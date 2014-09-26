@@ -25,5 +25,10 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
             ref Microsoft.Kinect.Fusion.Matrix4 referenceToObservedTransform);
         void SetAlignFrameToReconstructionReferenceFrame(IKinectDepthFrame kinectDepthFrame);
         void CalculatePointCloudAndDepth(FusionPointCloudImageFrame fusionPointCloudImageFrame, IKinectDepthFrame kinectDepthFrame, IKinectColorFrame kinectColorFrame, ICameraPose worldToCameraTransform);
+        void ResetReconstruction(ICameraPose cameraPose);
+        void ResetReconstruction(ICameraPose cameraPose, Pipeline.Math.Matrix4 worldToVolumeTransform);
+        ColorMesh CalculateMesh(int p);
+        void DepthToDepthFloatFrame(ushort[] p1, IKinectDepthFrame kinectDepthFrame, float p2, float p3, bool p4);
+        void IntegrateFrame(IKinectDepthFrame depthFrame, short p, ICameraPose cameraPose);
     }
 }

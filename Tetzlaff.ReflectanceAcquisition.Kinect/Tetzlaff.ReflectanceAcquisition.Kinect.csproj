@@ -54,6 +54,7 @@
     <Compile Include="Exceptions\NotEnoughPoseFinderMatchesException.cs" />
     <Compile Include="Modules\KinectColorFrameSource.cs" />
     <Compile Include="Modules\KinectDepthFrameSource.cs" />
+    <Compile Include="Modules\KinectGeometryIntegration.cs" />
     <Compile Include="Modules\KinectPoseAlignment.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
