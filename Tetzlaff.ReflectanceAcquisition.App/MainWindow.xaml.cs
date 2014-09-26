@@ -270,6 +270,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         
         // TODO: For mid-refactor testing, pull out later
         private KinectPoseAlignment poseAlignmentModule;
+        private KinectGeometryIntegration geometryIntegrationModule;
 
         /// <summary>
         /// The Kinect Fusion volume, enabling color reconstruction
@@ -487,11 +488,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// returned as invalid (0). Max depth must be greater than 0.
         /// </summary>
         private float maxDepthClip = FusionDepthProcessor.DefaultMaximumDepth;
-
-        /// <summary>
-        /// Image integration weight
-        /// </summary>
-        private short integrationWeight = FusionDepthProcessor.DefaultIntegrationWeight;
 
         /// <summary>
         /// The reconstruction volume voxel density in voxels per meter (vpm)
@@ -848,15 +844,18 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         {
             get
             {
-                return (double)this.integrationWeight;
+                return geometryIntegrationModule == null ? 0.0 : (double)geometryIntegrationModule.IntegrationWeight;
             }
 
             set
             {
-                this.integrationWeight = (short)(value + 0.5);
-                if (null != this.PropertyChanged)
+                if (geometryIntegrationModule != null)
                 {
-                    this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IntegrationWeight"));
+                    geometryIntegrationModule.IntegrationWeight = (short)(value + 0.5);
+                    if (null != this.PropertyChanged)
+                    {
+                        this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IntegrationWeight"));
+                    }
                 }
             }
         }
@@ -1169,6 +1168,12 @@ namespace Tetzlaff.ReflectanceAcquisition.App
             if (null != this.PropertyChanged)
             {
                 this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("UseCameraPoseFinder"));
+            }
+
+            geometryIntegrationModule = new KinectGeometryIntegration();
+            if (null != this.PropertyChanged)
+            {
+                this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IntegrationWeight"));
             }
 
             // Create the camera frustum 3D graphics in WPF3D
@@ -1545,7 +1550,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                             this.ResetReconstruction();
                         }
                     }
-                    catch (CameraPoseFinderHistoryFullException e)
+                    catch (CameraPoseFinderHistoryFullException)
                     {
                         this.ShowStatusMessage(Properties.Resources.PoseFinderPoseHistoryFull);
                     }
@@ -1554,7 +1559,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                     if (0 == poseAlignmentModule.TrackingErrorCount)
                     {
                         // Integrate depth
-                        bool colorAvailable = this.IntegrateData();
+                        this.IntegrateData();
 
                         // Check to see if another depth frame is already available. 
                         // If not we have time to calculate a point cloud and render, 
@@ -1713,56 +1718,21 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// <summary>
         /// Perform volume depth data integration
         /// </summary>
-        /// <returns>Returns true if a color frame is available for further processing, false otherwise.</returns>
-        private bool IntegrateData()
+        private void IntegrateData()
         {
-            //// Color may opportunistically be available here - check
-            //bool colorAvailable = this.colorReadyEvent.WaitOne(0);
-
             bool integrateData = !this.PauseIntegration && poseAlignmentModule.PreviousAlignmentSucceeded;
 
             // Integrate the frame to volume
             if (integrateData)
             {
-                //bool integrateColor = this.processedFrameCount % ColorIntegrationInterval == 0 && colorAvailable;
-
                 // Reset this flag as we are now integrating data again
                 if (poseAlignmentModule.TrackingHasFailedPreviously)
                 {
                     poseAlignmentModule.ResetTracking();
                 }
 
-                //if (this.captureColor && integrateColor)
-                //{
-                //    // Pre-process color
-                //    this.MapColorToDepth();
-
-                //    // Integrate color and depth
-                //    this.volume.IntegrateFrame(
-                //        this.depthFloatFrame, 
-                //        this.resampledColorFrameDepthAligned, 
-                //        this.integrationWeight,
-                //        FusionDepthProcessor.DefaultColorIntegrationOfAllAngles,
-                //        this.worldToCameraTransform);
-
-                //    // Flag that we have captured color
-                //    this.colorCaptured = true;
-                //}
-                //else
-                {
-                    // Just integrate depth
-                    this.volume.IntegrateFrame(
-                        this.depthFrame, 
-                        this.integrationWeight, 
-                        this.currentCameraPose);
-                }
-
-                // Reset color ready event
-                this.colorReadyEvent.Reset();
+                geometryIntegrationModule.IntegrateGeometry(this.depthFrame, this.volume, this.currentCameraPose);
             }
-
-            //return colorAvailable;
-            return true;
         }
 
         /// <summary>

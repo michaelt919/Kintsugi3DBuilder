@@ -93,7 +93,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
             _reconstruction.Dispose();
         }
 
-        public void IntegrateFrame(KinectDepthFrame kinectDepthFrame, short p, ICameraPose cameraPose)
+        public void IntegrateFrame(IKinectDepthFrame kinectDepthFrame, short p, ICameraPose cameraPose)
         {
             _reconstruction.IntegrateFrame(kinectDepthFrame.FusionImageFrame, p, cameraPose.Matrix.ToKinectMatrix());
         }
@@ -113,7 +113,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
             return _reconstruction.CalculateMesh(p);
         }
 
-        public void DepthToDepthFloatFrame(ushort[] p1, KinectDepthFrame kinectDepthFrame, float p2, float p3, bool p4)
+        public void DepthToDepthFloatFrame(ushort[] p1, IKinectDepthFrame kinectDepthFrame, float p2, float p3, bool p4)
         {
             _reconstruction.DepthToDepthFloatFrame(p1, kinectDepthFrame.FusionImageFrame, p2, p3, p4);
         }

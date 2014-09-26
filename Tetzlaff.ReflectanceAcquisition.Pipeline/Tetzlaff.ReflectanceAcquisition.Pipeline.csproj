@@ -52,6 +52,7 @@
     <Compile Include="Math\Matrix4.cs" />
     <Compile Include="Math\GeometryHelper.cs" />
     <Compile Include="Math\Vector3.cs" />
+    <Compile Include="Modules\IGeometryIntegrationModule.cs" />
     <Compile Include="Modules\IPoseAlignmentModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
