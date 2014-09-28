@@ -7,8 +7,17 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 
 namespace Tetzlaff.ReflectanceAcquisition.Pipeline.Modules
 {
-    public interface IFrameSource<FrameType> where FrameType : IDepthFrame
+    public interface IFrameSource<DepthFrameType, ColorFrameType>
+        where DepthFrameType : IDepthFrame
+        where ColorFrameType : IColorFrame
     {
-        void CopyToFrame(FrameType frame);
+        DepthFrameType DepthFrame { get; }
+        ColorFrameType ColorFrame { get; }
+
+        event Action DepthFrameReady;
+        event Action ColorFrameReady;
+
+        void RefreshDepthFrame();
+        void RefreshColorFrame();
     }
 }

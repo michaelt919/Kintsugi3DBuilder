@@ -1,4 +1,5 @@
-﻿using Microsoft.Kinect.Fusion;
+﻿using Microsoft.Kinect;
+using Microsoft.Kinect.Fusion;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -9,53 +10,49 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
 {
-    public class KinectColorFrame : IKinectColorFrame
+    public class KinectFusionColorFrame : IKinectFusionColorFrame
     {
-        /// <summary>
-        /// Intermediate storage for the color data used when upsampling
-        /// </summary>
-        private int[] _rawPixelsInternal;
-
-        public FusionColorImageFrame FusionImageFrame { get; private set; }
-
         public int Width 
-        { 
+        {
             get
             {
-                return FusionImageFrame.Width;
+                return this.FusionImageFrame.Width;
             }
         }
 
         public int Height 
-        { 
+        {
             get
             {
-                return FusionImageFrame.Height;
+                return this.FusionImageFrame.Height;
             }
         }
 
-        public byte[] RawPixelData { get; private set; }
+        public FusionColorImageFrame FusionImageFrame { get; private set; }
 
-        public KinectColorFrame(int width, int height, int maxUpsampleFactor = 1)
+        /// <summary>
+        /// Intermediate storage for the color data used when upsampling
+        /// </summary>
+        private int[] _rawPixels;
+
+        public KinectFusionColorFrame(int width, int height, int maxUpsampleFactor = 1)
         {
             Contract.Ensures(FusionImageFrame != null);
             FusionImageFrame = new FusionColorImageFrame(width, height);
 
             int colorImageSize = this.Width * this.Height;
             int colorImageByteSize = colorImageSize * sizeof(int);
-            _rawPixelsInternal = new int[colorImageSize];
-            RawPixelData = new byte[colorImageByteSize];
+            _rawPixels = new int[colorImageSize];
         }
 
-        public KinectColorFrame(FusionColorImageFrame fusionImageFrame, int maxUpsampleFactor = 1)
+        public KinectFusionColorFrame(FusionColorImageFrame fusionImageFrame, int maxUpsampleFactor = 1)
         {
             Contract.Ensures(FusionImageFrame != null);
             FusionImageFrame = fusionImageFrame;
 
             int colorImageSize = this.Width * this.Height;
             int colorImageByteSize = colorImageSize * sizeof(int);
-            _rawPixelsInternal = new int[colorImageSize];
-            RawPixelData = new byte[colorImageByteSize];
+            _rawPixels = new int[colorImageSize];
         }
 
         /// <summary>
@@ -82,15 +79,15 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
                 throw new ArgumentException("Destination buffer not large enough.");
             }
 
-            this.FusionImageFrame.CopyPixelDataTo(this._rawPixelsInternal);
+            this.FusionImageFrame.CopyPixelDataTo(this._rawPixels);
 
             int upsampleRowMultiplier = upsampleWidth * factor;
 
             // Here we make use of unsafe code to just copy the whole pixel as an int for performance reasons, as we do
             // not need access to the individual rgba components.
-            fixed (int* rawColorPixelPtr = this._rawPixelsInternal)
+            fixed (int* rawColorPixelFixedPtr = this._rawPixels)
             {
-                int* rawColorPixels = (int*)rawColorPixelPtr;
+                int* rawColorPixelPtr = (int*)rawColorPixelFixedPtr;
 
                 // Note we run this only for the source image height pixels to sparsely fill the destination with rows
                 Parallel.For(
@@ -103,7 +100,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
 
                         for (int x = 0; x < this.Width; ++x, ++sourceColorIndex)
                         {
-                            int color = rawColorPixels[sourceColorIndex];
+                            int color = rawColorPixelPtr[sourceColorIndex];
 
                             // Replicate pixels horizontally
                             for (int s = 0; s < factor; ++s, ++destIndex)

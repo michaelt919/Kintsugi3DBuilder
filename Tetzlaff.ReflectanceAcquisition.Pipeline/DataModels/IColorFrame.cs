@@ -8,7 +8,5 @@ namespace Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels
 {
     public interface IColorFrame : IFrame
     {
-        int Width { get; }
-        int Height { get; }
     }
 }

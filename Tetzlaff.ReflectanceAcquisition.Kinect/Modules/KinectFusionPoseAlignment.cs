@@ -14,7 +14,7 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.Modules;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
 {
-    public class KinectPoseAlignment : IPoseAlignmentModule<IKinectDepthFrame, IKinectColorFrame, IKinectReconstructionVolume>
+    public class KinectFusionPoseAlignment : IPoseAlignmentModule<IKinectFusionDepthFrame, IRawColorFrame, IKinectFusionReconstructionVolume>
     {
         private const int MAX_DEPTH_FRAME_WIDTH = 512;
         private const int MAX_DEPTH_FRAME_HEIGHT = 424;
@@ -179,17 +179,17 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// <summary>
         /// Intermediate storage for the smoothed depth float image frame
         /// </summary>
-        private KinectDepthFrame smoothDepthFrame;
+        private KinectFusionDepthFrame smoothDepthFrame;
 
         /// <summary>
         /// Kinect color re-sampled to be the same size as the depth frame
         /// </summary>
-        private KinectColorFrame resampledColorFrame;
+        private KinectFusionColorFrame resampledColorFrame;
 
         /// <summary>
         /// Per-pixel alignment values
         /// </summary>
-        private KinectDepthFrame deltaFromReferenceFrame;
+        private KinectFusionDepthFrame deltaFromReferenceFrame;
 
         /// <summary>
         /// Calculated point cloud frame from image integration
@@ -204,12 +204,12 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// <summary>
         /// Intermediate storage for the depth float data converted from depth image frame
         /// </summary>
-        private KinectDepthFrame downsampledDepthFloatFrame;
+        private KinectFusionDepthFrame downsampledDepthFloatFrame;
 
         /// <summary>
         /// Intermediate storage for the depth float data following smoothing
         /// </summary>
-        private KinectDepthFrame downsampledSmoothDepthFloatFrame;
+        private KinectFusionDepthFrame downsampledSmoothDepthFloatFrame;
 
         /// <summary>
         /// Calculated point cloud frame from image integration
@@ -224,7 +224,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// <summary>
         /// Kinect color delta from reference frame data from AlignPointClouds
         /// </summary>
-        private KinectColorFrame downsampledDeltaFromReferenceFrameColorFrame;
+        private KinectFusionColorFrame downsampledDeltaFromReferenceFrameColorFrame;
 
         /// <summary>
         /// Pixel buffer of delta from reference frame in 32bit color
@@ -262,7 +262,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
 
         public string CameraPoseFinderStatus { get; private set; }
 
-        public KinectPoseAlignment(int depthWidth, int depthHeight)
+        public KinectFusionPoseAlignment(int depthWidth, int depthHeight)
         {
             this.depthWidth = depthWidth;
             this.depthHeight = depthHeight;
@@ -271,33 +271,33 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
             this.TrackingErrorCount = 0;
 
             // Allocate delta from reference frame
-            this.deltaFromReferenceFrame = new KinectDepthFrame(this.depthWidth, this.depthHeight);
+            this.deltaFromReferenceFrame = new KinectFusionDepthFrame(this.depthWidth, this.depthHeight);
 
             // Allocate point cloud frame
             this.raycastPointCloudFrame = new FusionPointCloudImageFrame(this.depthWidth, this.depthHeight);
 
             // Allocate re-sampled color at depth image size
-            this.resampledColorFrame = new KinectColorFrame(this.depthWidth, this.depthHeight);
+            this.resampledColorFrame = new KinectFusionColorFrame(this.depthWidth, this.depthHeight);
 
             // Allocate point cloud frame created from input depth
             this.depthPointCloudFrame = new FusionPointCloudImageFrame(this.depthWidth, this.depthHeight);
 
             // Allocate smoothed depth float frame
-            this.smoothDepthFrame = new KinectDepthFrame(this.depthWidth, this.depthHeight);
+            this.smoothDepthFrame = new KinectFusionDepthFrame(this.depthWidth, this.depthHeight);
 
             this.downsampledWidth = depthWidth / DownsampleFactor;
             this.downsampledHeight = depthHeight / DownsampleFactor;
 
             // Allocate downsampled image frames
-            this.downsampledDepthFloatFrame = new KinectDepthFrame(this.downsampledWidth, this.downsampledHeight);
+            this.downsampledDepthFloatFrame = new KinectFusionDepthFrame(this.downsampledWidth, this.downsampledHeight);
 
-            this.downsampledSmoothDepthFloatFrame = new KinectDepthFrame(this.downsampledWidth, this.downsampledHeight);
+            this.downsampledSmoothDepthFloatFrame = new KinectFusionDepthFrame(this.downsampledWidth, this.downsampledHeight);
 
             this.downsampledRaycastPointCloudFrame = new FusionPointCloudImageFrame(this.downsampledWidth, this.downsampledHeight);
 
             this.downsampledDepthPointCloudFrame = new FusionPointCloudImageFrame(this.downsampledWidth, this.downsampledHeight);
 
-            this.downsampledDeltaFromReferenceFrameColorFrame = new KinectColorFrame(this.downsampledWidth, this.downsampledHeight);
+            this.downsampledDeltaFromReferenceFrameColorFrame = new KinectFusionColorFrame(this.downsampledWidth, this.downsampledHeight);
 
             int depthImageSize = depthWidth * depthHeight;
 
@@ -425,7 +425,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
             }
         }
 
-        public ICameraPose AlignFrame(IKinectDepthFrame depthFrame, IKinectColorFrame colorFrame, IKinectReconstructionVolume volume, ICameraPose cameraPoseEstimate, bool mirrorDepth)
+        public ICameraPose AlignFrame(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, IKinectFusionReconstructionVolume volume, ICameraPose cameraPoseEstimate, bool mirrorDepth)
         {
             // Check if camera pose finder is available
             this.CameraPoseFinderAvailable = this.IsCameraPoseFinderAvailable();
@@ -513,7 +513,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// <summary>
         /// Update the camera pose finder data.
         /// </summary>
-        private bool UpdateCameraPoseFinder(IKinectDepthFrame depthFrame, IKinectColorFrame colorFrame, ICameraPose cameraPose)
+        private bool UpdateCameraPoseFinder(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, ICameraPose cameraPose)
         {
             if (null == depthFrame || null == this.resampledColorFrame || null == this.cameraPoseFinder)
             {
@@ -555,9 +555,9 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// <returns>Returns true if tracking succeeded, false otherwise.</returns>
         private bool TrackCameraAlignDepthFloatToReconstruction(
             bool calculateDeltaFrame, 
-            IKinectDepthFrame depthFrame, 
-            IKinectColorFrame colorFrame, 
-            IKinectReconstructionVolume volume,
+            IKinectFusionDepthFrame depthFrame,
+            IRawColorFrame colorFrame, 
+            IKinectFusionReconstructionVolume volume,
             ref ICameraPose cameraPose)
         {
             bool trackingSucceeded = false;
@@ -604,9 +604,9 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// <returns>Returns true if tracking succeeded, false otherwise.</returns>
         private bool TrackCameraAlignPointClouds(
             bool calculateDeltaFrame, 
-            IKinectDepthFrame depthFrame, 
-            IKinectColorFrame colorFrame, 
-            IKinectReconstructionVolume volume, 
+            IKinectFusionDepthFrame depthFrame,
+            IRawColorFrame colorFrame, 
+            IKinectFusionReconstructionVolume volume, 
             ref ICameraPose cameraPose, 
             bool mirrorDepth)
         {
@@ -681,7 +681,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// This is typically more successful than FindCameraPoseAlignDepthFloatToReconstruction.
         /// </summary>
         /// <returns>Returns true if a valid camera pose was found, otherwise false.</returns>
-        private ICameraPose FindCameraPoseAlignPointClouds(IKinectDepthFrame depthFrame, IKinectColorFrame colorFrame, IKinectReconstructionVolume volume)
+        private ICameraPose FindCameraPoseAlignPointClouds(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, IKinectFusionReconstructionVolume volume)
         {
             if (!this.CameraPoseFinderAvailable)
             {
@@ -796,7 +796,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// Perform camera pose finding when tracking is lost using AlignDepthFloatToReconstruction.
         /// </summary>
         /// <returns>Returns true if a valid camera pose was found, otherwise false.</returns>
-        private ICameraPose FindCameraPoseAlignDepthFloatToReconstruction(IKinectDepthFrame depthFrame, IKinectColorFrame colorFrame, IKinectReconstructionVolume volume)
+        private ICameraPose FindCameraPoseAlignDepthFloatToReconstruction(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, IKinectFusionReconstructionVolume volume)
         {
             if (!this.CameraPoseFinderAvailable)
             {
@@ -901,7 +901,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// This is used to set the reference frame.
         /// </summary>
         /// <param name="pose">The pose to use.</param>
-        private void SetReferenceFrame(IKinectReconstructionVolume volume, ICameraPose pose)
+        private void SetReferenceFrame(IKinectFusionReconstructionVolume volume, ICameraPose pose)
         {
             // Get the saved pose view by raycasting the volume
             volume.CalculatePointCloudAndDepth(this.raycastPointCloudFrame, this.smoothDepthFrame, null, pose);
@@ -913,7 +913,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// <summary>
         /// Process input color image to make it equal in size to the depth image
         /// </summary>
-        private unsafe IKinectColorFrame ResampleColorFrame(IKinectColorFrame srcFrame, IKinectColorFrame destFrame)
+        private unsafe IKinectFusionColorFrame ResampleColorFrame(IRawColorFrame srcFrame, IKinectFusionColorFrame destFrame)
         {
             if (null == srcFrame)
             {
@@ -941,7 +941,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
 
             // Here we make use of unsafe code to just copy the whole pixel as an int for performance reasons, as we do
             // not need access to the individual rgba components.
-            fixed (byte* ptrColorPixels = srcFrame.RawPixelData)
+            fixed (byte* ptrColorPixels = srcFrame.RawPixels)
             {
                 int* rawColorPixels = (int*)ptrColorPixels;
 

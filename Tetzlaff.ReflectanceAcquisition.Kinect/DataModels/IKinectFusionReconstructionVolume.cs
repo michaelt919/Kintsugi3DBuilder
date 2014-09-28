@@ -9,26 +9,26 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.Math;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
 {
-    public interface IKinectReconstructionVolume : IReconstructionVolume
+    public interface IKinectFusionReconstructionVolume : IReconstructionVolume
     {
         int MaxAlignmentIterations { get; set; }
         Tetzlaff.ReflectanceAcquisition.Pipeline.Math.Matrix4 CurrentWorldToCameraTransform { get; }
 
-        bool AlignFrameToReconstruction(IKinectDepthFrame depthFrame, IKinectColorFrame colorFrame, IKinectDepthFrame deltaFromReferenceFrame, out float alignmentEnergy, ICameraPose poseEstimate);
-        void SmoothDepthFrame(IKinectDepthFrame originalDepthFrame, IKinectDepthFrame smoothDepthFrame, int kernelWidth, float distanceThreshold);
+        bool AlignFrameToReconstruction(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, IKinectFusionDepthFrame deltaFromReferenceFrame, out float alignmentEnergy, ICameraPose poseEstimate);
+        void SmoothDepthFrame(IKinectFusionDepthFrame originalDepthFrame, IKinectFusionDepthFrame smoothDepthFrame, int kernelWidth, float distanceThreshold);
         void CalculatePointCloud(FusionPointCloudImageFrame pointCloudFrame, ICameraPose worldToCameraTransform);
         bool AlignPointClouds(
             FusionPointCloudImageFrame referencePointCloudFrame,
             FusionPointCloudImageFrame observedPointCloudFrame,
-            IKinectColorFrame deltaFromReferenceFrame,
+            IKinectFusionColorFrame deltaFromReferenceFrame,
             out float alignmentEnergy,
             ref Microsoft.Kinect.Fusion.Matrix4 referenceToObservedTransform);
-        void SetAlignFrameToReconstructionReferenceFrame(IKinectDepthFrame kinectDepthFrame);
-        void CalculatePointCloudAndDepth(FusionPointCloudImageFrame fusionPointCloudImageFrame, IKinectDepthFrame kinectDepthFrame, IKinectColorFrame kinectColorFrame, ICameraPose worldToCameraTransform);
+        void SetAlignFrameToReconstructionReferenceFrame(IKinectFusionDepthFrame kinectDepthFrame);
+        void CalculatePointCloudAndDepth(FusionPointCloudImageFrame fusionPointCloudImageFrame, IKinectFusionDepthFrame kinectDepthFrame, IKinectFusionColorFrame kinectColorFrame, ICameraPose worldToCameraTransform);
         void ResetReconstruction(ICameraPose cameraPose);
         void ResetReconstruction(ICameraPose cameraPose, Pipeline.Math.Matrix4 worldToVolumeTransform);
         ColorMesh CalculateMesh(int p);
-        void DepthToDepthFloatFrame(ushort[] p1, IKinectDepthFrame kinectDepthFrame, float p2, float p3, bool p4);
-        void IntegrateFrame(IKinectDepthFrame depthFrame, short p, ICameraPose cameraPose);
+        void DepthToDepthFloatFrame(ushort[] p1, IKinectFusionDepthFrame kinectDepthFrame, float p2, float p3, bool p4);
+        void IntegrateFrame(IKinectFusionDepthFrame depthFrame, short p, ICameraPose cameraPose);
     }
 }
