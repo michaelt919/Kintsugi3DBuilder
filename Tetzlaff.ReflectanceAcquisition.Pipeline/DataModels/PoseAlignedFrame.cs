@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 
 namespace Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels
 {
-    public class AlignedDepthFrame : IDepthFrame
+    public class PoseAlignedFrame : IFrame
     {
-        private IDepthFrame _baseDepthFrame;
+        private IFrame _baseFrame;
 
         public int Width
         {
             get
             {
-                return _baseDepthFrame.Width;
+                return _baseFrame.Width;
             }
         }
 
@@ -22,15 +22,15 @@ namespace Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels
         {
             get
             {
-                return _baseDepthFrame.Height;
+                return _baseFrame.Height;
             }
         }
 
         public ICameraPose CameraPose { get; set; }
 
-        public AlignedDepthFrame(IDepthFrame depthFrame, ICameraPose cameraPose)
+        public PoseAlignedFrame(IFrame frame, ICameraPose cameraPose)
         {
-            _baseDepthFrame = depthFrame;
+            _baseFrame = frame;
             CameraPose = cameraPose;
         }
     }

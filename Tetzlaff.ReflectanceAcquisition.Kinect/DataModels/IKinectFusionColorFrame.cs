@@ -8,7 +8,7 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
 {
-    public interface IKinectFusionColorFrame : IColorFrame
+    public interface IKinectFusionColorFrame : IFrame
     {
         FusionColorImageFrame FusionImageFrame { get; }
 

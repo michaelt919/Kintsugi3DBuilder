@@ -8,8 +8,8 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 namespace Tetzlaff.ReflectanceAcquisition.Pipeline.Modules
 {
     public interface IFrameSource<DepthFrameType, ColorFrameType>
-        where DepthFrameType : IDepthFrame
-        where ColorFrameType : IColorFrame
+        where DepthFrameType : IFrame
+        where ColorFrameType : IFrame
     {
         DepthFrameType DepthFrame { get; }
         ColorFrameType ColorFrame { get; }

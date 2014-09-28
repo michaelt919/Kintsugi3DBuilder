@@ -7,75 +7,39 @@ using System.Text;
 using System.Threading.Tasks;
 using Tetzlaff.ReflectanceAcquisition.Kinect.DataModels;
 using Tetzlaff.ReflectanceAcquisition.Kinect.Exceptions;
+using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 using Tetzlaff.ReflectanceAcquisition.Pipeline.Modules;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
 {
-    public class KinectFrameSource : IFrameSource<IKinectFusionDepthFrame, IRawColorFrame>
+    public class KinectFrameSource : IFrameSource<IKinectFusionDepthFrame, IColorFrame>
     {
         /// <summary>
-        /// This is necessary to allow us to swap buffers transparently
+        /// Raw depth image frame in fixed precision
         /// </summary>
-        private class _RawColorFrameWrapper : IRawColorFrame
-        {
-            public IRawColorFrame BaseFrame { get; set; }
-
-            public _RawColorFrameWrapper(IRawColorFrame baseFrame)
-            {
-                this.BaseFrame = baseFrame;
-            }
-
-            public byte[] RawPixels
-            {
-                get
-                {
-                    return BaseFrame.RawPixels;
-                }
-            }
-
-            public int Width
-            {
-                get
-                {
-                    return BaseFrame.Width;
-                }
-            }
-
-            public int Height
-            {
-                get
-                {
-                    return BaseFrame.Height;
-                }
-            }
-        }
-
-        private KinectFusionDepthFrame _depthFrameFront;
-        private IRawDepthFrameFixed _rawDepthFrameFront;
-        private IRawDepthFrameFixed _rawDepthFrameBack;
+        private DoubleBufferedRawDepthFrameFixed<RawDepthFrameFixed> _depthFrameFixed;
 
         /// <summary>
         /// Intermediate storage for the depth float data converted from depth image frame
         /// </summary>
+        KinectFusionDepthFrame _depthFrameFloat;
         public IKinectFusionDepthFrame DepthFrame
         { 
             get
             {
-                return _depthFrameFront;
+                return _depthFrameFloat;
             }
         }
-
-        private _RawColorFrameWrapper _colorFrameFrontWrapper;
-        private IRawColorFrame _colorFrameBack;
 
         /// <summary>
         /// Intermediate storage for the color data
         /// </summary>
-        public IRawColorFrame ColorFrame
+        private DoubleBufferedColorFrame<RGBAColorFrame> _colorFrame;
+        public IColorFrame ColorFrame
         {
             get
             {
-                return _colorFrameFrontWrapper;
+                return _colorFrame;
             }
         }
 
@@ -189,15 +153,16 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
             this.ColorPixelCount = this.ColorWidth * this.ColorHeight;
             this.ColorHorizontalFieldOfView = colorFrameDescription.HorizontalFieldOfView;
 
-            // Allocate depth frame
-            this._depthFrameFront = new KinectFusionDepthFrame(this.DepthWidth, this.DepthHeight);
-            this._rawDepthFrameFront = new RawDepthFrameFixed(this.DepthWidth, this.DepthHeight);
-            this._rawDepthFrameBack = new RawDepthFrameFixed(this.DepthWidth, this.DepthHeight);
+            // Allocate depth frames
+            this._depthFrameFixed = new DoubleBufferedRawDepthFrameFixed<RawDepthFrameFixed>(
+                new RawDepthFrameFixed(this.DepthWidth, this.DepthHeight), 
+                new RawDepthFrameFixed(this.DepthWidth, this.DepthHeight));
+            this._depthFrameFloat = new KinectFusionDepthFrame(this.DepthWidth, this.DepthHeight);
 
             // Allocate color frame
-            IRawColorFrame colorFrameFront = new RawColorFrame(this.ColorWidth, this.ColorHeight);
-            this._colorFrameFrontWrapper = new _RawColorFrameWrapper(colorFrameFront);
-            this._colorFrameBack = new RawColorFrame(this.ColorWidth, this.ColorHeight);
+            this._colorFrame = new DoubleBufferedColorFrame<RGBAColorFrame>(
+                new RGBAColorFrame(this.ColorWidth, this.ColorHeight),
+                new RGBAColorFrame(this.ColorWidth, this.ColorHeight));
 
             // Add an event handler to be called whenever depth and color both have new data
             this._reader.MultiSourceFrameArrived += this.Reader_MultiSourceFrameArrived;
@@ -219,7 +184,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
 
             if (null != this.DepthFrame)
             {
-                this._depthFrameFront.Dispose();
+                this._depthFrameFloat.Dispose();
             }
         }
 
@@ -230,14 +195,12 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         {
             lock(_backFrameLock)
             {
-                _depthFrameFront.TakeRawDepthFrameFixed(
-                    this._rawDepthFrameBack,
+                this._depthFrameFloat.TakeRawDepthFrameFixed(
+                    this._depthFrameFixed.BackBuffer,
                     this.MinDepthClip,
                     this.MaxDepthClip,
                     this.MirrorDepth);
-                IRawDepthFrameFixed tmp = this._rawDepthFrameFront;
-                this._rawDepthFrameFront = this._rawDepthFrameBack;
-                this._rawDepthFrameBack = tmp;
+                this._depthFrameFixed.SwapBuffers();
             }
         }
 
@@ -245,9 +208,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         {
             lock(_backFrameLock)
             {
-                IRawColorFrame tmp = this._colorFrameFrontWrapper.BaseFrame;
-                _colorFrameFrontWrapper.BaseFrame = this._colorFrameBack;
-                this._colorFrameBack = tmp;
+                this._colorFrame.SwapBuffers();
             }
         }
 
@@ -290,7 +251,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
 
                         if (colorWidth == this.ColorFrame.Width && colorHeight == this.ColorFrame.Height)
                         {
-                            newColorFrame.CopyConvertedFrameDataToArray(this._colorFrameBack.RawPixels, ColorImageFormat.Bgra);
+                            newColorFrame.CopyConvertedFrameDataToArray(this._colorFrame.BackBuffer.RawPixels, ColorImageFormat.Bgra);
                             validColor = true;
                         }
 
@@ -300,7 +261,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
 
                         if (depthWidth == this.DepthFrame.Width && depthHeight == this.DepthFrame.Height)
                         {
-                            newDepthFrame.CopyFrameDataToArray(this._rawDepthFrameBack.RawPixels);
+                            newDepthFrame.CopyFrameDataToArray(this._depthFrameFixed.BackBuffer.RawPixels);
                             validDepth = true;
                         }
                     }

@@ -39,7 +39,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
             MaxAlignmentIterations = FusionDepthProcessor.DefaultAlignIterationCount;
         }
 
-        public bool AlignFrameToReconstruction(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, IKinectFusionDepthFrame deltaFromReferenceFrame, out float alignmentEnergy, ICameraPose poseEstimate)
+        public bool AlignFrameToReconstruction(IKinectFusionDepthFrame depthFrame, IColorFrame colorFrame, IKinectFusionDepthFrame deltaFromReferenceFrame, out float alignmentEnergy, ICameraPose poseEstimate)
         {
             Microsoft.Kinect.Fusion.Matrix4 kinectMatrix = poseEstimate.Matrix.ToKinectMatrix();
             bool success = _reconstruction.AlignDepthFloatToReconstruction(

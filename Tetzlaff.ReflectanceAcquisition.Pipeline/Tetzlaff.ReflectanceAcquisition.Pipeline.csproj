@@ -39,19 +39,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataModels\AlignedColorFrame.cs" />
-    <Compile Include="DataModels\AlignedDepthFrame.cs" />
+    <Compile Include="DataModels\DoubleBufferedColorFrame.cs" />
+    <Compile Include="DataModels\PoseAlignedFrame.cs" />
     <Compile Include="DataModels\CameraPose.cs" />
     <Compile Include="DataModels\ICameraPose.cs" />
-    <Compile Include="DataModels\IColorFrame.cs" />
-    <Compile Include="DataModels\IDepthFrame.cs" />
     <Compile Include="DataModels\IFrame.cs" />
-    <Compile Include="DataModels\IRawColorFrame.cs" />
-    <Compile Include="DataModels\IRawDepthFrameFloat.cs" />
-    <Compile Include="DataModels\IRawDepthFrameFixed.cs" />
-    <Compile Include="DataModels\RawColorFrame.cs" />
-    <Compile Include="DataModels\RawDepthFrameFloat.cs" />
-    <Compile Include="DataModels\RawDepthFrameFixed.cs" />
+    <Compile Include="DataModels\IColorFrame.cs" />
+    <Compile Include="DataModels\RGBAColorFrame.cs" />
     <Compile Include="Modules\IFrameSource.cs" />
     <Compile Include="DataModels\IReconstructionVolume.cs" />
     <Compile Include="Exceptions\CameraTrackingFailedException.cs" />
