@@ -1,4 +1,5 @@
-﻿using Microsoft.Kinect.Fusion;
+﻿using Microsoft.Kinect;
+using Microsoft.Kinect.Fusion;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -6,26 +7,18 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Tetzlaff.ReflectanceAcquisition.Kinect.Exceptions;
 using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
 {
-    public class KinectDepthFrame : IKinectDepthFrame
+    public class KinectFusionDepthFrame : IKinectFusionDepthFrame
     {
-        private const int MIN_DOWNSAMPLE_FACTOR = 2;
-
-        /// <summary>
-        /// Pixel buffer of depth float frame with pixel data in float format for downsampling
-        /// </summary>
-        private float[] _downsampledPixels;
-
-        public FusionFloatImageFrame FusionImageFrame { get; private set; }
-
         public int Width
         {
             get
             {
-                return FusionImageFrame.Width;
+                return this.FusionImageFrame.Width;
             }
         }
 
@@ -33,46 +26,51 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
         {
             get
             {
-                return FusionImageFrame.Height;
+                return this.FusionImageFrame.Height;
             }
         }
 
-        private ushort[] _rawPixelData;
-        //public ReadOnlyCollection<ushort> RawPixelData
-        //{
-        //    get
-        //    {
-        //        return Array.AsReadOnly<ushort>(_rawPixelData);
-        //    }
-        //}
-        public ushort[] Pixels
+        public float MinDepthClip { get; private set; }
+        public float MaxDepthClip { get; private set; }
+        public bool MirrorDepth { get; private set; }
+
+        public FusionFloatImageFrame FusionImageFrame { get; private set; }
+
+        public IRawDepthFrameFixed RawDepthFrameFixed { get; private set; }
+
+        public void TakeRawDepthFrameFixed(IRawDepthFrameFixed rawFixedDepthFrame, float minDepthClip, float maxDepthClip, bool mirrorDepth)
         {
-            get
+            this.RawDepthFrameFixed = rawFixedDepthFrame;
+
+            if (rawFixedDepthFrame != null)
             {
-                return _rawPixelData;
+                this.MinDepthClip = minDepthClip;
+                this.MaxDepthClip = maxDepthClip;
+                this.MirrorDepth = mirrorDepth;
+
+                FusionDepthProcessor.DepthToDepthFloatFrame(
+                    this.RawDepthFrameFixed.RawPixels,
+                    this.Width,
+                    this.Height,
+                    this.FusionImageFrame,
+                    this.MinDepthClip,
+                    this.MaxDepthClip,
+                    this.MirrorDepth);
             }
         }
 
-        public KinectDepthFrame(int width, int height)
+        private IRawDepthFrameFloat _downsampledFloatPixels = null;
+
+        public KinectFusionDepthFrame(int width, int height)
         {
             Contract.Ensures(FusionImageFrame != null);
             FusionImageFrame = new FusionFloatImageFrame(width, height);
-
-            int depthImageSize = this.Width * this.Height;
-            int downsampledDepthImageSize = depthImageSize / (MIN_DOWNSAMPLE_FACTOR * MIN_DOWNSAMPLE_FACTOR);
-            _rawPixelData = new ushort[depthImageSize];
-            _downsampledPixels = new float[downsampledDepthImageSize];
+            this.RawDepthFrameFixed = null;
         }
 
-        public KinectDepthFrame(FusionFloatImageFrame fusionImageFrame)
+        public void Dispose()
         {
-            Contract.Ensures(FusionImageFrame != null);
-            FusionImageFrame = fusionImageFrame;
-
-            int depthImageSize = this.Width * this.Height;
-            int downsampledDepthImageSize = depthImageSize / (MIN_DOWNSAMPLE_FACTOR * MIN_DOWNSAMPLE_FACTOR);
-            _rawPixelData = new ushort[depthImageSize];
-            _downsampledPixels = new float[downsampledDepthImageSize];
+            FusionImageFrame.Dispose();
         }
 
         /// <summary>
@@ -80,9 +78,14 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
         /// </summary>
         /// <param name="dest">The destination depth image.</param>
         /// <param name="factor">The downsample factor (2=x/2,y/2, 4=x/4,y/4, 8=x/8,y/8, 16=x/16,y/16).</param>
-        public unsafe void DownsampleNearestNeighbor(IKinectDepthFrame dest, int factor, bool mirror)
+        public unsafe void DownsampleNearestNeighbor(IKinectFusionDepthFrame dest, int factor, bool mirror)
         {
-            if (null == dest || null == this._downsampledPixels)
+            if (this.RawDepthFrameFixed == null)
+            {
+                throw new RawPixelsNotAvailableException("Raw fixed-point depth pixels must be available in order to downsample.");
+            }
+
+            if (null == dest)
             {
                 throw new ArgumentException("inputs null");
             }
@@ -92,11 +95,6 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
                 throw new ArgumentException("factor != 2, 4, 8 or 16");
             }
 
-            if (factor < MIN_DOWNSAMPLE_FACTOR)
-            {
-                throw new ArgumentException("Downsample factor too small.");
-            }
-
             int downsampleWidth = this.Width / factor;
             int downsampleHeight = this.Height / factor;
 
@@ -104,10 +102,18 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
             {
                 throw new ArgumentException("dest != downsampled image size");
             }
+            
+            if (_downsampledFloatPixels == null ||
+                _downsampledFloatPixels.Height != downsampleHeight ||
+                _downsampledFloatPixels.Width != downsampleWidth)
+            {
+                // Lazy initialization
+                _downsampledFloatPixels = new RawDepthFrameFloat(downsampleWidth, downsampleHeight);
+            }
 
             if (mirror)
             {
-                fixed (ushort* rawDepthPixelPtr = this._rawPixelData)
+                fixed (ushort* rawDepthPixelPtr = this.RawDepthFrameFixed.RawPixels)
                 {
                     ushort* rawDepthPixels = (ushort*)rawDepthPixelPtr;
 
@@ -122,14 +128,14 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
                             for (int x = 0; x < downsampleWidth; ++x, ++destIndex, sourceIndex += factor)
                             {
                                 // Copy depth value
-                                this._downsampledPixels[destIndex] = (float)rawDepthPixels[sourceIndex] * 0.001f;
+                                _downsampledFloatPixels.RawPixels[destIndex] = (float)rawDepthPixels[sourceIndex] * 0.001f;
                             }
                         });
                 }
             }
             else
             {
-                fixed (ushort* rawDepthPixelPtr = this._rawPixelData)
+                fixed (ushort* rawDepthPixelPtr = this.RawDepthFrameFixed.RawPixels)
                 {
                     ushort* rawDepthPixels = (ushort*)rawDepthPixelPtr;
 
@@ -146,18 +152,13 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
                             for (int x = 0; x < downsampleWidth; ++x, --flippedDestIndex, sourceIndex += factor)
                             {
                                 // Copy depth value
-                                this._downsampledPixels[flippedDestIndex] = (float)rawDepthPixels[sourceIndex] * 0.001f;
+                                _downsampledFloatPixels.RawPixels[flippedDestIndex] = (float)rawDepthPixels[sourceIndex] * 0.001f;
                             }
                         });
                 }
             }
 
-            dest.FusionImageFrame.CopyPixelDataFrom(this._downsampledPixels);
-        }
-
-        public void Dispose()
-        {
-            FusionImageFrame.Dispose();
+            dest.FusionImageFrame.CopyPixelDataFrom(this._downsampledFloatPixels.RawPixels);
         }
     }
 }

@@ -9,7 +9,7 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
 {
-    public class KinectReconstructionVolume : IKinectReconstructionVolume
+    public class KinectFusionReconstructionVolume : IKinectFusionReconstructionVolume
     {
         private ColorReconstruction _reconstruction;
         
@@ -31,7 +31,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
             }
         }
 
-        public KinectReconstructionVolume(ColorReconstruction reconstruction)
+        public KinectFusionReconstructionVolume(ColorReconstruction reconstruction)
         {
             Contract.Ensures(_reconstruction != null);
             _reconstruction = reconstruction;
@@ -39,7 +39,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
             MaxAlignmentIterations = FusionDepthProcessor.DefaultAlignIterationCount;
         }
 
-        public bool AlignFrameToReconstruction(IKinectDepthFrame depthFrame, IKinectColorFrame colorFrame, IKinectDepthFrame deltaFromReferenceFrame, out float alignmentEnergy, ICameraPose poseEstimate)
+        public bool AlignFrameToReconstruction(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, IKinectFusionDepthFrame deltaFromReferenceFrame, out float alignmentEnergy, ICameraPose poseEstimate)
         {
             Microsoft.Kinect.Fusion.Matrix4 kinectMatrix = poseEstimate.Matrix.ToKinectMatrix();
             bool success = _reconstruction.AlignDepthFloatToReconstruction(
@@ -52,7 +52,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
             return success;
         }
 
-        public void SmoothDepthFrame(IKinectDepthFrame originalDepthFrame, IKinectDepthFrame smoothDepthFrame, int kernelWidth, float distanceThreshold)
+        public void SmoothDepthFrame(IKinectFusionDepthFrame originalDepthFrame, IKinectFusionDepthFrame smoothDepthFrame, int kernelWidth, float distanceThreshold)
         {
             _reconstruction.SmoothDepthFloatFrame(originalDepthFrame.FusionImageFrame, smoothDepthFrame.FusionImageFrame, kernelWidth, distanceThreshold);
         }
@@ -65,7 +65,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
         public bool AlignPointClouds(
             FusionPointCloudImageFrame referencePointCloudFrame,
             FusionPointCloudImageFrame observedPointCloudFrame,
-            IKinectColorFrame deltaFromReferenceFrame,
+            IKinectFusionColorFrame deltaFromReferenceFrame,
             out float alignmentEnergy,
             ref Microsoft.Kinect.Fusion.Matrix4 referenceToObservedTransform)
         {
@@ -78,12 +78,12 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
                 ref referenceToObservedTransform);
         }
 
-        public void SetAlignFrameToReconstructionReferenceFrame(IKinectDepthFrame kinectDepthFrame)
+        public void SetAlignFrameToReconstructionReferenceFrame(IKinectFusionDepthFrame kinectDepthFrame)
         {
             _reconstruction.SetAlignDepthFloatToReconstructionReferenceFrame(kinectDepthFrame.FusionImageFrame);
         }
 
-        public void CalculatePointCloudAndDepth(FusionPointCloudImageFrame fusionPointCloudImageFrame, IKinectDepthFrame kinectDepthFrame, IKinectColorFrame kinectColorFrame, ICameraPose pose)
+        public void CalculatePointCloudAndDepth(FusionPointCloudImageFrame fusionPointCloudImageFrame, IKinectFusionDepthFrame kinectDepthFrame, IKinectFusionColorFrame kinectColorFrame, ICameraPose pose)
         {
             _reconstruction.CalculatePointCloudAndDepth(fusionPointCloudImageFrame, kinectDepthFrame.FusionImageFrame, kinectColorFrame.FusionImageFrame, pose.Matrix.ToKinectMatrix());
         }
@@ -93,7 +93,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
             _reconstruction.Dispose();
         }
 
-        public void IntegrateFrame(IKinectDepthFrame kinectDepthFrame, short p, ICameraPose cameraPose)
+        public void IntegrateFrame(IKinectFusionDepthFrame kinectDepthFrame, short p, ICameraPose cameraPose)
         {
             _reconstruction.IntegrateFrame(kinectDepthFrame.FusionImageFrame, p, cameraPose.Matrix.ToKinectMatrix());
         }
@@ -113,7 +113,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
             return _reconstruction.CalculateMesh(p);
         }
 
-        public void DepthToDepthFloatFrame(ushort[] p1, IKinectDepthFrame kinectDepthFrame, float p2, float p3, bool p4)
+        public void DepthToDepthFloatFrame(ushort[] p1, IKinectFusionDepthFrame kinectDepthFrame, float p2, float p3, bool p4)
         {
             _reconstruction.DepthToDepthFloatFrame(p1, kinectDepthFrame.FusionImageFrame, p2, p3, p4);
         }

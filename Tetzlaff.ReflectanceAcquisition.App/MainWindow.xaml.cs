@@ -169,11 +169,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         private bool pauseIntegration = true;
 
         /// <summary>
-        /// Depth image is mirrored
-        /// </summary>
-        private bool mirrorDepth;
-
-        /// <summary>
         /// Whether render from the live Kinect camera pose or virtual camera pose
         /// </summary>
         private bool kinectView = true;
@@ -182,36 +177,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// Whether render the volume 3D graphics overlay
         /// </summary>
         private bool volumeGraphics;
-
-        /// <summary>
-        /// Image Width of depth frame
-        /// </summary>
-        private int depthWidth = 0;
-
-        /// <summary>
-        /// Image height of depth frame
-        /// </summary>
-        private int depthHeight = 0;
-
-        /// <summary>
-        /// Count of pixels in the depth frame
-        /// </summary>
-        private int depthPixelCount = 0;
-
-        /// <summary>
-        /// Image width of color frame
-        /// </summary>
-        private int colorWidth = 0;
-
-        /// <summary>
-        /// Image height of color frame
-        /// </summary>
-        private int colorHeight = 0;
-
-        /// <summary>
-        /// Count of pixels in the color frame
-        /// </summary>
-        private int colorPixelCount = 0;
 
         /// <summary>
         /// The counter for frames that have been processed
@@ -257,35 +222,16 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// A high priority message queue for status message
         /// </summary>
         private Queue<string> statusMessageQueue = new Queue<string>();
-
-        /// <summary>
-        /// Active Kinect sensor
-        /// </summary>
-        private KinectSensor sensor = null;
-
-        /// <summary>
-        /// Reader for depth/color/body index frames
-        /// </summary>
-        private MultiSourceFrameReader reader;
         
         // TODO: For mid-refactor testing, pull out later
-        private KinectPoseAlignment poseAlignmentModule;
-        private KinectGeometryIntegration geometryIntegrationModule;
+        private KinectFrameSource frameSource = null;
+        private KinectFusionPoseAlignment poseAlignmentModule = null;
+        private KinectFusionGeometryIntegration geometryIntegrationModule = null;
 
         /// <summary>
         /// The Kinect Fusion volume, enabling color reconstruction
         /// </summary>
-        private KinectReconstructionVolume volume;
-
-        /// <summary>
-        /// Intermediate storage for the depth float data converted from depth image frame
-        /// </summary>
-        private KinectDepthFrame depthFrame;
-
-        /// <summary>
-        /// Intermediate storage for the depth float data converted from depth image frame
-        /// </summary>
-        private KinectColorFrame colorFrame;
+        private KinectFusionReconstructionVolume volume;
 
         /// <summary>
         /// Kinect color mapped into depth frame
@@ -356,11 +302,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// Mapped color pixels in depth frame of reference
         /// </summary>
         private int[] resampledColorImagePixelsAlignedToDepth;
- 
-        /// <summary>
-        /// The coordinate mapper to convert between depth and color frames of reference
-        /// </summary>
-        private CoordinateMapper mapper;
 
         /// <summary>
         /// The worker thread to process the depth and color data
@@ -381,11 +322,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// Event to notify that color data is ready for process
         /// </summary>
         private ManualResetEvent colorReadyEvent;
-
-        /// <summary>
-        /// Lock object for raw pixel access
-        /// </summary>
-        private object rawDataLock = new object();
 
         /// <summary>
         /// Lock object for volume re-creation and meshing
@@ -478,18 +414,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         private Tetzlaff.ReflectanceAcquisition.Pipeline.Math.Matrix4 defaultWorldToVolumeTransform;
 
         /// <summary>
-        /// Minimum depth distance threshold in meters. Depth pixels below this value will be
-        /// returned as invalid (0). Min depth must be positive or 0.
-        /// </summary>
-        private float minDepthClip = FusionDepthProcessor.DefaultMinimumDepth;
-
-        /// <summary>
-        /// Maximum depth distance threshold in meters. Depth pixels above this value will be
-        /// returned as invalid (0). Max depth must be greater than 0.
-        /// </summary>
-        private float maxDepthClip = FusionDepthProcessor.DefaultMaximumDepth;
-
-        /// <summary>
         /// The reconstruction volume voxel density in voxels per meter (vpm)
         /// 1000mm / 256vpm = ~3.9mm/voxel
         /// </summary>
@@ -574,11 +498,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
-        /// Gets or sets the timestamp of the current depth frame
-        /// </summary>
-        public TimeSpan RelativeTime { get; set; }
-
-        /// <summary>
         /// Gets or sets a value indicating whether to display surface normals.
         /// </summary>
         public bool DisplayNormals
@@ -646,18 +565,21 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         {
             get
             {
-                return this.mirrorDepth;
+                return this.frameSource == null ? false : this.frameSource.MirrorDepth;
             }
 
             set
             {
-                this.mirrorDepth = value;
-                if (null != this.PropertyChanged)
+                if (this.frameSource != null)
                 {
-                    this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("MirrorDepth"));
-                }
+                    this.frameSource.MirrorDepth = value;
+                    if (null != this.PropertyChanged)
+                    {
+                        this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("MirrorDepth"));
+                    }
 
-                this.resetReconstruction = true;
+                    this.resetReconstruction = true;
+                }
             }
         }
 
@@ -789,10 +711,13 @@ namespace Tetzlaff.ReflectanceAcquisition.App
             }
             set
             {
-                poseAlignmentModule.AutoFindCameraPoseWhenLost = value;
-                if (null != this.PropertyChanged)
+                if (poseAlignmentModule != null)
                 {
-                    this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("UseCameraPoseFinder"));
+                    poseAlignmentModule.AutoFindCameraPoseWhenLost = value;
+                    if (null != this.PropertyChanged)
+                    {
+                        this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("UseCameraPoseFinder"));
+                    }
                 }
             }
         }
@@ -804,15 +729,18 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         {
             get
             {
-                return (double)this.minDepthClip;
+                return (double)(this.frameSource == null ? FusionDepthProcessor.DefaultMinimumDepth : this.frameSource.MinDepthClip);
             }
 
             set
             {
-                this.minDepthClip = (float)value;
-                if (null != this.PropertyChanged)
+                if (this.frameSource != null)
                 {
-                    this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("MinDepthClip"));
+                    this.frameSource.MinDepthClip = (float)value;
+                    if (null != this.PropertyChanged)
+                    {
+                        this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("MinDepthClip"));
+                    }
                 }
             }
         }
@@ -824,15 +752,18 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         {
             get
             {
-                return (double)this.maxDepthClip;
+                return (double)(this.frameSource == null ? FusionDepthProcessor.DefaultMaximumDepth : this.frameSource.MaxDepthClip);
             }
 
             set
             {
-                this.maxDepthClip = (float)value;
-                if (null != this.PropertyChanged)
+                if (this.frameSource != null)
                 {
-                    this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("MaxDepthClip"));
+                    this.frameSource.MaxDepthClip = (float)value;
+                    if (null != this.PropertyChanged)
+                    {
+                        this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("MaxDepthClip"));
+                    }
                 }
             }
         }
@@ -1101,32 +1032,29 @@ namespace Tetzlaff.ReflectanceAcquisition.App
             VoxelsYSlider.Maximum = 512;
             VoxelsZSlider.Maximum = 512;
 
-            // One sensor is supported
-            this.sensor = KinectSensor.GetDefault();
-
-            if (null == this.sensor)
+            try
+            {
+                this.frameSource = new KinectFrameSource();
+                if (null != this.PropertyChanged)
+                {
+                    this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("MinDepthClip"));
+                    this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("MaxDepthClip"));
+                }
+                this.frameSource.ColorFrameReady += () =>
+                {
+                    // Signal worker thread to process
+                    this.colorReadyEvent.Set(); 
+                };
+                this.frameSource.DepthFrameReady += () =>
+                {
+                    // Signal worker thread to process
+                    this.depthReadyEvent.Set(); 
+                };
+            }
+            catch (NoReadyKinectException)
             {
                 this.statusBarText.Text = Properties.Resources.NoReadyKinect;
-                return;
             }
-
-            // get the coordinate mapper
-            this.mapper = this.sensor.CoordinateMapper;
-
-            // open the sensor
-            this.sensor.Open();
-
-            this.reader = this.sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color);
-
-            FrameDescription depthFrameDescription = this.sensor.DepthFrameSource.FrameDescription;
-            this.depthWidth = depthFrameDescription.Width;
-            this.depthHeight = depthFrameDescription.Height;
-            this.depthPixelCount = this.depthWidth * this.depthHeight;
-
-            FrameDescription colorFrameDescription = this.sensor.ColorFrameSource.FrameDescription;
-            this.colorWidth = colorFrameDescription.Width;
-            this.colorHeight = colorFrameDescription.Height;
-            this.colorPixelCount = this.colorWidth * this.colorHeight;
 
             // Setup the graphics rendering
 
@@ -1158,26 +1086,23 @@ namespace Tetzlaff.ReflectanceAcquisition.App
 
             this.lastStatusTimestamp = DateTime.Now;
 
-            // Add an event handler to be called whenever depth and color both have new data
-            this.reader.MultiSourceFrameArrived += this.Reader_MultiSourceFrameArrived;
-
             // Allocate frames for Kinect Fusion now a sensor is present
             this.AllocateKinectFusionResources();
 
-            poseAlignmentModule = new KinectPoseAlignment(this.depthWidth, this.depthHeight);
+            poseAlignmentModule = new KinectFusionPoseAlignment(this.frameSource.DepthWidth, this.frameSource.DepthHeight);
             if (null != this.PropertyChanged)
             {
                 this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("UseCameraPoseFinder"));
             }
 
-            geometryIntegrationModule = new KinectGeometryIntegration();
+            geometryIntegrationModule = new KinectFusionGeometryIntegration();
             if (null != this.PropertyChanged)
             {
                 this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IntegrationWeight"));
             }
 
             // Create the camera frustum 3D graphics in WPF3D
-            this.virtualCamera.CreateFrustum3DGraphics(this.GraphicsViewport, this.depthWidth, this.depthHeight);
+            this.virtualCamera.CreateFrustum3DGraphics(this.GraphicsViewport, this.frameSource.DepthWidth, this.frameSource.DepthHeight);
 
             // Set recreate reconstruction flag
             this.recreateReconstruction = true;
@@ -1208,18 +1133,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                 this.statusBarTimer.Tick -= this.StatusBarTimerTick;
             }
 
-            if (this.reader != null)
-            {
-                this.reader.Dispose();
-                this.reader = null;
-            }
-
-            if (null != this.sensor)
-            {
-                this.sensor.Close();
-                this.sensor = null;
-            }
-
             // Remove the camera frustum 3D graphics from WPF3D
             this.virtualCamera.DisposeFrustum3DGraphics();
 
@@ -1236,7 +1149,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         {
             if (!this.savingMesh)
             {
-                if (null == this.sensor)
+                if (null == this.frameSource)
                 {
                     // Show "No ready Kinect found!" on status bar
                     this.statusBarText.Text = Properties.Resources.NoReadyKinect;
@@ -1350,105 +1263,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         }
 
         /// <summary>
-        /// Event handler for multiSourceFrame arrived event
-        /// </summary>
-        /// <param name="sender">object sending the event</param>
-        /// <param name="e">event arguments</param>
-        private void Reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
-        {
-            bool validDepth = false;
-            bool validColor = false;
-
-            MultiSourceFrameReference frameReference = e.FrameReference;
-
-            MultiSourceFrame multiSourceFrame = null;
-            DepthFrame newDepthFrame = null;
-            ColorFrame newColorFrame = null;
-
-            try
-            {
-                multiSourceFrame = frameReference.AcquireFrame();
-
-                if (multiSourceFrame != null)
-                {
-                    // MultiSourceFrame is IDisposable
-                    lock (this.rawDataLock)
-                    {
-                        ColorFrameReference colorFrameReference = multiSourceFrame.ColorFrameReference;
-                        DepthFrameReference depthFrameReference = multiSourceFrame.DepthFrameReference;
-
-                        newColorFrame = colorFrameReference.AcquireFrame();
-                        newDepthFrame = depthFrameReference.AcquireFrame();
-
-                        if ((newDepthFrame != null) && (newColorFrame != null))
-                        {
-                            // Save frame timestamp
-                            this.RelativeTime = newDepthFrame.RelativeTime;
-
-                            FrameDescription colorFrameDescription = newColorFrame.FrameDescription;
-                            int colorWidth = colorFrameDescription.Width;
-                            int colorHeight = colorFrameDescription.Height;
-
-                            if ((colorWidth * colorHeight * sizeof(int)) == this.colorFrame.RawPixelData.Length)
-                            {
-                                newColorFrame.CopyConvertedFrameDataToArray(this.colorFrame.RawPixelData, ColorImageFormat.Bgra);
-
-                                validColor = true;
-                            }
-
-                            FrameDescription depthFrameDescription = newDepthFrame.FrameDescription;
-                            int depthWidth = depthFrameDescription.Width;
-                            int depthHeight = depthFrameDescription.Height;
-
-                            if ((depthWidth * depthHeight) == this.depthFrame.Pixels.Length)
-                            {
-                                newDepthFrame.CopyFrameDataToArray(this.depthFrame.Pixels);
-
-                                validDepth = true;
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // ignore if the frame is no longer available
-            }
-            finally
-            {
-                // MultiSourceFrame, DepthFrame, ColorFrame, BodyIndexFrame are IDispoable
-                if (newDepthFrame != null)
-                {
-                    newDepthFrame.Dispose();
-                    newDepthFrame = null;
-                }
-
-                if (newColorFrame != null)
-                {
-                    newColorFrame.Dispose();
-                    newColorFrame = null;
-                }
-
-                if (multiSourceFrame != null)
-                {
-                    multiSourceFrame = null;
-                }
-            }
-
-            if (validDepth)
-            {
-                // Signal worker thread to process
-                this.depthReadyEvent.Set();
-            }
-
-            if (validColor)
-            {
-                // Signal worker thread to process
-                this.colorReadyEvent.Set();
-            }
-        }
-
-        /// <summary>
         /// The main Kinect Fusion process function
         /// </summary>
         private void Process()
@@ -1473,17 +1287,17 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                 try
                 {
                     // Convert depth to float and render depth frame
-                    this.ProcessDepthData();
+                    this.ProcessDepthAndColorData();
 
                     try
                     {
                         // Track camera pose
                         ICameraPose calculatedCameraPos = poseAlignmentModule.AlignFrame(
-                            this.depthFrame,
-                            this.colorFrame,
+                            this.frameSource.DepthFrame,
+                            this.frameSource.ColorFrame,
                             this.volume,
                             this.currentCameraPose,
-                            this.mirrorDepth
+                            this.MirrorDepth
                         );
 
                         this.ShowStatusMessageLowPriority(poseAlignmentModule.CameraPoseFinderStatus);
@@ -1582,7 +1396,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// <summary>
         /// Process the depth input for camera tracking
         /// </summary>
-        private void ProcessDepthData()
+        private void ProcessDepthAndColorData()
         {
             // To enable playback of a .xef file through Kinect Studio and reset of the reconstruction
             // if the .xef loops, we test for when the frame timestamp has skipped a large number. 
@@ -1591,19 +1405,11 @@ namespace Tetzlaff.ReflectanceAcquisition.App
             // milliseconds if this is a problem.
             if (this.autoResetReconstructionOnTimeSkip)
             {
-                this.CheckResetTimeStamp(this.RelativeTime);
+                this.CheckResetTimeStamp(this.frameSource.RelativeTime);
             }
 
-            // Lock the depth operations
-            lock (this.rawDataLock)
-            {
-                this.volume.DepthToDepthFloatFrame(
-                    this.depthFrame.Pixels,
-                    this.depthFrame,
-                    this.minDepthClip,
-                    this.maxDepthClip,
-                    this.MirrorDepth);
-            }
+            this.frameSource.RefreshDepthFrame();
+            this.frameSource.RefreshColorFrame();
 
             // Render depth float frame
             this.Dispatcher.BeginInvoke(
@@ -1618,101 +1424,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                     this.RenderKinectColorImage(
                         ref this.deltaFromReferenceFrameBitmap,
                         this.deltaFromReferenceImage)));
-        }
-
-        /// <summary>
-        /// Process the color and depth inputs, converting the color into the depth space
-        /// </summary>
-        private unsafe void MapColorToDepth()
-        {
-            this.mapper.MapDepthFrameToColorSpace(this.depthFrame.Pixels, this.colorCoordinates);
-
-            lock (this.rawDataLock)
-            {
-                if (this.mirrorDepth)
-                {
-                    // Here we make use of unsafe code to just copy the whole pixel as an int for performance reasons, as we do
-                    // not need access to the individual rgba components.
-                    fixed (byte* ptrColorPixels = this.colorFrame.RawPixelData)
-                    {
-                        int* rawColorPixels = (int*)ptrColorPixels;
-
-                        Parallel.For(
-                            0,
-                            this.depthHeight,
-                            y =>
-                            {
-                                int destIndex = y * this.depthWidth;
-
-                                for (int x = 0; x < this.depthWidth; ++x, ++destIndex)
-                                {
-                                    // calculate index into depth array
-                                    int colorInDepthX = (int)Math.Floor(colorCoordinates[destIndex].X + 0.5);
-                                    int colorInDepthY = (int)Math.Floor(colorCoordinates[destIndex].Y + 0.5);
-
-                                    // make sure the depth pixel maps to a valid point in color space
-                                    if (colorInDepthX >= 0 && colorInDepthX < this.colorWidth && colorInDepthY >= 0
-                                        && colorInDepthY < this.colorHeight && depthFrame.Pixels[destIndex] != 0)
-                                    {
-                                        // Calculate index into color array
-                                        int sourceColorIndex = colorInDepthX + (colorInDepthY * this.colorWidth);
-
-                                        // Copy color pixel
-                                        this.resampledColorImagePixelsAlignedToDepth[destIndex] = rawColorPixels[sourceColorIndex];
-                                    }
-                                    else
-                                    {
-                                        this.resampledColorImagePixelsAlignedToDepth[destIndex] = 0;
-                                    }
-                                }
-                            });
-                    }
-                }
-                else
-                {
-                    // Here we make use of unsafe code to just copy the whole pixel as an int for performance reasons, as we do
-                    // not need access to the individual rgba components.
-                    fixed (byte* ptrColorPixels = this.colorFrame.RawPixelData)
-                    {
-                        int* rawColorPixels = (int*)ptrColorPixels;
-
-                        // Horizontal flip the color image as the standard depth image is flipped internally in Kinect Fusion
-                        // to give a viewpoint as though from behind the Kinect looking forward by default.
-                        Parallel.For(
-                            0,
-                            this.depthHeight,
-                            y =>
-                            {
-                                int destIndex = y * this.depthWidth;
-                                int flippedDestIndex = destIndex + (this.depthWidth - 1); // horizontally mirrored
-
-                                for (int x = 0; x < this.depthWidth; ++x, ++destIndex, --flippedDestIndex)
-                                {
-                                    // calculate index into depth array
-                                    int colorInDepthX = (int)Math.Floor(colorCoordinates[destIndex].X + 0.5);
-                                    int colorInDepthY = (int)Math.Floor(colorCoordinates[destIndex].Y + 0.5);
-
-                                    // make sure the depth pixel maps to a valid point in color space
-                                    if (colorInDepthX >= 0 && colorInDepthX < this.colorWidth && colorInDepthY >= 0
-                                        && colorInDepthY < this.colorHeight && depthFrame.Pixels[destIndex] != 0)
-                                    {
-                                        // Calculate index into color array- this will perform a horizontal flip as well
-                                        int sourceColorIndex = colorInDepthX + (colorInDepthY * this.colorWidth);
-
-                                        // Copy color pixel
-                                        this.resampledColorImagePixelsAlignedToDepth[flippedDestIndex] = rawColorPixels[sourceColorIndex];
-                                    }
-                                    else
-                                    {
-                                        this.resampledColorImagePixelsAlignedToDepth[flippedDestIndex] = 0;
-                                    }
-                                }
-                            });
-                    }
-                }
-            }
-
-            this.resampledColorFrameDepthAligned.CopyPixelDataFrom(this.resampledColorImagePixelsAlignedToDepth);
         }
 
         /// <summary>
@@ -1731,7 +1442,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                     poseAlignmentModule.ResetTracking();
                 }
 
-                geometryIntegrationModule.IntegrateGeometry(this.depthFrame, this.volume, this.currentCameraPose);
+                geometryIntegrationModule.IntegrateGeometry(this.frameSource.DepthFrame, this.volume, this.currentCameraPose);
             }
         }
 
@@ -1792,21 +1503,21 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// <param name="image">UI image component to render depth float frame to</param>
         private void RenderDepthFloatImage(ref WriteableBitmap bitmap, System.Windows.Controls.Image image)
         {
-            if (null == this.depthFrame)
+            if (null == this.frameSource.DepthFrame)
             {
                 return;
             }
 
-            if (null == bitmap || this.depthFrame.Width != bitmap.Width || this.depthFrame.Height != bitmap.Height)
+            if (null == bitmap || this.frameSource.DepthFrame.Width != bitmap.Width || this.frameSource.DepthFrame.Height != bitmap.Height)
             {
                 // Create bitmap of correct format
-                bitmap = new WriteableBitmap(this.depthFrame.Width, this.depthFrame.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
+                bitmap = new WriteableBitmap(this.frameSource.DepthFrame.Width, this.frameSource.DepthFrame.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
 
                 // Set bitmap as source to UI image object
                 image.Source = bitmap;
             }
 
-            this.depthFrame.FusionImageFrame.CopyPixelDataTo(this.depthFloatFrameDepthPixels);
+            this.frameSource.DepthFrame.FusionImageFrame.CopyPixelDataTo(this.depthFloatFrameDepthPixels);
 
             // Calculate color of pixels based on depth of each pixel
             float range = 4.0f;
@@ -1815,11 +1526,11 @@ namespace Tetzlaff.ReflectanceAcquisition.App
 
             Parallel.For(
             0,
-            this.depthFrame.Height,
+            this.frameSource.DepthFrame.Height,
             y =>
             {
-                int index = y * this.depthFrame.Width;
-                for (int x = 0; x < this.depthFrame.Width; ++x, ++index)
+                int index = y * this.frameSource.DepthFrame.Width;
+                for (int x = 0; x < this.frameSource.DepthFrame.Width; ++x, ++index)
                 {
                     float depth = this.depthFloatFrameDepthPixels[index];
                     int intensity = (depth >= minRange) ? ((byte)((depth - minRange) * oneOverRange)) : 0;
@@ -1830,7 +1541,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
 
             // Copy colored pixels to bitmap
             bitmap.WritePixels(
-                        new Int32Rect(0, 0, this.depthFrame.Width, this.depthFrame.Height),
+                        new Int32Rect(0, 0, this.frameSource.DepthFrame.Width, this.frameSource.DepthFrame.Height),
                         this.depthFloatFramePixelsArgb,
                         bitmap.PixelWidth * sizeof(int),
                         0);
@@ -1843,39 +1554,36 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// <param name="image">UI image component to render color float frame to</param>
         private void RenderKinectColorImage(ref WriteableBitmap bitmap, System.Windows.Controls.Image image)
         {
-            if (null == this.colorFrame.RawPixelData)
+            if (null == this.frameSource.ColorFrame.RawPixels)
             {
                 return;
             }
 
-            if (null == bitmap || this.colorWidth != bitmap.Width || this.colorHeight != bitmap.Height)
+            if (null == bitmap || this.frameSource.ColorWidth != bitmap.Width || this.frameSource.ColorHeight != bitmap.Height)
             {
                 // Create bitmap of correct format
-                bitmap = new WriteableBitmap(this.colorWidth, this.colorHeight, 96.0, 96.0, PixelFormats.Bgr32, null);
+                bitmap = new WriteableBitmap(this.frameSource.ColorWidth, this.frameSource.ColorHeight, 96.0, 96.0, PixelFormats.Bgr32, null);
 
                 // Set bitmap as source to UI image object
                 image.Source = bitmap;
             }
 
-            lock (rawDataLock)
-            {
-                Parallel.For(
+            Parallel.For(
                 0,
-                this.colorHeight,
+                this.frameSource.ColorHeight,
                 y =>
                 {
-                    int index = y * this.colorWidth;
-                    for (int x = 0; x < this.colorWidth; ++x, ++index)
+                    int index = y * this.frameSource.ColorWidth;
+                    for (int x = 0; x < this.frameSource.ColorWidth; ++x, ++index)
                     {
-                        int bufferIndexBase = 4 * (y * this.colorWidth + this.colorWidth - x - 1);
-                        this.colorFramePixelsArgb[index] = (255 << 24) | (colorFrame.RawPixelData[bufferIndexBase + 2] << 16) | (colorFrame.RawPixelData[bufferIndexBase + 1] << 8) | colorFrame.RawPixelData[bufferIndexBase + 0]; // set blue, green, red
+                        int bufferIndexBase = 4 * (y * this.frameSource.ColorWidth + this.frameSource.ColorWidth - x - 1);
+                        this.colorFramePixelsArgb[index] = (255 << 24) | (this.frameSource.ColorFrame.RawPixels[bufferIndexBase + 2] << 16) | (this.frameSource.ColorFrame.RawPixels[bufferIndexBase + 1] << 8) | this.frameSource.ColorFrame.RawPixels[bufferIndexBase + 0]; // set blue, green, red
                     }
                 });
-            }
 
             // Copy colored pixels to bitmap
             bitmap.WritePixels(
-                        new Int32Rect(0, 0, this.colorWidth, this.colorHeight),
+                        new Int32Rect(0, 0, this.frameSource.ColorWidth, this.frameSource.ColorHeight),
                         this.colorFramePixelsArgb,
                         bitmap.PixelWidth * sizeof(int),
                         0);
@@ -1939,7 +1647,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// </summary>
         private void ResetReconstruction()
         {
-            if (null == this.sensor)
+            if (null == this.frameSource)
             {
                 return;
             }
@@ -1965,7 +1673,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                         Tetzlaff.ReflectanceAcquisition.Pipeline.Math.Matrix4 worldToVolumeTransform = this.defaultWorldToVolumeTransform;
 
                         // Translate the volume in the Z axis by the minDepthClip distance
-                        float minDist = (this.minDepthClip < this.maxDepthClip) ? this.minDepthClip : this.maxDepthClip;
+                        float minDist = (this.frameSource.MinDepthClip < this.frameSource.MaxDepthClip) ? this.frameSource.MinDepthClip : this.frameSource.MaxDepthClip;
                         worldToVolumeTransform.M43 -= minDist * this.voxelsPerMeter;
 
                         this.volume.ResetReconstruction(this.currentCameraPose, worldToVolumeTransform); 
@@ -1995,7 +1703,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         private bool RecreateReconstruction()
         {
             // Check if sensor has been initialized
-            if (null == this.sensor)
+            if (null == this.frameSource)
             {
                 return false;
             }
@@ -2013,7 +1721,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                 // Set the world-view transform to identity, so the world origin is the initial camera location.
                 this.currentCameraPose = new CameraPose();
 
-                this.volume = new KinectReconstructionVolume(ColorReconstruction.FusionCreateReconstruction(volParam, ProcessorType, DeviceToUse, this.currentCameraPose.Matrix.ToKinectMatrix()));
+                this.volume = new KinectFusionReconstructionVolume(ColorReconstruction.FusionCreateReconstruction(volParam, ProcessorType, DeviceToUse, this.currentCameraPose.Matrix.ToKinectMatrix()));
 
                 this.defaultWorldToVolumeTransform = this.volume.CurrentWorldToVolumeTransform;
 
@@ -2118,7 +1826,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// <param name="e">Event arguments</param>
         private void ResetReconstructionButtonClick(object sender, RoutedEventArgs e)
         {
-            if (null == this.sensor)
+            if (null == this.frameSource)
             {
                 return;
             }
@@ -2641,26 +2349,20 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         {
             this.SafeDisposeFusionResources();
 
-            // Allocate depth frame
-            this.depthFrame = new KinectDepthFrame(this.depthWidth, this.depthHeight);
-
-            // Allocate color frame
-            this.colorFrame = new KinectColorFrame(this.colorWidth, this.colorHeight);
-
             // Allocate color frame for color data from Kinect mapped into depth frame
-            this.resampledColorFrameDepthAligned = new FusionColorImageFrame(this.depthWidth, this.depthHeight);
+            this.resampledColorFrameDepthAligned = new FusionColorImageFrame(this.frameSource.DepthWidth, this.frameSource.DepthHeight);
 
             // Allocate point cloud frame
-            this.raycastPointCloudFrame = new FusionPointCloudImageFrame(this.depthWidth, this.depthHeight);
+            this.raycastPointCloudFrame = new FusionPointCloudImageFrame(this.frameSource.DepthWidth, this.frameSource.DepthHeight);
 
             // Allocate shaded surface frame
-            this.shadedSurfaceFrame = new FusionColorImageFrame(this.depthWidth, this.depthHeight);
+            this.shadedSurfaceFrame = new FusionColorImageFrame(this.frameSource.DepthWidth, this.frameSource.DepthHeight);
 
             // Allocate shaded surface normals frame
-            this.shadedSurfaceNormalsFrame = new FusionColorImageFrame(this.depthWidth, this.depthHeight);
+            this.shadedSurfaceNormalsFrame = new FusionColorImageFrame(this.frameSource.DepthWidth, this.frameSource.DepthHeight);
 
-            int depthImageSize = this.depthWidth * this.depthHeight;
-            int colorImageSize = this.colorWidth * this.colorHeight;
+            int depthImageSize = this.frameSource.DepthWidth * this.frameSource.DepthHeight;
+            int colorImageSize = this.frameSource.ColorWidth * this.frameSource.ColorHeight;
 
             // Create float pixel array
             this.depthFloatFrameDepthPixels = new float[depthImageSize];
@@ -2686,11 +2388,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// </summary>
         private void SafeDisposeFusionResources()
         {
-            if (null != this.depthFrame)
-            {
-                this.depthFrame.Dispose();
-            }
-
             if (null != this.resampledColorFrameDepthAligned)
             {
                 this.resampledColorFrameDepthAligned.Dispose();
@@ -2727,18 +2424,15 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                 int viewIndex = this.viewSetSize;
                 byte[] colorBufferCopy;
 
-                lock (this.rawDataLock)
-                {
-                    // Indicate that the main thread can proceed, since we have copied the view index and have a lock on the color buffer.
-                    canProceed = true;
+                // Quickly copy the color buffer directly so that it can be released and other threads can use it
+                colorBufferCopy = new byte[this.frameSource.ColorFrame.RawPixels.Length];
+                Array.Copy(this.frameSource.ColorFrame.RawPixels, colorBufferCopy, this.frameSource.ColorFrame.RawPixels.Length);
 
-                    // Quickly copy the color buffer directly so that it can be released and other threads can use it
-                    colorBufferCopy = new byte[colorFrame.RawPixelData.Length];
-                    Array.Copy(colorFrame.RawPixelData, colorBufferCopy, colorFrame.RawPixelData.Length);
+                // Indicate that the main thread can proceed, since we have copied the view index and the color buffer.
+                canProceed = true;
 
-                    // Yield so that this thread doesn't hog the CPU, hurting the framerate
-                    Thread.Yield();
-                }
+                // Yield so that this thread doesn't hog the CPU, hurting the framerate
+                Thread.Yield();
 
                 if (!Directory.Exists(lightfieldDirectory + "\\views"))
                 {
@@ -2749,8 +2443,8 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                 {
                     string path = lightfieldDirectory + "\\views\\" + string.Format("{0:D4}", viewIndex) + ".png";
 
-                    int width = this.sensor.ColorFrameSource.FrameDescription.Width;
-                    int height = this.sensor.ColorFrameSource.FrameDescription.Height;
+                    int width = this.frameSource.ColorWidth;
+                    int height = this.frameSource.ColorHeight;
 
                     // Now we copy the pixels one by one into the Bitmap object, which is slower, but allows to save as a PNG file
                     System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(width, height);
@@ -2820,15 +2514,15 @@ namespace Tetzlaff.ReflectanceAcquisition.App
             {
                 if (this.viewSetSize == 0)
                 {
-                    viewSetStreamWriter.WriteLine("c\t" + this.minDepthClip + "\t" + this.maxDepthClip);
+                    viewSetStreamWriter.WriteLine("c\t" + this.frameSource.MinDepthClip + "\t" + this.frameSource.MaxDepthClip);
 
                     // With a typical Kinect sensor, the aspect ratio should be 4:3, 
                     // and horizontal fov should be 62 degrees, which corresponds to a sensor width of 42 in Blender.
                     // Currently, there seem to be issues with non 1:1 aspect ratios in the light field morphing code base,
                     // so this line will probably need to be changed in the vset file manually to make it work.
                     viewSetStreamWriter.WriteLine("f\t0\t0\t" +
-                        (double)this.sensor.ColorFrameSource.FrameDescription.Width / (double)this.sensor.ColorFrameSource.FrameDescription.Height + "\t" +
-                        this.sensor.ColorFrameSource.FrameDescription.HorizontalFieldOfView);
+                        (double)this.frameSource.ColorWidth / (double)this.frameSource.ColorHeight + "\t" +
+                        this.frameSource.ColorHorizontalFieldOfView);
                 }
 
                 // Write the raw matrix to the log file for debugging purposes

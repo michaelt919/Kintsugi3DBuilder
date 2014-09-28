@@ -10,16 +10,16 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.Modules;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
 {
-    public class KinectGeometryIntegration : IGeometryIntegrationModule<IKinectDepthFrame, IKinectReconstructionVolume>
+    public class KinectFusionGeometryIntegration : IGeometryIntegrationModule<IKinectFusionDepthFrame, IKinectFusionReconstructionVolume>
     {
         public short IntegrationWeight { get; set; }
 
-        public KinectGeometryIntegration()
+        public KinectFusionGeometryIntegration()
         {
             this.IntegrationWeight = FusionDepthProcessor.DefaultIntegrationWeight;
         }
 
-        public void IntegrateGeometry(IKinectDepthFrame depthFrame, IKinectReconstructionVolume reconstructionVolume, ICameraPose cameraPose)
+        public void IntegrateGeometry(IKinectFusionDepthFrame depthFrame, IKinectFusionReconstructionVolume reconstructionVolume, ICameraPose cameraPose)
         {
             reconstructionVolume.IntegrateFrame(
                 depthFrame,

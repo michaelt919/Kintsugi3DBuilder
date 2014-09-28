@@ -8,10 +8,9 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
 {
-    public interface IKinectColorFrame : IColorFrame
+    public interface IKinectFusionColorFrame : IColorFrame
     {
         FusionColorImageFrame FusionImageFrame { get; }
-        byte[] RawPixelData { get; }
 
         /// <summary>
         /// Up sample color frame with nearest neighbor - replicates pixels

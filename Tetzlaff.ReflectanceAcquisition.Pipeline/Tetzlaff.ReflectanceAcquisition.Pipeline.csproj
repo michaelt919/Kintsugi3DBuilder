@@ -46,6 +46,12 @@
     <Compile Include="DataModels\IColorFrame.cs" />
     <Compile Include="DataModels\IDepthFrame.cs" />
     <Compile Include="DataModels\IFrame.cs" />
+    <Compile Include="DataModels\IRawColorFrame.cs" />
+    <Compile Include="DataModels\IRawDepthFrameFloat.cs" />
+    <Compile Include="DataModels\IRawDepthFrameFixed.cs" />
+    <Compile Include="DataModels\RawColorFrame.cs" />
+    <Compile Include="DataModels\RawDepthFrameFloat.cs" />
+    <Compile Include="DataModels\RawDepthFrameFixed.cs" />
     <Compile Include="Modules\IFrameSource.cs" />
     <Compile Include="DataModels\IReconstructionVolume.cs" />
     <Compile Include="Exceptions\CameraTrackingFailedException.cs" />
