@@ -14,7 +14,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
         int MaxAlignmentIterations { get; set; }
         Tetzlaff.ReflectanceAcquisition.Pipeline.Math.Matrix4 CurrentWorldToCameraTransform { get; }
 
-        bool AlignFrameToReconstruction(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, IKinectFusionDepthFrame deltaFromReferenceFrame, out float alignmentEnergy, ICameraPose poseEstimate);
+        bool AlignFrameToReconstruction(IKinectFusionDepthFrame depthFrame, IColorFrame colorFrame, IKinectFusionDepthFrame deltaFromReferenceFrame, out float alignmentEnergy, ICameraPose poseEstimate);
         void SmoothDepthFrame(IKinectFusionDepthFrame originalDepthFrame, IKinectFusionDepthFrame smoothDepthFrame, int kernelWidth, float distanceThreshold);
         void CalculatePointCloud(FusionPointCloudImageFrame pointCloudFrame, ICameraPose worldToCameraTransform);
         bool AlignPointClouds(

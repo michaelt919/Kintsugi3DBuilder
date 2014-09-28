@@ -41,13 +41,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataModels\DoubleBufferedRawDepthFrameFixed.cs" />
     <Compile Include="DataModels\IKinectFusionColorFrame.cs" />
     <Compile Include="DataModels\IKinectFusionDepthFrame.cs" />
     <Compile Include="DataModels\IKinectFusionReconstructionVolume.cs" />
+    <Compile Include="DataModels\IRawDepthFrameFixed.cs" />
+    <Compile Include="DataModels\IRawDepthFrameFloat.cs" />
     <Compile Include="DataModels\KinectFusionReconstructionVolume.cs" />
     <Compile Include="DataModels\KinectFusionColorFrame.cs" />
     <Compile Include="DataModels\KinectFusionDepthFrame.cs" />
     <Compile Include="DataModels\Matrix4Extension.cs" />
+    <Compile Include="DataModels\RawDepthFrameFixed.cs" />
+    <Compile Include="DataModels\RawDepthFrameFloat.cs" />
     <Compile Include="Exceptions\CameraPoseFinderFailedException.cs" />
     <Compile Include="Exceptions\CameraPoseFinderUnavailableException.cs" />
     <Compile Include="Exceptions\CameraPoseFinderHistoryFullException.cs" />

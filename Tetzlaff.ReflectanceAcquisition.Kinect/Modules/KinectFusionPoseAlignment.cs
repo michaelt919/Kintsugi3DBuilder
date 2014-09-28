@@ -14,7 +14,7 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.Modules;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
 {
-    public class KinectFusionPoseAlignment : IPoseAlignmentModule<IKinectFusionDepthFrame, IRawColorFrame, IKinectFusionReconstructionVolume>
+    public class KinectFusionPoseAlignment : IPoseAlignmentModule<IKinectFusionDepthFrame, IColorFrame, IKinectFusionReconstructionVolume>
     {
         private const int MAX_DEPTH_FRAME_WIDTH = 512;
         private const int MAX_DEPTH_FRAME_HEIGHT = 424;
@@ -425,7 +425,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
             }
         }
 
-        public ICameraPose AlignFrame(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, IKinectFusionReconstructionVolume volume, ICameraPose cameraPoseEstimate, bool mirrorDepth)
+        public ICameraPose AlignFrame(IKinectFusionDepthFrame depthFrame, IColorFrame colorFrame, IKinectFusionReconstructionVolume volume, ICameraPose cameraPoseEstimate, bool mirrorDepth)
         {
             // Check if camera pose finder is available
             this.CameraPoseFinderAvailable = this.IsCameraPoseFinderAvailable();
@@ -513,7 +513,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// <summary>
         /// Update the camera pose finder data.
         /// </summary>
-        private bool UpdateCameraPoseFinder(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, ICameraPose cameraPose)
+        private bool UpdateCameraPoseFinder(IKinectFusionDepthFrame depthFrame, IColorFrame colorFrame, ICameraPose cameraPose)
         {
             if (null == depthFrame || null == this.resampledColorFrame || null == this.cameraPoseFinder)
             {
@@ -556,7 +556,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         private bool TrackCameraAlignDepthFloatToReconstruction(
             bool calculateDeltaFrame, 
             IKinectFusionDepthFrame depthFrame,
-            IRawColorFrame colorFrame, 
+            IColorFrame colorFrame, 
             IKinectFusionReconstructionVolume volume,
             ref ICameraPose cameraPose)
         {
@@ -605,7 +605,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         private bool TrackCameraAlignPointClouds(
             bool calculateDeltaFrame, 
             IKinectFusionDepthFrame depthFrame,
-            IRawColorFrame colorFrame, 
+            IColorFrame colorFrame, 
             IKinectFusionReconstructionVolume volume, 
             ref ICameraPose cameraPose, 
             bool mirrorDepth)
@@ -681,7 +681,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// This is typically more successful than FindCameraPoseAlignDepthFloatToReconstruction.
         /// </summary>
         /// <returns>Returns true if a valid camera pose was found, otherwise false.</returns>
-        private ICameraPose FindCameraPoseAlignPointClouds(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, IKinectFusionReconstructionVolume volume)
+        private ICameraPose FindCameraPoseAlignPointClouds(IKinectFusionDepthFrame depthFrame, IColorFrame colorFrame, IKinectFusionReconstructionVolume volume)
         {
             if (!this.CameraPoseFinderAvailable)
             {
@@ -796,7 +796,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// Perform camera pose finding when tracking is lost using AlignDepthFloatToReconstruction.
         /// </summary>
         /// <returns>Returns true if a valid camera pose was found, otherwise false.</returns>
-        private ICameraPose FindCameraPoseAlignDepthFloatToReconstruction(IKinectFusionDepthFrame depthFrame, IRawColorFrame colorFrame, IKinectFusionReconstructionVolume volume)
+        private ICameraPose FindCameraPoseAlignDepthFloatToReconstruction(IKinectFusionDepthFrame depthFrame, IColorFrame colorFrame, IKinectFusionReconstructionVolume volume)
         {
             if (!this.CameraPoseFinderAvailable)
             {
@@ -913,7 +913,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
         /// <summary>
         /// Process input color image to make it equal in size to the depth image
         /// </summary>
-        private unsafe IKinectFusionColorFrame ResampleColorFrame(IRawColorFrame srcFrame, IKinectFusionColorFrame destFrame)
+        private unsafe IKinectFusionColorFrame ResampleColorFrame(IColorFrame srcFrame, IKinectFusionColorFrame destFrame)
         {
             if (null == srcFrame)
             {

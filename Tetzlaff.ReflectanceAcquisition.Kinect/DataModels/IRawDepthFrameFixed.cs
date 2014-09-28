@@ -7,7 +7,7 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
 {
-    public interface IRawDepthFrameFixed : IDepthFrame
+    public interface IRawDepthFrameFixed : IFrame
     {
         ushort[] RawPixels { get; }
     }

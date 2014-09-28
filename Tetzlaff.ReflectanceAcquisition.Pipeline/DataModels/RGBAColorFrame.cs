@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 
-namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
+namespace Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels
 {
-    public class RawColorFrame : IRawColorFrame
+    public class RGBAColorFrame : IColorFrame
     {
         public int Width { get; private set; }
 
@@ -19,7 +19,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
         /// </summary>
         public byte[] RawPixels { get; private set; }
 
-        public RawColorFrame(int width, int height, int maxUpsampleFactor = 1)
+        public RGBAColorFrame(int width, int height)
         {
             this.Width = width;
             this.Height = height;

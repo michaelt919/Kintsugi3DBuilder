@@ -7,9 +7,9 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 
 namespace Tetzlaff.ReflectanceAcquisition.Pipeline.Modules
 {
-    public interface IPoseAlignmentModule<DepthFrameType, ColorFrameType, ReconstructionVolumeType> 
-        where DepthFrameType : IDepthFrame
-        where ColorFrameType : IColorFrame
+    public interface IPoseAlignmentModule<DepthFrameType, ColorFrameType, ReconstructionVolumeType>
+        where DepthFrameType : IFrame
+        where ColorFrameType : IFrame
         where ReconstructionVolumeType : IReconstructionVolume
     {
         ICameraPose AlignFrame(DepthFrameType depthFrame, ColorFrameType colorFrame, ReconstructionVolumeType volume, ICameraPose cameraPoseEstimate, bool mirrorDepth);

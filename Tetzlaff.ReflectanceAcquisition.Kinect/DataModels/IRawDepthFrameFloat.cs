@@ -7,8 +7,8 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 
 namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
 {
-    public interface IRawColorFrame : IColorFrame
+    public interface IRawDepthFrameFloat : IFrame
     {
-        byte[] RawPixels { get; }
+        float[] RawPixels { get; }
     }
 }
