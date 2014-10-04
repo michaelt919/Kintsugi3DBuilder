@@ -85,16 +85,16 @@ namespace Tetzlaff.ReflectanceAcquisition.LightField.DataModels
                 int i = 0;
                 for (int y = 0; y < height; y++)
                 {
+                    i += margin;
                     for (int x = width - 1; x >= 0; x--)
                     {
-                        i += margin;
                         int b = colorFrame.RawPixels[i++];
                         int g = colorFrame.RawPixels[i++];
                         int r = colorFrame.RawPixels[i++];
                         int a = colorFrame.RawPixels[i++];
-                        i += margin;
                         bitmap.SetPixel(x, y, Color.FromArgb(255, r, g, b));
                     }
+                    i += margin; 
                 }
                 bitmap.Save(path);
             }
