@@ -20,6 +20,24 @@ namespace Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels
             }
         }
 
+        public ICameraProjection CameraProjection
+        {
+            get
+            {
+                return FrontBuffer.CameraProjection;
+            }
+            set
+            {
+                FrontBuffer.CameraProjection = value;
+                BackBuffer.CameraProjection = value;
+            }
+        }
+
+        public IColorFrame Clone()
+        {
+            return FrontBuffer.Clone();
+        }
+
         public ColorFrameType FrontBuffer { get; private set; }
         public ColorFrameType BackBuffer { get; private set; }
 

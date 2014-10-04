@@ -164,6 +164,15 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.Modules
                 new RGBAColorFrame(this.ColorWidth, this.ColorHeight),
                 new RGBAColorFrame(this.ColorWidth, this.ColorHeight));
 
+            this._colorFrame.CameraProjection = new CameraProjection
+            {
+                AspectRatio = (double)colorFrameDescription.Width / (double)colorFrameDescription.Height,
+                HorizontalFieldOfView = colorFrameDescription.HorizontalFieldOfView,
+                VerticalFieldOfView = colorFrameDescription.VerticalFieldOfView,
+                NearPlane = this.MinDepthClip,
+                FarPlane = this.MaxDepthClip
+            };
+
             // Add an event handler to be called whenever depth and color both have new data
             this._reader.MultiSourceFrameArrived += this.Reader_MultiSourceFrameArrived;
         }

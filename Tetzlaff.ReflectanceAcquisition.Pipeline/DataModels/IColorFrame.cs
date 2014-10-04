@@ -10,5 +10,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels
     public interface IColorFrame : IFrame
     {
         byte[] RawPixels { get; }
+        ICameraProjection CameraProjection { get; set; }
+        IColorFrame Clone();
     }
 }

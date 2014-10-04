@@ -27,6 +27,8 @@ namespace Tetzlaff.ReflectanceAcquisition.App
     using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
     using Tetzlaff.ReflectanceAcquisition.Pipeline.Exceptions;
     using Tetzlaff.ReflectanceAcquisition.Kinect.Exceptions;
+    using Tetzlaff.ReflectanceAcquisition.LightField.DataModels;
+using Tetzlaff.ReflectanceAcquisition.LightField.Modules;
 
     /// <summary>
     /// The implementation of the MainWindow class.
@@ -184,11 +186,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         private int processedFrameCount = 0;
 
         /// <summary>
-        /// The number of frames in the view set
-        /// </summary>
-        private int viewSetSize = 0;
-
-        /// <summary>
         /// Timestamp of last depth frame
         /// </summary>
         private TimeSpan lastFrameTimestamp;
@@ -227,11 +224,14 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         private KinectFrameSource frameSource = null;
         private KinectFusionPoseAlignment poseAlignmentModule = null;
         private KinectFusionGeometryIntegration geometryIntegrationModule = null;
+        private LightFieldIntegration lightFieldIntegration = null;
 
         /// <summary>
         /// The Kinect Fusion volume, enabling color reconstruction
         /// </summary>
         private KinectFusionReconstructionVolume volume;
+
+        private LightFieldDirectory lightField;
 
         /// <summary>
         /// Kinect color mapped into depth frame
@@ -459,19 +459,11 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// </summary>
         private ICameraPose virtualCameraPose = new CameraPose();
 
-        /// <summary>
-        /// Flag set true if at some point color has been captured. 
-        /// Used when writing .Ply mesh files to output vertex color.
-        /// </summary>
-        private bool colorCaptured;
-
-        private string lightfieldDirectory = null;
-
-        private StreamWriter viewSetStreamWriter = null;
-
-        private StreamWriter logFileStreamWriter = null;
-
         private Thread saveViewThread = null;
+
+        private string outputDirectory;
+
+        //private bool ForceLightField1To1AspectRatio = true; // Required for LFMorphing code base
 
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
@@ -1101,6 +1093,8 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                 this.PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IntegrationWeight"));
             }
 
+            lightFieldIntegration = new LightFieldIntegration();
+
             // Create the camera frustum 3D graphics in WPF3D
             this.virtualCamera.CreateFrustum3DGraphics(this.GraphicsViewport, this.frameSource.DepthWidth, this.frameSource.DepthHeight);
 
@@ -1118,7 +1112,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         /// <param name="e">Event arguments</param>
         private void WindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            CloseViewSetFile();
+            this.lightField.FinalizeReflectance();
 
             // Stop timer
             if (null != this.fpsTimer)
@@ -1312,10 +1306,8 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                         // Only save the view if there isn't already an active view saving thread
                         if (saveViewThread == null || !saveViewThread.IsAlive)
                         {
-                            if (AddViewSetEntry(calculatedCameraPos.Matrix.ToKinectMatrix())) // Only save the image if the entry was successfuly added to the vset file
+                            //if (AddViewSetEntry(calculatedCameraPos.Matrix.ToKinectMatrix())) // Only save the image if the entry was successfuly added to the vset file
                             {
-                                logFileStreamWriter.WriteLine("\tAlignment energy: " + poseAlignmentModule.AlignmentEnergy);
-                                this.viewSetSize++;
                                 canProceed = false;
                                 saveViewThread = new Thread(new ThreadStart(this.SaveLightFieldView));
                                 saveViewThread.Start();
@@ -1801,8 +1793,6 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                 Array.Clear(this.resampledColorImagePixelsAlignedToDepth, 0, this.resampledColorImagePixelsAlignedToDepth.Length);
                 this.resampledColorFrameDepthAligned.CopyPixelDataFrom(this.resampledColorImagePixelsAlignedToDepth);
             }
-
-            this.colorCaptured = false;
         }
 
         /// <summary>
@@ -1852,7 +1842,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
             {
                 this.ShowStatusMessage(Properties.Resources.SavingMesh);
 
-                ColorMesh mesh = null;
+                GeometryMeshBase mesh = null;
 
                 lock (this.volumeLock)
                 {
@@ -1874,7 +1864,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                 }
 
                 Microsoft.Win32.SaveFileDialog dialog = new Microsoft.Win32.SaveFileDialog();
-                dialog.InitialDirectory = this.lightfieldDirectory;
+                dialog.InitialDirectory = this.outputDirectory;
 
                 if (true == this.stlFormat.IsChecked)
                 {
@@ -1899,7 +1889,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                         using (BinaryWriter writer = new BinaryWriter(dialog.OpenFile()))
                         {
                             // Default to flip Y,Z coordinates on save
-                            KinectFusionHelper.SaveBinaryStlMesh(mesh, writer, true);
+                            mesh.SaveBinaryStlMesh(writer, true);
                         }
                     }
                     else if (true == this.objFormat.IsChecked)
@@ -1907,7 +1897,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                         using (StreamWriter writer = new StreamWriter(dialog.FileName))
                         {
                             // Default to flip Y,Z coordinates on save
-                            KinectFusionHelper.SaveAsciiObjMesh(mesh, writer, true);
+                            mesh.SaveAsciiObjMesh(writer, true);
                         }
                     }
                     else
@@ -1915,7 +1905,7 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                         using (StreamWriter writer = new StreamWriter(dialog.FileName))
                         {
                             // Default to flip Y,Z coordinates on save
-                            KinectFusionHelper.SaveAsciiPlyMesh(mesh, writer, true, this.colorCaptured);
+                            mesh.SaveAsciiPlyMesh(writer, true);
                         }
                     }
 
@@ -2421,12 +2411,8 @@ namespace Tetzlaff.ReflectanceAcquisition.App
         {
             if (this.captureColor)
             {
-                int viewIndex = this.viewSetSize;
-                byte[] colorBufferCopy;
-
                 // Quickly copy the color buffer directly so that it can be released and other threads can use it
-                colorBufferCopy = new byte[this.frameSource.ColorFrame.RawPixels.Length];
-                Array.Copy(this.frameSource.ColorFrame.RawPixels, colorBufferCopy, this.frameSource.ColorFrame.RawPixels.Length);
+                IColorFrame colorFrameCopy = frameSource.ColorFrame.Clone();
 
                 // Indicate that the main thread can proceed, since we have copied the view index and the color buffer.
                 canProceed = true;
@@ -2434,37 +2420,24 @@ namespace Tetzlaff.ReflectanceAcquisition.App
                 // Yield so that this thread doesn't hog the CPU, hurting the framerate
                 Thread.Yield();
 
-                if (!Directory.Exists(lightfieldDirectory + "\\views"))
-                {
-                    // Create the view directory if it doesn't already exist
-                    Directory.CreateDirectory(lightfieldDirectory + "\\views");
-                }
-                if (lightfieldDirectory != null)
-                {
-                    string path = lightfieldDirectory + "\\views\\" + string.Format("{0:D4}", viewIndex) + ".png";
-
-                    int width = this.frameSource.ColorWidth;
-                    int height = this.frameSource.ColorHeight;
-
-                    // Now we copy the pixels one by one into the Bitmap object, which is slower, but allows to save as a PNG file
-                    System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(width, height);
-                    int i = 0;
-                    for (int y = 0; y < height; y++)
-                    {
-                        for (int x = width-1; x >= 0; x--)
-                        {
-                            int b = colorBufferCopy[i++];
-                            int g = colorBufferCopy[i++];
-                            int r = colorBufferCopy[i++];
-                            int a = colorBufferCopy[i++];
-                            bitmap.SetPixel(x, y, System.Drawing.Color.FromArgb(255, r, g, b));
-                        }
-                    }
-                    bitmap.Save(path);
-                }
+                lightFieldIntegration.IntegrateReflectance(colorFrameCopy, lightField, currentCameraPose, poseAlignmentModule.AlignmentEnergy);
             }
             else canProceed = true; // Let the main thread proceed if we aren't saving the image
         }
+
+        ///// <summary>
+        ///// Add an entry for the current camera pose to the view set (vset) file
+        ///// </summary>
+        ///// <param name="m">The camera-to-world transformation matrix</param>
+        ///// <returns>true if added successfully, false if no entry was added</returns>
+        //private bool AddViewSetEntry(Matrix4 m)
+        //{
+        //    if (this.captureColor)
+        //    {
+        //        return lightFieldIntegration.IntegrateReflectance();
+        //    }
+        //    else return false;
+        //}
 
         /// <summary>
         /// Prompts the user for a directory in which to create a light field, and opens the corresponding view set (vset) file to be written to.
@@ -2476,122 +2449,10 @@ namespace Tetzlaff.ReflectanceAcquisition.App
             dialog.Description = "Select a light field output directory:";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                lightfieldDirectory = dialog.SelectedPath;
-                viewSetStreamWriter = new StreamWriter(lightfieldDirectory + "\\default.vset");
-                logFileStreamWriter = new StreamWriter(lightfieldDirectory + "\\log.txt");
+                outputDirectory = dialog.SelectedPath;
+                this.lightField = new LightFieldDirectory(outputDirectory);
+                this.lightField.Force1To1AspectRatio = this.ForceLightField1To1AspectRatio;
             }
-        }
-
-        /// <summary>
-        /// Completes the view set file, and closes the streams for both the view set file and the log file.
-        /// </summary>
-        private void CloseViewSetFile()
-        {
-            if (viewSetStreamWriter != null)
-            {
-                for (int i = 0; i < this.viewSetSize; i++)
-                {
-                    viewSetStreamWriter.WriteLine("v\t" + i + "\t0\t0\tviews/" + string.Format("{0:D4}", i + 1) + ".png");
-                }
-                viewSetStreamWriter.Flush();
-                viewSetStreamWriter.Close();
-            }
-            if (logFileStreamWriter != null)
-            {
-                logFileStreamWriter.Flush();
-                logFileStreamWriter.Close();
-            }
-        }
-
-        /// <summary>
-        /// Add an entry for the current camera pose to the view set (vset) file
-        /// </summary>
-        /// <param name="m">The camera-to-world transformation matrix</param>
-        /// <returns>true if added successfully, false if no entry was added</returns>
-        private bool AddViewSetEntry(Matrix4 m)
-        {
-            if (viewSetStreamWriter != null && this.captureColor)
-            {
-                if (this.viewSetSize == 0)
-                {
-                    viewSetStreamWriter.WriteLine("c\t" + this.frameSource.MinDepthClip + "\t" + this.frameSource.MaxDepthClip);
-
-                    // With a typical Kinect sensor, the aspect ratio should be 4:3, 
-                    // and horizontal fov should be 62 degrees, which corresponds to a sensor width of 42 in Blender.
-                    // Currently, there seem to be issues with non 1:1 aspect ratios in the light field morphing code base,
-                    // so this line will probably need to be changed in the vset file manually to make it work.
-                    viewSetStreamWriter.WriteLine("f\t0\t0\t" +
-                        (double)this.frameSource.ColorWidth / (double)this.frameSource.ColorHeight + "\t" +
-                        this.frameSource.ColorHorizontalFieldOfView);
-                }
-
-                // Write the raw matrix to the log file for debugging purposes
-                logFileStreamWriter.Write("View " + (this.viewSetSize + 1) + ":\t");
-
-                logFileStreamWriter.Write("Raw matrix values:\t" +
-                    m.M11 + "\t" + m.M12 + "\t" + m.M13 + "\t" + m.M14 + "\t" +
-                    m.M21 + "\t" + m.M22 + "\t" + m.M23 + "\t" + m.M24 + "\t" +
-                    m.M31 + "\t" + m.M32 + "\t" + m.M33 + "\t" + m.M34 + "\t" +
-                    m.M41 + "\t" + m.M42 + "\t" + m.M43 + "\t" + m.M44 + "\t"
-                );
-
-                // Take the upper 3x3 matrix transposed (the inverted rotation matrix) and negate the values that are affected by flipping across the x-axis
-                Matrix3D r = new Matrix3D(m.M11, -m.M21, -m.M31, 0.0, -m.M12, m.M22, m.M32, 0.0, -m.M13, m.M23, m.M33, 0.0, 0.0, 0.0, 0.0, 1.0);
-
-                // Flip across the x-axis, shift by 0.05 (approximate offset between the depth and RGB cameras), then rotate by the inverted rotation matrix
-                Vector3D pos = new Vector3D(-m.M41 + 0.05, m.M42, m.M43);
-                pos = r.Transform(pos);
-
-                // Convert rotation matrix to quaternion
-                double trace = r.M11 + r.M22 + r.M33;
-                double w, x, y, z;
-                if (trace > 0)
-                {
-                    double s = 0.5 / Math.Sqrt(trace + 1.0);
-                    w = 0.25 / s;
-                    x = (r.M32 - r.M23) * s;
-                    y = (r.M13 - r.M31) * s;
-                    z = (r.M21 - r.M12) * s;
-                    logFileStreamWriter.Write("\tQuaternion case 1");
-                }
-                else
-                {
-                    if (r.M11 > r.M22 && r.M11 > r.M33)
-                    {
-                        double s = 2.0 * Math.Sqrt(1.0 + r.M11 - r.M22 - r.M33);
-                        w = (r.M32 - r.M23) / s;
-                        x = 0.25 * s;
-                        y = (r.M12 + r.M21) / s;
-                        z = (r.M13 + r.M31) / s;
-                        logFileStreamWriter.Write("\tQuaternion case 2");
-                    }
-                    else if (r.M22 > r.M33)
-                    {
-                        double s = 2.0 * Math.Sqrt(1.0 + r.M22 - r.M11 - r.M33);
-                        w = (r.M13 - r.M31) / s;
-                        x = (r.M12 + r.M21) / s;
-                        y = 0.25 * s;
-                        z = (r.M23 + r.M32) / s;
-                        logFileStreamWriter.Write("\tQuaternion case 3");
-                    }
-                    else
-                    {
-                        double s = 2.0 * Math.Sqrt(1.0 + r.M33 - r.M11 - r.M22);
-                        w = (r.M21 - r.M12) / s;
-                        x = (r.M13 + r.M31) / s;
-                        y = (r.M23 + r.M32) / s;
-                        z = 0.25 * s;
-                        logFileStreamWriter.Write("\tQuaternion case 4");
-                    }
-                }
-
-                // Write the camera offset, rotation quaternion, and image filename to the vset file
-                viewSetStreamWriter.WriteLine("p\t" + pos.X + "\t" + pos.Y + "\t" + pos.Z + "\t" +
-                    x + "\t" + y + "\t" + z + "\t" + w + "\tviews\\" + string.Format("{0:D4}", this.viewSetSize + 1) + ".png"
-                );
-                return true;
-            }
-            else return false;
         }
     }
 }
