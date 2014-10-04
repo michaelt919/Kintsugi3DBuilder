@@ -463,7 +463,7 @@ using Tetzlaff.ReflectanceAcquisition.LightField.Modules;
 
         private string outputDirectory;
 
-        //private bool ForceLightField1To1AspectRatio = true; // Required for LFMorphing code base
+        private bool ForceLightField1To1AspectRatio = false/*true*/; // Required for LFMorphing code base
 
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
