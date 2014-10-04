@@ -7,9 +7,10 @@ using Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels;
 
 namespace Tetzlaff.ReflectanceAcquisition.Pipeline.Modules
 {
-    public interface IGeometryIntegrationModule<DepthFrameType, RecontructionVolumeType>
-        where DepthFrameType : IFrame
+    public interface IReflectanceIntegrationModule<ColorFrameType, ReflectanceModelType>
+        where ColorFrameType : IFrame
+        where ReflectanceModelType : IReflectanceModel
     {
-        void IntegrateGeometry(DepthFrameType depthFrame, RecontructionVolumeType reconstructionVolume, ICameraPose cameraPose);
+
     }
 }

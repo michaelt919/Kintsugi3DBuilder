@@ -39,13 +39,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataModels\CameraProjection.cs" />
     <Compile Include="DataModels\DoubleBufferedColorFrame.cs" />
+    <Compile Include="DataModels\GeometryMeshBase.cs" />
+    <Compile Include="DataModels\ICameraProjection.cs" />
+    <Compile Include="DataModels\IMesh.cs" />
+    <Compile Include="DataModels\IReflectanceModel.cs" />
     <Compile Include="DataModels\PoseAlignedFrame.cs" />
     <Compile Include="DataModels\CameraPose.cs" />
     <Compile Include="DataModels\ICameraPose.cs" />
     <Compile Include="DataModels\IFrame.cs" />
     <Compile Include="DataModels\IColorFrame.cs" />
     <Compile Include="DataModels\RGBAColorFrame.cs" />
+    <Compile Include="DataModels\Vertex3D.cs" />
     <Compile Include="Modules\IFrameSource.cs" />
     <Compile Include="DataModels\IReconstructionVolume.cs" />
     <Compile Include="Exceptions\CameraTrackingFailedException.cs" />
@@ -54,6 +60,7 @@
     <Compile Include="Math\Vector3.cs" />
     <Compile Include="Modules\IGeometryIntegrationModule.cs" />
     <Compile Include="Modules\IPoseAlignmentModule.cs" />
+    <Compile Include="Modules\IReflectanceIntegrationModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />

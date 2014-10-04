@@ -108,9 +108,9 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
             _reconstruction.ResetReconstruction(cameraPose.Matrix.ToKinectMatrix(), worldToVolumeTransform.ToKinectMatrix());
         }
 
-        public ColorMesh CalculateMesh(int p)
+        public GeometryMeshBase CalculateMesh(int p)
         {
-            return _reconstruction.CalculateMesh(p);
+            return new KinectFusionGeometryMesh(_reconstruction.CalculateMesh(p));
         }
 
         public void DepthToDepthFloatFrame(ushort[] p1, IKinectFusionDepthFrame kinectDepthFrame, float p2, float p3, bool p4)

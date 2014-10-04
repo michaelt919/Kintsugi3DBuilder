@@ -27,7 +27,7 @@ namespace Tetzlaff.ReflectanceAcquisition.Kinect.DataModels
         void CalculatePointCloudAndDepth(FusionPointCloudImageFrame fusionPointCloudImageFrame, IKinectFusionDepthFrame kinectDepthFrame, IKinectFusionColorFrame kinectColorFrame, ICameraPose worldToCameraTransform);
         void ResetReconstruction(ICameraPose cameraPose);
         void ResetReconstruction(ICameraPose cameraPose, Pipeline.Math.Matrix4 worldToVolumeTransform);
-        ColorMesh CalculateMesh(int p);
+        GeometryMeshBase CalculateMesh(int p);
         void DepthToDepthFloatFrame(ushort[] p1, IKinectFusionDepthFrame kinectDepthFrame, float p2, float p3, bool p4);
         void IntegrateFrame(IKinectFusionDepthFrame depthFrame, short p, ICameraPose cameraPose);
     }

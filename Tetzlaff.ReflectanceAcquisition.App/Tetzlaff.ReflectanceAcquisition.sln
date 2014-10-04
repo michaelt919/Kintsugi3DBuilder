@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tetzlaff.ReflectanceAcquisi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tetzlaff.ReflectanceAcquisition.Kinect", "..\Tetzlaff.ReflectanceAcquisition.Kinect\Tetzlaff.ReflectanceAcquisition.Kinect.csproj", "{5856CEC7-6D42-41E5-8EB0-33D78EB4B667}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tetzlaff.ReflectanceAcquisition.LightField", "..\Tetzlaff.ReflectanceAcquisition.LightField\Tetzlaff.ReflectanceAcquisition.LightField.csproj", "{B22B4129-55BB-415E-853A-CB42E0E03F36}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{5856CEC7-6D42-41E5-8EB0-33D78EB4B667}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5856CEC7-6D42-41E5-8EB0-33D78EB4B667}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5856CEC7-6D42-41E5-8EB0-33D78EB4B667}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B22B4129-55BB-415E-853A-CB42E0E03F36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B22B4129-55BB-415E-853A-CB42E0E03F36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B22B4129-55BB-415E-853A-CB42E0E03F36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B22B4129-55BB-415E-853A-CB42E0E03F36}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5856CEC7-6D42-41E5-8EB0-33D78EB4B667}</ProjectGuid>
+    <ProjectGuid>{B22B4129-55BB-415E-853A-CB42E0E03F36}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Tetzlaff.ReflectanceAcquisition.Kinect</RootNamespace>
-    <AssemblyName>Tetzlaff.ReflectanceAcquisition.Kinect</AssemblyName>
+    <RootNamespace>Tetzlaff.ReflectanceAcquisition.LightField</RootNamespace>
+    <AssemblyName>Tetzlaff.ReflectanceAcquisition.LightField</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -20,7 +20,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,9 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Kinect, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,37 +41,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataModels\DoubleBufferedRawDepthFrameFixed.cs" />
-    <Compile Include="DataModels\IKinectFusionColorFrame.cs" />
-    <Compile Include="DataModels\IKinectFusionDepthFrame.cs" />
-    <Compile Include="DataModels\IKinectFusionReconstructionVolume.cs" />
-    <Compile Include="DataModels\IRawDepthFrameFixed.cs" />
-    <Compile Include="DataModels\IRawDepthFrameFloat.cs" />
-    <Compile Include="DataModels\KinectFusionGeometryMesh.cs" />
-    <Compile Include="DataModels\KinectFusionReconstructionVolume.cs" />
-    <Compile Include="DataModels\KinectFusionColorFrame.cs" />
-    <Compile Include="DataModels\KinectFusionDepthFrame.cs" />
-    <Compile Include="DataModels\Matrix4Extension.cs" />
-    <Compile Include="DataModels\RawDepthFrameFixed.cs" />
-    <Compile Include="DataModels\RawDepthFrameFloat.cs" />
-    <Compile Include="DataModels\Vector3Extension.cs" />
-    <Compile Include="Exceptions\CameraPoseFinderFailedException.cs" />
-    <Compile Include="Exceptions\CameraPoseFinderUnavailableException.cs" />
-    <Compile Include="Exceptions\CameraPoseFinderHistoryFullException.cs" />
-    <Compile Include="Exceptions\NoPoseFinderMatchesException.cs" />
-    <Compile Include="Exceptions\NoReadyKinectException.cs" />
-    <Compile Include="Exceptions\NotEnoughPoseFinderMatchesException.cs" />
-    <Compile Include="Exceptions\RawPixelsNotAvailableException.cs" />
-    <Compile Include="Modules\KinectFrameSource.cs" />
-    <Compile Include="Modules\KinectFusionGeometryIntegration.cs" />
-    <Compile Include="Modules\KinectFusionPoseAlignment.cs" />
+    <Compile Include="DataModels\ILightField.cs" />
+    <Compile Include="DataModels\LightFieldDirectory.cs" />
+    <Compile Include="Modules\LightFieldIntegration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.Kinect.Fusion\Microsoft.Kinect.Fusion.csproj">
-      <Project>{58851747-f078-44e1-94b0-99ef065b3319}</Project>
-      <Name>Microsoft.Kinect.Fusion</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Tetzlaff.ReflectanceAcquisition.Pipeline\Tetzlaff.ReflectanceAcquisition.Pipeline.csproj">
       <Project>{b4d19c5a-4ce9-4404-a39f-3294986e0708}</Project>
       <Name>Tetzlaff.ReflectanceAcquisition.Pipeline</Name>

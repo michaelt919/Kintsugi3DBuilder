@@ -156,6 +156,10 @@
       <Project>{5856cec7-6d42-41e5-8eb0-33d78eb4b667}</Project>
       <Name>Tetzlaff.ReflectanceAcquisition.Kinect</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Tetzlaff.ReflectanceAcquisition.LightField\Tetzlaff.ReflectanceAcquisition.LightField.csproj">
+      <Project>{b22b4129-55bb-415e-853a-cb42e0e03f36}</Project>
+      <Name>Tetzlaff.ReflectanceAcquisition.LightField</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Tetzlaff.ReflectanceAcquisition.Pipeline\Tetzlaff.ReflectanceAcquisition.Pipeline.csproj">
       <Project>{b4d19c5a-4ce9-4404-a39f-3294986e0708}</Project>
       <Name>Tetzlaff.ReflectanceAcquisition.Pipeline</Name>
