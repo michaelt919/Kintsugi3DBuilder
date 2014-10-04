@@ -124,7 +124,7 @@ namespace Tetzlaff.ReflectanceAcquisition.LightField.DataModels
                     // so this line will probably need to be changed in the vset file manually to make it work.
                     viewSetStreamWriter.WriteLine("f\t0\t0\t" +
                         (this.Force1To1AspectRatio ? 1.0 : cameraProjection.AspectRatio) + "\t" +
-                        (this.Force1To1AspectRatio ? cameraProjection.VerticalFieldOfView : cameraProjection.HorizontalFieldOfView);
+                        (this.Force1To1AspectRatio ? cameraProjection.VerticalFieldOfView : cameraProjection.HorizontalFieldOfView));
                 }
 
                 // Write the raw matrix to the log file for debugging purposes
