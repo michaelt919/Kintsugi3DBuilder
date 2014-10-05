@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels
 {
-    public interface ICameraProjection
+    public interface ICameraProjection : IEquatable<ICameraProjection>
     {
-        double NearPlane { get; set; }
-        double FarPlane { get; set; }
-        double AspectRatio { get; set; }
-        double HorizontalFieldOfView { get; set; }
-        double VerticalFieldOfView { get; set; }
+        double NearPlane { get; }
+        double FarPlane { get; }
+        double AspectRatio { get; }
+        double HorizontalFieldOfView { get; }
+        double VerticalFieldOfView { get; }
     }
 }

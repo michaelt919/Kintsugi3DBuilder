@@ -15,6 +15,6 @@ namespace Tetzlaff.ReflectanceAcquisition.LightField.DataModels
         int ViewCount { get; }
 
         void AddView(IColorFrame view, ICameraPose cameraPose, double alignmentEnergy);
-        void FinalizeReflectance();
+        void SaveViewSet();
     }
 }

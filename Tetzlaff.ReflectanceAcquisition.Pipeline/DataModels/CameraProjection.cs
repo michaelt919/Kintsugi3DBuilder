@@ -13,5 +13,14 @@ namespace Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels
         public double AspectRatio { get; set; }
         public double HorizontalFieldOfView { get; set; }
         public double VerticalFieldOfView { get; set; }
+
+        public bool Equals(ICameraProjection other)
+        {
+            return this.NearPlane == other.NearPlane &&
+                this.FarPlane == other.FarPlane &&
+                this.AspectRatio == other.AspectRatio &&
+                this.HorizontalFieldOfView == other.HorizontalFieldOfView &&
+                this.VerticalFieldOfView == other.VerticalFieldOfView;
+        }
     }
 }

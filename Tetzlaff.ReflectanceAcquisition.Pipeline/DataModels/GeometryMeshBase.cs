@@ -15,6 +15,48 @@ namespace Tetzlaff.ReflectanceAcquisition.Pipeline.DataModels
         public abstract ReadOnlyCollection<Vertex3D> Vertices { get; protected set; }
 
         /// <summary>
+        /// Centers the mesh around the centroid (the average vertex position)
+        /// </summary>
+        /// <returns>The offset the mesh is ultimately shifted by</returns>
+        public Vector3 CenterMesh()
+        {
+            Vector3 sumPositions = new Vector3();
+            foreach (Vertex3D vertex in Vertices)
+            {
+                sumPositions = new Vector3
+                {
+                    X = sumPositions.X + vertex.Position.X,
+                    Y = sumPositions.Y + vertex.Position.Y,
+                    Z = sumPositions.Z + vertex.Position.Z
+                };
+            }
+
+            Vector3 centroid = new Vector3
+            {
+                X = sumPositions.X / Vertices.Count,
+                Y = sumPositions.Y / Vertices.Count,
+                Z = sumPositions.Z / Vertices.Count
+            };
+
+            foreach (Vertex3D vertex in Vertices)
+            {
+                vertex.Position = new Vector3
+                {
+                    X = vertex.Position.X - centroid.X,
+                    Y = vertex.Position.Y - centroid.Y,
+                    Z = vertex.Position.Z - centroid.Z
+                };
+            }
+
+            return new Vector3
+            {
+                X = -centroid.X,
+                Y = -centroid.Y,
+                Z = -centroid.Z
+            };
+        }
+
+        /// <summary>
         /// Save mesh in binary .STL file
         /// </summary>
         /// <param name="mesh">Calculated mesh object</param>
