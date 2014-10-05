@@ -60,11 +60,11 @@ namespace Tetzlaff.ReflectanceAcquisition.Pipeline.Math
         }
 
         ///// <summary>
-        ///// Get Quaternion from Matrix3D rotation
+        ///// Get Quaternion from Matrix4 rotation
         ///// </summary>
-        ///// <param name="mat">A Matrix3D.</param>
+        ///// <param name="mat">A Matrix4 containing rotation in the upper-left 3x3</param>
         ///// <returns>Returns the equivalent quaternion.</returns>
-        //public static Quaternion Matrix3DToQuaternion(Matrix3D mat)
+        //public static Quaternion Matrix4ToQuaternion(Matrix4 mat)
         //{
         //    double x, y, z, w;
 

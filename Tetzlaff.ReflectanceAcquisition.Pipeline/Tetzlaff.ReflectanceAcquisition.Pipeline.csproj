@@ -45,6 +45,7 @@
     <Compile Include="DataModels\ICameraProjection.cs" />
     <Compile Include="DataModels\IMesh.cs" />
     <Compile Include="DataModels\IReflectanceModel.cs" />
+    <Compile Include="DataModels\PoseAlignedColorFrame.cs" />
     <Compile Include="DataModels\PoseAlignedFrame.cs" />
     <Compile Include="DataModels\CameraPose.cs" />
     <Compile Include="DataModels\ICameraPose.cs" />

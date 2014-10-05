@@ -1112,8 +1112,6 @@ using Tetzlaff.ReflectanceAcquisition.LightField.Modules;
         /// <param name="e">Event arguments</param>
         private void WindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            this.lightField.FinalizeReflectance();
-
             // Stop timer
             if (null != this.fpsTimer)
             {
@@ -1285,36 +1283,10 @@ using Tetzlaff.ReflectanceAcquisition.LightField.Modules;
 
                     try
                     {
-                        // Track camera pose
-                        ICameraPose calculatedCameraPos = poseAlignmentModule.AlignFrame(
-                            this.frameSource.DepthFrame,
-                            this.frameSource.ColorFrame,
-                            this.volume,
-                            this.currentCameraPose,
-                            this.MirrorDepth
-                        );
-
-                        this.ShowStatusMessageLowPriority(poseAlignmentModule.CameraPoseFinderStatus);
-
-                        if (poseAlignmentModule.TrackingHasFailedPreviously)
+                        this.UpdateAlignment();
+                        if (this.captureColor)
                         {
-                            this.ShowStatusMessageLowPriority("Kinect Fusion camera tracking RECOVERED! Residual energy=" + string.Format(CultureInfo.InvariantCulture, "{0:0.00000}", poseAlignmentModule.AlignmentEnergy));
-                        }
-
-                        this.currentCameraPose = calculatedCameraPos;
-
-                        // Only save the view if there isn't already an active view saving thread
-                        if (saveViewThread == null || !saveViewThread.IsAlive)
-                        {
-                            //if (AddViewSetEntry(calculatedCameraPos.Matrix.ToKinectMatrix())) // Only save the image if the entry was successfuly added to the vset file
-                            {
-                                canProceed = false;
-                                saveViewThread = new Thread(new ThreadStart(this.SaveLightFieldView));
-                                saveViewThread.Start();
-
-                                // Wait for the view saving thread to get started before moving on.
-                                while (!canProceed) Thread.Sleep(1);
-                            }
+                            this.StartViewSavingThread();
                         }
 
                         if (this.kinectView)
@@ -1383,6 +1355,27 @@ using Tetzlaff.ReflectanceAcquisition.LightField.Modules;
                     this.ShowStatusMessage(ex.Message);
                 }
             }
+        }
+
+        private void UpdateAlignment()
+        {
+            // Track camera pose
+            ICameraPose calculatedCameraPos = poseAlignmentModule.AlignFrame(
+                this.frameSource.DepthFrame,
+                this.frameSource.ColorFrame,
+                this.volume,
+                this.currentCameraPose,
+                this.MirrorDepth
+            );
+
+            this.ShowStatusMessageLowPriority(poseAlignmentModule.CameraPoseFinderStatus);
+
+            if (poseAlignmentModule.TrackingHasFailedPreviously)
+            {
+                this.ShowStatusMessageLowPriority("Kinect Fusion camera tracking RECOVERED! Residual energy=" + string.Format(CultureInfo.InvariantCulture, "{0:0.00000}", poseAlignmentModule.AlignmentEnergy));
+            }
+
+            this.currentCameraPose = calculatedCameraPos;
         }
 
         /// <summary>
@@ -1868,22 +1861,28 @@ using Tetzlaff.ReflectanceAcquisition.LightField.Modules;
 
                 if (true == this.stlFormat.IsChecked)
                 {
-                    dialog.FileName = "MeshedReconstruction.stl";
+                    dialog.FileName = "manifold.stl";
                     dialog.Filter = "STL Mesh Files|*.stl|All Files|*.*";
                 }
                 else if (true == this.objFormat.IsChecked)
                 {
-                    dialog.FileName = "MeshedReconstruction.obj";
+                    dialog.FileName = "manifold.obj";
                     dialog.Filter = "OBJ Mesh Files|*.obj|All Files|*.*";
                 }
                 else
                 {
-                    dialog.FileName = "MeshedReconstruction.ply";
+                    dialog.FileName = "manifold.ply";
                     dialog.Filter = "PLY Mesh Files|*.ply|All Files|*.*";
                 }
 
                 if (true == dialog.ShowDialog())
                 {
+                    Tetzlaff.ReflectanceAcquisition.Pipeline.Math.Vector3 offset;
+                    offset = mesh.CenterMesh();
+
+                    lightField.CameraOffset = offset;
+                    lightField.SaveViewSet();
+
                     if (true == this.stlFormat.IsChecked)
                     {
                         using (BinaryWriter writer = new BinaryWriter(dialog.OpenFile()))
@@ -2409,20 +2408,16 @@ using Tetzlaff.ReflectanceAcquisition.LightField.Modules;
         /// </summary>
         private void SaveLightFieldView()
         {
-            if (this.captureColor)
-            {
-                // Quickly copy the color buffer directly so that it can be released and other threads can use it
-                IColorFrame colorFrameCopy = frameSource.ColorFrame.Clone();
+            // Quickly copy the color buffer directly so that it can be released and other threads can use it
+            IColorFrame colorFrameCopy = frameSource.ColorFrame.Clone();
 
-                // Indicate that the main thread can proceed, since we have copied the view index and the color buffer.
-                canProceed = true;
+            // Indicate that the main thread can proceed, since we have copied the view index and the color buffer.
+            canProceed = true;
 
-                // Yield so that this thread doesn't hog the CPU, hurting the framerate
-                Thread.Yield();
+            // Yield so that this thread doesn't hog the CPU, hurting the framerate
+            Thread.Yield();
 
-                lightFieldIntegration.IntegrateReflectance(colorFrameCopy, lightField, currentCameraPose, poseAlignmentModule.AlignmentEnergy);
-            }
-            else canProceed = true; // Let the main thread proceed if we aren't saving the image
+            lightFieldIntegration.IntegrateReflectance(colorFrameCopy, lightField, currentCameraPose, poseAlignmentModule.AlignmentEnergy);
         }
 
         ///// <summary>
@@ -2453,6 +2448,26 @@ using Tetzlaff.ReflectanceAcquisition.LightField.Modules;
                 this.lightField = new LightFieldDirectory(outputDirectory);
                 this.lightField.Force1To1AspectRatio = this.ForceLightField1To1AspectRatio;
             }
+        }
+
+        private void StartViewSavingThread()
+        {
+            // Only save the view if there isn't already an active view saving thread
+            if (saveViewThread == null || !saveViewThread.IsAlive)
+            {
+                canProceed = false;
+                saveViewThread = new Thread(new ThreadStart(this.SaveLightFieldView));
+                saveViewThread.Start();
+
+                // Wait for the view saving thread to get started before moving on.
+                while (!canProceed) Thread.Sleep(1);
+            }
+        }
+
+        private void ColorSnapshotButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.UpdateAlignment(); // Make sure alignment information is current
+            this.StartViewSavingThread();
         }
     }
 }
