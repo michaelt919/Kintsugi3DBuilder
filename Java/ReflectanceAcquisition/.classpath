@@ -3,6 +3,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/slick-util"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/lwjgl"/>
 	<classpathentry kind="lib" path="C:/Program Files/Java/lwjgl/jar/disruptor.jar" sourcepath="C:/Program Files/Java/lwjgl/src.zip">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:file:/C:/Program%20Files/Java/lwjgl/doc/javadoc.zip!/"/>
