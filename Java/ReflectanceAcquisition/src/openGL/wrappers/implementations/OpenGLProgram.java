@@ -43,12 +43,6 @@ public class OpenGLProgram implements Program
 	}
 	
 	@Override
-	public int getId()
-	{
-		return programId;
-	}
-	
-	@Override
 	public void attachShader(Shader shader, boolean owned)
 	{
 		glAttachShader(programId, shader.getId());

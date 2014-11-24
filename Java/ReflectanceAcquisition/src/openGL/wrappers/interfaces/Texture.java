@@ -1,5 +1,6 @@
 package openGL.wrappers.interfaces;
 
-public interface Texture {
+public interface Texture extends GLResource
+{
 
 }
