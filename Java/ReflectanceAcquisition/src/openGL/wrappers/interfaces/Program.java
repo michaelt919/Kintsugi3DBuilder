@@ -1,5 +1,5 @@
 package openGL.wrappers.interfaces;
-public interface Program 
+public interface Program extends GLResource
 {
 
 	void attachShader(Shader shader, boolean owned);
@@ -11,8 +11,6 @@ public interface Program
 	void link();
 
 	void use();
-
-	void delete();
 
 	void setUniform(String name, double value1, double value2,
 			double value3, double value4);
@@ -75,7 +73,5 @@ public interface Program
 	void setUniform(int location, int value);
 
 	int getUniformLocation(String name);
-
-	int getId();
 
 }

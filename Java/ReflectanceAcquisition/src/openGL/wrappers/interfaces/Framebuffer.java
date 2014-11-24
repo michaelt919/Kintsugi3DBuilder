@@ -2,7 +2,7 @@ package openGL.wrappers.interfaces;
 
 import java.io.IOException;
 
-public interface Framebuffer 
+public interface Framebuffer
 {
 	int getViewportX();
 
