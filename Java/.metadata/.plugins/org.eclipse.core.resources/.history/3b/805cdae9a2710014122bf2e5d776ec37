@@ -1,0 +1,6 @@
+package openGL.wrappers.interfaces;
+
+public interface FramebufferImage 
+{
+	void bindToCurrentFramebuffer();
+}

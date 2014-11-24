@@ -1,0 +1,12 @@
+public interface Framebuffer 
+{
+
+	void bindForDraw();
+
+	void bindForRead();
+
+	void delete();
+
+	void setViewport(int x, int y, int width, int height);
+
+}

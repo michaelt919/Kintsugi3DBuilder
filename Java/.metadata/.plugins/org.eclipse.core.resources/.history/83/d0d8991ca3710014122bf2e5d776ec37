@@ -1,0 +1,43 @@
+package openGL.wrappers.implementations;
+
+import static openGL.OpenGLHelper.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.*;
+
+import openGL.wrappers.interfaces.FramebufferImage;
+
+public class OpenGLRenderbuffer implements FramebufferImage
+{
+	private int renderbufferId;
+	
+	public OpenGLRenderbuffer() 
+	{
+		this.renderbufferId = glGenRenderbuffers();
+	}
+
+	@Override
+	public void bindToDrawFramebuffer(int attachment, int level) 
+	{
+		if (level != 0)
+		{
+			throw new IllegalArgumentException("Renderbuffers only have one level to bind to.");
+		}
+		glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, attachment, GL_RENDERBUFFER, this.renderbufferId);
+	}
+
+	@Override
+	public void bindToReadFramebuffer(int attachment, int level) 
+	{
+		if (level != 0)
+		{
+			throw new IllegalArgumentException("Renderbuffers only have one level to bind to.");
+		}
+	}
+
+	@Override
+	public void delete()
+	{
+		glDeleteRenderbuffers(this.renderbufferId);
+	}
+}

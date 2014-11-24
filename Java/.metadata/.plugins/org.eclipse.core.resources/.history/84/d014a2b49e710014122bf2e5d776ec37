@@ -1,0 +1,21 @@
+package openGL.wrappers.interfaces;
+public interface Framebuffer 
+{
+	int getViewportX();
+
+	int getViewportY();
+
+	int getViewportWidth();
+
+	int getViewportHeight();
+
+	void setViewport(int x, int y, int width, int height);
+
+	void bindForDraw();
+
+	void bindForRead();
+
+	int[] readPixelsRGBA(int mode);
+
+	void delete();
+}

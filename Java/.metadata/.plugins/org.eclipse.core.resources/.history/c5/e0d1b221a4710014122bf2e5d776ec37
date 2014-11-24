@@ -1,0 +1,16 @@
+package openGL.wrappers.implementations;
+
+public class OpenGLDefaultFramebuffer extends OpenGLFramebuffer
+{
+	private OpenGLDefaultFramebuffer instance;
+	
+	private OpenGLDefaultFramebuffer() 
+	{
+		super(0);
+	}
+	
+	public OpenGLDefaultFramebuffer getInstance()
+	{
+		return instance == null ? instance = new OpenGLDefaultFramebuffer() : instance;
+	}
+}

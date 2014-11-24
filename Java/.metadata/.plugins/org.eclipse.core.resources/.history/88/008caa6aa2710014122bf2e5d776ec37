@@ -1,0 +1,24 @@
+package openGL.wrappers.implementations;
+
+import openGL.wrappers.interfaces.FramebufferImage;
+
+public class OpenGLRenderbuffer implements FramebufferImage
+{
+	public OpenGLRenderbuffer() 
+	{
+		
+	}
+
+	@Override
+	public void bindToDrawFramebuffer() 
+	{
+		
+	}
+
+	@Override
+	public void bindToReadFramebuffer() 
+	{
+		
+	}
+
+}

@@ -1,0 +1,100 @@
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.system.MemoryUtil.NULL;
+import static org.lwjgl.system.glfw.GLFW.glfwCreateWindow;
+
+import java.io.File;
+import java.io.IOException;
+
+import openGL.wrappers.implementations.OpenGLFramebufferObject;
+import openGL.wrappers.implementations.OpenGLProgram;
+import openGL.wrappers.interfaces.FramebufferObject;
+import openGL.wrappers.interfaces.Program;
+
+import org.lwjgl.Sys;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GLContext;
+import org.newdawn.slick.opengl.Texture;
+import org.newdawn.slick.opengl.TextureLoader;
+import org.newdawn.slick.util.ResourceLoader;
+
+public class MainProgram 
+{
+    private Texture texture;
+    private Program program;
+    private FramebufferObject framebuffer;
+ 
+    public void execute() 
+    {
+        System.out.println("Using LWJGL version " + Sys.getVersion());
+        
+        init();
+        draw();
+ 
+        try 
+        {
+            framebuffer.saveToFile(0, "png", "output.png");
+        } 
+        catch(IOException e)
+        {
+        	e.printStackTrace();
+        }
+        
+        program.delete();
+        framebuffer.delete();
+    }
+ 
+    private void init() 
+    {
+        int WIDTH = 300;
+        int HEIGHT = 300;
+ 
+        window = glfwCreateWindow(WIDTH, HEIGHT, "Hello World!", NULL, NULL)
+        GLContext.createFromCurrent();
+        System.out.println("Using OpenGL version " + glGetString(GL_VERSION));
+
+        framebuffer = new OpenGLFramebufferObject(WIDTH, HEIGHT);
+        
+        try
+        {
+        	program = new OpenGLProgram(new File("shaders/test.vert"), new File("shaders/test.frag"));
+        	program.use();
+        }
+        catch (IOException e)
+        {
+        	e.printStackTrace();
+        }
+        
+        glEnable(GL_TEXTURE_2D);
+        
+        try
+        {
+        	texture = TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("checkerboard.png"));
+        }
+        catch (IOException e)
+        {
+        	e.printStackTrace();
+        }
+    }
+    
+    private void draw() 
+    {
+    	framebuffer.bindForDraw();
+    	glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        glActiveTexture(GL_TEXTURE0);
+        texture.bind();
+        program.setUniform("texture0", 0);
+        glBegin(GL_QUADS);
+        	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 0.0f);
+        	glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 1.0f, 0.0f);
+        	glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0f, 1.0f, 0.0f);
+        	glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, -1.0f, 0.0f);
+        glEnd();
+    }
+ 
+    public static void main(String[] args) {
+        new MainProgram().execute();
+    }
+}

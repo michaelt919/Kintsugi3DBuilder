@@ -1,0 +1,32 @@
+package openGL.wrappers.implementations;
+
+import openGL.wrappers.interfaces.FramebufferImage;
+
+public class OpenGLRenderbuffer implements FramebufferImage
+{
+	public OpenGLRenderbuffer() 
+	{
+		
+	}
+
+	@Override
+	public void bindToDrawFramebuffer(int attachment, int level) 
+	{
+		if (level != 0)
+		{
+			throw new IllegalArgumentException("Renderbuffers only have one level to bind to.");
+		}
+		
+	}
+
+	@Override
+	public void bindToReadFramebuffer(int attachment, int level) 
+	{
+		if (level != 0)
+		{
+			throw new IllegalArgumentException("Renderbuffers only have one level to bind to.");
+		}
+		
+	}
+
+}

@@ -1,0 +1,36 @@
+1416511968018	Rename type 'Shader'
+1416512709101	Copy compilation unit
+1416512757365	Rename type 'LinkProgramException'
+1416513837283	Copy compilation unit
+1416513985541	Copy compilation unit
+1416514792943	Delete element
+1416514866035	Extract interface 'Program'
+1416515560754	Pull up members to 'Program'
+1416516647776	Rename type 'OpenGLFrameBuffer'
+1416518622691	Extract interface 'Framebuffer'
+1416522732122	Delete element
+1416522781818	Extract interface 'Framebuffer'
+1416531066614	Rename method 'getDefault'
+1416534109232	Copy compilation unit
+1416534116855	Copy compilation unit
+1416534125655	Copy compilation unit
+1416534131484	Copy compilation unit
+1416534141717	Copy compilation unit
+1416534390994	Rename package 'openGLWrappers'
+1416534400935	Copy package
+1416534403554	Delete element
+1416534410242	Rename package 'openGL'
+1416534433951	Move compilation unit
+1416534451998	Move compilation units
+1416534506197	Move compilation units
+1416534513894	Move compilation units
+1416534532263	Move compilation units
+1416536593020	Rename method 'frontBuffer'
+1416536882436	Copy compilation unit
+1416537444190	Delete element
+1416537548567	Rename method 'readRGBAPixelsAsPackedInts'
+1416591830798	Rename type 'FramebufferImage'
+1416592574996	Rename field 'images'
+1416594808881	Rename method 'bindToDrawFramebuffer'
+1416594816898	Rename method 'bindToReadFramebuffer'
+1416603211318	Rename type 'Program'

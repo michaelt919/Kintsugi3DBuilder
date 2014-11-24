@@ -1,0 +1,13 @@
+
+public class OpenGLInvalidEnumException extends OpenGLException {
+
+	public OpenGLInvalidEnumException() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public OpenGLInvalidEnumException(String message) {
+		super(message);
+		// TODO Auto-generated constructor stub
+	}
+
+}

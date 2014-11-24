@@ -1,0 +1,548 @@
+package openGL.wrappers.implementations;
+import static openGL.OpenGLHelper.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.*;
+
+import java.nio.ByteBuffer;
+
+import openGL.wrappers.interfaces.ReadableFramebuffer;
+
+public class OpenGLFramebuffer implements ReadableFramebuffer 
+{
+	private int framebufferId;
+	private boolean viewportSet;
+	private int x;
+	private int y;
+	private int width;
+	private int height;
+	
+	public OpenGLFramebuffer()
+	{
+		this.framebufferId = glGenFramebuffers();
+		openGLErrorCheck();
+	}
+	
+	private OpenGLFramebuffer(int id)
+	{
+		this.framebufferId = id;
+	}
+	
+	public static ReadableFramebuffer defaultFramebuffer()
+	{
+		return new OpenGLFramebuffer(0);
+	}
+	
+	public static ReadableFramebuffer[] createMultiple(int n)
+	{
+		ReadableFramebuffer[] framebuffers = new ReadableFramebuffer[n];
+		
+		// Allocate a 1 int byte buffer
+		ByteBuffer idBuffer = ByteBuffer.allocateDirect(n*4);
+		
+		glGenFramebuffers(n, idBuffer);
+		openGLErrorCheck();
+		int[] ids = idBuffer.asIntBuffer().array();
+		for(int i = 0; i < ids.length; i++)
+		{
+			framebuffers[i] = new OpenGLFramebuffer(ids[i]);
+		}
+		
+		return framebuffers;
+	}
+	
+	
+	@Override
+	public int getViewportX()
+	{
+		return x;
+	}
+	
+	
+	@Override
+	public int getViewportY()
+	{
+		return y;
+	}
+	
+	
+	@Override
+	public int getViewportWidth()
+	{
+		return width;
+	}
+	
+	
+	@Override
+	public int getViewportHeight()
+	{
+		return height;
+	}
+	
+	
+	@Override
+	public void setViewport(int x, int y, int width, int height)
+	{
+		if (width < 0 || height < 0)
+		{
+			throw new IllegalArgumentException("Viewport width and height must be non-negative.");
+		}
+		this.viewportSet = true;
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		glViewport(x, y, width, height);
+		openGLErrorCheck();
+	}
+	
+	
+	@Override
+	public void bindForDraw()
+	{
+		if (viewportSet)
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebufferId);
+			openGLErrorCheck();
+			glViewport(x, y, width, height);
+			openGLErrorCheck();
+		}
+		else
+		{
+			throw new IllegalStateException("Cannot bind a framebuffer for draw without first setting its viewport.");
+		}
+	}
+	
+	
+	@Override
+	public void bindForRead()
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, framebufferId);
+		openGLErrorCheck();
+	}
+	
+	
+	@Override
+	public byte[] readRGBPixelsAsBytes(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 3);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RGB, GL_BYTE, pixelBuffer);
+		openGLErrorCheck();
+		byte[] pixelArray = new byte[this.width * this.height * 3];
+		pixelBuffer.get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public byte[] readRGBAPixelsAsBytes(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RGBA, GL_BYTE, pixelBuffer);
+		openGLErrorCheck();
+		byte[] pixelArray = new byte[this.width * this.height * 4];
+		pixelBuffer.get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public byte[] readRedPixelsAsBytes(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RED, GL_BYTE, pixelBuffer);
+		openGLErrorCheck();
+		byte[] pixelArray = new byte[this.width * this.height];
+		pixelBuffer.get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public byte[] readGreenPixelsAsBytes(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_GREEN, GL_BYTE, pixelBuffer);
+		openGLErrorCheck();
+		byte[] pixelArray = new byte[this.width * this.height];
+		pixelBuffer.get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public byte[] readBluePixelsAsBytes(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_BLUE, GL_BYTE, pixelBuffer);
+		openGLErrorCheck();
+		byte[] pixelArray = new byte[this.width * this.height];
+		pixelBuffer.get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public byte[] readDepthPixelsAsBytes()
+	{
+		this.bindForRead();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_DEPTH_COMPONENT, GL_BYTE, pixelBuffer);
+		openGLErrorCheck();
+		byte[] pixelArray = new byte[this.width * this.height];
+		pixelBuffer.get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public byte[] readStencilPixelsAsBytes()
+	{
+		this.bindForRead();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_STENCIL_INDEX, GL_BYTE, pixelBuffer);
+		openGLErrorCheck();
+		byte[] pixelArray = new byte[this.width * this.height];
+		pixelBuffer.get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public short[] readRGBPixelsAsShorts(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 6);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RGB, GL_SHORT, pixelBuffer);
+		openGLErrorCheck();
+		short[] pixelArray = new short[this.width * this.height * 3];
+		pixelBuffer.asShortBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public short[] readRGBAPixelsAsShorts(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 8);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RGBA, GL_SHORT, pixelBuffer);
+		openGLErrorCheck();
+		short[] pixelArray = new short[this.width * this.height * 4];
+		pixelBuffer.asShortBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public short[] readRedPixelsAsShorts(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 2);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RED, GL_SHORT, pixelBuffer);
+		openGLErrorCheck();
+		short[] pixelArray = new short[this.width * this.height];
+		pixelBuffer.asShortBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public short[] readGreenPixelsAsShorts(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 2);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_GREEN, GL_SHORT, pixelBuffer);
+		openGLErrorCheck();
+		short[] pixelArray = new short[this.width * this.height];
+		pixelBuffer.asShortBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public short[] readBluePixelsAsShorts(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 2);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_BLUE, GL_SHORT, pixelBuffer);
+		openGLErrorCheck();
+		short[] pixelArray = new short[this.width * this.height];
+		pixelBuffer.asShortBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public short[] readDepthPixelsAsShorts()
+	{
+		this.bindForRead();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 2);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_DEPTH_COMPONENT, GL_SHORT, pixelBuffer);
+		openGLErrorCheck();
+		short[] pixelArray = new short[this.width * this.height];
+		pixelBuffer.asShortBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public short[] readStencilPixelsAsShorts()
+	{
+		this.bindForRead();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 2);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_STENCIL_INDEX, GL_SHORT, pixelBuffer);
+		openGLErrorCheck();
+		short[] pixelArray = new short[this.width * this.height];
+		pixelBuffer.asShortBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public int[] readRGBPixelsAsInts(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 12);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RGB, GL_INT, pixelBuffer);
+		openGLErrorCheck();
+		int[] pixelArray = new int[this.width * this.height * 3];
+		pixelBuffer.asIntBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public int[] readRGBAPixelsAsInts(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 16);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RGBA, GL_INT, pixelBuffer);
+		openGLErrorCheck();
+		int[] pixelArray = new int[this.width * this.height * 4];
+		pixelBuffer.asIntBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public int[] readRedPixelsAsInts(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RED, GL_INT, pixelBuffer);
+		openGLErrorCheck();
+		int[] pixelArray = new int[this.width * this.height];
+		pixelBuffer.asIntBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public int[] readGreenPixelsAsInts(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_GREEN, GL_INT, pixelBuffer);
+		openGLErrorCheck();
+		int[] pixelArray = new int[this.width * this.height];
+		pixelBuffer.asIntBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public int[] readBluePixelsAsInts(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_BLUE, GL_INT, pixelBuffer);
+		openGLErrorCheck();
+		int[] pixelArray = new int[this.width * this.height];
+		pixelBuffer.asIntBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public int[] readDepthPixelsAsInts()
+	{
+		this.bindForRead();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_DEPTH_COMPONENT, GL_INT, pixelBuffer);
+		openGLErrorCheck();
+		int[] pixelArray = new int[this.width * this.height];
+		pixelBuffer.asIntBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public int[] readStencilPixelsAsInts()
+	{
+		this.bindForRead();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_STENCIL_INDEX, GL_INT, pixelBuffer);
+		openGLErrorCheck();
+		int[] pixelArray = new int[this.width * this.height];
+		pixelBuffer.asIntBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public float[] readRGBPixelsAsFloats(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 12);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RGB, GL_FLOAT, pixelBuffer);
+		openGLErrorCheck();
+		float[] pixelArray = new float[this.width * this.height * 3];
+		pixelBuffer.asFloatBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public float[] readRGBAPixelsAsFloats(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 16);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RGBA, GL_FLOAT, pixelBuffer);
+		openGLErrorCheck();
+		float[] pixelArray = new float[this.width * this.height * 4];
+		pixelBuffer.asFloatBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public float[] readRedPixelsAsFloats(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RED, GL_FLOAT, pixelBuffer);
+		openGLErrorCheck();
+		float[] pixelArray = new float[this.width * this.height];
+		pixelBuffer.asFloatBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public float[] readGreenPixelsAsFloats(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_GREEN, GL_FLOAT, pixelBuffer);
+		openGLErrorCheck();
+		float[] pixelArray = new float[this.width * this.height];
+		pixelBuffer.asFloatBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public float[] readBluePixelsAsFloats(int mode)
+	{
+		this.bindForRead();
+		openGLErrorCheck();
+		glReadBuffer(mode);
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_BLUE, GL_FLOAT, pixelBuffer);
+		openGLErrorCheck();
+		float[] pixelArray = new float[this.width * this.height];
+		pixelBuffer.asFloatBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public float[] readDepthPixelsAsFloats()
+	{
+		this.bindForRead();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_DEPTH_COMPONENT, GL_FLOAT, pixelBuffer);
+		openGLErrorCheck();
+		float[] pixelArray = new float[this.width * this.height];
+		pixelBuffer.asFloatBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	
+	@Override
+	public float[] readStencilPixelsAsFloats()
+	{
+		this.bindForRead();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_STENCIL_INDEX, GL_FLOAT, pixelBuffer);
+		openGLErrorCheck();
+		float[] pixelArray = new float[this.width * this.height];
+		pixelBuffer.asFloatBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	@Override
+	public int[] readRGBAPixelsAsPackedInts(int mode)
+	{
+		this.bindForRead();
+		glReadBuffer(mode);
+		openGLErrorCheck();
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
+		glReadPixels(this.x, this.y, this.width, this.height, GL_RGBA, GL_UNSIGNED_BYTE, pixelBuffer);
+		openGLErrorCheck();
+		int[] pixelArray = new int[this.width * this.height];
+		for (int i = 0; i < pixelArray.length; i++) { pixelArray[i] = 0xFF0000FF; }
+		pixelBuffer.asIntBuffer().get(pixelArray);
+		return pixelArray;
+	}
+	
+	@Override
+	public void delete()
+	{
+		glDeleteFramebuffers(framebufferId);
+	}
+}
