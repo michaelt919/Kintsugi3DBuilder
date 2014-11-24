@@ -1,0 +1,10 @@
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
+
+public interface Shader 
+{
+	int getId();
+	boolean isCompiled();
+	void compile();
+	void delete();
+}

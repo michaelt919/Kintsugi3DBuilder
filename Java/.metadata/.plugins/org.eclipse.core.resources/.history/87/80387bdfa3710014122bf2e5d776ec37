@@ -1,0 +1,10 @@
+package openGL.wrappers.implementations;
+
+public class OpenGLDefaultFramebuffer 
+{
+	public OpenGLDefaultFramebuffer() 
+	{
+		super(0);
+	}
+
+}

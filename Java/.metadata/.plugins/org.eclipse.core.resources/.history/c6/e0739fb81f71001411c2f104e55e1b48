@@ -1,0 +1,8 @@
+
+public class OpenGLInvalidValueException extends OpenGLException 
+{
+	public OpenGLInvalidValueException() 
+	{
+		super("An unacceptable value is specified for an enumerated argument.");
+	}
+}

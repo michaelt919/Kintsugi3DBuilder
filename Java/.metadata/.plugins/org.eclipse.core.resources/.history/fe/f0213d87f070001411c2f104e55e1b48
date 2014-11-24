@@ -1,0 +1,6 @@
+
+public interface Shader 
+{
+	int getId();
+	void delete();
+}

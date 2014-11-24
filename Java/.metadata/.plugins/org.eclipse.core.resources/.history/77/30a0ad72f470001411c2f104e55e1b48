@@ -1,0 +1,238 @@
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL40.*;
+import static org.lwjgl.opengl.GL41.*;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+
+public class OpenGLProgram implements Program 
+{
+	private int programId;
+	private ArrayList<Shader> ownedShaders;
+	
+	public OpenGLProgram()
+	{
+		programId = glCreateProgram();
+		ownedShaders = new ArrayList<Shader>();
+	}
+	
+	public OpenGLProgram(File vertexShader, File fragmentShader) throws FileNotFoundException
+	{
+		Shader vertexShaderObj = new OpenGLShader(GL_VERTEX_SHADER, vertexShader);
+		Shader fragmentShaderObj = new OpenGLShader(GL_FRAGMENT_SHADER, fragmentShader);
+		vertexShaderObj.compile();
+		fragmentShaderObj.compile();
+		this.attachShader(vertexShaderObj, true);
+		this.attachShader(fragmentShaderObj, true);
+		this.link();
+	}
+	
+	public void attachShader(Shader shader, boolean owned)
+	{
+		if (!shader.isCompiled())
+		{
+			throw new UncompiledShaderException("Shaders must be compiled before they can be attached to a program.");
+		}
+		else
+		{
+			glAttachShader(programId, shader.getId());
+			if (owned)
+			{
+				ownedShaders.add(shader);
+			}
+		}
+	}
+	
+	public void detachShader(Shader shader)
+	{
+		glDetachShader(programId, shader.getId());
+	}
+	
+	public boolean isLinked()
+	{
+		int linked = glGetProgrami(programId, GL_LINK_STATUS);
+    	return linked == GL_TRUE;
+	}
+	
+	public void link()
+	{
+    	glLinkProgram(programId);
+    	if (!this.isLinked())
+    	{
+    		throw new ProgramLinkFailureException(glGetProgramInfoLog(programId));
+    	}
+	}
+	
+	public void use()
+	{
+		if (!this.isLinked())
+		{
+			throw new UnlinkedProgramException("An OpenGL program cannot be used if it has not been linked.");
+		}
+		else
+		{
+			glUseProgram(programId);
+		}
+	}
+	
+	@Override public void delete()
+	{
+		glDeleteProgram(programId);
+		for (Shader shader : ownedShaders)
+		{
+			shader.delete();
+		}
+	}
+	
+	@Override
+	public int getUniformLocation(String name)
+	{
+		return glGetUniformLocation(programId, name);
+	}
+	
+	@Override
+	public void setUniform(int location, int value)
+	{
+		glProgramUniform1i(programId, location, value);
+	}
+	
+	@Override
+	public void setUniform(int location, int value1, int value2)
+	{
+		glProgramUniform2i(programId, location, value1, value2);
+	}
+	
+	@Override
+	public void setUniform(int location, int value1, int value2, int value3)
+	{
+		glProgramUniform3i(programId, location, value1, value2, value3);
+	}
+	
+	@Override
+	public void setUniform(int location, int value1, int value2, int value3, int value4)
+	{
+		glProgramUniform4i(programId, location, value1, value2, value3, value4);
+	}
+
+	@Override
+	public void setUniform(int location, float value)
+	{
+		glProgramUniform1f(programId, location, value);
+	}
+	
+	@Override
+	public void setUniform(int location, float value1, float value2)
+	{
+		glProgramUniform2f(programId, location, value1, value2);
+	}
+	
+	@Override
+	public void setUniform(int location, float value1, float value2, float value3)
+	{
+		glProgramUniform3f(programId, location, value1, value2, value3);
+	}
+	
+	@Override
+	public void setUniform(int location, float value1, float value2, float value3, float value4)
+	{
+		glProgramUniform4f(programId, location, value1, value2, value3, value4);
+	}
+
+	@Override
+	public void setUniform(int location, double value)
+	{
+		glProgramUniform1d(programId, location, value);
+	}
+	
+	@Override
+	public void setUniform(int location, double value1, double value2)
+	{
+		glProgramUniform2d(programId, location, value1, value2);
+	}
+	
+	@Override
+	public void setUniform(int location, double value1, double value2, double value3)
+	{
+		glProgramUniform3d(programId, location, value1, value2, value3);
+	}
+	
+	@Override
+	public void setUniform(int location, double value1, double value2, double value3, double value4)
+	{
+		glProgramUniform4d(programId, location, value1, value2, value3, value4);
+	}
+	
+	@Override
+	public void setUniform(String name, int value)
+	{
+		glProgramUniform1i(programId, this.getUniformLocation(name), value);
+	}
+	
+	@Override
+	public void setUniform(String name, int value1, int value2)
+	{
+		glProgramUniform2i(programId, this.getUniformLocation(name), value1, value2);
+	}
+	
+	@Override
+	public void setUniform(String name, int value1, int value2, int value3)
+	{
+		glProgramUniform3i(programId, this.getUniformLocation(name), value1, value2, value3);
+	}
+	
+	@Override
+	public void setUniform(String name, int value1, int value2, int value3, int value4)
+	{
+		glProgramUniform4i(programId, this.getUniformLocation(name), value1, value2, value3, value4);
+	}
+
+	@Override
+	public void setUniform(String name, float value)
+	{
+		glProgramUniform1f(programId, this.getUniformLocation(name), value);
+	}
+	
+	@Override
+	public void setUniform(String name, float value1, float value2)
+	{
+		glProgramUniform2f(programId, this.getUniformLocation(name), value1, value2);
+	}
+	
+	@Override
+	public void setUniform(String name, float value1, float value2, float value3)
+	{
+		glProgramUniform3f(programId, this.getUniformLocation(name), value1, value2, value3);
+	}
+	
+	@Override
+	public void setUniform(String name, float value1, float value2, float value3, float value4)
+	{
+		glProgramUniform4f(programId, this.getUniformLocation(name), value1, value2, value3, value4);
+	}
+
+	@Override
+	public void setUniform(String name, double value)
+	{
+		glProgramUniform1d(programId, this.getUniformLocation(name), value);
+	}
+	
+	@Override
+	public void setUniform(String name, double value1, double value2)
+	{
+		glProgramUniform2d(programId, this.getUniformLocation(name), value1, value2);
+	}
+	
+	@Override
+	public void setUniform(String name, double value1, double value2, double value3)
+	{
+		glProgramUniform3d(programId, this.getUniformLocation(name), value1, value2, value3);
+	}
+	
+	@Override
+	public void setUniform(String name, double value1, double value2, double value3, double value4)
+	{
+		glProgramUniform4d(programId, this.getUniformLocation(name), value1, value2, value3, value4);
+	}
+}

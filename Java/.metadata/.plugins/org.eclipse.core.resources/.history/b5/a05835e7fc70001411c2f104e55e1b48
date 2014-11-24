@@ -1,0 +1,12 @@
+public interface Framebuffer 
+{
+
+	int getId();
+
+	void bindForDraw();
+
+	void bindForRead();
+
+	void delete();
+
+}

@@ -1,0 +1,9 @@
+import static org.lwjgl.opengl.GL11.*;
+
+public class OpenGLHelper 
+{
+	public static void openGLErrorCheck()
+	{
+		int error = glGetError();
+	}
+}

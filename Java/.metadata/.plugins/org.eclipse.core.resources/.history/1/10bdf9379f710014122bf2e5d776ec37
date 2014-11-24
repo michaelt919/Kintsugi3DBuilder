@@ -1,0 +1,8 @@
+package openGL.wrappers.interfaces;
+public interface Shader 
+{
+	int getId();
+	boolean isCompiled();
+	void compile();
+	void delete();
+}
