@@ -32,6 +32,10 @@ import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.system.glfw.GLFW.*;
  
 public class HelloWorld {
+	
+    private final int WIDTH = 300;
+    private final int HEIGHT = 300;
+
  
     private long window;
     
@@ -64,10 +68,7 @@ public class HelloWorld {
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
- 
-        int WIDTH = 300;
-        int HEIGHT = 300;
- 
+        
         window = glfwCreateWindow(WIDTH, HEIGHT, "Hello World!", NULL, NULL);
         if ( window == NULL )
             throw new RuntimeException("Failed to create the GLFW window");
@@ -96,7 +97,6 @@ public class HelloWorld {
         System.out.println("Hello OpenGL " + glGetString(GL_VERSION) + "!");
 
         framebuffer = OpenGLFramebuffer.defaultFramebuffer();
-        framebuffer.setViewport(0, 0, WIDTH, HEIGHT);
         
         try
         {
@@ -123,7 +123,7 @@ public class HelloWorld {
     private void loop() {
         while ( glfwWindowShouldClose(window) == GL_FALSE ) {
         	
-        	framebuffer.bindForDraw();
+        	framebuffer.bindForDraw(0, 0, WIDTH, HEIGHT);
         	glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             

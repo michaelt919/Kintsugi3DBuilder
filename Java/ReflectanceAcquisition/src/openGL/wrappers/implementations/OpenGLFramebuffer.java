@@ -19,11 +19,10 @@ import openGL.wrappers.interfaces.FramebufferAttachment;
 
 public abstract class OpenGLFramebuffer implements Framebuffer 
 {
-	private boolean viewportSet;
-	private int x;
-	private int y;
-	private int width;
-	private int height;
+//	private int x;
+//	private int y;
+//	private int width;
+//	private int height;
 	
 	public static Framebuffer defaultFramebuffer()
 	{
@@ -32,46 +31,60 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	
 	protected abstract int getId();
 	
+	public abstract int getWidth();
+	public abstract int getHeight();
+	
+//	@Override
+//	public int getViewportX()
+//	{
+//		return x;
+//	}
+//	
+//	
+//	@Override
+//	public int getViewportY()
+//	{
+//		return y;
+//	}
+//	
+//	
+//	@Override
+//	public int getViewportWidth()
+//	{
+//		return width;
+//	}
+//	
+//	
+//	@Override
+//	public int getViewportHeight()
+//	{
+//		return height;
+//	}
+	
+	
+//	@Override
+//	public void setViewport()
+//	{
+//		if (width < 0 || height < 0)
+//		{
+//			throw new IllegalArgumentException("Viewport width and height must be non-negative.");
+//		}
+//		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
+//		openGLErrorCheck();
+//		glViewport(x, y, width, height);
+//		openGLErrorCheck();
+//		this.viewportSet = true;
+//		this.x = x;
+//		this.y = y;
+//		this.width = width;
+//		this.height = height;
+//	}
+	
 	@Override
-	public int getViewportX()
+	public void bindForDraw(int x, int y, int width, int height)
 	{
-		return x;
-	}
-	
-	
-	@Override
-	public int getViewportY()
-	{
-		return y;
-	}
-	
-	
-	@Override
-	public int getViewportWidth()
-	{
-		return width;
-	}
-	
-	
-	@Override
-	public int getViewportHeight()
-	{
-		return height;
-	}
-	
-	
-	@Override
-	public void setViewport(int x, int y, int width, int height)
-	{
-		if (width < 0 || height < 0)
-		{
-			throw new IllegalArgumentException("Viewport width and height must be non-negative.");
-		}
-		this.viewportSet = true;
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
+		openGLErrorCheck();
 		glViewport(x, y, width, height);
 		openGLErrorCheck();
 	}
@@ -79,47 +92,35 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	@Override
 	public void bindForDraw()
 	{
-		if (viewportSet)
-		{
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
-			openGLErrorCheck();
-			glViewport(x, y, width, height);
-			openGLErrorCheck();
-		}
-		else
-		{
-			throw new IllegalStateException("Cannot bind a framebuffer for draw without first calling setViewport().");
-		}
+		this.bindForDraw(0, 0, this.getWidth(), this.getHeight());
 	}
 	
 	protected abstract void selectColorSourceForRead(int index);
 	
-	@Override
-	public void bindForRead(int attachmentIndex)
+	protected void bindForRead(int attachmentIndex)
 	{
-		if (viewportSet)
-		{
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, this.getId());
-			openGLErrorCheck();
-			selectColorSourceForRead(attachmentIndex);
-		}
-		else
-		{
-			throw new IllegalStateException("Cannot bind a framebuffer for read without first calling setViewport().");
-		}
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, this.getId());
+		openGLErrorCheck();
+		selectColorSourceForRead(attachmentIndex);
 	}
 	
 	@Override
-	public int[] readPixelsRGBA(int attachmentIndex)
+	public int[] readPixelsRGBA(int attachmentIndex, int x, int y, int width, int height)
 	{
 		this.bindForRead(attachmentIndex);
-		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(this.width * this.height * 4);
-		glReadPixels(this.x, this.y, this.width, this.height, GL_RGBA, GL_UNSIGNED_BYTE, pixelBuffer);
+		ByteBuffer pixelBuffer = ByteBuffer.allocateDirect(width * height * 4);
+		glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelBuffer);
 		openGLErrorCheck();
-		int[] pixelArray = new int[this.width * this.height];
+		int[] pixelArray = new int[width * height];
 		for (int i = 0; i < pixelArray.length; i++) { pixelArray[i] = 0xFF0000FF; }
 		pixelBuffer.asIntBuffer().get(pixelArray);
 		return pixelArray;
+	}
+
+	@Override
+	public int[] readPixelsRGBA(int attachmentIndex)
+	{
+		return this.readPixelsRGBA(attachmentIndex, 0, 0, this.getWidth(), this.getHeight());
 	}
 	
 	@Override
@@ -138,8 +139,8 @@ public abstract class OpenGLFramebuffer implements Framebuffer
         		pixels[i] = (pixels[i] >>> 8) | (pixels[i] << 24);
         	}
         }
-        BufferedImage outImg = new BufferedImage(this.getViewportWidth(), this.getViewportHeight(), BufferedImage.TYPE_INT_ARGB);
-        outImg.setRGB(0, 0, this.getViewportWidth(), this.getViewportHeight(), pixels, 0, this.getViewportWidth());
+        BufferedImage outImg = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        outImg.setRGB(0, 0, this.getWidth(), this.getHeight(), pixels, 0, this.getWidth());
         File outputFile = new File(filename);
         ImageIO.write(outImg, fileFormat, outputFile);
 	}
