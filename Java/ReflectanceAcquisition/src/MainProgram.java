@@ -1,5 +1,4 @@
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.system.glfw.GLFW.*;
 
@@ -8,15 +7,14 @@ import java.io.IOException;
 
 import openGL.wrappers.implementations.OpenGLFramebufferObject;
 import openGL.wrappers.implementations.OpenGLProgram;
+import openGL.wrappers.implementations.OpenGLTexture2D;
 import openGL.wrappers.interfaces.FramebufferObject;
 import openGL.wrappers.interfaces.Program;
+import openGL.wrappers.interfaces.Texture;
 
 import org.lwjgl.Sys;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.system.glfw.ErrorCallback;
-import org.newdawn.slick.opengl.Texture;
-import org.newdawn.slick.opengl.TextureLoader;
-import org.newdawn.slick.util.ResourceLoader;
 
 public class MainProgram 
 {
@@ -24,6 +22,7 @@ public class MainProgram
     private Texture texture;
     private Program program;
     private FramebufferObject framebuffer;
+    private FramebufferObject framebuffer2;
  
     public void execute() 
     {
@@ -32,16 +31,8 @@ public class MainProgram
 	        System.out.println("Using LWJGL version " + Sys.getVersion());
 	        
 	        init();
+	        
 	        draw();
-	 
-	        try 
-	        {
-	            framebuffer.saveToFile(0, "png", "output.png");
-	        } 
-	        catch(IOException e)
-	        {
-	        	e.printStackTrace();
-	        }
 	        
 	        program.delete();
 	        framebuffer.delete();
@@ -70,6 +61,7 @@ public class MainProgram
         System.out.println("Using OpenGL version " + glGetString(GL_VERSION));
 
         framebuffer = new OpenGLFramebufferObject(WIDTH, HEIGHT);
+        framebuffer2 = new OpenGLFramebufferObject(WIDTH, HEIGHT);
         
         try
         {
@@ -81,11 +73,9 @@ public class MainProgram
         	e.printStackTrace();
         }
         
-        glEnable(GL_TEXTURE_2D);
-        
         try
         {
-        	texture = TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("checkerboard.png"));
+        	texture = new OpenGLTexture2D(GL_RGBA, "PNG", "checkerboard.png");
         }
         catch (IOException e)
         {
@@ -99,8 +89,7 @@ public class MainProgram
     	glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        glActiveTexture(GL_TEXTURE0);
-        texture.bind();
+        texture.bindToTextureUnit(0);
         program.setUniform("texture0", 0);
         glBegin(GL_QUADS);
         	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 0.0f);
@@ -108,6 +97,37 @@ public class MainProgram
         	glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0f, 1.0f, 0.0f);
         	glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, -1.0f, 0.0f);
         glEnd();
+        
+        try 
+        {
+            framebuffer.saveToFile(0, "png", "output1.png");
+        } 
+        catch(IOException e)
+        {
+        	e.printStackTrace();
+        }
+        
+        framebuffer2.bindForDraw();
+    	glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        framebuffer.getColorAttachmentTexture(0).bindToTextureUnit(0);
+        program.setUniform("texture0", 0);
+        glBegin(GL_QUADS);
+        	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 0.0f);
+        	glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 1.0f, 0.0f);
+        	glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0f, 1.0f, 0.0f);
+        	glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, -1.0f, 0.0f);
+        glEnd();
+        
+        try 
+        {
+            framebuffer2.saveToFile(0, "png", "output2.png");
+        } 
+        catch(IOException e)
+        {
+        	e.printStackTrace();
+        }
     }
  
     public static void main(String[] args) 

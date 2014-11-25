@@ -18,9 +18,8 @@ public class OpenGLRenderbuffer implements FramebufferAttachment
 		glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, internalFormat, width, height);
 		openGLErrorCheck();
 	}
-	
-	@Override
-	public void bind()
+
+	protected void bind()
 	{
 		glBindRenderbuffer(GL_RENDERBUFFER, this.renderbufferId);
 		openGLErrorCheck();

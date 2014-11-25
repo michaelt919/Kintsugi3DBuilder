@@ -4,21 +4,15 @@ import java.io.IOException;
 
 public interface Framebuffer
 {
-	int getViewportX();
+	int getWidth();
 
-	int getViewportY();
-
-	int getViewportWidth();
-
-	int getViewportHeight();
-
-	void setViewport(int x, int y, int width, int height);
+	int getHeight();
 
 	void bindForDraw();
-
-	void bindForRead(int attachmentIndex);
+	void bindForDraw(int x, int y, int width, int height);
 
 	int[] readPixelsRGBA(int mode);
+	int[] readPixelsRGBA(int mode, int x, int y, int width, int height);
 
 	void saveToFile(int readMode, String fileFormat, String filename) throws IOException;
 }
