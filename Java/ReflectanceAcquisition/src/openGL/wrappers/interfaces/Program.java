@@ -74,4 +74,10 @@ public interface Program extends GLResource
 
 	int getUniformLocation(String name);
 
+	int getVertexAttribLocation(String name);
+
+	void setTexture(int location, Texture texture);
+
+	void setTexture(String name, Texture texture);
+
 }

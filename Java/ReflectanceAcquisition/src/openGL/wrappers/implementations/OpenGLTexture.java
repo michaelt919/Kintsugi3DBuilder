@@ -10,7 +10,7 @@ import openGL.wrappers.interfaces.Texture;
 
 public abstract class OpenGLTexture implements Texture
 {
-	private static final int MAX_COMBINED_TEXTURE_IMAGE_UNITS;
+	public static final int MAX_COMBINED_TEXTURE_IMAGE_UNITS;
 	
 	private int textureId;
 	
@@ -59,6 +59,23 @@ public abstract class OpenGLTexture implements Texture
 		glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
 		openGLErrorCheck();
 		this.bind();
+	}
+	
+	public static void unbindTextureUnit(int textureUnitIndex)
+	{
+		if (textureUnitIndex < 0)
+		{
+			throw new IllegalArgumentException("Texture unit index cannot be negative.");
+		}
+		else if (textureUnitIndex > MAX_COMBINED_TEXTURE_IMAGE_UNITS)
+		{
+			throw new IllegalArgumentException("Texture unit index (" + textureUnitIndex + ") is greater than the maximum allowed index (" + 
+					(MAX_COMBINED_TEXTURE_IMAGE_UNITS-1) + ").");
+		}
+		glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
+		openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		openGLErrorCheck();
 	}
 
 	@Override

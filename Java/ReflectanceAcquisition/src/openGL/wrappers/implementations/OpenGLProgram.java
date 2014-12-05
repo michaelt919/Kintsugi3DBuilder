@@ -1,7 +1,9 @@
 package openGL.wrappers.implementations;
-import static openGL.OpenGLHelper.openGLErrorCheck;
+import static openGL.OpenGLHelper.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL40.*;
 
 import java.io.File;
@@ -9,9 +11,11 @@ import java.io.FileNotFoundException;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 
+import openGL.helpers.TextureManager;
 import openGL.wrappers.exceptions.UncompiledShaderException;
 import openGL.wrappers.exceptions.UnlinkedProgramException;
 import openGL.wrappers.interfaces.Program;
+import openGL.wrappers.interfaces.Texture;
 import openGL.wrappers.exceptions.ProgramLinkFailureException;
 import openGL.wrappers.interfaces.Shader;
 
@@ -19,6 +23,7 @@ public class OpenGLProgram implements Program
 {
 	private int programId;
 	private AbstractCollection<Shader> ownedShaders;
+	private TextureManager textureManager;
 	
 	public OpenGLProgram()
 	{
@@ -40,6 +45,7 @@ public class OpenGLProgram implements Program
 		programId = glCreateProgram();
 		openGLErrorCheck();
 		ownedShaders = new ArrayList<Shader>();
+		textureManager = new TextureManager(OpenGLTexture2D.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
 	}
 	
 	@Override
@@ -90,7 +96,33 @@ public class OpenGLProgram implements Program
 		{
 			glUseProgram(programId);
 			openGLErrorCheck();
+			
+			for (int i = 0; i < textureManager.length; i++)
+			{
+				Texture texture = textureManager.getTextureByUnit(i);
+				if (texture != null)
+				{
+					texture.bindToTextureUnit(i);
+				}
+				else
+				{
+					OpenGLTexture.unbindTextureUnit(i);
+				}
+			}
 		}
+	}
+	
+	@Override
+	public void setTexture(int location, Texture texture)
+	{
+		int textureUnit = textureManager.assignTextureByKey(location, texture);
+		this.setUniform(location, textureUnit);
+	}
+	
+	@Override
+	public void setTexture(String name, Texture texture)
+	{
+		this.setTexture(this.getUniformLocation(name), texture);
 	}
 	
 	@Override
@@ -278,5 +310,13 @@ public class OpenGLProgram implements Program
 	{
 		this.use(); glUniform4d(this.getUniformLocation(name), value1, value2, value3, value4);
 		openGLErrorCheck();
+	}
+	
+	@Override
+	public int getVertexAttribLocation(String name)
+	{
+		int location = glGetAttribLocation(programId, name);
+		openGLErrorCheck();
+		return location;
 	}
 }
