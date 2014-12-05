@@ -1,7 +1,9 @@
 package openGL.helpers;
 
-import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.DoubleBuffer;
+
+import org.lwjgl.BufferUtils;
 
 public class DoubleVertexList
 {
@@ -27,7 +29,7 @@ public class DoubleVertexList
 		
 		this.dimensions = dimensions;
 		this.count = count;
-		this.buffer = ByteBuffer.allocateDirect(dimensions * count * 8).asDoubleBuffer();
+		this.buffer = BufferUtils.createDoubleBuffer(dimensions * count);
 	}
 	
 	public DoubleVertexList(int dimensions, int count, DoubleBuffer buffer)
@@ -48,6 +50,10 @@ public class DoubleVertexList
 		{
 			throw new IllegalArgumentException("Insufficient buffer size - a list of " + count + dimensions +
 					"D vertices requires a buffer with a capacity of at least " + dimensions * count + ".");
+		}
+		if (buffer.order() != ByteOrder.nativeOrder())
+		{
+			throw new IllegalArgumentException("Buffers used by OpenGL must be in native byte order.");
 		}
 		
 		this.dimensions = dimensions;

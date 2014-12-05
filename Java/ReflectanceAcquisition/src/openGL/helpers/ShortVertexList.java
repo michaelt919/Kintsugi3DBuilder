@@ -1,7 +1,10 @@
 package openGL.helpers;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+
+import org.lwjgl.BufferUtils;
 
 public class ShortVertexList
 {
@@ -27,7 +30,7 @@ public class ShortVertexList
 		
 		this.dimensions = dimensions;
 		this.count = count;
-		this.buffer = ByteBuffer.allocateDirect(dimensions * count * 2).asShortBuffer();
+		this.buffer = BufferUtils.createShortBuffer(dimensions * count);
 	}
 	
 	public ShortVertexList(int dimensions, int count, ShortBuffer buffer)
@@ -48,6 +51,10 @@ public class ShortVertexList
 		{
 			throw new IllegalArgumentException("Insufficient buffer size - a list of " + count + dimensions +
 					"D vertices requires a buffer with a capacity of at least " + dimensions * count + ".");
+		}
+		if (buffer.order() != ByteOrder.nativeOrder())
+		{
+			throw new IllegalArgumentException("Buffers used by OpenGL must be in native byte order.");
 		}
 		
 		this.dimensions = dimensions;
