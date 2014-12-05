@@ -18,12 +18,7 @@ import openGL.wrappers.interfaces.Framebuffer;
 import openGL.wrappers.interfaces.FramebufferAttachment;
 
 public abstract class OpenGLFramebuffer implements Framebuffer 
-{
-//	private int x;
-//	private int y;
-//	private int width;
-//	private int height;
-	
+{	
 	public static Framebuffer defaultFramebuffer()
 	{
 		return OpenGLDefaultFramebuffer.getInstance();
@@ -33,53 +28,7 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	
 	public abstract int getWidth();
 	public abstract int getHeight();
-	
-//	@Override
-//	public int getViewportX()
-//	{
-//		return x;
-//	}
-//	
-//	
-//	@Override
-//	public int getViewportY()
-//	{
-//		return y;
-//	}
-//	
-//	
-//	@Override
-//	public int getViewportWidth()
-//	{
-//		return width;
-//	}
-//	
-//	
-//	@Override
-//	public int getViewportHeight()
-//	{
-//		return height;
-//	}
-	
-	
-//	@Override
-//	public void setViewport()
-//	{
-//		if (width < 0 || height < 0)
-//		{
-//			throw new IllegalArgumentException("Viewport width and height must be non-negative.");
-//		}
-//		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
-//		openGLErrorCheck();
-//		glViewport(x, y, width, height);
-//		openGLErrorCheck();
-//		this.viewportSet = true;
-//		this.x = x;
-//		this.y = y;
-//		this.width = width;
-//		this.height = height;
-//	}
-	
+
 	@Override
 	public void bindForDraw(int x, int y, int width, int height)
 	{

@@ -31,7 +31,7 @@ public class OpenGLTexture2D extends OpenGLTexture
 	
 	public OpenGLTexture2D(int internalFormat, String fileFormat, InputStream fileStream, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
 	{
-		// Use Slick just to load the texture from a file
+		// Use SlickUtil just to load the texture from a file
 		org.newdawn.slick.opengl.Texture texture = TextureLoader.getTexture(fileFormat, fileStream, flipVertical);
 		this.setTextureId(texture.getTextureID());
 		this.bind();
