@@ -109,10 +109,7 @@ public class MainProgram
     
     private void draw() 
     {
-    	framebuffer.bindForDraw();
-    	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        OpenGLHelper.openGLErrorCheck();
+    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
  
         renderable.program().setTexture("texture0", texture);
         renderable.draw(GL_TRIANGLE_FAN, framebuffer);
@@ -126,10 +123,7 @@ public class MainProgram
         	e.printStackTrace();
         }
         
-        framebuffer2.bindForDraw();
-    	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        OpenGLHelper.openGLErrorCheck();
+        framebuffer2.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 
         renderable.program().setTexture("texture0", framebuffer.getColorAttachmentTexture(0));
         renderable.draw(GL_TRIANGLE_FAN, framebuffer2);

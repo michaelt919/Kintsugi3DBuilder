@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import javax.imageio.ImageIO;
 
@@ -85,5 +87,41 @@ public abstract class OpenGLFramebuffer implements Framebuffer
         outImg.setRGB(0, 0, this.getWidth(), this.getHeight(), pixels, 0, this.getWidth());
         File outputFile = new File(filename);
         ImageIO.write(outImg, fileFormat, outputFile);
+	}
+	
+	@Override
+	public void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a)
+	{
+		this.bindForDraw();
+		FloatBuffer buffer = BufferUtils.createFloatBuffer(4);
+		buffer.put(r);
+		buffer.put(g);
+		buffer.put(b);
+		buffer.put(a);
+		buffer.flip();
+		glClearBuffer(GL_COLOR, attachmentIndex, buffer);
+		openGLErrorCheck();
+	}
+	
+	@Override
+	public void clearDepthBuffer(int attachmentIndex, float depth)
+	{
+		this.bindForDraw();
+		FloatBuffer buffer = BufferUtils.createFloatBuffer(1);
+		buffer.put(depth);
+		buffer.flip();
+		glClearBuffer(GL_COLOR, attachmentIndex, buffer);
+		openGLErrorCheck();
+	}
+	
+	@Override
+	public void clearStencilBuffer(int attachmentIndex, int stencilIndex)
+	{
+		this.bindForDraw();
+		IntBuffer buffer = BufferUtils.createIntBuffer(1);
+		buffer.put(stencilIndex);
+		buffer.flip();
+		glClearBuffer(GL_COLOR, attachmentIndex, buffer);
+		openGLErrorCheck();
 	}
 }
