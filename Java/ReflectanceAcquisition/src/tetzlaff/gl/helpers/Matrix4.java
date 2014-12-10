@@ -6,7 +6,7 @@ import org.lwjgl.BufferUtils;
 
 public class Matrix4 
 {
-	private float[] m;
+	private float[][] m;
 	private FloatBuffer buffer;
 	
 	public Matrix4(
@@ -15,23 +15,23 @@ public class Matrix4
 		float m31, float m32, float m33, float m34,
 		float m41, float m42, float m43, float m44)
     {
-        m = new float[16];
-        m[0] = m11;
-        m[1] = m21;
-        m[2] = m31;
-        m[3] = m41;
-        m[4] = m12;
-        m[5] = m22;
-        m[6] = m32;
-        m[7] = m42;
-        m[8] = m13;
-        m[9] = m23;
-        m[10] = m33;
-        m[11] = m43;
-        m[12] = m14;
-        m[13] = m24;
-        m[14] = m34;
-        m[15] = m44;
+        m = new float[4][4];
+        m[0][0] = m11;
+        m[1][0] = m21;
+        m[2][0] = m31;
+        m[3][0] = m41;
+        m[0][1] = m12;
+        m[1][1] = m22;
+        m[2][1] = m32;
+        m[3][1] = m42;
+        m[0][2] = m13;
+        m[1][2] = m23;
+        m[2][2] = m33;
+        m[3][2] = m43;
+        m[0][3] = m14;
+        m[1][3] = m24;
+        m[2][3] = m34;
+        m[3][3] = m44;
         
         buffer = BufferUtils.createFloatBuffer(16);
         buffer.put(m11); 
@@ -52,6 +52,19 @@ public class Matrix4
         buffer.put(m44);
         buffer.flip();
     }
+	
+	public Matrix4(Matrix3 m3, float tx, float ty, float tz)
+	{
+		this(	m3.get(0,0),	m3.get(0,1),	m3.get(0,2),	tx,
+				m3.get(1,0),	m3.get(1,1),	m3.get(1,2),	ty,
+				m3.get(2,0),	m3.get(2,1),	m3.get(2,2),	tz,
+				0.0f,			0.0f,			0.0f,			1.0f	);
+	}
+	
+	public Matrix4(Matrix3 m3)
+	{
+		this(m3, 0.0f, 0.0f, 0.0f);
+	}
 
 	public Matrix4(float sx, float sy, float sz, 
 			float tx, float ty, float tz) 
@@ -94,7 +107,7 @@ public class Matrix4
 	
 	public static Matrix4 translate(float tx, float ty, float tz)
 	{
-		return new Matrix4(0.0f, 0.0f, 0.0f, tx, ty, tz);
+		return new Matrix4(1.0f, 1.0f, 1.0f, tx, ty, tz);
 	}
 	
 	public static Matrix4 ortho(float left, float right, float bottom, float top, float near, float far)
@@ -131,6 +144,88 @@ public class Matrix4
 			0.0f,		0.0f,	(far + near) / (near - far),	2.0f * far * near / (near - far),
 			0.0f,		0.0f,	-1.0f,							0.0f
 		);
+	}
+	
+	public static Matrix4 rotateX(double radians)
+	{
+		return new Matrix4(Matrix3.rotateX(radians));
+	}
+	
+	public static Matrix4 rotateY(double radians)
+	{
+		return new Matrix4(Matrix3.rotateY(radians));
+	}
+	
+	public static Matrix4 rotateZ(double radians)
+	{
+		return new Matrix4(Matrix3.rotateZ(radians));
+	}
+	
+	public Matrix4 plus(Matrix4 other)
+	{
+		return new Matrix4(
+			this.m[0][0] + other.m[0][0],	this.m[0][1] + other.m[0][1], this.m[0][2] + other.m[0][2], this.m[0][3] + other.m[0][3],
+			this.m[1][0] + other.m[1][0],	this.m[1][1] + other.m[1][1], this.m[1][2] + other.m[1][2], this.m[1][3] + other.m[1][3],
+			this.m[2][0] + other.m[2][0],	this.m[2][1] + other.m[2][1], this.m[2][2] + other.m[2][2], this.m[2][3] + other.m[2][3],
+			this.m[3][0] + other.m[3][0],	this.m[3][1] + other.m[3][1], this.m[3][2] + other.m[3][2], this.m[3][3] + other.m[3][3]
+		);
+	}
+	
+	public Matrix4 minus(Matrix4 other)
+	{
+		return new Matrix4(
+			this.m[0][0] - other.m[0][0],	this.m[0][1] - other.m[0][1], this.m[0][2] - other.m[0][2], this.m[0][3] - other.m[0][3],
+			this.m[1][0] - other.m[1][0],	this.m[1][1] - other.m[1][1], this.m[1][2] - other.m[1][2], this.m[1][3] - other.m[1][3],
+			this.m[2][0] - other.m[2][0],	this.m[2][1] - other.m[2][1], this.m[2][2] - other.m[2][2], this.m[2][3] - other.m[2][3],
+			this.m[3][0] - other.m[3][0],	this.m[3][1] - other.m[3][1], this.m[3][2] - other.m[3][2], this.m[3][3] - other.m[3][3]
+		);
+	}
+	
+	public Matrix4 times(Matrix4 other)
+	{
+		return new Matrix4(
+			this.m[0][0] * other.m[0][0] + this.m[0][1] * other.m[1][0] + this.m[0][2] * other.m[2][0] + this.m[0][3] * other.m[3][0],	
+			this.m[0][0] * other.m[0][1] + this.m[0][1] * other.m[1][1] + this.m[0][2] * other.m[2][1] + this.m[0][3] * other.m[3][1],	
+			this.m[0][0] * other.m[0][2] + this.m[0][1] * other.m[1][2] + this.m[0][2] * other.m[2][2] + this.m[0][3] * other.m[3][2],	
+			this.m[0][0] * other.m[0][3] + this.m[0][1] * other.m[1][3] + this.m[0][2] * other.m[2][3] + this.m[0][3] * other.m[3][3],	
+			this.m[1][0] * other.m[0][0] + this.m[1][1] * other.m[1][0] + this.m[1][2] * other.m[2][0] + this.m[1][3] * other.m[3][0],	
+			this.m[1][0] * other.m[0][1] + this.m[1][1] * other.m[1][1] + this.m[1][2] * other.m[2][1] + this.m[1][3] * other.m[3][1],	
+			this.m[1][0] * other.m[0][2] + this.m[1][1] * other.m[1][2] + this.m[1][2] * other.m[2][2] + this.m[1][3] * other.m[3][2],
+			this.m[1][0] * other.m[0][3] + this.m[1][1] * other.m[1][3] + this.m[1][2] * other.m[2][3] + this.m[1][3] * other.m[3][3],
+			this.m[2][0] * other.m[0][0] + this.m[2][1] * other.m[1][0] + this.m[2][2] * other.m[2][0] + this.m[2][3] * other.m[3][0],	
+			this.m[2][0] * other.m[0][1] + this.m[2][1] * other.m[1][1] + this.m[2][2] * other.m[2][1] + this.m[2][3] * other.m[3][1],	
+			this.m[2][0] * other.m[0][2] + this.m[2][1] * other.m[1][2] + this.m[2][2] * other.m[2][2] + this.m[2][3] * other.m[3][2],	
+			this.m[2][0] * other.m[0][3] + this.m[2][1] * other.m[1][3] + this.m[2][2] * other.m[2][3] + this.m[2][3] * other.m[3][3],
+			this.m[3][0] * other.m[0][0] + this.m[3][1] * other.m[1][0] + this.m[3][2] * other.m[2][0] + this.m[3][3] * other.m[3][0],	
+			this.m[3][0] * other.m[0][1] + this.m[3][1] * other.m[1][1] + this.m[3][2] * other.m[2][1] + this.m[3][3] * other.m[3][1],	
+			this.m[3][0] * other.m[0][2] + this.m[3][1] * other.m[1][2] + this.m[3][2] * other.m[2][2] + this.m[3][3] * other.m[3][2],	
+			this.m[3][0] * other.m[0][3] + this.m[3][1] * other.m[1][3] + this.m[3][2] * other.m[2][3] + this.m[3][3] * other.m[3][3]
+		);
+	}
+	
+	public Matrix4 negate()
+	{
+		return new Matrix4(
+			-this.m[0][0], -this.m[0][1], -this.m[0][2], -this.m[0][3],
+			-this.m[1][0], -this.m[1][1], -this.m[1][2], -this.m[1][3],
+			-this.m[2][0], -this.m[2][1], -this.m[2][2], -this.m[2][3],
+			-this.m[3][0], -this.m[3][1], -this.m[3][2], -this.m[3][3]
+		);
+	}
+	
+	public Matrix4 transpose()
+	{
+		return new Matrix4(
+			this.m[0][0], this.m[1][0], this.m[2][0], this.m[3][0],
+			this.m[0][1], this.m[1][1], this.m[2][1], this.m[3][1],
+			this.m[0][2], this.m[1][2], this.m[2][2], this.m[3][2],
+			this.m[0][3], this.m[1][3], this.m[2][3], this.m[3][3]
+		);
+	}
+	
+	public float get(int row, int col)
+	{
+		return this.m[row][col];
 	}
 
 	public FloatBuffer asFloatBuffer() 
