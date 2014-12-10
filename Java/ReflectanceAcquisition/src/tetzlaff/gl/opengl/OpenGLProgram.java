@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.exceptions.ProgramLinkFailureException;
 import tetzlaff.gl.exceptions.UnlinkedProgramException;
+import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.opengl.helpers.TextureManager;
 
 public class OpenGLProgram implements Program<OpenGLShader, OpenGLTexture>
@@ -312,5 +313,21 @@ public class OpenGLProgram implements Program<OpenGLShader, OpenGLTexture>
 		int location = glGetAttribLocation(programId, name);
 		openGLErrorCheck();
 		return location;
+	}
+
+	@Override
+	public void setUniform(String name, Matrix4 value) 
+	{
+		this.use();
+		glUniformMatrix4(this.getUniformLocation(name), false, value.asFloatBuffer());
+		openGLErrorCheck();
+	}
+
+	@Override
+	public void setUniform(int location, Matrix4 value) 
+	{
+		this.use();
+		glUniformMatrix4(location, false, value.asFloatBuffer());
+		openGLErrorCheck();
 	}
 }

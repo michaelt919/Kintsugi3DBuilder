@@ -1,5 +1,6 @@
 package tetzlaff.gl;
 
+import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.opengl.OpenGLResource;
 
 public interface Program<ShaderType, TextureType> extends OpenGLResource
@@ -42,6 +43,8 @@ public interface Program<ShaderType, TextureType> extends OpenGLResource
 	void setUniform(String name, int value1, int value2);
 
 	void setUniform(String name, int value);
+	
+	void setUniform(String name, Matrix4 value);
 
 	void setUniform(int location, double value1, double value2,
 			double value3, double value4);
@@ -72,6 +75,8 @@ public interface Program<ShaderType, TextureType> extends OpenGLResource
 	void setUniform(int location, int value1, int value2);
 
 	void setUniform(int location, int value);
+	
+	void setUniform(int location, Matrix4 value);
 
 	int getUniformLocation(String name);
 
