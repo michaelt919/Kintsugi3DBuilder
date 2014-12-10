@@ -15,6 +15,7 @@ import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.helpers.FloatVertexList;
+import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
@@ -92,10 +93,10 @@ public class MainProgram
         renderable = new OpenGLRenderable(program);
         renderable.addVertexBuffer("position", new OpenGLVertexBuffer(
     		new FloatVertexList(3, 4, new float[] { 
-				-1.0f, -1.0f, 0.0f,
-				-1.0f,  1.0f, 0.0f, 
-				 1.0f,  1.0f, 0.0f, 
-				 1.0f, -1.0f, 0.0f,
+				-1.0f, -1.0f, -1.0f,
+				-1.0f,  1.0f, -1.0f, 
+				 1.0f,  1.0f, 1.0f, 
+				 1.0f, -1.0f, 1.0f,
 			})
 		));
         renderable.addVertexBuffer("texCoord", new OpenGLVertexBuffer(
@@ -112,6 +113,10 @@ public class MainProgram
     {
     	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
  
+    	renderable.program().setUniform("model_view", new Matrix4(0.25f, 0.5f, 1.0f, 0.25f, -0.5f, -3.0f));
+    	//renderable.program().setUniform("projection", Matrix4.ortho(0.0f, 1.0f, -1.0f, 0.5f, 0.0f, 2.0f));
+    	renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, 1.0f, 2.0f, 4.0f));
+    	//renderable.program().setUniform("projection", Matrix4.frustum(-1.0f, 1.0f, -1.0f, 1.0f, 2.0f, 4.0f));
         renderable.program().setTexture("texture0", texture);
         renderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
         
@@ -126,6 +131,8 @@ public class MainProgram
         
         framebuffer2.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 
+    	renderable.program().setUniform("model_view", new Matrix4(0.5f, 0.75f, 1.0f, 0.25f, 0.5f, 0.0f));
+    	renderable.program().setUniform("projection", Matrix4.ortho(0.0f, 1.0f, -1.0f, 0.0f));
         renderable.program().setTexture("texture0", framebuffer.getColorAttachmentTexture(0));
         renderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer2);
         
