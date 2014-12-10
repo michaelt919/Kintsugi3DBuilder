@@ -113,9 +113,15 @@ public class MainProgram
     {
     	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
  
-    	renderable.program().setUniform("model_view", new Matrix4(0.25f, 0.5f, 1.0f, 0.25f, -0.5f, -3.0f));
+    	renderable.program().setUniform("model_view", 
+			Matrix4.rotateZ(Math.PI / 2).times(
+			Matrix4.rotateX(Math.PI / 8).times(
+			Matrix4.rotateY(Math.PI / 8).times(
+			Matrix4.translate(0.0f, 0.0f, 1.0f).times(
+				new Matrix4(0.25f, 0.5f, 1.0f, 0.25f, -0.5f, -3.0f)
+		)))));
     	//renderable.program().setUniform("projection", Matrix4.ortho(0.0f, 1.0f, -1.0f, 0.5f, 0.0f, 2.0f));
-    	renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, 1.0f, 2.0f, 4.0f));
+    	renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, 1.0f, 1.0f, 3.0f));
     	//renderable.program().setUniform("projection", Matrix4.frustum(-1.0f, 1.0f, -1.0f, 1.0f, 2.0f, 4.0f));
         renderable.program().setTexture("texture0", texture);
         renderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
