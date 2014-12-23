@@ -16,7 +16,7 @@ import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.exceptions.UnrecognizedPrimitiveModeException;
 import tetzlaff.gl.opengl.helpers.VertexAttributeSetting;
 
-public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexBuffer, OpenGLFramebuffer, OpenGLTexture>
+public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexBuffer, OpenGLIndexBuffer, OpenGLFramebuffer, OpenGLTexture>
 {
 	private OpenGLProgram program;
 	private OpenGLVertexArray vao;
@@ -110,6 +110,18 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	public void draw(PrimitiveMode primitiveMode, int width, int height)
 	{
 		this.draw(primitiveMode, OpenGLFramebuffer.defaultFramebuffer(), width, height);
+	}
+	
+	@Override
+	public void addVertexBuffer(int location, OpenGLVertexBuffer buffer, OpenGLIndexBuffer indexBuffer)
+	{
+		this.vao.addVertexBuffer(location, buffer, indexBuffer);
+	}
+	
+	@Override
+	public void addVertexBuffer(String name, OpenGLVertexBuffer buffer, OpenGLIndexBuffer indexBuffer)
+	{
+		this.addVertexBuffer(program.getVertexAttribLocation(name), buffer, indexBuffer);
 	}
 	
 	@Override

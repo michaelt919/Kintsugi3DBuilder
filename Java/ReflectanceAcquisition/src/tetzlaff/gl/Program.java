@@ -3,7 +3,7 @@ package tetzlaff.gl;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.opengl.OpenGLResource;
 
-public interface Program<ShaderType, TextureType> extends OpenGLResource
+public interface Program<ShaderType, TextureType>
 {
 
 	void attachShader(ShaderType shader, boolean owned);

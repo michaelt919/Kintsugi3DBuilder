@@ -15,7 +15,7 @@ import tetzlaff.gl.exceptions.UnlinkedProgramException;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.opengl.helpers.TextureManager;
 
-public class OpenGLProgram implements Program<OpenGLShader, OpenGLTexture>
+public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, OpenGLTexture>
 {
 	private int programId;
 	private AbstractCollection<OpenGLShader> ownedShaders;

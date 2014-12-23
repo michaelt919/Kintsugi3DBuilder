@@ -12,7 +12,7 @@ import java.nio.ShortBuffer;
 
 public abstract class OpenGLBuffer implements OpenGLResource
 {
-	public /*TODO*/ int bufferId;
+	public int bufferId;
 	private int usage;
 
 	protected OpenGLBuffer(int usage) 
