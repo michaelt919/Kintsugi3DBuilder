@@ -1,6 +1,10 @@
 package tetzlaff.gl;
 
-public interface Renderable<ProgramType extends Program<?, ? super TextureType>, VertexBufferType extends VertexBuffer, FramebufferType extends Framebuffer, TextureType>
+public interface Renderable<
+	ProgramType extends Program<?, ? super TextureType>, 
+	VertexBufferType extends VertexBuffer,
+	IndexBufferType extends IndexBuffer,
+	FramebufferType extends Framebuffer, TextureType		>
 {
 	ProgramType program();
 
@@ -73,6 +77,10 @@ public interface Renderable<ProgramType extends Program<?, ? super TextureType>,
 	void setVertexAttrib(int location, int value1, int value2);
 
 	void setVertexAttrib(int location, int value);
+
+	void addVertexBuffer(int location, VertexBufferType buffer, IndexBufferType indexBuffer);
+
+	void addVertexBuffer(String name, VertexBufferType buffer, IndexBufferType indexBuffer);
 
 	void addVertexBuffer(int location, VertexBufferType buffer);
 

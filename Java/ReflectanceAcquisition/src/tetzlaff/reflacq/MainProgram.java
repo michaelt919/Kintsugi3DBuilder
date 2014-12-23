@@ -17,6 +17,7 @@ import tetzlaff.gl.Renderable;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject;
+import tetzlaff.gl.opengl.OpenGLIndexBuffer;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLTexture;
@@ -91,22 +92,32 @@ public class MainProgram
         }
         
         renderable = new OpenGLRenderable(program);
-        renderable.addVertexBuffer("position", new OpenGLVertexBuffer(
-    		new FloatVertexList(3, 4, new float[] { 
-				-1.0f, -1.0f, -1.0f,
-				-1.0f,  1.0f, -1.0f, 
-				 1.0f,  1.0f, 1.0f, 
-				 1.0f, -1.0f, 1.0f,
-			})
-		));
-        renderable.addVertexBuffer("texCoord", new OpenGLVertexBuffer(
-    		new FloatVertexList(2, 4, new float[] { 
-				0.0f, 0.0f, 
-				0.0f, 1.0f, 
-				1.0f, 1.0f, 
-				1.0f, 0.0f 
-			})
-		));
+        renderable.addVertexBuffer("position",
+    		new OpenGLVertexBuffer(
+	    		new FloatVertexList(3, 4, new float[] { 
+					-1.0f, -1.0f, -1.0f,
+					-1.0f,  1.0f, -1.0f, 
+					 1.0f,  1.0f, 1.0f, 
+					 1.0f, -1.0f, 1.0f,
+				})
+			),
+			new OpenGLIndexBuffer(
+				new int[] { 0, 1, 2, 0, 2, 3 }
+			)
+        );
+        renderable.addVertexBuffer("texCoord", 
+    		new OpenGLVertexBuffer(
+	    		new FloatVertexList(2, 4, new float[] { 
+					0.0f, 0.0f, 
+					0.0f, 1.0f, 
+					1.0f, 1.0f, 
+					1.0f, 0.0f 
+				})
+			),
+			new OpenGLIndexBuffer(
+				new int[] { 0, 1, 2, 0, 2, 3 }
+			)
+        );
     }
     
     private void draw() 
@@ -114,17 +125,16 @@ public class MainProgram
     	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
  
     	renderable.program().setUniform("model_view", 
-			Matrix4.rotateZ(Math.PI / 2).times(
-			Matrix4.rotateX(Math.PI / 8).times(
-			Matrix4.rotateY(Math.PI / 8).times(
-			Matrix4.translate(0.0f, 0.0f, 1.0f).times(
-				new Matrix4(0.25f, 0.5f, 1.0f, 0.25f, -0.5f, -3.0f)
-		)))));
+			Matrix4.rotateZ(Math.PI / 2)
+				.times(Matrix4.rotateX(Math.PI / 8))
+				.times(Matrix4.rotateY(Math.PI / 8))
+				.times(Matrix4.translate(0.0f, 0.0f, 1.0f))
+				.times(new Matrix4(0.25f, 0.5f, 1.0f, 0.25f, -0.5f, -3.0f)));
     	//renderable.program().setUniform("projection", Matrix4.ortho(0.0f, 1.0f, -1.0f, 0.5f, 0.0f, 2.0f));
     	renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, 1.0f, 1.0f, 3.0f));
     	//renderable.program().setUniform("projection", Matrix4.frustum(-1.0f, 1.0f, -1.0f, 1.0f, 2.0f, 4.0f));
         renderable.program().setTexture("texture0", texture);
-        renderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
         
         try 
         {
@@ -140,7 +150,7 @@ public class MainProgram
     	renderable.program().setUniform("model_view", new Matrix4(0.5f, 0.75f, 1.0f, 0.25f, 0.5f, 0.0f));
     	renderable.program().setUniform("projection", Matrix4.ortho(0.0f, 1.0f, -1.0f, 0.0f));
         renderable.program().setTexture("texture0", framebuffer.getColorAttachmentTexture(0));
-        renderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer2);
+        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer2);
         
         try 
         {
