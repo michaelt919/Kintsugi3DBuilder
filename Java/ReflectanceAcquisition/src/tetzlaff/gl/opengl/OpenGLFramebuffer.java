@@ -115,26 +115,32 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	}
 	
 	@Override
-	public void clearDepthBuffer(int attachmentIndex, float depth)
+	public void clearDepthBuffer(float depth)
 	{
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
 		openGLErrorCheck();
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(1);
 		buffer.put(depth);
 		buffer.flip();
-		glClearBuffer(GL_COLOR, attachmentIndex, buffer);
+		glClearBuffer(GL_DEPTH, 0, buffer);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void clearStencilBuffer(int attachmentIndex, int stencilIndex)
+	public void clearDepthBuffer()
+	{
+		this.clearDepthBuffer(1.0f);
+	}
+	
+	@Override
+	public void clearStencilBuffer(int stencilIndex)
 	{
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
 		openGLErrorCheck();
 		IntBuffer buffer = BufferUtils.createIntBuffer(1);
 		buffer.put(stencilIndex);
 		buffer.flip();
-		glClearBuffer(GL_COLOR, attachmentIndex, buffer);
+		glClearBuffer(GL_STENCIL, 0, buffer);
 		openGLErrorCheck();
 	}
 }

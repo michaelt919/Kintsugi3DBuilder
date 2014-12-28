@@ -83,7 +83,7 @@ public class FloatVertexList
 		{
 			throw new IndexOutOfBoundsException("Dimension cannot be negative.");
 		}
-		if (dimension > this.count)
+		if (dimension > this.dimensions)
 		{
 			throw new IndexOutOfBoundsException("Dimension (" + dimension + ") is greater than the dimensions of the vertex list (" + this.dimensions + ").");
 		}
@@ -104,7 +104,7 @@ public class FloatVertexList
 		{
 			throw new IndexOutOfBoundsException("Dimension cannot be negative.");
 		}
-		if (dimension > this.count)
+		if (dimension > this.dimensions)
 		{
 			throw new IndexOutOfBoundsException("Dimension (" + dimension + ") is greater than the dimensions of the vertex list (" + this.dimensions + ").");
 		}

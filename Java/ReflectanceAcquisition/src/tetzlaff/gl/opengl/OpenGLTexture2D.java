@@ -14,19 +14,19 @@ public class OpenGLTexture2D extends OpenGLTexture
 {
 	private int levelCount;
 	
-	public OpenGLTexture2D(int internalFormat, int width, int height, boolean useLinearFiltering, boolean useMipmaps) 
+	public OpenGLTexture2D(int internalFormat, int width, int height, int format, boolean useLinearFiltering, boolean useMipmaps) 
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
 		super();
 		this.bind();
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, 0);
 		openGLErrorCheck();
 		this.init(width, height, useLinearFiltering, useMipmaps);
 	}
 	
-	public OpenGLTexture2D(int internalFormat, int width, int height) 
+	public OpenGLTexture2D(int internalFormat, int width, int height, int format) 
 	{
-		this(internalFormat, width, height, false, false);
+		this(internalFormat, width, height, format, false, false);
 	}
 	
 	public OpenGLTexture2D(int internalFormat, String fileFormat, InputStream fileStream, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException

@@ -146,6 +146,36 @@ public class Matrix4
 		);
 	}
 	
+	public static Matrix4 lookAt(
+		Vector3 eye,
+		Vector3 center,
+		Vector3 up)
+	{
+		Vector3 f = center.minus(eye).normalized();
+		up = up.normalized();
+		Vector3 s = f.cross(up);
+		Vector3 u = s.cross(f);
+		
+		return new Matrix4(
+			s.x, 	s.y, 	s.z, 	0.0f,
+			u.x, 	u.y, 	u.z, 	0.0f,
+			-f.x,	-f.y,	-f.z,	0.0f,
+			0.0f,	0.0f,	0.0f,	1.0f
+		).times(Matrix4.translate(-eye.x, -eye.y, -eye.z));
+	}
+	
+	public static Matrix4 lookAt(
+		float eyeX, float eyeY, float eyeZ,
+		float centerX, float centerY, float centerZ,
+		float upX, float upY, float upZ)
+	{
+		return Matrix4.lookAt(
+			new Vector3(eyeX, eyeY, eyeZ),
+			new Vector3(centerX, centerY, centerZ),
+			new Vector3(upX, upY, upZ)
+		);
+	}
+	
 	public static Matrix4 rotateX(double radians)
 	{
 		return new Matrix4(Matrix3.rotateX(radians));
