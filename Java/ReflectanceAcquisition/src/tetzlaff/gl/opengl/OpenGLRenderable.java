@@ -14,9 +14,10 @@ import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.exceptions.UnrecognizedPrimitiveModeException;
+import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.gl.opengl.helpers.VertexAttributeSetting;
 
-public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexBuffer, OpenGLIndexBuffer, OpenGLFramebuffer, OpenGLTexture>
+public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexBuffer, OpenGLFramebuffer, OpenGLTexture>
 {
 	private OpenGLProgram program;
 	private OpenGLVertexArray vao;
@@ -113,15 +114,15 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	}
 	
 	@Override
-	public void addVertexBuffer(int location, OpenGLVertexBuffer buffer, OpenGLIndexBuffer indexBuffer)
+	public void addVertexBuffer(int location, OpenGLVertexBuffer buffer, boolean owned)
 	{
-		this.vao.addVertexBuffer(location, buffer, indexBuffer);
+		this.vao.addVertexBuffer(location, buffer, owned);
 	}
 	
 	@Override
-	public void addVertexBuffer(String name, OpenGLVertexBuffer buffer, OpenGLIndexBuffer indexBuffer)
+	public void addVertexBuffer(String name, OpenGLVertexBuffer buffer, boolean owned)
 	{
-		this.addVertexBuffer(program.getVertexAttribLocation(name), buffer, indexBuffer);
+		this.addVertexBuffer(program.getVertexAttribLocation(name), buffer, owned);
 	}
 	
 	@Override
@@ -134,6 +135,32 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	public void addVertexBuffer(String name, OpenGLVertexBuffer buffer)
 	{
 		this.addVertexBuffer(program.getVertexAttribLocation(name), buffer);
+	}
+
+	@Override
+	public void addVertexMesh(String vertexName, String texCoordName, String normalName, VertexMesh mesh) 
+	{
+        this.addVertexBuffer(
+    		vertexName,
+    		new OpenGLVertexBuffer(mesh.getVertices()),
+			true
+        );
+        if (mesh.hasTexCoords())
+        {
+	        this.addVertexBuffer(
+	    		texCoordName, 
+	    		new OpenGLVertexBuffer(mesh.getTexCoords()),
+				true
+	        );
+        }
+        if (mesh.hasNormals())
+        {
+	        this.addVertexBuffer(
+	    		normalName, 
+	    		new OpenGLVertexBuffer(mesh.getNormals()),
+				true
+	        );
+        }
 	}
 	
 	@Override

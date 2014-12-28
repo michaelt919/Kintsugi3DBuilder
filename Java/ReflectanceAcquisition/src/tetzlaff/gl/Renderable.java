@@ -1,9 +1,10 @@
 package tetzlaff.gl;
 
+import tetzlaff.gl.helpers.VertexMesh;
+
 public interface Renderable<
 	ProgramType extends Program<?, ? super TextureType>, 
 	VertexBufferType extends VertexBuffer,
-	IndexBufferType extends IndexBuffer,
 	FramebufferType extends Framebuffer, TextureType		>
 {
 	ProgramType program();
@@ -78,11 +79,13 @@ public interface Renderable<
 
 	void setVertexAttrib(int location, int value);
 
-	void addVertexBuffer(int location, VertexBufferType buffer, IndexBufferType indexBuffer);
+	void addVertexBuffer(int location, VertexBufferType buffer, boolean owned);
 
-	void addVertexBuffer(String name, VertexBufferType buffer, IndexBufferType indexBuffer);
+	void addVertexBuffer(String name, VertexBufferType buffer, boolean owned);
 
 	void addVertexBuffer(int location, VertexBufferType buffer);
 
 	void addVertexBuffer(String name, VertexBufferType buffer);
+	
+	void addVertexMesh(String vertexName, String texCoordName, String normalName, VertexMesh mesh);
 }

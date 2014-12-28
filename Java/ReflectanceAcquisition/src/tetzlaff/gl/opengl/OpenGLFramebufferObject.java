@@ -49,23 +49,23 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 		
 		for (int i = 0; i < colorAttachments; i++)
 		{
-			this.colorTextures[i] = createAttachment(GL_COLOR_ATTACHMENT0 + i, GL_RGBA);
+			this.colorTextures[i] = createAttachment(GL_COLOR_ATTACHMENT0 + i, GL_RGBA, GL_RGBA);
 		}
 		
 		if (depthAttachment && stencilAttachment && combineDepthAndStencil)
 		{
-			this.depthStencilTexture = createAttachment(GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH_STENCIL);
+			this.depthStencilTexture = createAttachment(GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL);
 		}
 		else
 		{
 			if (depthAttachment)
 			{
-				this.depthTexture = createAttachment(GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT);
+				this.depthTexture = createAttachment(GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT);
 			}
 			
 			if (stencilAttachment)
 			{
-				this.stencilTexture = createAttachment(GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX);
+				this.stencilTexture = createAttachment(GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX, GL_STENCIL_INDEX);
 			}
 		}
 		
@@ -76,10 +76,10 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 		openGLErrorCheck();
 	}
 	
-	private OpenGLTexture createAttachment(int attachmentType, int internalFormat)
+	private OpenGLTexture createAttachment(int attachmentType, int internalFormat, int format)
 	{
 		//FramebufferAttachment attachment = new OpenGLRenderbuffer(0, internalFormat, this.nativeWidth, this.nativeHeight);
-		OpenGLTexture attachment = new OpenGLTexture2D(internalFormat, this.nativeWidth, this.nativeHeight);
+		OpenGLTexture attachment = new OpenGLTexture2D(internalFormat, this.nativeWidth, this.nativeHeight, format);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
 		openGLErrorCheck();
 		attachment.attachToDrawFramebuffer(attachmentType, 0);
@@ -89,7 +89,7 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 	
 	public OpenGLFramebufferObject(int width, int height, int colorAttachments)
 	{
-		this(width, height, colorAttachments, false, false, false);
+		this(width, height, colorAttachments, true, false, false);
 	}
 	
 	public OpenGLFramebufferObject(int width, int height)
