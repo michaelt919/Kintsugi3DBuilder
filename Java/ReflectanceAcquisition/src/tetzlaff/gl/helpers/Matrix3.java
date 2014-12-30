@@ -86,6 +86,27 @@ public class Matrix3
 		);
 	}
 	
+	public static Matrix3 rotateAxis(Vector3 axis, double radians)
+	{
+		float sinTheta = (float)Math.sin(radians);
+		float cosTheta = (float)Math.cos(radians);
+		float oneMinusCosTheta = 1.0f - cosTheta;
+		return new Matrix3(
+				
+			axis.x * axis.x * oneMinusCosTheta + cosTheta,			
+				axis.x * axis.y * oneMinusCosTheta - axis.z * sinTheta,	
+					axis.x * axis.z * oneMinusCosTheta + axis.y * sinTheta,
+					
+			axis.y * axis.x * oneMinusCosTheta + axis.z * sinTheta,	
+				axis.y * axis.y * oneMinusCosTheta + cosTheta,			
+					axis.y * axis.z * oneMinusCosTheta - axis.x * sinTheta,
+					
+			axis.z * axis.x * oneMinusCosTheta - axis.y * sinTheta,	
+				axis.z * axis.y * oneMinusCosTheta + axis.x * sinTheta, 
+					axis.z * axis.z * oneMinusCosTheta + cosTheta
+		);
+	}
+	
 	public Matrix3 plus(Matrix3 other)
 	{
 		return new Matrix3(

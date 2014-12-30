@@ -4,8 +4,7 @@ import java.io.IOException;
 
 public interface Framebuffer
 {
-	int getWidth();
-	int getHeight();
+	FramebufferSize getSize();
 
 	int[] readColorBufferARGB(int attachmentIndex);
 	int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height);

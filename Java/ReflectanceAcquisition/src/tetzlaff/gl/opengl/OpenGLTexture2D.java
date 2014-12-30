@@ -29,7 +29,7 @@ public class OpenGLTexture2D extends OpenGLTexture
 		this(internalFormat, width, height, format, false, false);
 	}
 	
-	public OpenGLTexture2D(int internalFormat, String fileFormat, InputStream fileStream, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
+	public OpenGLTexture2D(String fileFormat, InputStream fileStream, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
 	{
 		// Use SlickUtil just to load the texture from a file
 		org.newdawn.slick.opengl.Texture texture = TextureLoader.getTexture(fileFormat, fileStream, flipVertical);
@@ -38,19 +38,19 @@ public class OpenGLTexture2D extends OpenGLTexture
 		this.init(texture.getTextureWidth(), texture.getTextureHeight(), useLinearFiltering, useMipmaps);
 	}
 	
-	public OpenGLTexture2D(int internalFormat, String fileFormat, InputStream fileStream) throws IOException
+	public OpenGLTexture2D(String fileFormat, InputStream fileStream) throws IOException
 	{
-		this(internalFormat, fileFormat, fileStream, false, false, false);
+		this(fileFormat, fileStream, false, false, false);
 	}
 	
-	public OpenGLTexture2D(int internalFormat, String fileFormat, String filename, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
+	public OpenGLTexture2D(String fileFormat, String filename, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
 	{
-		this(internalFormat, fileFormat, ResourceLoader.getResourceAsStream(filename), flipVertical, useLinearFiltering, useMipmaps);
+		this(fileFormat, ResourceLoader.getResourceAsStream(filename), flipVertical, useLinearFiltering, useMipmaps);
 	}
 	
-	public OpenGLTexture2D(int internalFormat, String fileFormat, String filename) throws IOException
+	public OpenGLTexture2D(String fileFormat, String filename) throws IOException
 	{
-		this(internalFormat, fileFormat, filename, false, false, false);
+		this(fileFormat, filename, false, false, false);
 	}
 	
 	private void init(int width, int height, boolean useLinearFiltering, boolean useMipmaps)

@@ -18,18 +18,13 @@ import javax.imageio.ImageIO;
 import org.lwjgl.BufferUtils;
 
 import tetzlaff.gl.Framebuffer;
+import tetzlaff.gl.FramebufferSize;
 
 public abstract class OpenGLFramebuffer implements Framebuffer 
-{	
-	public static OpenGLFramebuffer defaultFramebuffer()
-	{
-		return OpenGLDefaultFramebuffer.getInstance();
-	}
-	
+{		
 	protected abstract int getId();
 	
-	public abstract int getWidth();
-	public abstract int getHeight();
+	public abstract FramebufferSize getSize();
 
 	void bindForDraw(int x, int y, int width, int height)
 	{
@@ -41,7 +36,8 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	
 	void bindForDraw()
 	{
-		this.bindForDraw(0, 0, this.getWidth(), this.getHeight());
+		FramebufferSize size = this.getSize();
+		this.bindForDraw(0, 0, size.width, size.height);
 	}
 	
 	protected abstract void selectColorSourceForRead(int index);
@@ -71,7 +67,8 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	@Override
 	public int[] readColorBufferARGB(int attachmentIndex)
 	{
-		return this.readColorBufferARGB(attachmentIndex, 0, 0, this.getWidth(), this.getHeight());
+		FramebufferSize size = this.getSize();
+		return this.readColorBufferARGB(attachmentIndex, 0, 0, size.width, size.height);
 	}
 	
 	@Override
@@ -80,12 +77,11 @@ public abstract class OpenGLFramebuffer implements Framebuffer
         int[] pixels = this.readColorBufferARGB(attachmentIndex);
         
         // Flip the array vertically
-        int height = this.getHeight();
-        int width = this.getWidth();
-        for (int y = 0; y < height / 2; y++)
+        FramebufferSize size = this.getSize();
+        for (int y = 0; y < size.height / 2; y++)
         {
-        	int limit = (y + 1) * width;
-        	for (int i1 = y * width, i2 = (height - y - 1) * width; i1 < limit; i1++, i2++)
+        	int limit = (y + 1) * size.width;
+        	for (int i1 = y * size.width, i2 = (size.height - y - 1) * size.width; i1 < limit; i1++, i2++)
         	{
             	int tmp = pixels[i1];
             	pixels[i1] = pixels[i2];
@@ -93,8 +89,8 @@ public abstract class OpenGLFramebuffer implements Framebuffer
         	}
         }
         
-        BufferedImage outImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        outImg.setRGB(0, 0, width, height, pixels, 0, this.getWidth());
+        BufferedImage outImg = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
+        outImg.setRGB(0, 0, size.width, size.height, pixels, 0, size.width);
         File outputFile = new File(filename);
         ImageIO.write(outImg, fileFormat, outputFile);
 	}
