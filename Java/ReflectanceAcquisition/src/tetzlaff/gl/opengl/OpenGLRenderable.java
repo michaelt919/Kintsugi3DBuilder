@@ -10,6 +10,7 @@ import static tetzlaff.gl.opengl.helpers.StaticHelpers.openGLErrorCheck;
 import java.util.Map;
 import java.util.TreeMap;
 
+import tetzlaff.gl.Context;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.VertexBuffer;
@@ -106,11 +107,23 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	{
 		this.draw(primitiveMode, framebuffer, 0, 0, width, height);
 	}
+	
+	@Override
+	public void draw(PrimitiveMode primitiveMode, Context context)
+	{
+		this.draw(primitiveMode, OpenGLDefaultFramebuffer.fromContext(context));
+	}
 
 	@Override
-	public void draw(PrimitiveMode primitiveMode, int width, int height)
+	public void draw(PrimitiveMode primitiveMode, Context context, int width, int height)
 	{
-		this.draw(primitiveMode, OpenGLFramebuffer.defaultFramebuffer(), width, height);
+		this.draw(primitiveMode, OpenGLDefaultFramebuffer.fromContext(context), width, height);
+	}
+
+	@Override
+	public void draw(PrimitiveMode primitiveMode, Context context, int x, int y, int width, int height)
+	{
+		this.draw(primitiveMode, OpenGLDefaultFramebuffer.fromContext(context), x, y, width, height);
 	}
 	
 	@Override

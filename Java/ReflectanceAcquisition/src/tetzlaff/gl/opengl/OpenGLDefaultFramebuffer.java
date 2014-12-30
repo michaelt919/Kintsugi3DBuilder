@@ -6,12 +6,21 @@ import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
 import java.nio.IntBuffer;
 
+import tetzlaff.gl.Context;
+import tetzlaff.gl.FramebufferSize;
+
 public class OpenGLDefaultFramebuffer extends OpenGLFramebuffer
 {
-	private static OpenGLDefaultFramebuffer instance;
+	private Context context;
 	
-	private OpenGLDefaultFramebuffer() 
+	private OpenGLDefaultFramebuffer(Context context) 
 	{
+		this.context = context;
+	}
+	
+	public static OpenGLDefaultFramebuffer fromContext(Context context)
+	{
+		return new OpenGLDefaultFramebuffer(context);
 	}
 	
 	@Override
@@ -21,28 +30,9 @@ public class OpenGLDefaultFramebuffer extends OpenGLFramebuffer
 	}
 
 	@Override
-	public int getWidth() 
+	public FramebufferSize getSize() 
 	{
-		throw new UnsupportedOperationException("Retrieving the width or height of the default framebuffer is not currently supported.");
-//		long window = glfwGetCurrentContext();
-//		IntBuffer widthBuffer = IntBuffer.allocate(1);
-//		glfwGetFramebufferSize(window, widthBuffer, null);
-//		return widthBuffer.get();
-	}
-
-	@Override
-	public int getHeight() 
-	{
-		throw new UnsupportedOperationException("Retrieving the width or height of the default framebuffer is not currently supported.");
-//		long window = glfwGetCurrentContext();
-//		IntBuffer heightBuffer = IntBuffer.allocate(1);
-//		glfwGetFramebufferSize(window, null, heightBuffer);
-//		return heightBuffer.get();
-	}
-	
-	public static OpenGLDefaultFramebuffer getInstance()
-	{
-		return instance == null ? instance = new OpenGLDefaultFramebuffer() : instance;
+		return context.getFramebufferSize();
 	}
 
 	@Override

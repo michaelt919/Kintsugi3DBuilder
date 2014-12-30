@@ -191,6 +191,11 @@ public class Matrix4
 		return new Matrix4(Matrix3.rotateZ(radians));
 	}
 	
+	public static Matrix4 rotateAxis(Vector3 axis, double radians)
+	{
+		return new Matrix4(Matrix3.rotateAxis(axis, radians));
+	}
+	
 	public Matrix4 plus(Matrix4 other)
 	{
 		return new Matrix4(

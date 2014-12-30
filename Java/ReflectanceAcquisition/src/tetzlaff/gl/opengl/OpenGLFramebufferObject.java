@@ -8,6 +8,7 @@ import java.util.AbstractCollection;
 import java.util.ArrayList;
 
 import tetzlaff.gl.FramebufferObject;
+import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.opengl.exceptions.OpenGLInvalidFramebufferOperationException;
 
 public class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferObject<OpenGLTexture>, OpenGLResource
@@ -104,17 +105,11 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 	}
 	
 	@Override
-	public int getWidth()
+	public FramebufferSize getSize()
 	{
-		return this.nativeWidth;
+		return new FramebufferSize(this.nativeWidth, this.nativeHeight);
 	}
 	
-	@Override
-	public int getHeight()
-	{
-		return this.nativeHeight;
-	}
-
 	@Override
 	protected void selectColorSourceForRead(int index) 
 	{

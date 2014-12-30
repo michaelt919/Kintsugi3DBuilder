@@ -16,8 +16,12 @@ public interface Renderable<
 
 	void draw(PrimitiveMode primitiveMode, FramebufferType framebuffer, int width,
 			int height);
+	
+	void draw(PrimitiveMode primitiveMode, Context context);
+	
+	void draw(PrimitiveMode primitiveMode, Context context, int x, int y, int width, int height);
 
-	void draw(PrimitiveMode primitiveMode, int width, int height);
+	void draw(PrimitiveMode primitiveMode, Context context, int width, int height);
 	
 	void setVertexAttrib(String name, double value1, double value2,
 			double value3, double value4);
