@@ -110,6 +110,11 @@ public class Matrix4
 		return new Matrix4(1.0f, 1.0f, 1.0f, tx, ty, tz);
 	}
 	
+	public static Matrix4 translate(Vector3 t)
+	{
+		return new Matrix4(1.0f, 1.0f, 1.0f, t.x, t.y, t.z);
+	}
+	
 	public static Matrix4 ortho(float left, float right, float bottom, float top, float near, float far)
 	{
 		return new Matrix4(

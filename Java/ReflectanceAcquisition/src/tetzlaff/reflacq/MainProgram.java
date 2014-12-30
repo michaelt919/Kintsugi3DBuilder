@@ -93,11 +93,12 @@ public class MainProgram implements Drawable
     	
     	renderable.program().setUniform("model_view", 
 			Matrix4.lookAt(
-				new Vector3(0.0f, 0.0f, 5.0f).plus(mesh.getCentroid()), 
-				mesh.getCentroid(),
+				new Vector3(0.0f, 0.0f, 5.0f), 
+				new Vector3(0.0f, 0.0f, 0.0f),
 				new Vector3(0.0f, 1.0f, 0.0f)
 			) // View
-			.times(trackball.getRotationMatrix()) // Model
+			.times(trackball.getRotationMatrix())
+			.times(Matrix4.translate(mesh.getCentroid().negated())) // Model
 		);
     	
     	renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 3, 1.0f, 0.01f, 100.0f));
