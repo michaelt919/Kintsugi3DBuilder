@@ -107,6 +107,15 @@ public class Matrix3
 		);
 	}
 	
+	public static Matrix3 fromQuaternion(float x, float y, float z, float w)
+	{
+		return new Matrix3(
+			1 - 2*y*y - 2*z*z,	2*x*y - 2*z*w,		2*x*z + 2*y*w,
+			2*x*y + 2*z*w,		1 - 2*x*x - 2*z*z,	2*y*z - 2*x*w,
+			2*x*z - 2*y*w,		2*y*z + 2*x*w,		1 - 2*x*x - 2*y*y
+		);
+	}
+	
 	public Matrix3 plus(Matrix3 other)
 	{
 		return new Matrix3(

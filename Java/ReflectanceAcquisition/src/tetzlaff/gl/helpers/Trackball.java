@@ -57,7 +57,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 			WindowSize size = window.getWindowSize();
 			this.startX = (float)pos.x;
 			this.startY = (float)pos.y;
-			this.scale = 1.0f / Math.min(size.width, size.height);
+			this.scale = (float)Math.PI * this.sensitivity / Math.min(size.width, size.height);
 		}
 	}	
 
@@ -70,15 +70,15 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 			{
 				Vector3 rotationVector = 
 					new Vector3(
-						(float)(ypos - this.startY) * this.scale,
-						(float)(xpos - this.startX) * this.scale, 
+						(float)(ypos - this.startY),
+						(float)(xpos - this.startX), 
 						0.0f
 					);
 					
 				this.rotationMatrix = 
 					Matrix4.rotateAxis(
 						rotationVector.normalized(), 
-						this.sensitivity * rotationVector.length()
+						this.scale * rotationVector.length()
 					)
 					.times(this.oldRotationMatrix);
 			}

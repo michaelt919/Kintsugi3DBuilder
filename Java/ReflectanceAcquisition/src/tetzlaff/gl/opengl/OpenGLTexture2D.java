@@ -1,14 +1,20 @@
 package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
+import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
-import org.newdawn.slick.opengl.TextureLoader;
-import org.newdawn.slick.util.ResourceLoader;
+import javax.imageio.ImageIO;
+
+import org.lwjgl.BufferUtils;
 
 public class OpenGLTexture2D extends OpenGLTexture
 {
@@ -31,11 +37,22 @@ public class OpenGLTexture2D extends OpenGLTexture
 	
 	public OpenGLTexture2D(String fileFormat, InputStream fileStream, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
 	{
-		// Use SlickUtil just to load the texture from a file
-		org.newdawn.slick.opengl.Texture texture = TextureLoader.getTexture(fileFormat, fileStream, flipVertical);
-		this.setTextureId(texture.getTextureID());
+		super();
 		this.bind();
-		this.init(texture.getTextureWidth(), texture.getTextureHeight(), useLinearFiltering, useMipmaps);
+		
+		BufferedImage img = ImageIO.read(fileStream);
+		ByteBuffer buffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
+		IntBuffer intBuffer = buffer.asIntBuffer();
+		for (int y = 0; y < img.getHeight(); y++)
+		{
+			for (int x = 0; x < img.getWidth(); x++)
+			{
+				intBuffer.put(img.getRGB(x, y));
+			}
+		}
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.getWidth(), img.getHeight(), 0, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+		openGLErrorCheck();
+		this.init(img.getWidth(), img.getHeight(), useLinearFiltering, useMipmaps);
 	}
 	
 	public OpenGLTexture2D(String fileFormat, InputStream fileStream) throws IOException
@@ -45,7 +62,7 @@ public class OpenGLTexture2D extends OpenGLTexture
 	
 	public OpenGLTexture2D(String fileFormat, String filename, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
 	{
-		this(fileFormat, ResourceLoader.getResourceAsStream(filename), flipVertical, useLinearFiltering, useMipmaps);
+		this(fileFormat, new FileInputStream(filename), flipVertical, useLinearFiltering, useMipmaps);
 	}
 	
 	public OpenGLTexture2D(String fileFormat, String filename) throws IOException
