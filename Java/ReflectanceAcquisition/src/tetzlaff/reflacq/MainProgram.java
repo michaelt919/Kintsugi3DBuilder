@@ -19,6 +19,8 @@ import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLTexture;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
 import tetzlaff.interactive.InteractiveApplication;
+import tetzlaff.lightfield.ViewSet;
+import tetzlaff.lightfield.View;
 import tetzlaff.window.glfw.GLFWWindow;
 
 public class MainProgram implements Drawable
@@ -26,7 +28,8 @@ public class MainProgram implements Drawable
 	private GLFWWindow window;
     private OpenGLTexture texture;
     private OpenGLProgram program;
-    VertexMesh mesh;
+    private VertexMesh mesh;
+    private ViewSet<OpenGLTexture2D> viewSet;
     private OpenGLRenderable renderable;
     private Trackball trackball;
     
@@ -38,7 +41,7 @@ public class MainProgram implements Drawable
     @Override
     public void initialize() 
     {
-        this.trackball = new Trackball(2.0f);
+        this.trackball = new Trackball(1.0f);
         this.trackball.addAsWindowListener(this.window);
         
         this.window.enableDepthTest();
@@ -64,13 +67,24 @@ public class MainProgram implements Drawable
         try
         {
         	renderable = new OpenGLRenderable(program);
-        	mesh = new VertexMesh("OBJ", "cube.obj");
+        	mesh = new VertexMesh("OBJ", "pumpkin-warts-hires/manifold.obj");
         	renderable.addVertexMesh("position", "texCoord", "normal", mesh);
         }
         catch (IOException e)
         {
         	e.printStackTrace();
         }
+        
+        try
+        {
+        	viewSet = ViewSet.loadFromVSETFile("pumpkin-warts-hires/default.vset");
+        }
+        catch (IOException e)
+        {
+        	e.printStackTrace();
+        }
+
+        window.show();
     }
 
 	@Override
@@ -84,9 +98,6 @@ public class MainProgram implements Drawable
     	OpenGLFramebuffer framebuffer = OpenGLDefaultFramebuffer.fromContext(window);
     	
     	FramebufferSize size = framebuffer.getSize();
-    	int dim = Math.min(size.width, size.height);
-    	int x = (size.width - dim) / 2;
-    	int y = (size.height - dim) / 2;
     	
     	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
     	framebuffer.clearDepthBuffer();
@@ -101,9 +112,27 @@ public class MainProgram implements Drawable
 			.times(Matrix4.translate(mesh.getCentroid().negated())) // Model
 		);
     	
-    	renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 3, 1.0f, 0.01f, 100.0f));
-        renderable.program().setTexture("texture0", texture);
-        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer, x, y, dim, dim);
+    	renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
+    	
+    	int i = 0;
+    	for (View<OpenGLTexture2D> v : viewSet.views)
+    	{
+    		if (i == 0)
+    		{
+	        	renderable.program().setUniform("texMatrix", 
+	    			v.projection.getProjectionMatrix(viewSet.recommendedNearPlane, viewSet.recommendedFarPlane)
+	    				.times(v.cameraPose)
+				);
+	        	
+	        	//renderable.program().setUniform("model_view", v.cameraPose);
+	        	//renderable.program().setUniform("projection", v.projection.getProjectionMatrix(viewSet.recommendedNearPlane, viewSet.recommendedFarPlane));
+	        	
+	    		renderable.program().setTexture("texture0", v.image);
+	    		break; // temp
+    		}
+    		i++;
+    	}
+        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer, 0, 0, size.width, size.height);
     }
     
     @Override
@@ -138,7 +167,6 @@ public class MainProgram implements Drawable
     {
     	GLFWWindow window = new GLFWWindow(300, 300, "Light Field Renderer", true);
         InteractiveApplication app = InteractiveGraphics.createApplication(window, window, new MainProgram(window));
-        window.show();
 		app.run();
         GLFWWindow.closeAllWindows();
     }

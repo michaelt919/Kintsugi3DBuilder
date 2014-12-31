@@ -142,7 +142,7 @@ public class Matrix4
 	
 	public static Matrix4 perspective(float fovy, float aspect, float near, float far)
 	{
-		float f = 1.0f / (float)Math.tan(fovy * 0.5f);
+		float f = 1.0f / (float)Math.tan(fovy / 2);
 		return new Matrix4(
 			f / aspect,	0.0f,	0.0f,							0.0f,
 			0.0f,		f,		0.0f,							0.0f,
@@ -199,6 +199,11 @@ public class Matrix4
 	public static Matrix4 rotateAxis(Vector3 axis, double radians)
 	{
 		return new Matrix4(Matrix3.rotateAxis(axis, radians));
+	}
+	
+	public static Matrix4 fromQuaternion(float x, float y, float z, float w)
+	{
+		return new Matrix4(Matrix3.fromQuaternion(x, y, z, w));
 	}
 	
 	public Matrix4 plus(Matrix4 other)

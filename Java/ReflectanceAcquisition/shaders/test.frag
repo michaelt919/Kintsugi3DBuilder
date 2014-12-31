@@ -1,14 +1,25 @@
-#version 130
+#version 400
 
+in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
 
 uniform sampler2D texture0;
+uniform mat4 texMatrix;
 
 void main()
 {
-	 gl_FragColor = //(vec4(0.3) + 0.7*texture2D(texture0, fTexCoord.xy)) * 
-		 //vec4(0.75 * fTexCoord.x, 0.5 * fTexCoord.y, 0.25, 1.0) *
-		 vec4(0.75, 0.5, 0.25, 1.0) *
-		 vec4(vec3(normalize(fNormal).z), 1.0f);
+	vec4 projPos = texMatrix * vec4(fPosition, 1.0);
+	projPos = projPos / projPos.w;
+	
+	vec2 texCoord = vec2((projPos.x / 2 + 0.5), (-projPos.y / 2 + 0.5));
+	
+	if (texCoord.x < 0 || texCoord.x > 1 || texCoord.y < 0 || texCoord.y > 1)
+	{
+		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	}
+	else
+	{
+		gl_FragColor = texture2D(texture0, texCoord.xy);
+	}
 }
