@@ -13,6 +13,8 @@ public interface Context
 	FramebufferSize getFramebufferSize();
 	
 	void enableDepthTest();
-	
 	void disableDepthTest();
+	
+	void enableMultisampling();
+	void disableMultisampling();
 }

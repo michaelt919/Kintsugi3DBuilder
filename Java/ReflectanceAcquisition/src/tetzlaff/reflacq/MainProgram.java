@@ -154,7 +154,7 @@ public class MainProgram implements Drawable
  
     public static void main(String[] args) 
     {
-    	GLFWWindow window = new GLFWWindow(300, 300, "Light Field Renderer", true);
+    	GLFWWindow window = new GLFWWindow(300, 300, "Light Field Renderer", true, 4);
         InteractiveApplication app = InteractiveGraphics.createApplication(window, window, new MainProgram(window));
 		app.run();
         GLFWWindow.closeAllWindows();

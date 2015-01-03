@@ -127,304 +127,369 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	}
 	
 	@Override
-	public void addVertexBuffer(int location, OpenGLVertexBuffer buffer, boolean owned)
+	public boolean addVertexBuffer(int location, OpenGLVertexBuffer buffer, boolean owned)
 	{
-		this.vao.addVertexBuffer(location, buffer, owned);
+		if (location >= 0)
+		{
+			this.vao.addVertexBuffer(location, buffer, owned);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void addVertexBuffer(String name, OpenGLVertexBuffer buffer, boolean owned)
+	public boolean addVertexBuffer(String name, OpenGLVertexBuffer buffer, boolean owned)
 	{
-		this.addVertexBuffer(program.getVertexAttribLocation(name), buffer, owned);
+		return this.addVertexBuffer(program.getVertexAttribLocation(name), buffer, owned);
 	}
 	
 	@Override
-	public void addVertexBuffer(int location, OpenGLVertexBuffer buffer)
+	public boolean addVertexBuffer(int location, OpenGLVertexBuffer buffer)
 	{
-		this.vao.addVertexBuffer(location, buffer);
+		if (location >= 0)
+		{
+			this.vao.addVertexBuffer(location, buffer);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void addVertexBuffer(String name, OpenGLVertexBuffer buffer)
+	public boolean addVertexBuffer(String name, OpenGLVertexBuffer buffer)
 	{
-		this.addVertexBuffer(program.getVertexAttribLocation(name), buffer);
+		return this.addVertexBuffer(program.getVertexAttribLocation(name), buffer);
 	}
 
 	@Override
-	public void addVertexMesh(String vertexName, String texCoordName, String normalName, VertexMesh mesh) 
+	public boolean addVertexMesh(String vertexName, String texCoordName, String normalName, VertexMesh mesh) 
 	{
-        this.addVertexBuffer(
+        boolean ret = this.addVertexBuffer(
     		vertexName,
     		new OpenGLVertexBuffer(mesh.getVertices()),
 			true
         );
-        if (mesh.hasTexCoords())
+        if (mesh.hasTexCoords() && texCoordName != null)
         {
-	        this.addVertexBuffer(
+	        ret = ret && this.addVertexBuffer(
 	    		texCoordName, 
 	    		new OpenGLVertexBuffer(mesh.getTexCoords()),
 				true
 	        );
         }
-        if (mesh.hasNormals())
+        if (mesh.hasNormals() && normalName != null)
         {
-	        this.addVertexBuffer(
+	        ret = ret && this.addVertexBuffer(
 	    		normalName, 
 	    		new OpenGLVertexBuffer(mesh.getNormals()),
 				true
 	        );
         }
+        return ret;
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, int value)
+	public boolean setVertexAttrib(int location, int value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttribI1i(location, value);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttribI1i(location, value);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, IntVector2 value)
+	public boolean setVertexAttrib(int location, IntVector2 value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttribI2i(location, value.x, value.y);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttribI2i(location, value.x, value.y);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, IntVector3 value)
+	public boolean setVertexAttrib(int location, IntVector3 value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttribI3i(location, value.x, value.y, value.z);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttribI3i(location, value.x, value.y, value.z);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, IntVector4 value)
+	public boolean setVertexAttrib(int location, IntVector4 value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttribI4i(location, value.x, value.y, value.z, value.w);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttribI4i(location, value.x, value.y, value.z, value.w);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	@Override
-	public void setVertexAttrib(int location, float value)
+	public boolean setVertexAttrib(int location, float value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttrib1f(location, value);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttrib1f(location, value);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, Vector2 value)
+	public boolean setVertexAttrib(int location, Vector2 value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttrib2f(location, value.x, value.y);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttrib2f(location, value.x, value.y);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, Vector3 value)
+	public boolean setVertexAttrib(int location, Vector3 value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttrib3f(location, value.x, value.y, value.z);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttrib3f(location, value.x, value.y, value.z);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, Vector4 value)
+	public boolean setVertexAttrib(int location, Vector4 value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttrib4f(location, value.x, value.y, value.z, value.w);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttrib4f(location, value.x, value.y, value.z, value.w);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	@Override
-	public void setVertexAttrib(int location, double value)
+	public boolean setVertexAttrib(int location, double value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttrib1d(location, value);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttrib1d(location, value);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, DoubleVector2 value)
+	public boolean setVertexAttrib(int location, DoubleVector2 value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttrib2d(location, value.x, value.y);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttrib2d(location, value.x, value.y);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, DoubleVector3 value)
+	public boolean setVertexAttrib(int location, DoubleVector3 value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttrib3d(location, value.x, value.y, value.z);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttrib3d(location, value.x, value.y, value.z);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, DoubleVector4 value)
+	public boolean setVertexAttrib(int location, DoubleVector4 value)
 	{
-		settings.put(location, () ->
+		if (location >= 0)
 		{
-			glVertexAttrib4d(location, value.x, value.y, value.z, value.w);
-			openGLErrorCheck();
-		});
+			settings.put(location, () ->
+			{
+				glVertexAttrib4d(location, value.x, value.y, value.z, value.w);
+				openGLErrorCheck();
+			});
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, int value)
+	public boolean setVertexAttrib(String name, int value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttribI1i(location, value);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, IntVector2 value)
+	public boolean setVertexAttrib(String name, IntVector2 value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttribI2i(location, value.x, value.y);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, IntVector3 value)
+	public boolean setVertexAttrib(String name, IntVector3 value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttribI3i(location, value.x, value.y, value.z);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, IntVector4 value)
+	public boolean setVertexAttrib(String name, IntVector4 value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttribI4i(location, value.x, value.y, value.z, value.w);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 
 	@Override
-	public void setVertexAttrib(String name, float value)
+	public boolean setVertexAttrib(String name, float value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttrib1f(location, value);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, Vector2 value)
+	public boolean setVertexAttrib(String name, Vector2 value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttrib2f(location, value.x, value.y);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, Vector3 value)
+	public boolean setVertexAttrib(String name, Vector3 value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttrib3f(location, value.x, value.y, value.z);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, Vector4 value)
+	public boolean setVertexAttrib(String name, Vector4 value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttrib4f(location, value.x, value.y, value.z, value.w);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 
 	@Override
-	public void setVertexAttrib(String name, double value)
+	public boolean setVertexAttrib(String name, double value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttrib1d(location, value);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, DoubleVector2 value)
+	public boolean setVertexAttrib(String name, DoubleVector2 value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttrib2d(location, value.x, value.y);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, DoubleVector3 value)
+	public boolean setVertexAttrib(String name, DoubleVector3 value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttrib3d(location, value.x, value.y, value.z);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, DoubleVector4 value)
+	public boolean setVertexAttrib(String name, DoubleVector4 value)
 	{
 		int location = program.getVertexAttribLocation(name);
-		settings.put(location, () ->
-		{
-			glVertexAttrib4d(location, value.x, value.y, value.z, value.w);
-			openGLErrorCheck();
-		});
+		return this.setVertexAttrib(location, value);
 	}
 }
