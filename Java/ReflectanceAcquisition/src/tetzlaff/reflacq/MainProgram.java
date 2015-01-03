@@ -47,7 +47,7 @@ public class MainProgram implements Drawable
         
         try
         {
-        	program = new OpenGLProgram(new File("shaders/test.vert"), new File("shaders/test.frag"));
+        	program = new OpenGLProgram(new File("shaders/ulr.vert"), new File("shaders/ulr.frag"));
         }
         catch (IOException e)
         {
@@ -87,6 +87,7 @@ public class MainProgram implements Drawable
     	renderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
     	renderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
     	renderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
+    	renderable.program().setUniform("cameraPoseCount", viewSet.getCameraPoseCount());
 
         window.show();
     }
@@ -118,19 +119,8 @@ public class MainProgram implements Drawable
     	
     	renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
     	
-    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-    	{
-    		if (i == 10)
-    		{
-	        	renderable.program().setUniform("cameraProj", 
-	    			viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
-	    				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane())
-				);
-	        	
-	    		break; // temp
-    		}
-    		i++;
-    	}
+    	renderable.program().setUniform("weightExponent", 16.0f);
+    	
         renderable.draw(PrimitiveMode.TRIANGLES, framebuffer, 0, 0, size.width, size.height);
     }
     
