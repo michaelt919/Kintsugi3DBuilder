@@ -2,6 +2,7 @@ package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL30.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
 import java.nio.ByteBuffer;
@@ -12,7 +13,7 @@ import java.nio.ShortBuffer;
 
 public abstract class OpenGLBuffer implements OpenGLResource
 {
-	public int bufferId;
+	private int bufferId;
 	private int usage;
 
 	protected OpenGLBuffer(int usage) 
@@ -50,6 +51,11 @@ public abstract class OpenGLBuffer implements OpenGLResource
 	{
 		this(usage);
 		this.setData(data);
+	}
+	
+	protected int getBufferId()
+	{
+		return this.bufferId;
 	}
 	
 	protected abstract int getBufferTarget();
@@ -97,6 +103,18 @@ public abstract class OpenGLBuffer implements OpenGLResource
 	protected void bind()
 	{
 		glBindBuffer(this.getBufferTarget(), this.bufferId);
+		openGLErrorCheck();
+	}
+	
+	void bindToIndex(int index)
+	{
+		glBindBufferBase(this.getBufferTarget(), index, this.bufferId);
+		openGLErrorCheck();
+	}
+	
+	protected static void unbindFromIndex(int bufferTarget, int index)
+	{
+		glBindBufferBase(bufferTarget, index, 0);
 		openGLErrorCheck();
 	}
 

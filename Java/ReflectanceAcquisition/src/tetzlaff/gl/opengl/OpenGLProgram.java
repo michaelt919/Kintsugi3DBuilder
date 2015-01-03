@@ -1,6 +1,7 @@
 package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.opengl.GL40.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
@@ -13,13 +14,14 @@ import tetzlaff.gl.Program;
 import tetzlaff.gl.exceptions.ProgramLinkFailureException;
 import tetzlaff.gl.exceptions.UnlinkedProgramException;
 import tetzlaff.gl.helpers.*;
-import tetzlaff.gl.opengl.helpers.TextureManager;
+import tetzlaff.gl.opengl.helpers.ResourceManager;
 
-public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, OpenGLTexture>
+public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, OpenGLTexture, OpenGLUniformBuffer>
 {
 	private int programId;
 	private AbstractCollection<OpenGLShader> ownedShaders;
-	private TextureManager<OpenGLTexture> textureManager;
+	private ResourceManager<OpenGLTexture> textureManager;
+	private ResourceManager<OpenGLUniformBuffer> uniformBufferManager;
 	
 	public OpenGLProgram()
 	{
@@ -41,7 +43,8 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 		programId = glCreateProgram();
 		openGLErrorCheck();
 		ownedShaders = new ArrayList<OpenGLShader>();
-		textureManager = new TextureManager<OpenGLTexture>(OpenGLTexture2D.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+		textureManager = new ResourceManager<OpenGLTexture>(OpenGLTexture2D.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+		uniformBufferManager = new ResourceManager<OpenGLUniformBuffer>(OpenGLUniformBuffer.MAX_COMBINED_UNIFORM_BLOCKS);
 	}
 	
 	@Override
@@ -94,7 +97,7 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 			
 			for (int i = 0; i < textureManager.length; i++)
 			{
-				OpenGLTexture texture = textureManager.getTextureByUnit(i);
+				OpenGLTexture texture = textureManager.getResourceByUnit(i);
 				if (texture != null)
 				{
 					texture.bindToTextureUnit(i);
@@ -104,13 +107,26 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 					OpenGLTexture.unbindTextureUnit(i);
 				}
 			}
+			
+			for (int i = 0; i < uniformBufferManager.length; i++)
+			{
+				OpenGLUniformBuffer uniformBuffer = uniformBufferManager.getResourceByUnit(i);
+				if (uniformBuffer != null)
+				{
+					uniformBuffer.bindToIndex(i);
+				}
+				else
+				{
+					OpenGLUniformBuffer.unbindFromIndex(i);
+				}
+			}
 		}
 	}
 	
 	@Override
 	public void setTexture(int location, OpenGLTexture texture)
 	{
-		int textureUnit = textureManager.assignTextureByKey(location, texture);
+		int textureUnit = textureManager.assignResourceByKey(location, texture);
 		this.setUniform(location, textureUnit);
 	}
 	
@@ -118,6 +134,29 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	public void setTexture(String name, OpenGLTexture texture)
 	{
 		this.setTexture(this.getUniformLocation(name), texture);
+	}
+	
+	@Override
+	public void setUniformBuffer(int index, OpenGLUniformBuffer buffer)
+	{
+		int bindingPoint = uniformBufferManager.assignResourceByKey(index, buffer);
+		
+		glUniformBlockBinding(this.programId, index, bindingPoint);
+		openGLErrorCheck();
+	}
+	
+	@Override
+	public void setUniformBuffer(String name, OpenGLUniformBuffer buffer)
+	{
+		this.setUniformBuffer(this.getUniformBlockIndex(name), buffer);
+	}
+	
+	@Override
+	public int getUniformBlockIndex(String name)
+	{
+		int index = glGetUniformBlockIndex(this.programId, name);
+		openGLErrorCheck();
+		return index;
 	}
 	
 	@Override

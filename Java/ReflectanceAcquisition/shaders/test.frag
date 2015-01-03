@@ -1,15 +1,36 @@
 #version 400
 
+#define MAX_CAMERA_POSE_COUNT 256
+#define MAX_CAMERA_PROJECTION_COUNT 256
+
 in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
 
-uniform sampler2DArray texture0;
-uniform mat4 texMatrix;
+uniform sampler2DArray imageTextures;
+
+uniform CameraPoses
+{
+	mat4 cameraPoses[MAX_CAMERA_POSE_COUNT];
+};
+
+uniform CameraProjections
+{
+	mat4 cameraProjections[MAX_CAMERA_PROJECTION_COUNT];
+};
+
+uniform CameraProjectionIndices
+{
+	int cameraProjectionIndices[MAX_CAMERA_POSE_COUNT];
+};
+
+uniform mat4 cameraProj;
 
 void main()
 {
-	vec4 projPos = texMatrix * vec4(fPosition, 1.0);
+	int testIndex = 10;
+
+	vec4 projPos = cameraProjections[cameraProjectionIndices[testIndex]] * cameraPoses[testIndex] * vec4(fPosition, 1.0);
 	projPos = projPos / projPos.w;
 	
 	vec2 texCoord = vec2((projPos.x / 2 + 0.5), (-projPos.y / 2 + 0.5));
@@ -20,6 +41,6 @@ void main()
 	}
 	else
 	{
-		gl_FragColor = texture(texture0, vec3(texCoord.xy, 10));
+		gl_FragColor = texture(imageTextures, vec3(texCoord.xy, testIndex));
 	}
 }

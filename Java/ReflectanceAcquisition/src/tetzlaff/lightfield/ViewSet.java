@@ -12,37 +12,125 @@ import java.util.Scanner;
 
 import javax.imageio.ImageIO;
 
+import tetzlaff.gl.helpers.FloatVertexList;
+import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
 import tetzlaff.gl.opengl.OpenGLTextureArray;
+import tetzlaff.gl.opengl.OpenGLUniformBuffer;
 
-public class ViewSet<ImageType>
+public class ViewSet
 {
-	private List<Matrix4> cameraPoses;
-	private List<Projection> cameraProjections;
-	private List<Integer> cameraProjectionIndices;
-	private OpenGLTextureArray textures;
+	private List<Matrix4> cameraPoseList;
+	private List<Projection> cameraProjectionList;
+	private List<Integer> cameraProjectionIndexList;
+	private List<String> imageFilePaths;
+	
+	private OpenGLUniformBuffer cameraPoseBuffer;
+	private OpenGLUniformBuffer cameraProjectionBuffer;
+	private OpenGLUniformBuffer cameraProjectionIndexBuffer;
+	private OpenGLTextureArray textureArray;
 	private float recommendedNearPlane;
 	private float recommendedFarPlane;
 	
 	public ViewSet(
-		List<Matrix4> cameraPoses,
-		List<Projection> cameraProjections,
-		List<Integer> cameraProjectionIndices,
-		OpenGLTextureArray textures, 
+		List<Matrix4> cameraPoseList,
+		List<Projection> cameraProjectionList,
+		List<Integer> cameraProjectionIndexList,
+		List<String> imageFilePaths, 
 		float recommendedNearPlane,
-		float recommendedFarPlane) 
+		float recommendedFarPlane) throws IOException
 	{
-		super();
-		this.cameraPoses = cameraPoses;
-		this.cameraProjections = cameraProjections;
-		this.cameraProjectionIndices = cameraProjectionIndices;
-		this.textures = textures;
+		this.cameraPoseList = cameraPoseList;
+		this.cameraProjectionList = cameraProjectionList;
+		this.cameraProjectionIndexList = cameraProjectionIndexList;
+		this.imageFilePaths = imageFilePaths;
+		
 		this.recommendedNearPlane = recommendedNearPlane;
 		this.recommendedFarPlane = recommendedFarPlane;
+		
+		// Store the poses in a uniform buffer
+		if (cameraPoseList != null && cameraPoseList.size() > 0)
+		{
+			// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
+			FloatVertexList flattenedPoseMatrices = new FloatVertexList(16, cameraPoseList.size());
+			
+			for (int k = 0; k < cameraPoseList.size(); k++)
+			{
+				int d = 0;
+				for (int col = 0; col < 4; col++) // column
+				{
+					for (int row = 0; row < 4; row++) // row
+					{
+						flattenedPoseMatrices.set(k, d, cameraPoseList.get(k).get(row, col));
+						d++;
+					}
+				}
+			}
+			
+			// Create the uniform buffer
+			cameraPoseBuffer = new OpenGLUniformBuffer(flattenedPoseMatrices);
+		}
+		
+		// Store the camera projections in a uniform buffer
+		if (cameraPoseList != null && cameraPoseList.size() > 0)
+		{
+			// Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
+			FloatVertexList flattenedProjectionMatrices = new FloatVertexList(16, cameraPoseList.size());
+			
+			for (int k = 0; k < cameraProjectionList.size(); k++)
+			{
+				int d = 0;
+				for (int col = 0; col < 4; col++) // column
+				{
+					for (int row = 0; row < 4; row++) // row
+					{
+						Matrix4 projection = cameraProjectionList.get(k).getProjectionMatrix(recommendedNearPlane, recommendedFarPlane);
+						flattenedProjectionMatrices.set(k, d, projection.get(row, col));
+						d++;
+					}
+				}
+			}
+			
+			// Create the uniform buffer
+			cameraProjectionBuffer = new OpenGLUniformBuffer(flattenedProjectionMatrices);
+		}
+		
+		// Store the camera projection indices in a uniform buffer
+		if (cameraProjectionIndexList != null && cameraProjectionIndexList.size() > 0)
+		{
+			int[] indexArray = new int[cameraProjectionIndexList.size()];
+			for (int i = 0; i < indexArray.length; i++)
+			{
+				indexArray[i] = cameraProjectionIndexList.get(i);
+			}
+			IntVertexList indexVertexList = new IntVertexList(1, cameraProjectionIndexList.size(), indexArray);
+			cameraProjectionIndexBuffer = new OpenGLUniformBuffer(indexVertexList);
+		}
+		
+		// Read the images from a file
+		if (imageFilePaths != null && imageFilePaths.size() > 0)
+		{
+			Date timestamp = new Date();
+			
+			// Read a single image to get the dimensions for the texture array
+			BufferedImage img = ImageIO.read(new FileInputStream(imageFilePaths.get(0)));
+			OpenGLTextureArray textures = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFilePaths.size());
+			
+			for (int i = 0; i < imageFilePaths.size(); i++)
+			{
+				String imgFilePath = imageFilePaths.get(i);
+				
+				String[] imgFilenameParts = imgFilePath.split("\\.");
+				String format = imgFilenameParts[imgFilenameParts.length - 1].toUpperCase();
+				textures.loadLayer(i, format, imgFilePath);
+			}
+	
+			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		}
 	}
 
-	public static ViewSet<OpenGLTexture2D> loadFromVSETFile(String filename) throws IOException
+	public static ViewSet loadFromVSETFile(String filename) throws IOException
 	{
 		Date timestamp = new Date();
 		
@@ -159,62 +247,59 @@ public class ViewSet<ImageType>
 
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
-		
-		if (imageFilePaths.size() > 0)
-		{
-			// Read a single image to get the dimensions for the texture array
-			BufferedImage img = ImageIO.read(new FileInputStream(imageFilePaths.get(0)));
-			OpenGLTextureArray textures = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFilePaths.size());
-			
-			for (int i = 0; i < imageFilePaths.size(); i++)
-			{
-				String imgFilePath = imageFilePaths.get(i);
-				
-				String[] imgFilenameParts = imgFilePath.split("\\.");
-				String format = imgFilenameParts[imgFilenameParts.length - 1].toUpperCase();
-				textures.loadLayer(i, format, imgFilePath);
-			}
-	
-			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-			
-			return new ViewSet<OpenGLTexture2D>(
-				orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, textures,
-				recommendedNearPlane, recommendedFarPlane);
-		}
-		else
-		{
-			return null;
-		}
+		return new ViewSet(
+			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, imageFilePaths,
+			recommendedNearPlane, recommendedFarPlane);
 	}
 
 	public Matrix4 getCameraPose(int poseIndex) 
 	{
-		return this.cameraPoses.get(poseIndex);
+		return this.cameraPoseList.get(poseIndex);
+	}
+
+	public String getImageFilePath(int poseIndex) 
+	{
+		return this.imageFilePaths.get(poseIndex);
 	}
 
 	public Projection getCameraProjection(int projectionIndex) 
 	{
-		return this.cameraProjections.get(projectionIndex);
+		return this.cameraProjectionList.get(projectionIndex);
 	}
 
 	public Integer getCameraProjectionIndex(int poseIndex) 
 	{
-		return this.cameraProjectionIndices.get(poseIndex);
+		return this.cameraProjectionIndexList.get(poseIndex);
 	}
 	
 	public int getCameraPoseCount()
 	{
-		return this.cameraPoses.size();
+		return this.cameraPoseList.size();
 	}
 	
 	public int getCameraProjectionCount()
 	{
-		return this.cameraProjections.size();
+		return this.cameraProjectionList.size();
+	}
+	
+	public OpenGLUniformBuffer getCameraPoseBuffer()
+	{
+		return this.cameraPoseBuffer;
+	}
+	
+	public OpenGLUniformBuffer getCameraProjectionBuffer()
+	{
+		return this.cameraProjectionBuffer;
+	}
+	
+	public OpenGLUniformBuffer getCameraProjectionIndexBuffer()
+	{
+		return this.cameraProjectionIndexBuffer;
 	}
 
 	public OpenGLTextureArray getTextures() 
 	{
-		return this.textures;
+		return this.textureArray;
 	}
 
 	public float getRecommendedNearPlane() 

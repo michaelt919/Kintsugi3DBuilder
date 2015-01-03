@@ -28,7 +28,7 @@ public class MainProgram implements Drawable
     private OpenGLTexture texture;
     private OpenGLProgram program;
     private VertexMesh mesh;
-    private ViewSet<OpenGLTexture2D> viewSet;
+    private ViewSet viewSet;
     private OpenGLRenderable renderable;
     private Trackball trackball;
     
@@ -82,6 +82,11 @@ public class MainProgram implements Drawable
         {
         	e.printStackTrace();
         }
+        
+		renderable.program().setTexture("imageTextures", viewSet.getTextures());
+    	renderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
+    	renderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
+    	renderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
 
         window.show();
     }
@@ -117,13 +122,11 @@ public class MainProgram implements Drawable
     	{
     		if (i == 10)
     		{
-	        	renderable.program().setUniform("texMatrix", 
+	        	renderable.program().setUniform("cameraProj", 
 	    			viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
 	    				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane())
-	    				.times(viewSet.getCameraPose(i))
 				);
 	        	
-	    		renderable.program().setTexture("texture0", viewSet.getTextures());
 	    		break; // temp
     		}
     		i++;
