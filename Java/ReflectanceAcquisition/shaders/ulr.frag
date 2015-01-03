@@ -34,6 +34,8 @@ uniform CameraProjectionIndices
 
 uniform mat4 cameraProj;
 
+layout(location = 0) out vec4 fragColor;
+
 float computeSampleWeight(vec3 cameraPos, vec3 samplePos, vec3 fragmentPos)
 {
 	return 1.0 / (1.0 - pow(max(0.0, dot(normalize(samplePos - fragmentPos), 
@@ -71,5 +73,5 @@ vec4 computeLightField()
 
 void main()
 {
-	gl_FragColor = computeLightField();
+	fragColor = computeLightField();
 }

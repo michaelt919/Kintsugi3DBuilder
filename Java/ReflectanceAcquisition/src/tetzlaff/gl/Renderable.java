@@ -23,61 +23,61 @@ public interface Renderable<
 
 	void draw(PrimitiveMode primitiveMode, Context context, int width, int height);
 	
-	void setVertexAttrib(String name, DoubleVector4 value);
+	boolean setVertexAttrib(String name, DoubleVector4 value);
 
-	void setVertexAttrib(String name, DoubleVector3 value);
+	boolean setVertexAttrib(String name, DoubleVector3 value);
 
-	void setVertexAttrib(String name, DoubleVector2 value);
+	boolean setVertexAttrib(String name, DoubleVector2 value);
 
-	void setVertexAttrib(String name, double value);
+	boolean setVertexAttrib(String name, double value);
 
-	void setVertexAttrib(String name, Vector4 value);
+	boolean setVertexAttrib(String name, Vector4 value);
 
-	void setVertexAttrib(String name, Vector3 value);
+	boolean setVertexAttrib(String name, Vector3 value);
 
-	void setVertexAttrib(String name, Vector2 value);
+	boolean setVertexAttrib(String name, Vector2 value);
 
-	void setVertexAttrib(String name, float value);
+	boolean setVertexAttrib(String name, float value);
 
-	void setVertexAttrib(String name, IntVector4 value);
+	boolean setVertexAttrib(String name, IntVector4 value);
 
-	void setVertexAttrib(String name, IntVector3 value);
+	boolean setVertexAttrib(String name, IntVector3 value);
 
-	void setVertexAttrib(String name, IntVector2 value);
+	boolean setVertexAttrib(String name, IntVector2 value);
 
-	void setVertexAttrib(String name, int value);
+	boolean setVertexAttrib(String name, int value);
 
-	void setVertexAttrib(int location, DoubleVector4 value);
+	boolean setVertexAttrib(int location, DoubleVector4 value);
 
-	void setVertexAttrib(int location, DoubleVector3 value);
+	boolean setVertexAttrib(int location, DoubleVector3 value);
 
-	void setVertexAttrib(int location, DoubleVector2 value);
+	boolean setVertexAttrib(int location, DoubleVector2 value);
 
-	void setVertexAttrib(int location, double value);
+	boolean setVertexAttrib(int location, double value);
 
-	void setVertexAttrib(int location, Vector4 value);
+	boolean setVertexAttrib(int location, Vector4 value);
 
-	void setVertexAttrib(int location, Vector3 value);
+	boolean setVertexAttrib(int location, Vector3 value);
 
-	void setVertexAttrib(int location, Vector2 value);
+	boolean setVertexAttrib(int location, Vector2 value);
 
-	void setVertexAttrib(int location, float value);
+	boolean setVertexAttrib(int location, float value);
 
-	void setVertexAttrib(int location, IntVector4 value);
+	boolean setVertexAttrib(int location, IntVector4 value);
 
-	void setVertexAttrib(int location, IntVector3 value);
+	boolean setVertexAttrib(int location, IntVector3 value);
 
-	void setVertexAttrib(int location, IntVector2 value);
+	boolean setVertexAttrib(int location, IntVector2 value);
 
-	void setVertexAttrib(int location, int value);
+	boolean setVertexAttrib(int location, int value);
 
-	void addVertexBuffer(int location, VertexBufferType buffer, boolean owned);
+	boolean addVertexBuffer(int location, VertexBufferType buffer, boolean owned);
 
-	void addVertexBuffer(String name, VertexBufferType buffer, boolean owned);
+	boolean addVertexBuffer(String name, VertexBufferType buffer, boolean owned);
 
-	void addVertexBuffer(int location, VertexBufferType buffer);
+	boolean addVertexBuffer(int location, VertexBufferType buffer);
 
-	void addVertexBuffer(String name, VertexBufferType buffer);
+	boolean addVertexBuffer(String name, VertexBufferType buffer);
 	
-	void addVertexMesh(String vertexName, String texCoordName, String normalName, VertexMesh mesh);
+	boolean addVertexMesh(String vertexName, String texCoordName, String normalName, VertexMesh mesh);
 }

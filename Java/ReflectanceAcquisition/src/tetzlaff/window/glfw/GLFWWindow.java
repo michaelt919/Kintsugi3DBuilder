@@ -19,6 +19,7 @@ import org.lwjgl.system.glfw.ErrorCallback.StrAdapter;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;
+import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.interactive.EventPollable;
 import tetzlaff.window.CursorPosition;
 import tetzlaff.window.KeyCodes;
@@ -49,13 +50,13 @@ import tetzlaff.window.listeners.WindowRefreshListener;
 import tetzlaff.window.listeners.WindowRestoredListener;
 import tetzlaff.window.listeners.WindowSizeListener;
 
-public class GLFWWindow implements Window, Context, EventPollable
+public class GLFWWindow extends OpenGLContext implements Window, Context, EventPollable
 {
 	private long handle;
 	private boolean isDestroyed;
 	private WindowListenerManager listenerManager;
 
-	public GLFWWindow(int width, int height, String title, int x, int y, boolean resizable) 
+	public GLFWWindow(int width, int height, String title, int x, int y, boolean resizable, int multisamples) 
 	{
 		Sys.touch();
 		glfwSetErrorCallback(new StrAdapter() 
@@ -75,6 +76,7 @@ public class GLFWWindow implements Window, Context, EventPollable
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
+        glfwWindowHint(GLFW_SAMPLES, multisamples);
         
         handle = glfwCreateWindow(width, height, title, NULL, NULL);
         if ( handle == NULL )
@@ -101,11 +103,26 @@ public class GLFWWindow implements Window, Context, EventPollable
         glfwSwapInterval(1);
         
         GLContext.createFromCurrent();
+
+        if (multisamples > 0)
+        {
+        	this.enableMultisampling();
+        }
+	}
+	
+	public GLFWWindow(int width, int height, String title, int x, int y, boolean resizable) 
+	{
+		this(width, height, title, x, y, resizable, 0);
+	}
+	
+	public GLFWWindow(int width, int height, String title, boolean resizable, int multisamples) 
+	{
+		this(width, height, title, -1, -1, resizable, multisamples);
 	}
 	
 	public GLFWWindow(int width, int height, String title, boolean resizable) 
 	{
-		this(width, height, title, -1, -1, resizable);
+		this(width, height, title, -1, -1, resizable, 0);
 	}
 	
 	public GLFWWindow(int width, int height, String title) 
@@ -191,18 +208,6 @@ public class GLFWWindow implements Window, Context, EventPollable
 		int width = widthBuffer.asIntBuffer().get(0);
 		int height = heightBuffer.asIntBuffer().get(0);
 		return new WindowSize(width, height);
-	}
-	
-	@Override
-	public void enableDepthTest()
-	{
-		glEnable(GL_DEPTH_TEST);
-	}
-	
-	@Override
-	public void disableDepthTest()
-	{
-		glDisable(GL_DEPTH_TEST);
 	}
 	
 	@Override
