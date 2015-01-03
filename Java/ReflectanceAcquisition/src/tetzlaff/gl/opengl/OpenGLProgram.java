@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.exceptions.ProgramLinkFailureException;
 import tetzlaff.gl.exceptions.UnlinkedProgramException;
-import tetzlaff.gl.helpers.Matrix4;
+import tetzlaff.gl.helpers.*;
 import tetzlaff.gl.opengl.helpers.TextureManager;
 
 public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, OpenGLTexture>
@@ -147,23 +147,23 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	}
 	
 	@Override
-	public void setUniform(int location, int value1, int value2)
+	public void setUniform(int location, IntVector2 value)
 	{
-		this.use(); glUniform2i(location, value1, value2);
+		this.use(); glUniform2i(location, value.x, value.y);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(int location, int value1, int value2, int value3)
+	public void setUniform(int location, IntVector3 value)
 	{
-		this.use(); glUniform3i(location, value1, value2, value3);
+		this.use(); glUniform3i(location, value.x, value.y, value.z);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(int location, int value1, int value2, int value3, int value4)
+	public void setUniform(int location, IntVector4 value)
 	{
-		this.use(); glUniform4i(location, value1, value2, value3, value4);
+		this.use(); glUniform4i(location, value.x, value.y, value.z, value.w);
 		openGLErrorCheck();
 	}
 
@@ -175,23 +175,23 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	}
 	
 	@Override
-	public void setUniform(int location, float value1, float value2)
+	public void setUniform(int location, Vector2 value)
 	{
-		this.use(); glUniform2f(location, value1, value2);
+		this.use(); glUniform2f(location, value.x, value.y);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(int location, float value1, float value2, float value3)
+	public void setUniform(int location, Vector3 value)
 	{
-		this.use(); glUniform3f(location, value1, value2, value3);
+		this.use(); glUniform3f(location, value.x, value.y, value.z);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(int location, float value1, float value2, float value3, float value4)
+	public void setUniform(int location, Vector4 value)
 	{
-		this.use(); glUniform4f(location, value1, value2, value3, value4);
+		this.use(); glUniform4f(location, value.x, value.y, value.z, value.w);
 		openGLErrorCheck();
 	}
 
@@ -203,23 +203,23 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	}
 	
 	@Override
-	public void setUniform(int location, double value1, double value2)
+	public void setUniform(int location, DoubleVector2 value)
 	{
-		this.use(); glUniform2d(location, value1, value2);
+		this.use(); glUniform2d(location, value.x, value.y);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(int location, double value1, double value2, double value3)
+	public void setUniform(int location, DoubleVector3 value)
 	{
-		this.use(); glUniform3d(location, value1, value2, value3);
+		this.use(); glUniform3d(location, value.x, value.y, value.z);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(int location, double value1, double value2, double value3, double value4)
+	public void setUniform(int location, DoubleVector4 value)
 	{
-		this.use(); glUniform4d(location, value1, value2, value3, value4);
+		this.use(); glUniform4d(location, value.x, value.y, value.z, value.w);
 		openGLErrorCheck();
 	}
 	
@@ -231,23 +231,23 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	}
 	
 	@Override
-	public void setUniform(String name, int value1, int value2)
+	public void setUniform(String name, IntVector2 value)
 	{
-		this.use(); glUniform2i(this.getUniformLocation(name), value1, value2);
+		this.use(); glUniform2i(this.getUniformLocation(name), value.x, value.y);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(String name, int value1, int value2, int value3)
+	public void setUniform(String name, IntVector3 value)
 	{
-		this.use(); glUniform3i(this.getUniformLocation(name), value1, value2, value3);
+		this.use(); glUniform3i(this.getUniformLocation(name), value.x, value.y, value.z);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(String name, int value1, int value2, int value3, int value4)
+	public void setUniform(String name, IntVector4 value)
 	{
-		this.use(); glUniform4i(this.getUniformLocation(name), value1, value2, value3, value4);
+		this.use(); glUniform4i(this.getUniformLocation(name), value.x, value.y, value.z, value.w);
 		openGLErrorCheck();
 	}
 
@@ -259,23 +259,23 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	}
 	
 	@Override
-	public void setUniform(String name, float value1, float value2)
+	public void setUniform(String name, Vector2 value)
 	{
-		this.use(); glUniform2f(this.getUniformLocation(name), value1, value2);
+		this.use(); glUniform2f(this.getUniformLocation(name), value.x, value.y);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(String name, float value1, float value2, float value3)
+	public void setUniform(String name, Vector3 value)
 	{
-		this.use(); glUniform3f(this.getUniformLocation(name), value1, value2, value3);
+		this.use(); glUniform3f(this.getUniformLocation(name), value.x, value.y, value.z);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(String name, float value1, float value2, float value3, float value4)
+	public void setUniform(String name, Vector4 value)
 	{
-		this.use(); glUniform4f(this.getUniformLocation(name), value1, value2, value3, value4);
+		this.use(); glUniform4f(this.getUniformLocation(name), value.x, value.y, value.z, value.w);
 		openGLErrorCheck();
 	}
 
@@ -287,23 +287,23 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	}
 	
 	@Override
-	public void setUniform(String name, double value1, double value2)
+	public void setUniform(String name, DoubleVector2 value)
 	{
-		this.use(); glUniform2d(this.getUniformLocation(name), value1, value2);
+		this.use(); glUniform2d(this.getUniformLocation(name), value.x, value.y);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(String name, double value1, double value2, double value3)
+	public void setUniform(String name, DoubleVector3 value)
 	{
-		this.use(); glUniform3d(this.getUniformLocation(name), value1, value2, value3);
+		this.use(); glUniform3d(this.getUniformLocation(name), value.x, value.y, value.z);
 		openGLErrorCheck();
 	}
 	
 	@Override
-	public void setUniform(String name, double value1, double value2, double value3, double value4)
+	public void setUniform(String name, DoubleVector4 value)
 	{
-		this.use(); glUniform4d(this.getUniformLocation(name), value1, value2, value3, value4);
+		this.use(); glUniform4d(this.getUniformLocation(name), value.x, value.y, value.z, value.w);
 		openGLErrorCheck();
 	}
 	

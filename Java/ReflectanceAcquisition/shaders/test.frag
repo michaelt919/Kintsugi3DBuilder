@@ -4,7 +4,7 @@ in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
 
-uniform sampler2D texture0;
+uniform sampler2DArray texture0;
 uniform mat4 texMatrix;
 
 void main()
@@ -20,6 +20,6 @@ void main()
 	}
 	else
 	{
-		gl_FragColor = texture2D(texture0, texCoord.xy);
+		gl_FragColor = texture(texture0, vec3(texCoord.xy, 10));
 	}
 }

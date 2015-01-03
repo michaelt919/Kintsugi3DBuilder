@@ -20,7 +20,6 @@ import tetzlaff.gl.opengl.OpenGLTexture;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.lightfield.ViewSet;
-import tetzlaff.lightfield.View;
 import tetzlaff.window.glfw.GLFWWindow;
 
 public class MainProgram implements Drawable
@@ -67,7 +66,7 @@ public class MainProgram implements Drawable
         try
         {
         	renderable = new OpenGLRenderable(program);
-        	mesh = new VertexMesh("OBJ", "pumpkin-warts-hires/manifold.obj");
+        	mesh = new VertexMesh("OBJ", "pumpkin-warts/manifold.obj");
         	renderable.addVertexMesh("position", "texCoord", "normal", mesh);
         }
         catch (IOException e)
@@ -77,7 +76,7 @@ public class MainProgram implements Drawable
         
         try
         {
-        	viewSet = ViewSet.loadFromVSETFile("pumpkin-warts-hires/default.vset");
+        	viewSet = ViewSet.loadFromVSETFile("pumpkin-warts/default.vset");
         }
         catch (IOException e)
         {
@@ -114,20 +113,17 @@ public class MainProgram implements Drawable
     	
     	renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
     	
-    	int i = 0;
-    	for (View<OpenGLTexture2D> v : viewSet.views)
+    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
     	{
-    		if (i == 0)
+    		if (i == 10)
     		{
 	        	renderable.program().setUniform("texMatrix", 
-	    			v.projection.getProjectionMatrix(viewSet.recommendedNearPlane, viewSet.recommendedFarPlane)
-	    				.times(v.cameraPose)
+	    			viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
+	    				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane())
+	    				.times(viewSet.getCameraPose(i))
 				);
 	        	
-	        	//renderable.program().setUniform("model_view", v.cameraPose);
-	        	//renderable.program().setUniform("projection", v.projection.getProjectionMatrix(viewSet.recommendedNearPlane, viewSet.recommendedFarPlane));
-	        	
-	    		renderable.program().setTexture("texture0", v.image);
+	    		renderable.program().setTexture("texture0", viewSet.getTextures());
 	    		break; // temp
     		}
     		i++;

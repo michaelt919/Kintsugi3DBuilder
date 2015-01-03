@@ -1,6 +1,6 @@
 package tetzlaff.gl;
 
-import tetzlaff.gl.helpers.VertexMesh;
+import tetzlaff.gl.helpers.*;
 
 public interface Renderable<
 	ProgramType extends Program<?, ? super TextureType>, 
@@ -23,63 +23,51 @@ public interface Renderable<
 
 	void draw(PrimitiveMode primitiveMode, Context context, int width, int height);
 	
-	void setVertexAttrib(String name, double value1, double value2,
-			double value3, double value4);
+	void setVertexAttrib(String name, DoubleVector4 value);
 
-	void setVertexAttrib(String name, double value1, double value2,
-			double value3);
+	void setVertexAttrib(String name, DoubleVector3 value);
 
-	void setVertexAttrib(String name, double value1, double value2);
+	void setVertexAttrib(String name, DoubleVector2 value);
 
 	void setVertexAttrib(String name, double value);
 
-	void setVertexAttrib(String name, float value1, float value2,
-			float value3, float value4);
+	void setVertexAttrib(String name, Vector4 value);
 
-	void setVertexAttrib(String name, float value1, float value2,
-			float value3);
+	void setVertexAttrib(String name, Vector3 value);
 
-	void setVertexAttrib(String name, float value1, float value2);
+	void setVertexAttrib(String name, Vector2 value);
 
 	void setVertexAttrib(String name, float value);
 
-	void setVertexAttrib(String name, int value1, int value2,
-			int value3, int value4);
+	void setVertexAttrib(String name, IntVector4 value);
 
-	void setVertexAttrib(String name, int value1, int value2,
-			int value3);
+	void setVertexAttrib(String name, IntVector3 value);
 
-	void setVertexAttrib(String name, int value1, int value2);
+	void setVertexAttrib(String name, IntVector2 value);
 
 	void setVertexAttrib(String name, int value);
 
-	void setVertexAttrib(int location, double value1, double value2,
-			double value3, double value4);
+	void setVertexAttrib(int location, DoubleVector4 value);
 
-	void setVertexAttrib(int location, double value1, double value2,
-			double value3);
+	void setVertexAttrib(int location, DoubleVector3 value);
 
-	void setVertexAttrib(int location, double value1, double value2);
+	void setVertexAttrib(int location, DoubleVector2 value);
 
 	void setVertexAttrib(int location, double value);
 
-	void setVertexAttrib(int location, float value1, float value2,
-			float value3, float value4);
+	void setVertexAttrib(int location, Vector4 value);
 
-	void setVertexAttrib(int location, float value1, float value2,
-			float value3);
+	void setVertexAttrib(int location, Vector3 value);
 
-	void setVertexAttrib(int location, float value1, float value2);
+	void setVertexAttrib(int location, Vector2 value);
 
 	void setVertexAttrib(int location, float value);
 
-	void setVertexAttrib(int location, int value1, int value2,
-			int value3, int value4);
+	void setVertexAttrib(int location, IntVector4 value);
 
-	void setVertexAttrib(int location, int value1, int value2,
-			int value3);
+	void setVertexAttrib(int location, IntVector3 value);
 
-	void setVertexAttrib(int location, int value1, int value2);
+	void setVertexAttrib(int location, IntVector2 value);
 
 	void setVertexAttrib(int location, int value);
 

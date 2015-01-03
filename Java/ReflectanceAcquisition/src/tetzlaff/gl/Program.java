@@ -1,7 +1,6 @@
 package tetzlaff.gl;
 
-import tetzlaff.gl.helpers.Matrix4;
-import tetzlaff.gl.opengl.OpenGLResource;
+import tetzlaff.gl.helpers.*;
 
 public interface Program<ShaderType, TextureType>
 {
@@ -14,65 +13,53 @@ public interface Program<ShaderType, TextureType>
 
 	void link();
 
-	void setUniform(String name, double value1, double value2,
-			double value3, double value4);
+	void setUniform(String name, DoubleVector4 value);
 
-	void setUniform(String name, double value1, double value2,
-			double value3);
+	void setUniform(String name, DoubleVector3 value);
 
-	void setUniform(String name, double value1, double value2);
+	void setUniform(String name, DoubleVector2 value);
 
 	void setUniform(String name, double value);
 
-	void setUniform(String name, float value1, float value2,
-			float value3, float value4);
+	void setUniform(String name, Vector4 value);
 
-	void setUniform(String name, float value1, float value2,
-			float value3);
+	void setUniform(String name, Vector3 value);
 
-	void setUniform(String name, float value1, float value2);
+	void setUniform(String name, Vector2 value);
 
 	void setUniform(String name, float value);
 
-	void setUniform(String name, int value1, int value2,
-			int value3, int value4);
+	void setUniform(String name, IntVector4 value);
 
-	void setUniform(String name, int value1, int value2,
-			int value3);
+	void setUniform(String name, IntVector3 value);
 
-	void setUniform(String name, int value1, int value2);
+	void setUniform(String name, IntVector2 value);
 
 	void setUniform(String name, int value);
 	
 	void setUniform(String name, Matrix4 value);
 
-	void setUniform(int location, double value1, double value2,
-			double value3, double value4);
+	void setUniform(int location, DoubleVector4 value);
 
-	void setUniform(int location, double value1, double value2,
-			double value3);
+	void setUniform(int location, DoubleVector3 value);
 
-	void setUniform(int location, double value1, double value2);
+	void setUniform(int location, DoubleVector2 value);
 
 	void setUniform(int location, double value);
 
-	void setUniform(int location, float value1, float value2,
-			float value3, float value4);
+	void setUniform(int location, Vector4 value);
 
-	void setUniform(int location, float value1, float value2,
-			float value3);
+	void setUniform(int location, Vector3 value);
 
-	void setUniform(int location, float value1, float value2);
+	void setUniform(int location, Vector2 value);
 
 	void setUniform(int location, float value);
 
-	void setUniform(int location, int value1, int value2,
-			int value3, int value4);
+	void setUniform(int location, IntVector4 value);
 
-	void setUniform(int location, int value1, int value2,
-			int value3);
+	void setUniform(int location, IntVector3 value);
 
-	void setUniform(int location, int value1, int value2);
+	void setUniform(int location, IntVector2 value);
 
 	void setUniform(int location, int value);
 	

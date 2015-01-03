@@ -20,7 +20,7 @@ public class OpenGLTexture2D extends OpenGLTexture
 {
 	private int levelCount;
 	
-	public OpenGLTexture2D(int internalFormat, int width, int height, int format, boolean useLinearFiltering, boolean useMipmaps) 
+	OpenGLTexture2D(int internalFormat, int width, int height, int format, boolean useLinearFiltering, boolean useMipmaps) 
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
 		super();
@@ -30,7 +30,7 @@ public class OpenGLTexture2D extends OpenGLTexture
 		this.init(width, height, useLinearFiltering, useMipmaps);
 	}
 	
-	public OpenGLTexture2D(int internalFormat, int width, int height, int format) 
+	OpenGLTexture2D(int internalFormat, int width, int height, int format) 
 	{
 		this(internalFormat, width, height, format, false, false);
 	}
