@@ -15,7 +15,7 @@ import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.exceptions.UnrecognizedPrimitiveModeException;
-import tetzlaff.gl.helpers.VertexMesh;
+import tetzlaff.gl.helpers.*;
 import tetzlaff.gl.opengl.helpers.VertexAttributeSetting;
 
 public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexBuffer, OpenGLFramebuffer, OpenGLTexture>
@@ -187,31 +187,31 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, int value1, int value2)
+	public void setVertexAttrib(int location, IntVector2 value)
 	{
 		settings.put(location, () ->
 		{
-			glVertexAttribI2i(location, value1, value2);
+			glVertexAttribI2i(location, value.x, value.y);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, int value1, int value2, int value3)
+	public void setVertexAttrib(int location, IntVector3 value)
 	{
 		settings.put(location, () ->
 		{
-			glVertexAttribI3i(location, value1, value2, value3);
+			glVertexAttribI3i(location, value.x, value.y, value.z);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, int value1, int value2, int value3, int value4)
+	public void setVertexAttrib(int location, IntVector4 value)
 	{
 		settings.put(location, () ->
 		{
-			glVertexAttribI4i(location, value1, value2, value3, value4);
+			glVertexAttribI4i(location, value.x, value.y, value.z, value.w);
 			openGLErrorCheck();
 		});
 	}
@@ -227,31 +227,31 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, float value1, float value2)
+	public void setVertexAttrib(int location, Vector2 value)
 	{
 		settings.put(location, () ->
 		{
-			glVertexAttrib2f(location, value1, value2);
+			glVertexAttrib2f(location, value.x, value.y);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, float value1, float value2, float value3)
+	public void setVertexAttrib(int location, Vector3 value)
 	{
 		settings.put(location, () ->
 		{
-			glVertexAttrib3f(location, value1, value2, value3);
+			glVertexAttrib3f(location, value.x, value.y, value.z);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, float value1, float value2, float value3, float value4)
+	public void setVertexAttrib(int location, Vector4 value)
 	{
 		settings.put(location, () ->
 		{
-			glVertexAttrib4f(location, value1, value2, value3, value4);
+			glVertexAttrib4f(location, value.x, value.y, value.z, value.w);
 			openGLErrorCheck();
 		});
 	}
@@ -267,31 +267,31 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, double value1, double value2)
+	public void setVertexAttrib(int location, DoubleVector2 value)
 	{
 		settings.put(location, () ->
 		{
-			glVertexAttrib2d(location, value1, value2);
+			glVertexAttrib2d(location, value.x, value.y);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, double value1, double value2, double value3)
+	public void setVertexAttrib(int location, DoubleVector3 value)
 	{
 		settings.put(location, () ->
 		{
-			glVertexAttrib3d(location, value1, value2, value3);
+			glVertexAttrib3d(location, value.x, value.y, value.z);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(int location, double value1, double value2, double value3, double value4)
+	public void setVertexAttrib(int location, DoubleVector4 value)
 	{
 		settings.put(location, () ->
 		{
-			glVertexAttrib4d(location, value1, value2, value3, value4);
+			glVertexAttrib4d(location, value.x, value.y, value.z, value.w);
 			openGLErrorCheck();
 		});
 	}
@@ -308,34 +308,34 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, int value1, int value2)
+	public void setVertexAttrib(String name, IntVector2 value)
 	{
 		int location = program.getVertexAttribLocation(name);
 		settings.put(location, () ->
 		{
-			glVertexAttribI2i(location, value1, value2);
+			glVertexAttribI2i(location, value.x, value.y);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, int value1, int value2, int value3)
+	public void setVertexAttrib(String name, IntVector3 value)
 	{
 		int location = program.getVertexAttribLocation(name);
 		settings.put(location, () ->
 		{
-			glVertexAttribI3i(location, value1, value2, value3);
+			glVertexAttribI3i(location, value.x, value.y, value.z);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, int value1, int value2, int value3, int value4)
+	public void setVertexAttrib(String name, IntVector4 value)
 	{
 		int location = program.getVertexAttribLocation(name);
 		settings.put(location, () ->
 		{
-			glVertexAttribI4i(location, value1, value2, value3, value4);
+			glVertexAttribI4i(location, value.x, value.y, value.z, value.w);
 			openGLErrorCheck();
 		});
 	}
@@ -352,34 +352,34 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, float value1, float value2)
+	public void setVertexAttrib(String name, Vector2 value)
 	{
 		int location = program.getVertexAttribLocation(name);
 		settings.put(location, () ->
 		{
-			glVertexAttrib2f(location, value1, value2);
+			glVertexAttrib2f(location, value.x, value.y);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, float value1, float value2, float value3)
+	public void setVertexAttrib(String name, Vector3 value)
 	{
 		int location = program.getVertexAttribLocation(name);
 		settings.put(location, () ->
 		{
-			glVertexAttrib3f(location, value1, value2, value3);
+			glVertexAttrib3f(location, value.x, value.y, value.z);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, float value1, float value2, float value3, float value4)
+	public void setVertexAttrib(String name, Vector4 value)
 	{
 		int location = program.getVertexAttribLocation(name);
 		settings.put(location, () ->
 		{
-			glVertexAttrib4f(location, value1, value2, value3, value4);
+			glVertexAttrib4f(location, value.x, value.y, value.z, value.w);
 			openGLErrorCheck();
 		});
 	}
@@ -396,34 +396,34 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, double value1, double value2)
+	public void setVertexAttrib(String name, DoubleVector2 value)
 	{
 		int location = program.getVertexAttribLocation(name);
 		settings.put(location, () ->
 		{
-			glVertexAttrib2d(location, value1, value2);
+			glVertexAttrib2d(location, value.x, value.y);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, double value1, double value2, double value3)
+	public void setVertexAttrib(String name, DoubleVector3 value)
 	{
 		int location = program.getVertexAttribLocation(name);
 		settings.put(location, () ->
 		{
-			glVertexAttrib3d(location, value1, value2, value3);
+			glVertexAttrib3d(location, value.x, value.y, value.z);
 			openGLErrorCheck();
 		});
 	}
 	
 	@Override
-	public void setVertexAttrib(String name, double value1, double value2, double value3, double value4)
+	public void setVertexAttrib(String name, DoubleVector4 value)
 	{
 		int location = program.getVertexAttribLocation(name);
 		settings.put(location, () ->
 		{
-			glVertexAttrib4d(location, value1, value2, value3, value4);
+			glVertexAttrib4d(location, value.x, value.y, value.z, value.w);
 			openGLErrorCheck();
 		});
 	}

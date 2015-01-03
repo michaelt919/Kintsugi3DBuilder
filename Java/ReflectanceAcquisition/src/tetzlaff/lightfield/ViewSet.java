@@ -1,5 +1,6 @@
 package tetzlaff.lightfield;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -9,18 +10,34 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.imageio.ImageIO;
+
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
+import tetzlaff.gl.opengl.OpenGLTextureArray;
 
 public class ViewSet<ImageType>
 {
-	public final Iterable<View<ImageType>> views;
-	public final float recommendedNearPlane;
-	public final float recommendedFarPlane;
+	private List<Matrix4> cameraPoses;
+	private List<Projection> cameraProjections;
+	private List<Integer> cameraProjectionIndices;
+	private OpenGLTextureArray textures;
+	private float recommendedNearPlane;
+	private float recommendedFarPlane;
 	
-	public ViewSet(Iterable<View<ImageType>> views, float recommendedNearPlane, float recommendedFarPlane) 
+	public ViewSet(
+		List<Matrix4> cameraPoses,
+		List<Projection> cameraProjections,
+		List<Integer> cameraProjectionIndices,
+		OpenGLTextureArray textures, 
+		float recommendedNearPlane,
+		float recommendedFarPlane) 
 	{
-		this.views = views;
+		super();
+		this.cameraPoses = cameraPoses;
+		this.cameraProjections = cameraProjections;
+		this.cameraProjectionIndices = cameraProjectionIndices;
+		this.textures = textures;
 		this.recommendedNearPlane = recommendedNearPlane;
 		this.recommendedFarPlane = recommendedFarPlane;
 	}
@@ -34,9 +51,11 @@ public class ViewSet<ImageType>
 		
 		float recommendedNearPlane = 0.0f;
 		float recommendedFarPlane = Float.MAX_VALUE;
-		List<Matrix4> cameraPoses = new ArrayList<Matrix4>();
-		List<Projection> cameraProjections = new ArrayList<Projection>();
-		List<View<OpenGLTexture2D>> views = new ArrayList<View<OpenGLTexture2D>>();
+		List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
+		List<Matrix4> orderedCameraPoseList = new ArrayList<Matrix4>();
+		List<Projection> cameraProjectionList = new ArrayList<Projection>();
+		List<Integer> cameraProjectionIndexList = new ArrayList<Integer>();
+		List<String> imageFilePaths = new ArrayList<String>();
 		
 		while (scanner.hasNext())
 		{
@@ -57,15 +76,18 @@ public class ViewSet<ImageType>
 				float j = scanner.nextFloat();
 				float k = scanner.nextFloat();
 				float qr = scanner.nextFloat();
-				cameraPoses.add(Matrix4.fromQuaternion(i, j, k, qr)
+				
+				cameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
 					.times(Matrix4.translate(-x, -y, -z)));
 				
 				scanner.nextLine();
 			}
 			else if (id.equals("d") || id.equals("D"))
 			{
-				float cx = scanner.nextFloat();
-				float cy = scanner.nextFloat();
+				// Skip "center/offset" parameters which are not consistent across all VSET files
+				scanner.nextFloat();
+				scanner.nextFloat();
+				
 				float aspect = scanner.nextFloat();
 				float focalLength = scanner.nextFloat();
 				
@@ -80,41 +102,31 @@ public class ViewSet<ImageType>
 				}
 				else
 				{
-					sensorWidth = 32.0f;
+					sensorWidth = 32.0f; // Default sensor width
 					k1 = scanner.nextFloat();
 					k2 = k3 = 0.0f;
 				}
 				
 				float sensorHeight = sensorWidth / aspect;
 				
-				if (cx == 0.0) 
-				{
-					cx = sensorWidth / 2;
-				}
-				
-				if (cy == 0.0) 
-				{
-					cy = sensorHeight / 2;
-				}
-				
-				cameraProjections.add(new DistortionProjection(
+				cameraProjectionList.add(new DistortionProjection(
 					sensorWidth, sensorHeight, 
 					focalLength, focalLength,
-					cx, cy, k1, k2, k3
+					sensorWidth / 2, sensorHeight / 2, k1, k2, k3
 				));
 				
 				scanner.nextLine();
 			}
 			else if (id.equals("f"))
 			{
-				// Skip meaningless "center/offset" parameters
+				// Skip "center/offset" parameters which are not consistent across all VSET files
 				scanner.next();
 				scanner.next();
 				
 				float aspect = scanner.nextFloat();
 				float fovy = scanner.nextFloat();
 				
-				cameraProjections.add(new SimpleProjection(aspect, fovy));
+				cameraProjectionList.add(new SimpleProjection(aspect, fovy));
 				
 				scanner.nextLine();
 			}
@@ -128,14 +140,13 @@ public class ViewSet<ImageType>
 				
 				String imgFilename = scanner.nextLine().trim();
 				
-				String[] imgFilenameParts = imgFilename.split("\\.");
-				String format = imgFilenameParts[imgFilenameParts.length - 1].toUpperCase();
-				
 				String[] filePathParts = filename.split("[\\\\\\/]");
 				filePathParts[filePathParts.length - 1] = imgFilename;
 				String imgFilePath = String.join(File.separator, filePathParts);
 				
-				views.add(new View<OpenGLTexture2D>(cameraPoses.get(poseId), cameraProjections.get(projectionId), new OpenGLTexture2D(format, imgFilePath)));
+				orderedCameraPoseList.add(cameraPoseList.get(poseId));
+				cameraProjectionIndexList.add(projectionId);
+				imageFilePaths.add(imgFilePath);
 			}
 			else
 			{
@@ -143,10 +154,76 @@ public class ViewSet<ImageType>
 				scanner.nextLine();
 			}
 		}
-
-		System.out.println("View Set and textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
-		return new ViewSet<OpenGLTexture2D>(views, recommendedNearPlane, recommendedFarPlane);
+		scanner.close();
+
+		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		
+		
+		if (imageFilePaths.size() > 0)
+		{
+			// Read a single image to get the dimensions for the texture array
+			BufferedImage img = ImageIO.read(new FileInputStream(imageFilePaths.get(0)));
+			OpenGLTextureArray textures = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFilePaths.size());
+			
+			for (int i = 0; i < imageFilePaths.size(); i++)
+			{
+				String imgFilePath = imageFilePaths.get(i);
+				
+				String[] imgFilenameParts = imgFilePath.split("\\.");
+				String format = imgFilenameParts[imgFilenameParts.length - 1].toUpperCase();
+				textures.loadLayer(i, format, imgFilePath);
+			}
+	
+			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+			
+			return new ViewSet<OpenGLTexture2D>(
+				orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, textures,
+				recommendedNearPlane, recommendedFarPlane);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	public Matrix4 getCameraPose(int poseIndex) 
+	{
+		return this.cameraPoses.get(poseIndex);
+	}
+
+	public Projection getCameraProjection(int projectionIndex) 
+	{
+		return this.cameraProjections.get(projectionIndex);
+	}
+
+	public Integer getCameraProjectionIndex(int poseIndex) 
+	{
+		return this.cameraProjectionIndices.get(poseIndex);
 	}
 	
+	public int getCameraPoseCount()
+	{
+		return this.cameraPoses.size();
+	}
+	
+	public int getCameraProjectionCount()
+	{
+		return this.cameraProjections.size();
+	}
+
+	public OpenGLTextureArray getTextures() 
+	{
+		return this.textures;
+	}
+
+	public float getRecommendedNearPlane() 
+	{
+		return this.recommendedNearPlane;
+	}
+
+	public float getRecommendedFarPlane() 
+	{
+		return this.recommendedFarPlane;
+	}
 }
