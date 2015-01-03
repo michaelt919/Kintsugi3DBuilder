@@ -1,8 +1,9 @@
 package tetzlaff.gl;
 
 import tetzlaff.gl.helpers.*;
+import tetzlaff.gl.opengl.OpenGLUniformBuffer;
 
-public interface Program<ShaderType, TextureType>
+public interface Program<ShaderType, TextureType, UniformBufferType>
 {
 
 	void attachShader(ShaderType shader, boolean owned);
@@ -72,5 +73,11 @@ public interface Program<ShaderType, TextureType>
 	void setTexture(int location, TextureType texture);
 
 	void setTexture(String name, TextureType texture);
+
+	void setUniformBuffer(int index, UniformBufferType buffer);
+
+	void setUniformBuffer(String name, UniformBufferType buffer);
+
+	int getUniformBlockIndex(String name);
 
 }

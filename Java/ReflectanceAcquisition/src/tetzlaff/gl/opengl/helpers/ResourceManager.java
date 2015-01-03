@@ -2,30 +2,34 @@ package tetzlaff.gl.opengl.helpers;
 
 import tetzlaff.gl.exceptions.NoAvailableTextureUnitsException;
 
-public class TextureManager<TextureType>
+public class ResourceManager<ResourceType>
 {
 	public final int length;
 	
 	private int[] keys;
-	private Object[] textures;
+	private Object[] resources;
 	private int nextSlot;
 
-	public TextureManager(int length) 
+	public ResourceManager(int length) 
 	{
 		this.length = length;
 		keys = new int[length];
-		textures = new Object[length];
+		for (int i = 0; i < length; i++)
+		{
+			keys[i] = -1;
+		}
+		resources = new Object[length];
 		nextSlot = 0;
 	}
 
-	public int assignTextureByKey(int key, TextureType texture)
+	public int assignResourceByKey(int key, ResourceType texture)
 	{
 		// Check if the key has already been assigned a texture
 		for (int i = 0; i < length; i++)
 		{
 			if (keys[i] == key)
 			{
-				textures[i] = texture;
+				resources[i] = texture;
 				return i;
 			}
 		}
@@ -33,20 +37,20 @@ public class TextureManager<TextureType>
 		if (nextSlot == length)
 		{
 			// No more slots available.
-			throw new NoAvailableTextureUnitsException("No more available texture units.");
+			throw new NoAvailableTextureUnitsException("No more available resource slots.");
 		}
 		else
 		{
-			// The key has not been assigned a texture, so use the next available slot
+			// The key has not been assigned a resource, so use the next available slot
 			keys[nextSlot] = key;
-			textures[nextSlot] = texture;
+			resources[nextSlot] = texture;
 			return nextSlot++;
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public TextureType getTextureByUnit(int index)
+	public ResourceType getResourceByUnit(int index)
 	{
-		return (TextureType)textures[index];
+		return (ResourceType)resources[index];
 	}
 }

@@ -3,9 +3,9 @@ package tetzlaff.gl;
 import tetzlaff.gl.helpers.*;
 
 public interface Renderable<
-	ProgramType extends Program<?, ? super TextureType>, 
+	ProgramType extends Program<?, ? super TextureType, ?>, 
 	VertexBufferType extends VertexBuffer,
-	FramebufferType extends Framebuffer, TextureType		>
+	FramebufferType extends Framebuffer, TextureType >
 {
 	ProgramType program();
 

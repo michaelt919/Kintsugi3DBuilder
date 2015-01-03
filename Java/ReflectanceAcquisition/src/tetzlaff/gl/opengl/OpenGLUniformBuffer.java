@@ -2,6 +2,7 @@ package tetzlaff.gl.opengl;
 
 import java.nio.ByteBuffer;
 
+import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.helpers.ByteVertexList;
 import tetzlaff.gl.helpers.DoubleVertexList;
 import tetzlaff.gl.helpers.FloatVertexList;
@@ -11,9 +12,15 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL31.*;
 
-public class OpenGLUniformBuffer extends OpenGLBuffer 
+public class OpenGLUniformBuffer extends OpenGLBuffer implements UniformBuffer
 {
-
+	public final static int MAX_COMBINED_UNIFORM_BLOCKS;
+	
+	static
+	{
+		MAX_COMBINED_UNIFORM_BLOCKS = glGetInteger(GL_MAX_COMBINED_UNIFORM_BLOCKS);
+	}
+	
 	public OpenGLUniformBuffer(int usage) 
 	{
 		super(usage);
@@ -84,5 +91,45 @@ public class OpenGLUniformBuffer extends OpenGLBuffer
 	{
 		return GL_UNIFORM_BUFFER;
 	}
+	
+	@Override
+	public void setData(ByteBuffer data)
+	{
+		super.setData(data);
+	}
+	
+	@Override
+	public void setData(ByteVertexList data)
+	{
+		super.setData(data.getBuffer());
+	}
 
+	@Override
+	public void setData(ShortVertexList data)
+	{
+		super.setData(data.getBuffer());
+	}
+
+	@Override
+	public void setData(IntVertexList data)
+	{
+		super.setData(data.getBuffer());
+	}
+
+	@Override
+	public void setData(FloatVertexList data)
+	{
+		super.setData(data.getBuffer());
+	}
+
+	@Override
+	public void setData(DoubleVertexList data)
+	{
+		super.setData(data.getBuffer());
+	}
+	
+	static void unbindFromIndex(int index)
+	{
+		OpenGLBuffer.unbindFromIndex(GL_UNIFORM_BUFFER, index);
+	}
 }

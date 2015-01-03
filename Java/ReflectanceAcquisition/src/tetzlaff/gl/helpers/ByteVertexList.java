@@ -18,10 +18,6 @@ public class ByteVertexList
 		{
 			throw new IllegalArgumentException("The number of vertex dimensions cannot be negative.");
 		}
-		if (dimensions > 4)
-		{
-			throw new IllegalArgumentException("The number of vertex dimensions cannot be greater than four.");
-		}
 		if (count < 0)
 		{
 			throw new IllegalArgumentException("The number of vertices cannot be negative.");
@@ -37,10 +33,6 @@ public class ByteVertexList
 		if (dimensions < 0)
 		{
 			throw new IllegalArgumentException("The number of vertex dimensions cannot be negative.");
-		}
-		if (dimensions > 4)
-		{
-			throw new IllegalArgumentException("The number of vertex dimensions cannot be greater than four.");
 		}
 		if (count < 0)
 		{
