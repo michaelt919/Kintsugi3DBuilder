@@ -4,6 +4,7 @@
 #define MAX_CAMERA_PROJECTION_COUNT 256
 
 uniform float weightExponent;
+uniform float gamma;
 
 uniform mat4 model_view;
 
@@ -57,7 +58,7 @@ vec4 getLightFieldSample(int index)
 	else
 	{
 		return computeSampleWeight((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz, vec3(0.0), fragPos.xyz)
-			* texture(imageTextures, vec3(texCoord.xy, index));
+			* pow(texture(imageTextures, vec3(texCoord.xy, index)), vec4(gamma));
 	}
 }
 
@@ -68,7 +69,7 @@ vec4 computeLightField()
 	{
 		sum += getLightFieldSample(i);
 	}
-	return sum / sum.w;
+	return pow(sum / sum.w, vec4(1 / gamma));
 }
 
 void main()
