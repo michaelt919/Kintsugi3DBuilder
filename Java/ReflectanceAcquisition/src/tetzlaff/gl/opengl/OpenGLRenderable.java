@@ -4,7 +4,6 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
-import static org.lwjgl.opengl.GL40.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.openGLErrorCheck;
 
 import java.util.Map;
@@ -13,7 +12,6 @@ import java.util.TreeMap;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Renderable;
-import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.exceptions.UnrecognizedPrimitiveModeException;
 import tetzlaff.gl.helpers.*;
 import tetzlaff.gl.opengl.helpers.VertexAttributeSetting;
@@ -67,7 +65,6 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 		case LINE_LOOP: return GL_LINE_LOOP;
 		case LINE_STRIP: return GL_LINE_STRIP;
 		case LINE_STRIP_ADJACENCY: return GL_LINE_STRIP_ADJACENCY;
-		case PATCHES: return GL_PATCHES;
 		case POINTS: return GL_POINTS;
 		case TRIANGLES: return GL_TRIANGLES;
 		case TRIANGLES_ADJACENCY: return GL_TRIANGLES_ADJACENCY;

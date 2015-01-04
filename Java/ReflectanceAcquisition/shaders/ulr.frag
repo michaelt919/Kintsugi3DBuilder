@@ -1,4 +1,4 @@
-#version 400
+#version 330
 
 #define MAX_CAMERA_POSE_COUNT 256
 #define MAX_CAMERA_PROJECTION_COUNT 256

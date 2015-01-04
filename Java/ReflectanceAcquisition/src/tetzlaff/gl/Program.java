@@ -14,14 +14,6 @@ public interface Program<ShaderType, TextureType, UniformBufferType>
 
 	void link();
 
-	boolean setUniform(String name, DoubleVector4 value);
-
-	boolean setUniform(String name, DoubleVector3 value);
-
-	boolean setUniform(String name, DoubleVector2 value);
-
-	boolean setUniform(String name, double value);
-
 	boolean setUniform(String name, Vector4 value);
 
 	boolean setUniform(String name, Vector3 value);
@@ -39,14 +31,6 @@ public interface Program<ShaderType, TextureType, UniformBufferType>
 	boolean setUniform(String name, int value);
 	
 	boolean setUniform(String name, Matrix4 value);
-
-	boolean setUniform(int location, DoubleVector4 value);
-
-	boolean setUniform(int location, DoubleVector3 value);
-
-	boolean setUniform(int location, DoubleVector2 value);
-
-	boolean setUniform(int location, double value);
 
 	boolean setUniform(int location, Vector4 value);
 
