@@ -62,7 +62,7 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 		this(width, height, layerCount, false, false);
 	}
 	
-	public void loadLayer(int layerIndex, String fileFormat, InputStream fileStream, boolean flipVertical) throws IOException
+	public void loadLayer(int layerIndex, InputStream fileStream) throws IOException
 	{
 		this.bind();
 			
@@ -101,14 +101,9 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 		}
 	}
 	
-	public void loadLayer(int layerIndex, String fileFormat, String filename, boolean flipVertical) throws IOException
+	public void loadLayer(int layerIndex, String filename) throws IOException
 	{
-		this.loadLayer(layerIndex, fileFormat, new FileInputStream(filename), flipVertical);
-	}
-	
-	public void loadLayer(int layerIndex, String fileFormat, String filename) throws IOException
-	{
-		this.loadLayer(layerIndex, fileFormat, filename, false);
+		this.loadLayer(layerIndex, new FileInputStream(filename));
 	}
 	
 	@Override

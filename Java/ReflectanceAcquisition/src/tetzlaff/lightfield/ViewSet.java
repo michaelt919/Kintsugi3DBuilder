@@ -115,15 +115,11 @@ public class ViewSet
 			
 			// Read a single image to get the dimensions for the texture array
 			BufferedImage img = ImageIO.read(new FileInputStream(imageFilePaths.get(0)));
-			OpenGLTextureArray textures = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFilePaths.size());
+			this.textureArray = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFilePaths.size(), true, true);
 			
 			for (int i = 0; i < imageFilePaths.size(); i++)
 			{
-				String imgFilePath = imageFilePaths.get(i);
-				
-				String[] imgFilenameParts = imgFilePath.split("\\.");
-				String format = imgFilenameParts[imgFilenameParts.length - 1].toUpperCase();
-				textures.loadLayer(i, format, imgFilePath);
+				this.textureArray.loadLayer(i, imageFilePaths.get(i));
 			}
 	
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
