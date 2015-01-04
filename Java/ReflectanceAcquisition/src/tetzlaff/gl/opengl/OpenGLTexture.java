@@ -7,14 +7,6 @@ import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
-import java.awt.image.BufferedImage;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-
-import javax.imageio.ImageIO;
-
-import org.lwjgl.BufferUtils;
-
 public abstract class OpenGLTexture implements OpenGLResource, OpenGLFramebufferAttachment
 {
 	public static final int MAX_COMBINED_TEXTURE_IMAGE_UNITS;

@@ -2,7 +2,6 @@ package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL31.*;
-import static org.lwjgl.opengl.GL40.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
 import java.io.File;
@@ -330,78 +329,6 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 			return false;
 		}
 	}
-
-	@Override
-	public boolean setUniform(int location, double value)
-	{
-		if (location >= 0)
-		{
-			this.use(); 
-			
-			glUniform1d(location, value);
-			openGLErrorCheck();
-			
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
-	@Override
-	public boolean setUniform(int location, DoubleVector2 value)
-	{
-		if (location >= 0)
-		{
-			this.use(); 
-			
-			glUniform2d(location, value.x, value.y);
-			openGLErrorCheck();
-			
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
-	@Override
-	public boolean setUniform(int location, DoubleVector3 value)
-	{
-		if (location >= 0)
-		{
-			this.use(); 
-			
-			glUniform3d(location, value.x, value.y, value.z);
-			openGLErrorCheck();
-			
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
-	@Override
-	public boolean setUniform(int location, DoubleVector4 value)
-	{
-		if (location >= 0)
-		{
-			this.use(); 
-			
-			glUniform4d(location, value.x, value.y, value.z, value.w);
-			openGLErrorCheck();
-			
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
 	
 	@Override
 	public boolean setUniform(String name, int value)
@@ -447,30 +374,6 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	
 	@Override
 	public boolean setUniform(String name, Vector4 value)
-	{
-		return this.setUniform(this.getUniformLocation(name), value);
-	}
-
-	@Override
-	public boolean setUniform(String name, double value)
-	{
-		return this.setUniform(this.getUniformLocation(name), value);
-	}
-	
-	@Override
-	public boolean setUniform(String name, DoubleVector2 value)
-	{
-		return this.setUniform(this.getUniformLocation(name), value);
-	}
-	
-	@Override
-	public boolean setUniform(String name, DoubleVector3 value)
-	{
-		return this.setUniform(this.getUniformLocation(name), value);
-	}
-	
-	@Override
-	public boolean setUniform(String name, DoubleVector4 value)
 	{
 		return this.setUniform(this.getUniformLocation(name), value);
 	}
