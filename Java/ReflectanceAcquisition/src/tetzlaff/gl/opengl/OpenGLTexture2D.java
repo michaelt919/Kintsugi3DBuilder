@@ -35,39 +35,47 @@ public class OpenGLTexture2D extends OpenGLTexture
 		this(internalFormat, width, height, format, false, false);
 	}
 	
-	public OpenGLTexture2D(String fileFormat, InputStream fileStream, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
+	public OpenGLTexture2D(InputStream fileStream, boolean useLinearFiltering, boolean useMipmaps) throws IOException
 	{
 		super();
 		this.bind();
 		
 		BufferedImage img = ImageIO.read(fileStream);
 		ByteBuffer buffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
-		IntBuffer intBuffer = buffer.asIntBuffer();
 		for (int y = 0; y < img.getHeight(); y++)
 		{
 			for (int x = 0; x < img.getWidth(); x++)
 			{
-				intBuffer.put(img.getRGB(x, y));
+				byte a = (byte)((img.getRGB(x, y) >>> 16) & 0xFF);
+				byte r = (byte)((img.getRGB(x, y) >>> 16) & 0xFF);
+				byte g = (byte)((img.getRGB(x, y) >>> 8) & 0xFF);
+				byte b = (byte)(img.getRGB(x, y) & 0xFF);
+				
+				buffer.put(r);
+				buffer.put(g);
+				buffer.put(b);
+				buffer.put(a);
 			}
 		}
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.getWidth(), img.getHeight(), 0, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+		buffer.flip();
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.getWidth(), img.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 		openGLErrorCheck();
 		this.init(img.getWidth(), img.getHeight(), useLinearFiltering, useMipmaps);
 	}
 	
-	public OpenGLTexture2D(String fileFormat, InputStream fileStream) throws IOException
+	public OpenGLTexture2D(InputStream fileStream) throws IOException
 	{
-		this(fileFormat, fileStream, false, false, false);
+		this(fileStream, false, false);
 	}
 	
-	public OpenGLTexture2D(String fileFormat, String filename, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
+	public OpenGLTexture2D(String filename, boolean useLinearFiltering, boolean useMipmaps) throws IOException
 	{
-		this(fileFormat, new FileInputStream(filename), flipVertical, useLinearFiltering, useMipmaps);
+		this(new FileInputStream(filename), useLinearFiltering, useMipmaps);
 	}
 	
-	public OpenGLTexture2D(String fileFormat, String filename) throws IOException
+	public OpenGLTexture2D(String filename) throws IOException
 	{
-		this(fileFormat, filename, false, false, false);
+		this(filename, false, false);
 	}
 	
 	private void init(int width, int height, boolean useLinearFiltering, boolean useMipmaps)

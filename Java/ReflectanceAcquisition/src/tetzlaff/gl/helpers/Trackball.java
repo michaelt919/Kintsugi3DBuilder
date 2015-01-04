@@ -12,28 +12,37 @@ import tetzlaff.window.listeners.MouseButtonReleaseListener;
 
 public class Trackball implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener
 {
-	private int buttonIndex;
+	private int primaryButtonIndex;
+	private int secondaryButtonIndex;
 	private float sensitivity;
 	
 	private float startX = Float.NaN;
 	private float startY = Float.NaN;
 	
-	private float scale = Float.NaN;
+	private float mouseScale = Float.NaN;
 	
-	private Matrix4 oldRotationMatrix;
-	private Matrix4 rotationMatrix;
+	private Matrix4 oldTrackballMatrix;
+	private Matrix4 trackballMatrix;
 	
-	public Trackball(int buttonIndex, float sensitivity)
+	private float oldLogScale;
+	private float logScale;
+	private float scale;
+	
+	public Trackball(int primaryButtonIndex, int secondaryButtonIndex, float sensitivity)
 	{
-		this.buttonIndex = buttonIndex;
+		this.primaryButtonIndex = primaryButtonIndex;
+		this.secondaryButtonIndex = secondaryButtonIndex;
 		this.sensitivity = sensitivity;
-		this.oldRotationMatrix = Matrix4.identity();
-		this.rotationMatrix = Matrix4.identity();
+		this.oldTrackballMatrix = Matrix4.identity();
+		this.trackballMatrix = Matrix4.identity();
+		this.oldLogScale = 0.0f;
+		this.logScale = 0.0f;
+		this.scale = 1.0f;
 	}
 	
 	public Trackball(float sensitivity)
 	{
-		this(0, sensitivity);
+		this(0, 1, sensitivity);
 	}
 	
 	public void addAsWindowListener(Window window)
@@ -45,28 +54,33 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	
 	public Matrix4 getRotationMatrix()
 	{
-		return this.rotationMatrix;
+		return this.trackballMatrix;
+	}
+	
+	public float getScale()
+	{
+		return this.scale;
 	}
 
 	@Override
 	public void mouseButtonPressed(Window window, int buttonIndex, ModifierKeys mods) 
 	{
-		if (buttonIndex == this.buttonIndex)
+		if (buttonIndex == this.primaryButtonIndex || buttonIndex == this.secondaryButtonIndex)
 		{
 			CursorPosition pos = window.getCursorPosition();
 			WindowSize size = window.getWindowSize();
 			this.startX = (float)pos.x;
 			this.startY = (float)pos.y;
-			this.scale = (float)Math.PI * this.sensitivity / Math.min(size.width, size.height);
+			this.mouseScale = (float)Math.PI * this.sensitivity / Math.min(size.width, size.height);
 		}
 	}	
 
 	@Override
 	public void cursorMoved(Window window, double xpos, double ypos) 
 	{
-		if (window.getMouseButtonState(buttonIndex) == MouseButtonState.Pressed)
+		if (window.getMouseButtonState(primaryButtonIndex) == MouseButtonState.Pressed)
 		{
-			if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(scale) && !Float.isNaN(scale))
+			if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale))
 			{
 				Vector3 rotationVector = 
 					new Vector3(
@@ -75,12 +89,24 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 						0.0f
 					);
 					
-				this.rotationMatrix = 
+				this.trackballMatrix = 
 					Matrix4.rotateAxis(
 						rotationVector.normalized(), 
-						this.scale * rotationVector.length()
+						this.mouseScale * rotationVector.length()
 					)
-					.times(this.oldRotationMatrix);
+					.times(this.oldTrackballMatrix);
+			}
+		}
+		else if (window.getMouseButtonState(secondaryButtonIndex) == MouseButtonState.Pressed)
+		{
+			if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale))
+			{
+				this.trackballMatrix = 
+					Matrix4.rotateZ(this.mouseScale * (xpos - this.startX))
+						.times(this.oldTrackballMatrix);
+				
+				this.logScale = this.oldLogScale + this.mouseScale * (float)(ypos - this.startY);
+				this.scale = (float)Math.pow(2, this.logScale);
 			}
 		}
 	}
@@ -88,9 +114,10 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	@Override
 	public void mouseButtonReleased(Window window, int buttonIndex, ModifierKeys mods) 
 	{
-		if (buttonIndex == this.buttonIndex)
+		if (buttonIndex == this.primaryButtonIndex || buttonIndex == this.secondaryButtonIndex)
 		{
-			this.oldRotationMatrix = this.rotationMatrix;
+			this.oldTrackballMatrix = this.trackballMatrix;
+			this.oldLogScale = this.logScale;
 		}
 	}
 }

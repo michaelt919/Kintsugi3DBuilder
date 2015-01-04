@@ -56,7 +56,7 @@ public class MainProgram implements Drawable
         
         try
         {
-        	texture = new OpenGLTexture2D("PNG", "checkerboard.png");
+        	texture = new OpenGLTexture2D("checkerboard.png", true, true);
         }
         catch (IOException e)
         {
@@ -109,7 +109,7 @@ public class MainProgram implements Drawable
     	
     	renderable.program().setUniform("model_view", 
 			Matrix4.lookAt(
-				new Vector3(0.0f, 0.0f, 5.0f), 
+				new Vector3(0.0f, 0.0f, 5.0f / trackball.getScale()), 
 				new Vector3(0.0f, 0.0f, 0.0f),
 				new Vector3(0.0f, 1.0f, 0.0f)
 			) // View
@@ -119,6 +119,7 @@ public class MainProgram implements Drawable
     	
     	renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
     	
+    	renderable.program().setUniform("gamma", 2.2f);
     	renderable.program().setUniform("weightExponent", 16.0f);
     	
         renderable.draw(PrimitiveMode.TRIANGLES, framebuffer, 0, 0, size.width, size.height);
