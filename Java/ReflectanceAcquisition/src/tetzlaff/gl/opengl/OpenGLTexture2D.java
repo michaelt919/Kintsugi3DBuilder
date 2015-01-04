@@ -42,23 +42,15 @@ public class OpenGLTexture2D extends OpenGLTexture
 		
 		BufferedImage img = ImageIO.read(fileStream);
 		ByteBuffer buffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
+		IntBuffer intBuffer = buffer.asIntBuffer();
 		for (int y = 0; y < img.getHeight(); y++)
 		{
 			for (int x = 0; x < img.getWidth(); x++)
 			{
-				byte a = (byte)((img.getRGB(x, y) >>> 16) & 0xFF);
-				byte r = (byte)((img.getRGB(x, y) >>> 16) & 0xFF);
-				byte g = (byte)((img.getRGB(x, y) >>> 8) & 0xFF);
-				byte b = (byte)(img.getRGB(x, y) & 0xFF);
-				
-				buffer.put(r);
-				buffer.put(g);
-				buffer.put(b);
-				buffer.put(a);
+				intBuffer.put(img.getRGB(x, y));
 			}
 		}
-		buffer.flip();
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.getWidth(), img.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.getWidth(), img.getHeight(), 0, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
 		openGLErrorCheck();
 		this.init(img.getWidth(), img.getHeight(), useLinearFiltering, useMipmaps);
 	}
