@@ -329,6 +329,18 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 			return false;
 		}
 	}
+
+	@Override
+	public boolean setUniform(int location, boolean value)
+	{
+		return this.setUniform(location, value ? GL_TRUE : GL_FALSE);
+	}
+	
+	@Override
+	public boolean setUniform(String name, boolean value)
+	{
+		return this.setUniform(this.getUniformLocation(name), value ? GL_TRUE : GL_FALSE);
+	}
 	
 	@Override
 	public boolean setUniform(String name, int value)

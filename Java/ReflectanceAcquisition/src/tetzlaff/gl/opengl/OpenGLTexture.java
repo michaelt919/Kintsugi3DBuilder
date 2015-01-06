@@ -33,9 +33,9 @@ public abstract class OpenGLTexture implements OpenGLResource, OpenGLFramebuffer
 		openGLErrorCheck();
 	}
 	
-	protected void setTextureId(int id)
+	protected int getTextureId()
 	{
-		this.textureId = id;
+		return this.textureId;
 	}
 	
 	public static int getTextureUnitCount()

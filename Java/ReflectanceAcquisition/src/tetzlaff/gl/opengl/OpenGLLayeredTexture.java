@@ -25,7 +25,7 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 	private boolean useMipmaps;
 	private boolean staleMipmaps;
 	
-	protected OpenGLLayeredTexture(int internalFormat, int width, int height, int layerCount, int format, boolean useLinearFiltering, boolean useMipmaps) 
+	protected OpenGLLayeredTexture(int internalFormat, int width, int height, int layerCount, int format, int type, boolean useLinearFiltering, boolean useMipmaps) 
 	{
 		// Create and allocate a 3D texture or 2D texture array
 		super();
@@ -40,10 +40,15 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 		glEnable(GL_TEXTURE_3D);
 		openGLErrorCheck();
 		
-		glTexImage3D(this.getOpenGLTextureTarget(), 0, internalFormat, width, height, layerCount, 0, format, GL_UNSIGNED_BYTE, 0);
+		glTexImage3D(this.getOpenGLTextureTarget(), 0, internalFormat, width, height, layerCount, 0, format, type, 0);
 		openGLErrorCheck();
 		
 		this.init(useLinearFiltering, useMipmaps);
+	}
+	
+	protected OpenGLLayeredTexture(int internalFormat, int width, int height, int layerCount, int format, boolean useLinearFiltering, boolean useMipmaps) 
+	{
+		this(internalFormat, width, height, layerCount, format, GL_UNSIGNED_BYTE, useLinearFiltering, useMipmaps);
 	}
 	
 	protected OpenGLLayeredTexture(int internalFormat, int width, int height, int layerCount, int format) 
@@ -62,7 +67,17 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 		this(width, height, layerCount, false, false);
 	}
 	
-	public void loadLayer(int layerIndex, InputStream fileStream) throws IOException
+	public int getWidth()
+	{
+		return this.width;
+	}
+	
+	public int getHeight()
+	{
+		return this.height;
+	}
+	
+	public void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical) throws IOException
 	{
 		this.bind();
 			
@@ -84,11 +99,24 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 		
 		ByteBuffer buffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
 		IntBuffer intBuffer = buffer.asIntBuffer();
-		for (int y = 0; y < img.getHeight(); y++)
+		if (flipVertical)
 		{
-			for (int x = 0; x < img.getWidth(); x++)
+			for (int y = img.getHeight() - 1; y >= 0; y--)
 			{
-				intBuffer.put(img.getRGB(x, y));
+				for (int x = 0; x < img.getWidth(); x++)
+				{
+					intBuffer.put(img.getRGB(x, y));
+				}
+			}
+		}
+		else
+		{
+			for (int y = 0; y < img.getHeight(); y++)
+			{
+				for (int x = 0; x < img.getWidth(); x++)
+				{
+					intBuffer.put(img.getRGB(x, y));
+				}
 			}
 		}
 		
@@ -101,9 +129,9 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 		}
 	}
 	
-	public void loadLayer(int layerIndex, String filename) throws IOException
+	public void loadLayer(int layerIndex, String filename, boolean flipVertical) throws IOException
 	{
-		this.loadLayer(layerIndex, new FileInputStream(filename));
+		this.loadLayer(layerIndex, new FileInputStream(filename), flipVertical);
 	}
 	
 	@Override
@@ -173,5 +201,26 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 	protected int getLevelCount() 
 	{
 		return this.mipmapCount;
+	}
+	
+	public OpenGLFramebufferAttachment getLayerAsFramebufferAttachment(int layerIndex)
+	{
+		final int textureId = this.getTextureId();
+		return new OpenGLFramebufferAttachment()
+		{
+			@Override
+			public void attachToDrawFramebuffer(int attachment, int level) 
+			{
+				glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, attachment, textureId, level, layerIndex);
+			}
+
+			@Override
+			public void attachToReadFramebuffer(int attachment, int level) 
+			{
+				glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, attachment, textureId, level, layerIndex);
+				
+			}
+			
+		};
 	}
 }

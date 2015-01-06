@@ -4,7 +4,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
-public class OpenGLRenderbuffer implements OpenGLFramebufferAttachment
+public class OpenGLRenderbuffer implements OpenGLFramebufferAttachment, OpenGLResource
 {
 	private int renderbufferId;
 	
