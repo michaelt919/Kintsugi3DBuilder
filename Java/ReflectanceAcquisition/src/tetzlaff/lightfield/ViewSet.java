@@ -119,9 +119,9 @@ public class ViewSet
 			
 			for (int i = 0; i < imageFilePaths.size(); i++)
 			{
-				this.textureArray.loadLayer(i, imageFilePaths.get(i));
+				this.textureArray.loadLayer(i, imageFilePaths.get(i), true);
 			}
-	
+
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		}
 	}

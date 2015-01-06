@@ -18,6 +18,7 @@ import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLTexture;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
+import tetzlaff.gl.opengl.OpenGLTextureArray;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.lightfield.ViewSet;
 import tetzlaff.window.glfw.GLFWWindow;
@@ -25,10 +26,11 @@ import tetzlaff.window.glfw.GLFWWindow;
 public class MainProgram implements Drawable
 {
 	private GLFWWindow window;
-    private OpenGLTexture texture;
+    private OpenGLTexture testTexture;
     private OpenGLProgram program;
     private VertexMesh mesh;
     private ViewSet viewSet;
+    private OpenGLTextureArray depthTextures;
     private OpenGLRenderable renderable;
     private Trackball trackball;
     
@@ -56,7 +58,7 @@ public class MainProgram implements Drawable
         
         try
         {
-        	texture = new OpenGLTexture2D("checkerboard.png", true, true);
+        	testTexture = new OpenGLTexture2D("checkerboard.png", true, true, true);
         }
         catch (IOException e)
         {
@@ -88,6 +90,50 @@ public class MainProgram implements Drawable
     	renderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
     	renderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
     	renderable.program().setUniform("cameraPoseCount", viewSet.getCameraPoseCount());
+    	
+    	// Build depth textures for each view
+    	int width = viewSet.getTextures().getWidth();
+    	int height = viewSet.getTextures().getHeight();
+    	depthTextures = OpenGLTextureArray.createDepthTextureArray(width, height, viewSet.getCameraPoseCount());
+    	
+    	// Don't automatically generate any texture attachments for this framebuffer object
+    	OpenGLFramebufferObject depthRenderingFBO = new OpenGLFramebufferObject(width, height, 0, false);
+    	
+    	try
+    	{
+	    	// Load the program
+	    	OpenGLProgram depthRenderingProgram = new OpenGLProgram(new File("shaders/depth.vert"), new File("shaders/depth.frag"));
+	    	OpenGLRenderable depthRenderable = new OpenGLRenderable(depthRenderingProgram);
+	    	depthRenderable.addVertexMesh("position", null, null, mesh);
+	    	
+	    	// Render each depth texture
+	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+	    	{
+	    		depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(i));
+	        	depthRenderingFBO.clearDepthBuffer();
+	        	
+	        	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
+	    		depthRenderingProgram.setUniform("projection", 
+					viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
+	    				.getProjectionMatrix(
+							viewSet.getRecommendedNearPlane(), 
+							viewSet.getRecommendedFarPlane()
+						)
+				);
+	        	
+	        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+	    	}
+	    	
+	    	depthRenderingProgram.delete();
+    	}
+    	catch (IOException e)
+    	{
+    		e.printStackTrace();
+    	}
+    	
+    	depthRenderingFBO.delete();
+    	
+    	renderable.program().setTexture("depthTextures", this.depthTextures);
 
         window.show();
     }
@@ -121,36 +167,18 @@ public class MainProgram implements Drawable
     	
     	renderable.program().setUniform("gamma", 2.2f);
     	renderable.program().setUniform("weightExponent", 16.0f);
+    	renderable.program().setUniform("occlusionEnabled", true);
+    	renderable.program().setUniform("occlusionBias", 0.005f);
     	
-        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer, 0, 0, size.width, size.height);
+        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
     }
     
     @Override
     public void cleanup()
     {
-    	// Print the last frame to a file
-    	OpenGLFramebuffer framebuffer = OpenGLDefaultFramebuffer.fromContext(window);
-    	FramebufferSize size = framebuffer.getSize();
-    	int dim = Math.min(size.width, size.height);
-    	
-    	OpenGLFramebufferObject framebuffer2 = new OpenGLFramebufferObject(dim, dim);
-    	framebuffer2.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
-    	framebuffer2.clearDepthBuffer();
-    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer2);
-    	
-		try 
-		{
-		    framebuffer2.saveColorBufferToFile(0, "png", "output.png");
-		}
-		catch(IOException e)
-		{
-			e.printStackTrace();
-		}
-		
-        framebuffer2.delete();
-    	
         program.delete();
-        texture.delete();
+        testTexture.delete();
+        depthTextures.delete();
     }
  
     public static void main(String[] args) 

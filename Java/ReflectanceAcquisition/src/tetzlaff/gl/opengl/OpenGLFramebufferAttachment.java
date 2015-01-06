@@ -1,7 +1,7 @@
 package tetzlaff.gl.opengl;
 
 
-interface OpenGLFramebufferAttachment extends OpenGLResource
+public interface OpenGLFramebufferAttachment
 {
 	void attachToDrawFramebuffer(int attachment, int level);
 	void attachToReadFramebuffer(int attachment, int level);

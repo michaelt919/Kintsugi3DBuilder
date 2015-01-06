@@ -3,7 +3,10 @@
 #define MAX_CAMERA_POSE_COUNT 256
 #define MAX_CAMERA_PROJECTION_COUNT 256
 
+uniform bool occlusionEnabled;
+
 uniform float weightExponent;
+uniform float occlusionBias;
 uniform float gamma;
 
 uniform mat4 model_view;
@@ -15,6 +18,8 @@ in vec3 fNormal;
 in vec3 fViewPos;
 
 uniform sampler2DArray imageTextures;
+uniform sampler2DArray depthTextures;
+uniform sampler2D testTexture;
 
 uniform CameraPoses
 {
@@ -49,14 +54,24 @@ vec4 getLightFieldSample(int index)
 	vec4 projPos = cameraProjections[cameraProjectionIndices[index]] * fragPos;
 	projPos = projPos / projPos.w;
 	
-	vec2 texCoord = vec2((projPos.x / 2 + 0.5), (-projPos.y / 2 + 0.5));
+	vec2 texCoord = vec2(projPos.x / 2 + 0.5, projPos.y / 2 + 0.5);
 	
 	if (texCoord.x < 0 || texCoord.x > 1 || texCoord.y < 0 || texCoord.y > 1)
 	{
-		return vec4(0.0, 0.0, 0.0, 0.0);
+		return vec4(0.0);
 	}
 	else
 	{
+		if (occlusionEnabled)
+		{
+			float imageDepth = 2*texture(depthTextures, vec3(texCoord.xy, index)).x - 1;
+			if (projPos.z > imageDepth + occlusionBias)
+			{
+				// Occluded
+				return vec4(0.0);
+			}
+		}
+		
 		return computeSampleWeight((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz, vec3(0.0), fragPos.xyz)
 			* pow(texture(imageTextures, vec3(texCoord.xy, index)), vec4(gamma));
 	}

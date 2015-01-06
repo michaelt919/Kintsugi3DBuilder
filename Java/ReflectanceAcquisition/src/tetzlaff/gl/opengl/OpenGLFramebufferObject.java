@@ -11,16 +11,17 @@ import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.opengl.exceptions.OpenGLInvalidFramebufferOperationException;
 
-public class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferObject<OpenGLTexture>, OpenGLResource
+public class OpenGLFramebufferObject 
+	extends OpenGLFramebuffer implements FramebufferObject<OpenGLFramebufferAttachment, OpenGLTexture2D>, OpenGLResource
 {
 	private int nativeWidth;
 	private int nativeHeight;
 	private int fboId;
-	private AbstractCollection<OpenGLResource> attachments;
-	private OpenGLTexture[] colorTextures;
-	private OpenGLTexture depthTexture;
-	private OpenGLTexture stencilTexture;
-	private OpenGLTexture depthStencilTexture;
+	private AbstractCollection<OpenGLResource> ownedAttachments;
+	private OpenGLFramebufferAttachment[] colorAttachments;
+	private OpenGLFramebufferAttachment depthAttachment;
+	private OpenGLFramebufferAttachment stencilAttachment;
+	private OpenGLFramebufferAttachment depthStencilAttachment;
 	
 	public OpenGLFramebufferObject(int width, int height, int colorAttachments, boolean depthAttachment, boolean stencilAttachment, boolean combineDepthAndStencil)
 	{
@@ -29,7 +30,7 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 		
 		this.nativeWidth = width;
 		this.nativeHeight = height;
-		this.attachments = new ArrayList<OpenGLResource>();
+		this.ownedAttachments = new ArrayList<OpenGLResource>();
 		
 		if (colorAttachments < 0)
 		{
@@ -41,32 +42,27 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 			throw new IllegalArgumentException("Too many color attachments specified - maximum is " + GL_MAX_COLOR_ATTACHMENTS + ".");
 		}
 		
-		if (colorAttachments == 0 && !depthAttachment && !stencilAttachment)
-		{
-			throw new IllegalArgumentException("No attachments specified - every FBO must have at least one attachment.");
-		}
-		
-		this.colorTextures = new OpenGLTexture[colorAttachments];
+		this.colorAttachments = new OpenGLTexture[colorAttachments];
 		
 		for (int i = 0; i < colorAttachments; i++)
 		{
-			this.colorTextures[i] = createAttachment(GL_COLOR_ATTACHMENT0 + i, GL_RGBA, GL_RGBA);
+			this.colorAttachments[i] = createAttachment(GL_COLOR_ATTACHMENT0 + i, GL_RGBA, GL_RGBA);
 		}
 		
 		if (depthAttachment && stencilAttachment && combineDepthAndStencil)
 		{
-			this.depthStencilTexture = createAttachment(GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL);
+			this.depthStencilAttachment = createAttachment(GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL);
 		}
 		else
 		{
 			if (depthAttachment)
 			{
-				this.depthTexture = createAttachment(GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT);
+				this.depthAttachment = createAttachment(GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT);
 			}
 			
 			if (stencilAttachment)
 			{
-				this.stencilTexture = createAttachment(GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX, GL_STENCIL_INDEX);
+				this.stencilAttachment = createAttachment(GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX, GL_STENCIL_INDEX);
 			}
 		}
 		
@@ -84,13 +80,18 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
 		openGLErrorCheck();
 		attachment.attachToDrawFramebuffer(attachmentType, 0);
-		attachments.add(attachment);
+		ownedAttachments.add(attachment);
 		return attachment;
+	}
+	
+	public OpenGLFramebufferObject(int width, int height, int colorAttachments, boolean depthAttachment)
+	{
+		this(width, height, colorAttachments, depthAttachment, false, false);
 	}
 	
 	public OpenGLFramebufferObject(int width, int height, int colorAttachments)
 	{
-		this(width, height, colorAttachments, true, false, false);
+		this(width, height, colorAttachments, true);
 	}
 	
 	public OpenGLFramebufferObject(int width, int height)
@@ -118,22 +119,72 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 	}
 	
 	@Override
-	public OpenGLTexture getColorAttachmentTexture(int index)
+	public OpenGLTexture2D getColorAttachmentTexture(int index)
 	{
 		if(index < 0)
 		{
 			throw new IllegalArgumentException("Attachment index cannot be negative.");
 		}
-		else if (index > this.colorTextures.length)
+		else if (index > this.colorAttachments.length)
 		{
 			throw new IllegalArgumentException("Attachment index (" + index + 
-					") exceeded the number of color attachments for the framebufer (" + this.colorTextures.length + ").");
+					") exceeded the number of color attachments for the framebufer (" + this.colorAttachments.length + ").");
 		}
-		else if (this.colorTextures[index] == null)
+		else if (this.colorAttachments[index] == null || !(this.colorAttachments[index] instanceof OpenGLTexture2D))
 		{
-			throw new UnsupportedOperationException("The color attachment for the framebuffer at index " + index + " is not a texture.");
+			throw new UnsupportedOperationException("The color attachment for the framebuffer at index " + index + " is not a 2D texture.");
 		}
-		else return colorTextures[index];
+		else return (OpenGLTexture2D)this.colorAttachments[index];
+	}
+	
+	@Override
+	public void setColorAttachment(int index, OpenGLFramebufferAttachment attachment)
+	{
+		if (this.colorAttachments[index] != null)
+		{
+			// Remove the attachment from the list of owned attachments if it existed
+			if (this.ownedAttachments.remove(this.colorAttachments[index]))
+			{
+				// Delete it
+				((OpenGLResource)this.colorAttachments[index]).delete();
+			}
+		}
+		
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
+		openGLErrorCheck();
+		attachment.attachToDrawFramebuffer(GL_COLOR_ATTACHMENT0 + index, 0);
+		
+		this.colorAttachments[index] = attachment;
+	}
+	
+	@Override
+	public OpenGLTexture2D getDepthAttachmentTexture()
+	{
+		if (this.depthAttachment == null || !(this.depthAttachment instanceof OpenGLTexture2D))
+		{
+			throw new UnsupportedOperationException("The depth attachment for the framebuffer is not a 2D texture.");
+		}
+		else return (OpenGLTexture2D)this.depthAttachment;
+	}
+	
+	@Override
+	public void setDepthAttachment(OpenGLFramebufferAttachment attachment)
+	{
+		if (this.depthAttachment != null)
+		{
+			// Remove the attachment from the list of owned attachments if it existed
+			if (this.ownedAttachments.remove(this.depthAttachment))
+			{
+				// Delete it
+				((OpenGLResource)this.depthAttachment).delete();
+			}
+		}
+		
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
+		openGLErrorCheck();
+		attachment.attachToDrawFramebuffer(GL_DEPTH_ATTACHMENT, 0);
+		
+		this.depthAttachment = attachment;
 	}
 	
 	@Override
@@ -141,7 +192,7 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 	{
 		glDeleteFramebuffers(this.fboId);
 		openGLErrorCheck();
-		for (OpenGLResource attachment : attachments)
+		for (OpenGLResource attachment : ownedAttachments)
 		{
 			attachment.delete();
 		}
