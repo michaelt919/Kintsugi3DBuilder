@@ -125,6 +125,14 @@ public class ViewSet
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		}
 	}
+	
+	public void deleteOpenGLResources()
+	{
+		cameraPoseBuffer.delete();
+		cameraProjectionBuffer.delete();
+		cameraProjectionIndexBuffer.delete();
+		textureArray.delete();
+	}
 
 	public static ViewSet loadFromVSETFile(String filename) throws IOException
 	{
