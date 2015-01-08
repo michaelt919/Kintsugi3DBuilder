@@ -1,4 +1,4 @@
-package tetzlaff.lightfield;
+package tetzlaff.ulf;
 
 import tetzlaff.gl.helpers.Matrix4;
 

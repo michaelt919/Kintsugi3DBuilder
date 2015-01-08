@@ -1,4 +1,4 @@
-package tetzlaff.lightfield;
+package tetzlaff.ulf;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,15 +12,19 @@ import tetzlaff.gl.opengl.OpenGLTextureArray;
 
 public class UnstructuredLightField 
 {
+	public final String id;
 	public final ViewSet viewSet;
 	public final VertexMesh proxy;
 	public final OpenGLTextureArray depthTextures;
+    public final ULFSettings settings;
 	
-	public UnstructuredLightField(ViewSet viewSet, VertexMesh proxy, OpenGLTextureArray depthTextures) 
+	public UnstructuredLightField(String id, ViewSet viewSet, VertexMesh proxy, OpenGLTextureArray depthTextures, ULFSettings settings) 
 	{
+		this.id = id;
 		this.viewSet = viewSet;
 		this.proxy = proxy;
 		this.depthTextures = depthTextures;
+		this.settings = settings;
 	}
 	
 	public void deleteOpenGLResources()
@@ -73,6 +77,14 @@ public class UnstructuredLightField
     	
     	depthRenderingFBO.delete();
     	
-    	return new UnstructuredLightField(viewSet, proxy, depthTextures);
+    	String[] pathParts = directoryPath.split("[\\\\\\/]");
+    	String id = pathParts[pathParts.length - 1];
+    	return new UnstructuredLightField(id, viewSet, proxy, depthTextures, new ULFSettings());
+	}
+	
+	@Override
+	public String toString()
+	{
+		return this.id;
 	}
 }
