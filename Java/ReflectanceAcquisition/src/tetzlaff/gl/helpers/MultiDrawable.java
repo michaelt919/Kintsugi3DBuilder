@@ -6,10 +6,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-public class MultiDrawable<T extends Drawable> implements Drawable, List<T>
+import tetzlaff.helpers.SelectableList;
+
+public class MultiDrawable<T extends Drawable> implements Drawable, SelectableList<T>
 {
 	private List<T> drawables;
-	private int activeIndex;
+	private int selectedIndex = -1;
 	
 	private List<T> removedDrawables;
 	private List<T> addedDrawables;
@@ -62,7 +64,11 @@ public class MultiDrawable<T extends Drawable> implements Drawable, List<T>
 	@Override
 	public void draw() 
 	{
-		this.getActiveDrawable().draw();
+		Drawable selected = this.getSelectedItem();
+		if (selected != null)
+		{
+			selected.draw();
+		}
 	}
 
 	@Override
@@ -74,19 +80,42 @@ public class MultiDrawable<T extends Drawable> implements Drawable, List<T>
 		}
 	}
 	
-	public int getActiveIndex()
+	@Override
+	public int getSelectedIndex()
 	{
-		return activeIndex;
+		return selectedIndex;
 	}
 	
-	public Drawable getActiveDrawable()
+	@Override
+	public T getSelectedItem()
 	{
-		return drawables.get(activeIndex);
+		if (this.getSelectedIndex() < 0)
+		{
+			return null;
+		}
+		else
+		{
+			return drawables.get(selectedIndex);
+		}
 	}
 	
-	public void setActiveIndex(int index)
+	@Override
+	public void setSelectedIndex(int index)
 	{
-		this.activeIndex = index;
+		this.selectedIndex = index;
+	}
+	
+	@Override
+	public void setSelectedItem(Object item)
+	{
+		if (item == null)
+		{
+			this.setSelectedIndex(-1);
+		}
+		else
+		{
+			this.setSelectedIndex(drawables.indexOf(item));
+		}
 	}
 
 	@Override
@@ -120,7 +149,7 @@ public class MultiDrawable<T extends Drawable> implements Drawable, List<T>
 	}
 
 	@Override
-	public <T> T[] toArray(T[] a) 
+	public <U> U[] toArray(U[] a) 
 	{
 		return drawables.toArray(a);
 	}
@@ -180,9 +209,9 @@ public class MultiDrawable<T extends Drawable> implements Drawable, List<T>
 		if (drawables.addAll(index, c))
 		{
 			addedDrawables.addAll(c);
-			if (index < activeIndex)
+			if (index < selectedIndex)
 			{
-				activeIndex += c.size();
+				selectedIndex += c.size();
 			}
 			return true;
 		}
@@ -240,9 +269,9 @@ public class MultiDrawable<T extends Drawable> implements Drawable, List<T>
 		{
 			addedDrawables.add(element);
 		}
-		if (index < activeIndex)
+		if (index < selectedIndex)
 		{
-			activeIndex++;
+			selectedIndex++;
 		}
 	}
 
@@ -254,9 +283,9 @@ public class MultiDrawable<T extends Drawable> implements Drawable, List<T>
 		{
 			removedDrawables.add(removed);
 		}
-		if (index < activeIndex)
+		if (index < selectedIndex)
 		{
-			activeIndex--;
+			selectedIndex--;
 		}
 		return removed;
 	}
