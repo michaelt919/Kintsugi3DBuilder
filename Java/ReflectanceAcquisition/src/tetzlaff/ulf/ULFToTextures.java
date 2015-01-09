@@ -15,9 +15,9 @@ import tetzlaff.gl.opengl.OpenGLFramebuffer;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
 
-public class ULFRenderable implements Drawable
+public class ULFToTextures implements ULFDrawable
 {
-    private static OpenGLProgram program;
+    private static OpenGLProgram genTexProgram;
     
     private String lightFieldDirectory;
     private UnstructuredLightField lightField;
@@ -26,18 +26,20 @@ public class ULFRenderable implements Drawable
     private Trackball trackball;
     private ULFLoadedCallback callback;
 
-    public ULFRenderable(OpenGLContext context, String lightFieldDirectory, Trackball trackball)
+    public ULFToTextures(OpenGLContext context, String lightFieldDirectory, Trackball trackball)
     {
     	this.context = context;
     	this.lightFieldDirectory = lightFieldDirectory;
     	this.trackball = trackball;
     }
-    
+
+    @Override
     public UnstructuredLightField getLightField()
     {
     	return this.lightField;
     }
     
+    @Override
     public void setOnLoadCallback(ULFLoadedCallback callback)
     {
     	this.callback = callback;
@@ -46,11 +48,11 @@ public class ULFRenderable implements Drawable
     @Override
     public void initialize() 
     {
-    	if (ULFRenderable.program == null)
+    	if (ULFToTextures.genTexProgram == null)
     	{
 	    	try
 	        {
-	    		ULFRenderable.program = new OpenGLProgram(new File("shaders/ulr.vert"), new File("shaders/ulr.frag"));
+	    		ULFToTextures.genTexProgram = new OpenGLProgram(new File("shaders/ulfTex.vert"), new File("shaders/ulfTex.frag"));
 	        }
 	        catch (IOException e)
 	        {
@@ -63,7 +65,7 @@ public class ULFRenderable implements Drawable
 			this.lightField = UnstructuredLightField.loadFromDirectory(this.lightFieldDirectory);
 			this.callback.ulfLoaded();
 	    	
-	    	this.renderable = new OpenGLRenderable(program);
+	    	this.renderable = new OpenGLRenderable(genTexProgram);
 	    	this.renderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
 		} 
     	catch (IOException e) 

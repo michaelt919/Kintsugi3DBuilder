@@ -36,4 +36,18 @@ public abstract class OpenGLContext implements Context
 		glDisable(GL_MULTISAMPLE);
 		openGLErrorCheck();
 	}
+	
+	@Override
+	public void enableBackFaceCulling()
+	{
+		glEnable(GL_CULL_FACE);
+		openGLErrorCheck();
+	}
+	
+	@Override
+	public void disableBackFaceCulling()
+	{
+		glDisable(GL_CULL_FACE);
+		openGLErrorCheck();
+	}
 }

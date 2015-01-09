@@ -1,28 +1,54 @@
 package tetzlaff.reflacq;
 
+import java.util.Arrays;
+
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.interactive.InteractiveApplication;
-import tetzlaff.ulf.ULFRenderableListModel;
+import tetzlaff.ulf.ULFRendererList;
+import tetzlaff.ulf.ULFToTexturesList;
 import tetzlaff.window.glfw.GLFWWindow;
 
 public class MainProgram
 {
     public static void main(String[] args) 
     {
-    	GLFWWindow window = new GLFWWindow(800, 800, "Unstructured Light Field Renderer", true, 4);
-    	window.enableDepthTest();
+    	GLFWWindow ulrWindow = new GLFWWindow(800, 800, "Unstructured Light Field Renderer", 280, 140, true, 4);
+    	ulrWindow.enableDepthTest();
+    	ulrWindow.enableBackFaceCulling();
+    	
+    	GLFWWindow ulfToTexWindow = new GLFWWindow(800, 800, "Texture Space Visualization", 1100, 140, true, 4);
     	
     	Trackball trackball = new Trackball(1.0f);
-        trackball.addAsWindowListener(window);
+        trackball.addAsWindowListener(ulrWindow);
         
-    	ULFRenderableListModel model = new ULFRenderableListModel(window, trackball);
+    	ULFRendererList model = new ULFRendererList(ulrWindow, trackball);
+    	ULFToTexturesList ulfToTexList = new ULFToTexturesList(ulrWindow, trackball);
     	ULFUserInterface gui = new ULFUserInterface(model);
+    	
+        gui.addSelectedLightFieldListener(lf -> 
+        {
+        	ulfToTexList.setSelectedItem(lf);
+        	if (ulfToTexList.getSelectedItem() == null)
+        	{
+        		try 
+        		{
+					ulfToTexList.addFromDirectory(lf.directoryPath);
+				} 
+        		catch (Exception e)
+        		{
+					e.printStackTrace();
+				}
+        	}
+        });
         
-        InteractiveApplication app = InteractiveGraphics.createApplication(window, window, model.getDrawable());
-        window.show();
+        InteractiveApplication ulrApp = InteractiveGraphics.createApplication(ulrWindow, ulrWindow, model.getDrawable());
+        InteractiveApplication ulfToTexApp = InteractiveGraphics.createApplication(ulfToTexWindow, ulfToTexWindow, ulfToTexList.getDrawable());
+        
         gui.show();
-		app.run();
+        ulrWindow.show();
+        ulfToTexWindow.show();
+		InteractiveApplication.runSimultaneous(Arrays.asList(ulrApp, ulfToTexApp));
         
         GLFWWindow.closeAllWindows();
         System.exit(0);
