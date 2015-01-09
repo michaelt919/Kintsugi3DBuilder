@@ -14,6 +14,7 @@ import tetzlaff.gl.opengl.OpenGLDefaultFramebuffer;
 import tetzlaff.gl.opengl.OpenGLFramebuffer;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
+import tetzlaff.gl.opengl.OpenGLResource;
 
 public class ULFRenderer implements ULFDrawable
 {
@@ -25,6 +26,7 @@ public class ULFRenderer implements ULFDrawable
     private OpenGLRenderable renderable;
     private Trackball trackball;
     private ULFLoadedCallback callback;
+    private Iterable<OpenGLResource> vboResources;
 
     public ULFRenderer(OpenGLContext context, String lightFieldDirectory, Trackball trackball)
     {
@@ -66,7 +68,7 @@ public class ULFRenderer implements ULFDrawable
 			this.callback.ulfLoaded();
 	    	
 	    	this.renderable = new OpenGLRenderable(program);
-	    	this.renderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
+	    	this.vboResources = this.renderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
 		} 
     	catch (IOException e) 
     	{
@@ -119,6 +121,11 @@ public class ULFRenderer implements ULFDrawable
     @Override
     public void cleanup()
     {
+    	for (OpenGLResource r : vboResources)
+    	{
+    		r.delete();
+    	}
+    	
         lightField.deleteOpenGLResources();
     }
 }

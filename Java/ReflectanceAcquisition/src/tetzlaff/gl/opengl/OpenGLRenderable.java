@@ -6,6 +6,8 @@ import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.openGLErrorCheck;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -164,30 +166,26 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	}
 
 	@Override
-	public boolean addVertexMesh(String vertexName, String texCoordName, String normalName, VertexMesh mesh) 
+	public Iterable<OpenGLResource> addVertexMesh(String vertexName, String texCoordName, String normalName, VertexMesh mesh) 
 	{
-        boolean ret = this.addVertexBuffer(
-    		vertexName,
-    		new OpenGLVertexBuffer(mesh.getVertices()),
-			true
-        );
+		Collection<OpenGLResource> newResources = new ArrayList<OpenGLResource>();
+		OpenGLVertexBuffer vertexBuffer = new OpenGLVertexBuffer(mesh.getVertices());
+		this.addVertexBuffer(vertexName, vertexBuffer, true);
+	    newResources.add(vertexBuffer);
+	    
         if (mesh.hasTexCoords() && texCoordName != null)
         {
-	        ret = ret && this.addVertexBuffer(
-	    		texCoordName, 
-	    		new OpenGLVertexBuffer(mesh.getTexCoords()),
-				true
-	        );
+        	OpenGLVertexBuffer texCoordBuffer = new OpenGLVertexBuffer(mesh.getTexCoords());
+	        this.addVertexBuffer(texCoordName, texCoordBuffer, true);
+	        newResources.add(texCoordBuffer);
         }
         if (mesh.hasNormals() && normalName != null)
         {
-	        ret = ret && this.addVertexBuffer(
-	    		normalName, 
-	    		new OpenGLVertexBuffer(mesh.getNormals()),
-				true
-	        );
+        	OpenGLVertexBuffer normalBuffer = new OpenGLVertexBuffer(mesh.getNormals());
+	        this.addVertexBuffer(normalName, normalBuffer, true);
+        	newResources.add(normalBuffer);
         }
-        return ret;
+        return newResources;
 	}
 	
 	@Override

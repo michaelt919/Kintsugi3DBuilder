@@ -1,6 +1,7 @@
 package tetzlaff.gl;
 
 import tetzlaff.gl.helpers.*;
+import tetzlaff.gl.opengl.OpenGLResource;
 
 public interface Renderable<
 	ProgramType extends Program<?, ? super TextureType, ?>, 
@@ -79,5 +80,5 @@ public interface Renderable<
 
 	boolean addVertexBuffer(String name, VertexBufferType buffer);
 	
-	boolean addVertexMesh(String vertexName, String texCoordName, String normalName, VertexMesh mesh);
+	Iterable<OpenGLResource> addVertexMesh(String vertexName, String texCoordName, String normalName, VertexMesh mesh);
 }
