@@ -9,7 +9,7 @@ import tetzlaff.ulf.ULFRendererList;
 import tetzlaff.ulf.ULFToTexturesList;
 import tetzlaff.window.glfw.GLFWWindow;
 
-public class MainProgram
+public class TexGenProgram
 {
     public static void main(String[] args) 
     {
