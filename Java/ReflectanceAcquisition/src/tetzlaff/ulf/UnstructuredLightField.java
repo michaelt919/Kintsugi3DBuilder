@@ -8,6 +8,7 @@ import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
+import tetzlaff.gl.opengl.OpenGLResource;
 import tetzlaff.gl.opengl.OpenGLTextureArray;
 
 public class UnstructuredLightField 
@@ -57,7 +58,7 @@ public class UnstructuredLightField
     	// Load the program
     	OpenGLProgram depthRenderingProgram = new OpenGLProgram(new File("shaders/depth.vert"), new File("shaders/depth.frag"));
     	OpenGLRenderable depthRenderable = new OpenGLRenderable(depthRenderingProgram);
-    	depthRenderable.addVertexMesh("position", null, null, proxy);
+    	Iterable<OpenGLResource> vboResources = depthRenderable.addVertexMesh("position", null, null, proxy);
     	
     	// Render each depth texture
     	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
@@ -77,8 +78,12 @@ public class UnstructuredLightField
         	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
     	}
     	
+    	for (OpenGLResource r : vboResources)
+    	{
+    		r.delete();
+    	}
+
     	depthRenderingProgram.delete();
-    	
     	depthRenderingFBO.delete();
     	
     	return new UnstructuredLightField(directoryPath, viewSet, proxy, depthTextures, new ULFSettings());
