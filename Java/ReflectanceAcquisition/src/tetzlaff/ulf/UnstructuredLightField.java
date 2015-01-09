@@ -12,15 +12,19 @@ import tetzlaff.gl.opengl.OpenGLTextureArray;
 
 public class UnstructuredLightField 
 {
+	public final String directoryPath;
 	public final String id;
 	public final ViewSet viewSet;
 	public final VertexMesh proxy;
 	public final OpenGLTextureArray depthTextures;
     public final ULFSettings settings;
 	
-	public UnstructuredLightField(String id, ViewSet viewSet, VertexMesh proxy, OpenGLTextureArray depthTextures, ULFSettings settings) 
+	public UnstructuredLightField(String directoryPath, ViewSet viewSet, VertexMesh proxy, OpenGLTextureArray depthTextures, ULFSettings settings) 
 	{
-		this.id = id;
+    	String[] pathParts = directoryPath.split("[\\\\\\/]");
+    	this.id = pathParts[pathParts.length - 1];
+    	
+		this.directoryPath = directoryPath;
 		this.viewSet = viewSet;
 		this.proxy = proxy;
 		this.depthTextures = depthTextures;
@@ -77,9 +81,7 @@ public class UnstructuredLightField
     	
     	depthRenderingFBO.delete();
     	
-    	String[] pathParts = directoryPath.split("[\\\\\\/]");
-    	String id = pathParts[pathParts.length - 1];
-    	return new UnstructuredLightField(id, viewSet, proxy, depthTextures, new ULFSettings());
+    	return new UnstructuredLightField(directoryPath, viewSet, proxy, depthTextures, new ULFSettings());
 	}
 	
 	@Override

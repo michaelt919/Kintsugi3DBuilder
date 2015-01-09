@@ -17,4 +17,7 @@ public interface Context
 	
 	void enableMultisampling();
 	void disableMultisampling();
+	
+	void enableBackFaceCulling();
+	void disableBackFaceCulling();
 }

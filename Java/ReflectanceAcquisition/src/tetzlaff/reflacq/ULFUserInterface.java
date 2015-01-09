@@ -4,8 +4,6 @@ import java.awt.Dimension;
 import java.io.IOException;
 import java.io.File;
 
-
-
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -14,14 +12,11 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-
 
 import tetzlaff.ulf.ULFListModel;
 import tetzlaff.ulf.UnstructuredLightField;
@@ -29,10 +24,14 @@ import tetzlaff.ulf.UnstructuredLightField;
 public class ULFUserInterface
 {
 	private JFrame frame;
-
+	private JComboBox<UnstructuredLightField> selector;
+	private ULFListModel model;
+	
 	public ULFUserInterface(ULFListModel model) 
 	{
-		frame = new JFrame("Light Field Config");
+		this.model = model;
+		
+		this.frame = new JFrame("Light Field Config");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		frame.setLocation(10, 10);
@@ -41,7 +40,7 @@ public class ULFUserInterface
 		
 		frame.getContentPane().setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
 		
-		JComboBox<UnstructuredLightField> selector = new JComboBox<UnstructuredLightField>();
+		this.selector = new JComboBox<UnstructuredLightField>();
 		selector.setModel(model);
 		selector.setBorder(new EmptyBorder(10, 10, 10, 10));
 		frame.add(selector);
@@ -175,6 +174,14 @@ public class ULFUserInterface
 		occlusionBiasSpinner.addChangeListener(e ->
 		{
 			model.getSelectedItem().settings.setOcclusionBias(occlusionBiasModel.getNumber().floatValue());
+		});
+	}
+	
+	public void addSelectedLightFieldListener(SelectedLightFieldListener l)
+	{
+		this.selector.addItemListener(e ->
+		{
+			l.lightFieldSelected(model.getSelectedItem());
 		});
 	}
 
