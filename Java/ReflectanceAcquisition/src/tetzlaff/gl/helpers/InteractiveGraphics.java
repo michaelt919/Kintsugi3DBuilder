@@ -30,6 +30,7 @@ public class InteractiveGraphics
 			@Override
 			public void terminate() 
 			{
+				context.makeContextCurrent();
 				drawable.cleanup();
 				context.destroy();
 			}

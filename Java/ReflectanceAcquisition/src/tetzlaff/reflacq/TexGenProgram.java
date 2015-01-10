@@ -18,12 +18,14 @@ public class TexGenProgram
     	ulrWindow.enableBackFaceCulling();
     	
     	GLFWWindow ulfToTexWindow = new GLFWWindow(800, 800, "Texture Space Visualization", 1100, 140, true, 4);
+    	ulfToTexWindow.enableDepthTest();
+    	ulfToTexWindow.enableBackFaceCulling();
     	
     	Trackball trackball = new Trackball(1.0f);
         trackball.addAsWindowListener(ulrWindow);
         
     	ULFRendererList model = new ULFRendererList(ulrWindow, trackball);
-    	ULFToTexturesList ulfToTexList = new ULFToTexturesList(ulrWindow, trackball);
+    	ULFToTexturesList ulfToTexList = new ULFToTexturesList(ulfToTexWindow, trackball);
     	ULFUserInterface gui = new ULFUserInterface(model);
     	
         gui.addSelectedLightFieldListener(lf -> 

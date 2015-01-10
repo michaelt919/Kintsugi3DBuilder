@@ -65,7 +65,7 @@ vec4 getLightFieldSample(int index)
 		if (occlusionEnabled)
 		{
 			float imageDepth = 2*texture(depthTextures, vec3(texCoord.xy, index)).x - 1;
-			if (projPos.z > imageDepth + occlusionBias)
+			if (abs(projPos.z - imageDepth) > occlusionBias)
 			{
 				// Occluded
 				return vec4(0.0);
