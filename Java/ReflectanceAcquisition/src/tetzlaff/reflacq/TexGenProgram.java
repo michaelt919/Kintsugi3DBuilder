@@ -11,9 +11,10 @@ import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.apache.commons.math3.fitting.GaussianCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
-import org.apache.commons.math3.special.Erf;
+import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer;
+import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
+import org.apache.commons.math3.util.Precision;
 
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.opengl.OpenGLContext;
@@ -26,9 +27,6 @@ import tetzlaff.window.glfw.GLFWWindow;
 
 public class TexGenProgram
 {
-	private static final double PI_OVER_2_SQRT_2 = 2 * Math.sqrt(2);
-	private static final double SQRT_2_PI = Math.sqrt(2 * Math.PI);
-	
 	private static final double MIN_SIGMA = 1.0 / 256.0;
 	
 	private static double getSpecularIntensity(double incomingIntensity, double incomingSigma, double outgoingIntensity, double outgoingSigma, double specularRoughness)
@@ -39,8 +37,8 @@ public class TexGenProgram
 		}
 		else
 		{
-			double incomingSigmaTimesRoughness = incomingSigma * specularRoughness;
-			return outgoingIntensity * outgoingSigma / (incomingIntensity * incomingSigmaTimesRoughness * SQRT_2_PI * Erf.erf(outgoingSigma * PI_OVER_2_SQRT_2 / incomingSigmaTimesRoughness));
+			// TODO dependence on sigma
+			return outgoingIntensity / incomingIntensity;
 		}
 	}
 	
@@ -69,16 +67,17 @@ public class TexGenProgram
 	    	ulfToTexContext.enableBackFaceCulling();
 	    	
 	    	String lightFieldDirectory = fileChooser.getSelectedFile().getParent();
-	    	int textureSize = 1024;
+	    	int textureSize = 256;
 	    	
-	    	int maxFittingIterations = 100;
+	    	short blackThreshold = 32;
+	    	double gamma = 2.2;
 	    	
 	    	double lightIntensityRed = 1.0;
 	    	double lightIntensityGreen = 1.0;
 	    	double lightIntensityBlue = 1.0;
-	    	double lightSigmaRed = 0.5;
-	    	double lightSigmaGreen = 0.5;
-	    	double lightSigmaBlue = 0.5;
+	    	double lightSigmaRed = 0.2;
+	    	double lightSigmaGreen = 0.2;
+	    	double lightSigmaBlue = 0.2;
 	        
 	        try
 	        {
@@ -189,15 +188,20 @@ public class TexGenProgram
 				int[] specularRoughnessData = new int[texelCount];
 				int[] specularOffsetData = new int[texelCount];
 				
+				LeastSquaresOptimizer optimizer = new LevenbergMarquardtOptimizer(100, 1e-5, 1e-5, 1e-5, Precision.SAFE_MIN);
+				
 				for (int texelIndex = 0; texelIndex < texelCount; texelIndex++)
 				{
 					if (texelCount > 100 && texelIndex % (texelCount / 100) == 0)
 					{
-						System.out.println(texelIndex / (texelCount / 100) + "% complete.");
+						System.out.println(100 * texelIndex / texelCount + "% complete.");
 					}
 					
-					int diffuseIndex = texelCount / 2;
-					while (diffuseIndex < texelCount - 1 && diffuseImgData[texelIndex] == 0x00000000)
+					int diffuseIndex = sampleCount / 2;
+					while (diffuseIndex < sampleCount - 1 && 
+						redTexels[texelIndex][diffuseIndex] <= blackThreshold &&
+						greenTexels[texelIndex][diffuseIndex] <= blackThreshold && 
+						blueTexels[texelIndex][diffuseIndex] <= blackThreshold)
 					{
 						diffuseIndex++;
 					}
@@ -209,16 +213,7 @@ public class TexGenProgram
 					
 					if (sampleCount - diffuseIndex > 3)
 					{
-						GaussianCurveFitter redFitter = GaussianCurveFitter.create()
-							.withMaxIterations(maxFittingIterations);
-						
-						GaussianCurveFitter greenFitter = GaussianCurveFitter.create()
-							.withMaxIterations(maxFittingIterations);
-
-						GaussianCurveFitter blueFitter = GaussianCurveFitter.create()
-							.withMaxIterations(maxFittingIterations);
-	
-				        WeightedObservedPoints redPoints = new WeightedObservedPoints();
+						WeightedObservedPoints redPoints = new WeightedObservedPoints();
 				        WeightedObservedPoints greenPoints = new WeightedObservedPoints();
 				        WeightedObservedPoints bluePoints = new WeightedObservedPoints();
 	
@@ -229,57 +224,58 @@ public class TexGenProgram
 				        	double theta = (double)(sampleCount - sampleIndex - 0.5) / (double)(sampleCount - diffuseIndex - 0.5);
 				        	
 				        	short red = redTexels[texelIndex][sampleIndex];
-				        	if (red < 255)
+			        		short green = greenTexels[texelIndex][sampleIndex];
+				        	short blue = blueTexels[texelIndex][sampleIndex];
+				        	
+				        	if (red < 255 && green < 255 && blue < 255)
 				        	{
 				        		// Add sample points at theta and negative theta to ensure that the Gaussian is centered
-				        		redPoints.add(theta, red - diffuseRed);
-				        		redPoints.add(-theta, red - diffuseRed);
-				        	}
-	
-			        		short green = greenTexels[texelIndex][sampleIndex];
-				        	if (green < 255)
-				        	{
-				        		greenPoints.add(theta, green - diffuseGreen);
-				        		greenPoints.add(-theta, green - diffuseGreen);
-				        	}
-				        	
-				        	short blue = blueTexels[texelIndex][sampleIndex];
-				        	if (blue < 255)
-				        	{
-				        		bluePoints.add(theta, blue - diffuseBlue);
-				        		bluePoints.add(-theta, blue - diffuseBlue);
+				        		double redRelative = Math.pow(red, gamma) - Math.pow(diffuseRed, gamma);
+				        		redPoints.add(theta, redRelative);
+				        		redPoints.add(-theta, redRelative);
+
+				        		double greenRelative = Math.pow(green, gamma) - Math.pow(diffuseGreen, gamma);
+				        		greenPoints.add(theta, greenRelative);
+				        		greenPoints.add(-theta, greenRelative);
+				        		
+				        		double blueRelative = Math.pow(blue, gamma) - Math.pow(diffuseBlue, gamma);
+				        		bluePoints.add(theta, blueRelative);
+				        		bluePoints.add(-theta, blueRelative);
 				        	}
 				        }
 	
 				        try
 				        {
+				        	CustomGaussianCurveFitter redFitter = CustomGaussianCurveFitter.create().withOptimizer(optimizer);
 					        double[] redFit = redFitter.fit(redPoints.toList());
 					        double redNorm = redFit[0];
 					        double redCenter = redFit[1]; // Should be zero
 					        double redSigma = redFit[2];
 					        double redRoughness = getSpecularRoughness(lightSigmaRed, redSigma);
-					        double redIntensity = getSpecularIntensity(lightIntensityRed, lightSigmaRed, redNorm, redSigma, redRoughness);
+					        double redIntensity = Math.pow(getSpecularIntensity(lightIntensityRed, lightSigmaRed, redNorm, redSigma, redRoughness), 1 / gamma);
 					        short redIntensityInteger = (short)Math.min(Math.round(redIntensity), 255);
 					        short redRoughnessInteger = (short)Math.min(Math.max(Math.round(redRoughness*256 - 1), 0), 255);
 					        short redOffsetInteger = (short)Math.min(Math.round(redCenter*255), 255);
 
-					        double[] greenFit = greenFitter.fit(greenPoints.toList());
+					        CustomGaussianCurveFitter greenFitter = CustomGaussianCurveFitter.create().withOptimizer(optimizer);
+							double[] greenFit = greenFitter.fit(greenPoints.toList());
 					        double greenNorm = greenFit[0];
 					        double greenCenter = greenFit[1]; // Should be zero
 					        double greenSigma = greenFit[2];
 					        double greenRoughness = getSpecularRoughness(lightSigmaGreen, greenSigma);
-					        double greenIntensity = getSpecularIntensity(lightIntensityGreen, lightSigmaGreen, greenNorm, greenSigma, greenRoughness);
-					        short greenIntensityInteger = (short)Math.min(Math.round(greenIntensity), 255);
+					        double greenIntensity = Math.pow(getSpecularIntensity(lightIntensityGreen, lightSigmaGreen, greenNorm, greenSigma, greenRoughness), 1 / gamma);
+					        short greenIntensityInteger = (short)Math.min(Math.max(Math.round(greenIntensity), 0), 255);
 					        short greenRoughnessInteger = (short)Math.min(Math.max(Math.round(greenRoughness*256 - 1), 0), 255);
 					        short greenOffsetInteger = (short)Math.min(Math.round(greenCenter*255), 255);
 					        
-					        double[] blueFit = blueFitter.fit(bluePoints.toList());
+					        CustomGaussianCurveFitter blueFitter = CustomGaussianCurveFitter.create().withOptimizer(optimizer);
+							double[] blueFit = blueFitter.fit(bluePoints.toList());
 					        double blueNorm = blueFit[0];
 					        double blueCenter = blueFit[1]; // Should be zero
 					        double blueSigma = blueFit[2];
 					        double blueRoughness = getSpecularRoughness(lightSigmaBlue, blueSigma);
-					        double blueIntensity = getSpecularIntensity(lightIntensityBlue, lightSigmaBlue, blueNorm, blueSigma, blueRoughness);
-					        short blueIntensityInteger = (short)Math.min(Math.round(blueIntensity), 255);
+					        double blueIntensity = Math.pow(getSpecularIntensity(lightIntensityBlue, lightSigmaBlue, blueNorm, blueSigma, blueRoughness), 1 / gamma);
+					        short blueIntensityInteger = (short)Math.min(Math.max(Math.round(blueIntensity), 0), 255);
 					        short blueRoughnessInteger = (short)Math.min(Math.max(Math.round(blueRoughness*256 - 1), 0), 255);
 					        short blueOffsetInteger = (short)Math.min(Math.round(blueCenter*255), 255);
 				        
@@ -287,11 +283,16 @@ public class TexGenProgram
 					        specularRoughnessData[texelIndex] = 0xFF000000 | redRoughnessInteger << 16 | greenRoughnessInteger << 8 | blueRoughnessInteger;
 					        specularOffsetData[texelIndex] = 0xFF000000 | redOffsetInteger << 16 | greenOffsetInteger << 8 | blueOffsetInteger;
 				        }
-
 				        catch(Exception e)
 				        {
 				        	e.printStackTrace();
 				        }
+					}
+					else
+					{
+						specularIntensityData[texelIndex] = 0xFF000000;
+				        specularRoughnessData[texelIndex] = 0xFF000000;
+				        specularOffsetData[texelIndex] = 0xFF000000;
 					}
 				}
 				
@@ -343,7 +344,8 @@ public class TexGenProgram
 	        }
 	        
 	        GLFWWindow.closeAllWindows();
-	        System.exit(0);
 		}
+		
+        System.exit(0);
     }
 }
