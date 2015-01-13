@@ -9,6 +9,9 @@ public interface Framebuffer
 	int[] readColorBufferARGB(int attachmentIndex);
 	int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height);
 
+	short[] readDepthBuffer(int x, int y, int width, int height);
+	short[] readDepthBuffer();
+
 	void saveColorBufferToFile(int attachmentIndex, String fileFormat, String filename) throws IOException;
 
 	void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a);

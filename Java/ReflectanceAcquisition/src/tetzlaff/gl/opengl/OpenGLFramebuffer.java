@@ -96,6 +96,27 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	}
 	
 	@Override
+	public short[] readDepthBuffer(int x, int y, int width, int height)
+	{
+		this.bindForRead(0);
+		ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(width * height * 4);
+		
+		glReadPixels(x, y, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, pixelBuffer);
+		openGLErrorCheck();
+		
+		short[] pixelArray = new short[width * height];
+		pixelBuffer.asShortBuffer().get(pixelArray);
+		return pixelArray;
+	}
+
+	@Override
+	public short[] readDepthBuffer()
+	{
+		FramebufferSize size = this.getSize();
+		return this.readDepthBuffer(0, 0, size.width, size.height);
+	}
+	
+	@Override
 	public void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a)
 	{
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
