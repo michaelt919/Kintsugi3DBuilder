@@ -144,6 +144,8 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 			// Create mipmaps
 			glGenerateMipmap(this.getOpenGLTextureTarget());
 	        openGLErrorCheck();
+	        
+	        this.staleMipmaps = false;
 		}
 	}
 	
