@@ -1,11 +1,15 @@
 package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.openGLErrorCheck;
 
+import java.nio.IntBuffer;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
+
+import org.lwjgl.BufferUtils;
 
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
@@ -43,10 +47,12 @@ public class OpenGLFramebufferObject
 		}
 		
 		this.colorAttachments = new OpenGLTexture[colorAttachments];
+		IntBuffer drawBufferList = BufferUtils.createIntBuffer(colorAttachments);
 		
 		for (int i = 0; i < colorAttachments; i++)
 		{
 			this.colorAttachments[i] = createAttachment(GL_COLOR_ATTACHMENT0 + i, GL_RGBA, GL_RGBA);
+			drawBufferList.put(i, GL_COLOR_ATTACHMENT0 + i);
 		}
 		
 		if (depthAttachment && stencilAttachment && combineDepthAndStencil)
@@ -65,6 +71,8 @@ public class OpenGLFramebufferObject
 				this.stencilAttachment = createAttachment(GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX, GL_STENCIL_INDEX);
 			}
 		}
+		
+		glDrawBuffers(drawBufferList);
 		
 		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
