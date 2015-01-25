@@ -72,7 +72,11 @@ public class OpenGLFramebufferObject
 			}
 		}
 		
-		glDrawBuffers(drawBufferList);
+		if (colorAttachments > 0)
+		{
+			glDrawBuffers(drawBufferList);
+			openGLErrorCheck();
+		}
 		
 		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
