@@ -1,9 +1,0 @@
-package openGL.exceptions;
-
-public class OpenGLInvalidFramebufferOperationException extends OpenGLException 
-{
-	public OpenGLInvalidFramebufferOperationException() 
-	{
-		super("The specified operation is not allowed in the current state.");
-	}
-}

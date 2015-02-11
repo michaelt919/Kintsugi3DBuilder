@@ -1,8 +1,0 @@
-
-public class OpenGLStackUnderflowException extends OpenGLException 
-{
-	public OpenGLStackUnderflowException() 
-	{
-		super("An unacceptable value is specified for an enumerated argument.");
-	}
-}

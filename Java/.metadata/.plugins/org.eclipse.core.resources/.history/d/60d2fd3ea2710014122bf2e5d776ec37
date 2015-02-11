@@ -1,9 +1,0 @@
-package openGL.wrappers.implementations;
-
-public class OpenGLRenderbuffer {
-
-	public OpenGLRenderbuffer() {
-		// TODO Auto-generated constructor stub
-	}
-
-}

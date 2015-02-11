@@ -1,9 +1,0 @@
-package openGL.wrappers.implementations;
-
-public class OpenGLDefaultFramebuffer extends OpenGLFramebuffer
-{
-	public OpenGLDefaultFramebuffer() 
-	{
-		super(0);
-	}
-}
