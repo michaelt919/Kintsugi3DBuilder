@@ -1,8 +1,0 @@
-
-public class OpenGLInvalidOperationException extends OpenGLException 
-{
-	public OpenGLInvalidOperationException() 
-	{
-		super("AThe specified operation is not allowed in the current state.");
-	}
-}

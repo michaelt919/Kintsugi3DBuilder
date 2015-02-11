@@ -1,6 +1,0 @@
-package openGL.wrappers.interfaces;
-
-public interface FramebufferObject 
-{
-	void delete();
-}

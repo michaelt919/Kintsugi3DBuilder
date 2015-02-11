@@ -1,8 +1,0 @@
-package openGL.wrappers.interfaces;
-
-public interface FramebufferImage 
-{
-	void bindToDrawFramebuffer(int attachment, int level);
-	void bindToReadFramebuffer(int attachment, int level);
-	void delete();
-}

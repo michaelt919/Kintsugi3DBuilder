@@ -1,9 +1,0 @@
-package openGL.wrappers.implementations;
-
-public class OpenGLDefaultFramebuffer {
-
-	public OpenGLDefaultFramebuffer() {
-		// TODO Auto-generated constructor stub
-	}
-
-}
