@@ -152,7 +152,7 @@ public class OpenGLFramebufferObject
 	@Override
 	public void setColorAttachment(int index, OpenGLFramebufferAttachment attachment)
 	{
-		if (this.colorAttachments[index] != null)
+		if (index < this.colorAttachments.length && this.colorAttachments[index] != null)
 		{
 			// Remove the attachment from the list of owned attachments if it existed
 			if (this.ownedAttachments.remove(this.colorAttachments[index]))
@@ -165,8 +165,6 @@ public class OpenGLFramebufferObject
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
 		openGLErrorCheck();
 		attachment.attachToDrawFramebuffer(GL_COLOR_ATTACHMENT0 + index, 0);
-		
-		this.colorAttachments[index] = attachment;
 	}
 	
 	@Override

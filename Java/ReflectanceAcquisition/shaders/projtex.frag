@@ -42,7 +42,7 @@ void main()
 	
 	if (texCoord.x < 0 || texCoord.x > 1 || texCoord.y < 0 || texCoord.y > 1)
 	{
-		fragColor = vec4(0.0);
+		discard;
 	}
 	else
 	{

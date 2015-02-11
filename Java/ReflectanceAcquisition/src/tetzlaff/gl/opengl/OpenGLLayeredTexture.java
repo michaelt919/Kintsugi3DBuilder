@@ -214,13 +214,14 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 			public void attachToDrawFramebuffer(int attachment, int level) 
 			{
 				glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, attachment, textureId, level, layerIndex);
+				openGLErrorCheck();
 			}
 
 			@Override
 			public void attachToReadFramebuffer(int attachment, int level) 
 			{
 				glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, attachment, textureId, level, layerIndex);
-				
+				openGLErrorCheck();
 			}
 			
 		};

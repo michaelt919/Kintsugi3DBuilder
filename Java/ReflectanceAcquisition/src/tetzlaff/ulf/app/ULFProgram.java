@@ -1,4 +1,4 @@
-package tetzlaff.reflacq;
+package tetzlaff.ulf.app;
 
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
