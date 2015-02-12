@@ -165,6 +165,8 @@ public class OpenGLFramebufferObject
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
 		openGLErrorCheck();
 		attachment.attachToDrawFramebuffer(GL_COLOR_ATTACHMENT0 + index, 0);
+		
+		// TODO update colorAttachments list
 	}
 	
 	@Override

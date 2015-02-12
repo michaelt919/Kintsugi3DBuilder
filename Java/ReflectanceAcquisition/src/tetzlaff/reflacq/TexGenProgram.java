@@ -9,6 +9,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.helpers.FloatVertexList;
+import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject;
 import tetzlaff.gl.opengl.OpenGLProgram;
@@ -30,8 +31,9 @@ public class TexGenProgram
     	ulfToTexContext.enableBackFaceCulling();
     	
     	int textureSize = 1024;
-    	
     	float gamma = 2.2f;
+    	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
+    	float guessSpecularWeight = 100.0f;
     	
         try
         {
@@ -94,14 +96,18 @@ public class TexGenProgram
 		    	renderable.program().setUniform("textureCount", lightField.viewSet.getCameraPoseCount());
 		    	renderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
 		    	renderable.program().setUniform("gamma", gamma);
+		    	renderable.program().setUniform("guessSpecularColor", guessSpecularColor);
+		    	renderable.program().setUniform("guessSpecularWeight", guessSpecularWeight);
 		    	
-		    	OpenGLFramebufferObject framebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 3, false);
+		    	OpenGLFramebufferObject framebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 5, false);
 		    	
 		    	new File(lightFieldDirectory + "\\output\\textures").mkdirs();
 		    	
 		    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	framebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+		    	framebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+		    	framebuffer.clearColorBuffer(4, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	framebuffer.clearDepthBuffer();
 		    	
 		        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
@@ -109,6 +115,8 @@ public class TexGenProgram
 		        framebuffer.saveColorBufferToFile(0, "PNG", lightFieldDirectory + "\\output\\textures\\ambient.png");
 		        framebuffer.saveColorBufferToFile(1, "PNG", lightFieldDirectory + "\\output\\textures\\diffuse.png");
 		        framebuffer.saveColorBufferToFile(2, "PNG", lightFieldDirectory + "\\output\\textures\\normal.png");
+		        framebuffer.saveColorBufferToFile(3, "PNG", lightFieldDirectory + "\\output\\textures\\specular.png");
+		        framebuffer.saveColorBufferToFile(4, "PNG", lightFieldDirectory + "\\output\\textures\\roughness.png");
 
 		    	System.out.println("Model fitting completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		        
