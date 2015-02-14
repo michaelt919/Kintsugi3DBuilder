@@ -12,25 +12,26 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import tetzlaff.ulf.ULFDrawable;
 import tetzlaff.ulf.ULFListModel;
-import tetzlaff.ulf.UnstructuredLightField;
+import tetzlaff.ulf.ULFLoadingMonitor;
+import tetzlaff.ulf.ULFMorphRenderer;
 
 public class ULFUserInterface
 {
 	private JFrame frame;
-	private JComboBox<UnstructuredLightField> selector;
-	private ULFListModel model;
+	private JComboBox<ULFDrawable> selector;
 	
 	public ULFUserInterface(ULFListModel model) 
 	{
-		this.model = model;
-		
 		this.frame = new JFrame("Light Field Config");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
@@ -40,14 +41,30 @@ public class ULFUserInterface
 		
 		frame.getContentPane().setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
 		
-		this.selector = new JComboBox<UnstructuredLightField>();
+		this.selector = new JComboBox<ULFDrawable>();
 		selector.setModel(model);
 		selector.setBorder(new EmptyBorder(10, 10, 10, 10));
 		frame.add(selector);
 		
-		JButton loadButton = new JButton("Load...");
-		loadButton.setBorder(new EmptyBorder(10, 10, 10, 10));
-		frame.add(loadButton);
+		JSlider morphSlider = new JSlider();
+		morphSlider.setMaximum(0);
+		morphSlider.setValue(0);
+		morphSlider.setEnabled(false);
+		morphSlider.setBorder(new EmptyBorder(0, 10, 0, 10));
+		frame.add(morphSlider);
+		
+		Box loadBox = new Box(BoxLayout.X_AXIS);
+		JPanel loadSingleWrapper = new JPanel();
+		JButton loadSingleButton = new JButton("Load Single...");
+		loadSingleWrapper.add(loadSingleButton);
+		loadSingleWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
+		loadBox.add(loadSingleWrapper);
+		JPanel loadMorphWrapper = new JPanel();
+		JButton loadMorphButton = new JButton("Load Morph...");
+		loadMorphWrapper.add(loadMorphButton);
+		loadMorphWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
+		loadBox.add(loadMorphWrapper);
+		frame.add(loadBox);
 		
 		Box gammaBox = new Box(BoxLayout.X_AXIS);
 		JLabel gammaLabel = new JLabel("Gamma:");
@@ -107,21 +124,21 @@ public class ULFUserInterface
 			occlusionCheckBox.setEnabled(true);
 			occlusionBiasSpinner.setEnabled(true);
 			
-			gammaSpinner.setValue(model.getSelectedItem().settings.getGamma());
-			weightExpSpinner.setValue(model.getSelectedItem().settings.getWeightExponent());
-			occlusionCheckBox.setSelected(model.getSelectedItem().settings.isOcclusionEnabled());
-			occlusionBiasSpinner.setValue(model.getSelectedItem().settings.getOcclusionBias());
+			gammaSpinner.setValue(model.getSelectedItem().getGamma());
+			weightExpSpinner.setValue(model.getSelectedItem().getWeightExponent());
+			occlusionCheckBox.setSelected(model.getSelectedItem().isOcclusionEnabled());
+			occlusionBiasSpinner.setValue(model.getSelectedItem().getOcclusionBias());
 		}
 		
 		selector.addItemListener(e ->
 		{
-			loadingFrame.setVisible(false);
 			if (model.getSelectedItem() == null)
 			{
 				gammaSpinner.setEnabled(false);
 				weightExpSpinner.setEnabled(false);
 				occlusionCheckBox.setEnabled(false);
 				occlusionBiasSpinner.setEnabled(false);
+				morphSlider.setEnabled(false);
 			}
 			else
 			{
@@ -130,14 +147,29 @@ public class ULFUserInterface
 				occlusionCheckBox.setEnabled(true);
 				occlusionBiasSpinner.setEnabled(true);
 				
-				gammaSpinner.setValue(model.getSelectedItem().settings.getGamma());
-				weightExpSpinner.setValue(model.getSelectedItem().settings.getWeightExponent());
-				occlusionCheckBox.setSelected(model.getSelectedItem().settings.isOcclusionEnabled());
-				occlusionBiasSpinner.setValue(model.getSelectedItem().settings.getOcclusionBias());
+				gammaSpinner.setValue(model.getSelectedItem().getGamma());
+				weightExpSpinner.setValue(model.getSelectedItem().getWeightExponent());
+				occlusionCheckBox.setSelected(model.getSelectedItem().isOcclusionEnabled());
+				occlusionBiasSpinner.setValue(model.getSelectedItem().getOcclusionBias());
+				
+				if (model.getSelectedItem() instanceof ULFMorphRenderer)
+				{
+					ULFMorphRenderer morph = (ULFMorphRenderer)(model.getSelectedItem());
+					int currentStage = morph.getCurrentStage();
+					morphSlider.setEnabled(true);
+					morphSlider.setMaximum(morph.getStageCount() - 1);
+					morphSlider.setValue(currentStage);
+				}
+				else
+				{
+					morphSlider.setMaximum(0);
+					morphSlider.setValue(0);
+					morphSlider.setEnabled(false);
+				}
 			}
 		});
 		
-		loadButton.addActionListener(e -> 
+		loadSingleButton.addActionListener(e -> 
 		{
 			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
@@ -146,7 +178,28 @@ public class ULFUserInterface
 			{
 				try 
 				{
-					model.addFromDirectory(fileChooser.getSelectedFile().getParent());
+					model.addFromVSETFile(fileChooser.getSelectedFile().getPath());
+					loadingBar.setIndeterminate(true);
+					loadingFrame.setVisible(true);
+				} 
+				catch (IOException ex) 
+				{
+					ex.printStackTrace();
+				}
+			}
+		});
+		
+		loadMorphButton.addActionListener(e -> 
+		{
+			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.setFileFilter(new FileNameExtensionFilter("Light Field Morph files (.lfm)", "lfm"));
+			if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
+			{
+				try 
+				{
+					model.addMorphFromLFMFile(fileChooser.getSelectedFile().getPath());
+					loadingBar.setIndeterminate(true);
 					loadingFrame.setVisible(true);
 				} 
 				catch (IOException ex) 
@@ -158,30 +211,46 @@ public class ULFUserInterface
 		
 		gammaSpinner.addChangeListener(e ->
 		{
-			model.getSelectedItem().settings.setGamma(gammaModel.getNumber().floatValue());
+			model.getSelectedItem().setGamma(gammaModel.getNumber().floatValue());
 		});
 		
 		weightExpSpinner.addChangeListener(e ->
 		{
-			model.getSelectedItem().settings.setWeightExponent(weightExpModel.getNumber().floatValue());
+			model.getSelectedItem().setWeightExponent(weightExpModel.getNumber().floatValue());
 		});
 		
 		occlusionCheckBox.addChangeListener(e ->
 		{
-			model.getSelectedItem().settings.setOcclusionEnabled(occlusionCheckBox.isSelected());
+			model.getSelectedItem().setOcclusionEnabled(occlusionCheckBox.isSelected());
 		});
 		
 		occlusionBiasSpinner.addChangeListener(e ->
 		{
-			model.getSelectedItem().settings.setOcclusionBias(occlusionBiasModel.getNumber().floatValue());
+			model.getSelectedItem().setOcclusionBias(occlusionBiasModel.getNumber().floatValue());
 		});
-	}
-	
-	public void addSelectedLightFieldListener(SelectedLightFieldListener l)
-	{
-		this.selector.addItemListener(e ->
+		
+		morphSlider.addChangeListener(e ->
 		{
-			l.lightFieldSelected(model.getSelectedItem());
+			if (model.getSelectedItem() instanceof ULFMorphRenderer)
+			{
+				((ULFMorphRenderer)(model.getSelectedItem())).setCurrentStage(morphSlider.getValue());
+			}
+		});
+		
+		model.setLoadingMonitor(new ULFLoadingMonitor()
+		{
+			@Override
+			public void setProgress(double progress)
+			{
+				loadingBar.setIndeterminate(false);
+				loadingBar.setValue((int)Math.round(progress * 100));
+			}
+
+			@Override
+			public void loadingComplete()
+			{
+				loadingFrame.setVisible(false);
+			}
 		});
 	}
 

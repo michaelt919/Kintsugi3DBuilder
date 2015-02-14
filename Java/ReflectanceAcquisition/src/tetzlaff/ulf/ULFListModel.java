@@ -4,10 +4,10 @@ import java.io.IOException;
 
 import javax.swing.ComboBoxModel;
 
-import tetzlaff.helpers.Selectable;
-
-public interface ULFListModel extends ComboBoxModel<UnstructuredLightField>
+public interface ULFListModel extends ComboBoxModel<ULFDrawable>
 {
-	UnstructuredLightField addFromDirectory(String directoryPath) throws IOException;
-	UnstructuredLightField getSelectedItem();
+	ULFDrawable addFromVSETFile(String vsetFile) throws IOException;
+	ULFDrawable addMorphFromLFMFile(String lfmFile) throws IOException;
+	ULFDrawable getSelectedItem();
+	void setLoadingMonitor(ULFLoadingMonitor loadingMonitor);
 }
