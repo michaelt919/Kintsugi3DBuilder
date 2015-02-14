@@ -47,9 +47,9 @@ public class TexGenProgram
     		
     		if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
     		{
-
+    	    	String vsetFile = fileChooser.getSelectedFile().getPath();
     	    	String lightFieldDirectory = fileChooser.getSelectedFile().getParent();
-    	    	UnstructuredLightField lightField = UnstructuredLightField.loadFromDirectory(lightFieldDirectory);
+    	    	UnstructuredLightField lightField = UnstructuredLightField.loadFromVSETFile(vsetFile);
     		
 	    		lightField.settings.setOcclusionBias(0.005f);
 	    		

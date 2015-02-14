@@ -2,14 +2,10 @@ package tetzlaff.ulf;
 
 import java.io.IOException;
 
-import javax.swing.AbstractListModel;
-
-import tetzlaff.gl.helpers.Drawable;
-import tetzlaff.gl.helpers.MultiDrawable;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
 
-public class ULFRendererList extends ULFDrawableListModel<ULFRenderer>
+public class ULFRendererList extends ULFDrawableListModel
 {
 	public ULFRendererList(OpenGLContext context, Trackball trackball) 
 	{
@@ -17,8 +13,14 @@ public class ULFRendererList extends ULFDrawableListModel<ULFRenderer>
 	}
 	
 	@Override
-	protected ULFRenderer createFromDirectory(String directoryPath) throws IOException
+	protected ULFRenderer createFromVSETFile(String vsetFile) throws IOException
 	{
-		return new ULFRenderer(context, directoryPath, trackball);
+		return new ULFRenderer(context, vsetFile, trackball);
+	}
+	
+	@Override
+	protected ULFMorphRenderer createMorphFromLFMFile(String lfmFile) throws IOException
+	{
+		return new ULFMorphRenderer(context, lfmFile, trackball);
 	}
 }

@@ -38,14 +38,15 @@ public class UnstructuredLightField
 		depthTextures.delete();
 	}
 
-	public static UnstructuredLightField loadFromDirectory(String directoryPath) throws IOException
+	public static UnstructuredLightField loadFromVSETFile(String vsetFilePath) throws IOException
 	{
 		ViewSet viewSet;
 		VertexMesh proxy;
 		OpenGLTextureArray depthTextures;
 		
+		String directoryPath = new File(vsetFilePath).getParent();
         proxy = new VertexMesh("OBJ", directoryPath + "/manifold.obj");
-        viewSet = ViewSet.loadFromVSETFile(directoryPath + "/default.vset");
+        viewSet = ViewSet.loadFromVSETFile(vsetFilePath);
         
         // Build depth textures for each view
     	int width = viewSet.getTextures().getWidth();

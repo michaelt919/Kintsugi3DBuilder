@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
@@ -20,29 +19,23 @@ public class ULFRenderer implements ULFDrawable
 {
     private static OpenGLProgram program;
     
-    private String lightFieldDirectory;
+    private String vsetFile;
     private UnstructuredLightField lightField;
 	private OpenGLContext context;
     private OpenGLRenderable renderable;
     private Trackball trackball;
-    private ULFLoadedCallback callback;
+    private ULFLoadingMonitor callback;
     private Iterable<OpenGLResource> vboResources;
 
-    public ULFRenderer(OpenGLContext context, String lightFieldDirectory, Trackball trackball)
+    public ULFRenderer(OpenGLContext context, String vsetFile, Trackball trackball)
     {
     	this.context = context;
-    	this.lightFieldDirectory = lightFieldDirectory;
+    	this.vsetFile = vsetFile;
     	this.trackball = trackball;
     }
     
     @Override
-    public UnstructuredLightField getLightField()
-    {
-    	return this.lightField;
-    }
-    
-    @Override
-    public void setOnLoadCallback(ULFLoadedCallback callback)
+    public void setOnLoadCallback(ULFLoadingMonitor callback)
     {
     	this.callback = callback;
     }
@@ -64,8 +57,11 @@ public class ULFRenderer implements ULFDrawable
     	
     	try 
     	{
-			this.lightField = UnstructuredLightField.loadFromDirectory(this.lightFieldDirectory);
-			this.callback.ulfLoaded();
+			this.lightField = UnstructuredLightField.loadFromVSETFile(this.vsetFile);
+			if (this.callback != null)
+			{
+				this.callback.loadingComplete();
+			}
 	    	
 	    	this.renderable = new OpenGLRenderable(program);
 	    	this.vboResources = this.renderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
@@ -128,4 +124,68 @@ public class ULFRenderer implements ULFDrawable
     	
         lightField.deleteOpenGLResources();
     }
+    
+    public String getVSETFileName()
+    {
+    	return this.vsetFile;
+    }
+    
+    public UnstructuredLightField getLightField()
+    {
+    	return this.lightField;
+    }
+
+	@Override
+	public float getGamma() 
+	{
+		return this.lightField.settings.getGamma();
+	}
+
+	@Override
+	public float getWeightExponent() 
+	{
+		return this.lightField.settings.getWeightExponent();
+	}
+
+	@Override
+	public boolean isOcclusionEnabled() 
+	{
+		return this.lightField.settings.isOcclusionEnabled();
+	}
+
+	@Override
+	public float getOcclusionBias() 
+	{
+		return this.lightField.settings.getOcclusionBias();
+	}
+
+	@Override
+	public void setGamma(float gamma) 
+	{
+		this.lightField.settings.setGamma(gamma);
+	}
+
+	@Override
+	public void setWeightExponent(float weightExponent) 
+	{
+		this.lightField.settings.setWeightExponent(weightExponent);
+	}
+
+	@Override
+	public void setOcclusionEnabled(boolean occlusionEnabled) 
+	{
+		this.lightField.settings.setOcclusionEnabled(occlusionEnabled);
+	}
+
+	@Override
+	public void setOcclusionBias(float occlusionBias) 
+	{
+		this.lightField.settings.setOcclusionBias(occlusionBias);
+	}
+	
+	@Override
+	public String toString()
+	{
+		return this.lightField.toString();
+	}
 }
