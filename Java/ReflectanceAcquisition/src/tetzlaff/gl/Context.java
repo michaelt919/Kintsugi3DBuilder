@@ -20,4 +20,7 @@ public interface Context
 	
 	void enableBackFaceCulling();
 	void disableBackFaceCulling();
+
+	void setAlphaBlendingFunction(AlphaBlendingFunction func);
+	void disableAlphaBlending();
 }
