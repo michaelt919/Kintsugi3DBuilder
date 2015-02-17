@@ -7,6 +7,7 @@ import java.util.Date;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.Vector3;
@@ -34,6 +35,7 @@ public class TexGenProgram
     	float gamma = 1.0f; // 2.2f;
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
     	float guessSpecularWeight = 10.0f;
+    	int specularRange = 1; // +/- one pixel in each direction
     	
         try
         {
@@ -51,12 +53,14 @@ public class TexGenProgram
     	    	String lightFieldDirectory = fileChooser.getSelectedFile().getParent();
     	    	UnstructuredLightField lightField = UnstructuredLightField.loadFromVSETFile(vsetFile);
     		
-	    		lightField.settings.setOcclusionBias(0.005f);
+	    		lightField.settings.setOcclusionBias(0.02f); // For the cube test
 	    		
 	    		System.out.println("Projecting light field images into texture space...");
 		    	timestamp = new Date();
 	    		
-	    		OpenGLTextureArray textures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, false);
+	    		OpenGLTextureArray imageTextures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, false);
+	    		OpenGLTextureArray depthTextures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, false);
+	    		//OpenGLTextureArray depthTextures = OpenGLTextureArray.createDepthTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, false);
 		    	OpenGLFramebufferObject worldToTextureFBO = new OpenGLFramebufferObject(textureSize, textureSize, 0, false);
 		    	OpenGLRenderable worldToTextureRenderable = new OpenGLRenderable(worldToTextureProgram);
 		    	
@@ -73,10 +77,12 @@ public class TexGenProgram
 		    	
 		    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
 		    	{
-		    		worldToTextureFBO.setColorAttachment(0, textures.getLayerAsFramebufferAttachment(i));
+		    		worldToTextureFBO.setColorAttachment(0, imageTextures.getLayerAsFramebufferAttachment(i));
+		    		worldToTextureFBO.setColorAttachment(1, depthTextures.getLayerAsFramebufferAttachment(i));
 		    		worldToTextureRenderable.program().setUniform("cameraPoseIndex", i);
 		    		
 		    		worldToTextureFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		worldToTextureFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
 		    		worldToTextureFBO.clearDepthBuffer();
 		    		worldToTextureRenderable.draw(PrimitiveMode.TRIANGLES, worldToTextureFBO);
 		    		
@@ -97,12 +103,16 @@ public class TexGenProgram
 		    	OpenGLRenderable renderable = new OpenGLRenderable(modelFitProgram);
 		    	
 		    	renderable.addVertexMesh("position", "texCoord", null, lightField.proxy);
-		    	renderable.program().setTexture("textures", textures);
+		    	renderable.program().setTexture("imageTextures", imageTextures);
+		    	renderable.program().setTexture("depthTextures", depthTextures);
 		    	renderable.program().setUniform("textureCount", lightField.viewSet.getCameraPoseCount());
 		    	renderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
+		    	renderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
+		    	renderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
 		    	renderable.program().setUniform("gamma", gamma);
 		    	renderable.program().setUniform("guessSpecularColor", guessSpecularColor);
 		    	renderable.program().setUniform("guessSpecularWeight", guessSpecularWeight);
+		    	renderable.program().setUniform("specularRange", specularRange);
 		    	
 		    	OpenGLFramebufferObject framebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 8, false);
 		    	
@@ -139,19 +149,23 @@ public class TexGenProgram
 		    	OpenGLRenderable specularDebugRenderable = new OpenGLRenderable(specularDebugProgram);
 		    	
 		    	Iterable<OpenGLResource> specularDebugResources = specularDebugRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
-		    	specularDebugRenderable.program().setTexture("textures", textures);
+		    	specularDebugRenderable.program().setTexture("textures", imageTextures);
 		    	specularDebugRenderable.program().setTexture("diffuse", framebuffer.getColorAttachmentTexture(0));
 		    	specularDebugRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
 		    	specularDebugRenderable.program().setUniform("gamma", gamma);
 		    	
 		    	new File(lightFieldDirectory + "\\output\\debug\\specular").mkdirs();
 		    	
+		    	ulfToTexContext.setAlphaBlendingFunction(new AlphaBlendingFunction(
+		    			AlphaBlendingFunction.Weight.SRC_ALPHA, 
+		    			AlphaBlendingFunction.Weight.ONE_MINUS_SRC_ALPHA));
+		    	
 		    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
 		    	{
 		    		specularDebugFBO.setColorAttachment(0, specularDebugTextures.getLayerAsFramebufferAttachment(i));
 		    		specularDebugRenderable.program().setUniform("textureIndex", i);
 		    		
-		    		specularDebugFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		specularDebugFBO.clearColorBuffer(0, 1.0f, 0.0f, 1.0f, 1.0f);
 		    		specularDebugFBO.clearDepthBuffer();
 		    		specularDebugRenderable.draw(PrimitiveMode.TRIANGLES, specularDebugFBO);
 		    		
@@ -166,7 +180,7 @@ public class TexGenProgram
 		    	
 				System.out.println("Specular debug images completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		        
-		        textures.delete();
+		        imageTextures.delete();
 		    	framebuffer.delete();
 		        lightField.deleteOpenGLResources();
     		}

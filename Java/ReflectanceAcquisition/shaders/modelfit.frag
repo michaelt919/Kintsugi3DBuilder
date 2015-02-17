@@ -7,16 +7,28 @@ in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
 
-uniform sampler2DArray textures;
+uniform sampler2DArray imageTextures;
+uniform sampler2DArray depthTextures;
 uniform int textureCount;
 uniform float gamma;
 
 uniform float guessSpecularWeight;
 uniform vec3 guessSpecularColor;
+uniform int specularRange;
 
 uniform CameraPoses
 {
 	mat4 cameraPoses[MAX_CAMERA_POSE_COUNT];
+};
+
+uniform CameraProjections
+{
+	mat4 cameraProjections[MAX_CAMERA_PROJECTION_COUNT];
+};
+
+uniform CameraProjectionIndices
+{
+	int cameraProjectionIndices[MAX_CAMERA_POSE_COUNT];
 };
 
 layout(location = 0) out vec4 diffuseColor;
@@ -24,15 +36,39 @@ layout(location = 1) out vec4 normalMap;
 layout(location = 2) out vec4 specularColor;
 layout(location = 3) out vec4 specularRoughness;
 layout(location = 4) out vec4 ambientColor;
+layout(location = 5) out vec4 debug1;
+layout(location = 6) out vec4 debug2;
+layout(location = 7) out vec4 debug3;
 
 vec4 getColor(int index)
 {
-    return pow(texture(textures, vec3(fTexCoord, index)), vec4(gamma));
+    return pow(texture(imageTextures, vec3(fTexCoord, index)), vec4(gamma));
+}
+
+vec4 getColorWithOffset(int index, ivec2 offset)
+{
+    return pow(textureOffset(imageTextures, vec3(fTexCoord, index), offset), vec4(gamma));
+}
+
+vec3 getRelativePositionFromDepthBufferWithOffset(int index, ivec2 offset)
+{
+    float depth = texture(depthTextures, vec3(fTexCoord, index)).r;
+    mat4 proj = cameraProjections[cameraProjectionIndices[index]];
+    float z = - proj[3].z / (proj[2].z + 2 * depth - 1);
+    float x = - z * (2 * fTexCoord.x - 1 + proj[2].x) / proj[0].x;
+    float y = - z * (2 * fTexCoord.y - 1 + proj[2].y) / proj[1].y;
+    return vec3(x, y, z);
 }
 
 vec3 getViewVector(int index)
 {
     return normalize(transpose(mat3(cameraPoses[index])) * -cameraPoses[index][3].xyz - fPosition);
+}
+
+vec3 getViewVectorWithOffset(int index, ivec2 offset)
+{
+    return normalize(transpose(mat3(cameraPoses[index])) * 
+        (- cameraPoses[index][3].xyz - getRelativePositionFromDepthBufferWithOffset(index, offset)));
 }
 
 vec3 getLightVector(int index)
@@ -43,7 +79,7 @@ vec3 getLightVector(int index)
 
 vec3 getReflectionVector(vec3 normalVector, vec3 lightVector)
 {
-    return 2 * dot(lightVector, normalVector) * normalVector - lightVector;
+    return normalize(2 * dot(lightVector, normalVector) * normalVector - lightVector);
 }
 
 void main()
@@ -106,7 +142,7 @@ void main()
     vec4 dSolution = inverse(dA) * dB * vec4(rgbWeights, 0.0);
     float ambientIntensity = dSolution.w;
     float diffuseIntensity = length(dSolution.xyz);
-    vec3 normal = dSolution.xyz / diffuseIntensity;
+    vec3 normal = normalize(dSolution.xyz);
     normalMap = vec4(normal * 0.5 + vec3(0.5), 1.0);
     ambientColor = vec4(pow(diffuseAvg * dSolution.w, vec3(1 / gamma)), 1.0);
     diffuseColor = vec4(pow(diffuseAvg * diffuseIntensity, vec3(1 / gamma)), 1.0);
@@ -133,12 +169,22 @@ void main()
                 float rDotV = dot(reflection, view);
                 if (rDotV > 0.0)
                 {
-                    float x = rDotV - 1 / rDotV;
-                    //sA += color.a * intensity / log(intensity) * outerProduct(vec2(x, 1), vec2(x, 1));
-                    //sB += color.a * intensity * vec2(x, 1);
-                    sA += color.a * outerProduct(vec2(x, 1), vec2(x, 1));
-                    sB += color.a * log(intensity) * vec2(x, 1);
+                    float u = rDotV - 1 / rDotV;
+                    
+                    //sA += color.a * rDotV * outerProduct(vec2(u, 1), vec2(u, 1));
+                    //sB += color.a * rDotV * log(intensity) * vec2(u, 1);
+                    
+                    //sA += color.a * intensity / log(intensity) * outerProduct(vec2(u, 1), vec2(u, 1));
+                    //sB += color.a * intensity * vec2(u, 1);
+                    
+                    sA += color.a * outerProduct(vec2(u, 1), vec2(u, 1));
+                    sB += color.a * log(intensity) * vec2(u, 1);
+                    
                     specularSum += colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
+                    
+                    for (int i = 0; i < specularRange; i++)
+                    {
+                    }
                 }
             }
         }
@@ -148,4 +194,8 @@ void main()
     vec3 specularAvg = specularSum.rgb / (diffuseSum.r + diffuseSum.g + diffuseSum.b);
     specularColor = vec4(pow(exp(sSolution[1]) * specularAvg, vec3(1 / gamma)), 1.0);
     specularRoughness = vec4(vec3(inversesqrt(2*sSolution[0])), 1.0);
+    
+    debug1 = vec4(specularAvg, 1.0);
+    debug2 = vec4(vec3(sSolution[0]), 1.0);
+    debug3 = vec4(vec3(sSolution[1]), 1.0);
 }
