@@ -8,6 +8,7 @@ in vec2 fTexCoord;
 in vec3 fNormal;
 
 uniform sampler2D diffuse;
+uniform sampler2D normalMap;
 uniform sampler2DArray textures;
 uniform int textureIndex;
 uniform float gamma;
@@ -18,6 +19,7 @@ uniform CameraPoses
 };
 
 layout(location = 0) out vec4 fragColor;
+layout(location = 1) out vec4 rDotV;
 
 vec4 getOriginalColor(int index)
 {
@@ -35,13 +37,29 @@ vec3 getLightVector(int index)
     return getViewVector(index);
 }
 
+vec3 getNormalVector()
+{
+    return normalize(texture(normalMap, fTexCoord).xyz * 2 - vec3(1));
+}
+
 vec3 getDiffuseColor(int index)
 {
     return pow(texture(diffuse, fTexCoord), vec4(gamma)).rgb * max(0, dot(fNormal, getLightVector(index)));
+}
+
+vec3 getReflectionVector(vec3 normalVector, vec3 lightVector)
+{
+    return normalize(2 * dot(lightVector, normalVector) * normalVector - lightVector);
 }
 
 void main()
 {
 	vec4 original = getOriginalColor(textureIndex);
     fragColor = vec4(original.rgb - getDiffuseColor(textureIndex), original.a);
+    
+    vec3 view = getViewVector(textureIndex);
+    vec3 light = getLightVector(textureIndex);
+    vec3 normal = getNormalVector();
+    vec3 reflection = getReflectionVector(normal, light);
+    rDotV = vec4(vec3(dot(reflection, view)), 1.0);
 }
