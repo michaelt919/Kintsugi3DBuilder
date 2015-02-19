@@ -54,11 +54,11 @@ vec4 getColorWithOffset(int index, ivec2 offset)
 
 vec3 getRelativePositionFromDepthBufferWithOffset(int index, ivec2 offset)
 {
-    float depth = texture(depthTextures, vec3(fTexCoord, index)).r;
+    vec4 projPos = textureOffset(depthTextures, vec3(fTexCoord, index), offset);
     mat4 proj = cameraProjections[cameraProjectionIndices[index]];
-    float z = - proj[3].z / (proj[2].z + 2 * depth - 1);
-    float x = - z * (2 * fTexCoord.x - 1 + proj[2].x) / proj[0].x;
-    float y = - z * (2 * fTexCoord.y - 1 + proj[2].y) / proj[1].y;
+    float z = - proj[3].z / (proj[2].z + 2 * projPos.z - 1);
+    float x = - z * (2 * projPos.x - 1 + proj[2].x) / proj[0].x;
+    float y = - z * (2 * projPos.y - 1 + proj[2].y) / proj[1].y;
     return vec3(x, y, z);
 }
 
@@ -70,7 +70,7 @@ vec3 getViewVector(int index)
 vec3 getViewVectorWithOffset(int index, ivec2 offset)
 {
     return normalize(transpose(mat3(cameraPoses[index])) * 
-        (- cameraPoses[index][3].xyz - getRelativePositionFromDepthBufferWithOffset(index, offset)));
+        -getRelativePositionFromDepthBufferWithOffset(index, offset));
 }
 
 vec3 getLightVector(int index)
@@ -178,74 +178,63 @@ void main()
             {
                 float u = rDotV - 1 / rDotV;
                 
-                //sA += color.a * rDotV * outerProduct(vec2(u, 1), vec2(u, 1));
-                //sB += color.a * rDotV * log(intensity) * vec2(u, 1);
-                
-                //sA += color.a * intensity / log(intensity) * outerProduct(vec2(u, 1), vec2(u, 1));
-                //sB += color.a * intensity * vec2(u, 1);
-                
-                //sA += color.a * outerProduct(vec2(u, 1), vec2(u, 1));
-                //sB += color.a * log(intensity) * vec2(u, 1);
-                
                 sA += color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
                     intensity * outerProduct(vec2(u, 1), vec2(u, 1));
                 sB += color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
                     intensity * log(intensity) * vec2(u, 1);
                 
-                specularSum += color.a * rDotV * intensity * colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
+                specularSum += color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness))
+                    * intensity * colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
                 
-                // for (int i = 1; i < specularRange; i++)
-                // {
-                    // float weight = 1.0; // TODO
-                    // ivec2 offset = ivec2(i, 0);
-                    // for (int j = 0; j < 4*(i+1); j++)
-                    // {
-                        // if (offset.x == i && offset.y != -i)
-                        // {
-                            // offset.y--;
-                        // }
-                        // else if (offset.y == i)
-                        // {
-                            // offset.x++;
-                        // }
-                        // else if (offset.x == -i)
-                        // {
-                            // offset.y++;
-                        // }
-                        // else if (offset.y == -i)
-                        // {
-                            // offset.x--;
-                        // }
+                for (int j = 1; j < specularRange; j++)
+                {
+                    float weight = 0.25 / (j + 1);
+                    ivec2 offset = ivec2(j, 0);
+                    for (int k = 0; k < 4*(j+1); k++)
+                    {
+                        if (offset.x == j && offset.y != -j)
+                        {
+                            offset.y--;
+                        }
+                        else if (offset.y == j)
+                        {
+                            offset.x++;
+                        }
+                        else if (offset.x == -j)
+                        {
+                            offset.y++;
+                        }
+                        else if (offset.y == -j)
+                        {
+                            offset.x--;
+                        }
                         
-                        // color = getColorWithOffset(i, offset);
-                        // view = getViewVectorWithOffset(i, offset);
-                        // light = getLightVectorWithOffset(i, offset);
-                        // normal = normal; // TODO
+                        color = getColorWithOffset(i, offset);
+                        view = getViewVectorWithOffset(i, offset);
+                        light = getLightVectorWithOffset(i, offset);
+                        normal = normal; // TODO
                         
-                        // diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal)); // TODO
-                        // colorRemainder = vec4(max(vec3(0), color.rgb - diffuseContrib), color.a);
-                        // intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
+                        diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal)); // TODO
+                        colorRemainder = vec4(max(vec3(0), color.rgb - diffuseContrib), color.a);
+                        intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
                         
-                        // reflection = getReflectionVector(normal, light);
-                        // rDotV = dot(reflection, view);
+                        reflection = getReflectionVector(normal, light);
+                        rDotV = dot(reflection, view);
                         
-                        // if (intensity > 0.0 && rDotV > 0.0)
-                        // {
-                            // u = rDotV - 1 / rDotV;
+                        if (intensity > 0.0 && rDotV > 0.0)
+                        {
+                            u = rDotV - 1 / rDotV;
                             
-                            // //sA += color.a * rDotV * outerProduct(vec2(u, 1), vec2(u, 1));
-                            // //sB += color.a * rDotV * log(intensity) * vec2(u, 1);
+                            sA += weight * color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
+                                intensity * outerProduct(vec2(u, 1), vec2(u, 1));
+                            sB += weight * color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
+                                intensity * log(intensity) * vec2(u, 1);
                             
-                            // //sA += color.a * intensity / log(intensity) * outerProduct(vec2(u, 1), vec2(u, 1));
-                            // //sB += color.a * intensity * vec2(u, 1);
-                            
-                            // sA += weight * color.a * outerProduct(vec2(u, 1), vec2(u, 1));
-                            // sB += weight * color.a * log(intensity) * vec2(u, 1);
-                            
-                            // specularSum += colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
-                        // }
-                    // }
-                // }
+                            specularSum += color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
+                                intensity * colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
+                        }
+                    }
+                }
             }
         }
     }
@@ -265,7 +254,16 @@ void main()
     }
     
     debug0 = vec4(specularAvg, 1.0);
-    debug1 = vec4(sSolution[0] / 4, (6 + sSolution[1]) / 8, 0.0, 1.0);
-    debug2 = vec4(-sA[0][0], sA[0][1], sA[1][1], 1.0);
-    debug3 = vec4(-sB[0], sB[1], 0.0, 1.0);
+    //debug1 = vec4(sSolution[0] / 4, (6 + sSolution[1]) / 8, 0.0, 1.0);
+    debug1 = vec4(-sA[0][0], sA[0][1], sA[1][1], 1.0);
+    //debug3 = vec4(-sB[0], sB[1], 0.0, 1.0);
+    
+    debug2 = vec4((getRelativePositionFromDepthBufferWithOffset(0, ivec2(0)) + vec3(2,2,12)) / 4, 1.0);
+    debug3 = vec4(((cameraPoses[0] * vec4(fPosition, 1.0)).xyz + vec3(2,2,12)) / 4, 1.0);
+    
+    // debug2 = texture(depthTextures, vec3(fTexCoord, 0));
+    // vec4 debugProjPos = cameraProjections[cameraProjectionIndices[0]] * cameraPoses[0] * 
+        // vec4(fPosition, 1.0);
+    // debugProjPos /= debugProjPos.w;
+    // debug3 = debugProjPos / 2 + vec4(0.5);
 }
