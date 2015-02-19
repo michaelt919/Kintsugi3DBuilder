@@ -35,10 +35,12 @@ public class TexGenProgram
     	int textureSize = 1024;
     	float gamma = 1.0f; // 2.2f;
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
+    	float guessSpecularRoughness = 0.5f;
     	float guessSpecularWeight = 10.0f;
     	int specularRange = 0; // +/- n pixels in each direction
+    	float expectedWeightSum = 0.125f;
     	
-    	int debugPixelX = 64, debugPixelY = 768;
+    	int debugPixelX = 505, debugPixelY = 788;
     	
         try
         {
@@ -114,8 +116,10 @@ public class TexGenProgram
 		    	renderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
 		    	renderable.program().setUniform("gamma", gamma);
 		    	renderable.program().setUniform("guessSpecularColor", guessSpecularColor);
+		    	renderable.program().setUniform("guessSpecularRoughness", guessSpecularRoughness);
 		    	renderable.program().setUniform("guessSpecularWeight", guessSpecularWeight);
 		    	renderable.program().setUniform("specularRange", specularRange);
+		    	renderable.program().setUniform("expectedWeightSum", expectedWeightSum);
 		    	
 		    	OpenGLFramebufferObject framebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 8, false);
 		    	
@@ -153,14 +157,14 @@ public class TexGenProgram
 		        System.out.println();
 		        
 	    		int[] debug2Data = framebuffer.readColorBufferARGB(6, debugPixelX, debugPixelY, 1, 1);
-	    		System.out.println(-((debug2Data[0] & 0x00FF0000) >>> 16) * 100 / 255.0);
-	    		System.out.println(((debug2Data[0] & 0x0000FF00) >>> 8) * 100  / 255.0);
-	    		System.out.println((debug2Data[0] & 0x000000FF) * 100  / 255.0);
+	    		System.out.println(-((debug2Data[0] & 0x00FF0000) >>> 16) / 255.0);
+	    		System.out.println(((debug2Data[0] & 0x0000FF00) >>> 8) / 255.0);
+	    		System.out.println((debug2Data[0] & 0x000000FF) / 255.0);
 		        System.out.println();
 		        
 	    		int[] debug3Data = framebuffer.readColorBufferARGB(7, debugPixelX, debugPixelY, 1, 1);
-	    		System.out.println(-((debug3Data[0] & 0x00FF0000) >>> 16) * 100 / 255.0);
-	    		System.out.println(((debug3Data[0] & 0x0000FF00) >>> 8) * 100  / 255.0);
+	    		System.out.println(-((debug3Data[0] & 0x00FF0000) >>> 16) / 255.0);
+	    		System.out.println(((debug3Data[0] & 0x0000FF00) >>> 8) / 255.0);
 	    		System.out.println();
 
 		    	System.out.println("Model fitting completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -205,7 +209,7 @@ public class TexGenProgram
 		    							((colorData[0] & 0x00FF0000) >>> 16) + "\t" + 
 		    							((colorData[0] & 0x0000FF00) >>> 8) + "\t" +
 		    							(colorData[0] & 0x000000FF));
-		    	}		    	
+		    	}
 		    	
 		    	debugInfo.flush();
 		    	debugInfo.close();
