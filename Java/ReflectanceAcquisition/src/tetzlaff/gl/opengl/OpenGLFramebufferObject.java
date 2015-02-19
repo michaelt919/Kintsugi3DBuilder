@@ -27,7 +27,8 @@ public class OpenGLFramebufferObject
 	private OpenGLFramebufferAttachment stencilAttachment;
 	private OpenGLFramebufferAttachment depthStencilAttachment;
 	
-	public OpenGLFramebufferObject(int width, int height, int colorAttachments, boolean depthAttachment, boolean stencilAttachment, boolean combineDepthAndStencil)
+	public OpenGLFramebufferObject(int width, int height, int colorAttachmentCount,
+			boolean generateDepthAttachment, boolean generateStencilAttachment, boolean combineDepthAndStencil)
 	{
 		this.fboId = glGenFramebuffers();
 		openGLErrorCheck();
@@ -36,43 +37,43 @@ public class OpenGLFramebufferObject
 		this.nativeHeight = height;
 		this.ownedAttachments = new ArrayList<OpenGLResource>();
 		
-		if (colorAttachments < 0)
+		if (colorAttachmentCount < 0)
 		{
 			throw new IllegalArgumentException("The number of color attachments cannot be negative.");
 		}
 		
-		if (colorAttachments > GL_MAX_COLOR_ATTACHMENTS)
+		if (colorAttachmentCount > GL_MAX_COLOR_ATTACHMENTS)
 		{
 			throw new IllegalArgumentException("Too many color attachments specified - maximum is " + GL_MAX_COLOR_ATTACHMENTS + ".");
 		}
 		
-		this.colorAttachments = new OpenGLTexture[colorAttachments];
-		IntBuffer drawBufferList = BufferUtils.createIntBuffer(colorAttachments);
+		this.colorAttachments = new OpenGLFramebufferAttachment[colorAttachmentCount];
+		IntBuffer drawBufferList = BufferUtils.createIntBuffer(colorAttachmentCount);
 		
-		for (int i = 0; i < colorAttachments; i++)
+		for (int i = 0; i < colorAttachmentCount; i++)
 		{
 			this.colorAttachments[i] = createAttachment(GL_COLOR_ATTACHMENT0 + i, GL_RGBA, GL_RGBA);
 			drawBufferList.put(i, GL_COLOR_ATTACHMENT0 + i);
 		}
 		
-		if (depthAttachment && stencilAttachment && combineDepthAndStencil)
+		if (generateDepthAttachment && generateStencilAttachment && combineDepthAndStencil)
 		{
 			this.depthStencilAttachment = createAttachment(GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL);
 		}
 		else
 		{
-			if (depthAttachment)
+			if (generateDepthAttachment)
 			{
 				this.depthAttachment = createAttachment(GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT);
 			}
 			
-			if (stencilAttachment)
+			if (generateStencilAttachment)
 			{
 				this.stencilAttachment = createAttachment(GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX, GL_STENCIL_INDEX);
 			}
 		}
 		
-		if (colorAttachments > 0)
+		if (colorAttachmentCount > 0)
 		{
 			glDrawBuffers(drawBufferList);
 			openGLErrorCheck();
@@ -96,14 +97,14 @@ public class OpenGLFramebufferObject
 		return attachment;
 	}
 	
-	public OpenGLFramebufferObject(int width, int height, int colorAttachments, boolean depthAttachment)
+	public OpenGLFramebufferObject(int width, int height, int colorAttachmentCount, boolean generateDepthAttachment)
 	{
-		this(width, height, colorAttachments, depthAttachment, false, false);
+		this(width, height, colorAttachmentCount, generateDepthAttachment, false, false);
 	}
 	
-	public OpenGLFramebufferObject(int width, int height, int colorAttachments)
+	public OpenGLFramebufferObject(int width, int height, int colorAttachmentCount)
 	{
-		this(width, height, colorAttachments, true);
+		this(width, height, colorAttachmentCount, true);
 	}
 	
 	public OpenGLFramebufferObject(int width, int height)
@@ -165,8 +166,7 @@ public class OpenGLFramebufferObject
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
 		openGLErrorCheck();
 		attachment.attachToDrawFramebuffer(GL_COLOR_ATTACHMENT0 + index, 0);
-		
-		// TODO update colorAttachments list
+		this.colorAttachments[index] = attachment;
 	}
 	
 	@Override

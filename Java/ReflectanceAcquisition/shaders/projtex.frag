@@ -31,7 +31,7 @@ uniform CameraProjectionIndices
 };
 
 layout(location = 0) out vec4 fragColor;
-layout(location = 1) out float fragDepth;
+layout(location = 1) out vec4 projPosMap;
 
 void main()
 {
@@ -60,6 +60,6 @@ void main()
 		fragColor = vec4(texture(imageTextures, vec3(texCoord.xy, cameraPoseIndex)).rgb, 
                             max(0.0, (cameraPoses[cameraPoseIndex] * vec4(normalize(fNormal), 0.0)).z));
                             
-        fragDepth = (projPos.z + 1) / 2;
+        projPosMap = (projPos + vec4(1)) / 2;
 	}
 }

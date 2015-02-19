@@ -24,7 +24,7 @@ import tetzlaff.window.glfw.GLFWWindow;
 
 public class TexGenProgram
 {
-	public static void main(String[] args) 
+	public static void main(String[] args)
     {
     	Date timestamp;
 		
@@ -37,7 +37,7 @@ public class TexGenProgram
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
     	float guessSpecularRoughness = 0.5f;
     	float guessSpecularWeight = 10.0f;
-    	int specularRange = 0; // +/- n pixels in each direction
+    	int specularRange = 10; // +/- n pixels in each direction
     	float expectedWeightSum = 0.125f;
     	
     	int debugPixelX = 505, debugPixelY = 788;
@@ -66,7 +66,7 @@ public class TexGenProgram
 	    		OpenGLTextureArray imageTextures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, false);
 	    		OpenGLTextureArray depthTextures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, false);
 	    		//OpenGLTextureArray depthTextures = OpenGLTextureArray.createDepthTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, false);
-		    	OpenGLFramebufferObject worldToTextureFBO = new OpenGLFramebufferObject(textureSize, textureSize, 0, false);
+		    	OpenGLFramebufferObject worldToTextureFBO = new OpenGLFramebufferObject(textureSize, textureSize, 2, false);
 		    	OpenGLRenderable worldToTextureRenderable = new OpenGLRenderable(worldToTextureProgram);
 		    	
 		    	Iterable<OpenGLResource> worldToTextureVBOResources = worldToTextureRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
@@ -78,7 +78,7 @@ public class TexGenProgram
 		    	worldToTextureRenderable.program().setUniform("occlusionEnabled", lightField.settings.isOcclusionEnabled());
 		    	worldToTextureRenderable.program().setUniform("occlusionBias", lightField.settings.getOcclusionBias());
 		    	
-		    	new File(lightFieldDirectory + "\\output\\debug\\diffuse").mkdirs();
+		    	new File(lightFieldDirectory + "\\output\\debug\\diffuse\\projpos").mkdirs();
 		    	
 		    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
 		    	{
@@ -91,7 +91,8 @@ public class TexGenProgram
 		    		worldToTextureFBO.clearDepthBuffer();
 		    		worldToTextureRenderable.draw(PrimitiveMode.TRIANGLES, worldToTextureFBO);
 		    		
-		    		worldToTextureFBO.saveColorBufferToFile(0, "PNG", String.format(lightFieldDirectory + "\\output\\debug\\diffuse\\%04d.png", i));
+		    		//worldToTextureFBO.saveColorBufferToFile(0, "PNG", String.format(lightFieldDirectory + "\\output\\debug\\diffuse\\%04d.png", i));
+		    		//worldToTextureFBO.saveColorBufferToFile(1, "PNG", String.format(lightFieldDirectory + "\\output\\debug\\diffuse\\projpos\\%04d.png", i));
 		    	}		    	
 		    	
 		    	worldToTextureFBO.delete();
@@ -134,6 +135,11 @@ public class TexGenProgram
 		    	framebuffer.clearColorBuffer(6, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	framebuffer.clearColorBuffer(7, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	framebuffer.clearDepthBuffer();
+
+		    	System.out.println("Model fitting completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		    	
+		    	System.out.println("Saving textures...");
+		    	timestamp = new Date();
 		    	
 		        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 		        
@@ -166,10 +172,10 @@ public class TexGenProgram
 	    		System.out.println(-((debug3Data[0] & 0x00FF0000) >>> 16) / 255.0);
 	    		System.out.println(((debug3Data[0] & 0x0000FF00) >>> 8) / 255.0);
 	    		System.out.println();
-
-		    	System.out.println("Model fitting completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+	    		
+		    	System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    	
-		    	System.out.println("Generating specular debug images...");
+		    	System.out.println("Generating specular debug info...");
 		    	timestamp = new Date();
 	    		
 		    	OpenGLFramebufferObject specularDebugFBO = new OpenGLFramebufferObject(textureSize, textureSize, 2, false);
@@ -199,8 +205,8 @@ public class TexGenProgram
 		    		specularDebugFBO.clearDepthBuffer();
 		    		specularDebugRenderable.draw(PrimitiveMode.TRIANGLES, specularDebugFBO);
 		    		
-		    		specularDebugFBO.saveColorBufferToFile(0, "PNG", String.format(lightFieldDirectory + "\\output\\debug\\specular\\%04d.png", i));
-		    		specularDebugFBO.saveColorBufferToFile(1, "PNG", String.format(lightFieldDirectory + "\\output\\debug\\specular\\rDotV\\%04d.png", i));
+		    		//specularDebugFBO.saveColorBufferToFile(0, "PNG", String.format(lightFieldDirectory + "\\output\\debug\\specular\\%04d.png", i));
+		    		//specularDebugFBO.saveColorBufferToFile(1, "PNG", String.format(lightFieldDirectory + "\\output\\debug\\specular\\rDotV\\%04d.png", i));
 		    		
 		    		int[] colorData = specularDebugFBO.readColorBufferARGB(0, debugPixelX, debugPixelY, 1, 1);
 		    		int[] rDotVData = specularDebugFBO.readColorBufferARGB(1, debugPixelX, debugPixelY, 1, 1);
@@ -220,7 +226,7 @@ public class TexGenProgram
 		    		r.delete();
 		    	}
 		    	
-				System.out.println("Specular debug images completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+				System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		        
 		        imageTextures.delete();
 		    	framebuffer.delete();
