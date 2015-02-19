@@ -14,7 +14,9 @@ uniform float gamma;
 
 uniform float guessSpecularWeight;
 uniform vec3 guessSpecularColor;
+uniform float guessSpecularRoughness;
 uniform int specularRange;
+uniform float expectedWeightSum;
 
 uniform CameraPoses
 {
@@ -185,8 +187,10 @@ void main()
                 //sA += color.a * outerProduct(vec2(u, 1), vec2(u, 1));
                 //sB += color.a * log(intensity) * vec2(u, 1);
                 
-                sA += color.a * rDotV * intensity / log(intensity) * outerProduct(vec2(u, 1), vec2(u, 1));
-                sB += color.a * rDotV * intensity * vec2(u, 1);
+                sA += color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
+                    intensity * outerProduct(vec2(u, 1), vec2(u, 1));
+                sB += color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
+                    intensity * log(intensity) * vec2(u, 1);
                 
                 specularSum += color.a * rDotV * intensity * colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
                 
@@ -248,11 +252,20 @@ void main()
     
     vec2 sSolution = inverse(sA) * sB;
     vec3 specularAvg = specularSum.rgb / (specularSum.r + specularSum.g + specularSum.b);
-    specularColor = vec4(pow(exp(sSolution[1]) * specularAvg, vec3(1 / gamma)), 1.0);
-    specularRoughness = vec4(vec3(inversesqrt(2 * sSolution[0])), 1.0);
+    specularColor =  vec4(pow(
+        min(1.0, sA[1][1] / expectedWeightSum) * min(3.0, exp(sSolution[1])) * specularAvg,
+        vec3(1 / gamma)), 1.0);
+    if (specularColor.r > 1 / 256.0 || specularColor.g > 1 / 256.0 || specularColor.b > 1 / 256.0)
+    {
+        specularRoughness = vec4(vec3(inversesqrt(2 * sSolution[0])), 1.0);
+    }
+    else
+    {
+        specularRoughness = vec4(0.0, 0.0, 0.0, 1.0);
+    }
     
     debug0 = vec4(specularAvg, 1.0);
     debug1 = vec4(sSolution[0] / 4, (6 + sSolution[1]) / 8, 0.0, 1.0);
-    debug2 = vec4(-sA[0][0] / textureCount, sA[0][1] / textureCount, sA[1][1] / textureCount, 1.0);
-    debug3 = vec4(-sB[0] / textureCount, sB[1] / textureCount, 0.0, 1.0);
+    debug2 = vec4(-sA[0][0], sA[0][1], sA[1][1], 1.0);
+    debug3 = vec4(-sB[0], sB[1], 0.0, 1.0);
 }
