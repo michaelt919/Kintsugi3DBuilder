@@ -19,7 +19,7 @@ in vec3 fViewPos;
 
 uniform sampler2DArray imageTextures;
 uniform sampler2DArray depthTextures;
-uniform sampler2D testTexture;
+uniform sampler2D testTexture; // TODO don't think this is needed anymore
 
 uniform CameraPoses
 {
@@ -38,7 +38,7 @@ uniform CameraProjectionIndices
 	int cameraProjectionIndices[MAX_CAMERA_POSE_COUNT];
 };
 
-uniform mat4 cameraProj;
+uniform mat4 cameraProj; // TODO don't think this is needed anymore
 
 layout(location = 0) out vec4 fragColor;
 

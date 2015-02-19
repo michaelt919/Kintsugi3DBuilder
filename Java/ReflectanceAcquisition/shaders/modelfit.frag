@@ -35,7 +35,7 @@ layout(location = 0) out vec4 diffuseColor;
 layout(location = 1) out vec4 normalMap;
 layout(location = 2) out vec4 specularColor;
 layout(location = 3) out vec4 specularRoughness;
-layout(location = 4) out vec4 ambientColor;
+layout(location = 4) out vec4 debug0;
 layout(location = 5) out vec4 debug1;
 layout(location = 6) out vec4 debug2;
 layout(location = 7) out vec4 debug3;
@@ -77,6 +77,12 @@ vec3 getLightVector(int index)
     return getViewVector(index);
 }
 
+vec3 getLightVectorWithOffset(int index, ivec2 offset)
+{
+    // TODO
+    return getViewVectorWithOffset(index, offset);
+}
+
 vec3 getReflectionVector(vec3 normalVector, vec3 lightVector)
 {
     return normalize(2 * dot(lightVector, normalVector) * normalVector - lightVector);
@@ -84,7 +90,7 @@ vec3 getReflectionVector(vec3 normalVector, vec3 lightVector)
 
 void main()
 {
-	vec4 sumColor = vec4(0);
+    vec4 sumColor = vec4(0);
     for (int i = 0; i < textureCount; i++)
     {   
        vec4 color = getColor(i);
@@ -144,7 +150,7 @@ void main()
     float diffuseIntensity = length(dSolution.xyz);
     vec3 normal = normalize(dSolution.xyz);
     normalMap = vec4(normal * 0.5 + vec3(0.5), 1.0);
-    ambientColor = vec4(pow(diffuseAvg * dSolution.w, vec3(1 / gamma)), 1.0);
+    //debug0 = vec4(pow(diffuseAvg * dSolution.w, vec3(1 / gamma)), 1.0);
     diffuseColor = vec4(pow(diffuseAvg * diffuseIntensity, vec3(1 / gamma)), 1.0);
     
     vec4 specularSum = vec4(0);
@@ -163,39 +169,90 @@ void main()
             vec4 colorRemainder = vec4(max(vec3(0), color.rgb - diffuseContrib), color.a);
             float intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
             
-            if (intensity > 0.0)
+            vec3 reflection = getReflectionVector(normal, light);
+            float rDotV = dot(reflection, view);
+            
+            if (intensity > 0.0 && rDotV > 0.0)
             {
-                vec3 reflection = getReflectionVector(normal, light);
-                float rDotV = dot(reflection, view);
-                if (rDotV > 0.0)
-                {
-                    float u = rDotV - 1 / rDotV;
-                    
-                    //sA += color.a * rDotV * outerProduct(vec2(u, 1), vec2(u, 1));
-                    //sB += color.a * rDotV * log(intensity) * vec2(u, 1);
-                    
-                    //sA += color.a * intensity / log(intensity) * outerProduct(vec2(u, 1), vec2(u, 1));
-                    //sB += color.a * intensity * vec2(u, 1);
-                    
-                    sA += color.a * outerProduct(vec2(u, 1), vec2(u, 1));
-                    sB += color.a * log(intensity) * vec2(u, 1);
-                    
-                    specularSum += colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
-                    
-                    for (int i = 0; i < specularRange; i++)
-                    {
-                    }
-                }
+                float u = rDotV - 1 / rDotV;
+                
+                //sA += color.a * rDotV * outerProduct(vec2(u, 1), vec2(u, 1));
+                //sB += color.a * rDotV * log(intensity) * vec2(u, 1);
+                
+                //sA += color.a * intensity / log(intensity) * outerProduct(vec2(u, 1), vec2(u, 1));
+                //sB += color.a * intensity * vec2(u, 1);
+                
+                //sA += color.a * outerProduct(vec2(u, 1), vec2(u, 1));
+                //sB += color.a * log(intensity) * vec2(u, 1);
+                
+                sA += color.a * rDotV * intensity / log(intensity) * outerProduct(vec2(u, 1), vec2(u, 1));
+                sB += color.a * rDotV * intensity * vec2(u, 1);
+                
+                specularSum += color.a * rDotV * intensity * colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
+                
+                // for (int i = 1; i < specularRange; i++)
+                // {
+                    // float weight = 1.0; // TODO
+                    // ivec2 offset = ivec2(i, 0);
+                    // for (int j = 0; j < 4*(i+1); j++)
+                    // {
+                        // if (offset.x == i && offset.y != -i)
+                        // {
+                            // offset.y--;
+                        // }
+                        // else if (offset.y == i)
+                        // {
+                            // offset.x++;
+                        // }
+                        // else if (offset.x == -i)
+                        // {
+                            // offset.y++;
+                        // }
+                        // else if (offset.y == -i)
+                        // {
+                            // offset.x--;
+                        // }
+                        
+                        // color = getColorWithOffset(i, offset);
+                        // view = getViewVectorWithOffset(i, offset);
+                        // light = getLightVectorWithOffset(i, offset);
+                        // normal = normal; // TODO
+                        
+                        // diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal)); // TODO
+                        // colorRemainder = vec4(max(vec3(0), color.rgb - diffuseContrib), color.a);
+                        // intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
+                        
+                        // reflection = getReflectionVector(normal, light);
+                        // rDotV = dot(reflection, view);
+                        
+                        // if (intensity > 0.0 && rDotV > 0.0)
+                        // {
+                            // u = rDotV - 1 / rDotV;
+                            
+                            // //sA += color.a * rDotV * outerProduct(vec2(u, 1), vec2(u, 1));
+                            // //sB += color.a * rDotV * log(intensity) * vec2(u, 1);
+                            
+                            // //sA += color.a * intensity / log(intensity) * outerProduct(vec2(u, 1), vec2(u, 1));
+                            // //sB += color.a * intensity * vec2(u, 1);
+                            
+                            // sA += weight * color.a * outerProduct(vec2(u, 1), vec2(u, 1));
+                            // sB += weight * color.a * log(intensity) * vec2(u, 1);
+                            
+                            // specularSum += colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
+                        // }
+                    // }
+                // }
             }
         }
     }
     
     vec2 sSolution = inverse(sA) * sB;
-    vec3 specularAvg = specularSum.rgb / (diffuseSum.r + diffuseSum.g + diffuseSum.b);
+    vec3 specularAvg = specularSum.rgb / (specularSum.r + specularSum.g + specularSum.b);
     specularColor = vec4(pow(exp(sSolution[1]) * specularAvg, vec3(1 / gamma)), 1.0);
-    specularRoughness = vec4(vec3(inversesqrt(2*sSolution[0])), 1.0);
+    specularRoughness = vec4(vec3(inversesqrt(2 * sSolution[0])), 1.0);
     
-    debug1 = vec4(specularAvg, 1.0);
-    debug2 = vec4(vec3(sSolution[0]), 1.0);
-    debug3 = vec4(vec3(sSolution[1]), 1.0);
+    debug0 = vec4(specularAvg, 1.0);
+    debug1 = vec4(sSolution[0] / 4, (6 + sSolution[1]) / 8, 0.0, 1.0);
+    debug2 = vec4(-sA[0][0] / textureCount, sA[0][1] / textureCount, sA[1][1] / textureCount, 1.0);
+    debug3 = vec4(-sB[0] / textureCount, sB[1] / textureCount, 0.0, 1.0);
 }
