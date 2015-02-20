@@ -17,6 +17,7 @@ uniform vec3 guessSpecularColor;
 uniform float guessSpecularRoughness;
 uniform int specularRange;
 uniform float expectedWeightSum;
+uniform float diffuseRemovalFactor;
 
 uniform CameraPoses
 {
@@ -126,6 +127,7 @@ void main()
     
     vec3 simpleWeights = diffuseSum.rgb / max(max(diffuseSum.r, diffuseSum.g), diffuseSum.b);
     vec3 rgbWeights;
+    float diffuseRemovalMult;
     if (guessSpecularWeight > 0)
     {
         vec3 ortho = cross(diffuseAvg, guessSpecularColor);
@@ -136,15 +138,18 @@ void main()
                 (length(diffuseAvg) * length(guessSpecularColor));
             rgbWeights = (adjustedFixedSpecWeight * transpose(inverse(colorBasis))[0] + simpleWeights) / 
                 (1 + adjustedFixedSpecWeight);
+            diffuseRemovalMult = adjustedFixedSpecWeight / (1 + adjustedFixedSpecWeight);
         }
         else
         {
             rgbWeights = simpleWeights;
+            diffuseRemovalMult = 0.0;
         }
     }
     else
     {
         rgbWeights = simpleWeights;
+        diffuseRemovalMult = 0.0;
     }
     
     vec4 dSolution = inverse(dA) * dB * vec4(rgbWeights, 0.0);
@@ -168,7 +173,8 @@ void main()
             vec3 light = getLightVector(i);
             
             vec3 diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal));
-            vec4 colorRemainder = vec4(max(vec3(0), color.rgb - diffuseContrib), color.a);
+            vec4 colorRemainder = vec4(max(vec3(0), 
+                color.rgb - diffuseRemovalMult * diffuseRemovalFactor * diffuseContrib), color.a);
             float intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
             
             vec3 reflection = getReflectionVector(normal, light);
@@ -215,7 +221,9 @@ void main()
                         normal = normal; // TODO
                         
                         diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal)); // TODO
-                        colorRemainder = vec4(max(vec3(0), color.rgb - diffuseContrib), color.a);
+                        colorRemainder = vec4(max(vec3(0), 
+                            color.rgb - diffuseRemovalMult * diffuseRemovalFactor * diffuseContrib), 
+                            color.a); // TODO
                         intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
                         
                         reflection = getReflectionVector(normal, light);
@@ -225,12 +233,15 @@ void main()
                         {
                             u = rDotV - 1 / rDotV;
                             
-                            sA += weight * color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
+                            sA += weight * color.a * 
+                                pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
                                 intensity * outerProduct(vec2(u, 1), vec2(u, 1));
-                            sB += weight * color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
+                            sB += weight * color.a * 
+                                pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
                                 intensity * log(intensity) * vec2(u, 1);
                             
-                            specularSum += color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
+                            specularSum += color.a * 
+                                pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
                                 intensity * colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
                         }
                     }
@@ -254,12 +265,12 @@ void main()
     }
     
     debug0 = vec4(specularAvg, 1.0);
-    //debug1 = vec4(sSolution[0] / 4, (6 + sSolution[1]) / 8, 0.0, 1.0);
-    debug1 = vec4(-sA[0][0], sA[0][1], sA[1][1], 1.0);
-    //debug3 = vec4(-sB[0], sB[1], 0.0, 1.0);
+    debug1 = vec4(sSolution[0] / 4, (6 + sSolution[1]) / 8, 0.0, 1.0);
+    debug2 = vec4(-sA[0][0], sA[0][1], sA[1][1], 1.0);
+    debug3 = vec4(-sB[0], sB[1], 0.0, 1.0);
     
-    debug2 = vec4((getRelativePositionFromDepthBufferWithOffset(0, ivec2(0)) + vec3(2,2,12)) / 4, 1.0);
-    debug3 = vec4(((cameraPoses[0] * vec4(fPosition, 1.0)).xyz + vec3(2,2,12)) / 4, 1.0);
+    //debug2 = vec4((getRelativePositionFromDepthBufferWithOffset(0, ivec2(0)) + vec3(2,2,12)) / 4, 1.0);
+    //debug3 = vec4(((cameraPoses[0] * vec4(fPosition, 1.0)).xyz + vec3(2,2,12)) / 4, 1.0);
     
     // debug2 = texture(depthTextures, vec3(fTexCoord, 0));
     // vec4 debugProjPos = cameraProjections[cameraProjectionIndices[0]] * cameraPoses[0] * 

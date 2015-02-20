@@ -39,8 +39,9 @@ public class TexGenProgram
     	float guessSpecularWeight = 10.0f;
     	int specularRange = 10; // +/- n pixels in each direction
     	float expectedWeightSum = 0.125f;
+    	float diffuseRemovalFactor = 0.0f;
     	
-    	int debugPixelX = 505, debugPixelY = 788;
+    	int debugPixelX = 512, debugPixelY = 1004;
     	
         try
         {
@@ -121,6 +122,7 @@ public class TexGenProgram
 		    	renderable.program().setUniform("guessSpecularWeight", guessSpecularWeight);
 		    	renderable.program().setUniform("specularRange", specularRange);
 		    	renderable.program().setUniform("expectedWeightSum", expectedWeightSum);
+		    	renderable.program().setUniform("diffuseRemovalFactor", diffuseRemovalFactor);
 		    	
 		    	OpenGLFramebufferObject framebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 8, false);
 		    	
@@ -187,6 +189,7 @@ public class TexGenProgram
 		    	specularDebugRenderable.program().setTexture("normalMap", framebuffer.getColorAttachmentTexture(1));
 		    	specularDebugRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
 		    	specularDebugRenderable.program().setUniform("gamma", gamma);
+		    	specularDebugRenderable.program().setUniform("diffuseRemovalFactor", diffuseRemovalFactor);
 		    	
 		    	new File(lightFieldDirectory + "\\output\\debug\\specular\\rDotV").mkdirs();
 		    	
