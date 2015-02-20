@@ -12,6 +12,7 @@ uniform sampler2D normalMap;
 uniform sampler2DArray textures;
 uniform int textureIndex;
 uniform float gamma;
+uniform float diffuseRemovalFactor;
 
 uniform CameraPoses
 {
@@ -55,7 +56,7 @@ vec3 getReflectionVector(vec3 normalVector, vec3 lightVector)
 void main()
 {
 	vec4 original = getOriginalColor(textureIndex);
-    fragColor = vec4(original.rgb - getDiffuseColor(textureIndex), original.a);
+    fragColor = vec4(original.rgb - diffuseRemovalFactor * getDiffuseColor(textureIndex), original.a);
     
     vec3 view = getViewVector(textureIndex);
     vec3 light = getLightVector(textureIndex);
