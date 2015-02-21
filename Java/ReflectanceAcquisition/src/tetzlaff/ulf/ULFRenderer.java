@@ -2,6 +2,8 @@ package tetzlaff.ulf;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
@@ -11,6 +13,7 @@ import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLDefaultFramebuffer;
 import tetzlaff.gl.opengl.OpenGLFramebuffer;
+import tetzlaff.gl.opengl.OpenGLFramebufferObject;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLResource;
@@ -26,6 +29,11 @@ public class ULFRenderer implements ULFDrawable
     private Trackball trackball;
     private ULFLoadingMonitor callback;
     private Iterable<OpenGLResource> vboResources;
+    
+    private boolean resampleRequested;
+    private int resampleSize;
+    private String resampleVSETFile;
+    private String resampleExportPath;
 
     public ULFRenderer(OpenGLContext context, String vsetFile, Trackball trackball)
     {
@@ -75,6 +83,22 @@ public class ULFRenderer implements ULFDrawable
 	@Override
 	public void update()
 	{
+    	if (this.resampleRequested)
+    	{
+    		try
+    		{
+				this.resample();
+			} 
+    		catch (IOException e) 
+    		{
+				e.printStackTrace();
+			}
+    		this.resampleRequested = false;
+    		if (this.callback != null)
+			{
+				this.callback.loadingComplete();
+			}
+    	}
 	}
     
     @Override
@@ -187,5 +211,56 @@ public class ULFRenderer implements ULFDrawable
 	public String toString()
 	{
 		return this.lightField.toString();
+	}
+	
+	@Override
+	public void requestResample(int size, String targetVSETFile, String exportPath) throws IOException
+	{
+		this.resampleRequested = true;
+		this.resampleSize = size;
+		this.resampleVSETFile = targetVSETFile;
+		this.resampleExportPath = exportPath;
+	}
+	
+	private void resample() throws IOException
+	{
+		ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, false);
+		OpenGLFramebufferObject framebuffer = new OpenGLFramebufferObject(resampleSize, resampleSize);
+    	
+    	this.renderable.program().setTexture("imageTextures", lightField.viewSet.getTextures());
+    	this.renderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
+    	this.renderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
+    	this.renderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+    	this.renderable.program().setUniform("cameraPoseCount", lightField.viewSet.getCameraPoseCount());
+    	this.renderable.program().setTexture("depthTextures", lightField.depthTextures);
+    	
+    	this.renderable.program().setUniform("gamma", this.lightField.settings.getGamma());
+    	this.renderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
+    	this.renderable.program().setUniform("occlusionEnabled", this.lightField.settings.isOcclusionEnabled());
+    	this.renderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
+    	
+		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+		{
+	    	renderable.program().setUniform("model_view", targetViewSet.getCameraPose(i));
+	    	renderable.program().setUniform("projection", 
+    			targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
+    				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
+	    	
+	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+	    	framebuffer.clearDepthBuffer();
+	    	
+	    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+	    	
+	    	File exportFile = new File(resampleExportPath, targetViewSet.getImageFileName(i));
+	    	exportFile.getParentFile().mkdirs();
+	        framebuffer.saveColorBufferToFile(0, "PNG", exportFile.getPath());
+	        
+	        this.callback.setProgress((double) i / (double) targetViewSet.getCameraPoseCount());
+		}
+		
+		Files.copy(new File(resampleVSETFile).toPath(), 
+			new File(resampleExportPath, new File(resampleVSETFile).getName()).toPath());
+		Files.copy(new File(lightField.viewSet.getGeometryFilePath()).toPath(), 
+			new File(resampleExportPath, lightField.viewSet.getGeometryFileName()).toPath());
 	}
 }

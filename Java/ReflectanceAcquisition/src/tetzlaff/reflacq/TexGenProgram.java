@@ -39,7 +39,7 @@ public class TexGenProgram
     	float guessSpecularWeight = 10.0f;
     	int specularRange = 10; // +/- n pixels in each direction
     	float expectedWeightSum = 0.125f;
-    	float diffuseRemovalFactor = 0.0f;
+    	float diffuseRemovalFactor = 1.0f;
     	
     	int debugPixelX = 512, debugPixelY = 1004;
     	

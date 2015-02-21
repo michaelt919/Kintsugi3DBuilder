@@ -23,7 +23,8 @@ public class ViewSet
 	private List<Matrix4> cameraPoseList;
 	private List<Projection> cameraProjectionList;
 	private List<Integer> cameraProjectionIndexList;
-	private List<String> imageFilePaths;
+	private List<String> imageFileNames;
+	private String filePath;
 	
 	private OpenGLUniformBuffer cameraPoseBuffer;
 	private OpenGLUniformBuffer cameraProjectionBuffer;
@@ -36,17 +37,21 @@ public class ViewSet
 		List<Matrix4> cameraPoseList,
 		List<Projection> cameraProjectionList,
 		List<Integer> cameraProjectionIndexList,
-		List<String> imageFilePaths, 
+		List<String> imageFileNames, 
+		String imageFilePath,
+		boolean loadImages,
 		float recommendedNearPlane,
 		float recommendedFarPlane) throws IOException
 	{
 		this.cameraPoseList = cameraPoseList;
 		this.cameraProjectionList = cameraProjectionList;
 		this.cameraProjectionIndexList = cameraProjectionIndexList;
-		this.imageFilePaths = imageFilePaths;
+		this.imageFileNames = imageFileNames;
 		
 		this.recommendedNearPlane = recommendedNearPlane;
 		this.recommendedFarPlane = recommendedFarPlane;
+		
+		this.filePath = imageFilePath;
 		
 		// Store the poses in a uniform buffer
 		if (cameraPoseList != null && cameraPoseList.size() > 0)
@@ -108,17 +113,17 @@ public class ViewSet
 		}
 		
 		// Read the images from a file
-		if (imageFilePaths != null && imageFilePaths.size() > 0)
+		if (loadImages && imageFilePath != null && imageFileNames != null && imageFileNames.size() > 0)
 		{
 			Date timestamp = new Date();
 			
 			// Read a single image to get the dimensions for the texture array
-			BufferedImage img = ImageIO.read(new FileInputStream(imageFilePaths.get(0)));
-			this.textureArray = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFilePaths.size(), true, true);
+			BufferedImage img = ImageIO.read(new FileInputStream(imageFilePath + "\\" + imageFileNames.get(0)));
+			this.textureArray = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFileNames.size(), true, true);
 			
-			for (int i = 0; i < imageFilePaths.size(); i++)
+			for (int i = 0; i < imageFileNames.size(); i++)
 			{
-				this.textureArray.loadLayer(i, imageFilePaths.get(i), true);
+				this.textureArray.loadLayer(i, imageFilePath + "\\" + imageFileNames.get(i), true);
 			}
 
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -133,7 +138,7 @@ public class ViewSet
 		textureArray.delete();
 	}
 
-	public static ViewSet loadFromVSETFile(String filename) throws IOException
+	public static ViewSet loadFromVSETFile(String filename, boolean loadImages) throws IOException
 	{
 		Date timestamp = new Date();
 		
@@ -146,7 +151,7 @@ public class ViewSet
 		List<Matrix4> orderedCameraPoseList = new ArrayList<Matrix4>();
 		List<Projection> cameraProjectionList = new ArrayList<Projection>();
 		List<Integer> cameraProjectionIndexList = new ArrayList<Integer>();
-		List<String> imageFilePaths = new ArrayList<String>();
+		List<String> imageFileNames = new ArrayList<String>();
 		
 		while (scanner.hasNext())
 		{
@@ -231,13 +236,9 @@ public class ViewSet
 				
 				String imgFilename = scanner.nextLine().trim();
 				
-				String[] filePathParts = filename.split("[\\\\\\/]");
-				filePathParts[filePathParts.length - 1] = imgFilename;
-				String imgFilePath = String.join(File.separator, filePathParts);
-				
 				orderedCameraPoseList.add(cameraPoseList.get(poseId));
 				cameraProjectionIndexList.add(projectionId);
-				imageFilePaths.add(imgFilePath);
+				imageFileNames.add(imgFilename);
 			}
 			else
 			{
@@ -251,18 +252,33 @@ public class ViewSet
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
 		return new ViewSet(
-			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, imageFilePaths,
-			recommendedNearPlane, recommendedFarPlane);
+			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, imageFileNames, new File(filename).getParent(),
+			loadImages, recommendedNearPlane, recommendedFarPlane);
 	}
 
 	public Matrix4 getCameraPose(int poseIndex) 
 	{
 		return this.cameraPoseList.get(poseIndex);
 	}
+	
+	public String getGeometryFileName()
+	{
+		return "manifold.obj"; // TODO
+	}
+	
+	public String getGeometryFilePath()
+	{
+		return new File(this.filePath, "manifold.obj").getPath(); // TODO
+	}
+	
+	public String getImageFileName(int poseIndex)
+	{
+		return this.imageFileNames.get(poseIndex);
+	}
 
 	public String getImageFilePath(int poseIndex) 
 	{
-		return this.imageFilePaths.get(poseIndex);
+		return new File(this.filePath, this.imageFileNames.get(poseIndex)).getPath();
 	}
 
 	public Projection getCameraProjection(int projectionIndex) 
