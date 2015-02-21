@@ -100,6 +100,23 @@ public class ULFUserInterface
 		occlusionBiasBox.setBorder(new EmptyBorder(10, 10, 10, 10));
 		frame.add(occlusionBiasBox);
 		
+		Box resampleBox = new Box(BoxLayout.X_AXIS);
+		JPanel resampleWrapper = new JPanel();
+		JButton resampleButton = new JButton("Resample...");
+		resampleWrapper.add(resampleButton);
+		resampleWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
+		resampleBox.add(resampleWrapper);
+		JPanel resampleSizeWrapper = new JPanel();
+		JLabel resampleSizeLabel = new JLabel("Size:");
+		resampleSizeWrapper.add(resampleSizeLabel);
+		SpinnerNumberModel resampleSizeModel = new SpinnerNumberModel(1024.0f, 1.0f, 8192.0f, 1.0f);
+		JSpinner resampleSizeSpinner = new JSpinner(resampleSizeModel);
+		resampleSizeWrapper.add(resampleSizeSpinner);
+		resampleSizeWrapper.setBorder(new EmptyBorder(5, 10, 0, 10));
+		resampleBox.add(resampleSizeWrapper);
+		resampleBox.setBorder(new EmptyBorder(0, 10, 10, 10));
+		frame.add(resampleBox);
+		
 		frame.pack();
 		
 		JFrame loadingFrame = new JFrame("Loading...");
@@ -205,6 +222,38 @@ public class ULFUserInterface
 				catch (IOException ex) 
 				{
 					ex.printStackTrace();
+				}
+			}
+		});
+		
+		resampleButton.addActionListener(e -> 
+		{
+			JFileChooser vsetFileChooser = new JFileChooser(new File("").getAbsolutePath());
+			vsetFileChooser.setDialogTitle("Choose a Target VSET File");
+			vsetFileChooser.removeChoosableFileFilter(vsetFileChooser.getAcceptAllFileFilter());
+			vsetFileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
+			if (vsetFileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
+			{
+				JFileChooser exportFileChooser = new JFileChooser(vsetFileChooser.getSelectedFile().getParentFile());
+				exportFileChooser.setDialogTitle("Choose an Export Directory");
+				exportFileChooser.removeChoosableFileFilter(exportFileChooser.getAcceptAllFileFilter());
+				exportFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				
+				if (exportFileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
+				{
+					try 
+					{
+						loadingBar.setIndeterminate(true);
+						loadingFrame.setVisible(true);
+						model.getSelectedItem().requestResample(
+							(int)Math.round((Double)resampleSizeSpinner.getValue()), 
+							vsetFileChooser.getSelectedFile().getPath(), 
+							exportFileChooser.getSelectedFile().getPath());
+					} 
+					catch (IOException ex) 
+					{
+						ex.printStackTrace();
+					}
 				}
 			}
 		});

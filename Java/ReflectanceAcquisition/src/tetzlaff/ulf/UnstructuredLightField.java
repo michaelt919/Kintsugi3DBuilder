@@ -35,7 +35,10 @@ public class UnstructuredLightField
 	public void deleteOpenGLResources()
 	{
 		viewSet.deleteOpenGLResources();
-		depthTextures.delete();
+		if (depthTextures != null)
+		{
+			depthTextures.delete();
+		}
 	}
 
 	public static UnstructuredLightField loadFromVSETFile(String vsetFilePath) throws IOException
@@ -45,8 +48,8 @@ public class UnstructuredLightField
 		OpenGLTextureArray depthTextures;
 		
 		String directoryPath = new File(vsetFilePath).getParent();
-        proxy = new VertexMesh("OBJ", directoryPath + "/manifold.obj");
-        viewSet = ViewSet.loadFromVSETFile(vsetFilePath);
+        proxy = new VertexMesh("OBJ", directoryPath + "/manifold.obj"); // TODO don't have geometry filename hard-coded
+        viewSet = ViewSet.loadFromVSETFile(vsetFilePath, true);
         
         // Build depth textures for each view
     	int width = viewSet.getTextures().getWidth();
