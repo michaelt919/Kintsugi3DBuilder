@@ -11,6 +11,7 @@ import tetzlaff.gl.helpers.ShortVertexList;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL31.*;
+import static tetzlaff.gl.opengl.helpers.StaticHelpers.openGLErrorCheck;
 
 public class OpenGLUniformBuffer extends OpenGLBuffer implements UniformBuffer
 {
@@ -19,6 +20,7 @@ public class OpenGLUniformBuffer extends OpenGLBuffer implements UniformBuffer
 	static
 	{
 		MAX_COMBINED_UNIFORM_BLOCKS = glGetInteger(GL_MAX_COMBINED_UNIFORM_BLOCKS);
+		openGLErrorCheck();
 	}
 	
 	public OpenGLUniformBuffer(int usage) 
