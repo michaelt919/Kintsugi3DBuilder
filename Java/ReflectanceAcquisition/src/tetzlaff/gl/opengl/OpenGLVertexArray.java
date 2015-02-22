@@ -73,12 +73,13 @@ public class OpenGLVertexArray implements OpenGLResource, VertexArray<OpenGLVert
 			if (usesIndexing)
 			{
 				glDrawElements(primitiveMode, this.count, GL_UNSIGNED_INT, 0);
+				openGLErrorCheck();
 			}
 			else
 			{
 				glDrawArrays(primitiveMode, 0, this.count);
+				openGLErrorCheck();
 			}
-			openGLErrorCheck();
 		}
 	}
 

@@ -72,12 +72,15 @@ public abstract class OpenGLContext implements Context
 	public void setAlphaBlendingFunction(AlphaBlendingFunction func)
 	{
 		glEnable(GL_BLEND);
+		openGLErrorCheck();
 		glBlendFunc(blendFuncEnumToInt(func.sourceWeightFunction), blendFuncEnumToInt(func.destinationWeightFunction));
+		openGLErrorCheck();
 	}
 	
 	@Override
 	public void disableAlphaBlending()
 	{
 		glDisable(GL_BLEND);
+		openGLErrorCheck();
 	}
 }

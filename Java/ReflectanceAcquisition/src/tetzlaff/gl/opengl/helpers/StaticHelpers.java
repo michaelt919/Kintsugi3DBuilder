@@ -12,6 +12,11 @@ import tetzlaff.gl.opengl.exceptions.OpenGLStackUnderflowException;
 
 public class StaticHelpers 
 {
+	/**
+	 * Should always be called after any OpenGL function
+	 * Search for missing calls to this using this regex:
+	 * gl[A-Z].*\(.*\);\s*[^\s(openGLErrorCheck\(\);)]
+	 */
 	public static void openGLErrorCheck()
 	{
 		int error = glGetError();

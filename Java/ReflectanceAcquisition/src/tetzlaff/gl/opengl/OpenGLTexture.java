@@ -16,6 +16,7 @@ public abstract class OpenGLTexture implements OpenGLResource, OpenGLFramebuffer
 	static
 	{
 		MAX_COMBINED_TEXTURE_IMAGE_UNITS = glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+		openGLErrorCheck();
 	}
 	
 	protected OpenGLTexture() 
