@@ -2,6 +2,8 @@ package tetzlaff.gl.exceptions;
 
 public class UncompiledShaderException extends IllegalStateException 
 {
+	private static final long serialVersionUID = 323471236897721345L;
+
 	public UncompiledShaderException() {
 		super();
 		// TODO Auto-generated constructor stub

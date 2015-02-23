@@ -1,7 +1,6 @@
 package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
@@ -9,7 +8,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
@@ -72,7 +70,7 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	}
 	
 	@Override
-	public void saveColorBufferToFile(int attachmentIndex, String fileFormat, String filename) throws IOException
+	public void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException
 	{
         int[] pixels = this.readColorBufferARGB(attachmentIndex);
         
@@ -91,8 +89,7 @@ public abstract class OpenGLFramebuffer implements Framebuffer
         
         BufferedImage outImg = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_ARGB);
         outImg.setRGB(0, 0, size.width, size.height, pixels, 0, size.width);
-        File outputFile = new File(filename);
-        ImageIO.write(outImg, fileFormat, outputFile);
+        ImageIO.write(outImg, fileFormat, file);
 	}
 	
 	@Override

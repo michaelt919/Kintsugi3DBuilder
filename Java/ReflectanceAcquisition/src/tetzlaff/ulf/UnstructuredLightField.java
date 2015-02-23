@@ -13,18 +13,16 @@ import tetzlaff.gl.opengl.OpenGLTextureArray;
 
 public class UnstructuredLightField 
 {
-	public final String directoryPath;
+	public final File directoryPath;
 	public final String id;
 	public final ViewSet viewSet;
 	public final VertexMesh proxy;
 	public final OpenGLTextureArray depthTextures;
     public final ULFSettings settings;
 	
-	public UnstructuredLightField(String directoryPath, ViewSet viewSet, VertexMesh proxy, OpenGLTextureArray depthTextures, ULFSettings settings) 
+	public UnstructuredLightField(File directoryPath, ViewSet viewSet, VertexMesh proxy, OpenGLTextureArray depthTextures, ULFSettings settings) 
 	{
-    	String[] pathParts = directoryPath.split("[\\\\\\/]");
-    	this.id = pathParts[pathParts.length - 1];
-    	
+    	this.id = directoryPath.getName();
 		this.directoryPath = directoryPath;
 		this.viewSet = viewSet;
 		this.proxy = proxy;
@@ -41,15 +39,15 @@ public class UnstructuredLightField
 		}
 	}
 
-	public static UnstructuredLightField loadFromVSETFile(String vsetFilePath) throws IOException
+	public static UnstructuredLightField loadFromVSETFile(File vsetFile) throws IOException
 	{
 		ViewSet viewSet;
 		VertexMesh proxy;
 		OpenGLTextureArray depthTextures;
 		
-		String directoryPath = new File(vsetFilePath).getParent();
-        proxy = new VertexMesh("OBJ", directoryPath + "/manifold.obj"); // TODO don't have geometry filename hard-coded
-        viewSet = ViewSet.loadFromVSETFile(vsetFilePath, true);
+		File directoryPath = vsetFile.getParentFile();
+        proxy = new VertexMesh("OBJ", new File(directoryPath, "manifold.obj")); // TODO don't have geometry filename hard-coded
+        viewSet = ViewSet.loadFromVSETFile(vsetFile, true);
         
         // Build depth textures for each view
     	int width = viewSet.getTextures().getWidth();

@@ -2,8 +2,6 @@ package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
 import java.nio.IntBuffer;
@@ -11,12 +9,6 @@ import java.nio.IntBuffer;
 import org.lwjgl.BufferUtils;
 
 import tetzlaff.gl.IndexBuffer;
-import tetzlaff.gl.VertexBuffer;
-import tetzlaff.gl.helpers.ByteVertexList;
-import tetzlaff.gl.helpers.DoubleVertexList;
-import tetzlaff.gl.helpers.FloatVertexList;
-import tetzlaff.gl.helpers.IntVertexList;
-import tetzlaff.gl.helpers.ShortVertexList;
 
 public class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer
 {

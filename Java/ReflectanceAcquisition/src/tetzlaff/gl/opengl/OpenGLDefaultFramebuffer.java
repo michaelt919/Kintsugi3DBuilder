@@ -1,10 +1,7 @@
 package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.glfw.GLFW.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
-
-import java.nio.IntBuffer;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.FramebufferSize;

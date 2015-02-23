@@ -6,6 +6,7 @@ import static org.lwjgl.opengl.GL30.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,9 +37,6 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 		this.useMipmaps = useMipmaps;
 		
 		this.bind();
-
-		glEnable(GL_TEXTURE_3D);
-		openGLErrorCheck();
 		
 		glTexImage3D(this.getOpenGLTextureTarget(), 0, internalFormat, width, height, layerCount, 0, format, type, 0);
 		openGLErrorCheck();
@@ -129,9 +127,9 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 		}
 	}
 	
-	public void loadLayer(int layerIndex, String filename, boolean flipVertical) throws IOException
+	public void loadLayer(int layerIndex, File file, boolean flipVertical) throws IOException
 	{
-		this.loadLayer(layerIndex, new FileInputStream(filename), flipVertical);
+		this.loadLayer(layerIndex, new FileInputStream(file), flipVertical);
 	}
 	
 	@Override

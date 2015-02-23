@@ -1,5 +1,6 @@
 package tetzlaff.gl.helpers;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,9 +19,9 @@ public class VertexMesh
 	private FloatVertexList texCoords;
 	private Vector3 centroid;
 
-	public VertexMesh(String fileFormat, String filename) throws IOException
+	public VertexMesh(String fileFormat, File file) throws IOException
 	{
-		try(FileInputStream inputStream = new FileInputStream(filename))
+		try(FileInputStream inputStream = new FileInputStream(file))
 		{
 			if (fileFormat.equals("OBJ"))
 			{

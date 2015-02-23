@@ -1,5 +1,6 @@
 package tetzlaff.ulf;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.swing.AbstractListModel;
@@ -11,6 +12,8 @@ import tetzlaff.gl.opengl.OpenGLContext;
 
 public abstract class ULFDrawableListModel extends AbstractListModel<ULFDrawable> implements ULFListModel
 {
+	private static final long serialVersionUID = 4167467314632694946L;
+	
 	protected final OpenGLContext context;
 	protected final Trackball trackball;
 	private MultiDrawable<ULFDrawable> ulfs;
@@ -25,12 +28,12 @@ public abstract class ULFDrawableListModel extends AbstractListModel<ULFDrawable
 		this.effectiveSize = 0;
 	}
 	
-	protected abstract ULFDrawable createFromVSETFile(String vsetFile) throws IOException;
+	protected abstract ULFDrawable createFromVSETFile(File vsetFile) throws IOException;
 	
-	protected abstract ULFDrawable createMorphFromLFMFile(String lfmFile) throws IOException;
+	protected abstract ULFDrawable createMorphFromLFMFile(File lfmFile) throws IOException;
 
 	@Override
-	public ULFDrawable addFromVSETFile(String vsetFile) throws IOException
+	public ULFDrawable addFromVSETFile(File vsetFile) throws IOException
 	{
 		ULFDrawable newItem = this.createFromVSETFile(vsetFile);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
@@ -61,7 +64,7 @@ public abstract class ULFDrawableListModel extends AbstractListModel<ULFDrawable
 	}
 
 	@Override
-	public ULFDrawable addMorphFromLFMFile(String lfmFile) throws IOException 
+	public ULFDrawable addMorphFromLFMFile(File lfmFile) throws IOException 
 	{
 		ULFDrawable newItem = this.createMorphFromLFMFile(lfmFile);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()

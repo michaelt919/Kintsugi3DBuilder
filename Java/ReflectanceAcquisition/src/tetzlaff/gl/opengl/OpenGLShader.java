@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-import tetzlaff.gl.exceptions.ProgramLinkFailureException;
 import tetzlaff.gl.exceptions.ShaderCompileFailureException;
 
 
@@ -41,7 +40,7 @@ public class OpenGLShader implements OpenGLResource
 		openGLErrorCheck();
         if (compiled == GL_FALSE)
         {
-        	throw new ProgramLinkFailureException(glGetShaderInfoLog(shaderId));
+        	throw new ShaderCompileFailureException(glGetShaderInfoLog(shaderId));
         }
 	}
 	

@@ -2,6 +2,8 @@ package tetzlaff.gl.exceptions;
 
 public class UnrecognizedPrimitiveModeException extends RuntimeException {
 
+	private static final long serialVersionUID = -6087408994505500419L;
+
 	public UnrecognizedPrimitiveModeException() {
 	}
 

@@ -2,6 +2,8 @@ package tetzlaff.gl.exceptions;
 
 public class NoSpecifiedVertexBuffersException extends RuntimeException {
 
+	private static final long serialVersionUID = 6824841077784662947L;
+
 	public NoSpecifiedVertexBuffersException() {
 		// TODO Auto-generated constructor stub
 	}

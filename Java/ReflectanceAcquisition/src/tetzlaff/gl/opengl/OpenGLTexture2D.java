@@ -6,6 +6,7 @@ import static org.lwjgl.opengl.GL30.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,14 +74,14 @@ public class OpenGLTexture2D extends OpenGLTexture
 		this(fileStream, flipVertical, false, false);
 	}
 	
-	public OpenGLTexture2D(String filename, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
+	public OpenGLTexture2D(File file, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
 	{
-		this(new FileInputStream(filename), flipVertical, useLinearFiltering, useMipmaps);
+		this(new FileInputStream(file), flipVertical, useLinearFiltering, useMipmaps);
 	}
 	
-	public OpenGLTexture2D(String filename, boolean flipVertical) throws IOException
+	public OpenGLTexture2D(File file, boolean flipVertical) throws IOException
 	{
-		this(filename, flipVertical, false, false);
+		this(file, flipVertical, false, false);
 	}
 	
 	private void init(int width, int height, boolean useLinearFiltering, boolean useMipmaps)

@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.lwjgl.system.glfw.WindowCallback;
 
-import tetzlaff.window.Window;
 import tetzlaff.window.listeners.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.glfw.GLFW.*;

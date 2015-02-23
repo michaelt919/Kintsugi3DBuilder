@@ -3,7 +3,6 @@ package tetzlaff.ulf;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
@@ -22,7 +21,7 @@ public class ULFRenderer implements ULFDrawable
 {
     private static OpenGLProgram program;
     
-    private String vsetFile;
+    private File vsetFile;
     private UnstructuredLightField lightField;
 	private OpenGLContext context;
     private OpenGLRenderable renderable;
@@ -32,10 +31,10 @@ public class ULFRenderer implements ULFDrawable
     
     private boolean resampleRequested;
     private int resampleSize;
-    private String resampleVSETFile;
-    private String resampleExportPath;
+    private File resampleVSETFile;
+    private File resampleExportPath;
 
-    public ULFRenderer(OpenGLContext context, String vsetFile, Trackball trackball)
+    public ULFRenderer(OpenGLContext context, File vsetFile, Trackball trackball)
     {
     	this.context = context;
     	this.vsetFile = vsetFile;
@@ -149,7 +148,7 @@ public class ULFRenderer implements ULFDrawable
         lightField.deleteOpenGLResources();
     }
     
-    public String getVSETFileName()
+    public File getVSETFile()
     {
     	return this.vsetFile;
     }
@@ -214,7 +213,7 @@ public class ULFRenderer implements ULFDrawable
 	}
 	
 	@Override
-	public void requestResample(int size, String targetVSETFile, String exportPath) throws IOException
+	public void requestResample(int size, File targetVSETFile, File exportPath) throws IOException
 	{
 		this.resampleRequested = true;
 		this.resampleSize = size;
@@ -253,14 +252,14 @@ public class ULFRenderer implements ULFDrawable
 	    	
 	    	File exportFile = new File(resampleExportPath, targetViewSet.getImageFileName(i));
 	    	exportFile.getParentFile().mkdirs();
-	        framebuffer.saveColorBufferToFile(0, "PNG", exportFile.getPath());
+	        framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
 	        
 	        this.callback.setProgress((double) i / (double) targetViewSet.getCameraPoseCount());
 		}
 		
-		Files.copy(new File(resampleVSETFile).toPath(), 
-			new File(resampleExportPath, new File(resampleVSETFile).getName()).toPath());
-		Files.copy(new File(lightField.viewSet.getGeometryFilePath()).toPath(), 
-			new File(resampleExportPath, lightField.viewSet.getGeometryFileName()).toPath());
+		Files.copy(resampleVSETFile.toPath(), 
+			new File(resampleExportPath, resampleVSETFile.getName()).toPath());
+		Files.copy(lightField.viewSet.getGeometryFile().toPath(), 
+			new File(resampleExportPath, lightField.viewSet.getGeometryFile().getName()).toPath());
 	}
 }

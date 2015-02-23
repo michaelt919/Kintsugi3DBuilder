@@ -10,10 +10,8 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
-import org.lwjgl.system.glfw.ErrorCallback;
 import org.lwjgl.system.glfw.GLFWvidmode;
 import org.lwjgl.system.glfw.WindowCallback;
-import org.lwjgl.system.glfw.WindowCallbackAdapter;
 import org.lwjgl.system.glfw.ErrorCallback.StrAdapter;
 
 import tetzlaff.gl.Context;
@@ -74,6 +72,12 @@ public class GLFWWindow extends OpenGLContext implements Window, Context, EventP
         }
  
         glfwDefaultWindowHints();
+        
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
         glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
         glfwWindowHint(GLFW_SAMPLES, multisamples);
@@ -103,6 +107,7 @@ public class GLFWWindow extends OpenGLContext implements Window, Context, EventP
         glfwSwapInterval(1);
         
         GLContext.createFromCurrent();
+        System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
 
         if (multisamples > 0)
         {
