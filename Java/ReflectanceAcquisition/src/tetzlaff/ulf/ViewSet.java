@@ -24,7 +24,7 @@ public class ViewSet
 	private List<Projection> cameraProjectionList;
 	private List<Integer> cameraProjectionIndexList;
 	private List<String> imageFileNames;
-	private String filePath;
+	private File filePath;
 	
 	private OpenGLUniformBuffer cameraPoseBuffer;
 	private OpenGLUniformBuffer cameraProjectionBuffer;
@@ -38,7 +38,7 @@ public class ViewSet
 		List<Projection> cameraProjectionList,
 		List<Integer> cameraProjectionIndexList,
 		List<String> imageFileNames, 
-		String imageFilePath,
+		File imageFilePath,
 		boolean loadImages,
 		float recommendedNearPlane,
 		float recommendedFarPlane) throws IOException
@@ -118,12 +118,12 @@ public class ViewSet
 			Date timestamp = new Date();
 			
 			// Read a single image to get the dimensions for the texture array
-			BufferedImage img = ImageIO.read(new FileInputStream(imageFilePath + "\\" + imageFileNames.get(0)));
+			BufferedImage img = ImageIO.read(new FileInputStream(new File(imageFilePath, imageFileNames.get(0))));
 			this.textureArray = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFileNames.size(), true, true);
 			
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
-				this.textureArray.loadLayer(i, imageFilePath + "\\" + imageFileNames.get(i), true);
+				this.textureArray.loadLayer(i, new File(imageFilePath, imageFileNames.get(i)), true);
 			}
 
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -138,11 +138,11 @@ public class ViewSet
 		textureArray.delete();
 	}
 
-	public static ViewSet loadFromVSETFile(String filename, boolean loadImages) throws IOException
+	public static ViewSet loadFromVSETFile(File file, boolean loadImages) throws IOException
 	{
 		Date timestamp = new Date();
 		
-		InputStream input = new FileInputStream(filename);
+		InputStream input = new FileInputStream(file);
 		Scanner scanner = new Scanner(input);
 		
 		float recommendedNearPlane = 0.0f;
@@ -252,7 +252,7 @@ public class ViewSet
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
 		return new ViewSet(
-			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, imageFileNames, new File(filename).getParent(),
+			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, imageFileNames, file.getParentFile(),
 			loadImages, recommendedNearPlane, recommendedFarPlane);
 	}
 
@@ -266,9 +266,9 @@ public class ViewSet
 		return "manifold.obj"; // TODO
 	}
 	
-	public String getGeometryFilePath()
+	public File getGeometryFile()
 	{
-		return new File(this.filePath, "manifold.obj").getPath(); // TODO
+		return new File(this.filePath, "manifold.obj"); // TODO
 	}
 	
 	public String getImageFileName(int poseIndex)
@@ -276,9 +276,9 @@ public class ViewSet
 		return this.imageFileNames.get(poseIndex);
 	}
 
-	public String getImageFilePath(int poseIndex) 
+	public File getImageFile(int poseIndex) 
 	{
-		return new File(this.filePath, this.imageFileNames.get(poseIndex)).getPath();
+		return new File(this.filePath, this.imageFileNames.get(poseIndex));
 	}
 
 	public Projection getCameraProjection(int projectionIndex) 

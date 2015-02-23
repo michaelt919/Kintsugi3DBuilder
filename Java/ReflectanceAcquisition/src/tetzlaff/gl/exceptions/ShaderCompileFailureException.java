@@ -2,6 +2,8 @@ package tetzlaff.gl.exceptions;
 
 public class ShaderCompileFailureException extends RuntimeException 
 {
+	private static final long serialVersionUID = 7556469381337373536L;
+
 	public ShaderCompileFailureException() {
 		super();
 		// TODO Auto-generated constructor stub

@@ -8,9 +8,7 @@ import java.util.Date;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject;
@@ -18,7 +16,6 @@ import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLResource;
 import tetzlaff.gl.opengl.OpenGLTextureArray;
-import tetzlaff.gl.opengl.OpenGLVertexBuffer;
 import tetzlaff.ulf.UnstructuredLightField;
 import tetzlaff.window.glfw.GLFWWindow;
 
@@ -45,9 +42,9 @@ public class TexGenProgram
     	
         try
         {
-	    	OpenGLProgram worldToTextureProgram = new OpenGLProgram(new File("shaders\\texspace.vert"), new File("shaders\\projtex.frag"));
-    		OpenGLProgram modelFitProgram = new OpenGLProgram(new File("shaders\\texspace.vert"), new File("shaders\\modelfit.frag"));
-    		OpenGLProgram specularDebugProgram = new OpenGLProgram(new File("shaders\\texspace.vert"), new File("shaders\\speculardebug.frag"));
+	    	OpenGLProgram worldToTextureProgram = new OpenGLProgram(new File("shaders", "texspace.vert"), new File("shaders", "projtex.frag"));
+    		OpenGLProgram modelFitProgram = new OpenGLProgram(new File("shaders", "texspace.vert"), new File("shaders", "modelfit.frag"));
+    		OpenGLProgram specularDebugProgram = new OpenGLProgram(new File("shaders", "texspace.vert"), new File("shaders", "speculardebug.frag"));
     		
     		JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
     		fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
@@ -55,8 +52,8 @@ public class TexGenProgram
     		
     		if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
     		{
-    	    	String vsetFile = fileChooser.getSelectedFile().getPath();
-    	    	String lightFieldDirectory = fileChooser.getSelectedFile().getParent();
+    	    	File vsetFile = fileChooser.getSelectedFile();
+    	    	File lightFieldDirectory = vsetFile.getParentFile();
     	    	UnstructuredLightField lightField = UnstructuredLightField.loadFromVSETFile(vsetFile);
     		
 	    		lightField.settings.setOcclusionBias(0.02f); // For the cube test
@@ -79,7 +76,7 @@ public class TexGenProgram
 		    	worldToTextureRenderable.program().setUniform("occlusionEnabled", lightField.settings.isOcclusionEnabled());
 		    	worldToTextureRenderable.program().setUniform("occlusionBias", lightField.settings.getOcclusionBias());
 		    	
-		    	new File(lightFieldDirectory + "\\output\\debug\\diffuse\\projpos").mkdirs();
+		    	new File(lightFieldDirectory, "output/debug/diffuse/projpos").mkdirs();
 		    	
 		    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
 		    	{
@@ -92,8 +89,8 @@ public class TexGenProgram
 		    		worldToTextureFBO.clearDepthBuffer();
 		    		worldToTextureRenderable.draw(PrimitiveMode.TRIANGLES, worldToTextureFBO);
 		    		
-		    		//worldToTextureFBO.saveColorBufferToFile(0, "PNG", String.format(lightFieldDirectory + "\\output\\debug\\diffuse\\%04d.png", i));
-		    		//worldToTextureFBO.saveColorBufferToFile(1, "PNG", String.format(lightFieldDirectory + "\\output\\debug\\diffuse\\projpos\\%04d.png", i));
+		    		worldToTextureFBO.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory, String.format("output/debug/diffuse/%04d.png", i)));
+		    		worldToTextureFBO.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory, String.format("output/debug/diffuse/projpos/%04d.png", i)));
 		    	}		    	
 		    	
 		    	worldToTextureFBO.delete();
@@ -126,7 +123,7 @@ public class TexGenProgram
 		    	
 		    	OpenGLFramebufferObject framebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 8, false);
 		    	
-		    	new File(lightFieldDirectory + "\\output\\textures").mkdirs();
+		    	new File(lightFieldDirectory, "output/textures").mkdirs();
 		    	
 		    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -145,14 +142,14 @@ public class TexGenProgram
 		    	
 		        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 		        
-		        framebuffer.saveColorBufferToFile(0, "PNG", lightFieldDirectory + "\\output\\textures\\diffuse.png");
-		        framebuffer.saveColorBufferToFile(1, "PNG", lightFieldDirectory + "\\output\\textures\\normal.png");
-		        framebuffer.saveColorBufferToFile(2, "PNG", lightFieldDirectory + "\\output\\textures\\specular.png");
-		        framebuffer.saveColorBufferToFile(3, "PNG", lightFieldDirectory + "\\output\\textures\\roughness.png");
-		        framebuffer.saveColorBufferToFile(4, "PNG", lightFieldDirectory + "\\output\\debug\\debug0.png");
-		        framebuffer.saveColorBufferToFile(5, "PNG", lightFieldDirectory + "\\output\\debug\\debug1.png");
-		        framebuffer.saveColorBufferToFile(6, "PNG", lightFieldDirectory + "\\output\\debug\\debug2.png");
-		        framebuffer.saveColorBufferToFile(7, "PNG", lightFieldDirectory + "\\output\\debug\\debug3.png");
+		        framebuffer.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory, "output/textures/diffuse.png"));
+		        framebuffer.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory, "output/textures/normal.png"));
+		        framebuffer.saveColorBufferToFile(2, "PNG", new File(lightFieldDirectory, "output/textures/specular.png"));
+		        framebuffer.saveColorBufferToFile(3, "PNG", new File(lightFieldDirectory, "output/textures/roughness.png"));
+		        framebuffer.saveColorBufferToFile(4, "PNG", new File(lightFieldDirectory, "output/debug/debug0.png"));
+		        framebuffer.saveColorBufferToFile(5, "PNG", new File(lightFieldDirectory, "output/debug/debug1.png"));
+		        framebuffer.saveColorBufferToFile(6, "PNG", new File(lightFieldDirectory, "output/debug/debug2.png"));
+		        framebuffer.saveColorBufferToFile(7, "PNG", new File(lightFieldDirectory, "output/debug/debug3.png"));
 		        
 		        System.out.println();
 		        int[] debug1Data = framebuffer.readColorBufferARGB(5, debugPixelX, debugPixelY, 1, 1);
@@ -191,13 +188,13 @@ public class TexGenProgram
 		    	specularDebugRenderable.program().setUniform("gamma", gamma);
 		    	specularDebugRenderable.program().setUniform("diffuseRemovalFactor", diffuseRemovalFactor);
 		    	
-		    	new File(lightFieldDirectory + "\\output\\debug\\specular\\rDotV").mkdirs();
+		    	new File(lightFieldDirectory, "output/debug/specular/rDotV").mkdirs();
 		    	
 		    	//ulfToTexContext.setAlphaBlendingFunction(new AlphaBlendingFunction(
 		    	//		AlphaBlendingFunction.Weight.SRC_ALPHA, 
 		    	//		AlphaBlendingFunction.Weight.ONE_MINUS_SRC_ALPHA));
 		    	
-		    	PrintStream debugInfo = new PrintStream(lightFieldDirectory + "\\output\\debug\\debugInfo.txt");
+		    	PrintStream debugInfo = new PrintStream(new File(lightFieldDirectory, "output/debug/debugInfo.txt"));
 		    	
 		    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
 		    	{
@@ -208,8 +205,8 @@ public class TexGenProgram
 		    		specularDebugFBO.clearDepthBuffer();
 		    		specularDebugRenderable.draw(PrimitiveMode.TRIANGLES, specularDebugFBO);
 		    		
-		    		//specularDebugFBO.saveColorBufferToFile(0, "PNG", String.format(lightFieldDirectory + "\\output\\debug\\specular\\%04d.png", i));
-		    		//specularDebugFBO.saveColorBufferToFile(1, "PNG", String.format(lightFieldDirectory + "\\output\\debug\\specular\\rDotV\\%04d.png", i));
+		    		//specularDebugFBO.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory + String.format("output/debug/specular/%04d.png", i)));
+		    		//specularDebugFBO.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory + String.format("output/debug/specular/rDotV/%04d.png", i)));
 		    		
 		    		int[] colorData = specularDebugFBO.readColorBufferARGB(0, debugPixelX, debugPixelY, 1, 1);
 		    		int[] rDotVData = specularDebugFBO.readColorBufferARGB(1, debugPixelX, debugPixelY, 1, 1);

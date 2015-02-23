@@ -1,5 +1,6 @@
 package tetzlaff.ulf;
 
+import java.io.File;
 import java.io.IOException;
 
 import tetzlaff.gl.helpers.Trackball;
@@ -7,19 +8,21 @@ import tetzlaff.gl.opengl.OpenGLContext;
 
 public class ULFRendererList extends ULFDrawableListModel
 {
+	private static final long serialVersionUID = -8199166231586786343L;
+
 	public ULFRendererList(OpenGLContext context, Trackball trackball) 
 	{
 		super(context, trackball);
 	}
 	
 	@Override
-	protected ULFRenderer createFromVSETFile(String vsetFile) throws IOException
+	protected ULFRenderer createFromVSETFile(File vsetFile) throws IOException
 	{
 		return new ULFRenderer(context, vsetFile, trackball);
 	}
 	
 	@Override
-	protected ULFMorphRenderer createMorphFromLFMFile(String lfmFile) throws IOException
+	protected ULFMorphRenderer createMorphFromLFMFile(File lfmFile) throws IOException
 	{
 		return new ULFMorphRenderer(context, lfmFile, trackball);
 	}

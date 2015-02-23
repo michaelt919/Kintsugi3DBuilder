@@ -1,7 +1,6 @@
 package tetzlaff.gl;
 
 import tetzlaff.gl.helpers.*;
-import tetzlaff.gl.opengl.OpenGLUniformBuffer;
 
 public interface Program<ShaderType, TextureType, UniformBufferType>
 {

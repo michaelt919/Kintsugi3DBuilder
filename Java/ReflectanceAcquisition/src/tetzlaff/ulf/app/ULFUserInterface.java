@@ -195,7 +195,7 @@ public class ULFUserInterface
 			{
 				try 
 				{
-					model.addFromVSETFile(fileChooser.getSelectedFile().getPath());
+					model.addFromVSETFile(fileChooser.getSelectedFile());
 					loadingBar.setIndeterminate(true);
 					loadingFrame.setVisible(true);
 				} 
@@ -215,7 +215,7 @@ public class ULFUserInterface
 			{
 				try 
 				{
-					model.addMorphFromLFMFile(fileChooser.getSelectedFile().getPath());
+					model.addMorphFromLFMFile(fileChooser.getSelectedFile());
 					loadingBar.setIndeterminate(true);
 					loadingFrame.setVisible(true);
 				} 
@@ -247,8 +247,8 @@ public class ULFUserInterface
 						loadingFrame.setVisible(true);
 						model.getSelectedItem().requestResample(
 							(int)Math.round((Double)resampleSizeSpinner.getValue()), 
-							vsetFileChooser.getSelectedFile().getPath(), 
-							exportFileChooser.getSelectedFile().getPath());
+							vsetFileChooser.getSelectedFile(), 
+							exportFileChooser.getSelectedFile());
 					} 
 					catch (IOException ex) 
 					{

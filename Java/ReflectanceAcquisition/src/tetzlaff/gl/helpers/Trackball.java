@@ -5,7 +5,6 @@ import tetzlaff.window.ModifierKeys;
 import tetzlaff.window.MouseButtonState;
 import tetzlaff.window.Window;
 import tetzlaff.window.WindowSize;
-import tetzlaff.window.glfw.WindowListenerManager;
 import tetzlaff.window.listeners.CursorPositionListener;
 import tetzlaff.window.listeners.MouseButtonPressListener;
 import tetzlaff.window.listeners.MouseButtonReleaseListener;

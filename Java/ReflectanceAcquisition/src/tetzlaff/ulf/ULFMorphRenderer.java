@@ -13,7 +13,7 @@ import tetzlaff.gl.opengl.OpenGLContext;
 public class ULFMorphRenderer implements ULFDrawable
 {
 	private OpenGLContext context;
-    private String lfmFile;
+    private File lfmFile;
     private Trackball trackball;
     private String id;
 
@@ -21,13 +21,13 @@ public class ULFMorphRenderer implements ULFDrawable
 	private List<ULFRenderer> stages;
 	private int currentStage;
 
-	public ULFMorphRenderer(OpenGLContext context, String lfmFile, Trackball trackball) throws FileNotFoundException 
+	public ULFMorphRenderer(OpenGLContext context, File lfmFile, Trackball trackball) throws FileNotFoundException 
 	{
 		this.context = context;
 		this.lfmFile = lfmFile;
 		this.trackball = trackball;
 		
-		this.id = new File(lfmFile).getParentFile().getName();
+		this.id = lfmFile.getParentFile().getName();
 		
 		this.stages = new ArrayList<ULFRenderer>();
 		this.currentStage = 0;
@@ -53,19 +53,19 @@ public class ULFMorphRenderer implements ULFDrawable
 	{
 		try 
 		{
-			Scanner scanner = new Scanner(new File(lfmFile));
-			String directoryPath = new File(lfmFile).getParent();
+			Scanner scanner = new Scanner(lfmFile);
+			File directory = lfmFile.getParentFile();
 			while (scanner.hasNextLine())
 			{
-				String vsetFile = scanner.nextLine();
-				stages.add(new ULFRenderer(context, directoryPath + "/" + vsetFile, trackball));
+				String vsetFileName = scanner.nextLine();
+				stages.add(new ULFRenderer(context, new File(directory, vsetFileName), trackball));
 			}
 			scanner.close();
 			
 			int stagesLoaded = 0;
 			for(ULFRenderer stage : stages)
 			{
-				System.out.println(stage.getVSETFileName());
+				System.out.println(stage.getVSETFile());
 				callback.setProgress((double)stagesLoaded / (double)stages.size());
 				stage.initialize();
 				stagesLoaded++;
@@ -181,7 +181,7 @@ public class ULFMorphRenderer implements ULFDrawable
 	}
 
 	@Override
-	public void requestResample(int size, String targetVSETFile, String exportPath) throws IOException 
+	public void requestResample(int size, File targetVSETFile, File exportPath) throws IOException 
 	{
 		throw new UnsupportedOperationException();
 	}

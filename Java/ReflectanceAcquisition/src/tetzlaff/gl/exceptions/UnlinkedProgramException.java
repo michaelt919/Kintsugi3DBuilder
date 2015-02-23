@@ -2,6 +2,8 @@ package tetzlaff.gl.exceptions;
 
 public class UnlinkedProgramException extends IllegalStateException 
 {
+	private static final long serialVersionUID = 7045695222299534322L;
+
 	public UnlinkedProgramException() {
 		super();
 		// TODO Auto-generated constructor stub

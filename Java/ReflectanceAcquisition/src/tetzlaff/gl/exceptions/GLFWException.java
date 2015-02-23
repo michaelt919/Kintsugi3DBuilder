@@ -2,6 +2,7 @@ package tetzlaff.gl.exceptions;
 
 public class GLFWException extends RuntimeException 
 {
+	private static final long serialVersionUID = -9045950594133572264L;
 
 	public GLFWException() 
 	{

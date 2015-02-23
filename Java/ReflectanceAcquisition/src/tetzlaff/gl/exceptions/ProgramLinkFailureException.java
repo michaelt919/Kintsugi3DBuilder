@@ -2,6 +2,8 @@ package tetzlaff.gl.exceptions;
 
 public class ProgramLinkFailureException extends RuntimeException 
 {
+	private static final long serialVersionUID = 8084771613401908824L;
+
 	public ProgramLinkFailureException() {
 		super();
 		// TODO Auto-generated constructor stub
