@@ -27,7 +27,7 @@ public class OpenGLFramebufferObject
 	private OpenGLFramebufferAttachment stencilAttachment;
 	private OpenGLFramebufferAttachment depthStencilAttachment;
 	
-	public OpenGLFramebufferObject(int width, int height, int colorAttachmentCount,
+	public OpenGLFramebufferObject(int width, int height, int colorAttachmentCount, boolean useFloatingPointColorAttachments,
 			boolean generateDepthAttachment, boolean generateStencilAttachment, boolean combineDepthAndStencil)
 	{
 		this.fboId = glGenFramebuffers();
@@ -47,29 +47,32 @@ public class OpenGLFramebufferObject
 			throw new IllegalArgumentException("Too many color attachments specified - maximum is " + GL_MAX_COLOR_ATTACHMENTS + ".");
 		}
 		
+		int internalFormat = useFloatingPointColorAttachments ? GL_RGBA32F : GL_RGBA8;
+		int type = useFloatingPointColorAttachments ? GL_FLOAT : GL_UNSIGNED_BYTE;
+		
 		this.colorAttachments = new OpenGLFramebufferAttachment[colorAttachmentCount];
 		IntBuffer drawBufferList = BufferUtils.createIntBuffer(colorAttachmentCount);
 		
 		for (int i = 0; i < colorAttachmentCount; i++)
 		{
-			this.colorAttachments[i] = createAttachment(GL_COLOR_ATTACHMENT0 + i, GL_RGBA, GL_RGBA);
+			this.colorAttachments[i] = createAttachment(GL_COLOR_ATTACHMENT0 + i, internalFormat, GL_RGBA, type);
 			drawBufferList.put(i, GL_COLOR_ATTACHMENT0 + i);
 		}
 		
 		if (generateDepthAttachment && generateStencilAttachment && combineDepthAndStencil)
 		{
-			this.depthStencilAttachment = createAttachment(GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL);
+			this.depthStencilAttachment = createAttachment(GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL, GL_UNSIGNED_BYTE);
 		}
 		else
 		{
 			if (generateDepthAttachment)
 			{
-				this.depthAttachment = createAttachment(GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT);
+				this.depthAttachment = createAttachment(GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE);
 			}
 			
 			if (generateStencilAttachment)
 			{
-				this.stencilAttachment = createAttachment(GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX, GL_STENCIL_INDEX);
+				this.stencilAttachment = createAttachment(GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE);
 			}
 		}
 		
@@ -86,10 +89,10 @@ public class OpenGLFramebufferObject
 		openGLErrorCheck();
 	}
 	
-	private OpenGLTexture createAttachment(int attachmentType, int internalFormat, int format)
+	private OpenGLTexture createAttachment(int attachmentType, int internalFormat, int format, int type)
 	{
 		//FramebufferAttachment attachment = new OpenGLRenderbuffer(0, internalFormat, this.nativeWidth, this.nativeHeight);
-		OpenGLTexture attachment = new OpenGLTexture2D(internalFormat, this.nativeWidth, this.nativeHeight, format);
+		OpenGLTexture attachment = new OpenGLTexture2D(internalFormat, this.nativeWidth, this.nativeHeight, format, type);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
 		openGLErrorCheck();
 		attachment.attachToDrawFramebuffer(attachmentType, 0);
@@ -97,14 +100,15 @@ public class OpenGLFramebufferObject
 		return attachment;
 	}
 	
-	public OpenGLFramebufferObject(int width, int height, int colorAttachmentCount, boolean generateDepthAttachment)
+	public OpenGLFramebufferObject(int width, int height, int colorAttachmentCount, 
+			boolean useFloatingPointColorAttachments, boolean generateDepthAttachment)
 	{
-		this(width, height, colorAttachmentCount, generateDepthAttachment, false, false);
+		this(width, height, colorAttachmentCount, useFloatingPointColorAttachments, generateDepthAttachment, false, false);
 	}
 	
 	public OpenGLFramebufferObject(int width, int height, int colorAttachmentCount)
 	{
-		this(width, height, colorAttachmentCount, true);
+		this(width, height, colorAttachmentCount, false, true);
 	}
 	
 	public OpenGLFramebufferObject(int width, int height)
