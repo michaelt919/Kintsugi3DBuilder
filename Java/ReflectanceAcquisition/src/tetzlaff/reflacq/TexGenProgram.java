@@ -37,7 +37,7 @@ public class TexGenProgram
     	float guessSpecularWeight = 10.0f;
     	int specularRange = 10; // +/- n pixels in each direction
     	float expectedWeightSum = 0.125f;
-    	int fittingIterations = 100;
+    	int fittingIterations = 10;
     	
     	int debugPixelX = 512, debugPixelY = 1004;
     	
@@ -206,8 +206,8 @@ public class TexGenProgram
 			        specularFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug1.png", i)));
 			        specularFitFramebuffer.saveColorBufferToFile(4, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug2.png", i)));
 			        specularFitFramebuffer.saveColorBufferToFile(5, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug3.png", i)));
-			        specularFitFramebuffer.saveColorBufferToFile(6, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug4.png", i)));
-			        specularFitFramebuffer.saveColorBufferToFile(7, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug5.png", i)));
+//			        specularFitFramebuffer.saveColorBufferToFile(6, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug4.png", i)));
+//			        specularFitFramebuffer.saveColorBufferToFile(7, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug5.png", i)));
 			        
 			        ulfToTexContext.swapBuffers(); // Signal the OS that we're still here (prevents TDR errors)
 		        }

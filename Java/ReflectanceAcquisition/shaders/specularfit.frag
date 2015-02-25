@@ -226,23 +226,48 @@ void main()
     
     vec2 sSolution = inverse(sA) * sB;
     vec3 specularAvg = specularSum.rgb / (specularSum.r + specularSum.g + specularSum.b);
-    specularColor =  vec4(pow(
-        min(1.0, sA[1][1] / expectedWeightSum) * min(3.0, exp(sSolution[1])) * specularAvg,
-        vec3(1 / gamma)), 1.0);
+    vec3 specularColorPreGamma = min(1.0, sA[1][1] / expectedWeightSum) * 
+        min(3.0, exp(sSolution[1])) * specularAvg;
+    float roughness = inversesqrt(2 * sSolution[0]);
+    specularColor =  vec4(pow(specularColorPreGamma, vec3(1 / gamma)), 1.0);
     if (specularColor.r > 1 / 256.0 || specularColor.g > 1 / 256.0 || specularColor.b > 1 / 256.0)
     {
-        specularRoughness = vec4(vec3(inversesqrt(2 * sSolution[0])), 1.0);
+        specularRoughness = vec4(vec3(roughness), 1.0);
     }
     else
     {
         specularRoughness = vec4(0.0, 0.0, 0.0, 1.0);
     }
     
-    debug0 = vec4(specularAvg, 1.0);
-    debug1 = vec4(sSolution[0] / 4, (6 + sSolution[1]) / 8, 0.0, 1.0);
-    debug2 = vec4(-sA[0][0], sA[0][1], sA[1][1], 1.0);
-    debug3 = vec4(-sB[0], sB[1], 0.0, 1.0);
+    float sumSqError = 0.0;
+    normal = getNormalVector();
+    diffuseColor = getDiffuseColor();
+    for (int i = 0; i < textureCount; i++)
+    {
+        vec3 view = getViewVector(i);
+        vec3 light = getLightVector(i);
+        vec3 diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal));
+        vec3 reflection = getReflectionVector(normal, light);
+        float rDotV = max(0.0, dot(reflection, view));
+        vec3 specularContrib = specularColorPreGamma * 
+            exp((rDotV - 1 / rDotV) / (2 * roughness * roughness));
+        vec4 color = getColor(i);
+        vec3 error = min(vec3(1.0), diffuseContrib + specularContrib) - color.rgb;
+        sumSqError += dot(error, error);
+        
+        debug2 = vec4(diffuseContrib, 1.0);
+        debug3 = vec4(specularContrib, 1.0);
+        debug4 = vec4(error * error, 1.0);
+    }
     
-    debug4 = vec4((getRelativePositionFromDepthBufferWithOffset(0, ivec2(0)) + vec3(2,2,12)) / 4, 1.0);
-    debug5 = vec4(((cameraPoses[0] * vec4(fPosition, 1.0)).xyz + vec3(2,2,12)) / 4, 1.0);
+    debug0 = vec4(vec3(sumSqError / (3 * textureCount)), 1.0);
+    debug1 = vec4(vec3(sumSqError), 1.0);
+    
+    // debug0 = vec4(specularAvg, 1.0);
+    // debug1 = vec4(sSolution[0] / 4, (6 + sSolution[1]) / 8, 0.0, 1.0);
+    // debug2 = vec4(-sA[0][0], sA[0][1], sA[1][1], 1.0);
+    // debug3 = vec4(-sB[0], sB[1], 0.0, 1.0);
+    
+    // debug4 = vec4((getRelativePositionFromDepthBufferWithOffset(0, ivec2(0)) + vec3(2,2,12)) / 4, 1.0);
+    // debug5 = vec4(((cameraPoses[0] * vec4(fPosition, 1.0)).xyz + vec3(2,2,12)) / 4, 1.0);
 }
