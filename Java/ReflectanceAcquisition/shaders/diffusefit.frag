@@ -117,7 +117,7 @@ void main()
             {
                 vec3 view = getViewVector(i);
                 vec3 refl = getReflectionVector(prevNormal, light.xyz);
-                float rDotV = dot(refl, view.xyz);
+                float rDotV = max(0.0, dot(refl, view.xyz));
                 vec3 specularContrib = specularColor.rgb * 
                     exp((rDotV - 1 / rDotV) / (2 * specularRoughness * specularRoughness));
                 colorRemainder = vec4(max(vec3(0), 
