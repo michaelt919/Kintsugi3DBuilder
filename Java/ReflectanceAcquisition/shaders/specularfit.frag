@@ -18,7 +18,7 @@ uniform sampler2D previousError;
 
 uniform float guessSpecularRoughness;
 uniform int multisampleRange;
-uniform float multisampleDistanceFactor;
+//uniform float multisampleDistanceFactor;
 uniform float expectedWeightSum;
 uniform float diffuseRemovalFactor;
 uniform float specularRoughnessCap;
@@ -193,7 +193,9 @@ void main()
                         color = getColorWithOffset(i, offset);
                         if (color.a > 0.0)
                         {
-                            float effectiveWeight = 1 / (getDistanceByOffset(i, offset) + 1);
+                            // float effectiveWeight = weight * multisampleDistanceFactor / 
+                                // (getDistanceByOffset(i, offset) + multisampleDistanceFactor);
+                            float effectiveWeight = weight;
                             view = getViewVectorWithOffset(i, offset);
                             light = getLightVectorWithOffset(i, offset);
                             normal = getNormalVectorWithOffset(offset);
@@ -219,14 +221,14 @@ void main()
                             {
                                 u = rDotV - 1 / rDotV;
                                 
-                                sA += weight * color.a * 
+                                sA += effectiveWeight * color.a * 
                                     pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
                                     intensity * outerProduct(vec2(u, 1), vec2(u, 1));
-                                sB += weight * color.a * 
+                                sB += effectiveWeight * color.a * 
                                     pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
                                     intensity * log(intensity) * vec2(u, 1);
                                 
-                                specularSum += weight * color.a * 
+                                specularSum += effectiveWeight * color.a * 
                                     pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
                                     intensity * colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
                             }
@@ -237,11 +239,21 @@ void main()
         }
     }
     
-    vec2 sSolution = inverse(sA) * sB;
-    vec3 specularAvg = specularSum.rgb / (specularSum.r + specularSum.g + specularSum.b);
-    vec3 specularColorPreGamma = min(vec3(1.0), min(1.0, sA[1][1] / expectedWeightSum) * 
-        min(3.0, exp(sSolution[1])) * specularAvg);
-    float roughness = min(1.0, inversesqrt(2 * sSolution[0]));
+    vec3 specularColorPreGamma;
+    float roughness;
+    if (determinant(sA) == 0.0)
+    {
+        specularColorPreGamma = vec3(0.0);
+        roughness = 0.0;
+    }
+    else
+    {
+        vec2 sSolution = inverse(sA) * sB;
+        vec3 specularAvg = specularSum.rgb / (specularSum.r + specularSum.g + specularSum.b);
+        specularColorPreGamma = min(vec3(1.0), min(1.0, sA[1][1] / expectedWeightSum) * 
+            min(3.0, exp(sSolution[1])) * specularAvg);
+        roughness = min(1.0, inversesqrt(2 * sSolution[0]));
+    }
     
     float sumSqError = 0.0;
     float sumErrorWeights = 0.0;
