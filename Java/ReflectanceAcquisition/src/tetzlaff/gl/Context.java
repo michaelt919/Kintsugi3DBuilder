@@ -6,6 +6,7 @@ public interface Context
 	
 	void makeContextCurrent();
 
+	void flush();
 	void swapBuffers();
 	
 	void destroy();
