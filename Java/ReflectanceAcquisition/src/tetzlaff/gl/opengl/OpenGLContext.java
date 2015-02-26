@@ -9,6 +9,13 @@ import tetzlaff.gl.Context;
 public abstract class OpenGLContext implements Context
 {
 	@Override
+	public void flush()
+	{
+		glFlush();
+		openGLErrorCheck();
+	}
+	
+	@Override
 	public void enableDepthTest()
 	{
 		glEnable(GL_DEPTH_TEST);

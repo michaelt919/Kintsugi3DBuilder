@@ -35,9 +35,11 @@ public class TexGenProgram
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
     	float guessSpecularRoughness = 0.5f;
     	float guessSpecularWeight = 10.0f;
-    	int specularRange = 10; // +/- n pixels in each direction
+    	int specularRange = 2; //10; // +/- n pixels in each direction
     	float expectedWeightSum = 0.125f;
     	int fittingIterations = 256;
+    	float specularRoughnessCap = 0.5f;
+    	float diffuseRemovalLead = 0.125f;
     	
     	int debugPixelX = 512, debugPixelY = 1004;
     	
@@ -132,6 +134,7 @@ public class TexGenProgram
 		    	specularFitRenderable.program().setUniform("guessSpecularRoughness", guessSpecularRoughness);
 		    	specularFitRenderable.program().setUniform("specularRange", specularRange);
 		    	specularFitRenderable.program().setUniform("expectedWeightSum", expectedWeightSum);
+		    	specularFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
 
 		    	OpenGLFramebufferObject diffuseFitBackFramebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 8, true, false);
 		    	OpenGLFramebufferObject diffuseFitFrontFramebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 8, true, false);
@@ -168,6 +171,7 @@ public class TexGenProgram
 		        {
 		        	System.out.println("Starting iteration " + i);
 			    	diffuseFitRenderable.program().setUniform("specularRemovalFactor", (float)i / (float)(fittingIterations - 1));
+			    	diffuseFitRenderable.program().setUniform("specularRoughnessCap", (float)i / (float)(fittingIterations - 1) * specularRoughnessCap);
 			    	diffuseFitRenderable.program().setTexture("diffuseEstimate", diffuseFitFrontFramebuffer.getColorAttachmentTexture(0));
 			    	diffuseFitRenderable.program().setTexture("normalEstimate", diffuseFitFrontFramebuffer.getColorAttachmentTexture(1));
 		        	diffuseFitRenderable.program().setTexture("specularColorEstimate", specularFitFramebuffer.getColorAttachmentTexture(0));
@@ -176,7 +180,7 @@ public class TexGenProgram
 			    	
 			        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitBackFramebuffer);
 
-			    	specularFitRenderable.program().setUniform("diffuseRemovalFactor", (float)i / (float)(fittingIterations - 1));
+			    	specularFitRenderable.program().setUniform("diffuseRemovalFactor", Math.min(1.0f, diffuseRemovalLead + (float)i / (float)(fittingIterations - 1)));
 			    	specularFitRenderable.program().setTexture("diffuseEstimate", diffuseFitBackFramebuffer.getColorAttachmentTexture(0));
 			    	specularFitRenderable.program().setTexture("normalEstimate", diffuseFitBackFramebuffer.getColorAttachmentTexture(1));
 			    	specularFitRenderable.program().setTexture("previousError", diffuseFitBackFramebuffer.getColorAttachmentTexture(2));
@@ -198,7 +202,7 @@ public class TexGenProgram
 			        diffuseFitBackFramebuffer = diffuseFitFrontFramebuffer;
 			        diffuseFitFrontFramebuffer = tmp;
 			        
-			    	if (i % 32 == 0)
+			    	if (i == 0 || (i >= fittingIterations / 2 && i % (fittingIterations / 16) == 0))
 			    	{
 				    	new File(lightFieldDirectory, String.format("output/debug/stages/%04d", i)).mkdirs();
 				    	
@@ -221,7 +225,7 @@ public class TexGenProgram
 	//			        specularFitFramebuffer.saveColorBufferToFile(7, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug5.png", i)));
 			    	}
 			        
-			        ulfToTexContext.swapBuffers(); // Signal the OS that we're still here (prevents TDR errors)
+			    	ulfToTexContext.flush();
 		        }
 
 		    	System.out.println("Model fitting completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
