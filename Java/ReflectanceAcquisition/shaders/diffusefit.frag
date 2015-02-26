@@ -19,6 +19,7 @@ uniform sampler2D roughnessEstimate;
 uniform sampler2D previousError;
 
 uniform float guessSpecularWeight;
+uniform float guessSpecularOrthoExp;
 uniform vec3 guessSpecularColor;
 uniform float specularRemovalFactor;
 uniform float specularRoughnessCap;
@@ -103,8 +104,10 @@ void main()
     }
     float avgIntensity = (sumColor.r + sumColor.g + sumColor.b) / sumColor.a;
     
-    mat4 dA = mat4(0);
-    mat4 dB = mat4(0);
+    //mat4 dA = mat4(0);
+    //mat4 dB = mat4(0);
+    mat3 dA = mat3(0);
+    mat3 dB = mat3(0);
     
     vec4 diffuseSum = prevDiffuseColor.a * vec4(prevDiffuseColor.rgb, 1.0);
     for (int i = 0; i < textureCount; i++)
@@ -112,7 +115,8 @@ void main()
         vec4 color = getColor(i);
         if (color.a > 0)
         {
-            vec4 light = vec4(getLightVector(i), 1.0);
+            //vec4 light = vec4(getLightVector(i), 1.0);
+            vec3 light = getLightVector(i);
             vec4 colorRemainder;
             
             if (prevDiffuseColor.a > 0)
@@ -139,7 +143,8 @@ void main()
             }
             
             dA += colorRemainder.a * outerProduct(light, light);
-            dB += colorRemainder.a * outerProduct(light, vec4(colorRemainder.rgb, 0.0));
+            //dB += colorRemainder.a * outerProduct(light, vec4(colorRemainder.rgb, 0.0));
+            dB += colorRemainder.a * outerProduct(light, colorRemainder.rgb);
         }
     }
     vec3 diffuseAvg = diffuseSum.rgb / (diffuseSum.r + diffuseSum.g + diffuseSum.b);
@@ -153,7 +158,8 @@ void main()
         if (ortho.x > 0 || ortho.y > 0 || ortho.z > 0)
         {
             mat3 colorBasis = mat3(diffuseAvg, guessSpecularColor, ortho);
-            float adjustedFixedSpecWeight = guessSpecularWeight * length(ortho) / 
+            float adjustedFixedSpecWeight = guessSpecularWeight * 
+                pow(length(ortho), guessSpecularOrthoExp) / 
                 (length(diffuseAvg) * length(guessSpecularColor));
             rgbWeights = (adjustedFixedSpecWeight * transpose(inverse(colorBasis))[0] + simpleWeights) / 
                 (1 + adjustedFixedSpecWeight);
@@ -171,13 +177,14 @@ void main()
         //diffuseRemovalMult = 0.0;
     }
     
-    vec4 dSolution = inverse(dA) * dB * vec4(rgbWeights, 0.0);
-    float ambientIntensity = dSolution.w;
+    //vec4 dSolution = inverse(dA) * dB * vec4(rgbWeights, 0.0);
+    vec3 dSolution = inverse(dA) * dB * rgbWeights;
+    //float ambientIntensity = dSolution.w;
     float diffuseIntensity = length(dSolution.xyz);
     vec3 normal = normalize(dSolution.xyz);
     vec3 diffuseColorPreGamma = min(vec3(1.0), diffuseAvg * diffuseIntensity);
     
-    debug1 = vec4(pow(diffuseAvg * dSolution.w, vec3(1 / gamma)), 1.0);
+    //debug1 = vec4(pow(diffuseAvg * dSolution.w, vec3(1 / gamma)), 1.0);
     
     float sumSqError = 0.0;
     for (int i = 0; i < textureCount; i++)
