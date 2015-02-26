@@ -34,12 +34,14 @@ public class TexGenProgram
     	float gamma = 1.0f; // 2.2f;
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
     	float guessSpecularRoughness = 0.5f;
+    	float guessSpecularOrthoExp = 4.0f;
     	float guessSpecularWeight = 10.0f;
-    	int specularRange = 2; //10; // +/- n pixels in each direction
+    	int multisampleRange = 2; //10; // +/- n pixels in each direction
+    	float multisampleDistanceFactor = 0.02f;
     	float expectedWeightSum = 0.125f;
     	int fittingIterations = 256;
     	float specularRoughnessCap = 0.5f;
-    	float diffuseRemovalLead = 0.125f;
+    	float diffuseRemovalLead = 0.0f;
     	
     	int debugPixelX = 512, debugPixelY = 1004;
     	
@@ -120,6 +122,7 @@ public class TexGenProgram
 		    	diffuseFitRenderable.program().setUniform("gamma", gamma);
 		    	diffuseFitRenderable.program().setUniform("guessSpecularColor", guessSpecularColor);
 		    	diffuseFitRenderable.program().setUniform("guessSpecularWeight", guessSpecularWeight);
+		    	diffuseFitRenderable.program().setUniform("guessSpecularOrthoExp", guessSpecularOrthoExp);
 		    	
 		    	OpenGLRenderable specularFitRenderable = new OpenGLRenderable(specularFitProgram);
 		    	
@@ -132,7 +135,8 @@ public class TexGenProgram
 		    	specularFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
 		    	specularFitRenderable.program().setUniform("gamma", gamma);
 		    	specularFitRenderable.program().setUniform("guessSpecularRoughness", guessSpecularRoughness);
-		    	specularFitRenderable.program().setUniform("specularRange", specularRange);
+		    	specularFitRenderable.program().setUniform("multisampleRange", multisampleRange);
+		    	specularFitRenderable.program().setUniform("multisampleDistanceFactor", multisampleDistanceFactor);
 		    	specularFitRenderable.program().setUniform("expectedWeightSum", expectedWeightSum);
 		    	specularFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
 
