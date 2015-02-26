@@ -17,7 +17,6 @@ import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLResource;
 import tetzlaff.gl.opengl.OpenGLTextureArray;
 import tetzlaff.ulf.UnstructuredLightField;
-import tetzlaff.window.Window;
 import tetzlaff.window.glfw.GLFWWindow;
 
 public class TexGenProgram
@@ -36,14 +35,12 @@ public class TexGenProgram
     	float guessSpecularRoughness = 0.5f;
     	float guessSpecularOrthoExp = 4.0f;
     	float guessSpecularWeight = 10.0f;
-    	int multisampleRange = 2; //10; // +/- n pixels in each direction
-    	float multisampleDistanceFactor = 0.02f;
-    	float expectedWeightSum = 0.125f;
+    	int multisampleRange = 5; // +/- n pixels in each direction
+    	float expectedWeightSum = 0.25f;
     	int fittingIterations = 256;
-    	float specularRoughnessCap = 0.5f;
-    	float diffuseRemovalLead = 0.0f;
+    	float specularRoughnessCap = 1.0f;
     	
-    	int debugPixelX = 512, debugPixelY = 1004;
+    	int debugPixelX = 400, debugPixelY = 524;
     	
         try
         {
@@ -136,7 +133,6 @@ public class TexGenProgram
 		    	specularFitRenderable.program().setUniform("gamma", gamma);
 		    	specularFitRenderable.program().setUniform("guessSpecularRoughness", guessSpecularRoughness);
 		    	specularFitRenderable.program().setUniform("multisampleRange", multisampleRange);
-		    	specularFitRenderable.program().setUniform("multisampleDistanceFactor", multisampleDistanceFactor);
 		    	specularFitRenderable.program().setUniform("expectedWeightSum", expectedWeightSum);
 		    	specularFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
 
@@ -174,8 +170,8 @@ public class TexGenProgram
 		        for (int i = 0; i < fittingIterations; i++)
 		        {
 		        	System.out.println("Starting iteration " + i);
-			    	diffuseFitRenderable.program().setUniform("specularRemovalFactor", (float)i / (float)(fittingIterations - 1));
-			    	diffuseFitRenderable.program().setUniform("specularRoughnessCap", (float)i / (float)(fittingIterations - 1) * specularRoughnessCap);
+			    	diffuseFitRenderable.program().setUniform("specularRemovalFactor", fittingIterations == 1 ? 0.0f : (float)i / (float)(fittingIterations - 1));
+			    	diffuseFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
 			    	diffuseFitRenderable.program().setTexture("diffuseEstimate", diffuseFitFrontFramebuffer.getColorAttachmentTexture(0));
 			    	diffuseFitRenderable.program().setTexture("normalEstimate", diffuseFitFrontFramebuffer.getColorAttachmentTexture(1));
 		        	diffuseFitRenderable.program().setTexture("specularColorEstimate", specularFitFramebuffer.getColorAttachmentTexture(0));
@@ -184,7 +180,7 @@ public class TexGenProgram
 			    	
 			        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitBackFramebuffer);
 
-			    	specularFitRenderable.program().setUniform("diffuseRemovalFactor", Math.min(1.0f, diffuseRemovalLead + (float)i / (float)(fittingIterations - 1)));
+			    	specularFitRenderable.program().setUniform("diffuseRemovalFactor", fittingIterations == 1 ? 1.0f : Math.min(1.0f, (float)i / (float)(fittingIterations - 1)));
 			    	specularFitRenderable.program().setTexture("diffuseEstimate", diffuseFitBackFramebuffer.getColorAttachmentTexture(0));
 			    	specularFitRenderable.program().setTexture("normalEstimate", diffuseFitBackFramebuffer.getColorAttachmentTexture(1));
 			    	specularFitRenderable.program().setTexture("previousError", diffuseFitBackFramebuffer.getColorAttachmentTexture(2));
@@ -206,28 +202,28 @@ public class TexGenProgram
 			        diffuseFitBackFramebuffer = diffuseFitFrontFramebuffer;
 			        diffuseFitFrontFramebuffer = tmp;
 			        
-			    	if (i == 0 || (i >= fittingIterations / 2 && i % (fittingIterations / 16) == 0))
-			    	{
-				    	new File(lightFieldDirectory, String.format("output/debug/stages/%04d", i)).mkdirs();
-				    	
-				        diffuseFitFrontFramebuffer.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuse.png", i)));
-				        diffuseFitFrontFramebuffer.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/normal.png", i)));
-				        diffuseFitFrontFramebuffer.saveColorBufferToFile(2, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseError.png", i)));
-				        //diffuseFitFrontFramebuffer.saveColorBufferToFile(3, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseDebug1.png", i)));
-				        //diffuseFitFrontFramebuffer.saveColorBufferToFile(4, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseDebug2.png", i)));
-				        //diffuseFitFrontFramebuffer.saveColorBufferToFile(5, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseDebug3.png", i)));
-				        //diffuseFitFrontFramebuffer.saveColorBufferToFile(6, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseDebug4.png", i)));
-				        //diffuseFitFrontFramebuffer.saveColorBufferToFile(7, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseDebug5.png", i)));
-	
-				        specularFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specular.png", i)));
-				        specularFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/roughness.png", i)));
-				        specularFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularError.png", i)));
-	//			        specularFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug1.png", i)));
-	//			        specularFitFramebuffer.saveColorBufferToFile(4, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug2.png", i)));
-	//			        specularFitFramebuffer.saveColorBufferToFile(5, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug3.png", i)));
-	//			        specularFitFramebuffer.saveColorBufferToFile(6, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug4.png", i)));
-	//			        specularFitFramebuffer.saveColorBufferToFile(7, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug5.png", i)));
-			    	}
+//			    	if (i == 0 || (i >= fittingIterations / 2 && (fittingIterations <= 16 || i % (fittingIterations / 16) == 0)))
+//			    	{
+//				    	new File(lightFieldDirectory, String.format("output/debug/stages/%04d", i)).mkdirs();
+//				    	
+//				        diffuseFitFrontFramebuffer.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuse.png", i)));
+//				        diffuseFitFrontFramebuffer.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/normal.png", i)));
+//				        diffuseFitFrontFramebuffer.saveColorBufferToFile(2, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseError.png", i)));
+//				        //diffuseFitFrontFramebuffer.saveColorBufferToFile(3, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseDebug1.png", i)));
+//				        //diffuseFitFrontFramebuffer.saveColorBufferToFile(4, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseDebug2.png", i)));
+//				        //diffuseFitFrontFramebuffer.saveColorBufferToFile(5, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseDebug3.png", i)));
+//				        //diffuseFitFrontFramebuffer.saveColorBufferToFile(6, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseDebug4.png", i)));
+//				        //diffuseFitFrontFramebuffer.saveColorBufferToFile(7, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/diffuseDebug5.png", i)));
+//	
+//				        specularFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specular.png", i)));
+//				        specularFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/roughness.png", i)));
+//				        specularFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularError.png", i)));
+//	//			        specularFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug1.png", i)));
+//	//			        specularFitFramebuffer.saveColorBufferToFile(4, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug2.png", i)));
+//	//			        specularFitFramebuffer.saveColorBufferToFile(5, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug3.png", i)));
+//	//			        specularFitFramebuffer.saveColorBufferToFile(6, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug4.png", i)));
+//	//			        specularFitFramebuffer.saveColorBufferToFile(7, "PNG", new File(lightFieldDirectory, String.format("output/debug/stages/%04d/specularDebug5.png", i)));
+//			    	}
 			        
 			    	ulfToTexContext.flush();
 		        }
@@ -279,60 +275,60 @@ public class TexGenProgram
 //	    		System.out.println();
 	    		
 		    	System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//		    	
-//		    	System.out.println("Generating specular debug info...");
-//		    	timestamp = new Date();
-//	    		
-//		    	OpenGLFramebufferObject specularDebugFBO = new OpenGLFramebufferObject(textureSize, textureSize, 2, false);
-//		    	OpenGLRenderable specularDebugRenderable = new OpenGLRenderable(specularDebugProgram);
 		    	
-//		    	Iterable<OpenGLResource> specularDebugResources = specularDebugRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
-//		    	specularDebugRenderable.program().setTexture("textures", imageTextures);
-//		    	specularDebugRenderable.program().setTexture("diffuse", diffuseFitFramebuffer.getColorAttachmentTexture(0));
-//		    	specularDebugRenderable.program().setTexture("normalMap", diffuseFitFramebuffer.getColorAttachmentTexture(1));
-//		    	specularDebugRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
-//		    	specularDebugRenderable.program().setUniform("gamma", gamma);
-//		    	specularDebugRenderable.program().setUniform("diffuseRemovalFactor", diffuseRemovalFactor);
-//		    	
-//		    	new File(lightFieldDirectory, "output/debug/specular/rDotV").mkdirs();
+		    	System.out.println("Generating specular debug info...");
+		    	timestamp = new Date();
+	    		
+		    	OpenGLFramebufferObject specularDebugFBO = new OpenGLFramebufferObject(textureSize, textureSize, 2, true, false);
+		    	OpenGLRenderable specularDebugRenderable = new OpenGLRenderable(specularDebugProgram);
+		    	
+		    	Iterable<OpenGLResource> specularDebugResources = specularDebugRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
+		    	specularDebugRenderable.program().setTexture("textures", imageTextures);
+		    	specularDebugRenderable.program().setTexture("diffuse", diffuseFitFrontFramebuffer.getColorAttachmentTexture(0));
+		    	specularDebugRenderable.program().setTexture("normalMap", diffuseFitFrontFramebuffer.getColorAttachmentTexture(1));
+		    	specularDebugRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
+		    	specularDebugRenderable.program().setUniform("gamma", gamma);
+		    	specularDebugRenderable.program().setUniform("diffuseRemovalFactor", 1.0f);
+		    	
+		    	new File(lightFieldDirectory, "output/debug/specular/rDotV").mkdirs();
 		    	
 		    	//ulfToTexContext.setAlphaBlendingFunction(new AlphaBlendingFunction(
 		    	//		AlphaBlendingFunction.Weight.SRC_ALPHA, 
 		    	//		AlphaBlendingFunction.Weight.ONE_MINUS_SRC_ALPHA));
 		    	
-//		    	PrintStream debugInfo = new PrintStream(new File(lightFieldDirectory, "output/debug/debugInfo.txt"));
-//		    	
-//		    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
-//		    	{
-//		    		specularDebugRenderable.program().setUniform("textureIndex", i);
-//		    		
-//		    		specularDebugFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//		    		specularDebugFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-//		    		specularDebugFBO.clearDepthBuffer();
-//		    		specularDebugRenderable.draw(PrimitiveMode.TRIANGLES, specularDebugFBO);
+		    	PrintStream debugInfo = new PrintStream(new File(lightFieldDirectory, "output/debug/debugInfo.txt"));
+		    	
+		    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
+		    	{
+		    		specularDebugRenderable.program().setUniform("textureIndex", i);
+		    		
+		    		specularDebugFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		specularDebugFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		specularDebugFBO.clearDepthBuffer();
+		    		specularDebugRenderable.draw(PrimitiveMode.TRIANGLES, specularDebugFBO);
 		    		
 		    		//specularDebugFBO.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory + String.format("output/debug/specular/%04d.png", i)));
 		    		//specularDebugFBO.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory + String.format("output/debug/specular/rDotV/%04d.png", i)));
 		    		
-//		    		int[] colorData = specularDebugFBO.readColorBufferARGB(0, debugPixelX, debugPixelY, 1, 1);
-//		    		int[] rDotVData = specularDebugFBO.readColorBufferARGB(1, debugPixelX, debugPixelY, 1, 1);
-//		    		debugInfo.println(	(rDotVData[0] & 0x000000FF) + "\t" +
-//										((colorData[0] & 0xFF000000) >>> 24) + "\t" + 
-//		    							((colorData[0] & 0x00FF0000) >>> 16) + "\t" + 
-//		    							((colorData[0] & 0x0000FF00) >>> 8) + "\t" +
-//		    							(colorData[0] & 0x000000FF));
-//		    	}
+		    		int[] colorData = specularDebugFBO.readColorBufferARGB(0, debugPixelX, debugPixelY, 1, 1);
+		    		int[] rDotVData = specularDebugFBO.readColorBufferARGB(1, debugPixelX, debugPixelY, 1, 1);
+		    		debugInfo.println(	(rDotVData[0] & 0x000000FF) + "\t" +
+										((colorData[0] & 0xFF000000) >>> 24) + "\t" + 
+		    							((colorData[0] & 0x00FF0000) >>> 16) + "\t" + 
+		    							((colorData[0] & 0x0000FF00) >>> 8) + "\t" +
+		    							(colorData[0] & 0x000000FF));
+		    	}
 		    	
-//		    	debugInfo.flush();
-//		    	debugInfo.close();
-//		    	
-//		    	specularDebugFBO.delete();
-//		    	for (OpenGLResource r : specularDebugResources)
-//		    	{
-//		    		r.delete();
-//		    	}
-//		    	
-//				System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		    	debugInfo.flush();
+		    	debugInfo.close();
+		    	
+		    	specularDebugFBO.delete();
+		    	for (OpenGLResource r : specularDebugResources)
+		    	{
+		    		r.delete();
+		    	}
+		    	
+				System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		        
 		        imageTextures.delete();
 		    	diffuseFitBackFramebuffer.delete();
