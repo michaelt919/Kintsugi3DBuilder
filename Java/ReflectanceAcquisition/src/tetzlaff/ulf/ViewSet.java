@@ -119,7 +119,7 @@ public class ViewSet
 			
 			// Read a single image to get the dimensions for the texture array
 			BufferedImage img = ImageIO.read(new FileInputStream(new File(imageFilePath, imageFileNames.get(0))));
-			this.textureArray = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFileNames.size(), true, true);
+			this.textureArray = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFileNames.size(), false, true, true);
 			
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{

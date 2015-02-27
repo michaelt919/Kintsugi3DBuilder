@@ -1,13 +1,15 @@
 package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL30.*;
 
 public class OpenGLTextureArray extends OpenGLLayeredTexture 
 {
-	public OpenGLTextureArray(int width, int height, int layerCount, boolean useLinearFiltering, boolean useMipmaps)
+	public OpenGLTextureArray(int width, int height, int layerCount, boolean useFloatingPointStorage, boolean useLinearFiltering, boolean useMipmaps)
 	{
-		super(width, height, layerCount, useLinearFiltering, useMipmaps);
+		super(useFloatingPointStorage ? GL_RGBA32F : GL_RGBA8, width, height, layerCount, GL_BGRA, 
+				useFloatingPointStorage ? GL_FLOAT : GL_UNSIGNED_BYTE, useLinearFiltering, useMipmaps);
 	}
 
 	public OpenGLTextureArray(int width, int height, int layerCount) 

@@ -35,12 +35,12 @@ public class TexGenProgram
     	float guessSpecularRoughness = 0.5f;
     	float guessSpecularOrthoExp = 4.0f;
     	float guessSpecularWeight = 10.0f;
-    	int multisampleRange = 5; // +/- n pixels in each direction
+    	int multisampleRange = 0; // +/- n pixels in each direction
     	float expectedWeightSum = 0.25f;
     	int fittingIterations = 256;
     	float specularRoughnessCap = 1.0f;
     	
-    	int debugPixelX = 400, debugPixelY = 524;
+    	int debugPixelX = 790, debugPixelY = 1012;
     	
         try
         {
@@ -64,8 +64,8 @@ public class TexGenProgram
 	    		System.out.println("Projecting light field images into texture space...");
 		    	timestamp = new Date();
 	    		
-	    		OpenGLTextureArray imageTextures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, false);
-	    		OpenGLTextureArray depthTextures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, false);
+	    		OpenGLTextureArray imageTextures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, true, false);
+	    		OpenGLTextureArray depthTextures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, true, false);
 	    		//OpenGLTextureArray depthTextures = OpenGLTextureArray.createDepthTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, false);
 		    	OpenGLFramebufferObject worldToTextureFBO = new OpenGLFramebufferObject(textureSize, textureSize, 2, false, false);
 		    	OpenGLRenderable worldToTextureRenderable = new OpenGLRenderable(worldToTextureProgram);
