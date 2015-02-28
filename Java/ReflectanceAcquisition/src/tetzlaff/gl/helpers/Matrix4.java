@@ -248,6 +248,16 @@ public class Matrix4
 		);
 	}
 	
+	public Vector4 times(Vector4 vector)
+	{
+		return new Vector4(
+			this.m[0][0] * vector.x + this.m[0][1] * vector.y + this.m[0][2] * vector.z + this.m[0][3] * vector.w,
+			this.m[1][0] * vector.x + this.m[1][1] * vector.y + this.m[1][2] * vector.z + this.m[1][3] * vector.w,
+			this.m[2][0] * vector.x + this.m[2][1] * vector.y + this.m[2][2] * vector.z + this.m[2][3] * vector.w,
+			this.m[3][0] * vector.x + this.m[3][1] * vector.y + this.m[3][2] * vector.z + this.m[3][3] * vector.w
+		);
+	}
+	
 	public Matrix4 negate()
 	{
 		return new Matrix4(
@@ -271,6 +281,18 @@ public class Matrix4
 	public float get(int row, int col)
 	{
 		return this.m[row][col];
+	}
+	
+	public Matrix3 getRotationMatrix()
+	{
+		return new Matrix3(	this.get(0, 0),	this.get(0, 1),	this.get(0, 2),
+							this.get(1, 0),	this.get(1, 1),	this.get(1, 2),
+							this.get(2, 0),	this.get(2, 1),	this.get(2, 2)	);
+	}
+	
+	public Vector3 getTranslationVector()
+	{
+		return new Vector3(this.get(0, 3), this.get(1, 3), this.get(2, 3));
 	}
 
 	public FloatBuffer asFloatBuffer() 

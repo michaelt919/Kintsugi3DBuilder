@@ -149,6 +149,15 @@ public class Matrix3
 		);
 	}
 	
+	public Vector3 times(Vector3 vector)
+	{
+		return new Vector3(
+			this.m[0][0] * vector.x + this.m[0][1] * vector.y + this.m[0][2] * vector.z,
+			this.m[1][0] * vector.x + this.m[1][1] * vector.y + this.m[1][2] * vector.z,
+			this.m[2][0] * vector.x + this.m[2][1] * vector.y + this.m[2][2] * vector.z
+		);
+	}
+	
 	public Matrix3 negate()
 	{
 		return new Matrix3(

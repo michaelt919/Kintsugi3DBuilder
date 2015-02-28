@@ -84,6 +84,11 @@ public class OpenGLTexture2D extends OpenGLTexture
 		this(file, flipVertical, false, false);
 	}
 	
+	public OpenGLTexture2D(File file) throws IOException
+	{
+		this(file, false);
+	}
+	
 	private void init(int width, int height, boolean useLinearFiltering, boolean useMipmaps)
 	{
 		if (useMipmaps)
