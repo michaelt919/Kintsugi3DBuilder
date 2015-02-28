@@ -35,7 +35,7 @@ public class TexGenProgram
     	float guessSpecularRoughness = 0.5f;
     	float guessSpecularOrthoExp = 4.0f;
     	float guessSpecularWeight = 10.0f;
-    	int multisampleRange = 0; // +/- n pixels in each direction
+    	int multisampleRange = 5; // +/- n pixels in each direction
     	float expectedWeightSum = 0.25f;
     	int fittingIterations = 256;
     	float specularRoughnessCap = 1.0f;

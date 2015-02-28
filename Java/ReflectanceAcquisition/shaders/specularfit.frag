@@ -253,6 +253,7 @@ void main()
         specularColorPreGamma = min(vec3(1.0), min(1.0, sA[1][1] / expectedWeightSum) * 
             min(3.0, exp(sSolution[1])) * specularAvg);
         roughness = min(1.0, inversesqrt(2 * sSolution[0]));
+        debug1 = vec4(specularAvg, 1.0);
     }
     
     float sumSqError = 0.0;
