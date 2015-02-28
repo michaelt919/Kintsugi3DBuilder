@@ -64,7 +64,7 @@ public class OpenGLTexture2D extends OpenGLTexture
 				}
 			}
 		}
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.getWidth(), img.getHeight(), 0, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, img.getWidth(), img.getHeight(), 0, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
 		openGLErrorCheck();
 		this.init(img.getWidth(), img.getHeight(), useLinearFiltering, useMipmaps);
 	}
