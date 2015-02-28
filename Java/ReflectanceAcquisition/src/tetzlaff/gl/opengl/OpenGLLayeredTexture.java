@@ -57,7 +57,7 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 	protected OpenGLLayeredTexture(int width, int height, int layerCount, boolean useLinearFiltering, boolean useMipmaps) 
 	{
 		// Constructor for a texture that will be loaded from files by layer
-		this(GL_RGBA, width, height, layerCount, GL_BGRA, useLinearFiltering, useMipmaps);
+		this(GL_RGBA8, width, height, layerCount, GL_BGRA, useLinearFiltering, useMipmaps);
 	}
 	
 	protected OpenGLLayeredTexture(int width, int height, int layerCount)
