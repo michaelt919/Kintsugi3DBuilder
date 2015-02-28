@@ -1,6 +1,7 @@
 package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.openGLErrorCheck;
@@ -67,7 +68,7 @@ public class OpenGLFramebufferObject
 		{
 			if (generateDepthAttachment)
 			{
-				this.depthAttachment = createAttachment(GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE);
+				this.depthAttachment = createAttachment(GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
 			}
 			
 			if (generateStencilAttachment)

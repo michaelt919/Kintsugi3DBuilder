@@ -19,7 +19,7 @@ public class OpenGLTextureArray extends OpenGLLayeredTexture
 	
 	public static OpenGLTextureArray createDepthTextureArray(int width, int height, int layerCount, boolean useLinearFiltering, boolean useMipmaps)
 	{
-		return new OpenGLTextureArray(GL_DEPTH_COMPONENT16, width, height, layerCount, GL_DEPTH_COMPONENT, GL_FLOAT, useLinearFiltering, useMipmaps);
+		return new OpenGLTextureArray(GL_DEPTH_COMPONENT16, width, height, layerCount, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, useLinearFiltering, useMipmaps);
 	}
 	
 	public static OpenGLTextureArray createDepthTextureArray(int width, int height, int layerCount)
