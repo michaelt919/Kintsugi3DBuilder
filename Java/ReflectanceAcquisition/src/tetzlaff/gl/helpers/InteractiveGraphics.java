@@ -24,6 +24,7 @@ public class InteractiveGraphics
 				context.makeContextCurrent();
 				drawable.update();
 				drawable.draw();
+				context.flush();
 				context.swapBuffers();
 			}
 
