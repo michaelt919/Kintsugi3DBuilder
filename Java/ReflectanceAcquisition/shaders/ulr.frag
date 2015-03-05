@@ -71,9 +71,11 @@ vec4 getLightFieldSample(int index)
 				return vec4(0.0);
 			}
 		}
+        
+        vec4 color = texture(imageTextures, vec3(texCoord.xy, index));
 		
 		return computeSampleWeight((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz, vec3(0.0), fragPos.xyz)
-			* pow(texture(imageTextures, vec3(texCoord.xy, index)), vec4(gamma));
+			* color.a * vec4(pow(color.rgb, vec3(gamma)), 1.0);
 	}
 }
 
@@ -84,7 +86,7 @@ vec4 computeLightField()
 	{
 		sum += getLightFieldSample(i);
 	}
-	return pow(sum / sum.w, vec4(1 / gamma));
+	return pow(sum / sum.a, vec4(1 / gamma));
 }
 
 void main()
