@@ -11,6 +11,16 @@ public class Vector2
 		this.y = y;
 	}
 	
+	public Vector2(Vector3 v3)
+	{
+		this(v3.x, v3.y);
+	}
+	
+	public Vector2(Vector4 v4)
+	{
+		this(v4.x, v4.y);
+	}
+	
 	public Vector2 plus(Vector2 other)
 	{
 		return new Vector2(

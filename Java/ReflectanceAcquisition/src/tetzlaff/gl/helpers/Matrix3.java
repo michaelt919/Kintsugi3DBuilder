@@ -20,6 +20,13 @@ public class Matrix3
         m[1][2] = m23;
         m[2][2] = m33;
     }
+	
+	public Matrix3(Matrix4 m4)
+	{
+		this(	m4.get(0,0),	m4.get(0,1),	m4.get(0,2),
+				m4.get(1,0),	m4.get(1,1),	m4.get(1,2),
+				m4.get(2,0),	m4.get(2,1),	m4.get(2,2)		);
+	}
 
 	public Matrix3(float sx, float sy, float sz) 
 	{
@@ -179,5 +186,15 @@ public class Matrix3
 	public float get(int row, int col)
 	{
 		return this.m[row][col];
+	}
+	
+	public Vector3 getRow(int row)
+	{
+		return new Vector3(this.m[row][0], this.m[row][1], this.m[row][2]);
+	}
+	
+	public Vector3 getColumn(int col)
+	{
+		return new Vector3(this.m[0][col], this.m[1][col], this.m[2][col]);
 	}
 }

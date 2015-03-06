@@ -13,6 +13,16 @@ public class IntVector3
 		this.z = z;
 	}
 	
+	public IntVector3(IntVector2 v2, int z)
+	{
+		this(v2.x, v2.y, z);
+	}
+	
+	public IntVector3(IntVector4 v4)
+	{
+		this(v4.x, v4.y, v4.z);
+	}
+	
 	public IntVector3 plus(IntVector3 other)
 	{
 		return new IntVector3(

@@ -15,6 +15,16 @@ public class Vector4
 		this.w = w;
 	}
 	
+	public Vector4(Vector2 v2, float z, float w)
+	{
+		this(v2.x, v2.y, z, w);
+	}
+	
+	public Vector4(Vector3 v3, float w)
+	{
+		this(v3.x, v3.y, v3.z, w);
+	}
+	
 	public Vector4 plus(Vector4 other)
 	{
 		return new Vector4(
