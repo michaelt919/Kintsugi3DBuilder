@@ -8,8 +8,9 @@ import tetzlaff.window.WindowSize;
 import tetzlaff.window.listeners.CursorPositionListener;
 import tetzlaff.window.listeners.MouseButtonPressListener;
 import tetzlaff.window.listeners.MouseButtonReleaseListener;
+import tetzlaff.window.listeners.ScrollListener;
 
-public class Trackball implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener
+public class Trackball implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener
 {
 	private int primaryButtonIndex;
 	private int secondaryButtonIndex;
@@ -27,7 +28,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	private float logScale;
 	private float scale;
 	
-	public Trackball(int primaryButtonIndex, int secondaryButtonIndex, float sensitivity)
+	public Trackball(float sensitivity, int primaryButtonIndex, int secondaryButtonIndex, boolean zoomWithWheel)
 	{
 		this.primaryButtonIndex = primaryButtonIndex;
 		this.secondaryButtonIndex = secondaryButtonIndex;
@@ -41,7 +42,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	
 	public Trackball(float sensitivity)
 	{
-		this(0, 1, sensitivity);
+		this(sensitivity, 0, 1, true);
 	}
 	
 	public void addAsWindowListener(Window window)
@@ -49,6 +50,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 		window.addCursorPositionListener(this);
 		window.addMouseButtonPressListener(this);
 		window.addMouseButtonReleaseListener(this);
+		window.addScrollListener(this);
 	}
 	
 	public Matrix4 getRotationMatrix()
@@ -77,7 +79,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	@Override
 	public void cursorMoved(Window window, double xpos, double ypos) 
 	{
-		if (window.getMouseButtonState(primaryButtonIndex) == MouseButtonState.Pressed)
+		if (this.primaryButtonIndex >= 0 && window.getMouseButtonState(primaryButtonIndex) == MouseButtonState.Pressed)
 		{
 			if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale))
 			{
@@ -96,7 +98,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 					.times(this.oldTrackballMatrix);
 			}
 		}
-		else if (window.getMouseButtonState(secondaryButtonIndex) == MouseButtonState.Pressed)
+		else if (this.secondaryButtonIndex >= 0 && window.getMouseButtonState(secondaryButtonIndex) == MouseButtonState.Pressed)
 		{
 			if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale))
 			{
@@ -118,5 +120,12 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 			this.oldTrackballMatrix = this.trackballMatrix;
 			this.oldLogScale = this.logScale;
 		}
+	}
+
+	@Override
+	public void scroll(Window window, double xoffset, double yoffset) 
+	{
+		this.logScale = this.logScale + sensitivity / 256.0f * (float)(yoffset);
+		this.scale = (float)Math.pow(2, this.logScale);
 	}
 }

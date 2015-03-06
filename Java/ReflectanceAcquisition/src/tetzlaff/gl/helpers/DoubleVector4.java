@@ -15,6 +15,16 @@ public class DoubleVector4
 		this.w = w;
 	}
 	
+	public DoubleVector4(DoubleVector2 v2, double z, double w)
+	{
+		this(v2.x, v2.y, z, w);
+	}
+	
+	public DoubleVector4(DoubleVector3 v3, double w)
+	{
+		this(v3.x, v3.y, v3.z, w);
+	}
+	
 	public DoubleVector4 plus(DoubleVector4 other)
 	{
 		return new DoubleVector4(

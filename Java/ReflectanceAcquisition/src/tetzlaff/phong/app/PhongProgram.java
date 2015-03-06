@@ -19,8 +19,11 @@ public class PhongProgram
     	GLFWWindow window = new GLFWWindow(800, 800, "Phong Renderer", true, 4);
     	window.enableDepthTest();
     	
-    	Trackball trackball = new Trackball(1.0f);
-        trackball.addAsWindowListener(window);
+    	Trackball viewTrackball = new Trackball(1.0f, 0, -1, true);
+    	viewTrackball.addAsWindowListener(window);
+    	
+    	Trackball lightTrackball = new Trackball(1.0f, 1, -1, false);
+    	lightTrackball.addAsWindowListener(window);
         
         JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
 		fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
@@ -28,7 +31,7 @@ public class PhongProgram
 		
 		if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
 		{
-	        PhongRenderer renderer = new PhongRenderer(window, fileChooser.getSelectedFile(), trackball);
+	        PhongRenderer renderer = new PhongRenderer(window, fileChooser.getSelectedFile(), viewTrackball, lightTrackball);
 	        InteractiveApplication app = InteractiveGraphics.createApplication(window, window, renderer);
 	        window.show();
 			app.run();

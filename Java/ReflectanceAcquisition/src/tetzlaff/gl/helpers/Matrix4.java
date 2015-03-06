@@ -283,16 +283,14 @@ public class Matrix4
 		return this.m[row][col];
 	}
 	
-	public Matrix3 getRotationMatrix()
+	public Vector4 getRow(int row)
 	{
-		return new Matrix3(	this.get(0, 0),	this.get(0, 1),	this.get(0, 2),
-							this.get(1, 0),	this.get(1, 1),	this.get(1, 2),
-							this.get(2, 0),	this.get(2, 1),	this.get(2, 2)	);
+		return new Vector4(this.m[row][0], this.m[row][1], this.m[row][2], this.m[row][3]);
 	}
 	
-	public Vector3 getTranslationVector()
+	public Vector4 getColumn(int col)
 	{
-		return new Vector3(this.get(0, 3), this.get(1, 3), this.get(2, 3));
+		return new Vector4(this.m[0][col], this.m[1][col], this.m[2][col], this.m[3][col]);
 	}
 
 	public FloatBuffer asFloatBuffer() 

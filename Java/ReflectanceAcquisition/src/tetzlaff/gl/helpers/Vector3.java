@@ -13,6 +13,16 @@ public class Vector3
 		this.z = z;
 	}
 	
+	public Vector3(Vector2 v2, float z)
+	{
+		this(v2.x, v2.y, z);
+	}
+	
+	public Vector3(Vector4 v4)
+	{
+		this(v4.x, v4.y, v4.z);
+	}
+	
 	public Vector3 plus(Vector3 other)
 	{
 		return new Vector3(

@@ -11,6 +11,16 @@ public class DoubleVector2
 		this.y = y;
 	}
 	
+	public DoubleVector2(DoubleVector3 v3)
+	{
+		this(v3.x, v3.y);
+	}
+	
+	public DoubleVector2(DoubleVector4 v4)
+	{
+		this(v4.x, v4.y);
+	}
+	
 	public DoubleVector2 plus(DoubleVector2 other)
 	{
 		return new DoubleVector2(

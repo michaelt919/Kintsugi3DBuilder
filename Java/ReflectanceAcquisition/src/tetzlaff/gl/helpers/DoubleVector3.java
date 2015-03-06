@@ -13,6 +13,16 @@ public class DoubleVector3
 		this.z = z;
 	}
 	
+	public DoubleVector3(DoubleVector2 v2, double z)
+	{
+		this(v2.x, v2.y, z);
+	}
+	
+	public DoubleVector3(DoubleVector4 v4)
+	{
+		this(v4.x, v4.y, v4.z);
+	}
+	
 	public DoubleVector3 plus(DoubleVector3 other)
 	{
 		return new DoubleVector3(

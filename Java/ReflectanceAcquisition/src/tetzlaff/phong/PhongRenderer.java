@@ -28,7 +28,8 @@ public class PhongRenderer implements Drawable
 	
 	private OpenGLContext context;
 	private File objFile;
-	private Trackball trackball;
+	private Trackball viewTrackball;
+	private Trackball lightTrackball;
 	
 	private VertexMesh mesh;
 	private OpenGLTexture2D diffuse;
@@ -38,11 +39,12 @@ public class PhongRenderer implements Drawable
 	private OpenGLRenderable renderable;
 	private Iterable<OpenGLResource> vboResources;
 	
-	public PhongRenderer(OpenGLContext context, File objFile, Trackball trackball) 
+	public PhongRenderer(OpenGLContext context, File objFile, Trackball viewTrackball, Trackball lightTrackball) 
 	{
 		this.context = context;
     	this.objFile = objFile;
-    	this.trackball = trackball;
+    	this.viewTrackball = viewTrackball;
+    	this.lightTrackball = lightTrackball;
 	}
 
 	@Override
@@ -100,11 +102,11 @@ public class PhongRenderer implements Drawable
     	this.renderable.program().setTexture("roughness", this.roughness);
     	
     	Matrix4 modelView = Matrix4.lookAt(
-				new Vector3(0.0f, 0.0f, 5.0f / trackball.getScale()), 
+				new Vector3(0.0f, 0.0f, 5.0f / viewTrackball.getScale()), 
 				new Vector3(0.0f, 0.0f, 0.0f),
 				new Vector3(0.0f, 1.0f, 0.0f)
 			) // View
-			.times(trackball.getRotationMatrix()) // Trackball
+			.times(viewTrackball.getRotationMatrix()) // Trackball
 			.times(Matrix4.translate(mesh.getCentroid().negated())); // Model
     	
     	this.renderable.program().setUniform("model_view", modelView);
@@ -114,8 +116,9 @@ public class PhongRenderer implements Drawable
     	this.renderable.program().setUniform("gamma", 1.0f);
     	this.renderable.program().setUniform("ambientColor", new Vector3(0.0f, 0.0f, 0.0f));
     	this.renderable.program().setUniform("lightColor", new Vector3(1.0f, 1.0f, 1.0f));
-    	this.renderable.program().setUniform("lightPosition", 
-    			modelView.getRotationMatrix().transpose().times(modelView.getTranslationVector().negated()));
+    	//this.renderable.program().setUniform("lightPosition", 
+    	//		new Matrix3(modelView).transpose().times(new Vector3(modelView.getColumn(3)).negated()));
+    	this.renderable.program().setUniform("lightDirection", new Vector3(lightTrackball.getRotationMatrix().getColumn(2)));
     	
     	this.renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 	}
