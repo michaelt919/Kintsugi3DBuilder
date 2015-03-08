@@ -88,7 +88,7 @@ public class ULFRenderer implements ULFDrawable
     		{
 				this.resample();
 			} 
-    		catch (IOException e) 
+    		catch (Exception e) 
     		{
 				e.printStackTrace();
 			}
@@ -254,7 +254,10 @@ public class ULFRenderer implements ULFDrawable
 	    	exportFile.getParentFile().mkdirs();
 	        framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
 	        
-	        this.callback.setProgress((double) i / (double) targetViewSet.getCameraPoseCount());
+	        if (this.callback != null)
+	        {
+	        	this.callback.setProgress((double) i / (double) targetViewSet.getCameraPoseCount());
+	        }
 		}
 		
 		Files.copy(resampleVSETFile.toPath(), 
