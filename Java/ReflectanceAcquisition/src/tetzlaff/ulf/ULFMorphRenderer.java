@@ -183,6 +183,6 @@ public class ULFMorphRenderer implements ULFDrawable
 	@Override
 	public void requestResample(int size, File targetVSETFile, File exportPath) throws IOException 
 	{
-		throw new UnsupportedOperationException();
+		this.stages.get(this.currentStage).requestResample(size, targetVSETFile, exportPath);
 	}
 }

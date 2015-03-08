@@ -75,7 +75,7 @@ vec4 getLightFieldSample(int index)
         vec4 color = texture(imageTextures, vec3(texCoord.xy, index));
 		
 		return computeSampleWeight((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz, vec3(0.0), fragPos.xyz)
-			* color.a * vec4(pow(color.rgb, vec3(gamma)), 1.0);
+			* (color.a < 0.9999 ? 0.0 : 1.0) * vec4(pow(color.rgb, vec3(gamma)), 1.0);
 	}
 }
 
