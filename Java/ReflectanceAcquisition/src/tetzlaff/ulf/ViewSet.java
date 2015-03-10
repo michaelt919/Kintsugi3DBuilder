@@ -15,6 +15,7 @@ import javax.imageio.ImageIO;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix4;
+import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.opengl.OpenGLTextureArray;
 import tetzlaff.gl.opengl.OpenGLUniformBuffer;
 
@@ -23,12 +24,16 @@ public class ViewSet
 	private List<Matrix4> cameraPoseList;
 	private List<Projection> cameraProjectionList;
 	private List<Integer> cameraProjectionIndexList;
+	private List<Vector3> lightPositionList;
+	private List<Integer> lightIndexList;
 	private List<String> imageFileNames;
 	private File filePath;
 	
 	private OpenGLUniformBuffer cameraPoseBuffer;
 	private OpenGLUniformBuffer cameraProjectionBuffer;
 	private OpenGLUniformBuffer cameraProjectionIndexBuffer;
+	private OpenGLUniformBuffer lightPositionBuffer;
+	private OpenGLUniformBuffer lightIndexBuffer;
 	private OpenGLTextureArray textureArray;
 	private float recommendedNearPlane;
 	private float recommendedFarPlane;
@@ -37,6 +42,8 @@ public class ViewSet
 		List<Matrix4> cameraPoseList,
 		List<Projection> cameraProjectionList,
 		List<Integer> cameraProjectionIndexList,
+		List<Vector3> lightPositionList,
+		List<Integer> lightIndexList,
 		List<String> imageFileNames, 
 		File imageFilePath,
 		boolean loadImages,
@@ -46,6 +53,8 @@ public class ViewSet
 		this.cameraPoseList = cameraPoseList;
 		this.cameraProjectionList = cameraProjectionList;
 		this.cameraProjectionIndexList = cameraProjectionIndexList;
+		this.lightPositionList = lightPositionList;
+		this.lightIndexList = lightIndexList;
 		this.imageFileNames = imageFileNames;
 		
 		this.recommendedNearPlane = recommendedNearPlane;
@@ -77,7 +86,7 @@ public class ViewSet
 		}
 		
 		// Store the camera projections in a uniform buffer
-		if (cameraPoseList != null && cameraPoseList.size() > 0)
+		if (cameraProjectionList != null && cameraProjectionList.size() > 0)
 		{
 			// Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
 			FloatVertexList flattenedProjectionMatrices = new FloatVertexList(16, cameraPoseList.size());
@@ -110,6 +119,33 @@ public class ViewSet
 			}
 			IntVertexList indexVertexList = new IntVertexList(1, cameraProjectionIndexList.size(), indexArray);
 			cameraProjectionIndexBuffer = new OpenGLUniformBuffer(indexVertexList);
+		}
+		
+		// Store the light positions in a uniform buffer
+		if (lightPositionList != null && lightPositionList.size() > 0)
+		{
+			FloatVertexList lightPositions = new FloatVertexList(3, lightPositionList.size());
+			for (int k = 0; k < lightPositionList.size(); k++)
+			{
+				lightPositions.set(k, 0, lightPositionList.get(k).x);
+				lightPositions.set(k, 1, lightPositionList.get(k).y);
+				lightPositions.set(k, 2, lightPositionList.get(k).z);
+			}
+			
+			// Create the uniform buffer
+			lightPositionBuffer = new OpenGLUniformBuffer(lightPositions);
+		}
+		
+		// Store the light indices indices in a uniform buffer
+		if (lightIndexList != null && lightIndexList.size() > 0)
+		{
+			int[] indexArray = new int[lightIndexList.size()];
+			for (int i = 0; i < indexArray.length; i++)
+			{
+				indexArray[i] = lightIndexList.get(i);
+			}
+			IntVertexList indexVertexList = new IntVertexList(1, lightIndexList.size(), indexArray);
+			lightIndexBuffer = new OpenGLUniformBuffer(indexVertexList);
 		}
 		
 		// Read the images from a file
@@ -150,7 +186,9 @@ public class ViewSet
 		List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
 		List<Matrix4> orderedCameraPoseList = new ArrayList<Matrix4>();
 		List<Projection> cameraProjectionList = new ArrayList<Projection>();
+		List<Vector3> lightList = new ArrayList<Vector3>();
 		List<Integer> cameraProjectionIndexList = new ArrayList<Integer>();
+		List<Integer> lightIndexList = new ArrayList<Integer>();
 		List<String> imageFileNames = new ArrayList<String>();
 		
 		while (scanner.hasNext())
@@ -226,18 +264,27 @@ public class ViewSet
 				
 				scanner.nextLine();
 			}
+			else if (id.equals("l"))
+			{
+				float x = scanner.nextFloat();
+				float y = scanner.nextFloat();
+				float z = scanner.nextFloat();
+				lightList.add(new Vector3(x, y, z));
+
+				// Skip the rest of the line
+				scanner.nextLine();
+			}
 			else if (id.equals("v"))
 			{
 				int poseId = scanner.nextInt();
 				int projectionId = scanner.nextInt();
-				
-				// Ignore next field (unused light index)
-				scanner.next();
+				int lightId = scanner.nextInt();
 				
 				String imgFilename = scanner.nextLine().trim();
 				
 				orderedCameraPoseList.add(cameraPoseList.get(poseId));
 				cameraProjectionIndexList.add(projectionId);
+				lightIndexList.add(lightId);
 				imageFileNames.add(imgFilename);
 			}
 			else
@@ -252,8 +299,8 @@ public class ViewSet
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
 		return new ViewSet(
-			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, imageFileNames, file.getParentFile(),
-			loadImages, recommendedNearPlane, recommendedFarPlane);
+			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightList, lightIndexList, 
+			imageFileNames, file.getParentFile(), loadImages, recommendedNearPlane, recommendedFarPlane);
 	}
 
 	public Matrix4 getCameraPose(int poseIndex) 
@@ -291,6 +338,16 @@ public class ViewSet
 		return this.cameraProjectionIndexList.get(poseIndex);
 	}
 	
+	public Vector3 getLightPosition(int projectionIndex) 
+	{
+		return this.lightPositionList.get(projectionIndex);
+	}
+
+	public Integer getLightPositionIndex(int poseIndex) 
+	{
+		return this.lightIndexList.get(poseIndex);
+	}
+	
 	public int getCameraPoseCount()
 	{
 		return this.cameraPoseList.size();
@@ -314,6 +371,16 @@ public class ViewSet
 	public OpenGLUniformBuffer getCameraProjectionIndexBuffer()
 	{
 		return this.cameraProjectionIndexBuffer;
+	}
+	
+	public OpenGLUniformBuffer getLightPositionBuffer()
+	{
+		return this.lightPositionBuffer;
+	}
+	
+	public OpenGLUniformBuffer getLightIndexBuffer()
+	{
+		return this.lightIndexBuffer;
 	}
 
 	public OpenGLTextureArray getTextures() 
