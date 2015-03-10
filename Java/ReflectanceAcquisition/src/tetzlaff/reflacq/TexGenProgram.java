@@ -64,7 +64,7 @@ public class TexGenProgram
 	    		System.out.println("Projecting light field images into texture space...");
 		    	timestamp = new Date();
 	    		
-	    		OpenGLTextureArray imageTextures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, true, false);
+	    		OpenGLTextureArray imageTextures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), false, true, false);
 	    		OpenGLTextureArray depthTextures = new OpenGLTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, true, false);
 	    		//OpenGLTextureArray depthTextures = OpenGLTextureArray.createDepthTextureArray(textureSize, textureSize, lightField.viewSet.getCameraPoseCount(), true, false);
 		    	OpenGLFramebufferObject worldToTextureFBO = new OpenGLFramebufferObject(textureSize, textureSize, 2, false, false);
@@ -110,12 +110,15 @@ public class TexGenProgram
 		    	OpenGLRenderable diffuseFitRenderable = new OpenGLRenderable(diffuseFitProgram);
 		    	
 		    	diffuseFitRenderable.addVertexMesh("position", "texCoord", null, lightField.proxy);
+		    	
 		    	diffuseFitRenderable.program().setTexture("imageTextures", imageTextures);
 		    	diffuseFitRenderable.program().setTexture("depthTextures", depthTextures);
 		    	diffuseFitRenderable.program().setUniform("textureCount", lightField.viewSet.getCameraPoseCount());
+		    	
 		    	diffuseFitRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
 		    	diffuseFitRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
 		    	diffuseFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+		    	
 		    	diffuseFitRenderable.program().setUniform("gamma", gamma);
 		    	diffuseFitRenderable.program().setUniform("guessSpecularColor", guessSpecularColor);
 		    	diffuseFitRenderable.program().setUniform("guessSpecularWeight", guessSpecularWeight);
@@ -124,17 +127,28 @@ public class TexGenProgram
 		    	OpenGLRenderable specularFitRenderable = new OpenGLRenderable(specularFitProgram);
 		    	
 		    	specularFitRenderable.addVertexMesh("position", "texCoord", null, lightField.proxy);
+		    	
 		    	specularFitRenderable.program().setTexture("imageTextures", imageTextures);
 		    	specularFitRenderable.program().setTexture("depthTextures", depthTextures);
 		    	specularFitRenderable.program().setUniform("textureCount", lightField.viewSet.getCameraPoseCount());
+		    	
 		    	specularFitRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
 		    	specularFitRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
 		    	specularFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+		    	
 		    	specularFitRenderable.program().setUniform("gamma", gamma);
 		    	specularFitRenderable.program().setUniform("guessSpecularRoughness", guessSpecularRoughness);
 		    	specularFitRenderable.program().setUniform("multisampleRange", multisampleRange);
 		    	specularFitRenderable.program().setUniform("expectedWeightSum", expectedWeightSum);
 		    	specularFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
+		    	
+		    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
+	    		{
+		    		diffuseFitRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
+		    		diffuseFitRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+		    		specularFitRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
+		    		specularFitRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+	    		}
 
 		    	OpenGLFramebufferObject diffuseFitBackFramebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 8, true, false);
 		    	OpenGLFramebufferObject diffuseFitFrontFramebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 8, true, false);
@@ -170,7 +184,7 @@ public class TexGenProgram
 		        for (int i = 0; i < fittingIterations; i++)
 		        {
 		        	System.out.println("Starting iteration " + i);
-			    	diffuseFitRenderable.program().setUniform("specularRemovalFactor", fittingIterations == 1 ? 0.0f : (float)i / (float)(fittingIterations - 1));
+			    	diffuseFitRenderable.program().setUniform("specularRemovalFactor", (float)i / (float)fittingIterations);
 			    	diffuseFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
 			    	diffuseFitRenderable.program().setTexture("diffuseEstimate", diffuseFitFrontFramebuffer.getColorAttachmentTexture(0));
 			    	diffuseFitRenderable.program().setTexture("normalEstimate", diffuseFitFrontFramebuffer.getColorAttachmentTexture(1));
@@ -180,7 +194,7 @@ public class TexGenProgram
 			    	
 			        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitBackFramebuffer);
 
-			    	specularFitRenderable.program().setUniform("diffuseRemovalFactor", fittingIterations == 1 ? 1.0f : Math.min(1.0f, (float)i / (float)(fittingIterations - 1)));
+			    	specularFitRenderable.program().setUniform("diffuseRemovalFactor", (float)(i + 1) / (float)fittingIterations);
 			    	specularFitRenderable.program().setTexture("diffuseEstimate", diffuseFitBackFramebuffer.getColorAttachmentTexture(0));
 			    	specularFitRenderable.program().setTexture("normalEstimate", diffuseFitBackFramebuffer.getColorAttachmentTexture(1));
 			    	specularFitRenderable.program().setTexture("previousError", diffuseFitBackFramebuffer.getColorAttachmentTexture(2));
@@ -289,6 +303,12 @@ public class TexGenProgram
 		    	specularDebugRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
 		    	specularDebugRenderable.program().setUniform("gamma", gamma);
 		    	specularDebugRenderable.program().setUniform("diffuseRemovalFactor", 1.0f);
+		    	
+		    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
+	    		{
+		    		specularDebugRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
+		    		specularDebugRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+	    		}
 		    	
 		    	new File(lightFieldDirectory, "output/debug/specular/rDotV").mkdirs();
 		    	
