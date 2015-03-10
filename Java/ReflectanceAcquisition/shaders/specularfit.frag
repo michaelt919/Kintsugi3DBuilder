@@ -2,6 +2,7 @@
 
 #define MAX_CAMERA_POSE_COUNT 256
 #define MAX_CAMERA_PROJECTION_COUNT 256
+#define MAX_LIGHT_POSITION_COUNT 256
 
 in vec3 fPosition;
 in vec2 fTexCoord;
@@ -36,6 +37,16 @@ uniform CameraProjections
 uniform CameraProjectionIndices
 {
 	int cameraProjectionIndices[MAX_CAMERA_POSE_COUNT];
+};
+
+uniform LightPositions
+{
+	vec4 lightPositions[MAX_LIGHT_POSITION_COUNT];
+};
+
+uniform LightIndices
+{
+	int lightIndices[MAX_CAMERA_POSE_COUNT];
 };
 
 layout(location = 0) out vec4 specularColor;
@@ -80,14 +91,15 @@ vec3 getViewVectorWithOffset(int index, ivec2 offset)
 
 vec3 getLightVector(int index)
 {
-    // TODO
-    return getViewVector(index);
+    return normalize(transpose(mat3(cameraPoses[index])) * 
+        (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition);
 }
 
 vec3 getLightVectorWithOffset(int index, ivec2 offset)
 {
-    // TODO
-    return getViewVectorWithOffset(index, offset);
+    return normalize(transpose(mat3(cameraPoses[index])) * 
+        (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz - 
+            getRelativePositionFromDepthBufferWithOffset(index, offset)));
 }
 
 vec4 getDiffuseColor()
@@ -298,6 +310,8 @@ void main()
             specularRoughness = vec4(0.0, 0.0, 0.0, 1.0);
         }
     }
+    
+    debug2 = vec4(lightPositions[0].xyz * 0.5 + vec3(0.5), 1.0);
     
     // debug0 = vec4(specularAvg, 1.0);
     // debug1 = vec4(sSolution[0] / 4, (6 + sSolution[1]) / 8, 0.0, 1.0);

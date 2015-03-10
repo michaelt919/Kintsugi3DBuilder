@@ -2,6 +2,7 @@
 
 #define MAX_CAMERA_POSE_COUNT 256
 #define MAX_CAMERA_PROJECTION_COUNT 256
+#define MAX_LIGHT_POSITION_COUNT 256
 
 in vec3 fPosition;
 in vec2 fTexCoord;
@@ -19,6 +20,16 @@ uniform CameraPoses
 	mat4 cameraPoses[MAX_CAMERA_POSE_COUNT];
 };
 
+uniform LightPositions
+{
+	vec4 lightPositions[MAX_LIGHT_POSITION_COUNT];
+};
+
+uniform LightIndices
+{
+	int lightIndices[MAX_CAMERA_POSE_COUNT];
+};
+
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec4 rDotV;
 
@@ -34,8 +45,8 @@ vec3 getViewVector(int index)
 
 vec3 getLightVector(int index)
 {
-    // TODO
-    return getViewVector(index);
+    return normalize(transpose(mat3(cameraPoses[index])) * 
+        (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition);
 }
 
 vec3 getNormalVector()
