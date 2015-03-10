@@ -124,12 +124,13 @@ public class ViewSet
 		// Store the light positions in a uniform buffer
 		if (lightPositionList != null && lightPositionList.size() > 0)
 		{
-			FloatVertexList lightPositions = new FloatVertexList(3, lightPositionList.size());
+			FloatVertexList lightPositions = new FloatVertexList(4, lightPositionList.size());
 			for (int k = 0; k < lightPositionList.size(); k++)
 			{
 				lightPositions.set(k, 0, lightPositionList.get(k).x);
 				lightPositions.set(k, 1, lightPositionList.get(k).y);
 				lightPositions.set(k, 2, lightPositionList.get(k).z);
+				lightPositions.set(k, 3, 1.0f);
 			}
 			
 			// Create the uniform buffer
