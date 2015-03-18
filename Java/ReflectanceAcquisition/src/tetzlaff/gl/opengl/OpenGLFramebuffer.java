@@ -70,6 +70,28 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	}
 	
 	@Override
+	public float[] readFloatingPointColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height)
+	{
+		this.bindForRead(attachmentIndex);
+		FloatBuffer pixelBuffer = BufferUtils.createFloatBuffer(width * height * 4);
+		
+		// use BGRA because due to byte order differences it ends up being ARGB
+		glReadPixels(x, y, width, height, GL_RGBA, GL_FLOAT, pixelBuffer);
+		openGLErrorCheck();
+		
+		float[] pixelArray = new float[width * height * 4];
+		pixelBuffer.get(pixelArray);
+		return pixelArray;
+	}
+
+	@Override
+	public float[] readFloatingPointColorBufferRGBA(int attachmentIndex)
+	{
+		FramebufferSize size = this.getSize();
+		return this.readFloatingPointColorBufferRGBA(attachmentIndex, 0, 0, size.width, size.height);
+	}
+	
+	@Override
 	public void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException
 	{
         int[] pixels = this.readColorBufferARGB(attachmentIndex);

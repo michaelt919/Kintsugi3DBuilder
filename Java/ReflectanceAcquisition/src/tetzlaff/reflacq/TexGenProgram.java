@@ -9,6 +9,8 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.helpers.Matrix3;
+import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject;
@@ -33,14 +35,14 @@ public class TexGenProgram
     	float gamma = 1.0f; // 2.2f;
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
     	float guessSpecularRoughness = 0.5f;
-    	float guessSpecularOrthoExp = 4.0f;
-    	float guessSpecularWeight = 10.0f;
-    	int multisampleRange = 5; // +/- n pixels in each direction
+    	float guessSpecularOrthoExp = 1.0f;
+    	float guessSpecularWeight = 0.0f;
+    	int multisampleRange = 1; // +/- n pixels in each direction
     	float expectedWeightSum = 0.25f;
     	int fittingIterations = 256;
     	float specularRoughnessCap = 1.0f;
     	
-    	int debugPixelX = 790, debugPixelY = 1012;
+    	int debugPixelX = 35, debugPixelY = 780;
     	
         try
         {
@@ -81,6 +83,8 @@ public class TexGenProgram
 		    	
 		    	new File(lightFieldDirectory, "output/debug/diffuse/projpos").mkdirs();
 		    	
+		    	PrintStream diffuseInfo = new PrintStream(new File(lightFieldDirectory, "output/debug/diffuseInfo.txt"));
+		    	
 		    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
 		    	{
 		    		worldToTextureFBO.setColorAttachment(0, imageTextures.getLayerAsFramebufferAttachment(i));
@@ -94,7 +98,28 @@ public class TexGenProgram
 		    		
 		    		//worldToTextureFBO.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory, String.format("output/debug/diffuse/%04d.png", i)));
 		    		//worldToTextureFBO.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory, String.format("output/debug/diffuse/projpos/%04d.png", i)));
-		    	}		    	
+		    		
+		    		Matrix4 cameraPose = lightField.viewSet.getCameraPose(i);
+		    		Vector3 lightPosition = new Matrix3(cameraPose).transpose().times(
+	    				lightField.viewSet.getLightPosition(lightField.viewSet.getLightPositionIndex(i))
+	    					.minus(new Vector3(cameraPose.getColumn(3))));
+		    		int[] colorData = worldToTextureFBO.readColorBufferARGB(0, debugPixelX, debugPixelY, 1, 1);
+		    		float[] positionData = worldToTextureFBO.readFloatingPointColorBufferRGBA(1, debugPixelX, debugPixelY, 1, 1);
+		    		diffuseInfo.println(
+	    				lightPosition.x + "\t" +
+						lightPosition.y + "\t" +
+						lightPosition.z + "\t" +
+	    				positionData[0] + "\t" +
+	    				positionData[1] + "\t" +
+	    				positionData[2] + "\t" +
+						((colorData[0] & 0xFF000000) >>> 24) + "\t" + 
+						((colorData[0] & 0x00FF0000) >>> 16) + "\t" + 
+						((colorData[0] & 0x0000FF00) >>> 8) + "\t" +
+						(colorData[0] & 0x000000FF));
+		    	}	
+		    	
+		    	diffuseInfo.flush();
+		    	diffuseInfo.close();	    	
 		    	
 		    	worldToTextureFBO.delete();
 		    	for (OpenGLResource r : worldToTextureVBOResources)
@@ -316,7 +341,7 @@ public class TexGenProgram
 		    	//		AlphaBlendingFunction.Weight.SRC_ALPHA, 
 		    	//		AlphaBlendingFunction.Weight.ONE_MINUS_SRC_ALPHA));
 		    	
-		    	PrintStream debugInfo = new PrintStream(new File(lightFieldDirectory, "output/debug/debugInfo.txt"));
+		    	PrintStream specularInfo = new PrintStream(new File(lightFieldDirectory, "output/debug/specularInfo.txt"));
 		    	
 		    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
 		    	{
@@ -332,15 +357,15 @@ public class TexGenProgram
 		    		
 		    		int[] colorData = specularDebugFBO.readColorBufferARGB(0, debugPixelX, debugPixelY, 1, 1);
 		    		int[] rDotVData = specularDebugFBO.readColorBufferARGB(1, debugPixelX, debugPixelY, 1, 1);
-		    		debugInfo.println(	(rDotVData[0] & 0x000000FF) + "\t" +
+		    		specularInfo.println(	(rDotVData[0] & 0x000000FF) + "\t" +
 										((colorData[0] & 0xFF000000) >>> 24) + "\t" + 
 		    							((colorData[0] & 0x00FF0000) >>> 16) + "\t" + 
 		    							((colorData[0] & 0x0000FF00) >>> 8) + "\t" +
 		    							(colorData[0] & 0x000000FF));
 		    	}
 		    	
-		    	debugInfo.flush();
-		    	debugInfo.close();
+		    	specularInfo.flush();
+		    	specularInfo.close();
 		    	
 		    	specularDebugFBO.delete();
 		    	for (OpenGLResource r : specularDebugResources)
