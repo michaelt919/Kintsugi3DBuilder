@@ -10,6 +10,9 @@ public interface Framebuffer
 	int[] readColorBufferARGB(int attachmentIndex);
 	int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height);
 
+	float[] readFloatingPointColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height);
+	float[] readFloatingPointColorBufferRGBA(int attachmentIndex);
+
 	short[] readDepthBuffer(int x, int y, int width, int height);
 	short[] readDepthBuffer();
 

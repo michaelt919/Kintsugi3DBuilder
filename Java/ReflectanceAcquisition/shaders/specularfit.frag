@@ -154,8 +154,9 @@ void main()
             if (diffuseColor.a > 0)
             {
                 vec3 diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal));
-                colorRemainder = vec4(max(vec3(0), 
-                    color.rgb - diffuseRemovalFactor * diffuseContrib), color.a);
+                float cap = 1.0 - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
+                colorRemainder = vec4(clamp(color.rgb - diffuseRemovalFactor * diffuseContrib,
+                    vec3(0), vec3(cap)), color.a);
             }
             else
             {
@@ -216,8 +217,11 @@ void main()
                             if (diffuseColor.a > 0)
                             {
                                 vec3 diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal));
-                                colorRemainder = vec4(max(vec3(0), 
-                                    color.rgb - diffuseRemovalFactor * diffuseContrib), color.a);
+                                float cap = 1.0 - max(diffuseContrib.r, 
+                                    max(diffuseContrib.g, diffuseContrib.b));
+                                colorRemainder = vec4(clamp(
+                                    color.rgb - diffuseRemovalFactor * diffuseContrib,
+                                    vec3(0), vec3(cap)), color.a);
                             }
                             else
                             {
@@ -307,7 +311,7 @@ void main()
         }
         else
         {
-            specularRoughness = vec4(0.0, 0.0, 0.0, 1.0);
+            specularRoughness = vec4(1.0);
         }
     }
     
