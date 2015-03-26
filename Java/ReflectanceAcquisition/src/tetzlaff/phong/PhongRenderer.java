@@ -113,6 +113,7 @@ public class PhongRenderer implements Drawable
     	this.renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
     	
     	// TODO settings UI
+    	//this.renderable.program().setUniform("gamma", 2.2f);
     	this.renderable.program().setUniform("gamma", 1.0f);
     	this.renderable.program().setUniform("ambientColor", new Vector3(0.0f, 0.0f, 0.0f));
     	this.renderable.program().setUniform("lightColor", new Vector3(1.0f, 1.0f, 1.0f));

@@ -20,7 +20,7 @@ uniform sampler2D previousError;
 uniform float guessSpecularRoughness;
 uniform int multisampleRange;
 //uniform float multisampleDistanceFactor;
-uniform float expectedWeightSum;
+uniform float determinantThreshold;
 uniform float diffuseRemovalFactor;
 uniform float specularRoughnessCap;
 
@@ -257,18 +257,20 @@ void main()
     
     vec3 specularColorPreGamma;
     float roughness;
+    float alpha;
     if (determinant(sA) == 0.0)
     {
         specularColorPreGamma = vec3(0.0);
         roughness = 0.0;
+        alpha = 0.0;
     }
     else
     {
         vec2 sSolution = inverse(sA) * sB;
         vec3 specularAvg = specularSum.rgb / (specularSum.r + specularSum.g + specularSum.b);
-        specularColorPreGamma = min(vec3(1.0), min(1.0, sA[1][1] / expectedWeightSum) * 
-            min(3.0, exp(sSolution[1])) * specularAvg);
+        specularColorPreGamma = min(vec3(1.0), exp(sSolution[1]) * specularAvg);
         roughness = min(1.0, inversesqrt(2 * sSolution[0]));
+        alpha = min(1.0, /*sA[1][1]*/ abs(determinant(sA)) / determinantThreshold);
         debug1 = vec4(specularAvg, 1.0);
     }
     
@@ -304,15 +306,15 @@ void main()
     // }
     // else
     {
-        specularColor = vec4(pow(specularColorPreGamma, vec3(1 / gamma)), 1.0);
-        if (specularColor.r > 1 / 256.0 || specularColor.g > 1 / 256.0 || specularColor.b > 1 / 256.0)
+        specularColor = vec4(pow(specularColorPreGamma, vec3(1 / gamma)), alpha);
+        // if (specularColor.r > 1 / 256.0 || specularColor.g > 1 / 256.0 || specularColor.b > 1 / 256.0)
         {
-            specularRoughness = vec4(vec3(roughness / specularRoughnessCap), 1.0);
+            specularRoughness = vec4(vec3(roughness / specularRoughnessCap), alpha);
         }
-        else
-        {
-            specularRoughness = vec4(1.0);
-        }
+        // else
+        // {
+            // specularRoughness = vec4(1.0);
+        // }
     }
     
     debug2 = vec4(lightPositions[0].xyz * 0.5 + vec3(0.5), 1.0);

@@ -16,6 +16,13 @@ public abstract class OpenGLContext implements Context
 	}
 	
 	@Override
+	public void finish()
+	{
+		glFinish();
+		openGLErrorCheck();
+	}
+	
+	@Override
 	public void enableDepthTest()
 	{
 		glEnable(GL_DEPTH_TEST);
