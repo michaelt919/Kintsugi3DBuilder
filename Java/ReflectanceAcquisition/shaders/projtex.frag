@@ -58,7 +58,8 @@ void main()
 		}
 		
 		fragColor = vec4(texture(imageTextures, vec3(texCoord.xy, cameraPoseIndex)).rgb, 
-                            max(0.0, (cameraPoses[cameraPoseIndex] * vec4(normalize(fNormal), 0.0)).z));
+                        max(0.0, dot(normalize((cameraPoses[cameraPoseIndex] * vec4(fNormal, 0.0)).xyz),
+                            - normalize((cameraPoses[cameraPoseIndex] * vec4(fPosition, 1.0)).xyz))));
                             
         projPosMap = (projPos + vec4(1)) / 2;
 	}
