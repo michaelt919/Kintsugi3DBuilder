@@ -35,19 +35,22 @@ public class TexGenProgram
     	ulfToTexContext.enableBackFaceCulling();
     	
     	int textureSize = 1024;
-    	float gamma = 1.0f; // 2.2f;
+    	float gamma = 1.0f;
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
     	float guessSpecularRoughness = 0.5f;
     	float guessSpecularOrthoExp = 1.0f;
     	float guessSpecularWeight = 0.0f;
-    	int multisampleRange = 1; // +/- n pixels in each direction
-    	float determinantThreshold = 0.01f * (1 + multisampleRange);
-    	int fittingIterations = 256;
+    	int multisampleRange = 0; // +/- n pixels in each direction
+    	float specularRoughnessCap = 1.0f;
+    	float weightSumThreshold = 0.1f * (1 + multisampleRange);
+    	float determinantThreshold = 0.005f * (1 + multisampleRange);
+    	float determinantExponent = 1.0f;
+    	float minFillAlphaSpecular = 0.0f;
+    	int fittingIterations = 1;
     	int diffuseFillIterations = 1;
     	int specularFillIterations = 1024;
-    	float specularRoughnessCap = 1.0f;
     	
-    	int debugPixelX = 450, debugPixelY = 790;
+    	int debugPixelX = 560, debugPixelY = 885;
     	
         try
         {
@@ -170,8 +173,12 @@ public class TexGenProgram
 		    	specularFitRenderable.program().setUniform("gamma", gamma);
 		    	specularFitRenderable.program().setUniform("guessSpecularRoughness", guessSpecularRoughness);
 		    	specularFitRenderable.program().setUniform("multisampleRange", multisampleRange);
-		    	specularFitRenderable.program().setUniform("determinantThreshold", determinantThreshold);
 		    	specularFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
+		    	specularFitRenderable.program().setUniform("defaultSpecularColor", new Vector3(0.0f, 0.0f, 0.0f));
+		    	specularFitRenderable.program().setUniform("defaultSpecularRoughness", specularRoughnessCap);
+		    	specularFitRenderable.program().setUniform("weightSumThreshold", weightSumThreshold);
+		    	specularFitRenderable.program().setUniform("determinantThreshold", determinantThreshold);
+		    	specularFitRenderable.program().setUniform("determinantExponent", determinantExponent);
 		    	
 		    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
 	    		{
@@ -325,6 +332,7 @@ public class TexGenProgram
 		    	holeFillFrontFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	
 		    	holeFillRenderable.program().setUniform("fillAll", false);
+		    	holeFillRenderable.program().setUniform("minFillAlpha", 0.0f);
 		    	
 		    	holeFillRenderable.program().setUniform("defaultColor0", new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
 		    	holeFillRenderable.program().setUniform("defaultColor1", new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
@@ -368,6 +376,7 @@ public class TexGenProgram
 		    	}
 		    	
 		    	holeFillRenderable.program().setUniform("fillAll", false);
+		    	holeFillRenderable.program().setUniform("minFillAlpha", minFillAlphaSpecular);
 		    	
 		    	holeFillRenderable.program().setUniform("defaultColor0", new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
 		    	holeFillRenderable.program().setUniform("defaultColor1", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -392,6 +401,7 @@ public class TexGenProgram
 		    		{
 		    			// Final iteration: render to final framebuffer and ensure that every pixel has an alpha of 1.0
 				    	holeFillRenderable.program().setUniform("fillAll", true);
+				    	holeFillRenderable.program().setUniform("minFillAlpha", 0.0f);
 		    			holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, specularFitBackFramebuffer);
 		    		}
 		    		else

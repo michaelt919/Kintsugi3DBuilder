@@ -27,6 +27,7 @@ uniform vec4 defaultColor5;
 uniform vec4 defaultColor6;
 uniform vec4 defaultColor7;
 
+uniform float minFillAlpha;
 uniform bool fillAll;
 
 in vec4 fPosition;
@@ -72,25 +73,37 @@ vec4 fill(sampler2D input, sampler2D original, vec4 defaultColor)
             if (northMask > 0.0)
             {
                 vec4 north = textureOffset(input, texCoords, ivec2(0, 1));
-                sum += north.a * vec4(north.rgb, 1.0);
+                if (north.a >= minFillAlpha)
+                {
+                    sum += north.a * vec4(north.rgb, 1.0);
+                }
             }
             if (southMask > 0.0)
             {
                 vec4 south = textureOffset(input, texCoords, ivec2(0, -1));
-                sum += south.a * vec4(south.rgb, 1.0);
+                if (south.a >= minFillAlpha)
+                {
+                    sum += south.a * vec4(south.rgb, 1.0);
+                }
             }
             if (eastMask > 0.0)
             {
                 vec4 east = textureOffset(input, texCoords, ivec2(1, 0));
-                sum += east.a * vec4(east.rgb, 1.0);
+                if (east.a >= minFillAlpha)
+                {
+                    sum += east.a * vec4(east.rgb, 1.0);
+                }
             }
             if (westMask > 0.0)
             {
                 vec4 west = textureOffset(input, texCoords, ivec2(-1, 0));
-                sum += west.a * vec4(west.rgb, 1.0);
+                if (west.a >= minFillAlpha)
+                {
+                    sum += west.a * vec4(west.rgb, 1.0);
+                }
             }
             
-            if (sum.a > (1.0 - central.a))
+            if (sum.a >= (1.0 - central.a))
             {
                 return vec4(central.a * central.rgb + (1.0 - central.a) * sum.rgb / sum.a, 1.0);
             }
