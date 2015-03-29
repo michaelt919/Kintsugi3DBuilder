@@ -230,7 +230,22 @@ void main()
     //float ambientIntensity = dSolution.w;
     float diffuseIntensity = length(dSolution.xyz);
     vec3 normal = normalize(dSolution.xyz);
-    vec3 diffuseColorPreGamma = min(vec3(1.0), diffuseAvg * diffuseIntensity);
+    vec3 diffuseColorPreGamma = diffuseAvg * diffuseIntensity;
+    
+    float alpha;
+    if (isnan(diffuseColorPreGamma.r) || isnan(diffuseColorPreGamma.g) || isnan(diffuseColorPreGamma.b) ||
+        isinf(diffuseColorPreGamma.r) || isinf(diffuseColorPreGamma.g) || isinf(diffuseColorPreGamma.b) ||
+        isnan(normal.x) || isnan(normal.y) || isnan(normal.z) ||
+        isinf(normal.x) || isinf(normal.y) || isinf(normal.z))
+    {
+        diffuseColorPreGamma = vec3(0.0);
+        normal = vec3(0.0);
+        alpha = 0.0;
+    }
+    else
+    {
+        alpha = 1.0;
+    }
     
     debug1 = vec4(rgbWeights, 1.0);
     debug2 = vec4(vec3(diffuseIntensity), 1.0);
@@ -263,8 +278,8 @@ void main()
     // }
     // else
     {
-        diffuseColor = vec4(pow(diffuseColorPreGamma, vec3(1 / gamma)), 1.0);
-        normalMap = vec4(normal * 0.5 + vec3(0.5), 1.0);
+        diffuseColor = vec4(pow(diffuseColorPreGamma, vec3(1 / gamma)), alpha);
+        normalMap = vec4(normal * 0.5 + vec3(0.5), alpha);
     }
     
     //debug1 = vec4(lightPositions[0].xyz * 0.5 + vec3(0.5), 1.0);
