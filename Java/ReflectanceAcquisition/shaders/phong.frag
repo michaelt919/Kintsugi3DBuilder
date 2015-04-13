@@ -4,6 +4,7 @@ uniform mat4 model_view;
 uniform vec3 lightDirection;
 uniform vec3 lightColor;
 uniform vec3 ambientColor;
+uniform float roughnessScale;
 uniform float gamma;
 
 uniform sampler2D diffuse;
@@ -21,7 +22,7 @@ void main()
 {
     vec4 diffuseColor = pow(texture(diffuse, fTexCoord), vec4(gamma));
     vec4 specularColor = pow(texture(specular, fTexCoord), vec4(gamma));
-    float specularRoughness = texture(roughness, fTexCoord)[0];
+    float specularRoughness = texture(roughness, fTexCoord)[0] * roughnessScale;
     vec3 normalDir = normalize((model_view * vec4(texture(normal, fTexCoord).xyz * 2 - vec3(1.0), 0.0)).xyz);
 
     vec3 viewDir = normalize((model_view * vec4(fPosition, 1.0)).xyz);
