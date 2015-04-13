@@ -67,10 +67,10 @@ public class PhongRenderer implements Drawable
 			this.mesh = new VertexMesh("OBJ", objFile);
 			
 			File texturePath = new File(objFile.getParentFile(), "textures");
-			this.diffuse = new OpenGLTexture2D(new File(texturePath, "diffuse.png"), true);
-			this.normal = new OpenGLTexture2D(new File(texturePath, "normal.png"), true);
-			this.specular = new OpenGLTexture2D(new File(texturePath, "specular.png"), true);
-			this.roughness = new OpenGLTexture2D(new File(texturePath, "roughness.png"), true);
+			this.diffuse = new OpenGLTexture2D(new File(texturePath, "diffuse.png"), true, true, true);
+			this.normal = new OpenGLTexture2D(new File(texturePath, "normal.png"), true, true, true);
+			this.specular = new OpenGLTexture2D(new File(texturePath, "specular.png"), true, true, true);
+			this.roughness = new OpenGLTexture2D(new File(texturePath, "roughness.png"), true, true, true);
 			
 			this.renderable = new OpenGLRenderable(PhongRenderer.program);
 			this.vboResources = this.renderable.addVertexMesh("position", "texCoord", null, this.mesh);
@@ -113,13 +113,14 @@ public class PhongRenderer implements Drawable
     	this.renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
     	
     	// TODO settings UI
-    	//this.renderable.program().setUniform("gamma", 2.2f);
-    	this.renderable.program().setUniform("gamma", 1.0f);
+    	this.renderable.program().setUniform("gamma", 2.2f);
+    	//this.renderable.program().setUniform("gamma", 1.0f);
     	this.renderable.program().setUniform("ambientColor", new Vector3(0.0f, 0.0f, 0.0f));
     	this.renderable.program().setUniform("lightColor", new Vector3(1.0f, 1.0f, 1.0f));
     	//this.renderable.program().setUniform("lightPosition", 
     	//		new Matrix3(modelView).transpose().times(new Vector3(modelView.getColumn(3)).negated()));
     	this.renderable.program().setUniform("lightDirection", new Vector3(lightTrackball.getRotationMatrix().getColumn(2)));
+    	this.renderable.program().setUniform("roughnessScale", 2.0f);
     	
     	this.renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 	}

@@ -35,22 +35,22 @@ public class TexGenProgram
     	ulfToTexContext.enableBackFaceCulling();
     	
     	int textureSize = 1024;
-    	float gamma = 1.0f;
+    	float gamma = 2.2f;
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
     	float guessSpecularRoughness = 0.5f;
     	float guessSpecularOrthoExp = 1.0f;
     	float guessSpecularWeight = 0.0f;
-    	int multisampleRange = 0; // +/- n pixels in each direction
-    	float specularRoughnessCap = 1.0f;
+    	int multisampleRange = 1; // +/- n pixels in each direction
+    	float specularRoughnessCap = 2.0f;
     	float weightSumThreshold = 0.1f * (1 + multisampleRange);
     	float determinantThreshold = 0.005f * (1 + multisampleRange);
     	float determinantExponent = 1.0f;
-    	float minFillAlphaSpecular = 0.0f;
+    	float minFillAlphaSpecular = 0.1f;
     	int fittingIterations = 1;
     	int diffuseFillIterations = 1;
     	int specularFillIterations = 1024;
     	
-    	int debugPixelX = 560, debugPixelY = 885;
+    	int debugPixelX = 412, debugPixelY = 840;
     	
         try
         {
@@ -339,8 +339,8 @@ public class TexGenProgram
 		    	
 		    	for (int i = 0; i < diffuseFillIterations; i++)
 		    	{
-		    		holeFillRenderable.program().setTexture("original0", diffuseFitFrontFramebuffer.getColorAttachmentTexture(0));
-		    		holeFillRenderable.program().setTexture("original1", diffuseFitFrontFramebuffer.getColorAttachmentTexture(1));
+		    		holeFillRenderable.program().setTexture("mask0", diffuseFitFrontFramebuffer.getColorAttachmentTexture(0));
+		    		holeFillRenderable.program().setTexture("mask1", diffuseFitFrontFramebuffer.getColorAttachmentTexture(1));
 
 		    		if (i == 0)
 		    		{
@@ -374,6 +374,9 @@ public class TexGenProgram
 
 			    	ulfToTexContext.flush();
 		    	}
+
+		    	holeFillFrontFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		    	holeFillFrontFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	
 		    	holeFillRenderable.program().setUniform("fillAll", false);
 		    	holeFillRenderable.program().setUniform("minFillAlpha", minFillAlphaSpecular);
@@ -383,8 +386,9 @@ public class TexGenProgram
 		    	
 		    	for (int i = 0; i < specularFillIterations; i++)
 		    	{
-		    		holeFillRenderable.program().setTexture("original0", specularFitFrontFramebuffer.getColorAttachmentTexture(0));
-		    		holeFillRenderable.program().setTexture("original1", specularFitFrontFramebuffer.getColorAttachmentTexture(1));
+		    		// Intentionally use mask from diffuse fit since its more reliable
+		    		holeFillRenderable.program().setTexture("mask0", diffuseFitFrontFramebuffer.getColorAttachmentTexture(0));
+		    		holeFillRenderable.program().setTexture("mask1", diffuseFitFrontFramebuffer.getColorAttachmentTexture(1));
 
 		    		if (i == 0)
 		    		{

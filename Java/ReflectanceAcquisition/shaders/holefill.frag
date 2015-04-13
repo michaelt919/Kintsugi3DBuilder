@@ -9,14 +9,14 @@ uniform sampler2D input5;
 uniform sampler2D input6;
 uniform sampler2D input7;
 
-uniform sampler2D original0;
-uniform sampler2D original1;
-uniform sampler2D original2;
-uniform sampler2D original3;
-uniform sampler2D original4;
-uniform sampler2D original5;
-uniform sampler2D original6;
-uniform sampler2D original7;
+uniform sampler2D mask0;
+uniform sampler2D mask1;
+uniform sampler2D mask2;
+uniform sampler2D mask3;
+uniform sampler2D mask4;
+uniform sampler2D mask5;
+uniform sampler2D mask6;
+uniform sampler2D mask7;
 
 uniform vec4 defaultColor0;
 uniform vec4 defaultColor1;
@@ -41,7 +41,7 @@ layout(location=5) out vec4 output5;
 layout(location=6) out vec4 output6;
 layout(location=7) out vec4 output7;
 
-vec4 fill(sampler2D input, sampler2D original, vec4 defaultColor)
+vec4 fill(sampler2D input, sampler2D mask, vec4 defaultColor)
 {
     vec2 texCoords = (fPosition.xy + vec2(1)) / 2;
     vec4 central = texture(input, texCoords);
@@ -56,10 +56,10 @@ vec4 fill(sampler2D input, sampler2D original, vec4 defaultColor)
         // Check which pixels are valid blending candidates.
         // We don't blend with pixels that originally had an alpha of 0.0
         // to prevent bleeding across boundaries.
-        float northMask = textureOffset(original, texCoords, ivec2(0, 1)).a;
-        float southMask = textureOffset(original, texCoords, ivec2(0, -1)).a;
-        float eastMask = textureOffset(original, texCoords, ivec2(1, 0)).a;
-        float westMask = textureOffset(original, texCoords, ivec2(-1, 0)).a;
+        float northMask = textureOffset(mask, texCoords, ivec2(0, 1)).a;
+        float southMask = textureOffset(mask, texCoords, ivec2(0, -1)).a;
+        float eastMask = textureOffset(mask, texCoords, ivec2(1, 0)).a;
+        float westMask = textureOffset(mask, texCoords, ivec2(-1, 0)).a;
         
         // If there are no valid candidates, immediately blend with the default color
         if (northMask <= 0.0 && southMask <= 0.0 && eastMask <= 0.0 && westMask <= 0.0)
@@ -110,11 +110,15 @@ vec4 fill(sampler2D input, sampler2D original, vec4 defaultColor)
             else if (fillAll)
             {
                 return vec4(central.a * central.rgb + sum.rgb + 
-                    (1.0 - central.a - sum.a) * defaultColor.rgb, 1.0);
+                   (1.0 - central.a - sum.a) * defaultColor.rgb, 1.0);
+            }
+            else if (central.a + sum.a > 0)
+            {
+                return vec4((central.a * central.rgb + sum.rgb) / (central.a + sum.a), central.a + sum.a);
             }
             else
             {
-                return vec4((central.a * central.rgb + sum.rgb) / (central.a + sum.a), central.a + sum.a);
+                return vec4(0);
             }
         }
     }
@@ -122,12 +126,12 @@ vec4 fill(sampler2D input, sampler2D original, vec4 defaultColor)
 
 void main()
 {
-    output0 = fill(input0, original0, defaultColor0);
-    output1 = fill(input1, original1, defaultColor1);
-    output2 = fill(input2, original2, defaultColor2);
-    output3 = fill(input3, original3, defaultColor3);
-    output4 = fill(input4, original4, defaultColor4);
-    output5 = fill(input5, original5, defaultColor5);
-    output6 = fill(input6, original6, defaultColor6);
-    output7 = fill(input7, original7, defaultColor7);
+    output0 = fill(input0, mask0, defaultColor0);
+    output1 = fill(input1, mask1, defaultColor1);
+    output2 = fill(input2, mask2, defaultColor2);
+    output3 = fill(input3, mask3, defaultColor3);
+    output4 = fill(input4, mask4, defaultColor4);
+    output5 = fill(input5, mask5, defaultColor5);
+    output6 = fill(input6, mask6, defaultColor6);
+    output7 = fill(input7, mask7, defaultColor7);
 }
