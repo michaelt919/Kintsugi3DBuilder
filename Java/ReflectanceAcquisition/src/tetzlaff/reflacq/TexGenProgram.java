@@ -41,16 +41,18 @@ public class TexGenProgram
     	float guessSpecularOrthoExp = 1.0f;
     	float guessSpecularWeight = 0.0f;
     	int multisampleRange = 1; // +/- n pixels in each direction
-    	float specularRoughnessCap = 2.0f;
+    	float specularRoughnessCap = 1.0f;
     	float weightSumThreshold = 0.1f * (1 + multisampleRange);
     	float determinantThreshold = 0.005f * (1 + multisampleRange);
     	float determinantExponent = 1.0f;
     	float minFillAlphaSpecular = 0.1f;
+    	float maxDiffuseRemovalFactor = 1.0f;
+    	float maxSpecularRemovalFactor = 1.0f;
     	int fittingIterations = 1;
     	int diffuseFillIterations = 1;
     	int specularFillIterations = 1024;
     	
-    	int debugPixelX = 412, debugPixelY = 840;
+    	int debugPixelX = 692, debugPixelY = 509;
     	
         try
         {
@@ -232,7 +234,7 @@ public class TexGenProgram
 		        for (int i = 0; i < fittingIterations; i++)
 		        {
 		        	System.out.println("Starting iteration " + i);
-			    	diffuseFitRenderable.program().setUniform("specularRemovalFactor", (float)i / (float)fittingIterations);
+			    	diffuseFitRenderable.program().setUniform("specularRemovalFactor", maxSpecularRemovalFactor * (float)i / (float)fittingIterations);
 			    	diffuseFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
 			    	diffuseFitRenderable.program().setTexture("diffuseEstimate", diffuseFitFrontFramebuffer.getColorAttachmentTexture(0));
 			    	diffuseFitRenderable.program().setTexture("normalEstimate", diffuseFitFrontFramebuffer.getColorAttachmentTexture(1));
@@ -242,7 +244,7 @@ public class TexGenProgram
 			    	
 			        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitBackFramebuffer);
 
-			    	specularFitRenderable.program().setUniform("diffuseRemovalFactor", (float)(i + 1) / (float)fittingIterations);
+			    	specularFitRenderable.program().setUniform("diffuseRemovalFactor", maxDiffuseRemovalFactor * (float)(i + 1) / (float)fittingIterations);
 			    	specularFitRenderable.program().setTexture("diffuseEstimate", diffuseFitBackFramebuffer.getColorAttachmentTexture(0));
 			    	specularFitRenderable.program().setTexture("normalEstimate", diffuseFitBackFramebuffer.getColorAttachmentTexture(1));
 			    	specularFitRenderable.program().setTexture("previousError", diffuseFitBackFramebuffer.getColorAttachmentTexture(2));

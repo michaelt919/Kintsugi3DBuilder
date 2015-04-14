@@ -268,9 +268,9 @@ void main()
     vec2 sSolution = inverse(sA) * sB;
     vec3 specularAvg = specularSum.rgb / (specularSum.r + specularSum.g + specularSum.b);
     float scaledWeightSum = min(1.0, sA[1][1] / weightSumThreshold);
-    vec3 specularColorPreGamma = scaledWeightSum * exp(sSolution[1]) * specularAvg + 
+    vec3 specularColorPreGamma = scaledWeightSum * min(vec3(1.0), exp(sSolution[1]) * specularAvg) + 
                                     (1 - scaledWeightSum) * defaultSpecularColor;
-    float roughness = scaledWeightSum * inversesqrt(2 * sSolution[0]) + 
+    float roughness = scaledWeightSum * min(specularRoughnessCap, inversesqrt(2 * sSolution[0])) + 
                         (1 - scaledWeightSum) * defaultSpecularRoughness;
     float alpha = min(1.0, scaledWeightSum * 
                     pow(abs(determinant(sA)) / (sA[1][1] * determinantThreshold), determinantExponent) + 
@@ -333,6 +333,9 @@ void main()
     }
     
     debug2 = vec4(lightPositions[0].xyz * 0.5 + vec3(0.5), 1.0);
+    
+    debug3 = vec4(vec3(scaledWeightSum), 1.0);
+    debug4 = vec4(vec3(alpha), 1.0);
     
     // debug0 = vec4(specularAvg, 1.0);
     // debug1 = vec4(sSolution[0] / 4, (6 + sSolution[1]) / 8, 0.0, 1.0);
