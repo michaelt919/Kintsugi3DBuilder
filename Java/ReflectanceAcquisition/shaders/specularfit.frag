@@ -17,7 +17,8 @@ uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
 uniform sampler2D previousError;
 
-uniform float guessSpecularRoughness;
+uniform bool computeRoughness;
+uniform float specularInfluenceScale;
 uniform int multisampleRange;
 //uniform float multisampleDistanceFactor;
 uniform vec3 defaultSpecularColor;
@@ -142,142 +143,210 @@ void main()
     vec3 normal = getNormalVector();
     vec4 diffuseColor = getDiffuseColor();
     
-    vec4 specularSum = vec4(0);
-    mat2 sA = mat2(0);
-    vec2 sB = vec2(0);
-    float weightSum = 0.0;
+    vec3 specularColorPreGamma;
+    float roughness;
+    float alpha;
     
-    for (int i = 0; i < textureCount; i++)
+    if (computeRoughness)
     {
-        vec4 color = getColor(i);
-        if (color.a > 0)
+        vec4 specularSum = vec4(0);
+        mat2 sA = mat2(0);
+        vec2 sB = vec2(0);
+        float weightSum = 0.0;
+        
+        for (int i = 0; i < textureCount; i++)
         {
-            vec3 view = getViewVector(i);
-            vec3 light = getLightVector(i);
-            vec4 colorRemainder;
-            
-            if (diffuseColor.a > 0)
+            vec4 color = getColor(i);
+            if (color.a > 0)
             {
-                vec3 diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal));
-                float cap = 1.0 - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
-                colorRemainder = vec4(clamp(color.rgb - diffuseRemovalFactor * diffuseContrib,
-                    vec3(0), vec3(cap)), color.a);
-            }
-            else
-            {
-                colorRemainder = color;
-            }
-            
-            float intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
-            
-            vec3 reflection = getReflectionVector(normal, light);
-            float rDotV = dot(reflection, view);
-            
-            if (intensity > 0.0 && rDotV > 0.0)
-            {
-                float u = rDotV - 1 / rDotV;
+                vec3 view = getViewVector(i);
+                vec3 light = getLightVector(i);
+                vec4 colorRemainder;
                 
-                sA += color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
-                    intensity * outerProduct(vec2(u, 1), vec2(u, 1));
-                sB += color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
-                    intensity * log(intensity) * vec2(u, 1);
-                
-                specularSum += color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness))
-                    * intensity * colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
-                    
-                weightSum += color.a * pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness));
-                
-                for (int j = 1; j <= multisampleRange; j++)
+                if (diffuseColor.a > 0)
                 {
-                    float weight = 0.25 / (j + 1);
-                    ivec2 offset = ivec2(j, 0);
-                    for (int k = 0; k < 4*(j+1); k++)
-                    {
-                        if (offset.x == j && offset.y != -j)
-                        {
-                            offset.y--;
-                        }
-                        else if (offset.y == j)
-                        {
-                            offset.x++;
-                        }
-                        else if (offset.x == -j)
-                        {
-                            offset.y++;
-                        }
-                        else if (offset.y == -j)
-                        {
-                            offset.x--;
-                        }
+                    vec3 diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal));
+                    float cap = 1.0 - diffuseRemovalFactor * 
+                        max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
+                    colorRemainder = vec4(clamp(color.rgb - diffuseRemovalFactor * diffuseContrib,
+                        vec3(0), vec3(cap)), color.a);
+                }
+                else
+                {
+                    colorRemainder = color;
+                }
+                
+                float intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
+                
+                vec3 reflection = getReflectionVector(normal, light);
+                float rDotV = dot(reflection, view);
+                
+                if (intensity > 0.0 && rDotV > 0.0)
+                {
+                    float u = rDotV - 1 / rDotV;
+                    
+                    sA += color.a * pow(rDotV, 1 / (specularInfluenceScale * specularInfluenceScale)) * 
+                        intensity * outerProduct(vec2(u, 1), vec2(u, 1));
+                    sB += color.a * pow(rDotV, 1 / (specularInfluenceScale * specularInfluenceScale)) * 
+                        intensity * log(intensity) * vec2(u, 1);
+                    
+                    specularSum += color.a * 
+                        pow(rDotV, 1 / (specularInfluenceScale * specularInfluenceScale))
+                        * intensity * vec4(colorRemainder.rgb, 1.0);
                         
-                        color = getColorWithOffset(i, offset);
-                        if (color.a > 0.0)
+                    weightSum += color.a * 
+                        pow(rDotV, 1 / (specularInfluenceScale * specularInfluenceScale));
+                    
+                    for (int j = 1; j <= multisampleRange; j++)
+                    {
+                        float weight = 0.25 / (j + 1);
+                        ivec2 offset = ivec2(j, 0);
+                        for (int k = 0; k < 4*(j+1); k++)
                         {
-                            // float effectiveWeight = weight * multisampleDistanceFactor / 
-                                // (getDistanceByOffset(i, offset) + multisampleDistanceFactor);
-                            float effectiveWeight = weight;
-                            view = getViewVectorWithOffset(i, offset);
-                            light = getLightVectorWithOffset(i, offset);
-                            normal = getNormalVectorWithOffset(offset);
-                            diffuseColor = getDiffuseColorWithOffset(offset);
-                            
-                            if (diffuseColor.a > 0)
+                            if (offset.x == j && offset.y != -j)
                             {
-                                vec3 diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal));
-                                float cap = 1.0 - max(diffuseContrib.r, 
-                                    max(diffuseContrib.g, diffuseContrib.b));
-                                colorRemainder = vec4(clamp(
-                                    color.rgb - diffuseRemovalFactor * diffuseContrib,
-                                    vec3(0), vec3(cap)), color.a);
+                                offset.y--;
                             }
-                            else
+                            else if (offset.y == j)
                             {
-                                colorRemainder = color;
+                                offset.x++;
+                            }
+                            else if (offset.x == -j)
+                            {
+                                offset.y++;
+                            }
+                            else if (offset.y == -j)
+                            {
+                                offset.x--;
                             }
                             
-                            intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
-                            
-                            reflection = getReflectionVector(normal, light);
-                            rDotV = dot(reflection, view);
-                            
-                            if (intensity > 0.0 && rDotV > 0.0)
+                            color = getColorWithOffset(i, offset);
+                            if (color.a > 0.0)
                             {
-                                u = rDotV - 1 / rDotV;
+                                // float effectiveWeight = weight * multisampleDistanceFactor / 
+                                    // (getDistanceByOffset(i, offset) + multisampleDistanceFactor);
+                                float effectiveWeight = weight;
+                                view = getViewVectorWithOffset(i, offset);
+                                light = getLightVectorWithOffset(i, offset);
+                                normal = getNormalVectorWithOffset(offset);
+                                diffuseColor = getDiffuseColorWithOffset(offset);
                                 
-                                sA += effectiveWeight * color.a * 
-                                    pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
-                                    intensity * outerProduct(vec2(u, 1), vec2(u, 1));
-                                sB += effectiveWeight * color.a * 
-                                    pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
-                                    intensity * log(intensity) * vec2(u, 1);
+                                if (diffuseColor.a > 0)
+                                {
+                                    vec3 diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal));
+                                    float cap = 1.0 - max(diffuseContrib.r, 
+                                        max(diffuseContrib.g, diffuseContrib.b));
+                                    colorRemainder = vec4(clamp(
+                                        color.rgb - diffuseRemovalFactor * diffuseContrib,
+                                        vec3(0), vec3(cap)), color.a);
+                                }
+                                else
+                                {
+                                    colorRemainder = color;
+                                }
                                 
-                                specularSum += effectiveWeight * color.a * 
-                                    pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness)) * 
-                                    intensity * colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
+                                intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
+                                
+                                reflection = getReflectionVector(normal, light);
+                                rDotV = dot(reflection, view);
+                                
+                                if (intensity > 0.0 && rDotV > 0.0)
+                                {
+                                    u = rDotV - 1 / rDotV;
                                     
-                                weightSum += effectiveWeight * color.a * 
-                                    pow(rDotV, 1 / (guessSpecularRoughness * guessSpecularRoughness));
+                                    sA += effectiveWeight * color.a * 
+                                        pow(rDotV, 1 / (specularInfluenceScale * specularInfluenceScale)) 
+                                        * intensity * outerProduct(vec2(u, 1), vec2(u, 1));
+                                    sB += effectiveWeight * color.a * 
+                                        pow(rDotV, 1 / (specularInfluenceScale * specularInfluenceScale)) 
+                                        * intensity * log(intensity) * vec2(u, 1);
+                                    
+                                    specularSum += effectiveWeight * color.a * 
+                                        pow(rDotV, 1 / (specularInfluenceScale * specularInfluenceScale)) 
+                                        * intensity * colorRemainder.a * vec4(colorRemainder.rgb, 1.0);
+                                        
+                                    weightSum += effectiveWeight * color.a * 
+                                        pow(rDotV, 1 / (specularInfluenceScale * specularInfluenceScale));
+                                }
                             }
                         }
                     }
                 }
             }
         }
+        
+        vec2 sSolution = inverse(sA) * sB;
+        vec3 specularAvg = specularSum.rgb / (specularSum.r + specularSum.g + specularSum.b);
+        float scaledWeightSum = min(1.0, sA[1][1] / weightSumThreshold);
+        
+        specularColorPreGamma = scaledWeightSum * min(vec3(1.0), exp(sSolution[1]) * specularAvg) + 
+                                        (1 - scaledWeightSum) * defaultSpecularColor;
+        roughness = scaledWeightSum * min(specularRoughnessCap, inversesqrt(2 * sSolution[0])) + 
+                            (1 - scaledWeightSum) * defaultSpecularRoughness;
+        alpha = min(1.0, scaledWeightSum * 
+                        pow(abs(determinant(sA)) / (sA[1][1] * determinantThreshold), determinantExponent)
+                        + (1 - scaledWeightSum));
+        // alpha = min(1.0, (exp(determinantExponent * abs(determinant(sA)) / determinantThreshold) - 1) /
+                            // (exp(determinantExponent) - 1));
+                            
+        debug1 = vec4(specularAvg, 1.0);
+        debug3 = vec4(vec3(scaledWeightSum), 1.0);
     }
-    
-    vec2 sSolution = inverse(sA) * sB;
-    vec3 specularAvg = specularSum.rgb / (specularSum.r + specularSum.g + specularSum.b);
-    float scaledWeightSum = min(1.0, sA[1][1] / weightSumThreshold);
-    vec3 specularColorPreGamma = scaledWeightSum * min(vec3(1.0), exp(sSolution[1]) * specularAvg) + 
-                                    (1 - scaledWeightSum) * defaultSpecularColor;
-    float roughness = scaledWeightSum * min(specularRoughnessCap, inversesqrt(2 * sSolution[0])) + 
-                        (1 - scaledWeightSum) * defaultSpecularRoughness;
-    float alpha = min(1.0, scaledWeightSum * 
-                    pow(abs(determinant(sA)) / (sA[1][1] * determinantThreshold), determinantExponent) + 
-                    (1 - scaledWeightSum));
-    // alpha = min(1.0, (exp(determinantExponent * abs(determinant(sA)) / determinantThreshold) - 1) /
-                        // (exp(determinantExponent) - 1));
-    debug1 = vec4(specularAvg, 1.0);
+    else
+    {
+        vec4 specularSum = vec4(0);
+        vec4 halfVectorSum = vec4(0);
+        
+        for (int i = 0; i < textureCount; i++)
+        {
+            vec4 color = getColor(i);
+            if (color.a > 0)
+            {
+                vec3 view = getViewVector(i);
+                vec3 light = getLightVector(i);
+                vec4 colorRemainder;
+                
+                if (diffuseColor.a > 0)
+                {
+                    vec3 diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal));
+                    float cap = 1.0 - diffuseRemovalFactor * 
+                        max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
+                    colorRemainder = vec4(clamp(color.rgb - diffuseRemovalFactor * diffuseContrib,
+                        vec3(0), vec3(cap)), color.a);
+                }
+                else
+                {
+                    colorRemainder = color;
+                }
+                
+                vec3 reflection = getReflectionVector(normal, light);
+                float rDotV = dot(reflection, view);
+                vec3 h = normalize(view + light);
+                
+                if ((colorRemainder.r > 0.0 || colorRemainder.g > 0.0 || colorRemainder.b > 0.0) && 
+                    rDotV > 0.0)
+                {
+                    specularSum += colorRemainder.a * 
+                        vec4(colorRemainder.rgb, exp((rDotV - 1 / rDotV) / 
+                            (2 * defaultSpecularRoughness * defaultSpecularRoughness)));
+                        
+                    halfVectorSum += (colorRemainder.r + colorRemainder.g + colorRemainder.b) * 
+                        vec4(h, 1.0);
+                }
+            }
+        }
+        
+        float scaledWeightSum = min(1.0, specularSum.a / weightSumThreshold);
+        
+        specularColorPreGamma = scaledWeightSum * min(vec3(1.0), specularSum.rgb / specularSum.a) + 
+                                        (1 - scaledWeightSum) * defaultSpecularColor;
+        roughness = defaultSpecularRoughness;
+        alpha = 1.0;
+        
+        debug1 = vec4(normalize(specularSum.rgb), 1.0);
+        debug3 = vec4(vec3(scaledWeightSum), 1.0);
+        debug5 = vec4((halfVectorSum.xyz / halfVectorSum.w) / 2 + vec3(0.5), 1.0);
+    }
     
     if (isinf(specularColorPreGamma.r) || isnan(specularColorPreGamma.r) || 
         isinf(specularColorPreGamma.g) || isnan(specularColorPreGamma.g) || 
@@ -333,8 +402,6 @@ void main()
     }
     
     debug2 = vec4(lightPositions[0].xyz * 0.5 + vec3(0.5), 1.0);
-    
-    debug3 = vec4(vec3(scaledWeightSum), 1.0);
     debug4 = vec4(vec3(alpha), 1.0);
     
     // debug0 = vec4(specularAvg, 1.0);
