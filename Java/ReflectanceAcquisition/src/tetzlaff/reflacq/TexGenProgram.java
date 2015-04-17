@@ -36,23 +36,25 @@ public class TexGenProgram
     	
     	int textureSize = 1024;
     	float gamma = 2.2f;
+    	
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
-    	float guessSpecularRoughness = 0.5f;
+    	boolean computeRoughness = false;
+    	float specularInfluenceScale = 0.5f;
     	float guessSpecularOrthoExp = 1.0f;
     	float guessSpecularWeight = 0.0f;
-    	int multisampleRange = 1; // +/- n pixels in each direction
-    	float specularRoughnessCap = 1.0f;
+    	int multisampleRange = 0; // +/- n pixels in each direction
+    	float specularRoughnessCap = 2.0f;
     	float weightSumThreshold = 0.1f * (1 + multisampleRange);
     	float determinantThreshold = 0.005f * (1 + multisampleRange);
     	float determinantExponent = 1.0f;
     	float minFillAlphaSpecular = 0.1f;
     	float maxDiffuseRemovalFactor = 1.0f;
-    	float maxSpecularRemovalFactor = 1.0f;
+    	float maxSpecularRemovalFactor = 0.0f;
     	int fittingIterations = 1;
     	int diffuseFillIterations = 1;
     	int specularFillIterations = 1024;
     	
-    	int debugPixelX = 692, debugPixelY = 509;
+    	int debugPixelX = 322, debugPixelY = 1024 - 365;
     	
         try
         {
@@ -173,7 +175,8 @@ public class TexGenProgram
 		    	specularFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
 		    	
 		    	specularFitRenderable.program().setUniform("gamma", gamma);
-		    	specularFitRenderable.program().setUniform("guessSpecularRoughness", guessSpecularRoughness);
+		    	specularFitRenderable.program().setUniform("computeRoughness", computeRoughness);
+		    	specularFitRenderable.program().setUniform("specularInfluenceScale", specularInfluenceScale);
 		    	specularFitRenderable.program().setUniform("multisampleRange", multisampleRange);
 		    	specularFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
 		    	specularFitRenderable.program().setUniform("defaultSpecularColor", new Vector3(0.0f, 0.0f, 0.0f));
