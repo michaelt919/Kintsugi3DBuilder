@@ -89,7 +89,7 @@ public class ViewSet
 		if (cameraProjectionList != null && cameraProjectionList.size() > 0)
 		{
 			// Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
-			FloatVertexList flattenedProjectionMatrices = new FloatVertexList(16, cameraPoseList.size());
+			FloatVertexList flattenedProjectionMatrices = new FloatVertexList(16, cameraProjectionList.size());
 			
 			for (int k = 0; k < cameraProjectionList.size(); k++)
 			{
