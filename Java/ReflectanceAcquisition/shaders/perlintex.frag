@@ -520,6 +520,7 @@ float noise(vec2 P)
 // End of supporting code from: https://github.com/ashima/webgl-noise
 ///////////////////////////////////////////////////////////////
 
+uniform float gamma;
 uniform int imageWidth;
 uniform int imageHeight;
 uniform int targetWidth;
@@ -529,6 +530,9 @@ uniform int cloudScale;
 uniform int cloudDepth;
 uniform int sampleRadius;
 uniform float weightExponent;
+uniform float sharpness;
+uniform vec4 whitePoint;
+uniform vec4 blackPoint;
 uniform sampler2D imageTexture;
 in vec3 fPosition;
 layout(location = 0) out vec4 fragColor;
@@ -546,46 +550,64 @@ float clouds(int n, vec2 P)
 
 void main()
 {
+    vec4 avgColor = textureLod(imageTexture, vec2(0.5), 256); // Should never have more than 256 mipmap levels
+
     vec2 texCoords = (fPosition.xy + 1.0) * 0.5;
     vec2 pixelLocation = vec2(imageWidth, imageHeight) * texCoords;
     vec2 interp = pixelLocation - floor(pixelLocation);
     vec2 delta = vec2(1) / vec2(imageWidth, imageHeight);
     
-    mat3 A = mat3(0);
-    mat4x3 B = mat4x3(0);
-    for (int i = -sampleRadius; i <= sampleRadius; i++)
+    vec4 baseSample = texture(imageTexture, texCoords);
+    vec3 offsetBaseSample = clamp((baseSample.rgb - avgColor.rgb) / max(vec3(0), max(avgColor.rgb - vec3(blackPoint), vec3(whitePoint)-avgColor.rgb)), -1, 1);
+    float weight = (3.0 - offsetBaseSample.r - offsetBaseSample.g - offsetBaseSample.b) * (3.0 + offsetBaseSample.r + offsetBaseSample.g + offsetBaseSample.b) / 9.0;
+    
+    vec4 sum = vec4(0.0);
+    vec2 p = vec2(imageWidth / cloudScale, imageHeight / cloudScale) * vec2(fPosition.xy + 1.0) / 2;
+    delta = delta * weight * sampleRadius;//pow(2.0, float(cloudDepth-1));
+    for (int i = 0; i < cloudDepth; i++)
     {
-        for (int j = -sampleRadius; j <= sampleRadius; j++)
-        {
-            vec4 sampleData = texture(imageTexture, texCoords + vec2(i,j) * delta);
-            A += outerProduct(vec3(i,j,1), vec3(i,j,1));
-            B += outerProduct(vec3(i,j,1), sampleData);
-        }
+        sum += texture(imageTexture, texCoords + vec2(noise(p), noise(p + vec2(0.5))) * delta);
+        //delta = delta / 2;
+        p *= 2;
     }
+    fragColor = sum / cloudDepth;
+    
+    // mat3 A = mat3(0);
+    // mat4x3 B = mat4x3(0);
+    // for (int i = -sampleRadius; i <= sampleRadius; i++)
+    // {
+        // for (int j = -sampleRadius; j <= sampleRadius; j++)
+        // {
+            // vec4 sampleData = pow(texture(imageTexture, texCoords + vec2(i,j) * delta), vec4(gamma));
+            // A += outerProduct(vec3(i,j,1), vec3(i,j,1));
+            // B += outerProduct(vec3(i,j,1), sampleData);
+        // }
+    // }
                 
-    mat3x4 M = transpose(inverse(A) * B);
+    // mat3x4 M = transpose(inverse(A) * B);
     
-    vec4 sumError = vec4(0);
-    float sumWeights = 0;
-    for (int i = -sampleRadius; i <= sampleRadius; i++)
-    {
-        for (int j = -sampleRadius; j <= sampleRadius; j++)
-        {
-            float dist = length(vec2(i,j));
-            float weight = 1 / pow((dist+1)*(dist+1) - dist*dist, weightExponent);
-            vec4 sampleData = texture(imageTexture, texCoords + vec2(i,j) * delta);
-            sumError += weight * (sampleData - M * vec3(i,j,1));
-            sumWeights += weight;
-        }
-    }
+    // vec4 sumError = vec4(0);
+    // vec4 sumSquaredError = vec4(0);
+    // float sumWeights = 0;
+    // for (int i = -sampleRadius; i <= sampleRadius; i++)
+    // {
+        // for (int j = -sampleRadius; j <= sampleRadius; j++)
+        // {
+            // float dist = length(vec2(i,j));
+            // float weight = 1 / pow((dist+1)*(dist+1) - dist*dist, weightExponent);
+            // vec4 sampleData = pow(texture(imageTexture, texCoords + vec2(i,j) * delta), vec4(gamma));
+            // sumError += weight * (sampleData - M * vec3(i,j,1));
+            // sumSquaredError += weight * (sampleData - M * vec3(i,j,1)) * (sampleData - M * vec3(i,j,1));
+            // sumWeights += weight;
+        // }
+    // }
+    
+    // vec4 gradx = M * vec3(1,0,0);
+    // vec4 grady = M * vec3(0,1,0);
+    // vec4 noiseWeight = 1.0 / (1.0 + (gradx * gradx + grady * grady) * sharpness * sharpness);
    
-    vec4 avgError = sumError / sumWeights;
-    fragColor = M * vec3(0,0,1) + (clouds(cloudDepth, vec2(imageWidth / cloudScale, imageHeight / cloudScale) * vec2(fPosition.xy + 1.0) / 2) + 1) * avgError * cloudAmplitude;
-    //fragColor = vec4(avgError.rgb * vec3(interp, 1), 1);
-    
-    //fragColor = sample00;
-    
-    //fragColor = interp.x * interp.y * sample11 + (1-interp.x) * interp.y * sample01 + 
-    //                interp.x * (1-interp.y) * sample10 + (1-interp.x) * (1-interp.y) * sample00;
-    //fragColor = vec4(avgError.rgb * vec3(clouds(cloudDepth, vec2(imageWidth, imageHeight) * vec2(fPosition.xy + 1.0) / 2)), 1.0);
+    // vec4 avgError = sumError / sumWeights;
+    // vec4 avgError2 = sqrt(sumSquaredError / sumWeights);
+    // vec4 baseColor = M * vec3(0,0,1);
+    // fragColor = pow(noiseWeight * (baseColor + (clouds(cloudDepth, vec2(imageWidth / cloudScale, imageHeight / cloudScale) * vec2(fPosition.xy + 1.0) / 2)) * avgError2 * cloudAmplitude) + (1 - noiseWeight) * pow(texture(imageTexture, texCoords), vec4(gamma)), vec4(1 / gamma));
 }
