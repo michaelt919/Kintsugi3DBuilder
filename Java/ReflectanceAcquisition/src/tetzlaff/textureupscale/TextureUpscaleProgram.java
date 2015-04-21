@@ -27,12 +27,14 @@ import tetzlaff.window.glfw.GLFWWindow;
 
 public class TextureUpscaleProgram
 {
+	private static final float GAMMA = 2.2f;
 	private static final int SCALE_FACTOR = 16;
-	private static final float CLOUD_AMPLITUDE = 48.0f;
-	private static final int CLOUD_SCALE = 256;
+	private static final float CLOUD_AMPLITUDE = 8.0f;
+	private static final int CLOUD_SCALE = 16;
 	private static final int CLOUD_DEPTH = 8;
-	private static final int SAMPLE_RADIUS = 4;
-	private static final float WEIGHT_EXPONENT = 0.25f;
+	private static final int SAMPLE_RADIUS = 8;
+	private static final float WEIGHT_EXPONENT = 1.0f;
+	private static final float SHARPNESS = 0.0f;
 	
 	public static void main(String[] args)
     {
@@ -50,10 +52,11 @@ public class TextureUpscaleProgram
     		if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
     		{
     	    	File imageFile = fileChooser.getSelectedFile();
-    	    	OpenGLTexture2D imageTexture = new OpenGLTexture2D(imageFile, true, true, false);
+    	    	OpenGLTexture2D imageTexture = new OpenGLTexture2D(imageFile, true, true, true);
     	    	perlinNoiseProgram.setTexture("imageTexture", imageTexture);
     	    	int targetWidth = imageTexture.getWidth() * SCALE_FACTOR;
     	    	int targetHeight = imageTexture.getHeight() * SCALE_FACTOR;
+    	    	perlinNoiseProgram.setUniform("gamma", GAMMA);
     	    	perlinNoiseProgram.setUniform("imageWidth", imageTexture.getWidth());
     	    	perlinNoiseProgram.setUniform("imageHeight", imageTexture.getHeight());
     	    	perlinNoiseProgram.setUniform("targetWidth", targetWidth);
@@ -63,6 +66,9 @@ public class TextureUpscaleProgram
     	    	perlinNoiseProgram.setUniform("cloudDepth", CLOUD_DEPTH);
     	    	perlinNoiseProgram.setUniform("sampleRadius", SAMPLE_RADIUS);
     	    	perlinNoiseProgram.setUniform("weightExponent", WEIGHT_EXPONENT);
+    	    	perlinNoiseProgram.setUniform("sharpness", SHARPNESS);
+    	    	perlinNoiseProgram.setUniform("blackPoint", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+    	    	perlinNoiseProgram.setUniform("whitePoint", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		    	OpenGLFramebufferObject fbo = new OpenGLFramebufferObject(targetWidth, targetHeight, 1, false, false);
 		    	OpenGLRenderable renderable = new OpenGLRenderable(perlinNoiseProgram);
 		    	renderable.addVertexBuffer("position", OpenGLVertexBuffer.createRectangle(), true);
