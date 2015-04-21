@@ -121,6 +121,11 @@ public class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer
 	{
 		this(data, false);
 	}
+	
+	public static OpenGLVertexBuffer createRectangle()
+	{
+		return new OpenGLVertexBuffer(new FloatVertexList(2, 4, new float[] { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f }));
+	}
 
 	@Override
 	protected int getBufferTarget() 
