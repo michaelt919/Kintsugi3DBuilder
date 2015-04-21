@@ -553,6 +553,7 @@ public class TexGenProgram
         }
         
         GLFWWindow.closeAllWindows();
+        System.out.println("Process terminated with no errors.");
         System.exit(0);
 	}
 }
