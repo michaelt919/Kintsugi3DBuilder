@@ -561,9 +561,28 @@ void main()
     vec3 offsetBaseSample = clamp((baseSample.rgb - avgColor.rgb) / max(vec3(0), max(avgColor.rgb - vec3(blackPoint), vec3(whitePoint)-avgColor.rgb)), -1, 1);
     float weight = (3.0 - offsetBaseSample.r - offsetBaseSample.g - offsetBaseSample.b) * (3.0 + offsetBaseSample.r + offsetBaseSample.g + offsetBaseSample.b) / 9.0;
     
+    mat3 A = mat3(0);
+    mat4x3 B = mat4x3(0);
+    for (int i = -sampleRadius; i <= sampleRadius; i++)
+    {
+        for (int j = -sampleRadius; j <= sampleRadius; j++)
+        {
+            vec4 sampleData = pow(texture(imageTexture, texCoords + vec2(i,j) * delta), vec4(gamma));
+            A += outerProduct(vec3(i,j,1), vec3(i,j,1));
+            B += outerProduct(vec3(i,j,1), sampleData);
+        }
+    }
+                
+    mat3x4 M = transpose(inverse(A) * B);
+    
+    vec4 gradx = M * vec3(1,0,0);
+    vec4 grady = M * vec3(0,1,0);
+    vec2 noiseScale = max(vec2(0.0), vec2(1.0) - sharpness * sharpness * vec2(dot(gradx * gradx, vec4(1,1,1,0)), dot(grady * grady, vec4(1,1,1,0))));
+    //vec4 noiseWeight = 1.0 / (1.0 + (gradx * gradx + grady * grady) * sharpness * sharpness);
+    
     vec4 sum = vec4(0.0);
     vec2 p = vec2(imageWidth / cloudScale, imageHeight / cloudScale) * vec2(fPosition.xy + 1.0) / 2;
-    delta = delta * weight * sampleRadius;//pow(2.0, float(cloudDepth-1));
+    delta = delta * weight * sampleRadius * noiseScale;//pow(2.0, float(cloudDepth-1));
     for (int i = 0; i < cloudDepth; i++)
     {
         sum += texture(imageTexture, texCoords + vec2(noise(p), noise(p + vec2(0.5))) * delta);
@@ -572,19 +591,7 @@ void main()
     }
     fragColor = sum / cloudDepth;
     
-    // mat3 A = mat3(0);
-    // mat4x3 B = mat4x3(0);
-    // for (int i = -sampleRadius; i <= sampleRadius; i++)
-    // {
-        // for (int j = -sampleRadius; j <= sampleRadius; j++)
-        // {
-            // vec4 sampleData = pow(texture(imageTexture, texCoords + vec2(i,j) * delta), vec4(gamma));
-            // A += outerProduct(vec3(i,j,1), vec3(i,j,1));
-            // B += outerProduct(vec3(i,j,1), sampleData);
-        // }
-    // }
-                
-    // mat3x4 M = transpose(inverse(A) * B);
+    
     
     // vec4 sumError = vec4(0);
     // vec4 sumSquaredError = vec4(0);
@@ -601,10 +608,6 @@ void main()
             // sumWeights += weight;
         // }
     // }
-    
-    // vec4 gradx = M * vec3(1,0,0);
-    // vec4 grady = M * vec3(0,1,0);
-    // vec4 noiseWeight = 1.0 / (1.0 + (gradx * gradx + grady * grady) * sharpness * sharpness);
    
     // vec4 avgError = sumError / sumWeights;
     // vec4 avgError2 = sqrt(sumSquaredError / sumWeights);
