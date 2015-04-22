@@ -533,7 +533,9 @@ uniform float weightExponent;
 uniform float sharpness;
 uniform vec4 whitePoint;
 uniform vec4 blackPoint;
+uniform int maxSamples;
 uniform sampler2D imageTexture;
+uniform sampler2D segmentTexture;
 in vec3 fPosition;
 layout(location = 0) out vec4 fragColor;
 
@@ -556,6 +558,14 @@ void main()
     vec2 pixelLocation = vec2(imageWidth, imageHeight) * texCoords;
     vec2 interp = pixelLocation - floor(pixelLocation);
     vec2 delta = vec2(1) / vec2(imageWidth, imageHeight);
+    
+    vec4 segmentID1 = texelFetch(segmentTexture, ivec2(floor(pixelLocation.x), floor(pixelLocation.y)), 0);
+    vec4 segmentID2 = texelFetch(segmentTexture, ivec2(floor(pixelLocation.x), ceil(pixelLocation.y)), 0);
+    vec4 segmentID3 = texelFetch(segmentTexture, ivec2(ceil(pixelLocation.x), floor(pixelLocation.y)), 0);
+    vec4 segmentID4 = texelFetch(segmentTexture, ivec2(ceil(pixelLocation.x), ceil(pixelLocation.y)), 0);
+    mat4 segmentIDMatrix = mat4(segmentID1, segmentID2, segmentID3, segmentID4);
+    vec4 interpVector = vec4((1 - interp.x) * (1 - interp.y), (1 - interp.x) * (interp.y),
+                                (interp.x) * (1 - interp.y), (interp.x) * (interp.y));
     
     vec4 baseSample = texture(imageTexture, texCoords);
     vec3 offsetBaseSample = clamp((baseSample.rgb - avgColor.rgb) / max(vec3(0), max(avgColor.rgb - vec3(blackPoint), vec3(whitePoint)-avgColor.rgb)), -1, 1);
@@ -583,15 +593,73 @@ void main()
     vec4 sum = vec4(0.0);
     vec2 p = vec2(imageWidth / cloudScale, imageHeight / cloudScale) * vec2(fPosition.xy + 1.0) / 2;
     delta = delta * weight * sampleRadius * noiseScale;//pow(2.0, float(cloudDepth-1));
+    
     for (int i = 0; i < cloudDepth; i++)
     {
-        sum += texture(imageTexture, texCoords + vec2(noise(p), noise(p + vec2(0.5))) * delta);
+        vec4 sampleSum = vec4(0.0);
+        float weightSum = 0.0;
+        mat2 noiseSeed = mat2(p, p + vec2(0.5)); 
+        for (int s = 0; weightSum < 1.0 && s < maxSamples; s++)
+        {
+            vec2 noiseQuery = vec2(noise(noiseSeed[0]), noise(noiseSeed[1]));
+            vec2 sampleTexCoords = texCoords + noiseQuery * delta;
+            vec2 samplePixelLocation = sampleTexCoords * vec2(imageWidth, imageHeight);
+            vec2 sampleInterp = samplePixelLocation - floor(samplePixelLocation);
+            vec4 sampleSegmentID1 = texelFetch(segmentTexture, 
+                ivec2(floor(samplePixelLocation.x), floor(samplePixelLocation.y)), 0);
+            vec4 sampleSegmentID2 = texelFetch(segmentTexture, 
+                ivec2(floor(samplePixelLocation.x), ceil(samplePixelLocation.y)), 0);
+            vec4 sampleSegmentID3 = texelFetch(segmentTexture, 
+                ivec2(ceil(samplePixelLocation.x), floor(samplePixelLocation.y)), 0);
+            vec4 sampleSegmentID4 = texelFetch(segmentTexture, 
+                ivec2(ceil(samplePixelLocation.x), ceil(samplePixelLocation.y)), 0);
+            mat4 sampleSegmentIDMatrix = 
+                mat4(sampleSegmentID1, sampleSegmentID2, sampleSegmentID3, sampleSegmentID4);
+            vec4 sampleInterpVector = vec4((1 - sampleInterp.x) * (1 - sampleInterp.y), 
+                                            (1 - sampleInterp.x) * (sampleInterp.y),
+                                            (sampleInterp.x) * (1 - sampleInterp.y), 
+                                            (sampleInterp.x) * (sampleInterp.y));
+                                   
+            float weight = 0.0;
+            for (int j = 0; j < 4; j++)
+            {
+                for (int k = 0; k < 4; k++)
+                {
+                    if (segmentIDMatrix[j] == sampleSegmentIDMatrix[k])
+                    {
+                        weight += interpVector[j] * sampleInterpVector[k];
+                    }
+                }
+            }
+            
+            vec4 sampleColor = texture(imageTexture, sampleTexCoords);
+            
+            if (weight < 1.0 - weightSum)
+            {
+                sampleSum += weight * sampleColor;
+                weightSum += weight;
+            }
+            else
+            {
+                sampleSum += (1.0 - weightSum) * sampleColor;
+                weightSum = 1.0;
+            }
+            
+            noiseSeed = mat2(noiseQuery + vec2(1), noiseQuery + vec2(2)) / 2;
+        }
+        
+        if (weightSum < 1.0)
+        {
+            sampleSum += (1.0 - weightSum) * baseSample;
+        }
+            
+        sum += sampleSum;
         //delta = delta / 2;
         p *= 2;
     }
     fragColor = sum / cloudDepth;
     
-    
+    //fragColor = segmentIDMatrix * interpVector;
     
     // vec4 sumError = vec4(0);
     // vec4 sumSquaredError = vec4(0);
