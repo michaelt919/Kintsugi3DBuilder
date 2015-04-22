@@ -35,6 +35,7 @@ public class TextureUpscaleProgram
 	private static final int SAMPLE_RADIUS = 8;
 	private static final float WEIGHT_EXPONENT = 1.0f;
 	private static final float SHARPNESS = 0.0f;
+	private static final int MAX_SAMPLES = 32;
 	
 	public static void main(String[] args)
     {
@@ -53,7 +54,9 @@ public class TextureUpscaleProgram
     		{
     	    	File imageFile = fileChooser.getSelectedFile();
     	    	OpenGLTexture2D imageTexture = new OpenGLTexture2D(imageFile, true, true, true);
+    	    	OpenGLTexture2D segmentTexture = new OpenGLTexture2D(new File(new File(imageFile.getParent(), "segment"), imageFile.getName()), true, false, false);
     	    	perlinNoiseProgram.setTexture("imageTexture", imageTexture);
+    	    	perlinNoiseProgram.setTexture("segmentTexture", segmentTexture);
     	    	int targetWidth = imageTexture.getWidth() * SCALE_FACTOR;
     	    	int targetHeight = imageTexture.getHeight() * SCALE_FACTOR;
     	    	perlinNoiseProgram.setUniform("gamma", GAMMA);
@@ -67,6 +70,7 @@ public class TextureUpscaleProgram
     	    	perlinNoiseProgram.setUniform("sampleRadius", SAMPLE_RADIUS);
     	    	perlinNoiseProgram.setUniform("weightExponent", WEIGHT_EXPONENT);
     	    	perlinNoiseProgram.setUniform("sharpness", SHARPNESS);
+    	    	perlinNoiseProgram.setUniform("maxSamples", MAX_SAMPLES);
     	    	perlinNoiseProgram.setUniform("blackPoint", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
     	    	perlinNoiseProgram.setUniform("whitePoint", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		    	OpenGLFramebufferObject fbo = new OpenGLFramebufferObject(targetWidth, targetHeight, 1, false, false);
