@@ -38,7 +38,8 @@ public class TexGenProgram
     	float gamma = 2.2f;
     	
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
-    	boolean computeRoughness = true;
+    	boolean computeRoughness = false;
+    	boolean useViewSetNormal = true;
     	boolean computeSpecularNormal = false;
     	float specularInfluenceScale = 0.35f;
     	float guessSpecularOrthoExp = 1.0f;
@@ -178,6 +179,7 @@ public class TexGenProgram
 		    	specularFitRenderable.program().setUniform("gamma", gamma);
 		    	specularFitRenderable.program().setUniform("computeRoughness", computeRoughness);
 		    	specularFitRenderable.program().setUniform("computeNormal", computeSpecularNormal);
+		    	specularFitRenderable.program().setUniform("useViewSetNormal", useViewSetNormal);
 		    	specularFitRenderable.program().setUniform("specularInfluenceScale", specularInfluenceScale);
 		    	specularFitRenderable.program().setUniform("multisampleRange", multisampleRange);
 		    	specularFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
