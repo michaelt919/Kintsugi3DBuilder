@@ -19,6 +19,7 @@ uniform sampler2D previousError;
 
 uniform bool computeRoughness;
 uniform bool computeNormal;
+uniform bool useViewSetNormal;
 uniform float specularInfluenceScale;
 uniform int multisampleRange;
 //uniform float multisampleDistanceFactor;
@@ -149,6 +150,46 @@ void main()
     vec3 sNormal = normal;
     float alpha;
     
+    if (useViewSetNormal)
+    {
+        vec4 halfVectorSum = vec4(0);
+        
+        for (int i = 0; i < textureCount; i++)
+        {
+            vec4 color = getColor(i);
+            if (color.a > 0)
+            {
+                vec3 view = getViewVector(i);
+                vec3 light = getLightVector(i);
+                vec4 colorRemainder;
+                
+                if (diffuseColor.a > 0)
+                {
+                    vec3 diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal));
+                    float cap = 1.0 - diffuseRemovalFactor * 
+                        max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
+                    colorRemainder = vec4(clamp(color.rgb - diffuseRemovalFactor * diffuseContrib,
+                        vec3(0), vec3(cap)), color.a);
+                }
+                else
+                {
+                    colorRemainder = color;
+                }
+                
+                vec3 half = normalize(light + view);
+                float nDotH = dot(normal, half);
+                
+                if (colorRemainder.r > 0.0 || colorRemainder.g > 0.0 || colorRemainder.b > 0.0)
+                {
+                    halfVectorSum += (colorRemainder.r + colorRemainder.g + colorRemainder.b) * 
+                        vec4(half, 1.0);
+                }
+            }
+        }
+    
+        sNormal = halfVectorSum.xyz / halfVectorSum.w;
+    }
+    
     if (computeRoughness)
     {
         if (!computeNormal)
@@ -183,7 +224,7 @@ void main()
                     float intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
                     
                     vec3 half = normalize(light + view);
-                    float nDotH = dot(normal, half);
+                    float nDotH = dot(sNormal, half);
                     
                     if (intensity > 0.0 && nDotH > 0.0)
                     {
@@ -364,7 +405,7 @@ void main()
             roughness = scaledWeightSum * min(specularRoughnessCap, (invRate / 2 + 1) * invSqrtRate) +
                 (1 - scaledWeightSum) * defaultSpecularRoughness;
             alpha = min(1.0, scaledWeightSum * 
-                        pow(abs(determinant(sA)) / (sA[1][1] * determinantThreshold), determinantExponent)
+                        pow(abs(determinant(sA)) / (sA[3][3] * determinantThreshold), determinantExponent)
                         + (1 - scaledWeightSum));
             sNormal = scaledWeightSum * sSolution.xyz * invRate + (1 - scaledWeightSum) * normal;
                                 
@@ -400,7 +441,7 @@ void main()
                 }
                 
                 vec3 half = normalize(light + view);
-                float nDotH = dot(normal, half);
+                float nDotH = dot(sNormal, half);
                 
                 if ((colorRemainder.r > 0.0 || colorRemainder.g > 0.0 || colorRemainder.b > 0.0) && 
                     nDotH > 0.0)
@@ -424,6 +465,7 @@ void main()
         
         debug1 = vec4(normalize(specularSum.rgb), 1.0);
         debug3 = vec4(vec3(scaledWeightSum), 1.0);
+        debug4 = vec4((halfVectorSum.xyz / halfVectorSum.w) / 2 + vec3(0.5), 1.0);
     }
     
     if (isinf(specularColorPreGamma.r) || isnan(specularColorPreGamma.r) || 
@@ -446,7 +488,7 @@ void main()
         vec3 light = getLightVector(i);
         vec3 diffuseContrib = diffuseColor.rgb * max(0, dot(light, normal));
         vec3 half = normalize(view + light);
-        float nDotH = max(0.0, dot(normal, half));
+        float nDotH = max(0.0, dot(sNormal, half));
         vec3 specularContrib = specularColorPreGamma * 
             exp((nDotH - 1 / nDotH) / (2 * roughness * roughness));
         vec4 color = getColor(i);
@@ -469,7 +511,7 @@ void main()
     // else
     {
         specularColor = vec4(pow(specularColorPreGamma, vec3(1 / gamma)), alpha);
-        specularNormal = vec4(sNormal * 0.5 + vec3(0.5), alpha);
+        specularNormal = vec4(sNormal * 0.5 + vec3(0.5), computeNormal ? alpha : 1.0);
         // if (specularColor.r > 1 / 256.0 || specularColor.g > 1 / 256.0 || specularColor.b > 1 / 256.0)
         {
             specularRoughness = vec4(vec3(roughness / specularRoughnessCap), alpha);
@@ -480,8 +522,8 @@ void main()
         // }
     }
     
-    debug2 = vec4(lightPositions[0].xyz * 0.5 + vec3(0.5), 1.0);
-    debug4 = vec4(vec3(alpha), 1.0);
+   // debug2 = vec4(lightPositions[0].xyz * 0.5 + vec3(0.5), 1.0);
+    debug2 = vec4(vec3(alpha), 1.0);
     
     // debug0 = vec4(specularAvg, 1.0);
     // debug1 = vec4(sSolution[0] / 4, (6 + sSolution[1]) / 8, 0.0, 1.0);
