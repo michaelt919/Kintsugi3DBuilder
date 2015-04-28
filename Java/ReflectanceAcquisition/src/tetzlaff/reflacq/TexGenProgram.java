@@ -35,23 +35,23 @@ public class TexGenProgram
     	ulfToTexContext.enableBackFaceCulling();
     	
     	int textureSize = 1024;
-    	float gamma = 1.0f;
+    	float gamma = 2.2f;
     	
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
     	boolean computeRoughness = true;
     	boolean computeSpecularNormal = false;
-    	float specularInfluenceScale = 0.5f;
+    	float specularInfluenceScale = 0.35f;
     	float guessSpecularOrthoExp = 1.0f;
     	float guessSpecularWeight = 0.0f;
     	int multisampleRange = 0; // +/- n pixels in each direction
-    	float specularRoughnessCap = 2.0f;
+    	float specularRoughnessCap = 0.5f;
     	float weightSumThreshold = 0.1f * (1 + multisampleRange);
     	float determinantThreshold = 0.005f * (1 + multisampleRange);
     	float determinantExponent = 1.0f;
     	float minFillAlphaSpecular = 0.1f;
     	float maxDiffuseRemovalFactor = 1.0f;
-    	float maxSpecularRemovalFactor = 1.0f;
-    	int fittingIterations = 256;
+    	float maxSpecularRemovalFactor = 0.0f;
+    	int fittingIterations = 1;
     	int diffuseFillIterations = 1;
     	int specularFillIterations = 1024;
     	

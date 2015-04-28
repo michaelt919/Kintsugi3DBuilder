@@ -28,7 +28,7 @@ void main()
 
     vec3 specNormalDir = 
         normalize((model_view * vec4(texture(specNormal, fTexCoord).xyz * 2 - vec3(1.0), 0.0)).xyz);
-    vec3 viewDir = normalize((model_view * vec4(fPosition, 1.0)).xyz);
+    vec3 viewDir = normalize(-(model_view * vec4(fPosition, 1.0)).xyz);
     float nDotH = max(0.0, dot(normalize(lightDirection + viewDir), specNormalDir));
     
     fragColor = vec4(pow((ambientColor + lightColor * max(0.0, dot(lightDirection, normalDir))) * 

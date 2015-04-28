@@ -6,11 +6,9 @@ import java.io.IOException;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.helpers.Drawable;
-import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
-import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLDefaultFramebuffer;
@@ -19,8 +17,6 @@ import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLResource;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
-import tetzlaff.ulf.ULFRenderer;
-import tetzlaff.ulf.UnstructuredLightField;
 
 public class PhongRenderer implements Drawable 
 {
@@ -116,13 +112,13 @@ public class PhongRenderer implements Drawable
     	this.renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
     	
     	// TODO settings UI
-    	this.renderable.program().setUniform("gamma", 1.0f);
+    	this.renderable.program().setUniform("gamma", 2.2f);
     	this.renderable.program().setUniform("ambientColor", new Vector3(0.0f, 0.0f, 0.0f));
     	this.renderable.program().setUniform("lightColor", new Vector3(1.0f, 1.0f, 1.0f));
     	//this.renderable.program().setUniform("lightPosition", 
     	//		new Matrix3(modelView).transpose().times(new Vector3(modelView.getColumn(3)).negated()));
     	this.renderable.program().setUniform("lightDirection", new Vector3(lightTrackball.getRotationMatrix().getColumn(2)));
-    	this.renderable.program().setUniform("roughnessScale", 2.0f);
+    	this.renderable.program().setUniform("roughnessScale", 0.5f);
     	
     	this.renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 	}
