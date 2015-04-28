@@ -35,6 +35,7 @@ public class PhongRenderer implements Drawable
 	private OpenGLTexture2D diffuse;
 	private OpenGLTexture2D normal;
 	private OpenGLTexture2D specular;
+	private OpenGLTexture2D specNormal;
 	private OpenGLTexture2D roughness;
 	private OpenGLRenderable renderable;
 	private Iterable<OpenGLResource> vboResources;
@@ -70,6 +71,7 @@ public class PhongRenderer implements Drawable
 			this.diffuse = new OpenGLTexture2D(new File(texturePath, "diffuse.png"), true, true, true);
 			this.normal = new OpenGLTexture2D(new File(texturePath, "normal.png"), true, true, true);
 			this.specular = new OpenGLTexture2D(new File(texturePath, "specular.png"), true, true, true);
+			this.specNormal = new OpenGLTexture2D(new File(texturePath, "snormal.png"), true, true, true);
 			this.roughness = new OpenGLTexture2D(new File(texturePath, "roughness.png"), true, true, true);
 			
 			this.renderable = new OpenGLRenderable(PhongRenderer.program);
@@ -99,6 +101,7 @@ public class PhongRenderer implements Drawable
     	this.renderable.program().setTexture("diffuse", this.diffuse);
     	this.renderable.program().setTexture("normal", this.normal);
     	this.renderable.program().setTexture("specular", this.specular);
+    	this.renderable.program().setTexture("specNormal", this.specNormal);
     	this.renderable.program().setTexture("roughness", this.roughness);
     	
     	Matrix4 modelView = Matrix4.lookAt(
@@ -113,8 +116,7 @@ public class PhongRenderer implements Drawable
     	this.renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
     	
     	// TODO settings UI
-    	this.renderable.program().setUniform("gamma", 2.2f);
-    	//this.renderable.program().setUniform("gamma", 1.0f);
+    	this.renderable.program().setUniform("gamma", 1.0f);
     	this.renderable.program().setUniform("ambientColor", new Vector3(0.0f, 0.0f, 0.0f));
     	this.renderable.program().setUniform("lightColor", new Vector3(1.0f, 1.0f, 1.0f));
     	//this.renderable.program().setUniform("lightPosition", 

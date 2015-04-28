@@ -16,6 +16,7 @@ uniform float gamma;
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
 uniform sampler2D specularColorEstimate;
+uniform sampler2D specularNormalEstimate;
 uniform sampler2D roughnessEstimate;
 uniform sampler2D previousError;
 
@@ -100,11 +101,17 @@ vec3 getPreviousNormalVector()
     return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
 }
 
+vec3 getSpecularNormalVector()
+{
+    return normalize(texture(specularNormalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
+}
+
 void main()
 {
     vec4 prevDiffuseColor = getPreviousDiffuseColor();
     vec3 prevNormal = getPreviousNormalVector();
     vec4 specularColor = getSpecularColor();
+    vec3 specNormal = getSpecularNormalVector();
     float specularRoughness = getSpecularRoughness();
 
     vec4 sumColor = vec4(0);
@@ -136,10 +143,10 @@ void main()
                 if (prevDiffuseColor.a > 0)
                 {
                     vec3 view = getViewVector(i);
-                    vec3 refl = getReflectionVector(prevNormal, light.xyz);
-                    float rDotV = max(0.0, dot(refl, view.xyz));
+                    vec3 half = normalize(view + light);
+                    float nDotH = max(0.0, dot(half, specNormal));
                     vec3 specularContrib = specularColor.rgb * 
-                        exp((rDotV - 1 / rDotV) / (2 * specularRoughness * specularRoughness));
+                        exp((nDotH - 1 / nDotH) / (2 * specularRoughness * specularRoughness));
                     colorRemainder = vec4(max(vec3(0), 
                         color.rgb - specularRemovalFactor * specularContrib), color.a);
                 }
@@ -259,10 +266,10 @@ void main()
         vec3 view = getViewVector(i);
         vec3 light = getLightVector(i);
         vec3 diffuseContrib = diffuseColorPreGamma.rgb * max(0, dot(light, normal));
-        vec3 reflection = getReflectionVector(normal, light);
-        float rDotV = max(0.0, dot(reflection, view));
+        vec3 half = normalize(view + light);
+        float nDotH = max(0.0, dot(normal, half));
         vec3 specularContrib = specularColor.rgb * 
-            exp((rDotV - 1 / rDotV) / (2 * specularRoughness * specularRoughness));
+            exp((nDotH - 1 / nDotH) / (2 * specularRoughness * specularRoughness));
         vec4 color = getColor(i);
         vec3 error = min(vec3(1.0), diffuseContrib + specularContrib) - color.rgb;
         sumSqError += dot(error, error);

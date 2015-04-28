@@ -10,6 +10,7 @@ uniform float gamma;
 uniform sampler2D diffuse;
 uniform sampler2D normal;
 uniform sampler2D specular;
+uniform sampler2D specNormal;
 uniform sampler2D roughness;
 
 in vec3 fPosition;
@@ -25,10 +26,12 @@ void main()
     float specularRoughness = texture(roughness, fTexCoord)[0] * roughnessScale;
     vec3 normalDir = normalize((model_view * vec4(texture(normal, fTexCoord).xyz * 2 - vec3(1.0), 0.0)).xyz);
 
+    vec3 specNormalDir = 
+        normalize((model_view * vec4(texture(specNormal, fTexCoord).xyz * 2 - vec3(1.0), 0.0)).xyz);
     vec3 viewDir = normalize((model_view * vec4(fPosition, 1.0)).xyz);
-    float rDotV = max(0.0, dot(reflect(lightDirection, normalDir), viewDir));
+    float nDotH = max(0.0, dot(normalize(lightDirection + viewDir), specNormalDir));
     
     fragColor = vec4(pow((ambientColor + lightColor * max(0.0, dot(lightDirection, normalDir))) * 
-        diffuseColor.rgb + exp((rDotV - 1 / rDotV) / (2 * specularRoughness * specularRoughness)) * 
+        diffuseColor.rgb + exp((nDotH - 1 / nDotH) / (2 * specularRoughness * specularRoughness)) * 
         lightColor * specularColor.rgb, vec3(1 / gamma)), 1.0);
 }

@@ -35,10 +35,11 @@ public class TexGenProgram
     	ulfToTexContext.enableBackFaceCulling();
     	
     	int textureSize = 1024;
-    	float gamma = 2.2f;
+    	float gamma = 1.0f;
     	
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
-    	boolean computeRoughness = false;
+    	boolean computeRoughness = true;
+    	boolean computeSpecularNormal = false;
     	float specularInfluenceScale = 0.5f;
     	float guessSpecularOrthoExp = 1.0f;
     	float guessSpecularWeight = 0.0f;
@@ -49,8 +50,8 @@ public class TexGenProgram
     	float determinantExponent = 1.0f;
     	float minFillAlphaSpecular = 0.1f;
     	float maxDiffuseRemovalFactor = 1.0f;
-    	float maxSpecularRemovalFactor = 0.0f;
-    	int fittingIterations = 1;
+    	float maxSpecularRemovalFactor = 1.0f;
+    	int fittingIterations = 256;
     	int diffuseFillIterations = 1;
     	int specularFillIterations = 1024;
     	
@@ -176,6 +177,7 @@ public class TexGenProgram
 		    	
 		    	specularFitRenderable.program().setUniform("gamma", gamma);
 		    	specularFitRenderable.program().setUniform("computeRoughness", computeRoughness);
+		    	specularFitRenderable.program().setUniform("computeNormal", computeSpecularNormal);
 		    	specularFitRenderable.program().setUniform("specularInfluenceScale", specularInfluenceScale);
 		    	specularFitRenderable.program().setUniform("multisampleRange", multisampleRange);
 		    	specularFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
@@ -243,7 +245,8 @@ public class TexGenProgram
 			    	diffuseFitRenderable.program().setTexture("normalEstimate", diffuseFitFrontFramebuffer.getColorAttachmentTexture(1));
 		        	diffuseFitRenderable.program().setTexture("specularColorEstimate", specularFitBackFramebuffer.getColorAttachmentTexture(0));
 		        	diffuseFitRenderable.program().setTexture("roughnessEstimate", specularFitBackFramebuffer.getColorAttachmentTexture(1));
-		        	diffuseFitRenderable.program().setTexture("previousError", specularFitBackFramebuffer.getColorAttachmentTexture(2));
+			    	diffuseFitRenderable.program().setTexture("specularNormalEstimate", specularFitBackFramebuffer.getColorAttachmentTexture(2));
+		        	diffuseFitRenderable.program().setTexture("previousError", specularFitBackFramebuffer.getColorAttachmentTexture(3));
 			    	
 			        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitBackFramebuffer);
 
@@ -315,12 +318,12 @@ public class TexGenProgram
 
 		        specularFitFrontFramebuffer.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory, "output/debug/specular.png"));
 		        specularFitFrontFramebuffer.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory, "output/debug/roughness.png"));
-		        specularFitFrontFramebuffer.saveColorBufferToFile(2, "PNG", new File(lightFieldDirectory, "output/debug/specularError.png"));
-		        specularFitFrontFramebuffer.saveColorBufferToFile(3, "PNG", new File(lightFieldDirectory, "output/debug/specular1.png"));
-		        specularFitFrontFramebuffer.saveColorBufferToFile(4, "PNG", new File(lightFieldDirectory, "output/debug/specular2.png"));
-		        specularFitFrontFramebuffer.saveColorBufferToFile(5, "PNG", new File(lightFieldDirectory, "output/debug/specular3.png"));
-		        specularFitFrontFramebuffer.saveColorBufferToFile(6, "PNG", new File(lightFieldDirectory, "output/debug/specular4.png"));
-		        specularFitFrontFramebuffer.saveColorBufferToFile(7, "PNG", new File(lightFieldDirectory, "output/debug/specular5.png"));
+		        specularFitFrontFramebuffer.saveColorBufferToFile(2, "PNG", new File(lightFieldDirectory, "output/debug/snormal.png"));
+		        specularFitFrontFramebuffer.saveColorBufferToFile(3, "PNG", new File(lightFieldDirectory, "output/debug/specularError.png"));
+		        specularFitFrontFramebuffer.saveColorBufferToFile(4, "PNG", new File(lightFieldDirectory, "output/debug/specular1.png"));
+		        specularFitFrontFramebuffer.saveColorBufferToFile(5, "PNG", new File(lightFieldDirectory, "output/debug/specular2.png"));
+		        specularFitFrontFramebuffer.saveColorBufferToFile(6, "PNG", new File(lightFieldDirectory, "output/debug/specular3.png"));
+		        specularFitFrontFramebuffer.saveColorBufferToFile(7, "PNG", new File(lightFieldDirectory, "output/debug/specular4.png"));
 	    		
 		    	System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    	
@@ -330,8 +333,8 @@ public class TexGenProgram
 		    	OpenGLRenderable holeFillRenderable = new OpenGLRenderable(holeFillProgram);
 		    	holeFillRenderable.addVertexBuffer("position", new OpenGLVertexBuffer(new FloatVertexList(2, 4, new float[] { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f })), true);
 		    	
-		    	OpenGLFramebufferObject holeFillBackFramebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 2, true, false);
-		    	OpenGLFramebufferObject holeFillFrontFramebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 2, true, false);
+		    	OpenGLFramebufferObject holeFillBackFramebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 3, true, false);
+		    	OpenGLFramebufferObject holeFillFrontFramebuffer = new OpenGLFramebufferObject(textureSize, textureSize, 3, true, false);
 
 		    	holeFillFrontFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	holeFillFrontFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -382,28 +385,33 @@ public class TexGenProgram
 
 		    	holeFillFrontFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	holeFillFrontFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+		    	holeFillFrontFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	
 		    	holeFillRenderable.program().setUniform("fillAll", false);
 		    	holeFillRenderable.program().setUniform("minFillAlpha", minFillAlphaSpecular);
 		    	
 		    	holeFillRenderable.program().setUniform("defaultColor0", new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
 		    	holeFillRenderable.program().setUniform("defaultColor1", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+		    	holeFillRenderable.program().setUniform("defaultColor2", new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
 		    	
 		    	for (int i = 0; i < specularFillIterations; i++)
 		    	{
 		    		// Intentionally use mask from diffuse fit since its more reliable
 		    		holeFillRenderable.program().setTexture("mask0", diffuseFitFrontFramebuffer.getColorAttachmentTexture(0));
-		    		holeFillRenderable.program().setTexture("mask1", diffuseFitFrontFramebuffer.getColorAttachmentTexture(1));
+		    		holeFillRenderable.program().setTexture("mask1", diffuseFitFrontFramebuffer.getColorAttachmentTexture(0));
+		    		holeFillRenderable.program().setTexture("mask2", diffuseFitFrontFramebuffer.getColorAttachmentTexture(0));
 
 		    		if (i == 0)
 		    		{
 			    		holeFillRenderable.program().setTexture("input0", specularFitFrontFramebuffer.getColorAttachmentTexture(0));
 			    		holeFillRenderable.program().setTexture("input1", specularFitFrontFramebuffer.getColorAttachmentTexture(1));
+			    		holeFillRenderable.program().setTexture("input2", specularFitFrontFramebuffer.getColorAttachmentTexture(2));
 		    		}
 		    		else
 		    		{
 			    		holeFillRenderable.program().setTexture("input0", holeFillFrontFramebuffer.getColorAttachmentTexture(0));
 			    		holeFillRenderable.program().setTexture("input1", holeFillFrontFramebuffer.getColorAttachmentTexture(1));
+			    		holeFillRenderable.program().setTexture("input2", holeFillFrontFramebuffer.getColorAttachmentTexture(2));
 		    		}
 		    		
 		    		if (i == specularFillIterations - 1)
@@ -417,6 +425,7 @@ public class TexGenProgram
 		    		{
 				    	holeFillBackFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 				    	holeFillBackFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+				    	holeFillBackFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
 				    	
 		    			holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, holeFillBackFramebuffer);
 		    		}
@@ -450,6 +459,7 @@ public class TexGenProgram
 
 		        specularFitFrontFramebuffer.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory, "output/textures/specular.png"));
 		        specularFitFrontFramebuffer.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory, "output/textures/roughness.png"));
+		        specularFitFrontFramebuffer.saveColorBufferToFile(2, "PNG", new File(lightFieldDirectory, "output/textures/snormal.png"));
 		        
 //		        System.out.println();
 //		        int[] debug1Data = diffuseFitBackFramebuffer.readColorBufferARGB(5, debugPixelX, debugPixelY, 1, 1);
