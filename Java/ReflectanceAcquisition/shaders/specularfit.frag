@@ -177,9 +177,8 @@ void main()
                 }
                 
                 vec3 half = normalize(light + view);
-                float nDotH = dot(normal, half);
-                
-                if (colorRemainder.r > 0.0 || colorRemainder.g > 0.0 || colorRemainder.b > 0.0)
+                if ((colorRemainder.r > 0.0 || colorRemainder.g > 0.0 || colorRemainder.b > 0.0)
+                    && dot(-reflect(light, normal), view) > 0.0)
                 {
                     halfVectorSum += (colorRemainder.r + colorRemainder.g + colorRemainder.b) * 
                         vec4(half, 1.0);

@@ -38,7 +38,7 @@ public class TexGenProgram
     	float gamma = 2.2f;
     	
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
-    	boolean computeRoughness = false;
+    	boolean computeRoughness = true;
     	boolean useViewSetNormal = true;
     	boolean computeSpecularNormal = false;
     	float specularInfluenceScale = 0.35f;
@@ -46,7 +46,7 @@ public class TexGenProgram
     	float guessSpecularWeight = 0.0f;
     	int multisampleRange = 0; // +/- n pixels in each direction
     	float specularRoughnessCap = 0.5f;
-    	float weightSumThreshold = 0.1f * (1 + multisampleRange);
+    	float weightSumThreshold = 0.5f * (1 + multisampleRange);
     	float determinantThreshold = 0.005f * (1 + multisampleRange);
     	float determinantExponent = 1.0f;
     	float minFillAlphaSpecular = 0.1f;
