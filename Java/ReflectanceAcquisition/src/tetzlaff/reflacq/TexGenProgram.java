@@ -44,14 +44,17 @@ public class TexGenProgram
     	float specularInfluenceScale = 0.35f;
     	float guessSpecularOrthoExp = 1.0f;
     	float guessSpecularWeight = 0.0f;
+    	float delta = 0.05f;
+    	float minDiffuseSamplePct = 0.1f;
     	int multisampleRange = 0; // +/- n pixels in each direction
+    	float specularBias = 0.0f;
     	float specularRoughnessCap = 0.5f;
-    	float weightSumThreshold = 0.5f * (1 + multisampleRange);
-    	float determinantThreshold = 0.005f * (1 + multisampleRange);
+    	float weightSumThreshold = 0.01f * (1 + multisampleRange);
+    	float determinantThreshold = (computeSpecularNormal ? 0.000001f : 0.005f) * (1 + multisampleRange);
     	float determinantExponent = 1.0f;
     	float minFillAlphaSpecular = 0.1f;
-    	float maxDiffuseRemovalFactor = 1.0f;
-    	float maxSpecularRemovalFactor = 0.0f;
+    	float maxDiffuseRemovalFactor = 0.98f;
+    	float maxSpecularRemovalFactor = 0.98f;
     	int fittingIterations = 1;
     	int diffuseFillIterations = 1;
     	int specularFillIterations = 1024;
@@ -160,6 +163,8 @@ public class TexGenProgram
 		    	diffuseFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
 		    	
 		    	diffuseFitRenderable.program().setUniform("gamma", gamma);
+		    	diffuseFitRenderable.program().setUniform("delta", delta);
+		    	diffuseFitRenderable.program().setUniform("minDiffuseSamples", (int)Math.ceil(minDiffuseSamplePct * lightField.viewSet.getCameraPoseCount()));
 		    	diffuseFitRenderable.program().setUniform("guessSpecularColor", guessSpecularColor);
 		    	diffuseFitRenderable.program().setUniform("guessSpecularWeight", guessSpecularWeight);
 		    	diffuseFitRenderable.program().setUniform("guessSpecularOrthoExp", guessSpecularOrthoExp);
@@ -180,6 +185,7 @@ public class TexGenProgram
 		    	specularFitRenderable.program().setUniform("computeRoughness", computeRoughness);
 		    	specularFitRenderable.program().setUniform("computeNormal", computeSpecularNormal);
 		    	specularFitRenderable.program().setUniform("useViewSetNormal", useViewSetNormal);
+		    	specularFitRenderable.program().setUniform("specularBias", specularBias);
 		    	specularFitRenderable.program().setUniform("specularInfluenceScale", specularInfluenceScale);
 		    	specularFitRenderable.program().setUniform("multisampleRange", multisampleRange);
 		    	specularFitRenderable.program().setUniform("specularRoughnessCap", specularRoughnessCap);
