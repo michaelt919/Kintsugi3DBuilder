@@ -20,6 +20,7 @@ uniform sampler2D previousError;
 uniform bool computeRoughness;
 uniform bool computeNormal;
 uniform bool useViewSetNormal;
+uniform float specularBias;
 uniform float specularInfluenceScale;
 uniform int multisampleRange;
 //uniform float multisampleDistanceFactor;
@@ -290,7 +291,7 @@ void main()
                                         colorRemainder = color;
                                     }
                                     
-                                    intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
+                                    intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b + specularBias;
                                     
                                     half = normalize(light + view);
                                     nDotH = dot(normal, half);
