@@ -20,6 +20,9 @@ uniform sampler2D specularNormalEstimate;
 uniform sampler2D roughnessEstimate;
 uniform sampler2D previousError;
 
+uniform float delta;
+uniform int minDiffuseSamples;
+
 uniform float guessSpecularWeight;
 uniform float guessSpecularOrthoExp;
 uniform vec3 guessSpecularColor;
@@ -122,122 +125,169 @@ void main()
     }
     float avgIntensity = (sumColor.r + sumColor.g + sumColor.b) / sumColor.a;
     
-    //mat4 dA = mat4(0);
-    //mat4 dB = mat4(0);
-    mat3 dA = mat3(0);
-    mat3 dB = mat3(0);
-    
-    vec4 diffuseSum = prevDiffuseColor.a * vec4(prevDiffuseColor.rgb, 1.0);
-    for (int i = 0; i < textureCount; i++)
+    vec3 normal = vec3(0);
+    vec3 diffuseColorPreGamma = vec3(0);
+    bool firstIteration = true;
+    int skipCount = -1, lastSkipCount = -2;
+    while(skipCount > lastSkipCount)
     {
-        vec4 color = getColor(i);
-        if (color.a > 0)
+        lastSkipCount = skipCount;
+        skipCount = 0;
+        int ignoreCount = 0;
+    
+        //mat4 dA = mat4(0);
+        //mat4 dB = mat4(0);
+        mat3 dA = mat3(0);
+        mat3 dB = mat3(0);
+        
+        vec4 diffuseSum = prevDiffuseColor.a * vec4(prevDiffuseColor.rgb, 1.0);
+        for (int i = 0; i < textureCount; i++)
         {
-            //vec4 light = vec4(getLightVector(i), 1.0);
-            vec3 light = getLightVector(i);
-            
-            if (prevDiffuseColor.a == 0.0 || dot(light, prevNormal) > 0)
+            vec4 color = getColor(i);
+            if (color.a > 0)
             {
-                vec4 colorRemainder;
+                //vec4 light = vec4(getLightVector(i), 1.0);
+                vec3 light = getLightVector(i);
                 
-                if (prevDiffuseColor.a > 0)
+                if (prevDiffuseColor.a == 0.0 || dot(light, prevNormal) > 0)
                 {
-                    vec3 view = getViewVector(i);
-                    vec3 half = normalize(view + light);
-                    float nDotH = max(0.0, dot(half, specNormal));
-                    vec3 specularContrib = specularColor.rgb * 
-                        exp((nDotH - 1 / nDotH) / (2 * specularRoughness * specularRoughness));
-                    colorRemainder = vec4(max(vec3(0), 
-                        color.rgb - specularRemovalFactor * specularContrib), color.a);
-                }
-                else 
-                {
-                    // First fitting iteration only
-                    colorRemainder = color;
+                    vec4 colorRemainder;
                     
-                    if ((color.r > 0.0 || color.g > 0.0 || color.b > 0.0) && 
-                        (color.r + color.g + color.b) < avgIntensity)
+                    if (prevDiffuseColor.a > 0)
                     {
-                        diffuseSum += color.a * vec4(color.rgb, 1.0);
+                        vec3 view = getViewVector(i);
+                        vec3 half = normalize(view + light);
+                        float nDotH = max(0.0, dot(half, specNormal));
+                        vec3 specularContrib = specularColor.rgb * 
+                            exp((nDotH - 1 / nDotH) / (2 * specularRoughness * specularRoughness));
+                        colorRemainder = vec4(max(vec3(0), 
+                            color.rgb - specularRemovalFactor * specularContrib), color.a);
+                    }
+                    else 
+                    {
+                        // First global fitting (diffuse+specular) iteration only
+                        colorRemainder = color;
+                    }
+                    
+                    if (firstIteration || 
+                        colorRemainder.r + colorRemainder.g + colorRemainder.b <= 
+                            (diffuseColorPreGamma.r + diffuseColorPreGamma.g + diffuseColorPreGamma.b) 
+                                * dot(normal, light) + delta)
+                    {
+                        dA += colorRemainder.a * outerProduct(light, light);
+                        //dB += colorRemainder.a * outerProduct(light, vec4(colorRemainder.rgb, 0.0));
+                        dB += colorRemainder.a * outerProduct(light, colorRemainder.rgb);
+                        
+                        if (prevDiffuseColor.a == 0.0 && // First global fitting iteration only
+                            (color.r > 0.0 || color.g > 0.0 || color.b > 0.0) && 
+                            (color.r + color.g + color.b) < avgIntensity)
+                        {
+                            diffuseSum += color.a * vec4(color.rgb, 1.0);
+                        }
+                    }
+                    else
+                    {
+                        skipCount++;
                     }
                 }
-                
-                dA += colorRemainder.a * outerProduct(light, light);
-                //dB += colorRemainder.a * outerProduct(light, vec4(colorRemainder.rgb, 0.0));
-                dB += colorRemainder.a * outerProduct(light, colorRemainder.rgb);
+                else
+                {
+                    ignoreCount++;
+                }
+            }
+            else
+            {
+                ignoreCount++;
             }
         }
-    }
-    vec3 diffuseAvg = diffuseSum.rgb / (diffuseSum.r + diffuseSum.g + diffuseSum.b);
-    
-    mat3 dM = inverse(dA) * dB;
-    vec3 componentFit = vec3(length(dM[0]), length(dM[1]), length(dM[2]));
-    float simpleWeightScale;
-    if (diffuseSum.r > diffuseSum.g && diffuseSum.r > diffuseSum.b)
-    {
-        // Red dominates
-        simpleWeightScale = componentFit.r / diffuseSum.r;
-    }
-    else if (diffuseSum.g > diffuseSum.b)
-    {
-        // Green dominates
-        simpleWeightScale = componentFit.g / diffuseSum.g;
-    }
-    else
-    {
-        // Blue dominates
-        simpleWeightScale = componentFit.b / diffuseSum.b;
-    }
-    vec3 componentFitInv = 1.0 / componentFit;
-    if (componentFit.r == 0.0)
-    {
-        componentFitInv.r = 0.0;
-    }
-    if (componentFit.g == 0.0)
-    {
-        componentFitInv.g = 0.0;
-    }
-    if (componentFit.b == 0.0)
-    {
-        componentFitInv.b = 0.0;
-    }
-    vec3 simpleWeights = simpleWeightScale * diffuseSum.rgb * componentFitInv;
-    
-    vec3 rgbWeights;
-    //float diffuseRemovalMult;
-    if (guessSpecularWeight > 0)
-    {
-        vec3 ortho = cross(normalize(diffuseSum.rgb), normalize(guessSpecularColor));
-        if (ortho.x > 0 || ortho.y > 0 || ortho.z > 0)
+        
+        if (!firstIteration && skipCount + ignoreCount + minDiffuseSamples > textureCount)
         {
-            mat3 colorBasis = mat3(diffuseAvg, guessSpecularColor, ortho);
-            float adjustedSpecGuessWeight = guessSpecularWeight * 
-                pow(length(ortho), guessSpecularOrthoExp);
-            vec3 basisWeights = transpose(inverse(colorBasis))[0];
-            vec3 scaledBasisWeights = basisWeights / 
-                max(max(basisWeights.r, basisWeights.g), basisWeights.b);
-            rgbWeights = (adjustedSpecGuessWeight * scaledBasisWeights + simpleWeights) / 
-                (1 + adjustedSpecGuessWeight);
-            //diffuseRemovalMult = adjustedSpecGuessWeight / (1 + adjustedSpecGuessWeight);
+            skipCount = lastSkipCount;
+            // Use the result of the previous iteration
         }
         else
         {
-            rgbWeights = simpleWeights;
-            //diffuseRemovalMult = 0.0;
+            vec3 diffuseAvg = diffuseSum.rgb / (diffuseSum.r + diffuseSum.g + diffuseSum.b);
+            
+            mat3 dM = inverse(dA) * dB;
+            vec3 componentFit = vec3(length(dM[0]), length(dM[1]), length(dM[2]));
+            float simpleWeightScale;
+            if (diffuseSum.r > diffuseSum.g && diffuseSum.r > diffuseSum.b)
+            {
+                // Red dominates
+                simpleWeightScale = componentFit.r / diffuseSum.r;
+            }
+            else if (diffuseSum.g > diffuseSum.b)
+            {
+                // Green dominates
+                simpleWeightScale = componentFit.g / diffuseSum.g;
+            }
+            else
+            {
+                // Blue dominates
+                simpleWeightScale = componentFit.b / diffuseSum.b;
+            }
+            vec3 componentFitInv = 1.0 / componentFit;
+            if (componentFit.r == 0.0)
+            {
+                componentFitInv.r = 0.0;
+            }
+            if (componentFit.g == 0.0)
+            {
+                componentFitInv.g = 0.0;
+            }
+            if (componentFit.b == 0.0)
+            {
+                componentFitInv.b = 0.0;
+            }
+            vec3 simpleWeights = simpleWeightScale * diffuseSum.rgb * componentFitInv;
+            
+            vec3 rgbWeights;
+            //float diffuseRemovalMult;
+            if (guessSpecularWeight > 0)
+            {
+                vec3 ortho = cross(normalize(diffuseSum.rgb), normalize(guessSpecularColor));
+                if (ortho.x > 0 || ortho.y > 0 || ortho.z > 0)
+                {
+                    mat3 colorBasis = mat3(diffuseAvg, guessSpecularColor, ortho);
+                    float adjustedSpecGuessWeight = guessSpecularWeight * 
+                        pow(length(ortho), guessSpecularOrthoExp);
+                    vec3 basisWeights = transpose(inverse(colorBasis))[0];
+                    vec3 scaledBasisWeights = basisWeights / 
+                        max(max(basisWeights.r, basisWeights.g), basisWeights.b);
+                    rgbWeights = (adjustedSpecGuessWeight * scaledBasisWeights + simpleWeights) / 
+                        (1 + adjustedSpecGuessWeight);
+                    //diffuseRemovalMult = adjustedSpecGuessWeight / (1 + adjustedSpecGuessWeight);
+                }
+                else
+                {
+                    rgbWeights = simpleWeights;
+                    //diffuseRemovalMult = 0.0;
+                }
+            }
+            else
+            {
+                rgbWeights = simpleWeights;
+                //diffuseRemovalMult = 0.0;
+            }
+            
+            //vec4 dSolution = inverse(dA) * dB * vec4(rgbWeights, 0.0);
+            vec3 dSolution = dM * rgbWeights;
+            //float ambientIntensity = dSolution.w;
+            float diffuseIntensity = length(dSolution.xyz);
+            normal = normalize(dSolution.xyz);
+            diffuseColorPreGamma = diffuseAvg * diffuseIntensity;
+        
+            debug1 = vec4(rgbWeights, 1.0);
+            debug2 = vec4(vec3(diffuseIntensity), 1.0);
+            debug3 = vec4(diffuseAvg, 1.0);
+            debug4 = vec4(vec3(float(skipCount) / float(textureCount-ignoreCount)), 1.0);
+            debug5 = vec4(vec3(float(ignoreCount) / float(textureCount)), 1.0);
         }
+            
+        firstIteration = false;
     }
-    else
-    {
-        rgbWeights = simpleWeights;
-        //diffuseRemovalMult = 0.0;
-    }
-    
-    //vec4 dSolution = inverse(dA) * dB * vec4(rgbWeights, 0.0);
-    vec3 dSolution = dM * rgbWeights;
-    //float ambientIntensity = dSolution.w;
-    float diffuseIntensity = length(dSolution.xyz);
-    vec3 normal = normalize(dSolution.xyz);
-    vec3 diffuseColorPreGamma = diffuseAvg * diffuseIntensity;
     
     float alpha;
     if (isnan(diffuseColorPreGamma.r) || isnan(diffuseColorPreGamma.g) || isnan(diffuseColorPreGamma.b) ||
@@ -253,10 +303,6 @@ void main()
     {
         alpha = 1.0;
     }
-    
-    debug1 = vec4(rgbWeights, 1.0);
-    debug2 = vec4(vec3(diffuseIntensity), 1.0);
-    debug3 = vec4(diffuseAvg, 1.0);
     
     //debug1 = vec4(pow(diffuseAvg * dSolution.w, vec3(1 / gamma)), 1.0);
     
