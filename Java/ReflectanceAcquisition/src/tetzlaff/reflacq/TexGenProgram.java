@@ -39,18 +39,19 @@ public class TexGenProgram
     	
     	Vector3 guessSpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
     	boolean computeRoughness = true;
-    	boolean useViewSetNormal = true;
+    	boolean useViewSetNormal = false;
     	boolean computeSpecularNormal = false;
     	float specularInfluenceScale = 0.35f;
     	float guessSpecularOrthoExp = 1.0f;
     	float guessSpecularWeight = 0.0f;
     	float delta = 0.05f;
     	float minDiffuseSamplePct = 0.1f;
+    	float diffuseDeterminantThreshold = 1.0f;
     	int multisampleRange = 0; // +/- n pixels in each direction
     	float specularBias = 0.0f;
     	float specularRoughnessCap = 0.5f;
     	float weightSumThreshold = 0.01f * (1 + multisampleRange);
-    	float determinantThreshold = (computeSpecularNormal ? 0.000001f : 0.005f) * (1 + multisampleRange);
+    	float specularDeterminantThreshold = (computeSpecularNormal ? 0.000001f : 0.005f) * (1 + multisampleRange);
     	float determinantExponent = 1.0f;
     	float minFillAlphaSpecular = 0.1f;
     	float maxDiffuseRemovalFactor = 0.98f;
@@ -152,7 +153,7 @@ public class TexGenProgram
 		    	
 		    	OpenGLRenderable diffuseFitRenderable = new OpenGLRenderable(diffuseFitProgram);
 		    	
-		    	diffuseFitRenderable.addVertexMesh("position", "texCoord", null, lightField.proxy);
+		    	diffuseFitRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
 		    	
 		    	diffuseFitRenderable.program().setTexture("imageTextures", imageTextures);
 		    	diffuseFitRenderable.program().setTexture("depthTextures", depthTextures);
@@ -168,10 +169,11 @@ public class TexGenProgram
 		    	diffuseFitRenderable.program().setUniform("guessSpecularColor", guessSpecularColor);
 		    	diffuseFitRenderable.program().setUniform("guessSpecularWeight", guessSpecularWeight);
 		    	diffuseFitRenderable.program().setUniform("guessSpecularOrthoExp", guessSpecularOrthoExp);
+		    	diffuseFitRenderable.program().setUniform("determinantThreshold", diffuseDeterminantThreshold);
 		    	
 		    	OpenGLRenderable specularFitRenderable = new OpenGLRenderable(specularFitProgram);
 		    	
-		    	specularFitRenderable.addVertexMesh("position", "texCoord", null, lightField.proxy);
+		    	specularFitRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
 		    	
 		    	specularFitRenderable.program().setTexture("imageTextures", imageTextures);
 		    	specularFitRenderable.program().setTexture("depthTextures", depthTextures);
@@ -192,7 +194,7 @@ public class TexGenProgram
 		    	specularFitRenderable.program().setUniform("defaultSpecularColor", new Vector3(0.0f, 0.0f, 0.0f));
 		    	specularFitRenderable.program().setUniform("defaultSpecularRoughness", specularRoughnessCap);
 		    	specularFitRenderable.program().setUniform("weightSumThreshold", weightSumThreshold);
-		    	specularFitRenderable.program().setUniform("determinantThreshold", determinantThreshold);
+		    	specularFitRenderable.program().setUniform("determinantThreshold", specularDeterminantThreshold);
 		    	specularFitRenderable.program().setUniform("determinantExponent", determinantExponent);
 		    	
 		    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
