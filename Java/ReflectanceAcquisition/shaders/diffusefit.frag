@@ -28,6 +28,7 @@ uniform float guessSpecularOrthoExp;
 uniform vec3 guessSpecularColor;
 uniform float specularRemovalFactor;
 uniform float specularRoughnessCap;
+uniform float determinantThreshold;
 
 uniform CameraPoses
 {
@@ -139,6 +140,7 @@ void main()
         //mat4 dB = mat4(0);
         mat3 dA = mat3(0);
         mat3 dB = mat3(0);
+        float weightSum = 0;
         
         vec4 diffuseSum = prevDiffuseColor.a * vec4(prevDiffuseColor.rgb, 1.0);
         for (int i = 0; i < textureCount; i++)
@@ -177,6 +179,8 @@ void main()
                         dA += colorRemainder.a * outerProduct(light, light);
                         //dB += colorRemainder.a * outerProduct(light, vec4(colorRemainder.rgb, 0.0));
                         dB += colorRemainder.a * outerProduct(light, colorRemainder.rgb);
+                        
+                        weightSum += colorRemainder.a;
                         
                         if (prevDiffuseColor.a == 0.0 && // First global fitting iteration only
                             (color.r > 0.0 || color.g > 0.0 || color.b > 0.0) && 
@@ -271,12 +275,14 @@ void main()
                 rgbWeights = simpleWeights;
                 //diffuseRemovalMult = 0.0;
             }
+        
+            float scaledDeterminant = determinant(dA) / (weightSum * determinantThreshold);
             
             //vec4 dSolution = inverse(dA) * dB * vec4(rgbWeights, 0.0);
             vec3 dSolution = dM * rgbWeights;
             //float ambientIntensity = dSolution.w;
             float diffuseIntensity = length(dSolution.xyz);
-            normal = normalize(dSolution.xyz);
+            normal = normalize(dSolution.xyz) * clamp(scaledDeterminant, 0.0, 1.0) + fNormal * clamp(1 - scaledDeterminant, 0.0, 1.0);
             diffuseColorPreGamma = diffuseAvg * diffuseIntensity;
         
             debug1 = vec4(rgbWeights, 1.0);
@@ -321,6 +327,8 @@ void main()
         sumSqError += dot(error, error);
     }
     error = vec4(vec3(sumSqError / (3 * textureCount)), 1.0);
+    
+   // normal = normal * (1 - clamp(sumSqError / (3 * textureCount) * 100.0, 0, 1));
     
     // vec4 previousErrorSample = texture(previousError, fTexCoord);
     // if (previousErrorSample.a > 0.0 && error[0] > previousErrorSample[0])
