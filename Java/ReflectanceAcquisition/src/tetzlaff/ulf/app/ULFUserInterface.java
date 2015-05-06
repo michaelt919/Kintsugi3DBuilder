@@ -94,8 +94,10 @@ public class ULFUserInterface
 		JLabel occlusionBiasLabel = new JLabel("Occlusion Bias:");
 		occlusionBiasLabel.setPreferredSize(new Dimension(128, 16));
 		occlusionBiasBox.add(occlusionBiasLabel);
-		SpinnerNumberModel occlusionBiasModel = new SpinnerNumberModel(0.005f, 0.0f, 1.0f, 0.001f);
+		SpinnerNumberModel occlusionBiasModel = new SpinnerNumberModel(0.0025f, 0.0f, 1.0f, 0.0001f);
 		JSpinner occlusionBiasSpinner = new JSpinner(occlusionBiasModel);
+		JSpinner.NumberEditor numberEditor = new JSpinner.NumberEditor(occlusionBiasSpinner, "0.0000");
+		occlusionBiasSpinner.setEditor(numberEditor);
 		occlusionBiasBox.add(occlusionBiasSpinner);
 		occlusionBiasBox.setBorder(new EmptyBorder(10, 10, 10, 10));
 		frame.add(occlusionBiasBox);

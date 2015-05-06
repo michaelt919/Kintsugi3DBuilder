@@ -8,9 +8,9 @@ in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
 
-uniform sampler2DArray imageTextures;
-uniform sampler2DArray depthTextures;
-uniform int textureCount;
+uniform sampler2DArray viewImages;
+uniform sampler2DArray depthImages;
+uniform int viewCount;
 uniform float gamma;
 
 uniform sampler2D diffuseEstimate;
@@ -19,6 +19,9 @@ uniform sampler2D specularColorEstimate;
 uniform sampler2D specularNormalEstimate;
 uniform sampler2D roughnessEstimate;
 uniform sampler2D previousError;
+
+uniform bool occlusionEnabled;
+uniform float occlusionBias;
 
 uniform float delta;
 uniform int minDiffuseSamples;
@@ -66,7 +69,30 @@ layout(location = 7) out vec4 debug5;
 
 vec4 getColor(int index)
 {
-    return pow(texture(imageTextures, vec3(fTexCoord, index)), vec4(gamma));
+    vec4 projTexCoord = cameraProjections[cameraProjectionIndices[index]] * cameraPoses[index] * 
+                            vec4(fPosition, 1.0);
+    projTexCoord /= projTexCoord.w;
+    projTexCoord = (projTexCoord + vec4(1)) / 2;
+	
+	if (projTexCoord.x < 0 || projTexCoord.x > 1 || projTexCoord.y < 0 || projTexCoord.y > 1 ||
+            projTexCoord.z < 0 || projTexCoord.z > 1)
+	{
+		return vec4(0);
+	}
+	else
+	{
+		if (occlusionEnabled)
+		{
+			float imageDepth = texture(depthImages, vec3(projTexCoord.xy, index)).r;
+			if (abs(projTexCoord.z - imageDepth) > occlusionBias)
+			{
+				// Occluded
+				return vec4(0);
+			}
+		}
+        
+        return pow(texture(viewImages, vec3(projTexCoord.xy, index)), vec4(gamma));
+	}
 }
 
 vec3 getViewVector(int index)
@@ -112,6 +138,7 @@ vec3 getSpecularNormalVector()
 
 void main()
 {
+    vec3 geometricNormal = normalize(fNormal);
     vec4 prevDiffuseColor = getPreviousDiffuseColor();
     vec3 prevNormal = getPreviousNormalVector();
     vec4 specularColor = getSpecularColor();
@@ -119,10 +146,11 @@ void main()
     float specularRoughness = getSpecularRoughness();
 
     vec4 sumColor = vec4(0);
-    for (int i = 0; i < textureCount; i++)
+    for (int i = 0; i < viewCount; i++)
     {
+        vec3 view = getViewVector(i);
         vec4 color = getColor(i);
-        sumColor += color.a * vec4(color.rgb, 1.0);
+        sumColor += dot(geometricNormal, view) * color.a * vec4(color.rgb, 1.0);
     }
     float avgIntensity = (sumColor.r + sumColor.g + sumColor.b) / sumColor.a;
     
@@ -143,10 +171,12 @@ void main()
         float weightSum = 0;
         
         vec4 diffuseSum = prevDiffuseColor.a * vec4(prevDiffuseColor.rgb, 1.0);
-        for (int i = 0; i < textureCount; i++)
+        for (int i = 0; i < viewCount; i++)
         {
+            vec3 view = getViewVector(i);
             vec4 color = getColor(i);
-            if (color.a > 0)
+            float nDotV = dot(geometricNormal, view);
+            if (color.a * nDotV > 0)
             {
                 //vec4 light = vec4(getLightVector(i), 1.0);
                 vec3 light = getLightVector(i);
@@ -157,13 +187,12 @@ void main()
                     
                     if (prevDiffuseColor.a > 0)
                     {
-                        vec3 view = getViewVector(i);
                         vec3 half = normalize(view + light);
                         float nDotH = max(0.0, dot(half, specNormal));
                         vec3 specularContrib = specularColor.rgb * 
                             exp((nDotH - 1 / nDotH) / (2 * specularRoughness * specularRoughness));
-                        colorRemainder = vec4(max(vec3(0), 
-                            color.rgb - specularRemovalFactor * specularContrib), color.a);
+                        colorRemainder = max(vec4(0), 
+                            color - specularRemovalFactor * vec4(specularContrib, 0.0));
                     }
                     else 
                     {
@@ -176,17 +205,17 @@ void main()
                             (diffuseColorPreGamma.r + diffuseColorPreGamma.g + diffuseColorPreGamma.b) 
                                 * dot(normal, light) + delta)
                     {
-                        dA += colorRemainder.a * outerProduct(light, light);
-                        //dB += colorRemainder.a * outerProduct(light, vec4(colorRemainder.rgb, 0.0));
-                        dB += colorRemainder.a * outerProduct(light, colorRemainder.rgb);
+                        dA += color.a * nDotV * outerProduct(light, light);
+                        //dB += color.a * nDotV * outerProduct(light, vec4(colorRemainder.rgb, 0.0));
+                        dB += color.a * nDotV * outerProduct(light, colorRemainder.rgb);
                         
-                        weightSum += colorRemainder.a;
+                        weightSum += color.a * nDotV;
                         
                         if (prevDiffuseColor.a == 0.0 && // First global fitting iteration only
                             (color.r > 0.0 || color.g > 0.0 || color.b > 0.0) && 
                             (color.r + color.g + color.b) < avgIntensity)
                         {
-                            diffuseSum += color.a * vec4(color.rgb, 1.0);
+                            diffuseSum += color.a * nDotV * vec4(color.rgb, 1.0);
                         }
                     }
                     else
@@ -205,7 +234,7 @@ void main()
             }
         }
         
-        if (!firstIteration && skipCount + ignoreCount + minDiffuseSamples > textureCount)
+        if (!firstIteration && skipCount + ignoreCount + minDiffuseSamples > viewCount)
         {
             skipCount = lastSkipCount;
             // Use the result of the previous iteration
@@ -288,8 +317,8 @@ void main()
             debug1 = vec4(rgbWeights, 1.0);
             debug2 = vec4(vec3(diffuseIntensity), 1.0);
             debug3 = vec4(diffuseAvg, 1.0);
-            debug4 = vec4(vec3(float(skipCount) / float(textureCount-ignoreCount)), 1.0);
-            debug5 = vec4(vec3(float(ignoreCount) / float(textureCount)), 1.0);
+            debug4 = vec4(vec3(float(skipCount) / float(viewCount-ignoreCount)), 1.0);
+            debug5 = vec4(vec3(float(ignoreCount) / float(viewCount)), 1.0);
         }
             
         firstIteration = false;
@@ -313,7 +342,7 @@ void main()
     //debug1 = vec4(pow(diffuseAvg * dSolution.w, vec3(1 / gamma)), 1.0);
     
     float sumSqError = 0.0;
-    for (int i = 0; i < textureCount; i++)
+    for (int i = 0; i < viewCount; i++)
     {
         vec3 view = getViewVector(i);
         vec3 light = getLightVector(i);
@@ -326,9 +355,9 @@ void main()
         vec3 error = min(vec3(1.0), diffuseContrib + specularContrib) - color.rgb;
         sumSqError += dot(error, error);
     }
-    error = vec4(vec3(sumSqError / (3 * textureCount)), 1.0);
+    error = vec4(vec3(sumSqError / (3 * viewCount)), 1.0);
     
-   // normal = normal * (1 - clamp(sumSqError / (3 * textureCount) * 100.0, 0, 1));
+   // normal = normal * (1 - clamp(sumSqError / (3 * viewCount) * 100.0, 0, 1));
     
     // vec4 previousErrorSample = texture(previousError, fTexCoord);
     // if (previousErrorSample.a > 0.0 && error[0] > previousErrorSample[0])

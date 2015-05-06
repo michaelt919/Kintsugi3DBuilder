@@ -20,7 +20,15 @@ public class OpenGLShader implements OpenGLResource
         scanner.useDelimiter("\\Z"); // EOF
         String source = scanner.next();
         scanner.close();
-        this.init(shaderType, source);
+        
+        try
+        {
+        	this.init(shaderType, source);
+        }
+        catch (ShaderCompileFailureException e)
+        {
+        	throw new ShaderCompileFailureException(file.getAbsolutePath() + " failed to compile.", e);
+        }
 	}
 	
 	public OpenGLShader(int shaderType, String source)

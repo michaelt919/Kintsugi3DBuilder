@@ -6,7 +6,7 @@ public class ULFSettings
     private float gamma = 2.2f;
     private float weightExponent = 16.0f;
     private boolean occlusionEnabled = true;
-    private float occlusionBias = 0.005f;
+    private float occlusionBias = 0.0025f;
 
 	public ULFSettings() 
 	{

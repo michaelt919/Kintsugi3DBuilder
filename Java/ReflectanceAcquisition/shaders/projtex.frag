@@ -10,15 +10,15 @@ in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
 
-uniform sampler2DArray imageTextures;
-uniform sampler2DArray depthTextures;
+uniform sampler2DArray viewImages;
+uniform sampler2DArray depthImages;
 
 uniform CameraPoses
 {
 	mat4 cameraPoses[MAX_CAMERA_POSE_COUNT];
 };
 
-uniform int cameraPoseIndex;
+uniform int viewIndex;
 
 uniform CameraProjections
 {
@@ -31,17 +31,17 @@ uniform CameraProjectionIndices
 };
 
 layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec4 projPosMap;
+layout(location = 1) out vec4 projTexCoord;
 
 void main()
 {
-	vec4 fragPos = cameraPoses[cameraPoseIndex] * vec4(fPosition, 1.0);
-	vec4 projPos = cameraProjections[cameraProjectionIndices[cameraPoseIndex]] * fragPos;
-	projPos = projPos / projPos.w;
+    projTexCoord = cameraProjections[cameraProjectionIndices[viewIndex]] * cameraPoses[viewIndex] * 
+                        vec4(fPosition, 1.0);
+    projTexCoord /= projTexCoord.w;
+    projTexCoord = (projTexCoord + vec4(1)) / 2;
 	
-	vec2 texCoord = vec2(projPos.x / 2 + 0.5, projPos.y / 2 + 0.5);
-	
-	if (texCoord.x < 0 || texCoord.x > 1 || texCoord.y < 0 || texCoord.y > 1)
+	if (projTexCoord.x < 0 || projTexCoord.x > 1 || projTexCoord.y < 0 || projTexCoord.y > 1 ||
+            projTexCoord.z < 0 || projTexCoord.z > 1)
 	{
 		discard;
 	}
@@ -49,18 +49,17 @@ void main()
 	{
 		if (occlusionEnabled)
 		{
-			float imageDepth = 2*texture(depthTextures, vec3(texCoord.xy, cameraPoseIndex)).x - 1;
-			if (abs(projPos.z - imageDepth) > occlusionBias)
+			float imageDepth = texture(depthImages, vec3(projTexCoord.xy, viewIndex)).r;
+			if (abs(projTexCoord.z - imageDepth) > occlusionBias)
 			{
 				// Occluded
 				discard;
 			}
 		}
-		
-		fragColor = vec4(texture(imageTextures, vec3(texCoord.xy, cameraPoseIndex)).rgb, 
-                        max(0.0, dot(normalize((cameraPoses[cameraPoseIndex] * vec4(fNormal, 0.0)).xyz),
-                            - normalize((cameraPoses[cameraPoseIndex] * vec4(fPosition, 1.0)).xyz))));
-                            
-        projPosMap = (projPos + vec4(1)) / 2;
+        
+        vec3 view = normalize(transpose(mat3(cameraPoses[viewIndex])) *
+                        -cameraPoses[viewIndex][3].xyz - fPosition);
+        vec3 normal = normalize(fNormal);
+        fragColor = vec4(texture(viewImages, vec3(projTexCoord.xy, viewIndex)).rgb, dot(normal, view));
 	}
 }
