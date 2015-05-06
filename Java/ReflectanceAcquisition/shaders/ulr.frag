@@ -51,12 +51,12 @@ float computeSampleWeight(vec3 cameraPos, vec3 samplePos, vec3 fragmentPos)
 vec4 getLightFieldSample(int index)
 {
 	vec4 fragPos = cameraPoses[index] * vec4(fPosition, 1.0);
-	vec4 projPos = cameraProjections[cameraProjectionIndices[index]] * fragPos;
-	projPos = projPos / projPos.w;
+	vec4 projTexCoord = cameraProjections[cameraProjectionIndices[index]] * fragPos;
+	projTexCoord = projTexCoord / projTexCoord.w;
+	projTexCoord = (projTexCoord + vec4(1)) / 2;
 	
-	vec2 texCoord = vec2(projPos.x / 2 + 0.5, projPos.y / 2 + 0.5);
-	
-	if (texCoord.x < 0 || texCoord.x > 1 || texCoord.y < 0 || texCoord.y > 1)
+	if (projTexCoord.x < 0 || projTexCoord.x > 1 || projTexCoord.y < 0 || projTexCoord.y > 1
+             || projTexCoord.z < 0 || projTexCoord.z > 1)
 	{
 		return vec4(0.0);
 	}
@@ -64,15 +64,15 @@ vec4 getLightFieldSample(int index)
 	{
 		if (occlusionEnabled)
 		{
-			float imageDepth = 2*texture(depthTextures, vec3(texCoord.xy, index)).x - 1;
-			if (projPos.z > imageDepth + occlusionBias)
+			float imageDepth = texture(depthTextures, vec3(projTexCoord.xy, index)).r;
+			if (projTexCoord.z > imageDepth + occlusionBias)
 			{
 				// Occluded
 				return vec4(0.0);
 			}
 		}
         
-        vec4 color = texture(imageTextures, vec3(texCoord.xy, index));
+        vec4 color = texture(imageTextures, vec3(projTexCoord.xy, index));
 		
 		return computeSampleWeight((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz, vec3(0.0), fragPos.xyz)
 			* (color.a < 0.9999 ? 0.0 : 1.0) * vec4(pow(color.rgb, vec3(gamma)), 1.0);
