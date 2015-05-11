@@ -30,7 +30,7 @@ uniform float fit2Weight;
 uniform float fit1Weight;
 uniform vec3 defaultSpecularColor;
 uniform float defaultSpecularRoughness;
-uniform float roughnessScale;
+uniform float specularRoughnessScale;
 
 uniform CameraPoses
 {
@@ -138,7 +138,7 @@ bool validateFit(SpecularFit fit)
 SpecularFit clampFit(SpecularFit fit)
 {
     fit.color = clamp(fit.color, 0, 1);
-    fit.roughness = clamp(fit.roughness, 0, roughnessScale);
+    fit.roughness = clamp(fit.roughness, 0, specularRoughnessScale);
     return fit;
 }
 
@@ -296,5 +296,5 @@ void main()
     SpecularFit fit = fitSpecular();
     specularColor = vec4(pow(fit.color, vec3(1 / gamma)), 1.0);
     specularNormalMap = vec4(fit.normal * 0.5 + vec3(0.5), 1.0);
-    specularRoughness = vec4(vec3(fit.roughness / roughnessScale), 1.0);
+    specularRoughness = vec4(vec3(fit.roughness / specularRoughnessScale), 1.0);
 }
