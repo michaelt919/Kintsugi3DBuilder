@@ -30,8 +30,8 @@ public class TexGenProgram
 	
 	private static final int TEXTURE_SIZE = 2048;
 	
-	private static final float DIFFUSE_DELTA = 0.05f;
-	private static final float MIN_DIFFUSE_SAMPLE_PCT = 0.1f;
+	private static final float DIFFUSE_DELTA = 0.1f;
+	private static final int DIFFUSE_ITERATIONS = 8;
 	private static final float DIFFUSE_DETERMINANT_THRESHOLD = 10.0f;
 	private static final float DIFFUSE_FIT3_WEIGHT = 1.0f;
 	private static final float DIFFUSE_FIT1_WEIGHT = 1.0f;
@@ -97,7 +97,7 @@ public class TexGenProgram
 		    	diffuseFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
 		    	
 		    	diffuseFitRenderable.program().setUniform("delta", DIFFUSE_DELTA);
-		    	diffuseFitRenderable.program().setUniform("minDiffuseSamples", (int)Math.ceil(MIN_DIFFUSE_SAMPLE_PCT * lightField.viewSet.getCameraPoseCount()));
+		    	diffuseFitRenderable.program().setUniform("iterations", DIFFUSE_ITERATIONS);
 		    	diffuseFitRenderable.program().setUniform("determinantThreshold", DIFFUSE_DETERMINANT_THRESHOLD);
 		    	diffuseFitRenderable.program().setUniform("fit1Weight", DIFFUSE_FIT1_WEIGHT);
 		    	diffuseFitRenderable.program().setUniform("fit3Weight", DIFFUSE_FIT3_WEIGHT);
