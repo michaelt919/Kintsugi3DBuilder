@@ -64,11 +64,11 @@ public class PhongRenderer implements Drawable
 			this.mesh = new VertexMesh("OBJ", objFile);
 			
 			File texturePath = new File(objFile.getParentFile(), "textures");
-			this.diffuse = new OpenGLTexture2D(new File(texturePath, "diffuse.png"), true, true, true);
-			this.normal = new OpenGLTexture2D(new File(texturePath, "normal.png"), true, true, true);
-			this.specular = new OpenGLTexture2D(new File(texturePath, "specular.png"), true, true, true);
-			this.specNormal = new OpenGLTexture2D(new File(texturePath, "snormal.png"), true, true, true);
-			this.roughness = new OpenGLTexture2D(new File(texturePath, "roughness.png"), true, true, true);
+			this.diffuse = new OpenGLTexture2D(new File(texturePath, "diffuse.png"), true, false, false);
+			this.normal = new OpenGLTexture2D(new File(texturePath, "normal.png"), true, false, false);
+			this.specular = new OpenGLTexture2D(new File(texturePath, "specular.png"), true, false, false);
+			this.specNormal = new OpenGLTexture2D(new File(texturePath, "snormal.png"), true, false, false);
+			this.roughness = new OpenGLTexture2D(new File(texturePath, "roughness.png"), true, false, false);
 			
 			this.renderable = new OpenGLRenderable(PhongRenderer.program);
 			this.vboResources = this.renderable.addVertexMesh("position", "texCoord", null, this.mesh);
