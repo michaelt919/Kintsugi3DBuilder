@@ -17,7 +17,7 @@ uniform bool occlusionEnabled;
 uniform float occlusionBias;
 
 uniform float delta;
-uniform int minDiffuseSamples;
+uniform int iterations;
 uniform float determinantThreshold;
 uniform float fit1Weight;
 uniform float fit3Weight;
@@ -113,20 +113,15 @@ DiffuseFit fitDiffuse()
     vec3 geometricNormal = normalize(fNormal);
     
     DiffuseFit fit = DiffuseFit(vec3(0), vec3(0), vec3(0));
-    bool firstIteration = true;
-    int skipCount = -1, lastSkipCount = -2;
-    while(skipCount > lastSkipCount)
-    {
-        lastSkipCount = skipCount;
-        skipCount = 0;
-        int ignoreCount = 0;
     
+    for (int k = 0; k < iterations; k++)
+    {
         //mat4 a = mat4(0);
         //mat4 b = mat4(0);
         mat3 a = mat3(0);
         mat3 b = mat3(0);
         vec4 weightedSum = vec4(0.0);
-        vec4 unweightedSum = vec4(0.0);
+        vec4 semiweightedSum = vec4(0.0);
         
         for (int i = 0; i < viewCount; i++)
         {
@@ -138,84 +133,75 @@ DiffuseFit fitDiffuse()
                 //vec4 light = vec4(getLightVector(i), 1.0);
                 vec3 light = getLightVector(i);
                 
-                if (firstIteration || color.r + color.g + color.b <= 
-                        (fit.color.r + fit.color.g + fit.color.b) * dot(fit.normal, light) + delta)
+                float weight;
+                if (k == 0)
                 {
-                    a += color.a * nDotV * outerProduct(light, light);
-                    //b += color.a * nDotV * outerProduct(light, vec4(color.rgb, 0.0));
-                    b += color.a * nDotV * outerProduct(light, color.rgb);
-                    weightedSum += color.a * nDotV * vec4(color.rgb, 1.0);
-                    unweightedSum += color.a * vec4(color.rgb, nDotV);
+                    weight = 1.0;
                 }
                 else
                 {
-                    skipCount++;
+                    float error = color.r + color.g + color.b -
+                        (fit.color.r + fit.color.g + fit.color.b) * dot(fit.normal, light);
+                    weight = exp(-error*error/(2*delta*delta));
                 }
-            }
-            else
-            {
-                ignoreCount++;
+                    
+                a += color.a * nDotV * weight * outerProduct(light, light);
+                //b += color.a * nDotV * outerProduct(light, vec4(color.rgb, 0.0));
+                b += color.a * nDotV * weight * outerProduct(light, color.rgb);
+                weightedSum += color.a * nDotV * weight * vec4(color.rgb, 1.0);
+                semiweightedSum += color.a * weight * vec4(color.rgb, nDotV);
             }
         }
         
-        if (!firstIteration && skipCount + ignoreCount + minDiffuseSamples > viewCount)
+        vec3 averageColor = weightedSum.rgb / (weightedSum.r + weightedSum.g + weightedSum.b);
+        mat3 m = inverse(a) * b;
+        vec3 rgbFit = vec3(length(m[0]), length(m[1]), length(m[2]));
+        vec3 rgbWeights = weightedSum.rgb / rgbFit;
+        
+        if (rgbFit.r == 0.0)
         {
-            skipCount = lastSkipCount;
-            // Use the result of the previous iteration
+            rgbWeights.r = 0.0;
+        }
+        if (rgbFit.g == 0.0)
+        {
+            rgbWeights.g = 0.0;
+        }
+        if (rgbFit.b == 0.0)
+        {
+            rgbWeights.b = 0.0;
+        }
+        
+        if (rgbWeights.r > rgbWeights.g && rgbWeights.r > rgbWeights.b)
+        {
+            // Red dominates
+            rgbWeights *= rgbFit.r / weightedSum.r;
+        }
+        else if (rgbWeights.g > rgbWeights.b)
+        {
+            // Green dominates
+            rgbWeights *= rgbFit.g / weightedSum.g;
         }
         else
         {
-            vec3 averageColor = weightedSum.rgb / (weightedSum.r + weightedSum.g + weightedSum.b);
-            mat3 m = inverse(a) * b;
-            vec3 rgbFit = vec3(length(m[0]), length(m[1]), length(m[2]));
-            vec3 rgbWeights = weightedSum.rgb / rgbFit;
-            
-            if (rgbFit.r == 0.0)
-            {
-                rgbWeights.r = 0.0;
-            }
-            if (rgbFit.g == 0.0)
-            {
-                rgbWeights.g = 0.0;
-            }
-            if (rgbFit.b == 0.0)
-            {
-                rgbWeights.b = 0.0;
-            }
-            
-            if (rgbWeights.r > rgbWeights.g && rgbWeights.r > rgbWeights.b)
-            {
-                // Red dominates
-                rgbWeights *= rgbFit.r / weightedSum.r;
-            }
-            else if (rgbWeights.g > rgbWeights.b)
-            {
-                // Green dominates
-                rgbWeights *= rgbFit.g / weightedSum.g;
-            }
-            else
-            {
-                // Blue dominates
-                rgbWeights *= rgbFit.b / weightedSum.b;
-            }
-        
-            float scaledDeterminant = clamp(determinant(a) * fit3Weight / 
-                                            (weightedSum.a * determinantThreshold), 0.0, 1.0);
-            
-            //vec4 solution = m * vec4(rgbWeights, 0.0);
-            vec3 solution = m * rgbWeights;
-            
-            float intensity = length(solution.xyz);
-            //float ambientIntensity = solution.w;
-            
-            fit.color = clamp(averageColor * intensity, 0, 1) * scaledDeterminant + 
-                            clamp(unweightedSum.rgb / unweightedSum.a, 0, 1) * 
-                                clamp(fit1Weight * unweightedSum.a, 0, 1 - scaledDeterminant);
-            fit.normal = normalize(solution.xyz) * scaledDeterminant + fNormal * (1 - scaledDeterminant);
-            debug = vec4(vec3(weightedSum.a * 0.05), 1.0);
+            // Blue dominates
+            rgbWeights *= rgbFit.b / weightedSum.b;
         }
-            
-        firstIteration = false;
+        
+        //vec4 solution = m * vec4(rgbWeights, 0.0);
+        vec3 solution = m * rgbWeights;
+        
+        float intensity = length(solution.xyz);
+        //float ambientIntensity = solution.w;
+    
+        float fit3Quality = clamp(fit3Weight * determinant(a) * 
+                                    clamp(dot(normalize(solution.xyz), geometricNormal), 0, 1)  / 
+                                    (weightedSum.a * determinantThreshold), 0.0, 1.0);
+        
+        fit.color = clamp(averageColor * intensity, 0, 1) * fit3Quality + 
+                        clamp(semiweightedSum.rgb / semiweightedSum.a, 0, 1) * 
+                            clamp(fit1Weight * semiweightedSum.a, 0, 1 - fit3Quality);
+        fit.normal = normalize(solution.xyz) * fit3Quality + fNormal * (1 - fit3Quality);
+        debug = vec4(pow(semiweightedSum.rgb / semiweightedSum.a, vec3(1 / gamma)), 1.0);
     }
     
     if (!validateFit(fit))

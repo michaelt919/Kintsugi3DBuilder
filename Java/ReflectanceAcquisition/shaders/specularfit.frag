@@ -197,8 +197,10 @@ SpecularFit fitSpecular()
     if (computeRoughness && computeNormal)
     {
         vec4 solution4 = inverse(a4) * b4;
-        float quality4 = clamp(fit4Weight * abs(determinant(a4)) / 
-            (determinantThreshold * determinantThreshold * determinantThreshold), 0.0, 1.0);
+        float quality4 = clamp(fit4Weight * abs(determinant(a4)) * 
+                                clamp(dot(normalize(solution4.xyz), geometricNormal), 0, 1) / 
+                                (determinantThreshold * determinantThreshold * determinantThreshold), 
+                            0.0, 1.0);
         float invRate = inversesqrt(dot(solution4.xyz, solution4.xyz));
         float invSqrtRate = sqrt(invRate);
         
