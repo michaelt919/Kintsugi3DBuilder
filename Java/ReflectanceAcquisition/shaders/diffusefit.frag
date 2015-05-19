@@ -121,7 +121,7 @@ DiffuseFit fitDiffuse()
         mat3 a = mat3(0);
         mat3 b = mat3(0);
         vec4 weightedSum = vec4(0.0);
-        vec4 semiweightedSum = vec4(0.0);
+        float nDotLSum = 0.0;
         
         for (int i = 0; i < viewCount; i++)
         {
@@ -140,16 +140,15 @@ DiffuseFit fitDiffuse()
                 }
                 else
                 {
-                    float error = color.r + color.g + color.b -
-                        (fit.color.r + fit.color.g + fit.color.b) * dot(fit.normal, light);
-                    weight = exp(-error*error/(2*delta*delta));
+                    vec3 error = color.rgb - fit.color * dot(fit.normal, light);
+                    weight = exp(-dot(error,error)/(2*delta*delta));
                 }
                     
                 a += color.a * nDotV * weight * outerProduct(light, light);
                 //b += color.a * nDotV * outerProduct(light, vec4(color.rgb, 0.0));
                 b += color.a * nDotV * weight * outerProduct(light, color.rgb);
                 weightedSum += color.a * nDotV * weight * vec4(color.rgb, 1.0);
-                semiweightedSum += color.a * weight * vec4(color.rgb, nDotV);
+                nDotLSum += color.a * nDotV * weight * max(0, dot(geometricNormal, light));
             }
         }
         
@@ -198,10 +197,10 @@ DiffuseFit fitDiffuse()
                                     (weightedSum.a * determinantThreshold), 0.0, 1.0);
         
         fit.color = clamp(averageColor * intensity, 0, 1) * fit3Quality + 
-                        clamp(semiweightedSum.rgb / semiweightedSum.a, 0, 1) * 
-                            clamp(fit1Weight * semiweightedSum.a, 0, 1 - fit3Quality);
+                        clamp(weightedSum.rgb / nDotLSum, 0, 1) * 
+                            clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality);
         fit.normal = normalize(solution.xyz) * fit3Quality + fNormal * (1 - fit3Quality);
-        debug = vec4(pow(semiweightedSum.rgb / semiweightedSum.a, vec3(1 / gamma)), 1.0);
+        debug = vec4(pow(weightedSum.rgb / nDotLSum, vec3(1 / gamma)), 1.0);
     }
     
     if (!validateFit(fit))
