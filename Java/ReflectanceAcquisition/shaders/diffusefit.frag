@@ -133,22 +133,18 @@ DiffuseFit fitDiffuse()
                 //vec4 light = vec4(getLightVector(i), 1.0);
                 vec3 light = getLightVector(i);
                 
-                float weight;
-                if (k == 0)
-                {
-                    weight = 1.0;
-                }
-                else
+                float weight = color.a * nDotV;
+                if (k != 0)
                 {
                     vec3 error = color.rgb - fit.color * dot(fit.normal, light);
-                    weight = exp(-dot(error,error)/(2*delta*delta));
+                    weight *= exp(-dot(error,error)/(2*delta*delta));
                 }
                     
-                a += color.a * nDotV * weight * outerProduct(light, light);
+                a += weight * outerProduct(light, light);
                 //b += color.a * nDotV * outerProduct(light, vec4(color.rgb, 0.0));
-                b += color.a * nDotV * weight * outerProduct(light, color.rgb);
-                weightedSum += color.a * nDotV * weight * vec4(color.rgb, 1.0);
-                nDotLSum += color.a * nDotV * weight * max(0, dot(geometricNormal, light));
+                b += weight * outerProduct(light, color.rgb);
+                weightedSum += weight * vec4(color.rgb, 1.0);
+                nDotLSum += weight * max(0, dot(geometricNormal, light));
             }
         }
         
@@ -200,7 +196,7 @@ DiffuseFit fitDiffuse()
                         clamp(weightedSum.rgb / nDotLSum, 0, 1) * 
                             clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality);
         fit.normal = normalize(solution.xyz) * fit3Quality + fNormal * (1 - fit3Quality);
-        debug = vec4(pow(weightedSum.rgb / nDotLSum, vec3(1 / gamma)), 1.0);
+        debug = vec4(fit3Quality, clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality), 0.0, 1.0);
     }
     
     if (!validateFit(fit))

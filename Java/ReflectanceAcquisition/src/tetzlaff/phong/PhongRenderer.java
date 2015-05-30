@@ -1,7 +1,10 @@
 package tetzlaff.phong;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
@@ -13,14 +16,22 @@ import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLDefaultFramebuffer;
 import tetzlaff.gl.opengl.OpenGLFramebuffer;
+import tetzlaff.gl.opengl.OpenGLFramebufferObject;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLResource;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
+import tetzlaff.ulf.ViewSet;
 
 public class PhongRenderer implements Drawable 
 {
+	public static final int NO_TEXTURE_MODE = 0;
+	public static final int FULL_TEXTURE_MODE = 1;
+	public static final int NORMAL_TEXTURE_ONLY_MODE = 2;
+	
 	private static OpenGLProgram program;
+	
+	private int mode = FULL_TEXTURE_MODE;
 	
 	private OpenGLContext context;
 	private File objFile;
@@ -42,6 +53,11 @@ public class PhongRenderer implements Drawable
     	this.objFile = objFile;
     	this.viewTrackball = viewTrackball;
     	this.lightTrackball = lightTrackball;
+	}
+	
+	public void setMode(int mode)
+	{
+		this.mode = mode;
 	}
 
 	@Override
@@ -71,7 +87,7 @@ public class PhongRenderer implements Drawable
 			this.roughness = new OpenGLTexture2D(new File(texturePath, "roughness.png"), true, false, false);
 			
 			this.renderable = new OpenGLRenderable(PhongRenderer.program);
-			this.vboResources = this.renderable.addVertexMesh("position", "texCoord", null, this.mesh);
+			this.vboResources = this.renderable.addVertexMesh("position", "texCoord", "normal", this.mesh);
 		} 
     	catch (IOException e) 
     	{
@@ -112,6 +128,8 @@ public class PhongRenderer implements Drawable
     	this.renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
     	
     	// TODO settings UI
+    	this.renderable.program().setUniform("mode", mode);
+    	this.renderable.program().setUniform("trueBlinnPhong", true);
     	this.renderable.program().setUniform("gamma", 2.2f);
     	this.renderable.program().setUniform("ambientColor", new Vector3(0.0f, 0.0f, 0.0f));
     	this.renderable.program().setUniform("lightColor", new Vector3(1.0f, 1.0f, 1.0f));
@@ -134,6 +152,33 @@ public class PhongRenderer implements Drawable
 		for (OpenGLResource r : vboResources)
 		{
 			r.delete();
+		}
+	}
+	
+	public void resample(File targetVSETFile, File exportPath) throws IOException
+	{
+		ViewSet targetViewSet = ViewSet.loadFromVSETFile(targetVSETFile, false);
+		
+		BufferedImage img = ImageIO.read(targetViewSet.getImageFile(0));
+		OpenGLFramebufferObject framebuffer = new OpenGLFramebufferObject(img.getWidth(), img.getHeight());
+    	
+    	for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+		{
+	    	renderable.program().setUniform("model_view", targetViewSet.getCameraPose(i));
+	    	renderable.program().setUniform("projection", 
+    			targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
+    				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
+	    	
+	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+	    	framebuffer.clearDepthBuffer();
+	    	
+	    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+	    	
+	    	File exportFile = new File(exportPath, targetViewSet.getImageFileName(i));
+	    	exportFile.getParentFile().mkdirs();
+	        framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+	        
+	        System.out.println("Wrote image " + i);
 		}
 	}
 }

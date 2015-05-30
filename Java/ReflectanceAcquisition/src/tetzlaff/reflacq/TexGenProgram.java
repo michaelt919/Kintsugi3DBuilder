@@ -31,21 +31,22 @@ public class TexGenProgram
 	private static final int TEXTURE_SIZE = 2048;
 	
 	private static final float DIFFUSE_DELTA = 0.1f;
-	private static final int DIFFUSE_ITERATIONS = 8;
+	private static final int DIFFUSE_ITERATIONS = 4;
 	private static final float DIFFUSE_DETERMINANT_THRESHOLD = 10.0f;
 	private static final float DIFFUSE_FIT3_WEIGHT = 1.0f;
-	private static final float DIFFUSE_FIT1_WEIGHT = 1.0f;
+	private static final float DIFFUSE_FIT1_WEIGHT = Float.MAX_VALUE;
 	
-	private static final boolean COMPUTE_ROUGHNESS = true;
-	private static final boolean COMPUTE_SPECULAR_NORMAL = true;
+	private static final boolean COMPUTE_ROUGHNESS = false;
+	private static final boolean COMPUTE_SPECULAR_NORMAL = false;
+	private static final boolean TRUE_BLINN_PHONG = true;
 	
 	private static final float DIFFUSE_REMOVAL_AMOUNT = 0.98f;
 	private static final float SPECULAR_INFLUENCE_SCALE = 0.35f;
-	private static final float SPECULAR_DETERMINANT_THRESHOLD = 0.02f;
-	private static final float SPECULAR_FIT4_WEIGHT = 1.0f;
+	private static final float SPECULAR_DETERMINANT_THRESHOLD = 0.002f;
+	private static final float SPECULAR_FIT4_WEIGHT = 0.0f;
 	private static final float SPECULAR_FIT2_WEIGHT = 0.0f;
 	private static final float SPECULAR_FIT1_WEIGHT = 1.0f;
-	private static final float DEFAULT_SPECULAR_ROUGHNESS = 0.25f;
+	private static final float DEFAULT_SPECULAR_ROUGHNESS = 0.125f;
 	private static final float SPECULAR_ROUGHNESS_SCALE = 0.5f;
 	
 	private static final int DEBUG_PIXEL_X = 322;
@@ -53,7 +54,8 @@ public class TexGenProgram
 	
 	public static void main(String[] args)
     {
-    	Date timestamp;
+		System.out.println("Loading view set...");
+    	Date timestamp = new Date();
 		
     	OpenGLContext ulfToTexContext = new GLFWWindow(800, 800, "Texture Generation");
     	ulfToTexContext.enableDepthTest();
@@ -76,8 +78,10 @@ public class TexGenProgram
     	    	File vsetFile = fileChooser.getSelectedFile();
     	    	File lightFieldDirectory = vsetFile.getParentFile();
     	    	UnstructuredLightField lightField = UnstructuredLightField.loadFromVSETFile(vsetFile);
+    	    	
+		    	System.out.println("Loading completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    	
-		    	System.out.println("Fitting to model...");
+		    	System.out.println("Fitting diffuse...");
 		    	timestamp = new Date();
 		    	
 		    	OpenGLRenderable diffuseFitRenderable = new OpenGLRenderable(diffuseFitProgram);
@@ -102,6 +106,27 @@ public class TexGenProgram
 		    	diffuseFitRenderable.program().setUniform("fit1Weight", DIFFUSE_FIT1_WEIGHT);
 		    	diffuseFitRenderable.program().setUniform("fit3Weight", DIFFUSE_FIT3_WEIGHT);
 		    	
+		    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
+	    		{
+		    		diffuseFitRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
+		    		diffuseFitRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+	    		}
+
+		    	OpenGLFramebufferObject diffuseFitFramebuffer = new OpenGLFramebufferObject(TEXTURE_SIZE, TEXTURE_SIZE, 4, true, false);
+
+		    	diffuseFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		    	diffuseFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+		    	diffuseFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+		    	diffuseFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+		    	
+		        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitFramebuffer);
+		        ulfToTexContext.finish();
+	    		
+		    	System.out.println("Diffuse fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		        
+		        System.out.println("Fitting specular...");
+		    	timestamp = new Date();
+		    	
 		    	OpenGLRenderable specularFitRenderable = new OpenGLRenderable(specularFitProgram);
 		    	
 		    	specularFitRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
@@ -120,6 +145,7 @@ public class TexGenProgram
 		    	
 		    	specularFitRenderable.program().setUniform("computeRoughness", COMPUTE_ROUGHNESS);
 		    	specularFitRenderable.program().setUniform("computeNormal", COMPUTE_SPECULAR_NORMAL);
+		    	specularFitRenderable.program().setUniform("trueBlinnPhong", TRUE_BLINN_PHONG);
 
 		    	specularFitRenderable.program().setUniform("diffuseRemovalAmount", DIFFUSE_REMOVAL_AMOUNT);
 		    	specularFitRenderable.program().setUniform("specularInfluenceScale", SPECULAR_INFLUENCE_SCALE);
@@ -133,22 +159,11 @@ public class TexGenProgram
 		    	
 		    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
 	    		{
-		    		diffuseFitRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
-		    		diffuseFitRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
 		    		specularFitRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
 		    		specularFitRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
 	    		}
-
-		    	OpenGLFramebufferObject diffuseFitFramebuffer = new OpenGLFramebufferObject(TEXTURE_SIZE, TEXTURE_SIZE, 4, true, false);
-		    	OpenGLFramebufferObject specularFitFramebuffer = new OpenGLFramebufferObject(TEXTURE_SIZE, TEXTURE_SIZE, 4, true, false);
-
-		    	diffuseFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-		    	diffuseFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-		    	diffuseFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-		    	diffuseFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	
-		        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitFramebuffer);
-		        ulfToTexContext.finish();
+		    	OpenGLFramebufferObject specularFitFramebuffer = new OpenGLFramebufferObject(TEXTURE_SIZE, TEXTURE_SIZE, 4, true, false);
 		    	
 		        specularFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 		        specularFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -161,7 +176,7 @@ public class TexGenProgram
 	    		specularFitRenderable.draw(PrimitiveMode.TRIANGLES, specularFitFramebuffer);
 	    		ulfToTexContext.finish();
 	    		
-		    	System.out.println("Model fitting completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		    	System.out.println("Specular fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    	
 		    	System.out.println("Saving textures...");
 		    	timestamp = new Date();
@@ -170,8 +185,8 @@ public class TexGenProgram
 		        
 		    	diffuseFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory, "output/textures/diffuse.png"));
 		    	diffuseFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory, "output/textures/normal.png"));
-		    	diffuseFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(lightFieldDirectory, "output/textures/ambient.png"));
-		    	//if (DEBUG)
+		    	//diffuseFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(lightFieldDirectory, "output/textures/ambient.png"));
+		    	if (DEBUG)
 		    	{
 		    		diffuseFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(lightFieldDirectory, "output/textures/ddebug.png"));
 		    	}
@@ -179,7 +194,7 @@ public class TexGenProgram
 		    	specularFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(lightFieldDirectory, "output/textures/specular.png"));
 		    	specularFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(lightFieldDirectory, "output/textures/roughness.png"));
 		    	specularFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(lightFieldDirectory, "output/textures/snormal.png"));
-		    	//if (DEBUG)
+		    	if (DEBUG)
 		    	{
 			    	specularFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(lightFieldDirectory, "output/textures/sdebug.png"));
 		    	}
