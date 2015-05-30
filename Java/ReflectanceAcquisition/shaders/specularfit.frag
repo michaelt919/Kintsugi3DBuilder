@@ -17,6 +17,7 @@ uniform sampler2D normalEstimate;
 
 uniform bool computeRoughness;
 uniform bool computeNormal;
+uniform bool trueBlinnPhong;
 
 uniform float gamma;
 uniform bool occlusionEnabled;
@@ -118,21 +119,22 @@ vec3 getDiffuseNormalVector()
     return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
 }
 
-vec3 removeDiffuse(vec3 originalColor, vec3 diffuseColor, vec3 light, vec3 normal)
+vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, vec3 normal)
 {
     vec3 diffuseContrib = diffuseColor * max(0, dot(light, normal));
     float cap = 1.0 - diffuseRemovalAmount * 
-                        max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
-    return clamp(originalColor - diffuseRemovalAmount * diffuseContrib, 0, cap);
+                        max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b));
+    vec3 remainder = clamp(originalColor.rgb - diffuseRemovalAmount * diffuseContrib, 0, cap);
+    return vec4(remainder, cap <= 0.0 ? 0.0 : 
+                    pow(originalColor.a * remainder.r * remainder.g * remainder.b * (cap - remainder.r) 
+                            * (cap - remainder.g) * (cap - remainder.b), 1.0 / 3.0) / cap);
 }
 
 bool validateFit(SpecularFit fit)
 {
-    return ! isinf(fit.color.r) && ! isinf(fit.color.g) && ! isinf(fit.color.b) && 
-            ! isnan(fit.color.r) && ! isnan(fit.color.g) && ! isnan(fit.color.b) && 
-            ! isinf(fit.normal.x) && ! isinf(fit.normal.y) && ! isinf(fit.normal.z) && 
+    return ! isnan(fit.color.r) && ! isnan(fit.color.g) && ! isnan(fit.color.b) && 
             ! isnan(fit.normal.x) && ! isnan(fit.normal.y) && ! isnan(fit.normal.z) && 
-            ! isinf(fit.roughness) && ! isnan(fit.roughness);
+            ! isnan(fit.roughness);
 }
 
 SpecularFit clampFit(SpecularFit fit)
@@ -165,7 +167,7 @@ SpecularFit fitSpecular()
         if (color.a * nDotV > 0)
         {
             vec3 light = getLightVector(i);
-            vec3 colorRemainder = removeDiffuse(color.rgb, diffuseColor, light, diffuseNormal);
+            vec4 colorRemainder = removeDiffuse(color, diffuseColor, light, diffuseNormal);
             float intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
             
             vec3 half = normalize(view + light);
@@ -176,15 +178,19 @@ SpecularFit fitSpecular()
                 float nDotHPower = pow(nDotH, exponent);
                 float u = nDotH - 1 / nDotH;
                 
-                sum += color.a * nDotV * vec4(colorRemainder.rgb, exp((nDotH - 1 / nDotH) / 
-                                            (2 * defaultSpecularRoughness * defaultSpecularRoughness)));
+                sum += color.a * nDotV * vec4(colorRemainder.rgb, 
+                        trueBlinnPhong ? 
+                            pow(nDotH, 1 / (defaultSpecularRoughness * defaultSpecularRoughness)) :
+                            exp((nDotH - 1 / nDotH) / 
+                                (2 * defaultSpecularRoughness * defaultSpecularRoughness)));
                 
-                a2 += color.a * nDotV * nDotHPower * intensity * outerProduct(vec2(u, 1), vec2(u, 1));
-                b2 += color.a * nDotV * nDotHPower * intensity * log(intensity) * vec2(u, 1);
+                a2 += colorRemainder.a * nDotV * nDotHPower * 
+                        outerProduct(vec2(u, 1), vec2(u, 1));
+                b2 += colorRemainder.a * nDotV * nDotHPower * log(intensity) * vec2(u, 1);
                 
-                a4 += color.a * nDotV * nDotHPower * intensity * 
+                a4 += colorRemainder.a * nDotV * nDotHPower * 
                         outerProduct(vec4(half, 1), vec4(half, 1));
-                b4 += color.a * nDotV * nDotHPower * intensity * log(intensity) * vec4(half, 1);
+                b4 += colorRemainder.a * nDotV * nDotHPower * log(intensity) * vec4(half, 1);
             }
         }
     }
@@ -225,6 +231,8 @@ SpecularFit fitSpecular()
             fit.normal += quality4 * fit4.normal;
             qualitySum += quality4;
         }
+    
+        debug = vec4(quality4, 0, 0, 1);
     }
     
     if (computeRoughness && qualitySum < 1.0)
@@ -235,7 +243,7 @@ SpecularFit fitSpecular()
         
         SpecularFit fit2;
         fit2.color = exp(solution2[1]) * averageColor;
-        fit2.roughness = inversesqrt(2 * solution2[0]);
+        fit2.roughness = inversesqrt(max(0, 2 * solution2[0]));
         fit2.normal = diffuseNormal;
         
         if (validateFit(fit2))
@@ -254,6 +262,8 @@ SpecularFit fitSpecular()
             fit.normal += quality2 * fit2.normal;
             qualitySum += quality2;
         }
+    
+        debug.g = quality2;
     }
     
     if (qualitySum < 1.0)
@@ -281,6 +291,8 @@ SpecularFit fitSpecular()
             fit.normal += quality1 * fit1.normal;
             qualitySum += quality1;
         }
+    
+        debug.b = quality1;
     }
     
     if (qualitySum < 1.0)
