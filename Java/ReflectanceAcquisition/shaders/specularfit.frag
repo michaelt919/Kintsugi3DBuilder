@@ -139,7 +139,7 @@ bool validateFit(SpecularFit fit)
 
 SpecularFit clampFit(SpecularFit fit)
 {
-    fit.color = clamp(fit.color, 0, 1);
+    fit.color = fit.color / max(max(1.0, fit.color.r), max(fit.color.g, fit.color.b));
     fit.roughness = clamp(fit.roughness, 0, specularRoughnessScale);
     return fit;
 }
@@ -175,7 +175,6 @@ SpecularFit fitSpecular()
             
             if (intensity > 0.0 && nDotH > 0.0)
             {
-                float nDotHPower = pow(nDotH, exponent);
                 float u = nDotH - 1 / nDotH;
                 
                 sum += color.a * nDotV * vec4(colorRemainder.rgb, 
@@ -184,13 +183,21 @@ SpecularFit fitSpecular()
                             exp((nDotH - 1 / nDotH) / 
                                 (2 * defaultSpecularRoughness * defaultSpecularRoughness)));
                 
-                a2 += colorRemainder.a * nDotV * nDotHPower * 
-                        outerProduct(vec2(u, 1), vec2(u, 1));
-                b2 += colorRemainder.a * nDotV * nDotHPower * log(intensity) * vec2(u, 1);
+                if (computeRoughness)
+                {
+                    float nDotHPower = pow(nDotH, exponent);
                 
-                a4 += colorRemainder.a * nDotV * nDotHPower * 
-                        outerProduct(vec4(half, 1), vec4(half, 1));
-                b4 += colorRemainder.a * nDotV * nDotHPower * log(intensity) * vec4(half, 1);
+                    a2 += colorRemainder.a * nDotV * nDotHPower * 
+                            outerProduct(vec2(u, 1), vec2(u, 1));
+                    b2 += colorRemainder.a * nDotV * nDotHPower * log(intensity) * vec2(u, 1);
+                    
+                    if (computeNormal)
+                    {
+                        a4 += colorRemainder.a * nDotV * nDotHPower * 
+                                outerProduct(vec4(half, 1), vec4(half, 1));
+                        b4 += colorRemainder.a * nDotV * nDotHPower * log(intensity) * vec4(half, 1);
+                    }
+                }
             }
         }
     }

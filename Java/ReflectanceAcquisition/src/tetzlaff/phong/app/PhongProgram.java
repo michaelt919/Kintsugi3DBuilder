@@ -75,7 +75,67 @@ public class PhongProgram
 	    		}
 	    		else if (keycode == KeyCodes.TWO)
 	    		{
+	    			renderer.setMode(PhongRenderer.PLASTIC_TEXTURE_MODE);
+	    		}
+	    		else if (keycode == KeyCodes.THREE)
+	    		{
+	    			renderer.setMode(PhongRenderer.METALLIC_TEXTURE_MODE);
+	    		}
+	    		else if (keycode == KeyCodes.FOUR)
+	    		{
+	    			renderer.setMode(PhongRenderer.DIFFUSE_TEXTURE_MODE);
+	    		}
+	    		else if (keycode == KeyCodes.FIVE)
+	    		{
 	    			renderer.setMode(PhongRenderer.NORMAL_TEXTURE_ONLY_MODE);
+	    		}
+	    		else if (keycode == KeyCodes.SIX)
+	    		{
+	    			renderer.setMode(PhongRenderer.DIFFUSE_NO_SHADING_MODE);
+	    		}
+	    		else if (keycode == KeyCodes.EQUAL)
+	    		{
+	    			if (renderer.getMode() == PhongRenderer.METALLIC_TEXTURE_MODE)
+	    			{
+	    				renderer.setMetallicIntensity(renderer.getMetallicIntensity() * 1.1f);
+	    			}
+	    			else
+	    			{
+	    				renderer.setSpecularIntensity(renderer.getSpecularIntensity() * 1.1f);
+	    			}
+	    		}
+	    		else if (keycode == KeyCodes.MINUS)
+	    		{
+	    			if (renderer.getMode() == PhongRenderer.METALLIC_TEXTURE_MODE)
+	    			{
+	    				renderer.setMetallicIntensity(renderer.getMetallicIntensity() * 0.9f);
+	    			}
+	    			else
+	    			{
+	    				renderer.setSpecularIntensity(renderer.getSpecularIntensity() * 0.9f);
+	    			}
+	    		}
+	    		else if (keycode == KeyCodes.RIGHT_BRACKET)
+	    		{
+	    			if (renderer.getMode() == PhongRenderer.FULL_TEXTURE_MODE)
+	    			{
+		    			renderer.setSpecularRoughnessTextureScale(renderer.getSpecularRoughnessTextureScale() * 1.1f);
+	    			}
+	    			else
+	    			{
+		    			renderer.setSpecularRoughness(renderer.getSpecularRoughness() * 1.1f);
+	    			}
+	    		}
+	    		else if (keycode == KeyCodes.LEFT_BRACKET)
+	    		{
+	    			if (renderer.getMode() == PhongRenderer.FULL_TEXTURE_MODE)
+	    			{
+		    			renderer.setSpecularRoughnessTextureScale(renderer.getSpecularRoughnessTextureScale() * 0.9f);
+	    			}
+	    			else
+	    			{
+		    			renderer.setSpecularRoughness(renderer.getSpecularRoughness() * 0.9f);
+	    			}
 	    		}
 	    	});
 	        

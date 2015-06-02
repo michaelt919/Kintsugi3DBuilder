@@ -9,9 +9,11 @@ import javax.imageio.ImageIO;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.helpers.Drawable;
+import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLDefaultFramebuffer;
@@ -27,11 +29,20 @@ public class PhongRenderer implements Drawable
 {
 	public static final int NO_TEXTURE_MODE = 0;
 	public static final int FULL_TEXTURE_MODE = 1;
-	public static final int NORMAL_TEXTURE_ONLY_MODE = 2;
+	public static final int PLASTIC_TEXTURE_MODE = 2;
+	public static final int METALLIC_TEXTURE_MODE = 3;
+	public static final int DIFFUSE_TEXTURE_MODE = 4;
+	public static final int NORMAL_TEXTURE_ONLY_MODE = 5;
+	public static final int DIFFUSE_NO_SHADING_MODE = 6;
 	
 	private static OpenGLProgram program;
+	private static OpenGLProgram shadowProgram;
 	
 	private int mode = FULL_TEXTURE_MODE;
+	private float specularRoughnessTextureScale = 0.5f;
+	private float specularRoughness = 0.125f;
+	private float specularIntensity = 0.5f;
+	private float metallicIntensity = 1.0f;
 	
 	private OpenGLContext context;
 	private File objFile;
@@ -45,7 +56,10 @@ public class PhongRenderer implements Drawable
 	private OpenGLTexture2D specNormal;
 	private OpenGLTexture2D roughness;
 	private OpenGLRenderable renderable;
+	private OpenGLRenderable shadowRenderable;
 	private Iterable<OpenGLResource> vboResources;
+	private Iterable<OpenGLResource> shadowVboResources;
+	private OpenGLFramebufferObject shadowBuffer;
 	
 	public PhongRenderer(OpenGLContext context, File objFile, Trackball viewTrackball, Trackball lightTrackball) 
 	{
@@ -53,6 +67,11 @@ public class PhongRenderer implements Drawable
     	this.objFile = objFile;
     	this.viewTrackball = viewTrackball;
     	this.lightTrackball = lightTrackball;
+	}
+
+	public int getMode()
+	{
+		return this.mode;
 	}
 	
 	public void setMode(int mode)
@@ -74,6 +93,18 @@ public class PhongRenderer implements Drawable
 	        	e.printStackTrace();
 	        }
     	}
+		
+		if (PhongRenderer.shadowProgram == null)
+    	{
+	    	try
+	        {
+	    		PhongRenderer.shadowProgram = new OpenGLProgram(new File("shaders/depth.vert"), new File("shaders/depth.frag"));
+	        }
+	        catch (IOException e)
+	        {
+	        	e.printStackTrace();
+	        }
+    	}
     	
     	try 
     	{
@@ -88,6 +119,10 @@ public class PhongRenderer implements Drawable
 			
 			this.renderable = new OpenGLRenderable(PhongRenderer.program);
 			this.vboResources = this.renderable.addVertexMesh("position", "texCoord", "normal", this.mesh);
+
+			this.shadowRenderable = new OpenGLRenderable(PhongRenderer.shadowProgram);
+			this.shadowVboResources = this.shadowRenderable.addVertexMesh("position", null, null, this.mesh);
+			this.shadowBuffer = new OpenGLFramebufferObject(4096, 4096, 0);
 		} 
     	catch (IOException e) 
     	{
@@ -103,6 +138,31 @@ public class PhongRenderer implements Drawable
 	@Override
 	public void draw() 
 	{
+    	Matrix4 modelView = Matrix4.lookAt(
+				new Vector3(0.0f, 0.0f, 5.0f / viewTrackball.getScale()), 
+				new Vector3(0.0f, 0.0f, 0.0f),
+				new Vector3(0.0f, 1.0f, 0.0f)
+			) // View
+			.times(viewTrackball.getRotationMatrix()) // Trackball
+			.times(Matrix4.translate(mesh.getCentroid().negated())); // Model
+		
+		Vector3 lightPosition = 
+				(new Matrix3(lightTrackball.getRotationMatrix())
+					.times(new Vector3(0.0f, 0.0f, 5.0f)))
+					.plus(mesh.getCentroid());
+		
+		this.shadowBuffer.clearDepthBuffer();
+		Matrix4 lightMatrix = 
+			Matrix4.lookAt(
+				lightPosition, 
+				mesh.getCentroid(),
+				new Vector3(0.0f, 1.0f, 0.0f)
+			);
+    	
+    	this.shadowRenderable.program().setUniform("model_view", lightMatrix);
+    	this.shadowRenderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 2, 1.0f, 1.0f, 9.0f));
+    	this.shadowRenderable.draw(PrimitiveMode.TRIANGLES, this.shadowBuffer);
+		
 		OpenGLFramebuffer framebuffer = OpenGLDefaultFramebuffer.fromContext(context);
     	
     	FramebufferSize size = framebuffer.getSize();
@@ -115,28 +175,34 @@ public class PhongRenderer implements Drawable
     	this.renderable.program().setTexture("specular", this.specular);
     	this.renderable.program().setTexture("specNormal", this.specNormal);
     	this.renderable.program().setTexture("roughness", this.roughness);
-    	
-    	Matrix4 modelView = Matrix4.lookAt(
-				new Vector3(0.0f, 0.0f, 5.0f / viewTrackball.getScale()), 
-				new Vector3(0.0f, 0.0f, 0.0f),
-				new Vector3(0.0f, 1.0f, 0.0f)
-			) // View
-			.times(viewTrackball.getRotationMatrix()) // Trackball
-			.times(Matrix4.translate(mesh.getCentroid().negated())); // Model
+    	this.renderable.program().setTexture("shadow", this.shadowBuffer.getDepthAttachmentTexture());
     	
     	this.renderable.program().setUniform("model_view", modelView);
     	this.renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
+    	this.renderable.program().setUniform("lightMatrix", Matrix4.perspective((float)Math.PI / 2, 1.0f, 1.0f, 9.0f).times(lightMatrix));
     	
     	// TODO settings UI
     	this.renderable.program().setUniform("mode", mode);
     	this.renderable.program().setUniform("trueBlinnPhong", true);
     	this.renderable.program().setUniform("gamma", 2.2f);
-    	this.renderable.program().setUniform("ambientColor", new Vector3(0.0f, 0.0f, 0.0f));
+    	this.renderable.program().setUniform("shadowBias", 0.001f);
+    	this.renderable.program().setUniform("ambientColor", new Vector3(0.05f, 0.05f, 0.05f));
     	this.renderable.program().setUniform("lightColor", new Vector3(1.0f, 1.0f, 1.0f));
-    	//this.renderable.program().setUniform("lightPosition", 
-    	//		new Matrix3(modelView).transpose().times(new Vector3(modelView.getColumn(3)).negated()));
-    	this.renderable.program().setUniform("lightDirection", new Vector3(lightTrackball.getRotationMatrix().getColumn(2)));
-    	this.renderable.program().setUniform("roughnessScale", 0.5f);
+    	this.renderable.program().setUniform("lightPosition", lightPosition);
+    	//this.renderable.program().setUniform("lightDirection", new Vector3(lightTrackball.getRotationMatrix().getColumn(2)));
+    	if (mode == METALLIC_TEXTURE_MODE)
+    	{
+        	this.renderable.program().setUniform("specularScale", metallicIntensity);
+    	}
+    	else if (mode == FULL_TEXTURE_MODE)
+    	{
+        	this.renderable.program().setUniform("specularScale", 0.5f);
+    	}
+    	else
+    	{
+        	this.renderable.program().setUniform("specularScale", specularIntensity);
+    	}
+    	this.renderable.program().setUniform("roughnessScale", mode == FULL_TEXTURE_MODE ? specularRoughnessTextureScale : specularRoughness);
     	
     	this.renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 	}
@@ -149,12 +215,53 @@ public class PhongRenderer implements Drawable
 		this.specular.delete();
 		this.roughness.delete();
 		
+		this.shadowBuffer.delete();
+		
 		for (OpenGLResource r : vboResources)
+		{
+			r.delete();
+		}
+		
+		for (OpenGLResource r : shadowVboResources)
 		{
 			r.delete();
 		}
 	}
 	
+	public float getSpecularRoughness() {
+		return this.specularRoughness;
+	}
+
+	public void setSpecularRoughness(float specularRoughness) {
+		this.specularRoughness = specularRoughness;
+		System.out.println("roughness = " + specularRoughness);
+	}
+
+	public float getSpecularRoughnessTextureScale() {
+		return this.specularRoughnessTextureScale;
+	}
+
+	public void setSpecularRoughnessTextureScale(float specularRoughnessTextureScale) {
+		this.specularRoughnessTextureScale = specularRoughnessTextureScale;
+		System.out.println("roughness scale = " + specularRoughnessTextureScale);
+	}
+
+	public float getSpecularIntensity() {
+		return this.specularIntensity;
+	}
+
+	public void setSpecularIntensity(float specularIntensity) {
+		this.specularIntensity = specularIntensity;
+	}
+
+	public float getMetallicIntensity() {
+		return this.metallicIntensity;
+	}
+
+	public void setMetallicIntensity(float metallicIntensity) {
+		this.metallicIntensity = metallicIntensity;
+	}
+
 	public void resample(File targetVSETFile, File exportPath) throws IOException
 	{
 		ViewSet targetViewSet = ViewSet.loadFromVSETFile(targetVSETFile, false);
