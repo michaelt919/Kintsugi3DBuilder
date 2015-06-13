@@ -1,7 +1,7 @@
 #version 330
 
-#define MAX_CAMERA_POSE_COUNT 256
-#define MAX_CAMERA_PROJECTION_COUNT 256
+#define MAX_CAMERA_POSE_COUNT 1024
+#define MAX_CAMERA_PROJECTION_COUNT 1024
 
 uniform bool occlusionEnabled;
 

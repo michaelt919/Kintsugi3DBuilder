@@ -2,6 +2,9 @@ package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL31.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.Context;
@@ -96,5 +99,42 @@ public abstract class OpenGLContext implements Context
 	{
 		glDisable(GL_BLEND);
 		openGLErrorCheck();
+	}
+	
+	private int getInteger(int queryId)
+	{
+		int queryResult = glGetInteger(queryId);
+		openGLErrorCheck();
+		return queryResult;
+	}
+	
+	public int getMaxCombinedVertexUniformComponents()
+	{
+		return getInteger(GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS);
+	}
+	
+	public int getMaxCombinedFragmentUniformComponents()
+	{
+		return getInteger(GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS);
+	}
+	
+	public int getMaxUniformBlockSize()
+	{
+		return getInteger(GL_MAX_UNIFORM_BLOCK_SIZE);
+	}
+	
+	public int getMaxVertexUniformComponents()
+	{
+		return getInteger(GL_MAX_VERTEX_UNIFORM_COMPONENTS);
+	}
+	
+	public int getMaxFragmentUniformComponents()
+	{
+		return getInteger(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS);
+	}
+	
+	public int getMaxArrayTextureLayers()
+	{
+		return getInteger(GL_MAX_ARRAY_TEXTURE_LAYERS);
 	}
 }

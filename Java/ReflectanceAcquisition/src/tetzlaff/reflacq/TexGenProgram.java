@@ -59,9 +59,14 @@ public class TexGenProgram
 		System.out.println("Loading view set...");
     	Date timestamp = new Date();
 		
-    	OpenGLContext ulfToTexContext = new GLFWWindow(800, 800, "Texture Generation");
-    	ulfToTexContext.enableDepthTest();
-    	ulfToTexContext.enableBackFaceCulling();
+    	OpenGLContext context = new GLFWWindow(800, 800, "Texture Generation");
+    	context.enableDepthTest();
+    	context.enableBackFaceCulling();
+
+    	System.out.println("Max vertex uniform components across all blocks:" + context.getMaxCombinedVertexUniformComponents());
+    	System.out.println("Max fragment uniform components across all blocks:" + context.getMaxCombinedFragmentUniformComponents());
+    	System.out.println("Max size of a uniform block in bytes:" + context.getMaxUniformBlockSize());
+    	System.out.println("Max texture array layers:" + context.getMaxArrayTextureLayers());
     	
         try
         {
@@ -122,7 +127,7 @@ public class TexGenProgram
 		    	diffuseFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	
 		        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitFramebuffer);
-		        ulfToTexContext.finish();
+		        context.finish();
 	    		
 		    	System.out.println("Diffuse fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    	
@@ -180,7 +185,7 @@ public class TexGenProgram
 			    	specularFitRenderable.program().setTexture("normalEstimate", diffuseFitFramebuffer.getColorAttachmentTexture(1));
 	
 		    		specularFitRenderable.draw(PrimitiveMode.TRIANGLES, specularFitFramebuffer);
-		    		ulfToTexContext.finish();
+		    		context.finish();
 		    		
 			    	System.out.println("Specular fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 			    	
