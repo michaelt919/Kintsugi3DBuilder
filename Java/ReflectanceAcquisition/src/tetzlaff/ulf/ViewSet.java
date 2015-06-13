@@ -172,6 +172,8 @@ public class ViewSet
 		cameraPoseBuffer.delete();
 		cameraProjectionBuffer.delete();
 		cameraProjectionIndexBuffer.delete();
+		lightPositionBuffer.delete();
+		lightIndexBuffer.delete();
 		textureArray.delete();
 	}
 
