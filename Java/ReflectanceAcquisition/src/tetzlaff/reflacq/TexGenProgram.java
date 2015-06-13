@@ -29,25 +29,25 @@ public class TexGenProgram
 	private static final boolean OCCLUSION_ENABLED = true;
 	private static final float OCCLUSION_BIAS = 0.0025f;
 	
-	private static final int TEXTURE_SIZE = 2048;
+	private static final int TEXTURE_SIZE = 1024;
 	
-	private static final float DIFFUSE_DELTA = 0.03f;
+	private static final float DIFFUSE_DELTA = 0.1f;
 	private static final int DIFFUSE_ITERATIONS = 8;
-	private static final float DIFFUSE_DETERMINANT_THRESHOLD = 10.0f;
-	private static final float DIFFUSE_FIT3_WEIGHT = 10.0f;
+	private static final float DIFFUSE_DETERMINANT_THRESHOLD = 1.0f;
+	private static final float DIFFUSE_FIT3_WEIGHT = 1.0f;
 	private static final float DIFFUSE_FIT1_WEIGHT = Float.MAX_VALUE;
 	
 	private static final boolean COMPUTE_ROUGHNESS = false;
 	private static final boolean COMPUTE_SPECULAR_NORMAL = false;
 	private static final boolean TRUE_BLINN_PHONG = true;
-	private static final boolean PREPROJECT_IMAGES = false;
+	private static final boolean PREPROJECT_IMAGES = true;
 	
 	private static final float DIFFUSE_REMOVAL_AMOUNT = 0.98f;
 	private static final float SPECULAR_INFLUENCE_SCALE = 0.35f;
 	private static final float SPECULAR_DETERMINANT_THRESHOLD = 0.002f;
 	private static final float SPECULAR_FIT4_WEIGHT = 0.0f;
 	private static final float SPECULAR_FIT2_WEIGHT = 0.0f;
-	private static final float SPECULAR_FIT1_WEIGHT = 10000.0f;
+	private static final float SPECULAR_FIT1_WEIGHT = 1.0f;
 	private static final float SPECULAR_ROUGHNESS_BOUND_LOWER = 0.2f;
 	private static final float SPECULAR_ROUGHNESS_BOUND_UPPER = 0.2f;
 	private static final int SPECULAR_ROUGHNESS_STEPS = 0;
@@ -73,10 +73,21 @@ public class TexGenProgram
     	
         try
         {
-	    	OpenGLProgram projTexProgram = new OpenGLProgram(new File("shaders", "texspace.vert"), new File("shaders", "projtex.frag"));
-    		OpenGLProgram diffuseFitProgram = new OpenGLProgram(new File("shaders", "texspace.vert"), new File("shaders", "diffusefit_imgspace.frag"));
-    		OpenGLProgram specularFitProgram = new OpenGLProgram(new File("shaders", "texspace.vert"), new File("shaders", "specularfit_imgspace.frag"));
-    		OpenGLProgram specularDebugProgram = new OpenGLProgram(new File("shaders", "texspace.vert"), new File("shaders", "speculardebug_imgspace.frag"));
+	    	OpenGLProgram projTexProgram = new OpenGLProgram(
+	    			new File("shaders", "texspace.vert"), 
+	    			new File("shaders", "projtex.frag"));
+	    	
+    		OpenGLProgram diffuseFitProgram = new OpenGLProgram(
+    				new File("shaders", "texspace.vert"), 
+    				new File("shaders", PREPROJECT_IMAGES ? "diffusefit_texspace.frag" : "diffusefit_imgspace.frag"));
+    		
+    		OpenGLProgram specularFitProgram = new OpenGLProgram(
+    				new File("shaders", "texspace.vert"), 
+    				new File("shaders", PREPROJECT_IMAGES ? "specularfit_texspace.frag" : "specularfit_imgspace.frag"));
+    		
+    		OpenGLProgram specularDebugProgram = new OpenGLProgram(
+    				new File("shaders", "texspace.vert"), 
+    				new File("shaders", "speculardebug_imgspace.frag"));
     		
     		JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
     		fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
@@ -89,7 +100,10 @@ public class TexGenProgram
     	    	UnstructuredLightField lightField = UnstructuredLightField.loadFromVSETFile(vsetFile);
     	    	
     	    	File outputDirectory = new File(lightFieldDirectory, "output");
-		    	new File(outputDirectory, "debug").mkdirs();
+    	    	if (DEBUG)
+    	    	{
+    	    		new File(outputDirectory, "debug").mkdirs();
+    	    	}
     	    	
 		    	System.out.println("Loading completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    	
@@ -170,6 +184,14 @@ public class TexGenProgram
 			    		projTexFBO.delete();
 			    	}
 			    	
+			    	if (PREPROJECT_IMAGES)
+			    	{
+				        lightField.viewSet.getCameraProjectionBuffer().delete();
+				        lightField.viewSet.getCameraProjectionIndexBuffer().delete();
+				        lightField.viewSet.getTextures().delete();
+				        lightField.depthTextures.delete();
+			    	}
+			    	
 			    	for (OpenGLResource r : worldToTextureVBOResources)
 			    	{
 			    		r.delete();
@@ -185,8 +207,15 @@ public class TexGenProgram
 		    	
 		    	diffuseFitRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
 		    	
-		    	diffuseFitRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
-		    	diffuseFitRenderable.program().setTexture("depthImages", lightField.depthTextures);
+		    	if (PREPROJECT_IMAGES)
+		    	{
+		    		diffuseFitRenderable.program().setTexture("viewImages", preprojectedViews);
+		    	}
+		    	else
+		    	{
+			    	diffuseFitRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
+			    	diffuseFitRenderable.program().setTexture("depthImages", lightField.depthTextures);
+		    	}
 		    	diffuseFitRenderable.program().setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
 		    	
 		    	diffuseFitRenderable.program().setUniform("gamma", GAMMA);
@@ -194,8 +223,12 @@ public class TexGenProgram
 		    	diffuseFitRenderable.program().setUniform("occlusionBias", OCCLUSION_BIAS);
 		    	
 		    	diffuseFitRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
-		    	diffuseFitRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-		    	diffuseFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+		    	
+		    	if (!PREPROJECT_IMAGES)
+		    	{
+			    	diffuseFitRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
+			    	diffuseFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+		    	}
 		    	
 		    	diffuseFitRenderable.program().setUniform("delta", DIFFUSE_DELTA);
 		    	diffuseFitRenderable.program().setUniform("iterations", DIFFUSE_ITERATIONS);
@@ -230,13 +263,24 @@ public class TexGenProgram
 			    	
 			    	specularFitRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
 			    	
-			    	specularFitRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
-			    	specularFitRenderable.program().setTexture("depthImages", lightField.depthTextures);
+			    	if (PREPROJECT_IMAGES)
+			    	{
+			    		specularFitRenderable.program().setTexture("viewImages", preprojectedViews);
+			    	}
+			    	else
+			    	{
+				    	specularFitRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
+				    	specularFitRenderable.program().setTexture("depthImages", lightField.depthTextures);
+			    	}
 			    	specularFitRenderable.program().setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
 			    	
 			    	specularFitRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
-			    	specularFitRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-			    	specularFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+			    	
+			    	if (!PREPROJECT_IMAGES)
+			    	{
+				    	specularFitRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
+				    	specularFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+			    	}
 	
 			    	specularFitRenderable.program().setUniform("occlusionEnabled", OCCLUSION_ENABLED);
 			    	specularFitRenderable.program().setUniform("occlusionBias", OCCLUSION_BIAS);
@@ -308,7 +352,7 @@ public class TexGenProgram
 			        
 		    	diffuseFitFramebuffer.delete();
 		    	
-		    	if (DEBUG)
+		    	if (DEBUG && !PREPROJECT_IMAGES)
 		    	{
 			    	System.out.println("Generating specular debug info...");
 			    	timestamp = new Date();
@@ -371,8 +415,10 @@ public class TexGenProgram
 			    	
 					System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    	}
-				
-		        lightField.deleteOpenGLResources();
+		    	
+		        lightField.viewSet.getCameraPoseBuffer().delete();
+		        lightField.viewSet.getLightPositionBuffer().delete();
+		        lightField.viewSet.getLightIndexBuffer().delete();
     		}
     		
     		projTexProgram.delete();
