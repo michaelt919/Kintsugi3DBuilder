@@ -23,6 +23,7 @@ import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLResource;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
+import tetzlaff.gl.opengl.OpenGLVertexBuffer;
 import tetzlaff.ulf.ViewSet;
 
 public class PhongRenderer implements Drawable 
@@ -50,15 +51,20 @@ public class PhongRenderer implements Drawable
 	private Trackball lightTrackball;
 	
 	private VertexMesh mesh;
+	
+	private OpenGLVertexBuffer positionBuffer;
+	private OpenGLVertexBuffer texCoordBuffer;
+	private OpenGLVertexBuffer normalBuffer;
+	
 	private OpenGLTexture2D diffuse;
 	private OpenGLTexture2D normal;
 	private OpenGLTexture2D specular;
 	private OpenGLTexture2D specNormal;
 	private OpenGLTexture2D roughness;
+	
 	private OpenGLRenderable renderable;
 	private OpenGLRenderable shadowRenderable;
-	private Iterable<OpenGLResource> vboResources;
-	private Iterable<OpenGLResource> shadowVboResources;
+	
 	private OpenGLFramebufferObject shadowBuffer;
 	
 	public PhongRenderer(OpenGLContext context, File objFile, Trackball viewTrackball, Trackball lightTrackball) 
@@ -110,6 +116,10 @@ public class PhongRenderer implements Drawable
     	{
 			this.mesh = new VertexMesh("OBJ", objFile);
 			
+			this.positionBuffer = new OpenGLVertexBuffer(this.mesh.getVertices());
+			this.texCoordBuffer = new OpenGLVertexBuffer(this.mesh.getTexCoords());
+			this.normalBuffer = new OpenGLVertexBuffer(this.mesh.getNormals());
+			
 			File texturePath = new File(objFile.getParentFile(), "textures");
 			this.diffuse = new OpenGLTexture2D(new File(texturePath, "diffuse.png"), true, false, false);
 			this.normal = new OpenGLTexture2D(new File(texturePath, "normal.png"), true, false, false);
@@ -118,10 +128,14 @@ public class PhongRenderer implements Drawable
 			this.roughness = new OpenGLTexture2D(new File(texturePath, "roughness.png"), true, false, false);
 			
 			this.renderable = new OpenGLRenderable(PhongRenderer.program);
-			this.vboResources = this.renderable.addVertexMesh("position", "texCoord", "normal", this.mesh);
+			this.renderable.addVertexBuffer("position", this.positionBuffer);
+			this.renderable.addVertexBuffer("texCoord", this.texCoordBuffer);
+			this.renderable.addVertexBuffer("normal", this.normalBuffer);
 
 			this.shadowRenderable = new OpenGLRenderable(PhongRenderer.shadowProgram);
-			this.shadowVboResources = this.shadowRenderable.addVertexMesh("position", null, null, this.mesh);
+			this.shadowRenderable.addVertexBuffer("position", this.positionBuffer);
+			this.shadowRenderable.addVertexBuffer("texCoord", this.texCoordBuffer);
+			this.shadowRenderable.addVertexBuffer("normal", this.normalBuffer);
 			this.shadowBuffer = new OpenGLFramebufferObject(4096, 4096, 0);
 		} 
     	catch (IOException e) 
@@ -210,22 +224,16 @@ public class PhongRenderer implements Drawable
 	@Override
 	public void cleanup() 
 	{
+		this.positionBuffer.delete();
+		this.texCoordBuffer.delete();
+		this.normalBuffer.delete();
+		
 		this.diffuse.delete();
 		this.normal.delete();
 		this.specular.delete();
 		this.roughness.delete();
 		
 		this.shadowBuffer.delete();
-		
-		for (OpenGLResource r : vboResources)
-		{
-			r.delete();
-		}
-		
-		for (OpenGLResource r : shadowVboResources)
-		{
-			r.delete();
-		}
 	}
 	
 	public float getSpecularRoughness() {
