@@ -174,7 +174,11 @@ public class ViewSet
 		cameraProjectionIndexBuffer.delete();
 		lightPositionBuffer.delete();
 		lightIndexBuffer.delete();
-		textureArray.delete();
+		
+		if (textureArray != null)
+		{
+			textureArray.delete();
+		}
 	}
 
 	public static ViewSet loadFromVSETFile(File file, boolean loadImages) throws IOException

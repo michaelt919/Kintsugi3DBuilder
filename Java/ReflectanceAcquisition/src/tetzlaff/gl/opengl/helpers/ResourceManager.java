@@ -22,14 +22,14 @@ public class ResourceManager<ResourceType>
 		nextSlot = 0;
 	}
 
-	public int assignResourceByKey(int key, ResourceType texture)
+	public int assignResourceByKey(int key, ResourceType resource)
 	{
 		// Check if the key has already been assigned a texture
 		for (int i = 0; i < length; i++)
 		{
 			if (keys[i] == key)
 			{
-				resources[i] = texture;
+				resources[i] = resource;
 				return i;
 			}
 		}
@@ -43,7 +43,7 @@ public class ResourceManager<ResourceType>
 		{
 			// The key has not been assigned a resource, so use the next available slot
 			keys[nextSlot] = key;
-			resources[nextSlot] = texture;
+			resources[nextSlot] = resource;
 			return nextSlot++;
 		}
 	}
