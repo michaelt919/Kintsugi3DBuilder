@@ -8,6 +8,9 @@ in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
 
+uniform vec2 minTexCoord;
+uniform vec2 maxTexCoord;
+
 uniform sampler2DArray viewImages;
 uniform int viewCount;
 
@@ -61,7 +64,7 @@ struct SpecularFit
 
 vec4 getColor(int index)
 {
-    return pow(texture(viewImages, vec3(fTexCoord, index)), vec4(gamma));
+    return pow(texture(viewImages, vec3((fTexCoord - minTexCoord) / (maxTexCoord - minTexCoord), index)), vec4(gamma));
 }
 
 vec3 getViewVector(int index)
