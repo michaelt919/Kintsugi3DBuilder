@@ -20,6 +20,7 @@ import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLResource;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
 import tetzlaff.gl.opengl.OpenGLTextureArray;
+import tetzlaff.gl.opengl.OpenGLVertexBuffer;
 import tetzlaff.ulf.UnstructuredLightField;
 import tetzlaff.window.glfw.GLFWWindow;
 
@@ -125,7 +126,10 @@ public class TexGenProgram
 			    	OpenGLFramebufferObject projTexFBO = new OpenGLFramebufferObject(TEXTURE_SIZE / TEXTURE_SUBDIV, TEXTURE_SIZE / TEXTURE_SUBDIV, 2, true, false);
 			    	OpenGLRenderable projTexRenderable = new OpenGLRenderable(projTexProgram);
 			    	
-			    	Iterable<OpenGLResource> worldToTextureVBOResources = projTexRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
+			    	projTexRenderable.addVertexBuffer("position", lightField.positionBuffer);
+			    	projTexRenderable.addVertexBuffer("texCoord", lightField.texCoordBuffer);
+			    	projTexRenderable.addVertexBuffer("normal", lightField.normalBuffer);
+			    	
 			    	projTexRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
 			    	projTexRenderable.program().setTexture("depthImages", lightField.depthTextures);
 			    	projTexRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
@@ -147,7 +151,7 @@ public class TexGenProgram
 				    	
 				    	OpenGLFramebufferObject depthFBO =  new OpenGLFramebufferObject(viewTexture.getWidth(), viewTexture.getHeight(), 0, false, true);
 				    	OpenGLRenderable depthRenderable = new OpenGLRenderable(depthRenderingProgram);
-				    	Iterable<OpenGLResource> vboResources = depthRenderable.addVertexMesh("position", null, null, lightField.proxy);
+				    	depthRenderable.addVertexBuffer("position", lightField.positionBuffer);
 				    	
 			        	depthRenderingProgram.setUniform("model_view", lightField.viewSet.getCameraPose(i));
 			    		depthRenderingProgram.setUniform("projection", 
@@ -160,11 +164,6 @@ public class TexGenProgram
 			        	
 			    		depthFBO.clearDepthBuffer();
 			        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthFBO);
-			        	
-			        	for (OpenGLResource r : vboResources)
-			        	{
-			        		r.delete();
-			        	}
 			        	
 			        	projTexRenderable.program().setUniform("cameraPose", lightField.viewSet.getCameraPose(i));
 			        	projTexRenderable.program().setUniform("cameraProjection", 
@@ -199,11 +198,6 @@ public class TexGenProgram
 				    	System.out.println("Completed " + (i+1) + "/" + lightField.viewSet.getCameraPoseCount());
 			    	}
 			    	
-			    	for (OpenGLResource r : worldToTextureVBOResources)
-			    	{
-			    		r.delete();
-			    	}
-			    	
 			    	System.out.println("Pre-projections completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    	}
 		    	
@@ -221,7 +215,10 @@ public class TexGenProgram
 		        specularFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
 
 		    	OpenGLRenderable diffuseFitRenderable = new OpenGLRenderable(diffuseFitProgram);
-		    	Iterable<OpenGLResource> diffuseVboResources = diffuseFitRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
+		    	
+		    	diffuseFitRenderable.addVertexBuffer("position", lightField.positionBuffer);
+		    	diffuseFitRenderable.addVertexBuffer("texCoord", lightField.texCoordBuffer);
+		    	diffuseFitRenderable.addVertexBuffer("normal", lightField.normalBuffer);
 		    	
 		    	diffuseFitRenderable.program().setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
 		    	diffuseFitRenderable.program().setUniform("gamma", GAMMA);
@@ -249,7 +246,10 @@ public class TexGenProgram
 	    		}
 		    	
 		    	OpenGLRenderable specularFitRenderable = new OpenGLRenderable(specularFitProgram);
-		    	Iterable<OpenGLResource> specularVboResources = specularFitRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
+		    	
+		    	specularFitRenderable.addVertexBuffer("position", lightField.positionBuffer);
+		    	specularFitRenderable.addVertexBuffer("texCoord", lightField.texCoordBuffer);
+		    	specularFitRenderable.addVertexBuffer("normal", lightField.normalBuffer);
 
 		    	specularFitRenderable.program().setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
 		    	specularFitRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
@@ -411,16 +411,6 @@ public class TexGenProgram
 		    	
 		    	diffuseFitFramebuffer.delete();
 		    	specularFitFramebuffer.delete();
-		    	
-		    	for (OpenGLResource r : diffuseVboResources)
-		    	{
-		    		r.delete();
-		    	}
-		    	
-		    	for (OpenGLResource r : specularVboResources)
-		    	{
-		    		r.delete();
-		    	}
 
 		    	System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    	
@@ -437,7 +427,10 @@ public class TexGenProgram
 			    	diffuseDebugRenderable.program().setUniform("minTexCoord", new Vector2(0.0f, 0.0f));
 			    	diffuseDebugRenderable.program().setUniform("maxTexCoord", new Vector2(1.0f, 1.0f));
 			    	
-			    	Iterable<OpenGLResource> worldToTextureVBOResources = diffuseDebugRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
+			    	diffuseDebugRenderable.addVertexBuffer("position", lightField.positionBuffer);
+			    	diffuseDebugRenderable.addVertexBuffer("texCoord", lightField.texCoordBuffer);
+			    	diffuseDebugRenderable.addVertexBuffer("normal", lightField.normalBuffer);
+
 			    	diffuseDebugRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
 			    	diffuseDebugRenderable.program().setTexture("depthImages", lightField.depthTextures);
 			    	diffuseDebugRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
@@ -485,10 +478,6 @@ public class TexGenProgram
 			    	diffuseInfo.close();	    	
 			    	
 			    	diffuseDebugFBO.delete();
-			    	for (OpenGLResource r : worldToTextureVBOResources)
-			    	{
-			    		r.delete();
-			    	}
 			    	
 					System.out.println("Diffuse debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    		
@@ -501,7 +490,10 @@ public class TexGenProgram
 			    	specularDebugRenderable.program().setUniform("minTexCoord", new Vector2(0.0f, 0.0f));
 			    	specularDebugRenderable.program().setUniform("maxTexCoord", new Vector2(1.0f, 1.0f));
 			    	
-			    	Iterable<OpenGLResource> specularDebugResources = specularDebugRenderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
+			    	specularDebugRenderable.addVertexBuffer("position", lightField.positionBuffer);
+			    	specularDebugRenderable.addVertexBuffer("texCoord", lightField.texCoordBuffer);
+			    	specularDebugRenderable.addVertexBuffer("normal", lightField.normalBuffer);
+
 			    	specularDebugRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
 			    	specularDebugRenderable.program().setTexture("depthImages", lightField.depthTextures);
 			    	specularDebugRenderable.program().setUniform("occlusionEnabled", OCCLUSION_ENABLED);
@@ -549,10 +541,6 @@ public class TexGenProgram
 			    	specularInfo.close();
 			    	
 			    	specularDebugFBO.delete();
-			    	for (OpenGLResource r : specularDebugResources)
-			    	{
-			    		r.delete();
-			    	}
 			    	
 					System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    	}

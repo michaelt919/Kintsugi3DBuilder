@@ -71,7 +71,7 @@ public class ULFRenderer implements ULFDrawable
 			}
 	    	
 	    	this.renderable = new OpenGLRenderable(program);
-	    	this.vboResources = this.renderable.addVertexMesh("position", "texCoord", "normal", lightField.proxy);
+	    	this.renderable.addVertexBuffer("position", this.lightField.positionBuffer);
 		} 
     	catch (IOException e) 
     	{

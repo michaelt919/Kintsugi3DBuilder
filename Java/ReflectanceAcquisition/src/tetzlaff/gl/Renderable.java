@@ -79,6 +79,4 @@ public interface Renderable<
 	boolean addVertexBuffer(int location, VertexBufferType buffer);
 
 	boolean addVertexBuffer(String name, VertexBufferType buffer);
-	
-	Iterable<OpenGLResource> addVertexMesh(String vertexName, String texCoordName, String normalName, VertexMesh mesh);
 }
