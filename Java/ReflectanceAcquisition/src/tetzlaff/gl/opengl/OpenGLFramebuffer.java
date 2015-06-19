@@ -115,6 +115,28 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	}
 	
 	@Override
+	public void saveColorBufferToFile(int attachmentIndex, int x, int y, int width, int height, String fileFormat, File file) throws IOException
+	{
+        int[] pixels = this.readColorBufferARGB(attachmentIndex, x, y, width, height);
+        
+        // Flip the array vertically
+        for (int row = 0; row < height / 2; row++)
+        {
+        	int limit = (row + 1) * width;
+        	for (int i1 = row * width, i2 = (height - row - 1) * width; i1 < limit; i1++, i2++)
+        	{
+            	int tmp = pixels[i1];
+            	pixels[i1] = pixels[i2];
+            	pixels[i2] = tmp;
+        	}
+        }
+        
+        BufferedImage outImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        outImg.setRGB(0, 0, width, height, pixels, 0, width);
+        ImageIO.write(outImg, fileFormat, file);
+	}
+	
+	@Override
 	public short[] readDepthBuffer(int x, int y, int width, int height)
 	{
 		this.bindForRead(0);
