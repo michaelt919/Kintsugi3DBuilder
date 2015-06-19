@@ -17,6 +17,7 @@ public interface Framebuffer
 	short[] readDepthBuffer();
 
 	void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException;
+	void saveColorBufferToFile(int attachmentIndex, int x, int y, int width, int height, String fileFormat, File file) throws IOException;
 
 	void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a);
 	void clearDepthBuffer(float depth);

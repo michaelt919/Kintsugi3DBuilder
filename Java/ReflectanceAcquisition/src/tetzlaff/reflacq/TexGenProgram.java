@@ -32,8 +32,10 @@ public class TexGenProgram
 	private static final boolean OCCLUSION_ENABLED = true;
 	private static final float OCCLUSION_BIAS = 0.0025f;
 	
-	private static final int TEXTURE_SIZE = 512;
-	private static final int TEXTURE_SUBDIV = 2;
+	private static final int TEXTURE_SIZE = 8192;
+	private static final int TEXTURE_SUBDIV = 16;
+	private static final boolean PREPROJECT_IMAGES = true;
+	private static final boolean GENERATE_PROJECTIONS = false;
 	
 	private static final float DIFFUSE_DELTA = 0.1f;
 	private static final int DIFFUSE_ITERATIONS = 4;
@@ -44,7 +46,6 @@ public class TexGenProgram
 	private static final boolean COMPUTE_ROUGHNESS = false;
 	private static final boolean COMPUTE_SPECULAR_NORMAL = false;
 	private static final boolean TRUE_BLINN_PHONG = true;
-	private static final boolean PREPROJECT_IMAGES = true;
 	
 	private static final float DIFFUSE_REMOVAL_AMOUNT = 0.98f;
 	private static final float SPECULAR_INFLUENCE_SCALE = 0.35f;
@@ -118,7 +119,7 @@ public class TexGenProgram
 		    	
 		    	File tmpDir = new File(outputDirectory, "tmp");
 		    	
-		    	if (PREPROJECT_IMAGES || TEXTURE_SUBDIV > 1)
+		    	if ((PREPROJECT_IMAGES || TEXTURE_SUBDIV > 1) && GENERATE_PROJECTIONS)
 		    	{
 		    		System.out.println("Pre-projecting images into texture space...");
 			    	timestamp = new Date();
@@ -130,11 +131,6 @@ public class TexGenProgram
 			    	projTexRenderable.addVertexBuffer("texCoord", lightField.texCoordBuffer);
 			    	projTexRenderable.addVertexBuffer("normal", lightField.normalBuffer);
 			    	
-			    	projTexRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
-			    	projTexRenderable.program().setTexture("depthImages", lightField.depthTextures);
-			    	projTexRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
-			    	projTexRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-			    	projTexRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
 			    	projTexRenderable.program().setUniform("occlusionEnabled", OCCLUSION_ENABLED);
 			    	projTexRenderable.program().setUniform("occlusionBias", OCCLUSION_BIAS);
 			    	
@@ -201,8 +197,14 @@ public class TexGenProgram
 			    	System.out.println("Pre-projections completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		    	}
 		    	
-		    	OpenGLFramebufferObject diffuseFitFramebuffer = new OpenGLFramebufferObject(TEXTURE_SIZE, TEXTURE_SIZE, 4, true, false);
-		    	OpenGLFramebufferObject specularFitFramebuffer = new OpenGLFramebufferObject(TEXTURE_SIZE, TEXTURE_SIZE, 4, true, false);
+		    	if (PREPROJECT_IMAGES || TEXTURE_SUBDIV > 1)
+		    	{
+		    		System.out.println("Beginning model fitting (" + (TEXTURE_SUBDIV * TEXTURE_SUBDIV) + " blocks)...");
+			    	timestamp = new Date();
+		    	}
+		    	
+		    	OpenGLFramebufferObject diffuseFitFramebuffer = new OpenGLFramebufferObject(TEXTURE_SIZE, TEXTURE_SIZE, 4, false, false);
+		    	OpenGLFramebufferObject specularFitFramebuffer = new OpenGLFramebufferObject(TEXTURE_SIZE, TEXTURE_SIZE, 4, false, false);
 		    	
 		    	diffuseFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	diffuseFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -276,12 +278,18 @@ public class TexGenProgram
 		    	specularFitRenderable.program().setUniform("fit4Weight", SPECULAR_FIT4_WEIGHT);
 		    	specularFitRenderable.program().setUniform("defaultSpecularColor", new Vector3(0.0f, 0.0f, 0.0f));
 		    	specularFitRenderable.program().setUniform("specularRoughnessScale", SPECULAR_ROUGHNESS_SCALE);
+
+		    	File diffuseTempDirectory = new File(tmpDir, "diffuse");
+		    	File normalTempDirectory = new File(tmpDir, "normal");
+		    	File specularTempDirectory = new File(tmpDir, "specular");
+		    	File roughnessTempDirectory = new File(tmpDir, "roughness");
+		    	File snormalTempDirectory = new File(tmpDir, "snormal");
 		    	
-		    	if (PREPROJECT_IMAGES || TEXTURE_SUBDIV > 1)
-		    	{
-		    		System.out.println("Beginning model fitting (" + (TEXTURE_SUBDIV * TEXTURE_SUBDIV) + " blocks)...");
-			    	timestamp = new Date();
-		    	}
+		    	diffuseTempDirectory.mkdir();
+		    	normalTempDirectory.mkdir();
+		    	specularTempDirectory.mkdir();
+		    	roughnessTempDirectory.mkdir();
+		    	snormalTempDirectory.mkdir();
 		    	
 		    	int subdivSize = TEXTURE_SIZE / TEXTURE_SUBDIV;
 		    	
@@ -322,6 +330,12 @@ public class TexGenProgram
 				    	
 				        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitFramebuffer, col * subdivSize, row * subdivSize, subdivSize, subdivSize);
 				        context.finish();
+				        
+				        diffuseFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+				        		"PNG", new File(diffuseTempDirectory, String.format("r%04dc%04d.png", row, col)));
+				        
+				        diffuseFitFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+				        		"PNG", new File(normalTempDirectory, String.format("r%04dc%04d.png", row, col)));
 			    		
 				        if (!PREPROJECT_IMAGES && TEXTURE_SUBDIV == 1)
 				        {
@@ -364,6 +378,15 @@ public class TexGenProgram
 				        
 			    		specularFitRenderable.draw(PrimitiveMode.TRIANGLES, specularFitFramebuffer, col * subdivSize, row * subdivSize, subdivSize, subdivSize);
 			    		context.finish();
+
+			    		specularFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+				        		"PNG", new File(specularTempDirectory, String.format("r%04dc%04d.png", row, col)));
+				        
+			    		specularFitFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+				        		"PNG", new File(roughnessTempDirectory, String.format("r%04dc%04d.png", row, col)));
+				        
+			    		specularFitFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+				        		"PNG", new File(snormalTempDirectory, String.format("r%04dc%04d.png", row, col)));
 				    	
 				    	if (PREPROJECT_IMAGES || TEXTURE_SUBDIV > 1)
 				    	{
