@@ -18,7 +18,6 @@ uniform float occlusionBias;
 
 uniform float delta;
 uniform int iterations;
-uniform float determinantThreshold;
 uniform float fit1Weight;
 uniform float fit3Weight;
 
@@ -188,9 +187,8 @@ DiffuseFit fitDiffuse()
         float intensity = length(solution.xyz);
         //float ambientIntensity = solution.w;
     
-        float fit3Quality = clamp(fit3Weight * determinant(a) * 
-                                    clamp(dot(normalize(solution.xyz), geometricNormal), 0, 1)  / 
-                                    (weightedSum.a * determinantThreshold), 0.0, 1.0);
+        float fit3Quality = clamp(fit3Weight * determinant(a) / weightedSum.a *
+                                clamp(dot(normalize(solution.xyz), geometricNormal), 0, 1), 0.0, 1.0);
         
         fit.color = clamp(averageColor * intensity, 0, 1) * fit3Quality + 
                         clamp(weightedSum.rgb / nDotLSum, 0, 1) * 
