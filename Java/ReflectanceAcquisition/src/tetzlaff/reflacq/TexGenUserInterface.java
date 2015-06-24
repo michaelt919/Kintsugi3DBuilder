@@ -1,9 +1,11 @@
 package tetzlaff.reflacq;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowListener;
 import java.io.File;
+import java.util.Arrays;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -16,16 +18,22 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class TexGenUserInterface
 {
 	private JFrame frame;
-	private File selectedVsetFile;
-	
-	private JLabel fileLabel;
 	private JButton executeButton;
+	
+	private FilePicker vsetFilePicker;
+	private FilePicker objFilePicker;
+	private FilePicker imageDirectoryPicker;
+	private FilePicker maskDirectoryPicker;
+	private FilePicker outputDirectoryPicker;
 	
 	private JSpinner gammaSpinner;
 	private JCheckBox cameraVisCheckBox;
@@ -56,16 +64,96 @@ public class TexGenUserInterface
 	private JSpinner defaultRoughnessSpinner;
 	private JSpinner roughnessCapSpinner;
 	
-	private JLabel addUILabel(String name)
+	private class FilePicker
 	{
+		File file = null;
+	}
+	
+	private FilePicker addDirectoryPicker(JPanel panel, String name)
+	{
+		Box loadBox = new Box(BoxLayout.X_AXIS);
+		JPanel loadWrapper = new JPanel();
+		JButton loadButton = new JButton(name);
+		loadWrapper.add(loadButton);
+		loadWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
+		loadBox.add(loadWrapper);
+		JPanel labelWrapper = new JPanel();
+		labelWrapper.setLayout(new BorderLayout());
+		labelWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
+		JLabel label = new JLabel("No file selected.");
+		label.setHorizontalAlignment(SwingConstants.RIGHT);
+		labelWrapper.add(label);
+		loadBox.add(labelWrapper);
+		panel.add(loadBox);
+		
+		FilePicker picker = new FilePicker();
+		
+		loadButton.addActionListener(e -> 
+		{
+			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
+			{
+				picker.file = fileChooser.getSelectedFile();
+				String fileString = picker.file.toString();
+				label.setText(fileString.length() < 32 ? fileString : "..." + fileString.substring(fileString.length() - 32));
+			}
+		});
+		
+		return picker;
+	}
+	
+	private FilePicker addFilePicker(JPanel panel, String name, Iterable<FileFilter> filters)
+	{
+		Box loadBox = new Box(BoxLayout.X_AXIS);
+		JPanel loadWrapper = new JPanel();
+		JButton loadButton = new JButton(name);
+		loadWrapper.add(loadButton);
+		loadWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
+		loadBox.add(loadWrapper);
+		JPanel labelWrapper = new JPanel();
+		labelWrapper.setLayout(new BorderLayout());
+		labelWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
+		JLabel label = new JLabel("No file selected.");
+		label.setHorizontalAlignment(SwingConstants.RIGHT);
+		labelWrapper.add(label);
+		loadBox.add(labelWrapper);
+		panel.add(loadBox);
+		
+		FilePicker picker = new FilePicker();
+		
+		loadButton.addActionListener(e -> 
+		{
+			
+			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			for (FileFilter filter : filters)
+			{
+				fileChooser.addChoosableFileFilter(filter);
+			}
+			if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
+			{
+				picker.file = fileChooser.getSelectedFile();
+				String fileString = picker.file.toString();
+				label.setText(fileString.length() < 32 ? fileString : "..." + fileString.substring(fileString.length() - 32));
+			}
+		});
+		
+		return picker;
+	}
+	
+	private JLabel addUILabel(JPanel panel, String name)
+	{
+		JPanel wrapper = new JPanel();
+		wrapper.setLayout(new BorderLayout());
 		JLabel label = new JLabel(name);
 		label.setBorder(new EmptyBorder(25, 10, 5, 10));
-		frame.add(label);
+		wrapper.add(label);
+		panel.add(wrapper);
 		return label;
 	}
 	
-	
-	private JSpinner addUIValueField(String name, double defaultValue, double minValue, double maxValue, double stepSize)
+	private JSpinner addUIValueField(JPanel panel, String name, double defaultValue, double minValue, double maxValue, double stepSize)
 	{
 		Box box = new Box(BoxLayout.X_AXIS);
 		JLabel label = new JLabel(name + ":");
@@ -75,15 +163,15 @@ public class TexGenUserInterface
 		JSpinner spinner = new JSpinner(model);
 		box.add(spinner);
 		box.setBorder(new EmptyBorder(5, 10, 5, 10));
-		frame.add(box);
+		panel.add(box);
 		return spinner;
 	}
 	
-	private JCheckBox addUICheckBoxField(String name, boolean checked)
+	private JCheckBox addUICheckBoxField(JPanel panel, String name, boolean checked)
 	{
 		JCheckBox checkBox = new JCheckBox(name, checked);
 		checkBox.setBorder(new EmptyBorder(5, 10, 5, 10));
-		frame.add(checkBox);
+		panel.add(checkBox);
 		return checkBox;
 	}
 	
@@ -98,45 +186,56 @@ public class TexGenUserInterface
 		
 		TexGenParameters defaults = new TexGenParameters();
 
-		fileLabel = addUILabel("No file selected.");
-		Box loadBox = new Box(BoxLayout.X_AXIS);
-		JPanel loadWrapper = new JPanel();
-		JButton loadButton = new JButton("Select View Set File...");
-		loadWrapper.add(loadButton);
-		loadWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
-		loadBox.add(loadWrapper);
-		frame.add(loadBox);
+		JPanel filePanel = new JPanel();
+		filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.Y_AXIS));
+		filePanel.setBorder(new TitledBorder("Files and Directories"));
+		vsetFilePicker = addFilePicker(filePanel, "Select Camera File...", Arrays.asList(
+				new FileNameExtensionFilter("Agisoft Photoscan XML files (.xml)", "xml"),
+				new FileNameExtensionFilter("View Set files (.vset)", "vset")));
+		objFilePicker = addFilePicker(filePanel, "Select Model File...", Arrays.asList(new FileNameExtensionFilter("Wavefront OBJ files (.obj)", "obj")));
+		imageDirectoryPicker = addDirectoryPicker(filePanel, "Select Images...");
+		maskDirectoryPicker = addDirectoryPicker(filePanel, "Select Masks...");
+		outputDirectoryPicker = addDirectoryPicker(filePanel, "Output Directory...");
+		frame.add(filePanel);
 		
-
-		addUILabel("Sampling Parameters");
-		gammaSpinner = addUIValueField("Gamma", defaults.getGamma(), 1.0f, 99.0f, 0.1f);
-		cameraVisCheckBox = addUICheckBoxField("Enable Camera Visibility Test", defaults.isCameraVisibilityTestEnabled());
-		cameraVisBiasSpinner = addUIValueField("Camera Visibility Test Bias", defaults.getCameraVisibilityTestBias(), 0.0f, 1.0f, 0.0001f);
-		textureSizeSpinner = addUIValueField("Texture Size", defaults.getTextureSize(), 1.0f, 8192.0f, 1.0f);
-		textureSubdivSpinner = addUIValueField("Texture Subdivision", defaults.getTextureSubdivision(), 1.0f, 8192.0f, 1.0f);
-		imagePreprojGenCheckBox = addUICheckBoxField("Generate Pre-projected images", defaults.isImagePreprojectionGenerationEnabled());
-		imagePreprojUseCheckBox = addUICheckBoxField("Use Pre-projected images", defaults.isImagePreprojectionUseEnabled());
+		JPanel samplingPanel = new JPanel();
+		samplingPanel.setLayout(new BoxLayout(samplingPanel, BoxLayout.Y_AXIS));
+		samplingPanel.setBorder(new TitledBorder("Sampling Parameters"));
+		gammaSpinner = addUIValueField(samplingPanel, "Gamma", defaults.getGamma(), 1.0f, 99.0f, 0.1f);
+		cameraVisCheckBox = addUICheckBoxField(samplingPanel, "Enable Camera Visibility Test", defaults.isCameraVisibilityTestEnabled());
+		cameraVisBiasSpinner = addUIValueField(samplingPanel, "Camera Visibility Test Bias", defaults.getCameraVisibilityTestBias(), 0.0f, 1.0f, 0.0001f);
+		textureSizeSpinner = addUIValueField(samplingPanel, "Texture Size", defaults.getTextureSize(), 1.0f, 8192.0f, 1.0f);
+		textureSubdivSpinner = addUIValueField(samplingPanel, "Texture Subdivision", defaults.getTextureSubdivision(), 1.0f, 8192.0f, 1.0f);
+		imagePreprojGenCheckBox = addUICheckBoxField(samplingPanel, "Generate Pre-projected images", defaults.isImagePreprojectionGenerationEnabled());
+		imagePreprojUseCheckBox = addUICheckBoxField(samplingPanel, "Use Pre-projected images", defaults.isImagePreprojectionUseEnabled());
+		frame.add(samplingPanel);
 		
-		addUILabel("Diffuse Fitting Parameters");
-		diffuseDeltaSpinner = addUIValueField("Delta", defaults.getDiffuseDelta(), 0.0f, 1.0f, 0.01f);
-		diffuseIterationsSpinner = addUIValueField("Iterations", defaults.getDiffuseIterations(), 0.0f, 8.0f, 1.0f);
-		diffuseCompNormalSpinner = addUIValueField("Computed Normal Weight", Math.min(9999.0f, defaults.getDiffuseComputedNormalWeight()), 0.0f, 9999.0f, 0.1f);
-		diffuseCompNormalInfCheckBox = addUICheckBoxField("(infinite)", defaults.getDiffuseComputedNormalWeight() >= Float.MAX_VALUE);
-		diffuseInputNormalSpinner = addUIValueField("Input Normal Weight", Math.min(9999.0f, defaults.getDiffuseInputNormalWeight()),  0.0f, 9999.0f, 0.1f);
-		diffuseInputNormalInfCheckBox = addUICheckBoxField("(infinite)", defaults.getDiffuseInputNormalWeight() >= Float.MAX_VALUE);
+		JPanel diffusePanel = new JPanel();
+		diffusePanel.setLayout(new BoxLayout(diffusePanel, BoxLayout.Y_AXIS));
+		diffusePanel.setBorder(new TitledBorder("Diffuse Fitting Parameters"));
+		diffuseDeltaSpinner = addUIValueField(diffusePanel, "Delta", defaults.getDiffuseDelta(), 0.0f, 1.0f, 0.01f);
+		diffuseIterationsSpinner = addUIValueField(diffusePanel, "Iterations", defaults.getDiffuseIterations(), 0.0f, 8.0f, 1.0f);
+		diffuseCompNormalSpinner = addUIValueField(diffusePanel, "Computed Normal Weight", Math.min(9999.0f, defaults.getDiffuseComputedNormalWeight()), 0.0f, 9999.0f, 0.1f);
+		diffuseCompNormalInfCheckBox = addUICheckBoxField(diffusePanel, "(infinite)", defaults.getDiffuseComputedNormalWeight() >= Float.MAX_VALUE);
+		diffuseInputNormalSpinner = addUIValueField(diffusePanel, "Input Normal Weight", Math.min(9999.0f, defaults.getDiffuseInputNormalWeight()),  0.0f, 9999.0f, 0.1f);
+		diffuseInputNormalInfCheckBox = addUICheckBoxField(diffusePanel, "(infinite)", defaults.getDiffuseInputNormalWeight() >= Float.MAX_VALUE);
+		frame.add(diffusePanel);
 		
-		addUILabel("Specular Fitting Parameters");
-		specRoughCheckBox = addUICheckBoxField("Compute Roughness", defaults.isSpecularRoughnessComputationEnabled());
-		specNormalCheckBox = addUICheckBoxField("Compute Separate Normal", defaults.isSpecularNormalComputationEnabled());
-		blinnPhongCheckBox = addUICheckBoxField("Use \"True\" Blinn-Phong Model", defaults.isTrueBlinnPhongSpecularEnabled());
-		specSubDiffuseSpinner = addUIValueField("Diffuse Subtraction Amount", defaults.getSpecularSubtractDiffuseAmount(), 0.0f, 1.0f, 0.01f);
-		specInfluenceSpinner = addUIValueField("Influence Scale", defaults.getSpecularInfluenceScale(), 0.0f, 1.0f, 0.01f);
-		specDetThreshSpinner = addUIValueField("Determinant Threshold", defaults.getSpecularDeterminantThreshold(), 0.0f, 1.0f, 0.0001f);
-		specCompNormalSpinner = addUIValueField("Computed Normal Weight", defaults.getSpecularComputedNormalWeight(), 0.0f, 1.0f, 0.01f);
-		specCompRoughSpinner = addUIValueField("Input Normal, Computed Roughness Weight", defaults.getSpecularInputNormalComputedRoughnessWeight(), 0.0f, 1.0f, 0.01f);
-		specDefaultRoughSpinner = addUIValueField("Input Normal, Default Roughness Weight", defaults.getSpecularInputNormalDefaultRoughnessWeight(), 0.0f, 1.0f, 0.01f);
-		defaultRoughnessSpinner = addUIValueField("Default Specular Roughness", defaults.getDefaultSpecularRoughness(), 0.0f, 10.0f, 0.01f);
-		roughnessCapSpinner = addUIValueField("Specular Roughness Cap", defaults.getSpecularRoughnessCap(), 0.0f, 10.0f, 0.01f);
+		JPanel specularPanel = new JPanel();
+		specularPanel.setLayout(new BoxLayout(specularPanel, BoxLayout.Y_AXIS));
+		specularPanel.setBorder(new TitledBorder("Specular Fitting Parameters"));
+		specRoughCheckBox = addUICheckBoxField(specularPanel,"Compute Roughness", defaults.isSpecularRoughnessComputationEnabled());
+		specNormalCheckBox = addUICheckBoxField(specularPanel,"Compute Separate Normal", defaults.isSpecularNormalComputationEnabled());
+		blinnPhongCheckBox = addUICheckBoxField(specularPanel,"Use \"True\" Blinn-Phong Model", defaults.isTrueBlinnPhongSpecularEnabled());
+		specSubDiffuseSpinner = addUIValueField(specularPanel,"Diffuse Subtraction Amount", defaults.getSpecularSubtractDiffuseAmount(), 0.0f, 1.0f, 0.01f);
+		specInfluenceSpinner = addUIValueField(specularPanel,"Influence Scale", defaults.getSpecularInfluenceScale(), 0.0f, 1.0f, 0.01f);
+		specDetThreshSpinner = addUIValueField(specularPanel,"Determinant Threshold", defaults.getSpecularDeterminantThreshold(), 0.0f, 1.0f, 0.0001f);
+		specCompNormalSpinner = addUIValueField(specularPanel,"Computed Normal Weight", defaults.getSpecularComputedNormalWeight(), 0.0f, 1.0f, 0.01f);
+		specCompRoughSpinner = addUIValueField(specularPanel,"Input Normal, Computed Roughness Weight", defaults.getSpecularInputNormalComputedRoughnessWeight(), 0.0f, 1.0f, 0.01f);
+		specDefaultRoughSpinner = addUIValueField(specularPanel,"Input Normal, Default Roughness Weight", defaults.getSpecularInputNormalDefaultRoughnessWeight(), 0.0f, 1.0f, 0.01f);
+		defaultRoughnessSpinner = addUIValueField(specularPanel,"Default Specular Roughness", defaults.getDefaultSpecularRoughness(), 0.0f, 10.0f, 0.01f);
+		roughnessCapSpinner = addUIValueField(specularPanel,"Specular Roughness Cap", defaults.getSpecularRoughnessCap(), 0.0f, 10.0f, 0.01f);
+		frame.add(specularPanel);
 		
 		JSpinner.NumberEditor cameraVisBiasNumberEditor = new JSpinner.NumberEditor(cameraVisBiasSpinner, "0.0000");
 		cameraVisBiasSpinner.setEditor(cameraVisBiasNumberEditor);
@@ -161,24 +260,31 @@ public class TexGenUserInterface
 		loadingFrame.add(loadingBar);
 		loadingFrame.pack();
 		loadingFrame.setLocationRelativeTo(null);
-		
-		loadButton.addActionListener(e -> 
-		{
-			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
-			if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
-			{
-				selectedVsetFile = fileChooser.getSelectedFile();
-				String fileString = selectedVsetFile.toString();
-				fileLabel.setText(fileString.length() < 32 ? fileString : "..." + fileString.substring(fileString.length() - 32));
-			}
-		});
 	}
 	
-	public File getSelectedFile()
+	public File getCameraFile()
 	{
-		return selectedVsetFile;
+		return vsetFilePicker.file;
+	}
+	
+	public File getModelFile()
+	{
+		return objFilePicker.file;
+	}
+	
+	public File getImageDirectory()
+	{
+		return imageDirectoryPicker.file;
+	}
+	
+	public File getMaskDirectory()
+	{
+		return maskDirectoryPicker.file;
+	}
+	
+	public File getOutputDirectory()
+	{
+		return outputDirectoryPicker.file;
 	}
 	
 	private float getValueAsFloat(JSpinner spinner)
