@@ -1,0 +1,8 @@
+syntax: glob
+*.class
+*.orig
+.metadata
+.classpath
+.recommenders
+.project
+.DS_Store
