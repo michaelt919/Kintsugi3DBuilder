@@ -27,9 +27,9 @@ import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
-import tetzlaff.gl.helpers.ZipWrapper;
 import tetzlaff.gl.opengl.OpenGLTextureArray;
 import tetzlaff.gl.opengl.OpenGLUniformBuffer;
+import tetzlaff.helpers.ZipWrapper;
 
 public class ViewSet
 {

@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.zip.*;
 
+import tetzlaff.helpers.ZipWrapper;
+
 public class VertexMesh 
 {
 	private boolean hasNormals;

@@ -27,7 +27,6 @@ public class ULFRenderer implements ULFDrawable
     private OpenGLRenderable renderable;
     private Trackball trackball;
     private ULFLoadingMonitor callback;
-    private Iterable<OpenGLResource> vboResources;
     
     private boolean resampleRequested;
     private int resampleSize;
@@ -140,12 +139,7 @@ public class ULFRenderer implements ULFDrawable
     @Override
     public void cleanup()
     {
-    	for (OpenGLResource r : vboResources)
-    	{
-    		r.delete();
-    	}
-    	
-        lightField.deleteOpenGLResources();
+    	lightField.deleteOpenGLResources();
     }
     
     public File getVSETFile()

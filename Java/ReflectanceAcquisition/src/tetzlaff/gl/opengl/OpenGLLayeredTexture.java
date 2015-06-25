@@ -17,7 +17,7 @@ import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
 
-import tetzlaff.gl.helpers.ZipWrapper;
+import tetzlaff.helpers.ZipWrapper;
 
 public abstract class OpenGLLayeredTexture extends OpenGLTexture
 {
