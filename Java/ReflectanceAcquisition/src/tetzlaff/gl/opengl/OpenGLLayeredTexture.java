@@ -17,6 +17,8 @@ import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
 
+import tetzlaff.gl.helpers.ZipWrapper;
+
 public abstract class OpenGLLayeredTexture extends OpenGLTexture
 {
 	private int layerCount;
@@ -127,6 +129,11 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 		}
 	}
 	
+	public void loadLayer(int layerIndex, ZipWrapper zipFile, boolean flipVertical) throws IOException
+	{
+		this.loadLayer(layerIndex, zipFile.getInputStream(), flipVertical);
+	}
+
 	public void loadLayer(int layerIndex, File file, boolean flipVertical) throws IOException
 	{
 		this.loadLayer(layerIndex, new FileInputStream(file), flipVertical);

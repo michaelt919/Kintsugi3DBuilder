@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
+import java.util.zip.*;
 
 public class VertexMesh 
 {
@@ -21,16 +22,15 @@ public class VertexMesh
 
 	public VertexMesh(String fileFormat, File file) throws IOException
 	{
-		try(FileInputStream inputStream = new FileInputStream(file))
+		ZipWrapper myZip = new ZipWrapper(file);
+		InputStream inputStream = myZip.getInputStream();
+		if (fileFormat.equals("OBJ"))
 		{
-			if (fileFormat.equals("OBJ"))
-			{
-				initFromOBJStream(inputStream);
-			}
-			else
-			{
-				throw new IllegalArgumentException("Invalid file format.");
-			}
+			initFromOBJStream(inputStream);
+		}
+		else
+		{
+			throw new IllegalArgumentException("Invalid file format.");
 		}
 	}
 

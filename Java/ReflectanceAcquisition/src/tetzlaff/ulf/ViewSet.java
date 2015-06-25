@@ -12,10 +12,12 @@ import java.util.Scanner;
 
 import javax.imageio.ImageIO;
 
+import jdk.nashorn.internal.runtime.FindProperty;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.ZipWrapper;
 import tetzlaff.gl.opengl.OpenGLTextureArray;
 import tetzlaff.gl.opengl.OpenGLUniformBuffer;
 
@@ -155,12 +157,16 @@ public class ViewSet
 			Date timestamp = new Date();
 			
 			// Read a single image to get the dimensions for the texture array
-			BufferedImage img = ImageIO.read(new FileInputStream(new File(imageFilePath, imageFileNames.get(0))));
+			ZipWrapper myZip = new ZipWrapper(new File(imageFilePath, imageFileNames.get(0)));
+			InputStream input = myZip.getInputStream();
+			
+			BufferedImage img = ImageIO.read(input);
 			this.textureArray = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFileNames.size(), false, true, true);
 			
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
-				this.textureArray.loadLayer(i, new File(imageFilePath, imageFileNames.get(i)), true);
+				myZip.retrieveFile(new File(imageFilePath, imageFileNames.get(i)));
+				this.textureArray.loadLayer(i, myZip, true);
 			}
 
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -184,8 +190,15 @@ public class ViewSet
 	public static ViewSet loadFromVSETFile(File file, boolean loadImages) throws IOException
 	{
 		Date timestamp = new Date();
+
+		ZipWrapper myZip = new ZipWrapper(file);		
+		InputStream input = myZip.getInputStream();
+		if(input == null)
+		{
+			myZip.close();
+			throw new IOException();
+		}
 		
-		InputStream input = new FileInputStream(file);
 		Scanner scanner = new Scanner(input);
 		
 		float recommendedNearPlane = 0.0f;
@@ -302,6 +315,7 @@ public class ViewSet
 		}
 		
 		scanner.close();
+		myZip.close();
 
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		

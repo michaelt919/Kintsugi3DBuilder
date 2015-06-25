@@ -192,12 +192,22 @@ public class ULFUserInterface
 		{
 			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
+			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("View Set files", "vset"));
+			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Zip files", "zip"));
 			if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
 			{
+				File file = fileChooser.getSelectedFile();
+				if(file.getName().endsWith(".zip") || file.getName().endsWith(".ZIP"))
+				{
+					String vsetName = file.getPath();
+					vsetName = vsetName.replace(".zip", "/default.vset");
+					file = new File(vsetName);
+					System.out.printf("Zip file name converted to '%s'\n", vsetName);
+				}
+				
 				try 
 				{
-					model.addFromVSETFile(fileChooser.getSelectedFile());
+					model.addFromVSETFile(file);
 					loadingBar.setIndeterminate(true);
 					loadingFrame.setVisible(true);
 				} 
