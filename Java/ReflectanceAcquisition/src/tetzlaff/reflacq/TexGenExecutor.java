@@ -1,22 +1,28 @@
 package tetzlaff.reflacq;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Date;
+
+import javax.imageio.ImageIO;
 
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
 import tetzlaff.gl.opengl.OpenGLTextureArray;
-import tetzlaff.ulf.UnstructuredLightField;
+import tetzlaff.gl.opengl.OpenGLVertexBuffer;
+import tetzlaff.ulf.ViewSet;
 
 public class TexGenExecutor 
 {
@@ -25,12 +31,20 @@ public class TexGenExecutor
 
 	private OpenGLContext context;
 	private File vsetFile;
+	private File objFile;
+	private File imageDir;
+	private File maskDir; // TODO
+	private File outputDir;
 	private TexGenParameters param;
 	
-	public TexGenExecutor(OpenGLContext context, File vsetFile, TexGenParameters param) 
+	public TexGenExecutor(OpenGLContext context, File vsetFile, File objFile, File imageDir, File maskDir, File outputDir, TexGenParameters param) 
 	{
 		this.context = context;
 		this.vsetFile = vsetFile;
+		this.objFile = objFile;
+		this.imageDir = imageDir;
+		this.maskDir = maskDir;
+		this.outputDir = outputDir;
 		this.param = param;
 	}
 
@@ -38,14 +52,47 @@ public class TexGenExecutor
 	{
 		final int DEBUG_PIXEL_X = 322;
 		final int DEBUG_PIXEL_Y = param.getTextureSize() - 365;
-		
-		context.enableDepthTest();
-    	context.enableBackFaceCulling();
 
     	System.out.println("Max vertex uniform components across all blocks:" + context.getMaxCombinedVertexUniformComponents());
     	System.out.println("Max fragment uniform components across all blocks:" + context.getMaxCombinedFragmentUniformComponents());
     	System.out.println("Max size of a uniform block in bytes:" + context.getMaxUniformBlockSize());
     	System.out.println("Max texture array layers:" + context.getMaxArrayTextureLayers());
+		
+		System.out.println("Loading view set...");
+    	Date timestamp = new Date();
+		
+    	ViewSet viewSet = null;
+    	String[] vsetFileNameParts = vsetFile.getName().split("\\.");
+    	String fileExt = vsetFileNameParts[vsetFileNameParts.length-1];
+    	if (fileExt.equalsIgnoreCase("vset"))
+    	{
+    		System.out.println("Loading from VSET file.");
+    		viewSet = ViewSet.loadFromVSETFile(vsetFile, false);
+    	}
+    	else if (fileExt.equalsIgnoreCase("xml"))
+    	{
+    		System.out.println("Loading from Agisoft Photoscan XML file.");
+    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, false);
+    	}
+    	else
+    	{
+    		System.out.println("Unrecognized file type, aborting.");
+    		return;
+    	}
+    	
+    	outputDir.mkdir();
+    	if (DEBUG)
+    	{
+    		new File(outputDir, "debug").mkdir();
+    	}
+    	
+    	System.out.println("Loading view set completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+    	
+    	System.out.println("Loading and compiling shader programs...");
+    	timestamp = new Date();
+		
+		context.enableDepthTest();
+    	context.enableBackFaceCulling();
     	
     	OpenGLProgram depthRenderingProgram = new OpenGLProgram(new File("shaders/depth.vert"), new File("shaders/depth.frag"));
     	
@@ -69,22 +116,22 @@ public class TexGenExecutor
 				new File("shaders", "texspace.vert"), 
 				new File("shaders", "speculardebug_imgspace.frag"));
 		
-		System.out.println("Loading view set...");
-    	Date timestamp = new Date();
-		
-    	File lightFieldDirectory = vsetFile.getParentFile();
-    	UnstructuredLightField lightField = UnstructuredLightField.loadFromVSETFile(vsetFile, !param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1);
+    	System.out.println("Shader compilation completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	
-    	File outputDirectory = new File(lightFieldDirectory, "output");
-    	outputDirectory.mkdir();
-    	if (DEBUG)
-    	{
-    		new File(outputDirectory, "debug").mkdir();
-    	}
+    	System.out.println("Loading mesh...");
+    	timestamp = new Date();
     	
-    	System.out.println("Loading completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+    	VertexMesh mesh = new VertexMesh("OBJ", objFile);
+    	OpenGLVertexBuffer positionBuffer = new OpenGLVertexBuffer(mesh.getVertices());
+    	OpenGLVertexBuffer texCoordBuffer = new OpenGLVertexBuffer(mesh.getTexCoords());
+    	OpenGLVertexBuffer normalBuffer = new OpenGLVertexBuffer(mesh.getNormals());
     	
-    	File tmpDir = new File(outputDirectory, "tmp");
+    	System.out.println("Loading mesh completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+    	
+    	File tmpDir = new File(outputDir, "tmp");
+    	
+    	OpenGLTextureArray viewTextures = null;
+    	OpenGLTextureArray depthTextures = null;
     	
     	if ((param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1) && param.isImagePreprojectionGenerationEnabled())
     	{
@@ -94,44 +141,42 @@ public class TexGenExecutor
 	    	OpenGLFramebufferObject projTexFBO = new OpenGLFramebufferObject(param.getTextureSize() / param.getTextureSubdivision(), param.getTextureSize() / param.getTextureSubdivision(), 2, true, false);
 	    	OpenGLRenderable projTexRenderable = new OpenGLRenderable(projTexProgram);
 	    	
-	    	projTexRenderable.addVertexBuffer("position", lightField.positionBuffer);
-	    	projTexRenderable.addVertexBuffer("texCoord", lightField.texCoordBuffer);
-	    	projTexRenderable.addVertexBuffer("normal", lightField.normalBuffer);
+	    	projTexRenderable.addVertexBuffer("position", positionBuffer);
+	    	projTexRenderable.addVertexBuffer("texCoord", texCoordBuffer);
+	    	projTexRenderable.addVertexBuffer("normal", normalBuffer);
 	    	
 	    	projTexRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
 	    	projTexRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
 	    	
-	    	PrintStream diffuseDebugInfo = null;
-	    	
 	    	tmpDir.mkdir();
 	    	
-	    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
+	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 	    	{
 		    	File viewDir = new File(tmpDir, String.format("%04d", i));
 		    	viewDir.mkdir();
 		    	
-		    	OpenGLTexture2D viewTexture = new OpenGLTexture2D(lightField.viewSet.getImageFile(i), true, true, true);
+		    	OpenGLTexture2D viewTexture = new OpenGLTexture2D(viewSet.getImageFile(i), true, true, true);
 		    	
 		    	OpenGLFramebufferObject depthFBO =  new OpenGLFramebufferObject(viewTexture.getWidth(), viewTexture.getHeight(), 0, false, true);
 		    	OpenGLRenderable depthRenderable = new OpenGLRenderable(depthRenderingProgram);
-		    	depthRenderable.addVertexBuffer("position", lightField.positionBuffer);
+		    	depthRenderable.addVertexBuffer("position", positionBuffer);
 		    	
-	        	depthRenderingProgram.setUniform("model_view", lightField.viewSet.getCameraPose(i));
+	        	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
 	    		depthRenderingProgram.setUniform("projection", 
-    				lightField.viewSet.getCameraProjection(lightField.viewSet.getCameraProjectionIndex(i))
+    				viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
 	    				.getProjectionMatrix(
-    						lightField.viewSet.getRecommendedNearPlane(), 
-    						lightField.viewSet.getRecommendedFarPlane()
+    						viewSet.getRecommendedNearPlane(), 
+    						viewSet.getRecommendedFarPlane()
 						)
 				);
 	        	
 	    		depthFBO.clearDepthBuffer();
 	        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthFBO);
 	        	
-	        	projTexRenderable.program().setUniform("cameraPose", lightField.viewSet.getCameraPose(i));
+	        	projTexRenderable.program().setUniform("cameraPose", viewSet.getCameraPose(i));
 	        	projTexRenderable.program().setUniform("cameraProjection", 
-	        			lightField.viewSet.getCameraProjection(lightField.viewSet.getCameraProjectionIndex(i))
-	        				.getProjectionMatrix(lightField.viewSet.getRecommendedNearPlane(), lightField.viewSet.getRecommendedFarPlane()));
+	        			viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
+	        				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
 		    	
 		    	projTexRenderable.program().setTexture("viewImage", viewTexture);
 		    	projTexRenderable.program().setTexture("depthImage", depthFBO.getDepthAttachmentTexture());
@@ -158,17 +203,75 @@ public class TexGenExecutor
 		    	viewTexture.delete();
 	        	depthFBO.delete();
 		    	
-		    	System.out.println("Completed " + (i+1) + "/" + lightField.viewSet.getCameraPoseCount());
+		    	System.out.println("Completed " + (i+1) + "/" + viewSet.getCameraPoseCount());
 	    	}
 	    	
 	    	System.out.println("Pre-projections completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}
+    	else
+    	{
+    		System.out.println("Loading images...");
+	    	timestamp = new Date();
+	    	
+	    	// Read a single image to get the dimensions for the texture array
+			BufferedImage img = ImageIO.read(new FileInputStream(new File(imageDir, viewSet.getImageFileName(0))));
+			viewTextures = new OpenGLTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount(), false, true, true);
+			
+			for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+			{
+				viewTextures.loadLayer(i, new File(imageDir, viewSet.getImageFileName(i)), true);
+				System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " images loaded.");
+			}
+	    	
+    		System.out.println("Image loading completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+    		
+    		System.out.println("Creating depth maps...");
+	    	timestamp = new Date();
+	    	
+	    	// Build depth textures for each view
+	    	int width = viewTextures.getWidth();
+	    	int height = viewTextures.getHeight();
+	    	depthTextures = OpenGLTextureArray.createDepthTextureArray(width, height, viewSet.getCameraPoseCount());
+	    	
+	    	// Don't automatically generate any texture attachments for this framebuffer object
+	    	OpenGLFramebufferObject depthRenderingFBO = new OpenGLFramebufferObject(width, height, 0, false, false);
+	    	
+	    	OpenGLRenderable depthRenderable = new OpenGLRenderable(depthRenderingProgram);
+	    	depthRenderable.addVertexBuffer("position", positionBuffer);
+	    	
+	    	// Render each depth texture
+	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+	    	{
+	    		depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(i));
+	        	depthRenderingFBO.clearDepthBuffer();
+	        	
+	        	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
+	    		depthRenderingProgram.setUniform("projection", 
+					viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
+	    				.getProjectionMatrix(
+							viewSet.getRecommendedNearPlane(), 
+							viewSet.getRecommendedFarPlane()
+						)
+				);
+	        	
+	        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+				System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " depth maps created.");
+	    	}
+
+	    	depthRenderingFBO.delete();
+	    	
+    		System.out.println("Depth maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+    	}
     	
     	if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
     	{
-    		System.out.println("Beginning model fitting (" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " blocks)...");
-	    	timestamp = new Date();
+	    	System.out.println("Beginning model fitting (" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " blocks)...");
     	}
+    	else
+    	{
+	    	System.out.println("Setting up model fitting...");
+    	}
+    	timestamp = new Date();
     	
     	OpenGLFramebufferObject diffuseFitFramebuffer = new OpenGLFramebufferObject(param.getTextureSize(), param.getTextureSize(), 4, false, false);
     	OpenGLFramebufferObject specularFitFramebuffer = new OpenGLFramebufferObject(param.getTextureSize(), param.getTextureSize(), 4, false, false);
@@ -185,21 +288,21 @@ public class TexGenExecutor
 
     	OpenGLRenderable diffuseFitRenderable = new OpenGLRenderable(diffuseFitProgram);
     	
-    	diffuseFitRenderable.addVertexBuffer("position", lightField.positionBuffer);
-    	diffuseFitRenderable.addVertexBuffer("texCoord", lightField.texCoordBuffer);
-    	diffuseFitRenderable.addVertexBuffer("normal", lightField.normalBuffer);
+    	diffuseFitRenderable.addVertexBuffer("position", positionBuffer);
+    	diffuseFitRenderable.addVertexBuffer("texCoord", texCoordBuffer);
+    	diffuseFitRenderable.addVertexBuffer("normal", normalBuffer);
     	
-    	diffuseFitRenderable.program().setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
+    	diffuseFitRenderable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
     	diffuseFitRenderable.program().setUniform("gamma", param.getGamma());
     	diffuseFitRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
     	diffuseFitRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
     	
-    	diffuseFitRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
+    	diffuseFitRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
     	
     	if (!param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1)
     	{
-	    	diffuseFitRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-	    	diffuseFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+	    	diffuseFitRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
+	    	diffuseFitRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
     	}
     	
     	diffuseFitRenderable.program().setUniform("delta", param.getDiffuseDelta());
@@ -207,25 +310,25 @@ public class TexGenExecutor
     	diffuseFitRenderable.program().setUniform("fit1Weight", param.getDiffuseInputNormalWeight());
     	diffuseFitRenderable.program().setUniform("fit3Weight", param.getDiffuseComputedNormalWeight());
     	
-    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
+    	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
 		{
-    		diffuseFitRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
-    		diffuseFitRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+    		diffuseFitRenderable.program().setUniformBuffer("LightPositions", viewSet.getLightPositionBuffer());
+    		diffuseFitRenderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
 		}
     	
     	OpenGLRenderable specularFitRenderable = new OpenGLRenderable(specularFitProgram);
     	
-    	specularFitRenderable.addVertexBuffer("position", lightField.positionBuffer);
-    	specularFitRenderable.addVertexBuffer("texCoord", lightField.texCoordBuffer);
-    	specularFitRenderable.addVertexBuffer("normal", lightField.normalBuffer);
+    	specularFitRenderable.addVertexBuffer("position", positionBuffer);
+    	specularFitRenderable.addVertexBuffer("texCoord", texCoordBuffer);
+    	specularFitRenderable.addVertexBuffer("normal", normalBuffer);
 
-    	specularFitRenderable.program().setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
-    	specularFitRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
+    	specularFitRenderable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
+    	specularFitRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
     	
     	if (!param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1)
     	{
-	    	specularFitRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-	    	specularFitRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+	    	specularFitRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
+	    	specularFitRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
     	}
 
     	specularFitRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
@@ -260,6 +363,11 @@ public class TexGenExecutor
     	
     	int subdivSize = param.getTextureSize() / param.getTextureSubdivision();
     	
+    	if (!param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1)
+		{
+	    	System.out.println("Setup finished in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		}
+    	
     	for (int row = 0; row < param.getTextureSubdivision(); row++)
     	{
 	    	for (int col = 0; col < param.getTextureSubdivision(); col++)
@@ -274,9 +382,9 @@ public class TexGenExecutor
 		    	
 		    	if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
 		    	{
-		    		preprojectedViews = new OpenGLTextureArray(subdivSize, subdivSize, lightField.viewSet.getCameraPoseCount(), false, false, false);
+		    		preprojectedViews = new OpenGLTextureArray(subdivSize, subdivSize, viewSet.getCameraPoseCount(), false, false, false);
 			    	
-					for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
+					for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 					{
 						preprojectedViews.loadLayer(i, new File(new File(tmpDir, String.format("%04d", i)), String.format("r%04dc%04d.png", row, col)), true);
 					}
@@ -285,8 +393,8 @@ public class TexGenExecutor
 		    	}
 		    	else
 		    	{
-			    	diffuseFitRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
-			    	diffuseFitRenderable.program().setTexture("depthImages", lightField.depthTextures);
+			    	diffuseFitRenderable.program().setTexture("viewImages", viewTextures);
+			    	diffuseFitRenderable.program().setTexture("depthImages", depthTextures);
 		    	}
 		    	
 		    	diffuseFitRenderable.program().setUniform("minTexCoord", 
@@ -298,11 +406,14 @@ public class TexGenExecutor
 		        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitFramebuffer, col * subdivSize, row * subdivSize, subdivSize, subdivSize);
 		        context.finish();
 		        
-		        diffuseFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-		        		"PNG", new File(diffuseTempDirectory, String.format("r%04dc%04d.png", row, col)));
-		        
-		        diffuseFitFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-		        		"PNG", new File(normalTempDirectory, String.format("r%04dc%04d.png", row, col)));
+		        if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
+		        {
+			        diffuseFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+			        		"PNG", new File(diffuseTempDirectory, String.format("r%04dc%04d.png", row, col)));
+			        
+			        diffuseFitFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+			        		"PNG", new File(normalTempDirectory, String.format("r%04dc%04d.png", row, col)));
+		        }
 	    		
 		        if (!param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1)
 		        {
@@ -321,14 +432,14 @@ public class TexGenExecutor
 		    	}
 		    	else
 		    	{
-			    	specularFitRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
-			    	specularFitRenderable.program().setTexture("depthImages", lightField.depthTextures);
+			    	specularFitRenderable.program().setTexture("viewImages", viewTextures);
+			    	specularFitRenderable.program().setTexture("depthImages", depthTextures);
 		    	}
 		    	
-		    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
+		    	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
 	    		{
-		    		specularFitRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
-		    		specularFitRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+		    		specularFitRenderable.program().setUniformBuffer("LightPositions", viewSet.getLightPositionBuffer());
+		    		specularFitRenderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
 	    		}
 		    	
 		    	specularFitRenderable.program().setUniform("minTexCoord", 
@@ -343,14 +454,17 @@ public class TexGenExecutor
 	    		specularFitRenderable.draw(PrimitiveMode.TRIANGLES, specularFitFramebuffer, col * subdivSize, row * subdivSize, subdivSize, subdivSize);
 	    		context.finish();
 
-	    		specularFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-		        		"PNG", new File(specularTempDirectory, String.format("r%04dc%04d.png", row, col)));
-		        
-	    		specularFitFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-		        		"PNG", new File(roughnessTempDirectory, String.format("r%04dc%04d.png", row, col)));
-		        
-	    		specularFitFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-		        		"PNG", new File(snormalTempDirectory, String.format("r%04dc%04d.png", row, col)));
+	    		if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
+	    		{
+		    		specularFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+			        		"PNG", new File(specularTempDirectory, String.format("r%04dc%04d.png", row, col)));
+			        
+		    		specularFitFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+			        		"PNG", new File(roughnessTempDirectory, String.format("r%04dc%04d.png", row, col)));
+			        
+		    		specularFitFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+			        		"PNG", new File(snormalTempDirectory, String.format("r%04dc%04d.png", row, col)));
+	    		}
 		    	
 		    	if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
 		    	{
@@ -376,7 +490,7 @@ public class TexGenExecutor
     	System.out.println("Saving textures...");
     	timestamp = new Date();
     	
-    	File textureDirectory = new File(new File(lightFieldDirectory, "output"), "textures");
+    	File textureDirectory = new File(outputDir, "textures");
     	
     	textureDirectory.mkdirs();
         
@@ -406,7 +520,7 @@ public class TexGenExecutor
     		System.out.println("Generating diffuse debug info...");
 	    	timestamp = new Date();
 
-	    	new File(outputDirectory, "debug").mkdirs();
+	    	new File(outputDir, "debug").mkdirs();
     		
     		OpenGLFramebufferObject diffuseDebugFBO = new OpenGLFramebufferObject(param.getTextureSize(), param.getTextureSize(), 2, true, false);
 	    	OpenGLRenderable diffuseDebugRenderable = new OpenGLRenderable(diffuseDebugProgram);
@@ -414,23 +528,23 @@ public class TexGenExecutor
 	    	diffuseDebugRenderable.program().setUniform("minTexCoord", new Vector2(0.0f, 0.0f));
 	    	diffuseDebugRenderable.program().setUniform("maxTexCoord", new Vector2(1.0f, 1.0f));
 	    	
-	    	diffuseDebugRenderable.addVertexBuffer("position", lightField.positionBuffer);
-	    	diffuseDebugRenderable.addVertexBuffer("texCoord", lightField.texCoordBuffer);
-	    	diffuseDebugRenderable.addVertexBuffer("normal", lightField.normalBuffer);
+	    	diffuseDebugRenderable.addVertexBuffer("position", positionBuffer);
+	    	diffuseDebugRenderable.addVertexBuffer("texCoord", texCoordBuffer);
+	    	diffuseDebugRenderable.addVertexBuffer("normal", normalBuffer);
 
-	    	diffuseDebugRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
-	    	diffuseDebugRenderable.program().setTexture("depthImages", lightField.depthTextures);
-	    	diffuseDebugRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
-	    	diffuseDebugRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-	    	diffuseDebugRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+	    	diffuseDebugRenderable.program().setTexture("viewImages", viewTextures);
+	    	diffuseDebugRenderable.program().setTexture("depthImages", depthTextures);
+	    	diffuseDebugRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
+	    	diffuseDebugRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
+	    	diffuseDebugRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
 	    	diffuseDebugRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
 	    	diffuseDebugRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
 	    	
 	    	//new File(outputDirectory, "debug/diffuse/projpos").mkdirs();
 	    	
-	    	PrintStream diffuseInfo = new PrintStream(new File(outputDirectory, "debug/diffuseInfo.txt"));
+	    	PrintStream diffuseInfo = new PrintStream(new File(outputDir, "debug/diffuseInfo.txt"));
 	    	
-	    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
+	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 	    	{
 	    		diffuseDebugRenderable.program().setUniform("viewIndex", i);
 	    		
@@ -442,9 +556,9 @@ public class TexGenExecutor
 	    		//diffuseDebugFBO.saveColorBufferToFile(0, "PNG", new File(outputDirectory, String.format("debug/diffuse/%04d.png", i)));
 	    		//diffuseDebugFBO.saveColorBufferToFile(1, "PNG", new File(outputDirectory, String.format("debug/diffuse/projpos/%04d.png", i)));
 	    		
-	    		Matrix4 cameraPose = lightField.viewSet.getCameraPose(i);
+	    		Matrix4 cameraPose = viewSet.getCameraPose(i);
 	    		Vector3 lightPosition = new Matrix3(cameraPose).transpose().times(
-    				lightField.viewSet.getLightPosition(lightField.viewSet.getLightPositionIndex(i))
+    				viewSet.getLightPosition(viewSet.getLightPositionIndex(i))
     					.minus(new Vector3(cameraPose.getColumn(3))));
 	    		int[] colorData = diffuseDebugFBO.readColorBufferARGB(0, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
 	    		float[] positionData = diffuseDebugFBO.readFloatingPointColorBufferRGBA(1, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
@@ -477,33 +591,33 @@ public class TexGenExecutor
 	    	specularDebugRenderable.program().setUniform("minTexCoord", new Vector2(0.0f, 0.0f));
 	    	specularDebugRenderable.program().setUniform("maxTexCoord", new Vector2(1.0f, 1.0f));
 	    	
-	    	specularDebugRenderable.addVertexBuffer("position", lightField.positionBuffer);
-	    	specularDebugRenderable.addVertexBuffer("texCoord", lightField.texCoordBuffer);
-	    	specularDebugRenderable.addVertexBuffer("normal", lightField.normalBuffer);
+	    	specularDebugRenderable.addVertexBuffer("position", positionBuffer);
+	    	specularDebugRenderable.addVertexBuffer("texCoord", texCoordBuffer);
+	    	specularDebugRenderable.addVertexBuffer("normal", normalBuffer);
 
-	    	specularDebugRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
-	    	specularDebugRenderable.program().setTexture("depthImages", lightField.depthTextures);
+	    	specularDebugRenderable.program().setTexture("viewImages", viewTextures);
+	    	specularDebugRenderable.program().setTexture("depthImages", depthTextures);
 	    	specularDebugRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
 	    	specularDebugRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
 	    	specularDebugRenderable.program().setTexture("diffuse", diffuseFitFramebuffer.getColorAttachmentTexture(0));
 	    	specularDebugRenderable.program().setTexture("normalMap", diffuseFitFramebuffer.getColorAttachmentTexture(1));
-	    	specularDebugRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
-	    	specularDebugRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-	    	specularDebugRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+	    	specularDebugRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
+	    	specularDebugRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
+	    	specularDebugRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
 	    	specularDebugRenderable.program().setUniform("gamma", param.getGamma());
 	    	specularDebugRenderable.program().setUniform("diffuseRemovalFactor", 1.0f);
 	    	
-	    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
+	    	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
     		{
-	    		specularDebugRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
-	    		specularDebugRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+	    		specularDebugRenderable.program().setUniformBuffer("LightPositions", viewSet.getLightPositionBuffer());
+	    		specularDebugRenderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
     		}
 	    	
 	    	//new File(outputDirectory, "debug/specular/rDotV").mkdirs();
 	    	
-	    	PrintStream specularInfo = new PrintStream(new File(outputDirectory, "debug/specularInfo.txt"));
+	    	PrintStream specularInfo = new PrintStream(new File(outputDir, "debug/specularInfo.txt"));
 	    	
-	    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
+	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 	    	{
 	    		specularDebugRenderable.program().setUniform("viewIndex", i);
 	    		
@@ -532,7 +646,20 @@ public class TexGenExecutor
 			System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}
     	
-        lightField.deleteOpenGLResources();
+        viewSet.deleteOpenGLResources();
+        positionBuffer.delete();
+        normalBuffer.delete();
+        texCoordBuffer.delete();
+        
+        if (viewTextures != null)
+        {
+        	viewTextures.delete();
+        }
+        
+        if (depthTextures != null)
+        {
+        	depthTextures.delete();
+        }
 
 		projTexProgram.delete();
 		diffuseFitProgram.delete();
