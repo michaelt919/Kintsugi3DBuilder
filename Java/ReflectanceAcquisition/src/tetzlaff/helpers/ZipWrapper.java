@@ -1,4 +1,4 @@
-package tetzlaff.gl.helpers;
+package tetzlaff.helpers;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,7 +61,17 @@ public class ZipWrapper
 	{
 		StringTokenizer tok = new StringTokenizer(fullPath, "/");
 		
-		String path = "";
+		String path;
+		if (fullPath.startsWith("/"))
+		{
+			path = "";
+		}
+		else
+		{
+			// Drive letter for Windows
+			path = tok.nextToken();
+		}
+		
 		boolean found = false;
 		while(tok.hasMoreTokens() && !found)
 		{
