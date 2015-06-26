@@ -33,17 +33,19 @@ public class TexGenExecutor
 	private File vsetFile;
 	private File objFile;
 	private File imageDir;
-	private File maskDir; // TODO
+	private File maskDir;
+	private File rescaleDir;
 	private File outputDir;
 	private TexGenParameters param;
 	
-	public TexGenExecutor(OpenGLContext context, File vsetFile, File objFile, File imageDir, File maskDir, File outputDir, TexGenParameters param) 
+	public TexGenExecutor(OpenGLContext context, File vsetFile, File objFile, File imageDir, File maskDir, File rescaleDir, File outputDir, TexGenParameters param) 
 	{
 		this.context = context;
 		this.vsetFile = vsetFile;
 		this.objFile = objFile;
 		this.imageDir = imageDir;
 		this.maskDir = maskDir;
+		this.rescaleDir = rescaleDir;
 		this.outputDir = outputDir;
 		this.param = param;
 	}
@@ -116,6 +118,10 @@ public class TexGenExecutor
 				new File("shaders", "texspace.vert"), 
 				new File("shaders", "speculardebug_imgspace.frag"));
 		
+		OpenGLProgram textureRectProgram = new OpenGLProgram(
+				new File("shaders", "texturerect.vert"),
+				new File("shaders", "simpletexture.frag"));
+		
     	System.out.println("Shader compilation completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	
     	System.out.println("Loading mesh...");
@@ -155,7 +161,33 @@ public class TexGenExecutor
 		    	File viewDir = new File(tmpDir, String.format("%04d", i));
 		    	viewDir.mkdir();
 		    	
-		    	OpenGLTexture2D viewTexture = new OpenGLTexture2D(viewSet.getImageFile(i), true, true, true);
+		    	File imageFile = new File(imageDir, viewSet.getImageFileName(i));
+				if (!imageFile.exists())
+				{
+					String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
+			    	filenameParts[filenameParts.length - 1] = "png";
+			    	String pngFileName = String.join(".", filenameParts);
+			    	imageFile = new File(imageDir, pngFileName);
+				}
+		    	
+		    	OpenGLTexture2D viewTexture;
+		    	if (maskDir == null)
+		    	{
+		    		viewTexture = new OpenGLTexture2D(imageFile, true, true, true);
+		    	}
+		    	else
+		    	{
+		    		File maskFile = new File(maskDir, viewSet.getImageFileName(i));
+					if (!maskFile.exists())
+					{
+						String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
+				    	filenameParts[filenameParts.length - 1] = "png";
+				    	String pngFileName = String.join(".", filenameParts);
+				    	maskFile = new File(maskDir, pngFileName);
+					}
+					
+		    		viewTexture = new OpenGLTexture2D(imageFile, maskFile, true, true, true);
+		    	}
 		    	
 		    	OpenGLFramebufferObject depthFBO =  new OpenGLFramebufferObject(viewTexture.getWidth(), viewTexture.getHeight(), 0, false, true);
 		    	OpenGLRenderable depthRenderable = new OpenGLRenderable(depthRenderingProgram);
@@ -210,20 +242,132 @@ public class TexGenExecutor
     	}
     	else
     	{
-    		System.out.println("Loading images...");
-	    	timestamp = new Date();
-	    	
-	    	// Read a single image to get the dimensions for the texture array
-			BufferedImage img = ImageIO.read(new FileInputStream(new File(imageDir, viewSet.getImageFileName(0))));
-			viewTextures = new OpenGLTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount(), false, true, true);
-			
-			for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-			{
-				viewTextures.loadLayer(i, new File(imageDir, viewSet.getImageFileName(i)), true);
-				System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " images loaded.");
-			}
-	    	
-    		System.out.println("Image loading completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+    		if (param.isImageRescalingEnabled())
+    		{
+    			System.out.println("Loading and rescaling images...");
+    			timestamp = new Date();
+    			
+    			viewTextures = new OpenGLTextureArray(param.getImageWidth(), param.getImageHeight(), viewSet.getCameraPoseCount(), false, true, false);
+    			
+				// Create an FBO for downsampling
+		    	OpenGLFramebufferObject downsamplingFBO = new OpenGLFramebufferObject(param.getImageWidth(), param.getImageHeight(), 1, false, false);
+		    	
+		    	OpenGLRenderable downsampleRenderable = new OpenGLRenderable(textureRectProgram);
+		    	OpenGLVertexBuffer rectBuffer = OpenGLVertexBuffer.createRectangle();
+		    	downsampleRenderable.addVertexBuffer("position", rectBuffer);
+		    	
+		    	// Downsample and store each image
+		    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+		    	{
+		    		File imageFile = new File(imageDir, viewSet.getImageFileName(i));
+					if (!imageFile.exists())
+					{
+						String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
+				    	filenameParts[filenameParts.length - 1] = "png";
+				    	String pngFileName = String.join(".", filenameParts);
+				    	imageFile = new File(imageDir, pngFileName);
+					}
+		    		
+		    		OpenGLTexture2D fullSizeImage;
+		    		if (maskDir == null)
+	    			{
+		    			fullSizeImage = new OpenGLTexture2D(imageFile, true, true, true);
+	    			}
+		    		else
+		    		{
+		    			File maskFile = new File(maskDir, viewSet.getImageFileName(i));
+						if (!maskFile.exists())
+						{
+							String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
+					    	filenameParts[filenameParts.length - 1] = "png";
+					    	String pngFileName = String.join(".", filenameParts);
+					    	maskFile = new File(maskDir, pngFileName);
+						}
+						
+		    			fullSizeImage = new OpenGLTexture2D(imageFile, maskFile, true, true, true);
+		    		}
+		    		
+		    		downsamplingFBO.setColorAttachment(0, viewTextures.getLayerAsFramebufferAttachment(i));
+		    		downsamplingFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		        	
+		    		textureRectProgram.setTexture("tex", fullSizeImage);
+		        	
+		        	downsampleRenderable.draw(PrimitiveMode.TRIANGLE_FAN, downsamplingFBO);
+		        	context.finish();
+		        	
+		        	if (rescaleDir != null)
+		        	{
+				    	String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
+				    	filenameParts[filenameParts.length - 1] = "png";
+				    	String pngFileName = String.join(".", filenameParts);
+		        		downsamplingFBO.saveColorBufferToFile(0, "PNG", new File(rescaleDir, pngFileName));
+		        	}
+		        	
+		        	fullSizeImage.delete();
+		        	
+					System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " images loaded and rescaled.");
+		    	}
+	
+		    	rectBuffer.delete();
+		    	downsamplingFBO.delete();
+		    	
+		    	// TODO why don't mipmaps work?
+		    	//viewTextures.generateMipmaps();
+		    	//context.finish();
+		    	
+	    		System.out.println("Image loading and rescaling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+    		}
+    		else
+    		{
+	    		System.out.println("Loading images...");
+		    	timestamp = new Date();
+		    	
+		    	// Read a single image to get the dimensions for the texture array
+		    	File imageFile = new File(imageDir, viewSet.getImageFileName(0));
+				if (!imageFile.exists())
+				{
+					String[] filenameParts = viewSet.getImageFileName(0).split("\\.");
+			    	filenameParts[filenameParts.length - 1] = "png";
+			    	String pngFileName = String.join(".", filenameParts);
+			    	imageFile = new File(imageDir, pngFileName);
+				}
+				BufferedImage img = ImageIO.read(new FileInputStream(imageFile));
+				viewTextures = new OpenGLTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount(), false, true, true);
+				
+				for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+				{
+					imageFile = new File(imageDir, viewSet.getImageFileName(i));
+					if (!imageFile.exists())
+					{
+						String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
+				    	filenameParts[filenameParts.length - 1] = "png";
+				    	String pngFileName = String.join(".", filenameParts);
+				    	imageFile = new File(imageDir, pngFileName);
+					}
+					
+					if (maskDir == null)
+					{
+						viewTextures.loadLayer(i, imageFile, true);
+					}
+					else
+					{
+						File maskFile = new File(maskDir, viewSet.getImageFileName(i));
+						if (!maskFile.exists())
+						{
+							String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
+					    	filenameParts[filenameParts.length - 1] = "png";
+					    	String pngFileName = String.join(".", filenameParts);
+					    	maskFile = new File(maskDir, pngFileName);
+						}
+						
+						viewTextures.loadLayer(i, imageFile, maskFile, true);
+					}
+					
+					System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " images loaded.");
+				}
+		    	
+	    		System.out.println("Image loading completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+    		}
     		
     		System.out.println("Creating depth maps...");
 	    	timestamp = new Date();

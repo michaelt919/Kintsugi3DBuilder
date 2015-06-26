@@ -139,6 +139,84 @@ public abstract class OpenGLLayeredTexture extends OpenGLTexture
 		this.loadLayer(layerIndex, new FileInputStream(file), flipVertical);
 	}
 	
+	public void loadLayer(int layerIndex, InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
+	{
+		this.bind();
+			
+		BufferedImage colorImg = ImageIO.read(imageStream);
+		BufferedImage maskImg = ImageIO.read(maskStream);
+		
+		if (layerIndex < 0 || layerIndex >= this.layerCount)
+		{
+			throw new IllegalArgumentException("The layer index specified (" + layerIndex + ") is out of bounds (layer count: " + this.layerCount + ").");
+		}
+		else if (colorImg.getWidth() != this.width || colorImg.getHeight() != this.height)
+		{
+			throw new IllegalStateException("The texture to be loaded does not have the correct width and height.");
+		}
+		else if (maskImg.getWidth() != this.width || maskImg.getHeight() != this.height)
+		{
+			throw new IllegalStateException("The alpha mask to be loaded does not have the correct width and height.");
+		}
+		else
+		{
+			this.width = colorImg.getWidth();
+			this.height = colorImg.getHeight();
+		}
+		
+		ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.getWidth() * colorImg.getHeight() * 4);
+		IntBuffer intBuffer = buffer.asIntBuffer();
+		if (flipVertical)
+		{
+			for (int y = colorImg.getHeight() - 1; y >= 0; y--)
+			{
+				for (int x = 0; x < colorImg.getWidth(); x++)
+				{
+					// Use green channel of the mask image for alpha
+					intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
+				}
+			}
+		}
+		else
+		{
+			for (int y = 0; y < colorImg.getHeight(); y++)
+			{
+				for (int x = 0; x < colorImg.getWidth(); x++)
+				{
+					// Use green channel of the mask image for alpha
+					intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
+				}
+			}
+		}
+		
+		glTexSubImage3D(this.getOpenGLTextureTarget(), 0, 0, 0, layerIndex, colorImg.getWidth(), colorImg.getHeight(), 1, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+		openGLErrorCheck();
+		
+		if (this.useMipmaps)
+		{
+			this.staleMipmaps = true;
+		}
+	}
+	
+	public void loadLayer(int layerIndex, ZipWrapper imageZip, ZipWrapper maskZip, boolean flipVertical) throws IOException
+	{
+		this.loadLayer(layerIndex, imageZip.getInputStream(), maskZip.getInputStream(), flipVertical);
+	}
+
+	public void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical) throws IOException
+	{
+		this.loadLayer(layerIndex, new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical);
+	}
+	
+	public void generateMipmaps()
+	{
+		// Create mipmaps
+		glGenerateMipmap(this.getOpenGLTextureTarget());
+        openGLErrorCheck();
+        
+        this.staleMipmaps = false;
+	}
+	
 	@Override
 	void bindToTextureUnit(int textureUnitIndex)
 	{

@@ -7,8 +7,11 @@ public class TexGenParameters
 	private boolean cameraVisibilityTestEnabled = true;
 	private float cameraVisibilityTestBias = 0.0025f;
 	
+	private int imageWidth = 1024;
+	private int imageHeight = 1024;
 	private int textureSize = 1024;
 	private int textureSubdivision = 1;
+	private boolean imageRescalingEnabled = true;
 	private boolean imagePreprojectionUseEnabled = false;
 	private boolean imagePreprojectionGenerationEnabled = false;
 	
@@ -60,6 +63,22 @@ public class TexGenParameters
 		this.cameraVisibilityTestBias = cameraVisibilityTestBias;
 	}
 
+	public int getImageWidth() {
+		return this.imageWidth;
+	}
+
+	public void setImageWidth(int imageWidth) {
+		this.imageWidth = imageWidth;
+	}
+
+	public int getImageHeight() {
+		return this.imageHeight;
+	}
+
+	public void setImageHeight(int imageHeight) {
+		this.imageHeight = imageHeight;
+	}
+
 	public int getTextureSize() {
 		return this.textureSize;
 	}
@@ -74,6 +93,14 @@ public class TexGenParameters
 
 	public void setTextureSubdivision(int textureSubdivision) {
 		this.textureSubdivision = textureSubdivision;
+	}
+
+	public boolean isImageRescalingEnabled() {
+		return this.imageRescalingEnabled;
+	}
+
+	public void setImageRescalingEnabled(boolean imageRescalingEnabled) {
+		this.imageRescalingEnabled = imageRescalingEnabled;
 	}
 
 	public boolean isImagePreprojectionUseEnabled() {
