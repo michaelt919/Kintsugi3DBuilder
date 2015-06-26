@@ -83,6 +83,19 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
     	}
 	}
 	
+	private void useForUniformAssignment()
+	{
+		if (!this.isLinked())
+		{
+			throw new UnlinkedProgramException("An OpenGL program cannot be used if it has not been linked.");
+		}
+		else
+		{
+			glUseProgram(programId);
+			openGLErrorCheck();
+		}
+	}
+	
 	void use()
 	{
 		if (!this.isLinked())
@@ -191,7 +204,7 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	{
 		if (location >= 0)
 		{
-			this.use(); 
+			this.useForUniformAssignment(); 
 			
 			glUniform1i(location, value);
 			openGLErrorCheck();
@@ -209,7 +222,7 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	{
 		if (location >= 0)
 		{
-			this.use(); 
+			this.useForUniformAssignment(); 
 			
 			glUniform2i(location, value.x, value.y);
 			openGLErrorCheck();
@@ -227,7 +240,7 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	{
 		if (location >= 0)
 		{
-			this.use(); 
+			this.useForUniformAssignment(); 
 			
 			glUniform3i(location, value.x, value.y, value.z);
 			openGLErrorCheck();
@@ -245,7 +258,7 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	{
 		if (location >= 0)
 		{
-			this.use(); 
+			this.useForUniformAssignment(); 
 			
 			glUniform4i(location, value.x, value.y, value.z, value.w);
 			openGLErrorCheck();
@@ -263,7 +276,7 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	{
 		if (location >= 0)
 		{
-			this.use(); 
+			this.useForUniformAssignment(); 
 			
 			glUniform1f(location, value);
 			openGLErrorCheck();
@@ -281,7 +294,7 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	{
 		if (location >= 0)
 		{
-			this.use(); 
+			this.useForUniformAssignment(); 
 			
 			glUniform2f(location, value.x, value.y);
 			openGLErrorCheck();
@@ -299,7 +312,7 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	{
 		if (location >= 0)
 		{
-			this.use(); 
+			this.useForUniformAssignment(); 
 			
 			glUniform3f(location, value.x, value.y, value.z);
 			openGLErrorCheck();
@@ -317,7 +330,7 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	{
 		if (location >= 0)
 		{
-			this.use(); 
+			this.useForUniformAssignment(); 
 			
 			glUniform4f(location, value.x, value.y, value.z, value.w);
 			openGLErrorCheck();
@@ -403,7 +416,7 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	{
 		if (location >= 0)
 		{
-			this.use(); 
+			this.useForUniformAssignment(); 
 			
 			glUniformMatrix4(location, false, value.asFloatBuffer());
 			openGLErrorCheck();

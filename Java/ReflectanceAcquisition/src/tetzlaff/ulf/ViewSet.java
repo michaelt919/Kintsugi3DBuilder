@@ -185,11 +185,30 @@ public class ViewSet
 	
 	public void deleteOpenGLResources()
 	{
-		cameraPoseBuffer.delete();
-		cameraProjectionBuffer.delete();
-		cameraProjectionIndexBuffer.delete();
-		lightPositionBuffer.delete();
-		lightIndexBuffer.delete();
+		if (cameraPoseBuffer != null)
+		{
+			cameraPoseBuffer.delete();
+		}
+		
+		if (cameraProjectionBuffer != null)
+		{
+			cameraProjectionBuffer.delete();
+		}
+		
+		if (cameraProjectionIndexBuffer != null)
+		{
+			cameraProjectionIndexBuffer.delete();
+		}
+		
+		if (lightPositionBuffer != null)
+		{
+			lightPositionBuffer.delete();
+		}
+		
+		if (lightIndexBuffer != null)
+		{
+			lightIndexBuffer.delete();
+		}
 		
 		if (textureArray != null)
 		{
