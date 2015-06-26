@@ -15,7 +15,8 @@ public class TexGenProgram
 	        try
 	        {
 	        	OpenGLContext context = new GLFWWindow(800, 800, "Texture Generation");
-	    		new TexGenExecutor(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(), gui.getOutputDirectory(), gui.getParameters())
+	    		new TexGenExecutor(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(), 
+	    				gui.getRescaleDirectory(), gui.getOutputDirectory(), gui.getParameters())
 	    				.execute();
 		        GLFWWindow.closeAllWindows();
 		        System.out.println("Process terminated with no errors.");

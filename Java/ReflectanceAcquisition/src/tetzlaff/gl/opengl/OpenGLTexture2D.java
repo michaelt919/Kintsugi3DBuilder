@@ -92,6 +92,48 @@ public class OpenGLTexture2D extends OpenGLTexture
 		this.init(img.getWidth(), img.getHeight(), useLinearFiltering, useMipmaps);
 	}
 	
+	public OpenGLTexture2D(InputStream imageStream, InputStream maskStream, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
+	{
+		super();
+		this.bind();
+		
+		BufferedImage colorImg = ImageIO.read(imageStream);
+		BufferedImage maskImg = ImageIO.read(maskStream);
+		this.width = colorImg.getWidth();
+		this.height = colorImg.getHeight();
+		if (maskImg.getWidth() != this.width || maskImg.getHeight() != this.height)
+		{
+			throw new IllegalArgumentException("Color image and mask image must have the same dimensions.");
+		}
+		ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.getWidth() * colorImg.getHeight() * 4);
+		IntBuffer intBuffer = buffer.asIntBuffer();
+		if (flipVertical)
+		{
+			for (int y = colorImg.getHeight() - 1; y >= 0; y--)
+			{
+				for (int x = 0; x < colorImg.getWidth(); x++)
+				{
+					// Use green channel of the mask image for alpha
+					intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
+				}
+			}
+		}
+		else
+		{
+			for (int y = 0; y < colorImg.getHeight(); y++)
+			{
+				for (int x = 0; x < colorImg.getWidth(); x++)
+				{
+					// Use green channel of the mask image for alpha
+					intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
+				}
+			}
+		}
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, colorImg.getWidth(), colorImg.getHeight(), 0, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+		openGLErrorCheck();
+		this.init(colorImg.getWidth(), colorImg.getHeight(), useLinearFiltering, useMipmaps);
+	}
+	
 	public OpenGLTexture2D(InputStream fileStream, boolean flipVertical) throws IOException
 	{
 		this(fileStream, flipVertical, false, false);
@@ -110,6 +152,26 @@ public class OpenGLTexture2D extends OpenGLTexture
 	public OpenGLTexture2D(File file) throws IOException
 	{
 		this(file, false);
+	}
+	
+	public OpenGLTexture2D(InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
+	{
+		this(imageStream, maskStream, flipVertical, false, false);
+	}
+	
+	public OpenGLTexture2D(File imageFile, File maskFile, boolean flipVertical, boolean useLinearFiltering, boolean useMipmaps) throws IOException
+	{
+		this(new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical, useLinearFiltering, useMipmaps);
+	}
+	
+	public OpenGLTexture2D(File imageFile, File maskFile, boolean flipVertical) throws IOException
+	{
+		this(imageFile, maskFile, flipVertical, false, false);
+	}
+	
+	public OpenGLTexture2D(File imageFile, File maskFile) throws IOException
+	{
+		this(imageFile, maskFile, false);
 	}
 	
 	// Supporting code:

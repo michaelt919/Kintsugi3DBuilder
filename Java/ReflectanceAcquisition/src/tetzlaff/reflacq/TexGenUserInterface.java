@@ -17,6 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSpinner;
+import javax.swing.JTabbedPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
@@ -33,11 +34,16 @@ public class TexGenUserInterface
 	private FilePicker objFilePicker;
 	private FilePicker imageDirectoryPicker;
 	private FilePicker maskDirectoryPicker;
+	private FilePicker rescaleDirectoryPicker;
 	private FilePicker outputDirectoryPicker;
 	
 	private JSpinner gammaSpinner;
 	private JCheckBox cameraVisCheckBox;
 	private JSpinner cameraVisBiasSpinner;
+	
+	private JSpinner imageWidthSpinner;
+	private JSpinner imageHeightSpinner;
+	private JCheckBox imageRescaleCheckBox;
 	
 	private JSpinner textureSizeSpinner;
 	private JSpinner textureSubdivSpinner;
@@ -88,10 +94,16 @@ public class TexGenUserInterface
 		
 		FilePicker picker = new FilePicker();
 		
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		
 		loadButton.addActionListener(e -> 
 		{
-			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
-			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			if (picker.file == null && vsetFilePicker.file != null)
+			{
+				fileChooser.setCurrentDirectory(vsetFilePicker.file.getParentFile());
+			}
+			
 			if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
 			{
 				picker.file = fileChooser.getSelectedFile();
@@ -122,15 +134,21 @@ public class TexGenUserInterface
 		
 		FilePicker picker = new FilePicker();
 		
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+		
 		loadButton.addActionListener(e -> 
 		{
+			if (picker.file == null && vsetFilePicker.file != null)
+			{
+				fileChooser.setCurrentDirectory(vsetFilePicker.file.getParentFile());
+			}
 			
-			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
 			for (FileFilter filter : filters)
 			{
 				fileChooser.addChoosableFileFilter(filter);
 			}
+			
 			if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
 			{
 				picker.file = fileChooser.getSelectedFile();
@@ -140,17 +158,6 @@ public class TexGenUserInterface
 		});
 		
 		return picker;
-	}
-	
-	private JLabel addUILabel(JPanel panel, String name)
-	{
-		JPanel wrapper = new JPanel();
-		wrapper.setLayout(new BorderLayout());
-		JLabel label = new JLabel(name);
-		label.setBorder(new EmptyBorder(25, 10, 5, 10));
-		wrapper.add(label);
-		panel.add(wrapper);
-		return label;
 	}
 	
 	private JSpinner addUIValueField(JPanel panel, String name, double defaultValue, double minValue, double maxValue, double stepSize)
@@ -184,6 +191,9 @@ public class TexGenUserInterface
 		frame.setResizable(false);
 		frame.getContentPane().setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
 		
+		JTabbedPane tabbedPane = new JTabbedPane();
+		frame.add(tabbedPane);
+		
 		TexGenParameters defaults = new TexGenParameters();
 
 		JPanel filePanel = new JPanel();
@@ -195,20 +205,24 @@ public class TexGenUserInterface
 		objFilePicker = addFilePicker(filePanel, "Select Model File...", Arrays.asList(new FileNameExtensionFilter("Wavefront OBJ files (.obj)", "obj")));
 		imageDirectoryPicker = addDirectoryPicker(filePanel, "Select Images...");
 		maskDirectoryPicker = addDirectoryPicker(filePanel, "Select Masks...");
+		rescaleDirectoryPicker = addDirectoryPicker(filePanel, "Rescale Directory...");
 		outputDirectoryPicker = addDirectoryPicker(filePanel, "Output Directory...");
-		frame.add(filePanel);
+		tabbedPane.addTab("Files and Directories", filePanel);
 		
 		JPanel samplingPanel = new JPanel();
 		samplingPanel.setLayout(new BoxLayout(samplingPanel, BoxLayout.Y_AXIS));
 		samplingPanel.setBorder(new TitledBorder("Sampling Parameters"));
 		gammaSpinner = addUIValueField(samplingPanel, "Gamma", defaults.getGamma(), 1.0f, 99.0f, 0.1f);
+		imageRescaleCheckBox = addUICheckBoxField(samplingPanel, "Rescale Images", defaults.isImageRescalingEnabled());
+		imageWidthSpinner = addUIValueField(samplingPanel, "Rescaled Image Width", defaults.getImageWidth(), 1.0f, 8192.0f, 1.0f);
+		imageHeightSpinner = addUIValueField(samplingPanel, "Rescaled Image Height", defaults.getImageHeight(), 1.0f, 8192.0f, 1.0f);
 		cameraVisCheckBox = addUICheckBoxField(samplingPanel, "Enable Camera Visibility Test", defaults.isCameraVisibilityTestEnabled());
 		cameraVisBiasSpinner = addUIValueField(samplingPanel, "Camera Visibility Test Bias", defaults.getCameraVisibilityTestBias(), 0.0f, 1.0f, 0.0001f);
 		textureSizeSpinner = addUIValueField(samplingPanel, "Texture Size", defaults.getTextureSize(), 1.0f, 8192.0f, 1.0f);
 		textureSubdivSpinner = addUIValueField(samplingPanel, "Texture Subdivision", defaults.getTextureSubdivision(), 1.0f, 8192.0f, 1.0f);
 		imagePreprojGenCheckBox = addUICheckBoxField(samplingPanel, "Generate Pre-projected images", defaults.isImagePreprojectionGenerationEnabled());
 		imagePreprojUseCheckBox = addUICheckBoxField(samplingPanel, "Use Pre-projected images", defaults.isImagePreprojectionUseEnabled());
-		frame.add(samplingPanel);
+		tabbedPane.addTab("Sampling Parameters", samplingPanel);
 		
 		JPanel diffusePanel = new JPanel();
 		diffusePanel.setLayout(new BoxLayout(diffusePanel, BoxLayout.Y_AXIS));
@@ -219,7 +233,7 @@ public class TexGenUserInterface
 		diffuseCompNormalInfCheckBox = addUICheckBoxField(diffusePanel, "(infinite)", defaults.getDiffuseComputedNormalWeight() >= Float.MAX_VALUE);
 		diffuseInputNormalSpinner = addUIValueField(diffusePanel, "Input Normal Weight", Math.min(9999.0f, defaults.getDiffuseInputNormalWeight()),  0.0f, 9999.0f, 0.1f);
 		diffuseInputNormalInfCheckBox = addUICheckBoxField(diffusePanel, "(infinite)", defaults.getDiffuseInputNormalWeight() >= Float.MAX_VALUE);
-		frame.add(diffusePanel);
+		tabbedPane.addTab("Diffuse Fitting Parameters", diffusePanel);
 		
 		JPanel specularPanel = new JPanel();
 		specularPanel.setLayout(new BoxLayout(specularPanel, BoxLayout.Y_AXIS));
@@ -235,7 +249,7 @@ public class TexGenUserInterface
 		specDefaultRoughSpinner = addUIValueField(specularPanel,"Input Normal, Default Roughness Weight", defaults.getSpecularInputNormalDefaultRoughnessWeight(), 0.0f, 1.0f, 0.01f);
 		defaultRoughnessSpinner = addUIValueField(specularPanel,"Default Specular Roughness", defaults.getDefaultSpecularRoughness(), 0.0f, 10.0f, 0.01f);
 		roughnessCapSpinner = addUIValueField(specularPanel,"Specular Roughness Cap", defaults.getSpecularRoughnessCap(), 0.0f, 10.0f, 0.01f);
-		frame.add(specularPanel);
+		tabbedPane.addTab("Specular Fitting Parameters", specularPanel);
 		
 		JSpinner.NumberEditor cameraVisBiasNumberEditor = new JSpinner.NumberEditor(cameraVisBiasSpinner, "0.0000");
 		cameraVisBiasSpinner.setEditor(cameraVisBiasNumberEditor);
@@ -282,6 +296,11 @@ public class TexGenUserInterface
 		return maskDirectoryPicker.file;
 	}
 	
+	public File getRescaleDirectory()
+	{
+		return rescaleDirectoryPicker.file;
+	}
+	
 	public File getOutputDirectory()
 	{
 		return outputDirectoryPicker.file;
@@ -307,6 +326,9 @@ public class TexGenUserInterface
 		param.setTextureSubdivision(getValueAsInt(this.textureSubdivSpinner));
 		param.setImagePreprojectionUseEnabled(this.imagePreprojUseCheckBox.isSelected());
 		param.setImagePreprojectionGenerationEnabled(this.imagePreprojGenCheckBox.isSelected());
+		param.setImageRescalingEnabled(this.imageRescaleCheckBox.isSelected());
+		param.setImageWidth(getValueAsInt(this.imageWidthSpinner));
+		param.setImageHeight(getValueAsInt(this.imageHeightSpinner));
 		param.setDiffuseDelta(getValueAsFloat(this.diffuseDeltaSpinner));
 		param.setDiffuseIterations(getValueAsInt(this.diffuseIterationsSpinner));
 		param.setDiffuseComputedNormalWeight(this.diffuseCompNormalInfCheckBox.isSelected() ? 

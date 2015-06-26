@@ -75,7 +75,6 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 		this.bindForRead(attachmentIndex);
 		FloatBuffer pixelBuffer = BufferUtils.createFloatBuffer(width * height * 4);
 		
-		// use BGRA because due to byte order differences it ends up being ARGB
 		glReadPixels(x, y, width, height, GL_RGBA, GL_FLOAT, pixelBuffer);
 		openGLErrorCheck();
 		
