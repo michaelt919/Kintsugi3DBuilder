@@ -21,7 +21,9 @@ public class ULFRenderer implements ULFDrawable
 {
     private static OpenGLProgram program;
     
-    private File vsetFile;
+    private File cameraFile;
+    private File meshFile;
+    private File imageDirectory;
     private UnstructuredLightField lightField;
 	private OpenGLContext context;
     private OpenGLRenderable renderable;
@@ -36,7 +38,16 @@ public class ULFRenderer implements ULFDrawable
     public ULFRenderer(OpenGLContext context, File vsetFile, Trackball trackball)
     {
     	this.context = context;
-    	this.vsetFile = vsetFile;
+    	this.cameraFile = vsetFile;
+    	this.trackball = trackball;
+    }
+
+    public ULFRenderer(OpenGLContext context, File xmlFile, File meshFile, File imageDirectory, Trackball trackball)
+    {
+    	this.context = context;
+    	this.cameraFile = xmlFile;
+    	this.meshFile = meshFile;
+    	this.imageDirectory = imageDirectory;
     	this.trackball = trackball;
     }
     
@@ -63,7 +74,14 @@ public class ULFRenderer implements ULFDrawable
     	
     	try 
     	{
-			this.lightField = UnstructuredLightField.loadFromVSETFile(this.vsetFile);
+    		if (this.cameraFile.getName().toUpperCase().endsWith(".XML"))
+    		{
+    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.meshFile, this.imageDirectory);
+    		}
+    		else
+    		{
+    			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile);
+    		}
 			if (this.callback != null)
 			{
 				this.callback.loadingComplete();
@@ -144,7 +162,7 @@ public class ULFRenderer implements ULFDrawable
     
     public File getVSETFile()
     {
-    	return this.vsetFile;
+    	return this.cameraFile;
     }
     
     public UnstructuredLightField getLightField()

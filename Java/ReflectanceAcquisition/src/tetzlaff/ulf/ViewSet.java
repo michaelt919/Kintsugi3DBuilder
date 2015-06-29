@@ -166,8 +166,17 @@ public class ViewSet
 		{
 			Date timestamp = new Date();
 			
+			File imageFile = new File(imageFilePath, imageFileNames.get(0));
+			if (!imageFile.exists())
+			{
+				String[] filenameParts = imageFileNames.get(0).split("\\.");
+		    	filenameParts[filenameParts.length - 1] = "png";
+		    	String pngFileName = String.join(".", filenameParts);
+		    	imageFile = new File(imageFilePath, pngFileName);
+			}
+			
 			// Read a single image to get the dimensions for the texture array
-			ZipWrapper myZip = new ZipWrapper(new File(imageFilePath, imageFileNames.get(0)));
+			ZipWrapper myZip = new ZipWrapper(imageFile);
 			InputStream input = myZip.getInputStream();
 			
 			BufferedImage img = ImageIO.read(input);
@@ -175,7 +184,16 @@ public class ViewSet
 			
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
-				myZip.retrieveFile(new File(imageFilePath, imageFileNames.get(i)));
+				imageFile = new File(imageFilePath, imageFileNames.get(i));
+				if (!imageFile.exists())
+				{
+					String[] filenameParts = imageFileNames.get(i).split("\\.");
+			    	filenameParts[filenameParts.length - 1] = "png";
+			    	String pngFileName = String.join(".", filenameParts);
+			    	imageFile = new File(imageFilePath, pngFileName);
+				}
+				
+				myZip.retrieveFile(imageFile);
 				this.textureArray.loadLayer(i, myZip, true);
 			}
 
@@ -399,7 +417,7 @@ public class ViewSet
 	    }
 	}
 
-	public static ViewSet loadFromAgisoftXMLFile(File file, boolean loadImages) throws IOException
+	public static ViewSet loadFromAgisoftXMLFile(File file, File imageDirectory) throws IOException
 	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
@@ -546,21 +564,22 @@ public class ViewSet
                                 if (camera != null)
                                 {
                                     // Negate 2nd and 3rd column to rotate 180 degrees around x-axis
+                                	// Invert matrix by transposing rotation and negating translation
                                     Matrix4 trans;
                                     if(expectedSize == 9)
                                     {
                                         trans = new Matrix4(new Matrix3(
-                                           m[0], -m[1], -m[2],
-                                           m[3], -m[4], -m[5],
-                                           m[6], -m[7], -m[8]));
+                                            m[0],  m[3],  m[6],
+                                           -m[1], -m[4], -m[7],
+                                           -m[2], -m[5], -m[8]));
                                     }
                                     else
                                     {
-                                        trans = new Matrix4(
-                                            m[0], -m[1], -m[2],  m[3],
-                                            m[4], -m[5], -m[6],  m[7],
-                                            m[8], -m[9], -m[10], m[11],
-                                            m[12], m[13], m[14], m[15]);
+                                        trans = new Matrix4(new Matrix3(
+	                                             m[0], 	m[4],  m[8],
+	                                            -m[1], -m[5], -m[9],
+	                                            -m[2], -m[6], -m[10]))
+	                                    	.times(Matrix4.translate(-m[3], -m[7], -m[11]));
                                     }
                                     
                                     camera.transform = trans;
@@ -571,17 +590,17 @@ public class ViewSet
                                     if(expectedSize == 9)
                                     {
                                         globalTransform = new Matrix4(new Matrix3(
-                                           m[0], m[1], m[2],
-                                           m[3], m[4], m[5],
-                                           m[6], m[7], m[8]));
+                                            m[0],  m[3],  m[6],
+                                            -m[1], -m[4], -m[7],
+                                            -m[2], -m[5], -m[8]));
                                     }
                                     else
                                     {
-                                        globalTransform = new Matrix4(
-                                            m[0],  m[1],  m[2],  m[3],
-                                            m[4],  m[5],  m[6],  m[7],
-                                            m[8],  m[9],  m[10], m[11],
-                                            m[12], m[13], m[14], m[15]);
+                                        globalTransform = new Matrix4(new Matrix3(
+	                                             m[0], 	m[4],  m[8],
+	                                            -m[1], -m[5], -m[9],
+	                                            -m[2], -m[6], -m[10]))
+                                        	.times(Matrix4.translate(-m[3], -m[7], -m[11]));
                                     }
                                 }
                             }
@@ -692,7 +711,7 @@ public class ViewSet
 
         float farPlane = findFarPlane(cameraPoseList);
         return new ViewSet(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightList, lightIndexList,
-        		imageFileNames, file.getParentFile(), loadImages, farPlane / 16.0f, farPlane);
+        		imageFileNames, imageDirectory, imageDirectory != null, farPlane / 16.0f, farPlane);
     }
 	
 	private static float findFarPlane(List<Matrix4> cameraPoseList)

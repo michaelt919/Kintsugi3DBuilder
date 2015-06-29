@@ -22,6 +22,12 @@ public class ULFRendererList extends ULFDrawableListModel
 	}
 	
 	@Override
+	protected ULFRenderer createFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory) throws IOException
+	{
+		return new ULFRenderer(context, xmlFile, meshFile, imageDirectory, trackball);
+	}
+	
+	@Override
 	protected ULFMorphRenderer createMorphFromLFMFile(File lfmFile) throws IOException
 	{
 		return new ULFMorphRenderer(context, lfmFile, trackball);
