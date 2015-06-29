@@ -29,13 +29,44 @@ public abstract class ULFDrawableListModel extends AbstractListModel<ULFDrawable
 	}
 	
 	protected abstract ULFDrawable createFromVSETFile(File vsetFile) throws IOException;
-	
+	protected abstract ULFRenderer createFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory) throws IOException;
 	protected abstract ULFDrawable createMorphFromLFMFile(File lfmFile) throws IOException;
 
 	@Override
 	public ULFDrawable addFromVSETFile(File vsetFile) throws IOException
 	{
 		ULFDrawable newItem = this.createFromVSETFile(vsetFile);
+		newItem.setOnLoadCallback(new ULFLoadingMonitor()
+		{
+			@Override
+			public void loadingComplete()
+			{
+				ulfs.setSelectedItem(newItem);
+				effectiveSize = ulfs.size();
+				if (loadingMonitor != null)
+				{
+					loadingMonitor.loadingComplete();
+				}
+				fireIntervalAdded(this, ulfs.size() - 1, ulfs.size() - 1);
+			}
+
+			@Override
+			public void setProgress(double progress) 
+			{
+				if (loadingMonitor != null)
+				{
+					loadingMonitor.setProgress(progress);
+				}
+			}
+		});
+		ulfs.add(newItem);
+		return newItem;
+	}
+	
+	@Override
+	public ULFDrawable addFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory) throws IOException
+	{
+		ULFDrawable newItem = this.createFromAgisoftXMLFile(xmlFile, meshFile, imageDirectory);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override

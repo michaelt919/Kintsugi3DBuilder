@@ -74,7 +74,7 @@ public class TexGenExecutor
     	else if (fileExt.equalsIgnoreCase("xml"))
     	{
     		System.out.println("Loading from Agisoft Photoscan XML file.");
-    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, false);
+    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null);
     	}
     	else
     	{

@@ -60,6 +60,74 @@ public class UnstructuredLightField
 		}
 	}
 	
+	public static UnstructuredLightField loadFromAgisoftXMLFile(File xmlFile, File meshFile) throws IOException
+	{
+		return UnstructuredLightField.loadFromAgisoftXMLFile(xmlFile, meshFile, null);
+	}
+
+	public static UnstructuredLightField loadFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory) throws IOException
+	{
+		ViewSet viewSet;
+		VertexMesh proxy;
+		OpenGLTextureArray depthTextures = null;
+		
+		File directoryPath = xmlFile.getParentFile();
+        proxy = new VertexMesh("OBJ", meshFile); // TODO don't have geometry filename hard-coded
+        viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, imageDirectory);
+        OpenGLVertexBuffer positionBuffer = new OpenGLVertexBuffer(proxy.getVertices());
+        
+        if (imageDirectory != null)
+        {
+	        // Build depth textures for each view
+	    	int width = viewSet.getTextures().getWidth();
+	    	int height = viewSet.getTextures().getHeight();
+	    	depthTextures = OpenGLTextureArray.createDepthTextureArray(width, height, viewSet.getCameraPoseCount());
+	    	
+	    	// Don't automatically generate any texture attachments for this framebuffer object
+	    	OpenGLFramebufferObject depthRenderingFBO = new OpenGLFramebufferObject(width, height, 0, false, false);
+	    	
+	    	// Load the program
+	    	OpenGLProgram depthRenderingProgram = new OpenGLProgram(new File("shaders/depth.vert"), new File("shaders/depth.frag"));
+	    	OpenGLRenderable depthRenderable = new OpenGLRenderable(depthRenderingProgram);
+	    	depthRenderable.addVertexBuffer("position", positionBuffer);
+	    	
+	    	// Render each depth texture
+	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+	    	{
+	    		depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(i));
+	        	depthRenderingFBO.clearDepthBuffer();
+	        	
+	        	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
+	    		depthRenderingProgram.setUniform("projection", 
+					viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
+	    				.getProjectionMatrix(
+							viewSet.getRecommendedNearPlane(), 
+							viewSet.getRecommendedFarPlane()
+						)
+				);
+	        	
+	        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+	    	}
+
+	    	depthRenderingProgram.delete();
+	    	depthRenderingFBO.delete();
+        }
+        
+        OpenGLVertexBuffer texCoordBuffer = null;
+        if (proxy.hasTexCoords())
+        {
+        	texCoordBuffer = new OpenGLVertexBuffer(proxy.getTexCoords());
+        }
+        
+        OpenGLVertexBuffer normalBuffer = null;
+        if (proxy.hasNormals())
+        {
+        	normalBuffer = new OpenGLVertexBuffer(proxy.getNormals());
+        }
+        
+    	return new UnstructuredLightField(directoryPath, viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
+	}
+	
 	public static UnstructuredLightField loadFromVSETFile(File vsetFile) throws IOException
 	{
 		return UnstructuredLightField.loadFromVSETFile(vsetFile, true);

@@ -191,13 +191,15 @@ public class ULFUserInterface
 		loadSingleButton.addActionListener(e -> 
 		{
 			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
+			fileChooser.setDialogTitle("Select a camera definition file");
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Agisoft Photoscan XML files", "xml"));
 			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("View Set files", "vset"));
 			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Zip files", "zip"));
 			if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
 			{
 				File file = fileChooser.getSelectedFile();
-				if(file.getName().endsWith(".zip") || file.getName().endsWith(".ZIP"))
+				if(file.getName().toUpperCase().endsWith(".ZIP"))
 				{
 					String vsetName = file.getPath();
 					vsetName = vsetName.replace(".zip", "/default.vset");
@@ -207,9 +209,31 @@ public class ULFUserInterface
 				
 				try 
 				{
-					model.addFromVSETFile(file);
-					loadingBar.setIndeterminate(true);
-					loadingFrame.setVisible(true);
+					if (file.getName().toUpperCase().endsWith(".XML"))
+					{
+						JFileChooser meshChooser = new JFileChooser(file.getParentFile());
+						meshChooser.setDialogTitle("Select the corresponding mesh");
+						meshChooser.removeChoosableFileFilter(meshChooser.getAcceptAllFileFilter());
+						meshChooser.addChoosableFileFilter(new FileNameExtensionFilter("Wavefront OBJ files", "obj"));
+						
+						if (meshChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
+						{
+							JFileChooser imageChooser = new JFileChooser(file.getParentFile());
+							imageChooser.setDialogTitle("Select the undistorted image directory");
+							imageChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+							
+							if (imageChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION)
+							{
+								model.addFromAgisoftXMLFile(file, meshChooser.getSelectedFile(), imageChooser.getSelectedFile());
+							}
+						}
+					}
+					else
+					{
+						model.addFromVSETFile(file);
+						loadingBar.setIndeterminate(true);
+						loadingFrame.setVisible(true);
+					}
 				} 
 				catch (IOException ex) 
 				{
