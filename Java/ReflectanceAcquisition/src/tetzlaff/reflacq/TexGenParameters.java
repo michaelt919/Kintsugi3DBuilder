@@ -9,20 +9,20 @@ public class TexGenParameters
 	
 	private int imageWidth = 1024;
 	private int imageHeight = 1024;
-	private int textureSize = 1024;
-	private int textureSubdivision = 1;
+	private int textureSize = 2048;
+	private int textureSubdivision = 8;
 	private boolean imageRescalingEnabled = true;
 	private boolean imagePreprojectionUseEnabled = false;
 	private boolean imagePreprojectionGenerationEnabled = false;
 	
 	// Diffuse fitting parameters
 	private float diffuseDelta = 0.1f;
-	private int diffuseIterations = 4;
+	private int diffuseIterations = 16;
 	private float diffuseComputedNormalWeight = 1.0f;
 	private float diffuseInputNormalWeight = Float.MAX_VALUE;
 	
 	// Specular fitting parameters
-	private boolean specularRoughnessComputationEnabled = false;
+	private boolean specularRoughnessComputationEnabled = true;
 	private boolean specularNormalComputationEnabled = false;
 	private boolean trueBlinnPhongSpecularEnabled = true;
 	
@@ -30,9 +30,9 @@ public class TexGenParameters
 	private float specularInfluenceScale = 0.35f;
 	private float specularDeterminantThreshold = 0.002f;
 	private float specularComputedNormalWeight = 0.0f;
-	private float specularInputNormalComputedRoughnessWeight = 0.0f;
+	private float specularInputNormalComputedRoughnessWeight = 1.0f;
 	private float specularInputNormalDefaultRoughnessWeight = 1.0f;
-	private float defaultSpecularRoughness = 0.1f;
+	private float defaultSpecularRoughness = 0.25f;
 	private float specularRoughnessCap = 0.5f;
 
 	public TexGenParameters() 

@@ -228,7 +228,7 @@ public class TexGenUserInterface
 		diffusePanel.setLayout(new BoxLayout(diffusePanel, BoxLayout.Y_AXIS));
 		diffusePanel.setBorder(new TitledBorder("Diffuse Fitting Parameters"));
 		diffuseDeltaSpinner = addUIValueField(diffusePanel, "Delta", defaults.getDiffuseDelta(), 0.0f, 1.0f, 0.01f);
-		diffuseIterationsSpinner = addUIValueField(diffusePanel, "Iterations", defaults.getDiffuseIterations(), 0.0f, 8.0f, 1.0f);
+		diffuseIterationsSpinner = addUIValueField(diffusePanel, "Iterations", defaults.getDiffuseIterations(), 0.0f, 999.0f, 1.0f);
 		diffuseCompNormalSpinner = addUIValueField(diffusePanel, "Computed Normal Weight", Math.min(9999.0f, defaults.getDiffuseComputedNormalWeight()), 0.0f, 9999.0f, 0.1f);
 		diffuseCompNormalInfCheckBox = addUICheckBoxField(diffusePanel, "(infinite)", defaults.getDiffuseComputedNormalWeight() >= Float.MAX_VALUE);
 		diffuseInputNormalSpinner = addUIValueField(diffusePanel, "Input Normal Weight", Math.min(9999.0f, defaults.getDiffuseInputNormalWeight()),  0.0f, 9999.0f, 0.1f);

@@ -104,11 +104,11 @@ public class TexGenExecutor
     	
 		OpenGLProgram diffuseFitProgram = new OpenGLProgram(
 				new File("shaders", "texspace.vert"), 
-				new File("shaders", param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1 ? "diffusefit_texspace.frag" : "diffusefit_imgspace.frag"));
+				new File("shaders", param.isImagePreprojectionUseEnabled() ? "diffusefit_texspace.frag" : "diffusefit_imgspace.frag"));
 		
 		OpenGLProgram specularFitProgram = new OpenGLProgram(
 				new File("shaders", "texspace.vert"), 
-				new File("shaders", param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1 ? "specularfit_texspace.frag" : "specularfit_imgspace.frag"));
+				new File("shaders", param.isImagePreprojectionUseEnabled() ? "specularfit_texspace.frag" : "specularfit_imgspace.frag"));
 		
     	OpenGLProgram diffuseDebugProgram = new OpenGLProgram(
     			new File("shaders", "texspace.vert"), 
@@ -139,7 +139,7 @@ public class TexGenExecutor
     	OpenGLTextureArray viewTextures = null;
     	OpenGLTextureArray depthTextures = null;
     	
-    	if ((param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1) && param.isImagePreprojectionGenerationEnabled())
+    	if (param.isImagePreprojectionUseEnabled() && param.isImagePreprojectionGenerationEnabled())
     	{
     		System.out.println("Pre-projecting images into texture space...");
 	    	timestamp = new Date();
@@ -407,7 +407,7 @@ public class TexGenExecutor
     		System.out.println("Depth maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}
     	
-    	if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
+    	if (param.getTextureSubdivision() > 1)
     	{
 	    	System.out.println("Beginning model fitting (" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " blocks)...");
     	}
@@ -443,7 +443,7 @@ public class TexGenExecutor
     	
     	diffuseFitRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
     	
-    	if (!param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1)
+    	if (!param.isImagePreprojectionUseEnabled())
     	{
 	    	diffuseFitRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
 	    	diffuseFitRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
@@ -469,7 +469,7 @@ public class TexGenExecutor
     	specularFitRenderable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
     	specularFitRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
     	
-    	if (!param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1)
+    	if (!param.isImagePreprojectionUseEnabled())
     	{
 	    	specularFitRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
 	    	specularFitRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
@@ -507,7 +507,7 @@ public class TexGenExecutor
     	
     	int subdivSize = param.getTextureSize() / param.getTextureSubdivision();
     	
-    	if (!param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1)
+    	if (param.getTextureSubdivision() == 1)
 		{
 	    	System.out.println("Setup finished in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		}
@@ -516,7 +516,7 @@ public class TexGenExecutor
     	{
 	    	for (int col = 0; col < param.getTextureSubdivision(); col++)
     		{
-		    	if (!param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1)
+		    	if (param.getTextureSubdivision() == 1)
 	    		{
 			    	System.out.println("Fitting diffuse...");
 			    	timestamp = new Date();
@@ -524,7 +524,7 @@ public class TexGenExecutor
 		    	
 		    	OpenGLTextureArray preprojectedViews = null;
 		    	
-		    	if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
+		    	if (param.isImagePreprojectionUseEnabled())
 		    	{
 		    		preprojectedViews = new OpenGLTextureArray(subdivSize, subdivSize, viewSet.getCameraPoseCount(), false, false, false);
 			    	
@@ -550,7 +550,7 @@ public class TexGenExecutor
 		        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitFramebuffer, col * subdivSize, row * subdivSize, subdivSize, subdivSize);
 		        context.finish();
 		        
-		        if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
+		        if (param.isImagePreprojectionUseEnabled())
 		        {
 			        diffuseFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
 			        		"PNG", new File(diffuseTempDirectory, String.format("r%04dc%04d.png", row, col)));
@@ -559,18 +559,15 @@ public class TexGenExecutor
 			        		"PNG", new File(normalTempDirectory, String.format("r%04dc%04d.png", row, col)));
 		        }
 	    		
-		        if (!param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1)
+		        if (param.getTextureSubdivision() == 1)
 		        {
 		        	System.out.println("Diffuse fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-		        }
-		    	
-		    	if (!param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1)
-		        {
+		        	
 		        	System.out.println("Fitting specular...");
 		        	timestamp = new Date();
 		        }
 		    	
-		    	if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
+		    	if (param.isImagePreprojectionUseEnabled())
 		    	{
 		    		specularFitRenderable.program().setTexture("viewImages", preprojectedViews);
 		    	}
@@ -598,7 +595,7 @@ public class TexGenExecutor
 	    		specularFitRenderable.draw(PrimitiveMode.TRIANGLES, specularFitFramebuffer, col * subdivSize, row * subdivSize, subdivSize, subdivSize);
 	    		context.finish();
 
-	    		if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
+	    		if (param.isImagePreprojectionUseEnabled())
 	    		{
 		    		specularFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
 			        		"PNG", new File(specularTempDirectory, String.format("r%04dc%04d.png", row, col)));
@@ -608,14 +605,11 @@ public class TexGenExecutor
 			        
 		    		specularFitFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
 			        		"PNG", new File(snormalTempDirectory, String.format("r%04dc%04d.png", row, col)));
-	    		}
-		    	
-		    	if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
-		    	{
+		    		
 		    		preprojectedViews.delete();
 		    	}
 	    		
-		    	if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
+		    	if (param.getTextureSubdivision() > 1)
 	    		{
 	    			System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
 	    		}
@@ -626,7 +620,7 @@ public class TexGenExecutor
     		}
     	}
     	
-    	if (param.isImagePreprojectionUseEnabled() || param.getTextureSubdivision() > 1)
+    	if (param.getTextureSubdivision() > 1)
     	{
     		System.out.println("Model fitting completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}
