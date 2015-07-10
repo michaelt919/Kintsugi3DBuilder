@@ -16,6 +16,7 @@ import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.gl.opengl.OpenGLFramebuffer;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
@@ -121,6 +122,10 @@ public class TexGenExecutor
 		OpenGLProgram textureRectProgram = new OpenGLProgram(
 				new File("shaders", "texturerect.vert"),
 				new File("shaders", "simpletexture.frag"));
+		
+		OpenGLProgram holeFillProgram = new OpenGLProgram(
+				new File("shaders", "texturerect.vert"),
+				new File("shaders", "holefill.frag"));
 		
     	System.out.println("Shader compilation completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	
@@ -620,10 +625,91 @@ public class TexGenExecutor
     		}
     	}
     	
+    	if (!DEBUG || param.isImagePreprojectionUseEnabled())
+    	{
+	        viewSet.deleteOpenGLResources();
+	        positionBuffer.delete();
+	        normalBuffer.delete();
+	        texCoordBuffer.delete();
+	        
+	        if (viewTextures != null)
+	        {
+	        	viewTextures.delete();
+	        }
+	        
+	        if (depthTextures != null)
+	        {
+	        	depthTextures.delete();
+	        }
+    	}
+    	
     	if (param.getTextureSubdivision() > 1)
     	{
     		System.out.println("Model fitting completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}
+    	
+    	System.out.println("Filling empty regions...");
+    	timestamp = new Date();
+    	
+    	OpenGLFramebufferObject holeFillBackFBO = new OpenGLFramebufferObject(param.getTextureSize(), param.getTextureSize(), 4, false, false);
+    	
+    	OpenGLRenderable holeFillRenderable = new OpenGLRenderable(holeFillProgram);
+    	OpenGLVertexBuffer rectBuffer = OpenGLVertexBuffer.createRectangle();
+    	holeFillRenderable.addVertexBuffer("position", rectBuffer);
+    	
+    	holeFillProgram.setUniform("minFillAlpha", 0.5f);
+    	
+    	// Diffuse
+    	OpenGLFramebufferObject holeFillFrontFBO = diffuseFitFramebuffer;
+    	for (int i = 0; i < param.getTextureSize() / 2; i++)
+    	{
+    		holeFillBackFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+    		holeFillBackFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+    		holeFillBackFBO.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+    		holeFillBackFBO.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+    		
+    		holeFillProgram.setTexture("input0", holeFillFrontFBO.getColorAttachmentTexture(0));
+    		holeFillProgram.setTexture("input1", holeFillFrontFBO.getColorAttachmentTexture(1));
+    		holeFillProgram.setTexture("input2", holeFillFrontFBO.getColorAttachmentTexture(2));
+    		holeFillProgram.setTexture("input3", holeFillFrontFBO.getColorAttachmentTexture(3));
+    		
+    		holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, holeFillBackFBO);
+    		context.finish();
+    		
+    		OpenGLFramebufferObject tmp = holeFillFrontFBO;
+    		holeFillFrontFBO = holeFillBackFBO;
+    		holeFillBackFBO = tmp;
+    		
+    		System.out.println("Diffuse fill iteration " + i + "/" + (param.getTextureSize() / 2) + " completed.");
+    	}
+    	diffuseFitFramebuffer = holeFillFrontFBO;
+    	
+    	// Specular
+    	holeFillFrontFBO = specularFitFramebuffer;
+    	for (int i = 0; i < param.getTextureSize() / 2; i++)
+    	{
+    		holeFillBackFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+    		holeFillBackFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+    		holeFillBackFBO.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+    		holeFillBackFBO.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+    		
+    		holeFillProgram.setTexture("input0", holeFillFrontFBO.getColorAttachmentTexture(0));
+    		holeFillProgram.setTexture("input1", holeFillFrontFBO.getColorAttachmentTexture(1));
+    		holeFillProgram.setTexture("input2", holeFillFrontFBO.getColorAttachmentTexture(2));
+    		holeFillProgram.setTexture("input3", holeFillFrontFBO.getColorAttachmentTexture(3));
+    		
+    		holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, holeFillBackFBO);
+    		context.finish();
+    		
+    		OpenGLFramebufferObject tmp = holeFillFrontFBO;
+    		holeFillFrontFBO = holeFillBackFBO;
+    		holeFillBackFBO = tmp;
+    		
+    		System.out.println("Specular fill iteration " + i + "/" + (param.getTextureSize() / 2) + " completed.");
+    	}
+    	specularFitFramebuffer = holeFillFrontFBO;
+
+		System.out.println("Empty regions filled in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	
     	System.out.println("Saving textures...");
     	timestamp = new Date();
@@ -653,7 +739,7 @@ public class TexGenExecutor
 
     	System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	
-    	if (DEBUG && !param.isImagePreprojectionUseEnabled() && param.getTextureSubdivision() == 1)
+    	if (DEBUG && !param.isImagePreprojectionUseEnabled())
     	{
     		System.out.println("Generating diffuse debug info...");
 	    	timestamp = new Date();
@@ -781,23 +867,23 @@ public class TexGenExecutor
 	    	
 	    	specularDebugFBO.delete();
 	    	
+	        viewSet.deleteOpenGLResources();
+	        positionBuffer.delete();
+	        normalBuffer.delete();
+	        texCoordBuffer.delete();
+	        
+	        if (viewTextures != null)
+	        {
+	        	viewTextures.delete();
+	        }
+	        
+	        if (depthTextures != null)
+	        {
+	        	depthTextures.delete();
+	        }
+	    	
 			System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}
-    	
-        viewSet.deleteOpenGLResources();
-        positionBuffer.delete();
-        normalBuffer.delete();
-        texCoordBuffer.delete();
-        
-        if (viewTextures != null)
-        {
-        	viewTextures.delete();
-        }
-        
-        if (depthTextures != null)
-        {
-        	depthTextures.delete();
-        }
 
 		projTexProgram.delete();
 		diffuseFitProgram.delete();
