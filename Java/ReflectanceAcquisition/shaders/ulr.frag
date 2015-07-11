@@ -1,5 +1,7 @@
 #version 330
 
+#define SAMPLE_COUNT 8
+
 #define MAX_CAMERA_POSE_COUNT 1024
 #define MAX_CAMERA_PROJECTION_COUNT 1024
 
@@ -48,6 +50,12 @@ float computeSampleWeight(vec3 cameraPos, vec3 samplePos, vec3 fragmentPos)
 		normalize(cameraPos - fragmentPos))), weightExponent)) - 1.0;
 }
 
+float getSampleWeight(int index)
+{
+    return computeSampleWeight((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz, vec3(0.0), 
+        (cameraPoses[index] * vec4(fPosition, 1.0)).xyz);
+}
+
 vec4 getLightFieldSample(int index)
 {
 	vec4 fragPos = cameraPoses[index] * vec4(fPosition, 1.0);
@@ -74,9 +82,56 @@ vec4 getLightFieldSample(int index)
         
         vec4 color = texture(imageTextures, vec3(projTexCoord.xy, index));
 		
-		return computeSampleWeight((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz, vec3(0.0), fragPos.xyz)
-			* (color.a < 0.9999 ? 0.0 : 1.0) * vec4(pow(color.rgb, vec3(gamma)), 1.0);
+		return (color.a < 0.9999 ? 0.0 : 1.0) * vec4(pow(color.rgb, vec3(gamma)), 1.0);
 	}
+}
+
+vec4 computeLightFieldBuehler()
+{
+    float weights[SAMPLE_COUNT];
+    int indices[SAMPLE_COUNT];
+    
+    // Initialization
+    for (int i = 0; i < SAMPLE_COUNT; i++)
+    {
+        weights[i] = -1.0 / 0.0;
+        indices[i] = -1;
+    }
+    
+    // Insertion sort(ish)
+    for (int i = 0; i < cameraPoseCount; i++)
+    {
+        float weight = getSampleWeight(i);
+        if (weight >= weights[0])
+        {
+            int j = 0;
+            int jj = 1;
+            
+            while(j+1 < SAMPLE_COUNT && weight >= weights[j+1])
+            {
+                if (jj != j+1) // TODO why is this necessary?
+                {
+                    return vec4(0);
+                }
+                weights[j] = weights[j+1];
+                indices[j] = indices[j+1];
+                jj++;
+                j++;
+            }
+            
+            // Insert the new weight & index
+            weights[j] = weight;
+            indices[j] = i;
+        }
+    }
+    
+    // Evaluate the light field
+    vec4 sum = vec4(0.0);
+	for (int i = 1; i < SAMPLE_COUNT; i++)
+	{
+		sum += (weights[i] - weights[0]) * getLightFieldSample(indices[i]);
+	}
+	return pow(sum / sum.a, vec4(1 / gamma));
 }
 
 vec4 computeLightField()
@@ -84,12 +139,13 @@ vec4 computeLightField()
 	vec4 sum = vec4(0.0);
 	for (int i = 0; i < cameraPoseCount; i++)
 	{
-		sum += getLightFieldSample(i);
+		sum += getSampleWeight(i) * getLightFieldSample(i);
 	}
 	return pow(sum / sum.a, vec4(1 / gamma));
 }
 
 void main()
 {
-	fragColor = computeLightField();
+    fragColor = computeLightField();
+	//fragColor = computeLightFieldBuehler();
 }
