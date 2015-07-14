@@ -124,8 +124,11 @@ public class PhongRenderer implements Drawable
 			this.diffuse = new OpenGLTexture2D(new File(texturePath, "diffuse.png"), true, false, false);
 			this.normal = new OpenGLTexture2D(new File(texturePath, "normal.png"), true, false, false);
 			this.specular = new OpenGLTexture2D(new File(texturePath, "specular.png"), true, false, false);
-			this.specNormal = new OpenGLTexture2D(new File(texturePath, "snormal.png"), true, false, false);
 			this.roughness = new OpenGLTexture2D(new File(texturePath, "roughness.png"), true, false, false);
+			if (new File(texturePath, "snormal.png").exists())
+			{
+				this.specNormal = new OpenGLTexture2D(new File(texturePath, "snormal.png"), true, false, false);
+			}
 			
 			this.renderable = new OpenGLRenderable(PhongRenderer.program);
 			this.renderable.addVertexBuffer("position", this.positionBuffer);
@@ -187,7 +190,14 @@ public class PhongRenderer implements Drawable
     	this.renderable.program().setTexture("diffuse", this.diffuse);
     	this.renderable.program().setTexture("normal", this.normal);
     	this.renderable.program().setTexture("specular", this.specular);
-    	this.renderable.program().setTexture("specNormal", this.specNormal);
+    	if (this.specNormal == null)
+    	{
+    		this.renderable.program().setTexture("specNormal", this.normal);
+    	}
+    	else
+    	{
+    		this.renderable.program().setTexture("specNormal", this.specNormal);
+    	}
     	this.renderable.program().setTexture("roughness", this.roughness);
     	this.renderable.program().setTexture("shadow", this.shadowBuffer.getDepthAttachmentTexture());
     	
