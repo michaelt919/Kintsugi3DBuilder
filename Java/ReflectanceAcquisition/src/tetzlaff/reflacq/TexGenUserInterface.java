@@ -58,13 +58,13 @@ public class TexGenUserInterface
 	private JCheckBox diffuseInputNormalInfCheckBox;
 	
 	private JCheckBox specRoughCheckBox;
-	private JCheckBox specNormalCheckBox;
-	private JCheckBox blinnPhongCheckBox;
+	//private JCheckBox specNormalCheckBox;
+	//private JCheckBox blinnPhongCheckBox;
 	
 	private JSpinner specSubDiffuseSpinner;
 	private JSpinner specInfluenceSpinner;
 	private JSpinner specDetThreshSpinner;
-	private JSpinner specCompNormalSpinner;
+	//private JSpinner specCompNormalSpinner;
 	private JSpinner specCompRoughSpinner;
 	private JSpinner specDefaultRoughSpinner;
 	private JSpinner defaultRoughnessSpinner;
@@ -198,7 +198,7 @@ public class TexGenUserInterface
 
 		JPanel filePanel = new JPanel();
 		filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.Y_AXIS));
-		filePanel.setBorder(new TitledBorder("Files and Directories"));
+		//filePanel.setBorder(new TitledBorder("Files and Directories"));
 		vsetFilePicker = addFilePicker(filePanel, "Select Camera File...", Arrays.asList(
 				new FileNameExtensionFilter("Agisoft Photoscan XML files (.xml)", "xml"),
 				new FileNameExtensionFilter("View Set files (.vset)", "vset")));
@@ -211,7 +211,7 @@ public class TexGenUserInterface
 		
 		JPanel samplingPanel = new JPanel();
 		samplingPanel.setLayout(new BoxLayout(samplingPanel, BoxLayout.Y_AXIS));
-		samplingPanel.setBorder(new TitledBorder("Sampling Parameters"));
+		//samplingPanel.setBorder(new TitledBorder("Sampling Parameters"));
 		gammaSpinner = addUIValueField(samplingPanel, "Gamma", defaults.getGamma(), 1.0f, 99.0f, 0.1f);
 		imageRescaleCheckBox = addUICheckBoxField(samplingPanel, "Rescale Images", defaults.isImageRescalingEnabled());
 		imageWidthSpinner = addUIValueField(samplingPanel, "Rescaled Image Width", defaults.getImageWidth(), 1.0f, 8192.0f, 1.0f);
@@ -226,7 +226,7 @@ public class TexGenUserInterface
 		
 		JPanel diffusePanel = new JPanel();
 		diffusePanel.setLayout(new BoxLayout(diffusePanel, BoxLayout.Y_AXIS));
-		diffusePanel.setBorder(new TitledBorder("Diffuse Fitting Parameters"));
+		//diffusePanel.setBorder(new TitledBorder("Diffuse Fitting Parameters"));
 		diffuseDeltaSpinner = addUIValueField(diffusePanel, "Delta", defaults.getDiffuseDelta(), 0.0f, 1.0f, 0.01f);
 		diffuseIterationsSpinner = addUIValueField(diffusePanel, "Iterations", defaults.getDiffuseIterations(), 0.0f, 999.0f, 1.0f);
 		diffuseCompNormalSpinner = addUIValueField(diffusePanel, "Computed Normal Weight", Math.min(9999.0f, defaults.getDiffuseComputedNormalWeight()), 0.0f, 9999.0f, 0.1f);
@@ -237,16 +237,16 @@ public class TexGenUserInterface
 		
 		JPanel specularPanel = new JPanel();
 		specularPanel.setLayout(new BoxLayout(specularPanel, BoxLayout.Y_AXIS));
-		specularPanel.setBorder(new TitledBorder("Specular Fitting Parameters"));
+		//specularPanel.setBorder(new TitledBorder("Specular Fitting Parameters"));
 		specRoughCheckBox = addUICheckBoxField(specularPanel,"Compute Roughness", defaults.isSpecularRoughnessComputationEnabled());
-		specNormalCheckBox = addUICheckBoxField(specularPanel,"Compute Separate Normal", defaults.isSpecularNormalComputationEnabled());
-		blinnPhongCheckBox = addUICheckBoxField(specularPanel,"Use \"True\" Blinn-Phong Model", defaults.isTrueBlinnPhongSpecularEnabled());
+		//specNormalCheckBox = addUICheckBoxField(specularPanel,"Compute Separate Normal", defaults.isSpecularNormalComputationEnabled());
+		//blinnPhongCheckBox = addUICheckBoxField(specularPanel,"Use \"True\" Blinn-Phong Model", defaults.isTrueBlinnPhongSpecularEnabled());
 		specSubDiffuseSpinner = addUIValueField(specularPanel,"Diffuse Subtraction Amount", defaults.getSpecularSubtractDiffuseAmount(), 0.0f, 1.0f, 0.01f);
 		specInfluenceSpinner = addUIValueField(specularPanel,"Influence Scale", defaults.getSpecularInfluenceScale(), 0.0f, 1.0f, 0.01f);
 		specDetThreshSpinner = addUIValueField(specularPanel,"Determinant Threshold", defaults.getSpecularDeterminantThreshold(), 0.0f, 1.0f, 0.0001f);
-		specCompNormalSpinner = addUIValueField(specularPanel,"Computed Normal Weight", defaults.getSpecularComputedNormalWeight(), 0.0f, 1.0f, 0.01f);
-		specCompRoughSpinner = addUIValueField(specularPanel,"Input Normal, Computed Roughness Weight", defaults.getSpecularInputNormalComputedRoughnessWeight(), 0.0f, 1.0f, 0.01f);
-		specDefaultRoughSpinner = addUIValueField(specularPanel,"Input Normal, Default Roughness Weight", defaults.getSpecularInputNormalDefaultRoughnessWeight(), 0.0f, 1.0f, 0.01f);
+		//specCompNormalSpinner = addUIValueField(specularPanel,"Computed Normal Weight", defaults.getSpecularComputedNormalWeight(), 0.0f, 1.0f, 0.01f);
+		specCompRoughSpinner = addUIValueField(specularPanel,"Computed Roughness Weight", defaults.getSpecularInputNormalComputedRoughnessWeight(), 0.0f, 1.0f, 0.01f);
+		specDefaultRoughSpinner = addUIValueField(specularPanel,"Default Roughness Weight", defaults.getSpecularInputNormalDefaultRoughnessWeight(), 0.0f, 1.0f, 0.01f);
 		defaultRoughnessSpinner = addUIValueField(specularPanel,"Default Specular Roughness", defaults.getDefaultSpecularRoughness(), 0.0f, 10.0f, 0.01f);
 		roughnessCapSpinner = addUIValueField(specularPanel,"Specular Roughness Cap", defaults.getSpecularRoughnessCap(), 0.0f, 10.0f, 0.01f);
 		tabbedPane.addTab("Specular Fitting Parameters", specularPanel);
@@ -336,12 +336,12 @@ public class TexGenUserInterface
 		param.setDiffuseInputNormalWeight(this.diffuseInputNormalInfCheckBox.isSelected() ?
 				Float.MAX_VALUE : getValueAsFloat(this.diffuseInputNormalSpinner));
 		param.setSpecularRoughnessComputationEnabled(this.specRoughCheckBox.isSelected());
-		param.setSpecularNormalComputationEnabled(this.specNormalCheckBox.isSelected());
-		param.setTrueBlinnPhongSpecularEnabled(this.blinnPhongCheckBox.isSelected());
+		//param.setSpecularNormalComputationEnabled(this.specNormalCheckBox.isSelected());
+		//param.setTrueBlinnPhongSpecularEnabled(this.blinnPhongCheckBox.isSelected());
 		param.setSpecularSubtractDiffuseAmount(getValueAsFloat(this.specSubDiffuseSpinner));
 		param.setSpecularInfluenceScale(getValueAsFloat(this.specInfluenceSpinner));
 		param.setSpecularDeterminantThreshold(getValueAsFloat(this.specDetThreshSpinner));
-		param.setSpecularComputedNormalWeight(getValueAsFloat(this.specCompNormalSpinner));
+		//param.setSpecularComputedNormalWeight(getValueAsFloat(this.specCompNormalSpinner));
 		param.setSpecularInputNormalComputedRoughnessWeight(getValueAsFloat(this.specCompRoughSpinner));
 		param.setSpecularInputNormalDefaultRoughnessWeight(getValueAsFloat(this.specDefaultRoughSpinner));
 		param.setDefaultSpecularRoughness(getValueAsFloat(this.defaultRoughnessSpinner));
