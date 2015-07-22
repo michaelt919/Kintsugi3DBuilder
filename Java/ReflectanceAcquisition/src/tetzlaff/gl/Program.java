@@ -1,13 +1,19 @@
 package tetzlaff.gl;
 
-import tetzlaff.gl.helpers.*;
+import tetzlaff.gl.helpers.IntVector2;
+import tetzlaff.gl.helpers.IntVector3;
+import tetzlaff.gl.helpers.IntVector4;
+import tetzlaff.gl.helpers.Matrix4;
+import tetzlaff.gl.helpers.Vector2;
+import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 
-public interface Program<ShaderType, TextureType, UniformBufferType>
+public interface Program<ContextType extends Context> extends Resource
 {
 
-	void attachShader(ShaderType shader, boolean owned);
+	void attachShader(Shader<ContextType> shader, boolean owned);
 
-	void detachShader(ShaderType shader);
+	void detachShader(Shader<ContextType> shader);
 
 	boolean isLinked();
 
@@ -57,13 +63,13 @@ public interface Program<ShaderType, TextureType, UniformBufferType>
 
 	int getVertexAttribLocation(String name);
 
-	boolean setTexture(int location, TextureType texture);
+	boolean setTexture(int location, Texture<ContextType> texture);
 
-	boolean setTexture(String name, TextureType texture);
+	boolean setTexture(String name, Texture<ContextType> texture);
 
-	boolean setUniformBuffer(int index, UniformBufferType buffer);
+	boolean setUniformBuffer(int index, UniformBuffer<ContextType> buffer);
 
-	boolean setUniformBuffer(String name, UniformBufferType buffer);
+	boolean setUniformBuffer(String name, UniformBuffer<ContextType> buffer);
 
 	int getUniformBlockIndex(String name);
 

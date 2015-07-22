@@ -17,8 +17,9 @@ import org.lwjgl.BufferUtils;
 
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferSize;
+import tetzlaff.gl.opengl.exceptions.OpenGLInvalidFramebufferOperationException;
 
-public abstract class OpenGLFramebuffer implements Framebuffer 
+public abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext> 
 {		
 	protected abstract int getId();
 	
@@ -28,6 +29,13 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	{
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
 		openGLErrorCheck();
+
+		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			throw new OpenGLInvalidFramebufferOperationException();
+		}
+		openGLErrorCheck();
+		
 		glViewport(x, y, width, height);
 		openGLErrorCheck();
 	}
@@ -44,6 +52,13 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	{
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, this.getId());
 		openGLErrorCheck();
+
+		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			throw new OpenGLInvalidFramebufferOperationException();
+		}
+		openGLErrorCheck();
+		
 		selectColorSourceForRead(attachmentIndex);
 	}
 	
@@ -161,6 +176,13 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	{
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
 		openGLErrorCheck();
+		
+		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			throw new OpenGLInvalidFramebufferOperationException();
+		}
+		openGLErrorCheck();
+		
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(4);
 		buffer.put(r);
 		buffer.put(g);
@@ -176,6 +198,13 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	{
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
 		openGLErrorCheck();
+		
+		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			throw new OpenGLInvalidFramebufferOperationException();
+		}
+		openGLErrorCheck();
+		
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(1);
 		buffer.put(depth);
 		buffer.flip();
@@ -194,6 +223,13 @@ public abstract class OpenGLFramebuffer implements Framebuffer
 	{
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
 		openGLErrorCheck();
+		
+		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			throw new OpenGLInvalidFramebufferOperationException();
+		}
+		openGLErrorCheck();
+		
 		IntBuffer buffer = BufferUtils.createIntBuffer(1);
 		buffer.put(stencilIndex);
 		buffer.flip();

@@ -4,21 +4,29 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.openGLErrorCheck;
+import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
 import tetzlaff.gl.Context;
+import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Renderable;
+import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.exceptions.UnrecognizedPrimitiveModeException;
-import tetzlaff.gl.helpers.*;
+import tetzlaff.gl.helpers.DoubleVector2;
+import tetzlaff.gl.helpers.DoubleVector3;
+import tetzlaff.gl.helpers.DoubleVector4;
+import tetzlaff.gl.helpers.IntVector2;
+import tetzlaff.gl.helpers.IntVector3;
+import tetzlaff.gl.helpers.IntVector4;
+import tetzlaff.gl.helpers.Vector2;
+import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.opengl.helpers.VertexAttributeSetting;
 
-public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexBuffer, OpenGLFramebuffer, OpenGLTexture>
+public class OpenGLRenderable implements Renderable<OpenGLContext>
 {
 	private OpenGLProgram program;
 	private OpenGLVertexArray vao;
@@ -78,31 +86,45 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	}
 	
 	@Override
-	public void draw(PrimitiveMode primitiveMode, OpenGLFramebuffer framebuffer)
+	public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer)
 	{
-		framebuffer.bindForDraw();
-		program.use();
-		for (VertexAttributeSetting s : settings.values())
+		if (framebuffer instanceof OpenGLFramebuffer)
 		{
-			s.set();
+			((OpenGLFramebuffer)framebuffer).bindForDraw();
+			program.use();
+			for (VertexAttributeSetting s : settings.values())
+			{
+				s.set();
+			}
+			vao.draw(getOpenGLPrimitiveModeConst(primitiveMode));
 		}
-		vao.draw(getOpenGLPrimitiveModeConst(primitiveMode));
+		else
+		{
+			throw new IllegalArgumentException("'framebuffer' must be of type OpenGLFramebuffer.");
+		}
 	}
 
 	@Override
-	public void draw(PrimitiveMode primitiveMode, OpenGLFramebuffer framebuffer, int x, int y, int width, int height)
+	public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer, int x, int y, int width, int height)
 	{
-		framebuffer.bindForDraw(x, y, width, height);
-		program.use();
-		for (VertexAttributeSetting s : settings.values())
+		if (framebuffer instanceof OpenGLFramebuffer)
 		{
-			s.set();
+			((OpenGLFramebuffer)framebuffer).bindForDraw(x, y, width, height);
+			program.use();
+			for (VertexAttributeSetting s : settings.values())
+			{
+				s.set();
+			}
+			vao.draw(getOpenGLPrimitiveModeConst(primitiveMode));
 		}
-		vao.draw(getOpenGLPrimitiveModeConst(primitiveMode));
+		else
+		{
+			throw new IllegalArgumentException("'framebuffer' must be of type OpenGLFramebuffer.");
+		}
 	}
 
 	@Override
-	public void draw(PrimitiveMode primitiveMode, OpenGLFramebuffer framebuffer, int width, int height)
+	public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer, int width, int height)
 	{
 		this.draw(primitiveMode, framebuffer, 0, 0, width, height);
 	}
@@ -126,41 +148,55 @@ public class OpenGLRenderable implements Renderable<OpenGLProgram, OpenGLVertexB
 	}
 	
 	@Override
-	public boolean addVertexBuffer(int location, OpenGLVertexBuffer buffer, boolean owned)
+	public boolean addVertexBuffer(int location, VertexBuffer<OpenGLContext> buffer, boolean owned)
 	{
-		if (location >= 0)
+		if (buffer instanceof OpenGLVertexBuffer)
 		{
-			this.vao.addVertexBuffer(location, buffer, owned);
-			return true;
+			if (location >= 0)
+			{
+				this.vao.addVertexBuffer(location, (OpenGLVertexBuffer)buffer, owned);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 		else
 		{
-			return false;
+			throw new IllegalArgumentException("'buffer' must be of type OpenGLVertexBuffer.");
 		}
 	}
 	
 	@Override
-	public boolean addVertexBuffer(String name, OpenGLVertexBuffer buffer, boolean owned)
+	public boolean addVertexBuffer(String name, VertexBuffer<OpenGLContext> buffer, boolean owned)
 	{
 		return this.addVertexBuffer(program.getVertexAttribLocation(name), buffer, owned);
 	}
 	
 	@Override
-	public boolean addVertexBuffer(int location, OpenGLVertexBuffer buffer)
+	public boolean addVertexBuffer(int location, VertexBuffer<OpenGLContext> buffer)
 	{
-		if (location >= 0)
+		if (buffer instanceof OpenGLVertexBuffer)
 		{
-			this.vao.addVertexBuffer(location, buffer);
-			return true;
+			if (location >= 0)
+			{
+				this.vao.addVertexBuffer(location, (OpenGLVertexBuffer)buffer);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 		else
 		{
-			return false;
+			throw new IllegalArgumentException("'buffer' must be of type OpenGLVertexBuffer.");
 		}
 	}
 	
 	@Override
-	public boolean addVertexBuffer(String name, OpenGLVertexBuffer buffer)
+	public boolean addVertexBuffer(String name, VertexBuffer<OpenGLContext> buffer)
 	{
 		return this.addVertexBuffer(program.getVertexAttribLocation(name), buffer);
 	}

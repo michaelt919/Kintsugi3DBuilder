@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.helpers.Matrix4;
@@ -12,10 +13,8 @@ import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLDefaultFramebuffer;
 import tetzlaff.gl.opengl.OpenGLFramebuffer;
-import tetzlaff.gl.opengl.OpenGLFramebufferObject;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
-import tetzlaff.gl.opengl.OpenGLResource;
 
 public class ULFRenderer implements ULFDrawable
 {
@@ -76,11 +75,11 @@ public class ULFRenderer implements ULFDrawable
     	{
     		if (this.cameraFile.getName().toUpperCase().endsWith(".XML"))
     		{
-    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.meshFile, this.imageDirectory);
+    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.meshFile, this.imageDirectory, this.context);
     		}
     		else
     		{
-    			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile);
+    			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.context);
     		}
 			if (this.callback != null)
 			{
@@ -236,7 +235,7 @@ public class ULFRenderer implements ULFDrawable
 	private void resample() throws IOException
 	{
 		ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, false);
-		OpenGLFramebufferObject framebuffer = new OpenGLFramebufferObject(resampleSize, resampleSize);
+		FramebufferObject<OpenGLContext> framebuffer = context.getFramebufferObjectBuilder(resampleSize, resampleSize).addColorAttachment().createFramebufferObject();
     	
     	this.renderable.program().setTexture("imageTextures", lightField.viewSet.getTextures());
     	this.renderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());

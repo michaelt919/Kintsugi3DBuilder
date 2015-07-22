@@ -12,7 +12,7 @@ import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.ShortVertexList;
 
-public class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer
+public class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLContext>
 {
 	private int count;
 	private int vertexSize;

@@ -3,7 +3,7 @@ package tetzlaff.gl;
 import java.io.File;
 import java.io.IOException;
 
-public interface Framebuffer
+public interface Framebuffer<ContextType extends Context>
 {
 	FramebufferSize getSize();
 

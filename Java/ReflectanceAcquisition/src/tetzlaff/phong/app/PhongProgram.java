@@ -10,11 +10,8 @@ import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.phong.PhongRenderer;
-import tetzlaff.ulf.ULFRendererList;
-import tetzlaff.window.ModifierKeys;
-import tetzlaff.window.Window;
-import tetzlaff.window.glfw.GLFWWindow;
 import tetzlaff.window.KeyCodes;
+import tetzlaff.window.glfw.GLFWWindow;
 
 public class PhongProgram
 {

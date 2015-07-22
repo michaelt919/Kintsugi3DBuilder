@@ -1,16 +1,18 @@
 package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.openGLErrorCheck;
+import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
+import tetzlaff.gl.Resource;
+import tetzlaff.gl.Shader;
 import tetzlaff.gl.exceptions.ShaderCompileFailureException;
 
 
-public class OpenGLShader implements OpenGLResource
+public class OpenGLShader implements Shader<OpenGLContext>, Resource
 {
 	private int shaderId;
 	
