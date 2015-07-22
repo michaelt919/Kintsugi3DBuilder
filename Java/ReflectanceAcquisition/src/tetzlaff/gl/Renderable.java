@@ -1,21 +1,25 @@
 package tetzlaff.gl;
 
-import tetzlaff.gl.helpers.*;
-import tetzlaff.gl.opengl.OpenGLResource;
+import tetzlaff.gl.helpers.DoubleVector2;
+import tetzlaff.gl.helpers.DoubleVector3;
+import tetzlaff.gl.helpers.DoubleVector4;
+import tetzlaff.gl.helpers.IntVector2;
+import tetzlaff.gl.helpers.IntVector3;
+import tetzlaff.gl.helpers.IntVector4;
+import tetzlaff.gl.helpers.Vector2;
+import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 
-public interface Renderable<
-	ProgramType extends Program<?, ? super TextureType, ?>, 
-	VertexBufferType extends VertexBuffer,
-	FramebufferType extends Framebuffer, TextureType >
+public interface Renderable<ContextType extends Context>
 {
-	ProgramType program();
+	Program<ContextType> program();
 
-	void draw(PrimitiveMode primitiveMode, FramebufferType framebuffer);
+	void draw(PrimitiveMode primitiveMode, Framebuffer<ContextType> framebuffer);
 
-	void draw(PrimitiveMode primitiveMode, FramebufferType framebuffer, int x, int y,
+	void draw(PrimitiveMode primitiveMode, Framebuffer<ContextType> framebuffer, int x, int y,
 			int width, int height);
 
-	void draw(PrimitiveMode primitiveMode, FramebufferType framebuffer, int width,
+	void draw(PrimitiveMode primitiveMode, Framebuffer<ContextType> framebuffer, int width,
 			int height);
 	
 	void draw(PrimitiveMode primitiveMode, Context context);
@@ -72,11 +76,11 @@ public interface Renderable<
 
 	boolean setVertexAttrib(int location, int value);
 
-	boolean addVertexBuffer(int location, VertexBufferType buffer, boolean owned);
+	boolean addVertexBuffer(int location, VertexBuffer<ContextType> buffer, boolean owned);
 
-	boolean addVertexBuffer(String name, VertexBufferType buffer, boolean owned);
+	boolean addVertexBuffer(String name, VertexBuffer<ContextType> buffer, boolean owned);
 
-	boolean addVertexBuffer(int location, VertexBufferType buffer);
+	boolean addVertexBuffer(int location, VertexBuffer<ContextType> buffer);
 
-	boolean addVertexBuffer(String name, VertexBufferType buffer);
+	boolean addVertexBuffer(String name, VertexBuffer<ContextType> buffer);
 }

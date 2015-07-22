@@ -2,27 +2,18 @@ package tetzlaff.textureupscale;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Date;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.helpers.FloatVertexList;
-import tetzlaff.gl.helpers.Matrix3;
-import tetzlaff.gl.helpers.Matrix4;
-import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.gl.opengl.OpenGLFramebufferObject;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
-import tetzlaff.gl.opengl.OpenGLResource;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
-import tetzlaff.gl.opengl.OpenGLTextureArray;
 import tetzlaff.gl.opengl.OpenGLVertexBuffer;
-import tetzlaff.ulf.UnstructuredLightField;
 import tetzlaff.window.glfw.GLFWWindow;
 
 public class TextureUpscaleProgram
@@ -73,7 +64,7 @@ public class TextureUpscaleProgram
     	    	perlinNoiseProgram.setUniform("maxSamples", MAX_SAMPLES);
     	    	perlinNoiseProgram.setUniform("blackPoint", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
     	    	perlinNoiseProgram.setUniform("whitePoint", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-		    	OpenGLFramebufferObject fbo = new OpenGLFramebufferObject(targetWidth, targetHeight, 1, false, false);
+		    	FramebufferObject<OpenGLContext> fbo = context.getFramebufferObjectBuilder(targetWidth, targetHeight).addColorAttachment().createFramebufferObject();
 		    	OpenGLRenderable renderable = new OpenGLRenderable(perlinNoiseProgram);
 		    	renderable.addVertexBuffer("position", OpenGLVertexBuffer.createRectangle(), true);
 		    	fbo.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);

@@ -1,6 +1,5 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL30.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
@@ -11,7 +10,9 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
-public abstract class OpenGLBuffer implements OpenGLResource
+import tetzlaff.gl.Resource;
+
+public abstract class OpenGLBuffer implements Resource
 {
 	private int bufferId;
 	private int usage;

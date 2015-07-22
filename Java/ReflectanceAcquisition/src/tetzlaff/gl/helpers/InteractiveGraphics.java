@@ -1,8 +1,8 @@
 package tetzlaff.gl.helpers;
 
 import tetzlaff.gl.Context;
-import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.EventPollable;
+import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 
 public class InteractiveGraphics

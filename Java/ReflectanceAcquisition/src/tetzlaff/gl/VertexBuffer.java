@@ -5,9 +5,8 @@ import tetzlaff.gl.helpers.DoubleVertexList;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.ShortVertexList;
-import tetzlaff.gl.opengl.OpenGLResource;
 
-public interface VertexBuffer extends OpenGLResource
+public interface VertexBuffer<ContextType extends Context> extends Resource
 {
 	int count();
 	void setData(ByteVertexList data, boolean unsigned);

@@ -1,6 +1,7 @@
 package tetzlaff.reflacq;
 
 import java.io.IOException;
+
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.window.glfw.GLFWWindow;
 

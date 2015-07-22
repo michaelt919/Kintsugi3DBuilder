@@ -13,7 +13,6 @@ import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
-import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLDefaultFramebuffer;
@@ -21,7 +20,6 @@ import tetzlaff.gl.opengl.OpenGLFramebuffer;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
-import tetzlaff.gl.opengl.OpenGLResource;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
 import tetzlaff.gl.opengl.OpenGLVertexBuffer;
 import tetzlaff.ulf.ViewSet;
@@ -139,7 +137,7 @@ public class PhongRenderer implements Drawable
 			this.shadowRenderable.addVertexBuffer("position", this.positionBuffer);
 			this.shadowRenderable.addVertexBuffer("texCoord", this.texCoordBuffer);
 			this.shadowRenderable.addVertexBuffer("normal", this.normalBuffer);
-			this.shadowBuffer = new OpenGLFramebufferObject(4096, 4096, 0);
+			this.shadowBuffer = context.getFramebufferObjectBuilder(4096, 4096).createFramebufferObject();
 		} 
     	catch (IOException e) 
     	{
@@ -285,7 +283,7 @@ public class PhongRenderer implements Drawable
 		ViewSet targetViewSet = ViewSet.loadFromVSETFile(targetVSETFile, false);
 		
 		BufferedImage img = ImageIO.read(targetViewSet.getImageFile(0));
-		OpenGLFramebufferObject framebuffer = new OpenGLFramebufferObject(img.getWidth(), img.getHeight());
+		OpenGLFramebufferObject framebuffer = context.getFramebufferObjectBuilder(img.getWidth(), img.getHeight()).createFramebufferObject();
     	
     	for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 		{

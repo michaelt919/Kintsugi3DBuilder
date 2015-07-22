@@ -1,8 +1,8 @@
 package tetzlaff.ulf.app;
 
 import java.awt.Dimension;
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;

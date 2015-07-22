@@ -6,8 +6,9 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
+import tetzlaff.gl.Texture;
 
-public abstract class OpenGLTexture implements OpenGLResource, OpenGLFramebufferAttachment
+public abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment
 {
 	public static final int MAX_COMBINED_TEXTURE_IMAGE_UNITS;
 	

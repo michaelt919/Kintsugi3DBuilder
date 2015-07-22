@@ -1,8 +1,6 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
 import java.nio.IntBuffer;
 
@@ -10,7 +8,7 @@ import org.lwjgl.BufferUtils;
 
 import tetzlaff.gl.IndexBuffer;
 
-public class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer
+public class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer<OpenGLContext>
 {
 	private int count;
 	

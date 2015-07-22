@@ -8,6 +8,7 @@ import static org.lwjgl.opengl.GL31.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.Context;
+import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
 
 public abstract class OpenGLContext implements Context
 {
@@ -136,5 +137,11 @@ public abstract class OpenGLContext implements Context
 	public int getMaxArrayTextureLayers()
 	{
 		return getInteger(GL_MAX_ARRAY_TEXTURE_LAYERS);
+	}
+	
+	@Override
+	public OpenGLFramebufferObjectBuilder getFramebufferObjectBuilder(int width, int height)
+	{
+		return new OpenGLFramebufferObjectBuilder(width, height);
 	}
 }

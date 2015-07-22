@@ -1,6 +1,6 @@
 package tetzlaff.gl;
 
-public class FramebufferSize 
+public class FramebufferSize
 {
 	public final int width;
 	public final int height;

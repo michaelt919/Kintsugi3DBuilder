@@ -1,10 +1,10 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
 import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
+import tetzlaff.gl.Resource;
 
-public class OpenGLRenderbuffer implements OpenGLFramebufferAttachment, OpenGLResource
+public class OpenGLRenderbuffer implements OpenGLFramebufferAttachment, Resource
 {
 	private int renderbufferId;
 	

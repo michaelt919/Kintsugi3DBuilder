@@ -8,7 +8,7 @@ import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.ShortVertexList;
 
-public interface UniformBuffer 
+public interface UniformBuffer<ContextType extends Context> extends Resource 
 {
 	void setData(ByteBuffer data);
 	void setData(ByteVertexList data);

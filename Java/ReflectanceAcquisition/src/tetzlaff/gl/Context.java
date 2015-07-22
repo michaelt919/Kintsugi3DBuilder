@@ -1,5 +1,7 @@
 package tetzlaff.gl;
 
+import tetzlaff.gl.builders.FramebufferObjectBuilder;
+
 public interface Context 
 {
 	boolean isDestroyed();
@@ -25,4 +27,6 @@ public interface Context
 
 	void setAlphaBlendingFunction(AlphaBlendingFunction func);
 	void disableAlphaBlending();
+	
+	FramebufferObjectBuilder<? extends Context> getFramebufferObjectBuilder(int width, int height);
 }

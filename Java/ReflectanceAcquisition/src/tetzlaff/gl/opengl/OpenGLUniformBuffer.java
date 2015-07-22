@@ -1,5 +1,10 @@
 package tetzlaff.gl.opengl;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL31.*;
+import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
+
 import java.nio.ByteBuffer;
 
 import tetzlaff.gl.UniformBuffer;
@@ -8,12 +13,8 @@ import tetzlaff.gl.helpers.DoubleVertexList;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.ShortVertexList;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL31.*;
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.openGLErrorCheck;
 
-public class OpenGLUniformBuffer extends OpenGLBuffer implements UniformBuffer
+public class OpenGLUniformBuffer extends OpenGLBuffer implements UniformBuffer<OpenGLContext>
 {
 	public final static int MAX_COMBINED_UNIFORM_BLOCKS;
 	

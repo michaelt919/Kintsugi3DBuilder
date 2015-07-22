@@ -8,21 +8,23 @@ import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import tetzlaff.gl.Resource;
 import tetzlaff.gl.VertexArray;
+import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.exceptions.NoSpecifiedVertexBuffersException;
 
-public class OpenGLVertexArray implements OpenGLResource, VertexArray<OpenGLVertexBuffer, OpenGLIndexBuffer>
+public class OpenGLVertexArray implements Resource, VertexArray<OpenGLContext>
 {
 	private boolean usesIndexing = false;
 	private int vaoId;
 	private int count = Integer.MAX_VALUE;
-	private List<OpenGLResource> ownedResources;
+	private List<Resource> ownedResources;
 
 	public OpenGLVertexArray() 
 	{
 		this.vaoId = glGenVertexArrays();
 		openGLErrorCheck();
-		this.ownedResources = new ArrayList<OpenGLResource>();
+		this.ownedResources = new ArrayList<Resource>();
 	}
 	
 	void bind()
@@ -32,30 +34,37 @@ public class OpenGLVertexArray implements OpenGLResource, VertexArray<OpenGLVert
 	}
 	
 	@Override
-	public void addVertexBuffer(int attributeIndex, OpenGLVertexBuffer buffer, boolean owned)
+	public void addVertexBuffer(int attributeIndex, VertexBuffer<OpenGLContext> buffer, boolean owned)
 	{
-		if (usesIndexing)
+		if (buffer instanceof OpenGLVertexBuffer)
 		{
-			throw new IllegalStateException("Cannot add a vertex attribute without an index buffer: this VAO already contains other vertex buffers which use index buffers.");
+			if (usesIndexing)
+			{
+				throw new IllegalStateException("Cannot add a vertex attribute without an index buffer: this VAO already contains other vertex buffers which use index buffers.");
+			}
+			else
+			{
+				if (owned)
+				{
+					this.ownedResources.add(buffer);
+				}
+				
+				glBindVertexArray(this.vaoId);
+				openGLErrorCheck();
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+				openGLErrorCheck();
+				((OpenGLVertexBuffer)buffer).useAsVertexAttribute(attributeIndex);
+				this.count = Math.min(this.count, buffer.count());
+			}
 		}
 		else
 		{
-			if (owned)
-			{
-				this.ownedResources.add(buffer);
-			}
-			
-			glBindVertexArray(this.vaoId);
-			openGLErrorCheck();
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-			openGLErrorCheck();
-			buffer.useAsVertexAttribute(attributeIndex);
-			this.count = Math.min(this.count, buffer.count());
+			throw new IllegalArgumentException("'buffer' must be of type OpenGLVertexBuffer.");
 		}
 	}
 	
 	@Override
-	public void addVertexBuffer(int attributeIndex, OpenGLVertexBuffer buffer)
+	public void addVertexBuffer(int attributeIndex, VertexBuffer<OpenGLContext> buffer)
 	{
 		this.addVertexBuffer(attributeIndex, buffer, false);
 	}
@@ -89,7 +98,7 @@ public class OpenGLVertexArray implements OpenGLResource, VertexArray<OpenGLVert
 		glDeleteVertexArrays(this.vaoId);
 		openGLErrorCheck();
 		
-		for (OpenGLResource resource : ownedResources)
+		for (Resource resource : ownedResources)
 		{
 			resource.delete();
 		}

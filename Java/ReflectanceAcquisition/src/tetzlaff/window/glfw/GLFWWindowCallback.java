@@ -1,13 +1,33 @@
 package tetzlaff.window.glfw;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.system.glfw.GLFW.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.lwjgl.system.glfw.WindowCallback;
 
-import tetzlaff.window.listeners.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.glfw.GLFW.*;
+import tetzlaff.window.listeners.CharacterListener;
+import tetzlaff.window.listeners.CharacterModifiersListener;
+import tetzlaff.window.listeners.CursorEnteredListener;
+import tetzlaff.window.listeners.CursorExitedListener;
+import tetzlaff.window.listeners.CursorPositionListener;
+import tetzlaff.window.listeners.FramebufferSizeListener;
+import tetzlaff.window.listeners.KeyPressListener;
+import tetzlaff.window.listeners.KeyReleaseListener;
+import tetzlaff.window.listeners.KeyRepeatListener;
+import tetzlaff.window.listeners.MouseButtonPressListener;
+import tetzlaff.window.listeners.MouseButtonReleaseListener;
+import tetzlaff.window.listeners.ScrollListener;
+import tetzlaff.window.listeners.WindowCloseListener;
+import tetzlaff.window.listeners.WindowFocusGainedListener;
+import tetzlaff.window.listeners.WindowFocusLostListener;
+import tetzlaff.window.listeners.WindowIconifiedListener;
+import tetzlaff.window.listeners.WindowPositionListener;
+import tetzlaff.window.listeners.WindowRefreshListener;
+import tetzlaff.window.listeners.WindowRestoredListener;
+import tetzlaff.window.listeners.WindowSizeListener;
 
 public class GLFWWindowCallback extends WindowCallback implements WindowListenerManager
 {

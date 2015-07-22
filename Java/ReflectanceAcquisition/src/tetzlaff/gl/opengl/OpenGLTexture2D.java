@@ -17,27 +17,29 @@ import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
 
-public class OpenGLTexture2D extends OpenGLTexture
+import tetzlaff.gl.Texture2D;
+
+public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 {
 	private int width;
 	private int height;
 	private int levelCount;
 	
-	OpenGLTexture2D(int internalFormat, int width, int height, int format, int type, boolean useLinearFiltering, boolean useMipmaps) 
+	OpenGLTexture2D(int internalFormat, int width, int height, boolean useLinearFiltering, boolean useMipmaps)
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
 		super();
 		this.bind();
 		this.width = width;
 		this.height = height;
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 		openGLErrorCheck();
 		this.init(width, height, useLinearFiltering, useMipmaps);
 	}
 	
-	OpenGLTexture2D(int internalFormat, int width, int height, int format, int type) 
+	OpenGLTexture2D(int internalFormat, int width, int height) 
 	{
-		this(internalFormat, width, height, format, type, false, false);
+		this(internalFormat, width, height, false, false);
 	}
 	
 	private OpenGLTexture2D(ByteBuffer buffer, int internalFormat, int width, int height, int format, int type, boolean useLinearFiltering, boolean useMipmaps) 

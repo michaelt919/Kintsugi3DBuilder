@@ -10,12 +10,22 @@ import java.util.AbstractCollection;
 import java.util.ArrayList;
 
 import tetzlaff.gl.Program;
+import tetzlaff.gl.Resource;
+import tetzlaff.gl.Shader;
+import tetzlaff.gl.Texture;
+import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.exceptions.ProgramLinkFailureException;
 import tetzlaff.gl.exceptions.UnlinkedProgramException;
-import tetzlaff.gl.helpers.*;
+import tetzlaff.gl.helpers.IntVector2;
+import tetzlaff.gl.helpers.IntVector3;
+import tetzlaff.gl.helpers.IntVector4;
+import tetzlaff.gl.helpers.Matrix4;
+import tetzlaff.gl.helpers.Vector2;
+import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.opengl.helpers.ResourceManager;
 
-public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, OpenGLTexture, OpenGLUniformBuffer>
+public class OpenGLProgram implements Resource, Program<OpenGLContext>
 {
 	private int programId;
 	private AbstractCollection<OpenGLShader> ownedShaders;
@@ -47,21 +57,36 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	}
 	
 	@Override
-	public void attachShader(OpenGLShader shader, boolean owned)
+	public void attachShader(Shader<OpenGLContext> shader, boolean owned)
 	{
-		glAttachShader(programId, shader.getId());
-		openGLErrorCheck();
-		if (owned)
+		if (shader instanceof OpenGLShader)
 		{
-			ownedShaders.add(shader);
+			OpenGLShader shaderCast = (OpenGLShader)shader;
+			glAttachShader(programId, shaderCast.getId());
+			openGLErrorCheck();
+			if (owned)
+			{
+				ownedShaders.add(shaderCast);
+			}
+		}
+		else
+		{
+			throw new IllegalArgumentException("'shader' must be of type OpenGLShader.");
 		}
 	}
 	
 	@Override
-	public void detachShader(OpenGLShader shader)
+	public void detachShader(Shader<OpenGLContext> shader)
 	{
-		glDetachShader(programId, shader.getId());
-		openGLErrorCheck();
+		if (shader instanceof OpenGLShader)
+		{
+			glDetachShader(programId, ((OpenGLShader)shader).getId());
+			openGLErrorCheck();
+		}
+		else
+		{
+			throw new IllegalArgumentException("'shader' must be of type OpenGLShader.");
+		}
 	}
 	
 	@Override
@@ -136,38 +161,52 @@ public class OpenGLProgram implements OpenGLResource, Program<OpenGLShader, Open
 	}
 	
 	@Override
-	public boolean setTexture(int location, OpenGLTexture texture)
+	public boolean setTexture(int location, Texture<OpenGLContext> texture)
 	{
-		int textureUnit = textureManager.assignResourceByKey(location, texture);
-		return this.setUniform(location, textureUnit);
+		if (texture instanceof OpenGLTexture)
+		{
+			int textureUnit = textureManager.assignResourceByKey(location, (OpenGLTexture)texture);
+			return this.setUniform(location, textureUnit);
+		}
+		else
+		{
+			throw new IllegalArgumentException("'textur' must be of type OpenGLTexture.");
+		}
 	}
 	
 	@Override
-	public boolean setTexture(String name, OpenGLTexture texture)
+	public boolean setTexture(String name, Texture<OpenGLContext> texture)
 	{
 		return this.setTexture(this.getUniformLocation(name), texture);
 	}
 	
 	@Override
-	public boolean setUniformBuffer(int index, OpenGLUniformBuffer buffer)
+	public boolean setUniformBuffer(int index, UniformBuffer<OpenGLContext> buffer)
 	{
-		if (index >= 0)
+		if (buffer instanceof OpenGLUniformBuffer)
 		{
-			int bindingPoint = uniformBufferManager.assignResourceByKey(index, buffer);
-			
-			glUniformBlockBinding(this.programId, index, bindingPoint);
-			openGLErrorCheck();
-			
-			return true;
+			if (index >= 0)
+			{
+				int bindingPoint = uniformBufferManager.assignResourceByKey(index, (OpenGLUniformBuffer)buffer);
+				
+				glUniformBlockBinding(this.programId, index, bindingPoint);
+				openGLErrorCheck();
+				
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 		else
 		{
-			return false;
+			throw new IllegalArgumentException("'buffer' must be of type OpenGLUniformBuffer.");
 		}
 	}
 	
 	@Override
-	public boolean setUniformBuffer(String name, OpenGLUniformBuffer buffer)
+	public boolean setUniformBuffer(String name, UniformBuffer<OpenGLContext> buffer)
 	{
 		return this.setUniformBuffer(this.getUniformBlockIndex(name), buffer);
 	}
