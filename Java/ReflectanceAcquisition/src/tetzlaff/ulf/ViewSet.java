@@ -14,17 +14,19 @@ import java.util.Map;
 import java.util.Scanner;
 
 import javax.imageio.ImageIO;
+import javax.naming.Context;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
-import tetzlaff.gl.opengl.OpenGLTextureArray;
+import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLUniformBuffer;
 import tetzlaff.helpers.ZipWrapper;
 
@@ -43,7 +45,7 @@ public class ViewSet
 	private OpenGLUniformBuffer cameraProjectionIndexBuffer;
 	private OpenGLUniformBuffer lightPositionBuffer;
 	private OpenGLUniformBuffer lightIndexBuffer;
-	private OpenGLTextureArray textureArray;
+	private Texture3D<OpenGLContext> textureArray;
 	private float recommendedNearPlane;
 	private float recommendedFarPlane;
 	
@@ -57,7 +59,8 @@ public class ViewSet
 		File imageFilePath,
 		boolean loadImages,
 		float recommendedNearPlane,
-		float recommendedFarPlane) throws IOException
+		float recommendedFarPlane,
+		OpenGLContext context) throws IOException
 	{
 		this.cameraPoseList = cameraPoseList;
 		this.cameraProjectionList = cameraProjectionList;
@@ -177,7 +180,10 @@ public class ViewSet
 			InputStream input = myZip.getInputStream();
 			
 			BufferedImage img = ImageIO.read(input);
-			this.textureArray = new OpenGLTextureArray(img.getWidth(), img.getHeight(), imageFileNames.size(), false, true, true);
+			this.textureArray = context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), imageFileNames.size())
+									.setLinearFilteringEnabled(true)
+									.setMipmapsEnabled(true)
+									.createTexture();
 			
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
@@ -231,7 +237,7 @@ public class ViewSet
 		}
 	}
 
-	public static ViewSet loadFromVSETFile(File file, boolean loadImages) throws IOException
+	public static ViewSet loadFromVSETFile(File file, boolean loadImages, OpenGLContext context) throws IOException
 	{
 		Date timestamp = new Date();
 
@@ -365,7 +371,7 @@ public class ViewSet
 		
 		return new ViewSet(
 			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightList, lightIndexList, 
-			imageFileNames, file.getParentFile(), loadImages, recommendedNearPlane, recommendedFarPlane);
+			imageFileNames, file.getParentFile(), loadImages, recommendedNearPlane, recommendedFarPlane, context);
 	}
 	
 	private static class Sensor
@@ -414,7 +420,7 @@ public class ViewSet
 	    }
 	}
 
-	public static ViewSet loadFromAgisoftXMLFile(File file, File imageDirectory) throws IOException
+	public static ViewSet loadFromAgisoftXMLFile(File file, File imageDirectory, OpenGLContext context) throws IOException
 	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
@@ -708,7 +714,7 @@ public class ViewSet
 
         float farPlane = findFarPlane(cameraPoseList);
         return new ViewSet(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightList, lightIndexList,
-        		imageFileNames, imageDirectory, imageDirectory != null, farPlane / 16.0f, farPlane);
+        		imageFileNames, imageDirectory, imageDirectory != null, farPlane / 16.0f, farPlane, context);
     }
 	
 	private static float findFarPlane(List<Matrix4> cameraPoseList)
@@ -810,7 +816,7 @@ public class ViewSet
 		return this.lightIndexBuffer;
 	}
 
-	public OpenGLTextureArray getTextures() 
+	public Texture3D<OpenGLContext> getTextures() 
 	{
 		return this.textureArray;
 	}

@@ -1,11 +1,13 @@
 package tetzlaff.gl.opengl.helpers;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL21.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.opengl.GL41.*;
 import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.opengl.OpenGLTexture2D;
 import tetzlaff.gl.opengl.exceptions.OpenGLException;
 import tetzlaff.gl.opengl.exceptions.OpenGLInvalidEnumException;
 import tetzlaff.gl.opengl.exceptions.OpenGLInvalidFramebufferOperationException;
@@ -17,7 +19,7 @@ import tetzlaff.gl.opengl.exceptions.OpenGLStackUnderflowException;
 
 public class StaticHelpers 
 {
-	public static int getOpenGLInternalFormat(ColorFormat format)
+	public static int getOpenGLInternalColorFormat(ColorFormat format)
 	{
 		if (format.alphaBits > 0)
 		{
@@ -318,6 +320,42 @@ public class StaticHelpers
 					return GL_R16;
 				}
 			}
+		}
+	}
+	
+	public static int getOpenGLInternalDepthFormat(int precision)
+	{
+		if (precision <= 16)
+		{
+			return GL_DEPTH_COMPONENT16;
+		}
+		else if (precision <= 24)
+		{
+			return GL_DEPTH_COMPONENT24;
+		}
+		else
+		{
+			return GL_DEPTH_COMPONENT32;
+		}
+	}
+	
+	public static int getOpenGLInternalStencilFormat(int precision)
+	{
+		if (precision == 1)
+		{
+			return GL_STENCIL_INDEX1;
+		}
+		if (precision <= 4)
+		{
+			return GL_STENCIL_INDEX4;
+		}
+		else if (precision <= 8)
+		{
+			return GL_STENCIL_INDEX8;
+		}
+		else
+		{
+			return GL_STENCIL_INDEX16;
 		}
 	}
 	

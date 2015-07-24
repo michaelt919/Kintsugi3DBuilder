@@ -12,6 +12,8 @@ import javax.imageio.ImageIO;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Texture2D;
+import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector2;
@@ -21,7 +23,6 @@ import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
 import tetzlaff.gl.opengl.OpenGLTexture2D;
-import tetzlaff.gl.opengl.OpenGLTextureArray;
 import tetzlaff.gl.opengl.OpenGLVertexBuffer;
 import tetzlaff.ulf.ViewSet;
 
@@ -70,12 +71,12 @@ public class TexGenExecutor
     	if (fileExt.equalsIgnoreCase("vset"))
     	{
     		System.out.println("Loading from VSET file.");
-    		viewSet = ViewSet.loadFromVSETFile(vsetFile, false);
+    		viewSet = ViewSet.loadFromVSETFile(vsetFile, false, context);
     	}
     	else if (fileExt.equalsIgnoreCase("xml"))
     	{
     		System.out.println("Loading from Agisoft Photoscan XML file.");
-    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null);
+    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null, context);
     	}
     	else
     	{
@@ -141,8 +142,8 @@ public class TexGenExecutor
     	
     	File tmpDir = new File(outputDir, "tmp");
     	
-    	OpenGLTextureArray viewTextures = null;
-    	OpenGLTextureArray depthTextures = null;
+    	Texture3D<OpenGLContext> viewTextures = null;
+    	Texture3D<OpenGLContext> depthTextures = null;
     	
     	if (param.isImagePreprojectionUseEnabled() && param.isImagePreprojectionGenerationEnabled())
     	{
@@ -178,10 +179,13 @@ public class TexGenExecutor
 			    	imageFile = new File(imageDir, pngFileName);
 				}
 		    	
-		    	OpenGLTexture2D viewTexture;
+		    	Texture2D<OpenGLContext> viewTexture;
 		    	if (maskDir == null)
 		    	{
-		    		viewTexture = new OpenGLTexture2D(imageFile, true, true, true);
+		    		viewTexture = context.get2DColorTextureBuilder(imageFile, true)
+		    						.setLinearFilteringEnabled(true)
+		    						.setMipmapsEnabled(true)
+		    						.createTexture();
 		    	}
 		    	else
 		    	{
@@ -194,7 +198,10 @@ public class TexGenExecutor
 				    	maskFile = new File(maskDir, pngFileName);
 					}
 					
-		    		viewTexture = new OpenGLTexture2D(imageFile, maskFile, true, true, true);
+		    		viewTexture = context.get2DColorTextureBuilder(imageFile, maskFile, true)
+		    						.setLinearFilteringEnabled(true)
+		    						.setMipmapsEnabled(true)
+		    						.createTexture();
 		    	}
 		    	
 		    	FramebufferObject<OpenGLContext> depthFBO = 
@@ -259,12 +266,15 @@ public class TexGenExecutor
     			System.out.println("Loading and rescaling images...");
     			timestamp = new Date();
     			
-    			viewTextures = new OpenGLTextureArray(param.getImageWidth(), param.getImageHeight(), viewSet.getCameraPoseCount(), false, true, false);
+    			viewTextures = context.get2DColorTextureArrayBuilder(param.getImageWidth(), param.getImageHeight(), viewSet.getCameraPoseCount())
+    							.setLinearFilteringEnabled(true)
+    							.setMipmapsEnabled(true)
+    							.createTexture();
     			
 				// Create an FBO for downsampling
 		    	FramebufferObject<OpenGLContext> downsamplingFBO = 
 	    			context.getFramebufferObjectBuilder(param.getImageWidth(), param.getImageHeight())
-	    				.addColorAttachment(null)
+	    				.addEmptyColorAttachment()
 	    				.createFramebufferObject();
 		    	
 		    	OpenGLRenderable downsampleRenderable = new OpenGLRenderable(textureRectProgram);
@@ -283,10 +293,13 @@ public class TexGenExecutor
 				    	imageFile = new File(imageDir, pngFileName);
 					}
 		    		
-		    		OpenGLTexture2D fullSizeImage;
+		    		Texture2D<OpenGLContext> fullSizeImage;
 		    		if (maskDir == null)
 	    			{
-		    			fullSizeImage = new OpenGLTexture2D(imageFile, true, true, true);
+		    			fullSizeImage = context.get2DColorTextureBuilder(imageFile, true)
+		    								.setLinearFilteringEnabled(true)
+		    								.setMipmapsEnabled(true)
+		    								.createTexture();
 	    			}
 		    		else
 		    		{
@@ -299,7 +312,10 @@ public class TexGenExecutor
 					    	maskFile = new File(maskDir, pngFileName);
 						}
 						
-		    			fullSizeImage = new OpenGLTexture2D(imageFile, maskFile, true, true, true);
+		    			fullSizeImage = context.get2DColorTextureBuilder(imageFile, maskFile, true)
+											.setLinearFilteringEnabled(true)
+											.setMipmapsEnabled(true)
+											.createTexture();
 		    		}
 		    		
 		    		downsamplingFBO.setColorAttachment(0, viewTextures.getLayerAsFramebufferAttachment(i));
@@ -347,7 +363,10 @@ public class TexGenExecutor
 			    	imageFile = new File(imageDir, pngFileName);
 				}
 				BufferedImage img = ImageIO.read(new FileInputStream(imageFile));
-				viewTextures = new OpenGLTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount(), false, true, true);
+				viewTextures = context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount())
+								.setLinearFilteringEnabled(true)
+								.setMipmapsEnabled(true)
+								.createTexture();
 				
 				for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 				{
@@ -390,7 +409,7 @@ public class TexGenExecutor
 	    	// Build depth textures for each view
 	    	int width = viewTextures.getWidth();
 	    	int height = viewTextures.getHeight();
-	    	depthTextures = OpenGLTextureArray.createDepthTextureArray(width, height, viewSet.getCameraPoseCount());
+	    	depthTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
 	    	
 	    	// Don't automatically generate any texture attachments for this framebuffer object
 	    	FramebufferObject<OpenGLContext> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
@@ -544,11 +563,11 @@ public class TexGenExecutor
 			    	timestamp = new Date();
 	    		}
 		    	
-		    	OpenGLTextureArray preprojectedViews = null;
+		    	Texture3D<OpenGLContext> preprojectedViews = null;
 		    	
 		    	if (param.isImagePreprojectionUseEnabled())
 		    	{
-		    		preprojectedViews = new OpenGLTextureArray(subdivSize, subdivSize, viewSet.getCameraPoseCount(), false, false, false);
+		    		preprojectedViews = context.get2DColorTextureArrayBuilder(subdivSize, subdivSize, viewSet.getCameraPoseCount()).createTexture();
 			    	
 					for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 					{

@@ -5,12 +5,12 @@ import java.io.IOException;
 
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject;
 import tetzlaff.gl.opengl.OpenGLProgram;
 import tetzlaff.gl.opengl.OpenGLRenderable;
-import tetzlaff.gl.opengl.OpenGLTextureArray;
 import tetzlaff.gl.opengl.OpenGLVertexBuffer;
 
 public class UnstructuredLightField 
@@ -22,10 +22,10 @@ public class UnstructuredLightField
 	public final OpenGLVertexBuffer positionBuffer;
 	public final OpenGLVertexBuffer texCoordBuffer;
 	public final OpenGLVertexBuffer normalBuffer;
-	public final OpenGLTextureArray depthTextures;
+	public final Texture3D<OpenGLContext> depthTextures;
     public final ULFSettings settings;
 	
-	public UnstructuredLightField(File directoryPath, ViewSet viewSet, VertexMesh proxy, OpenGLTextureArray depthTextures, 
+	public UnstructuredLightField(File directoryPath, ViewSet viewSet, VertexMesh proxy, Texture3D<OpenGLContext> depthTextures, 
 			OpenGLVertexBuffer positionBuffer, OpenGLVertexBuffer texCoordBuffer, OpenGLVertexBuffer normalBuffer, ULFSettings settings) 
 	{
     	this.id = directoryPath.getName();
@@ -70,11 +70,11 @@ public class UnstructuredLightField
 	{
 		ViewSet viewSet;
 		VertexMesh proxy;
-		OpenGLTextureArray depthTextures = null;
+		Texture3D<OpenGLContext> depthTextures = null;
 		
 		File directoryPath = xmlFile.getParentFile();
         proxy = new VertexMesh("OBJ", meshFile); // TODO don't have geometry filename hard-coded
-        viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, imageDirectory);
+        viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, imageDirectory, context);
         OpenGLVertexBuffer positionBuffer = new OpenGLVertexBuffer(proxy.getVertices());
         
         if (imageDirectory != null)
@@ -82,7 +82,7 @@ public class UnstructuredLightField
 	        // Build depth textures for each view
 	    	int width = viewSet.getTextures().getWidth();
 	    	int height = viewSet.getTextures().getHeight();
-	    	depthTextures = OpenGLTextureArray.createDepthTextureArray(width, height, viewSet.getCameraPoseCount());
+	    	depthTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
 	    	
 	    	// Don't automatically generate any texture attachments for this framebuffer object
 	    	FramebufferObject<OpenGLContext> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
@@ -138,11 +138,11 @@ public class UnstructuredLightField
 	{
 		ViewSet viewSet;
 		VertexMesh proxy;
-		OpenGLTextureArray depthTextures = null;
+		Texture3D<OpenGLContext> depthTextures = null;
 		
 		File directoryPath = vsetFile.getParentFile();
         proxy = new VertexMesh("OBJ", new File(directoryPath, "manifold.obj")); // TODO don't have geometry filename hard-coded
-        viewSet = ViewSet.loadFromVSETFile(vsetFile, loadImages);
+        viewSet = ViewSet.loadFromVSETFile(vsetFile, loadImages, context);
         OpenGLVertexBuffer positionBuffer = new OpenGLVertexBuffer(proxy.getVertices());
         
         if (loadImages)
@@ -150,10 +150,10 @@ public class UnstructuredLightField
 	        // Build depth textures for each view
 	    	int width = viewSet.getTextures().getWidth();
 	    	int height = viewSet.getTextures().getHeight();
-	    	depthTextures = OpenGLTextureArray.createDepthTextureArray(width, height, viewSet.getCameraPoseCount());
+	    	depthTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
 	    	
 	    	// Don't automatically generate any texture attachments for this framebuffer object
-	    	OpenGLFramebufferObject depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
+	    	FramebufferObject<OpenGLContext> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
 	    	
 	    	// Load the program
 	    	OpenGLProgram depthRenderingProgram = new OpenGLProgram(new File("shaders/depth.vert"), new File("shaders/depth.frag"));

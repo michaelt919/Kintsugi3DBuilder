@@ -8,6 +8,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.opengl.OpenGLProgram;
@@ -34,7 +35,7 @@ public class TextureUpscaleProgram
         try
         {
 	    	OpenGLProgram perlinNoiseProgram = new OpenGLProgram(new File("shaders", "passthrough2d.vert"), new File("shaders", "perlintex.frag"));
-	    	OpenGLTexture2D permTexture = OpenGLTexture2D.createPerlinNoise();
+	    	Texture2D<OpenGLContext> permTexture = context.getPerlinNoiseTextureBuilder().createTexture();
 	    	perlinNoiseProgram.setTexture("permTexture", permTexture);
     		
     		JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
@@ -44,8 +45,11 @@ public class TextureUpscaleProgram
     		if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
     		{
     	    	File imageFile = fileChooser.getSelectedFile();
-    	    	OpenGLTexture2D imageTexture = new OpenGLTexture2D(imageFile, true, true, true);
-    	    	OpenGLTexture2D segmentTexture = new OpenGLTexture2D(new File(new File(imageFile.getParent(), "segment"), imageFile.getName()), true, false, false);
+    	    	Texture2D<OpenGLContext> imageTexture = context.get2DColorTextureBuilder(imageFile, true)
+	    										.setLinearFilteringEnabled(true)
+	    										.setMipmapsEnabled(true)
+	    										.createTexture();
+    	    	Texture2D<OpenGLContext> segmentTexture = context.get2DColorTextureBuilder(new File(new File(imageFile.getParent(), "segment"), imageFile.getName()), true).createTexture();
     	    	perlinNoiseProgram.setTexture("imageTexture", imageTexture);
     	    	perlinNoiseProgram.setTexture("segmentTexture", segmentTexture);
     	    	int targetWidth = imageTexture.getWidth() * SCALE_FACTOR;

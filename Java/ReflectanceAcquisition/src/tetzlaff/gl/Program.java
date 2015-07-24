@@ -8,7 +8,7 @@ import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 
-public interface Program<ContextType extends Context> extends Resource
+public interface Program<ContextType extends Context<? super ContextType>> extends Resource
 {
 
 	void attachShader(Shader<ContextType> shader, boolean owned);

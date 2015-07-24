@@ -48,7 +48,7 @@ import tetzlaff.window.listeners.WindowRefreshListener;
 import tetzlaff.window.listeners.WindowRestoredListener;
 import tetzlaff.window.listeners.WindowSizeListener;
 
-public class GLFWWindow extends OpenGLContext implements Window, Context, EventPollable
+public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 {
 	private long handle;
 	private boolean isDestroyed;

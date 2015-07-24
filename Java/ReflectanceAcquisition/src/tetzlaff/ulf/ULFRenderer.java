@@ -234,7 +234,7 @@ public class ULFRenderer implements ULFDrawable
 	
 	private void resample() throws IOException
 	{
-		ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, false);
+		ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, false, context);
 		FramebufferObject<OpenGLContext> framebuffer = context.getFramebufferObjectBuilder(resampleSize, resampleSize).addColorAttachment().createFramebufferObject();
     	
     	this.renderable.program().setTexture("imageTextures", lightField.viewSet.getTextures());
