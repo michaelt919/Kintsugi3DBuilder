@@ -16,6 +16,8 @@ import tetzlaff.gl.FramebufferAttachment;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.Resource;
+import tetzlaff.gl.Texture2D;
+import tetzlaff.gl.builders.TextureBuilder;
 import tetzlaff.gl.builders.base.FramebufferObjectBuilderBase;
 import tetzlaff.gl.opengl.exceptions.OpenGLInvalidFramebufferOperationException;
 
@@ -32,9 +34,12 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 
 	public static class OpenGLFramebufferObjectBuilder extends FramebufferObjectBuilderBase<OpenGLContext>
 	{
-		OpenGLFramebufferObjectBuilder(int width, int height) 
+		private OpenGLContext context;
+		
+		OpenGLFramebufferObjectBuilder(OpenGLContext context, int width, int height) 
 		{
-			super(width, height);
+			super(context, width, height);
+			this.context = context;
 		}
 
 		@Override
@@ -48,9 +53,9 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 			OpenGLTexture2D[] colorAttachments = new OpenGLTexture2D[this.getColorAttachmentCount()];
 			for (int i = 0; i < this.getColorAttachmentCount(); i++)
 			{
-				if (this.getColorAttachmentFormat(i) != null)
+				if (this.getColorAttachmentBuilder(i) != null)
 				{
-					colorAttachments[i] = new OpenGLTexture2D(getOpenGLInternalFormat(this.getColorAttachmentFormat(i)), this.width, this.height);
+					colorAttachments[i] = (OpenGLTexture2D)this.getColorAttachmentBuilder(i).createTexture();
 				}
 			}
 
@@ -59,62 +64,18 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 			OpenGLTexture2D depthStencilAttachment = null;
 			if (this.hasCombinedDepthStencilAttachment())
 			{
-				if (this.hasFloatingPointDepthAttachment())
-				{
-					depthStencilAttachment = new OpenGLTexture2D(GL_DEPTH32F_STENCIL8, this.width, this.height);
-				}
-				else
-				{
-					depthStencilAttachment = new OpenGLTexture2D(GL_DEPTH24_STENCIL8, this.width, this.height);
-				}
+				depthStencilAttachment = (OpenGLTexture2D)this.getDepthStencilAttachmentBuilder().createTexture();
 			}
 			else
 			{
 				if (this.hasDepthAttachment())
 				{
-					if (this.hasFloatingPointDepthAttachment())
-					{
-						depthAttachment = new OpenGLTexture2D(GL_DEPTH_COMPONENT32F, this.width, this.height);
-					}
-					else
-					{
-						if (this.getDepthAttachmentPrecision() <= 16)
-						{
-							depthAttachment = new OpenGLTexture2D(GL_DEPTH_COMPONENT16, this.width, this.height);
-						}
-						else if (this.getDepthAttachmentPrecision() <= 24)
-						{
-							depthAttachment = new OpenGLTexture2D(GL_DEPTH_COMPONENT24, this.width, this.height);
-						}
-						else
-						{
-							depthAttachment = new OpenGLTexture2D(GL_DEPTH_COMPONENT32, this.width, this.height);
-						}
-					}
+					depthAttachment = (OpenGLTexture2D)this.getDepthAttachmentBuilder().createTexture();
 				}
 				
 				if (this.hasStencilAttachment())
 				{
-					if (this.getStencilAttachmentPrecision() == 1)
-					{
-						stencilAttachment = new OpenGLTexture2D(GL_STENCIL_INDEX1, this.width, this.height);
-					}
-					if (this.getStencilAttachmentPrecision() == 1)
-					{
-						stencilAttachment = new OpenGLTexture2D(GL_STENCIL_INDEX1, this.width, this.height);
-					}
-					else if (this.getDepthAttachmentPrecision() <= 16)
-					{
-						depthAttachment = new OpenGLTexture2D(GL_DEPTH_COMPONENT16, this.width, this.height);
-					}
-					else if (this.getDepthAttachmentPrecision() <= 24)
-					{
-						depthAttachment = new OpenGLTexture2D(GL_DEPTH_COMPONENT24, this.width, this.height);
-					}
-					else
-					{
-						depthAttachment = new OpenGLTexture2D(GL_DEPTH_COMPONENT32, this.width, this.height);
-					}
+					stencilAttachment = (OpenGLTexture2D)this.getStencilAttachmentBuilder().createTexture();
 				}
 			}
 			

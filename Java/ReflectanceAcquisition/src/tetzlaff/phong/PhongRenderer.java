@@ -6,8 +6,10 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
@@ -54,16 +56,16 @@ public class PhongRenderer implements Drawable
 	private OpenGLVertexBuffer texCoordBuffer;
 	private OpenGLVertexBuffer normalBuffer;
 	
-	private OpenGLTexture2D diffuse;
-	private OpenGLTexture2D normal;
-	private OpenGLTexture2D specular;
-	private OpenGLTexture2D specNormal;
-	private OpenGLTexture2D roughness;
+	private Texture2D<OpenGLContext> diffuse;
+	private Texture2D<OpenGLContext> normal;
+	private Texture2D<OpenGLContext> specular;
+	private Texture2D<OpenGLContext> specNormal;
+	private Texture2D<OpenGLContext> roughness;
 	
 	private OpenGLRenderable renderable;
 	private OpenGLRenderable shadowRenderable;
 	
-	private OpenGLFramebufferObject shadowBuffer;
+	private FramebufferObject<OpenGLContext> shadowBuffer;
 	
 	public PhongRenderer(OpenGLContext context, File objFile, Trackball viewTrackball, Trackball lightTrackball) 
 	{
@@ -119,13 +121,13 @@ public class PhongRenderer implements Drawable
 			this.normalBuffer = new OpenGLVertexBuffer(this.mesh.getNormals());
 			
 			File texturePath = new File(objFile.getParentFile(), "textures");
-			this.diffuse = new OpenGLTexture2D(new File(texturePath, "diffuse.png"), true, false, false);
-			this.normal = new OpenGLTexture2D(new File(texturePath, "normal.png"), true, false, false);
-			this.specular = new OpenGLTexture2D(new File(texturePath, "specular.png"), true, false, false);
-			this.roughness = new OpenGLTexture2D(new File(texturePath, "roughness.png"), true, false, false);
+			this.diffuse = context.get2DColorTextureBuilder(new File(texturePath, "diffuse.png"), true).createTexture();
+			this.normal = context.get2DColorTextureBuilder(new File(texturePath, "normal.png"), true).createTexture();
+			this.specular = context.get2DColorTextureBuilder(new File(texturePath, "specular.png"), true).createTexture();
+			this.roughness = context.get2DColorTextureBuilder(new File(texturePath, "roughness.png"), true).createTexture();
 			if (new File(texturePath, "snormal.png").exists())
 			{
-				this.specNormal = new OpenGLTexture2D(new File(texturePath, "snormal.png"), true, false, false);
+				this.specNormal =context.get2DColorTextureBuilder(new File(texturePath, "snormal.png"), true).createTexture();
 			}
 			
 			this.renderable = new OpenGLRenderable(PhongRenderer.program);
@@ -137,7 +139,7 @@ public class PhongRenderer implements Drawable
 			this.shadowRenderable.addVertexBuffer("position", this.positionBuffer);
 			this.shadowRenderable.addVertexBuffer("texCoord", this.texCoordBuffer);
 			this.shadowRenderable.addVertexBuffer("normal", this.normalBuffer);
-			this.shadowBuffer = context.getFramebufferObjectBuilder(4096, 4096).createFramebufferObject();
+			this.shadowBuffer = context.getFramebufferObjectBuilder(4096, 4096).addDepthAttachment().createFramebufferObject();
 		} 
     	catch (IOException e) 
     	{
@@ -280,10 +282,10 @@ public class PhongRenderer implements Drawable
 
 	public void resample(File targetVSETFile, File exportPath) throws IOException
 	{
-		ViewSet targetViewSet = ViewSet.loadFromVSETFile(targetVSETFile, false);
+		ViewSet targetViewSet = ViewSet.loadFromVSETFile(targetVSETFile, false, context);
 		
 		BufferedImage img = ImageIO.read(targetViewSet.getImageFile(0));
-		OpenGLFramebufferObject framebuffer = context.getFramebufferObjectBuilder(img.getWidth(), img.getHeight()).createFramebufferObject();
+		FramebufferObject<OpenGLContext> framebuffer = context.getFramebufferObjectBuilder(img.getWidth(), img.getHeight()).createFramebufferObject();
     	
     	for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 		{

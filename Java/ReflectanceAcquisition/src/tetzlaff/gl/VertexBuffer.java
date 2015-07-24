@@ -6,7 +6,7 @@ import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.ShortVertexList;
 
-public interface VertexBuffer<ContextType extends Context> extends Resource
+public interface VertexBuffer<ContextType extends Context<? super ContextType>> extends Resource
 {
 	int count();
 	void setData(ByteVertexList data, boolean unsigned);

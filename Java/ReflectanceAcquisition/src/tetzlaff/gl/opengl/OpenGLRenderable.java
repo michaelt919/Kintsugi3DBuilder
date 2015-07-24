@@ -130,19 +130,19 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 	}
 	
 	@Override
-	public void draw(PrimitiveMode primitiveMode, Context context)
+	public void draw(PrimitiveMode primitiveMode, OpenGLContext context)
 	{
 		this.draw(primitiveMode, OpenGLDefaultFramebuffer.fromContext(context));
 	}
 
 	@Override
-	public void draw(PrimitiveMode primitiveMode, Context context, int width, int height)
+	public void draw(PrimitiveMode primitiveMode, OpenGLContext context, int width, int height)
 	{
 		this.draw(primitiveMode, OpenGLDefaultFramebuffer.fromContext(context), width, height);
 	}
 
 	@Override
-	public void draw(PrimitiveMode primitiveMode, Context context, int x, int y, int width, int height)
+	public void draw(PrimitiveMode primitiveMode, OpenGLContext context, int x, int y, int width, int height)
 	{
 		this.draw(primitiveMode, OpenGLDefaultFramebuffer.fromContext(context), x, y, width, height);
 	}

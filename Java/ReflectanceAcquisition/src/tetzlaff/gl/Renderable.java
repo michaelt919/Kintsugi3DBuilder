@@ -10,7 +10,7 @@ import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 
-public interface Renderable<ContextType extends Context>
+public interface Renderable<ContextType extends Context<? super ContextType>>
 {
 	Program<ContextType> program();
 
@@ -22,11 +22,11 @@ public interface Renderable<ContextType extends Context>
 	void draw(PrimitiveMode primitiveMode, Framebuffer<ContextType> framebuffer, int width,
 			int height);
 	
-	void draw(PrimitiveMode primitiveMode, Context context);
+	void draw(PrimitiveMode primitiveMode, ContextType context);
 	
-	void draw(PrimitiveMode primitiveMode, Context context, int x, int y, int width, int height);
+	void draw(PrimitiveMode primitiveMode, ContextType context, int x, int y, int width, int height);
 
-	void draw(PrimitiveMode primitiveMode, Context context, int width, int height);
+	void draw(PrimitiveMode primitiveMode, ContextType context, int width, int height);
 	
 	boolean setVertexAttrib(String name, DoubleVector4 value);
 
