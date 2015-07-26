@@ -2,47 +2,41 @@ package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 import tetzlaff.gl.Texture;
 
-public abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment
+abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment
 {
-	public static final int MAX_COMBINED_TEXTURE_IMAGE_UNITS;
+	protected final OpenGLContext context;
 	
 	private int textureId;
 	
-	static
+	OpenGLTexture(OpenGLContext context) 
 	{
-		MAX_COMBINED_TEXTURE_IMAGE_UNITS = glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
-		openGLErrorCheck();
-	}
-	
-	protected OpenGLTexture() 
-	{
+		this.context = context;
 		this.textureId = glGenTextures();
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 	}
 	
-	protected abstract int getOpenGLTextureTarget();
-	protected abstract int getLevelCount();
+	@Override
+	public OpenGLContext getContext()
+	{
+		return this.context;
+	}
 	
-	protected void bind()
+	abstract int getOpenGLTextureTarget();
+	abstract int getLevelCount();
+	
+	void bind()
 	{
 		glBindTexture(this.getOpenGLTextureTarget(), this.textureId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 	}
 	
-	protected int getTextureId()
+	int getTextureId()
 	{
 		return this.textureId;
-	}
-	
-	public static int getTextureUnitCount()
-	{
-		return MAX_COMBINED_TEXTURE_IMAGE_UNITS;
 	}
 	
 	void bindToTextureUnit(int textureUnitIndex)
@@ -51,38 +45,21 @@ public abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFra
 		{
 			throw new IllegalArgumentException("Texture unit index cannot be negative.");
 		}
-		else if (textureUnitIndex > MAX_COMBINED_TEXTURE_IMAGE_UNITS)
+		else if (textureUnitIndex > this.context.getMaxCombinedTextureImageUnits())
 		{
 			throw new IllegalArgumentException("Texture unit index (" + textureUnitIndex + ") is greater than the maximum allowed index (" + 
-					(MAX_COMBINED_TEXTURE_IMAGE_UNITS-1) + ").");
+					(this.context.getMaxCombinedTextureImageUnits()-1) + ").");
 		}
 		glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		this.bind();
-	}
-	
-	static void unbindTextureUnit(int textureUnitIndex)
-	{
-		if (textureUnitIndex < 0)
-		{
-			throw new IllegalArgumentException("Texture unit index cannot be negative.");
-		}
-		else if (textureUnitIndex > MAX_COMBINED_TEXTURE_IMAGE_UNITS)
-		{
-			throw new IllegalArgumentException("Texture unit index (" + textureUnitIndex + ") is greater than the maximum allowed index (" + 
-					(MAX_COMBINED_TEXTURE_IMAGE_UNITS-1) + ").");
-		}
-		glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
-		openGLErrorCheck();
-		glBindTexture(GL_TEXTURE_2D, 0);
-		openGLErrorCheck();
 	}
 
 	@Override
 	public void delete() 
 	{
 		glDeleteTextures(this.textureId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 	}
 
 	@Override
@@ -97,13 +74,13 @@ public abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFra
 			throw new IllegalArgumentException("Illegal level index: " + level + ".  The texture only has " + this.getLevelCount() + " levels.");
 		}
 		glFramebufferTexture(GL_DRAW_FRAMEBUFFER, attachment, this.textureId, level);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 	}
 
 	@Override
 	public void attachToReadFramebuffer(int attachment, int level) 
 	{
 		glFramebufferTexture(GL_READ_FRAMEBUFFER, attachment, this.textureId, level);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 	}
 }

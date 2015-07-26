@@ -2,10 +2,7 @@ package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL31.*;
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 
@@ -14,6 +11,7 @@ import tetzlaff.gl.Resource;
 import tetzlaff.gl.Shader;
 import tetzlaff.gl.Texture;
 import tetzlaff.gl.UniformBuffer;
+import tetzlaff.gl.builders.base.ProgramBuilderBase;
 import tetzlaff.gl.exceptions.ProgramLinkFailureException;
 import tetzlaff.gl.exceptions.UnlinkedProgramException;
 import tetzlaff.gl.helpers.IntVector2;
@@ -23,51 +21,61 @@ import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
-import tetzlaff.gl.opengl.helpers.ResourceManager;
+import tetzlaff.helpers.ResourceManager;
 
-public class OpenGLProgram implements Resource, Program<OpenGLContext>
+class OpenGLProgram implements Resource, Program<OpenGLContext>
 {
+	protected final OpenGLContext context;
+
 	private int programId;
 	private AbstractCollection<OpenGLShader> ownedShaders;
 	private ResourceManager<OpenGLTexture> textureManager;
 	private ResourceManager<OpenGLUniformBuffer> uniformBufferManager;
 	
-	public OpenGLProgram()
+	static class OpenGLProgramBuilder extends ProgramBuilderBase<OpenGLContext>
 	{
-		initProgram();
+		OpenGLProgramBuilder(OpenGLContext context) 
+		{
+			super(context);
+		}
+
+		@Override
+		public OpenGLProgram createProgram() 
+		{
+			OpenGLProgram program = new OpenGLProgram(this.context);
+			for(Shader<OpenGLContext> shader : this.getShaders())
+			{
+				program.attachShader(shader);
+			}
+			program.link();
+			return program;
+		}
 	}
 	
-	public OpenGLProgram(File vertexShader, File fragmentShader) throws FileNotFoundException
+	private OpenGLProgram(OpenGLContext context)
 	{
+		this.context = context;
 		initProgram();
-		OpenGLShader vertexShaderObj = new OpenGLShader(GL_VERTEX_SHADER, vertexShader);
-		OpenGLShader fragmentShaderObj = new OpenGLShader(GL_FRAGMENT_SHADER, fragmentShader);
-		this.attachShader(vertexShaderObj, true);
-		this.attachShader(fragmentShaderObj, true);
-		this.link();
 	}
 	
 	private void initProgram()
 	{
 		programId = glCreateProgram();
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		ownedShaders = new ArrayList<OpenGLShader>();
-		textureManager = new ResourceManager<OpenGLTexture>(OpenGLTexture2D.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
-		uniformBufferManager = new ResourceManager<OpenGLUniformBuffer>(OpenGLUniformBuffer.MAX_COMBINED_UNIFORM_BLOCKS);
+		textureManager = new ResourceManager<OpenGLTexture>(this.context.getMaxCombinedTextureImageUnits());
+		uniformBufferManager = new ResourceManager<OpenGLUniformBuffer>(this.context.getMaxCombinedUniformBlocks());
 	}
 	
-	@Override
-	public void attachShader(Shader<OpenGLContext> shader, boolean owned)
+	private OpenGLProgram attachShader(Shader<OpenGLContext> shader)
 	{
 		if (shader instanceof OpenGLShader)
 		{
 			OpenGLShader shaderCast = (OpenGLShader)shader;
 			glAttachShader(programId, shaderCast.getId());
-			openGLErrorCheck();
-			if (owned)
-			{
-				ownedShaders.add(shaderCast);
-			}
+			this.context.openGLErrorCheck();
+			ownedShaders.add(shaderCast);
+			return this;
 		}
 		else
 		{
@@ -75,37 +83,27 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 		}
 	}
 	
-	@Override
-	public void detachShader(Shader<OpenGLContext> shader)
-	{
-		if (shader instanceof OpenGLShader)
-		{
-			glDetachShader(programId, ((OpenGLShader)shader).getId());
-			openGLErrorCheck();
-		}
-		else
-		{
-			throw new IllegalArgumentException("'shader' must be of type OpenGLShader.");
-		}
-	}
-	
-	@Override
-	public boolean isLinked()
+	private boolean isLinked()
 	{
 		int linked = glGetProgrami(programId, GL_LINK_STATUS);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
     	return linked == GL_TRUE;
 	}
 	
-	@Override
-	public void link()
+	private void link()
 	{
     	glLinkProgram(programId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
     	if (!this.isLinked())
     	{
     		throw new ProgramLinkFailureException(glGetProgramInfoLog(programId));
     	}
+	}
+	
+	@Override
+	public OpenGLContext getContext()
+	{
+		return this.context;
 	}
 	
 	private void useForUniformAssignment()
@@ -117,7 +115,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 		else
 		{
 			glUseProgram(programId);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 		}
 	}
 	
@@ -130,7 +128,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 		else
 		{
 			glUseProgram(programId);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			
 			for (int i = 0; i < textureManager.length; i++)
 			{
@@ -141,7 +139,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 				}
 				else
 				{
-					OpenGLTexture.unbindTextureUnit(i);
+					this.context.unbindTextureUnit(i);
 				}
 			}
 			
@@ -154,7 +152,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 				}
 				else
 				{
-					OpenGLUniformBuffer.unbindFromIndex(i);
+					this.context.unbindBuffer(GL_UNIFORM_BUFFER, i);
 				}
 			}
 		}
@@ -190,7 +188,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 				int bindingPoint = uniformBufferManager.assignResourceByKey(index, (OpenGLUniformBuffer)buffer);
 				
 				glUniformBlockBinding(this.programId, index, bindingPoint);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 				
 				return true;
 			}
@@ -215,7 +213,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 	public int getUniformBlockIndex(String name)
 	{
 		int index = glGetUniformBlockIndex(this.programId, name);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		return index;
 	}
 	
@@ -223,7 +221,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 	public void delete()
 	{
 		glDeleteProgram(programId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		for (OpenGLShader shader : ownedShaders)
 		{
 			shader.delete();
@@ -234,7 +232,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 	public int getUniformLocation(String name)
 	{
 		int location = glGetUniformLocation(programId, name);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		return location;
 	}
 	
@@ -246,7 +244,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 			this.useForUniformAssignment(); 
 			
 			glUniform1i(location, value);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			
 			return true;
 		}
@@ -264,7 +262,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 			this.useForUniformAssignment(); 
 			
 			glUniform2i(location, value.x, value.y);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			
 			return true;
 		}
@@ -282,7 +280,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 			this.useForUniformAssignment(); 
 			
 			glUniform3i(location, value.x, value.y, value.z);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			
 			return true;
 		}
@@ -300,7 +298,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 			this.useForUniformAssignment(); 
 			
 			glUniform4i(location, value.x, value.y, value.z, value.w);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			
 			return true;
 		}
@@ -318,7 +316,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 			this.useForUniformAssignment(); 
 			
 			glUniform1f(location, value);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			
 			return true;
 		}
@@ -336,7 +334,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 			this.useForUniformAssignment(); 
 			
 			glUniform2f(location, value.x, value.y);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			
 			return true;
 		}
@@ -354,7 +352,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 			this.useForUniformAssignment(); 
 			
 			glUniform3f(location, value.x, value.y, value.z);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			
 			return true;
 		}
@@ -372,7 +370,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 			this.useForUniformAssignment(); 
 			
 			glUniform4f(location, value.x, value.y, value.z, value.w);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			
 			return true;
 		}
@@ -446,7 +444,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 	public int getVertexAttribLocation(String name)
 	{
 		int location = glGetAttribLocation(programId, name);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		return location;
 	}
 
@@ -458,7 +456,7 @@ public class OpenGLProgram implements Resource, Program<OpenGLContext>
 			this.useForUniformAssignment(); 
 			
 			glUniformMatrix4(location, false, value.asFloatBuffer());
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			
 			return true;
 		}

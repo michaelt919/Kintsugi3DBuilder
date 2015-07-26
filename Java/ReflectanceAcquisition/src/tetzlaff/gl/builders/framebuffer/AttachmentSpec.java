@@ -1,9 +1,5 @@
 package tetzlaff.gl.builders.framebuffer;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Texture;
-
 public abstract class AttachmentSpec
 {
 	private int multisamples = 1;

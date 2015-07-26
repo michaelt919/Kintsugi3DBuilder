@@ -14,23 +14,22 @@ import java.util.Map;
 import java.util.Scanner;
 
 import javax.imageio.ImageIO;
-import javax.naming.Context;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture3D;
+import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
-import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.gl.opengl.OpenGLUniformBuffer;
 import tetzlaff.helpers.ZipWrapper;
 
-public class ViewSet
+public class ViewSet<ContextType extends Context<ContextType>>
 {
 	private List<Matrix4> cameraPoseList;
 	private List<Projection> cameraProjectionList;
@@ -40,12 +39,12 @@ public class ViewSet
 	private List<String> imageFileNames;
 	private File filePath;
 	
-	private OpenGLUniformBuffer cameraPoseBuffer;
-	private OpenGLUniformBuffer cameraProjectionBuffer;
-	private OpenGLUniformBuffer cameraProjectionIndexBuffer;
-	private OpenGLUniformBuffer lightPositionBuffer;
-	private OpenGLUniformBuffer lightIndexBuffer;
-	private Texture3D<OpenGLContext> textureArray;
+	private UniformBuffer<ContextType> cameraPoseBuffer;
+	private UniformBuffer<ContextType> cameraProjectionBuffer;
+	private UniformBuffer<ContextType> cameraProjectionIndexBuffer;
+	private UniformBuffer<ContextType> lightPositionBuffer;
+	private UniformBuffer<ContextType> lightIndexBuffer;
+	private Texture3D<ContextType> textureArray;
 	private float recommendedNearPlane;
 	private float recommendedFarPlane;
 	
@@ -60,7 +59,7 @@ public class ViewSet
 		boolean loadImages,
 		float recommendedNearPlane,
 		float recommendedFarPlane,
-		OpenGLContext context) throws IOException
+		ContextType context) throws IOException
 	{
 		this.cameraPoseList = cameraPoseList;
 		this.cameraProjectionList = cameraProjectionList;
@@ -94,7 +93,7 @@ public class ViewSet
 			}
 			
 			// Create the uniform buffer
-			cameraPoseBuffer = new OpenGLUniformBuffer(flattenedPoseMatrices);
+			cameraPoseBuffer = context.createUniformBuffer().setData(flattenedPoseMatrices);
 		}
 		
 		// Store the camera projections in a uniform buffer
@@ -118,7 +117,7 @@ public class ViewSet
 			}
 			
 			// Create the uniform buffer
-			cameraProjectionBuffer = new OpenGLUniformBuffer(flattenedProjectionMatrices);
+			cameraProjectionBuffer = context.createUniformBuffer().setData(flattenedProjectionMatrices);
 		}
 		
 		// Store the camera projection indices in a uniform buffer
@@ -130,7 +129,7 @@ public class ViewSet
 				indexArray[i] = cameraProjectionIndexList.get(i);
 			}
 			IntVertexList indexVertexList = new IntVertexList(1, cameraProjectionIndexList.size(), indexArray);
-			cameraProjectionIndexBuffer = new OpenGLUniformBuffer(indexVertexList);
+			cameraProjectionIndexBuffer = context.createUniformBuffer().setData(indexVertexList);
 		}
 		
 		// Store the light positions in a uniform buffer
@@ -146,7 +145,7 @@ public class ViewSet
 			}
 			
 			// Create the uniform buffer
-			lightPositionBuffer = new OpenGLUniformBuffer(lightPositions);
+			lightPositionBuffer = context.createUniformBuffer().setData(lightPositions);
 		}
 		
 		// Store the light indices indices in a uniform buffer
@@ -158,7 +157,7 @@ public class ViewSet
 				indexArray[i] = lightIndexList.get(i);
 			}
 			IntVertexList indexVertexList = new IntVertexList(1, lightIndexList.size(), indexArray);
-			lightIndexBuffer = new OpenGLUniformBuffer(indexVertexList);
+			lightIndexBuffer = context.createUniformBuffer().setData(indexVertexList);
 		}
 		
 		// Read the images from a file
@@ -237,7 +236,7 @@ public class ViewSet
 		}
 	}
 
-	public static ViewSet loadFromVSETFile(File file, boolean loadImages, OpenGLContext context) throws IOException
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(File file, boolean loadImages, ContextType context) throws IOException
 	{
 		Date timestamp = new Date();
 
@@ -369,7 +368,7 @@ public class ViewSet
 
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
-		return new ViewSet(
+		return new ViewSet<ContextType>(
 			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightList, lightIndexList, 
 			imageFileNames, file.getParentFile(), loadImages, recommendedNearPlane, recommendedFarPlane, context);
 	}
@@ -420,7 +419,7 @@ public class ViewSet
 	    }
 	}
 
-	public static ViewSet loadFromAgisoftXMLFile(File file, File imageDirectory, OpenGLContext context) throws IOException
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(File file, File imageDirectory, ContextType context) throws IOException
 	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
@@ -713,7 +712,7 @@ public class ViewSet
         lightList.add(new Vector3(0.0f, 0.0f, 0.0f)); // Just assume the light is co-located with the camera (for now)
 
         float farPlane = findFarPlane(cameraPoseList);
-        return new ViewSet(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightList, lightIndexList,
+        return new ViewSet<ContextType>(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightList, lightIndexList,
         		imageFileNames, imageDirectory, imageDirectory != null, farPlane / 16.0f, farPlane, context);
     }
 	
@@ -791,32 +790,32 @@ public class ViewSet
 		return this.cameraProjectionList.size();
 	}
 	
-	public OpenGLUniformBuffer getCameraPoseBuffer()
+	public UniformBuffer<ContextType> getCameraPoseBuffer()
 	{
 		return this.cameraPoseBuffer;
 	}
 	
-	public OpenGLUniformBuffer getCameraProjectionBuffer()
+	public UniformBuffer<ContextType> getCameraProjectionBuffer()
 	{
 		return this.cameraProjectionBuffer;
 	}
 	
-	public OpenGLUniformBuffer getCameraProjectionIndexBuffer()
+	public UniformBuffer<ContextType> getCameraProjectionIndexBuffer()
 	{
 		return this.cameraProjectionIndexBuffer;
 	}
 	
-	public OpenGLUniformBuffer getLightPositionBuffer()
+	public UniformBuffer<ContextType> getLightPositionBuffer()
 	{
 		return this.lightPositionBuffer;
 	}
 	
-	public OpenGLUniformBuffer getLightIndexBuffer()
+	public UniformBuffer<ContextType> getLightIndexBuffer()
 	{
 		return this.lightIndexBuffer;
 	}
 
-	public Texture3D<OpenGLContext> getTextures() 
+	public Texture3D<ContextType> getTextures() 
 	{
 		return this.textureArray;
 	}

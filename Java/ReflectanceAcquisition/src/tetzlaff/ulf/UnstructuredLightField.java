@@ -3,30 +3,30 @@ package tetzlaff.ulf;
 import java.io.File;
 import java.io.IOException;
 
+import tetzlaff.gl.Context;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Program;
+import tetzlaff.gl.Renderable;
+import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture3D;
+import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.helpers.VertexMesh;
-import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.gl.opengl.OpenGLFramebufferObject;
-import tetzlaff.gl.opengl.OpenGLProgram;
-import tetzlaff.gl.opengl.OpenGLRenderable;
-import tetzlaff.gl.opengl.OpenGLVertexBuffer;
 
-public class UnstructuredLightField 
+public class UnstructuredLightField<ContextType extends Context<ContextType>>
 {
 	public final File directoryPath;
 	public final String id;
-	public final ViewSet viewSet;
+	public final ViewSet<ContextType> viewSet;
 	public final VertexMesh proxy;
-	public final OpenGLVertexBuffer positionBuffer;
-	public final OpenGLVertexBuffer texCoordBuffer;
-	public final OpenGLVertexBuffer normalBuffer;
-	public final Texture3D<OpenGLContext> depthTextures;
+	public final VertexBuffer<ContextType> positionBuffer;
+	public final VertexBuffer<ContextType> texCoordBuffer;
+	public final VertexBuffer<ContextType> normalBuffer;
+	public final Texture3D<ContextType> depthTextures;
     public final ULFSettings settings;
 	
-	public UnstructuredLightField(File directoryPath, ViewSet viewSet, VertexMesh proxy, Texture3D<OpenGLContext> depthTextures, 
-			OpenGLVertexBuffer positionBuffer, OpenGLVertexBuffer texCoordBuffer, OpenGLVertexBuffer normalBuffer, ULFSettings settings) 
+	public UnstructuredLightField(File directoryPath, ViewSet<ContextType> viewSet, VertexMesh proxy, Texture3D<ContextType> depthTextures, 
+			VertexBuffer<ContextType> positionBuffer, VertexBuffer<ContextType> texCoordBuffer, VertexBuffer<ContextType> normalBuffer, ULFSettings settings) 
 	{
     	this.id = directoryPath.getName();
 		this.directoryPath = directoryPath;
@@ -61,21 +61,23 @@ public class UnstructuredLightField
 		}
 	}
 	
-	public static UnstructuredLightField loadFromAgisoftXMLFile(File xmlFile, File meshFile, OpenGLContext context) throws IOException
+	public static <ContextType extends Context<ContextType>> 
+		UnstructuredLightField<ContextType> loadFromAgisoftXMLFile(File xmlFile, File meshFile, ContextType context) throws IOException
 	{
 		return UnstructuredLightField.loadFromAgisoftXMLFile(xmlFile, meshFile, null);
 	}
 
-	public static UnstructuredLightField loadFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory, OpenGLContext context) throws IOException
+	public static <ContextType extends Context<ContextType>>
+		UnstructuredLightField<ContextType> loadFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory, ContextType context) throws IOException
 	{
-		ViewSet viewSet;
+		ViewSet<ContextType> viewSet;
 		VertexMesh proxy;
-		Texture3D<OpenGLContext> depthTextures = null;
+		Texture3D<ContextType> depthTextures = null;
 		
 		File directoryPath = xmlFile.getParentFile();
         proxy = new VertexMesh("OBJ", meshFile); // TODO don't have geometry filename hard-coded
         viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, imageDirectory, context);
-        OpenGLVertexBuffer positionBuffer = new OpenGLVertexBuffer(proxy.getVertices());
+        VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(proxy.getVertices());
         
         if (imageDirectory != null)
         {
@@ -85,11 +87,14 @@ public class UnstructuredLightField
 	    	depthTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
 	    	
 	    	// Don't automatically generate any texture attachments for this framebuffer object
-	    	FramebufferObject<OpenGLContext> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
+	    	FramebufferObject<ContextType> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
 	    	
 	    	// Load the program
-	    	OpenGLProgram depthRenderingProgram = new OpenGLProgram(new File("shaders/depth.vert"), new File("shaders/depth.frag"));
-	    	OpenGLRenderable depthRenderable = new OpenGLRenderable(depthRenderingProgram);
+	    	Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
+	    			.addShader(ShaderType.Vertex, new File("shaders/depth.vert"))
+	    			.addShader(ShaderType.Fragment, new File("shaders/depth.frag"))
+	    			.createProgram();
+	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 	    	depthRenderable.addVertexBuffer("position", positionBuffer);
 	    	
 	    	// Render each depth texture
@@ -114,36 +119,38 @@ public class UnstructuredLightField
 	    	depthRenderingFBO.delete();
         }
         
-        OpenGLVertexBuffer texCoordBuffer = null;
+        VertexBuffer<ContextType> texCoordBuffer = null;
         if (proxy.hasTexCoords())
         {
-        	texCoordBuffer = new OpenGLVertexBuffer(proxy.getTexCoords());
+        	texCoordBuffer = context.createVertexBuffer().setData(proxy.getTexCoords());
         }
         
-        OpenGLVertexBuffer normalBuffer = null;
+        VertexBuffer<ContextType> normalBuffer = null;
         if (proxy.hasNormals())
         {
-        	normalBuffer = new OpenGLVertexBuffer(proxy.getNormals());
+        	normalBuffer = context.createVertexBuffer().setData(proxy.getNormals());
         }
         
-    	return new UnstructuredLightField(directoryPath, viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
+    	return new UnstructuredLightField<ContextType>(directoryPath, viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
 	}
 	
-	public static UnstructuredLightField loadFromVSETFile(File vsetFile, OpenGLContext context) throws IOException
+	public static <ContextType extends Context<ContextType>>
+		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, ContextType context) throws IOException
 	{
 		return UnstructuredLightField.loadFromVSETFile(vsetFile, context, true);
 	}
 
-	public static UnstructuredLightField loadFromVSETFile(File vsetFile, OpenGLContext context, boolean loadImages) throws IOException
+	public static <ContextType extends Context<ContextType>>
+		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, ContextType context, boolean loadImages) throws IOException
 	{
-		ViewSet viewSet;
+		ViewSet<ContextType> viewSet;
 		VertexMesh proxy;
-		Texture3D<OpenGLContext> depthTextures = null;
+		Texture3D<ContextType> depthTextures = null;
 		
 		File directoryPath = vsetFile.getParentFile();
         proxy = new VertexMesh("OBJ", new File(directoryPath, "manifold.obj")); // TODO don't have geometry filename hard-coded
         viewSet = ViewSet.loadFromVSETFile(vsetFile, loadImages, context);
-        OpenGLVertexBuffer positionBuffer = new OpenGLVertexBuffer(proxy.getVertices());
+        VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(proxy.getVertices());
         
         if (loadImages)
         {
@@ -153,11 +160,14 @@ public class UnstructuredLightField
 	    	depthTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
 	    	
 	    	// Don't automatically generate any texture attachments for this framebuffer object
-	    	FramebufferObject<OpenGLContext> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
+	    	FramebufferObject<ContextType> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
 	    	
 	    	// Load the program
-	    	OpenGLProgram depthRenderingProgram = new OpenGLProgram(new File("shaders/depth.vert"), new File("shaders/depth.frag"));
-	    	OpenGLRenderable depthRenderable = new OpenGLRenderable(depthRenderingProgram);
+	    	Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
+	    			.addShader(ShaderType.Vertex, new File("shaders/depth.vert"))
+	    			.addShader(ShaderType.Fragment, new File("shaders/depth.frag"))
+	    			.createProgram();
+	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 	    	depthRenderable.addVertexBuffer("position", positionBuffer);
 	    	
 	    	// Render each depth texture
@@ -182,19 +192,19 @@ public class UnstructuredLightField
 	    	depthRenderingFBO.delete();
         }
         
-        OpenGLVertexBuffer texCoordBuffer = null;
+        VertexBuffer<ContextType> texCoordBuffer = null;
         if (proxy.hasTexCoords())
         {
-        	texCoordBuffer = new OpenGLVertexBuffer(proxy.getTexCoords());
+        	texCoordBuffer = context.createVertexBuffer().setData(proxy.getTexCoords());
         }
         
-        OpenGLVertexBuffer normalBuffer = null;
+        VertexBuffer<ContextType> normalBuffer = null;
         if (proxy.hasNormals())
         {
-        	normalBuffer = new OpenGLVertexBuffer(proxy.getNormals());
+        	normalBuffer = context.createVertexBuffer().setData(proxy.getNormals());
         }
         
-    	return new UnstructuredLightField(directoryPath, viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
+    	return new UnstructuredLightField<ContextType>(directoryPath, viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
 	}
 	
 	@Override

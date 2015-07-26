@@ -2,7 +2,6 @@ package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL30.*;
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
@@ -10,119 +9,98 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
+import tetzlaff.gl.Contextual;
 import tetzlaff.gl.Resource;
 
-public abstract class OpenGLBuffer implements Resource
+abstract class OpenGLBuffer implements Contextual<OpenGLContext>, Resource
 {
+	protected final OpenGLContext context;
+	
 	private int bufferId;
 	private int usage;
 
-	protected OpenGLBuffer(int usage) 
+	OpenGLBuffer(OpenGLContext context, int usage) 
 	{
+		this.context = context;
 		this.bufferId = glGenBuffers();
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		this.usage = usage;
 	}
-
-	protected OpenGLBuffer(ByteBuffer data, int usage) 
+	
+	@Override
+	public OpenGLContext getContext()
 	{
-		this(usage);
-		this.setData(data);
-	}
-
-	protected OpenGLBuffer(ShortBuffer data, int usage) 
-	{
-		this(usage);
-		this.setData(data);
-	}
-
-	protected OpenGLBuffer(IntBuffer data, int usage) 
-	{
-		this(usage);
-		this.setData(data);
-	}
-
-	protected OpenGLBuffer(FloatBuffer data, int usage) 
-	{
-		this(usage);
-		this.setData(data);
-	}
-
-	protected OpenGLBuffer(DoubleBuffer data, int usage) 
-	{
-		this(usage);
-		this.setData(data);
+		return this.context;
 	}
 	
-	protected int getBufferId()
+	int getBufferId()
 	{
 		return this.bufferId;
 	}
 	
-	protected abstract int getBufferTarget();
+	abstract int getBufferTarget();
 	
-	protected void setData(ByteBuffer data)
+	OpenGLBuffer setData(ByteBuffer data)
 	{
 		glBindBuffer(this.getBufferTarget(), this.bufferId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		glBufferData(this.getBufferTarget(), data, this.usage);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
+		return this;
 	}
 	
-	protected void setData(ShortBuffer data)
+	OpenGLBuffer setData(ShortBuffer data)
 	{
 		glBindBuffer(this.getBufferTarget(), this.bufferId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		glBufferData(this.getBufferTarget(), data, this.usage);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
+		return this;
 	}
 	
-	protected void setData(IntBuffer data)
+	OpenGLBuffer setData(IntBuffer data)
 	{
 		glBindBuffer(this.getBufferTarget(), this.bufferId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		glBufferData(this.getBufferTarget(), data, this.usage);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
+		return this;
 	}
 	
-	protected void setData(FloatBuffer data)
+	OpenGLBuffer setData(FloatBuffer data)
 	{
 		glBindBuffer(this.getBufferTarget(), this.bufferId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		glBufferData(this.getBufferTarget(), data, this.usage);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
+		return this;
 	}
 	
-	protected void setData(DoubleBuffer data)
+	OpenGLBuffer setData(DoubleBuffer data)
 	{
 		glBindBuffer(this.getBufferTarget(), this.bufferId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		glBufferData(this.getBufferTarget(), data, this.usage);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
+		return this;
 	}
 	
-	protected void bind()
+	void bind()
 	{
 		glBindBuffer(this.getBufferTarget(), this.bufferId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 	}
 	
 	void bindToIndex(int index)
 	{
 		glBindBufferBase(this.getBufferTarget(), index, this.bufferId);
-		openGLErrorCheck();
-	}
-	
-	protected static void unbindFromIndex(int bufferTarget, int index)
-	{
-		glBindBufferBase(bufferTarget, index, 0);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 	}
 
 	@Override
 	public void delete()
 	{
 		glDeleteBuffers(this.bufferId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 	}
 }

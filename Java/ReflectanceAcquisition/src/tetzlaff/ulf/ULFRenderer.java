@@ -4,28 +4,28 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Program;
+import tetzlaff.gl.Renderable;
+import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
-import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.gl.opengl.OpenGLDefaultFramebuffer;
-import tetzlaff.gl.opengl.OpenGLFramebuffer;
-import tetzlaff.gl.opengl.OpenGLProgram;
-import tetzlaff.gl.opengl.OpenGLRenderable;
 
-public class ULFRenderer implements ULFDrawable
+public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable
 {
-    private static OpenGLProgram program;
+    private Program<ContextType> program;
     
     private File cameraFile;
     private File meshFile;
     private File imageDirectory;
-    private UnstructuredLightField lightField;
-	private OpenGLContext context;
-    private OpenGLRenderable renderable;
+    private UnstructuredLightField<ContextType> lightField;
+	private ContextType context;
+    private Renderable<ContextType> renderable;
     private Trackball trackball;
     private ULFLoadingMonitor callback;
     
@@ -34,16 +34,18 @@ public class ULFRenderer implements ULFDrawable
     private File resampleVSETFile;
     private File resampleExportPath;
 
-    public ULFRenderer(OpenGLContext context, File vsetFile, Trackball trackball)
+    public ULFRenderer(ContextType context, Program<ContextType> program, File vsetFile, Trackball trackball)
     {
     	this.context = context;
+    	this.program = program;
     	this.cameraFile = vsetFile;
     	this.trackball = trackball;
     }
 
-    public ULFRenderer(OpenGLContext context, File xmlFile, File meshFile, File imageDirectory, Trackball trackball)
+    public ULFRenderer(ContextType context, Program<ContextType> program, File xmlFile, File meshFile, File imageDirectory, Trackball trackball)
     {
     	this.context = context;
+    	this.program = program;
     	this.cameraFile = xmlFile;
     	this.meshFile = meshFile;
     	this.imageDirectory = imageDirectory;
@@ -59,11 +61,14 @@ public class ULFRenderer implements ULFDrawable
     @Override
     public void initialize() 
     {
-    	if (ULFRenderer.program == null)
+    	if (this.program == null)
     	{
 	    	try
 	        {
-	    		ULFRenderer.program = new OpenGLProgram(new File("shaders/ulr.vert"), new File("shaders/ulr.frag"));
+	    		this.program = context.getShaderProgramBuilder()
+	    				.addShader(ShaderType.Vertex, new File("shaders/ulr.vert"))
+	    				.addShader(ShaderType.Fragment, new File("shaders/ulr.frag"))
+	    				.createProgram();
 	        }
 	        catch (IOException e)
 	        {
@@ -86,7 +91,7 @@ public class ULFRenderer implements ULFDrawable
 				this.callback.loadingComplete();
 			}
 	    	
-	    	this.renderable = new OpenGLRenderable(program);
+	    	this.renderable = context.createRenderable(program);
 	    	this.renderable.addVertexBuffer("position", this.lightField.positionBuffer);
 		} 
     	catch (IOException e) 
@@ -119,7 +124,7 @@ public class ULFRenderer implements ULFDrawable
     @Override
     public void draw() 
     {
-    	OpenGLFramebuffer framebuffer = OpenGLDefaultFramebuffer.fromContext(context);
+    	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
     	
     	FramebufferSize size = framebuffer.getSize();
     	
@@ -164,7 +169,7 @@ public class ULFRenderer implements ULFDrawable
     	return this.cameraFile;
     }
     
-    public UnstructuredLightField getLightField()
+    public UnstructuredLightField<ContextType> getLightField()
     {
     	return this.lightField;
     }
@@ -234,8 +239,8 @@ public class ULFRenderer implements ULFDrawable
 	
 	private void resample() throws IOException
 	{
-		ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, false, context);
-		FramebufferObject<OpenGLContext> framebuffer = context.getFramebufferObjectBuilder(resampleSize, resampleSize).addColorAttachment().createFramebufferObject();
+		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, false, context);
+		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleSize, resampleSize).addColorAttachment().createFramebufferObject();
     	
     	this.renderable.program().setTexture("imageTextures", lightField.viewSet.getTextures());
     	this.renderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());

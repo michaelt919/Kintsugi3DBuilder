@@ -8,7 +8,7 @@ import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthStencilAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.StencilAttachmentSpec;
 
-public interface FramebufferObjectBuilder<ContextType extends Context<? super ContextType>> 
+public interface FramebufferObjectBuilder<ContextType extends Context<ContextType>> 
 {
 	FramebufferObjectBuilder<ContextType> addEmptyColorAttachment();	
 	FramebufferObjectBuilder<ContextType> addEmptyColorAttachments(int count);

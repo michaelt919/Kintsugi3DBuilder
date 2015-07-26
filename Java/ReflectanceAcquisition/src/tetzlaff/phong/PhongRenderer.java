@@ -6,27 +6,25 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Program;
+import tetzlaff.gl.Renderable;
+import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
+import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.VertexMesh;
-import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.gl.opengl.OpenGLDefaultFramebuffer;
-import tetzlaff.gl.opengl.OpenGLFramebuffer;
-import tetzlaff.gl.opengl.OpenGLFramebufferObject;
-import tetzlaff.gl.opengl.OpenGLProgram;
-import tetzlaff.gl.opengl.OpenGLRenderable;
-import tetzlaff.gl.opengl.OpenGLTexture2D;
-import tetzlaff.gl.opengl.OpenGLVertexBuffer;
 import tetzlaff.ulf.ViewSet;
 
-public class PhongRenderer implements Drawable 
+public class PhongRenderer<ContextType extends Context<ContextType>> implements Drawable 
 {
 	public static final int NO_TEXTURE_MODE = 0;
 	public static final int FULL_TEXTURE_MODE = 1;
@@ -36,8 +34,8 @@ public class PhongRenderer implements Drawable
 	public static final int NORMAL_TEXTURE_ONLY_MODE = 5;
 	public static final int DIFFUSE_NO_SHADING_MODE = 6;
 	
-	private static OpenGLProgram program;
-	private static OpenGLProgram shadowProgram;
+	private Program<ContextType> program;
+	private Program<ContextType> shadowProgram;
 	
 	private int mode = FULL_TEXTURE_MODE;
 	private float specularRoughnessTextureScale = 0.5f;
@@ -45,29 +43,29 @@ public class PhongRenderer implements Drawable
 	private float specularIntensity = 0.5f;
 	private float metallicIntensity = 1.0f;
 	
-	private OpenGLContext context;
+	private ContextType context;
 	private File objFile;
 	private Trackball viewTrackball;
 	private Trackball lightTrackball;
 	
 	private VertexMesh mesh;
 	
-	private OpenGLVertexBuffer positionBuffer;
-	private OpenGLVertexBuffer texCoordBuffer;
-	private OpenGLVertexBuffer normalBuffer;
+	private VertexBuffer<ContextType> positionBuffer;
+	private VertexBuffer<ContextType> texCoordBuffer;
+	private VertexBuffer<ContextType> normalBuffer;
 	
-	private Texture2D<OpenGLContext> diffuse;
-	private Texture2D<OpenGLContext> normal;
-	private Texture2D<OpenGLContext> specular;
-	private Texture2D<OpenGLContext> specNormal;
-	private Texture2D<OpenGLContext> roughness;
+	private Texture2D<ContextType> diffuse;
+	private Texture2D<ContextType> normal;
+	private Texture2D<ContextType> specular;
+	private Texture2D<ContextType> specNormal;
+	private Texture2D<ContextType> roughness;
 	
-	private OpenGLRenderable renderable;
-	private OpenGLRenderable shadowRenderable;
+	private Renderable<ContextType> renderable;
+	private Renderable<ContextType> shadowRenderable;
 	
-	private FramebufferObject<OpenGLContext> shadowBuffer;
+	private FramebufferObject<ContextType> shadowBuffer;
 	
-	public PhongRenderer(OpenGLContext context, File objFile, Trackball viewTrackball, Trackball lightTrackball) 
+	public PhongRenderer(ContextType context, File objFile, Trackball viewTrackball, Trackball lightTrackball) 
 	{
 		this.context = context;
     	this.objFile = objFile;
@@ -88,37 +86,23 @@ public class PhongRenderer implements Drawable
 	@Override
 	public void initialize() 
 	{
-		if (PhongRenderer.program == null)
-    	{
-	    	try
-	        {
-	    		PhongRenderer.program = new OpenGLProgram(new File("shaders/phong.vert"), new File("shaders/phong.frag"));
-	        }
-	        catch (IOException e)
-	        {
-	        	e.printStackTrace();
-	        }
-    	}
-		
-		if (PhongRenderer.shadowProgram == null)
-    	{
-	    	try
-	        {
-	    		PhongRenderer.shadowProgram = new OpenGLProgram(new File("shaders/depth.vert"), new File("shaders/depth.frag"));
-	        }
-	        catch (IOException e)
-	        {
-	        	e.printStackTrace();
-	        }
-    	}
-    	
-    	try 
-    	{
+		try
+        {
+    		this.program = context.getShaderProgramBuilder()
+					.addShader(ShaderType.Vertex, new File("shaders/phong.vert"))
+					.addShader(ShaderType.Fragment, new File("shaders/phong.frag"))
+					.createProgram();
+    		
+    		this.shadowProgram = context.getShaderProgramBuilder()
+					.addShader(ShaderType.Vertex, new File("shaders/depth.vert"))
+					.addShader(ShaderType.Fragment, new File("shaders/depth.frag"))
+					.createProgram();
+
 			this.mesh = new VertexMesh("OBJ", objFile);
 			
-			this.positionBuffer = new OpenGLVertexBuffer(this.mesh.getVertices());
-			this.texCoordBuffer = new OpenGLVertexBuffer(this.mesh.getTexCoords());
-			this.normalBuffer = new OpenGLVertexBuffer(this.mesh.getNormals());
+			this.positionBuffer = context.createVertexBuffer().setData(this.mesh.getVertices());
+			this.texCoordBuffer = context.createVertexBuffer().setData(this.mesh.getTexCoords());
+			this.normalBuffer = context.createVertexBuffer().setData(this.mesh.getNormals());
 			
 			File texturePath = new File(objFile.getParentFile(), "textures");
 			this.diffuse = context.get2DColorTextureBuilder(new File(texturePath, "diffuse.png"), true).createTexture();
@@ -130,12 +114,12 @@ public class PhongRenderer implements Drawable
 				this.specNormal =context.get2DColorTextureBuilder(new File(texturePath, "snormal.png"), true).createTexture();
 			}
 			
-			this.renderable = new OpenGLRenderable(PhongRenderer.program);
+			this.renderable = context.createRenderable(this.program);
 			this.renderable.addVertexBuffer("position", this.positionBuffer);
 			this.renderable.addVertexBuffer("texCoord", this.texCoordBuffer);
 			this.renderable.addVertexBuffer("normal", this.normalBuffer);
 
-			this.shadowRenderable = new OpenGLRenderable(PhongRenderer.shadowProgram);
+			this.shadowRenderable = context.createRenderable(this.shadowProgram);
 			this.shadowRenderable.addVertexBuffer("position", this.positionBuffer);
 			this.shadowRenderable.addVertexBuffer("texCoord", this.texCoordBuffer);
 			this.shadowRenderable.addVertexBuffer("normal", this.normalBuffer);
@@ -180,7 +164,7 @@ public class PhongRenderer implements Drawable
     	this.shadowRenderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 2, 1.0f, 1.0f, 9.0f));
     	this.shadowRenderable.draw(PrimitiveMode.TRIANGLES, this.shadowBuffer);
 		
-		OpenGLFramebuffer framebuffer = OpenGLDefaultFramebuffer.fromContext(context);
+		Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
     	
     	FramebufferSize size = framebuffer.getSize();
     	
@@ -282,10 +266,10 @@ public class PhongRenderer implements Drawable
 
 	public void resample(File targetVSETFile, File exportPath) throws IOException
 	{
-		ViewSet targetViewSet = ViewSet.loadFromVSETFile(targetVSETFile, false, context);
+		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(targetVSETFile, false, context);
 		
 		BufferedImage img = ImageIO.read(targetViewSet.getImageFile(0));
-		FramebufferObject<OpenGLContext> framebuffer = context.getFramebufferObjectBuilder(img.getWidth(), img.getHeight()).createFramebufferObject();
+		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(img.getWidth(), img.getHeight()).createFramebufferObject();
     	
     	for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 		{

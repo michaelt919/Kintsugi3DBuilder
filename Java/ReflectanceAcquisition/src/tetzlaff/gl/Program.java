@@ -8,17 +8,8 @@ import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 
-public interface Program<ContextType extends Context<? super ContextType>> extends Resource
+public interface Program<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
-
-	void attachShader(Shader<ContextType> shader, boolean owned);
-
-	void detachShader(Shader<ContextType> shader);
-
-	boolean isLinked();
-
-	void link();
-
 	boolean setUniform(String name, boolean value);
 
 	boolean setUniform(String name, Vector4 value);

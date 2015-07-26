@@ -1,10 +1,9 @@
 package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
+
 
 import java.nio.IntBuffer;
 import java.util.AbstractCollection;
@@ -16,12 +15,9 @@ import tetzlaff.gl.FramebufferAttachment;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.Resource;
-import tetzlaff.gl.Texture2D;
-import tetzlaff.gl.builders.TextureBuilder;
 import tetzlaff.gl.builders.base.FramebufferObjectBuilderBase;
-import tetzlaff.gl.opengl.exceptions.OpenGLInvalidFramebufferOperationException;
 
-public class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferObject<OpenGLContext>, Resource
+class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferObject<OpenGLContext>, Resource
 {
 	private int width;
 	private int height;
@@ -34,12 +30,9 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 
 	public static class OpenGLFramebufferObjectBuilder extends FramebufferObjectBuilderBase<OpenGLContext>
 	{
-		private OpenGLContext context;
-		
 		OpenGLFramebufferObjectBuilder(OpenGLContext context, int width, int height) 
 		{
 			super(context, width, height);
-			this.context = context;
 		}
 
 		@Override
@@ -79,18 +72,22 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 				}
 			}
 			
-			return new OpenGLFramebufferObject(width, height, colorAttachments, depthAttachment, stencilAttachment, depthStencilAttachment);
+			return new OpenGLFramebufferObject(context, width, height, colorAttachments, depthAttachment, stencilAttachment, depthStencilAttachment);
 		}
 	}
 	
-	private OpenGLFramebufferObject(int width, int height, 
+	private OpenGLFramebufferObject(
+			OpenGLContext context,
+			int width, int height, 
 			OpenGLTexture2D[] colorAttachments, 
 			OpenGLTexture2D depthAttachment, 
 			OpenGLTexture2D stencilAttachment, 
 			OpenGLTexture2D depthStencilAttachment)
 	{
+		super(context);
+		
 		this.fboId = glGenFramebuffers();
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		
 		this.width = width;
 		this.height = height;
@@ -103,7 +100,7 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 		IntBuffer drawBufferList = BufferUtils.createIntBuffer(colorAttachments.length);
 		
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		
 		for (int i = 0; i < colorAttachments.length; i++)
 		{
@@ -121,7 +118,7 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 		if (colorAttachments.length > 0)
 		{
 			glDrawBuffers(drawBufferList);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 		}
 		
 		if (depthAttachment != null)
@@ -144,7 +141,7 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 	}
 	
 	@Override
-	protected int getId()
+	int getId()
 	{
 		return fboId;
 	}
@@ -156,10 +153,10 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 	}
 	
 	@Override
-	protected void selectColorSourceForRead(int index) 
+	void selectColorSourceForRead(int index) 
 	{
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + index);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 	}
 	
 	@Override
@@ -199,7 +196,7 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 			}
 			
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			attachmentCast.attachToDrawFramebuffer(GL_COLOR_ATTACHMENT0 + index, 0);
 			this.colorAttachments[index] = attachmentCast;
 		}
@@ -237,7 +234,7 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 			}
 			
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
-			openGLErrorCheck();
+			this.context.openGLErrorCheck();
 			attachmentCast.attachToDrawFramebuffer(GL_DEPTH_ATTACHMENT, 0);
 			
 			this.depthAttachment = attachmentCast;
@@ -252,7 +249,7 @@ public class OpenGLFramebufferObject extends OpenGLFramebuffer implements Frameb
 	public void delete()
 	{
 		glDeleteFramebuffers(this.fboId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		for (Resource attachment : ownedAttachments)
 		{
 			attachment.delete();

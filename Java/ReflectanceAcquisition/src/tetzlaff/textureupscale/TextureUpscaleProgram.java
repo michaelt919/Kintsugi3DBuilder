@@ -8,13 +8,13 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Program;
+import tetzlaff.gl.Renderable;
+import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
+import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.gl.opengl.OpenGLProgram;
-import tetzlaff.gl.opengl.OpenGLRenderable;
-import tetzlaff.gl.opengl.OpenGLTexture2D;
-import tetzlaff.gl.opengl.OpenGLVertexBuffer;
 import tetzlaff.window.glfw.GLFWWindow;
 
 public class TextureUpscaleProgram
@@ -34,7 +34,10 @@ public class TextureUpscaleProgram
     	OpenGLContext context = new GLFWWindow(800, 800, "Texture Upscale");
         try
         {
-	    	OpenGLProgram perlinNoiseProgram = new OpenGLProgram(new File("shaders", "passthrough2d.vert"), new File("shaders", "perlintex.frag"));
+	    	Program<OpenGLContext> perlinNoiseProgram = context.getShaderProgramBuilder()
+    				.addShader(ShaderType.Vertex, new File("shaders", "passthrough2d.vert"))
+    				.addShader(ShaderType.Fragment, new File("shaders", "perlintex.frag"))
+    				.createProgram();
 	    	Texture2D<OpenGLContext> permTexture = context.getPerlinNoiseTextureBuilder().createTexture();
 	    	perlinNoiseProgram.setTexture("permTexture", permTexture);
     		
@@ -69,14 +72,16 @@ public class TextureUpscaleProgram
     	    	perlinNoiseProgram.setUniform("blackPoint", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
     	    	perlinNoiseProgram.setUniform("whitePoint", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		    	FramebufferObject<OpenGLContext> fbo = context.getFramebufferObjectBuilder(targetWidth, targetHeight).addColorAttachment().createFramebufferObject();
-		    	OpenGLRenderable renderable = new OpenGLRenderable(perlinNoiseProgram);
-		    	renderable.addVertexBuffer("position", OpenGLVertexBuffer.createRectangle(), true);
+		    	Renderable<OpenGLContext> renderable = context.createRenderable(perlinNoiseProgram);
+		    	VertexBuffer<OpenGLContext> rectangle = context.createRectangle();
+		    	renderable.addVertexBuffer("position", rectangle);
 		    	fbo.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	renderable.draw(PrimitiveMode.TRIANGLE_FAN, fbo);
 		    	new File(imageFile.getParentFile(), "output").mkdirs();
 		        fbo.saveColorBufferToFile(0, "PNG", new File(new File(imageFile.getParentFile(), "output"), imageFile.getName()));
 		    	fbo.delete();
 		    	imageTexture.delete();
+		    	rectangle.delete();
     		}
     		
     		perlinNoiseProgram.delete();

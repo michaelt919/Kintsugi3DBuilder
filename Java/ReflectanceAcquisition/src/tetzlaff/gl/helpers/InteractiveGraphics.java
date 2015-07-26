@@ -7,7 +7,7 @@ import tetzlaff.interactive.Refreshable;
 
 public class InteractiveGraphics
 {	
-	public static InteractiveApplication createApplication(EventPollable pollable, Context context, Drawable drawable)
+	public static <ContextType extends Context<ContextType>> InteractiveApplication createApplication(EventPollable pollable, ContextType context, Drawable drawable)
 	{
 		return new InteractiveApplication(pollable, new Refreshable()
 		{

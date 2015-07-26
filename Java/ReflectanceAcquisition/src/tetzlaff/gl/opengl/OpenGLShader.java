@@ -1,23 +1,24 @@
 package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-import tetzlaff.gl.Resource;
 import tetzlaff.gl.Shader;
 import tetzlaff.gl.exceptions.ShaderCompileFailureException;
 
-
-public class OpenGLShader implements Shader<OpenGLContext>, Resource
+class OpenGLShader implements Shader<OpenGLContext>
 {
+	protected final OpenGLContext context;
+	
 	private int shaderId;
 	
-	public OpenGLShader(int shaderType, File file) throws FileNotFoundException
+	OpenGLShader(OpenGLContext context, int shaderType, File file) throws FileNotFoundException
 	{
+		this.context = context;
+		
 		Scanner scanner = new Scanner(file);
         scanner.useDelimiter("\\Z"); // EOF
         String source = scanner.next();
@@ -33,21 +34,28 @@ public class OpenGLShader implements Shader<OpenGLContext>, Resource
         }
 	}
 	
-	public OpenGLShader(int shaderType, String source)
+	OpenGLShader(OpenGLContext context, int shaderType, String source)
 	{
+		this.context = context;
 		this.init(shaderType, source);
+	}
+	
+	@Override
+	public OpenGLContext getContext()
+	{
+		return this.context;
 	}
 	
 	private void init(int shaderType, String source)
 	{
 		shaderId = glCreateShader(shaderType);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
         glShaderSource(shaderId, source);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
         glCompileShader(shaderId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
         int compiled = glGetShaderi(shaderId, GL_COMPILE_STATUS);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
         if (compiled == GL_FALSE)
         {
         	throw new ShaderCompileFailureException(glGetShaderInfoLog(shaderId));
@@ -59,9 +67,10 @@ public class OpenGLShader implements Shader<OpenGLContext>, Resource
 		return shaderId;
 	}
 	
+	@Override
 	public void delete()
 	{
 		glDeleteShader(shaderId);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 	}
 }

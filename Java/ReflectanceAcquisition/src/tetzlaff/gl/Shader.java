@@ -1,6 +1,6 @@
 package tetzlaff.gl;
 
-public interface Shader<ContextType extends Context<? super ContextType>> extends Resource
+public interface Shader<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
 
 }

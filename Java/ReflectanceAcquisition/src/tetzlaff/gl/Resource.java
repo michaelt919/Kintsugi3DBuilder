@@ -1,6 +1,6 @@
 package tetzlaff.gl;
 
-public interface Resource 
+public interface Resource
 {
 	void delete();
 }

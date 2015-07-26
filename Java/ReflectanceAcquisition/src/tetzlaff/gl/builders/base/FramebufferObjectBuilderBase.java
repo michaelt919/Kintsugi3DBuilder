@@ -8,20 +8,19 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.builders.FramebufferObjectBuilder;
 import tetzlaff.gl.builders.TextureBuilder;
-import tetzlaff.gl.builders.framebuffer.AttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthStencilAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.StencilAttachmentSpec;
 
-public abstract class FramebufferObjectBuilderBase<ContextType extends Context<? super ContextType>> implements FramebufferObjectBuilder<ContextType>
+public abstract class FramebufferObjectBuilderBase<ContextType extends Context<ContextType>> implements FramebufferObjectBuilder<ContextType>
 {
 	protected final ContextType context;
 	protected final int width;
 	protected final int height;
 	
-	private final List<TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>>> colorAttachmentFormats = 
-			new ArrayList<TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>>>();
+	private final List<TextureBuilder<ContextType, ? extends Texture2D<ContextType>>> colorAttachmentFormats = 
+			new ArrayList<TextureBuilder<ContextType, ? extends Texture2D<ContextType>>>();
 	
 	private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> depthAttachmentBuilder = null;
 	private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> stencilAttachmentBuilder = null;

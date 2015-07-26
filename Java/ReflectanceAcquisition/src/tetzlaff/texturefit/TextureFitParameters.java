@@ -1,6 +1,6 @@
-package tetzlaff.reflacq;
+package tetzlaff.texturefit;
 
-public class TexGenParameters 
+public class TextureFitParameters 
 {
 	// Sampling parameters
 	private float gamma = 2.2f;
@@ -35,7 +35,7 @@ public class TexGenParameters
 	private float defaultSpecularRoughness = 0.25f;
 	private float specularRoughnessCap = 0.5f;
 
-	public TexGenParameters() 
+	public TextureFitParameters() 
 	{
 	}
 
