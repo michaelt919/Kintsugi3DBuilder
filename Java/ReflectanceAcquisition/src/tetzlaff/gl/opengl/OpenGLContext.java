@@ -2,25 +2,54 @@ package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL14.*;
+import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL21.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL31.*;
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
+import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL40.*;
+import static org.lwjgl.opengl.GL41.*;
+import static org.lwjgl.opengl.GL43.*;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import tetzlaff.gl.AlphaBlendingFunction;
-import tetzlaff.gl.ContextBase;
+import tetzlaff.gl.BufferAccessFrequency;
+import tetzlaff.gl.BufferAccessType;
+import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Framebuffer;
+import tetzlaff.gl.IndexBuffer;
+import tetzlaff.gl.Program;
+import tetzlaff.gl.Renderable;
+import tetzlaff.gl.Shader;
+import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
+import tetzlaff.gl.UniformBuffer;
+import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.DepthStencilTextureBuilder;
 import tetzlaff.gl.builders.DepthTextureBuilder;
 import tetzlaff.gl.builders.FramebufferObjectBuilder;
+import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.StencilTextureBuilder;
-import tetzlaff.gl.builders.TextureBuilder;
+import tetzlaff.gl.exceptions.GLException;
+import tetzlaff.gl.exceptions.GLInvalidEnumException;
+import tetzlaff.gl.exceptions.GLInvalidFramebufferOperationException;
+import tetzlaff.gl.exceptions.GLInvalidOperationException;
+import tetzlaff.gl.exceptions.GLInvalidValueException;
+import tetzlaff.gl.exceptions.GLOutOfMemoryException;
+import tetzlaff.gl.exceptions.GLStackOverflowException;
+import tetzlaff.gl.exceptions.GLStackUnderflowException;
+import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DColorBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DDepthBuilder;
@@ -33,62 +62,62 @@ import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DStencilBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthStencilBuilder;
 
-public abstract class OpenGLContext extends ContextBase<OpenGLContext>
+public abstract class OpenGLContext implements Context<OpenGLContext>
 {
 	@Override
 	public void flush()
 	{
 		glFlush();
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 	}
 	
 	@Override
 	public void finish()
 	{
 		glFinish();
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 	}
 	
 	@Override
 	public void enableDepthTest()
 	{
 		glEnable(GL_DEPTH_TEST);
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 	}
 	
 	@Override
 	public void disableDepthTest()
 	{
 		glDisable(GL_DEPTH_TEST);
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 	}
 	
 	@Override
 	public void enableMultisampling()
 	{
 		glEnable(GL_MULTISAMPLE);
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 	}
 	
 	@Override
 	public void disableMultisampling()
 	{
 		glDisable(GL_MULTISAMPLE);
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 	}
 	
 	@Override
 	public void enableBackFaceCulling()
 	{
 		glEnable(GL_CULL_FACE);
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 	}
 	
 	@Override
 	public void disableBackFaceCulling()
 	{
 		glDisable(GL_CULL_FACE);
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 	}
 	
 	private int blendFuncEnumToInt(AlphaBlendingFunction.Weight func)
@@ -113,53 +142,126 @@ public abstract class OpenGLContext extends ContextBase<OpenGLContext>
 	public void setAlphaBlendingFunction(AlphaBlendingFunction func)
 	{
 		glEnable(GL_BLEND);
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 		glBlendFunc(blendFuncEnumToInt(func.sourceWeightFunction), blendFuncEnumToInt(func.destinationWeightFunction));
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 	}
 	
 	@Override
 	public void disableAlphaBlending()
 	{
 		glDisable(GL_BLEND);
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 	}
 	
 	private int getInteger(int queryId)
 	{
 		int queryResult = glGetInteger(queryId);
-		openGLErrorCheck();
+		this.openGLErrorCheck();
 		return queryResult;
 	}
 	
+	@Override
 	public int getMaxCombinedVertexUniformComponents()
 	{
 		return getInteger(GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS);
 	}
 	
+	@Override
 	public int getMaxCombinedFragmentUniformComponents()
 	{
 		return getInteger(GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS);
 	}
 	
+	@Override
 	public int getMaxUniformBlockSize()
 	{
 		return getInteger(GL_MAX_UNIFORM_BLOCK_SIZE);
 	}
 	
+	@Override
 	public int getMaxVertexUniformComponents()
 	{
 		return getInteger(GL_MAX_VERTEX_UNIFORM_COMPONENTS);
 	}
 	
+	@Override
 	public int getMaxFragmentUniformComponents()
 	{
 		return getInteger(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS);
 	}
 	
+	@Override
 	public int getMaxArrayTextureLayers()
 	{
 		return getInteger(GL_MAX_ARRAY_TEXTURE_LAYERS);
+	}
+	
+	@Override
+	public int getMaxCombinedTextureImageUnits()
+	{
+		return getInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+	}
+	
+	@Override
+	public int getMaxCombinedUniformBlocks()
+	{
+		return getInteger(GL_MAX_COMBINED_UNIFORM_BLOCKS);
+	}
+	
+	@Override
+	public Shader<OpenGLContext> createShader(ShaderType type, String source) 
+	{
+		return new OpenGLShader(this, getOpenGLShaderType(type), source);
+	}
+
+	@Override
+	public Shader<OpenGLContext> createShader(ShaderType type, File file) throws FileNotFoundException
+	{
+		return new OpenGLShader(this, getOpenGLShaderType(type), file);
+	}
+
+	@Override
+	public ProgramBuilder<OpenGLContext> getShaderProgramBuilder() 
+	{
+		return new OpenGLProgramBuilder(this);
+	}
+
+	@Override
+	public Framebuffer<OpenGLContext> getDefaultFramebuffer() 
+	{
+		return new OpenGLDefaultFramebuffer(this);
+	}
+
+	@Override
+	public VertexBuffer<OpenGLContext> createVertexBuffer() 
+	{
+		return new OpenGLVertexBuffer(this);
+	}
+
+	@Override
+	public IndexBuffer<OpenGLContext> createIndexBuffer() 
+	{
+		return new OpenGLIndexBuffer(this);
+	}
+
+	@Override
+	public UniformBuffer<OpenGLContext> createUniformBuffer() 
+	{
+		return new OpenGLUniformBuffer(this);
+	}
+	
+	@Override
+	public Renderable<OpenGLContext> createRenderable(Program<OpenGLContext> program)
+	{
+		if (program instanceof OpenGLProgram)
+		{
+			return new OpenGLRenderable(this, (OpenGLProgram)program);
+		}
+		else
+		{
+			throw new IllegalArgumentException("'program' must be of type OpenGLProgram.");
+		}
 	}
 	
 	@Override
@@ -268,5 +370,434 @@ public abstract class OpenGLContext extends ContextBase<OpenGLContext>
 	public DepthStencilTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> get2DDepthStencilTextureArrayBuilder(int width, int height, int length)
 	{
 		return new OpenGLTexture3DDepthStencilBuilder(this, GL_TEXTURE_2D_ARRAY, width, height, length);
+	}
+
+	protected void unbindBuffer(int bufferTarget, int index)
+	{
+		glBindBufferBase(bufferTarget, index, 0);
+		this.openGLErrorCheck();
+	}
+	
+	protected void unbindTextureUnit(int textureUnitIndex)
+	{
+		if (textureUnitIndex < 0)
+		{
+			throw new IllegalArgumentException("Texture unit index cannot be negative.");
+		}
+		else if (textureUnitIndex > this.getMaxCombinedTextureImageUnits())
+		{
+			throw new IllegalArgumentException("Texture unit index (" + textureUnitIndex + ") is greater than the maximum allowed index (" + 
+					(this.getMaxCombinedTextureImageUnits()-1) + ").");
+		}
+		glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
+		this.openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		this.openGLErrorCheck();
+	}
+	
+	protected int getOpenGLInternalColorFormat(ColorFormat format)
+	{
+		if (format.alphaBits > 0)
+		{
+			switch(format.dataType)
+			{
+			case FloatingPoint:
+				if (format.redBits <= 16 && format.greenBits <= 16 && format.blueBits <= 16 && format.alphaBits <= 16)
+				{
+					return GL_RGBA16F;
+				}
+				else
+				{
+					return GL_RGBA32F;
+				}
+			case UnsignedInteger:
+				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8 && format.alphaBits <= 8)
+				{
+					return GL_RGBA8UI;
+				}
+				else if (format.redBits <= 10 && format.greenBits <= 10 && format.blueBits <= 10 && format.alphaBits <= 2)
+				{
+					return GL_RGB10_A2UI;
+				}
+				else if (format.redBits <= 16 && format.greenBits <= 16 && format.blueBits <= 16 && format.alphaBits <= 16)
+				{
+					return GL_RGBA16UI;
+				}
+				else
+				{
+					return GL_RGBA32UI;
+				}
+			case SignedInteger:
+				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8 && format.alphaBits <= 8)
+				{
+					return GL_RGBA8I;
+				}
+				else if (format.redBits <= 16 && format.greenBits <= 16 && format.blueBits <= 16 && format.alphaBits <= 16)
+				{
+					return GL_RGBA16I;
+				}
+				else
+				{
+					return GL_RGBA32I;
+				}
+			case SRGBFixedPoint:
+				return GL_SRGB8_ALPHA8;
+			case SignedFixedPoint:
+				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8 && format.alphaBits <= 8)
+				{
+					return GL_RGBA8_SNORM;
+				}
+				else
+				{
+					return GL_RGBA16_SNORM;
+				}
+			case NormalizedFixedPoint:
+			default:
+				if (format.redBits <= 2 && format.greenBits <= 2 && format.blueBits <= 2 && format.alphaBits <= 2)
+				{
+					return GL_RGBA2;
+				}
+				else if (format.redBits <= 4 && format.greenBits <= 4 && format.blueBits <= 4 && format.alphaBits <= 4)
+				{
+					return GL_RGBA4;
+				}
+				else if (format.redBits <= 5 && format.greenBits <= 5 && format.blueBits <= 5 && format.alphaBits <= 1)
+				{
+					return GL_RGB5_A1;
+				}
+				else if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8 && format.alphaBits <= 8)
+				{
+					return GL_RGBA8;
+				}
+				else if (format.redBits <= 10 || format.greenBits <= 10 || format.blueBits <= 10 || format.alphaBits <= 2)
+				{
+					return GL_RGB10_A2;
+				}
+				else if (format.redBits <= 12 || format.greenBits <= 12 || format.blueBits <= 12 || format.alphaBits <= 12)
+				{
+					return GL_RGBA12;
+				}
+				else
+				{
+					return GL_RGBA16;
+				}
+			}
+		}
+		else if (format.blueBits > 0)
+		{
+			switch(format.dataType)
+			{
+			case FloatingPoint:
+				if (format.redBits <= 11 && format.greenBits <= 11 && format.blueBits <= 10)
+				{
+					return GL_R11F_G11F_B10F;
+				}
+				else if (format.redBits <= 16 && format.greenBits <= 16 && format.blueBits <= 16)
+				{
+					return GL_RGB16F;
+				}
+				else
+				{
+					return GL_RGB32F;
+				}
+			case UnsignedInteger:
+				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8)
+				{
+					return GL_RGB8UI;
+				}
+				else if (format.redBits <= 16 && format.greenBits <= 16 && format.blueBits <= 16)
+				{
+					return GL_RGB16UI;
+				}
+				else
+				{
+					return GL_RGB32UI;
+				}
+			case SignedInteger:
+				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8)
+				{
+					return GL_RGB8I;
+				}
+				else if (format.redBits <= 16 && format.greenBits <= 16 && format.blueBits <= 16)
+				{
+					return GL_RGB16I;
+				}
+				else
+				{
+					return GL_RGB32I;
+				}
+			case SRGBFixedPoint:
+				return GL_SRGB8;
+			case SignedFixedPoint:
+				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8)
+				{
+					return GL_RGB8_SNORM;
+				}
+				else
+				{
+					return GL_RGB16_SNORM;
+				}
+			case NormalizedFixedPoint:
+			default:
+				if (format.redBits <= 3 && format.greenBits <= 3 && format.blueBits <= 2)
+				{
+					return GL_R3_G3_B2;
+				}
+				else if (format.redBits <= 4 && format.greenBits <= 4 && format.blueBits <= 4)
+				{
+					return GL_RGB4;
+				}
+				else if (format.redBits <= 5 && format.greenBits <= 5 && format.blueBits <= 5)
+				{
+					return GL_RGB5;
+				}
+				else if (format.redBits <= 5 && format.greenBits <= 6 && format.blueBits <= 5)
+				{
+					return GL_RGB565;
+				}
+				else if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8)
+				{
+					return GL_RGB8;
+				}
+				else if (format.redBits <= 10 || format.greenBits <= 10 || format.blueBits <= 10)
+				{
+					return GL_RGB10;
+				}
+				else if (format.redBits <= 12 || format.greenBits <= 12 || format.blueBits <= 12)
+				{
+					return GL_RGB12;
+				}
+				else
+				{
+					return GL_RGB16;
+				}
+			}
+		}
+		else if (format.greenBits > 0)
+		{
+			switch(format.dataType)
+			{
+			case FloatingPoint:
+				if (format.redBits <= 16 && format.greenBits <= 16)
+				{
+					return GL_RG16F;
+				}
+				else
+				{
+					return GL_RG32F;
+				}
+			case UnsignedInteger:
+				if (format.redBits <= 8 && format.greenBits <= 8)
+				{
+					return GL_RG8UI;
+				}
+				else if (format.redBits <= 16 && format.greenBits <= 16)
+				{
+					return GL_RG16UI;
+				}
+				else
+				{
+					return GL_RG32UI;
+				}
+			case SignedInteger:
+				if (format.redBits <= 8 && format.greenBits <= 8)
+				{
+					return GL_RG8I;
+				}
+				else if (format.redBits <= 16 && format.greenBits <= 16)
+				{
+					return GL_RG16I;
+				}
+				else
+				{
+					return GL_RG32I;
+				}
+			case SRGBFixedPoint:
+				return GL_SRGB8;
+			case SignedFixedPoint:
+				if (format.redBits <= 8 && format.greenBits <= 8)
+				{
+					return GL_RG8_SNORM;
+				}
+				else
+				{
+					return GL_RG16_SNORM;
+				}
+			case NormalizedFixedPoint:
+			default:
+				if (format.redBits <= 8 && format.greenBits <= 8)
+				{
+					return GL_RG8;
+				}
+				else
+				{
+					return GL_RG16;
+				}
+			}
+		}
+		else
+		{
+			switch(format.dataType)
+			{
+			case FloatingPoint:
+				if (format.redBits <= 16)
+				{
+					return GL_R16F;
+				}
+				else
+				{
+					return GL_R32F;
+				}
+			case UnsignedInteger:
+				if (format.redBits <= 8)
+				{
+					return GL_R8UI;
+				}
+				else if (format.redBits <= 16)
+				{
+					return GL_R16UI;
+				}
+				else
+				{
+					return GL_R32UI;
+				}
+			case SignedInteger:
+				if (format.redBits <= 8)
+				{
+					return GL_R8I;
+				}
+				else if (format.redBits <= 16)
+				{
+					return GL_R16I;
+				}
+				else
+				{
+					return GL_R32I;
+				}
+			case SRGBFixedPoint:
+				return GL_SRGB8;
+			case SignedFixedPoint:
+				if (format.redBits <= 8)
+				{
+					return GL_R8_SNORM;
+				}
+				else
+				{
+					return GL_R16_SNORM;
+				}
+			case NormalizedFixedPoint:
+			default:
+				if (format.redBits <= 8)
+				{
+					return GL_R8;
+				}
+				else
+				{
+					return GL_R16;
+				}
+			}
+		}
+	}
+	
+	protected int getOpenGLInternalDepthFormat(int precision)
+	{
+		if (precision <= 16)
+		{
+			return GL_DEPTH_COMPONENT16;
+		}
+		else if (precision <= 24)
+		{
+			return GL_DEPTH_COMPONENT24;
+		}
+		else
+		{
+			return GL_DEPTH_COMPONENT32;
+		}
+	}
+	
+	protected int getOpenGLInternalStencilFormat(int precision)
+	{
+		if (precision == 1)
+		{
+			return GL_STENCIL_INDEX1;
+		}
+		if (precision <= 4)
+		{
+			return GL_STENCIL_INDEX4;
+		}
+		else if (precision <= 8)
+		{
+			return GL_STENCIL_INDEX8;
+		}
+		else
+		{
+			return GL_STENCIL_INDEX16;
+		}
+	}
+	
+	protected int getOpenGLShaderType(ShaderType type)
+	{
+		switch(type)
+		{
+		case Vertex: return GL_VERTEX_SHADER;
+		case Fragment: return GL_FRAGMENT_SHADER;
+		case Geometry: return GL_GEOMETRY_SHADER;
+		case TesselationControl: return GL_TESS_CONTROL_SHADER;
+		case TesselationEvaluation: return GL_TESS_EVALUATION_SHADER;
+		case Compute: return GL_COMPUTE_SHADER;
+		default: return 0;
+		}
+	}
+	
+	protected int getOpenGLBufferUsage(BufferAccessType accessType, BufferAccessFrequency accessFreq)
+	{
+		switch(accessFreq)
+		{
+		case Stream:
+			switch(accessType)
+			{
+			case Draw: return GL_STREAM_DRAW;
+			case Read: return GL_STREAM_READ;
+			case Copy: return GL_STREAM_COPY;
+			}
+		case Static:
+			switch(accessType)
+			{
+			case Draw: return GL_STATIC_DRAW;
+			case Read: return GL_STATIC_READ;
+			case Copy: return GL_STATIC_COPY;
+			}
+		case Dynamic:
+			switch(accessType)
+			{
+			case Draw: return GL_DYNAMIC_DRAW;
+			case Read: return GL_DYNAMIC_READ;
+			case Copy: return GL_DYNAMIC_COPY;
+			}
+		}
+		
+		return 0;
+	}
+	
+	/**
+	 * Should always be called after any OpenGL function
+	 * Search for missing calls to this using this regex:
+	 * gl[A-Z].*\(.*\);\s*[^\s(this.openGLErrorCheck\(\);)]
+	 */
+	protected void openGLErrorCheck()
+	{
+		int error = glGetError();
+		switch (error)
+		{
+		case GL_NO_ERROR: return;
+		case GL_INVALID_ENUM: throw new GLInvalidEnumException();
+		case GL_INVALID_VALUE: throw new GLInvalidValueException();
+		case GL_INVALID_OPERATION: throw new GLInvalidOperationException();
+		case GL_INVALID_FRAMEBUFFER_OPERATION: throw new GLInvalidFramebufferOperationException();
+		case GL_OUT_OF_MEMORY: throw new GLOutOfMemoryException();
+		case GL_STACK_UNDERFLOW: throw new GLStackUnderflowException();
+		case GL_STACK_OVERFLOW: throw new GLStackOverflowException();
+		default: throw new GLException("Unrecognized OpenGL Exception.");
+		}
 	}
 }

@@ -1,4 +1,4 @@
-package tetzlaff.gl.opengl.helpers;
+package tetzlaff.helpers;
 
 import tetzlaff.gl.exceptions.NoAvailableTextureUnitsException;
 

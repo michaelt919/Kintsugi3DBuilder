@@ -171,9 +171,9 @@ public class ULFUserInterface
 				occlusionCheckBox.setSelected(model.getSelectedItem().isOcclusionEnabled());
 				occlusionBiasSpinner.setValue(model.getSelectedItem().getOcclusionBias());
 				
-				if (model.getSelectedItem() instanceof ULFMorphRenderer)
+				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
 				{
-					ULFMorphRenderer morph = (ULFMorphRenderer)(model.getSelectedItem());
+					ULFMorphRenderer<?> morph = (ULFMorphRenderer<?>)(model.getSelectedItem());
 					int currentStage = morph.getCurrentStage();
 					morphSlider.setEnabled(true);
 					morphSlider.setMaximum(morph.getStageCount() - 1);
@@ -316,9 +316,9 @@ public class ULFUserInterface
 		
 		morphSlider.addChangeListener(e ->
 		{
-			if (model.getSelectedItem() instanceof ULFMorphRenderer)
+			if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
 			{
-				((ULFMorphRenderer)(model.getSelectedItem())).setCurrentStage(morphSlider.getValue());
+				((ULFMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(morphSlider.getValue());
 			}
 		});
 		

@@ -2,6 +2,7 @@ package tetzlaff.ulf.app;
 
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
+import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.ulf.ULFRendererList;
 import tetzlaff.window.glfw.GLFWWindow;
@@ -16,7 +17,7 @@ public class ULFProgram
     	Trackball trackball = new Trackball(1.0f);
         trackball.addAsWindowListener(window);
         
-        ULFRendererList model = new ULFRendererList(window, trackball);
+        ULFRendererList<OpenGLContext> model = new ULFRendererList<OpenGLContext>(window, trackball);
     	ULFUserInterface gui = new ULFUserInterface(model);
         
         InteractiveApplication app = InteractiveGraphics.createApplication(window, window, model.getDrawable());

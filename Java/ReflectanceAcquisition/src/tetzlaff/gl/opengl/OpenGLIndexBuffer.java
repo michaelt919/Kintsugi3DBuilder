@@ -8,19 +8,19 @@ import org.lwjgl.BufferUtils;
 
 import tetzlaff.gl.IndexBuffer;
 
-public class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer<OpenGLContext>
+class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer<OpenGLContext>
 {
 	private int count;
 	
-	public OpenGLIndexBuffer(int usage) 
+	OpenGLIndexBuffer(OpenGLContext context, int usage) 
 	{
-		super(usage);
+		super(context, usage);
 		this.count = 0;
 	}
 	
-	public OpenGLIndexBuffer() 
+	OpenGLIndexBuffer(OpenGLContext context) 
 	{
-		this(GL_STATIC_DRAW);
+		this(context, GL_STATIC_DRAW);
 	}
 	
 	private static IntBuffer convertToIntBuffer(int[] data)
@@ -29,17 +29,6 @@ public class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer<OpenG
 		buffer.put(data);
 		buffer.flip();
 		return buffer;
-	}
-	
-	public OpenGLIndexBuffer(int[] data, int usage)
-	{
-		super(convertToIntBuffer(data), usage);
-		this.count = data.length;
-	}
-	
-	public OpenGLIndexBuffer(int[] data)
-	{
-		this(data, GL_STATIC_DRAW);
 	}
 
 	@Override
@@ -55,9 +44,10 @@ public class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer<OpenG
 	}
 
 	@Override
-	public void setData(int[] data)
+	public OpenGLIndexBuffer setData(int[] data)
 	{
 		super.setData(convertToIntBuffer(data));
 		this.count = data.length;
+		return this;
 	}
 }

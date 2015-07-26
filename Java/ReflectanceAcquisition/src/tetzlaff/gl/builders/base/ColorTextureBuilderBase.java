@@ -4,9 +4,8 @@ import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture;
 import tetzlaff.gl.builders.ColorTextureBuilder;
-import tetzlaff.gl.builders.TextureBuilder;
 
-public abstract class ColorTextureBuilderBase<ContextType extends Context<? super ContextType>, TextureType extends Texture<ContextType>> 
+public abstract class ColorTextureBuilderBase<ContextType extends Context<ContextType>, TextureType extends Texture<ContextType>> 
 	extends TextureBuilderBase<ContextType, TextureType> implements ColorTextureBuilder<ContextType, TextureType>
 {
 	private ColorFormat internalFormat = ColorFormat.RGBA8;
@@ -21,6 +20,7 @@ public abstract class ColorTextureBuilderBase<ContextType extends Context<? supe
 		super(context);
 	}
 	
+	@Override
 	public ColorTextureBuilderBase<ContextType, TextureType> setInternalFormat(ColorFormat format)
 	{
 		internalFormat = format;

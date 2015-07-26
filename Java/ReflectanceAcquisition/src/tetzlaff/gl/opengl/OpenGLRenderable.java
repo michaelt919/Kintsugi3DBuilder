@@ -4,12 +4,10 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
 
 import java.util.Map;
 import java.util.TreeMap;
 
-import tetzlaff.gl.Context;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Renderable;
@@ -24,40 +22,38 @@ import tetzlaff.gl.helpers.IntVector4;
 import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
-import tetzlaff.gl.opengl.helpers.VertexAttributeSetting;
 
-public class OpenGLRenderable implements Renderable<OpenGLContext>
+class OpenGLRenderable implements Renderable<OpenGLContext>
 {
-	private OpenGLProgram program;
-	private OpenGLVertexArray vao;
-	private boolean vaoOwned;
-	private Map<Integer, VertexAttributeSetting> settings;
-
-	public OpenGLRenderable(OpenGLProgram program, OpenGLVertexArray vertexArray, boolean ownVertexArray) 
+	private static interface VertexAttributeSetting 
 	{
-		this.program = program;
-		this.vao = vertexArray;
-		this.vaoOwned = ownVertexArray;
-		this.settings = new TreeMap<Integer, VertexAttributeSetting>();
-	}
-
-	public OpenGLRenderable(OpenGLProgram program, OpenGLVertexArray vertexArray) 
-	{
-		this(program, vertexArray, false);
+		public void set();
 	}
 	
-	public OpenGLRenderable(OpenGLProgram program) 
-	{
-		this(program, new OpenGLVertexArray(), true);
-	}
+	protected final OpenGLContext context;
+	
+	private OpenGLProgram program;
+	private OpenGLVertexArray vao;
+	private Map<Integer, VertexAttributeSetting> settings;
 
+	OpenGLRenderable(OpenGLContext context, OpenGLProgram program) 
+	{
+		this.context = context;
+		this.program = program;
+		this.vao = new OpenGLVertexArray(context);
+		this.settings = new TreeMap<Integer, VertexAttributeSetting>();
+	}
+	
+	@Override
+	public OpenGLContext getContext()
+	{
+		return this.context;
+	}
+	
 	@Override
 	public void finalize()
 	{
-		if (vaoOwned)
-		{
-			vao.delete();
-		}
+		vao.delete();
 	}
 	
 	@Override
@@ -132,46 +128,19 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 	@Override
 	public void draw(PrimitiveMode primitiveMode, OpenGLContext context)
 	{
-		this.draw(primitiveMode, OpenGLDefaultFramebuffer.fromContext(context));
+		this.draw(primitiveMode, context.getDefaultFramebuffer());
 	}
 
 	@Override
 	public void draw(PrimitiveMode primitiveMode, OpenGLContext context, int width, int height)
 	{
-		this.draw(primitiveMode, OpenGLDefaultFramebuffer.fromContext(context), width, height);
+		this.draw(primitiveMode, context.getDefaultFramebuffer(), width, height);
 	}
 
 	@Override
 	public void draw(PrimitiveMode primitiveMode, OpenGLContext context, int x, int y, int width, int height)
 	{
-		this.draw(primitiveMode, OpenGLDefaultFramebuffer.fromContext(context), x, y, width, height);
-	}
-	
-	@Override
-	public boolean addVertexBuffer(int location, VertexBuffer<OpenGLContext> buffer, boolean owned)
-	{
-		if (buffer instanceof OpenGLVertexBuffer)
-		{
-			if (location >= 0)
-			{
-				this.vao.addVertexBuffer(location, (OpenGLVertexBuffer)buffer, owned);
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		else
-		{
-			throw new IllegalArgumentException("'buffer' must be of type OpenGLVertexBuffer.");
-		}
-	}
-	
-	@Override
-	public boolean addVertexBuffer(String name, VertexBuffer<OpenGLContext> buffer, boolean owned)
-	{
-		return this.addVertexBuffer(program.getVertexAttribLocation(name), buffer, owned);
+		this.draw(primitiveMode, context.getDefaultFramebuffer(), x, y, width, height);
 	}
 	
 	@Override
@@ -181,7 +150,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 		{
 			if (location >= 0)
 			{
-				this.vao.addVertexBuffer(location, (OpenGLVertexBuffer)buffer);
+				this.vao.addVertexBuffer(location, buffer);
 				return true;
 			}
 			else
@@ -209,7 +178,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttribI1i(location, value);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}
@@ -227,7 +196,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttribI2i(location, value.x, value.y);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}
@@ -245,7 +214,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttribI3i(location, value.x, value.y, value.z);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}
@@ -263,7 +232,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttribI4i(location, value.x, value.y, value.z, value.w);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}
@@ -281,7 +250,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttrib1f(location, value);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}
@@ -299,7 +268,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttrib2f(location, value.x, value.y);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}
@@ -317,7 +286,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttrib3f(location, value.x, value.y, value.z);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}
@@ -335,7 +304,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttrib4f(location, value.x, value.y, value.z, value.w);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}
@@ -353,7 +322,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttrib1d(location, value);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}
@@ -371,7 +340,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttrib2d(location, value.x, value.y);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}
@@ -389,7 +358,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttrib3d(location, value.x, value.y, value.z);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}
@@ -407,7 +376,7 @@ public class OpenGLRenderable implements Renderable<OpenGLContext>
 			settings.put(location, () ->
 			{
 				glVertexAttrib4d(location, value.x, value.y, value.z, value.w);
-				openGLErrorCheck();
+				this.context.openGLErrorCheck();
 			});
 			return true;
 		}

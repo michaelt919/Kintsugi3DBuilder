@@ -6,7 +6,7 @@ import java.io.InputStream;
 
 import tetzlaff.helpers.ZipWrapper;
 
-public interface Texture3D<ContextType extends Context<? super ContextType>> extends Texture<ContextType>
+public interface Texture3D<ContextType extends Context<ContextType>> extends Texture<ContextType>
 {
 	int getWidth();
 	int getHeight();

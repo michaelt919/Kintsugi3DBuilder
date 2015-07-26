@@ -10,7 +10,7 @@ import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 
-public interface Renderable<ContextType extends Context<? super ContextType>>
+public interface Renderable<ContextType extends Context<ContextType>> extends Contextual<ContextType>
 {
 	Program<ContextType> program();
 
@@ -75,10 +75,6 @@ public interface Renderable<ContextType extends Context<? super ContextType>>
 	boolean setVertexAttrib(int location, IntVector2 value);
 
 	boolean setVertexAttrib(int location, int value);
-
-	boolean addVertexBuffer(int location, VertexBuffer<ContextType> buffer, boolean owned);
-
-	boolean addVertexBuffer(String name, VertexBuffer<ContextType> buffer, boolean owned);
 
 	boolean addVertexBuffer(int location, VertexBuffer<ContextType> buffer);
 

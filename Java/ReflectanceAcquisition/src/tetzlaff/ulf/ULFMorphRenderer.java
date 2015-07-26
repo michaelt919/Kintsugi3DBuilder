@@ -7,29 +7,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.Trackball;
-import tetzlaff.gl.opengl.OpenGLContext;
 
-public class ULFMorphRenderer implements ULFDrawable
+public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable
 {
-	private OpenGLContext context;
+	private ContextType context;
+	private Program<ContextType> program;
     private File lfmFile;
     private Trackball trackball;
     private String id;
 
     private ULFLoadingMonitor callback;
-	private List<ULFRenderer> stages;
+	private List<ULFRenderer<ContextType>> stages;
 	private int currentStage;
 
-	public ULFMorphRenderer(OpenGLContext context, File lfmFile, Trackball trackball) throws FileNotFoundException 
+	public ULFMorphRenderer(ContextType context, Program<ContextType> program, File lfmFile, Trackball trackball) throws FileNotFoundException 
 	{
 		this.context = context;
+		this.program = program;
 		this.lfmFile = lfmFile;
 		this.trackball = trackball;
 		
 		this.id = lfmFile.getParentFile().getName();
 		
-		this.stages = new ArrayList<ULFRenderer>();
+		this.stages = new ArrayList<ULFRenderer<ContextType>>();
 		this.currentStage = 0;
 	}
 	
@@ -58,12 +61,12 @@ public class ULFMorphRenderer implements ULFDrawable
 			while (scanner.hasNextLine())
 			{
 				String vsetFileName = scanner.nextLine();
-				stages.add(new ULFRenderer(context, new File(directory, vsetFileName), trackball));
+				stages.add(new ULFRenderer<ContextType>(context, program, new File(directory, vsetFileName), trackball));
 			}
 			scanner.close();
 			
 			int stagesLoaded = 0;
-			for(ULFRenderer stage : stages)
+			for(ULFRenderer<ContextType> stage : stages)
 			{
 				System.out.println(stage.getVSETFile());
 				callback.setProgress((double)stagesLoaded / (double)stages.size());
@@ -82,7 +85,7 @@ public class ULFMorphRenderer implements ULFDrawable
 	@Override
 	public void update() 
 	{
-		for(ULFRenderer stage : stages)
+		for(ULFRenderer<ContextType> stage : stages)
 		{
 			stage.update();
 		}
@@ -97,7 +100,7 @@ public class ULFMorphRenderer implements ULFDrawable
 	@Override
 	public void cleanup() 
 	{
-		for(ULFRenderer stage : stages)
+		for(ULFRenderer<ContextType> stage : stages)
 		{
 			stage.cleanup();
 		}
@@ -109,7 +112,7 @@ public class ULFMorphRenderer implements ULFDrawable
 		this.callback = callback;
 	}
 	
-	public UnstructuredLightField getLightField()
+	public UnstructuredLightField<ContextType> getLightField()
 	{
 		return stages.get(currentStage).getLightField();
 	}
@@ -141,7 +144,7 @@ public class ULFMorphRenderer implements ULFDrawable
 	@Override
 	public void setGamma(float gamma)
 	{
-		for (ULFRenderer stage : stages)
+		for (ULFRenderer<ContextType> stage : stages)
 		{
 			stage.getLightField().settings.setGamma(gamma);
 		}
@@ -150,7 +153,7 @@ public class ULFMorphRenderer implements ULFDrawable
 	@Override
 	public void setWeightExponent(float weightExponent) 
 	{
-		for (ULFRenderer stage : stages)
+		for (ULFRenderer<ContextType> stage : stages)
 		{
 			stage.getLightField().settings.setWeightExponent(weightExponent);
 		}
@@ -159,7 +162,7 @@ public class ULFMorphRenderer implements ULFDrawable
 	@Override
 	public void setOcclusionEnabled(boolean occlusionEnabled) 
 	{
-		for (ULFRenderer stage : stages)
+		for (ULFRenderer<ContextType> stage : stages)
 		{
 			stage.getLightField().settings.setOcclusionEnabled(occlusionEnabled);
 		}
@@ -168,7 +171,7 @@ public class ULFMorphRenderer implements ULFDrawable
 	@Override
 	public void setOcclusionBias(float occlusionBias) 
 	{
-		for (ULFRenderer stage : stages)
+		for (ULFRenderer<ContextType> stage : stages)
 		{
 			stage.getLightField().settings.setOcclusionBias(occlusionBias);
 		}

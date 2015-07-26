@@ -14,7 +14,6 @@ import org.lwjgl.system.glfw.ErrorCallback.StrAdapter;
 import org.lwjgl.system.glfw.GLFWvidmode;
 import org.lwjgl.system.glfw.WindowCallback;
 
-import tetzlaff.gl.Context;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;
 import tetzlaff.gl.opengl.OpenGLContext;

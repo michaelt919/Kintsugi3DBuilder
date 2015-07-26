@@ -8,6 +8,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
+import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.phong.PhongRenderer;
 import tetzlaff.window.KeyCodes;
@@ -32,7 +33,7 @@ public class PhongProgram
 		
 		if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
 		{
-	        PhongRenderer renderer = new PhongRenderer(window, fileChooser.getSelectedFile(), viewTrackball, lightTrackball);
+	        PhongRenderer<OpenGLContext> renderer = new PhongRenderer<OpenGLContext>(window, fileChooser.getSelectedFile(), viewTrackball, lightTrackball);
 	        
 	    	window.addKeyPressListener((targetWindow, keycode, mods) -> 
 	    	{

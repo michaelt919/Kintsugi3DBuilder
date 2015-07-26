@@ -1,14 +1,10 @@
 package tetzlaff.gl.builders.base;
 
-import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture;
-import tetzlaff.gl.builders.ColorTextureBuilder;
-import tetzlaff.gl.builders.DepthTextureBuilder;
 import tetzlaff.gl.builders.StencilTextureBuilder;
-import tetzlaff.gl.builders.TextureBuilder;
 
-public abstract class StencilTextureBuilderBase<ContextType extends Context<? super ContextType>, TextureType extends Texture<ContextType>> 
+public abstract class StencilTextureBuilderBase<ContextType extends Context<ContextType>, TextureType extends Texture<ContextType>> 
 	extends TextureBuilderBase<ContextType, TextureType> implements StencilTextureBuilder<ContextType, TextureType>
 {
 	private int precision = 8;

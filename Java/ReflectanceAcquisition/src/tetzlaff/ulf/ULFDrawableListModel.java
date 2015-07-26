@@ -5,31 +5,47 @@ import java.io.IOException;
 
 import javax.swing.AbstractListModel;
 
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Program;
+import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.MultiDrawable;
 import tetzlaff.gl.helpers.Trackball;
-import tetzlaff.gl.opengl.OpenGLContext;
 
-public abstract class ULFDrawableListModel extends AbstractListModel<ULFDrawable> implements ULFListModel
+public abstract class ULFDrawableListModel<ContextType extends Context<ContextType>> extends AbstractListModel<ULFDrawable> implements ULFListModel
 {
 	private static final long serialVersionUID = 4167467314632694946L;
 	
-	protected final OpenGLContext context;
+	protected final ContextType context;
+	protected final Program<ContextType> program;
 	protected final Trackball trackball;
 	private MultiDrawable<ULFDrawable> ulfs;
 	private int effectiveSize;
 	private ULFLoadingMonitor loadingMonitor;
 	
-	public ULFDrawableListModel(OpenGLContext context, Trackball trackball) 
+	public ULFDrawableListModel(ContextType context, Trackball trackball) 
 	{
 		this.context = context;
 		this.trackball = trackball;
 		this.ulfs = new MultiDrawable<ULFDrawable>();
 		this.effectiveSize = 0;
+		
+		try
+        {
+    		this.program = context.getShaderProgramBuilder()
+    				.addShader(ShaderType.Vertex, new File("shaders/ulr.vert"))
+    				.addShader(ShaderType.Fragment, new File("shaders/ulr.frag"))
+    				.createProgram();
+        }
+        catch (IOException e)
+        {
+        	e.printStackTrace();
+        	throw new IllegalStateException("The shader program could not be initialized.", e);
+        }
 	}
 	
 	protected abstract ULFDrawable createFromVSETFile(File vsetFile) throws IOException;
-	protected abstract ULFRenderer createFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory) throws IOException;
+	protected abstract ULFRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory) throws IOException;
 	protected abstract ULFDrawable createMorphFromLFMFile(File lfmFile) throws IOException;
 
 	@Override

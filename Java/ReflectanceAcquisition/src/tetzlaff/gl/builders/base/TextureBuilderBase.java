@@ -1,11 +1,10 @@
 package tetzlaff.gl.builders.base;
 
-import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture;
 import tetzlaff.gl.builders.TextureBuilder;
 
-public abstract class TextureBuilderBase<ContextType extends Context<? super ContextType>, TextureType extends Texture<ContextType>> implements TextureBuilder<ContextType, TextureType>
+public abstract class TextureBuilderBase<ContextType extends Context<ContextType>, TextureType extends Texture<ContextType>> implements TextureBuilder<ContextType, TextureType>
 {
 	protected final ContextType context;
 	private int multisamples = 1;
@@ -39,6 +38,7 @@ public abstract class TextureBuilderBase<ContextType extends Context<? super Con
 		this.context = context;
 	}
 	
+	@Override
 	public TextureBuilder<ContextType, TextureType> setMultisamples(int samples, boolean fixedSampleLocations)
 	{
 		multisamples = samples;
@@ -46,12 +46,14 @@ public abstract class TextureBuilderBase<ContextType extends Context<? super Con
 		return this;
 	}
 	
+	@Override
 	public TextureBuilder<ContextType, TextureType> setMipmapsEnabled(boolean enabled)
 	{
 		mipmapsEnabled = enabled;
 		return this;
 	}
 	
+	@Override
 	public TextureBuilder<ContextType, TextureType> setLinearFilteringEnabled(boolean enabled)
 	{
 		linearFilteringEnabled = enabled;

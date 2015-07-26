@@ -1,22 +1,22 @@
-package tetzlaff.reflacq;
+package tetzlaff.texturefit;
 
 import java.io.IOException;
 
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.window.glfw.GLFWWindow;
 
-public class TexGenProgram
+public class TextureFitProgram
 {
 	public static void main(String[] args)
     {
-		TexGenUserInterface gui = new TexGenUserInterface();
+		TextureFitUserInterface gui = new TextureFitUserInterface();
     	
 		gui.addExecuteButtonActionListener(e -> 
 		{
 	        try
 	        {
 	        	OpenGLContext context = new GLFWWindow(800, 800, "Texture Generation");
-	    		new TexGenExecutor(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(), 
+	    		new TextureFitExecutor<OpenGLContext>(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(), 
 	    				gui.getRescaleDirectory(), gui.getOutputDirectory(), gui.getParameters())
 	    				.execute();
 		        GLFWWindow.closeAllWindows();

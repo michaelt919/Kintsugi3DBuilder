@@ -1,4 +1,4 @@
-package tetzlaff.reflacq;
+package tetzlaff.texturefit;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -10,37 +10,37 @@ import java.util.Date;
 import javax.imageio.ImageIO;
 
 import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.Context;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Program;
+import tetzlaff.gl.Renderable;
+import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
+import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.VertexMesh;
-import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.gl.opengl.OpenGLProgram;
-import tetzlaff.gl.opengl.OpenGLRenderable;
-import tetzlaff.gl.opengl.OpenGLTexture2D;
-import tetzlaff.gl.opengl.OpenGLVertexBuffer;
 import tetzlaff.ulf.ViewSet;
 
-public class TexGenExecutor 
+public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
 	// Debug parameters
 	private static final boolean DEBUG = false;
 
-	private OpenGLContext context;
+	private ContextType context;
 	private File vsetFile;
 	private File objFile;
 	private File imageDir;
 	private File maskDir;
 	private File rescaleDir;
 	private File outputDir;
-	private TexGenParameters param;
+	private TextureFitParameters param;
 	
-	public TexGenExecutor(OpenGLContext context, File vsetFile, File objFile, File imageDir, File maskDir, File rescaleDir, File outputDir, TexGenParameters param) 
+	public TextureFitExecutor(ContextType context, File vsetFile, File objFile, File imageDir, File maskDir, File rescaleDir, File outputDir, TextureFitParameters param) 
 	{
 		this.context = context;
 		this.vsetFile = vsetFile;
@@ -65,7 +65,7 @@ public class TexGenExecutor
 		System.out.println("Loading view set...");
     	Date timestamp = new Date();
 		
-    	ViewSet viewSet = null;
+    	ViewSet<ContextType> viewSet = null;
     	String[] vsetFileNameParts = vsetFile.getName().split("\\.");
     	String fileExt = vsetFileNameParts[vsetFileNameParts.length-1];
     	if (fileExt.equalsIgnoreCase("vset"))
@@ -98,35 +98,45 @@ public class TexGenExecutor
 		context.enableDepthTest();
     	context.enableBackFaceCulling();
     	
-    	OpenGLProgram depthRenderingProgram = new OpenGLProgram(new File("shaders/depth.vert"), new File("shaders/depth.frag"));
+    	Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
+    			.addShader(ShaderType.Vertex, new File("shaders/depth.vert"))
+    			.addShader(ShaderType.Fragment, new File("shaders/depth.frag"))
+    			.createProgram();
     	
-    	OpenGLProgram projTexProgram = new OpenGLProgram(
-    			new File("shaders", "texspace.vert"), 
-    			new File("shaders", "projtex_single.frag"));
+    	Program<ContextType> projTexProgram = context.getShaderProgramBuilder()
+    			.addShader(ShaderType.Vertex, new File("shaders", "texspace.vert"))
+    			.addShader(ShaderType.Fragment, new File("shaders", "projtex_single.frag"))
+    			.createProgram();
     	
-		OpenGLProgram diffuseFitProgram = new OpenGLProgram(
-				new File("shaders", "texspace.vert"), 
-				new File("shaders", param.isImagePreprojectionUseEnabled() ? "diffusefit_texspace.frag" : "diffusefit_imgspace.frag"));
+    	Program<ContextType> diffuseFitProgram = context.getShaderProgramBuilder()
+    			.addShader(ShaderType.Vertex, new File("shaders", "texspace.vert"))
+    			.addShader(ShaderType.Fragment, new File("shaders", param.isImagePreprojectionUseEnabled() ? "diffusefit_texspace.frag" : "diffusefit_imgspace.frag"))
+    			.createProgram();
 		
-		OpenGLProgram specularFitProgram = new OpenGLProgram(
-				new File("shaders", "texspace.vert"), 
-				new File("shaders", param.isImagePreprojectionUseEnabled() ? "specularfit_texspace.frag" : "specularfit_imgspace.frag"));
+    	Program<ContextType> specularFitProgram = context.getShaderProgramBuilder()
+    			.addShader(ShaderType.Vertex, new File("shaders", "texspace.vert"))
+    			.addShader(ShaderType.Fragment, new File("shaders", param.isImagePreprojectionUseEnabled() ? "specularfit_texspace.frag" : "specularfit_imgspace.frag"))
+    			.createProgram();
 		
-    	OpenGLProgram diffuseDebugProgram = new OpenGLProgram(
-    			new File("shaders", "texspace.vert"), 
-    			new File("shaders", "projtex_multi.frag"));
+    	Program<ContextType> diffuseDebugProgram = context.getShaderProgramBuilder()
+    			.addShader(ShaderType.Vertex, new File("shaders", "texspace.vert"))
+    			.addShader(ShaderType.Fragment, new File("shaders", "projtex_multi.frag"))
+    			.createProgram();
 		
-		OpenGLProgram specularDebugProgram = new OpenGLProgram(
-				new File("shaders", "texspace.vert"), 
-				new File("shaders", "speculardebug_imgspace.frag"));
+    	Program<ContextType> specularDebugProgram = context.getShaderProgramBuilder()
+    			.addShader(ShaderType.Vertex, new File("shaders", "texspace.vert"))
+    			.addShader(ShaderType.Fragment, new File("shaders", "speculardebug_imgspace.frag"))
+    			.createProgram();
 		
-		OpenGLProgram textureRectProgram = new OpenGLProgram(
-				new File("shaders", "texturerect.vert"),
-				new File("shaders", "simpletexture.frag"));
+    	Program<ContextType> textureRectProgram = context.getShaderProgramBuilder()
+    			.addShader(ShaderType.Vertex, new File("shaders", "texturerect.vert"))
+    			.addShader(ShaderType.Fragment, new File("shaders", "simpletexture.frag"))
+    			.createProgram();
 		
-		OpenGLProgram holeFillProgram = new OpenGLProgram(
-				new File("shaders", "texturerect.vert"),
-				new File("shaders", "holefill.frag"));
+    	Program<ContextType> holeFillProgram = context.getShaderProgramBuilder()
+    			.addShader(ShaderType.Vertex, new File("shaders", "texturerect.vert"))
+    			.addShader(ShaderType.Fragment, new File("shaders", "holefill.frag"))
+    			.createProgram();
 		
     	System.out.println("Shader compilation completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	
@@ -134,27 +144,27 @@ public class TexGenExecutor
     	timestamp = new Date();
     	
     	VertexMesh mesh = new VertexMesh("OBJ", objFile);
-    	OpenGLVertexBuffer positionBuffer = new OpenGLVertexBuffer(mesh.getVertices());
-    	OpenGLVertexBuffer texCoordBuffer = new OpenGLVertexBuffer(mesh.getTexCoords());
-    	OpenGLVertexBuffer normalBuffer = new OpenGLVertexBuffer(mesh.getNormals());
+    	VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(mesh.getVertices());
+    	VertexBuffer<ContextType> texCoordBuffer = context.createVertexBuffer().setData(mesh.getTexCoords());
+    	VertexBuffer<ContextType> normalBuffer = context.createVertexBuffer().setData(mesh.getNormals());
     	
     	System.out.println("Loading mesh completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	
     	File tmpDir = new File(outputDir, "tmp");
     	
-    	Texture3D<OpenGLContext> viewTextures = null;
-    	Texture3D<OpenGLContext> depthTextures = null;
+    	Texture3D<ContextType> viewTextures = null;
+    	Texture3D<ContextType> depthTextures = null;
     	
     	if (param.isImagePreprojectionUseEnabled() && param.isImagePreprojectionGenerationEnabled())
     	{
     		System.out.println("Pre-projecting images into texture space...");
 	    	timestamp = new Date();
 	    	
-	    	FramebufferObject<OpenGLContext> projTexFBO = 
+	    	FramebufferObject<ContextType> projTexFBO = 
     			context.getFramebufferObjectBuilder(param.getTextureSize() / param.getTextureSubdivision(), param.getTextureSize() / param.getTextureSubdivision())
     				.addColorAttachments(ColorFormat.RGBA32F, 2)
     				.createFramebufferObject();
-	    	OpenGLRenderable projTexRenderable = new OpenGLRenderable(projTexProgram);
+	    	Renderable<ContextType> projTexRenderable = context.createRenderable(projTexProgram);
 	    	
 	    	projTexRenderable.addVertexBuffer("position", positionBuffer);
 	    	projTexRenderable.addVertexBuffer("texCoord", texCoordBuffer);
@@ -179,7 +189,7 @@ public class TexGenExecutor
 			    	imageFile = new File(imageDir, pngFileName);
 				}
 		    	
-		    	Texture2D<OpenGLContext> viewTexture;
+		    	Texture2D<ContextType> viewTexture;
 		    	if (maskDir == null)
 		    	{
 		    		viewTexture = context.get2DColorTextureBuilder(imageFile, true)
@@ -204,12 +214,12 @@ public class TexGenExecutor
 		    						.createTexture();
 		    	}
 		    	
-		    	FramebufferObject<OpenGLContext> depthFBO = 
+		    	FramebufferObject<ContextType> depthFBO = 
 	    			context.getFramebufferObjectBuilder(viewTexture.getWidth(), viewTexture.getHeight())
 	    				.addDepthAttachment()
 	    				.createFramebufferObject();
 		    	
-		    	OpenGLRenderable depthRenderable = new OpenGLRenderable(depthRenderingProgram);
+		    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 		    	depthRenderable.addVertexBuffer("position", positionBuffer);
 		    	
 	        	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
@@ -272,13 +282,13 @@ public class TexGenExecutor
     							.createTexture();
     			
 				// Create an FBO for downsampling
-		    	FramebufferObject<OpenGLContext> downsamplingFBO = 
+		    	FramebufferObject<ContextType> downsamplingFBO = 
 	    			context.getFramebufferObjectBuilder(param.getImageWidth(), param.getImageHeight())
 	    				.addEmptyColorAttachment()
 	    				.createFramebufferObject();
 		    	
-		    	OpenGLRenderable downsampleRenderable = new OpenGLRenderable(textureRectProgram);
-		    	OpenGLVertexBuffer rectBuffer = OpenGLVertexBuffer.createRectangle();
+		    	Renderable<ContextType> downsampleRenderable = context.createRenderable(textureRectProgram);
+		    	VertexBuffer<ContextType> rectBuffer = context.createRectangle();
 		    	downsampleRenderable.addVertexBuffer("position", rectBuffer);
 		    	
 		    	// Downsample and store each image
@@ -293,7 +303,7 @@ public class TexGenExecutor
 				    	imageFile = new File(imageDir, pngFileName);
 					}
 		    		
-		    		Texture2D<OpenGLContext> fullSizeImage;
+		    		Texture2D<ContextType> fullSizeImage;
 		    		if (maskDir == null)
 	    			{
 		    			fullSizeImage = context.get2DColorTextureBuilder(imageFile, true)
@@ -412,9 +422,9 @@ public class TexGenExecutor
 	    	depthTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
 	    	
 	    	// Don't automatically generate any texture attachments for this framebuffer object
-	    	FramebufferObject<OpenGLContext> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
+	    	FramebufferObject<ContextType> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
 	    	
-	    	OpenGLRenderable depthRenderable = new OpenGLRenderable(depthRenderingProgram);
+	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 	    	depthRenderable.addVertexBuffer("position", positionBuffer);
 	    	
 	    	// Render each depth texture
@@ -451,12 +461,12 @@ public class TexGenExecutor
     	}
     	timestamp = new Date();
     	
-    	FramebufferObject<OpenGLContext> diffuseFitFramebuffer = 
+    	FramebufferObject<ContextType> diffuseFitFramebuffer = 
 			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
 				.addColorAttachments(4)
 				.createFramebufferObject();
     	
-    	FramebufferObject<OpenGLContext> specularFitFramebuffer = 
+    	FramebufferObject<ContextType> specularFitFramebuffer = 
 			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
 				.addColorAttachments(4)
 				.createFramebufferObject();
@@ -471,7 +481,7 @@ public class TexGenExecutor
         specularFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
         specularFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
 
-    	OpenGLRenderable diffuseFitRenderable = new OpenGLRenderable(diffuseFitProgram);
+    	Renderable<ContextType> diffuseFitRenderable = context.createRenderable(diffuseFitProgram);
     	
     	diffuseFitRenderable.addVertexBuffer("position", positionBuffer);
     	diffuseFitRenderable.addVertexBuffer("texCoord", texCoordBuffer);
@@ -501,7 +511,7 @@ public class TexGenExecutor
     		diffuseFitRenderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
 		}
     	
-    	OpenGLRenderable specularFitRenderable = new OpenGLRenderable(specularFitProgram);
+    	Renderable<ContextType> specularFitRenderable = context.createRenderable(specularFitProgram);
     	
     	specularFitRenderable.addVertexBuffer("position", positionBuffer);
     	specularFitRenderable.addVertexBuffer("texCoord", texCoordBuffer);
@@ -563,7 +573,7 @@ public class TexGenExecutor
 			    	timestamp = new Date();
 	    		}
 		    	
-		    	Texture3D<OpenGLContext> preprojectedViews = null;
+		    	Texture3D<ContextType> preprojectedViews = null;
 		    	
 		    	if (param.isImagePreprojectionUseEnabled())
 		    	{
@@ -687,19 +697,19 @@ public class TexGenExecutor
     	System.out.println("Filling empty regions...");
     	timestamp = new Date();
     	
-    	FramebufferObject<OpenGLContext> holeFillBackFBO = 
+    	FramebufferObject<ContextType> holeFillBackFBO = 
 			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
 				.addColorAttachments(4)
 				.createFramebufferObject();
     	
-    	OpenGLRenderable holeFillRenderable = new OpenGLRenderable(holeFillProgram);
-    	OpenGLVertexBuffer rectBuffer = OpenGLVertexBuffer.createRectangle();
+    	Renderable<ContextType> holeFillRenderable = context.createRenderable(holeFillProgram);
+    	VertexBuffer<ContextType> rectBuffer = context.createRectangle();
     	holeFillRenderable.addVertexBuffer("position", rectBuffer);
     	
     	holeFillProgram.setUniform("minFillAlpha", 0.5f);
     	
     	// Diffuse
-    	FramebufferObject<OpenGLContext> holeFillFrontFBO = diffuseFitFramebuffer;
+    	FramebufferObject<ContextType> holeFillFrontFBO = diffuseFitFramebuffer;
     	for (int i = 0; i < param.getTextureSize() / 2; i++)
     	{
     		holeFillBackFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
@@ -715,7 +725,7 @@ public class TexGenExecutor
     		holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, holeFillBackFBO);
     		context.finish();
     		
-    		FramebufferObject<OpenGLContext> tmp = holeFillFrontFBO;
+    		FramebufferObject<ContextType> tmp = holeFillFrontFBO;
     		holeFillFrontFBO = holeFillBackFBO;
     		holeFillBackFBO = tmp;
     		
@@ -740,7 +750,7 @@ public class TexGenExecutor
     		holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, holeFillBackFBO);
     		context.finish();
     		
-    		FramebufferObject<OpenGLContext> tmp = holeFillFrontFBO;
+    		FramebufferObject<ContextType> tmp = holeFillFrontFBO;
     		holeFillFrontFBO = holeFillBackFBO;
     		holeFillBackFBO = tmp;
     		
@@ -788,12 +798,12 @@ public class TexGenExecutor
 
 	    	new File(outputDir, "debug").mkdirs();
     		
-	    	FramebufferObject<OpenGLContext> diffuseDebugFBO = 
+	    	FramebufferObject<ContextType> diffuseDebugFBO = 
     			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
     				.addColorAttachments(ColorFormat.RGBA32F, 2)
     				.createFramebufferObject();
 	    	
-	    	OpenGLRenderable diffuseDebugRenderable = new OpenGLRenderable(diffuseDebugProgram);
+	    	Renderable<ContextType> diffuseDebugRenderable = context.createRenderable(diffuseDebugProgram);
 	    	
 	    	diffuseDebugRenderable.program().setUniform("minTexCoord", new Vector2(0.0f, 0.0f));
 	    	diffuseDebugRenderable.program().setUniform("maxTexCoord", new Vector2(1.0f, 1.0f));
@@ -855,11 +865,11 @@ public class TexGenExecutor
 	    	System.out.println("Generating specular debug info...");
 	    	timestamp = new Date();
     		
-	    	FramebufferObject<OpenGLContext> specularDebugFBO = 
+	    	FramebufferObject<ContextType> specularDebugFBO = 
     			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
     				.addColorAttachments(ColorFormat.RGBA32F, 2)
     				.createFramebufferObject();
-	    	OpenGLRenderable specularDebugRenderable = new OpenGLRenderable(specularDebugProgram);
+	    	Renderable<ContextType> specularDebugRenderable = context.createRenderable(specularDebugProgram);
 
 	    	specularDebugRenderable.program().setUniform("minTexCoord", new Vector2(0.0f, 0.0f));
 	    	specularDebugRenderable.program().setUniform("maxTexCoord", new Vector2(1.0f, 1.0f));

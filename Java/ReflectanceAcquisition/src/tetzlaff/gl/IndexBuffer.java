@@ -1,7 +1,7 @@
 package tetzlaff.gl;
 
-public interface IndexBuffer<ContextType extends Context<? super ContextType>> extends Resource 
+public interface IndexBuffer<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
 	int count();
-	void setData(int[] data);
+	IndexBuffer<ContextType> setData(int[] data);
 }

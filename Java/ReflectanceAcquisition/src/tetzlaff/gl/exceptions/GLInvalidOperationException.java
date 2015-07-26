@@ -1,10 +1,10 @@
-package tetzlaff.gl.opengl.exceptions;
+package tetzlaff.gl.exceptions;
 
-public class OpenGLInvalidOperationException extends OpenGLException 
+public class GLInvalidOperationException extends GLException 
 {
 	private static final long serialVersionUID = 4614535430818755323L;
 
-	public OpenGLInvalidOperationException() 
+	public GLInvalidOperationException() 
 	{
 		super("The specified operation is not allowed in the current state.");
 	}

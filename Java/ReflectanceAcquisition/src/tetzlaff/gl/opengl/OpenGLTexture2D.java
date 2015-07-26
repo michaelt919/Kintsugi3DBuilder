@@ -4,11 +4,9 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.*; // mipmaps
 import static org.lwjgl.opengl.GL32.*; // multisampling
-import static tetzlaff.gl.opengl.helpers.StaticHelpers.*;
+
 
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -19,16 +17,13 @@ import javax.imageio.ImageIO;
 import org.lwjgl.BufferUtils;
 
 import tetzlaff.gl.ColorFormat.DataType;
-import tetzlaff.gl.Texture;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
-import tetzlaff.gl.builders.base.TextureBuilderBase;
-import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 
-public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
+class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 {
 	private int textureTarget;
 	private int width;
@@ -36,7 +31,7 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 	private int multisamples;
 	private int levelCount;
 	
-	public static class OpenGLTexture2DFromFileBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
+	static class OpenGLTexture2DFromFileBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
 	{
 		private int textureTarget;
 		private BufferedImage colorImg;
@@ -117,8 +112,9 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 			}
 			
 			return new OpenGLTexture2D(
+					this.context,
 					this.textureTarget, 
-					getOpenGLInternalColorFormat(this.getInternalFormat()), 
+					this.context.getOpenGLInternalColorFormat(this.getInternalFormat()), 
 					width,
 					height,
 					GL_BGRA,
@@ -129,7 +125,7 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		}
 	}
 	
-	public static class OpenGLTexture2DFromBufferBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
+	static class OpenGLTexture2DFromBufferBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
 	{
 		private int textureTarget;
 		private int width;
@@ -151,8 +147,9 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		public OpenGLTexture2D createTexture() 
 		{
 			return new OpenGLTexture2D(
+					this.context,
 					this.textureTarget, 
-					getOpenGLInternalColorFormat(this.getInternalFormat()), 
+					this.context.getOpenGLInternalColorFormat(this.getInternalFormat()), 
 					this.width,
 					this.height,
 					this.format,
@@ -163,7 +160,7 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		}
 	}
 	
-	public static class OpenGLTexture2DColorBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
+	static class OpenGLTexture2DColorBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
 	{
 		private int textureTarget;
 		private int width;
@@ -181,9 +178,10 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		public OpenGLTexture2D createTexture() 
 		{
 			return new OpenGLTexture2D(
+					this.context,
 					this.textureTarget, 
 					this.getMultisamples(),
-					getOpenGLInternalColorFormat(this.getInternalFormat()), 
+					this.context.getOpenGLInternalColorFormat(this.getInternalFormat()), 
 					this.width,
 					this.height,
 					(this.getInternalFormat().dataType == DataType.SignedInteger || this.getInternalFormat().dataType == DataType.UnsignedInteger) ? GL_RGBA_INTEGER : GL_RGBA,
@@ -193,7 +191,7 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		}
 	}
 	
-	public static class OpenGLTexture2DDepthBuilder extends DepthTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
+	static class OpenGLTexture2DDepthBuilder extends DepthTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
 	{
 		private int textureTarget;
 		private int width;
@@ -211,9 +209,10 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		public OpenGLTexture2D createTexture() 
 		{
 			return new OpenGLTexture2D(
+					this.context,
 					this.textureTarget, 
 					this.getMultisamples(),
-					getOpenGLInternalDepthFormat(this.getInternalPrecision()), 
+					this.context.getOpenGLInternalDepthFormat(this.getInternalPrecision()), 
 					this.width,
 					this.height,
 					GL_DEPTH_COMPONENT,
@@ -223,7 +222,7 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		}
 	}
 	
-	public static class OpenGLTexture2DStencilBuilder extends StencilTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
+	static class OpenGLTexture2DStencilBuilder extends StencilTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
 	{
 		private int textureTarget;
 		private int width;
@@ -241,9 +240,10 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		public OpenGLTexture2D createTexture() 
 		{
 			return new OpenGLTexture2D(
+					this.context,
 					this.textureTarget, 
 					this.getMultisamples(),
-					getOpenGLInternalStencilFormat(this.getInternalPrecision()), 
+					this.context.getOpenGLInternalStencilFormat(this.getInternalPrecision()), 
 					this.width,
 					this.height,
 					GL_STENCIL_INDEX,
@@ -253,7 +253,7 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		}
 	}
 	
-	public static class OpenGLTexture2DDepthStencilBuilder extends DepthStencilTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
+	static class OpenGLTexture2DDepthStencilBuilder extends DepthStencilTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
 	{
 		private int textureTarget;
 		private int width;
@@ -271,6 +271,7 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		public OpenGLTexture2D createTexture() 
 		{
 			return new OpenGLTexture2D(
+					this.context,
 					this.textureTarget, 
 					this.getMultisamples(),
 					this.isFloatingPointEnabled() ? GL_DEPTH32F_STENCIL8 : GL_DEPTH24_STENCIL8, 
@@ -283,10 +284,10 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		}
 	}
 	
-	private OpenGLTexture2D(int textureTarget, int multisamples, int internalFormat, int width, int height, int format, boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps)
+	private OpenGLTexture2D(OpenGLContext context, int textureTarget, int multisamples, int internalFormat, int width, int height, int format, boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps)
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
-		super();
+		super(context);
 		this.textureTarget = textureTarget;
 		this.bind();
 		this.width = width;
@@ -300,20 +301,20 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 			// Last four parameters are essentially meaningless, but are subject to certain validation conditions
 			glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, 0);
 		}
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		this.init(width, height, useLinearFiltering, useMipmaps);
 	}
 	
-	private OpenGLTexture2D(int textureTarget, int internalFormat, int width, int height, int format, int type, ByteBuffer buffer, boolean useLinearFiltering, boolean useMipmaps) 
+	private OpenGLTexture2D(OpenGLContext context, int textureTarget, int internalFormat, int width, int height, int format, int type, ByteBuffer buffer, boolean useLinearFiltering, boolean useMipmaps) 
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
-		super();
+		super(context);
 		this.textureTarget = textureTarget;
 		this.bind();
 		this.width = width;
 		this.height = height;
 		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, buffer);
-		openGLErrorCheck();
+		this.context.openGLErrorCheck();
 		this.init(width, height, useLinearFiltering, useMipmaps);
 	}
 	
@@ -323,7 +324,7 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 		{
 			// Create mipmaps
 			glGenerateMipmap(GL_TEXTURE_2D);
-	        openGLErrorCheck();
+	        this.context.openGLErrorCheck();
 	        
 	        // Calculate the number of mipmap levels
 			this.levelCount = 0;
@@ -337,16 +338,16 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 			if (useLinearFiltering)
 			{
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		        openGLErrorCheck();
+		        this.context.openGLErrorCheck();
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		        openGLErrorCheck();
+		        this.context.openGLErrorCheck();
 			}
 			else
 			{
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		        openGLErrorCheck();
+		        this.context.openGLErrorCheck();
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		        openGLErrorCheck();
+		        this.context.openGLErrorCheck();
 			}
 		}
 		else
@@ -357,25 +358,27 @@ public class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCo
 			if (useLinearFiltering)
 			{
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		        openGLErrorCheck();
+		        this.context.openGLErrorCheck();
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		        openGLErrorCheck();
+		        this.context.openGLErrorCheck();
 			}
 			else
 			{
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		        openGLErrorCheck();
+		        this.context.openGLErrorCheck();
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		        openGLErrorCheck();
+		        this.context.openGLErrorCheck();
 			}
 		}
 	}
 	
+	@Override
 	public int getWidth()
 	{
 		return this.width;
 	}
 	
+	@Override
 	public int getHeight()
 	{
 		return this.height;

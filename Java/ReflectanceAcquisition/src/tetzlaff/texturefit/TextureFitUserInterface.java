@@ -1,4 +1,4 @@
-package tetzlaff.reflacq;
+package tetzlaff.texturefit;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -24,7 +24,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-public class TexGenUserInterface
+public class TextureFitUserInterface
 {
 	private JFrame frame;
 	private JButton executeButton;
@@ -181,7 +181,7 @@ public class TexGenUserInterface
 		return checkBox;
 	}
 	
-	public TexGenUserInterface() 
+	public TextureFitUserInterface() 
 	{
 		this.frame = new JFrame("Texture Generation Program");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -193,7 +193,7 @@ public class TexGenUserInterface
 		JTabbedPane tabbedPane = new JTabbedPane();
 		frame.add(tabbedPane);
 		
-		TexGenParameters defaults = new TexGenParameters();
+		TextureFitParameters defaults = new TextureFitParameters();
 
 		JPanel filePanel = new JPanel();
 		filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.Y_AXIS));
@@ -312,12 +312,12 @@ public class TexGenUserInterface
 	
 	private int getValueAsInt(JSpinner spinner)
 	{
-		return (int)Math.round(((double)((Double)spinner.getValue())));
+		return (int)Math.round((((Double)spinner.getValue())));
 	}
 	
-	public TexGenParameters getParameters()
+	public TextureFitParameters getParameters()
 	{
-		TexGenParameters param = new TexGenParameters();
+		TextureFitParameters param = new TextureFitParameters();
 		param.setGamma(getValueAsFloat(this.gammaSpinner));
 		param.setCameraVisibilityTestEnabled(this.cameraVisCheckBox.isSelected());
 		param.setCameraVisibilityTestBias(getValueAsFloat(this.cameraVisBiasSpinner));

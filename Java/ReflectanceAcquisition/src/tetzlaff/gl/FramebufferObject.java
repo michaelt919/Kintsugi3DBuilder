@@ -1,6 +1,6 @@
 package tetzlaff.gl;
 
-public interface FramebufferObject<ContextType extends Context<? super ContextType>> extends Framebuffer<ContextType>, Resource
+public interface FramebufferObject<ContextType extends Context<ContextType>> extends Framebuffer<ContextType>, Resource, Contextual<ContextType>
 {
 	Texture2D<ContextType> getColorAttachmentTexture(int index);
 	Texture2D<ContextType> getDepthAttachmentTexture();
