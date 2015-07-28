@@ -91,8 +91,8 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	    	
 	    	// Load the program
 	    	Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
-	    			.addShader(ShaderType.Vertex, new File("shaders/depth.vert"))
-	    			.addShader(ShaderType.Fragment, new File("shaders/depth.frag"))
+	    			.addShader(ShaderType.VERTEX, new File("shaders/depth.vert"))
+	    			.addShader(ShaderType.FRAGMENT, new File("shaders/depth.frag"))
 	    			.createProgram();
 	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 	    	depthRenderable.addVertexBuffer("position", positionBuffer);
@@ -164,8 +164,8 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	    	
 	    	// Load the program
 	    	Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
-	    			.addShader(ShaderType.Vertex, new File("shaders/depth.vert"))
-	    			.addShader(ShaderType.Fragment, new File("shaders/depth.frag"))
+	    			.addShader(ShaderType.VERTEX, new File("shaders/depth.vert"))
+	    			.addShader(ShaderType.FRAGMENT, new File("shaders/depth.frag"))
 	    			.createProgram();
 	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 	    	depthRenderable.addVertexBuffer("position", positionBuffer);

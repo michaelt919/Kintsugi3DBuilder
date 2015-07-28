@@ -33,8 +33,8 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 		try
         {
     		this.program = context.getShaderProgramBuilder()
-    				.addShader(ShaderType.Vertex, new File("shaders/ulr.vert"))
-    				.addShader(ShaderType.Fragment, new File("shaders/ulr.frag"))
+    				.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/ulr.frag"))
     				.createProgram();
         }
         catch (IOException e)
