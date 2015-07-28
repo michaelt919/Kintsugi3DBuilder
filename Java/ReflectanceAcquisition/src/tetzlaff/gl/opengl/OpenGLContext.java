@@ -401,7 +401,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		{
 			switch(format.dataType)
 			{
-			case FloatingPoint:
+			case FLOATING_POINT:
 				if (format.redBits <= 16 && format.greenBits <= 16 && format.blueBits <= 16 && format.alphaBits <= 16)
 				{
 					return GL_RGBA16F;
@@ -410,7 +410,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RGBA32F;
 				}
-			case UnsignedInteger:
+			case UNSIGNED_INTEGER:
 				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8 && format.alphaBits <= 8)
 				{
 					return GL_RGBA8UI;
@@ -427,7 +427,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RGBA32UI;
 				}
-			case SignedInteger:
+			case SIGNED_INTEGER:
 				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8 && format.alphaBits <= 8)
 				{
 					return GL_RGBA8I;
@@ -440,9 +440,9 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RGBA32I;
 				}
-			case SRGBFixedPoint:
+			case SRGB_FIXED_POINT:
 				return GL_SRGB8_ALPHA8;
-			case SignedFixedPoint:
+			case SIGNED_FIXED_POINT:
 				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8 && format.alphaBits <= 8)
 				{
 					return GL_RGBA8_SNORM;
@@ -451,7 +451,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RGBA16_SNORM;
 				}
-			case NormalizedFixedPoint:
+			case NORMALIZED_FIXED_POINT:
 			default:
 				if (format.redBits <= 2 && format.greenBits <= 2 && format.blueBits <= 2 && format.alphaBits <= 2)
 				{
@@ -487,7 +487,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		{
 			switch(format.dataType)
 			{
-			case FloatingPoint:
+			case FLOATING_POINT:
 				if (format.redBits <= 11 && format.greenBits <= 11 && format.blueBits <= 10)
 				{
 					return GL_R11F_G11F_B10F;
@@ -500,7 +500,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RGB32F;
 				}
-			case UnsignedInteger:
+			case UNSIGNED_INTEGER:
 				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8)
 				{
 					return GL_RGB8UI;
@@ -513,7 +513,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RGB32UI;
 				}
-			case SignedInteger:
+			case SIGNED_INTEGER:
 				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8)
 				{
 					return GL_RGB8I;
@@ -526,9 +526,9 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RGB32I;
 				}
-			case SRGBFixedPoint:
+			case SRGB_FIXED_POINT:
 				return GL_SRGB8;
-			case SignedFixedPoint:
+			case SIGNED_FIXED_POINT:
 				if (format.redBits <= 8 && format.greenBits <= 8 && format.blueBits <= 8)
 				{
 					return GL_RGB8_SNORM;
@@ -537,7 +537,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RGB16_SNORM;
 				}
-			case NormalizedFixedPoint:
+			case NORMALIZED_FIXED_POINT:
 			default:
 				if (format.redBits <= 3 && format.greenBits <= 3 && format.blueBits <= 2)
 				{
@@ -577,7 +577,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		{
 			switch(format.dataType)
 			{
-			case FloatingPoint:
+			case FLOATING_POINT:
 				if (format.redBits <= 16 && format.greenBits <= 16)
 				{
 					return GL_RG16F;
@@ -586,7 +586,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RG32F;
 				}
-			case UnsignedInteger:
+			case UNSIGNED_INTEGER:
 				if (format.redBits <= 8 && format.greenBits <= 8)
 				{
 					return GL_RG8UI;
@@ -599,7 +599,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RG32UI;
 				}
-			case SignedInteger:
+			case SIGNED_INTEGER:
 				if (format.redBits <= 8 && format.greenBits <= 8)
 				{
 					return GL_RG8I;
@@ -612,9 +612,9 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RG32I;
 				}
-			case SRGBFixedPoint:
+			case SRGB_FIXED_POINT:
 				return GL_SRGB8;
-			case SignedFixedPoint:
+			case SIGNED_FIXED_POINT:
 				if (format.redBits <= 8 && format.greenBits <= 8)
 				{
 					return GL_RG8_SNORM;
@@ -623,7 +623,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_RG16_SNORM;
 				}
-			case NormalizedFixedPoint:
+			case NORMALIZED_FIXED_POINT:
 			default:
 				if (format.redBits <= 8 && format.greenBits <= 8)
 				{
@@ -639,7 +639,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		{
 			switch(format.dataType)
 			{
-			case FloatingPoint:
+			case FLOATING_POINT:
 				if (format.redBits <= 16)
 				{
 					return GL_R16F;
@@ -648,7 +648,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_R32F;
 				}
-			case UnsignedInteger:
+			case UNSIGNED_INTEGER:
 				if (format.redBits <= 8)
 				{
 					return GL_R8UI;
@@ -661,7 +661,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_R32UI;
 				}
-			case SignedInteger:
+			case SIGNED_INTEGER:
 				if (format.redBits <= 8)
 				{
 					return GL_R8I;
@@ -674,9 +674,9 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_R32I;
 				}
-			case SRGBFixedPoint:
+			case SRGB_FIXED_POINT:
 				return GL_SRGB8;
-			case SignedFixedPoint:
+			case SIGNED_FIXED_POINT:
 				if (format.redBits <= 8)
 				{
 					return GL_R8_SNORM;
@@ -685,7 +685,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 				{
 					return GL_R16_SNORM;
 				}
-			case NormalizedFixedPoint:
+			case NORMALIZED_FIXED_POINT:
 			default:
 				if (format.redBits <= 8)
 				{
@@ -739,12 +739,12 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	{
 		switch(type)
 		{
-		case Vertex: return GL_VERTEX_SHADER;
-		case Fragment: return GL_FRAGMENT_SHADER;
-		case Geometry: return GL_GEOMETRY_SHADER;
-		case TesselationControl: return GL_TESS_CONTROL_SHADER;
-		case TesselationEvaluation: return GL_TESS_EVALUATION_SHADER;
-		case Compute: return GL_COMPUTE_SHADER;
+		case VERTEX: return GL_VERTEX_SHADER;
+		case FRAGMENT: return GL_FRAGMENT_SHADER;
+		case GEOMETRY: return GL_GEOMETRY_SHADER;
+		case TESSELATION_CONTROL: return GL_TESS_CONTROL_SHADER;
+		case TESSELATION_EVALUATION: return GL_TESS_EVALUATION_SHADER;
+		case COMPUTE: return GL_COMPUTE_SHADER;
 		default: return 0;
 		}
 	}
@@ -753,26 +753,26 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	{
 		switch(accessFreq)
 		{
-		case Stream:
+		case STREAM:
 			switch(accessType)
 			{
-			case Draw: return GL_STREAM_DRAW;
-			case Read: return GL_STREAM_READ;
-			case Copy: return GL_STREAM_COPY;
+			case DRAW: return GL_STREAM_DRAW;
+			case READ: return GL_STREAM_READ;
+			case COPY: return GL_STREAM_COPY;
 			}
-		case Static:
+		case STATIC:
 			switch(accessType)
 			{
-			case Draw: return GL_STATIC_DRAW;
-			case Read: return GL_STATIC_READ;
-			case Copy: return GL_STATIC_COPY;
+			case DRAW: return GL_STATIC_DRAW;
+			case READ: return GL_STATIC_READ;
+			case COPY: return GL_STATIC_COPY;
 			}
-		case Dynamic:
+		case DYNAMIC:
 			switch(accessType)
 			{
-			case Draw: return GL_DYNAMIC_DRAW;
-			case Read: return GL_DYNAMIC_READ;
-			case Copy: return GL_DYNAMIC_COPY;
+			case DRAW: return GL_DYNAMIC_DRAW;
+			case READ: return GL_DYNAMIC_READ;
+			case COPY: return GL_DYNAMIC_COPY;
 			}
 		}
 		
