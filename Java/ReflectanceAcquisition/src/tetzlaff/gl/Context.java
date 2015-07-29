@@ -15,6 +15,19 @@ import tetzlaff.gl.builders.StencilTextureBuilder;
 import tetzlaff.gl.builders.TextureBuilder;
 import tetzlaff.gl.helpers.FloatVertexList;
 
+/**
+ * An interface for any OpenGL-like graphics context.
+ * An implementation of this interface serves several purposes:
+ * (1) it provides query functions for obtaining information about the GL state, and
+ * (2) it serves as an access point for modifying global GL options like depth testing, multisampling, and back-face culling,
+ * (3) it provides synchronization functions like flush(), finish(), and swapBuffers(),
+ * (4) it acts as a factory for creating GL objects such as buffers, textures, and shaders.
+ * @author Michael Tetzlaff
+ *
+ * @param <ContextType> For concrete types, this type parameter should match the implementing class itself.
+ * Abstract implementations should be parameterized so that subclasses can fulfill this constraint.
+ * This type parameter ensures that all the objects created by this context are mutually compatible with each other and the context itself.
+ */
 public interface Context<ContextType extends Context<ContextType>>
 {
 	boolean isDestroyed();

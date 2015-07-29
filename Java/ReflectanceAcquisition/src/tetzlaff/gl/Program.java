@@ -8,6 +8,14 @@ import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 
+/**
+ * An interface for a program that can be used for rendering.
+ * A program's behavior can be modified dynamically by changing "uniform" variables which remain constant with respect to a single draw call.
+ * These variables can be scalars, vectors, uniform buffer objects (which consist of multiple scalars or vectors stored in a single buffer), or texture objects.
+ * @author Michael Tetzlaff
+ *
+ * @param <ContextType> The type of the GL context that the program is associated with.
+ */
 public interface Program<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
 	boolean setUniform(String name, boolean value);
