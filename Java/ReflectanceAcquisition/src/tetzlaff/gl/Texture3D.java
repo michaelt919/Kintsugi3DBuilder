@@ -6,6 +6,12 @@ import java.io.InputStream;
 
 import tetzlaff.helpers.ZipWrapper;
 
+/**
+ * An interface for a three-dimensional texture.
+ * @author Michael Tetzlaff
+ *
+ * @param <ContextType> The type of the GL context that the texture is associated with.
+ */
 public interface Texture3D<ContextType extends Context<ContextType>> extends Texture<ContextType>
 {
 	int getWidth();

@@ -3,6 +3,13 @@ package tetzlaff.gl;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * An interface for a framebuffer.
+ * This could be either the default on-screen framebuffer, or a framebuffer object (FBO).
+ * @author Michael Tetzlaff
+ *
+ * @param <ContextType> The type of the GL context that the framebuffer is associated with.
+ */
 public interface Framebuffer<ContextType extends Context<ContextType>> extends Contextual<ContextType>
 {
 	FramebufferSize getSize();
