@@ -11,7 +11,7 @@ public class ULFProgram
 {
     public static void main(String[] args) 
     {
-    	GLFWWindow window = new GLFWWindow(800, 800, "Unstructured Light Field Renderer", true, 4);
+    	GLFWWindow window = new GLFWWindow(800, 800, "Unstructured Light Field Renderer", true);
     	window.enableDepthTest();
     	
     	Trackball trackball = new Trackball(1.0f);
