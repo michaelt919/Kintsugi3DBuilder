@@ -1,5 +1,5 @@
 package tetzlaff.window.glfw;
-import static org.lwjgl.system.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.*;
 import tetzlaff.window.ModifierKeys;
 
 public class GLFWModifierKeys implements ModifierKeys

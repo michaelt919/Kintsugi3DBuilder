@@ -181,7 +181,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			BufferedImage img = ImageIO.read(input);
 			this.textureArray = context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), imageFileNames.size())
 									.setLinearFilteringEnabled(true)
-									.setMipmapsEnabled(true)
+									.setMipmapsEnabled(false)
 									.createTexture();
 			
 			for (int i = 0; i < imageFileNames.size(); i++)
