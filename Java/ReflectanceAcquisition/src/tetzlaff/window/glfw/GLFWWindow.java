@@ -107,7 +107,9 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
         
         GLContext.createFromCurrent();
         System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
-
+        System.out.println("LWJGL version: " + Sys.getVersion());
+        System.out.println("GLFW version: " + glfwGetVersionString());
+        
         if (multisamples > 0)
         {
         	this.enableMultisampling();
