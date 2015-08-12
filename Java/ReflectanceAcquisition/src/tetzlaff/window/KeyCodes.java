@@ -1,5 +1,5 @@
 package tetzlaff.window;
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.system.glfw.GLFW.*;
 
 public class KeyCodes
 {
