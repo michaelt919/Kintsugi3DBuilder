@@ -35,6 +35,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	private List<Projection> cameraProjectionList;
 	private List<Integer> cameraProjectionIndexList;
 	private List<Vector3> lightPositionList;
+	private List<Vector3> lightIntensityList;
 	private List<Integer> lightIndexList;
 	private List<String> imageFileNames;
 	private File filePath;
@@ -43,6 +44,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	private UniformBuffer<ContextType> cameraProjectionBuffer;
 	private UniformBuffer<ContextType> cameraProjectionIndexBuffer;
 	private UniformBuffer<ContextType> lightPositionBuffer;
+	private UniformBuffer<ContextType> lightIntensityBuffer;
 	private UniformBuffer<ContextType> lightIndexBuffer;
 	private Texture3D<ContextType> textureArray;
 	private float recommendedNearPlane;
@@ -53,6 +55,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Projection> cameraProjectionList,
 		List<Integer> cameraProjectionIndexList,
 		List<Vector3> lightPositionList,
+		List<Vector3> lightIntensityList,
 		List<Integer> lightIndexList,
 		List<String> imageFileNames, 
 		File imageFilePath,
@@ -65,6 +68,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		this.cameraProjectionList = cameraProjectionList;
 		this.cameraProjectionIndexList = cameraProjectionIndexList;
 		this.lightPositionList = lightPositionList;
+		this.lightIntensityList = lightIntensityList;
 		this.lightIndexList = lightIndexList;
 		this.imageFileNames = imageFileNames;
 		
@@ -148,6 +152,22 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			lightPositionBuffer = context.createUniformBuffer().setData(lightPositions);
 		}
 		
+		// Store the light positions in a uniform buffer
+		if (lightIntensityList != null && lightIntensityList.size() > 0)
+		{
+			FloatVertexList lightIntensities = new FloatVertexList(4, lightIntensityList.size());
+			for (int k = 0; k < lightPositionList.size(); k++)
+			{
+				lightIntensities.set(k, 0, lightIntensityList.get(k).x);
+				lightIntensities.set(k, 1, lightIntensityList.get(k).y);
+				lightIntensities.set(k, 2, lightIntensityList.get(k).z);
+				lightIntensities.set(k, 3, 1.0f);
+			}
+			
+			// Create the uniform buffer
+			lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensities);
+		}
+		
 		// Store the light indices indices in a uniform buffer
 		if (lightIndexList != null && lightIndexList.size() > 0)
 		{
@@ -225,6 +245,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			lightPositionBuffer.delete();
 		}
 		
+		if (lightIntensityBuffer != null)
+		{
+			lightIntensityBuffer.delete();
+		}
+		
 		if (lightIndexBuffer != null)
 		{
 			lightIndexBuffer.delete();
@@ -255,7 +280,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
 		List<Matrix4> orderedCameraPoseList = new ArrayList<Matrix4>();
 		List<Projection> cameraProjectionList = new ArrayList<Projection>();
-		List<Vector3> lightList = new ArrayList<Vector3>();
+		List<Vector3> lightPositionList = new ArrayList<Vector3>();
+		List<Vector3> lightIntensityList = new ArrayList<Vector3>();
 		List<Integer> cameraProjectionIndexList = new ArrayList<Integer>();
 		List<Integer> lightIndexList = new ArrayList<Integer>();
 		List<String> imageFileNames = new ArrayList<String>();
@@ -338,7 +364,12 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				float x = scanner.nextFloat();
 				float y = scanner.nextFloat();
 				float z = scanner.nextFloat();
-				lightList.add(new Vector3(x, y, z));
+				lightPositionList.add(new Vector3(x, y, z));
+				
+				float r = scanner.nextFloat();
+				float g = scanner.nextFloat();
+				float b = scanner.nextFloat();
+				lightIntensityList.add(new Vector3(r, g, b));
 
 				// Skip the rest of the line
 				scanner.nextLine();
@@ -369,7 +400,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
 		return new ViewSet<ContextType>(
-			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightList, lightIndexList, 
+			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, 
 			imageFileNames, file.getParentFile(), loadImages, recommendedNearPlane, recommendedFarPlane, context);
 	}
 	
@@ -473,12 +504,19 @@ public class ViewSet<ContextType extends Context<ContextType>>
                             }
                             else
                             {
-                               sensorID = reader.getAttributeValue(null, "sensor_id");
-                               imageFile = reader.getAttributeValue(null, "label");
-                               System.out.printf("\tAdding camera %s, with sensor %s and image %s\n",
-                                                   cameraID, sensorID, imageFile);
-                               camera = new Camera(cameraID, sensorSet.get(sensorID));
-                               camera.filename = imageFile;
+                            	if (reader.getAttributeValue(null, "enabled").equals("true"))
+                            	{
+	                                sensorID = reader.getAttributeValue(null, "sensor_id");
+	                                imageFile = reader.getAttributeValue(null, "label");
+	                                System.out.printf("\tAdding camera %s, with sensor %s and image %s\n",
+	                                                    cameraID, sensorID, imageFile);
+	                                camera = new Camera(cameraID, sensorSet.get(sensorID));
+	                                camera.filename = imageFile;
+                            	}
+                            	else
+                            	{
+                            		camera = null;
+                            	}
                             }
                             break;
                         case "image":
@@ -666,7 +704,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
         
         List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
 		List<Projection> cameraProjectionList = new ArrayList<Projection>();
-		List<Vector3> lightList = new ArrayList<Vector3>();
+		List<Vector3> lightPositionList = new ArrayList<Vector3>();
+		List<Vector3> lightIntensityList = new ArrayList<Vector3>();
 		List<Integer> cameraProjectionIndexList = new ArrayList<Integer>();
 		List<Integer> lightIndexList = new ArrayList<Integer>();
 		List<String> imageFileNames = new ArrayList<String>();
@@ -709,10 +748,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
             imageFileNames.add(cameras[i].filename);
         }
         
-        lightList.add(new Vector3(0.0f, 0.0f, 0.0f)); // Just assume the light is co-located with the camera (for now)
+        lightPositionList.add(new Vector3(0.0f, 0.0f, 0.0f)); // Just assume the light is co-located with the camera (for now)
+        lightIntensityList.add(new Vector3(1.0f, 1.0f, 1.0f));
 
         float farPlane = findFarPlane(cameraPoseList);
-        return new ViewSet<ContextType>(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightList, lightIndexList,
+        return new ViewSet<ContextType>(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
         		imageFileNames, imageDirectory, imageDirectory != null, farPlane / 16.0f, farPlane, context);
     }
 	
@@ -774,7 +814,12 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	{
 		return this.lightPositionList.get(projectionIndex);
 	}
-
+	
+	public Vector3 getLightIntensity(int projectionIndex) 
+	{
+		return this.lightIntensityList.get(projectionIndex);
+	}
+	
 	public Integer getLightPositionIndex(int poseIndex) 
 	{
 		return this.lightIndexList.get(poseIndex);
@@ -808,6 +853,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public UniformBuffer<ContextType> getLightPositionBuffer()
 	{
 		return this.lightPositionBuffer;
+	}
+	
+	public UniformBuffer<ContextType> getLightIntensityBuffer()
+	{
+		return this.lightIntensityBuffer;
 	}
 	
 	public UniformBuffer<ContextType> getLightIndexBuffer()

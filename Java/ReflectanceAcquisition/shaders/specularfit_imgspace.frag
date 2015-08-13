@@ -2,7 +2,7 @@
 
 #define MAX_CAMERA_POSE_COUNT 1024
 #define MAX_CAMERA_PROJECTION_COUNT 1024
-#define MAX_LIGHT_POSITION_COUNT 1024
+#define MAX_LIGHT_COUNT 1024
 
 in vec3 fPosition;
 in vec2 fTexCoord;
@@ -50,7 +50,12 @@ uniform CameraProjectionIndices
 
 uniform LightPositions
 {
-	vec4 lightPositions[MAX_LIGHT_POSITION_COUNT];
+	vec4 lightPositions[MAX_LIGHT_COUNT];
+};
+
+uniform LightIntensities
+{
+    vec3 lightIntensities[MAX_LIGHT_COUNT];
 };
 
 uniform LightIndices
@@ -109,6 +114,11 @@ vec3 getLightVector(int index)
         (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition);
 }
 
+vec3 getLightIntensity(int index)
+{
+    return lightIntensities[lightIndices[index]];
+}
+
 vec3 getDiffuseColor()
 {
     return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
@@ -119,11 +129,10 @@ vec3 getDiffuseNormalVector()
     return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
 }
 
-vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, vec3 normal)
+vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, vec3 attenuatedLightIntensity, vec3 normal)
 {
-    vec3 diffuseContrib = diffuseColor * max(0, dot(light, normal));
-    float cap = 1.0 - diffuseRemovalAmount * 
-                        max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b));
+    vec3 diffuseContrib = diffuseColor * max(0, dot(light, normal)) * attenuatedLightIntensity;
+    float cap = 1.0 - diffuseRemovalAmount * max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
     vec3 remainder = clamp(originalColor.rgb - diffuseRemovalAmount * diffuseContrib, 0, cap);
     return vec4(remainder, cap <= 0.0 ? 0.0 : 
                     pow(originalColor.a * remainder.r * remainder.g * remainder.b * (cap - remainder.r) 
@@ -167,8 +176,11 @@ SpecularFit fitSpecular()
         if (color.a * nDotV > 0)
         {
             vec3 light = getLightVector(i);
-            vec4 colorRemainder = removeDiffuse(color, diffuseColor, light, diffuseNormal);
-            float intensity = colorRemainder.r + colorRemainder.g + colorRemainder.b;
+            vec3 attenuatedLightIntensity = getLightIntensity(i) / (dot(light, light));
+            vec4 colorRemainder = removeDiffuse(color, diffuseColor, light, attenuatedLightIntensity, diffuseNormal);
+            float intensity = colorRemainder.r / attenuatedLightIntensity.r + 
+                                colorRemainder.g / attenuatedLightIntensity.g + 
+                                colorRemainder.b / attenuatedLightIntensity,b;
             
             vec3 half = normalize(view + light);
             float nDotH = dot(half, diffuseNormal);
@@ -177,7 +189,7 @@ SpecularFit fitSpecular()
             {
                 float u = nDotH - 1 / nDotH;
                 
-                sum += color.a * nDotV * vec4(colorRemainder.rgb, 
+                sum += color.a * nDotV * vec4(colorRemainder.rgb / attenuatedLightIntensity, 
                         trueBlinnPhong ? 
                             pow(nDotH, 1 / (defaultSpecularRoughness * defaultSpecularRoughness)) :
                             exp((nDotH - 1 / nDotH) / 

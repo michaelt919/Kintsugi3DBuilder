@@ -2,7 +2,7 @@
 
 #define MAX_CAMERA_POSE_COUNT 1024
 #define MAX_CAMERA_PROJECTION_COUNT 1024
-#define MAX_LIGHT_POSITION_COUNT 1024
+#define MAX_LIGHT_COUNT 1024
 
 in vec3 fPosition;
 in vec2 fTexCoord;
@@ -35,7 +35,12 @@ uniform CameraProjectionIndices
 
 uniform LightPositions
 {
-	vec4 lightPositions[MAX_LIGHT_POSITION_COUNT];
+	vec4 lightPositions[MAX_LIGHT_COUNT];
+};
+
+uniform LightIntensities
+{
+    vec3 lightIntensities[MAX_LIGHT_COUNT];
 };
 
 uniform LightIndices
@@ -85,6 +90,11 @@ vec3 getLightVector(int index)
         (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition);
 }
 
+vec3 getLightIntensity(int index)
+{
+    return lightIntensities[lightIndices[index]];
+}
+
 vec3 getNormalVector()
 {
     return normalize(texture(normalMap, fTexCoord).xyz * 2 - vec3(1));
@@ -92,7 +102,9 @@ vec3 getNormalVector()
 
 vec3 getDiffuseColor(int index)
 {
-    return pow(texture(diffuse, fTexCoord), vec4(gamma)).rgb * max(0, dot(fNormal, getLightVector(index)));
+    vec3 light = getLightVector(index);
+    return pow(texture(diffuse, fTexCoord), vec4(gamma)).rgb * max(0, dot(fNormal, light)) 
+            * getLightIntensity(index) / (dot(light, light));
 }
 
 vec3 getReflectionVector(vec3 normalVector, vec3 lightVector)
