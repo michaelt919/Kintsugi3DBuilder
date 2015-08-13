@@ -646,6 +646,19 @@ public class ViewSet<ContextType extends Context<ContextType>>
                             }
                             break;
                             
+                        case "scale":
+                        	if (camera == null)
+                        	{
+                        		if (globalTransform == null)
+                        		{
+                        			globalTransform = Matrix4.scale(1.0f / Float.parseFloat(reader.getElementText()));
+                        		}
+                        		else
+                        		{
+                        			globalTransform = globalTransform.times(Matrix4.scale(1.0f / Float.parseFloat(reader.getElementText())));
+                        		}
+                        	}
+                            
                         case "property": case "projections": case "depth":
                         case "frames": case "frame": case "meta": case "R":
                         case "size": case "center": case "region": case "settings":
@@ -739,7 +752,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
             if(globalTransform != null)
             {
             	Matrix4 m1 = cameras[i].transform;
-                cameras[i].transform = globalTransform.times(m1);
+                cameras[i].transform = m1.times(globalTransform);
             }
         	
             cameraPoseList.add(cameras[i].transform);
