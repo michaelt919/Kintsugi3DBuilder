@@ -508,6 +508,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
 		{
     		diffuseFitRenderable.program().setUniformBuffer("LightPositions", viewSet.getLightPositionBuffer());
+    		diffuseFitRenderable.program().setUniformBuffer("LightIntensities", viewSet.getLightIntensityBuffer());
     		diffuseFitRenderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
 		}
     	
@@ -631,6 +632,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
 	    		{
 		    		specularFitRenderable.program().setUniformBuffer("LightPositions", viewSet.getLightPositionBuffer());
+		    		specularFitRenderable.program().setUniformBuffer("LightIntensities", viewSet.getLightIntensityBuffer());
 		    		specularFitRenderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
 	    		}
 		    	
@@ -893,6 +895,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
     		{
 	    		specularDebugRenderable.program().setUniformBuffer("LightPositions", viewSet.getLightPositionBuffer());
+	    		specularDebugRenderable.program().setUniformBuffer("LightIntensities", viewSet.getLightIntensityBuffer());
 	    		specularDebugRenderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
     		}
 	    	

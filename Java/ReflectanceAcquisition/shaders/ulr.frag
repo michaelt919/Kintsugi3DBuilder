@@ -107,7 +107,7 @@ vec4 getLightFieldSampleNoMipmap(int index)
 			}
 		}
         
-        vec4 color = textureLod(imageTextures, vec3(projTexCoord.xy, index), 1.0);
+        vec4 color = textureLod(imageTextures, vec3(projTexCoord.xy, index), 0.0);
 		
 		return (color.a < 0.9999 ? 0.0 : 1.0) * vec4(pow(color.rgb, vec3(gamma)), 1.0);
 	}

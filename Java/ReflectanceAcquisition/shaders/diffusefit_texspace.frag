@@ -2,7 +2,7 @@
 
 #define MAX_CAMERA_POSE_COUNT 1024
 #define MAX_CAMERA_PROJECTION_COUNT 1024
-#define MAX_LIGHT_POSITION_COUNT 1024
+#define MAX_LIGHT_COUNT 1024
 
 in vec3 fPosition;
 in vec2 fTexCoord;
@@ -31,7 +31,12 @@ uniform CameraPoses
 
 uniform LightPositions
 {
-	vec4 lightPositions[MAX_LIGHT_POSITION_COUNT];
+	vec4 lightPositions[MAX_LIGHT_COUNT];
+};
+
+uniform LightIntensities
+{
+    vec3 lightIntensities[MAX_LIGHT_COUNT];
 };
 
 uniform LightIndices
@@ -65,6 +70,11 @@ vec3 getLightVector(int index)
 {
     return normalize(transpose(mat3(cameraPoses[index])) * 
         (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition);
+}
+
+vec3 getLightIntensity(int index)
+{
+    return lightIntensities[lightIndices[index]];
 }
 
 bool validateFit(DiffuseFit fit)
@@ -101,18 +111,19 @@ DiffuseFit fitDiffuse()
             {
                 //vec4 light = vec4(getLightVector(i), 1.0);
                 vec3 light = getLightVector(i);
+                vec3 attenuatedLightIntensity = getLightIntensity(i) / (dot(light, light));
                 
                 float weight = color.a * nDotV;
                 if (k != 0)
                 {
-                    vec3 error = color.rgb - fit.color * dot(fit.normal, light);
+                    vec3 error = color.rgb - fit.color * dot(fit.normal, light) ;//* attenuatedLightIntensity;
                     weight *= exp(-dot(error,error)/(2*delta*delta));
                 }
                     
                 a += weight * outerProduct(light, light);
-                //b += color.a * nDotV * outerProduct(light, vec4(color.rgb, 0.0));
-                b += weight * outerProduct(light, color.rgb);
-                weightedSum += weight * vec4(color.rgb, 1.0);
+                //b += weight * outerProduct(light, vec4(color.rgb / attenuatedLightIntensity, 0.0));
+                b += weight * outerProduct(light, color.rgb );// / attenuatedLightIntensity);
+                weightedSum += weight * vec4(color.rgb /* / attenuatedLightIntensity*/, 1.0);
                 nDotLSum += weight * max(0, dot(geometricNormal, light));
             }
         }
