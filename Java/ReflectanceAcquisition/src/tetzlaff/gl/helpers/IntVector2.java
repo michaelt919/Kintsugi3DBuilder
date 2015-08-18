@@ -1,5 +1,14 @@
 package tetzlaff.gl.helpers;
 
+/**
+ * A vector of two dimensions (for linear algebra calculations) backed by 
+ * 32-bit integers.  All arithmetic will be integer arithmetic (including
+ * multiplication, division, length and normalization.  This is an immutable
+ * object.
+ * 
+ * @see Vector2
+ * @author Michael Tetzlaff
+ */
 public class IntVector2 
 {
 	public final int x;

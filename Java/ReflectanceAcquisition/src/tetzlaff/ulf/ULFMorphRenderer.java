@@ -188,4 +188,27 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	{
 		this.stages.get(this.currentStage).requestResample(size, targetVSETFile, exportPath);
 	}
+
+	@Override
+	public void setHalfResolution(boolean halfResEnabled)
+	{	
+		for (ULFRenderer<ContextType> stage : stages)
+		{
+			stage.setHalfResolution(halfResEnabled);
+		}
+	}
+
+	@Override
+	public void setMultisampling(boolean multisamplingEnabled)
+	{
+		context.makeContextCurrent();
+		if(multisamplingEnabled)
+		{
+			context.enableMultisampling();
+		}
+		else
+		{
+			context.disableMultisampling();			
+		}		
+	}
 }

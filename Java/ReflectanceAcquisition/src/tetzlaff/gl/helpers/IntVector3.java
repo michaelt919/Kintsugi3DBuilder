@@ -1,5 +1,14 @@
 package tetzlaff.gl.helpers;
 
+/**
+ * A vector of three dimensions (for linear algebra calculations) backed by 
+ * 32-bit integers.  All arithmetic will be integer arithmetic (including
+ * multiplication, division, length and normalization.  This is an immutable
+ * object.
+ * 
+ * @author Michael Tetzlaff
+ * @see Vector3
+ */
 public class IntVector3 
 {
 	public final int x;
