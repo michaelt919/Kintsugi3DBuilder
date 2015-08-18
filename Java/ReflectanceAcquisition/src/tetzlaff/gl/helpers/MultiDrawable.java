@@ -8,6 +8,15 @@ import java.util.ListIterator;
 
 import tetzlaff.helpers.SelectableList;
 
+/**
+ * A container that can hold many Drawable objects with one of them being selected/active. It
+ * is also itself a Drawable and will keep all its members updated and will draw the currently
+ * 'active' Drawable in the collection.
+ *
+ * @param <T> The type of the objects stored in the container (must extend/implement Drawable)
+ * @see Drawable
+ * @author Michael Tetzlaff
+ */
 public class MultiDrawable<T extends Drawable> implements Drawable, SelectableList<T>
 {
 	private List<T> drawables;

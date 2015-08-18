@@ -1,5 +1,12 @@
 package tetzlaff.gl.helpers;
 
+/**
+ * A vector of two dimensions (for linear algebra calculations) backed by 
+ * 64-bit floats.  This is an immutable object.
+ * 
+ * @see Vector2
+ * @author Michael Tetzlaff
+ */
 public class DoubleVector2 
 {
 	public final double x;

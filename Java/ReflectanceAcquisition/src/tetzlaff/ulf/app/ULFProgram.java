@@ -8,9 +8,10 @@ import tetzlaff.ulf.ULFRendererList;
 import tetzlaff.window.glfw.GLFWWindow;
 
 /**
- * @author Michael Tetzlaff
  * ULFProgram is a container for the main entry point of the Unstructured Light Field
  * rendering program.
+ * 
+ * @author Michael Tetzlaff
  */
 public class ULFProgram
 {
@@ -21,7 +22,7 @@ public class ULFProgram
     public static void main(String[] args) 
     {
     	// Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
-    	GLFWWindow window = new GLFWWindow(800, 800, "Unstructured Light Field Renderer", true);
+    	GLFWWindow window = new GLFWWindow(800, 800, "Unstructured Light Field Renderer", true, 4);
     	window.enableDepthTest();
     	
     	// Add a trackball controller to the window for rotating the object (also responds to mouse scrolling)

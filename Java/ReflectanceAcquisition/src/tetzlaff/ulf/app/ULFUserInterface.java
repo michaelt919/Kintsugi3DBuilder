@@ -111,7 +111,7 @@ public class ULFUserInterface
 		weightExpBox.add(weightExpSpinner);
 		weightExpBox.setBorder(new EmptyBorder(0, 10, 10, 10));
 		frame.add(weightExpBox);
-
+		
 		// Add a checkbox for enabling/disabling occlusion culling
 		JCheckBox occlusionCheckBox = new JCheckBox("Enable Occlusion", true);
 		occlusionCheckBox.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -148,6 +148,23 @@ public class ULFUserInterface
 		resampleBox.setBorder(new EmptyBorder(0, 10, 10, 10));
 		frame.add(resampleBox);
 		
+		// Add two checkboxes side-by-side for changing quality settings
+		Box qualBox = new Box(BoxLayout.X_AXIS);
+
+		JPanel halfResWrapper = new JPanel();
+		JCheckBox halfResCheckBox = new JCheckBox("Half Resolution", false);
+		halfResWrapper.add(halfResCheckBox);
+		halfResWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
+		qualBox.add(halfResWrapper);
+		
+		JPanel multisamplingWrapper = new JPanel();
+		JCheckBox multisampCheckBox = new JCheckBox("Multisampling", true);
+		multisamplingWrapper.add(multisampCheckBox);
+		multisamplingWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
+		qualBox.add(multisamplingWrapper);
+
+		frame.add(qualBox);
+
 		// Finalize the Swing interface
 		frame.pack();
 
@@ -168,6 +185,8 @@ public class ULFUserInterface
 			weightExpSpinner.setEnabled(false);
 			occlusionCheckBox.setEnabled(false);
 			occlusionBiasSpinner.setEnabled(false);
+			halfResCheckBox.setEnabled(false);
+			multisampCheckBox.setEnabled(false);
 		}
 		else
 		{
@@ -175,6 +194,8 @@ public class ULFUserInterface
 			weightExpSpinner.setEnabled(true);
 			occlusionCheckBox.setEnabled(true);
 			occlusionBiasSpinner.setEnabled(true);
+			halfResCheckBox.setEnabled(true);
+			multisampCheckBox.setEnabled(true);
 			
 			gammaSpinner.setValue(model.getSelectedItem().getGamma());
 			weightExpSpinner.setValue(model.getSelectedItem().getWeightExponent());
@@ -192,6 +213,8 @@ public class ULFUserInterface
 				occlusionCheckBox.setEnabled(false);
 				occlusionBiasSpinner.setEnabled(false);
 				morphSlider.setEnabled(false);
+				halfResCheckBox.setEnabled(false);
+				multisampCheckBox.setEnabled(false);
 			}
 			else
 			{
@@ -199,6 +222,8 @@ public class ULFUserInterface
 				weightExpSpinner.setEnabled(true);
 				occlusionCheckBox.setEnabled(true);
 				occlusionBiasSpinner.setEnabled(true);
+				halfResCheckBox.setEnabled(true);
+				multisampCheckBox.setEnabled(true);
 				
 				gammaSpinner.setValue(model.getSelectedItem().getGamma());
 				weightExpSpinner.setValue(model.getSelectedItem().getWeightExponent());
@@ -343,6 +368,12 @@ public class ULFUserInterface
 			model.getSelectedItem().setWeightExponent(weightExpModel.getNumber().floatValue());
 		});
 		
+		// Add listener for changes to half resolution checkbox.
+		halfResCheckBox.addChangeListener(e ->
+		{
+			model.getSelectedItem().setHalfResolution(halfResCheckBox.isSelected());
+		});
+
 		// Add listener for changes to occlusion checkbox.
 		occlusionCheckBox.addChangeListener(e ->
 		{
