@@ -345,6 +345,7 @@ public class ULFUserInterface
 						loadingFrame.setVisible(true);
 						model.getSelectedItem().requestResample(
 							(int)Math.round((Double)resampleSizeSpinner.getValue()), 
+							(int)Math.round((Double)resampleSizeSpinner.getValue()), 
 							vsetFileChooser.getSelectedFile(), 
 							exportFileChooser.getSelectedFile());
 					} 

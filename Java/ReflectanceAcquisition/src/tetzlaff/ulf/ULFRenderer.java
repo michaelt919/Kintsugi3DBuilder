@@ -35,7 +35,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private Renderable<ContextType> simpleTexRenderable;
 
     private boolean resampleRequested;
-    private int resampleSize;
+    private int resampleWidth, resampleHeight;
     private File resampleVSETFile;
     private File resampleExportPath;
 
@@ -275,10 +275,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	}
 	
 	@Override
-	public void requestResample(int size, File targetVSETFile, File exportPath) throws IOException
+	public void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException
 	{
 		this.resampleRequested = true;
-		this.resampleSize = size;
+		this.resampleWidth = width;
+		this.resampleHeight = height;
 		this.resampleVSETFile = targetVSETFile;
 		this.resampleExportPath = exportPath;
 	}
@@ -286,7 +287,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	private void resample() throws IOException
 	{
 		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, false, context);
-		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleSize, resampleSize).addColorAttachment().createFramebufferObject();
+		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleWidth, resampleHeight).addColorAttachment().createFramebufferObject();
     	
     	this.renderable.program().setTexture("imageTextures", lightField.viewSet.getTextures());
     	this.renderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
