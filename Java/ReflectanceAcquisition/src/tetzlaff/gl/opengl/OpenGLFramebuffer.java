@@ -199,7 +199,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 		buffer.put(b);
 		buffer.put(a);
 		buffer.flip();
-		glClearBuffer(GL_COLOR, attachmentIndex, buffer);
+		glClearBufferfv(GL_COLOR, attachmentIndex, buffer);
 		this.context.openGLErrorCheck();
 	}
 	
@@ -218,7 +218,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(1);
 		buffer.put(depth);
 		buffer.flip();
-		glClearBuffer(GL_DEPTH, 0, buffer);
+		glClearBufferfv(GL_DEPTH, 0, buffer);
 		this.context.openGLErrorCheck();
 	}
 	
@@ -243,7 +243,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 		IntBuffer buffer = BufferUtils.createIntBuffer(1);
 		buffer.put(stencilIndex);
 		buffer.flip();
-		glClearBuffer(GL_STENCIL, 0, buffer);
+		glClearBufferiv(GL_STENCIL, 0, buffer);
 		this.context.openGLErrorCheck();
 	}
 }

@@ -2,17 +2,18 @@ package tetzlaff.window.glfw;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
-import static org.lwjgl.system.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.Callbacks.errorCallbackDescriptionString;
 
 import java.nio.ByteBuffer;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
-import org.lwjgl.system.glfw.ErrorCallback.StrAdapter;
-import org.lwjgl.system.glfw.GLFWvidmode;
-import org.lwjgl.system.glfw.WindowCallback;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWvidmode;
 
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;
@@ -55,23 +56,23 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 
 	public GLFWWindow(int width, int height, String title, int x, int y, boolean resizable, int multisamples) 
 	{
-		Sys.touch();
-		glfwSetErrorCallback(new StrAdapter() 
+		// Sys.touch();
+		glfwSetErrorCallback(new GLFWErrorCallback() 
 		{
 			@Override
-			public void invoke(int error, String description) 
+			public void invoke(int error, long description) 
 			{
-				throw new GLFWException(description);
+				throw new GLFWException(errorCallbackDescriptionString(description));
 			}
 		});
-		 
+		
         if ( glfwInit() != GL11.GL_TRUE )
         {
             throw new GLFWException("Unable to initialize GLFW.");
         }
  
         glfwDefaultWindowHints();
-        
+                
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
@@ -87,9 +88,7 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
             throw new GLFWException("Failed to create the GLFW window");
         }
         
-        GLFWWindowCallback callback = new GLFWWindowCallback(this);
-        WindowCallback.set(handle, callback);
-        this.listenerManager = callback;
+        this.listenerManager = new GLFWWindowCallback(this);
 
         ByteBuffer vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
         if (x < 0)
@@ -293,6 +292,7 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 	public void makeContextCurrent()
 	{
 		glfwMakeContextCurrent(handle);
+		GL.createCapabilities(false);
 	}
 	
 	@Override

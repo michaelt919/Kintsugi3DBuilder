@@ -455,7 +455,7 @@ class OpenGLProgram implements Resource, Program<OpenGLContext>
 		{
 			this.useForUniformAssignment(); 
 			
-			glUniformMatrix4(location, false, value.asFloatBuffer());
+			glUniformMatrix4fv(location, false, value.asFloatBuffer());
 			this.context.openGLErrorCheck();
 			
 			return true;
