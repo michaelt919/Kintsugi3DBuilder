@@ -184,9 +184,9 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	}
 
 	@Override
-	public void requestResample(int size, File targetVSETFile, File exportPath) throws IOException 
+	public void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException 
 	{
-		this.stages.get(this.currentStage).requestResample(size, targetVSETFile, exportPath);
+		this.stages.get(this.currentStage).requestResample(width, height, targetVSETFile, exportPath);
 	}
 
 	@Override
