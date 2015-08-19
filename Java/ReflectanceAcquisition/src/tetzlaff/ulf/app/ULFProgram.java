@@ -42,11 +42,11 @@ public class ULFProgram
 
         // Create a user interface that examines the ULFRendererList for renderer settings and
         // selecting between different loaded models.
-        ULFUserInterface gui = new ULFUserInterface(model);
+        ULFConfigFrame gui = new ULFConfigFrame(model);
 
         // Make everything visible and start the event loop
     	window.show();
-        gui.show();
+        gui.setVisible(true);
 		app.run();
 
 		// The event loop has terminated so cleanup the windows and exit with a successful return code.
