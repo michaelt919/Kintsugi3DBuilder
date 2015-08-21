@@ -172,6 +172,14 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 	}
 	
 	@Override
+	public boolean isHighDPI()
+	{
+		WindowSize winSize = getWindowSize();
+		FramebufferSize fbSize = getFramebufferSize();
+		return (winSize.width != fbSize.width || winSize.height != fbSize.height);
+	}
+	
+	@Override
 	public boolean isClosing()
 	{
 		return glfwWindowShouldClose(handle) == GL_TRUE;

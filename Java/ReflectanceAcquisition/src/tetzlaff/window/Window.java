@@ -8,6 +8,8 @@ public interface Window extends WindowListenerManager
 
 	void hide();
 	
+	boolean isHighDPI();
+	
 	boolean isClosing();
 	
 	void requestClose();

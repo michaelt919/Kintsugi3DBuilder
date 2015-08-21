@@ -231,7 +231,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	{
 		return this.lightField.settings.getWeightExponent();
 	}
-
+	
 	@Override
 	public boolean isOcclusionEnabled() 
 	{
@@ -333,6 +333,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	public void setHalfResolution(boolean halfResEnabled)
 	{
 		this.halfResEnabled = halfResEnabled;
+	}
+
+	@Override
+	public boolean getHalfResolution()
+	{
+		return this.halfResEnabled;
 	}
 
 	@Override

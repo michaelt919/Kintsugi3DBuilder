@@ -42,13 +42,13 @@ public class ULFUserInterface
 	 * A selection form element allowing the user to change the active light field object.
 	 */
 	private JComboBox<ULFDrawable> selector;
-	
+		
 	/**
 	 * Construct a new ULFUserInterface that connects to the given ULFListModel for
 	 * constructing the list of available light field objects and triggering events.
 	 * @param model The data model that will be controlled by this interface.
 	 */
-	public ULFUserInterface(ULFListModel model) 
+	public ULFUserInterface(ULFListModel model, boolean isHighDPI) 
 	{
 		// Create a fixed size window
 		this.frame = new JFrame("Light Field Config");
@@ -185,6 +185,8 @@ public class ULFUserInterface
 			weightExpSpinner.setEnabled(false);
 			occlusionCheckBox.setEnabled(false);
 			occlusionBiasSpinner.setEnabled(false);
+
+			halfResCheckBox.setSelected(isHighDPI);
 			halfResCheckBox.setEnabled(false);
 			multisampCheckBox.setEnabled(false);
 		}
@@ -201,6 +203,9 @@ public class ULFUserInterface
 			weightExpSpinner.setValue(model.getSelectedItem().getWeightExponent());
 			occlusionCheckBox.setSelected(model.getSelectedItem().isOcclusionEnabled());
 			occlusionBiasSpinner.setValue(model.getSelectedItem().getOcclusionBias());
+			
+			model.getSelectedItem().setHalfResolution(isHighDPI);
+			halfResCheckBox.setSelected(isHighDPI);
 		}
 		
 		// Respond to combo box item changed event
@@ -229,6 +234,7 @@ public class ULFUserInterface
 				weightExpSpinner.setValue(model.getSelectedItem().getWeightExponent());
 				occlusionCheckBox.setSelected(model.getSelectedItem().isOcclusionEnabled());
 				occlusionBiasSpinner.setValue(model.getSelectedItem().getOcclusionBias());
+				halfResCheckBox.setSelected(model.getSelectedItem().getHalfResolution());
 				
 				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
 				{

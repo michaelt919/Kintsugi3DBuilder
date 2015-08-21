@@ -44,14 +44,25 @@ import tetzlaff.ulf.ULFMorphRenderer;
  */
 public class ULFConfigFrame extends JFrame {
 
-	private static final long serialVersionUID = 3234328215460573228L;	
+	private static final long serialVersionUID = 3234328215460573228L;
+
+	/**
+	 * The central panel of this frame where all widgets are laid out.
+	 */
 	private JPanel contentPane;
 
 	/**
-	 * Layout the GUI in the central content pane.  Also sets all appropriate listeners to update
+	 * Build and layout the GUI in the central content pane.  Also sets all appropriate listeners to update
 	 * the given ULFListModel parameter.
+	 * 
+	 * @param model The model that abstracts the underlying light field data and provides entries for the combo
+	 * box.  It is expected that this will be empty (but not null) when the GUI is initially constructed and
+	 * the listeners for the loading buttons will add items to the model.
+	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
+	 * defaults to being on.
 	 */
-	public ULFConfigFrame(ULFListModel model) {
+	public ULFConfigFrame(ULFListModel model, boolean isHighDPI)
+	{		
 		setResizable(false);
 		setTitle("Light Field Config");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -298,6 +309,7 @@ public class ULFConfigFrame extends JFrame {
 			lblBias.setEnabled(false);
 			spinnerOccBias.setEnabled(false);
 
+			chckbxHalfRes.setSelected(isHighDPI);
 			chckbxHalfRes.setEnabled(false);
 			chckbxMultisampling.setEnabled(false);
 
@@ -333,6 +345,9 @@ public class ULFConfigFrame extends JFrame {
 			spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
 			chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
 			spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
+
+			model.getSelectedItem().setHalfResolution(isHighDPI);
+			chckbxHalfRes.setSelected(isHighDPI);
 		}
 
 		// Respond to combo box item changed event
@@ -380,6 +395,7 @@ public class ULFConfigFrame extends JFrame {
 				spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
 				chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
 				spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
+				chckbxHalfRes.setSelected(model.getSelectedItem().getHalfResolution());
 				
 				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
 				{
@@ -495,7 +511,8 @@ public class ULFConfigFrame extends JFrame {
 						loadingBar.setIndeterminate(true);
 						loadingFrame.setVisible(true);
 						model.getSelectedItem().requestResample(
-							(Integer)spinnerWidth.getValue(), (Integer)spinnerHeight.getValue(), 
+							(Integer)spinnerWidth.getValue(),
+							(Integer)spinnerHeight.getValue(), 
 							vsetFileChooser.getSelectedFile(), 
 							exportFileChooser.getSelectedFile());
 					} 
@@ -568,5 +585,16 @@ public class ULFConfigFrame extends JFrame {
 				}
 			});
 		}
+	}
+	
+	/**
+	 * Convenience method that overrides the default show() method so it is compatible with the
+	 * show method from ULFUserInterface (which was the old GUI class). This makes the two
+	 * classes essentially interchangeable.
+	 */
+	@Override
+	public void show()
+	{
+		this.setVisible(true);
 	}
 }
