@@ -13,6 +13,7 @@ public interface ULFDrawable extends Drawable
 	float getWeightExponent();
 	boolean isOcclusionEnabled();
 	float getOcclusionBias();
+	boolean getHalfResolution();
 	
 	void setGamma(float gamma);
 	void setWeightExponent(float weightExponent);

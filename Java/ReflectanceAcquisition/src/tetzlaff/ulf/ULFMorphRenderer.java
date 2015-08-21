@@ -192,10 +192,13 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void setHalfResolution(boolean halfResEnabled)
 	{	
-		for (ULFRenderer<ContextType> stage : stages)
-		{
-			stage.setHalfResolution(halfResEnabled);
-		}
+		this.stages.get(this.currentStage).setHalfResolution(halfResEnabled);
+	}
+
+	@Override
+	public boolean getHalfResolution()
+	{	
+		return this.stages.get(this.currentStage).getHalfResolution();
 	}
 
 	@Override
