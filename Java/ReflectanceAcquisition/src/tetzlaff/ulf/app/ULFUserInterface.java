@@ -25,27 +25,49 @@ import tetzlaff.ulf.ULFListModel;
 import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFMorphRenderer;
 
+/**
+ * @author Michael Tetzlaff
+ * An object to contain and manage the main settings interface for a given ULFList.  It
+ * contains a single Swing JFrame and creates relevant listeners that will connect back
+ * to the model that is passed to its constructor.
+ */
 public class ULFUserInterface
 {
+	/**
+	 * The main window element that will hold the ULF settings.
+	 */
 	private JFrame frame;
-	private JComboBox<ULFDrawable> selector;
 	
-	public ULFUserInterface(ULFListModel model) 
+	/**
+	 * A selection form element allowing the user to change the active light field object.
+	 */
+	private JComboBox<ULFDrawable> selector;
+		
+	/**
+	 * Construct a new ULFUserInterface that connects to the given ULFListModel for
+	 * constructing the list of available light field objects and triggering events.
+	 * @param model The data model that will be controlled by this interface.
+	 */
+	public ULFUserInterface(ULFListModel model, boolean isHighDPI) 
 	{
+		// Create a fixed size window
 		this.frame = new JFrame("Light Field Config");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		frame.setLocation(10, 10);
 		frame.setSize(256, 256);
 		frame.setResizable(false);
-		
+
+		// Use a box layout to hold interface elements
 		frame.getContentPane().setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
-		
+
+		// Construct and add the combo box for selecting different light field objects.
 		this.selector = new JComboBox<ULFDrawable>();
 		selector.setModel(model);
 		selector.setBorder(new EmptyBorder(10, 10, 10, 10));
 		frame.add(selector);
 		
+		// An alternate interface (a slider) for moving through the light field objects
 		JSlider morphSlider = new JSlider();
 		morphSlider.setMaximum(0);
 		morphSlider.setValue(0);
@@ -53,6 +75,7 @@ public class ULFUserInterface
 		morphSlider.setBorder(new EmptyBorder(0, 10, 0, 10));
 		frame.add(morphSlider);
 		
+		// Add two buttons side-by-side for loading different light field objects
 		Box loadBox = new Box(BoxLayout.X_AXIS);
 		JPanel loadSingleWrapper = new JPanel();
 		JButton loadSingleButton = new JButton("Load Single...");
@@ -66,6 +89,7 @@ public class ULFUserInterface
 		loadBox.add(loadMorphWrapper);
 		frame.add(loadBox);
 		
+		// Add a labeled double spinner control for adjusting the gamma correction factor
 		Box gammaBox = new Box(BoxLayout.X_AXIS);
 		JLabel gammaLabel = new JLabel("Gamma:");
 		gammaLabel.setPreferredSize(new Dimension(128, 16));
@@ -75,7 +99,9 @@ public class ULFUserInterface
 		gammaBox.add(gammaSpinner);
 		gammaBox.setBorder(new EmptyBorder(10, 10, 10, 10));
 		frame.add(gammaBox);
+
 		
+		// Add a labeled double spinner control for adjusting the alpha weight factor
 		Box weightExpBox = new Box(BoxLayout.X_AXIS);
 		JLabel weightExpLabel = new JLabel("Weight Exponent:");
 		weightExpLabel.setPreferredSize(new Dimension(128, 16));
@@ -86,10 +112,12 @@ public class ULFUserInterface
 		weightExpBox.setBorder(new EmptyBorder(0, 10, 10, 10));
 		frame.add(weightExpBox);
 		
+		// Add a checkbox for enabling/disabling occlusion culling
 		JCheckBox occlusionCheckBox = new JCheckBox("Enable Occlusion", true);
 		occlusionCheckBox.setBorder(new EmptyBorder(10, 10, 10, 10));
 		frame.add(occlusionCheckBox);
-		
+
+		// Add a double spinner for adjusting the bias used by occlusion culling
 		Box occlusionBiasBox = new Box(BoxLayout.X_AXIS);
 		JLabel occlusionBiasLabel = new JLabel("Occlusion Bias:");
 		occlusionBiasLabel.setPreferredSize(new Dimension(128, 16));
@@ -102,6 +130,7 @@ public class ULFUserInterface
 		occlusionBiasBox.setBorder(new EmptyBorder(10, 10, 10, 10));
 		frame.add(occlusionBiasBox);
 		
+		// Add a button and size double spinner for 'resampling' the loaded light field object.
 		Box resampleBox = new Box(BoxLayout.X_AXIS);
 		JPanel resampleWrapper = new JPanel();
 		JButton resampleButton = new JButton("Resample...");
@@ -119,8 +148,28 @@ public class ULFUserInterface
 		resampleBox.setBorder(new EmptyBorder(0, 10, 10, 10));
 		frame.add(resampleBox);
 		
-		frame.pack();
+		// Add two checkboxes side-by-side for changing quality settings
+		Box qualBox = new Box(BoxLayout.X_AXIS);
+
+		JPanel halfResWrapper = new JPanel();
+		JCheckBox halfResCheckBox = new JCheckBox("Half Resolution", false);
+		halfResWrapper.add(halfResCheckBox);
+		halfResWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
+		qualBox.add(halfResWrapper);
 		
+		JPanel multisamplingWrapper = new JPanel();
+		JCheckBox multisampCheckBox = new JCheckBox("Multisampling", true);
+		multisamplingWrapper.add(multisampCheckBox);
+		multisamplingWrapper.setBorder(new EmptyBorder(0, 10, 0, 10));
+		qualBox.add(multisamplingWrapper);
+
+		frame.add(qualBox);
+
+		// Finalize the Swing interface
+		frame.pack();
+
+		// Create a separate loading window positioned over the GLFW window with
+		// nothing but an infinite progress bar.  Make it undecorated.
 		JFrame loadingFrame = new JFrame("Loading...");
 		loadingFrame.setUndecorated(true);
 		JProgressBar loadingBar = new JProgressBar();
@@ -128,13 +177,18 @@ public class ULFUserInterface
 		loadingFrame.add(loadingBar);
 		loadingFrame.pack();
 		loadingFrame.setLocationRelativeTo(null);
-		
+
+		// Set initial values from the 'model' parameter
 		if (model.getSelectedItem() == null)
 		{
 			gammaSpinner.setEnabled(false);
 			weightExpSpinner.setEnabled(false);
 			occlusionCheckBox.setEnabled(false);
 			occlusionBiasSpinner.setEnabled(false);
+
+			halfResCheckBox.setSelected(isHighDPI);
+			halfResCheckBox.setEnabled(false);
+			multisampCheckBox.setEnabled(false);
 		}
 		else
 		{
@@ -142,13 +196,19 @@ public class ULFUserInterface
 			weightExpSpinner.setEnabled(true);
 			occlusionCheckBox.setEnabled(true);
 			occlusionBiasSpinner.setEnabled(true);
+			halfResCheckBox.setEnabled(true);
+			multisampCheckBox.setEnabled(true);
 			
 			gammaSpinner.setValue(model.getSelectedItem().getGamma());
 			weightExpSpinner.setValue(model.getSelectedItem().getWeightExponent());
 			occlusionCheckBox.setSelected(model.getSelectedItem().isOcclusionEnabled());
 			occlusionBiasSpinner.setValue(model.getSelectedItem().getOcclusionBias());
+			
+			model.getSelectedItem().setHalfResolution(isHighDPI);
+			halfResCheckBox.setSelected(isHighDPI);
 		}
 		
+		// Respond to combo box item changed event
 		selector.addItemListener(e ->
 		{
 			if (model.getSelectedItem() == null)
@@ -158,6 +218,8 @@ public class ULFUserInterface
 				occlusionCheckBox.setEnabled(false);
 				occlusionBiasSpinner.setEnabled(false);
 				morphSlider.setEnabled(false);
+				halfResCheckBox.setEnabled(false);
+				multisampCheckBox.setEnabled(false);
 			}
 			else
 			{
@@ -165,11 +227,14 @@ public class ULFUserInterface
 				weightExpSpinner.setEnabled(true);
 				occlusionCheckBox.setEnabled(true);
 				occlusionBiasSpinner.setEnabled(true);
+				halfResCheckBox.setEnabled(true);
+				multisampCheckBox.setEnabled(true);
 				
 				gammaSpinner.setValue(model.getSelectedItem().getGamma());
 				weightExpSpinner.setValue(model.getSelectedItem().getWeightExponent());
 				occlusionCheckBox.setSelected(model.getSelectedItem().isOcclusionEnabled());
 				occlusionBiasSpinner.setValue(model.getSelectedItem().getOcclusionBias());
+				halfResCheckBox.setSelected(model.getSelectedItem().getHalfResolution());
 				
 				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
 				{
@@ -188,6 +253,7 @@ public class ULFUserInterface
 			}
 		});
 		
+		// Add listener for the 'single' load button to read a single light field object.
 		loadSingleButton.addActionListener(e -> 
 		{
 			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
@@ -242,6 +308,7 @@ public class ULFUserInterface
 			}
 		});
 		
+		// Add listener for the 'morph' load button to read many light field objects.
 		loadMorphButton.addActionListener(e -> 
 		{
 			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
@@ -262,6 +329,7 @@ public class ULFUserInterface
 			}
 		});
 		
+		// Add listener for the 'resample' button to generate new vies for the current light field.
 		resampleButton.addActionListener(e -> 
 		{
 			JFileChooser vsetFileChooser = new JFileChooser(new File("").getAbsolutePath());
@@ -283,6 +351,7 @@ public class ULFUserInterface
 						loadingFrame.setVisible(true);
 						model.getSelectedItem().requestResample(
 							(int)Math.round((Double)resampleSizeSpinner.getValue()), 
+							(int)Math.round((Double)resampleSizeSpinner.getValue()), 
 							vsetFileChooser.getSelectedFile(), 
 							exportFileChooser.getSelectedFile());
 					} 
@@ -294,26 +363,37 @@ public class ULFUserInterface
 			}
 		});
 		
+		// Add listener for changes to the gamma spinner.
 		gammaSpinner.addChangeListener(e ->
 		{
 			model.getSelectedItem().setGamma(gammaModel.getNumber().floatValue());
 		});
 		
+		// Add listener for changes to the alpha weight spinner.
 		weightExpSpinner.addChangeListener(e ->
 		{
 			model.getSelectedItem().setWeightExponent(weightExpModel.getNumber().floatValue());
 		});
 		
+		// Add listener for changes to half resolution checkbox.
+		halfResCheckBox.addChangeListener(e ->
+		{
+			model.getSelectedItem().setHalfResolution(halfResCheckBox.isSelected());
+		});
+
+		// Add listener for changes to occlusion checkbox.
 		occlusionCheckBox.addChangeListener(e ->
 		{
 			model.getSelectedItem().setOcclusionEnabled(occlusionCheckBox.isSelected());
 		});
 		
+		// Add listener for changes to the occlusion bias spinner.
 		occlusionBiasSpinner.addChangeListener(e ->
 		{
 			model.getSelectedItem().setOcclusionBias(occlusionBiasModel.getNumber().floatValue());
 		});
 		
+		// Add listener for changes to the morph slider.
 		morphSlider.addChangeListener(e ->
 		{
 			if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
@@ -322,6 +402,7 @@ public class ULFUserInterface
 			}
 		});
 		
+		// Create callback monitor to show the loading window when the model is being read
 		model.setLoadingMonitor(new ULFLoadingMonitor()
 		{
 			@Override
@@ -339,6 +420,10 @@ public class ULFUserInterface
 		});
 	}
 
+	/**
+	 * Set this GUI to be visible.  Should be called once after it's construction but before
+	 * the start of the main event loop.
+	 */
 	public void show()
 	{
 		frame.setVisible(true);

@@ -107,7 +107,9 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
         
         GLContext.createFromCurrent();
         System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
-
+        System.out.println("LWJGL version: " + Sys.getVersion());
+        System.out.println("GLFW version: " + glfwGetVersionString());
+        
         if (multisamples > 0)
         {
         	this.enableMultisampling();
@@ -167,6 +169,14 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 	public boolean shouldTerminate()
 	{
 		return this.isClosing();
+	}
+	
+	@Override
+	public boolean isHighDPI()
+	{
+		WindowSize winSize = getWindowSize();
+		FramebufferSize fbSize = getFramebufferSize();
+		return (winSize.width != fbSize.width || winSize.height != fbSize.height);
 	}
 	
 	@Override

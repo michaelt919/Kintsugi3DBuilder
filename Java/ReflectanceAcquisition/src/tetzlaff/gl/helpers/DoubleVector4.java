@@ -1,5 +1,14 @@
 package tetzlaff.gl.helpers;
 
+/**
+ * @author Michael Tetzlaff
+ * 
+ * A vector of four dimensions (for linear algebra calculations) backed by 
+ * 64-bit floats.  Useful for heterogeneous coordinate calculations. This
+ * is an immutable object.
+ * 
+ * @see Vector4
+ */
 public class DoubleVector4 
 {
 	public final double x;
