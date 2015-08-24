@@ -2,9 +2,9 @@ package tetzlaff.gl.helpers;
 
 /**
  * A vector of two dimensions (for linear algebra calculations) backed by 
- * 32-bit integers.  All arithmetic will be integer arithmetic (including
- * multiplication, division, length and normalization.  This is an immutable
- * object.
+ * 32-bit integers.
+ * All arithmetic other than length() or distance() will be integer arithmetic, including division.  
+ * This is an immutable object.
  * 
  * @see Vector2
  * @author Michael Tetzlaff

@@ -2,9 +2,9 @@ package tetzlaff.gl.helpers;
 
 /**
  * A vector of four dimensions (for linear algebra calculations) backed by 
- * 32-bit integers.  All arithmetic will be integer arithmetic (including
- * multiplication, division, length and normalization.  Useful for homogeneous
- * coordinates.  This is an immutable object.
+ * 32-bit integers.
+ * All arithmetic other than length() or distance() will be integer arithmetic, including division.  
+ * This is an immutable object.
  * 
  * @see Vector4
  * @author Michael Tetzlaff
