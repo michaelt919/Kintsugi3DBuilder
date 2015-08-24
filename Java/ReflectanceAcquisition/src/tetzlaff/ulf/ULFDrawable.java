@@ -13,11 +13,15 @@ public interface ULFDrawable extends Drawable
 	float getWeightExponent();
 	boolean isOcclusionEnabled();
 	float getOcclusionBias();
+	boolean getHalfResolution();
 	
 	void setGamma(float gamma);
 	void setWeightExponent(float weightExponent);
 	void setOcclusionEnabled(boolean occlusionEnabled);
 	void setOcclusionBias(float occlusionBias);
 	
-	void requestResample(int size, File targetVSETFile, File exportPath) throws IOException;
+	void setHalfResolution(boolean halfResEnabled);
+	void setMultisampling(boolean multisamplingEnabled);
+	
+	void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException;
 }
