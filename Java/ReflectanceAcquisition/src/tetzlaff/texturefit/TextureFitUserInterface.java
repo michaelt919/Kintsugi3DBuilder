@@ -253,7 +253,7 @@ public class TextureFitUserInterface
 		//diffusePanel.setBorder(new TitledBorder("Diffuse Fitting Parameters"));
 		
 		lightOffsetSpinners = addUIVectorField(diffusePanel, "Light Offset", new Vector3(0.0f, 0.0f, 0.0f), -99.0f, 99.0f, 0.001f);
-		lightIntensitySpinners = addUIVectorField(diffusePanel, "Light Intensity", new Vector3(1.0f, 1.0f, 1.0f), 0.0f, 999.0f, 0.001f);
+		lightIntensitySpinners = addUIVectorField(diffusePanel, "Light Intensity", new Vector3(1.0f, 1.0f, 1.0f), 0.0f, 9999.0f, 0.001f);
 				
 		diffuseDeltaSpinner = addUIValueField(diffusePanel, "Delta", defaults.getDiffuseDelta(), 0.0f, 1.0f, 0.01f);
 		diffuseIterationsSpinner = addUIValueField(diffusePanel, "Iterations", defaults.getDiffuseIterations(), 0.0f, 999.0f, 1.0f);

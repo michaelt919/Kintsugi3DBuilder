@@ -20,7 +20,6 @@ uniform float occlusionBias;
 
 uniform float delta;
 uniform int iterations;
-uniform float determinantThreshold;
 uniform float fit1Weight;
 uniform float fit3Weight;
 
@@ -63,13 +62,13 @@ vec4 getColor(int index)
 
 vec3 getViewVector(int index)
 {
-    return normalize(transpose(mat3(cameraPoses[index])) * -cameraPoses[index][3].xyz - fPosition);
+    return transpose(mat3(cameraPoses[index])) * -cameraPoses[index][3].xyz - fPosition;
 }
 
 vec3 getLightVector(int index)
 {
-    return normalize(transpose(mat3(cameraPoses[index])) * 
-        (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition);
+    return transpose(mat3(cameraPoses[index])) * 
+        (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition;
 }
 
 vec3 getLightIntensity(int index)
@@ -104,7 +103,7 @@ DiffuseFit fitDiffuse()
         
         for (int i = 0; i < viewCount; i++)
         {
-            vec3 view = getViewVector(i);
+            vec3 view = normalize(getViewVector(i));
             vec4 color = getColor(i);
             float nDotV = dot(geometricNormal, view);
             if (color.a * nDotV > 0)
@@ -112,19 +111,20 @@ DiffuseFit fitDiffuse()
                 //vec4 light = vec4(getLightVector(i), 1.0);
                 vec3 light = getLightVector(i);
                 vec3 attenuatedLightIntensity = getLightIntensity(i) / (dot(light, light));
+                vec3 lightNormalized = normalize(light);
                 
                 float weight = color.a * nDotV;
                 if (k != 0)
                 {
-                    vec3 error = color.rgb - fit.color * dot(fit.normal, light) * attenuatedLightIntensity;
+                    vec3 error = color.rgb - fit.color * dot(fit.normal, lightNormalized) * attenuatedLightIntensity;
                     weight *= exp(-dot(error,error)/(2*delta*delta));
                 }
                     
-                a += weight * outerProduct(light, light);
-                //b += weight * outerProduct(light, vec4(color.rgb / attenuatedLightIntensity, 0.0));
-                b += weight * outerProduct(light, color.rgb / attenuatedLightIntensity);
+                a += weight * outerProduct(lightNormalized, lightNormalized);
+                //b += weight * outerProduct(lightNormalized, vec4(color.rgb / attenuatedLightIntensity, 0.0));
+                b += weight * outerProduct(lightNormalized, color.rgb / attenuatedLightIntensity);
                 weightedSum += weight * vec4(color.rgb / attenuatedLightIntensity, 1.0);
-                nDotLSum += weight * max(0, dot(geometricNormal, light));
+                nDotLSum += weight * max(0, dot(geometricNormal, lightNormalized));
             }
         }
         
@@ -168,9 +168,8 @@ DiffuseFit fitDiffuse()
         float intensity = length(solution.xyz);
         //float ambientIntensity = solution.w;
     
-        float fit3Quality = clamp(fit3Weight * determinant(a) * 
-                                    clamp(dot(normalize(solution.xyz), geometricNormal), 0, 1)  / 
-                                    (weightedSum.a * determinantThreshold), 0.0, 1.0);
+        float fit3Quality = clamp(fit3Weight * determinant(a) / weightedSum.a *
+                                clamp(dot(normalize(solution.xyz), geometricNormal), 0, 1), 0.0, 1.0);
         
         fit.color = clamp(averageColor * intensity, 0, 1) * fit3Quality + 
                         clamp(weightedSum.rgb / nDotLSum, 0, 1) * 

@@ -81,13 +81,13 @@ vec4 getOriginalColor(int index)
 
 vec3 getViewVector(int index)
 {
-    return normalize(transpose(mat3(cameraPoses[index])) * -cameraPoses[index][3].xyz - fPosition);
+    return transpose(mat3(cameraPoses[index])) * -cameraPoses[index][3].xyz - fPosition;
 }
 
 vec3 getLightVector(int index)
 {
-    return normalize(transpose(mat3(cameraPoses[index])) * 
-        (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition);
+    return transpose(mat3(cameraPoses[index])) * 
+        (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition;
 }
 
 vec3 getLightIntensity(int index)
@@ -103,7 +103,7 @@ vec3 getNormalVector()
 vec3 getDiffuseColor(int index)
 {
     vec3 light = getLightVector(index);
-    return pow(texture(diffuse, fTexCoord), vec4(gamma)).rgb * max(0, dot(fNormal, light)) 
+    return pow(texture(diffuse, fTexCoord), vec4(gamma)).rgb * max(0, dot(fNormal, normalize(light))) 
             * getLightIntensity(index) / (dot(light, light));
 }
 
@@ -117,8 +117,8 @@ void main()
 	vec4 original = getOriginalColor(viewIndex);
     fragColor = vec4(original.rgb - diffuseRemovalFactor * getDiffuseColor(viewIndex), original.a);
     
-    vec3 view = getViewVector(viewIndex);
-    vec3 light = getLightVector(viewIndex);
+    vec3 view = normalize(getViewVector(viewIndex));
+    vec3 light = normalize(getLightVector(viewIndex));
     vec3 normal = getNormalVector();
     vec3 reflection = getReflectionVector(normal, light);
     rDotV = vec4(vec3(dot(reflection, view)), 1.0);
