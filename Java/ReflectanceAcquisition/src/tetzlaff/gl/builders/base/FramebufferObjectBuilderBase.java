@@ -83,7 +83,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
 	@Override
 	public FramebufferObjectBuilder<ContextType> addColorAttachment()
 	{
-		return this.addColorAttachment(ColorFormat.RGB8);
+		return this.addColorAttachment(ColorFormat.RGBA8);
 	}
 	
 	@Override
@@ -124,7 +124,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
 	@Override
 	public FramebufferObjectBuilder<ContextType> addColorAttachments(int count)
 	{
-		return this.addColorAttachments(ColorFormat.RGB8, count);
+		return this.addColorAttachments(ColorFormat.RGBA8, count);
 	}
 	
 	@Override

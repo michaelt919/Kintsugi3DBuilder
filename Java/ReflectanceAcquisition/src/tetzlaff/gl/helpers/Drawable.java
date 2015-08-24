@@ -1,8 +1,8 @@
 package tetzlaff.gl.helpers;
 
 /**
- * An interfaced used with the InteractiveGraphics object to coordinate the initialization,
- * updating, drawing and deleting of an OpenGL like renderable view.
+ * An interface used with the InteractiveGraphics object to coordinate the initialization,
+ * updating, drawing and deleting of an OpenGL-like renderable view.
  * 
  * @author Michael Tetzlaff
  * @see InteractiveGraphics
@@ -19,8 +19,9 @@ public interface Drawable
 	
 	/**
 	 * Adjust internal state that needs to change prior to drawing.  Called every time the
-	 * associated InteractiveApplication object refreshes and immediately before draw is called.
+	 * associated InteractiveApplication object refreshes and before draw() is called.
 	 * The associated context will be made current first.
+	 * This method may also be called without subsequently calling draw() to allow its internal state to be updated only.
 	 */
 	void update();
 	
@@ -35,7 +36,7 @@ public interface Drawable
 	/**
 	 * Execute any cleanup and bring the internal state out of being prepared to draw. Update
 	 * and draw will not execute after this method without initialize first being called. Called
-	 * once by the associated InteractiveAppliction created by InteractiveGraphics when the
+	 * once by the associated InteractiveApplication created by InteractiveGraphics when the
 	 * application is terminating.  The associated context will be made current first.
 	 */
 	void cleanup();
