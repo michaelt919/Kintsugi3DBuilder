@@ -452,6 +452,12 @@ public class ViewSet<ContextType extends Context<ContextType>>
 
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(File file, File imageDirectory, ContextType context) throws IOException
 	{
+		return loadFromAgisoftXMLFile(file, imageDirectory, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), context);
+	}
+	
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
+		File file, File imageDirectory, Vector3 lightOffset, Vector3 lightIntensity, ContextType context) throws IOException
+	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
         
@@ -761,8 +767,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
             imageFileNames.add(cameras[i].filename);
         }
         
-        lightPositionList.add(new Vector3(0.0f, 0.0f, 0.0f)); // Just assume the light is co-located with the camera (for now)
-        lightIntensityList.add(new Vector3(1.0f, 1.0f, 1.0f));
+        lightPositionList.add(lightOffset);
+        lightIntensityList.add(lightIntensity);
 
         float farPlane = findFarPlane(cameraPoseList);
         return new ViewSet<ContextType>(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,

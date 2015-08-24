@@ -38,9 +38,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	private File maskDir;
 	private File rescaleDir;
 	private File outputDir;
+	private Vector3 lightOffset;
+	private Vector3 lightIntensity;
 	private TextureFitParameters param;
 	
-	public TextureFitExecutor(ContextType context, File vsetFile, File objFile, File imageDir, File maskDir, File rescaleDir, File outputDir, TextureFitParameters param) 
+	public TextureFitExecutor(ContextType context, File vsetFile, File objFile, File imageDir, File maskDir, File rescaleDir, File outputDir,
+			Vector3 lightOffset, Vector3 lightIntensity, TextureFitParameters param) 
 	{
 		this.context = context;
 		this.vsetFile = vsetFile;
@@ -49,6 +52,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		this.maskDir = maskDir;
 		this.rescaleDir = rescaleDir;
 		this.outputDir = outputDir;
+		this.lightOffset = lightOffset;
+		this.lightIntensity = lightIntensity;
 		this.param = param;
 	}
 
@@ -76,7 +81,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	else if (fileExt.equalsIgnoreCase("xml"))
     	{
     		System.out.println("Loading from Agisoft Photoscan XML file.");
-    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null, context);
+    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null, lightOffset, lightIntensity, context);
     	}
     	else
     	{
