@@ -7,7 +7,7 @@ import tetzlaff.interactive.Refreshable;
 
 /**
  * An singleton factory object for binding together the given ContextType and Drawable as
- * an anonymous Refreshable object inside of an InteractiveAplication object.
+ * an object which implements InteractiveApplication.
  * 
  * @see Refreshable InteractiveApplication
  * @author Michael Tetzlaff
