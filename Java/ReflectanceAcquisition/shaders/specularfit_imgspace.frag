@@ -105,13 +105,13 @@ vec4 getColor(int index)
 
 vec3 getViewVector(int index)
 {
-    return normalize(transpose(mat3(cameraPoses[index])) * -cameraPoses[index][3].xyz - fPosition);
+    return transpose(mat3(cameraPoses[index])) * -cameraPoses[index][3].xyz - fPosition;
 }
 
 vec3 getLightVector(int index)
 {
-    return normalize(transpose(mat3(cameraPoses[index])) * 
-        (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition);
+    return transpose(mat3(cameraPoses[index])) * 
+        (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition;
 }
 
 vec3 getLightIntensity(int index)
@@ -134,9 +134,7 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, vec3 atten
     vec3 diffuseContrib = diffuseColor * max(0, dot(light, normal)) * attenuatedLightIntensity;
     float cap = 1.0 - diffuseRemovalAmount * max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
     vec3 remainder = clamp(originalColor.rgb - diffuseRemovalAmount * diffuseContrib, 0, cap);
-    return vec4(remainder, cap <= 0.0 ? 0.0 : 
-                    pow(originalColor.a * remainder.r * remainder.g * remainder.b * (cap - remainder.r) 
-                            * (cap - remainder.g) * (cap - remainder.b), 1.0 / 3.0) / cap);
+    return vec4(remainder, originalColor.a * pow(remainder.r * remainder.g * remainder.b, 1.0 / 3.0));
 }
 
 bool validateFit(SpecularFit fit)
@@ -169,7 +167,7 @@ SpecularFit fitSpecular()
     
     for (int i = 0; i < viewCount; i++)
     {
-        vec3 view = getViewVector(i);
+        vec3 view = normalize(getViewVector(i));
         vec4 color = getColor(i);
         float nDotV = dot(geometricNormal, view);
         
@@ -177,12 +175,14 @@ SpecularFit fitSpecular()
         {
             vec3 light = getLightVector(i);
             vec3 attenuatedLightIntensity = getLightIntensity(i) / (dot(light, light));
-            vec4 colorRemainder = removeDiffuse(color, diffuseColor, light, attenuatedLightIntensity, diffuseNormal);
+            vec3 lightNormalized = normalize(light);
+            
+            vec4 colorRemainder = removeDiffuse(color, diffuseColor, lightNormalized, attenuatedLightIntensity, diffuseNormal);
             float intensity = colorRemainder.r / attenuatedLightIntensity.r + 
                                 colorRemainder.g / attenuatedLightIntensity.g + 
                                 colorRemainder.b / attenuatedLightIntensity,b;
             
-            vec3 half = normalize(view + light);
+            vec3 half = normalize(view + lightNormalized);
             float nDotH = dot(half, diffuseNormal);
             
             if (intensity > 0.0 && nDotH > 0.0)
