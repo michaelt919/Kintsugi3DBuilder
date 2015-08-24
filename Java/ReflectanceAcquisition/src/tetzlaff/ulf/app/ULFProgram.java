@@ -46,7 +46,7 @@ public class ULFProgram
 
         // Make everything visible and start the event loop
     	window.show();
-        gui.show();
+        gui.setVisible(true);
 		app.run();
 
 		// The event loop has terminated so cleanup the windows and exit with a successful return code.
