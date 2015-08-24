@@ -3,6 +3,7 @@ package tetzlaff.ulf;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -164,21 +165,34 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		if (loadImages && imageFilePath != null && imageFileNames != null && imageFileNames.size() > 0)
 		{
 			Date timestamp = new Date();
-			
 			File imageFile = new File(imageFilePath, imageFileNames.get(0));
-			if (!imageFile.exists())
-			{
-				String[] filenameParts = imageFileNames.get(0).split("\\.");
-		    	filenameParts[filenameParts.length - 1] = "png";
-		    	String pngFileName = String.join(".", filenameParts);
-		    	imageFile = new File(imageFilePath, pngFileName);
-			}
+			ZipWrapper myZip = new ZipWrapper(imageFile);
+			
+//			if (!myZip.exists(imageFile))
+//			{
+//				System.err.printf("Warning: Image '%s' not found, trying '.png' extension instead.\n",
+//								  imageFileNames.get(0));
+//				String[] filenameParts = imageFileNames.get(0).split("\\.");
+//		    	filenameParts[filenameParts.length - 1] = "png";
+//		    	String pngFileName = String.join(".", filenameParts);
+//		    	imageFile = new File(imageFilePath, pngFileName);
+		    	
+		    	if(!myZip.exists(imageFile))
+		    	{
+		    		throw new FileNotFoundException(
+		    				String.format("'%s' not found.", imageFileNames.get(0)));
+		    	}
+//			}
 			
 			// Read a single image to get the dimensions for the texture array
-			ZipWrapper myZip = new ZipWrapper(imageFile);
-			InputStream input = myZip.getInputStream();
-			
+			InputStream input = myZip.getInputStream();			
 			BufferedImage img = ImageIO.read(input);
+			if(img == null)
+			{
+				throw new IOException(String.format("Error: Unsupported image format '%s'.",
+						imageFileNames.get(0)));				
+			}
+			
 			this.textureArray = context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), imageFileNames.size())
 									.setLinearFilteringEnabled(true)
 									.setMipmapsEnabled(false)
@@ -187,13 +201,19 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
 				imageFile = new File(imageFilePath, imageFileNames.get(i));
-				if (!imageFile.exists())
-				{
-					String[] filenameParts = imageFileNames.get(i).split("\\.");
-			    	filenameParts[filenameParts.length - 1] = "png";
-			    	String pngFileName = String.join(".", filenameParts);
-			    	imageFile = new File(imageFilePath, pngFileName);
-				}
+//				if (!myZip.exists(imageFile))
+//				{
+//					String[] filenameParts = imageFileNames.get(i).split("\\.");
+//			    	filenameParts[filenameParts.length - 1] = "png";
+//			    	String pngFileName = String.join(".", filenameParts);
+//			    	imageFile = new File(imageFilePath, pngFileName);
+
+			    	if(!myZip.exists(imageFile))
+			    	{
+			    		throw new FileNotFoundException(
+			    				String.format("'%s' not found.", imageFileNames.get(0)));
+			    	}
+//				}
 				
 				myZip.retrieveFile(imageFile);
 				this.textureArray.loadLayer(i, myZip, true);

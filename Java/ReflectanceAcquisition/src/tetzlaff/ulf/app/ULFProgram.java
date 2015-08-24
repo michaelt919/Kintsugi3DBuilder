@@ -1,5 +1,10 @@
 package tetzlaff.ulf.app;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.imageio.ImageIO;
+
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
@@ -21,6 +26,9 @@ public class ULFProgram
      */
     public static void main(String[] args) 
     {
+    	// Check for and print supported image formats (some are not as easy as you would think)
+    	checkSupportedImageFormats();
+    	
     	// Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
     	GLFWWindow window = new GLFWWindow(800, 800, "Unstructured Light Field Renderer", true, 4);
     	window.enableDepthTest();
@@ -46,11 +54,25 @@ public class ULFProgram
 
         // Make everything visible and start the event loop
     	window.show();
-        gui.show();
+        gui.showGUI();
 		app.run();
 
 		// The event loop has terminated so cleanup the windows and exit with a successful return code.
         GLFWWindow.closeAllWindows();
         System.exit(0);
+    }
+    
+    public static void checkSupportedImageFormats()
+    {
+    	Set<String> set = new HashSet<String>();
+    	
+        // Get list of all informal format names understood by the current set of registered readers
+        String[] formatNames = ImageIO.getReaderFormatNames();
+
+        for (int i = 0; i < formatNames.length; i++) {
+            set.add(formatNames[i].toLowerCase());
+        }
+
+        System.out.println("Supported image formats: " + set);    	
     }
 }

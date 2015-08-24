@@ -5,7 +5,6 @@ import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -252,6 +251,7 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 		this.bind();
 			
 		BufferedImage img = ImageIO.read(fileStream);
+		if(img == null) { throw new IOException("Error: Unsupported image format."); }
 		
 		if (layerIndex < 0 || layerIndex >= this.depth)
 		{
@@ -318,6 +318,9 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 			
 		BufferedImage colorImg = ImageIO.read(imageStream);
 		BufferedImage maskImg = ImageIO.read(maskStream);
+
+		if(colorImg == null) { throw new IOException("Error: Unsupported image format for color image."); }
+		if(maskImg == null) { throw new IOException("Error: Unsupported image format for mask image."); }
 		
 		if (layerIndex < 0 || layerIndex >= this.depth)
 		{
