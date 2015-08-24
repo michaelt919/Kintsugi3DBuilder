@@ -23,6 +23,23 @@ public class ZipWrapper
 		retrieveFile(file);
 	}
 	
+	public boolean exists(File file)
+	{
+		// Only works for normal files
+		if(file.exists()) return true;
+
+		// Might be in a zip file so try to retrieve it
+		try
+		{
+			InputStream stream = retrieveFile(file);
+			return (stream != null);
+		}
+		catch(IOException e)
+		{
+			return false;
+		}
+	}
+	
 	public InputStream retrieveFile(File file) throws IOException
 	{
 		try
@@ -37,13 +54,20 @@ public class ZipWrapper
 			String entryNameLong = zipName.substring(zipName.lastIndexOf("/")+1) + "/" + entryNameShort;
 			zipName += ".zip";
 			
+			// Open the most probable zip and look for the file in the two valid locations
 			if(myZip == null) myZip = new ZipFile(zipName);
-			
 			myZipEntry = myZip.getEntry(entryNameShort);
 			if(myZipEntry == null) myZipEntry = myZip.getEntry(entryNameLong);
+
+			// Did we find it?
 			if(myZipEntry != null)
 			{
 				input = myZip.getInputStream(myZipEntry);
+			}			
+			else
+			{
+				System.err.printf("File not found in folder or zip (%s, %s).\n",
+						file.getPath(), zipName);
 			}
 		}
 		

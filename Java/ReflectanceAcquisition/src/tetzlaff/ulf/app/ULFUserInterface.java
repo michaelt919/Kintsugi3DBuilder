@@ -424,7 +424,7 @@ public class ULFUserInterface
 	 * Set this GUI to be visible.  Should be called once after it's construction but before
 	 * the start of the main event loop.
 	 */
-	public void show()
+	public void showGUI()
 	{
 		frame.setVisible(true);
 	}
