@@ -586,15 +586,4 @@ public class ULFConfigFrame extends JFrame {
 			});
 		}
 	}
-	
-	/**
-	 * Convenience method that overrides the default show() method so it is compatible with the
-	 * show method from ULFUserInterface (which was the old GUI class). This makes the two
-	 * classes essentially interchangeable.
-	 */
-	@Override
-	public void show()
-	{
-		this.setVisible(true);
-	}
 }
