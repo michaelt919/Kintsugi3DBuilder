@@ -116,14 +116,14 @@ DiffuseFit fitDiffuse()
                 float weight = color.a * nDotV;
                 if (k != 0)
                 {
-                    vec3 error = color.rgb - fit.color * dot(fit.normal, light) ;//* attenuatedLightIntensity;
+                    vec3 error = color.rgb - fit.color * dot(fit.normal, light) * attenuatedLightIntensity;
                     weight *= exp(-dot(error,error)/(2*delta*delta));
                 }
                     
                 a += weight * outerProduct(light, light);
                 //b += weight * outerProduct(light, vec4(color.rgb / attenuatedLightIntensity, 0.0));
-                b += weight * outerProduct(light, color.rgb );// / attenuatedLightIntensity);
-                weightedSum += weight * vec4(color.rgb /* / attenuatedLightIntensity*/, 1.0);
+                b += weight * outerProduct(light, color.rgb / attenuatedLightIntensity);
+                weightedSum += weight * vec4(color.rgb / attenuatedLightIntensity, 1.0);
                 nDotLSum += weight * max(0, dot(geometricNormal, light));
             }
         }
