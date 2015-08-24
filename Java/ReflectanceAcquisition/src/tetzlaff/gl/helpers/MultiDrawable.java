@@ -13,7 +13,7 @@ import tetzlaff.helpers.SelectableList;
  * is also itself a Drawable and will keep all its members updated and will draw the currently
  * 'active' Drawable in the collection.
  *
- * @param <T> The type of the objects stored in the container (must extend/implement Drawable)
+ * @param <T> The type of the objects stored in the container (must implement Drawable)
  * @see Drawable
  * @author Michael Tetzlaff
  */

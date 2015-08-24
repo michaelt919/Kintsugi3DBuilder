@@ -17,7 +17,7 @@ public class TextureFitProgram
 	        {
 	        	OpenGLContext context = new GLFWWindow(800, 800, "Texture Generation");
 	    		new TextureFitExecutor<OpenGLContext>(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(), 
-	    				gui.getRescaleDirectory(), gui.getOutputDirectory(), gui.getParameters())
+	    				gui.getRescaleDirectory(), gui.getOutputDirectory(), gui.getLightOffset(), gui.getLightIntensity(), gui.getParameters())
 	    				.execute();
 		        GLFWWindow.closeAllWindows();
 		        System.out.println("Process terminated with no errors.");

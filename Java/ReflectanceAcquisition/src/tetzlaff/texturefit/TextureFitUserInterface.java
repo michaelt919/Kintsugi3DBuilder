@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -23,6 +24,8 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import tetzlaff.gl.helpers.Vector3;
 
 public class TextureFitUserInterface
 {
@@ -48,7 +51,9 @@ public class TextureFitUserInterface
 	private JSpinner textureSubdivSpinner;
 	private JCheckBox imagePreprojUseCheckBox;
 	private JCheckBox imagePreprojGenCheckBox;
-	
+
+	private JSpinner[] lightOffsetSpinners;
+	private JSpinner[] lightIntensitySpinners;
 	private JSpinner diffuseDeltaSpinner;
 	private JSpinner diffuseIterationsSpinner;
 	private JSpinner diffuseCompNormalSpinner;
@@ -173,6 +178,26 @@ public class TextureFitUserInterface
 		return spinner;
 	}
 	
+	private JSpinner[] addUIVectorField(JPanel panel, String name, Vector3 defaultValue, double minValue, double maxValue, double stepSize)
+	{
+		Box box = new Box(BoxLayout.X_AXIS);
+		JLabel label = new JLabel(name + ":");
+		label.setPreferredSize(new Dimension(256, 16));
+		box.add(label);
+		SpinnerNumberModel modelX = new SpinnerNumberModel(defaultValue.x, minValue, maxValue, stepSize);
+		JSpinner spinnerX = new JSpinner(modelX);
+		box.add(spinnerX);
+		SpinnerNumberModel modelY = new SpinnerNumberModel(defaultValue.y, minValue, maxValue, stepSize);
+		JSpinner spinnerY = new JSpinner(modelY);
+		box.add(spinnerY);
+		SpinnerNumberModel modelZ = new SpinnerNumberModel(defaultValue.z, minValue, maxValue, stepSize);
+		JSpinner spinnerZ = new JSpinner(modelZ);
+		box.add(spinnerZ);
+		box.setBorder(new EmptyBorder(5, 10, 5, 10));
+		panel.add(box);
+		return new JSpinner[] { spinnerX, spinnerY, spinnerZ };
+	}
+	
 	private JCheckBox addUICheckBoxField(JPanel panel, String name, boolean checked)
 	{
 		JCheckBox checkBox = new JCheckBox(name, checked);
@@ -206,7 +231,7 @@ public class TextureFitUserInterface
 		maskDirectoryPicker = addDirectoryPicker(filePanel, "Select Masks...");
 		rescaleDirectoryPicker = addDirectoryPicker(filePanel, "Rescale Directory...");
 		outputDirectoryPicker = addDirectoryPicker(filePanel, "Output Directory...");
-		tabbedPane.addTab("Files and Directories", filePanel);
+		tabbedPane.addTab("Files", filePanel);
 		
 		JPanel samplingPanel = new JPanel();
 		samplingPanel.setLayout(new BoxLayout(samplingPanel, BoxLayout.Y_AXIS));
@@ -221,18 +246,22 @@ public class TextureFitUserInterface
 		textureSubdivSpinner = addUIValueField(samplingPanel, "Texture Subdivision", defaults.getTextureSubdivision(), 1.0f, 8192.0f, 1.0f);
 		imagePreprojGenCheckBox = addUICheckBoxField(samplingPanel, "Generate Pre-projected images", defaults.isImagePreprojectionGenerationEnabled());
 		imagePreprojUseCheckBox = addUICheckBoxField(samplingPanel, "Use Pre-projected images", defaults.isImagePreprojectionUseEnabled());
-		tabbedPane.addTab("Sampling Parameters", samplingPanel);
+		tabbedPane.addTab("Sampling", samplingPanel);
 		
 		JPanel diffusePanel = new JPanel();
 		diffusePanel.setLayout(new BoxLayout(diffusePanel, BoxLayout.Y_AXIS));
 		//diffusePanel.setBorder(new TitledBorder("Diffuse Fitting Parameters"));
+		
+		lightOffsetSpinners = addUIVectorField(diffusePanel, "Light Offset", new Vector3(0.0f, 0.0f, 0.0f), -99.0f, 99.0f, 0.001f);
+		lightIntensitySpinners = addUIVectorField(diffusePanel, "Light Intensity", new Vector3(1.0f, 1.0f, 1.0f), 0.0f, 9999.0f, 0.001f);
+				
 		diffuseDeltaSpinner = addUIValueField(diffusePanel, "Delta", defaults.getDiffuseDelta(), 0.0f, 1.0f, 0.01f);
 		diffuseIterationsSpinner = addUIValueField(diffusePanel, "Iterations", defaults.getDiffuseIterations(), 0.0f, 999.0f, 1.0f);
 		diffuseCompNormalSpinner = addUIValueField(diffusePanel, "Computed Normal Weight", Math.min(9999.0f, defaults.getDiffuseComputedNormalWeight()), 0.0f, 9999.0f, 0.1f);
 		diffuseCompNormalInfCheckBox = addUICheckBoxField(diffusePanel, "(infinite)", defaults.getDiffuseComputedNormalWeight() >= Float.MAX_VALUE);
 		diffuseInputNormalSpinner = addUIValueField(diffusePanel, "Input Normal Weight", Math.min(9999.0f, defaults.getDiffuseInputNormalWeight()),  0.0f, 9999.0f, 0.1f);
 		diffuseInputNormalInfCheckBox = addUICheckBoxField(diffusePanel, "(infinite)", defaults.getDiffuseInputNormalWeight() >= Float.MAX_VALUE);
-		tabbedPane.addTab("Diffuse Fitting Parameters", diffusePanel);
+		tabbedPane.addTab("Lights/Diffuse", diffusePanel);
 		
 		JPanel specularPanel = new JPanel();
 		specularPanel.setLayout(new BoxLayout(specularPanel, BoxLayout.Y_AXIS));
@@ -248,7 +277,7 @@ public class TextureFitUserInterface
 		specDefaultRoughSpinner = addUIValueField(specularPanel,"Default Roughness Weight", defaults.getSpecularInputNormalDefaultRoughnessWeight(), 0.0f, 1.0f, 0.01f);
 		defaultRoughnessSpinner = addUIValueField(specularPanel,"Default Specular Roughness", defaults.getDefaultSpecularRoughness(), 0.0f, 10.0f, 0.01f);
 		roughnessCapSpinner = addUIValueField(specularPanel,"Specular Roughness Cap", defaults.getSpecularRoughnessCap(), 0.0f, 10.0f, 0.01f);
-		tabbedPane.addTab("Specular Fitting Parameters", specularPanel);
+		tabbedPane.addTab("Specular", specularPanel);
 		
 		JSpinner.NumberEditor cameraVisBiasNumberEditor = new JSpinner.NumberEditor(cameraVisBiasSpinner, "0.0000");
 		cameraVisBiasSpinner.setEditor(cameraVisBiasNumberEditor);
@@ -303,6 +332,22 @@ public class TextureFitUserInterface
 	public File getOutputDirectory()
 	{
 		return outputDirectoryPicker.file;
+	}
+	
+	public Vector3 getLightOffset()
+	{
+		return new Vector3(
+			getValueAsFloat(this.lightOffsetSpinners[0]),
+			getValueAsFloat(this.lightOffsetSpinners[1]),
+			getValueAsFloat(this.lightOffsetSpinners[2]));
+	}
+	
+	public Vector3 getLightIntensity()
+	{
+		return new Vector3(
+			getValueAsFloat(this.lightIntensitySpinners[0]),
+			getValueAsFloat(this.lightIntensitySpinners[1]),
+			getValueAsFloat(this.lightIntensitySpinners[2]));
 	}
 	
 	private float getValueAsFloat(JSpinner spinner)

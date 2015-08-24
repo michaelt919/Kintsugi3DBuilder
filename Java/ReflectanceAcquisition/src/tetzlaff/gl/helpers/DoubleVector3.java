@@ -1,7 +1,7 @@
 package tetzlaff.gl.helpers;
 
 /**
- * A vector of two dimensions (for linear algebra calculations) backed by 
+ * A vector of three dimensions (for linear algebra calculations) backed by 
  * 64-bit floats.  This is an immutable object.
  * 
  * @author Michael Tetzlaff
