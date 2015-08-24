@@ -7,6 +7,7 @@ syntax: glob
 .recommenders
 .project
 .DS_Store
+doc/*
 syntax: regexp
 ^Java/ReflectanceAcquisition/modelTesting\.nb$
 syntax: regexp
