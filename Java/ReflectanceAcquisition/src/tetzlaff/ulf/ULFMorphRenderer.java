@@ -16,6 +16,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	private ContextType context;
 	private Program<ContextType> program;
     private File lfmFile;
+    private ULFLoadOptions loadOptions;
     private Trackball trackball;
     private String id;
 
@@ -23,11 +24,12 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	private List<ULFRenderer<ContextType>> stages;
 	private int currentStage;
 
-	public ULFMorphRenderer(ContextType context, Program<ContextType> program, File lfmFile, Trackball trackball) throws FileNotFoundException 
+	public ULFMorphRenderer(ContextType context, Program<ContextType> program, File lfmFile, ULFLoadOptions loadOptions, Trackball trackball) throws FileNotFoundException 
 	{
 		this.context = context;
 		this.program = program;
 		this.lfmFile = lfmFile;
+		this.loadOptions = loadOptions;
 		this.trackball = trackball;
 		
 		this.id = lfmFile.getParentFile().getName();
@@ -61,7 +63,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 			while (scanner.hasNextLine())
 			{
 				String vsetFileName = scanner.nextLine();
-				stages.add(new ULFRenderer<ContextType>(context, program, new File(directory, vsetFileName), trackball));
+				stages.add(new ULFRenderer<ContextType>(context, program, new File(directory, vsetFileName), loadOptions, trackball));
 			}
 			scanner.close();
 			

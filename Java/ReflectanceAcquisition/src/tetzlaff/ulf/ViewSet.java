@@ -20,9 +20,13 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Context;
+import tetzlaff.gl.Texture;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
+import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix3;
@@ -59,8 +63,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Vector3> lightIntensityList,
 		List<Integer> lightIndexList,
 		List<String> imageFileNames, 
-		File imageFilePath,
-		boolean loadImages,
+		ViewSetImageOptions imageOptions,
 		float recommendedNearPlane,
 		float recommendedFarPlane,
 		ContextType context) throws IOException
@@ -76,7 +79,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		this.recommendedNearPlane = recommendedNearPlane;
 		this.recommendedFarPlane = recommendedFarPlane;
 		
-		this.filePath = imageFilePath;
+		this.filePath = imageOptions.getFilePath();
 		
 		// Store the poses in a uniform buffer
 		if (cameraPoseList != null && cameraPoseList.size() > 0)
@@ -182,10 +185,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		}
 		
 		// Read the images from a file
-		if (loadImages && imageFilePath != null && imageFileNames != null && imageFileNames.size() > 0)
+		if (imageOptions.isLoadingRequested() && imageOptions.getFilePath() != null && imageFileNames != null && imageFileNames.size() > 0)
 		{
 			Date timestamp = new Date();
-			File imageFile = new File(imageFilePath, imageFileNames.get(0));
+			File imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(0));
 			ZipWrapper myZip = new ZipWrapper(imageFile);
 			
 //			if (!myZip.exists(imageFile))
@@ -213,14 +216,33 @@ public class ViewSet<ContextType extends Context<ContextType>>
 						imageFileNames.get(0)));				
 			}
 			
-			this.textureArray = context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), imageFileNames.size())
-									.setLinearFilteringEnabled(true)
-									.setMipmapsEnabled(false)
-									.createTexture();
+			ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder = 
+					context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), imageFileNames.size());
+			
+			if (imageOptions.isCompressionRequested())
+			{
+				textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
+			}
+			else
+			{
+				textureArrayBuilder.setInternalFormat(ColorFormat.RGBA8);
+			}
+			
+			if (imageOptions.areMipmapsRequested())
+			{
+				textureArrayBuilder.setMipmapsEnabled(true);
+			}
+			else
+			{
+				textureArrayBuilder.setMipmapsEnabled(false);
+			}
+			
+			textureArrayBuilder.setLinearFilteringEnabled(true);
+			textureArray = textureArrayBuilder.createTexture();
 			
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
-				imageFile = new File(imageFilePath, imageFileNames.get(i));
+				imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
 //				if (!myZip.exists(imageFile))
 //				{
 //					String[] filenameParts = imageFileNames.get(i).split("\\.");
@@ -280,12 +302,17 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			textureArray.delete();
 		}
 	}
+	
+	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(File vsetFile, ContextType context) throws IOException
+	{
+		return ViewSet.loadFromVSETFile(vsetFile, new ViewSetImageOptions(null, false, false, false), context);
+	}
 
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(File file, boolean loadImages, ContextType context) throws IOException
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(File vsetFile, ViewSetImageOptions imageOptions, ContextType context) throws IOException
 	{
 		Date timestamp = new Date();
 
-		ZipWrapper myZip = new ZipWrapper(file);		
+		ZipWrapper myZip = new ZipWrapper(vsetFile);		
 		InputStream input = myZip.getInputStream();
 		if(input == null)
 		{
@@ -416,12 +443,17 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		
 		scanner.close();
 		myZip.close();
+		
+		if (imageOptions.getFilePath() == null)
+		{
+			imageOptions.setFilePath(vsetFile.getParentFile());
+		}
 
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
 		return new ViewSet<ContextType>(
 			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, 
-			imageFileNames, file.getParentFile(), loadImages, recommendedNearPlane, recommendedFarPlane, context);
+			imageFileNames, imageOptions, recommendedNearPlane, recommendedFarPlane, context);
 	}
 	
 	private static class Sensor
@@ -470,13 +502,13 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    }
 	}
 
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(File file, File imageDirectory, ContextType context) throws IOException
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(File file, ViewSetImageOptions imageOptions, ContextType context) throws IOException
 	{
-		return loadFromAgisoftXMLFile(file, imageDirectory, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), context);
+		return loadFromAgisoftXMLFile(file, imageOptions, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), context);
 	}
 	
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
-		File file, File imageDirectory, Vector3 lightOffset, Vector3 lightIntensity, ContextType context) throws IOException
+		File file, ViewSetImageOptions imageOptions, Vector3 lightOffset, Vector3 lightIntensity, ContextType context) throws IOException
 	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
@@ -792,7 +824,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 
         float farPlane = findFarPlane(cameraPoseList);
         return new ViewSet<ContextType>(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
-        		imageFileNames, imageDirectory, imageDirectory != null, farPlane / 16.0f, farPlane, context);
+        		imageFileNames, imageOptions, farPlane / 16.0f, farPlane, context);
     }
 	
 	private static float findFarPlane(List<Matrix4> cameraPoseList)

@@ -168,7 +168,7 @@ class OpenGLProgram implements Resource, Program<OpenGLContext>
 		}
 		else
 		{
-			throw new IllegalArgumentException("'textur' must be of type OpenGLTexture.");
+			throw new IllegalArgumentException("'texture' must be of type OpenGLTexture.");
 		}
 	}
 	
@@ -455,7 +455,7 @@ class OpenGLProgram implements Resource, Program<OpenGLContext>
 		{
 			this.useForUniformAssignment(); 
 			
-			glUniformMatrix4(location, false, value.asFloatBuffer());
+			glUniformMatrix4fv(location, false, value.asFloatBuffer());
 			this.context.openGLErrorCheck();
 			
 			return true;

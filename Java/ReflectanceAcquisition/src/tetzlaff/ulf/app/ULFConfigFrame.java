@@ -31,8 +31,12 @@ import javax.swing.UIManager;
 
 import tetzlaff.ulf.ULFDrawable;
 import tetzlaff.ulf.ULFListModel;
+import tetzlaff.ulf.ULFLoadOptions;
 import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFMorphRenderer;
+import tetzlaff.ulf.ViewSetImageOptions;
+
+import javax.swing.border.BevelBorder;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
@@ -66,58 +70,152 @@ public class ULFConfigFrame extends JFrame {
 		setResizable(false);
 		setTitle("Light Field Config");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(10, 10, 309, 449);
+		setBounds(10, 10, 309, 476);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		
 		JPanel loadingPanel = new JPanel();
-		loadingPanel.setToolTipText("Options for loading and changing the current object");
-		loadingPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Model Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		loadingPanel.setBorder(new TitledBorder(null, "Load Options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		contentPane.add(loadingPanel);
 		GridBagLayout gbl_loadingPanel = new GridBagLayout();
-		gbl_loadingPanel.columnWidths = new int[] {0, 0, 0};
-		gbl_loadingPanel.rowHeights = new int[]{29, 0, 0, 0};
-		gbl_loadingPanel.columnWeights = new double[]{1.0, 1.0, Double.MIN_VALUE};
-		gbl_loadingPanel.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_loadingPanel.columnWidths = new int[] {140, 140};
+		gbl_loadingPanel.rowHeights = new int[] {0, 0, 0};
+		gbl_loadingPanel.columnWeights = new double[]{1.0, 0.0};
+		gbl_loadingPanel.rowWeights = new double[]{0.0, 1.0, 0.0};
 		loadingPanel.setLayout(gbl_loadingPanel);
 		
+		JCheckBox chckbxCompressImages = new JCheckBox("Compress Images");
+		chckbxCompressImages.setSelected(true);
+		GridBagConstraints gbc_chckbxCompressImages = new GridBagConstraints();
+		gbc_chckbxCompressImages.anchor = GridBagConstraints.WEST;
+		gbc_chckbxCompressImages.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxCompressImages.gridx = 0;
+		gbc_chckbxCompressImages.gridy = 0;
+		loadingPanel.add(chckbxCompressImages, gbc_chckbxCompressImages);
+		
+		JCheckBox chckbxUseMipmaps = new JCheckBox("Use Mipmaps");
+		chckbxUseMipmaps.setSelected(true);
+		GridBagConstraints gbc_chckbxUseMipmaps = new GridBagConstraints();
+		gbc_chckbxUseMipmaps.anchor = GridBagConstraints.WEST;
+		gbc_chckbxUseMipmaps.insets = new Insets(0, 0, 5, 0);
+		gbc_chckbxUseMipmaps.gridx = 1;
+		gbc_chckbxUseMipmaps.gridy = 0;
+		loadingPanel.add(chckbxUseMipmaps, gbc_chckbxUseMipmaps);
+		
+		JPanel panel = new JPanel();
+		panel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		GridBagConstraints gbc_panel = new GridBagConstraints();
+		gbc_panel.gridwidth = 2;
+		gbc_panel.insets = new Insets(0, 0, 5, 5);
+		gbc_panel.fill = GridBagConstraints.VERTICAL;
+		gbc_panel.gridx = 0;
+		gbc_panel.gridy = 1;
+		loadingPanel.add(panel, gbc_panel);
+		GridBagLayout gbl_panel = new GridBagLayout();
+		gbl_panel.columnWidths = new int[] {68, 68, 68, 68};
+		gbl_panel.rowHeights = new int[] {0, 0};
+		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0};
+		gbl_panel.rowWeights = new double[]{0.0, 0.0};
+		panel.setLayout(gbl_panel);
+		
+		JCheckBox chckbxGenerateDepthImages = new JCheckBox("Generate depth images for visibility testing");
+		chckbxGenerateDepthImages.setSelected(true);
+		GridBagConstraints gbc_chckbxGenerateDepthImages = new GridBagConstraints();
+		gbc_chckbxGenerateDepthImages.gridwidth = 4;
+		gbc_chckbxGenerateDepthImages.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxGenerateDepthImages.anchor = GridBagConstraints.NORTHWEST;
+		gbc_chckbxGenerateDepthImages.gridx = 0;
+		gbc_chckbxGenerateDepthImages.gridy = 0;
+		panel.add(chckbxGenerateDepthImages, gbc_chckbxGenerateDepthImages);
+		
+		JLabel lblWidth = new JLabel("Width:");
+		GridBagConstraints gbc_lblWidth = new GridBagConstraints();
+		gbc_lblWidth.insets = new Insets(0, 0, 0, 5);
+		gbc_lblWidth.gridx = 0;
+		gbc_lblWidth.gridy = 1;
+		panel.add(lblWidth, gbc_lblWidth);
+		
+		JSpinner spinnerDepthWidth = new JSpinner();
+		spinnerDepthWidth.setModel(new SpinnerNumberModel(new Integer(1024), new Integer(1), null, new Integer(1)));
+		GridBagConstraints gbc_spinnerDepthWidth = new GridBagConstraints();
+		gbc_spinnerDepthWidth.fill = GridBagConstraints.HORIZONTAL;
+		gbc_spinnerDepthWidth.insets = new Insets(0, 0, 0, 5);
+		gbc_spinnerDepthWidth.gridx = 1;
+		gbc_spinnerDepthWidth.gridy = 1;
+		panel.add(spinnerDepthWidth, gbc_spinnerDepthWidth);
+		
+		JLabel lblHeight = new JLabel("Height:");
+		GridBagConstraints gbc_lblHeight = new GridBagConstraints();
+		gbc_lblHeight.insets = new Insets(0, 0, 0, 5);
+		gbc_lblHeight.gridx = 2;
+		gbc_lblHeight.gridy = 1;
+		panel.add(lblHeight, gbc_lblHeight);
+		
+		JSpinner spinnerDepthHeight = new JSpinner();
+		spinnerDepthHeight.setModel(new SpinnerNumberModel(new Integer(1024), new Integer(1), null, new Integer(1)));
+		GridBagConstraints gbc_spinnerDepthHeight = new GridBagConstraints();
+		gbc_spinnerDepthHeight.fill = GridBagConstraints.HORIZONTAL;
+		gbc_spinnerDepthHeight.gridx = 3;
+		gbc_spinnerDepthHeight.gridy = 1;
+		panel.add(spinnerDepthHeight, gbc_spinnerDepthHeight);
+		
 		JButton btnLoadSingle = new JButton("Load Single...");
-		btnLoadSingle.setToolTipText("Load a single object");
 		GridBagConstraints gbc_btnLoadSingle = new GridBagConstraints();
-		gbc_btnLoadSingle.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnLoadSingle.insets = new Insets(0, 0, 5, 5);
+		gbc_btnLoadSingle.anchor = GridBagConstraints.NORTH;
+		gbc_btnLoadSingle.insets = new Insets(0, 0, 0, 5);
 		gbc_btnLoadSingle.gridx = 0;
-		gbc_btnLoadSingle.gridy = 0;
+		gbc_btnLoadSingle.gridy = 2;
 		loadingPanel.add(btnLoadSingle, gbc_btnLoadSingle);
+		btnLoadSingle.setToolTipText("Load a single object");
 		
 		JButton btnLoadMultiple = new JButton("Load Multiple...");
-		btnLoadMultiple.setToolTipText("Load multiple objects");
 		GridBagConstraints gbc_btnLoadMultiple = new GridBagConstraints();
-		gbc_btnLoadMultiple.insets = new Insets(0, 0, 5, 0);
-		gbc_btnLoadMultiple.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnLoadMultiple.anchor = GridBagConstraints.NORTH;
 		gbc_btnLoadMultiple.gridx = 1;
-		gbc_btnLoadMultiple.gridy = 0;
+		gbc_btnLoadMultiple.gridy = 2;
 		loadingPanel.add(btnLoadMultiple, gbc_btnLoadMultiple);
+		btnLoadMultiple.setToolTipText("Load multiple objects");
+		
+		JPanel selectionPanel = new JPanel();
+		selectionPanel.setToolTipText("Options for loading and changing the current object");
+		selectionPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Model Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		contentPane.add(selectionPanel);
+		GridBagLayout gbl_selectionPanel = new GridBagLayout();
+		gbl_selectionPanel.columnWidths = new int[] {0, 0, 0};
+		gbl_selectionPanel.rowHeights = new int[] {0, 0};
+		gbl_selectionPanel.columnWeights = new double[]{1.0, 1.0, Double.MIN_VALUE};
+		gbl_selectionPanel.rowWeights = new double[]{0.0, 0.0};
+		selectionPanel.setLayout(gbl_selectionPanel);
 		
 		JComboBox<ULFDrawable> comboBoxObjects = new JComboBox<ULFDrawable>();
 		GridBagConstraints gbc_comboBoxObjects = new GridBagConstraints();
 		gbc_comboBoxObjects.gridwidth = 2;
-		gbc_comboBoxObjects.insets = new Insets(0, 0, 5, 5);
+		gbc_comboBoxObjects.insets = new Insets(0, 0, 5, 0);
 		gbc_comboBoxObjects.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboBoxObjects.gridx = 0;
-		gbc_comboBoxObjects.gridy = 1;
-		loadingPanel.add(comboBoxObjects, gbc_comboBoxObjects);
+		gbc_comboBoxObjects.gridy = 0;
+		selectionPanel.add(comboBoxObjects, gbc_comboBoxObjects);
 		
 		JSlider sliderObjects = new JSlider();
 		sliderObjects.setValue(0);
 		GridBagConstraints gbc_sliderObjects = new GridBagConstraints();
+		gbc_sliderObjects.insets = new Insets(0, 0, 5, 0);
 		gbc_sliderObjects.fill = GridBagConstraints.HORIZONTAL;
 		gbc_sliderObjects.gridwidth = 2;
 		gbc_sliderObjects.gridx = 0;
-		gbc_sliderObjects.gridy = 2;
-		loadingPanel.add(sliderObjects, gbc_sliderObjects);
+		gbc_sliderObjects.gridy = 1;
+		selectionPanel.add(sliderObjects, gbc_sliderObjects);
+		
+		// Add listener for changes to the morph slider.
+		sliderObjects.addChangeListener(e ->
+		{
+			if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
+			{
+				((ULFMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(sliderObjects.getValue());
+			}
+		});
 		
 		JPanel renderingOptionsPanel = new JPanel();
 		renderingOptionsPanel.setToolTipText("Options to control the ULF rendering algorithm");
@@ -178,7 +276,7 @@ public class ULFConfigFrame extends JFrame {
 		gbc_separator.gridy = 2;
 		renderingOptionsPanel.add(separator, gbc_separator);
 		
-		JCheckBox chckbxOcclusion = new JCheckBox("Occlusion");
+		JCheckBox chckbxOcclusion = new JCheckBox("Visibility Testing");
 		chckbxOcclusion.setSelected(true);
 		chckbxOcclusion.setToolTipText("Detect and eliminate views that are occluded");
 		GridBagConstraints gbc_chckbxOcclusion = new GridBagConstraints();
@@ -349,7 +447,92 @@ public class ULFConfigFrame extends JFrame {
 			model.getSelectedItem().setHalfResolution(isHighDPI);
 			chckbxHalfRes.setSelected(isHighDPI);
 		}
-
+		
+		// Add listener for the 'single' load button to read a single light field object.
+		btnLoadSingle.addActionListener(e -> 
+		{
+			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
+			fileChooser.setDialogTitle("Select a camera definition file");
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Agisoft Photoscan XML files", "xml"));
+			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("View Set files", "vset"));
+			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Zip files", "zip"));
+			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				File file = fileChooser.getSelectedFile();
+				if(file.getName().toUpperCase().endsWith(".ZIP"))
+				{
+					String vsetName = file.getPath();
+					vsetName = vsetName.replace(".zip", "/default.vset");
+					file = new File(vsetName);
+					System.out.printf("Zip file name converted to '%s'\n", vsetName);
+				}
+				
+				try 
+				{
+					ULFLoadOptions loadOptions = new ULFLoadOptions(
+							new ViewSetImageOptions(null, true, chckbxUseMipmaps.isSelected(), chckbxCompressImages.isSelected()),
+							chckbxGenerateDepthImages.isSelected(), (Integer)spinnerDepthWidth.getValue(), (Integer)spinnerDepthHeight.getValue());
+					
+					if (file.getName().toUpperCase().endsWith(".XML"))
+					{
+						JFileChooser meshChooser = new JFileChooser(file.getParentFile());
+						meshChooser.setDialogTitle("Select the corresponding mesh");
+						meshChooser.removeChoosableFileFilter(meshChooser.getAcceptAllFileFilter());
+						meshChooser.addChoosableFileFilter(new FileNameExtensionFilter("Wavefront OBJ files", "obj"));
+						
+						if (meshChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+						{
+							JFileChooser imageChooser = new JFileChooser(file.getParentFile());
+							imageChooser.setDialogTitle("Select the undistorted image directory");
+							imageChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+							
+							if (imageChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+							{
+								loadOptions.getImageOptions().setFilePath(imageChooser.getSelectedFile());
+								model.addFromAgisoftXMLFile(file, meshChooser.getSelectedFile(), loadOptions);
+							}
+						}
+					}
+					else
+					{
+						model.addFromVSETFile(file, loadOptions);
+						loadingBar.setIndeterminate(true);
+						loadingFrame.setVisible(true);
+					}
+				} 
+				catch (IOException ex) 
+				{
+					ex.printStackTrace();
+				}
+			}
+		});
+		
+		// Add listener for the 'morph' load button to read many light field objects.
+		btnLoadMultiple.addActionListener(e -> 
+		{
+			ULFLoadOptions loadOptions = new ULFLoadOptions(
+					new ViewSetImageOptions(null, true, chckbxUseMipmaps.isSelected(), chckbxCompressImages.isSelected()),
+					chckbxGenerateDepthImages.isSelected(), (Integer)spinnerDepthWidth.getValue(), (Integer)spinnerDepthHeight.getValue());
+			
+			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.setFileFilter(new FileNameExtensionFilter("Light Field Morph files (.lfm)", "lfm"));
+			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				try 
+				{
+					model.addMorphFromLFMFile(fileChooser.getSelectedFile(), loadOptions);
+					loadingBar.setIndeterminate(true);
+					loadingFrame.setVisible(true);
+				} 
+				catch (IOException ex) 
+				{
+					ex.printStackTrace();
+				}
+			}
+		});
+		
 		// Respond to combo box item changed event
 		comboBoxObjects.addItemListener(e ->
 		{
@@ -410,82 +593,6 @@ public class ULFConfigFrame extends JFrame {
 					sliderObjects.setMaximum(0);
 					sliderObjects.setValue(0);
 					sliderObjects.setEnabled(false);
-				}
-			}
-		});
-		
-		// Add listener for the 'single' load button to read a single light field object.
-		btnLoadSingle.addActionListener(e -> 
-		{
-			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
-			fileChooser.setDialogTitle("Select a camera definition file");
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Agisoft Photoscan XML files", "xml"));
-			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("View Set files", "vset"));
-			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Zip files", "zip"));
-			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-			{
-				File file = fileChooser.getSelectedFile();
-				if(file.getName().toUpperCase().endsWith(".ZIP"))
-				{
-					String vsetName = file.getPath();
-					vsetName = vsetName.replace(".zip", "/default.vset");
-					file = new File(vsetName);
-					System.out.printf("Zip file name converted to '%s'\n", vsetName);
-				}
-				
-				try 
-				{
-					if (file.getName().toUpperCase().endsWith(".XML"))
-					{
-						JFileChooser meshChooser = new JFileChooser(file.getParentFile());
-						meshChooser.setDialogTitle("Select the corresponding mesh");
-						meshChooser.removeChoosableFileFilter(meshChooser.getAcceptAllFileFilter());
-						meshChooser.addChoosableFileFilter(new FileNameExtensionFilter("Wavefront OBJ files", "obj"));
-						
-						if (meshChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-						{
-							JFileChooser imageChooser = new JFileChooser(file.getParentFile());
-							imageChooser.setDialogTitle("Select the undistorted image directory");
-							imageChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-							
-							if (imageChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-							{
-								model.addFromAgisoftXMLFile(file, meshChooser.getSelectedFile(), imageChooser.getSelectedFile());
-							}
-						}
-					}
-					else
-					{
-						model.addFromVSETFile(file);
-						loadingBar.setIndeterminate(true);
-						loadingFrame.setVisible(true);
-					}
-				} 
-				catch (IOException ex) 
-				{
-					ex.printStackTrace();
-				}
-			}
-		});
-		
-		// Add listener for the 'morph' load button to read many light field objects.
-		btnLoadMultiple.addActionListener(e -> 
-		{
-			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.setFileFilter(new FileNameExtensionFilter("Light Field Morph files (.lfm)", "lfm"));
-			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-			{
-				try 
-				{
-					model.addMorphFromLFMFile(fileChooser.getSelectedFile());
-					loadingBar.setIndeterminate(true);
-					loadingFrame.setVisible(true);
-				} 
-				catch (IOException ex) 
-				{
-					ex.printStackTrace();
 				}
 			}
 		});
@@ -555,15 +662,6 @@ public class ULFConfigFrame extends JFrame {
 		spinnerOccBias.addChangeListener(e ->
 		{
 			model.getSelectedItem().setOcclusionBias((Float)spinnerOccBias.getModel().getValue());
-		});
-		
-		// Add listener for changes to the morph slider.
-		sliderObjects.addChangeListener(e ->
-		{
-			if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
-			{
-				((ULFMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(sliderObjects.getValue());
-			}
 		});
 		
 		// Create callback monitor to show the loading window when the model is being read

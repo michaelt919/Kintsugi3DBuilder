@@ -16,20 +16,20 @@ public class ULFRendererList<ContextType extends Context<ContextType>> extends U
 	}
 	
 	@Override
-	protected ULFRenderer<ContextType> createFromVSETFile(File vsetFile) throws IOException
+	protected ULFRenderer<ContextType> createFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		return new ULFRenderer<ContextType>(context, program, vsetFile, trackball);
+		return new ULFRenderer<ContextType>(context, program, vsetFile, loadOptions, trackball);
 	}
 	
 	@Override
-	protected ULFRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory) throws IOException
+	protected ULFRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		return new ULFRenderer<ContextType>(context, program, xmlFile, meshFile, imageDirectory, trackball);
+		return new ULFRenderer<ContextType>(context, program, xmlFile, meshFile, loadOptions, trackball);
 	}
 	
 	@Override
-	protected ULFMorphRenderer<ContextType> createMorphFromLFMFile(File lfmFile) throws IOException
+	protected ULFMorphRenderer<ContextType> createMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		return new ULFMorphRenderer<ContextType>(context, program, lfmFile, trackball);
+		return new ULFMorphRenderer<ContextType>(context, program, lfmFile, loadOptions, trackball);
 	}
 }

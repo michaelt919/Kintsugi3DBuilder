@@ -44,14 +44,14 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
         }
 	}
 	
-	protected abstract ULFDrawable createFromVSETFile(File vsetFile) throws IOException;
-	protected abstract ULFRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory) throws IOException;
-	protected abstract ULFDrawable createMorphFromLFMFile(File lfmFile) throws IOException;
+	protected abstract ULFDrawable createFromVSETFile(File vsetFilee, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract ULFRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract ULFDrawable createMorphFromLFMFile(File lfmFilee, ULFLoadOptions loadOptions) throws IOException;
 
 	@Override
-	public ULFDrawable addFromVSETFile(File vsetFile) throws IOException
+	public ULFDrawable addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		ULFDrawable newItem = this.createFromVSETFile(vsetFile);
+		ULFDrawable newItem = this.createFromVSETFile(vsetFile, loadOptions);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
@@ -80,9 +80,9 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	}
 	
 	@Override
-	public ULFDrawable addFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory) throws IOException
+	public ULFDrawable addFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		ULFDrawable newItem = this.createFromAgisoftXMLFile(xmlFile, meshFile, imageDirectory);
+		ULFDrawable newItem = this.createFromAgisoftXMLFile(xmlFile, meshFile, loadOptions);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
@@ -111,9 +111,9 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	}
 
 	@Override
-	public ULFDrawable addMorphFromLFMFile(File lfmFile) throws IOException 
+	public ULFDrawable addMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException 
 	{
-		ULFDrawable newItem = this.createMorphFromLFMFile(lfmFile);
+		ULFDrawable newItem = this.createMorphFromLFMFile(lfmFile, loadOptions);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
