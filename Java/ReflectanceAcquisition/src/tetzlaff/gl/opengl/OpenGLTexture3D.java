@@ -54,15 +54,27 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 		@Override
 		public OpenGLTexture3D createTexture() 
 		{
+			int colorFormat;
+			if (this.isInternalFormatCompressed())
+			{
+				colorFormat = this.context.getOpenGLCompressionFormat(this.getInternalCompressionFormat());
+			}
+			else
+			{
+				colorFormat = this.context.getOpenGLInternalColorFormat(this.getInternalColorFormat());
+			}
+			
 			return new OpenGLTexture3D(
 					this.context,
 					this.textureTarget, 
 					this.getMultisamples(),
-					this.context.getOpenGLInternalColorFormat(this.getInternalFormat()), 
+					colorFormat, 
 					this.width,
 					this.height,
 					this.depth,
-					(this.getInternalFormat().dataType == DataType.SIGNED_INTEGER || this.getInternalFormat().dataType == DataType.UNSIGNED_INTEGER) ? GL_RGBA_INTEGER : GL_RGBA,
+					(!this.isInternalFormatCompressed() && 
+						(this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER || 
+							this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER)) ? GL_RGBA_INTEGER : GL_RGBA,
 					this.areMultisampleLocationsFixed(),
 					this.isLinearFilteringEnabled(),
 					this.areMipmapsEnabled());

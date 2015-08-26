@@ -1,6 +1,7 @@
 package tetzlaff.gl.builders.base;
 
 import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture;
 import tetzlaff.gl.builders.ColorTextureBuilder;
@@ -8,11 +9,22 @@ import tetzlaff.gl.builders.ColorTextureBuilder;
 public abstract class ColorTextureBuilderBase<ContextType extends Context<ContextType>, TextureType extends Texture<ContextType>> 
 	extends TextureBuilderBase<ContextType, TextureType> implements ColorTextureBuilder<ContextType, TextureType>
 {
-	private ColorFormat internalFormat = ColorFormat.RGBA8;
+	private ColorFormat internalColorFormat = ColorFormat.RGBA8;
+	private CompressionFormat internalCompressionFormat = null;
 	
-	protected ColorFormat getInternalFormat()
+	protected ColorFormat getInternalColorFormat()
 	{
-		return internalFormat;
+		return internalColorFormat;
+	}
+	
+	protected CompressionFormat getInternalCompressionFormat()
+	{
+		return internalCompressionFormat;
+	}
+	
+	protected boolean isInternalFormatCompressed()
+	{
+		return internalCompressionFormat != null;
 	}
 	
 	protected ColorTextureBuilderBase(ContextType context)
@@ -23,7 +35,16 @@ public abstract class ColorTextureBuilderBase<ContextType extends Context<Contex
 	@Override
 	public ColorTextureBuilderBase<ContextType, TextureType> setInternalFormat(ColorFormat format)
 	{
-		internalFormat = format;
+		internalColorFormat = format;
+		internalCompressionFormat = null;
+		return this;
+	}
+	
+	@Override
+	public ColorTextureBuilderBase<ContextType, TextureType> setInternalFormat(CompressionFormat format)
+	{
+		internalColorFormat = null;
+		internalCompressionFormat = format;
 		return this;
 	}
 }

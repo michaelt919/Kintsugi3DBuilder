@@ -7,9 +7,9 @@ import javax.swing.ComboBoxModel;
 
 public interface ULFListModel extends ComboBoxModel<ULFDrawable>
 {
-	ULFDrawable addFromVSETFile(File vsetFile) throws IOException;
-	ULFDrawable addFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory) throws IOException;
-	ULFDrawable addMorphFromLFMFile(File lfmFile) throws IOException;
+	ULFDrawable addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException;
+	ULFDrawable addFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
+	ULFDrawable addMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException;
 	@Override
 	ULFDrawable getSelectedItem();
 	void setLoadingMonitor(ULFLoadingMonitor loadingMonitor);

@@ -13,6 +13,8 @@ import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.opengl.GL40.*;
 import static org.lwjgl.opengl.GL41.*;
 import static org.lwjgl.opengl.GL43.*;
+import static org.lwjgl.opengl.EXTTextureCompressionS3TC.*;
+import static org.lwjgl.opengl.EXTTextureSRGB.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,6 +26,7 @@ import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.BufferAccessFrequency;
 import tetzlaff.gl.BufferAccessType;
 import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.IndexBuffer;
@@ -696,6 +699,26 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 					return GL_R16;
 				}
 			}
+		}
+	}
+	
+	
+	
+	protected int getOpenGLCompressionFormat(CompressionFormat format)
+	{
+		switch(format)
+		{
+		case RED_4BPP: return GL_COMPRESSED_RED_RGTC1;
+		case SIGNED_RED_4BPP: return GL_COMPRESSED_SIGNED_RED_RGTC1;
+		case RED_4BPP_GREEN_4BPP: return GL_COMPRESSED_RG_RGTC2;
+		case SIGNED_RED_4BPP_GREEN_4BPP: return GL_COMPRESSED_SIGNED_RG_RGTC2;
+		case RGB_4BPP: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+		case SRGB_4BPP: return GL_COMPRESSED_SRGB_S3TC_DXT1_EXT;
+		case RGB_PUNCHTHROUGH_ALPHA1_4BPP: return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT; 
+		case SRGB_PUNCHTHROUGH_ALPHA1_4BPP: return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT; 
+		case RGB_4BPP_ALPHA_4BPP: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+		case SRGB_4BPP_ALPHA_4BPP: return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
+		default: throw new IllegalArgumentException("Unsupported compression format.");
 		}
 	}
 	

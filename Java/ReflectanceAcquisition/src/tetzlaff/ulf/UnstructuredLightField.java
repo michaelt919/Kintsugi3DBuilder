@@ -68,7 +68,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	}
 
 	public static <ContextType extends Context<ContextType>>
-		UnstructuredLightField<ContextType> loadFromAgisoftXMLFile(File xmlFile, File meshFile, File imageDirectory, ContextType context) throws IOException
+		UnstructuredLightField<ContextType> loadFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions, ContextType context) throws IOException
 	{
 		ViewSet<ContextType> viewSet;
 		VertexMesh proxy;
@@ -76,10 +76,10 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 		
 		File directoryPath = xmlFile.getParentFile();
         proxy = new VertexMesh("OBJ", meshFile); // TODO don't have geometry filename hard-coded
-        viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, imageDirectory, context);
+        viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, loadOptions.getImageOptions(), context);
         VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(proxy.getVertices());
         
-        if (imageDirectory != null)
+        if (loadOptions.getImageOptions().getFilePath() != null)
         {
 	        // Build depth textures for each view
 	    	int width = viewSet.getTextures().getWidth();
@@ -137,11 +137,11 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	public static <ContextType extends Context<ContextType>>
 		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, ContextType context) throws IOException
 	{
-		return UnstructuredLightField.loadFromVSETFile(vsetFile, context, true);
+		return UnstructuredLightField.loadFromVSETFile(vsetFile, new ULFLoadOptions(new ViewSetImageOptions(null, false, false, false), false, 0, 0), context);
 	}
 
 	public static <ContextType extends Context<ContextType>>
-		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, ContextType context, boolean loadImages) throws IOException
+		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, ULFLoadOptions loadOptions, ContextType context) throws IOException
 	{
 		ViewSet<ContextType> viewSet;
 		VertexMesh proxy;
@@ -149,18 +149,22 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 		
 		File directoryPath = vsetFile.getParentFile();
         proxy = new VertexMesh("OBJ", new File(directoryPath, "manifold.obj")); // TODO don't have geometry filename hard-coded
-        viewSet = ViewSet.loadFromVSETFile(vsetFile, loadImages, context);
+        viewSet = ViewSet.loadFromVSETFile(vsetFile, loadOptions.getImageOptions(), context);
         VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(proxy.getVertices());
         
-        if (loadImages)
+        if (loadOptions.areDepthImagesRequested())
         {
 	        // Build depth textures for each view
-	    	int width = viewSet.getTextures().getWidth();
-	    	int height = viewSet.getTextures().getHeight();
-	    	depthTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
+	    	//int width = viewSet.getTextures().getWidth();
+	    	//int height = viewSet.getTextures().getHeight();
+	    	depthTextures = 
+    			context.get2DDepthTextureArrayBuilder(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCameraPoseCount())
+	    			.createTexture();
 	    	
 	    	// Don't automatically generate any texture attachments for this framebuffer object
-	    	FramebufferObject<ContextType> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
+	    	FramebufferObject<ContextType> depthRenderingFBO = 
+    			context.getFramebufferObjectBuilder(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
+	    			.createFramebufferObject();
 	    	
 	    	// Load the program
 	    	Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()

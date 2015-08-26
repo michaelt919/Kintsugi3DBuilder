@@ -76,7 +76,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	if (fileExt.equalsIgnoreCase("vset"))
     	{
     		System.out.println("Loading from VSET file.");
-    		viewSet = ViewSet.loadFromVSETFile(vsetFile, false, context);
+    		viewSet = ViewSet.loadFromVSETFile(vsetFile, context);
     	}
     	else if (fileExt.equalsIgnoreCase("xml"))
     	{

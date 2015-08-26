@@ -111,10 +111,20 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 				}
 			}
 			
+			int colorFormat;
+			if (this.isInternalFormatCompressed())
+			{
+				colorFormat = this.context.getOpenGLCompressionFormat(this.getInternalCompressionFormat());
+			}
+			else
+			{
+				colorFormat = this.context.getOpenGLInternalColorFormat(this.getInternalColorFormat());
+			}
+			
 			return new OpenGLTexture2D(
 					this.context,
 					this.textureTarget, 
-					this.context.getOpenGLInternalColorFormat(this.getInternalFormat()), 
+					colorFormat, 
 					width,
 					height,
 					GL_BGRA,
@@ -146,10 +156,20 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		@Override
 		public OpenGLTexture2D createTexture() 
 		{
+			int colorFormat;
+			if (this.isInternalFormatCompressed())
+			{
+				colorFormat = this.context.getOpenGLCompressionFormat(this.getInternalCompressionFormat());
+			}
+			else
+			{
+				colorFormat = this.context.getOpenGLInternalColorFormat(this.getInternalColorFormat());
+			}
+			
 			return new OpenGLTexture2D(
 					this.context,
 					this.textureTarget, 
-					this.context.getOpenGLInternalColorFormat(this.getInternalFormat()), 
+					colorFormat, 
 					this.width,
 					this.height,
 					this.format,
@@ -177,14 +197,26 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		@Override
 		public OpenGLTexture2D createTexture() 
 		{
+			int colorFormat;
+			if (this.isInternalFormatCompressed())
+			{
+				colorFormat = this.context.getOpenGLCompressionFormat(this.getInternalCompressionFormat());
+			}
+			else
+			{
+				colorFormat = this.context.getOpenGLInternalColorFormat(this.getInternalColorFormat());
+			}
+			
 			return new OpenGLTexture2D(
 					this.context,
 					this.textureTarget, 
 					this.getMultisamples(),
-					this.context.getOpenGLInternalColorFormat(this.getInternalFormat()), 
+					colorFormat, 
 					this.width,
 					this.height,
-					(this.getInternalFormat().dataType == DataType.SIGNED_INTEGER || this.getInternalFormat().dataType == DataType.UNSIGNED_INTEGER) ? GL_RGBA_INTEGER : GL_RGBA,
+					(!this.isInternalFormatCompressed() && 
+						(this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER || 
+							this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER)) ? GL_RGBA_INTEGER : GL_RGBA,
 					this.areMultisampleLocationsFixed(),
 					this.isLinearFilteringEnabled(),
 					this.areMipmapsEnabled());

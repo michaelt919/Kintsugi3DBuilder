@@ -2,7 +2,8 @@ package tetzlaff.window.glfw;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
-import static org.lwjgl.system.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.Callbacks.errorCallbackDescriptionString;
 
 import java.nio.ByteBuffer;
 
@@ -10,9 +11,8 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
-import org.lwjgl.system.glfw.ErrorCallback.StrAdapter;
-import org.lwjgl.system.glfw.GLFWvidmode;
-import org.lwjgl.system.glfw.WindowCallback;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWvidmode;
 
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;
@@ -55,13 +55,12 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 
 	public GLFWWindow(int width, int height, String title, int x, int y, boolean resizable, int multisamples) 
 	{
-		Sys.touch();
-		glfwSetErrorCallback(new StrAdapter() 
+		glfwSetErrorCallback(new GLFWErrorCallback() 
 		{
 			@Override
-			public void invoke(int error, String description) 
+			public void invoke(int error, long description) 
 			{
-				throw new GLFWException(description);
+				throw new GLFWException(errorCallbackDescriptionString(description));
 			}
 		});
 		 
@@ -88,7 +87,6 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
         }
         
         GLFWWindowCallback callback = new GLFWWindowCallback(this);
-        WindowCallback.set(handle, callback);
         this.listenerManager = callback;
 
         ByteBuffer vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
