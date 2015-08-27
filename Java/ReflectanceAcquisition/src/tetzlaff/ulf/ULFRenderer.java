@@ -176,7 +176,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	
     	renderable.program().setUniform("gamma", this.lightField.settings.getGamma());
     	renderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
-    	renderable.program().setUniform("occlusionEnabled", this.lightField.settings.isOcclusionEnabled());
+    	renderable.program().setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
     	renderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
     	
     	if(halfResEnabled) {
@@ -299,11 +299,13 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.renderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
     	this.renderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
     	this.renderable.program().setUniform("cameraPoseCount", lightField.viewSet.getCameraPoseCount());
-    	this.renderable.program().setTexture("depthTextures", lightField.depthTextures);
-    	
+    	if (lightField.depthTextures != null)
+		{
+    		this.renderable.program().setTexture("depthTextures", lightField.depthTextures);
+		}
     	this.renderable.program().setUniform("gamma", this.lightField.settings.getGamma());
     	this.renderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
-    	this.renderable.program().setUniform("occlusionEnabled", this.lightField.settings.isOcclusionEnabled());
+    	this.renderable.program().setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
     	this.renderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
     	
 		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
