@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferObject;
@@ -12,6 +13,8 @@ import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
+import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
@@ -182,7 +185,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	if(halfResEnabled) {
 	    	// Do first pass at half resolution to off-screen buffer
 			this.halfResFBO = context.getFramebufferObjectBuilder(size.width/2, size.height/2)
-					.addColorAttachment().addDepthAttachment().createFramebufferObject();
+					.addColorAttachment(new ColorAttachmentSpec(ColorFormat.RGB8)
+						.setLinearFilteringEnabled(true)
+						) //.setMultisamples(4, true)) // TODO why doesn't this work?
+					.addDepthAttachment(new DepthAttachmentSpec(16, false)
+						) //.setMultisamples(4, true))
+					.createFramebufferObject();
 			
 			halfResFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
 	    	halfResFBO.clearDepthBuffer();

@@ -29,6 +29,8 @@ public abstract class AttachmentSpec
 	
 	public AttachmentSpec setMultisamples(int samples, boolean fixedSampleLocations)
 	{
+		// TODO should this be a property of the framebuffer object builder?
+		// Having different number of samples per attachment is not allowed.
 		multisamples = samples;
 		fixedMultisampleLocations = fixedSampleLocations;
 		return this;
