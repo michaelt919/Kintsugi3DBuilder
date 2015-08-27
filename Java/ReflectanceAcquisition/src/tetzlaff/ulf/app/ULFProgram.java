@@ -26,6 +26,9 @@ public class ULFProgram
      */
     public static void main(String[] args) 
     {
+    	// Touch the environment so it is valid
+    	System.getenv();
+    	
     	// Check for and print supported image formats (some are not as easy as you would think)
     	checkSupportedImageFormats();
     	

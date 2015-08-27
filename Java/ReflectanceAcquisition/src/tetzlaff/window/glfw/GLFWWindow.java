@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -63,14 +64,14 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 				throw new GLFWException(errorCallbackDescriptionString(description));
 			}
 		});
-		 
+		
         if ( glfwInit() != GL11.GL_TRUE )
         {
             throw new GLFWException("Unable to initialize GLFW.");
         }
  
         glfwDefaultWindowHints();
-        
+                
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
@@ -299,6 +300,7 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 	public void makeContextCurrent()
 	{
 		glfwMakeContextCurrent(handle);
+		GL.createCapabilities(false);
 	}
 	
 	@Override
