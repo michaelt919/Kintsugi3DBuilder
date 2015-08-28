@@ -3,10 +3,11 @@ package tetzlaff.interactive;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 public class InteractiveApplication
 {
-	private ArrayList<EventPollable> pollable;
+	private List<EventPollable> pollable;
 	private Refreshable refreshable;
 	
 	public InteractiveApplication(EventPollable pollable, Refreshable refreshable) 
