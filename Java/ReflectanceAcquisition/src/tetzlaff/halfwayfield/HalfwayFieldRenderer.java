@@ -91,8 +91,14 @@ public class HalfwayFieldRenderer<ContextType extends Context<ContextType>> impl
 	public void cleanup() 
 	{
 		ulfRenderer.cleanup();
-		halfwayField.diffuseTexture.delete();
-		halfwayField.normalTexture.delete();
+		if (halfwayField.diffuseTexture != null)
+		{
+			halfwayField.diffuseTexture.delete();
+		}
+		if (halfwayField.normalTexture != null)
+		{
+			halfwayField.normalTexture.delete();
+		}
 	}
 
 	@Override

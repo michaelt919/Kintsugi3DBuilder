@@ -188,9 +188,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		{
 			Date timestamp = new Date();
 			File imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(0));
-			ZipWrapper myZip = new ZipWrapper(imageFile);
+			//ZipWrapper myZip = new ZipWrapper(imageFile);
 			
-			if (!myZip.exists(imageFile))
+			if (!imageFile.exists())
+			//if (!myZip.exists(imageFile))
 			{
 				System.err.printf("Warning: Image '%s' not found, trying '.png' extension instead.\n",
 								  imageFileNames.get(0));
@@ -198,9 +199,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		    	filenameParts[filenameParts.length - 1] = "png";
 		    	String pngFileName = String.join(".", filenameParts);
 		    	imageFile = new File(imageOptions.getFilePath(), pngFileName);
-		    	myZip = new ZipWrapper(imageFile);
+		    	//myZip = new ZipWrapper(imageFile);
 		    	
-		    	if(!myZip.exists(imageFile))
+		    	if (!imageFile.exists())
+		    	//if(!myZip.exists(imageFile))
 		    	{
 		    		throw new FileNotFoundException(
 		    				String.format("'%s' not found.", imageFileNames.get(0)));
@@ -208,7 +210,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			}
 			
 			// Read a single image to get the dimensions for the texture array
-			InputStream input = myZip.getInputStream();			
+			InputStream input = new FileInputStream(imageFile);//myZip.getInputStream();			
 			BufferedImage img = ImageIO.read(input);
 			if(img == null)
 			{
@@ -243,22 +245,25 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
 				imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
-				if (!myZip.exists(imageFile))
+				if (!imageFile.exists())
+				//if (!myZip.exists(imageFile))
 				{
 					String[] filenameParts = imageFileNames.get(i).split("\\.");
 			    	filenameParts[filenameParts.length - 1] = "png";
 			    	String pngFileName = String.join(".", filenameParts);
 			    	imageFile = new File(imageOptions.getFilePath(), pngFileName);
 
-			    	if(!myZip.exists(imageFile))
+			    	if (!imageFile.exists())
+			    	//if(!myZip.exists(imageFile))
 			    	{
 			    		throw new FileNotFoundException(
 			    				String.format("'%s' not found.", imageFileNames.get(0)));
 			    	}
 				}
 				
-				myZip.retrieveFile(imageFile);
-				this.textureArray.loadLayer(i, myZip, true);
+				//myZip.retrieveFile(imageFile);
+				//this.textureArray.loadLayer(i, myZip, true);
+				this.textureArray.loadLayer(i, imageFile, true);
 			}
 
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
