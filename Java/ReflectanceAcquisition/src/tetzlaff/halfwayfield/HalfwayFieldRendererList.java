@@ -17,6 +17,7 @@ public class HalfwayFieldRendererList<ContextType extends Context<ContextType>> 
 	public HalfwayFieldRendererList(ContextType context, Program<ContextType> program, Trackball viewTrackball, Trackball lightTrackball) 
 	{
 		super(context, program, viewTrackball);
+		this.lightTrackball = lightTrackball;
 	}
 	
 	@Override
