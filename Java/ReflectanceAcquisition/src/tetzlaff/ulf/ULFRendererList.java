@@ -4,15 +4,16 @@ import java.io.File;
 import java.io.IOException;
 
 import tetzlaff.gl.Context;
+import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.Trackball;
 
 public class ULFRendererList<ContextType extends Context<ContextType>> extends ULFDrawableListModel<ContextType>
 {
 	private static final long serialVersionUID = -8199166231586786343L;
 
-	public ULFRendererList(ContextType context, Trackball trackball) 
+	public ULFRendererList(ContextType context, Program<ContextType> program, Trackball trackball) 
 	{
-		super(context, trackball);
+		super(context, program, trackball);
 	}
 	
 	@Override

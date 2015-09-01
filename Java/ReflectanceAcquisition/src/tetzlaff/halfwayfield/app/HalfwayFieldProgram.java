@@ -1,4 +1,4 @@
-package tetzlaff.ulf.app;
+package tetzlaff.halfwayfield.app;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,8 +18,8 @@ import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.halfwayfield.HalfwayFieldRendererList;
 import tetzlaff.interactive.InteractiveApplication;
-import tetzlaff.ulf.ULFRendererList;
 import tetzlaff.window.glfw.GLFWWindow;
 
 /**
@@ -28,7 +28,7 @@ import tetzlaff.window.glfw.GLFWWindow;
  * 
  * @author Michael Tetzlaff
  */
-public class ULFProgram
+public class HalfwayFieldProgram
 {
     /**
      * The main entry point for the Unstructured Light Field (ULF) renderer application.
@@ -44,20 +44,23 @@ public class ULFProgram
     	checkSupportedImageFormats();
 
     	// Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
-    	GLFWWindow window = new GLFWWindow(800, 800, "Unstructured Light Field Renderer", true, 4);
+    	GLFWWindow window = new GLFWWindow(800, 800, "Unstructured Halfway Field Renderer", true, 4);
     	window.enableDepthTest();
 
     	// Add a trackball controller to the window for rotating the object (also responds to mouse scrolling)
     	// This is the 'controller' in the MVC arrangement.
-    	Trackball trackball = new Trackball(1.0f);
-        trackball.addAsWindowListener(window);
-        
-        Program<OpenGLContext> program;
+    	Trackball viewTrackball = new Trackball(1.0f, 0, -1, true);
+    	viewTrackball.addAsWindowListener(window);
+    	
+    	Trackball lightTrackball = new Trackball(1.0f, 1, -1, false);
+    	lightTrackball.addAsWindowListener(window);
+
+    	Program<OpenGLContext> program;
         try
         {
     		program = window.getShaderProgramBuilder()
     				.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ulr.frag"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/uhfr.frag"))
     				.createProgram();
         }
         catch (IOException e)
@@ -70,28 +73,28 @@ public class ULFProgram
         // This is the object that loads the ULF models and handles drawing them.  This object abstracts
         // the underlying data and provides ways of triggering events via the trackball and the user
         // interface later when it is passed to the ULFUserInterface object.
-        ULFRendererList<OpenGLContext> model = new ULFRendererList<OpenGLContext>(window, program, trackball);
+        HalfwayFieldRendererList<OpenGLContext> model = new HalfwayFieldRendererList<OpenGLContext>(window, program, viewTrackball, lightTrackball);
 
     	// Create a new application to run our event loop and give it the GLFWWindow for polling
     	// of events and the OpenGL context.  The ULFRendererList provides the drawable.
         InteractiveApplication app = InteractiveGraphics.createApplication(window, window, model.getDrawable());
 
-        // Fire up the Qt Interface
-		// Prepare the Qt GUI system
-        QApplication.initialize(args);
-        QCoreApplication.setOrganizationName("UW Stout");
-        QCoreApplication.setOrganizationDomain("uwstout.edu");
-        QCoreApplication.setApplicationName("PhotoScan Helper");
-        
-        // As far as I can tell, the OS X native menu bar doesn't work in Qt Jambi
-        // The Java process owns the native menu bar and won't relinquish it to Qt
-        QApplication.setAttribute(ApplicationAttribute.AA_DontUseNativeMenuBar);
+//        // Fire up the Qt Interface
+//		// Prepare the Qt GUI system
+//        QApplication.initialize(args);
+//        QCoreApplication.setOrganizationName("UW Stout");
+//        QCoreApplication.setOrganizationDomain("uwstout.edu");
+//        QCoreApplication.setApplicationName("PhotoScan Helper");
+//        
+//        // As far as I can tell, the OS X native menu bar doesn't work in Qt Jambi
+//        // The Java process owns the native menu bar and won't relinquish it to Qt
+//        QApplication.setAttribute(ApplicationAttribute.AA_DontUseNativeMenuBar);
         
         // Create a user interface that examines the ULFRendererList for renderer settings and
         // selecting between different loaded models.
-        ULFConfigQWidget gui = new ULFConfigQWidget(model, window.isHighDPI(), null);
+        HalfwayFieldConfigFrame gui = new HalfwayFieldConfigFrame(model, window.isHighDPI());
         gui.showGUI();        
-        app.addPollable(gui);
+        //app.addPollable(gui); // Needed for Qt UI
         
     	// Make everything visible and start the event loop
     	window.show();
