@@ -228,6 +228,18 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	return this.cameraFile;
     }
     
+    public File getGeometryFile()
+    {
+    	if (this.lightField != null)
+    	{
+    		return this.lightField.viewSet.getGeometryFile();
+    	}
+    	else
+    	{
+    		throw new IllegalStateException("The geometry file cannot be determined until the renderer has been initialized.");
+    	}
+    }
+    
     public UnstructuredLightField<ContextType> getLightField()
     {
     	return this.lightField;

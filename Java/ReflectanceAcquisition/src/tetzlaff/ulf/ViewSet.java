@@ -190,21 +190,22 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			File imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(0));
 			ZipWrapper myZip = new ZipWrapper(imageFile);
 			
-//			if (!myZip.exists(imageFile))
-//			{
-//				System.err.printf("Warning: Image '%s' not found, trying '.png' extension instead.\n",
-//								  imageFileNames.get(0));
-//				String[] filenameParts = imageFileNames.get(0).split("\\.");
-//		    	filenameParts[filenameParts.length - 1] = "png";
-//		    	String pngFileName = String.join(".", filenameParts);
-//		    	imageFile = new File(imageFilePath, pngFileName);
+			if (!myZip.exists(imageFile))
+			{
+				System.err.printf("Warning: Image '%s' not found, trying '.png' extension instead.\n",
+								  imageFileNames.get(0));
+				String[] filenameParts = imageFileNames.get(0).split("\\.");
+		    	filenameParts[filenameParts.length - 1] = "png";
+		    	String pngFileName = String.join(".", filenameParts);
+		    	imageFile = new File(imageOptions.getFilePath(), pngFileName);
+		    	myZip = new ZipWrapper(imageFile);
 		    	
 		    	if(!myZip.exists(imageFile))
 		    	{
 		    		throw new FileNotFoundException(
 		    				String.format("'%s' not found.", imageFileNames.get(0)));
 		    	}
-//			}
+			}
 			
 			// Read a single image to get the dimensions for the texture array
 			InputStream input = myZip.getInputStream();			
@@ -242,19 +243,19 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
 				imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
-//				if (!myZip.exists(imageFile))
-//				{
-//					String[] filenameParts = imageFileNames.get(i).split("\\.");
-//			    	filenameParts[filenameParts.length - 1] = "png";
-//			    	String pngFileName = String.join(".", filenameParts);
-//			    	imageFile = new File(imageFilePath, pngFileName);
+				if (!myZip.exists(imageFile))
+				{
+					String[] filenameParts = imageFileNames.get(i).split("\\.");
+			    	filenameParts[filenameParts.length - 1] = "png";
+			    	String pngFileName = String.join(".", filenameParts);
+			    	imageFile = new File(imageOptions.getFilePath(), pngFileName);
 
 			    	if(!myZip.exists(imageFile))
 			    	{
 			    		throw new FileNotFoundException(
 			    				String.format("'%s' not found.", imageFileNames.get(0)));
 			    	}
-//				}
+				}
 				
 				myZip.retrieveFile(imageFile);
 				this.textureArray.loadLayer(i, myZip, true);
