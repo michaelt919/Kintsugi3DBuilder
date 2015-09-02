@@ -14,6 +14,7 @@ import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.gui.QCloseEvent;
 import com.trolltech.qt.gui.QFileDialog;
 import com.trolltech.qt.gui.QFileDialog.Filter;
+import com.trolltech.qt.gui.QMouseEvent;
 import com.trolltech.qt.gui.QWidget;
 
 public class ULFConfigQWidget extends QWidget implements EventPollable {
@@ -306,6 +307,18 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		widgetClosed = true;
 	}
 	
+	@Override
+	protected void mousePressEvent(QMouseEvent event) {
+		System.err.println("Qt: Mouse Press");
+		super.mousePressEvent(event);
+	}
+
+	@Override
+	protected void mouseReleaseEvent(QMouseEvent event) {
+		System.err.println("Qt: Mouse Release");
+		super.mouseReleaseEvent(event);
+	}
+
 	/**
 	 * This should be called once after the object is constructed but before the event loop is begun.
 	 * This is a convenience method so it is compatible with the ULFUserInterface class (which was the
