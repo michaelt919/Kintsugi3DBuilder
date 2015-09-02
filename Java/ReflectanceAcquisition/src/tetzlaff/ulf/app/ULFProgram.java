@@ -33,7 +33,6 @@ public class ULFProgram
     public static void main(String[] args) 
     {
     	System.getenv();
-    	System.setProperty("org.lwjgl.util.DEBUG", "true");
     	LWJGLUtil.initialize();
     	
     	// Check for and print supported image formats (some are not as easy as you would think)
@@ -72,11 +71,13 @@ public class ULFProgram
         // Create a user interface that examines the ULFRendererList for renderer settings and
         // selecting between different loaded models.
         ULFConfigQWidget gui = new ULFConfigQWidget(model, window.isHighDPI(), null);
-        gui.showGUI();        
+        gui.move(0, 0);
         app.addPollable(gui);
         
     	// Make everything visible and start the event loop
+        window.setWindowPosition(gui.size().width(), 0);
     	window.show();
+        gui.showGUI();
 		app.run();
 
 		// The event loop has terminated so cleanup the windows and exit with a successful return code.
