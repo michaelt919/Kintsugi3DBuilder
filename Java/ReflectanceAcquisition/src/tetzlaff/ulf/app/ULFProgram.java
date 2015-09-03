@@ -10,6 +10,9 @@ import org.lwjgl.LWJGLUtil;
 import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.core.Qt.ApplicationAttribute;
 import com.trolltech.qt.gui.QApplication;
+import com.trolltech.qt.gui.QMessageBox;
+import com.trolltech.qt.gui.QStyle;
+import com.trolltech.qt.osinfo.OSInfo.OS;
 
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
@@ -35,6 +38,8 @@ public class ULFProgram
     	System.getenv();
     	LWJGLUtil.initialize();
     	
+    	System.out.println("System: " + System.getProperty("os.name"));
+    	
     	// Check for and print supported image formats (some are not as easy as you would think)
     	checkSupportedImageFormats();
 
@@ -57,8 +62,11 @@ public class ULFProgram
     	// of events and the OpenGL context.  The ULFRendererList provides the drawable.
         InteractiveApplication app = InteractiveGraphics.createApplication(window, window, model.getDrawable());
 
-        // Fire up the Qt Interface
 		// Prepare the Qt GUI system
+        if(System.getProperty("os.name").startsWith("Windows")) {
+        	QApplication.setDesktopSettingsAware(false);
+        }
+        
         QApplication.initialize(args);
         QCoreApplication.setOrganizationName("UW Stout");
         QCoreApplication.setOrganizationDomain("uwstout.edu");
@@ -71,13 +79,37 @@ public class ULFProgram
         // Create a user interface that examines the ULFRendererList for renderer settings and
         // selecting between different loaded models.
         ULFConfigQWidget gui = new ULFConfigQWidget(model, window.isHighDPI(), null);
-        gui.move(0, 0);
         app.addPollable(gui);
         
-    	// Make everything visible and start the event loop
-        window.setWindowPosition(gui.size().width(), 0);
-    	window.show();
+        // Move windows to nice initial locations
+        gui.move(0, 0);
+        int titleBarHeight = 0;
+        int frameWidth = 0;
+        if(System.getProperty("os.name").startsWith("Windows")) {
+            titleBarHeight = QApplication.style().pixelMetric(QStyle.PixelMetric.PM_TitleBarHeight);
+            frameWidth = 12;        	
+        }
+        
+        window.setWindowPosition(gui.size().width() + 2*frameWidth, titleBarHeight);
+                
+        // Make everything visible (important things happen here for Qt and GLFW    
+        window.show();
         gui.showGUI();
+        
+        /* Doesn't work on Windows 8.1, just leaving out for now
+         * TODO: Need to find a reliable way to detect system scaling in Windows
+        // Warn about scaled GUIs on windows
+        if(System.getProperty("os.name").startsWith("Windows") && gui.physicalDpiX() != gui.logicalDpiX())
+        {
+        	QMessageBox.warning(gui, "Window Scaling Detected",
+        			"It appears you are using Windows OS scaling (common for HighDPI/Retina displays).\n" +
+        			"This may cause problems with the user interface.  We recommend disabling this option\n" +
+        			"and instead selecting a desktop resolution that is lower than the native resolution.\n\n" +
+        			"Scaling and resolution are set in the control panel 'Display' area.");
+        }
+        */
+
+        // Start the main event loop
 		app.run();
 
 		// The event loop has terminated so cleanup the windows and exit with a successful return code.

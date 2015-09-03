@@ -348,9 +348,7 @@ public class GLFWWindowCallback implements WindowListenerManager
 							if (focused == GL_TRUE)
 							{								
 								if(glfwGetMouseButton(windowHandle, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-									System.err.println("GLFW: Window focus gained by mouse click.");
-								} else {
-									System.err.println("GLFW: Window focus gained WITHOUT mouse click.");
+									System.err.println("GLFW: Window focus gained.");
 								}
 								
 								for (WindowFocusGainedListener listener : windowFocusGainedListeners)
@@ -501,11 +499,6 @@ public class GLFWWindowCallback implements WindowListenerManager
 									listener.mouseButtonReleased(window, button, new GLFWModifierKeys(mods));
 								}
 							}
-						}
-						else
-						{
-							if (action == GLFW_PRESS) { System.err.println("GLFW: Mouse pressed for other window."); }
-							else if(action == GLFW_RELEASE) { System.err.println("GLFW: Mouse released for other window."); }
 						}
 					}
 				});
