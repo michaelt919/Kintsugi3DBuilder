@@ -14,7 +14,6 @@ import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.gui.QCloseEvent;
 import com.trolltech.qt.gui.QFileDialog;
 import com.trolltech.qt.gui.QFileDialog.Filter;
-import com.trolltech.qt.gui.QMouseEvent;
 import com.trolltech.qt.gui.QWidget;
 
 public class ULFConfigQWidget extends QWidget implements EventPollable {

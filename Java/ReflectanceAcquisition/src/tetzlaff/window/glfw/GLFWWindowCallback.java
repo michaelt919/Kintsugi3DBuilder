@@ -347,10 +347,7 @@ public class GLFWWindowCallback implements WindowListenerManager
 						{
 							if (focused == GL_TRUE)
 							{								
-								if(glfwGetMouseButton(windowHandle, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-									System.err.println("GLFW: Window focus gained.");
-								}
-								
+								//System.err.println("GLFW: Window focus gained.");
 								for (WindowFocusGainedListener listener : windowFocusGainedListeners)
 								{
 									listener.windowFocusGained(window);
@@ -358,7 +355,7 @@ public class GLFWWindowCallback implements WindowListenerManager
 							}
 							else
 							{
-								System.err.println("GLFW: Window focus lost.");
+								//System.err.println("GLFW: Window focus lost.");
 								for (WindowFocusLostListener listener : windowFocusLostListeners)
 								{
 									listener.windowFocusLost(window);
@@ -485,7 +482,7 @@ public class GLFWWindowCallback implements WindowListenerManager
 						{
 							if (action == GLFW_PRESS)
 							{
-								System.err.println("GLFW: Mouse pressed.");
+								//System.err.println("GLFW: Mouse pressed.");
 								for (MouseButtonPressListener listener : mouseButtonPressListeners)
 								{
 									listener.mouseButtonPressed(window, button, new GLFWModifierKeys(mods));
@@ -493,7 +490,7 @@ public class GLFWWindowCallback implements WindowListenerManager
 							}
 							else if (action == GLFW_RELEASE)
 							{
-								System.err.println("GLFW: Mouse released.");
+								//System.err.println("GLFW: Mouse released.");
 								for (MouseButtonReleaseListener listener : mouseButtonReleaseListeners)
 								{
 									listener.mouseButtonReleased(window, button, new GLFWModifierKeys(mods));
@@ -529,7 +526,7 @@ public class GLFWWindowCallback implements WindowListenerManager
 						{
 							if (entered == GL_TRUE)
 							{
-								System.err.println("GLFW: Mouse entered.");
+								//System.err.println("GLFW: Mouse entered.");
 								for (CursorEnteredListener listener : cursorEnterListeners)
 								{
 									listener.cursorEntered(window);
@@ -537,7 +534,7 @@ public class GLFWWindowCallback implements WindowListenerManager
 							}
 							else
 							{
-								System.err.println("GLFW: Mouse exited.");
+								//System.err.println("GLFW: Mouse exited.");
 								for (CursorExitedListener listener : cursorExitListeners)
 								{
 									listener.cursorExited(window);
@@ -555,7 +552,7 @@ public class GLFWWindowCallback implements WindowListenerManager
 					{
 						if (windowHandle == window.getHandle())
 						{
-							System.err.println("GLFW: Mouse scrolled.");
+							//System.err.println("GLFW: Mouse scrolled.");
 							for (ScrollListener listener : scrollListeners)
 							{
 								listener.scroll(window, xoffset, yoffset);

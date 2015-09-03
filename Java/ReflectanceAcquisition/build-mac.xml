@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_app_bundle" name="Create Runnable Jar for Project ReflectanceAcquisition">
+	
+    <taskdef name="bundleapp"
+             classname="com.oracle.appbundler.AppBundlerTask"   
+             classpath="lib/appbundler-1.0.jar" />
+
+    <target name="create_app_bundle" depends="create_run_jar">
+        <bundleapp outputdirectory="./dist"
+            name="ULFRenderer"
+            displayname="ULF Renderer"
+            identifier="org.culturalheritageimaging.ULFRenderer"
+        	shortversion="1.0a"
+            mainclassname="tetzlaff.ulf.app.ULFProgram"
+        	icon="dist/icon.icns">
+			<!--<runtime dir="/Library/Java/JavaVirtualMachines/jdk1.8.0_20.jdk/Contents/Home" />-->
+        	<classpath dir="./dist">
+        		<include name="ULFRenderer.jar" />
+        		<include name="ULFRenderer_lib/*.jar" />
+        	</classpath>
+        	<librarypath dir="./dist">
+        		<include name="ULFRenderer_lib/native/*" />
+        	</librarypath>
+        	<option value="-XstartOnFirstThread"/>
+        	<!-- <option value="-Dapple.laf.useScreenMenuBar=true"/> -->
+        </bundleapp>
+	</target>
+	
+	<target name="create_run_jar">
+        <jar destfile="./dist/ULFRenderer.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="tetzlaff.ulf.app.ULFProgram"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="/Users/berriers/Programming/Bitbucket/kinectreflectancefields/Java/ReflectanceAcquisition/bin"/>
+        </jar>
+		<delete dir="./dist/ULFRenderer_lib/native"/>
+		<delete dir="./dist/ULFRenderer_lib"/>
+		<mkdir dir="./dist/ULFRenderer_lib"/>
+		<mkdir dir="./dist/ULFRenderer_lib/native"/>
+		<copy file="/Developer/java-deps/JAI-proxy/clibwrapper_jiio.jar" todir="./dist/ULFRenderer_lib"/>
+		<copy file="/Developer/java-deps/JAI-proxy/jai_imageio.jar" todir="./dist/ULFRenderer_lib"/>
+		<copy file="/Developer/java-deps/lwjgl-3.0.0b/jar/lwjgl.jar" todir="./dist/ULFRenderer_lib"/>
+		<copy file="/Developer/java-deps/Qt-Jambi-4.8.6/qtjambi-4.8.6.jar" todir="./dist/ULFRenderer_lib"/>
+		<copy file="/Developer/java-deps/Qt-Jambi-4.8.6/qtjambi-native-macosx-gcc-4.8.6.jar" todir="./dist/ULFRenderer_lib"/>
+		<copy todir="./dist/ULFRenderer_lib/native">
+    		<fileset dir="/Developer/java-deps/lwjgl-3.0.0b/native/" />
+		</copy>
+	</target>
+	
+</project>

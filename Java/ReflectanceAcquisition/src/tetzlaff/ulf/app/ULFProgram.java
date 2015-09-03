@@ -10,9 +10,7 @@ import org.lwjgl.LWJGLUtil;
 import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.core.Qt.ApplicationAttribute;
 import com.trolltech.qt.gui.QApplication;
-import com.trolltech.qt.gui.QMessageBox;
 import com.trolltech.qt.gui.QStyle;
-import com.trolltech.qt.osinfo.OSInfo.OS;
 
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
