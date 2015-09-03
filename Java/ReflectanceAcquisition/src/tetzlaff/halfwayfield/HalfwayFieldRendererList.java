@@ -23,7 +23,7 @@ public class HalfwayFieldRendererList<ContextType extends Context<ContextType>> 
 	@Override
 	protected HalfwayFieldRenderer<ContextType> createFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		return new HalfwayFieldRenderer<ContextType>(context, program, vsetFile, loadOptions, trackball, lightTrackball);
+		return new HalfwayFieldRenderer<ContextType>(context, program, vsetFile, null, loadOptions, trackball, lightTrackball);
 	}
 	
 	@Override

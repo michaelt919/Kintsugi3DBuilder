@@ -14,14 +14,11 @@ public class HalfwayField<ContextType extends Context<ContextType>>
 	public final Texture2D<ContextType> diffuseTexture;
 	public final Texture2D<ContextType> normalTexture;
 	
-	public HalfwayField(UnstructuredLightField<ContextType> ulf, ContextType context) throws IOException
+	public HalfwayField(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, ContextType context) throws IOException
 	{
 		this.ulf = ulf;
 		
-		File geometryDirectory = ulf.viewSet.getGeometryFile().getParentFile();
-		
-		File diffuseFile = new File(new File(geometryDirectory, "textures"), "diffuse.png");
-		if (diffuseFile.exists())
+		if (diffuseFile != null && diffuseFile.exists())
 		{
 			System.out.println("Diffuse texture found.");
 			diffuseTexture = context.get2DColorTextureBuilder(diffuseFile, true)
@@ -35,8 +32,7 @@ public class HalfwayField<ContextType extends Context<ContextType>>
 			diffuseTexture = null;
 		}
 		
-		File normalFile = new File(new File(geometryDirectory, "textures"), "normal.png");
-		if (normalFile.exists())
+		if (normalFile != null && normalFile.exists())
 		{
 			System.out.println("Normal texture found.");
 			normalTexture = context.get2DColorTextureBuilder(normalFile, true)

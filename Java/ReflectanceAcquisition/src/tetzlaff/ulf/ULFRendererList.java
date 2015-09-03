@@ -19,7 +19,7 @@ public class ULFRendererList<ContextType extends Context<ContextType>> extends U
 	@Override
 	protected ULFRenderer<ContextType> createFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		return new ULFRenderer<ContextType>(context, program, vsetFile, loadOptions, trackball);
+		return new ULFRenderer<ContextType>(context, program, vsetFile, null, loadOptions, trackball);
 	}
 	
 	@Override

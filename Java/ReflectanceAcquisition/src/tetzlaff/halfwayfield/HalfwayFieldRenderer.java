@@ -21,15 +21,7 @@ public class HalfwayFieldRenderer<ContextType extends Context<ContextType>> impl
 	private Trackball lightTrackball;
 	private ULFLoadingMonitor callback;
 	
-	public HalfwayFieldRenderer(ContextType context, Program<ContextType> program, File vsetFile, ULFLoadOptions loadOptions, Trackball viewTrackball, Trackball lightTrackball)
-    {
-		this.context = context;
-		this.program = program;
-		this.lightTrackball = lightTrackball;
-    	this.ulfRenderer = new ULFRenderer<ContextType>(context, program, vsetFile, loadOptions, viewTrackball);
-    }
-
-    public HalfwayFieldRenderer(ContextType context, Program<ContextType> program, File xmlFile, File meshFile, ULFLoadOptions loadOptions, Trackball viewTrackball, Trackball lightTrackball)
+	public HalfwayFieldRenderer(ContextType context, Program<ContextType> program, File xmlFile, File meshFile, ULFLoadOptions loadOptions, Trackball viewTrackball, Trackball lightTrackball)
     {
 		this.context = context;
 		this.program = program;
@@ -43,7 +35,9 @@ public class HalfwayFieldRenderer<ContextType extends Context<ContextType>> impl
 		ulfRenderer.initialize();
 		try
 		{
-			halfwayField = new HalfwayField<ContextType>(ulfRenderer.getLightField(), context);
+			halfwayField = new HalfwayField<ContextType>(ulfRenderer.getLightField(), 
+					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "diffuse.png"),
+					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "normal.png"), context);
 		}
 		catch(IOException e)
 		{
