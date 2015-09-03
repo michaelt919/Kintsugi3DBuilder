@@ -225,7 +225,6 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	private void on_modelComboBox_currentIndexChanged(int newIndex)
 	{
 		if(blockSignals) { return; }
-		System.out.println("Model changed");
 		model.setSelectedItem(model.getElementAt(newIndex));
 		onModelChanged();
 	}
@@ -261,7 +260,6 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	private void on_gammaSpinBox_valueChanged(double newValue)
 	{
 		if(blockSignals) { return; }
-		System.out.println("Gamma changed");
 		model.getSelectedItem().setGamma((float)newValue);
 	}
 	
@@ -269,7 +267,6 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	private void on_exponentSpinBox_valueChanged(double newValue)
 	{
 		if(blockSignals) { return; }
-		System.out.println("Exponent changed");
 		model.getSelectedItem().setWeightExponent((float)newValue);
 	}
 	
@@ -278,7 +275,6 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	private void on_halfResCheckBox_toggled(boolean isChecked)
 	{
 		if(blockSignals) { return; }
-		System.out.println("Half Res changed");
 		model.getSelectedItem().setHalfResolution(isChecked);
 	}
 
@@ -287,7 +283,6 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	private void on_visibilityCheckBox_toggled(boolean isChecked)
 	{
 		if(blockSignals) { return; }
-		System.out.println("Visibility changed");
 		model.getSelectedItem().setOcclusionEnabled(isChecked);
 	}
 	
@@ -296,7 +291,6 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	private void on_visibilityBiasSpinBox_valueChanged(double newValue)
 	{
 		if(blockSignals) { return; }
-		System.out.println("Bias changed");
 		model.getSelectedItem().setOcclusionBias((float)newValue);
 	}
 	
