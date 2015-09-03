@@ -4,6 +4,7 @@ import static org.lwjgl.opengl.GL20.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Scanner;
 
 import tetzlaff.gl.Shader;
@@ -19,7 +20,13 @@ class OpenGLShader implements Shader<OpenGLContext>
 	{
 		this.context = context;
 		
-		Scanner scanner = new Scanner(file);
+		InputStream is = getClass().getResourceAsStream("/shaders/" + file.getName());
+		if(is == null)
+		{
+			throw new FileNotFoundException("/shaders/" + file.getName() + " (no such file or resource)");
+		}
+		
+		Scanner scanner = new Scanner(is);
         scanner.useDelimiter("\\Z"); // EOF
         String source = scanner.next();
         scanner.close();
