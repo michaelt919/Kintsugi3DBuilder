@@ -7,6 +7,7 @@ import javax.swing.AbstractListModel;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
+import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.MultiDrawable;
 import tetzlaff.gl.helpers.Trackball;
@@ -22,18 +23,29 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	private int effectiveSize;
 	private ULFLoadingMonitor loadingMonitor;
 	
-	protected ULFDrawableListModel(ContextType context, Program<ContextType> program, Trackball trackball) 
+	public ULFDrawableListModel(ContextType context, Trackball trackball) 
 	{
 		this.context = context;
 		this.trackball = trackball;
 		this.ulfs = new MultiDrawable<ULFDrawable>();
 		this.effectiveSize = 0;
 		
-		this.program = program;
+		try
+        {
+    		this.program = context.getShaderProgramBuilder()
+    				.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/ulr.frag"))
+    				.createProgram();
+        }
+        catch (IOException e)
+        {
+        	e.printStackTrace();
+        	throw new IllegalStateException("The shader program could not be initialized.", e);
+        }
 	}
 	
 	protected abstract ULFDrawable createFromVSETFile(File vsetFilee, ULFLoadOptions loadOptions) throws IOException;
-	protected abstract ULFDrawable createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract ULFRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
 	protected abstract ULFDrawable createMorphFromLFMFile(File lfmFilee, ULFLoadOptions loadOptions) throws IOException;
 
 	@Override

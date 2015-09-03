@@ -24,7 +24,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private Program<ContextType> program;
     
     private File cameraFile;
-    private File geometryFile;
+    private File meshFile;
     private ULFLoadOptions loadOptions;
     private UnstructuredLightField<ContextType> lightField;
 	private ContextType context;
@@ -42,12 +42,21 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private File resampleVSETFile;
     private File resampleExportPath;
 
-    public ULFRenderer(ContextType context, Program<ContextType> program, File cameraFile, File meshFile, ULFLoadOptions loadOptions, Trackball trackball)
+    public ULFRenderer(ContextType context, Program<ContextType> program, File vsetFile, ULFLoadOptions loadOptions, Trackball trackball)
     {
     	this.context = context;
     	this.program = program;
-    	this.cameraFile = cameraFile;
-    	this.geometryFile = meshFile;
+    	this.cameraFile = vsetFile;
+    	this.loadOptions = loadOptions;
+    	this.trackball = trackball;
+    }
+
+    public ULFRenderer(ContextType context, Program<ContextType> program, File xmlFile, File meshFile, ULFLoadOptions loadOptions, Trackball trackball)
+    {
+    	this.context = context;
+    	this.program = program;
+    	this.cameraFile = xmlFile;
+    	this.meshFile = meshFile;
     	this.loadOptions = loadOptions;
     	this.trackball = trackball;
     }
@@ -95,15 +104,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	{
     		if (this.cameraFile.getName().toUpperCase().endsWith(".XML"))
     		{
-    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.geometryFile, this.loadOptions, this.context);
+    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.meshFile, this.loadOptions, this.context);
     		}
     		else
     		{
     			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.context);
-    			if (this.geometryFile == null)
-				{
-    				this.geometryFile = lightField.viewSet.getGeometryFile();
-				}
     		}
     		
 			if (this.callback != null)
@@ -221,11 +226,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     public File getVSETFile()
     {
     	return this.cameraFile;
-    }
-    
-    public File getGeometryFile()
-    {
-    	return this.geometryFile;
     }
     
     public UnstructuredLightField<ContextType> getLightField()

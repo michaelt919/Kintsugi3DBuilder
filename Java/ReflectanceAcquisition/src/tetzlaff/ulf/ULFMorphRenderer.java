@@ -63,7 +63,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 			while (scanner.hasNextLine())
 			{
 				String vsetFileName = scanner.nextLine();
-				stages.add(new ULFRenderer<ContextType>(context, program, new File(directory, vsetFileName), null, loadOptions, trackball));
+				stages.add(new ULFRenderer<ContextType>(context, program, new File(directory, vsetFileName), loadOptions, trackball));
 			}
 			scanner.close();
 			
