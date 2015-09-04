@@ -59,6 +59,9 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
     public QHBoxLayout horizontalLayout_7;
     public QSpacerItem horizontalSpacer;
     public QPushButton resampleButton;
+    public QHBoxLayout horizontalLayout_8;
+    public QSpacerItem horizontalSpacer_2;
+    public QToolButton reportBugButton;
     public QProgressBar loadingProgressBar;
     public QSpacerItem verticalSpacer;
 
@@ -367,6 +370,20 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
 
         verticalLayout_6.addWidget(resampleGroupBox);
 
+        horizontalLayout_8 = new QHBoxLayout();
+        horizontalLayout_8.setObjectName("horizontalLayout_8");
+        horizontalSpacer_2 = new QSpacerItem(40, 20, com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Minimum);
+
+        horizontalLayout_8.addItem(horizontalSpacer_2);
+
+        reportBugButton = new QToolButton(LightFieldConfigForm);
+        reportBugButton.setObjectName("reportBugButton");
+
+        horizontalLayout_8.addWidget(reportBugButton);
+
+
+        verticalLayout_6.addLayout(horizontalLayout_8);
+
         loadingProgressBar = new QProgressBar(LightFieldConfigForm);
         loadingProgressBar.setObjectName("loadingProgressBar");
         loadingProgressBar.setValue(24);
@@ -435,6 +452,7 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
         resampleDimensionsLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Dimensions:", null));
         resampleXLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "X", null));
         resampleButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Resample", null));
+        reportBugButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Report Bug", null));
     } // retranslateUi
 
 }
