@@ -19,7 +19,7 @@ import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
 
-public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable
+public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
     private Program<ContextType> program;
     
@@ -113,6 +113,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	
 	    	this.renderable = context.createRenderable(program);
 	    	this.renderable.addVertexBuffer("position", this.lightField.positionBuffer);
+	    	this.renderable.addVertexBuffer("normal", this.lightField.normalBuffer);
+	    	this.renderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
 	    				
 	    	this.simpleTexRenderable = context.createRenderable(simpleTexProgram);
 	    	this.simpleTexRenderable.addVertexBuffer("position", context.createRectangle());
@@ -368,5 +370,16 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 		{
 			context.disableMultisampling();			
 		}
+	}
+
+	@Override
+	public void setProgram(Program<ContextType> program) 
+	{
+		this.program = program;
+		
+		this.renderable = context.createRenderable(program);
+    	this.renderable.addVertexBuffer("position", this.lightField.positionBuffer);
+    	this.renderable.addVertexBuffer("normal", this.lightField.normalBuffer);
+    	this.renderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
 	}
 }

@@ -86,7 +86,7 @@ float getHalfwayFieldSampleWeight(int index)
 {
     // All in camera space
     vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
-    vec3 virtualViewDir =  normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
+    vec3 virtualViewDir = normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
     vec3 sampleViewDir = normalize(-fragmentPos);
     vec3 virtualLightDir = normalize((cameraPoses[index] * vec4(lightPos, 1.0)).xyz - fragmentPos);
     vec3 sampleLightDir = normalize(lightPositions[lightIndices[index]].xyz - fragmentPos);
@@ -162,7 +162,7 @@ vec4 extractSpecular(int index, vec4 color)
 {
     vec3 light = getLightVector(index);
     vec3 threshold = color.a * getDiffuseColor(normalize(light));
-    return vec4(max(vec3(0), color.rgb * dot(light, light) / getLightIntensity(index) - threshold),
+    return vec4(max(vec3(0), color.rgb /* * dot(light, light) / getLightIntensity(index)*/ - threshold),
         color.a);
 }
 
@@ -179,6 +179,25 @@ vec3 computeHalfwayField()
 void main()
 {
     vec3 lightDir = lightPos - fPosition;
-    fragColor = vec4(pow((getDiffuseColor(normalize(lightDir)) + computeHalfwayField())
-            * lightIntensity / dot(lightDir, lightDir), vec3(1 / gamma)), 1.0);
+    float nDotL;
+    if (useNormalTexture)
+    {
+        nDotL = max(0.0, dot(normalize(texture(normalMap, fTexCoord).xyz * 2 - vec3(1.0)), 
+                                normalize(lightDir)));
+    }
+    else
+    {
+        nDotL = max(0.0, dot(normalize(fNormal), normalize(lightDir)));
+    }
+    if (useDiffuseTexture)
+    {
+        fragColor = vec4(pow(nDotL * 
+            (pow(texture(diffuseMap, fTexCoord), vec4(gamma)).rgb + computeHalfwayField())
+            /* * lightIntensity / dot(lightDir, lightDir)*/, vec3(1 / gamma)), 1.0);
+    }
+    else
+    {
+        fragColor = vec4(pow(nDotL * computeHalfwayField()
+            /* * lightIntensity / dot(lightDir, lightDir)*/, vec3(1 / gamma)), 1.0);
+    }
 }

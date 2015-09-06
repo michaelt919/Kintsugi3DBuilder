@@ -23,19 +23,19 @@ public class HalfwayFieldRendererList<ContextType extends Context<ContextType>> 
 	@Override
 	protected HalfwayFieldRenderer<ContextType> createFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		return new HalfwayFieldRenderer<ContextType>(context, program, vsetFile, null, loadOptions, trackball, lightTrackball);
+		return new HalfwayFieldRenderer<ContextType>(context, this.getProgram(), vsetFile, null, loadOptions, trackball, lightTrackball);
 	}
 	
 	@Override
 	protected HalfwayFieldRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		return new HalfwayFieldRenderer<ContextType>(context, program, xmlFile, meshFile, loadOptions, trackball, lightTrackball);
+		return new HalfwayFieldRenderer<ContextType>(context, this.getProgram(), xmlFile, meshFile, loadOptions, trackball, lightTrackball);
 	}
 	
 	@Override
 	protected HalfwayFieldRenderer<ContextType> createMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException
 	{
 		throw new IllegalStateException("Morphs not supported for halfway field rendering.");
-		//return new ULFMorphRenderer<ContextType>(context, program, lfmFile, loadOptions, trackball, lightTrackball);
+		//return new ULFMorphRenderer<ContextType>(context, this.getProgram(), lfmFile, loadOptions, trackball, lightTrackball);
 	}
 }

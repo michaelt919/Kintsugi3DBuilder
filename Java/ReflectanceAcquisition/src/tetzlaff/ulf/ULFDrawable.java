@@ -3,9 +3,11 @@ package tetzlaff.ulf;
 import java.io.File;
 import java.io.IOException;
 
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.Drawable;
 
-public interface ULFDrawable extends Drawable
+public interface ULFDrawable<ContextType extends Context<ContextType>> extends Drawable
 {
 	void setOnLoadCallback(ULFLoadingMonitor callback);
 	
@@ -22,6 +24,8 @@ public interface ULFDrawable extends Drawable
 	
 	void setHalfResolution(boolean halfResEnabled);
 	void setMultisampling(boolean multisamplingEnabled);
+	
+	void setProgram(Program<ContextType> program);
 	
 	void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException;
 }

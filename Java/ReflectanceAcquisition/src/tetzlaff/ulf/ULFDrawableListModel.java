@@ -16,8 +16,8 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	private static final long serialVersionUID = 4167467314632694946L;
 	
 	protected final ContextType context;
-	protected final Program<ContextType> program;
 	protected final Trackball trackball;
+	private Program<ContextType> program;
 	private MultiDrawable<ULFDrawable> ulfs;
 	private int effectiveSize;
 	private ULFLoadingMonitor loadingMonitor;
@@ -35,6 +35,20 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	protected abstract ULFDrawable createFromVSETFile(File vsetFilee, ULFLoadOptions loadOptions) throws IOException;
 	protected abstract ULFDrawable createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
 	protected abstract ULFDrawable createMorphFromLFMFile(File lfmFilee, ULFLoadOptions loadOptions) throws IOException;
+	
+	public Program<ContextType> getProgram()
+	{
+		return this.program;
+	}
+	
+	public void setProgram(Program<ContextType> program)
+	{
+		this.program = program;
+		for (ULFDrawable ulf : ulfs)
+		{
+			ulf.setProgram(program);
+		}
+	}
 
 	@Override
 	public ULFDrawable addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException

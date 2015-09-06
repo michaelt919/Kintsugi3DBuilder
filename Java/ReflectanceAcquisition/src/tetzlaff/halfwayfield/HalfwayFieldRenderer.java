@@ -12,7 +12,7 @@ import tetzlaff.ulf.ULFLoadOptions;
 import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFRenderer;
 
-public class HalfwayFieldRenderer<ContextType extends Context<ContextType>> implements ULFDrawable 
+public class HalfwayFieldRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
 	private ContextType context;
 	private Program<ContextType> program;
@@ -77,7 +77,11 @@ public class HalfwayFieldRenderer<ContextType extends Context<ContextType>> impl
 			program.setTexture("normalMap", halfwayField.normalTexture);
 		}
 		program.setUniform("diffuseRemovalAmount", 1.0f);
-		program.setUniform("lightPos", new Vector3(lightTrackball.getRotationMatrix().getColumn(2)).times(lightTrackball.getScale()));
+		program.setUniform("lightPos", 
+				new Vector3(lightTrackball.getRotationMatrix().getColumn(2))
+					.times(lightTrackball.getScale())
+					.plus(ulfRenderer.getLightField().proxy.getCentroid()));
+		program.setUniform("lightIntensity", new Vector3(1.0f, 1.0f, 1.0f));
 		ulfRenderer.draw();
 	}
 
@@ -171,5 +175,12 @@ public class HalfwayFieldRenderer<ContextType extends Context<ContextType>> impl
 	public void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException 
 	{
 		ulfRenderer.requestResample(width, height, targetVSETFile, exportPath);
+	}
+
+	@Override
+	public void setProgram(Program<ContextType> program) 
+	{
+		this.program = program;
+		ulfRenderer.setProgram(program);
 	}
 }
