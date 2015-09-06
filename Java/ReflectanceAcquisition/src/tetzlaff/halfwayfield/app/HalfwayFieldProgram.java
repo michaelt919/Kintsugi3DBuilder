@@ -74,6 +74,27 @@ public class HalfwayFieldProgram
         // the underlying data and provides ways of triggering events via the trackball and the user
         // interface later when it is passed to the ULFUserInterface object.
         HalfwayFieldRendererList<OpenGLContext> model = new HalfwayFieldRendererList<OpenGLContext>(window, program, viewTrackball, lightTrackball);
+        
+        window.addCharacterListener((win, c) -> {
+        	if (c == 'r')
+        	{
+        		System.out.println("reloading program...");
+	        	// reload program
+	        	model.getProgram().delete();
+	        	try
+	        	{
+					Program<OpenGLContext> newProgram = window.getShaderProgramBuilder()
+							.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
+							.addShader(ShaderType.FRAGMENT, new File("shaders/uhfr.frag"))
+							.createProgram();
+		        	model.setProgram(newProgram);
+				} 
+	        	catch (Exception e) 
+	        	{
+					e.printStackTrace();
+				}
+        	}
+        });
 
     	// Create a new application to run our event loop and give it the GLFWWindow for polling
     	// of events and the OpenGL context.  The ULFRendererList provides the drawable.

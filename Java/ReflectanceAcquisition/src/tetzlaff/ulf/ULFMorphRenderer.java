@@ -11,7 +11,7 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.Trackball;
 
-public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable
+public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
 	private ContextType context;
 	private Program<ContextType> program;
@@ -215,5 +215,14 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 		{
 			context.disableMultisampling();			
 		}		
+	}
+
+	@Override
+	public void setProgram(Program<ContextType> program) 
+	{
+		for(ULFRenderer<ContextType> stage : stages)
+		{
+			stage.setProgram(program);
+		}
 	}
 }
