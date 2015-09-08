@@ -66,36 +66,12 @@ uniform LightIndices
 
 layout(location = 0) out vec4 fragColor;
 
-vec3 getLightVector(int index)
-{
-    return transpose(mat3(cameraPoses[index])) * 
-        (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition;
-}
-
-vec3 getLightIntensity(int index)
-{
-    return lightIntensities[lightIndices[index]];
-}
-
 float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
 {
 	return 1.0 / (1.0 - pow(max(0.0, dot(targetDir, sampleDir)), weightExponent)) - 1.0;
 }
 
-float getHalfwayFieldSampleWeight(int index)
-{
-    // All in camera space
-    vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
-    vec3 virtualViewDir = normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
-    vec3 sampleViewDir = normalize(-fragmentPos);
-    vec3 virtualLightDir = normalize((cameraPoses[index] * vec4(lightPos, 1.0)).xyz - fragmentPos);
-    vec3 sampleLightDir = normalize(lightPositions[lightIndices[index]].xyz - fragmentPos);
-    return computeSampleWeight(
-        normalize(virtualViewDir + virtualLightDir),
-        normalize(sampleViewDir + sampleLightDir));
-}
-
-vec4 getLightFieldSample(int index, bool useMipmaps)
+vec4 getProjTexSample(int index, bool useMipmaps)
 {
 	vec4 fragPos = cameraPoses[index] * vec4(fPosition, 1.0);
 	vec4 projTexCoord = cameraProjections[cameraProjectionIndices[index]] * fragPos;
@@ -133,45 +109,48 @@ vec4 getLightFieldSample(int index, bool useMipmaps)
 	}
 }
 
-vec3 getDiffuseColor(vec3 normal, vec3 light)
+float computeGeometricAttenuation(vec3 view, vec3 light, vec3 normal)
 {
-    return pow(texture(diffuseMap, fTexCoord), vec4(gamma)).rgb * max(0, dot(normal, light));
+    vec3 half = normalize(view + light);
+    return min(1.0, min(
+        2.0 * dot(half, normal) * dot(view, normal) / dot(view, half),
+        2.0 * dot(half, normal) * dot(light, normal) / dot(view, half)))
+        / (dot(light, normal) * dot(view, normal));
 }
 
-vec3 getDiffuseColor(vec3 light)
+vec4 computeMicrofacetDistributionSample(int index, vec3 diffuseAlbedo, vec3 normalDir)
 {
-    if (useDiffuseTexture)
-    {
-        if (useNormalTexture)
-        {
-            return diffuseRemovalAmount * 
-                getDiffuseColor(normalize(texture(normalMap, fTexCoord).xyz * 2 - vec3(1.0)), light);
-        }
-        else
-        {
-            return diffuseRemovalAmount * getDiffuseColor(normalize(fNormal), light);
-        }
-    }
-    else
-    {
-        return vec3(0); // assume metallic
-    }
+    // All in camera space
+    vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
+    vec3 virtualViewDir = normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
+    vec3 sampleViewDir = normalize(-fragmentPos);
+    vec3 virtualLightDir = normalize((cameraPoses[index] * vec4(lightPos, 1.0)).xyz - fragmentPos);
+    vec3 sampleLightDirUnnorm = lightPositions[lightIndices[index]].xyz - fragmentPos;
+    vec3 sampleLightDir = normalize(sampleLightDirUnnorm);
+    vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
+    vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
+    vec3 normalDirCameraSpace = (cameraPoses[index] * vec4(normalDir, 0.0)).xyz;
+    
+    // Compute sample weight
+    float weight = computeSampleWeight(virtualHalfDir, sampleHalfDir);
+    
+    vec4 sampleColor = getProjTexSample(index, true);
+    float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
+    float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
+
+    return nDotV * weight * vec4(max(vec3(0), sampleColor.rgb
+            /* * dot(sampleLightDirUnnorm, sampleLightDirUnnorm) / lightIntensities[lightIndices[index]]*/
+            - diffuseRemovalAmount * diffuseAlbedo * nDotL)
+            / computeGeometricAttenuation(sampleViewDir, sampleLightDir, normalDirCameraSpace), 
+        sampleColor.a * nDotL);
 }
 
-vec4 extractSpecular(int index, vec4 color)
-{
-    vec3 light = getLightVector(index);
-    vec3 threshold = color.a * getDiffuseColor(normalize(light));
-    return vec4(max(vec3(0), color.rgb /* * dot(light, light) / getLightIntensity(index)*/ - threshold),
-        color.a);
-}
-
-vec3 computeHalfwayField()
+vec3 computeMicrofacetDistribution(vec3 diffuseAlbedo, vec3 normalDir)
 {
 	vec4 sum = vec4(0.0);
 	for (int i = 0; i < cameraPoseCount; i++)
 	{
-        sum += getHalfwayFieldSampleWeight(i) * extractSpecular(i, getLightFieldSample(i, true));
+        sum += computeMicrofacetDistributionSample(i, diffuseAlbedo, normalDir);
 	}
 	return sum.rgb / sum.a;
 }
@@ -179,25 +158,36 @@ vec3 computeHalfwayField()
 void main()
 {
     vec3 lightDir = lightPos - fPosition;
-    float nDotL;
+    vec3 viewDir = fViewPos - fPosition;
+    
+    vec3 normalDir;
     if (useNormalTexture)
     {
-        nDotL = max(0.0, dot(normalize(texture(normalMap, fTexCoord).xyz * 2 - vec3(1.0)), 
-                                normalize(lightDir)));
+        normalDir = normalize(texture(normalMap, fTexCoord).xyz * 2 - vec3(1.0));
     }
     else
     {
-        nDotL = max(0.0, dot(normalize(fNormal), normalize(lightDir)));
+        normalDir = normalize(fNormal);
     }
+    float nDotL = max(0.0, dot(normalDir, normalize(lightDir)));
+    
+    vec3 diffuseAlbedo;
     if (useDiffuseTexture)
     {
-        fragColor = vec4(pow(nDotL * 
-            (pow(texture(diffuseMap, fTexCoord), vec4(gamma)).rgb + computeHalfwayField())
-            /* * lightIntensity / dot(lightDir, lightDir)*/, vec3(1 / gamma)), 1.0);
+        diffuseAlbedo = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
     }
     else
     {
-        fragColor = vec4(pow(nDotL * computeHalfwayField()
-            /* * lightIntensity / dot(lightDir, lightDir)*/, vec3(1 / gamma)), 1.0);
+        diffuseAlbedo = vec3(0.0);
     }
+    
+    vec3 specularReflectance;
+    if (nDotL > 0.0)
+    {
+        specularReflectance = computeMicrofacetDistribution(diffuseAlbedo, normalDir) 
+            * computeGeometricAttenuation(normalize(viewDir), normalize(lightDir), normalDir);
+    }
+    
+    fragColor = vec4(pow(nDotL /* * lightIntensity / dot(lightDir, lightDir)*/
+        * (diffuseAlbedo + specularReflectance), vec3(1 / gamma)), 1.0);
 }
