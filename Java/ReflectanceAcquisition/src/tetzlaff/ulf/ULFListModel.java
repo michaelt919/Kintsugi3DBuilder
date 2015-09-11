@@ -5,12 +5,14 @@ import java.io.IOException;
 
 import javax.swing.ComboBoxModel;
 
-public interface ULFListModel extends ComboBoxModel<ULFDrawable>
+import tetzlaff.gl.Context;
+
+public interface ULFListModel<ContextType extends Context<ContextType>> extends ComboBoxModel<ULFDrawable<ContextType>>
 {
-	ULFDrawable addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException;
-	ULFDrawable addFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
-	ULFDrawable addMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException;
+	ULFDrawable<ContextType> addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException;
+	ULFDrawable<ContextType> addFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
+	ULFDrawable<ContextType> addMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException;
 	@Override
-	ULFDrawable getSelectedItem();
+	ULFDrawable<ContextType> getSelectedItem();
 	void setLoadingMonitor(ULFLoadingMonitor loadingMonitor);
 }

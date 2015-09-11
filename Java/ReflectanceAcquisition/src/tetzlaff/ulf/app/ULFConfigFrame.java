@@ -30,6 +30,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import tetzlaff.gl.Context;
 import tetzlaff.ulf.ULFDrawable;
 import tetzlaff.ulf.ULFListModel;
 import tetzlaff.ulf.ULFLoadOptions;
@@ -64,7 +65,7 @@ public class ULFConfigFrame extends JFrame {
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public ULFConfigFrame(ULFListModel model, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> ULFConfigFrame(ULFListModel<ContextType> model, boolean isHighDPI)
 	{		
 		setResizable(false);
 		setTitle("Light Field Config");
@@ -194,7 +195,7 @@ public class ULFConfigFrame extends JFrame {
 		gbl_selectionPanel.rowWeights = new double[]{0.0, 0.0};
 		selectionPanel.setLayout(gbl_selectionPanel);
 		
-		JComboBox<ULFDrawable> comboBoxObjects = new JComboBox<ULFDrawable>();
+		JComboBox<ULFDrawable<ContextType>> comboBoxObjects = new JComboBox<ULFDrawable<ContextType>>();
 		GridBagConstraints gbc_comboBoxObjects = new GridBagConstraints();
 		gbc_comboBoxObjects.gridwidth = 2;
 		gbc_comboBoxObjects.insets = new Insets(0, 0, 5, 0);

@@ -1,6 +1,8 @@
 #version 330
 
 #define SAMPLE_COUNT 7
+#define PACKED_INDEX_VERTEX_COUNT 7;
+#define MAX_VIRTUAL_LIGHT_COUNT 4;
 
 #define MAX_CAMERA_POSE_COUNT 1024
 #define MAX_CAMERA_PROJECTION_COUNT 1024
@@ -28,6 +30,8 @@ uniform sampler2DArray depthTextures;
 
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
+
+uniform isampler2DArray viewIndexTextures;
 
 uniform bool useDiffuseTexture;
 uniform bool useNormalTexture;
@@ -65,6 +69,22 @@ uniform LightIndices
 };
 
 layout(location = 0) out vec4 fragColor;
+
+int[SAMPLE_COUNT] readViewIndices()
+{
+    ivec4 prevViewIndices0 = texture(viewIndexTextures, vec3(fTexCoord, 0));
+    ivec4 prevViewIndices1 = texture(viewIndexTextures, vec3(fTexCoord, 1));
+
+    return int[SAMPLE_COUNT](
+        prevViewIndices0.x,
+        prevViewIndices0.y,
+        prevViewIndices0.z,
+        prevViewIndices0.w,
+        prevViewIndices1.x,
+        prevViewIndices1.y,
+        prevViewIndices1.z
+    );
+}
 
 float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
 {
@@ -118,7 +138,7 @@ float computeGeometricAttenuation(vec3 view, vec3 light, vec3 normal)
         / (dot(light, normal) * dot(view, normal));
 }
 
-vec4 computeMicrofacetDistributionSample(int index, vec3 diffuseAlbedo, vec3 normalDir)
+vec4 computeMicrofacetDistributionSample(int index, vec3 diffuseAlbedo, vec3 normalDir, bool useMipmaps)
 {
     // All in camera space
     vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
@@ -134,7 +154,7 @@ vec4 computeMicrofacetDistributionSample(int index, vec3 diffuseAlbedo, vec3 nor
     // Compute sample weight
     float weight = computeSampleWeight(virtualHalfDir, sampleHalfDir);
     
-    vec4 sampleColor = getProjTexSample(index, true);
+    vec4 sampleColor = getProjTexSample(index, useMipmaps);
     float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
     float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
 
@@ -150,9 +170,32 @@ vec3 computeMicrofacetDistribution(vec3 diffuseAlbedo, vec3 normalDir)
 	vec4 sum = vec4(0.0);
 	for (int i = 0; i < cameraPoseCount; i++)
 	{
-        sum += computeMicrofacetDistributionSample(i, diffuseAlbedo, normalDir);
+        sum += computeMicrofacetDistributionSample(i, diffuseAlbedo, normalDir, true);
 	}
 	return sum.rgb / sum.a;
+}
+
+vec3 computeMicrofacetDistributionFast(vec3 diffuseAlbedo, vec3 normalDir)
+{
+    int viewIndices[SAMPLE_COUNT] = readViewIndices();
+    
+    vec4 sum = vec4(0.0);
+	for (int i = 1; i < SAMPLE_COUNT; i++)
+	{
+        if (viewIndices[i] >= 0 && viewIndices[i] < MAX_CAMERA_POSE_COUNT)
+        {
+            sum += computeMicrofacetDistributionSample(viewIndices[i], diffuseAlbedo, normalDir, false);
+        }
+	}
+    
+    if (sum.a > 0.0)
+    {
+        return sum.rgb / sum.a;
+    }
+    else
+    {
+        return vec3(0);
+    }
 }
 
 void main()
@@ -184,7 +227,7 @@ void main()
     vec3 specularReflectance;
     if (nDotL > 0.0)
     {
-        specularReflectance = computeMicrofacetDistribution(diffuseAlbedo, normalDir) 
+        specularReflectance = computeMicrofacetDistributionFast(diffuseAlbedo, normalDir) 
             * computeGeometricAttenuation(normalize(viewDir), normalize(lightDir), normalDir);
     }
     

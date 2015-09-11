@@ -1,4 +1,4 @@
-package tetzlaff.halfwayfield.app;
+package tetzlaff.imagebasedmicrofacet.app;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,17 +8,15 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import org.lwjgl.LWJGLUtil;
-
-import com.trolltech.qt.core.QCoreApplication;
-import com.trolltech.qt.core.Qt.ApplicationAttribute;
-import com.trolltech.qt.gui.QApplication;
+//import org.lwjgl.opengl.GLDebugMessageCallback;
+//import static org.lwjgl.opengl.KHRDebug.*;
 
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.halfwayfield.HalfwayFieldRendererList;
+import tetzlaff.imagebasedmicrofacet.ImageBasedMicrofacetRendererList;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.window.glfw.GLFWWindow;
 
@@ -28,7 +26,7 @@ import tetzlaff.window.glfw.GLFWWindow;
  * 
  * @author Michael Tetzlaff
  */
-public class HalfwayFieldProgram
+public class ImageBasedMicrofacetProgram
 {
     /**
      * The main entry point for the Unstructured Light Field (ULF) renderer application.
@@ -44,8 +42,23 @@ public class HalfwayFieldProgram
     	checkSupportedImageFormats();
 
     	// Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
-    	GLFWWindow window = new GLFWWindow(800, 800, "Unstructured Halfway Field Renderer", true, 4);
+    	GLFWWindow window = new GLFWWindow(800, 800, "Image-Based Microfacet Renderer", true, 4);
     	window.enableDepthTest();
+    	
+//    	org.lwjgl.opengl.GL11.glEnable(GL_DEBUG_OUTPUT);
+//    	GLDebugMessageCallback debugCallback = new GLDebugMessageCallback() 
+//    	{
+//			@Override
+//			public void invoke(int source, int type, int id, int severity, int length, long message, long userParam) 
+//			{
+//		    	if (severity == GL_DEBUG_SEVERITY_HIGH)
+//		    	{
+//		    		System.err.println(org.lwjgl.system.MemoryUtil.memDecodeASCII(message));
+//		    	}
+//			}
+//    		
+//    	};
+//    	glDebugMessageCallback(debugCallback, 0L);
 
     	// Add a trackball controller to the window for rotating the object (also responds to mouse scrolling)
     	// This is the 'controller' in the MVC arrangement.
@@ -60,7 +73,21 @@ public class HalfwayFieldProgram
         {
     		program = window.getShaderProgramBuilder()
     				.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/uhfr.frag"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibmfr.frag"))
+    				.createProgram();
+        }
+        catch (IOException e)
+        {
+        	e.printStackTrace();
+        	throw new IllegalStateException("The shader program could not be initialized.", e);
+        }
+
+    	Program<OpenGLContext> indexProgram;
+        try
+        {
+        	indexProgram = window.getShaderProgramBuilder()
+    				.addShader(ShaderType.VERTEX, new File("shaders/simpletexspace.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibmfr_index.frag"))
     				.createProgram();
         }
         catch (IOException e)
@@ -73,21 +100,37 @@ public class HalfwayFieldProgram
         // This is the object that loads the ULF models and handles drawing them.  This object abstracts
         // the underlying data and provides ways of triggering events via the trackball and the user
         // interface later when it is passed to the ULFUserInterface object.
-        HalfwayFieldRendererList<OpenGLContext> model = new HalfwayFieldRendererList<OpenGLContext>(window, program, viewTrackball, lightTrackball);
+        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, indexProgram, viewTrackball, lightTrackball);
         
         window.addCharacterListener((win, c) -> {
         	if (c == 'r')
         	{
         		System.out.println("reloading program...");
-	        	// reload program
-	        	model.getProgram().delete();
+        		
 	        	try
 	        	{
-					Program<OpenGLContext> newProgram = window.getShaderProgramBuilder()
+	        		// reload program
+	        		Program<OpenGLContext> newProgram = window.getShaderProgramBuilder()
 							.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
-							.addShader(ShaderType.FRAGMENT, new File("shaders/uhfr.frag"))
+							.addShader(ShaderType.FRAGMENT, new File("shaders/ibmfr.frag"))
 							.createProgram();
+		        	
+		        	Program<OpenGLContext> newIndexProgram = window.getShaderProgramBuilder()
+							.addShader(ShaderType.VERTEX, new File("shaders/simpletexspace.vert"))
+							.addShader(ShaderType.FRAGMENT, new File("shaders/ibmfr_index.frag"))
+							.createProgram();
+		        	
+		        	if (model.getProgram() != null)
+	        		{
+	        			model.getProgram().delete();
+	        		}
 		        	model.setProgram(newProgram);
+		        	
+		        	if (model.getIndexProgram() != null)
+	        		{
+	        			model.getIndexProgram().delete();
+	        		}
+		        	model.setIndexProgram(newIndexProgram);
 				} 
 	        	catch (Exception e) 
 	        	{
@@ -113,7 +156,7 @@ public class HalfwayFieldProgram
         
         // Create a user interface that examines the ULFRendererList for renderer settings and
         // selecting between different loaded models.
-        HalfwayFieldConfigFrame gui = new HalfwayFieldConfigFrame(model, window.isHighDPI());
+        ImageBasedMicrofacetConfigFrame gui = new ImageBasedMicrofacetConfigFrame(model, window.isHighDPI());
         gui.showGUI();        
         //app.addPollable(gui); // Needed for Qt UI
         

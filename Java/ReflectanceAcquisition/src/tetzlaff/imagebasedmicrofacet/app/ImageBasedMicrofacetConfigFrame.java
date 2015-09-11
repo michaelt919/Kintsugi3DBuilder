@@ -1,4 +1,4 @@
-package tetzlaff.halfwayfield.app;
+package tetzlaff.imagebasedmicrofacet.app;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -30,6 +30,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import tetzlaff.gl.Context;
 import tetzlaff.ulf.ULFDrawable;
 import tetzlaff.ulf.ULFListModel;
 import tetzlaff.ulf.ULFLoadOptions;
@@ -45,7 +46,7 @@ import tetzlaff.ulf.ViewSetImageOptions;
  * 
  * @author Seth Berrier
  */
-public class HalfwayFieldConfigFrame extends JFrame {
+public class ImageBasedMicrofacetConfigFrame extends JFrame {
 
 	private static final long serialVersionUID = 3234328215460573228L;
 
@@ -64,7 +65,7 @@ public class HalfwayFieldConfigFrame extends JFrame {
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public HalfwayFieldConfigFrame(ULFListModel model, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> ImageBasedMicrofacetConfigFrame(ULFListModel<ContextType> model, boolean isHighDPI)
 	{		
 		setResizable(false);
 		setTitle("Light Field Config");
@@ -194,7 +195,7 @@ public class HalfwayFieldConfigFrame extends JFrame {
 		gbl_selectionPanel.rowWeights = new double[]{0.0, 0.0};
 		selectionPanel.setLayout(gbl_selectionPanel);
 		
-		JComboBox<ULFDrawable> comboBoxObjects = new JComboBox<ULFDrawable>();
+		JComboBox<ULFDrawable<ContextType>> comboBoxObjects = new JComboBox<ULFDrawable<ContextType>>();
 		GridBagConstraints gbc_comboBoxObjects = new GridBagConstraints();
 		gbc_comboBoxObjects.gridwidth = 2;
 		gbc_comboBoxObjects.insets = new Insets(0, 0, 5, 0);
