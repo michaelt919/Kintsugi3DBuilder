@@ -1,4 +1,4 @@
-package tetzlaff.halfwayfield;
+package tetzlaff.imagebasedmicrofacet;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,13 +8,13 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.ulf.UnstructuredLightField;
 
-public class HalfwayField<ContextType extends Context<ContextType>>
+public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 {
 	public final UnstructuredLightField<ContextType> ulf;
 	public final Texture2D<ContextType> diffuseTexture;
 	public final Texture2D<ContextType> normalTexture;
 	
-	public HalfwayField(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, ContextType context) throws IOException
+	public SampledMicrofacetField(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, ContextType context) throws IOException
 	{
 		this.ulf = ulf;
 		

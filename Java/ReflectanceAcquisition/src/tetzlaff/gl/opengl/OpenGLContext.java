@@ -802,6 +802,32 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		return 0;
 	}
 	
+	protected String getFramebufferStatusString(String framebufferName, int statusID)
+	{
+		switch(statusID)
+		{
+		case GL_FRAMEBUFFER_COMPLETE: return framebufferName + " is framebuffer complete (no errors).";
+		case GL_FRAMEBUFFER_UNDEFINED: return framebufferName + " is the default framebuffer, but the default framebuffer does not exist.";
+		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: return framebufferName + " has attachment points that are framebuffer incomplete.";
+		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: return framebufferName + " does not have at least one image attached to it.";
+		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: return framebufferName + " has a color attachment point without an attached image.";
+		case GL_FRAMEBUFFER_UNSUPPORTED: return framebufferName + " has attached images with a combination of internal formats that violates an implementation-dependent set of restrictions.";
+		case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: return framebufferName + " has attachments with different multisample parameters.";
+		case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: return framebufferName + " has a layered attachment and a populated non-layered attachment, or all populated color attachments are not from textures of the same target.";
+		case 0: return framebufferName + " has an unknown completeness status because an error has occurred.";
+		default: return framebufferName + " has failed an unrecognized completeness check.";
+		}
+	}
+	
+	void throwInvalidFramebufferOperationException()
+	{
+		int readStatus = glCheckFramebufferStatus(GL_READ_FRAMEBUFFER);
+		int drawStatus = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+		throw new GLInvalidFramebufferOperationException("The framebuffer object is not complete:  " + 
+					getFramebufferStatusString("The read framebuffer", readStatus) + "  " + getFramebufferStatusString("The draw framebuffer", drawStatus));
+	}
+	
 	/**
 	 * Should always be called after any OpenGL function
 	 * Search for missing calls to this using this regex:
@@ -816,7 +842,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		case GL_INVALID_ENUM: throw new GLInvalidEnumException();
 		case GL_INVALID_VALUE: throw new GLInvalidValueException();
 		case GL_INVALID_OPERATION: throw new GLInvalidOperationException();
-		case GL_INVALID_FRAMEBUFFER_OPERATION: throw new GLInvalidFramebufferOperationException();
+		case GL_INVALID_FRAMEBUFFER_OPERATION: throwInvalidFramebufferOperationException();
 		case GL_OUT_OF_MEMORY: throw new GLOutOfMemoryException();
 		case GL_STACK_UNDERFLOW: throw new GLStackUnderflowException();
 		case GL_STACK_OVERFLOW: throw new GLStackOverflowException();

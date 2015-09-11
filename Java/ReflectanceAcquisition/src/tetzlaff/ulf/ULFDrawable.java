@@ -15,17 +15,21 @@ public interface ULFDrawable<ContextType extends Context<ContextType>> extends D
 	float getWeightExponent();
 	boolean isOcclusionEnabled();
 	float getOcclusionBias();
+	boolean isViewIndexCacheEnabled();
 	boolean getHalfResolution();
 	
 	void setGamma(float gamma);
 	void setWeightExponent(float weightExponent);
 	void setOcclusionEnabled(boolean occlusionEnabled);
 	void setOcclusionBias(float occlusionBias);
-	
+
+	void setViewIndexCacheEnabled(boolean viewIndexCacheEnabled);
 	void setHalfResolution(boolean halfResEnabled);
 	void setMultisampling(boolean multisamplingEnabled);
 	
 	void setProgram(Program<ContextType> program);
+	void setIndexProgram(Program<ContextType> program);
 	
 	void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException;
+
 }

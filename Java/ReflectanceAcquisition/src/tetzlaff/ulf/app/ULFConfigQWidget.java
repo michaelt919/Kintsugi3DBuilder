@@ -19,14 +19,14 @@ import com.trolltech.qt.gui.QWidget;
 public class ULFConfigQWidget extends QWidget implements EventPollable {
 
 	private Ui_LightFieldConfigForm gui;
-	private final ULFListModel model;
+	private final ULFListModel<?> model;
 	private boolean widgetClosed;
 	private boolean halfResDefault;
 	private boolean blockSignals;
 	
 	public Signal0 loadingFinished;
 	
-	public ULFConfigQWidget(ULFListModel model, boolean isHighDPI, QWidget parent) {
+	public ULFConfigQWidget(ULFListModel<?> model, boolean isHighDPI, QWidget parent) {
 		super(parent);
 		this.blockSignals = true;
 
