@@ -1,5 +1,6 @@
 package tetzlaff.gl.helpers;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -80,6 +81,16 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 		}
 	}
 
+	@Override
+	public void saveToFile(String fileFormat, File file)
+	{
+		Drawable selected = this.getSelectedItem();
+		if (selected != null)
+		{
+			selected.saveToFile(fileFormat, file);
+		}		
+	}
+	
 	@Override
 	public void cleanup() 
 	{

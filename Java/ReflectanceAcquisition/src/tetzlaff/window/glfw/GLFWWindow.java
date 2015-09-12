@@ -11,6 +11,8 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWvidmode;
@@ -71,7 +73,7 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
         }
  
         glfwDefaultWindowHints();
-                
+        
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
@@ -105,9 +107,51 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
         glfwSwapInterval(1);
         
         GLContext.createFromCurrent();
-        System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
         System.out.println("LWJGL version: " + Sys.getVersion());
         System.out.println("GLFW version: " + glfwGetVersionString());
+        System.out.println("\n**** OpenGL Info ****");
+        System.out.println("* GL_VERSION   : " + GL11.glGetString(GL11.GL_VERSION)); this.openGLErrorCheck();
+        System.out.println("* GL_VENDOR    : " + GL11.glGetString(GL11.GL_VENDOR)); this.openGLErrorCheck();
+        System.out.println("* GL_RENDERER  : " + GL11.glGetString(GL11.GL_RENDERER)); this.openGLErrorCheck();
+        System.out.println("* GLSL_VERSION : " + GL11.glGetString(GL20.GL_SHADING_LANGUAGE_VERSION)); this.openGLErrorCheck();
+        
+        /* While this would be nice, it pretty much never works when you are in 'core' profile
+        
+        System.out.println("****** Memory *******");
+
+        // Allocate a memory buffer
+        ByteBuffer memInfo = ByteBuffer.allocateDirect(16);
+
+        // Try the two different extensions, hopefully one of them will work
+        try {
+            GL11.glGetIntegerv(NVXGPUMemoryInfo.GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, memInfo);
+        	this.openGLErrorCheck();
+        } catch(Exception e1) {
+        	e1.printStackTrace();
+            try {
+                GL11.glGetIntegerv(ATIMeminfo.GL_TEXTURE_FREE_MEMORY_ATI, memInfo);
+            	this.openGLErrorCheck();
+            } catch(Exception e2) { e2.printStackTrace(); }
+        }
+
+        // Output what, if anything, we know
+        System.out.println("* Memory : " + memInfo.getInt(0) + "kb, " + 
+						        		 + memInfo.getInt(1) + "kb, " + 
+						        		 + memInfo.getInt(2) + "kb, " + 
+						        		 + memInfo.getInt(3) + "kb");
+        */
+
+        System.out.println("**** Extensions *****");
+        int numExtensions=GL11.glGetInteger(GL30.GL_NUM_EXTENSIONS);
+        this.openGLErrorCheck();
+        for(int i=0; i<numExtensions; i++)
+        {
+            String extension = GL30.glGetStringi(GL11.GL_EXTENSIONS, i);
+	        this.openGLErrorCheck();
+            System.out.println("* " + extension);
+        }
+        
+        System.out.println("*********************\n");
         
         if (multisamples > 0)
         {
@@ -144,7 +188,7 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 	{
 		return handle;
 	}
-	
+		
 	@Override
 	public void show()
 	{

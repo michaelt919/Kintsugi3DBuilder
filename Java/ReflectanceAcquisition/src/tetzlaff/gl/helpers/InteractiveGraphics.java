@@ -1,5 +1,7 @@
 package tetzlaff.gl.helpers;
 
+import java.io.File;
+
 import tetzlaff.gl.Context;
 import tetzlaff.interactive.EventPollable;
 import tetzlaff.interactive.InteractiveApplication;
@@ -32,6 +34,10 @@ public class InteractiveGraphics
 	{
 		return new InteractiveApplication(pollable, new Refreshable()
 		{
+			private volatile boolean screenshotRequested = false;
+			private String fileFormat;
+			private File file;
+			
 			@Override
 			public void initialize() 
 			{
@@ -46,6 +52,11 @@ public class InteractiveGraphics
 				drawable.update();
 				drawable.draw();
 				context.flush();
+				if(screenshotRequested)
+				{
+					drawable.saveToFile(fileFormat, file);
+					screenshotRequested = false;
+				}
 				context.swapBuffers();
 			}
 
@@ -55,6 +66,14 @@ public class InteractiveGraphics
 				context.makeContextCurrent();
 				drawable.cleanup();
 				context.destroy();
+			}
+
+			@Override
+			public void requestScreenshot(String fileFormat, File file)
+			{
+				this.fileFormat = fileFormat;
+				this.file = file;
+				screenshotRequested = true;
 			}
 		});
 	}

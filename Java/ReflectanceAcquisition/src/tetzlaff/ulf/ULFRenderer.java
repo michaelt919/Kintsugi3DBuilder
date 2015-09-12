@@ -212,6 +212,18 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	}
     }
     
+	@Override
+	public void saveToFile(String fileFormat, File file)
+	{
+    	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
+    	try {
+			framebuffer.saveColorBufferToFile(0, fileFormat, file);
+		} catch (IOException e) {
+			System.err.println("Error saving to file " + file.getPath());
+			e.printStackTrace(System.err);
+		}
+	}
+
     @Override
     public void cleanup()
     {
