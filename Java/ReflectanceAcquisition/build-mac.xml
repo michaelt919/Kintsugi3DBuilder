@@ -43,6 +43,10 @@
 		<copy file="/Developer/java-deps/lwjgl-3.0.0b/jar/lwjgl.jar" todir="./dist/ULFRenderer_lib"/>
 		<copy file="/Developer/java-deps/Qt-Jambi-4.8.6/qtjambi-4.8.6.jar" todir="./dist/ULFRenderer_lib"/>
 		<copy file="/Developer/java-deps/Qt-Jambi-4.8.6/qtjambi-native-macosx-gcc-4.8.6.jar" todir="./dist/ULFRenderer_lib"/>
+		<copy file="/Developer/java-deps/BrowserLauncher2/BrowserLauncher2-1_3.jar" todir="./dist/ULFRenderer_lib"/>
+		<copy todir="./dist/ULFRenderer_lib">
+			<fileset dir="/Developer/java-deps/BugSplatJava/lib/" />
+		</copy>
 		<copy todir="./dist/ULFRenderer_lib/native">
     		<fileset dir="/Developer/java-deps/lwjgl-3.0.0b/native/" />
 		</copy>

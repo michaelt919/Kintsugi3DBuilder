@@ -1,5 +1,7 @@
 package tetzlaff.gl.helpers;
 
+import java.io.File;
+
 /**
  * An interface used with the InteractiveGraphics object to coordinate the initialization,
  * updating, drawing and deleting of an OpenGL-like renderable view.
@@ -20,8 +22,8 @@ public interface Drawable
 	/**
 	 * Adjust internal state that needs to change prior to drawing.  Called every time the
 	 * associated InteractiveApplication object refreshes and before draw() is called.
-	 * The associated context will be made current first.
-	 * This method may also be called without subsequently calling draw() to allow its internal state to be updated only.
+	 * The associated context will be made current first.  This method may also be called
+	 * without subsequently calling draw() to allow its internal state to be updated only.
 	 */
 	void update();
 	
@@ -32,6 +34,12 @@ public interface Drawable
 	 * immutable (no internal state should change) while executing this method.
 	 */
 	void draw();
+
+	/**
+	 * Save the contents of this Drawable to a file.  This should be called after draw() and
+	 * after the context has been flushed if you want to save the drawn results to a file.
+	 */
+	void saveToFile(String fileFormat, File file);
 	
 	/**
 	 * Execute any cleanup and bring the internal state out of being prepared to draw. Update

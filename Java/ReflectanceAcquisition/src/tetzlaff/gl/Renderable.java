@@ -15,8 +15,8 @@ import tetzlaff.gl.helpers.Vector4;
  * A "renderable" is essentially a tuple consisting of a program (the instructions) and a set of vertex buffers (the data).
  * It is in some ways analogous to an OpenGL vertex array object (VAO), but it is tied to a specific program 
  * since there is no guarantee that different programs will expect the same set of vertex attributes.
- * Unlike many other GL entities, a Renderable is not a proper "resource;" 
- * any graphics resources that a Renderable does allocate will be automatically deleted when the entity is garbage collected by the JRE.
+ * Unlike many other GL entities, a Renderable is not a proper "resource"; any graphics resources that
+ * a Renderable does allocate will be automatically deleted when the entity is garbage collected by the JRE.
  * @author Michael Tetzlaff
  *
  * @param <ContextType> The type of the GL context that the Renderable is associated with.

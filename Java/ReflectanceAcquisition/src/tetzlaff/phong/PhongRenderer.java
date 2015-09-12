@@ -216,6 +216,12 @@ public class PhongRenderer<ContextType extends Context<ContextType>> implements 
 	}
 
 	@Override
+	public void saveToFile(String fileFormat, File file)
+	{
+		// TODO: Implement
+	}
+	
+	@Override
 	public void cleanup() 
 	{
 		this.positionBuffer.delete();

@@ -54,7 +54,7 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 		this.context.openGLErrorCheck();
 		this.bind();
 	}
-
+	
 	@Override
 	public void delete() 
 	{
