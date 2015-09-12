@@ -23,7 +23,6 @@ import javax.xml.stream.XMLStreamReader;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Context;
-import tetzlaff.gl.Texture;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.builders.ColorTextureBuilder;
@@ -43,7 +42,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	private List<Vector3> lightIntensityList;
 	private List<Integer> lightIndexList;
 	private List<String> imageFileNames;
-	private File filePath;
+	private File imageFilePath;
+	private File geometryFile; // Only when loading from VSET
 	
 	private UniformBuffer<ContextType> cameraPoseBuffer;
 	private UniformBuffer<ContextType> cameraProjectionBuffer;
@@ -64,6 +64,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Integer> lightIndexList,
 		List<String> imageFileNames, 
 		ViewSetImageOptions imageOptions,
+		File geometryFile,
 		float recommendedNearPlane,
 		float recommendedFarPlane,
 		ContextType context) throws IOException
@@ -75,11 +76,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		this.lightIntensityList = lightIntensityList;
 		this.lightIndexList = lightIndexList;
 		this.imageFileNames = imageFileNames;
-		
+		this.geometryFile = geometryFile;
 		this.recommendedNearPlane = recommendedNearPlane;
 		this.recommendedFarPlane = recommendedFarPlane;
 		
-		this.filePath = imageOptions.getFilePath();
+		this.imageFilePath = imageOptions.getFilePath();
 		
 		// Store the poses in a uniform buffer
 		if (cameraPoseList != null && cameraPoseList.size() > 0)
@@ -189,26 +190,29 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		{
 			Date timestamp = new Date();
 			File imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(0));
-			ZipWrapper myZip = new ZipWrapper(imageFile);
+			//ZipWrapper myZip = new ZipWrapper(imageFile);
 			
-//			if (!myZip.exists(imageFile))
-//			{
-//				System.err.printf("Warning: Image '%s' not found, trying '.png' extension instead.\n",
-//								  imageFileNames.get(0));
-//				String[] filenameParts = imageFileNames.get(0).split("\\.");
-//		    	filenameParts[filenameParts.length - 1] = "png";
-//		    	String pngFileName = String.join(".", filenameParts);
-//		    	imageFile = new File(imageFilePath, pngFileName);
+			if (!imageFile.exists())
+			//if (!myZip.exists(imageFile))
+			{
+				System.err.printf("Warning: Image '%s' not found, trying '.png' extension instead.\n",
+								  imageFileNames.get(0));
+				String[] filenameParts = imageFileNames.get(0).split("\\.");
+		    	filenameParts[filenameParts.length - 1] = "png";
+		    	String pngFileName = String.join(".", filenameParts);
+		    	imageFile = new File(imageOptions.getFilePath(), pngFileName);
+		    	//myZip = new ZipWrapper(imageFile);
 		    	
-		    	if(!myZip.exists(imageFile))
+		    	if (!imageFile.exists())
+		    	//if(!myZip.exists(imageFile))
 		    	{
 		    		throw new FileNotFoundException(
 		    				String.format("'%s' not found.", imageFileNames.get(0)));
 		    	}
-//			}
+			}
 			
 			// Read a single image to get the dimensions for the texture array
-			InputStream input = myZip.getInputStream();			
+			InputStream input = new FileInputStream(imageFile);//myZip.getInputStream();			
 			BufferedImage img = ImageIO.read(input);
 			if(img == null)
 			{
@@ -243,22 +247,25 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
 				imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
-//				if (!myZip.exists(imageFile))
-//				{
-//					String[] filenameParts = imageFileNames.get(i).split("\\.");
-//			    	filenameParts[filenameParts.length - 1] = "png";
-//			    	String pngFileName = String.join(".", filenameParts);
-//			    	imageFile = new File(imageFilePath, pngFileName);
+				if (!imageFile.exists())
+				//if (!myZip.exists(imageFile))
+				{
+					String[] filenameParts = imageFileNames.get(i).split("\\.");
+			    	filenameParts[filenameParts.length - 1] = "png";
+			    	String pngFileName = String.join(".", filenameParts);
+			    	imageFile = new File(imageOptions.getFilePath(), pngFileName);
 
-			    	if(!myZip.exists(imageFile))
+			    	if (!imageFile.exists())
+			    	//if(!myZip.exists(imageFile))
 			    	{
 			    		throw new FileNotFoundException(
 			    				String.format("'%s' not found.", imageFileNames.get(0)));
 			    	}
-//				}
+				}
 				
-				myZip.retrieveFile(imageFile);
-				this.textureArray.loadLayer(i, myZip, true);
+				//myZip.retrieveFile(imageFile);
+				//this.textureArray.loadLayer(i, myZip, true);
+				this.textureArray.loadLayer(i, imageFile, true);
 			}
 
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -451,9 +458,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
+		File geometryFile =  new File(imageOptions.getFilePath(), "manifold.obj"); // TODO
+		
 		return new ViewSet<ContextType>(
 			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, 
-			imageFileNames, imageOptions, recommendedNearPlane, recommendedFarPlane, context);
+			imageFileNames, imageOptions, geometryFile, recommendedNearPlane, recommendedFarPlane, context);
 	}
 	
 	private static class Sensor
@@ -824,7 +833,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 
         float farPlane = findFarPlane(cameraPoseList);
         return new ViewSet<ContextType>(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
-        		imageFileNames, imageOptions, farPlane / 16.0f, farPlane, context);
+        		imageFileNames, imageOptions, null, farPlane / 16.0f, farPlane, context);
     }
 	
 	private static float findFarPlane(List<Matrix4> cameraPoseList)
@@ -851,14 +860,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		return this.cameraPoseList.get(poseIndex);
 	}
 	
-	public String getGeometryFileName()
-	{
-		return "manifold.obj"; // TODO
-	}
-	
 	public File getGeometryFile()
 	{
-		return new File(this.filePath, "manifold.obj"); // TODO
+		return this.geometryFile;
 	}
 	
 	public String getImageFileName(int poseIndex)
@@ -868,7 +872,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 
 	public File getImageFile(int poseIndex) 
 	{
-		return new File(this.filePath, this.imageFileNames.get(poseIndex));
+		return new File(this.imageFilePath, this.imageFileNames.get(poseIndex));
 	}
 
 	public Projection getCameraProjection(int projectionIndex) 

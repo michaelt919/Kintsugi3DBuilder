@@ -9,10 +9,8 @@ import tetzlaff.window.listeners.CursorPositionListener;
 import tetzlaff.window.listeners.MouseButtonPressListener;
 import tetzlaff.window.listeners.MouseButtonReleaseListener;
 import tetzlaff.window.listeners.ScrollListener;
-import tetzlaff.window.listeners.WindowFocusGainedListener;
-import tetzlaff.window.listeners.WindowFocusLostListener;
 
-public class Trackball implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener, WindowFocusGainedListener, WindowFocusLostListener
+public class Trackball implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener
 {
 	private int primaryButtonIndex;
 	private int secondaryButtonIndex;
@@ -29,8 +27,6 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	private float oldLogScale;
 	private float logScale;
 	private float scale;
-	
-	private boolean focus = false;
 	
 	public Trackball(float sensitivity, int primaryButtonIndex, int secondaryButtonIndex, boolean zoomWithWheel)
 	{
@@ -55,8 +51,6 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 		window.addMouseButtonPressListener(this);
 		window.addMouseButtonReleaseListener(this);
 		window.addScrollListener(this);
-		window.addWindowFocusGainedListener(this);
-		window.addWindowFocusLostListener(this);
 	}
 	
 	public Matrix4 getRotationMatrix()
@@ -72,7 +66,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	@Override
 	public void mouseButtonPressed(Window window, int buttonIndex, ModifierKeys mods) 
 	{
-		if (focus && (buttonIndex == this.primaryButtonIndex || buttonIndex == this.secondaryButtonIndex))
+		if (buttonIndex == this.primaryButtonIndex || buttonIndex == this.secondaryButtonIndex)
 		{
 			CursorPosition pos = window.getCursorPosition();
 			WindowSize size = window.getWindowSize();
@@ -85,38 +79,35 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	@Override
 	public void cursorMoved(Window window, double xpos, double ypos) 
 	{
-		if (focus)
+		if (this.primaryButtonIndex >= 0 && window.getMouseButtonState(primaryButtonIndex) == MouseButtonState.Pressed)
 		{
-			if (this.primaryButtonIndex >= 0 && window.getMouseButtonState(primaryButtonIndex) == MouseButtonState.Pressed)
+			if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale) && (xpos != this.startX || ypos != this.startY))
 			{
-				if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale))
-				{
-					Vector3 rotationVector = 
-						new Vector3(
-							(float)(ypos - this.startY),
-							(float)(xpos - this.startX), 
-							0.0f
-						);
-						
-					this.trackballMatrix = 
-						Matrix4.rotateAxis(
-							rotationVector.normalized(), 
-							this.mouseScale * rotationVector.length()
-						)
-						.times(this.oldTrackballMatrix);
-				}
+				Vector3 rotationVector = 
+					new Vector3(
+						(float)(ypos - this.startY),
+						(float)(xpos - this.startX), 
+						0.0f
+					);
+				
+				this.trackballMatrix = 
+					Matrix4.rotateAxis(
+						rotationVector.normalized(), 
+						this.mouseScale * rotationVector.length()
+					)
+					.times(this.oldTrackballMatrix);
 			}
-			else if (this.secondaryButtonIndex >= 0 && window.getMouseButtonState(secondaryButtonIndex) == MouseButtonState.Pressed)
+		}
+		else if (this.secondaryButtonIndex >= 0 && window.getMouseButtonState(secondaryButtonIndex) == MouseButtonState.Pressed)
+		{
+			if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale))
 			{
-				if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale))
-				{
-					this.trackballMatrix = 
-						Matrix4.rotateZ(this.mouseScale * (xpos - this.startX))
-							.times(this.oldTrackballMatrix);
-					
-					this.logScale = this.oldLogScale + this.mouseScale * (float)(ypos - this.startY);
-					this.scale = (float)Math.pow(2, this.logScale);
-				}
+				this.trackballMatrix = 
+					Matrix4.rotateZ(this.mouseScale * (xpos - this.startX))
+						.times(this.oldTrackballMatrix);
+				
+				this.logScale = this.oldLogScale + this.mouseScale * (float)(ypos - this.startY);
+				this.scale = (float)Math.pow(2, this.logScale);
 			}
 		}
 	}
@@ -124,7 +115,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	@Override
 	public void mouseButtonReleased(Window window, int buttonIndex, ModifierKeys mods) 
 	{
-		if (focus && (buttonIndex == this.primaryButtonIndex || buttonIndex == this.secondaryButtonIndex))
+		if (buttonIndex == this.primaryButtonIndex || buttonIndex == this.secondaryButtonIndex)
 		{
 			this.oldTrackballMatrix = this.trackballMatrix;
 			this.oldLogScale = this.logScale;
@@ -134,24 +125,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	@Override
 	public void scroll(Window window, double xoffset, double yoffset) 
 	{
-		if (focus)
-		{
-			this.logScale = this.logScale + sensitivity / 256.0f * (float)(yoffset);
-			this.scale = (float)Math.pow(2, this.logScale);
-		}
-	}
-
-	@Override
-	public void windowFocusLost(Window window) 
-	{
-		this.focus = false;
-		System.out.println("focus lost");
-	}
-
-	@Override
-	public void windowFocusGained(Window window) 
-	{
-		this.focus = true;
-		System.out.println("focus gained");
+		this.logScale = this.logScale + sensitivity / 256.0f * (float)(yoffset);
+		this.scale = (float)Math.pow(2, this.logScale);
 	}
 }

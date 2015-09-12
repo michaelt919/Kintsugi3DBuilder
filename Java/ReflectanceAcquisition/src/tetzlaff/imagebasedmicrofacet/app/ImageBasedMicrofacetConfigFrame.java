@@ -1,4 +1,4 @@
-package tetzlaff.ulf.app;
+package tetzlaff.imagebasedmicrofacet.app;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -46,7 +46,7 @@ import tetzlaff.ulf.ViewSetImageOptions;
  * 
  * @author Seth Berrier
  */
-public class ULFConfigFrame extends JFrame {
+public class ImageBasedMicrofacetConfigFrame extends JFrame {
 
 	private static final long serialVersionUID = 3234328215460573228L;
 
@@ -65,7 +65,7 @@ public class ULFConfigFrame extends JFrame {
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public <ContextType extends Context<ContextType>> ULFConfigFrame(ULFListModel<ContextType> model, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> ImageBasedMicrofacetConfigFrame(ULFListModel<ContextType> model, boolean isHighDPI)
 	{		
 		setResizable(false);
 		setTitle("Light Field Config");
