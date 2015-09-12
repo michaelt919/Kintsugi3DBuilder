@@ -3,8 +3,6 @@ syntax: glob
 *.orig
 *.trace
 *.jui-e
-output*.log
-error*.log
 hs_err*.log
 .metadata
 .classpath
