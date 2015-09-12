@@ -8,7 +8,7 @@ package tetzlaff.gl;
  * @author Michael Tetzlaff
  *
  * @param <ContextType> The type of the GL context that the framebuffer attachment is associated with.
- * Sub-types should be able to appropriately handle usage in conjunction with to any implementation of Framebuffer&lt;ContextType&gt;.
+ * Sub-types should be able to appropriately handle usage in conjunction with to any implementation of Framebuffer<ContextType>.
  * This could mean ensuring compatibility with any such implementation, and/or throwing an exception for implementations that are not compatible.
  */
 public interface FramebufferAttachment<ContextType extends Context<ContextType>> extends Contextual<ContextType>
