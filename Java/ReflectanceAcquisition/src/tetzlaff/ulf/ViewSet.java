@@ -23,6 +23,7 @@ import javax.xml.stream.XMLStreamReader;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Context;
+import tetzlaff.gl.Texture;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.builders.ColorTextureBuilder;

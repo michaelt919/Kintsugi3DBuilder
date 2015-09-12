@@ -2,19 +2,12 @@ syntax: glob
 *.class
 *.orig
 *.trace
-*.jui-e
-output*.log
-error*.log
-hs_err*.log
 .metadata
 .classpath
 .recommenders
 .project
 .DS_Store
-bin/*
-lib/*
 doc/*
-dist/*
 syntax: regexp
 ^Java/ReflectanceAcquisition/modelTesting\.nb$
 syntax: regexp

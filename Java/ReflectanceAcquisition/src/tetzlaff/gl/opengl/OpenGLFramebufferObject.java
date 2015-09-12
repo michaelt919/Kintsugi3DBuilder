@@ -4,6 +4,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
+
 import java.nio.IntBuffer;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
@@ -24,12 +25,7 @@ class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferOb
 	private AbstractCollection<Resource> ownedAttachments;
 	private OpenGLFramebufferAttachment[] colorAttachments;
 	private OpenGLFramebufferAttachment depthAttachment;
-
-	// For future expansion
-	@SuppressWarnings("unused")
 	private OpenGLFramebufferAttachment stencilAttachment;
-
-	@SuppressWarnings("unused")
 	private OpenGLFramebufferAttachment depthStencilAttachment;
 
 	public static class OpenGLFramebufferObjectBuilder extends FramebufferObjectBuilderBase<OpenGLContext>
