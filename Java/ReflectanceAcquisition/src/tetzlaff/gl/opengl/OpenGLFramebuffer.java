@@ -16,6 +16,7 @@ import org.lwjgl.BufferUtils;
 
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferSize;
+import tetzlaff.gl.exceptions.GLInvalidFramebufferOperationException;
 
 abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext> 
 {
@@ -41,7 +42,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 
 		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
-			this.context.throwInvalidFramebufferOperationException();
+			throw new GLInvalidFramebufferOperationException();
 		}
 		this.context.openGLErrorCheck();
 		
@@ -64,7 +65,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 
 		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
-			this.context.throwInvalidFramebufferOperationException();
+			throw new GLInvalidFramebufferOperationException();
 		}
 		this.context.openGLErrorCheck();
 		
@@ -188,7 +189,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 		
 		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
-			this.context.throwInvalidFramebufferOperationException();
+			throw new GLInvalidFramebufferOperationException();
 		}
 		this.context.openGLErrorCheck();
 		
@@ -203,28 +204,6 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 	}
 	
 	@Override
-	public void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a)
-	{
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
-		this.context.openGLErrorCheck();
-		
-		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
-			this.context.throwInvalidFramebufferOperationException();
-		}
-		this.context.openGLErrorCheck();
-		
-		IntBuffer buffer = BufferUtils.createIntBuffer(4);
-		buffer.put(r);
-		buffer.put(g);
-		buffer.put(b);
-		buffer.put(a);
-		buffer.flip();
-		glClearBufferiv(GL_COLOR, attachmentIndex, buffer);
-		this.context.openGLErrorCheck();
-	}
-	
-	@Override
 	public void clearDepthBuffer(float depth)
 	{
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
@@ -232,7 +211,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 		
 		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
-			this.context.throwInvalidFramebufferOperationException();
+			throw new GLInvalidFramebufferOperationException();
 		}
 		this.context.openGLErrorCheck();
 		
@@ -257,7 +236,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 		
 		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
-			this.context.throwInvalidFramebufferOperationException();
+			throw new GLInvalidFramebufferOperationException();
 		}
 		this.context.openGLErrorCheck();
 		

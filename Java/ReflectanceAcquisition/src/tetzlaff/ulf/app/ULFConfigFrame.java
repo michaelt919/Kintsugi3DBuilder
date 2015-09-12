@@ -27,16 +27,16 @@ import javax.swing.JSpinner;
 import javax.swing.JCheckBox;
 import javax.swing.JSeparator;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-import tetzlaff.gl.Context;
 import tetzlaff.ulf.ULFDrawable;
 import tetzlaff.ulf.ULFListModel;
 import tetzlaff.ulf.ULFLoadOptions;
 import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFMorphRenderer;
 import tetzlaff.ulf.ViewSetImageOptions;
+
+import javax.swing.border.BevelBorder;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
@@ -65,12 +65,12 @@ public class ULFConfigFrame extends JFrame {
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public <ContextType extends Context<ContextType>> ULFConfigFrame(ULFListModel<ContextType> model, boolean isHighDPI)
+	public ULFConfigFrame(ULFListModel model, boolean isHighDPI)
 	{		
 		setResizable(false);
 		setTitle("Light Field Config");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(10, 10, 332, 539);
+		setBounds(10, 10, 309, 476);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -81,9 +81,9 @@ public class ULFConfigFrame extends JFrame {
 		contentPane.add(loadingPanel);
 		GridBagLayout gbl_loadingPanel = new GridBagLayout();
 		gbl_loadingPanel.columnWidths = new int[] {140, 140};
-		gbl_loadingPanel.rowHeights = new int[] {0, 0, 0, 0};
+		gbl_loadingPanel.rowHeights = new int[] {0, 0, 0};
 		gbl_loadingPanel.columnWeights = new double[]{1.0, 0.0};
-		gbl_loadingPanel.rowWeights = new double[]{0.0, 1.0, 1.0, 0.0};
+		gbl_loadingPanel.rowWeights = new double[]{0.0, 1.0, 0.0};
 		loadingPanel.setLayout(gbl_loadingPanel);
 		
 		JCheckBox chckbxCompressImages = new JCheckBox("Compress Images");
@@ -103,43 +103,41 @@ public class ULFConfigFrame extends JFrame {
 		gbc_chckbxUseMipmaps.gridx = 1;
 		gbc_chckbxUseMipmaps.gridy = 0;
 		loadingPanel.add(chckbxUseMipmaps, gbc_chckbxUseMipmaps);
-			
+		
 		JPanel panel = new JPanel();
-		panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+		panel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
 		GridBagConstraints gbc_panel = new GridBagConstraints();
 		gbc_panel.gridwidth = 2;
-		gbc_panel.insets = new Insets(0, 0, 5, 0);
-		gbc_panel.fill = GridBagConstraints.BOTH;
+		gbc_panel.insets = new Insets(0, 0, 5, 5);
+		gbc_panel.fill = GridBagConstraints.VERTICAL;
 		gbc_panel.gridx = 0;
 		gbc_panel.gridy = 1;
 		loadingPanel.add(panel, gbc_panel);
 		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[]{0, 0, 0, 0, 0};
-		gbl_panel.rowHeights = new int[]{0, 0, 0};
-		gbl_panel.columnWeights = new double[]{0.0, 1.0, 0.0, 1.0, Double.MIN_VALUE};
-		gbl_panel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel.columnWidths = new int[] {68, 68, 68, 68};
+		gbl_panel.rowHeights = new int[] {0, 0};
+		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0};
+		gbl_panel.rowWeights = new double[]{0.0, 0.0};
 		panel.setLayout(gbl_panel);
 		
-		JCheckBox chckbxGenerateDepthImages = new JCheckBox("Generate Depth Images");
+		JCheckBox chckbxGenerateDepthImages = new JCheckBox("Generate depth images for visibility testing");
+		chckbxGenerateDepthImages.setSelected(true);
 		GridBagConstraints gbc_chckbxGenerateDepthImages = new GridBagConstraints();
-		gbc_chckbxGenerateDepthImages.anchor = GridBagConstraints.WEST;
 		gbc_chckbxGenerateDepthImages.gridwidth = 4;
 		gbc_chckbxGenerateDepthImages.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxGenerateDepthImages.anchor = GridBagConstraints.NORTHWEST;
 		gbc_chckbxGenerateDepthImages.gridx = 0;
 		gbc_chckbxGenerateDepthImages.gridy = 0;
 		panel.add(chckbxGenerateDepthImages, gbc_chckbxGenerateDepthImages);
 		
-		JLabel lblDimensions = new JLabel("Dimensions:");
-		lblDimensions.setEnabled(false);
-		GridBagConstraints gbc_lblDimensions = new GridBagConstraints();
-		gbc_lblDimensions.insets = new Insets(0, 5, 0, 5);
-		gbc_lblDimensions.gridx = 0;
-		gbc_lblDimensions.gridy = 1;
-		panel.add(lblDimensions, gbc_lblDimensions);
+		JLabel lblWidth = new JLabel("Width:");
+		GridBagConstraints gbc_lblWidth = new GridBagConstraints();
+		gbc_lblWidth.insets = new Insets(0, 0, 0, 5);
+		gbc_lblWidth.gridx = 0;
+		gbc_lblWidth.gridy = 1;
+		panel.add(lblWidth, gbc_lblWidth);
 		
 		JSpinner spinnerDepthWidth = new JSpinner();
-		lblDimensions.setLabelFor(spinnerDepthWidth);
-		spinnerDepthWidth.setEnabled(false);
 		spinnerDepthWidth.setModel(new SpinnerNumberModel(new Integer(1024), new Integer(1), null, new Integer(1)));
 		GridBagConstraints gbc_spinnerDepthWidth = new GridBagConstraints();
 		gbc_spinnerDepthWidth.fill = GridBagConstraints.HORIZONTAL;
@@ -148,31 +146,27 @@ public class ULFConfigFrame extends JFrame {
 		gbc_spinnerDepthWidth.gridy = 1;
 		panel.add(spinnerDepthWidth, gbc_spinnerDepthWidth);
 		
-		JLabel lblX_1 = new JLabel("X");
-		lblX_1.setEnabled(false);
-		GridBagConstraints gbc_lblX_1 = new GridBagConstraints();
-		gbc_lblX_1.insets = new Insets(0, 0, 0, 5);
-		gbc_lblX_1.gridx = 2;
-		gbc_lblX_1.gridy = 1;
-		panel.add(lblX_1, gbc_lblX_1);
+		JLabel lblHeight = new JLabel("Height:");
+		GridBagConstraints gbc_lblHeight = new GridBagConstraints();
+		gbc_lblHeight.insets = new Insets(0, 0, 0, 5);
+		gbc_lblHeight.gridx = 2;
+		gbc_lblHeight.gridy = 1;
+		panel.add(lblHeight, gbc_lblHeight);
 		
 		JSpinner spinnerDepthHeight = new JSpinner();
-		lblX_1.setLabelFor(spinnerDepthHeight);
-		spinnerDepthHeight.setEnabled(false);
 		spinnerDepthHeight.setModel(new SpinnerNumberModel(new Integer(1024), new Integer(1), null, new Integer(1)));
-		GridBagConstraints gbc_spinner_1 = new GridBagConstraints();
-		gbc_spinner_1.fill = GridBagConstraints.HORIZONTAL;
-		gbc_spinner_1.insets = new Insets(0, 0, 0, 5);
-		gbc_spinner_1.gridx = 3;
-		gbc_spinner_1.gridy = 1;
-		panel.add(spinnerDepthHeight, gbc_spinner_1);
-				
+		GridBagConstraints gbc_spinnerDepthHeight = new GridBagConstraints();
+		gbc_spinnerDepthHeight.fill = GridBagConstraints.HORIZONTAL;
+		gbc_spinnerDepthHeight.gridx = 3;
+		gbc_spinnerDepthHeight.gridy = 1;
+		panel.add(spinnerDepthHeight, gbc_spinnerDepthHeight);
+		
 		JButton btnLoadSingle = new JButton("Load Single...");
 		GridBagConstraints gbc_btnLoadSingle = new GridBagConstraints();
 		gbc_btnLoadSingle.anchor = GridBagConstraints.NORTH;
 		gbc_btnLoadSingle.insets = new Insets(0, 0, 0, 5);
 		gbc_btnLoadSingle.gridx = 0;
-		gbc_btnLoadSingle.gridy = 3;
+		gbc_btnLoadSingle.gridy = 2;
 		loadingPanel.add(btnLoadSingle, gbc_btnLoadSingle);
 		btnLoadSingle.setToolTipText("Load a single object");
 		
@@ -180,7 +174,7 @@ public class ULFConfigFrame extends JFrame {
 		GridBagConstraints gbc_btnLoadMultiple = new GridBagConstraints();
 		gbc_btnLoadMultiple.anchor = GridBagConstraints.NORTH;
 		gbc_btnLoadMultiple.gridx = 1;
-		gbc_btnLoadMultiple.gridy = 3;
+		gbc_btnLoadMultiple.gridy = 2;
 		loadingPanel.add(btnLoadMultiple, gbc_btnLoadMultiple);
 		btnLoadMultiple.setToolTipText("Load multiple objects");
 		
@@ -195,7 +189,7 @@ public class ULFConfigFrame extends JFrame {
 		gbl_selectionPanel.rowWeights = new double[]{0.0, 0.0};
 		selectionPanel.setLayout(gbl_selectionPanel);
 		
-		JComboBox<ULFDrawable<ContextType>> comboBoxObjects = new JComboBox<ULFDrawable<ContextType>>();
+		JComboBox<ULFDrawable> comboBoxObjects = new JComboBox<ULFDrawable>();
 		GridBagConstraints gbc_comboBoxObjects = new GridBagConstraints();
 		gbc_comboBoxObjects.gridwidth = 2;
 		gbc_comboBoxObjects.insets = new Insets(0, 0, 5, 0);
@@ -228,9 +222,9 @@ public class ULFConfigFrame extends JFrame {
 		renderingOptionsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Rendering Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		contentPane.add(renderingOptionsPanel);
 		GridBagLayout gbl_renderingOptionsPanel = new GridBagLayout();
-		gbl_renderingOptionsPanel.columnWidths = new int[]{0, 0, 0, 0, 0};
+		gbl_renderingOptionsPanel.columnWidths = new int[]{0, 0, 0, 0};
 		gbl_renderingOptionsPanel.rowHeights = new int[]{0, 0, 0, 0, 0};
-		gbl_renderingOptionsPanel.columnWeights = new double[]{0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+		gbl_renderingOptionsPanel.columnWeights = new double[]{0.0, 0.0, 1.0, Double.MIN_VALUE};
 		gbl_renderingOptionsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		renderingOptionsPanel.setLayout(gbl_renderingOptionsPanel);
 		
@@ -249,7 +243,7 @@ public class ULFConfigFrame extends JFrame {
 		gbc_spinnerGamma.gridwidth = 2;
 		gbc_spinnerGamma.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerGamma.insets = new Insets(0, 0, 5, 0);
-		gbc_spinnerGamma.gridx = 2;
+		gbc_spinnerGamma.gridx = 1;
 		gbc_spinnerGamma.gridy = 0;
 		renderingOptionsPanel.add(spinnerGamma, gbc_spinnerGamma);
 		
@@ -268,7 +262,7 @@ public class ULFConfigFrame extends JFrame {
 		gbc_spinnerExponent.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerExponent.gridwidth = 2;
 		gbc_spinnerExponent.insets = new Insets(0, 0, 5, 0);
-		gbc_spinnerExponent.gridx = 2;
+		gbc_spinnerExponent.gridx = 1;
 		gbc_spinnerExponent.gridy = 1;
 		renderingOptionsPanel.add(spinnerExponent, gbc_spinnerExponent);
 		
@@ -276,8 +270,8 @@ public class ULFConfigFrame extends JFrame {
 		separator.setForeground(UIManager.getColor("Separator.foreground"));
 		GridBagConstraints gbc_separator = new GridBagConstraints();
 		gbc_separator.fill = GridBagConstraints.HORIZONTAL;
-		gbc_separator.gridwidth = 4;
-		gbc_separator.insets = new Insets(0, 0, 5, 0);
+		gbc_separator.gridwidth = 3;
+		gbc_separator.insets = new Insets(0, 0, 5, 5);
 		gbc_separator.gridx = 0;
 		gbc_separator.gridy = 2;
 		renderingOptionsPanel.add(separator, gbc_separator);
@@ -292,17 +286,10 @@ public class ULFConfigFrame extends JFrame {
 		gbc_chckbxOcclusion.gridy = 3;
 		renderingOptionsPanel.add(chckbxOcclusion, gbc_chckbxOcclusion);
 		
-		JLabel label = new JLabel("-");
-		GridBagConstraints gbc_label = new GridBagConstraints();
-		gbc_label.insets = new Insets(0, 0, 0, 5);
-		gbc_label.gridx = 1;
-		gbc_label.gridy = 3;
-		renderingOptionsPanel.add(label, gbc_label);
-		
 		JLabel lblBias = new JLabel("Bias:");
 		GridBagConstraints gbc_lblBias = new GridBagConstraints();
 		gbc_lblBias.insets = new Insets(0, 0, 0, 5);
-		gbc_lblBias.gridx = 2;
+		gbc_lblBias.gridx = 1;
 		gbc_lblBias.gridy = 3;
 		renderingOptionsPanel.add(lblBias, gbc_lblBias);
 		
@@ -311,7 +298,7 @@ public class ULFConfigFrame extends JFrame {
 		spinnerOccBias.setToolTipText("Control the bias factor to help prevent bleading of views into occluded areas");
 		GridBagConstraints gbc_spinnerOccBias = new GridBagConstraints();
 		gbc_spinnerOccBias.fill = GridBagConstraints.HORIZONTAL;
-		gbc_spinnerOccBias.gridx = 3;
+		gbc_spinnerOccBias.gridx = 2;
 		gbc_spinnerOccBias.gridy = 3;
 		renderingOptionsPanel.add(spinnerOccBias, gbc_spinnerOccBias);
 		
@@ -353,7 +340,7 @@ public class ULFConfigFrame extends JFrame {
 		
 		JLabel lblNewDimensions = new JLabel("New Dimensions:");
 		GridBagConstraints gbc_lblNewDimensions = new GridBagConstraints();
-		gbc_lblNewDimensions.insets = new Insets(0, 5, 5, 5);
+		gbc_lblNewDimensions.insets = new Insets(0, 0, 5, 5);
 		gbc_lblNewDimensions.gridx = 0;
 		gbc_lblNewDimensions.gridy = 0;
 		resamplePanel.add(lblNewDimensions, gbc_lblNewDimensions);
@@ -419,7 +406,7 @@ public class ULFConfigFrame extends JFrame {
 			chckbxOcclusion.setEnabled(false);
 			lblBias.setEnabled(false);
 			spinnerOccBias.setEnabled(false);
-			
+
 			chckbxHalfRes.setSelected(isHighDPI);
 			chckbxHalfRes.setEnabled(false);
 			chckbxMultisampling.setEnabled(false);
@@ -510,13 +497,8 @@ public class ULFConfigFrame extends JFrame {
 					else
 					{
 						model.addFromVSETFile(file, loadOptions);
-						SwingUtilities.invokeLater(new Runnable(){
-							@Override
-							public void run() {
-								loadingBar.setIndeterminate(true);
-								loadingFrame.setVisible(true);
-							}
-						});
+						loadingBar.setIndeterminate(true);
+						loadingFrame.setVisible(true);
 					}
 				} 
 				catch (IOException ex) 
@@ -649,15 +631,6 @@ public class ULFConfigFrame extends JFrame {
 			}
 		});
 		
-		chckbxGenerateDepthImages.addChangeListener(e ->
-		{
-			boolean enabled = chckbxGenerateDepthImages.isSelected();
-			lblDimensions.setEnabled(enabled);
-			spinnerDepthWidth.setEnabled(enabled);
-			lblX_1.setEnabled(enabled);
-			spinnerDepthHeight.setEnabled(enabled);
-		});
-		
 		// Add listener for changes to the gamma spinner.
 		spinnerGamma.addChangeListener(e ->
 		{
@@ -699,24 +672,14 @@ public class ULFConfigFrame extends JFrame {
 				@Override
 				public void setProgress(double progress)
 				{
-					SwingUtilities.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							loadingBar.setIndeterminate(false);
-							loadingBar.setValue((int)Math.round(progress * 100));
-						}						
-					});
+					loadingBar.setIndeterminate(false);
+					loadingBar.setValue((int)Math.round(progress * 100));
 				}
 	
 				@Override
 				public void loadingComplete()
 				{
-					SwingUtilities.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							loadingFrame.setVisible(false);
-						}
-					});
+					loadingFrame.setVisible(false);
 				}
 			});
 		}

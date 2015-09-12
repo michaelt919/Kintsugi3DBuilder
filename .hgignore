@@ -2,8 +2,6 @@ syntax: glob
 *.class
 *.orig
 *.trace
-*.jui-e
-hs_err*.log
 .metadata
 .classpath
 .recommenders

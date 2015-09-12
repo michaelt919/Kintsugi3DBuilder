@@ -3,25 +3,18 @@ package tetzlaff.interactive;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
 public class InteractiveApplication
 {
-	private List<EventPollable> pollable;
+	private EventPollable pollable;
 	private Refreshable refreshable;
 	
 	public InteractiveApplication(EventPollable pollable, Refreshable refreshable) 
 	{
-		this.pollable = new ArrayList<EventPollable>();
-		this.pollable.add(pollable);
+		this.pollable = pollable;
 		this.refreshable = refreshable;
 	}
 
-	public void addPollable(EventPollable pollable)
-	{
-		this.pollable.add(pollable);		
-	}
-	
 	public void run()
 	{
 		int pollingTime = 0;
@@ -30,20 +23,14 @@ public class InteractiveApplication
 		Date startTimestamp = new Date();
 		Date timestampA = startTimestamp;
 		System.out.println("Main loop started.");
-		boolean shouldTerminate = false;
-		while (!shouldTerminate)
+		while (!this.pollable.shouldTerminate())
 		{
 			this.refreshable.refresh();
 			Date timestampB = new Date();
 			refreshTime += timestampB.getTime() - timestampA.getTime();
-			for (EventPollable poller : pollable)
-			{
-				poller.pollEvents();
-				shouldTerminate = shouldTerminate || poller.shouldTerminate();
-			}
+			this.pollable.pollEvents();
 			timestampA = new Date();
 			pollingTime += timestampA.getTime() - timestampB.getTime();
-
 		}
 		System.out.println("Main loop terminated.");
 		System.out.println("Total time elapsed: " + (timestampA.getTime() - startTimestamp.getTime()) + " milliseconds");
@@ -66,13 +53,7 @@ public class InteractiveApplication
 			Collection<InteractiveApplication> appsToTerminate = new ArrayList<InteractiveApplication>();
 			for (InteractiveApplication app : activeApps)
 			{
-				boolean shouldTerminate = false;
-				for (EventPollable poller : app.pollable)
-				{
-					shouldTerminate = shouldTerminate || poller.shouldTerminate();
-				}
-				
-				if (shouldTerminate)
+				if (app.pollable.shouldTerminate())
 				{
 					appsToTerminate.add(app);
 				}
@@ -90,10 +71,7 @@ public class InteractiveApplication
 
 			for (InteractiveApplication app : activeApps)
 			{
-				for (EventPollable poller : app.pollable)
-				{
-					poller.pollEvents();
-				}
+				app.pollable.pollEvents();
 			}
 		}
 	}

@@ -11,7 +11,7 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.Trackball;
 
-public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
+public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable
 {
 	private ContextType context;
 	private Program<ContextType> program;
@@ -63,7 +63,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 			while (scanner.hasNextLine())
 			{
 				String vsetFileName = scanner.nextLine();
-				stages.add(new ULFRenderer<ContextType>(context, program, null, new File(directory, vsetFileName), null, loadOptions, trackball));
+				stages.add(new ULFRenderer<ContextType>(context, program, new File(directory, vsetFileName), loadOptions, trackball));
 			}
 			scanner.close();
 			
@@ -215,35 +215,5 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 		{
 			context.disableMultisampling();			
 		}		
-	}
-
-	@Override
-	public void setProgram(Program<ContextType> program) 
-	{
-		for(ULFRenderer<ContextType> stage : stages)
-		{
-			stage.setProgram(program);
-		}
-	}
-
-	@Override
-	public void setIndexProgram(Program<ContextType> program) 
-	{
-		for(ULFRenderer<ContextType> stage : stages)
-		{
-			stage.setIndexProgram(program);
-		}
-	}
-
-	@Override
-	public boolean isViewIndexCacheEnabled() 
-	{
-		return this.stages.get(this.currentStage).isViewIndexCacheEnabled();
-	}
-
-	@Override
-	public void setViewIndexCacheEnabled(boolean viewIndexCacheEnabled) 
-	{
-		this.stages.get(this.currentStage).setViewIndexCacheEnabled(viewIndexCacheEnabled);
 	}
 }
