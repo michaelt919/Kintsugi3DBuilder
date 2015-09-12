@@ -7,51 +7,68 @@ import javax.swing.AbstractListModel;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
-import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.MultiDrawable;
 import tetzlaff.gl.helpers.Trackball;
 
-public abstract class ULFDrawableListModel<ContextType extends Context<ContextType>> extends AbstractListModel<ULFDrawable> implements ULFListModel
+public abstract class ULFDrawableListModel<ContextType extends Context<ContextType>> extends AbstractListModel<ULFDrawable<ContextType>> implements ULFListModel<ContextType>
 {
 	private static final long serialVersionUID = 4167467314632694946L;
 	
 	protected final ContextType context;
-	protected final Program<ContextType> program;
 	protected final Trackball trackball;
-	private MultiDrawable<ULFDrawable> ulfs;
+	private Program<ContextType> program;
+	private Program<ContextType> indexProgram;
+	private MultiDrawable<ULFDrawable<ContextType>> ulfs;
 	private int effectiveSize;
 	private ULFLoadingMonitor loadingMonitor;
 	
-	public ULFDrawableListModel(ContextType context, Trackball trackball) 
+	protected ULFDrawableListModel(ContextType context, Program<ContextType> program, Trackball trackball) 
 	{
 		this.context = context;
 		this.trackball = trackball;
-		this.ulfs = new MultiDrawable<ULFDrawable>();
+		this.ulfs = new MultiDrawable<ULFDrawable<ContextType>>();
 		this.effectiveSize = 0;
 		
-		try
-        {
-    		this.program = context.getShaderProgramBuilder()
-    				.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ulr.frag"))
-    				.createProgram();
-        }
-        catch (IOException e)
-        {
-        	e.printStackTrace();
-        	throw new IllegalStateException("The shader program could not be initialized.", e);
-        }
+		this.program = program;
 	}
 	
-	protected abstract ULFDrawable createFromVSETFile(File vsetFilee, ULFLoadOptions loadOptions) throws IOException;
-	protected abstract ULFRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
-	protected abstract ULFDrawable createMorphFromLFMFile(File lfmFilee, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract ULFDrawable<ContextType> createFromVSETFile(File vsetFilee, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract ULFDrawable<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract ULFDrawable<ContextType> createMorphFromLFMFile(File lfmFilee, ULFLoadOptions loadOptions) throws IOException;
+	
+	public Program<ContextType> getProgram()
+	{
+		return this.program;
+	}
+	
+	public void setProgram(Program<ContextType> program)
+	{
+		this.program = program;
+		for (ULFDrawable<ContextType> ulf : ulfs)
+		{
+			ulf.setProgram(program);
+		}
+	}
+
+	public Program<ContextType> getIndexProgram()
+	{
+		return this.indexProgram;
+	}
+	
+	public void setIndexProgram(Program<ContextType> program)
+	{
+		this.indexProgram = program;
+		for (ULFDrawable<ContextType> ulf : ulfs)
+		{
+			ulf.setIndexProgram(program);
+		}
+	}
 
 	@Override
-	public ULFDrawable addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
+	public ULFDrawable<ContextType> addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		ULFDrawable newItem = this.createFromVSETFile(vsetFile, loadOptions);
+		ULFDrawable<ContextType> newItem = this.createFromVSETFile(vsetFile, loadOptions);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
@@ -80,9 +97,9 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	}
 	
 	@Override
-	public ULFDrawable addFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException
+	public ULFDrawable<ContextType> addFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		ULFDrawable newItem = this.createFromAgisoftXMLFile(xmlFile, meshFile, loadOptions);
+		ULFDrawable<ContextType> newItem = this.createFromAgisoftXMLFile(xmlFile, meshFile, loadOptions);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
@@ -111,9 +128,9 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	}
 
 	@Override
-	public ULFDrawable addMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException 
+	public ULFDrawable<ContextType> addMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException 
 	{
-		ULFDrawable newItem = this.createMorphFromLFMFile(lfmFile, loadOptions);
+		ULFDrawable<ContextType> newItem = this.createMorphFromLFMFile(lfmFile, loadOptions);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
@@ -148,13 +165,13 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	}
 
 	@Override
-	public ULFDrawable getElementAt(int index) 
+	public ULFDrawable<ContextType> getElementAt(int index) 
 	{
 		return ulfs.get(index);
 	}
 
 	@Override
-	public ULFDrawable getSelectedItem() 
+	public ULFDrawable<ContextType> getSelectedItem() 
 	{
 		return ulfs.getSelectedItem();
 	}

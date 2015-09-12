@@ -12,6 +12,7 @@ import tetzlaff.gl.Shader;
 import tetzlaff.gl.Texture;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.builders.base.ProgramBuilderBase;
+import tetzlaff.gl.exceptions.InvalidProgramException;
 import tetzlaff.gl.exceptions.ProgramLinkFailureException;
 import tetzlaff.gl.exceptions.UnlinkedProgramException;
 import tetzlaff.gl.helpers.IntVector2;
@@ -127,9 +128,6 @@ class OpenGLProgram implements Resource, Program<OpenGLContext>
 		}
 		else
 		{
-			glUseProgram(programId);
-			this.context.openGLErrorCheck();
-			
 			for (int i = 0; i < textureManager.length; i++)
 			{
 				OpenGLTexture texture = textureManager.getResourceByUnit(i);
@@ -155,13 +153,26 @@ class OpenGLProgram implements Resource, Program<OpenGLContext>
 					this.context.unbindBuffer(GL_UNIFORM_BUFFER, i);
 				}
 			}
+			
+			glValidateProgram(programId);
+			if (glGetProgrami(programId, GL_VALIDATE_STATUS) == GL_FALSE)
+			{
+				throw new InvalidProgramException("The OpenGL program to be used failed validation.");
+			}
+			
+			glUseProgram(programId);
+			this.context.openGLErrorCheck();
 		}
 	}
 	
 	@Override
 	public boolean setTexture(int location, Texture<OpenGLContext> texture)
 	{
-		if (texture instanceof OpenGLTexture)
+		if (texture == null)
+		{
+			return this.setUniform(location, 0);
+		}
+		else if (texture instanceof OpenGLTexture)
 		{
 			int textureUnit = textureManager.assignResourceByKey(location, (OpenGLTexture)texture);
 			return this.setUniform(location, textureUnit);
