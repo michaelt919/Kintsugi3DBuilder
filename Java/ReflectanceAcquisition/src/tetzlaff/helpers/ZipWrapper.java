@@ -55,19 +55,9 @@ public class ZipWrapper
 			zipName += ".zip";
 			
 			// Open the most probable zip and look for the file in the two valid locations
-			if (myZip == null && new File(zipName).exists())
-			{
-				myZip = new ZipFile(zipName);
-			}
-			
-			if (myZip != null)
-			{
-				myZipEntry = myZip.getEntry(entryNameShort);
-				if(myZipEntry == null) 
-				{
-					myZipEntry = myZip.getEntry(entryNameLong);
-				}
-			}
+			if(myZip == null) myZip = new ZipFile(zipName);
+			myZipEntry = myZip.getEntry(entryNameShort);
+			if(myZipEntry == null) myZipEntry = myZip.getEntry(entryNameLong);
 
 			// Did we find it?
 			if(myZipEntry != null)

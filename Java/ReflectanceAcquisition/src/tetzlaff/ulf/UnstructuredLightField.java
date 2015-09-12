@@ -15,6 +15,7 @@ import tetzlaff.gl.helpers.VertexMesh;
 
 public class UnstructuredLightField<ContextType extends Context<ContextType>>
 {
+	public final File directoryPath;
 	public final String id;
 	public final ViewSet<ContextType> viewSet;
 	public final VertexMesh proxy;
@@ -24,10 +25,11 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	public final Texture3D<ContextType> depthTextures;
     public final ULFSettings settings;
 	
-	public UnstructuredLightField(String id, ViewSet<ContextType> viewSet, VertexMesh proxy, Texture3D<ContextType> depthTextures, 
+	public UnstructuredLightField(File directoryPath, ViewSet<ContextType> viewSet, VertexMesh proxy, Texture3D<ContextType> depthTextures, 
 			VertexBuffer<ContextType> positionBuffer, VertexBuffer<ContextType> texCoordBuffer, VertexBuffer<ContextType> normalBuffer, ULFSettings settings) 
 	{
-    	this.id = id;
+    	this.id = directoryPath.getName();
+		this.directoryPath = directoryPath;
 		this.viewSet = viewSet;
 		this.proxy = proxy;
 		this.depthTextures = depthTextures;
@@ -73,7 +75,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 		Texture3D<ContextType> depthTextures = null;
 		
 		File directoryPath = xmlFile.getParentFile();
-        proxy = new VertexMesh("OBJ", meshFile);
+        proxy = new VertexMesh("OBJ", meshFile); // TODO don't have geometry filename hard-coded
         viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, loadOptions.getImageOptions(), context);
         VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(proxy.getVertices());
         
@@ -129,7 +131,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
         	normalBuffer = context.createVertexBuffer().setData(proxy.getNormals());
         }
         
-    	return new UnstructuredLightField<ContextType>(directoryPath.toString(), viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
+    	return new UnstructuredLightField<ContextType>(directoryPath, viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
 	}
 	
 	public static <ContextType extends Context<ContextType>>
@@ -206,7 +208,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
         	normalBuffer = context.createVertexBuffer().setData(proxy.getNormals());
         }
         
-    	return new UnstructuredLightField<ContextType>(directoryPath.toString(), viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
+    	return new UnstructuredLightField<ContextType>(directoryPath, viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
 	}
 	
 	@Override

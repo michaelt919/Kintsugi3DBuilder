@@ -27,7 +27,6 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
 	void saveColorBufferToFile(int attachmentIndex, int x, int y, int width, int height, String fileFormat, File file) throws IOException;
 
 	void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a);
-	void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a);
 	void clearDepthBuffer(float depth);
 	void clearDepthBuffer();
 	void clearStencilBuffer(int stencilIndex);
