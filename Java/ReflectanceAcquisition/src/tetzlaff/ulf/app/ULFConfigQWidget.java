@@ -10,12 +10,10 @@ import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFMorphRenderer;
 import tetzlaff.ulf.ViewSetImageOptions;
 
-import com.bugsplatsoftware.client.BugSplat;
 import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.gui.QCloseEvent;
 import com.trolltech.qt.gui.QFileDialog;
 import com.trolltech.qt.gui.QFileDialog.Filter;
-import com.trolltech.qt.gui.QMessageBox;
 import com.trolltech.qt.gui.QWidget;
 
 public class ULFConfigQWidget extends QWidget implements EventPollable {
@@ -147,21 +145,6 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 				gui.depthImageHeightSpinner.value());
 		
 		return loadOptions;
-	}
-	
-	@SuppressWarnings("unused")
-	private void on_reportBugButton_clicked()
-	{
-		int result = QMessageBox.question(this, "Create Bug Report?",
-				"Would you like to send a manually created bug report?\n\n"+
-				"This will create a crash report with useful, anonmous information " +
-				"about your system.  Please be sure to enter a detailed description.",
-				QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No);
-		
-		if(result == QMessageBox.StandardButton.No.value()) return;
-		
-        BugSplat.SetDescription("Manual Report, " + System.getProperty("os.name"));
-		BugSplat.HandleException(new Exception("Manual Bug Report"));
 	}
 	
 	// Add listener for the 'single' load button to read a single light field object.
