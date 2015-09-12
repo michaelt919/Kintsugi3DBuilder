@@ -57,7 +57,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		this.param = param;
 	}
 
-	@SuppressWarnings("unused")
 	public void execute() throws IOException
 	{
 		final int DEBUG_PIXEL_X = 322;
