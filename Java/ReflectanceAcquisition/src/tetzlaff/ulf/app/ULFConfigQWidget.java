@@ -10,7 +10,6 @@ import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFMorphRenderer;
 import tetzlaff.ulf.ViewSetImageOptions;
 
-import com.bugsplatsoftware.client.BugSplat;
 import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.gui.QCloseEvent;
 import com.trolltech.qt.gui.QFileDialog;
@@ -160,8 +159,9 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		
 		if(result == QMessageBox.StandardButton.No.value()) return;
 		
-        BugSplat.SetDescription("Manual Report, " + System.getProperty("os.name"));
-		BugSplat.HandleException(new Exception("Manual Bug Report"));
+		try {
+			ULFProgram.generateBugReport();
+		} catch (IOException e) {}
 	}
 	
 	// Add listener for the 'single' load button to read a single light field object.

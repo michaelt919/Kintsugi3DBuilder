@@ -100,6 +100,12 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	}
 
 	@Override
+	public void saveToFile(String fileFormat, File file)
+	{
+		stages.get(currentStage).saveToFile(fileFormat, file);
+	}
+	
+	@Override
 	public void cleanup() 
 	{
 		for(ULFRenderer<ContextType> stage : stages)

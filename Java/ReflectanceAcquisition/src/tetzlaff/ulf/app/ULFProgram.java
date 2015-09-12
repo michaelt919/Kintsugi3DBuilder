@@ -3,7 +3,10 @@ package tetzlaff.ulf.app;
 import com.bugsplatsoftware.client.BugSplat;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,8 +15,10 @@ import javax.imageio.ImageIO;
 import org.lwjgl.LWJGLUtil;
 
 import com.trolltech.qt.core.QCoreApplication;
+import com.trolltech.qt.core.Qt;
 import com.trolltech.qt.core.Qt.ApplicationAttribute;
 import com.trolltech.qt.gui.QApplication;
+import com.trolltech.qt.gui.QCursor;
 import com.trolltech.qt.gui.QStyle;
 
 import tetzlaff.gl.helpers.InteractiveGraphics;
@@ -31,9 +36,22 @@ import tetzlaff.window.glfw.GLFWWindow;
  */
 public class ULFProgram
 {
+	/**
+	 * Current version number (increment on milestone releases)
+	 */
 	public static final String VERSION = "1.0a";
-	public static final String LOG_FILE = "output.log";
-	public static final String ERR_FILE = "errors.log";
+	
+	/**
+	 * Name of the file used to log standard out (System.out)
+	 */
+	public static final String LOG_FILE = "output";
+
+	/**
+	 * Name of the file used to log standard error (System.err)
+	 */
+	public static final String ERR_FILE = "errors";
+	
+	public static InteractiveApplication app;
 	
     /**
      * The main entry point for the Unstructured Light Field (ULF) renderer application.
@@ -41,14 +59,17 @@ public class ULFProgram
      */
     public static void main(String[] args)
     {
+    	// Return code to issue on completion (0 = success, >0 = error)
+    	int exitCode = 0;
+    	
     	// Surround with try-catch for BugSpat integration
     	try {
             // Init the bugsplat library with the database, application and version parameters
             BugSplat.Init("berriers_uwstout_edu", "ULFRenderer", VERSION);
             
             // Prepare log files, delete any old ones
-            File logFile = new File(LOG_FILE);
-            File errFile = new File(ERR_FILE);
+            File logFile = File.createTempFile(LOG_FILE, ".log");
+            File errFile = File.createTempFile(ERR_FILE, ".log");
             if(logFile.exists()) { logFile.delete(); }
             if(errFile.exists()) { errFile.delete(); }
 
@@ -56,15 +77,36 @@ public class ULFProgram
             System.setOut(new PrintStream(logFile));
             System.setErr(new PrintStream(errFile));
             
+            // Add header with timestamp to logs
+            String timestamp = new SimpleDateFormat("MM/dd/yyy HH:mm:ss").format(new Date());
+            System.out.println("ULF Renderer " + VERSION + ", Standard Log (" + timestamp + ")");
+            System.err.println("ULF Renderer " + VERSION + ", Error Log (" + timestamp + ")");
+
             // Add the logs to BugSplat crash report
-            BugSplat.AddAdditionalFile(logFile.getPath());
-            BugSplat.AddAdditionalFile(errFile.getPath());
+            BugSplat.AddAdditionalFile(errFile.getAbsolutePath());
+            BugSplat.AddAdditionalFile(logFile.getAbsolutePath());
             
             // Initialize the system environment vars and LWJGL
 	    	System.getenv();
 	    	LWJGLUtil.initialize();
 	    	
-	    	System.out.println("System: " + System.getProperty("os.name"));
+	    	// Output some system information
+	        System.out.println("\n****** Sys Info *****");	    	
+	    	System.out.println("OS      : " + System.getProperty("os.name"));
+	    	System.out.println("Arch    : " + System.getProperty("os.arch"));
+	    	System.out.println("Version : " + System.getProperty("os.version"));
+	        System.out.println("***** Java Info *****");
+	        System.out.println("* Version : " + System.getProperty("java.version"));
+	        System.out.println("* Vendor  : " + System.getProperty("java.vendor"));
+	        System.out.println("* Home    : " + System.getProperty("java.home"));
+	        System.out.println("****** JVM Info *****");
+	        System.out.println("* Name         : " + System.getProperty("java.vm.name"));
+	        System.out.println("* Version      : " + System.getProperty("java.vm.version"));
+	        System.out.println("* Vendor       : " + System.getProperty("java.vm.vendor"));
+	        System.out.println("* Spec Name    : " + System.getProperty("java.vm.specification.name"));
+	        System.out.println("* Spec Version : " + System.getProperty("java.vm.specification.version"));
+	        System.out.println("* Spec Vendor  : " + System.getProperty("java.vm.specification.vendor"));
+	        System.out.println("*********************\n");
 	    	
 	    	// Check for and print supported image formats (some are not as easy as you would think)
 	    	checkSupportedImageFormats();
@@ -86,7 +128,7 @@ public class ULFProgram
 	
 	    	// Create a new application to run our event loop and give it the GLFWWindow for polling
 	    	// of events and the OpenGL context.  The ULFRendererList provides the drawable.
-	        InteractiveApplication app = InteractiveGraphics.createApplication(window, window, model.getDrawable());
+	        app = InteractiveGraphics.createApplication(window, window, model.getDrawable());
 	
 			// Prepare the Qt GUI system
 	        if(System.getProperty("os.name").startsWith("Windows")) {
@@ -94,9 +136,9 @@ public class ULFProgram
 	        }
 	        
 	        QApplication.initialize(args);
-	        QCoreApplication.setOrganizationName("UW Stout");
-	        QCoreApplication.setOrganizationDomain("uwstout.edu");
-	        QCoreApplication.setApplicationName("PhotoScan Helper");
+	        QCoreApplication.setOrganizationName("Cultural Heritage Imaging");
+	        QCoreApplication.setOrganizationDomain("culturalheritageimaging.org");
+	        QCoreApplication.setApplicationName("ULF Renderer");
 	        
 	        // As far as I can tell, the OS X native menu bar doesn't work in Qt Jambi
 	        // The Java process owns the native menu bar and won't relinquish it to Qt
@@ -135,23 +177,29 @@ public class ULFProgram
 	        }
 	        */
 	
-	        // Start the main event loop
+	        // Set the GL window (so other funcs can access) and start the main event loop
 			app.run();
+    	} catch(Exception e) {
+            // Set crash description (useful for filtering)
+            BugSplat.SetDescription("Crash Report, Exception, " + System.getProperty("os.name"));
+            
+    		// Let BugSplat handle the exception and set error exit code
+    		BugSplat.HandleException(e);
+    		exitCode = 1;
     	} catch(Throwable t) {
             // Set crash description (useful for filtering)
-            BugSplat.SetDescription("Crash Report, " + System.getProperty("os.name"));
+            BugSplat.SetDescription("Crash Report, Error, " + System.getProperty("os.name"));
             
-    		// Let BugSplat handle the exception and exit unsuccessfully
+    		// Let BugSplat handle the exception and set error exit code
     		BugSplat.HandleException(new Exception(t));
-
-    		System.exit(1);
+    		exitCode = 1;
     	} finally {
     		// Always cleanup the windows
 	        GLFWWindow.closeAllWindows();
     	}
     	
-    	// Exit successfully
-        System.exit(0);
+    	// Exit with a particular error code
+        System.exit(exitCode);
     }
     
     /**
@@ -170,5 +218,37 @@ public class ULFProgram
         }
 
         System.out.println("Supported image formats: " + set);
+    }
+    
+    public static void generateBugReport() throws IOException
+    {
+    	// Set a waiting cursor to discourage interaction
+    	QApplication.setOverrideCursor(new QCursor(Qt.CursorShape.WaitCursor));
+    	
+        // Prepare for a screenshot
+    	File screenshot = File.createTempFile("screenshot", ".png");
+    	if(screenshot.exists()) { screenshot.delete(); }
+
+    	// Request and wait for the screenshot
+    	app.requestScreenshot("png", screenshot);
+    	int tries = 0, maxTries = 100;
+        while(!screenshot.exists() && tries < maxTries)
+        {
+        	try { Thread.sleep(100); }
+        	catch (InterruptedException e) {}
+        	tries++;
+        }
+        
+        // Attach it if it is there
+        if(screenshot.exists()) {
+        	BugSplat.AddAdditionalFile(screenshot.getAbsolutePath());
+        }
+
+        // Go back to normal cursor
+    	QApplication.restoreOverrideCursor();
+
+    	// Create the report
+        BugSplat.SetDescription("Manual Report, " + System.getProperty("os.name"));
+        BugSplat.HandleException(new Exception("Manual Bug Report"));
     }
 }
