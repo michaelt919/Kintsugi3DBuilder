@@ -102,11 +102,11 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 					indexProgram.setTexture("normalMap", microfacetField.normalTexture);
 				}
 	
-				program.setUniform("lightPos", 
+				indexProgram.setUniform("lightPos", 
 						new Vector3(lightTrackball.getRotationMatrix().getColumn(2))
 							.times(lightTrackball.getScale())
 							.plus(ulfRenderer.getLightField().proxy.getCentroid()));
-				program.setUniform("lightIntensity", new Vector3(1.0f, 1.0f, 1.0f));
+				indexProgram.setUniform("lightIntensity", new Vector3(1.0f, 1.0f, 1.0f));
 			}
 			
 			ulfRenderer.draw();

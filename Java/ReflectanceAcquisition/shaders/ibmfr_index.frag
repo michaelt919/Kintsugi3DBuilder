@@ -154,28 +154,28 @@ void updateViewIndices(inout int indices[SAMPLE_COUNT])
     // Initialization
     for (int i = 0; i < SAMPLE_COUNT; i++)
     {
-        // if (indices[i] >= 0 && indices[i] < MAX_CAMERA_POSE_COUNT)
-        // {
-            // // All in camera space
-            // vec3 fragmentPos = (cameraPoses[i] * vec4(fPosition, 1.0)).xyz;
-            // vec3 virtualViewDir = normalize((cameraPoses[i] * vec4(viewPos, 1.0)).xyz - fragmentPos);
-            // vec3 sampleViewDir = normalize(-fragmentPos);
-            // vec3 virtualLightDir = normalize((cameraPoses[i] * vec4(lightPos, 1.0)).xyz - fragmentPos);
-            // vec3 sampleLightDirUnnorm = lightPositions[lightIndices[i]].xyz - fragmentPos;
-            // vec3 sampleLightDir = normalize(sampleLightDirUnnorm);
-            // vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
-            // vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
-            // vec3 normalDirCameraSpace = (cameraPoses[i] * vec4(normalDir, 0.0)).xyz;
+        if (indices[i] >= 0 && indices[i] < MAX_CAMERA_POSE_COUNT)
+        {
+            // All in camera space
+            vec3 fragmentPos = (cameraPoses[i] * vec4(fPosition, 1.0)).xyz;
+            vec3 virtualViewDir = normalize((cameraPoses[i] * vec4(viewPos, 1.0)).xyz - fragmentPos);
+            vec3 sampleViewDir = normalize(-fragmentPos);
+            vec3 virtualLightDir = normalize((cameraPoses[i] * vec4(lightPos, 1.0)).xyz - fragmentPos);
+            vec3 sampleLightDirUnnorm = lightPositions[lightIndices[i]].xyz - fragmentPos;
+            vec3 sampleLightDir = normalize(sampleLightDirUnnorm);
+            vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
+            vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
+            vec3 normalDirCameraSpace = (cameraPoses[i] * vec4(normalDir, 0.0)).xyz;
             
-            // float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
-            // float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
+            float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
+            float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
             
-            // // Compute sample weight
-            // weights[i] = computeSampleWeight(virtualHalfDir, sampleHalfDir) * nDotL * nDotV;
+            // Compute sample weight
+            weights[i] = computeSampleWeight(virtualHalfDir, sampleHalfDir) * nDotL * nDotV;
             
-            // viewsUsed[indices[i]] = true;
-        // }
-        // else
+            viewsUsed[indices[i]] = true;
+        }
+        else
         {
             weights[i] = -1.0 / 0.0;
             indices[i] = -1;
@@ -183,15 +183,24 @@ void updateViewIndices(inout int indices[SAMPLE_COUNT])
     }
     
     // // Build heap
-    // for (int i = SAMPLE_COUNT / 2 - 1; i >= 0; i--)
-    // {
-        // heapify(indices, weights, i);
-    // }
+    for (int i = SAMPLE_COUNT / 2 - 1; i >= 0; i--)
+    {
+        heapify(indices, weights, i);
+    }
     
     // Partial heapsort
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < cameraPoseCount; i++)
     {
-        if (!viewsUsed[i])
+        bool viewUsed = false;
+        for (int j = 0; j < SAMPLE_COUNT; j++)
+        {
+            if(indices[j] == i)
+            {
+                viewUsed = true;
+            }
+        }
+        
+        if (!viewUsed)
         {
             // All in camera space
             vec3 fragmentPos = (cameraPoses[i] * vec4(fPosition, 1.0)).xyz;
@@ -224,7 +233,7 @@ void updateViewIndices(inout int indices[SAMPLE_COUNT])
 
 void main()
 {
-    int[] indices = readViewIndices();
+    int[] indices = int[SAMPLE_COUNT](-1,-1,-1,-1,-1,-1,-1);//readViewIndices();
     updateViewIndices(indices);
     writeViewIndices(indices);
 }
