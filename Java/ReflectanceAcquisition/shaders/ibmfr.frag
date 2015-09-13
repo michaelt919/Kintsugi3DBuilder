@@ -84,6 +84,119 @@ int[SAMPLE_COUNT] readViewIndices()
         prevViewIndices1.y,
         prevViewIndices1.z
     );
+    
+    // ivec2 texSize = textureSize(viewIndexTextures, 0).xy;
+    // vec2 texCoordExact = texSize * fTexCoord;
+    // vec2 texCoordFloor = floor(texCoordExact);
+    // vec2 texCoordDelta = texCoordExact-texCoordFloor;
+    
+    // ivec2 coordsA, coordsB, coordsC, coordsD;
+    // if (texCoordDelta.x > 0.5)
+    // {
+        // if (texCoordDelta.y > 0.5)
+        // {
+            // coordsA = ivec2(texCoordFloor + ivec2(1,1));
+            // coordsD = ivec2(texCoordFloor);
+            
+            // if (texCoordDelta.x > texCoordDelta.y)
+            // {
+                // coordsB = ivec2(texCoordFloor + ivec2(1,0));
+                // coordsC = ivec2(texCoordFloor + ivec2(0,1));
+            // }
+            // else
+            // {
+                // coordsB = ivec2(texCoordFloor + ivec2(0,1));
+                // coordsC = ivec2(texCoordFloor + ivec2(1,0));
+            // }
+        // }
+        // else
+        // {
+            // coordsA = ivec2(texCoordFloor + ivec2(1,0));
+            // coordsD = ivec2(texCoordFloor + ivec2(0,1));
+            
+            // if (texCoordDelta.x > 1.0 - texCoordDelta.y)
+            // {
+                // coordsB = ivec2(texCoordFloor + ivec2(1,1));
+                // coordsC = ivec2(texCoordFloor + ivec2(0,0));
+            // }
+            // else
+            // {
+                // coordsB = ivec2(texCoordFloor + ivec2(0,0));
+                // coordsC = ivec2(texCoordFloor + ivec2(1,1));
+            // }
+        // }
+    // }
+    // else
+    // {
+        // if (texCoordDelta.y > 0.5)
+        // {
+            // coordsA = ivec2(texCoordFloor + ivec2(0,1));
+            // coordsD = ivec2(texCoordFloor + ivec2(1,0));
+            
+            // if (texCoordDelta.x > 1.0 - texCoordDelta.y)
+            // {
+                // coordsB = ivec2(texCoordFloor + ivec2(1,1));
+                // coordsC = ivec2(texCoordFloor);
+            // }
+            // else
+            // {
+                // coordsB = ivec2(texCoordFloor);
+                // coordsC = ivec2(texCoordFloor + ivec2(1,1));
+            // }
+        // }
+        // else
+        // {
+            // coordsA = ivec2(texCoordFloor);
+            // coordsD = ivec2(texCoordFloor + ivec2(1,1));
+            
+            // if (texCoordDelta.x > texCoordDelta.y)
+            // {
+                // coordsB = ivec2(texCoordFloor + ivec2(1,0));
+                // coordsC = ivec2(texCoordFloor + ivec2(0,1));
+            // }
+            // else
+            // {
+                // coordsB = ivec2(texCoordFloor + ivec2(0,1));
+                // coordsC = ivec2(texCoordFloor + ivec2(1,0));
+            // }
+        // }
+    // }
+
+    // ivec4 prevViewIndices0A = texelFetch(viewIndexTextures, ivec3(coordsA, 0), 0);
+    // ivec4 prevViewIndices1A = texelFetch(viewIndexTextures, ivec3(coordsA, 1), 0);
+    
+    // ivec4 prevViewIndices0B = texelFetch(viewIndexTextures, ivec3(coordsB, 0), 0);
+    // ivec4 prevViewIndices1B = texelFetch(viewIndexTextures, ivec3(coordsB, 1), 0);
+    
+    // ivec4 prevViewIndices0C = texelFetch(viewIndexTextures, ivec3(coordsC, 0), 0);
+    // ivec4 prevViewIndices1C = texelFetch(viewIndexTextures, ivec3(coordsC, 1), 0);
+    
+    // ivec4 prevViewIndices0D = texelFetch(viewIndexTextures, ivec3(coordsD, 0), 0);
+    // ivec4 prevViewIndices1D = texelFetch(viewIndexTextures, ivec3(coordsD, 1), 0);
+
+    // return int[SAMPLE_COUNT](
+        // prevViewIndices0A.x >= 0 ? prevViewIndices0A.x :
+        // prevViewIndices0B.x >= 0 ? prevViewIndices0B.x :
+        // prevViewIndices0C.x >= 0 ? prevViewIndices0C.x : prevViewIndices0D.x,
+        // prevViewIndices0A.y >= 0 ? prevViewIndices0A.y :
+        // prevViewIndices0B.y >= 0 ? prevViewIndices0B.y :
+        // prevViewIndices0C.y >= 0 ? prevViewIndices0C.y : prevViewIndices0D.y,
+        // prevViewIndices0A.z >= 0 ? prevViewIndices0A.z :
+        // prevViewIndices0B.z >= 0 ? prevViewIndices0B.z :
+        // prevViewIndices0C.z >= 0 ? prevViewIndices0C.z : prevViewIndices0D.z,
+        // prevViewIndices0A.w >= 0 ? prevViewIndices0A.w :
+        // prevViewIndices0B.w >= 0 ? prevViewIndices0B.w :
+        // prevViewIndices0C.w >= 0 ? prevViewIndices0C.w : prevViewIndices0D.w,
+        // prevViewIndices1A.x >= 0 ? prevViewIndices1A.x :
+        // prevViewIndices1B.x >= 0 ? prevViewIndices1B.x :
+        // prevViewIndices1C.x >= 0 ? prevViewIndices1C.x : prevViewIndices1D.x,
+        // prevViewIndices1A.y >= 0 ? prevViewIndices1A.y :
+        // prevViewIndices1B.y >= 0 ? prevViewIndices1B.y :
+        // prevViewIndices1C.y >= 0 ? prevViewIndices1C.y : prevViewIndices1D.y,
+        // prevViewIndices1A.z >= 0 ? prevViewIndices1A.z :
+        // prevViewIndices1B.z >= 0 ? prevViewIndices1B.z :
+        // prevViewIndices1C.z >= 0 ? prevViewIndices1C.z : prevViewIndices1D.z
+    // );
 }
 
 float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
