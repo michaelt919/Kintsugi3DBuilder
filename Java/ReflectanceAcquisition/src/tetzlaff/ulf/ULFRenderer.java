@@ -3,6 +3,7 @@ package tetzlaff.ulf;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Date;
 
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
@@ -38,9 +39,15 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 
     private boolean viewIndexCacheEnabled;
     private boolean halfResEnabled;
-    private Texture3D<ContextType> viewIndexCacheTextures;
+    FramebufferObject<ContextType> indexFBO;
+    private Texture3D<ContextType> viewIndexCacheTexturesFront;
+    private Texture3D<ContextType> viewIndexCacheTexturesBack;
     private Program<ContextType> simpleTexProgram;
     private Renderable<ContextType> simpleTexRenderable;
+    
+    private float targetFPS;
+    private long lastFrame = 0;
+    private int offset=0, stride=0;
 
     private boolean resampleRequested;
     private int resampleWidth, resampleHeight;
@@ -57,6 +64,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.loadOptions = loadOptions;
     	this.trackball = trackball;
     	this.viewIndexCacheEnabled = true;
+    	this.targetFPS = 30.0f;
     }
     
     @Override
@@ -112,11 +120,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     				this.geometryFile = lightField.viewSet.getGeometryFile();
 				}
     		}
-    		
-			if (this.callback != null)
-			{
-				this.callback.loadingComplete();
-			}
 	    	
 	    	this.mainRenderable = context.createRenderable(program);
 	    	this.mainRenderable.addVertexBuffer("position", this.lightField.positionBuffer);
@@ -133,6 +136,35 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    				
 	    	this.simpleTexRenderable = context.createRenderable(simpleTexProgram);
 	    	this.simpleTexRenderable.addVertexBuffer("position", context.createRectangle());
+	    	
+        	indexFBO = context.getFramebufferObjectBuilder(this.lightField.depthTextures.getWidth(), this.lightField.depthTextures.getHeight())
+					.addEmptyColorAttachments(2)
+					.createFramebufferObject();
+			
+			viewIndexCacheTexturesFront = context.get2DColorTextureArrayBuilder(this.lightField.depthTextures.getWidth(), this.lightField.depthTextures.getHeight(), 2)
+					.setInternalFormat(ColorFormat.RGBA16I)
+					.setMipmapsEnabled(false)
+					.setLinearFilteringEnabled(false)
+					.setMultisamples(1, true)
+					.createTexture();
+			
+			viewIndexCacheTexturesBack = context.get2DColorTextureArrayBuilder(this.lightField.depthTextures.getWidth(), this.lightField.depthTextures.getHeight(), 2)
+					.setInternalFormat(ColorFormat.RGBA16I)
+					.setMipmapsEnabled(false)
+					.setLinearFilteringEnabled(false)
+					.setMultisamples(1, true)
+					.createTexture();
+			
+			indexFBO.setColorAttachment(0, viewIndexCacheTexturesFront.getLayerAsFramebufferAttachment(0));
+			indexFBO.setColorAttachment(1, viewIndexCacheTexturesFront.getLayerAsFramebufferAttachment(1));
+			indexFBO.clearIntegerColorBuffer(0, -1, -1, -1, -1);
+			indexFBO.clearIntegerColorBuffer(1, -1, -1, -1, -1);
+			context.flush();
+    		
+			if (this.callback != null)
+			{
+				this.callback.loadingComplete();
+			}
 		} 
     	catch (IOException e) 
     	{
@@ -164,6 +196,27 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     @Override
     public void draw()
     {
+    	if (offset == stride)
+    	{
+    		offset = 0;
+    		long now = new Date().getTime();
+    		
+    		if (lastFrame > 0)
+    		{
+	    		long elapsedTime = now-lastFrame;
+	    		float fps = (float)stride/(float)elapsedTime*1000;
+	    		stride = Math.max(1, Math.min((int)Math.ceil(stride*targetFPS/fps), lightField.viewSet.getCameraPoseCount()));
+	    		System.out.println("fps="+fps);
+	    		System.out.println("new stride="+stride);
+    		}
+    		else
+    		{
+    			stride = lightField.viewSet.getCameraPoseCount();
+    		}
+    		
+    		lastFrame = now;
+    	}
+    	
     	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
     	FramebufferSize size = framebuffer.getSize();
     			
@@ -198,7 +251,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	mainRenderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
     	
         FramebufferObject<ContextType> offscreenFBO;
-        Texture3D<ContextType> nextViewIndexCacheTextures = null;
         
         int fboWidth, fboHeight;
 		if (halfResEnabled)
@@ -214,6 +266,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 		
         if (viewIndexCacheEnabled && viewIndexProgram != null)
 		{
+        	// Update view indices
+			
+        	this.indexRenderable.program().setUniform("offset", offset);
+        	this.indexRenderable.program().setUniform("stride", stride);
+        	
         	this.indexRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
         	this.indexRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
         	this.indexRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
@@ -233,63 +290,21 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     		);
         	indexRenderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
         	
-        	FramebufferObject<ContextType> indexFBO = null;
-        	try
-        	{
-	        	// Update view indices
-	        	indexFBO = context.getFramebufferObjectBuilder(fboWidth, fboHeight)
-						.addEmptyColorAttachments(2)
-						.createFramebufferObject();
-				
-				nextViewIndexCacheTextures = context.get2DColorTextureArrayBuilder(fboWidth, fboHeight, 2)
-						.setInternalFormat(ColorFormat.RGBA16I)
-						.setMipmapsEnabled(false)
-						.setLinearFilteringEnabled(false)
-						.setMultisamples(1, true)
-						.createTexture();
-				
-				
-				if (viewIndexCacheTextures == null)
-				{
-					viewIndexCacheTextures = context.get2DColorTextureArrayBuilder(fboWidth, fboHeight, 2)
-							.setInternalFormat(ColorFormat.RGBA16I)
-							.setMipmapsEnabled(false)
-							.setLinearFilteringEnabled(false)
-							.setMultisamples(1, true)
-							.createTexture();
-					
-					indexFBO.setColorAttachment(0, viewIndexCacheTextures.getLayerAsFramebufferAttachment(0));
-					indexFBO.setColorAttachment(1, viewIndexCacheTextures.getLayerAsFramebufferAttachment(1));
-					indexFBO.clearIntegerColorBuffer(0, -1, -1, -1, -1);
-					indexFBO.clearIntegerColorBuffer(1, -1, -1, -1, -1);
-					context.finish();
-				}
-				
-				indexFBO.setColorAttachment(0, nextViewIndexCacheTextures.getLayerAsFramebufferAttachment(0));
-				indexFBO.setColorAttachment(1, nextViewIndexCacheTextures.getLayerAsFramebufferAttachment(1));
+        	indexFBO.setColorAttachment(0, viewIndexCacheTexturesBack.getLayerAsFramebufferAttachment(0));
+			indexFBO.setColorAttachment(1, viewIndexCacheTexturesBack.getLayerAsFramebufferAttachment(1));
 
-				viewIndexProgram.setTexture("viewIndexTextures", viewIndexCacheTextures);
+			viewIndexProgram.setTexture("viewIndexTextures", viewIndexCacheTexturesFront);
+			
+			indexFBO.clearIntegerColorBuffer(0, -1, -1, -1, -1);
+			indexFBO.clearIntegerColorBuffer(1, -1, -1, -1, -1);
+			indexRenderable.draw(PrimitiveMode.TRIANGLES, indexFBO);
+			context.flush();
 				
-				indexFBO.clearIntegerColorBuffer(0, -1, -1, -1, -1);
-				indexFBO.clearIntegerColorBuffer(1, -1, -1, -1, -1);
-				indexRenderable.draw(PrimitiveMode.TRIANGLES, indexFBO);
-				context.finish();
-        	}
-        	finally
-        	{
-        		if (indexFBO != null)
-        		{
-        			indexFBO.delete();
-        		}
-        		
-        		if (viewIndexCacheTextures != null)
-            	{
-            		viewIndexCacheTextures.delete();
-            	}
-            	viewIndexCacheTextures = nextViewIndexCacheTextures;
-        	}
+    		Texture3D<ContextType> tmp = viewIndexCacheTexturesFront;
+        	viewIndexCacheTexturesFront = viewIndexCacheTexturesBack;
+        	viewIndexCacheTexturesBack = tmp;
         	
-			program.setTexture("viewIndexTextures", viewIndexCacheTextures);
+			program.setTexture("viewIndexTextures", viewIndexCacheTexturesFront);
 		}
     	
     	if(halfResEnabled) 
@@ -306,7 +321,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 			offscreenFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
 	    	offscreenFBO.clearDepthBuffer();
 	        mainRenderable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
-	        context.finish();
+	        context.flush();
 	        
 	        // Second pass at full resolution to default framebuffer
 	    	simpleTexRenderable.program().setTexture("tex", offscreenFBO.getColorAttachmentTexture(0));    	
@@ -314,7 +329,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 			framebuffer.clearDepthBuffer();
 	    	simpleTexRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
 
-	    	context.finish();
+	    	context.flush();
 	    	offscreenFBO.delete();
     	} 
     	else 
@@ -322,18 +337,33 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
     		framebuffer.clearDepthBuffer();
 	        mainRenderable.draw(PrimitiveMode.TRIANGLES, framebuffer);  
-	        context.finish();
+	        context.flush();
     	}
+    	
+    	offset++;
     }
     
     @Override
     public void cleanup()
     {
     	lightField.deleteOpenGLResources();
-    	if (viewIndexCacheTextures != null)
+    	
+		if (indexFBO != null)
+		{
+			indexFBO.delete();
+			indexFBO = null;
+		}
+		
+    	if (viewIndexCacheTexturesFront != null)
     	{
-    		viewIndexCacheTextures.delete();
-    		viewIndexCacheTextures = null;
+    		viewIndexCacheTexturesFront.delete();
+    		viewIndexCacheTexturesFront = null;
+    	}
+		
+		if (viewIndexCacheTexturesBack != null)
+    	{
+			viewIndexCacheTexturesBack.delete();
+			viewIndexCacheTexturesBack = null;
     	}
     }
     
