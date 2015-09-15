@@ -67,12 +67,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 			public void startLoading(double maximum)
 			{
 				// Make dialog visible and set position
-				progressDialog.setHidden(false);
-				QSize dlgSize = progressDialog.size();
-				WindowSize winSize = ULFProgram.getRenderingWindowSize();
-				WindowPosition winPos = ULFProgram.getRendringWindowPosition();
-				progressDialog.move(winPos.x + winSize.width/2 - dlgSize.width()/2,
-									winPos.y + winSize.height/2 - dlgSize.height()/2);
+				initAndPositionProgressDialog();
 
 				// Set maximum
 				progressDialog.setMaximum((int)Math.round(maximum));
@@ -176,6 +171,21 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		return loadOptions;
 	}
 	
+	private void initAndPositionProgressDialog()
+	{
+		// Initialize/reset dialog
+		progressDialog.setMaximum(0);
+		progressDialog.setValue(0);
+		
+		// Make dialog visible and set position
+		progressDialog.setHidden(false);
+		QSize dlgSize = progressDialog.size();
+		WindowSize winSize = ULFProgram.getRenderingWindowSize();
+		WindowPosition winPos = ULFProgram.getRendringWindowPosition();
+		progressDialog.move(winPos.x + winSize.width/2 - dlgSize.width()/2,
+							winPos.y + winSize.height/2 - dlgSize.height()/2);
+	}
+	
 	@SuppressWarnings("unused")
 	private void on_reportBugButton_clicked()
 	{
@@ -237,11 +247,10 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 			}
 			else
 			{
-				model.addFromVSETFile(new File(camDefFilename), loadOptions);				
+				model.addFromVSETFile(new File(camDefFilename), loadOptions);
 			}
 			
-			progressDialog.setMaximum(0);
-			progressDialog.setHidden(false);
+			initAndPositionProgressDialog();
 		}
 		catch (IOException ex) 
 		{
@@ -267,8 +276,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		try 
 		{
 			model.addMorphFromLFMFile(new File(sequenceFilename), getLoadOptionsFromGui());
-			progressDialog.setMaximum(0);
-			progressDialog.setHidden(false);
+			initAndPositionProgressDialog();
 		} 
 		catch (IOException ex) 
 		{
@@ -300,8 +308,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 			
 		try 
 		{
-			progressDialog.setMaximum(0);
-			progressDialog.setHidden(false);
+			initAndPositionProgressDialog();
 			model.getSelectedItem().requestResample(
 				gui.resampleWidthSpinner.value(), gui.resampleHeightSpinner.value(), 
 				new File(vsetFilename), new File(outputDir));
@@ -348,7 +355,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	{
 		if(blockSignals) { return; }
 		model.getSelectedItem().setOcclusionBias((float)newValue);
-	}
+	}	
 	
 	protected void closeEvent(QCloseEvent event)
 	{
