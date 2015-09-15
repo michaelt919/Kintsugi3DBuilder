@@ -41,7 +41,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private int resampleWidth, resampleHeight;
     private File resampleVSETFile;
     private File resampleExportPath;
-
+    	
     public ULFRenderer(ContextType context, Program<ContextType> program, File vsetFile, ULFLoadOptions loadOptions, Trackball trackball)
     {
     	this.context = context;
@@ -70,6 +70,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     @Override
     public void initialize() 
     {
+    	// Initialize shaders
     	if (this.program == null)
     	{
 	    	try
@@ -102,13 +103,19 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	
     	try 
     	{
+    		// Read main cam def function and vicariously, all view image files
+			if (this.callback != null)
+			{
+				this.callback.startLoading();
+			}
+
     		if (this.cameraFile.getName().toUpperCase().endsWith(".XML"))
     		{
-    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.meshFile, this.loadOptions, this.context);
+    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.meshFile, this.loadOptions, this.context, callback);
     		}
     		else
     		{
-    			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.context);
+    			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.context, callback);
     		}
     		
 			if (this.callback != null)
@@ -311,7 +318,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	
 	private void resample() throws IOException
 	{
-		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, new ViewSetImageOptions(null, false, false, false), context);
+		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, new ViewSetImageOptions(null, false, false, false), context, null);
 		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleWidth, resampleHeight).addColorAttachment().createFramebufferObject();
     	
     	this.renderable.program().setTexture("imageTextures", lightField.viewSet.getTextures());
@@ -327,7 +334,13 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.renderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
     	this.renderable.program().setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
     	this.renderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
-    	
+
+    	// Reset the callback
+		if(callback != null) {
+			callback.startLoading();
+			callback.setMaximum(targetViewSet.getCameraPoseCount());
+		}
+		
 		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 		{
 	    	renderable.program().setUniform("model_view", targetViewSet.getCameraPose(i));
@@ -346,7 +359,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	        
 	        if (this.callback != null)
 	        {
-	        	this.callback.setProgress((double) i / (double) targetViewSet.getCameraPoseCount());
+	        	this.callback.setProgress(i);
 	        }
 		}
 		

@@ -65,7 +65,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		ViewSetImageOptions imageOptions,
 		float recommendedNearPlane,
 		float recommendedFarPlane,
-		ContextType context) throws IOException
+		ContextType context,
+		ULFLoadingMonitor loadingCallback) throws IOException
 	{
 		this.cameraPoseList = cameraPoseList;
 		this.cameraProjectionList = cameraProjectionList;
@@ -239,6 +240,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			textureArrayBuilder.setLinearFilteringEnabled(true);
 			textureArray = textureArrayBuilder.createTexture();
 			
+			if(loadingCallback != null) {
+				loadingCallback.setMaximum(imageFileNames.size());
+			}
+
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
 				imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
@@ -258,6 +263,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				
 				myZip.retrieveFile(imageFile);
 				this.textureArray.loadLayer(i, myZip, true);
+
+				if(loadingCallback != null) {
+					loadingCallback.setProgress(i+1);
+				}
 			}
 
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -302,12 +311,20 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		}
 	}
 	
-	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(File vsetFile, ContextType context) throws IOException
+	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(
+			File vsetFile, ContextType context) throws IOException
 	{
-		return ViewSet.loadFromVSETFile(vsetFile, new ViewSetImageOptions(null, false, false, false), context);
+		return ViewSet.loadFromVSETFile(vsetFile, context, null);
 	}
 
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(File vsetFile, ViewSetImageOptions imageOptions, ContextType context) throws IOException
+	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(
+			File vsetFile, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+	{
+		return ViewSet.loadFromVSETFile(vsetFile, new ViewSetImageOptions(null, false, false, false), context, loadingCallback);
+	}
+
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
+			File vsetFile, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
 		Date timestamp = new Date();
 
@@ -452,7 +469,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		
 		return new ViewSet<ContextType>(
 			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, 
-			imageFileNames, imageOptions, recommendedNearPlane, recommendedFarPlane, context);
+			imageFileNames, imageOptions, recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
 	}
 	
 	private static class Sensor
@@ -501,13 +518,20 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    }
 	}
 
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(File file, ViewSetImageOptions imageOptions, ContextType context) throws IOException
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
+			File file, ViewSetImageOptions imageOptions, ContextType context) throws IOException
 	{
-		return loadFromAgisoftXMLFile(file, imageOptions, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), context);
+		return loadFromAgisoftXMLFile(file, imageOptions, context, null);
+	}
+
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
+			File file, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+	{
+		return loadFromAgisoftXMLFile(file, imageOptions, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), context, loadingCallback);
 	}
 	
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
-		File file, ViewSetImageOptions imageOptions, Vector3 lightOffset, Vector3 lightIntensity, ContextType context) throws IOException
+		File file, ViewSetImageOptions imageOptions, Vector3 lightOffset, Vector3 lightIntensity, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
@@ -823,7 +847,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 
         float farPlane = findFarPlane(cameraPoseList);
         return new ViewSet<ContextType>(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
-        		imageFileNames, imageOptions, farPlane / 16.0f, farPlane, context);
+        		imageFileNames, imageOptions, farPlane / 16.0f, farPlane, context, loadingCallback);
     }
 	
 	private static float findFarPlane(List<Matrix4> cameraPoseList)

@@ -54,9 +54,11 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		// Setup the loading progress dialog
 		progressDialog = new QProgressDialog("Loading Model", "Cancel", 0, 0, this);
 		progressDialog.setWindowModality(WindowModality.ApplicationModal);
+		progressDialog.setModal(true);
 		progressDialog.setHidden(true);
 		progressDialog.setCancelButton(null);
 		progressDialog.setAutoReset(false);
+		progressDialog.setAutoClose(false);
 		progressDialog.setMinimumDuration(0);
 		
 		gui.halfResCheckBox.setChecked(halfResDefault);
@@ -64,11 +66,15 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		this.model.setLoadingMonitor(new ULFLoadingMonitor() {
 
 			@Override
-			public void startLoading(double maximum)
+			public void startLoading()
 			{
 				// Make dialog visible and set position
 				initAndPositionProgressDialog();
+			}
 
+			@Override
+			public void setMaximum(double maximum)
+			{				
 				// Set maximum
 				progressDialog.setMaximum((int)Math.round(maximum));
 			}
@@ -77,7 +83,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 			public void setProgress(double progress)
 			{
 				// Update the progress
-				progressDialog.setValue((int)Math.round(progress * 100));
+				progressDialog.setValue((int)Math.round(progress));
 			}
 
 			@Override
@@ -178,12 +184,12 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		progressDialog.setValue(0);
 		
 		// Make dialog visible and set position
-		progressDialog.setHidden(false);
 		QSize dlgSize = progressDialog.size();
 		WindowSize winSize = ULFProgram.getRenderingWindowSize();
 		WindowPosition winPos = ULFProgram.getRendringWindowPosition();
 		progressDialog.move(winPos.x + winSize.width/2 - dlgSize.width()/2,
 							winPos.y + winSize.height/2 - dlgSize.height()/2);
+		progressDialog.setHidden(false);
 	}
 	
 	@SuppressWarnings("unused")
@@ -250,7 +256,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 				model.addFromVSETFile(new File(camDefFilename), loadOptions);
 			}
 			
-			initAndPositionProgressDialog();
+//			initAndPositionProgressDialog();
 		}
 		catch (IOException ex) 
 		{

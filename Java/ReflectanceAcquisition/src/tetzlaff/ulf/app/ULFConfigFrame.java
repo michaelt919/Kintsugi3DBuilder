@@ -698,11 +698,14 @@ public class ULFConfigFrame extends JFrame {
 				private double maximum = 100;
 				
 				@Override
-				public void startLoading(double maximum)
+				public void startLoading() {}
+
+				@Override
+				public void setMaximum(double maximum)
 				{
 					this.maximum = maximum;
 				}
-
+				
 				@Override
 				public void setProgress(double progress)
 				{
