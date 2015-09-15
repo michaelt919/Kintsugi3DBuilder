@@ -9,12 +9,17 @@ import tetzlaff.ulf.ULFLoadOptions;
 import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFMorphRenderer;
 import tetzlaff.ulf.ViewSetImageOptions;
+import tetzlaff.window.WindowPosition;
+import tetzlaff.window.WindowSize;
 
 import com.trolltech.qt.core.QCoreApplication;
+import com.trolltech.qt.core.QSize;
+import com.trolltech.qt.core.Qt.WindowModality;
 import com.trolltech.qt.gui.QCloseEvent;
 import com.trolltech.qt.gui.QFileDialog;
 import com.trolltech.qt.gui.QFileDialog.Filter;
 import com.trolltech.qt.gui.QMessageBox;
+import com.trolltech.qt.gui.QProgressDialog;
 import com.trolltech.qt.gui.QWidget;
 
 public class ULFConfigQWidget extends QWidget implements EventPollable {
@@ -24,6 +29,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	private boolean widgetClosed;
 	private boolean halfResDefault;
 	private boolean blockSignals;
+	private QProgressDialog progressDialog;
 	
 	public Signal0 loadingFinished;
 	
@@ -45,22 +51,44 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 			this.model.getSelectedItem().setHalfResolution(isHighDPI);
 		}
 		
-		gui.loadingProgressBar.setHidden(true);
+		// Setup the loading progress dialog
+		progressDialog = new QProgressDialog("Loading Model", "Cancel", 0, 0, this);
+		progressDialog.setWindowModality(WindowModality.ApplicationModal);
+		progressDialog.setHidden(true);
+		progressDialog.setCancelButton(null);
+		progressDialog.setAutoReset(false);
+		progressDialog.setMinimumDuration(0);
+		
 		gui.halfResCheckBox.setChecked(halfResDefault);
 
 		this.model.setLoadingMonitor(new ULFLoadingMonitor() {
+
+			@Override
+			public void startLoading(double maximum)
+			{
+				// Make dialog visible and set position
+				progressDialog.setHidden(false);
+				QSize dlgSize = progressDialog.size();
+				WindowSize winSize = ULFProgram.getRenderingWindowSize();
+				WindowPosition winPos = ULFProgram.getRendringWindowPosition();
+				progressDialog.move(winPos.x + winSize.width/2 - dlgSize.width()/2,
+									winPos.y + winSize.height/2 - dlgSize.height()/2);
+
+				// Set maximum
+				progressDialog.setMaximum((int)Math.round(maximum));
+			}
+			
 			@Override
 			public void setProgress(double progress)
 			{
-				gui.loadingProgressBar.setHidden(false);
-				gui.loadingProgressBar.setMaximum(100);
-				gui.loadingProgressBar.setValue((int)Math.round(progress * 100));
+				// Update the progress
+				progressDialog.setValue((int)Math.round(progress * 100));
 			}
 
 			@Override
 			public void loadingComplete()
 			{
-				gui.loadingProgressBar.setHidden(true);
+				progressDialog.setHidden(true);
 				model.getSelectedItem().setHalfResolution(halfResDefault);
 				loadingFinished.emit();
 			}
@@ -68,7 +96,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		this.blockSignals = false;
 		onModelChanged();
 	}
-
+	
 	// Set values from the 'model' parameter
 	public void onModelChanged()
 	{
@@ -206,8 +234,8 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 				model.addFromVSETFile(new File(camDefFilename), loadOptions);				
 			}
 			
-			gui.loadingProgressBar.setMaximum(0);
-			gui.loadingProgressBar.setHidden(false);
+			progressDialog.setMaximum(0);
+			progressDialog.setHidden(false);
 		}
 		catch (IOException ex) 
 		{
@@ -228,8 +256,8 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		try 
 		{
 			model.addMorphFromLFMFile(new File(sequenceFilename), getLoadOptionsFromGui());
-			gui.loadingProgressBar.setMaximum(0);
-			gui.loadingProgressBar.setHidden(false);
+			progressDialog.setMaximum(0);
+			progressDialog.setHidden(false);
 		} 
 		catch (IOException ex) 
 		{
@@ -261,8 +289,8 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 			
 		try 
 		{
-			gui.loadingProgressBar.setMaximum(0);
-			gui.loadingProgressBar.setHidden(false);
+			progressDialog.setMaximum(0);
+			progressDialog.setHidden(false);
 			model.getSelectedItem().requestResample(
 				gui.resampleWidthSpinner.value(), gui.resampleHeightSpinner.value(), 
 				new File(vsetFilename), new File(outputDir));

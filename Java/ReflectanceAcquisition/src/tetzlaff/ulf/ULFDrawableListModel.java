@@ -55,6 +55,24 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
+			public void startLoading(double maximum)
+			{
+				if (loadingMonitor != null)
+				{
+					loadingMonitor.startLoading(maximum);
+				}
+			}
+			
+			@Override
+			public void setProgress(double progress) 
+			{
+				if (loadingMonitor != null)
+				{
+					loadingMonitor.setProgress(progress);
+				}
+			}
+			
+			@Override
 			public void loadingComplete()
 			{
 				ulfs.setSelectedItem(newItem);
@@ -64,15 +82,6 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 					loadingMonitor.loadingComplete();
 				}
 				fireIntervalAdded(this, ulfs.size() - 1, ulfs.size() - 1);
-			}
-
-			@Override
-			public void setProgress(double progress) 
-			{
-				if (loadingMonitor != null)
-				{
-					loadingMonitor.setProgress(progress);
-				}
 			}
 		});
 		ulfs.add(newItem);
@@ -86,6 +95,24 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
+			public void startLoading(double maximum)
+			{
+				if (loadingMonitor != null)
+				{
+					loadingMonitor.startLoading(maximum);
+				}
+			}
+			
+			@Override
+			public void setProgress(double progress) 
+			{
+				if (loadingMonitor != null)
+				{
+					loadingMonitor.setProgress(progress);
+				}
+			}
+			
+			@Override
 			public void loadingComplete()
 			{
 				ulfs.setSelectedItem(newItem);
@@ -95,15 +122,6 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 					loadingMonitor.loadingComplete();
 				}
 				fireIntervalAdded(this, ulfs.size() - 1, ulfs.size() - 1);
-			}
-
-			@Override
-			public void setProgress(double progress) 
-			{
-				if (loadingMonitor != null)
-				{
-					loadingMonitor.setProgress(progress);
-				}
 			}
 		});
 		ulfs.add(newItem);
@@ -117,15 +135,12 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
-			public void loadingComplete()
+			public void startLoading(double maximum)
 			{
-				ulfs.setSelectedItem(newItem);
-				effectiveSize = ulfs.size();
 				if (loadingMonitor != null)
 				{
-					loadingMonitor.loadingComplete();
+					loadingMonitor.startLoading(maximum);
 				}
-				fireIntervalAdded(this, ulfs.size() - 1, ulfs.size() - 1);
 			}
 
 			@Override
@@ -135,6 +150,18 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 				{
 					loadingMonitor.setProgress(progress);
 				}
+			}
+			
+			@Override
+			public void loadingComplete()
+			{
+				ulfs.setSelectedItem(newItem);
+				effectiveSize = ulfs.size();
+				if (loadingMonitor != null)
+				{
+					loadingMonitor.loadingComplete();
+				}
+				fireIntervalAdded(this, ulfs.size() - 1, ulfs.size() - 1);
 			}
 		});
 		ulfs.add(newItem);

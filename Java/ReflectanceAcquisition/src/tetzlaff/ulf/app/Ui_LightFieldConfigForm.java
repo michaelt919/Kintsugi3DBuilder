@@ -62,7 +62,6 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
     public QHBoxLayout horizontalLayout_8;
     public QSpacerItem horizontalSpacer_2;
     public QToolButton reportBugButton;
-    public QProgressBar loadingProgressBar;
     public QSpacerItem verticalSpacer;
 
     public Ui_LightFieldConfigForm() { super(); }
@@ -383,12 +382,6 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
 
 
         verticalLayout_6.addLayout(horizontalLayout_8);
-
-        loadingProgressBar = new QProgressBar(LightFieldConfigForm);
-        loadingProgressBar.setObjectName("loadingProgressBar");
-        loadingProgressBar.setValue(24);
-
-        verticalLayout_6.addWidget(loadingProgressBar);
 
         verticalSpacer = new QSpacerItem(20, 40, com.trolltech.qt.gui.QSizePolicy.Policy.Minimum, com.trolltech.qt.gui.QSizePolicy.Policy.Expanding);
 
