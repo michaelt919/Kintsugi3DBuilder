@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 
@@ -52,6 +53,11 @@ public class ULFProgram
 	 * Name of the file used to log standard error (System.err)
 	 */
 	public static final String ERR_FILE = "errors";
+	
+	/**
+	 * The User Preferences for the ULF application
+	 */
+	private static final Preferences PREFS = Preferences.userNodeForPackage(ULFProgram.class);
 	
 	/**
 	 * The GLFW window object that is the main rendering window
@@ -276,5 +282,40 @@ public class ULFProgram
     	// Create the report
         BugSplat.SetDescription("Manual Report, " + System.getProperty("os.name"));
         BugSplat.HandleException(new Exception("Manual Bug Report"));
+    }
+    
+    // User preferences access functions    
+    public static File getLastCamDefFileDirectory()
+    {
+    	return getSanitizedPrefsDir("lastCamDefFileDirectory");
+    }
+    
+    public static void setLastCamDefFileDirectory(File lastCamDefFileDir)
+    {
+    	setSanitizedPrefsDir("lastCamDefFileDirectory", lastCamDefFileDir);
+    }
+
+    public static File getLastSequenceFileDirectory()
+    {
+    	return getSanitizedPrefsDir("lastSequenceFileDirectory");
+    }
+    
+    public static void setLastSequenceFileDirectory(File lastSequenceFileDir)
+    {
+    	setSanitizedPrefsDir("lastSequenceFileDirectory", lastSequenceFileDir);
+    }
+    
+    // Helper function to catch fringe cases and make sure the directories are valid
+    private static File getSanitizedPrefsDir(String key)
+    {
+    	File prefsDir = new File(PREFS.get(key, System.getProperty("user.home")));
+    	if(!prefsDir.exists()) { prefsDir = new File(System.getProperty("user.home")); }
+    	return prefsDir;
+    }
+    
+    private static void setSanitizedPrefsDir(String key, File dir)
+    {
+    	if(!dir.isDirectory()) { dir = dir.getParentFile(); }
+    	PREFS.put(key, dir.getAbsolutePath());
     }
 }
