@@ -55,14 +55,23 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
-			public void startLoading(double maximum)
+			public void startLoading()
 			{
 				if (loadingMonitor != null)
 				{
-					loadingMonitor.startLoading(maximum);
+					loadingMonitor.startLoading();
 				}
 			}
 			
+			@Override
+			public void setMaximum(double maximum)
+			{
+				if (loadingMonitor != null)
+				{
+					loadingMonitor.setMaximum(maximum);
+				}
+			}
+
 			@Override
 			public void setProgress(double progress) 
 			{
@@ -95,14 +104,23 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
-			public void startLoading(double maximum)
+			public void startLoading()
 			{
 				if (loadingMonitor != null)
 				{
-					loadingMonitor.startLoading(maximum);
+					loadingMonitor.startLoading();
 				}
 			}
 			
+			@Override
+			public void setMaximum(double maximum)
+			{
+				if (loadingMonitor != null)
+				{
+					loadingMonitor.setMaximum(maximum);
+				}
+			}
+
 			@Override
 			public void setProgress(double progress) 
 			{
@@ -135,11 +153,20 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
-			public void startLoading(double maximum)
+			public void startLoading()
 			{
 				if (loadingMonitor != null)
 				{
-					loadingMonitor.startLoading(maximum);
+					loadingMonitor.startLoading();
+				}
+			}
+
+			@Override
+			public void setMaximum(double maximum)
+			{
+				if (loadingMonitor != null)
+				{
+					loadingMonitor.setMaximum(maximum);
 				}
 			}
 

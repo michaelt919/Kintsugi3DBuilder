@@ -68,7 +68,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	}
 
 	public static <ContextType extends Context<ContextType>>
-		UnstructuredLightField<ContextType> loadFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions, ContextType context) throws IOException
+		UnstructuredLightField<ContextType> loadFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
 		ViewSet<ContextType> viewSet;
 		VertexMesh proxy;
@@ -76,7 +76,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 		
 		File directoryPath = xmlFile.getParentFile();
         proxy = new VertexMesh("OBJ", meshFile); // TODO don't have geometry filename hard-coded
-        viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, loadOptions.getImageOptions(), context);
+        viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, loadOptions.getImageOptions(), context, loadingCallback);
         VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(proxy.getVertices());
         
         if (loadOptions.getImageOptions().getFilePath() != null)
@@ -135,13 +135,13 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	}
 	
 	public static <ContextType extends Context<ContextType>>
-		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, ContextType context) throws IOException
+		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
-		return UnstructuredLightField.loadFromVSETFile(vsetFile, new ULFLoadOptions(new ViewSetImageOptions(null, false, false, false), false, 0, 0), context);
+		return UnstructuredLightField.loadFromVSETFile(vsetFile, new ULFLoadOptions(new ViewSetImageOptions(null, false, false, false), false, 0, 0), context, loadingCallback);
 	}
 
 	public static <ContextType extends Context<ContextType>>
-		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, ULFLoadOptions loadOptions, ContextType context) throws IOException
+		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, ULFLoadOptions loadOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
 		ViewSet<ContextType> viewSet;
 		VertexMesh proxy;
@@ -149,7 +149,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 		
 		File directoryPath = vsetFile.getParentFile();
         proxy = new VertexMesh("OBJ", new File(directoryPath, "manifold.obj")); // TODO don't have geometry filename hard-coded
-        viewSet = ViewSet.loadFromVSETFile(vsetFile, loadOptions.getImageOptions(), context);
+        viewSet = ViewSet.loadFromVSETFile(vsetFile, loadOptions.getImageOptions(), context, loadingCallback);
         VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(proxy.getVertices());
         
         if (loadOptions.areDepthImagesRequested())

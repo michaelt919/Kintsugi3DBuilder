@@ -82,7 +82,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	else if (fileExt.equalsIgnoreCase("xml"))
     	{
     		System.out.println("Loading from Agisoft Photoscan XML file.");
-    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null, lightOffset, lightIntensity, context);
+    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null, lightOffset, lightIntensity, context, null);
     	}
     	else
     	{
