@@ -197,8 +197,9 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	private void on_loadSingleButton_clicked()
 	{
 		if(blockSignals) { return; }
+		File lastDir = ULFProgram.getLastCamDefFileDirectory();
 		String camDefFilename = QFileDialog.getOpenFileName(this,
-									"Select a camera definition file", "",
+									"Select a camera definition file", lastDir.getAbsolutePath(),
 									new Filter("Agisoft Photoscan XML (*.xml);;" +
 											   "View Set Files (*.vset);;" +
 											   "Zip Archive (*.zip)"));
@@ -206,6 +207,10 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 
 		try
 		{
+			// Update last selected cam def file directory
+			lastDir = new File(camDefFilename); lastDir.getParentFile();
+			ULFProgram.setLastCamDefFileDirectory(lastDir);
+			
 			if(camDefFilename.toUpperCase().endsWith(".ZIP"))
 			{
 				camDefFilename = camDefFilename.substring(0, camDefFilename.length()-4);
@@ -218,12 +223,13 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 			if (camDefFilename.toUpperCase().endsWith(".XML"))
 			{
 				String meshFilename = QFileDialog.getOpenFileName(this,
-						"Select the corresponding mesh", camDefFilename,
+						"Select the corresponding mesh", lastDir.getAbsolutePath(),
 						new Filter("Wavefront OBJ (*.obj)"));
 				if(meshFilename.isEmpty()) return;
 				
+				lastDir = new File(meshFilename); lastDir.getParentFile();
 				String undistImageDir = QFileDialog.getExistingDirectory(this,
-						"Select the undistorted image directory", meshFilename);
+						"Select the undistorted image directory", lastDir.getAbsolutePath());
 				if(undistImageDir.isEmpty()) return;
 				
 				loadOptions.getImageOptions().setFilePath(new File(undistImageDir));
@@ -249,10 +255,15 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	private void on_loadMultipleButton_clicked()
 	{
 		if(blockSignals) { return; }
+		File lastDir = ULFProgram.getLastSequenceFileDirectory();		
 		String sequenceFilename = QFileDialog.getOpenFileName(this,
-				"Select a sequence file", "", new Filter("light field sequence file (*.lfm)"));
+				"Select a sequence file", lastDir.getAbsolutePath(),
+				new Filter("light field sequence file (*.lfm)"));
 		if(sequenceFilename.isEmpty()) return;
 	
+		lastDir = new File(sequenceFilename);
+		ULFProgram.setLastSequenceFileDirectory(lastDir);
+		
 		try 
 		{
 			model.addMorphFromLFMFile(new File(sequenceFilename), getLoadOptionsFromGui());
