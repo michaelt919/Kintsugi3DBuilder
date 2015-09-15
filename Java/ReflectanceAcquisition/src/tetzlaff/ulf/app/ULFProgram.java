@@ -26,6 +26,8 @@ import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.ulf.ULFRendererList;
+import tetzlaff.window.WindowPosition;
+import tetzlaff.window.WindowSize;
 import tetzlaff.window.glfw.GLFWWindow;
 
 /**
@@ -51,7 +53,15 @@ public class ULFProgram
 	 */
 	public static final String ERR_FILE = "errors";
 	
-	public static InteractiveApplication app;
+	/**
+	 * The GLFW window object that is the main rendering window
+	 */
+	private static GLFWWindow window = null;
+	
+	/**
+	 * Reference to the main interactive application
+	 */
+	private static InteractiveApplication app;
 	
     /**
      * The main entry point for the Unstructured Light Field (ULF) renderer application.
@@ -112,7 +122,7 @@ public class ULFProgram
 	    	checkSupportedImageFormats();
 
 	    	// Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
-	    	GLFWWindow window = new GLFWWindow(800, 800, "Unstructured Light Field Renderer", true, 4);
+	    	window = new GLFWWindow(800, 800, "Unstructured Light Field Renderer", true, 4);
 	    	window.enableDepthTest();
 	
 	    	// Add a trackball controller to the window for rotating the object (also responds to mouse scrolling)
@@ -206,7 +216,7 @@ public class ULFProgram
      * A simple method to check and print out all image formats supported by the ImageIO API
      * including plugins from JAI.
      */
-    public static void checkSupportedImageFormats()
+    private static void checkSupportedImageFormats()
     {
     	Set<String> set = new HashSet<String>();
     	
@@ -220,6 +230,22 @@ public class ULFProgram
         System.out.println("Supported image formats: " + set);
     }
     
+    public static WindowSize getRenderingWindowSize()
+    {
+    	return window.getWindowSize();
+    }
+    
+    public static WindowPosition getRendringWindowPosition()
+    {
+    	return window.getWindowPosition();
+    }
+    
+    /**
+     * A useful method to manually generate a bug report and submit it to the
+     * BugSplat server.  The information contained in this report is similar to
+     * a crash report but also includes a screenshot.
+     * @throws IOException
+     */
     public static void generateBugReport() throws IOException
     {
     	// Set a waiting cursor to discourage interaction

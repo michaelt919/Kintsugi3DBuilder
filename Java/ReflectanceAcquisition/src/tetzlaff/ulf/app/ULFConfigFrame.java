@@ -695,6 +695,14 @@ public class ULFConfigFrame extends JFrame {
 		{
 			model.setLoadingMonitor(new ULFLoadingMonitor()
 			{
+				private double maximum = 100;
+				
+				@Override
+				public void startLoading(double maximum)
+				{
+					this.maximum = maximum;
+				}
+
 				@Override
 				public void setProgress(double progress)
 				{
@@ -702,7 +710,7 @@ public class ULFConfigFrame extends JFrame {
 						@Override
 						public void run() {
 							loadingBar.setIndeterminate(false);
-							loadingBar.setValue((int)Math.round(progress * 100));
+							loadingBar.setValue((int)Math.round((progress/maximum) * 100));
 						}						
 					});
 				}
