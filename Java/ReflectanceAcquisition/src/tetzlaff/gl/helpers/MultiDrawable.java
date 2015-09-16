@@ -25,12 +25,15 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 	
 	private List<T> removedDrawables;
 	private List<T> addedDrawables;
+	
+	private Exception initError;
 
 	public MultiDrawable() 
 	{
 		drawables = new ArrayList<T>();
 		removedDrawables = new ArrayList<T>();
 		addedDrawables = new ArrayList<T>();
+		initError = null;
 	}
 	
 	public MultiDrawable(List<T> drawables)
@@ -38,6 +41,7 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 		this.drawables = drawables;
 		removedDrawables = new ArrayList<T>();
 		addedDrawables = new ArrayList<T>(drawables);
+		initError = null;
 	}
 	
 	@Override
@@ -50,6 +54,20 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 	}
 
 	@Override
+	public boolean hasInitializeError()
+	{
+		return (initError != null);
+	}
+
+	@Override
+	public Exception getInitializeError()
+	{
+		Exception tempRef = initError;
+		initError = null;
+		return tempRef;
+	}
+	
+	@Override
 	public void update() 
 	{
 		for (Drawable d : removedDrawables)
@@ -60,6 +78,11 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 		for (Drawable d : addedDrawables)
 		{
 			d.initialize();
+			if(d.hasInitializeError())
+			{
+				initError = d.getInitializeError();
+				d.cleanup();
+			}
 		}
 		
 		removedDrawables = new ArrayList<T>();
@@ -67,7 +90,10 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 		
 		for (Drawable d : drawables)
 		{
-			d.update();
+			if(!d.hasInitializeError())
+			{
+				d.update();
+			}
 		}
 	}
 
@@ -75,7 +101,7 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 	public void draw() 
 	{
 		Drawable selected = this.getSelectedItem();
-		if (selected != null)
+		if (selected != null && !selected.hasInitializeError())
 		{
 			selected.draw();
 		}
@@ -85,7 +111,7 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 	public void saveToFile(String fileFormat, File file)
 	{
 		Drawable selected = this.getSelectedItem();
-		if (selected != null)
+		if (selected != null && !selected.hasInitializeError())
 		{
 			selected.saveToFile(fileFormat, file);
 		}		

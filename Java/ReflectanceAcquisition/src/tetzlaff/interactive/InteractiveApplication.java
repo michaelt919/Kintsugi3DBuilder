@@ -1,10 +1,15 @@
 package tetzlaff.interactive;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import tetzlaff.gl.exceptions.GLException;
+
+import com.trolltech.qt.gui.QMessageBox;
 
 public class InteractiveApplication
 {
@@ -43,6 +48,29 @@ public class InteractiveApplication
 		while (!shouldTerminate)
 		{
 			this.refreshable.refresh();
+			if(this.refreshable.hasDrawableError())
+			{
+				Exception drawableError = refreshable.getDrawableError();
+				drawableError.printStackTrace();
+				
+				// TODO: Replace the direct use of QMessageBox with some sort of indirect callback approach.  Using a GUI API directly creates an undesirable dependency in this package.
+				if(drawableError instanceof GLException || (drawableError.getCause() != null && drawableError.getCause() instanceof GLException))
+				{
+					QMessageBox.warning(null, "GL Rendering Error", "An error occured with the rendering system. " +
+							"Your GPU and/or video memory may be insufficient for rendering this model.\n\n[" + drawableError.getMessage() + "]");
+				}
+				else if(drawableError instanceof FileNotFoundException || (drawableError.getCause() != null && drawableError.getCause() instanceof GLException))
+				{
+					QMessageBox.warning(null, "Resource Error", "An error occured while loading resources. " +
+							"Check that all necessary files exist and that the proper paths were supplied.\n\n[" + drawableError.getMessage() + "]");
+				}
+				else
+				{
+					QMessageBox.warning(null, "Application Error", "An error occured that prevents this model from being rendered." +
+							"\n\n[" + drawableError.getMessage() + "]");
+				}
+			}
+			
 			Date timestampB = new Date();
 			refreshTime += timestampB.getTime() - timestampA.getTime();
 			for (EventPollable poller : pollable)

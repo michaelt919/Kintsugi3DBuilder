@@ -41,6 +41,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private int resampleWidth, resampleHeight;
     private File resampleVSETFile;
     private File resampleExportPath;
+    
+    private Exception initError;
     	
     public ULFRenderer(ContextType context, Program<ContextType> program, File vsetFile, ULFLoadOptions loadOptions, Trackball trackball)
     {
@@ -49,6 +51,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.cameraFile = vsetFile;
     	this.loadOptions = loadOptions;
     	this.trackball = trackball;
+    	this.initError = null;
     }
 
     public ULFRenderer(ContextType context, Program<ContextType> program, File xmlFile, File meshFile, ULFLoadOptions loadOptions, Trackball trackball)
@@ -59,6 +62,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.meshFile = meshFile;
     	this.loadOptions = loadOptions;
     	this.trackball = trackball;
+    	this.initError = null;
     }
     
     @Override
@@ -82,7 +86,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	        }
 	        catch (IOException e)
 	        {
-	        	e.printStackTrace();
+	        	this.initError = e;
 	        }
     	}
 
@@ -97,7 +101,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	        }
 	        catch (IOException e)
 	        {
-	        	e.printStackTrace();
+	        	this.initError = e;
 	        }
     	}
     	
@@ -117,12 +121,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     		{
     			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.context, callback);
     		}
-    		
-			if (this.callback != null)
-			{
-				this.callback.loadingComplete();
-			}
-	    	
+    			    	
 	    	this.renderable = context.createRenderable(program);
 	    	this.renderable.addVertexBuffer("position", this.lightField.positionBuffer);
 	    				
@@ -131,9 +130,28 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 		} 
     	catch (IOException e) 
     	{
-			e.printStackTrace();
+        	this.initError = e;
 		}
+    	finally
+    	{
+			if (this.callback != null)
+			{
+				this.callback.loadingComplete();
+			}    		
+    	}
     }
+
+	@Override
+	public Exception getInitializeError()
+	{
+		return initError;
+	}
+		
+	@Override
+	public boolean hasInitializeError()
+	{
+		return (initError != null);
+	}
 
 	@Override
 	public void update()
@@ -213,7 +231,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	context.finish();
 	    	halfResFBO.delete();
     	} else {
-    		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+//    		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
     		framebuffer.clearDepthBuffer();
 	        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);    		
     	}
@@ -234,7 +252,10 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     @Override
     public void cleanup()
     {
-    	lightField.deleteOpenGLResources();
+    	if(lightField != null)
+    	{
+    		lightField.deleteOpenGLResources();
+    	}
     	if(halfResFBO != null)
     	{
     		halfResFBO.delete();
@@ -303,6 +324,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	@Override
 	public String toString()
 	{
+		if(this.lightField == null) return "Error";
 		return this.lightField.toString();
 	}
 	

@@ -103,11 +103,8 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	{
 		if(blockSignals) { return; }
 		blockSignals = true;
-		boolean enable = (model != null && model.getSelectedItem() != null);
+		boolean enable = (model != null && model.getSelectedItem() != null && model.getSelectedItem().toString().compareToIgnoreCase("Error") != 0);
 		
-		gui.modelComboBox.clear();
-		gui.modelComboBox.setEnabled(enable?model.getSize()>1:false);
-
 		gui.modelSlider.setEnabled(enable);	
 		gui.gammaLabel.setEnabled(enable);
 		gui.gammaSpinBox.setEnabled(enable);
@@ -127,8 +124,10 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		
 		gui.resampleButton.setEnabled(enable);
 		
-		if(enable)
+		if(model != null && model.getSelectedItem() != null)
 		{
+			gui.modelComboBox.clear();
+			gui.modelComboBox.setEnabled(model.getSize()>1);
 			String selected = model.getSelectedItem().toString();
 			for(int i=0; i<model.getSize(); i++) {
 				String nextItem = model.getElementAt(i).toString();
@@ -139,24 +138,27 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 				}
 			}
 			
-			gui.gammaSpinBox.setValue(model.getSelectedItem().getGamma());
-			gui.exponentSpinBox.setValue(model.getSelectedItem().getWeightExponent());
-			gui.visibilityCheckBox.setChecked(model.getSelectedItem().isOcclusionEnabled());
-			gui.visibilityBiasSpinBox.setValue(model.getSelectedItem().getOcclusionBias());
+			if(selected.compareToIgnoreCase("Error") != 0)
+			{
+				gui.gammaSpinBox.setValue(model.getSelectedItem().getGamma());
+				gui.exponentSpinBox.setValue(model.getSelectedItem().getWeightExponent());
+				gui.visibilityCheckBox.setChecked(model.getSelectedItem().isOcclusionEnabled());
+				gui.visibilityBiasSpinBox.setValue(model.getSelectedItem().getOcclusionBias());
 
-			if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
-			{
-				ULFMorphRenderer<?> morph = (ULFMorphRenderer<?>)(model.getSelectedItem());
-				int currentStage = morph.getCurrentStage();
-				gui.modelSlider.setEnabled(true);
-				gui.modelSlider.setMaximum(morph.getStageCount() - 1);
-				gui.modelSlider.setValue(currentStage);
-			}
-			else
-			{
-				gui.modelSlider.setMaximum(0);
-				gui.modelSlider.setValue(0);
-				gui.modelSlider.setEnabled(false);
+				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
+				{
+					ULFMorphRenderer<?> morph = (ULFMorphRenderer<?>)(model.getSelectedItem());
+					int currentStage = morph.getCurrentStage();
+					gui.modelSlider.setEnabled(true);
+					gui.modelSlider.setMaximum(morph.getStageCount() - 1);
+					gui.modelSlider.setValue(currentStage);
+				}
+				else
+				{
+					gui.modelSlider.setMaximum(0);
+					gui.modelSlider.setValue(0);
+					gui.modelSlider.setEnabled(false);
+				}
 			}
 		}
 		

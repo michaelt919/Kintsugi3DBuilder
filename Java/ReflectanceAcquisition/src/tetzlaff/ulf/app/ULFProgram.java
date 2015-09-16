@@ -5,15 +5,19 @@ import com.bugsplatsoftware.client.BugSplat;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.LongBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLUtil;
+import org.lwjgl.opencl.*;
 
 import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.core.Qt;
@@ -69,23 +73,27 @@ public class ULFProgram
 	 */
 	private static InteractiveApplication app;
 	
+	/**
+	 * Our best guess at the number of megabytes available as VRam (queried from OpenCL)
+	 */
+	private static long videoMemBestGuessMB = -1;
+	
     /**
      * The main entry point for the Unstructured Light Field (ULF) renderer application.
      * @param args The usual command line arguments
      */
     public static void main(String[] args)
     {
-    	// Return code to issue on completion (0 = success, >0 = error)
-    	int exitCode = 0;
-    	
     	// Surround with try-catch for BugSpat integration
     	try {
             // Init the bugsplat library with the database, application and version parameters
             BugSplat.Init("berriers_uwstout_edu", "ULFRenderer", VERSION);
             
             // Prepare log files, delete any old ones
-            File logFile = File.createTempFile(LOG_FILE, ".log");
-            File errFile = File.createTempFile(ERR_FILE, ".log");
+//            File logFile = File.createTempFile(LOG_FILE, ".log");
+//            File errFile = File.createTempFile(ERR_FILE, ".log");
+            File logFile = new File(LOG_FILE + ".txt"); logFile = logFile.getAbsoluteFile();
+            File errFile = new File(ERR_FILE + ".txt"); errFile = errFile.getAbsoluteFile();
             if(logFile.exists()) { logFile.delete(); }
             if(errFile.exists()) { errFile.delete(); }
 
@@ -105,7 +113,10 @@ public class ULFProgram
             // Initialize the system environment vars and LWJGL
 	    	System.getenv();
 	    	LWJGLUtil.initialize();
-	    	
+
+	    	// Use OpenCL to make an informed guess at GPU memory
+	        checkGPUMemoryCapabilities();
+
 	    	// Output some system information
 	        System.out.println("\n****** Sys Info *****");	    	
 	    	System.out.println("OS      : " + System.getProperty("os.name"));
@@ -122,8 +133,10 @@ public class ULFProgram
 	        System.out.println("* Spec Name    : " + System.getProperty("java.vm.specification.name"));
 	        System.out.println("* Spec Version : " + System.getProperty("java.vm.specification.version"));
 	        System.out.println("* Spec Vendor  : " + System.getProperty("java.vm.specification.vendor"));
+	        System.out.println("**** Video Memory ***");
+	        System.out.println("* Best Guess : " + (videoMemBestGuessMB<0?"??":videoMemBestGuessMB) + "MB");
 	        System.out.println("*********************\n");
-	    	
+
 	    	// Check for and print supported image formats (some are not as easy as you would think)
 	    	checkSupportedImageFormats();
 
@@ -197,25 +210,22 @@ public class ULFProgram
 			app.run();
     	} catch(Exception e) {
             // Set crash description (useful for filtering)
+    		e.printStackTrace();
             BugSplat.SetDescription("Crash Report, Exception, " + System.getProperty("os.name"));
             
     		// Let BugSplat handle the exception and set error exit code
     		BugSplat.HandleException(e);
-    		exitCode = 1;
     	} catch(Throwable t) {
             // Set crash description (useful for filtering)
+    		t.printStackTrace();
             BugSplat.SetDescription("Crash Report, Error, " + System.getProperty("os.name"));
             
     		// Let BugSplat handle the exception and set error exit code
     		BugSplat.HandleException(new Exception(t));
-    		exitCode = 1;
     	} finally {
     		// Always cleanup the windows
 	        GLFWWindow.closeAllWindows();
-    	}
-    	
-    	// Exit with a particular error code
-        System.exit(exitCode);
+    	}    	
     }
     
     /**
@@ -234,6 +244,34 @@ public class ULFProgram
         }
 
         System.out.println("Supported image formats: " + set);
+    }
+    
+    private static void checkGPUMemoryCapabilities()
+    {
+    	try {
+
+	    	//CL.create();
+    		long maxMem = -1;
+	    	CLPlatform platform = CLPlatform.getPlatforms().get(0);
+	    	if(platform != null)
+	    	{
+	    		List<CLDevice> devices = platform.getDevices(CL10.CL_DEVICE_TYPE_GPU);
+				LongBuffer memSize = BufferUtils.createLongBuffer(1);
+				for(CLDevice device : devices)
+				{
+					CL10.clGetDeviceInfo(device.getPointer(), CL10.CL_DEVICE_GLOBAL_MEM_SIZE, memSize, null);
+					if(memSize.get(0) > maxMem) { maxMem = memSize.get(0); }
+				}
+	    	}
+	    	
+	    	if(maxMem > 0)
+	    	{
+	    		videoMemBestGuessMB = maxMem/1048576;
+	    	}
+	    	//CL.destroy();
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    	}
     }
     
     public static WindowSize getRenderingWindowSize()
@@ -282,6 +320,12 @@ public class ULFProgram
     	// Create the report
         BugSplat.SetDescription("Manual Report, " + System.getProperty("os.name"));
         BugSplat.HandleException(new Exception("Manual Bug Report"));
+    }
+    
+    // Query the installed amount of VRAM (note: this may be -1 if it could not be determined)
+    public static long getVRAMMegabytes()
+    {
+    	return videoMemBestGuessMB;
     }
     
     // User preferences access functions    

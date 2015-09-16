@@ -5,6 +5,8 @@ syntax: glob
 *.jui-e
 output*.log
 error*.log
+output*.txt
+error*.txt
 hs_err*.log
 .metadata
 .classpath

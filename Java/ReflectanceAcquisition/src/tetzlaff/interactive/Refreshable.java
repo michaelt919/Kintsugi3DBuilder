@@ -8,4 +8,7 @@ public interface Refreshable
 	void refresh();
 	void terminate();
 	void requestScreenshot(String fileFormat, File file);
+
+	boolean hasDrawableError();
+	Exception getDrawableError();
 }
