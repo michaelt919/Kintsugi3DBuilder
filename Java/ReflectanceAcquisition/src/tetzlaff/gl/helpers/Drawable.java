@@ -48,4 +48,21 @@ public interface Drawable
 	 * application is terminating.  The associated context will be made current first.
 	 */
 	void cleanup();
+	
+	/**
+	 * During initialization if any errors occur, rather than having those be thrown from the
+	 * initialize function they can be querying for later. Initialize can store any generated
+	 * exception object and this method should return that object.  If no errors/exceptions
+	 * occurred it should return null.  Note: the drawable that overrides this method might
+	 * also automatically clear the error after it is retrieved.
+	 * @return The exception object (if an exception occurred during initialize()) or null
+	 */
+	default Exception getInitializeError() { return null; }	
+
+	/**
+	 * Similar to getInitializeError() but only checks if one occurs.  This will not retrieve
+	 * or reset the error.
+	 * @return True if an error occurred during initialization, false otherwise
+	 */
+	default boolean hasInitializeError() { return true; }	
 }

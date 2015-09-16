@@ -38,6 +38,8 @@ public class InteractiveGraphics
 			private String fileFormat;
 			private File file;
 			
+			private Exception drawableError = null;
+			
 			@Override
 			public void initialize() 
 			{
@@ -58,6 +60,11 @@ public class InteractiveGraphics
 					screenshotRequested = false;
 				}
 				context.swapBuffers();
+				
+				if(drawable.hasInitializeError())
+				{
+					drawableError = drawable.getInitializeError();
+				}
 			}
 
 			@Override
@@ -74,6 +81,20 @@ public class InteractiveGraphics
 				this.fileFormat = fileFormat;
 				this.file = file;
 				screenshotRequested = true;
+			}
+			
+			@Override
+			public boolean hasDrawableError()
+			{
+				return (drawableError!=null);
+			}
+
+			@Override
+			public Exception getDrawableError()
+			{
+				Exception tempRef = drawableError;
+				drawableError = null;
+				return tempRef;
 			}
 		});
 	}

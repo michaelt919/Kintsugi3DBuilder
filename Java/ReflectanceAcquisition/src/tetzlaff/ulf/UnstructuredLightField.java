@@ -11,6 +11,7 @@ import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.VertexBuffer;
+import tetzlaff.gl.exceptions.GLException;
 import tetzlaff.gl.helpers.VertexMesh;
 
 public class UnstructuredLightField<ContextType extends Context<ContextType>>
@@ -81,42 +82,55 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
         
         if (loadOptions.getImageOptions().getFilePath() != null)
         {
-	        // Build depth textures for each view
-	    	int width = viewSet.getTextures().getWidth();
-	    	int height = viewSet.getTextures().getHeight();
-	    	depthTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
-	    	
-	    	// Don't automatically generate any texture attachments for this framebuffer object
-	    	FramebufferObject<ContextType> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
-	    	
-	    	// Load the program
-	    	Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
-	    			.addShader(ShaderType.VERTEX, new File("shaders/depth.vert"))
-	    			.addShader(ShaderType.FRAGMENT, new File("shaders/depth.frag"))
-	    			.createProgram();
-	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
-	    	depthRenderable.addVertexBuffer("position", positionBuffer);
-	    	
-	    	// Render each depth texture
-	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+        	FramebufferObject<ContextType> depthRenderingFBO = null;
+        	Program<ContextType> depthRenderingProgram = null;
+        	
+	    	try
 	    	{
-	    		depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(i));
-	        	depthRenderingFBO.clearDepthBuffer();
-	        	
-	        	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
-	    		depthRenderingProgram.setUniform("projection", 
-					viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
-	    				.getProjectionMatrix(
-							viewSet.getRecommendedNearPlane(), 
-							viewSet.getRecommendedFarPlane()
-						)
-				);
-	        	
-	        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+		        // Build depth textures for each view
+		    	int width = viewSet.getTextures().getWidth();
+		    	int height = viewSet.getTextures().getHeight();
+		    	depthTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
+		    	
+		    	// Don't automatically generate any texture attachments for this framebuffer object
+		    	depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
+		    	
+		    	// Load the program
+		    	depthRenderingProgram = context.getShaderProgramBuilder()
+		    			.addShader(ShaderType.VERTEX, new File("shaders/depth.vert"))
+		    			.addShader(ShaderType.FRAGMENT, new File("shaders/depth.frag"))
+		    			.createProgram();
+		    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
+		    	depthRenderable.addVertexBuffer("position", positionBuffer);
+		    	
+		    	// Render each depth texture
+		    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+		    	{
+		    		depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(i));
+		        	depthRenderingFBO.clearDepthBuffer();
+		        	
+		        	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
+		    		depthRenderingProgram.setUniform("projection", 
+						viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
+		    				.getProjectionMatrix(
+								viewSet.getRecommendedNearPlane(), 
+								viewSet.getRecommendedFarPlane()
+							)
+					);
+		        	
+		        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+		    	}
 	    	}
-
-	    	depthRenderingProgram.delete();
-	    	depthRenderingFBO.delete();
+	    	catch(GLException gle)
+	    	{
+	    		gle.printStackTrace();
+	    		throw new IOException("OpenGL Error: Unable to render due to incomplete framebuffer (possibly out of video memory).", gle);
+	    	}
+	    	finally
+	    	{
+		    	if(depthRenderingProgram != null) { depthRenderingProgram.delete(); }
+		    	if(depthRenderingFBO != null) { depthRenderingFBO.delete(); }
+	    	}
         }
         
         VertexBuffer<ContextType> texCoordBuffer = null;
@@ -154,46 +168,56 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
         
         if (loadOptions.areDepthImagesRequested())
         {
-	        // Build depth textures for each view
-	    	//int width = viewSet.getTextures().getWidth();
-	    	//int height = viewSet.getTextures().getHeight();
-	    	depthTextures = 
-    			context.get2DDepthTextureArrayBuilder(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCameraPoseCount())
-	    			.createTexture();
-	    	
-	    	// Don't automatically generate any texture attachments for this framebuffer object
-	    	FramebufferObject<ContextType> depthRenderingFBO = 
-    			context.getFramebufferObjectBuilder(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
-	    			.createFramebufferObject();
-	    	
-	    	// Load the program
-	    	Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
-	    			.addShader(ShaderType.VERTEX, new File("shaders/depth.vert"))
-	    			.addShader(ShaderType.FRAGMENT, new File("shaders/depth.frag"))
-	    			.createProgram();
-	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
-	    	depthRenderable.addVertexBuffer("position", positionBuffer);
-	    	
-	    	// Render each depth texture
-	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+        	FramebufferObject<ContextType> depthRenderingFBO = null;
+        	Program<ContextType> depthRenderingProgram = null;
+        	
+	    	try
 	    	{
-	    		depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(i));
-	        	depthRenderingFBO.clearDepthBuffer();
-	        	
-	        	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
-	    		depthRenderingProgram.setUniform("projection", 
-					viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
-	    				.getProjectionMatrix(
-							viewSet.getRecommendedNearPlane(), 
-							viewSet.getRecommendedFarPlane()
-						)
-				);
-	        	
-	        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+		    	depthTextures = 
+	    			context.get2DDepthTextureArrayBuilder(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCameraPoseCount())
+		    			.createTexture();
+		    	
+		    	// Don't automatically generate any texture attachments for this framebuffer object
+		    	depthRenderingFBO = 
+	    			context.getFramebufferObjectBuilder(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
+		    			.createFramebufferObject();
+		    	
+		    	// Load the program
+		    	depthRenderingProgram = context.getShaderProgramBuilder()
+		    			.addShader(ShaderType.VERTEX, new File("shaders/depth.vert"))
+		    			.addShader(ShaderType.FRAGMENT, new File("shaders/depth.frag"))
+		    			.createProgram();
+		    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
+		    	depthRenderable.addVertexBuffer("position", positionBuffer);
+		    	
+		    	// Render each depth texture
+		    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+		    	{
+		    		depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(i));
+		        	depthRenderingFBO.clearDepthBuffer();
+		        	
+		        	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
+		    		depthRenderingProgram.setUniform("projection", 
+						viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
+		    				.getProjectionMatrix(
+								viewSet.getRecommendedNearPlane(), 
+								viewSet.getRecommendedFarPlane()
+							)
+					);
+		        	
+		        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+		    	}
 	    	}
-
-	    	depthRenderingProgram.delete();
-	    	depthRenderingFBO.delete();
+	    	catch(GLException gle)
+	    	{
+	    		gle.printStackTrace();
+	    		throw new IOException("OpenGL Error: Unable to render due to incomplete framebuffer (possibly out of video memory).", gle);	    		
+	    	}
+	    	finally
+	    	{
+		    	if(depthRenderingProgram != null) { depthRenderingProgram.delete(); }
+		    	if(depthRenderingFBO != null) { depthRenderingFBO.delete(); }
+	    	}
         }
         
         VertexBuffer<ContextType> texCoordBuffer = null;
