@@ -263,7 +263,10 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 		this.bind();
 			
 		BufferedImage img = ImageIO.read(fileStream);
-		if(img == null) { throw new IOException("Error: Unsupported image format."); }
+		if(img == null)
+		{
+			throw new IOException("Error: Unsupported image format.");
+		}
 		
 		if (layerIndex < 0 || layerIndex >= this.depth)
 		{
