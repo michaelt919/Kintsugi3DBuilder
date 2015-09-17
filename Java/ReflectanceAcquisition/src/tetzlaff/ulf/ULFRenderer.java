@@ -123,15 +123,31 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	
 	    	this.mainRenderable = context.createRenderable(program);
 	    	this.mainRenderable.addVertexBuffer("position", this.lightField.positionBuffer);
-	    	this.mainRenderable.addVertexBuffer("normal", this.lightField.normalBuffer);
-	    	this.mainRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+	    	
+	    	if (this.lightField.normalBuffer != null)
+	    	{
+	    		this.mainRenderable.addVertexBuffer("normal", this.lightField.normalBuffer);
+	    	}
+	    	
+	    	if (this.lightField.texCoordBuffer != null)
+	    	{
+	    		this.mainRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+	    	}
 	    	
 	    	if(viewIndexProgram != null)
 	    	{
 		    	this.indexRenderable = context.createRenderable(viewIndexProgram);
 		    	this.indexRenderable.addVertexBuffer("position", this.lightField.positionBuffer);
-		    	this.indexRenderable.addVertexBuffer("normal", this.lightField.normalBuffer);
-		    	this.indexRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+		    	
+		    	if (this.lightField.normalBuffer != null)
+		    	{
+		    		this.indexRenderable.addVertexBuffer("normal", this.lightField.normalBuffer);
+		    	}
+		    	
+		    	if (this.lightField.texCoordBuffer != null)
+		    	{
+		    		this.indexRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+		    	}
 	    	}
 	    				
 	    	this.simpleTexRenderable = context.createRenderable(simpleTexProgram);

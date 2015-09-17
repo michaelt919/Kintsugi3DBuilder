@@ -177,7 +177,7 @@ void updateViewIndices(inout int indices[SAMPLE_COUNT])
         }
     }
     
-    // // Build heap
+    // Build heap
     for (int i = SAMPLE_COUNT / 2 - 1; i >= 0; i--)
     {
         heapify(indices, weights, i);
