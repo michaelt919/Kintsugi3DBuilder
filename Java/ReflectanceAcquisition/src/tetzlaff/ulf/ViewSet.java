@@ -525,6 +525,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
         Sensor sensor = null;
         Camera camera = null;
         Matrix4 globalTransform = null;
+        float globalScale = 1.0f;
         
         String version = "", chunkLabel = "";
         String sensorID = "", cameraID = "", imageFile = "";
@@ -716,15 +717,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
                         case "scale":
                         	if (camera == null)
                         	{
-                        		if (globalTransform == null)
-                        		{
-                        			globalTransform = Matrix4.scale(1.0f / Float.parseFloat(reader.getElementText()));
-                        		}
-                        		else
-                        		{
-                        			globalTransform = globalTransform.times(Matrix4.scale(1.0f / Float.parseFloat(reader.getElementText())));
-                        		}
+                        		globalScale = 1.0f / Float.parseFloat(reader.getElementText());
                         	}
+                        	break;
                             
                         case "property": case "projections": case "depth":
                         case "frames": case "frame": case "meta": case "R":
@@ -815,11 +810,16 @@ public class ViewSet<ContextType extends Context<ContextType>>
         // Fill out the camera pose, projection index, and light index lists
         for (int i = 0; i < cameras.length; i++)
         {
+        	Matrix4 m1 = cameras[i].transform;
+            
         	// Apply the global transform to each camera (if there is one)
             if(globalTransform != null)
             {
-            	Matrix4 m1 = cameras[i].transform;
-                cameras[i].transform = m1.times(globalTransform);
+            	cameras[i].transform = m1.times(globalTransform).times(Matrix4.scale(globalScale));
+            }
+            else
+            {
+            	cameras[i].transform = m1.times(Matrix4.scale(globalScale));
             }
         	
             cameraPoseList.add(cameras[i].transform);
