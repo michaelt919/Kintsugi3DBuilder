@@ -191,31 +191,44 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			File imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(0));
 			ZipWrapper myZip = new ZipWrapper(imageFile);
 			
-//			if (!myZip.exists(imageFile))
-//			{
-//				System.err.printf("Warning: Image '%s' not found, trying '.png' extension instead.\n",
-//								  imageFileNames.get(0));
-//				String[] filenameParts = imageFileNames.get(0).split("\\.");
-//		    	filenameParts[filenameParts.length - 1] = "png";
-//		    	String pngFileName = String.join(".", filenameParts);
-//		    	imageFile = new File(imageFilePath, pngFileName);
-		    	
+			if (!myZip.exists(imageFile))
+			{
+				// Try some alternate file formats/extensions
+				String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
+				for(final String extension : altFormats)
+				{
+					String[] filenameParts = imageFileNames.get(0).split("\\.");
+			    	filenameParts[filenameParts.length - 1] = extension;
+			    	String altFileName = String.join(".", filenameParts);
+			    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);					
+			    	
+			    	System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
+			    	if(myZip.exists(imageFileGuess))
+			    	{
+				    	System.out.printf("Found!!\n");
+			    		imageFile = imageFileGuess;
+			    		break;
+			    	}
+				}
+
+				// Is it still not there?
 		    	if(!myZip.exists(imageFile))
 		    	{
 		    		throw new FileNotFoundException(
 		    				String.format("'%s' not found.", imageFileNames.get(0)));
 		    	}
-//			}
+			}
 			
 			// Read a single image to get the dimensions for the texture array
-			InputStream input = myZip.getInputStream();			
+			InputStream input = myZip.retrieveFile(imageFile);
 			BufferedImage img = ImageIO.read(input);
 			if(img == null)
 			{
 				throw new IOException(String.format("Error: Unsupported image format '%s'.",
 						imageFileNames.get(0)));				
 			}
-			
+			myZip.getInputStream().close();
+
 			ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder = 
 					context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), imageFileNames.size());
 			
@@ -247,28 +260,42 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
 				imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
-//				if (!myZip.exists(imageFile))
-//				{
-//					String[] filenameParts = imageFileNames.get(i).split("\\.");
-//			    	filenameParts[filenameParts.length - 1] = "png";
-//			    	String pngFileName = String.join(".", filenameParts);
-//			    	imageFile = new File(imageFilePath, pngFileName);
+				if (!myZip.exists(imageFile))
+				{
+					// Try some alternate file formats/extensions
+					String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
+					for(final String extension : altFormats)
+					{
+						String[] filenameParts = imageFileNames.get(i).split("\\.");
+				    	filenameParts[filenameParts.length - 1] = extension;
+				    	String altFileName = String.join(".", filenameParts);
+				    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);
+				    	
+				    	if(myZip.exists(imageFileGuess))
+				    	{
+				    		imageFile = imageFileGuess;
+				    		break;
+				    	}
+					}
 
+					// Is it still not there?
 			    	if(!myZip.exists(imageFile))
 			    	{
 			    		throw new FileNotFoundException(
-			    				String.format("'%s' not found.", imageFileNames.get(0)));
+			    				String.format("'%s' not found.", imageFileNames.get(i)));
 			    	}
-//				}
+				}				
 				
 				myZip.retrieveFile(imageFile);
 				this.textureArray.loadLayer(i, myZip, true);
+				myZip.getInputStream().close();
 
 				if(loadingCallback != null) {
 					loadingCallback.setProgress(i+1);
 				}
 			}
 
+			myZip.close();
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		}
 	}
@@ -485,6 +512,16 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    float k1;
 	    float k2;
 	    float k3;
+
+	    // TODO: Incorporate these values into the distortion object
+	    @SuppressWarnings("unused")
+		float p1;
+	    @SuppressWarnings("unused")
+		float p2;
+	    @SuppressWarnings("unused")
+	    float k4;
+	    @SuppressWarnings("unused")
+	    float skew;
 	    
 	    Sensor(String id)
 	    {
@@ -538,9 +575,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
         
         Sensor sensor = null;
         Camera camera = null;
-        Matrix4 globalTransform = null;
+        Matrix4 globalScale = null, globalRotation = null;
         
-        String version = "", chunkLabel = "";
+        String version = "", chunkLabel = "", groupLabel = "";
         String sensorID = "", cameraID = "", imageFile = "";
         
         int intVersion = 0;
@@ -570,7 +607,12 @@ public class ViewSet<ContextType extends Context<ContextType>>
                             break;
                         case "chunk":
                             chunkLabel = reader.getAttributeValue(null, "label");
+                            if(chunkLabel == null) { chunkLabel = "unnamed"; }
                             System.out.printf("Reading chunk '%s'\n", chunkLabel);
+                            break;
+                        case "group":
+                            groupLabel = reader.getAttributeValue(null, "label");
+                            System.out.printf("Reading group '%s'\n", groupLabel);
                             break;
                         case "sensor":
                             sensorID = reader.getAttributeValue(null, "id");
@@ -637,6 +679,18 @@ public class ViewSet<ContextType extends Context<ContextType>>
                                 sensor.cy = Float.parseFloat(reader.getElementText());
                             }
                             break;
+                        case "p1":
+                            if (sensor != null) 
+                            {
+                                sensor.p1 = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "p2":
+                            if (sensor != null) 
+                            {
+                                sensor.p2 = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
                         case "k1":
                             if (sensor != null) 
                             {
@@ -653,6 +707,18 @@ public class ViewSet<ContextType extends Context<ContextType>>
                             if (sensor != null) 
                             {
                                 sensor.k3 = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "k4":
+                            if (sensor != null) 
+                            {
+                                sensor.k4 = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "skew":
+                            if (sensor != null) 
+                            {
+                                sensor.skew = Float.parseFloat(reader.getElementText());
                             }
                             break;
                             
@@ -707,21 +773,22 @@ public class ViewSet<ContextType extends Context<ContextType>>
                                 }
                                 else
                                 {
-                                    System.out.println("\tSetting global transformation.");
                                     if(expectedSize == 9)
                                     {
-                                        globalTransform = new Matrix4(new Matrix3(
-                                            m[0],  m[3],  m[6],
-                                            -m[1], -m[4], -m[7],
-                                            -m[2], -m[5], -m[8]));
+                                        System.out.println("\tSetting global rotation.");
+                                    	globalRotation = new Matrix4(new Matrix3(
+                                            m[0], m[3], m[6],
+                                            m[1], m[4], m[7],
+                                            m[2], m[5], m[8]));
                                     }
                                     else
                                     {
-                                        globalTransform = new Matrix4(new Matrix3(
+                                        System.out.println("\tSetting global transformation.");
+                                    	globalRotation = new Matrix4(new Matrix3(
 	                                             m[0], 	m[4],  m[8],
-	                                            -m[1], -m[5], -m[9],
-	                                            -m[2], -m[6], -m[10]))
-                                        	.times(Matrix4.translate(-m[3], -m[7], -m[11]));
+	                                             m[1],  m[5],  m[9],
+	                                             m[2],  m[6],  m[10]))
+                                        	.times(Matrix4.translate(m[3], m[7], m[11]));
                                     }
                                 }
                             }
@@ -730,15 +797,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
                         case "scale":
                         	if (camera == null)
                         	{
-                        		if (globalTransform == null)
-                        		{
-                        			globalTransform = Matrix4.scale(1.0f / Float.parseFloat(reader.getElementText()));
-                        		}
-                        		else
-                        		{
-                        			globalTransform = globalTransform.times(Matrix4.scale(1.0f / Float.parseFloat(reader.getElementText())));
-                        		}
+                                System.out.println("\tSetting global scale.");
+                    			globalScale = Matrix4.scale(1.0f/Float.parseFloat(reader.getElementText()));
                         	}
+                        	break;
                             
                         case "property": case "projections": case "depth":
                         case "frames": case "frame": case "meta": case "R":
@@ -771,6 +833,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
                     case "chunk":
                         System.out.printf("Finished chunk '%s'\n", chunkLabel);
                         chunkLabel = "";
+                        break;
+                    case "group":
+                        System.out.printf("Finished group '%s'\n", groupLabel);
+                        groupLabel = "";
                         break;
                     case "sensor":
                         if(sensor != null)
@@ -827,14 +893,16 @@ public class ViewSet<ContextType extends Context<ContextType>>
         Camera[] cameras = cameraSet.toArray(new Camera[0]);
         
         // Fill out the camera pose, projection index, and light index lists
+        if(globalScale == null) { globalScale = new Matrix4(); }
+        if(globalRotation == null) { globalRotation = new Matrix4(); }
+        
         for (int i = 0; i < cameras.length; i++)
         {
-        	// Apply the global transform to each camera (if there is one)
-            if(globalTransform != null)
-            {
-            	Matrix4 m1 = cameras[i].transform;
-                cameras[i].transform = m1.times(globalTransform);
-            }
+        	// Apply the global transform to each camera
+        	Matrix4 m1 = cameras[i].transform;
+        	
+        	// TODO: Figure out the right way to integrate the 'scale' (still doesn't work)
+            cameras[i].transform = m1.times(globalRotation);
         	
             cameraPoseList.add(cameras[i].transform);
             cameraProjectionIndexList.add(cameras[i].sensor.index);

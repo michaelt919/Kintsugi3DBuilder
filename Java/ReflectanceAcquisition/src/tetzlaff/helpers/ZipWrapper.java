@@ -55,9 +55,17 @@ public class ZipWrapper
 			zipName += ".zip";
 			
 			// Open the most probable zip and look for the file in the two valid locations
-			if(myZip == null) myZip = new ZipFile(zipName);
-			myZipEntry = myZip.getEntry(entryNameShort);
-			if(myZipEntry == null) myZipEntry = myZip.getEntry(entryNameLong);
+			try
+			{
+				if(myZip == null) myZip = new ZipFile(zipName);
+				myZipEntry = myZip.getEntry(entryNameShort);
+				if(myZipEntry == null) myZipEntry = myZip.getEntry(entryNameLong);
+			}
+			catch(IOException e2)
+			{
+				// just clear things out and fallthrough
+				myZipEntry = null;
+			}
 
 			// Did we find it?
 			if(myZipEntry != null)
@@ -66,8 +74,9 @@ public class ZipWrapper
 			}			
 			else
 			{
-				System.err.printf("File not found in folder or zip (%s, %s).\n",
-						file.getPath(), zipName);
+				input = null;
+//				System.err.printf("File not found in folder or zip (%s, %s).\n",
+//						file.getPath(), zipName);
 			}
 		}
 		

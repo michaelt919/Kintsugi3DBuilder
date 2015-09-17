@@ -76,7 +76,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 		Texture3D<ContextType> depthTextures = null;
 		
 		File directoryPath = xmlFile.getParentFile();
-        proxy = new VertexMesh("OBJ", meshFile); // TODO don't have geometry filename hard-coded
+        proxy = new VertexMesh("OBJ", meshFile);
         viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, loadOptions.getImageOptions(), context, loadingCallback);
         VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(proxy.getVertices());
         

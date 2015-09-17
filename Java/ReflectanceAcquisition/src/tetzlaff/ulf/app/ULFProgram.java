@@ -225,6 +225,7 @@ public class ULFProgram
     	} finally {
     		// Always cleanup the windows
 	        GLFWWindow.closeAllWindows();
+	        QCoreApplication.quit();
     	}    	
     }
     
