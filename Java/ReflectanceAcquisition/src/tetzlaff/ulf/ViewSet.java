@@ -575,7 +575,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
         
         Sensor sensor = null;
         Camera camera = null;
-        Matrix4 globalScale = null, globalRotation = null;
+        float globalScale = 1.0f;
+        Matrix4 globalRotation = new Matrix4();
         
         String version = "", chunkLabel = "", groupLabel = "";
         String sensorID = "", cameraID = "", imageFile = "";
@@ -798,7 +799,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
                         	if (camera == null)
                         	{
                                 System.out.println("\tSetting global scale.");
-                    			globalScale = Matrix4.scale(1.0f/Float.parseFloat(reader.getElementText()));
+                    			globalScale = 1.0f/Float.parseFloat(reader.getElementText());
                         	}
                         	break;
                             
@@ -893,16 +894,13 @@ public class ViewSet<ContextType extends Context<ContextType>>
         Camera[] cameras = cameraSet.toArray(new Camera[0]);
         
         // Fill out the camera pose, projection index, and light index lists
-        if(globalScale == null) { globalScale = new Matrix4(); }
-        if(globalRotation == null) { globalRotation = new Matrix4(); }
-        
         for (int i = 0; i < cameras.length; i++)
         {
         	// Apply the global transform to each camera
         	Matrix4 m1 = cameras[i].transform;
         	
-        	// TODO: Figure out the right way to integrate the 'scale' (still doesn't work)
-            cameras[i].transform = m1.times(globalRotation).times(globalScale);
+        	// TODO: Figure out the right way to integrate the global transforms
+            cameras[i].transform = m1.times(globalRotation).times(Matrix4.scale(globalScale));
         	
             cameraPoseList.add(cameras[i].transform);
             cameraProjectionIndexList.add(cameras[i].sensor.index);
