@@ -902,7 +902,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
         	Matrix4 m1 = cameras[i].transform;
         	
         	// TODO: Figure out the right way to integrate the 'scale' (still doesn't work)
-            cameras[i].transform = m1.times(globalRotation);
+            cameras[i].transform = m1.times(globalRotation).times(globalScale);
         	
             cameraPoseList.add(cameras[i].transform);
             cameraProjectionIndexList.add(cameras[i].sensor.index);
