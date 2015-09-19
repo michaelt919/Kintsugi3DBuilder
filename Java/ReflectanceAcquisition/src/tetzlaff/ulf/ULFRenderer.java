@@ -13,11 +13,13 @@ import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 
 public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable
 {
@@ -36,6 +38,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private FramebufferObject<ContextType> halfResFBO;
     private Program<ContextType> simpleTexProgram;
     private Renderable<ContextType> simpleTexRenderable;
+
+    private boolean cameraVisEnabled = true;
+    Program<ContextType> cameraVisProgram;
+    private Renderable<ContextType> cameraVisRenderable;
+    
+    private VertexBuffer<ContextType> rectangleVBO;
 
     private boolean resampleRequested;
     private int resampleWidth, resampleHeight;
@@ -104,6 +112,21 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	        	this.initError = e;
 	        }
     	}
+
+    	if (this.cameraVisProgram == null)
+    	{
+	    	try
+	        {
+	    		this.cameraVisProgram = context.getShaderProgramBuilder()
+	    				.addShader(ShaderType.VERTEX, new File("shaders/uniform3D.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("shaders/uniform.frag"))
+	    				.createProgram();
+	        }
+	        catch (IOException e)
+	        {
+	        	this.initError = e;
+	        }
+    	}
     	
     	try 
     	{
@@ -124,9 +147,14 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     			    	
 	    	this.renderable = context.createRenderable(program);
 	    	this.renderable.addVertexBuffer("position", this.lightField.positionBuffer);
+	    	
+	    	this.rectangleVBO = context.createRectangle();
 	    				
 	    	this.simpleTexRenderable = context.createRenderable(simpleTexProgram);
-	    	this.simpleTexRenderable.addVertexBuffer("position", context.createRectangle());
+	    	this.simpleTexRenderable.addVertexBuffer("position", rectangleVBO);
+	    	
+	        this.cameraVisRenderable = context.createRenderable(cameraVisProgram);
+	        this.cameraVisRenderable.addVertexBuffer("position", rectangleVBO);
 		} 
     	catch (IOException e) 
     	{
@@ -231,9 +259,39 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	context.finish();
 	    	halfResFBO.delete();
     	} else {
-//    		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+    		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
     		framebuffer.clearDepthBuffer();
-	        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);    		
+	        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+	        
+	        if (cameraVisEnabled)
+	        {
+		        for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
+		        {
+		        	cameraVisProgram.setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
+		        	cameraVisProgram.setUniform("model_view", 
+	        			Matrix4.lookAt(
+							new Vector3(0.0f, 0.0f, 5.0f / trackball.getScale()), 
+							new Vector3(0.0f, 0.0f, 0.0f),
+							new Vector3(0.0f, 1.0f, 0.0f)
+						) // View
+						.times(trackball.getRotationMatrix())
+						.times(Matrix4.translate(lightField.proxy.getCentroid().negated()))
+						.times(lightField.viewSet.getCameraPoseInverse(i))
+						.times(Matrix4.scale(0.25f))
+					); // Model
+		        	
+		        	if (i == 0)
+		        	{
+		        		cameraVisProgram.setUniform("color", new Vector4(1.0f, 0.5f, 0.75f, 1.0f));
+		        	}
+		        	else
+		        	{
+		        		cameraVisProgram.setUniform("color", new Vector4(0.5f, 0.75f, 1.0f, 1.0f));
+		        	}
+		        	
+		        	cameraVisRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+		        }
+	        }
     	}
     }
     
@@ -260,6 +318,21 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	{
     		halfResFBO.delete();
 	    	halfResFBO = null;
+    	}
+    	if (rectangleVBO != null)
+    	{
+    		rectangleVBO.delete();
+    		rectangleVBO = null;
+    	}
+    	if (simpleTexProgram != null)
+    	{
+    		simpleTexProgram.delete();
+    		simpleTexProgram = null;
+    	}
+    	if (cameraVisProgram != null)
+    	{
+    		cameraVisProgram.delete();
+    		cameraVisProgram = null;
     	}
     }
     
