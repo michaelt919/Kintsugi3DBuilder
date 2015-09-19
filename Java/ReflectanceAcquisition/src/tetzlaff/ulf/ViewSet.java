@@ -36,6 +36,7 @@ import tetzlaff.helpers.ZipWrapper;
 public class ViewSet<ContextType extends Context<ContextType>>
 {
 	private List<Matrix4> cameraPoseList;
+	private List<Matrix4> cameraPoseInvList;
 	private List<Projection> cameraProjectionList;
 	private List<Integer> cameraProjectionIndexList;
 	private List<Vector3> lightPositionList;
@@ -56,6 +57,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	
 	public ViewSet(
 		List<Matrix4> cameraPoseList,
+		List<Matrix4> cameraPoseInvList,
 		List<Projection> cameraProjectionList,
 		List<Integer> cameraProjectionIndexList,
 		List<Vector3> lightPositionList,
@@ -69,6 +71,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		ULFLoadingMonitor loadingCallback) throws IOException
 	{
 		this.cameraPoseList = cameraPoseList;
+		this.cameraPoseInvList = cameraPoseInvList;
 		this.cameraProjectionList = cameraProjectionList;
 		this.cameraProjectionIndexList = cameraProjectionIndexList;
 		this.lightPositionList = lightPositionList;
@@ -368,7 +371,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		float recommendedNearPlane = 0.0f;
 		float recommendedFarPlane = Float.MAX_VALUE;
 		List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
+		List<Matrix4> cameraPoseInvList = new ArrayList<Matrix4>();
 		List<Matrix4> orderedCameraPoseList = new ArrayList<Matrix4>();
+		List<Matrix4> orderedCameraPoseInvList = new ArrayList<Matrix4>();
 		List<Projection> cameraProjectionList = new ArrayList<Projection>();
 		List<Vector3> lightPositionList = new ArrayList<Vector3>();
 		List<Vector3> lightIntensityList = new ArrayList<Vector3>();
@@ -398,6 +403,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				
 				cameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
 					.times(Matrix4.translate(-x, -y, -z)));
+				
+				cameraPoseInvList.add(Matrix4.translate(x, y, z)
+					.times(new Matrix4(Matrix3.fromQuaternion(i, j, k, qr).transpose())));
 				
 				scanner.nextLine();
 			}
@@ -473,6 +481,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				String imgFilename = scanner.nextLine().trim();
 				
 				orderedCameraPoseList.add(cameraPoseList.get(poseId));
+				orderedCameraPoseInvList.add(cameraPoseInvList.get(poseId));
 				cameraProjectionIndexList.add(projectionId);
 				lightIndexList.add(lightId);
 				imageFileNames.add(imgFilename);
@@ -495,7 +504,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
 		return new ViewSet<ContextType>(
-			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, 
+			orderedCameraPoseList, orderedCameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, 
 			imageFileNames, imageOptions, recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
 	}
 	
@@ -864,6 +873,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
         }
         
         List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
+        List<Matrix4> cameraPoseInvList = new ArrayList<Matrix4>();
 		List<Projection> cameraProjectionList = new ArrayList<Projection>();
 		List<Vector3> lightPositionList = new ArrayList<Vector3>();
 		List<Vector3> lightIntensityList = new ArrayList<Vector3>();
@@ -903,6 +913,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
             cameras[i].transform = m1.times(globalRotation).times(Matrix4.scale(globalScale));
         	
             cameraPoseList.add(cameras[i].transform);
+            cameraPoseInvList.add(Matrix4.scale(1.0f / globalScale)
+        		.times(globalRotation.transpose())
+        		.times(new Matrix4(new Matrix3(m1).transpose()))
+            	.times(Matrix4.translate(new Vector3(m1.getColumn(3).negated()))));
             cameraProjectionIndexList.add(cameras[i].sensor.index);
             lightIndexList.add(0);
             imageFileNames.add(cameras[i].filename);
@@ -912,7 +926,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
         lightIntensityList.add(lightIntensity);
 
         float farPlane = findFarPlane(cameraPoseList);
-        return new ViewSet<ContextType>(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
+        return new ViewSet<ContextType>(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
         		imageFileNames, imageOptions, farPlane / 16.0f, farPlane, context, loadingCallback);
     }
 	
@@ -938,6 +952,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public Matrix4 getCameraPose(int poseIndex) 
 	{
 		return this.cameraPoseList.get(poseIndex);
+	}
+
+	public Matrix4 getCameraPoseInverse(int poseIndex) 
+	{
+		return this.cameraPoseInvList.get(poseIndex);
 	}
 	
 	public String getGeometryFileName()
