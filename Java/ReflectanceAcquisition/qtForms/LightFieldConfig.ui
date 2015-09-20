@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>345</width>
-    <height>674</height>
+    <height>685</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>345</width>
-    <height>638</height>
+    <height>685</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>345</width>
-    <height>674</height>
+    <height>685</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -183,6 +183,13 @@
        <widget class="QSlider" name="modelSlider">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="showCamerasCheckBox">
+        <property name="text">
+         <string>Show view cameras</string>
         </property>
        </widget>
       </item>

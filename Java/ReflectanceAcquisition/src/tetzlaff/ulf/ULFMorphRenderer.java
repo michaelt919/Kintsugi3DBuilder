@@ -204,6 +204,12 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	}
 
 	@Override
+	public void setVisualizeCameras(boolean camerasEnabled)
+	{	
+		this.stages.get(this.currentStage).setVisualizeCameras(camerasEnabled);
+	}
+
+	@Override
 	public boolean getHalfResolution()
 	{	
 		return this.stages.get(this.currentStage).getHalfResolution();
