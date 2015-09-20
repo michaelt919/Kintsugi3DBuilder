@@ -33,6 +33,7 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
     public QVBoxLayout verticalLayout_3;
     public QComboBox modelComboBox;
     public QSlider modelSlider;
+    public QCheckBox showCamerasCheckBox;
     public QGroupBox renderingOptionsGroupBox;
     public QVBoxLayout verticalLayout_4;
     public QGridLayout gridLayout;
@@ -69,9 +70,9 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
     public void setupUi(QWidget LightFieldConfigForm)
     {
         LightFieldConfigForm.setObjectName("LightFieldConfigForm");
-        LightFieldConfigForm.resize(new QSize(345, 674).expandedTo(LightFieldConfigForm.minimumSizeHint()));
-        LightFieldConfigForm.setMinimumSize(new QSize(345, 638));
-        LightFieldConfigForm.setMaximumSize(new QSize(345, 674));
+        LightFieldConfigForm.resize(new QSize(345, 685).expandedTo(LightFieldConfigForm.minimumSizeHint()));
+        LightFieldConfigForm.setMinimumSize(new QSize(345, 685));
+        LightFieldConfigForm.setMaximumSize(new QSize(345, 685));
         verticalLayout_6 = new QVBoxLayout(LightFieldConfigForm);
         verticalLayout_6.setObjectName("verticalLayout_6");
         loadOptionsGroupBox = new QGroupBox(LightFieldConfigForm);
@@ -186,6 +187,11 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
         modelSlider.setOrientation(com.trolltech.qt.core.Qt.Orientation.Horizontal);
 
         verticalLayout_3.addWidget(modelSlider);
+
+        showCamerasCheckBox = new QCheckBox(modelOptionsGroupBox);
+        showCamerasCheckBox.setObjectName("showCamerasCheckBox");
+
+        verticalLayout_3.addWidget(showCamerasCheckBox);
 
 
         verticalLayout_6.addWidget(modelOptionsGroupBox);
@@ -433,6 +439,7 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
         loadSingleButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Load Single ...", null));
         loadMultipleButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Load Multiple ...", null));
         modelOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Model Options", null));
+        showCamerasCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Show view cameras", null));
         renderingOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Rendering Options", null));
         gammaLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Gamma:", null));
         exponentLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Weight Exponent:", null));

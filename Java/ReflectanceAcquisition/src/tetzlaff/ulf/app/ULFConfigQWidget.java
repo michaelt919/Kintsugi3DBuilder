@@ -114,6 +114,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		gui.visibilityBiasLabel.setEnabled(enable);
 		gui.visibilityBiasSpinBox.setEnabled(enable);
 		
+		gui.showCamerasCheckBox.setEnabled(enable);
 		gui.halfResCheckBox.setEnabled(enable);
 		gui.multisamplingCheckBox.setEnabled(enable);
 
@@ -144,6 +145,9 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 				gui.exponentSpinBox.setValue(model.getSelectedItem().getWeightExponent());
 				gui.visibilityCheckBox.setChecked(model.getSelectedItem().isOcclusionEnabled());
 				gui.visibilityBiasSpinBox.setValue(model.getSelectedItem().getOcclusionBias());
+				
+				model.getSelectedItem().setHalfResolution(gui.halfResCheckBox.isChecked());
+				model.getSelectedItem().setVisualizeCameras(gui.showCamerasCheckBox.isChecked());
 
 				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
 				{
@@ -257,8 +261,6 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 			{
 				model.addFromVSETFile(new File(camDefFilename), loadOptions);
 			}
-			
-//			initAndPositionProgressDialog();
 		}
 		catch (IOException ex) 
 		{
@@ -341,6 +343,14 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		model.getSelectedItem().setWeightExponent((float)newValue);
 	}
 	
+	// Add listener for changes to camera visualization checkbox.
+	@SuppressWarnings("unused")
+	private void on_showCamerasCheckBox_toggled(boolean isChecked)
+	{
+		if(blockSignals) { return; }
+		model.getSelectedItem().setVisualizeCameras(isChecked);
+	}
+
 	// Add listener for changes to half resolution checkbox.
 	@SuppressWarnings("unused")
 	private void on_halfResCheckBox_toggled(boolean isChecked)

@@ -39,7 +39,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private Program<ContextType> simpleTexProgram;
     private Renderable<ContextType> simpleTexRenderable;
 
-    private boolean cameraVisEnabled = true;
+    private boolean cameraVisEnabled;
     Program<ContextType> cameraVisProgram;
     private Renderable<ContextType> cameraVisRenderable;
     
@@ -248,6 +248,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 			halfResFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
 	    	halfResFBO.clearDepthBuffer();
 	        renderable.draw(PrimitiveMode.TRIANGLES, halfResFBO);
+	        
+	        if (cameraVisEnabled)
+	        {
+	        	drawCameras(halfResFBO, size);
+	        }
+
 	        context.finish();
 	        
 	        // Second pass at full resolution to default framebuffer
@@ -265,34 +271,40 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	        
 	        if (cameraVisEnabled)
 	        {
-		        for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
-		        {
-		        	cameraVisProgram.setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
-		        	cameraVisProgram.setUniform("model_view", 
-	        			Matrix4.lookAt(
-							new Vector3(0.0f, 0.0f, 5.0f / trackball.getScale()), 
-							new Vector3(0.0f, 0.0f, 0.0f),
-							new Vector3(0.0f, 1.0f, 0.0f)
-						) // View
-						.times(trackball.getRotationMatrix())
-						.times(Matrix4.translate(lightField.proxy.getCentroid().negated()))
-						.times(lightField.viewSet.getCameraPoseInverse(i))
-						.times(Matrix4.scale(0.25f))
-					); // Model
-		        	
-		        	if (i == 0)
-		        	{
-		        		cameraVisProgram.setUniform("color", new Vector4(1.0f, 0.5f, 0.75f, 1.0f));
-		        	}
-		        	else
-		        	{
-		        		cameraVisProgram.setUniform("color", new Vector4(0.5f, 0.75f, 1.0f, 1.0f));
-		        	}
-		        	
-		        	cameraVisRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-		        }
+	        	drawCameras(framebuffer, size);
 	        }
     	}
+    }
+    
+    private void drawCameras(Framebuffer<ContextType> framebuffer, FramebufferSize size)
+    {
+    	Matrix4 persp = Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f);
+    	for (int i = 0; i < lightField.viewSet.getCameraPoseCount(); i++)
+        {
+        	cameraVisProgram.setUniform("projection", persp);
+        	cameraVisProgram.setUniform("model_view", 
+    			Matrix4.lookAt(
+					new Vector3(0.0f, 0.0f, 5.0f / trackball.getScale()), 
+					new Vector3(0.0f, 0.0f, 0.0f),
+					new Vector3(0.0f, 1.0f, 0.0f)
+				) // View
+				.times(trackball.getRotationMatrix())
+				.times(Matrix4.translate(lightField.proxy.getCentroid().negated()))
+				.times(lightField.viewSet.getCameraPoseInverse(i))
+				.times(Matrix4.scale(0.25f))
+			); // Model
+        	
+        	if (i == 0)
+        	{
+        		cameraVisProgram.setUniform("color", new Vector4(1.0f, 0.5f, 0.75f, 1.0f));
+        	}
+        	else
+        	{
+        		cameraVisProgram.setUniform("color", new Vector4(0.5f, 0.75f, 1.0f, 1.0f));
+        	}
+        	
+        	cameraVisRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+        }
     }
     
 	@Override
@@ -488,5 +500,10 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 		{
 			context.disableMultisampling();			
 		}
+	}
+
+	@Override
+	public void setVisualizeCameras(boolean camerasEnabled) {
+		cameraVisEnabled = camerasEnabled;
 	}
 }

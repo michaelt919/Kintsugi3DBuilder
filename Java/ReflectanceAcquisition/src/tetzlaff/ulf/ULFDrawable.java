@@ -20,8 +20,10 @@ public interface ULFDrawable extends Drawable
 	void setOcclusionEnabled(boolean occlusionEnabled);
 	void setOcclusionBias(float occlusionBias);
 	
+	void setVisualizeCameras(boolean camerasEnabled);
 	void setHalfResolution(boolean halfResEnabled);
 	void setMultisampling(boolean multisamplingEnabled);
 	
 	void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException;
+
 }
