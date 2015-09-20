@@ -9,6 +9,16 @@ package tetzlaff.gl;
  */
 public interface IndexBuffer<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
+	/**
+	 * Gets the number of indices in the buffer.
+	 * @return
+	 */
 	int count();
+	
+	/**
+	 * Sets the content of the index buffer.
+	 * @param data An array containing the array indices.
+	 * @return The calling object.
+	 */
 	IndexBuffer<ContextType> setData(int[] data);
 }
