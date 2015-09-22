@@ -1,5 +1,10 @@
 package tetzlaff.gl.exceptions;
 
+/**
+ * Thrown when the shaders within a program failed to linnk.
+ * @author Michael Tetzlaff
+ *
+ */
 public class ProgramLinkFailureException extends RuntimeException 
 {
 	private static final long serialVersionUID = 8084771613401908824L;

@@ -1,5 +1,10 @@
 package tetzlaff.gl.exceptions;
 
+/**
+ * Thrown when an attempt is made to use more texture units than are available in the GL implementation.
+ * @author Michael Tetzlaff
+ *
+ */
 public class NoAvailableTextureUnitsException extends RuntimeException {
 
 	private static final long serialVersionUID = -3881373761882575026L;

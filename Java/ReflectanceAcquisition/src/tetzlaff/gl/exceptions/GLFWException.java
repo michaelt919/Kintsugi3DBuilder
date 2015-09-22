@@ -1,5 +1,10 @@
 package tetzlaff.gl.exceptions;
 
+/**
+ * Thrown when any error related to GLFW occurs.
+ * @author Michael Tetzlaff
+ *
+ */
 public class GLFWException extends RuntimeException 
 {
 	private static final long serialVersionUID = -9045950594133572264L;

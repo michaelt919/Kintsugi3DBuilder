@@ -12,7 +12,6 @@ import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.VertexBuffer;
-import tetzlaff.gl.exceptions.UnrecognizedPrimitiveModeException;
 import tetzlaff.gl.helpers.DoubleVector2;
 import tetzlaff.gl.helpers.DoubleVector3;
 import tetzlaff.gl.helpers.DoubleVector4;
@@ -77,7 +76,7 @@ class OpenGLRenderable implements Renderable<OpenGLContext>
 		case TRIANGLE_FAN: return GL_TRIANGLE_FAN;
 		case TRIANGLE_STRIP: return GL_TRIANGLE_STRIP;
 		case TRIANGLE_STRIP_ADJACENCY: return GL_TRIANGLE_STRIP_ADJACENCY;
-		default: throw new UnrecognizedPrimitiveModeException("Unrecognized primitive mode: " + primitiveMode);
+		default: throw new UnsupportedOperationException("Unrecognized primitive mode: " + primitiveMode);
 		}
 	}
 	

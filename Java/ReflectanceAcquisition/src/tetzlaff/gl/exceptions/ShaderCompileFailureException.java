@@ -1,5 +1,10 @@
 package tetzlaff.gl.exceptions;
 
+/**
+ * Thrown when a shader fails to compile.
+ * @author Michael Tetzlaff
+ *
+ */
 public class ShaderCompileFailureException extends RuntimeException 
 {
 	private static final long serialVersionUID = 7556469381337373536L;
