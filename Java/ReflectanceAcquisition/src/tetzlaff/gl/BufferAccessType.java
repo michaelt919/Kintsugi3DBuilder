@@ -1,5 +1,10 @@
 package tetzlaff.gl;
 
+/**
+ * Enumerates the possible ways in which a buffer could be read or written to with respect to the application or the shaders.
+ * @author Michael Tetzlaff
+ *
+ */
 public enum BufferAccessType 
 {
 	/**
