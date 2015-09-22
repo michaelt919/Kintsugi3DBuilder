@@ -11,7 +11,7 @@ public interface IndexBuffer<ContextType extends Context<ContextType>> extends R
 {
 	/**
 	 * Gets the number of indices in the buffer.
-	 * @return
+	 * @return The number of indices in the buffer.
 	 */
 	int count();
 	
