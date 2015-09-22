@@ -1,5 +1,10 @@
 package tetzlaff.gl.exceptions;
 
+/**
+ * Thrown when an attempt is made to draw something without any vertex buffers specified.
+ * @author Michael Tetzlaff
+ *
+ */
 public class NoSpecifiedVertexBuffersException extends RuntimeException {
 
 	private static final long serialVersionUID = 6824841077784662947L;
