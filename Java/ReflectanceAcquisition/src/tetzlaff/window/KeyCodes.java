@@ -1,6 +1,11 @@
 package tetzlaff.window;
 import static org.lwjgl.glfw.GLFW.*;
 
+/**
+ * A listing of possible key codes that could be used in key events.
+ * @author Michael Tetzlaff
+ *
+ */
 public class KeyCodes
 {
 	public static final int UNKNOWN = GLFW_KEY_UNKNOWN;

@@ -6,6 +6,7 @@ import static org.lwjgl.glfw.GLFW.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
 // Window event callbacks
 import org.lwjgl.glfw.GLFWWindowCloseCallback;
 import org.lwjgl.glfw.GLFWWindowFocusCallback;
@@ -29,6 +30,8 @@ import org.lwjgl.glfw.GLFWCursorPosCallback;
 import org.lwjgl.glfw.GLFWDropCallback;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 
+
+import tetzlaff.window.WindowListenerManager;
 // Internal classes for wrapping GLFW callbacks
 import tetzlaff.window.listeners.CharacterListener;
 import tetzlaff.window.listeners.CharacterModifiersListener;
@@ -51,7 +54,7 @@ import tetzlaff.window.listeners.WindowRefreshListener;
 import tetzlaff.window.listeners.WindowRestoredListener;
 import tetzlaff.window.listeners.WindowSizeListener;
 
-public class GLFWWindowCallback implements WindowListenerManager
+class GLFWWindowCallback implements WindowListenerManager
 {
 	private GLFWWindow window;
 	
@@ -76,7 +79,7 @@ public class GLFWWindowCallback implements WindowListenerManager
 	private List<CursorExitedListener> cursorExitListeners;
 	private List<ScrollListener> scrollListeners;
 	
-	public GLFWWindowCallback(GLFWWindow window)
+	GLFWWindowCallback(GLFWWindow window)
 	{
 		this.window = window;
 		windowPosListeners = new ArrayList<WindowPositionListener>();
