@@ -27,6 +27,7 @@ import tetzlaff.window.KeyState;
 import tetzlaff.window.ModifierKeys;
 import tetzlaff.window.MouseButtonState;
 import tetzlaff.window.Window;
+import tetzlaff.window.WindowListenerManager;
 import tetzlaff.window.WindowPosition;
 import tetzlaff.window.WindowSize;
 import tetzlaff.window.listeners.CharacterListener;
@@ -50,12 +51,28 @@ import tetzlaff.window.listeners.WindowRefreshListener;
 import tetzlaff.window.listeners.WindowRestoredListener;
 import tetzlaff.window.listeners.WindowSizeListener;
 
+/**
+ * A class which implements the Window interface and provides a means of creating an OpenGL context using the GLFW library.
+ * @author Michael Tetzlaff
+ *
+ */
 public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 {
 	private long handle;
 	private boolean isDestroyed;
 	private WindowListenerManager listenerManager;
 
+	/**
+	 * Creates a new GLFW window.
+	 * @param width The width of the window, in logical pixels.
+	 * @param height The height of the window, in logical pixels.
+	 * @param title The title of the window.
+	 * @param x The x-coordinate of the left edge of the window, in logical pixels.
+	 * @param y The y-coordinate of the top edge of the window, in logical pixels.
+	 * @param resizable Whether or not the window is resizable.
+	 * @param multisamples The number of samples to use for multisampling the default framebuffer.
+	 * If this is set to one, multisampling will be disabled for the default framebuffer.
+	 */
 	public GLFWWindow(int width, int height, String title, int x, int y, boolean resizable, int multisamples) 
 	{
 		glfwSetErrorCallback(new GLFWErrorCallback() 
@@ -159,26 +176,62 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
         }
 	}
 	
+	/**
+	 * Creates a new GLFW window with multisampling disabled.
+	 * @param width The width of the window, in logical pixels.
+	 * @param height The height of the window, in logical pixels.
+	 * @param title The title of the window.
+	 * @param x The x-coordinate of the left edge of the window, in logical pixels.
+	 * @param y The y-coordinate of the top edge of the window, in logical pixels.
+	 * @param resizable Whether or not the window is resizable.
+	 */
 	public GLFWWindow(int width, int height, String title, int x, int y, boolean resizable) 
 	{
 		this(width, height, title, x, y, resizable, 0);
 	}
 	
+	/**
+	 * Creates a new GLFW window at a default screen position.
+	 * @param width The width of the window, in logical pixels.
+	 * @param height The height of the window, in logical pixels.
+	 * @param title The title of the window.
+	 * @param resizable Whether or not the window is resizable.
+	 * @param multisamples The number of samples to use for multisampling the default framebuffer.
+	 * If this is set to one, multisampling will be disabled for the default framebuffer.
+	 */
 	public GLFWWindow(int width, int height, String title, boolean resizable, int multisamples) 
 	{
 		this(width, height, title, -1, -1, resizable, multisamples);
 	}
 	
+	/**
+	 * Creates a new GLFW window at a default screen position with multisampling disabled.
+	 * @param width The width of the window, in logical pixels.
+	 * @param height The height of the window, in logical pixels.
+	 * @param title The title of the window.
+	 * @param resizable Whether or not the window is resizable.
+	 * If this is set to one, multisampling will be disabled for the default framebuffer.
+	 */
 	public GLFWWindow(int width, int height, String title, boolean resizable) 
 	{
 		this(width, height, title, -1, -1, resizable, 0);
 	}
 	
+	/**
+	 * Creates a new non-resizable GLFW window at a default screen position with multisampling disabled.
+	 * @param width The width of the window, in logical pixels.
+	 * @param height The height of the window, in logical pixels.
+	 * @param title The title of the window.
+	 * If this is set to one, multisampling will be disabled for the default framebuffer.
+	 */
 	public GLFWWindow(int width, int height, String title) 
 	{
 		this(width, height, title, false);
 	}
 	
+	/**
+	 * Immediately closes all GLFW windows.
+	 */
 	public static void closeAllWindows()
 	{
 		glfwTerminate();
