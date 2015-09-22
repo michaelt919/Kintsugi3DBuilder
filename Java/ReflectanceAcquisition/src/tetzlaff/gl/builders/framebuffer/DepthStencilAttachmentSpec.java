@@ -1,9 +1,17 @@
 package tetzlaff.gl.builders.framebuffer;
 
+
 public class DepthStencilAttachmentSpec extends AttachmentSpec
 {
+	/**
+	 * Whether or not floating-point storage for the depth component.
+	 */
 	public final boolean floatingPointDepth;
 	
+	/**
+	 * Creates a new depth+stencil attachment specification.
+	 * @param floatingPoint Whether or not floating-point storage for the depth attachment.
+	 */
 	public DepthStencilAttachmentSpec(boolean floatingPointDepth)
 	{
 		this.floatingPointDepth = floatingPointDepth;

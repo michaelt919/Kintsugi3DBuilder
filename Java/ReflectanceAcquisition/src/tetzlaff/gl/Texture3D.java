@@ -37,7 +37,7 @@ public interface Texture3D<ContextType extends Context<ContextType>> extends Tex
 	 * @param layerIndex The index of the layer to be loaded.
 	 * @param fileStream An input stream containing the image in a format supported by Java's ImageIO library.
 	 * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical ais.
-	 * @throws IOException Upon an unrecoverable File I/O problem.
+	 * @throws IOException Upon a File I/O problem while loading the image.
 	 */
 	void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical) throws IOException;
 	
@@ -46,7 +46,7 @@ public interface Texture3D<ContextType extends Context<ContextType>> extends Tex
 	 * @param layerIndex The index of the layer to be loaded.
 	 * @param zipFile Represents a location within a ZIP file containing the image in a format supported by Java's ImageIO library.
 	 * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
-	 * @throws IOException Upon an unrecoverable File I/O problem.
+	 * @throws IOException Upon a File I/O problem while loading the image.
 	 */
 	void loadLayer(int layerIndex, ZipWrapper zipFile, boolean flipVertical) throws IOException;
 	
@@ -55,7 +55,7 @@ public interface Texture3D<ContextType extends Context<ContextType>> extends Tex
 	 * @param layerIndex The index of the layer to be loaded.
 	 * @param file A file containing the image in a format supported by Java's ImageIO library.
 	 * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
-	 * @throws IOException Upon an unrecoverable File I/O problem.
+	 * @throws IOException Upon a File I/O problem while loading the image.
 	 */
 	void loadLayer(int layerIndex, File file, boolean flipVertical) throws IOException;
 	
@@ -65,7 +65,7 @@ public interface Texture3D<ContextType extends Context<ContextType>> extends Tex
 	 * @param imageStream An input stream containing the image in a format supported by Java's ImageIO library.
 	 * @param maskStream An input stream containing the alpha mask in a format supported by Java's ImageIO library.
 	 * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
-	 * @throws IOException Upon an unrecoverable File I/O problem.
+	 * @throws IOException Upon a File I/O problem while loading the image.
 	 */
 	void loadLayer(int layerIndex, InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
 	
@@ -75,7 +75,7 @@ public interface Texture3D<ContextType extends Context<ContextType>> extends Tex
 	 * @param imageZip Represents a location within a ZIP file containing the image in a format supported by Java's ImageIO library.
 	 * @param maskZip Represents a location within a ZIP file containing the alpha mask in a format supported by Java's ImageIO library.
 	 * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
-	 * @throws IOException Upon an unrecoverable File I/O problem.
+	 * @throws IOException Upon a File I/O problem while loading the image.
 	 */
 	void loadLayer(int layerIndex, ZipWrapper imageZip, ZipWrapper maskZip, boolean flipVertical) throws IOException;
 	
@@ -85,7 +85,7 @@ public interface Texture3D<ContextType extends Context<ContextType>> extends Tex
 	 * @param imageFile A file containing the image in a format supported by Java's ImageIO library.
 	 * @param maskFile A file containing the alpha mask in a format supported by Java's ImageIO library.
 	 * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
-	 * @throws IOException Upon an unrecoverable File I/O problem.
+	 * @throws IOException Upon a File I/O problem while loading the image.
 	 */
 	void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical) throws IOException;
 	
