@@ -118,27 +118,15 @@ class OpenGLRenderable implements Renderable<OpenGLContext>
 			throw new IllegalArgumentException("'framebuffer' must be of type OpenGLFramebuffer.");
 		}
 	}
-
-	@Override
-	public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer, int width, int height)
-	{
-		this.draw(primitiveMode, framebuffer, 0, 0, width, height);
-	}
 	
 	@Override
-	public void draw(PrimitiveMode primitiveMode, OpenGLContext context)
+	public void draw(PrimitiveMode primitiveMode)
 	{
 		this.draw(primitiveMode, context.getDefaultFramebuffer());
 	}
 
 	@Override
-	public void draw(PrimitiveMode primitiveMode, OpenGLContext context, int width, int height)
-	{
-		this.draw(primitiveMode, context.getDefaultFramebuffer(), width, height);
-	}
-
-	@Override
-	public void draw(PrimitiveMode primitiveMode, OpenGLContext context, int x, int y, int width, int height)
+	public void draw(PrimitiveMode primitiveMode, int x, int y, int width, int height)
 	{
 		this.draw(primitiveMode, context.getDefaultFramebuffer(), x, y, width, height);
 	}
