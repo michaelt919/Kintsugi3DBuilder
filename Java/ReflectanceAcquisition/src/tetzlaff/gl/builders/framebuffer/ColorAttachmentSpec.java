@@ -2,10 +2,22 @@ package tetzlaff.gl.builders.framebuffer;
 
 import tetzlaff.gl.ColorFormat;
 
+/**
+ * A builder-like object for specifying a framebuffer color attachment.
+ * @author Michael Tetzlaff
+ *
+ */
 public class ColorAttachmentSpec extends AttachmentSpec
 {
+	/**
+	 * The color format to be used internally.
+	 */
 	public final ColorFormat internalFormat;
 	
+	/**
+	 * Creates a new color attachment specification.
+	 * @param internalFormat The color format to be used internally.
+	 */
 	public ColorAttachmentSpec(ColorFormat internalFormat)
 	{
 		this.internalFormat = internalFormat;

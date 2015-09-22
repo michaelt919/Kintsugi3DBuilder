@@ -180,7 +180,7 @@ public interface Context<ContextType extends Context<ContextType>>
 	 * @param type The type of shader to create.
 	 * @param file A file containing the source code of the shader.
 	 * @return The newly created shader.
-	 * @throws FileNotFoundException Upon an unrecoverable File I/O problem when reading the shader file.
+	 * @throws FileNotFoundException Upon a File I/O problem when reading the shader file.
 	 */
 	Shader<ContextType> createShader(ShaderType type, File file) throws FileNotFoundException;
 	
@@ -244,7 +244,7 @@ public interface Context<ContextType extends Context<ContextType>>
 	 * @param maskStream An input stream containing the alpha mask in a format supported by Java's ImageIO library.
 	 * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
 	 * @return The builder object for the texture.
-	 * @throws IOException Upon an unrecoverable File I/O problem when reading the images.
+	 * @throws IOException Upon a File I/O problem when reading the images.
 	 */
 	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
 
@@ -258,7 +258,7 @@ public interface Context<ContextType extends Context<ContextType>>
 	 * @param imageStream An input stream containing the image in a format supported by Java's ImageIO library.
 	 * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
 	 * @return The builder object for the texture.
-	 * @throws IOException Upon an unrecoverable File I/O problem when reading the images.
+	 * @throws IOException Upon a File I/O problem when reading the images.
 	 */
 	default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(InputStream imageStream, boolean flipVertical) throws IOException
 	{
@@ -271,7 +271,7 @@ public interface Context<ContextType extends Context<ContextType>>
 	 * @param maskFile A file containing the alpha mask in a format supported by Java's ImageIO library.
 	 * @param flipVertical Whether or not to automatically flip all of the pixels vertically to resolve discrepancies with respect to the orientation of the vertical axis.
 	 * @return The builder object for the texture.
-	 * @throws IOException Upon an unrecoverable File I/O problem when reading the images.
+	 * @throws IOException Upon a File I/O problem when reading the images.
 	 */
 	default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(File imageFile, File maskFile, boolean flipVertical) throws IOException
 	{
