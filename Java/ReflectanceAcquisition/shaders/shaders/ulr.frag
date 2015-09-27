@@ -1,11 +1,14 @@
 #version 330
 
-#define SAMPLE_COUNT 7
+#define MAX_SAMPLE_COUNT 10
 
 #define MAX_CAMERA_POSE_COUNT 1024
 #define MAX_CAMERA_PROJECTION_COUNT 1024
 
 uniform bool occlusionEnabled;
+
+uniform bool buehlerEnabled;
+uniform int sampleCount;
 
 uniform float weightExponent;
 uniform float occlusionBias;
@@ -115,11 +118,11 @@ vec4 getLightFieldSampleNoMipmap(int index)
 
 vec4 computeLightFieldBuehler()
 {
-    float weights[SAMPLE_COUNT];
-    int indices[SAMPLE_COUNT];
+    float weights[MAX_SAMPLE_COUNT];
+    int indices[MAX_SAMPLE_COUNT];
     
     // Initialization
-    for (int i = 0; i < SAMPLE_COUNT; i++)
+    for (int i = 0; i < sampleCount; i++)
     {
         weights[i] = -1.0 / 0.0;
         indices[i] = -1;
@@ -145,7 +148,7 @@ vec4 computeLightFieldBuehler()
                 int rightIndex = 2*currentIndex+2;
                 
                 // Find the smallest of the current node, and its left and right children
-                if (leftIndex < SAMPLE_COUNT && weights[leftIndex] < weights[currentIndex])
+                if (leftIndex < sampleCount && weights[leftIndex] < weights[currentIndex])
                 {
                     minIndex = leftIndex;
                 }
@@ -154,7 +157,7 @@ vec4 computeLightFieldBuehler()
                     minIndex = currentIndex;
                 }
                 
-                if (rightIndex < SAMPLE_COUNT && weights[rightIndex] < weights[minIndex])
+                if (rightIndex < sampleCount && weights[rightIndex] < weights[minIndex])
                 {
                     minIndex = rightIndex;
                 }
@@ -182,7 +185,7 @@ vec4 computeLightFieldBuehler()
     // Evaluate the light field
     // Because of the min-heap property, weights[0] should be the smallest weight
     vec4 sum = vec4(0.0);
-	for (int i = 1; i < SAMPLE_COUNT; i++)
+	for (int i = 1; i < sampleCount; i++)
 	{
 		sum += (weights[i] - weights[0]) * getLightFieldSampleNoMipmap(indices[i]);
 	}
@@ -202,6 +205,12 @@ vec4 computeLightField()
 
 void main()
 {
-    fragColor = computeLightField();
-	//fragColor = computeLightFieldBuehler();
+	if (buehlerEnabled)
+	{
+		fragColor = computeLightFieldBuehler();
+	}
+	else
+	{	
+    	fragColor = computeLightField();
+    }
 }

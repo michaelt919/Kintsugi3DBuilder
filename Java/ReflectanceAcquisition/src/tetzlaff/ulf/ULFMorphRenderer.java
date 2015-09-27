@@ -10,6 +10,7 @@ import java.util.Scanner;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.Trackball;
+import tetzlaff.gl.helpers.Vector4;
 
 public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable
 {
@@ -227,5 +228,44 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 		{
 			context.disableMultisampling();			
 		}		
+	}
+
+	@Override
+	public void setBackgroundColor(Vector4 RGBA) {
+		for (ULFRenderer<ContextType> stage : stages)
+		{
+			stage.setBackgroundColor(RGBA);
+		}
+	}
+
+	@Override
+	public Vector4 getBackgroundColor() {
+		return this.stages.get(this.currentStage).getBackgroundColor();
+	}
+
+	@Override
+	public boolean isKNeighborsEnabled() {
+		return this.stages.get(this.currentStage).isKNeighborsEnabled();
+	}
+
+	@Override
+	public void setKNeighborsEnabled(boolean kNeighborsEnabled) {
+		for (ULFRenderer<ContextType> stage : stages)
+		{
+			stage.setKNeighborsEnabled(kNeighborsEnabled);
+		}
+	}
+
+	@Override
+	public int getKNeighborCount() {
+		return this.stages.get(this.currentStage).getKNeighborCount();
+	}
+
+	@Override
+	public void setKNeighborCount(int kNeighborCount) {
+		for (ULFRenderer<ContextType> stage : stages)
+		{
+			stage.setKNeighborCount(kNeighborCount);
+		}
 	}
 }
