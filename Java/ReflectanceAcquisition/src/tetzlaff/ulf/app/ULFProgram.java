@@ -24,12 +24,14 @@ import com.trolltech.qt.core.Qt;
 import com.trolltech.qt.core.Qt.ApplicationAttribute;
 import com.trolltech.qt.gui.QApplication;
 import com.trolltech.qt.gui.QCursor;
+import com.trolltech.qt.gui.QMessageBox;
 import com.trolltech.qt.gui.QStyle;
 
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.interactive.InteractiveApplication;
+import tetzlaff.interactive.MessageBox;
 import tetzlaff.ulf.ULFRendererList;
 import tetzlaff.window.WindowPosition;
 import tetzlaff.window.WindowSize;
@@ -158,12 +160,45 @@ public class ULFProgram
 	    	// Create a new application to run our event loop and give it the GLFWWindow for polling
 	    	// of events and the OpenGL context.  The ULFRendererList provides the drawable.
 	        app = InteractiveGraphics.createApplication(window, window, model.getDrawable());
+	        
+	        // Create an anonymous wrapper for QMessageBox
+	        InteractiveApplication.setMessageBox(new MessageBox() {
+				@Override
+				public void info(String title, String message) {
+					QMessageBox.information(null, title, message);
+				}
+
+				@Override
+				public Response question(String title, String message) {
+					QMessageBox.StandardButton button = QMessageBox.question(null, title, message);
+					switch(button)
+					{
+						case Yes:
+						case Ok: return MessageBox.Response.YES;
+						case No: return MessageBox.Response.NO;
+						
+						default:
+						case Cancel: return MessageBox.Response.CANCEL;
+					}
+				}
+
+				@Override
+				public void warning(String title, String message) {
+					QMessageBox.warning(null, title, message);
+				}
+
+				@Override
+				public void error(String title, String message) {
+					QMessageBox.critical(null, title, message);
+				}
+	        });
 	
 			// Prepare the Qt GUI system
 	        if(System.getProperty("os.name").startsWith("Windows")) {
 	        	QApplication.setDesktopSettingsAware(false);
 	        }
 	        
+	        // Set the QCoreApplication default properties
 	        QApplication.initialize(args);
 	        QCoreApplication.setOrganizationName("Cultural Heritage Imaging");
 	        QCoreApplication.setOrganizationDomain("culturalheritageimaging.org");
