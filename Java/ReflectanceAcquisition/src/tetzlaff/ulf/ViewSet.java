@@ -33,28 +33,139 @@ import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.helpers.ZipWrapper;
 
+/**
+ * A class for organizing the OpenGL resources that are necessary for view-dependent rendering.
+ * @author Michael Tetzlaff
+ *
+ * @param <ContextType>
+ */
 public class ViewSet<ContextType extends Context<ContextType>>
 {
+	/**
+	 * A list of camera poses defining the transformation from object space to camera space for each view.
+	 * These are necessary to perform projective texture mapping.
+	 */
 	private List<Matrix4> cameraPoseList;
+	
+	/**
+	 * A list of inverted camera poses defining the transformation from camera space to object space for each view.
+	 * (Useful for visualizing the cameras on screen).
+	 */
 	private List<Matrix4> cameraPoseInvList;
+	
+	/**
+	 * A list of projection transformations defining the intrinsic properties of each camera.
+	 * This list can be much smaller than the number of views if the same intrinsic properties apply for multiple views.
+	 */
 	private List<Projection> cameraProjectionList;
+	
+	/**
+	 * A list containing an entry for every view which designates the index of the projection transformation that should be used for each view.
+	 */
 	private List<Integer> cameraProjectionIndexList;
+	
+	/**
+	 * A list of light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
+	 */
 	private List<Vector3> lightPositionList;
+	
+	/**
+	 * A list of light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
+	 */
 	private List<Vector3> lightIntensityList;
+	
+	/**
+	 * A list containing an entry for every view which designates the index of the light source position and intensity that should be used for each view.
+	 */
 	private List<Integer> lightIndexList;
+	
+	/**
+	 * A list containing the relative name of the image file corresponding to each view.
+	 */
 	private List<String> imageFileNames;
+	
+	/**
+	 * The absolute file path to be used for loading images.
+	 */
 	private File filePath;
 	
+	/**
+	 * A GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
+	 * These are necessary to perform projective texture mapping.
+	 */
 	private UniformBuffer<ContextType> cameraPoseBuffer;
+	
+	/**
+	 * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
+	 */
 	private UniformBuffer<ContextType> cameraProjectionBuffer;
+	
+	/**
+	 * A GPU buffer containing for every view an index designating the projection transformation that should be used for each view.
+	 */
 	private UniformBuffer<ContextType> cameraProjectionIndexBuffer;
+	
+	/**
+	 * A GPU buffer containing light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 */
 	private UniformBuffer<ContextType> lightPositionBuffer;
+	
+	/**
+	 * A GPU buffer containing light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 */
 	private UniformBuffer<ContextType> lightIntensityBuffer;
+	
+	/**
+	 * A GPU buffer containing for every view an index designating the light source position and intensity that should be used for each view.
+	 */
 	private UniformBuffer<ContextType> lightIndexBuffer;
+	
+	/**
+	 * A texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
+	 */
 	private Texture3D<ContextType> textureArray;
+	
+	/**
+	 * The recommended near plane to use when rendering this view set.
+	 */
 	private float recommendedNearPlane;
+	
+	/**
+	 * The recommended far plane to use when rendering this view set.
+	 */
 	private float recommendedFarPlane;
 	
+	/**
+	 * The absolute file path to be used for loading images.
+	 */
+	
+	/**
+	 * Creates a new view set object, allocating and initializing GPU resources as appropriate.
+	 * @param cameraPoseList A list of camera poses defining the transformation from object space to camera space for each view.
+	 * These are necessary to perform projective texture mapping.
+	 * @param cameraPoseInvList A list of inverted camera poses defining the transformation from camera space to object space for each view.
+	 * (Useful for visualizing the cameras on screen).
+	 * @param cameraProjectionList A list of projection transformations defining the intrinsic properties of each camera.
+	 * This list can be much smaller than the number of views if the same intrinsic properties apply for multiple views.
+	 * @param cameraProjectionIndexList  A list containing an entry for every view which designates the index of the projection transformation that should be used for each view.
+	 * @param lightPositionList A list of light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
+	 * @param lightIntensityList A list of light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
+	 * @param lightIndexList A list containing an entry for every view which designates the index of the light source position and intensity that should be used for each view.
+	 * @param imageFileNames A list containing the relative name of the image file corresponding to each view.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param recommendedNearPlane A recommendation for the near plane to use when rendering this view set.
+	 * @param recommendedFarPlane A recommendation for the far plane to use when rendering this view set.
+	 * @param context The GL context in which to instantiate GPU resources.
+	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
+	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 */
 	public ViewSet(
 		List<Matrix4> cameraPoseList,
 		List<Matrix4> cameraPoseInvList,
@@ -303,6 +414,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		}
 	}
 	
+	/**
+	 * Deletes all the GL resources associated with this view set.
+	 * Attempting to use these resources after calling this method will have undefined results.
+	 */
 	public void deleteOpenGLResources()
 	{
 		if (cameraPoseBuffer != null)
@@ -341,18 +456,42 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		}
 	}
 	
+	/**
+	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param vsetFile The VSET file to load.
+	 * @param context The GL context in which to create the resources.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 */
 	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(
 			File vsetFile, ContextType context) throws IOException
 	{
 		return ViewSet.loadFromVSETFile(vsetFile, context, null);
 	}
 
+	/**
+	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param vsetFile The VSET file to load.
+	 * @param context The GL context in which to create the resources.
+	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 */
 	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(
 			File vsetFile, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
 		return ViewSet.loadFromVSETFile(vsetFile, new ViewSetImageOptions(null, false, false, false), context, loadingCallback);
 	}
 
+	/**
+	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param vsetFile The VSET file to load.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param context The GL context in which to create the resources.
+	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
 			File vsetFile, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
@@ -508,6 +647,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			imageFileNames, imageOptions, recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
 	}
 	
+	/**
+	 * A private class for representing a "sensor" in an Agisoft PhotoScan XML file.
+	 * @author Michael Tetzlaff
+	 *
+	 */
 	private static class Sensor
 	{
 		int index;
@@ -538,6 +682,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    }
 	}
 	
+	/**
+	 * A private class for representing a "camera" in an Agisoft PhotoScan XML file.
+	 * @author Michael Tetzlaff
+	 *
+	 */
 	private static class Camera
 	{
 	    String id;
@@ -564,18 +713,46 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    }
 	}
 
+	/**
+	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param file The Agisoft PhotoScan XML camera file to load.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param context The GL context in which to create the resources.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
 			File file, ViewSetImageOptions imageOptions, ContextType context) throws IOException
 	{
 		return loadFromAgisoftXMLFile(file, imageOptions, context, null);
 	}
 
+	/**
+	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param file The Agisoft PhotoScan XML camera file to load.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param context The GL context in which to create the resources.
+	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
 			File file, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
 		return loadFromAgisoftXMLFile(file, imageOptions, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), context, loadingCallback);
 	}
 	
+	/**
+	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param file The Agisoft PhotoScan XML camera file to load.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param lightOffset The default light position relative to the camera to use for every view..
+	 * @param lightIntensity The default light intensity to use for every view.
+	 * @param context The GL context in which to create the resources.
+	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
 		File file, ViewSetImageOptions imageOptions, Vector3 lightOffset, Vector3 lightIntensity, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
@@ -930,6 +1107,12 @@ public class ViewSet<ContextType extends Context<ContextType>>
         		imageFileNames, imageOptions, farPlane / 16.0f, farPlane, context, loadingCallback);
     }
 	
+	/**
+	 * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan XML file.
+	 * Assumes that the object must lie between all of the cameras in the file.
+	 * @param cameraPoseList The list of camera poses.
+	 * @return A far plane estimate.
+	 */
 	private static float findFarPlane(List<Matrix4> cameraPoseList)
 	{
 		float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY, minZ = Float.POSITIVE_INFINITY;
@@ -949,111 +1132,219 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
 	}
 
+	/**
+	 * Gets the camera pose defining the transformation from object space to camera space for a particular view.
+	 * @param poseIndex The index of the camera pose to retrieve.
+	 * @return The camera pose as a 4x4 affine transformation matrix.
+	 */
 	public Matrix4 getCameraPose(int poseIndex) 
 	{
 		return this.cameraPoseList.get(poseIndex);
 	}
 
+	/**
+	 * Gets the inverse of the camera pose, defining the transformation from camera space to object space for a particular view.
+	 * @param poseIndex The index of the camera pose to retrieve.
+	 * @return The inverse camera pose as a 4x4 affine transformation matrix.
+	 */
 	public Matrix4 getCameraPoseInverse(int poseIndex) 
 	{
 		return this.cameraPoseInvList.get(poseIndex);
 	}
 	
+	/**
+	 * Gets the name of the geometry file associated with this view set.
+	 * @return The name of the geometry file.
+	 */
 	public String getGeometryFileName()
 	{
 		return "manifold.obj"; // TODO
 	}
 	
+	/**
+	 * Gets the geometry file associated with this view set.
+	 * @return The geometry file.
+	 */
 	public File getGeometryFile()
 	{
 		return new File(this.filePath, "manifold.obj"); // TODO
 	}
 	
+	/**
+	 * Gets the relative name of the image file corresponding to a particular view.
+	 * @param poseIndex The index of the image file to retrieve.
+	 * @return The image file's relative name.
+	 */
 	public String getImageFileName(int poseIndex)
 	{
 		return this.imageFileNames.get(poseIndex);
 	}
 
+	/**
+	 * Gets the image file corresponding to a particular view.
+	 * @param poseIndex The index of the image file to retrieve.
+	 * @return The image file.
+	 */
 	public File getImageFile(int poseIndex) 
 	{
 		return new File(this.filePath, this.imageFileNames.get(poseIndex));
 	}
 
+	/**
+	 * Gets the projection transformation defining the intrinsic properties of a particular camera.
+	 * @param projectionIndex The index of the camera whose projection transformation is to be retrieved.
+	 * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
+	 * @return The projection transformation.
+	 */
 	public Projection getCameraProjection(int projectionIndex) 
 	{
 		return this.cameraProjectionList.get(projectionIndex);
 	}
 
+	/**
+	 * Gets the index of the projection transformation to be used for a particular view, 
+	 * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
+	 * @param poseIndex The index of the view.
+	 * @return The index of the projection transformation.
+	 */
 	public Integer getCameraProjectionIndex(int poseIndex) 
 	{
 		return this.cameraProjectionIndexList.get(poseIndex);
 	}
 	
-	public Vector3 getLightPosition(int projectionIndex) 
+	/**
+	 * Gets the position of a particular light source.
+	 * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 * @param lightIndex The index of the light source.
+	 * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
+	 * @return The position of the light source.
+	 */
+	public Vector3 getLightPosition(int lightIndex) 
 	{
-		return this.lightPositionList.get(projectionIndex);
+		return this.lightPositionList.get(lightIndex);
 	}
 	
-	public Vector3 getLightIntensity(int projectionIndex) 
+	/**
+	 * Gets the intensity of a particular light source.
+	 * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 * @param lightIndex The index of the light source.
+	 * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
+	 * @return The position of the light source.
+	 */
+	public Vector3 getLightIntensity(int lightIndex) 
 	{
-		return this.lightIntensityList.get(projectionIndex);
+		return this.lightIntensityList.get(lightIndex);
 	}
 	
+	/**
+	 * Gets the index of the light source to be used for a particular view,
+	 * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
+	 * @param poseIndex The index of the view.
+	 * @return The index of the light source.
+	 */
 	public Integer getLightPositionIndex(int poseIndex) 
 	{
 		return this.lightIndexList.get(poseIndex);
 	}
 	
+	/**
+	 * Gets the number of camera poses defined in this view set.
+	 * @return The number of camera poses defined in this view set.
+	 */
 	public int getCameraPoseCount()
 	{
 		return this.cameraPoseList.size();
 	}
 	
+	/**
+	 * Gets the number of projection transformations defined in this view set.
+	 * @return The number of projection transformations defined in this view set.
+	 */
 	public int getCameraProjectionCount()
 	{
 		return this.cameraProjectionList.size();
 	}
 	
+	/**
+	 * Gets a GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
+	 * These are necessary to perform projective texture mapping.
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getCameraPoseBuffer()
 	{
 		return this.cameraPoseBuffer;
 	}
 	
+	/**
+	 * Gets a GPU buffer containing projection transformations defining the intrinsic properties of each camera.
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getCameraProjectionBuffer()
 	{
 		return this.cameraProjectionBuffer;
 	}
 	
+	/**
+	 * Gets a GPU buffer containing for every view an index designating the projection transformation that should be used for each view.
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getCameraProjectionIndexBuffer()
 	{
 		return this.cameraProjectionIndexBuffer;
 	}
 	
+	/**
+	 * Gets a GPU buffer containing light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getLightPositionBuffer()
 	{
 		return this.lightPositionBuffer;
 	}
 	
+	/**
+	 * Gets a GPU buffer containing light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getLightIntensityBuffer()
 	{
 		return this.lightIntensityBuffer;
 	}
 	
+	/**
+	 * Gets a GPU buffer containing for every view an index designating the light source position and intensity that should be used for each view.
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getLightIndexBuffer()
 	{
 		return this.lightIndexBuffer;
 	}
 
+	/**
+	 * Gets a texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
+	 * @return The requested texture array.
+	 */
 	public Texture3D<ContextType> getTextures() 
 	{
 		return this.textureArray;
 	}
 
+	/**
+	 * Gets the recommended near plane to use when rendering this view set.
+	 * @return The near plane value.
+	 */
 	public float getRecommendedNearPlane() 
 	{
 		return this.recommendedNearPlane;
 	}
 
+	/**
+	 * Gets the recommended far plane to use when rendering this view set.
+	 * @return The far plane value.
+	 */
 	public float getRecommendedFarPlane() 
 	{
 		return this.recommendedFarPlane;
