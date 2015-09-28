@@ -270,11 +270,11 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 		
 		if (layerIndex < 0 || layerIndex >= this.depth)
 		{
-			throw new IllegalArgumentException("The layer index specified (" + layerIndex + ") is out of bounds (layer count: " + this.depth + ").");
+			throw new IOException("The layer index specified (" + layerIndex + ") is out of bounds (layer count: " + this.depth + ").");
 		}
 		else if (img.getWidth() != this.width || img.getHeight() != this.height)
 		{
-			throw new IllegalStateException("The texture to be loaded does not have the correct width and height.");
+			throw new IOException("The texture to be loaded does not have the correct width and height.");
 		}
 		else
 		{

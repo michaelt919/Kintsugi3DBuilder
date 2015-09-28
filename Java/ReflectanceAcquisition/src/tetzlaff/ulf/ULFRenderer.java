@@ -34,6 +34,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private Trackball trackball;
     private ULFLoadingMonitor callback;
 
+    private boolean kNeighborsEnabled;
+    private int kNeighborCount;
+    
     private boolean halfResEnabled;
     private FramebufferObject<ContextType> halfResFBO;
     private Program<ContextType> simpleTexProgram;
@@ -49,6 +52,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private int resampleWidth, resampleHeight;
     private File resampleVSETFile;
     private File resampleExportPath;
+
+    private Vector4 backgroundColor;
     
     private Exception initError;
     	
@@ -60,6 +65,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.loadOptions = loadOptions;
     	this.trackball = trackball;
     	this.initError = null;
+    	this.backgroundColor = new Vector4(0.30f, 0.30f, 0.30f, 1.0f);
+    	this.kNeighborCount = 5;
     }
 
     public ULFRenderer(ContextType context, Program<ContextType> program, File xmlFile, File meshFile, ULFLoadOptions loadOptions, Trackball trackball)
@@ -71,6 +78,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.loadOptions = loadOptions;
     	this.trackball = trackball;
     	this.initError = null;
+    	this.backgroundColor = new Vector4(0.30f, 0.30f, 0.30f, 1.0f);
+    	this.kNeighborCount = 5;
     }
     
     @Override
@@ -234,7 +243,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	renderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
     	renderable.program().setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
     	renderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
-    	
+    	renderable.program().setUniform("buehlerEnabled", kNeighborsEnabled);
+    	renderable.program().setUniform("sampleCount", kNeighborCount);
+
     	if(halfResEnabled) {
 	    	// Do first pass at half resolution to off-screen buffer
 			this.halfResFBO = context.getFramebufferObjectBuilder(size.width/2, size.height/2)
@@ -245,7 +256,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 						) //.setMultisamples(4, true))
 					.createFramebufferObject();
 			
-			halfResFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+			halfResFBO.clearColorBuffer(0, backgroundColor.x, backgroundColor.y, backgroundColor.z, backgroundColor.w);
 	    	halfResFBO.clearDepthBuffer();
 	        renderable.draw(PrimitiveMode.TRIANGLES, halfResFBO);
 	        
@@ -265,7 +276,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	context.finish();
 	    	halfResFBO.delete();
     	} else {
-    		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+    		framebuffer.clearColorBuffer(0, backgroundColor.x, backgroundColor.y, backgroundColor.z, backgroundColor.w);
     		framebuffer.clearDepthBuffer();
 	        renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 	        
@@ -441,6 +452,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.renderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
     	this.renderable.program().setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
     	this.renderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
+    	this.renderable.program().setUniform("buehlerEnabled", false);
 
     	// Reset the callback
 		if(callback != null) {
@@ -455,7 +467,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     			targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
     				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
 	    	
-	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+	    	framebuffer.clearColorBuffer(0, backgroundColor.x, backgroundColor.y, backgroundColor.z, backgroundColor.w);
 	    	framebuffer.clearDepthBuffer();
 	    	
 	    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
@@ -505,5 +517,35 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	@Override
 	public void setVisualizeCameras(boolean camerasEnabled) {
 		cameraVisEnabled = camerasEnabled;
+	}
+
+	@Override
+	public void setBackgroundColor(Vector4 RGBA) {
+		backgroundColor = RGBA;
+	}
+
+	@Override
+	public Vector4 getBackgroundColor() {
+		return backgroundColor;
+	}
+
+	@Override
+	public boolean isKNeighborsEnabled() {
+		return kNeighborsEnabled;
+	}
+
+	@Override
+	public void setKNeighborsEnabled(boolean kNeighborsEnabled) {
+		this.kNeighborsEnabled = kNeighborsEnabled;
+	}
+
+	@Override
+	public int getKNeighborCount() {
+		return kNeighborCount;
+	}
+
+	@Override
+	public void setKNeighborCount(int kNeighborCount) {
+		this.kNeighborCount = kNeighborCount;
 	}
 }

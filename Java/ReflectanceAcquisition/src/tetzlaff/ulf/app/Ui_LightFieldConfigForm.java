@@ -36,6 +36,15 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
     public QCheckBox showCamerasCheckBox;
     public QGroupBox renderingOptionsGroupBox;
     public QVBoxLayout verticalLayout_4;
+    public QHBoxLayout horizontalLayout_9;
+    public QCheckBox kNearestNeighborsCheckBox;
+    public QLabel kNeighborCountLabel;
+    public QSpinBox kNeighborCountSpinBox;
+    public QHBoxLayout horizontalLayout_10;
+    public QLabel backgroundColorLabel;
+    public QToolButton backgroundColorButton;
+    public QSpacerItem horizontalSpacer_3;
+    public QFrame line_2;
     public QGridLayout gridLayout;
     public QLabel gammaLabel;
     public QDoubleSpinBox gammaSpinBox;
@@ -43,6 +52,7 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
     public QDoubleSpinBox exponentSpinBox;
     public QFrame line;
     public QHBoxLayout horizontalLayout_4;
+    public QFrame line_3;
     public QCheckBox visibilityCheckBox;
     public QLabel visibilityBiasLabel;
     public QDoubleSpinBox visibilityBiasSpinBox;
@@ -70,9 +80,9 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
     public void setupUi(QWidget LightFieldConfigForm)
     {
         LightFieldConfigForm.setObjectName("LightFieldConfigForm");
-        LightFieldConfigForm.resize(new QSize(345, 685).expandedTo(LightFieldConfigForm.minimumSizeHint()));
-        LightFieldConfigForm.setMinimumSize(new QSize(345, 685));
-        LightFieldConfigForm.setMaximumSize(new QSize(345, 685));
+        LightFieldConfigForm.resize(new QSize(345, 774).expandedTo(LightFieldConfigForm.minimumSizeHint()));
+        LightFieldConfigForm.setMinimumSize(new QSize(345, 774));
+        LightFieldConfigForm.setMaximumSize(new QSize(345, 774));
         verticalLayout_6 = new QVBoxLayout(LightFieldConfigForm);
         verticalLayout_6.setObjectName("verticalLayout_6");
         loadOptionsGroupBox = new QGroupBox(LightFieldConfigForm);
@@ -200,6 +210,63 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
         renderingOptionsGroupBox.setObjectName("renderingOptionsGroupBox");
         verticalLayout_4 = new QVBoxLayout(renderingOptionsGroupBox);
         verticalLayout_4.setObjectName("verticalLayout_4");
+        horizontalLayout_9 = new QHBoxLayout();
+        horizontalLayout_9.setObjectName("horizontalLayout_9");
+        horizontalLayout_9.setContentsMargins(-1, 0, -1, -1);
+        kNearestNeighborsCheckBox = new QCheckBox(renderingOptionsGroupBox);
+        kNearestNeighborsCheckBox.setObjectName("kNearestNeighborsCheckBox");
+
+        horizontalLayout_9.addWidget(kNearestNeighborsCheckBox);
+
+        kNeighborCountLabel = new QLabel(renderingOptionsGroupBox);
+        kNeighborCountLabel.setObjectName("kNeighborCountLabel");
+        kNeighborCountLabel.setEnabled(false);
+
+        horizontalLayout_9.addWidget(kNeighborCountLabel);
+
+        kNeighborCountSpinBox = new QSpinBox(renderingOptionsGroupBox);
+        kNeighborCountSpinBox.setObjectName("kNeighborCountSpinBox");
+        kNeighborCountSpinBox.setEnabled(false);
+        QSizePolicy sizePolicy2 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
+        sizePolicy2.setHorizontalStretch((byte)0);
+        sizePolicy2.setVerticalStretch((byte)0);
+        sizePolicy2.setHeightForWidth(kNeighborCountSpinBox.sizePolicy().hasHeightForWidth());
+        kNeighborCountSpinBox.setSizePolicy(sizePolicy2);
+        kNeighborCountSpinBox.setMinimum(1);
+        kNeighborCountSpinBox.setMaximum(10);
+        kNeighborCountSpinBox.setValue(5);
+
+        horizontalLayout_9.addWidget(kNeighborCountSpinBox);
+
+
+        verticalLayout_4.addLayout(horizontalLayout_9);
+
+        horizontalLayout_10 = new QHBoxLayout();
+        horizontalLayout_10.setObjectName("horizontalLayout_10");
+        horizontalLayout_10.setContentsMargins(-1, 0, -1, -1);
+        backgroundColorLabel = new QLabel(renderingOptionsGroupBox);
+        backgroundColorLabel.setObjectName("backgroundColorLabel");
+
+        horizontalLayout_10.addWidget(backgroundColorLabel);
+
+        backgroundColorButton = new QToolButton(renderingOptionsGroupBox);
+        backgroundColorButton.setObjectName("backgroundColorButton");
+
+        horizontalLayout_10.addWidget(backgroundColorButton);
+
+        horizontalSpacer_3 = new QSpacerItem(40, 20, com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Minimum);
+
+        horizontalLayout_10.addItem(horizontalSpacer_3);
+
+
+        verticalLayout_4.addLayout(horizontalLayout_10);
+
+        line_2 = new QFrame(renderingOptionsGroupBox);
+        line_2.setObjectName("line_2");
+        line_2.setFrameShape(QFrame.Shape.HLine);
+
+        verticalLayout_4.addWidget(line_2);
+
         gridLayout = new QGridLayout();
         gridLayout.setObjectName("gridLayout");
         gammaLabel = new QLabel(renderingOptionsGroupBox);
@@ -210,11 +277,11 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
 
         gammaSpinBox = new QDoubleSpinBox(renderingOptionsGroupBox);
         gammaSpinBox.setObjectName("gammaSpinBox");
-        QSizePolicy sizePolicy2 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
-        sizePolicy2.setHorizontalStretch((byte)0);
-        sizePolicy2.setVerticalStretch((byte)0);
-        sizePolicy2.setHeightForWidth(gammaSpinBox.sizePolicy().hasHeightForWidth());
-        gammaSpinBox.setSizePolicy(sizePolicy2);
+        QSizePolicy sizePolicy3 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
+        sizePolicy3.setHorizontalStretch((byte)0);
+        sizePolicy3.setVerticalStretch((byte)0);
+        sizePolicy3.setHeightForWidth(gammaSpinBox.sizePolicy().hasHeightForWidth());
+        gammaSpinBox.setSizePolicy(sizePolicy3);
         gammaSpinBox.setMinimum(1);
         gammaSpinBox.setMaximum(100);
         gammaSpinBox.setSingleStep(0.01);
@@ -230,11 +297,11 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
 
         exponentSpinBox = new QDoubleSpinBox(renderingOptionsGroupBox);
         exponentSpinBox.setObjectName("exponentSpinBox");
-        QSizePolicy sizePolicy3 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
-        sizePolicy3.setHorizontalStretch((byte)0);
-        sizePolicy3.setVerticalStretch((byte)0);
-        sizePolicy3.setHeightForWidth(exponentSpinBox.sizePolicy().hasHeightForWidth());
-        exponentSpinBox.setSizePolicy(sizePolicy3);
+        QSizePolicy sizePolicy4 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
+        sizePolicy4.setHorizontalStretch((byte)0);
+        sizePolicy4.setVerticalStretch((byte)0);
+        sizePolicy4.setHeightForWidth(exponentSpinBox.sizePolicy().hasHeightForWidth());
+        exponentSpinBox.setSizePolicy(sizePolicy4);
         exponentSpinBox.setDecimals(0);
         exponentSpinBox.setMinimum(1);
         exponentSpinBox.setMaximum(1000);
@@ -253,34 +320,40 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
 
         horizontalLayout_4 = new QHBoxLayout();
         horizontalLayout_4.setObjectName("horizontalLayout_4");
+        line_3 = new QFrame(renderingOptionsGroupBox);
+        line_3.setObjectName("line_3");
+        line_3.setFrameShape(QFrame.Shape.HLine);
+
+        horizontalLayout_4.addWidget(line_3);
+
         visibilityCheckBox = new QCheckBox(renderingOptionsGroupBox);
         visibilityCheckBox.setObjectName("visibilityCheckBox");
-        QSizePolicy sizePolicy4 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Fixed, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
-        sizePolicy4.setHorizontalStretch((byte)0);
-        sizePolicy4.setVerticalStretch((byte)0);
-        sizePolicy4.setHeightForWidth(visibilityCheckBox.sizePolicy().hasHeightForWidth());
-        visibilityCheckBox.setSizePolicy(sizePolicy4);
+        QSizePolicy sizePolicy5 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Fixed, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
+        sizePolicy5.setHorizontalStretch((byte)0);
+        sizePolicy5.setVerticalStretch((byte)0);
+        sizePolicy5.setHeightForWidth(visibilityCheckBox.sizePolicy().hasHeightForWidth());
+        visibilityCheckBox.setSizePolicy(sizePolicy5);
         visibilityCheckBox.setChecked(true);
 
         horizontalLayout_4.addWidget(visibilityCheckBox);
 
         visibilityBiasLabel = new QLabel(renderingOptionsGroupBox);
         visibilityBiasLabel.setObjectName("visibilityBiasLabel");
-        QSizePolicy sizePolicy5 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Fixed, com.trolltech.qt.gui.QSizePolicy.Policy.Preferred);
-        sizePolicy5.setHorizontalStretch((byte)0);
-        sizePolicy5.setVerticalStretch((byte)0);
-        sizePolicy5.setHeightForWidth(visibilityBiasLabel.sizePolicy().hasHeightForWidth());
-        visibilityBiasLabel.setSizePolicy(sizePolicy5);
+        QSizePolicy sizePolicy6 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Fixed, com.trolltech.qt.gui.QSizePolicy.Policy.Preferred);
+        sizePolicy6.setHorizontalStretch((byte)0);
+        sizePolicy6.setVerticalStretch((byte)0);
+        sizePolicy6.setHeightForWidth(visibilityBiasLabel.sizePolicy().hasHeightForWidth());
+        visibilityBiasLabel.setSizePolicy(sizePolicy6);
 
         horizontalLayout_4.addWidget(visibilityBiasLabel);
 
         visibilityBiasSpinBox = new QDoubleSpinBox(renderingOptionsGroupBox);
         visibilityBiasSpinBox.setObjectName("visibilityBiasSpinBox");
-        QSizePolicy sizePolicy6 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
-        sizePolicy6.setHorizontalStretch((byte)0);
-        sizePolicy6.setVerticalStretch((byte)0);
-        sizePolicy6.setHeightForWidth(visibilityBiasSpinBox.sizePolicy().hasHeightForWidth());
-        visibilityBiasSpinBox.setSizePolicy(sizePolicy6);
+        QSizePolicy sizePolicy7 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
+        sizePolicy7.setHorizontalStretch((byte)0);
+        sizePolicy7.setVerticalStretch((byte)0);
+        sizePolicy7.setHeightForWidth(visibilityBiasSpinBox.sizePolicy().hasHeightForWidth());
+        visibilityBiasSpinBox.setSizePolicy(sizePolicy7);
         visibilityBiasSpinBox.setDecimals(5);
         visibilityBiasSpinBox.setMinimum(1e-05);
         visibilityBiasSpinBox.setMaximum(1);
@@ -326,11 +399,11 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
 
         resampleWidthSpinner = new QSpinBox(resampleGroupBox);
         resampleWidthSpinner.setObjectName("resampleWidthSpinner");
-        QSizePolicy sizePolicy7 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
-        sizePolicy7.setHorizontalStretch((byte)0);
-        sizePolicy7.setVerticalStretch((byte)0);
-        sizePolicy7.setHeightForWidth(resampleWidthSpinner.sizePolicy().hasHeightForWidth());
-        resampleWidthSpinner.setSizePolicy(sizePolicy7);
+        QSizePolicy sizePolicy8 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
+        sizePolicy8.setHorizontalStretch((byte)0);
+        sizePolicy8.setVerticalStretch((byte)0);
+        sizePolicy8.setHeightForWidth(resampleWidthSpinner.sizePolicy().hasHeightForWidth());
+        resampleWidthSpinner.setSizePolicy(sizePolicy8);
         resampleWidthSpinner.setMinimum(1);
         resampleWidthSpinner.setMaximum(8192);
         resampleWidthSpinner.setValue(1024);
@@ -344,11 +417,11 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
 
         resampleHeightSpinner = new QSpinBox(resampleGroupBox);
         resampleHeightSpinner.setObjectName("resampleHeightSpinner");
-        QSizePolicy sizePolicy8 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
-        sizePolicy8.setHorizontalStretch((byte)0);
-        sizePolicy8.setVerticalStretch((byte)0);
-        sizePolicy8.setHeightForWidth(resampleHeightSpinner.sizePolicy().hasHeightForWidth());
-        resampleHeightSpinner.setSizePolicy(sizePolicy8);
+        QSizePolicy sizePolicy9 = new QSizePolicy(com.trolltech.qt.gui.QSizePolicy.Policy.Expanding, com.trolltech.qt.gui.QSizePolicy.Policy.Fixed);
+        sizePolicy9.setHorizontalStretch((byte)0);
+        sizePolicy9.setVerticalStretch((byte)0);
+        sizePolicy9.setHeightForWidth(resampleHeightSpinner.sizePolicy().hasHeightForWidth());
+        resampleHeightSpinner.setSizePolicy(sizePolicy9);
         resampleHeightSpinner.setMinimum(1);
         resampleHeightSpinner.setMaximum(8192);
         resampleHeightSpinner.setValue(1024);
@@ -395,8 +468,11 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
 
         depImageDimensionsLabel.setBuddy(depthImageWidthSpinner);
         depthImageXLabel.setBuddy(depthImageHeightSpinner);
+        kNeighborCountLabel.setBuddy(kNeighborCountSpinBox);
+        backgroundColorLabel.setBuddy(backgroundColorButton);
         gammaLabel.setBuddy(gammaSpinBox);
         exponentLabel.setBuddy(exponentSpinBox);
+        visibilityBiasLabel.setBuddy(visibilityBiasSpinBox);
         resampleDimensionsLabel.setBuddy(resampleWidthSpinner);
         resampleXLabel.setBuddy(resampleHeightSpinner);
         QWidget.setTabOrder(compressCheckBox, mipmapsCheckbox);
@@ -407,7 +483,9 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
         QWidget.setTabOrder(loadSingleButton, loadMultipleButton);
         QWidget.setTabOrder(loadMultipleButton, modelComboBox);
         QWidget.setTabOrder(modelComboBox, modelSlider);
-        QWidget.setTabOrder(modelSlider, gammaSpinBox);
+        QWidget.setTabOrder(modelSlider, showCamerasCheckBox);
+        QWidget.setTabOrder(showCamerasCheckBox, kNearestNeighborsCheckBox);
+        QWidget.setTabOrder(kNearestNeighborsCheckBox, gammaSpinBox);
         QWidget.setTabOrder(gammaSpinBox, exponentSpinBox);
         QWidget.setTabOrder(exponentSpinBox, visibilityCheckBox);
         QWidget.setTabOrder(visibilityCheckBox, visibilityBiasSpinBox);
@@ -416,6 +494,7 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
         QWidget.setTabOrder(multisamplingCheckBox, resampleWidthSpinner);
         QWidget.setTabOrder(resampleWidthSpinner, resampleHeightSpinner);
         QWidget.setTabOrder(resampleHeightSpinner, resampleButton);
+        QWidget.setTabOrder(resampleButton, reportBugButton);
         retranslateUi(LightFieldConfigForm);
         generateDepthImagesCheckBox.clicked.connect(depImageDimensionsLabel, "setEnabled(boolean)");
         generateDepthImagesCheckBox.clicked.connect(depthImageWidthSpinner, "setEnabled(boolean)");
@@ -423,6 +502,8 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
         generateDepthImagesCheckBox.clicked.connect(depthImageHeightSpinner, "setEnabled(boolean)");
         visibilityCheckBox.clicked.connect(visibilityBiasLabel, "setEnabled(boolean)");
         visibilityCheckBox.clicked.connect(visibilityBiasSpinBox, "setEnabled(boolean)");
+        kNearestNeighborsCheckBox.toggled.connect(kNeighborCountLabel, "setEnabled(boolean)");
+        kNearestNeighborsCheckBox.toggled.connect(kNeighborCountSpinBox, "setEnabled(boolean)");
 
         LightFieldConfigForm.connectSlotsByName();
     } // setupUi
@@ -441,6 +522,10 @@ public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget
         modelOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Model Options", null));
         showCamerasCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Show view cameras", null));
         renderingOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Rendering Options", null));
+        kNearestNeighborsCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "k-nearest mode", null));
+        kNeighborCountLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "- k-samples:", null));
+        backgroundColorLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Background Color: ", null));
+        backgroundColorButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "...", null));
         gammaLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Gamma:", null));
         exponentLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Weight Exponent:", null));
         visibilityCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Visibility Testing -", null));
