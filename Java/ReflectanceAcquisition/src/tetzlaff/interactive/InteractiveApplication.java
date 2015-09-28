@@ -9,18 +9,27 @@ import java.util.List;
 
 import tetzlaff.gl.exceptions.GLException;
 
-import com.trolltech.qt.gui.QMessageBox;
-
 public class InteractiveApplication
 {
 	private List<EventPollable> pollable;
 	private Refreshable refreshable;
+	private static MessageBox userMessageBox = null;
 	
 	public InteractiveApplication(EventPollable pollable, Refreshable refreshable) 
 	{
 		this.pollable = new ArrayList<EventPollable>();
 		this.pollable.add(pollable);
 		this.refreshable = refreshable;
+	}
+	
+	public static void setMessageBox(MessageBox newMessageBox)
+	{
+		userMessageBox = newMessageBox;
+	}
+	
+	public static MessageBox getMessageBox()
+	{
+		return userMessageBox;
 	}
 
 	public void addPollable(EventPollable pollable)
@@ -52,22 +61,26 @@ public class InteractiveApplication
 			{
 				Exception drawableError = refreshable.getDrawableError();
 				drawableError.printStackTrace();
-				
-				// TODO: Replace the direct use of QMessageBox with some sort of indirect callback approach.  Using a GUI API directly creates an undesirable dependency in this package.
-				if(drawableError instanceof GLException || (drawableError.getCause() != null && drawableError.getCause() instanceof GLException))
+
+				if(userMessageBox != null)
 				{
-					QMessageBox.warning(null, "GL Rendering Error", "An error occured with the rendering system. " +
-							"Your GPU and/or video memory may be insufficient for rendering this model.\n\n[" + drawableError.getMessage() + "]");
-				}
-				else if(drawableError instanceof FileNotFoundException || (drawableError.getCause() != null && drawableError.getCause() instanceof GLException))
-				{
-					QMessageBox.warning(null, "Resource Error", "An error occured while loading resources. " +
-							"Check that all necessary files exist and that the proper paths were supplied.\n\n[" + drawableError.getMessage() + "]");
-				}
-				else
-				{
-					QMessageBox.warning(null, "Application Error", "An error occured that prevents this model from being rendered." +
-							"\n\n[" + drawableError.getMessage() + "]");
+					if(drawableError instanceof GLException || (drawableError.getCause() != null && drawableError.getCause() instanceof GLException))
+					{
+						userMessageBox.warning("GL Rendering Error", "An error occured with the rendering system. " +
+								"Your GPU and/or video memory may be insufficient for rendering this model.\n\n[" +
+								drawableError.getMessage() + "]");
+					}
+					else if(drawableError instanceof FileNotFoundException || (drawableError.getCause() != null && drawableError.getCause() instanceof GLException))
+					{
+						userMessageBox.warning("Resource Error", "An error occured while loading resources. " +
+								"Check that all necessary files exist and that the proper paths were supplied.\n\n[" +
+								drawableError.getMessage() + "]");
+					}
+					else
+					{
+						userMessageBox.warning("Application Error", "An error occured that prevents this model from being rendered." +
+								"\n\n[" + drawableError.getMessage() + "]");
+					}
 				}
 			}
 			

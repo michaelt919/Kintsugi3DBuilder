@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QtHelpProject version="1.0">
+    <namespace>culturalheritageimaging.com.ulfrenderer.1.0</namespace>
+    <virtualFolder>help</virtualFolder>
+    <customFilter name="ULF Renderer v1.0">
+        <filterAttribute>ulfrenderer</filterAttribute>
+        <filterAttribute>1.0</filterAttribute>
+    </customFilter>
+    <filterSection>
+        <filterAttribute>ulfrenderer</filterAttribute>
+        <filterAttribute>1.0</filterAttribute>
+        <toc>
+            <section title="User Manual" ref="index.html">
+                <section title="Loading a PhotoScan Model" ref="models.html#PhotoScanModel"/>
+                <section title="Loading a Prepared ZIP Model" ref="models.html#ZipModel"/>
+                <section title="Model Recommendations" ref="models.html#Recommendations"/>
+                <section title="Interacting with the Model" ref="windows.html#renderer"/>
+                <section title="Settings Window" ref="windows.html#settings"/>
+                <section title="Performance Considerations" ref="technical.html#Performance"/>
+                <section title="Troubleshooting" ref="technical.html#Troubleshooting"/>
+            </section>
+        </toc>
+        <keywords><!--
+            <keyword name="foo" id="MyApplication::foo" ref="doc.html#foo"/>
+            <keyword name="bar" ref="doc.html#bar"/>
+            <keyword id="MyApplication::foobar" ref="doc.html#foobar"/>
+            -->
+        </keywords>
+        <files>
+            <file>classic.css</file>
+            <file>*.html</file>
+            <file>*.jpg</file>
+        </files>
+    </filterSection>
+</QtHelpProject>

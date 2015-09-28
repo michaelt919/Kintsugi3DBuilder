@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>345</width>
-    <height>685</height>
+    <height>774</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>345</width>
-    <height>685</height>
+    <height>774</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>345</width>
-    <height>685</height>
+    <height>774</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -203,6 +203,99 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_9">
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QCheckBox" name="kNearestNeighborsCheckBox">
+          <property name="text">
+           <string>k-nearest mode</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="kNeighborCountLabel">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>- k-samples:</string>
+          </property>
+          <property name="buddy">
+           <cstring>kNeighborCountSpinBox</cstring>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="kNeighborCountSpinBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>10</number>
+          </property>
+          <property name="value">
+           <number>5</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_10">
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="backgroundColorLabel">
+          <property name="text">
+           <string>Background Color: </string>
+          </property>
+          <property name="buddy">
+           <cstring>backgroundColorButton</cstring>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="backgroundColorButton">
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
        <layout class="QGridLayout" name="gridLayout">
         <item row="0" column="0">
          <widget class="QLabel" name="gammaLabel">
@@ -286,6 +379,13 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
+         <widget class="Line" name="line_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QCheckBox" name="visibilityCheckBox">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -311,6 +411,9 @@
           </property>
           <property name="text">
            <string>Bias:</string>
+          </property>
+          <property name="buddy">
+           <cstring>visibilityBiasSpinBox</cstring>
           </property>
          </widget>
         </item>
@@ -514,6 +617,8 @@
   <tabstop>loadMultipleButton</tabstop>
   <tabstop>modelComboBox</tabstop>
   <tabstop>modelSlider</tabstop>
+  <tabstop>showCamerasCheckBox</tabstop>
+  <tabstop>kNearestNeighborsCheckBox</tabstop>
   <tabstop>gammaSpinBox</tabstop>
   <tabstop>exponentSpinBox</tabstop>
   <tabstop>visibilityCheckBox</tabstop>
@@ -523,6 +628,7 @@
   <tabstop>resampleWidthSpinner</tabstop>
   <tabstop>resampleHeightSpinner</tabstop>
   <tabstop>resampleButton</tabstop>
+  <tabstop>reportBugButton</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -597,12 +703,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>104</x>
-     <y>394</y>
+     <x>142</x>
+     <y>477</y>
     </hint>
     <hint type="destinationlabel">
-     <x>173</x>
-     <y>391</y>
+     <x>192</x>
+     <y>480</y>
     </hint>
    </hints>
   </connection>
@@ -613,12 +719,44 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>116</x>
-     <y>396</y>
+     <x>154</x>
+     <y>477</y>
     </hint>
     <hint type="destinationlabel">
-     <x>255</x>
-     <y>395</y>
+     <x>316</x>
+     <y>480</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>kNearestNeighborsCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>kNeighborCountLabel</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>102</x>
+     <y>333</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>165</x>
+     <y>332</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>kNearestNeighborsCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>kNeighborCountSpinBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>98</x>
+     <y>329</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>259</x>
+     <y>324</y>
     </hint>
    </hints>
   </connection>

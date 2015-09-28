@@ -3,7 +3,9 @@ package tetzlaff.ulf.app;
 import java.io.File;
 import java.io.IOException;
 
+import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.interactive.EventPollable;
+import tetzlaff.ulf.ULFDrawable;
 import tetzlaff.ulf.ULFListModel;
 import tetzlaff.ulf.ULFLoadOptions;
 import tetzlaff.ulf.ULFLoadingMonitor;
@@ -16,6 +18,8 @@ import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.core.QSize;
 import com.trolltech.qt.core.Qt.WindowModality;
 import com.trolltech.qt.gui.QCloseEvent;
+import com.trolltech.qt.gui.QColor;
+import com.trolltech.qt.gui.QColorDialog;
 import com.trolltech.qt.gui.QFileDialog;
 import com.trolltech.qt.gui.QFileDialog.Filter;
 import com.trolltech.qt.gui.QMessageBox;
@@ -105,7 +109,12 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		blockSignals = true;
 		boolean enable = (model != null && model.getSelectedItem() != null && model.getSelectedItem().toString().compareToIgnoreCase("Error") != 0);
 		
-		gui.modelSlider.setEnabled(enable);	
+		gui.modelSlider.setEnabled(enable);
+		gui.kNearestNeighborsCheckBox.setEnabled(enable);
+		gui.kNeighborCountLabel.setEnabled(enable);
+		gui.kNeighborCountSpinBox.setEnabled(enable);
+		gui.backgroundColorLabel.setEnabled(enable);
+		gui.backgroundColorButton.setEnabled(enable);
 		gui.gammaLabel.setEnabled(enable);
 		gui.gammaSpinBox.setEnabled(enable);
 		gui.exponentLabel.setEnabled(enable);
@@ -145,6 +154,8 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 				gui.exponentSpinBox.setValue(model.getSelectedItem().getWeightExponent());
 				gui.visibilityCheckBox.setChecked(model.getSelectedItem().isOcclusionEnabled());
 				gui.visibilityBiasSpinBox.setValue(model.getSelectedItem().getOcclusionBias());
+				gui.kNearestNeighborsCheckBox.setChecked(model.getSelectedItem().isKNeighborsEnabled());
+				gui.kNeighborCountSpinBox.setValue(model.getSelectedItem().getKNeighborCount());
 				
 				model.getSelectedItem().setHalfResolution(gui.halfResCheckBox.isChecked());
 				model.getSelectedItem().setVisualizeCameras(gui.showCamerasCheckBox.isChecked());
@@ -196,6 +207,23 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		progressDialog.move(winPos.x + winSize.width/2 - dlgSize.width()/2,
 							winPos.y + winSize.height/2 - dlgSize.height()/2);
 		progressDialog.setHidden(false);
+	}
+	
+	@SuppressWarnings("unused")
+	private void on_backgroundColorButton_clicked()
+	{
+		ULFDrawable current = model.getSelectedItem();
+		if(current != null && current.toString().compareToIgnoreCase("Error") != 0)
+		{
+			Vector4 curColor = current.getBackgroundColor();
+			QColor curQColor = QColor.fromRgbF(curColor.x, curColor.y, curColor.z, curColor.w);
+			QColor newQColor = QColorDialog.getColor(curQColor, this, "Select a Background Color");
+			if(newQColor != null && newQColor.isValid())
+			{
+				current.setBackgroundColor(new Vector4((float)newQColor.redF(),
+						(float)newQColor.greenF(), (float)newQColor.blueF(), 1.0f));
+			}
+		}
 	}
 	
 	@SuppressWarnings("unused")
@@ -374,6 +402,20 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		if(blockSignals) { return; }
 		model.getSelectedItem().setOcclusionBias((float)newValue);
 	}	
+	
+	@SuppressWarnings("unused")
+	private void on_kNearestNeighborsCheckBox_toggled(boolean isChecked)
+	{
+		if(blockSignals) { return; }
+		model.getSelectedItem().setKNeighborsEnabled(isChecked);
+	}
+
+	@SuppressWarnings("unused")
+	private void on_kNeighborCountSpinBox_valueChanged(int newValue)
+	{
+		if(blockSignals) { return; }
+		model.getSelectedItem().setKNeighborCount(newValue);
+	}
 	
 	protected void closeEvent(QCloseEvent event)
 	{

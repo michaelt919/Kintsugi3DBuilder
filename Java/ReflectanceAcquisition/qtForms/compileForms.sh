@@ -3,6 +3,7 @@
 for form in *.ui; do
 	cp "$form" "${form}.jui"
 	sed -i -e s#'<ui version="4.0">'#'<ui version="4.0" language="jambi">'#g "${form}.jui"
+	sed -i -e s#'Qt::Vertical'#'com.trolltech.qt.core.Qt.Orientation.Vertical'#g "${form}.jui"
 	sed -i -e s#'Qt::Horizontal'#'com.trolltech.qt.core.Qt.Orientation.Horizontal'#g "${form}.jui"
 	sed -i -e s#'Qt::LeftDockWidgetArea'#'com.trolltech.qt.core.Qt.DockWidgetArea.LeftDockWidgetArea'#g "${form}.jui"
 	sed -i -e s#'Qt::RightDockWidgetArea'#'com.trolltech.qt.core.Qt.DockWidgetArea.RightDockWidgetArea'#g "${form}.jui"
