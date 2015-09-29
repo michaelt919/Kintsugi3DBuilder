@@ -15,6 +15,8 @@ public class TextureFitParameters
 	private boolean imagePreprojectionUseEnabled = false;
 	private boolean imagePreprojectionGenerationEnabled = false;
 	
+	private boolean areLightSourcesInfinite;
+	
 	// Diffuse fitting parameters
 	private float diffuseDelta = 0.1f;
 	private int diffuseIterations = 16;
@@ -243,6 +245,14 @@ public class TextureFitParameters
 
 	public void setSpecularRoughnessCap(float specularRoughnessCap) {
 		this.specularRoughnessCap = specularRoughnessCap;
+	}
+
+	public boolean areLightSourcesInfinite() {
+		return this.areLightSourcesInfinite;
+	}
+
+	public void setLightSourcesInfinite(boolean infinite) {
+		this.areLightSourcesInfinite = infinite;
 	}
 
 }

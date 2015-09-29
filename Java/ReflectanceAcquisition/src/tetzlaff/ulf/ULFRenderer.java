@@ -53,6 +53,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private int resampleWidth, resampleHeight;
     private File resampleVSETFile;
     private File resampleExportPath;
+    
+    private boolean multisamplingEnabled = true;
 
     public ULFRenderer(ContextType context, Program<ContextType> program, Program<ContextType> viewIndexProgram, File cameraFile, File meshFile, ULFLoadOptions loadOptions, Trackball trackball)
     {
@@ -63,7 +65,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.geometryFile = meshFile;
     	this.loadOptions = loadOptions;
     	this.trackball = trackball;
-    	this.viewIndexCacheEnabled = true;
+    	this.viewIndexCacheEnabled = false;
     	this.targetFPS = 30.0f;
     }
     
@@ -233,6 +235,15 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     		lastFrame = now;
     	}
     	
+    	if(multisamplingEnabled)
+		{
+			context.enableMultisampling();
+		}
+		else
+		{
+			context.disableMultisampling();			
+		}
+    	
     	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
     	FramebufferSize size = framebuffer.getSize();
     			
@@ -244,6 +255,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.mainRenderable.program().setUniformBuffer("LightIntensities", lightField.viewSet.getLightIntensityBuffer());
     	this.mainRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
     	this.mainRenderable.program().setUniform("cameraPoseCount", lightField.viewSet.getCameraPoseCount());
+    	this.mainRenderable.program().setUniform("infiniteLightSources", true /* TODO */);
     	if (lightField.depthTextures != null)
 		{
     		this.mainRenderable.program().setTexture("depthTextures", lightField.depthTextures);
@@ -330,7 +342,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 					.addColorAttachment(new ColorAttachmentSpec(ColorFormat.RGB8)
 						.setLinearFilteringEnabled(true)
 						) //.setMultisamples(4, true)) // TODO why doesn't this work?
-					.addDepthAttachment(new DepthAttachmentSpec(16, false)
+					.addDepthAttachment(new DepthAttachmentSpec(32, false)
 						) //.setMultisamples(4, true))
 					.createFramebufferObject();
 			
@@ -536,15 +548,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	@Override
 	public void setMultisampling(boolean multisamplingEnabled)
 	{
-		context.makeContextCurrent();
-		if(multisamplingEnabled)
-		{
-			context.enableMultisampling();
-		}
-		else
-		{
-			context.disableMultisampling();			
-		}
+		this.multisamplingEnabled = multisamplingEnabled;
 	}
 
 	@Override

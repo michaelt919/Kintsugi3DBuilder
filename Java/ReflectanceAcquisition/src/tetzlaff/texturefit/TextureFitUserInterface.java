@@ -53,6 +53,7 @@ public class TextureFitUserInterface
 
 	private JSpinner[] lightOffsetSpinners;
 	private JSpinner[] lightIntensitySpinners;
+	private JCheckBox lightInfiniteCheckBox;
 	private JSpinner diffuseDeltaSpinner;
 	private JSpinner diffuseIterationsSpinner;
 	private JSpinner diffuseCompNormalSpinner;
@@ -253,6 +254,7 @@ public class TextureFitUserInterface
 		
 		lightOffsetSpinners = addUIVectorField(diffusePanel, "Light Offset", new Vector3(0.0f, 0.0f, 0.0f), -99.0f, 99.0f, 0.001f);
 		lightIntensitySpinners = addUIVectorField(diffusePanel, "Light Intensity", new Vector3(1.0f, 1.0f, 1.0f), 0.0f, 9999.0f, 0.001f);
+		lightInfiniteCheckBox = addUICheckBoxField(diffusePanel, "Infinite Light Source", defaults.areLightSourcesInfinite());
 				
 		diffuseDeltaSpinner = addUIValueField(diffusePanel, "Delta", defaults.getDiffuseDelta(), 0.0f, 1.0f, 0.01f);
 		diffuseIterationsSpinner = addUIValueField(diffusePanel, "Iterations", defaults.getDiffuseIterations(), 0.0f, 999.0f, 1.0f);
@@ -372,6 +374,7 @@ public class TextureFitUserInterface
 		param.setImageRescalingEnabled(this.imageRescaleCheckBox.isSelected());
 		param.setImageWidth(getValueAsInt(this.imageWidthSpinner));
 		param.setImageHeight(getValueAsInt(this.imageHeightSpinner));
+		param.setLightSourcesInfinite(this.lightInfiniteCheckBox.isSelected());
 		param.setDiffuseDelta(getValueAsFloat(this.diffuseDeltaSpinner));
 		param.setDiffuseIterations(getValueAsInt(this.diffuseIterationsSpinner));
 		param.setDiffuseComputedNormalWeight(this.diffuseCompNormalInfCheckBox.isSelected() ? 

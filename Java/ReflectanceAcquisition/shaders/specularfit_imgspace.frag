@@ -22,6 +22,7 @@ uniform bool trueBlinnPhong;
 uniform float gamma;
 uniform bool occlusionEnabled;
 uniform float occlusionBias;
+uniform bool infiniteLightSources;
 
 uniform float diffuseRemovalAmount;
 uniform float specularInfluenceScale;
@@ -174,7 +175,7 @@ SpecularFit fitSpecular()
         if (color.a * nDotV > 0)
         {
             vec3 light = getLightVector(i);
-            vec3 attenuatedLightIntensity = getLightIntensity(i) / (dot(light, light));
+            vec3 attenuatedLightIntensity = infiniteLightSources ? getLightIntensity(i) : getLightIntensity(i) / (dot(light, light));
             vec3 lightNormalized = normalize(light);
             
             vec4 colorRemainder = removeDiffuse(color, diffuseColor, lightNormalized, attenuatedLightIntensity, diffuseNormal);
