@@ -283,7 +283,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     			
     			viewTextures = context.get2DColorTextureArrayBuilder(param.getImageWidth(), param.getImageHeight(), viewSet.getCameraPoseCount())
     							.setLinearFilteringEnabled(true)
-    							.setMipmapsEnabled(true)
+    							//.setMipmapsEnabled(true)
     							.createTexture();
     			
 				// Create an FBO for downsampling
@@ -362,6 +362,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	//context.finish();
 		    	
 	    		System.out.println("Image loading and rescaling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+	    		
+	    		System.err.println("Warning: Image rescaling is buggy; it may be necessary to reload the rescaled images and execute again."); // TODO fix this
     		}
     		else
     		{
@@ -496,6 +498,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	diffuseFitRenderable.program().setUniform("gamma", param.getGamma());
     	diffuseFitRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
     	diffuseFitRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
+    	diffuseFitRenderable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
     	
     	diffuseFitRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
     	
@@ -535,6 +538,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	specularFitRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
     	specularFitRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
     	specularFitRenderable.program().setUniform("gamma", param.getGamma());
+    	specularFitRenderable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
     	
     	specularFitRenderable.program().setUniform("computeRoughness", param.isSpecularRoughnessComputationEnabled());
     	specularFitRenderable.program().setUniform("computeNormal", param.isSpecularNormalComputationEnabled());
@@ -896,6 +900,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	specularDebugRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
 	    	specularDebugRenderable.program().setUniform("gamma", param.getGamma());
 	    	specularDebugRenderable.program().setUniform("diffuseRemovalFactor", 1.0f);
+	    	specularDebugRenderable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
 	    	
 	    	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
     		{

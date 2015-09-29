@@ -242,7 +242,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		gbc_lblGamma.gridy = 0;
 		renderingOptionsPanel.add(lblGamma, gbc_lblGamma);
 		
-		JSpinner spinnerGamma = new JSpinner(new SpinnerNumberModel(2.2f, 1.0f, 100.0f, 0.1f));
+		JSpinner spinnerGamma = new JSpinner(new SpinnerNumberModel(2.2, 1.0, 100.0, 0.1));
 		lblGamma.setLabelFor(spinnerGamma);
 		spinnerGamma.setToolTipText("Gamma color correction applied to the final rendered image");
 		GridBagConstraints gbc_spinnerGamma = new GridBagConstraints();
@@ -261,7 +261,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		gbc_lblWeightExponent.gridy = 1;
 		renderingOptionsPanel.add(lblWeightExponent, gbc_lblWeightExponent);
 		
-		JSpinner spinnerExponent = new JSpinner(new SpinnerNumberModel(16.0f, 1.0f, 1000.0f, 1.0f));
+		JSpinner spinnerExponent = new JSpinner(new SpinnerNumberModel(16.0, 1.0, 1000.0, 1.0));
 		lblWeightExponent.setLabelFor(spinnerExponent);
 		spinnerExponent.setToolTipText("Exponent controlling the number of views used per pixel (too low causes blank/black areas, too high causes blurry results)");
 		GridBagConstraints gbc_spinnerExponent = new GridBagConstraints();
@@ -306,7 +306,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		gbc_lblBias.gridy = 3;
 		renderingOptionsPanel.add(lblBias, gbc_lblBias);
 		
-		JSpinner spinnerOccBias = new JSpinner(new SpinnerNumberModel(0.0025f, 0.0f, 1.0f, 0.0001f));
+		JSpinner spinnerOccBias = new JSpinner(new SpinnerNumberModel(0.0025, 0.0, 1.0, 0.0001));
 		lblBias.setLabelFor(spinnerOccBias);
 		spinnerOccBias.setToolTipText("Control the bias factor to help prevent bleading of views into occluded areas");
 		GridBagConstraints gbc_spinnerOccBias = new GridBagConstraints();
@@ -592,10 +592,10 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 				spinnerHeight.setEnabled(true);
 				btnResample.setEnabled(true);
 				
-				spinnerGamma.setValue(model.getSelectedItem().getGamma());
-				spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
+				spinnerGamma.setValue((double)model.getSelectedItem().getGamma());
+				spinnerExponent.setValue((double)model.getSelectedItem().getWeightExponent());
 				chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
-				spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
+				spinnerOccBias.setValue((double)model.getSelectedItem().getOcclusionBias());
 				chckbxHalfRes.setSelected(model.getSelectedItem().getHalfResolution());
 				
 				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
@@ -661,19 +661,25 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		// Add listener for changes to the gamma spinner.
 		spinnerGamma.addChangeListener(e ->
 		{
-			model.getSelectedItem().setGamma((Float)spinnerGamma.getModel().getValue());
+			model.getSelectedItem().setGamma((float)(double)(Double)spinnerGamma.getModel().getValue());
 		});
 		
 		// Add listener for changes to the alpha weight spinner.
 		spinnerExponent.addChangeListener(e ->
 		{
-			model.getSelectedItem().setWeightExponent((Float)spinnerExponent.getModel().getValue());
+			model.getSelectedItem().setWeightExponent((float)(double)(Double)spinnerExponent.getModel().getValue());
 		});
 		
 		// Add listener for changes to half resolution checkbox.
 		chckbxHalfRes.addChangeListener(e ->
 		{
 			model.getSelectedItem().setHalfResolution(chckbxHalfRes.isSelected());
+		});
+		
+		// Add listener for changes to multisampling checkbox.
+		chckbxMultisampling.addChangeListener(e ->
+		{
+			model.getSelectedItem().setMultisampling(chckbxMultisampling.isSelected());
 		});
 
 		// Add listener for changes to occlusion checkbox.
@@ -688,7 +694,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		// Add listener for changes to the occlusion bias spinner.
 		spinnerOccBias.addChangeListener(e ->
 		{
-			model.getSelectedItem().setOcclusionBias((Float)spinnerOccBias.getModel().getValue());
+			model.getSelectedItem().setOcclusionBias((float)(double)(Double)spinnerOccBias.getModel().getValue());
 		});
 		
 		// Create callback monitor to show the loading window when the model is being read

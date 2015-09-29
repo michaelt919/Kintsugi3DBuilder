@@ -15,6 +15,7 @@ uniform float gamma;
 
 uniform bool occlusionEnabled;
 uniform float occlusionBias;
+uniform bool infiniteLightSources;
 
 uniform float delta;
 uniform int iterations;
@@ -141,7 +142,7 @@ DiffuseFit fitDiffuse()
             {
                 //vec4 light = vec4(getLightVector(i), 1.0);
                 vec3 light = getLightVector(i);
-                vec3 attenuatedLightIntensity = getLightIntensity(i) / (dot(light, light));
+                vec3 attenuatedLightIntensity = infiniteLightSources ? getLightIntensity(i) : getLightIntensity(i) / (dot(light, light));
                 vec3 lightNormalized = normalize(light);
                 
                 float weight = color.a * nDotV;

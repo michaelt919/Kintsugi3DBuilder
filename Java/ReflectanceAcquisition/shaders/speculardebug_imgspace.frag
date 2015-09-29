@@ -16,6 +16,7 @@ uniform int viewIndex;
 uniform float gamma;
 uniform bool occlusionEnabled;
 uniform float occlusionBias;
+uniform bool infiniteLightSources;
 uniform float diffuseRemovalFactor;
 
 uniform CameraPoses
@@ -104,7 +105,7 @@ vec3 getDiffuseColor(int index)
 {
     vec3 light = getLightVector(index);
     return pow(texture(diffuse, fTexCoord), vec4(gamma)).rgb * max(0, dot(fNormal, normalize(light))) 
-            * getLightIntensity(index) / (dot(light, light));
+            * (infiniteLightSources ? getLightIntensity(index) : getLightIntensity(index) / (dot(light, light)));
 }
 
 vec3 getReflectionVector(vec3 normalVector, vec3 lightVector)

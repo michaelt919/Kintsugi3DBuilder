@@ -80,7 +80,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		this.recommendedNearPlane = recommendedNearPlane;
 		this.recommendedFarPlane = recommendedFarPlane;
 		
-		this.imageFilePath = imageOptions.getFilePath();
+		if (imageOptions != null)
+		{
+			this.imageFilePath = imageOptions.getFilePath();
+		}
 		
 		// Store the poses in a uniform buffer
 		if (cameraPoseList != null && cameraPoseList.size() > 0)
@@ -186,7 +189,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		}
 		
 		// Read the images from a file
-		if (imageOptions.isLoadingRequested() && imageOptions.getFilePath() != null && imageFileNames != null && imageFileNames.size() > 0)
+		if (imageOptions != null && imageOptions.isLoadingRequested() && imageOptions.getFilePath() != null && imageFileNames != null && imageFileNames.size() > 0)
 		{
 			Date timestamp = new Date();
 			File imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(0));

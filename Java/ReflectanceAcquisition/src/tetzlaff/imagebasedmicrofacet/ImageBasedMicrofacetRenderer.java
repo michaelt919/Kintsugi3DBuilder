@@ -19,6 +19,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	private Program<ContextType> indexProgram;
 	private ULFRenderer<ContextType> ulfRenderer;
 	private SampledMicrofacetField<ContextType> microfacetField;
+	private Trackball viewTrackball;
 	private Trackball lightTrackball;
 	private ULFLoadingMonitor callback;
 	private boolean suppressErrors = false;
@@ -28,6 +29,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
     {
 		this.context = context;
 		this.program = program;
+		this.viewTrackball = viewTrackball;
 		this.lightTrackball = lightTrackball;
     	this.ulfRenderer = new ULFRenderer<ContextType>(context, program, indexProgram, xmlFile, meshFile, loadOptions, viewTrackball);
     }
@@ -86,7 +88,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			program.setUniform("diffuseRemovalAmount", 1.0f);
 			program.setUniform("lightPos", 
 					new Vector3(lightTrackball.getRotationMatrix().getColumn(2))
-						.times(lightTrackball.getScale())
+						.times(lightTrackball.getScale() / viewTrackball.getScale())
 						.plus(ulfRenderer.getLightField().proxy.getCentroid()));
 			program.setUniform("lightIntensity", new Vector3(1.0f, 1.0f, 1.0f));
 			
@@ -104,7 +106,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	
 				indexProgram.setUniform("lightPos", 
 						new Vector3(lightTrackball.getRotationMatrix().getColumn(2))
-							.times(lightTrackball.getScale())
+							.times(lightTrackball.getScale() / viewTrackball.getScale())
 							.plus(ulfRenderer.getLightField().proxy.getCentroid()));
 				indexProgram.setUniform("lightIntensity", new Vector3(1.0f, 1.0f, 1.0f));
 			}

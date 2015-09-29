@@ -14,6 +14,7 @@ uniform float weightExponent;
 uniform float occlusionBias;
 uniform float gamma;
 uniform float diffuseRemovalAmount;
+uniform bool infiniteLightSources;
 
 uniform mat4 model_view;
 
@@ -272,7 +273,8 @@ vec4 computeMicrofacetDistributionSample(int index, vec3 diffuseAlbedo, vec3 nor
     float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
 
     return nDotV * weight * vec4(max(vec3(0), sampleColor.rgb
-            /* * dot(sampleLightDirUnnorm, sampleLightDirUnnorm) / lightIntensities[lightIndices[index]]*/
+            * (infiniteLightSources ? 1.0 : dot(sampleLightDirUnnorm, sampleLightDirUnnorm))
+            / lightIntensities[lightIndices[index]]
             - diffuseRemovalAmount * diffuseAlbedo * nDotL)
             / computeGeometricAttenuation(sampleViewDir, sampleLightDir, normalDirCameraSpace), 
         sampleColor.a * nDotL);
@@ -340,10 +342,10 @@ void main()
     vec3 specularReflectance;
     if (nDotL > 0.0)
     {
-        specularReflectance = computeMicrofacetDistributionFast(diffuseAlbedo, normalDir) 
+        specularReflectance = computeMicrofacetDistribution(diffuseAlbedo, normalDir) 
             * computeGeometricAttenuation(normalize(viewDir), normalize(lightDir), normalDir);
     }
     
-    fragColor = vec4(pow(nDotL /* * lightIntensity / dot(lightDir, lightDir)*/
+    fragColor = vec4(pow(nDotL * (infiniteLightSources ? lightIntensity : lightIntensity / dot(lightDir, lightDir))
         * (diffuseAlbedo + specularReflectance), vec3(1 / gamma)), 1.0);
 }
