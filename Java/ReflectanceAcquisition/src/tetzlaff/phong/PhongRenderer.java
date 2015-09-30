@@ -137,7 +137,7 @@ public class PhongRenderer<ContextType extends Context<ContextType>> implements 
 	}
 
 	@Override
-	public void draw() 
+	public boolean draw() 
 	{
     	Matrix4 modelView = Matrix4.lookAt(
 				new Vector3(0.0f, 0.0f, 5.0f / viewTrackball.getScale()), 
@@ -213,6 +213,7 @@ public class PhongRenderer<ContextType extends Context<ContextType>> implements 
     	this.renderable.program().setUniform("roughnessScale", mode == FULL_TEXTURE_MODE ? specularRoughnessTextureScale : specularRoughness);
     	
     	this.renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+    	return true;
 	}
 
 	@Override

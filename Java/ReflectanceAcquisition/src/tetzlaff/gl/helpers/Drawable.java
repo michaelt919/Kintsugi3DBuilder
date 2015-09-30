@@ -33,7 +33,7 @@ public interface Drawable
 	 * The associated context will be made current first.  Generally, the object should be
 	 * immutable (no internal state should change) while executing this method.
 	 */
-	void draw();
+	boolean draw();
 
 	/**
 	 * Save the contents of this Drawable to a file.  This should be called after draw() and

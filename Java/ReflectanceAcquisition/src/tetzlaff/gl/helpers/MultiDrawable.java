@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import tetzlaff.gl.Framebuffer;
 import tetzlaff.helpers.SelectableList;
 
 /**
@@ -98,12 +99,16 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 	}
 
 	@Override
-	public void draw() 
+	public boolean draw() 
 	{
 		Drawable selected = this.getSelectedItem();
 		if (selected != null && !selected.hasInitializeError())
 		{
-			selected.draw();
+			return selected.draw();
+		}
+		else
+		{
+			return false;
 		}
 	}
 

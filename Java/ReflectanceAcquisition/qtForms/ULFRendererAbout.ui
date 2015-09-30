@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AboutDialog</class>
+ <widget class="QDialog" name="AboutDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>449</width>
+    <height>270</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>449</width>
+    <height>270</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>449</width>
+    <height>270</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>About ULF Renderer v1.0</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>10</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="iconLabel">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="textLabel">
+       <property name="text">
+        <string>&lt;html&gt;&lt;body&gt;
+&lt;h2&gt;ULF Renderer&lt;/h2&gt;
+&lt;h3&gt;Version: 1.0 (alpha 2)&lt;/h3&gt;
+
+&lt;p&gt;Originally written by:&lt;ul&gt;
+&lt;li&gt;Michael Tetzlaff (University of Minnesota)&lt;/li&gt;
+&lt;li&gt;Seth Berrier (University of Wisconsin Stout)&lt;/li&gt;
+&lt;li&gt;Michael Ludwig (University of Minnesota)&lt;/li&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Licensed under GPLv3&lt;br/&gt;
+Requests for source code, comments,&lt;br/&gt;or bug reports should be sent to:&lt;br/&gt;
+&lt;a href=&quot;mailto:ulfrenderer@gmail.com&quot;&gt;ulfrenderer@gmail.com&lt;/a&gt;&lt;/p&gt;
+&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Close</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>AboutDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>AboutDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

@@ -22,13 +22,14 @@ import com.trolltech.qt.gui.QColor;
 import com.trolltech.qt.gui.QColorDialog;
 import com.trolltech.qt.gui.QFileDialog;
 import com.trolltech.qt.gui.QFileDialog.Filter;
+import com.trolltech.qt.gui.QMainWindow;
 import com.trolltech.qt.gui.QMessageBox;
 import com.trolltech.qt.gui.QProgressDialog;
 import com.trolltech.qt.gui.QWidget;
 
-public class ULFConfigQWidget extends QWidget implements EventPollable {
+public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 
-	private Ui_LightFieldConfigForm gui;
+	private Ui_ULFRendererMainWindow gui;
 	private final ULFListModel model;
 	private boolean widgetClosed;
 	private boolean halfResDefault;
@@ -48,7 +49,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		this.widgetClosed = false;
 		this.model = model;
 		
-		gui = new Ui_LightFieldConfigForm();
+		gui = new Ui_ULFRendererMainWindow();
 		gui.setupUi(this);
 		
 		if(this.model != null && this.model.getSelectedItem() != null) {
@@ -244,7 +245,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	
 	// Add listener for the 'single' load button to read a single light field object.
 	@SuppressWarnings("unused")
-	private void on_loadSingleButton_clicked()
+	private void on_actionLoad_single_model_triggered()
 	{
 		if(blockSignals) { return; }
 		File lastDir = ULFProgram.getLastCamDefFileDirectory();
@@ -299,7 +300,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	
 	// Add listener for the 'morph' load button to read many light field objects.
 	@SuppressWarnings("unused")
-	private void on_loadMultipleButton_clicked()
+	private void on_actionLoad_model_sequence_triggered()
 	{
 		if(blockSignals) { return; }
 		File lastDir = ULFProgram.getLastSequenceFileDirectory();		
@@ -322,6 +323,13 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		}
 	}
 	
+	@SuppressWarnings("unused")
+	private void on_actionAbout_ULF_Renderer_triggered()
+	{
+		ULFAboutQDialog aboutDiag = new ULFAboutQDialog(this);
+		aboutDiag.exec();		
+	}
+
 	// Respond to combo box item changed event
 	@SuppressWarnings("unused")
 	private void on_modelComboBox_currentIndexChanged(int newIndex)
