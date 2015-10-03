@@ -2,7 +2,9 @@ package tetzlaff.imagebasedmicrofacet.app;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -17,6 +19,7 @@ import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.imagebasedmicrofacet.ImageBasedMicrofacetRendererList;
+import tetzlaff.imagebasedmicrofacet.LightController;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.window.glfw.GLFWWindow;
 
@@ -59,14 +62,16 @@ public class ImageBasedMicrofacetProgram
 //    		
 //    	};
 //    	glDebugMessageCallback(debugCallback, 0L);
-
+    	
     	// Add a trackball controller to the window for rotating the object (also responds to mouse scrolling)
     	// This is the 'controller' in the MVC arrangement.
-    	Trackball viewTrackball = new Trackball(1.0f, 0, -1, true);
-    	viewTrackball.addAsWindowListener(window);
-    	
-    	Trackball lightTrackball = new Trackball(1.0f, 1, -1, false);
-    	lightTrackball.addAsWindowListener(window);
+    	List<Trackball> trackballs = new ArrayList<Trackball>(8);
+    	for (int i = 0; i < 4; i++)
+    	{
+    		Trackball newTrackball = new Trackball(1.0f, 0, -1, true);
+    		newTrackball.addAsWindowListener(window);
+    		trackballs.add(newTrackball);
+    	}
 
     	Program<OpenGLContext> program;
         try
@@ -100,10 +105,13 @@ public class ImageBasedMicrofacetProgram
         // This is the object that loads the ULF models and handles drawing them.  This object abstracts
         // the underlying data and provides ways of triggering events via the trackball and the user
         // interface later when it is passed to the ULFUserInterface object.
-        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, indexProgram, viewTrackball, lightTrackball);
+        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, indexProgram, trackballs);
+        
+        LightController<OpenGLContext> lightController = new LightController<OpenGLContext>(model);
+        window.addCharacterListener(lightController);
         
         window.addCharacterListener((win, c) -> {
-        	if (c == 'r')
+        	if (c == 'p')
         	{
         		System.out.println("reloading program...");
         		

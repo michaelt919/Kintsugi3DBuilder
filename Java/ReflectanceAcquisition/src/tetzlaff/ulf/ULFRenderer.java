@@ -19,7 +19,6 @@ import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
-import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 
 public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
@@ -68,6 +67,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.viewIndexCacheEnabled = false;
     	this.targetFPS = 30.0f;
     }
+	
+	public void setTrackball(Trackball trackball)
+	{
+		this.trackball = trackball;
+	}
     
     @Override
     public void setOnLoadCallback(ULFLoadingMonitor callback)
@@ -224,8 +228,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    		long elapsedTime = now-lastFrame;
 	    		float fps = (float)stride/(float)elapsedTime*1000;
 	    		stride = Math.max(1, Math.min((int)Math.ceil(stride*targetFPS/fps), lightField.viewSet.getCameraPoseCount()));
-	    		System.out.println("fps="+fps);
-	    		System.out.println("new stride="+stride);
+	    		//System.out.println("fps="+fps);
+	    		//System.out.println("new stride="+stride);
     		}
     		else
     		{
