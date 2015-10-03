@@ -1,19 +1,18 @@
 #version 330
 
 #define SAMPLE_COUNT 7
-#define PACKED_INDEX_VERTEX_COUNT 7;
-#define MAX_VIRTUAL_LIGHT_COUNT 4;
 
 #define MAX_CAMERA_POSE_COUNT 1024
 #define MAX_CAMERA_PROJECTION_COUNT 1024
 #define MAX_LIGHT_COUNT 1024
+
+#define MAX_VIRTUAL_LIGHT_COUNT 8
 
 uniform bool occlusionEnabled;
 
 uniform float weightExponent;
 uniform float occlusionBias;
 uniform float gamma;
-uniform float diffuseRemovalAmount;
 uniform bool infiniteLightSources;
 
 uniform mat4 model_view;
@@ -23,18 +22,17 @@ in vec2 fTexCoord;
 in vec3 fNormal;
 
 in vec3 fViewPos;
-uniform vec3 lightIntensity;
-uniform vec3 lightPos;
+uniform vec3 lightIntensity[MAX_VIRTUAL_LIGHT_COUNT];
+uniform vec3 lightPos[MAX_VIRTUAL_LIGHT_COUNT];
+uniform int virtualLightCount;
 
 uniform sampler2DArray imageTextures;
 uniform sampler2DArray depthTextures;
 
-uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 
 uniform isampler2DArray viewIndexTextures;
 
-uniform bool useDiffuseTexture;
 uniform bool useNormalTexture;
 
 uniform CameraPoses
@@ -252,45 +250,69 @@ float computeGeometricAttenuation(vec3 view, vec3 light, vec3 normal)
         / (dot(light, normal) * dot(view, normal));
 }
 
-vec4 computeMicrofacetDistributionSample(int index, vec3 diffuseAlbedo, vec3 normalDir, bool useMipmaps)
+vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 normalDir, bool useMipmaps)
 {
+    vec4 sampleColor = getProjTexSample(index, useMipmaps);
+    vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
+    
     // All in camera space
     vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
     vec3 virtualViewDir = normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
     vec3 sampleViewDir = normalize(-fragmentPos);
-    vec3 virtualLightDir = normalize((cameraPoses[index] * vec4(lightPos, 1.0)).xyz - fragmentPos);
     vec3 sampleLightDirUnnorm = lightPositions[lightIndices[index]].xyz - fragmentPos;
     vec3 sampleLightDir = normalize(sampleLightDirUnnorm);
-    vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
     vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
     vec3 normalDirCameraSpace = (cameraPoses[index] * vec4(normalDir, 0.0)).xyz;
     
-    // Compute sample weight
-    float weight = computeSampleWeight(virtualHalfDir, sampleHalfDir);
-    
-    vec4 sampleColor = getProjTexSample(index, useMipmaps);
     float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
     float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
-
-    return nDotV * weight * vec4(max(vec3(0), sampleColor.rgb
+    
+    vec4 precomputedSample = nDotV * vec4(sampleColor.rgb
             * (infiniteLightSources ? 1.0 : dot(sampleLightDirUnnorm, sampleLightDirUnnorm))
             / lightIntensities[lightIndices[index]]
-            - diffuseRemovalAmount * diffuseAlbedo * nDotL)
             / computeGeometricAttenuation(sampleViewDir, sampleLightDir, normalDirCameraSpace), 
         sampleColor.a * nDotL);
+        
+    for (int lightPass = 0; lightPass < virtualLightCount; lightPass++)
+    {
+        vec3 virtualLightDir = normalize((cameraPoses[index] * vec4(lightPos[lightPass], 1.0)).xyz - fragmentPos);
+        vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
+
+        // Compute sample weight
+        float weight = computeSampleWeight(virtualHalfDir, sampleHalfDir);
+        result[lightPass] = weight * precomputedSample;
+    }
+    
+    return result;
 }
 
-vec3 computeMicrofacetDistribution(vec3 diffuseAlbedo, vec3 normalDir)
+vec3[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(vec3 normalDir)
 {
-	vec4 sum = vec4(0.0);
+	vec4[MAX_VIRTUAL_LIGHT_COUNT] sums;
+    for (int i = 0; i < virtualLightCount; i++)
+    {
+        sums[i] = vec4(0.0);
+    }
+    
 	for (int i = 0; i < cameraPoseCount; i++)
 	{
-        sum += computeMicrofacetDistributionSample(i, diffuseAlbedo, normalDir, true);
+        vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample = computeSample(i, normalDir, true);
+        
+        for (int j = 0; j < virtualLightCount; j++)
+        {
+            sums[j] += microfacetSample[j];
+        }
 	}
-	return sum.rgb / sum.a;
+    
+    vec3[MAX_VIRTUAL_LIGHT_COUNT] results;
+    for (int i = 0; i < virtualLightCount; i++)
+    {
+        results[i] = sums[i].rgb / sums[i].a;
+    }
+	return results;
 }
 
-vec3 computeMicrofacetDistributionFast(vec3 diffuseAlbedo, vec3 normalDir)
+vec3 computeMicrofacetDistributionsFast(vec3 normalDir)
 {
     int viewIndices[SAMPLE_COUNT] = readViewIndices();
     
@@ -299,7 +321,8 @@ vec3 computeMicrofacetDistributionFast(vec3 diffuseAlbedo, vec3 normalDir)
 	{
         if (viewIndices[i] >= 0 && viewIndices[i] < MAX_CAMERA_POSE_COUNT)
         {
-            sum += computeMicrofacetDistributionSample(viewIndices[i], diffuseAlbedo, normalDir, false);
+            // TODO multiple light sources
+            sum += computeSample(viewIndices[i], normalDir, false)[0];
         }
 	}
     
@@ -315,7 +338,6 @@ vec3 computeMicrofacetDistributionFast(vec3 diffuseAlbedo, vec3 normalDir)
 
 void main()
 {
-    vec3 lightDir = lightPos - fPosition;
     vec3 viewDir = fViewPos - fPosition;
     
     vec3 normalDir;
@@ -327,25 +349,22 @@ void main()
     {
         normalDir = normalize(fNormal);
     }
-    float nDotL = max(0.0, dot(normalDir, normalize(lightDir)));
     
-    vec3 diffuseAlbedo;
-    if (useDiffuseTexture)
-    {
-        diffuseAlbedo = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
-    }
-    else
-    {
-        diffuseAlbedo = vec3(0.0);
-    }
+    vec3[] microfacetDistributions = computeMicrofacetDistributions(normalDir);
+    vec3 reflectance = vec3(0.0);
     
-    vec3 specularReflectance;
-    if (nDotL > 0.0)
+    for (int i = 0; i < virtualLightCount; i++)
     {
-        specularReflectance = computeMicrofacetDistribution(diffuseAlbedo, normalDir) 
-            * computeGeometricAttenuation(normalize(viewDir), normalize(lightDir), normalDir);
+        vec3 lightDir = lightPos[i] - fPosition;
+        float nDotL = max(0.0, dot(normalDir, normalize(lightDir)));
+        
+        if (nDotL > 0.0)
+        {
+            reflectance += nDotL * microfacetDistributions[i] * nDotL * lightIntensity[i]
+                * (infiniteLightSources ? 1.0 : 1.0 / dot(lightDir, lightDir))
+                * computeGeometricAttenuation(normalize(viewDir), normalize(lightDir), normalDir);
+        }
     }
     
-    fragColor = vec4(pow(nDotL * (infiniteLightSources ? lightIntensity : lightIntensity / dot(lightDir, lightDir))
-        * (diffuseAlbedo + specularReflectance), vec3(1 / gamma)), 1.0);
+    fragColor = vec4(pow(reflectance, vec3(1 / gamma)), 1.0);
 }

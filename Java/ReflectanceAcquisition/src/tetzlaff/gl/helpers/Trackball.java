@@ -12,6 +12,7 @@ import tetzlaff.window.listeners.ScrollListener;
 
 public class Trackball implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener
 {
+	private boolean enabled = true;
 	private int primaryButtonIndex;
 	private int secondaryButtonIndex;
 	private float sensitivity;
@@ -66,7 +67,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	@Override
 	public void mouseButtonPressed(Window window, int buttonIndex, ModifierKeys mods) 
 	{
-		if (buttonIndex == this.primaryButtonIndex || buttonIndex == this.secondaryButtonIndex)
+		if (enabled && (buttonIndex == this.primaryButtonIndex || buttonIndex == this.secondaryButtonIndex))
 		{
 			CursorPosition pos = window.getCursorPosition();
 			WindowSize size = window.getWindowSize();
@@ -79,35 +80,38 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	@Override
 	public void cursorMoved(Window window, double xpos, double ypos) 
 	{
-		if (this.primaryButtonIndex >= 0 && window.getMouseButtonState(primaryButtonIndex) == MouseButtonState.Pressed)
+		if (enabled)
 		{
-			if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale) && (xpos != this.startX || ypos != this.startY))
+			if (this.primaryButtonIndex >= 0 && window.getMouseButtonState(primaryButtonIndex) == MouseButtonState.Pressed)
 			{
-				Vector3 rotationVector = 
-					new Vector3(
-						(float)(ypos - this.startY),
-						(float)(xpos - this.startX), 
-						0.0f
-					);
-				
-				this.trackballMatrix = 
-					Matrix4.rotateAxis(
-						rotationVector.normalized(), 
-						this.mouseScale * rotationVector.length()
-					)
-					.times(this.oldTrackballMatrix);
-			}
-		}
-		else if (this.secondaryButtonIndex >= 0 && window.getMouseButtonState(secondaryButtonIndex) == MouseButtonState.Pressed)
-		{
-			if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale))
-			{
-				this.trackballMatrix = 
-					Matrix4.rotateZ(this.mouseScale * (xpos - this.startX))
+				if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale) && (xpos != this.startX || ypos != this.startY))
+				{
+					Vector3 rotationVector = 
+						new Vector3(
+							(float)(ypos - this.startY),
+							(float)(xpos - this.startX), 
+							0.0f
+						);
+					
+					this.trackballMatrix = 
+						Matrix4.rotateAxis(
+							rotationVector.normalized(), 
+							this.mouseScale * rotationVector.length()
+						)
 						.times(this.oldTrackballMatrix);
-				
-				this.logScale = this.oldLogScale + this.mouseScale * (float)(ypos - this.startY);
-				this.scale = (float)Math.pow(2, this.logScale);
+				}
+			}
+			else if (this.secondaryButtonIndex >= 0 && window.getMouseButtonState(secondaryButtonIndex) == MouseButtonState.Pressed)
+			{
+				if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale))
+				{
+					this.trackballMatrix = 
+						Matrix4.rotateZ(this.mouseScale * (xpos - this.startX))
+							.times(this.oldTrackballMatrix);
+					
+					this.logScale = this.oldLogScale + this.mouseScale * (float)(ypos - this.startY);
+					this.scale = (float)Math.pow(2, this.logScale);
+				}
 			}
 		}
 	}
@@ -115,7 +119,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	@Override
 	public void mouseButtonReleased(Window window, int buttonIndex, ModifierKeys mods) 
 	{
-		if (buttonIndex == this.primaryButtonIndex || buttonIndex == this.secondaryButtonIndex)
+		if (enabled && (buttonIndex == this.primaryButtonIndex || buttonIndex == this.secondaryButtonIndex))
 		{
 			this.oldTrackballMatrix = this.trackballMatrix;
 			this.oldLogScale = this.logScale;
@@ -125,7 +129,15 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	@Override
 	public void scroll(Window window, double xoffset, double yoffset) 
 	{
-		this.logScale = this.logScale + sensitivity / 256.0f * (float)(yoffset);
-		this.scale = (float)Math.pow(2, this.logScale);
+		if (enabled)
+		{
+			this.logScale = this.logScale + sensitivity / 256.0f * (float)(yoffset);
+			this.scale = (float)Math.pow(2, this.logScale);
+		}
+	}
+	
+	public void setEnabled(boolean enabled)
+	{
+		this.enabled = enabled;
 	}
 }
