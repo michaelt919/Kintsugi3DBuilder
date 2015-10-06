@@ -68,7 +68,7 @@ public class ImageBasedMicrofacetProgram
     	List<Trackball> trackballs = new ArrayList<Trackball>(8);
     	for (int i = 0; i < 4; i++)
     	{
-    		Trackball newTrackball = new Trackball(1.0f, 0, -1, true);
+    		Trackball newTrackball = new Trackball(1.0f, 0, 1, true);
     		newTrackball.addAsWindowListener(window);
     		trackballs.add(newTrackball);
     	}

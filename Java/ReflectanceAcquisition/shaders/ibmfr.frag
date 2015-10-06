@@ -6,7 +6,7 @@
 #define MAX_CAMERA_PROJECTION_COUNT 1024
 #define MAX_LIGHT_COUNT 1024
 
-#define MAX_VIRTUAL_LIGHT_COUNT 8
+#define MAX_VIRTUAL_LIGHT_COUNT 4
 
 uniform bool occlusionEnabled;
 
@@ -273,7 +273,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 normalDir, bool useM
             / computeGeometricAttenuation(sampleViewDir, sampleLightDir, normalDirCameraSpace), 
         sampleColor.a * nDotL);
         
-    for (int lightPass = 0; lightPass < virtualLightCount; lightPass++)
+    for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
     {
         vec3 virtualLightDir = normalize((cameraPoses[index] * vec4(lightPos[lightPass], 1.0)).xyz - fragmentPos);
         vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
@@ -289,7 +289,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 normalDir, bool useM
 vec3[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(vec3 normalDir)
 {
 	vec4[MAX_VIRTUAL_LIGHT_COUNT] sums;
-    for (int i = 0; i < virtualLightCount; i++)
+    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
     {
         sums[i] = vec4(0.0);
     }
@@ -298,14 +298,14 @@ vec3[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(vec3 normalDir)
 	{
         vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample = computeSample(i, normalDir, true);
         
-        for (int j = 0; j < virtualLightCount; j++)
+        for (int j = 0; j < MAX_VIRTUAL_LIGHT_COUNT; j++)
         {
             sums[j] += microfacetSample[j];
         }
 	}
     
     vec3[MAX_VIRTUAL_LIGHT_COUNT] results;
-    for (int i = 0; i < virtualLightCount; i++)
+    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
     {
         results[i] = sums[i].rgb / sums[i].a;
     }
@@ -353,14 +353,14 @@ void main()
     vec3[] microfacetDistributions = computeMicrofacetDistributions(normalDir);
     vec3 reflectance = vec3(0.0);
     
-    for (int i = 0; i < virtualLightCount; i++)
+    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < virtualLightCount; i++)
     {
         vec3 lightDir = lightPos[i] - fPosition;
         float nDotL = max(0.0, dot(normalDir, normalize(lightDir)));
         
         if (nDotL > 0.0)
         {
-            reflectance += nDotL * microfacetDistributions[i] * nDotL * lightIntensity[i]
+            reflectance += nDotL * microfacetDistributions[i] * lightIntensity[i]
                 * (infiniteLightSources ? 1.0 : 1.0 / dot(lightDir, lightDir))
                 * computeGeometricAttenuation(normalize(viewDir), normalize(lightDir), normalDir);
         }
