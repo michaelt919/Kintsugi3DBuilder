@@ -332,7 +332,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		QDialog aboutDiag = new QDialog(this);
 		Ui_AboutDialog aboutGui = new Ui_AboutDialog();
 		aboutGui.setupUi(aboutDiag);
-		aboutGui.iconLabel.setPixmap(new QPixmap("classpath:images#/icons/icon.png"));
+		aboutGui.iconLabel.setPixmap(new QPixmap("classpath:resources#/icons/icon.png"));
 		
 		aboutDiag.setWindowModality(WindowModality.ApplicationModal);
 		aboutDiag.setModal(true);
