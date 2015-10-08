@@ -20,7 +20,9 @@ import com.trolltech.qt.core.Qt.WindowModality;
 import com.trolltech.qt.gui.QCloseEvent;
 import com.trolltech.qt.gui.QColor;
 import com.trolltech.qt.gui.QColorDialog;
+import com.trolltech.qt.gui.QDialog;
 import com.trolltech.qt.gui.QFileDialog;
+import com.trolltech.qt.gui.QPixmap;
 import com.trolltech.qt.gui.QFileDialog.Filter;
 import com.trolltech.qt.gui.QMainWindow;
 import com.trolltech.qt.gui.QMessageBox;
@@ -326,8 +328,23 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	@SuppressWarnings("unused")
 	private void on_actionAbout_ULF_Renderer_triggered()
 	{
-		ULFAboutQDialog aboutDiag = new ULFAboutQDialog(this);
-		aboutDiag.exec();		
+		// Make the about dialog GUI
+		QDialog aboutDiag = new QDialog(this);
+		Ui_AboutDialog aboutGui = new Ui_AboutDialog();
+		aboutGui.setupUi(aboutDiag);
+		aboutGui.iconLabel.setPixmap(new QPixmap("classpath:images#/icons/icon.png"));
+		
+		aboutDiag.setWindowModality(WindowModality.ApplicationModal);
+		aboutDiag.setModal(true);
+
+		// Center over rendering window
+		WindowSize winSize = ULFProgram.getRenderingWindowSize();
+		WindowPosition winPos = ULFProgram.getRendringWindowPosition();
+		aboutDiag.move(winPos.x + winSize.width/2 - aboutDiag.width()/2,
+					   winPos.y + winSize.height/2 - aboutDiag.height()/2);
+
+		// Show it
+		aboutDiag.exec();
 	}
 
 	// Respond to combo box item changed event

@@ -258,7 +258,7 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 	}
 	
 	@Override
-	public void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical) throws IOException
+	public void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical, boolean rotate90) throws IOException
 	{
 		this.bind();
 			
@@ -268,29 +268,46 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 			throw new IOException("Error: Unsupported image format.");
 		}
 		
+		this.loadLayer(layerIndex, img, flipVertical, rotate90);
+	}
+	
+	@Override
+	public void loadLayer(int layerIndex, BufferedImage img, boolean flipVertical, boolean rotate90) throws IOException
+	{		
 		if (layerIndex < 0 || layerIndex >= this.depth)
 		{
 			throw new IOException("The layer index specified (" + layerIndex + ") is out of bounds (layer count: " + this.depth + ").");
 		}
-		else if (img.getWidth() != this.width || img.getHeight() != this.height)
+		else if ((!rotate90 && (img.getWidth() != this.width || img.getHeight() != this.height)) ||
+				 (rotate90 && (img.getWidth() != this.height || img.getHeight() != this.width)))
 		{
 			throw new IOException("The texture to be loaded does not have the correct width and height.");
 		}
 		else
 		{
-			this.width = img.getWidth();
-			this.height = img.getHeight();
+			if(rotate90)
+			{
+				this.width = img.getHeight();
+				this.height = img.getWidth();				
+			}
+			else
+			{
+				this.width = img.getWidth();
+				this.height = img.getHeight();
+			}
 		}
-		
+				
 		ByteBuffer buffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
 		IntBuffer intBuffer = buffer.asIntBuffer();
-		if (flipVertical)
+		
+		if (rotate90)
 		{
-			for (int y = img.getHeight() - 1; y >= 0; y--)
+			for (int x = img.getWidth()-1; x >= 0; x--)
 			{
-				for (int x = 0; x < img.getWidth(); x++)
+				for (int y = 0; y < img.getHeight(); y++)
 				{
-					intBuffer.put(img.getRGB(x, y));
+					if(flipVertical) { intBuffer.put(img.getRGB(img.getWidth() - x - 1, y)); }
+					else { intBuffer.put(img.getRGB(x, y)); }
 				}
 			}
 		}
@@ -300,12 +317,13 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 			{
 				for (int x = 0; x < img.getWidth(); x++)
 				{
-					intBuffer.put(img.getRGB(x, y));
+					if(rotate90) { intBuffer.put(img.getRGB(x, img.getHeight() - y - 1)); }
+					else { intBuffer.put(img.getRGB(x, y)); }
 				}
 			}
 		}
 		
-		glTexSubImage3D(this.getOpenGLTextureTarget(), 0, 0, 0, layerIndex, img.getWidth(), img.getHeight(), 1, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+		glTexSubImage3D(this.getOpenGLTextureTarget(), 0, 0, 0, layerIndex, width, height, 1, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
 		this.context.openGLErrorCheck();
 		
 		if (this.useMipmaps)
@@ -315,28 +333,34 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 	}
 
 	@Override
-	public void loadLayer(int layerIndex, ZipWrapper zipFile, boolean flipVertical) throws IOException
+	public void loadLayer(int layerIndex, ZipWrapper zipFile, boolean flipVertical, boolean rotate90) throws IOException
 	{
-		this.loadLayer(layerIndex, zipFile.getInputStream(), flipVertical);
+		this.loadLayer(layerIndex, zipFile.getInputStream(), flipVertical, rotate90);
 	}
 
 	@Override
-	public void loadLayer(int layerIndex, File file, boolean flipVertical) throws IOException
+	public void loadLayer(int layerIndex, File file, boolean flipVertical, boolean rotate90) throws IOException
 	{
-		this.loadLayer(layerIndex, new FileInputStream(file), flipVertical);
+		this.loadLayer(layerIndex, new FileInputStream(file), flipVertical, rotate90);
 	}
 
 	@Override
-	public void loadLayer(int layerIndex, InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
+	public void loadLayer(int layerIndex, InputStream imageStream, InputStream maskStream, boolean flipVertical, boolean rotate90) throws IOException
 	{
-		this.bind();
-			
 		BufferedImage colorImg = ImageIO.read(imageStream);
 		BufferedImage maskImg = ImageIO.read(maskStream);
 
 		if(colorImg == null) { throw new IOException("Error: Unsupported image format for color image."); }
 		if(maskImg == null) { throw new IOException("Error: Unsupported image format for mask image."); }
 		
+		this.loadLayer(layerIndex, colorImg, maskImg, flipVertical, rotate90);
+	}
+
+	@Override
+	public void loadLayer(int layerIndex, BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical, boolean rotate90) throws IOException
+	{
+		this.bind();
+					
 		if (layerIndex < 0 || layerIndex >= this.depth)
 		{
 			throw new IllegalArgumentException("The layer index specified (" + layerIndex + ") is out of bounds (layer count: " + this.depth + ").");
@@ -364,7 +388,15 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 				for (int x = 0; x < colorImg.getWidth(); x++)
 				{
 					// Use green channel of the mask image for alpha
-					intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
+					if(rotate90)
+					{
+						int x2 = colorImg.getWidth() - x - 1;
+						intBuffer.put((colorImg.getRGB(y, x2) & 0x00ffffff) | ((maskImg.getRGB(y, x2) & 0x0000ff00) << 16));
+					}
+					else
+					{
+						intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
+					}
 				}
 			}
 		}
@@ -375,7 +407,15 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 				for (int x = 0; x < colorImg.getWidth(); x++)
 				{
 					// Use green channel of the mask image for alpha
-					intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
+					if(rotate90)
+					{
+						int x2 = colorImg.getWidth() - x - 1;
+						intBuffer.put((colorImg.getRGB(y, x2) & 0x00ffffff) | ((maskImg.getRGB(y, x2) & 0x0000ff00) << 16));
+					}
+					else
+					{
+						intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
+					}
 				}
 			}
 		}
@@ -390,15 +430,15 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 	}
 
 	@Override
-	public void loadLayer(int layerIndex, ZipWrapper imageZip, ZipWrapper maskZip, boolean flipVertical) throws IOException
+	public void loadLayer(int layerIndex, ZipWrapper imageZip, ZipWrapper maskZip, boolean flipVertical, boolean rotate90) throws IOException
 	{
-		this.loadLayer(layerIndex, imageZip.getInputStream(), maskZip.getInputStream(), flipVertical);
+		this.loadLayer(layerIndex, imageZip.getInputStream(), maskZip.getInputStream(), flipVertical, rotate90);
 	}
 
 	@Override
-	public void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical) throws IOException
+	public void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical, boolean rotate90) throws IOException
 	{
-		this.loadLayer(layerIndex, new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical);
+		this.loadLayer(layerIndex, new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical, rotate90);
 	}
 
 	@Override
