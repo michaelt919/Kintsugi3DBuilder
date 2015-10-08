@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import tetzlaff.gl.Framebuffer;
 import tetzlaff.helpers.SelectableList;
 
 /**
@@ -29,7 +28,7 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 	
 	private Exception initError;
 
-	public MultiDrawable() 
+	public MultiDrawable()
 	{
 		drawables = new ArrayList<T>();
 		removedDrawables = new ArrayList<T>();

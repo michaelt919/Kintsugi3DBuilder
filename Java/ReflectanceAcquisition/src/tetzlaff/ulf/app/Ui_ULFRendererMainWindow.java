@@ -505,9 +505,12 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
     {
         ULFRendererMainWindow.setWindowTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "ULF Renderer Settings", null));
         actionLoad_single_model.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load single model ...", null));
+        actionLoad_single_model.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load a single model into the renderer from data stored on the drive.", null));
         actionLoad_model_sequence.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load model sequence ...", null));
+        actionLoad_model_sequence.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load a model sequence file describing several models into the renderer from data stored on the drive.", null));
         actionQuit.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Quit", null));
         actionAbout_ULF_Renderer.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "About ULF Renderer", null));
+        actionAbout_ULF_Renderer.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Get more information about the ULF Renderer application.", null));
         loadOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load Options", null));
         compressCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Compress Images", null));
         mipmapsCheckbox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Use Mipmaps", null));
