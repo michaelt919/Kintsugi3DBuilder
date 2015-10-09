@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ULF Renderer - Loading Models</title>
+    <link rel="stylesheet" type="text/css" href="help.css" />
+</head>
+<body>
+    <p>A complete model for the ULF Renderer must provide the following three things:</p>
+    <ul>
+        <li>Surface Geometry (as an OBJ)</li>
+        <li>Camera views (with camera distortion removed) as JPGs, PNGs or TIFFs.</li>
+        <li>Camera location and orientations as a PhotoScan .xml file or a .vset file.</li>
+    </ul>
+    <p>Any program that can provide these three things can in theory be used with the renderer however, we have constructed it with Agisoft Photoscan in mind (which does provide the necessary info).  Furthermore, only certain formats for each of these items are supported.</p>
+    
+    <H2>Loading a PhotoScan Model</H2>
+    <p>If you have a fully processed model in PhotoScan you can export the appropriate data with the following steps:</p>
+
+    <h3>Before Starting</h3>
+    <ul>
+        <li>Make sure you have completed processing and fully generated the geometry for the object</li>
+        <li>If you have multiple chunks, you will only be able to export and render one of them. You can combine them into one prior to exporting.</li>
+        <li>The chunk you want to export must not have any transformation applied to it.  Look for [R] next to the chunk name.  If you see this, right click the chunk and say 'Reset Transform'.  Caution, this will loose all object orientaiton and scale so save before you do this and then avoid saving the PSZ afterwards.</li>
+    </ul>
+    
+    
+    <h3>Exporting data:</h3>
+    <ol>
+        <li>Right click the desired chunk and select 'set active'
+        <li>Right click the chunk again and select 'Export->Export model'
+            <ul>
+                <li>Export as a 'Wavefront OBJ' file with the settings shown</li>
+                <li>If you are using the non-pro verison of PhotoScan your options will be slightly different but the differences are unimportant.</li>
+            </ul>
+            <img width="40%" src="ExportOBJOptions.jpg" />
+        <li>Select 'Tools->Export->Export Cameras'</li>
+            <ul>
+                <li>Export the cameras as 'PhotoScan XML'</li>
+            </ul>
+        <li>Select 'Tools->Export->Undistort Photos'</li>
+            <ul>
+                <li>Make sure the settings match the window shown below</li>
+                <li>You may provide a different file extension if you like (the renderer will search for other file types), but DO NOT modify the {filename} part.</li>
+            </ul>
+            <img width="40%" src="UndistortOptions.jpg" />
+    </ol>
+    
+    <h3>Loading into the Renderer:</H3>
+    <ol>
+        <li>Start the ULF Renderer and select 'File->Load single model'</li>
+        <li>Make sure the file type is set to 'PhotoScan XML' and select your xml file</li>
+        <li>follow the prompts and provide the obj file and the directory with undistorted photos</li>
+    </ol>
+    
+    <H2>Using a prepared Example</H2>
+    <p>It is possible to prepare all of this data and collect it into a single ZIP archive.  We have provided several examples of this for you to try out.  Doing so requires the camera pose information to be provided as a .vset file.  The documentation for this file format is still yet to be created but there are plans to support exporting it directly from the renderer.  For now, this part is only intended for a pre-existing .zip archive provided with the renderer.</p>
+
+    <h3>Loading into the Renderer:</h3>
+    <ol>
+        <li>Start the ULF Renderer and select 'File->Load single model'</li>
+        <Li>Change the file type to .zip archive</li>
+        <li>Select the prepared zip file</li>
+    </ol>
+
+</body>
+</html>

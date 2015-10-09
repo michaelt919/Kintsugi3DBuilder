@@ -212,7 +212,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	}
     
     @Override
-    public void draw()
+    public boolean draw()
     {
     	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
     	FramebufferSize size = framebuffer.getSize();
@@ -285,6 +285,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	        	drawCameras(framebuffer, size);
 	        }
     	}
+    	
+    	return true;
     }
     
     private void drawCameras(Framebuffer<ContextType> framebuffer, FramebufferSize size)

@@ -397,7 +397,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					
 					if (maskDir == null)
 					{
-						viewTextures.loadLayer(i, imageFile, true);
+						viewTextures.loadLayer(i, imageFile, true, false);
 					}
 					else
 					{
@@ -410,7 +410,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					    	maskFile = new File(maskDir, pngFileName);
 						}
 						
-						viewTextures.loadLayer(i, imageFile, maskFile, true);
+						viewTextures.loadLayer(i, imageFile, maskFile, true, false);
 					}
 					
 					System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " images loaded.");
@@ -588,7 +588,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    	
 					for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 					{
-						preprojectedViews.loadLayer(i, new File(new File(tmpDir, String.format("%04d", i)), String.format("r%04dc%04d.png", row, col)), true);
+						preprojectedViews.loadLayer(i, new File(new File(tmpDir, String.format("%04d", i)), String.format("r%04dc%04d.png", row, col)), true, false);
 					}
 		    		
 		    		diffuseFitRenderable.program().setTexture("viewImages", preprojectedViews);

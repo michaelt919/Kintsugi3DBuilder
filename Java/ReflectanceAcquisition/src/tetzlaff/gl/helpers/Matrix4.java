@@ -206,6 +206,7 @@ public class Matrix4
 		return new Matrix4(Matrix3.fromQuaternion(x, y, z, w));
 	}
 	
+	
 	public Matrix4 plus(Matrix4 other)
 	{
 		return new Matrix4(

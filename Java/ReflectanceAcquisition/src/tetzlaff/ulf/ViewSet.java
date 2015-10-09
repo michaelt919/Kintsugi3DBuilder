@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.helpers.ZipWrapper;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.MessageBox;
@@ -373,6 +375,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				loadingCallback.setMaximum(imageFileNames.size());
 			}
 
+			boolean needsRotation = false;
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
 				imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
@@ -403,8 +406,25 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				}				
 				
 				myZip.retrieveFile(imageFile);
-				this.textureArray.loadLayer(i, myZip, true);
+
+				// Examine image
+				img = ImageIO.read(myZip.retrieveFile(imageFile));
+				if(img == null)
+				{
+					throw new IOException(String.format("Error: Unsupported image format '%s'.",
+							imageFileNames.get(i)));				
+				}
 				myZip.getInputStream().close();
+
+				needsRotation = (img.getWidth() == textureArray.getHeight() && img.getHeight() == textureArray.getWidth());
+				if(!needsRotation &&
+						(img.getWidth() != textureArray.getWidth() || img.getHeight() != textureArray.getHeight()))
+				{
+					// Image resolution does not match
+					// TODO: resample image to match so we can proceed
+				}
+				
+				this.textureArray.loadLayer(i, img, true, needsRotation);
 
 				if(loadingCallback != null) {
 					loadingCallback.setProgress(i+1);
@@ -682,6 +702,13 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    {
 	        this.id = id;
 	    }
+	    
+	    @SuppressWarnings("unused")
+		public String toVSETString()
+	    {
+	    	return "D\t" + this.cx/this.width + "\t" + this.cy/this.height + "\t" + (this.width/this.height) + "\t" + 
+	    			this.fx + "\t" + this.width + "\t" + this.k1 + "\t" + this.k2 + "\t" + this.k3 + "\t0\t0";
+	    }
 	}
 	
 	/**
@@ -712,6 +739,17 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    {
 	      Camera otherCam = (Camera)other;
 	      return (this.id.equals(otherCam.id));
+	    }
+
+	    @SuppressWarnings("unused")
+	    public String toVSETString()
+	    {
+	    	// TODO: Provide means to compute quaternion
+//	        Vector4 q = this.transform.getRotationAsQuaternion();	    	
+	        Vector4 q = new Vector4(0, 0, 0, 0);
+	        Vector4 t = this.transform.getColumn(3);
+	        return "p\t" + t.x + "\t" + t.y + "\t" + t.z + "\t" +
+	                q.x + "\t" + q.y + "\t" + q.z + "\t" + q.w;
 	    }
 	}
 
@@ -1117,6 +1155,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
         		.times(globalRotation.transpose())
         		.times(new Matrix4(new Matrix3(m1).transpose()))
             	.times(Matrix4.translate(new Vector3(m1.getColumn(3).negated()))));
+            
             cameraProjectionIndexList.add(cameras[i].sensor.index);
             lightIndexList.add(0);
             imageFileNames.add(cameras[i].filename);
@@ -1154,6 +1193,31 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		
 		return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
 	}
+	
+    public void writeVSETFileToStream(OutputStream outputStream)
+    {
+    	/* These lists are not properly available, need to rethink this
+    	 * 
+	    PrintStream out = new PrintStream(outputStream);
+	    out.println("# Created by ULF Renderer from PhotoScan XML file");
+	    out.println("# " + sensors.length + (sensors.length==1?" Sensor":" Sensors"));
+	    for (Sensor sensor : sensors)
+	    {
+	        out.println(sensor.toVSETString());
+	    }
+	
+	    out.println("\n# " + cameras.length + (cameras.length==1?" Camera":" Cameras"));
+	    for (Camera camera : cameras)
+	    {
+	        out.println(camera.toVSETString());
+	    }
+	
+	    out.println("\n# " + cameras.length + (cameras.length==1?" View":" Views"));
+	    for (Camera camera : cameras)
+	    {
+	        out.println("v " + camera.getId() + " " + camera.getSensor().getId() + " 0 views/" + camera.getFilename().replace(".jpg", ".png"));
+	    } */
+    }
 
 	/**
 	 * Gets the camera pose defining the transformation from object space to camera space for a particular view.
