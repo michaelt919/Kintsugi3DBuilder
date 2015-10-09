@@ -32,7 +32,16 @@
                 <attribute name="Main-Class" value="tetzlaff.ulf.app.ULFProgram"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
-            <fileset dir="/Users/berriers/Programming/Bitbucket/kinectreflectancefields/Java/ReflectanceAcquisition/bin"/>
+            <fileset dir="./bin">
+            	<patternset id="unrelated">
+            	    <exclude name="**/shaders-exclude/**" />
+            	    <exclude name="**/tetzlaff/phong/**" />
+            	    <exclude name="**/tetzlaff/phong/**" />
+            	    <exclude name="**/tetzlaff/phong/app/**" />
+            	    <exclude name="**/tetzlaff/texturefit/**" />
+    	            <exclude name="**/tetzlaff/textureupscale/**" />
+            	</patternset>
+           	</fileset>
         </jar>
 		<delete dir="./dist/ULFRenderer_lib/native"/>
 		<delete dir="./dist/ULFRenderer_lib"/>
