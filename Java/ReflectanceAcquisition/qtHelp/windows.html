@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>ULF Renderer - Window Settings and Controls</title>
+        <link rel="stylesheet" type="text/css" href="help.css" />
+    </head>
+    <body>
+        <h1>Settings Window</h1>
+        <table>
+        <tr>
+            <td width="300" valign="top"><img width="100%" src="ULFSettingsWindow.png" /></td>
+            <td>
+            <ul>
+                <li>File &amp; Help Menus</li>
+                <ul>
+                    <li>Models can be loaded from the 'File' menu (or you can quit the program).</li>
+                    <li>You can access this help and information about the program from this menu.</li>
+                </ul><br/>
+                <li>Loading Options</li>
+                <ul>
+                    <li><b><u>Compress Images</u></b> - Apply texture compression to the images as they are being loaded.  This will reduce memory usage significantly but may result in some visual artifacts</li>
+                    <li><b><u>Use Mipmaps</u></b> - Generate mipmap levels for every view.  This increases memory usage but may help eliminate some visual artifacts that are the result of image resampling</li>
+                    <li><b><u>Generate Depth Maps</u></b> - If the model has some parts that could cast a shadow on itself or otherwise obstruct the surface than the depth maps will help it render properly.  If the model does not have these features you may safely uncheck this box and reduce memory usage.</li>
+                    <li><b><u>Dimensions</u></b> - The resolution of the depth images.  Only applied if the 'generate depth images' option is enabled</li>
+                </ul><br/>
+                <li>Model Options</li>
+                <ul>
+                    <li>The first drop down box lets you select the currently active model if more than one has been loaded</li>
+                    <li>The slider is used to move through the stages of a model sequence. This will only be enabled if there are stages to move through.</li>
+                    <li><b><u>Show View Cameras</b></u> - Visualize the location and orientation of the cameras.  Handy for double-checking that the video information was loaded properly.</li>
+                </ul><br/>
+                <li>Rendering Options</li>
+                <ul>
+                    <li><b><u>K-nearest mode</b></u> - Blend only the 'k' nearest neighbors of highest weight as in the original Beuhler algorithm.  This may help speed up rendering.</li>
+                    <li><b><u>'k-samples'</b></u> - Set the 'k' value used by the Beuhler algorithm. Lower is faster but the value cannot be less than 2</li>
+                    <li><b><u>Background Color</b></u> - Change the color of the background in the main window.  It defaults to a 30% grey value.</li>
+                    <li><b><u>Gamma</b></u> - correction applied for non-linear image resonse curves (based on a standard gamma function).</li>
+                    <li><b><u>Weight Exponent</b></u> - The 'alpha' value from the weight equation.  Increasing this causes more views to be used at each point but will introduce blurryness.  Decreasing it will force the views to have a zero effect sooner and results in sharper images.</li>
+                    <li><b><u>Visibility Testing</b></u> - Enable this option to eliminate views bleeding through onto parts of the geometry that they could not see. Depth images are required for this to work.</li>
+                    <li><b><u>Bias</b></u> - Minimum value for detecting a difference between the depth in the depth image and the value in the current view.  Make this small to help get less bleeding across visibility discontinunities.  Increase it to eliminate more bleeding.</li>
+                </ul><br/>
+                <li>Quality Options</li>
+                <ul>
+                    <li><b><u>Half-Resolution</b></u> - Cut the number of pixels generated in half to help speed up rendering.  This is meant to help with High-DPI displays and should be enabled if you have a retina display</li>
+                    <li><b><u>Multisampling</b></u> - Disable OpenGL multisampling.  This will also help speed up rendering but causes some jagged lines to appear at the edge of the model.</li>
+                </ul><br/>
+                <li>Resample Model</li>
+                <ul>
+                    <li>This is a special mode that allows you to resample all the views of a model so that they match some other set of views.  You must have the target views ready in a .vset file.  It is intended for internal use only.</li>
+                    <li><b><u>Dimensions</b></u> - Specify the resolution of the resampled images</li>
+                    <li><b><u>Resample</b></u> - Start resampling.  You will be prompted for a target vset file.</li>
+                </ul><br/>
+                <li>Reporting Bugs</li>
+                <ul><li>At any time you can click the 'report bug' button to send a manual bug report.  This will take a screenshot and then generate and upload a 'crash report'.  Note that you should be sure to describe the issue in detail as the crash report will not be very helpful otherwise.</li></ul>
+            </td>
+        </tr>
+        </table>
+
+        <h1>Main Model Window</h1>
+            <p> Once a model is loaded, you can interact with the object as you would with most objects in other 3d programs. This is often referred to as a ‘trackball’ controller</p>
+        
+        <h2>Controls</h2>
+            <ul>
+                <li>Click and drag to rotate around the object’s center</li>
+                <li>Use the mouse scroll wheel to zoom in and out</li>
+            </ul>
+            
+    </body>
+</html>
