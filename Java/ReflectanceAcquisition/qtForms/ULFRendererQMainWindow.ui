@@ -612,6 +612,8 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionHelp"/>
+    <addaction name="separator"/>
     <addaction name="actionAbout_ULF_Renderer"/>
    </widget>
    <addaction name="menuFile"/>
@@ -645,6 +647,11 @@
    </property>
    <property name="toolTip">
     <string>Get more information about the ULF Renderer application.</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
    </property>
   </action>
  </widget>

@@ -16,6 +16,7 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
     public QAction actionLoad_model_sequence;
     public QAction actionQuit;
     public QAction actionAbout_ULF_Renderer;
+    public QAction actionHelp;
     public QWidget centralwidget;
     public QVBoxLayout verticalLayout_6;
     public QGroupBox loadOptionsGroupBox;
@@ -97,6 +98,8 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
         actionQuit.setObjectName("actionQuit");
         actionAbout_ULF_Renderer = new QAction(ULFRendererMainWindow);
         actionAbout_ULF_Renderer.setObjectName("actionAbout_ULF_Renderer");
+        actionHelp = new QAction(ULFRendererMainWindow);
+        actionHelp.setObjectName("actionHelp");
         centralwidget = new QWidget(ULFRendererMainWindow);
         centralwidget.setObjectName("centralwidget");
         verticalLayout_6 = new QVBoxLayout(centralwidget);
@@ -495,6 +498,8 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
         menuFile.addAction(actionLoad_model_sequence);
         menuFile.addSeparator();
         menuFile.addAction(actionQuit);
+        menuHelp.addAction(actionHelp);
+        menuHelp.addSeparator();
         menuHelp.addAction(actionAbout_ULF_Renderer);
         retranslateUi(ULFRendererMainWindow);
 
@@ -511,6 +516,7 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
         actionQuit.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Quit", null));
         actionAbout_ULF_Renderer.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "About ULF Renderer", null));
         actionAbout_ULF_Renderer.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Get more information about the ULF Renderer application.", null));
+        actionHelp.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Help", null));
         loadOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load Options", null));
         compressCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Compress Images", null));
         mipmapsCheckbox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Use Mipmaps", null));

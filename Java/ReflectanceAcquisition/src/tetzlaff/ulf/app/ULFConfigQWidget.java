@@ -16,6 +16,7 @@ import tetzlaff.window.WindowSize;
 
 import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.core.QSize;
+import com.trolltech.qt.core.Qt;
 import com.trolltech.qt.core.Qt.WindowModality;
 import com.trolltech.qt.gui.QCloseEvent;
 import com.trolltech.qt.gui.QColor;
@@ -27,7 +28,9 @@ import com.trolltech.qt.gui.QFileDialog.Filter;
 import com.trolltech.qt.gui.QMainWindow;
 import com.trolltech.qt.gui.QMessageBox;
 import com.trolltech.qt.gui.QProgressDialog;
+import com.trolltech.qt.gui.QSplitter;
 import com.trolltech.qt.gui.QWidget;
+import com.trolltech.qt.help.QHelpEngine;
 
 public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 
@@ -345,6 +348,29 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 
 		// Show it
 		aboutDiag.exec();
+	}
+	
+	@SuppressWarnings("unused")
+	private void on_actionHelp_triggered()
+	{
+		QHelpEngine helpEngine = new QHelpEngine("classpath:/userGuide.qhc");
+	    helpEngine.setupData();
+	
+	    ULFHelpWidget textViewer = new ULFHelpWidget(helpEngine, this);
+	    helpEngine.contentWidget().linkActivated.connect(textViewer, "setSource(QUrl)");
+//	    connect(helpEngine.contentWidget(),
+//	            SIGNAL(linkActivated(QUrl)),
+//	            textViewer, SLOT(setSource(QUrl)));
+
+//	    helpEngine.indexWidget().linkActivated.connect(textViewer, "setSource(QUrl)");
+//	    connect(helpEngine->indexWidget(),
+//	            SIGNAL(linkActivated(QUrl, QString)),
+//	            textViewer, SLOT(setSource(QUrl)));
+	
+	    QSplitter horizSplitter = new QSplitter(Qt.Orientation.Horizontal);
+	    horizSplitter.insertWidget(0, helpEngine.contentWidget());
+	    horizSplitter.insertWidget(1, textViewer);
+	    horizSplitter.setVisible(true);
 	}
 
 	// Respond to combo box item changed event
