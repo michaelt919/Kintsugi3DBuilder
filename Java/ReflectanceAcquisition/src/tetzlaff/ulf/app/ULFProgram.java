@@ -48,7 +48,7 @@ public class ULFProgram
 	/**
 	 * Current version number (increment on milestone releases)
 	 */
-	public static final String VERSION = "1.0a";
+	public static final String VERSION = "1.0a2";
 	
 	/**
 	 * Name of the file used to log standard out (System.out)
@@ -92,10 +92,10 @@ public class ULFProgram
             BugSplat.Init("berriers_uwstout_edu", "ULFRenderer", VERSION);
             
             // Prepare log files, delete any old ones
-//            File logFile = File.createTempFile(LOG_FILE, ".log");
-//            File errFile = File.createTempFile(ERR_FILE, ".log");
-            File logFile = new File(LOG_FILE + ".txt"); logFile = logFile.getAbsoluteFile();
-            File errFile = new File(ERR_FILE + ".txt"); errFile = errFile.getAbsoluteFile();
+            File logFile = File.createTempFile(LOG_FILE, ".log");
+            File errFile = File.createTempFile(ERR_FILE, ".log");
+//            File logFile = new File(LOG_FILE + ".txt"); logFile = logFile.getAbsoluteFile();
+//            File errFile = new File(ERR_FILE + ".txt"); errFile = errFile.getAbsoluteFile();
             if(logFile.exists()) { logFile.delete(); }
             if(errFile.exists()) { errFile.delete(); }
 
