@@ -516,7 +516,7 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
         actionQuit.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Quit", null));
         actionAbout_ULF_Renderer.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "About ULF Renderer", null));
         actionAbout_ULF_Renderer.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Get more information about the ULF Renderer application.", null));
-        actionHelp.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Help", null));
+        actionHelp.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Show Help ...", null));
         loadOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load Options", null));
         compressCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Compress Images", null));
         mipmapsCheckbox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Use Mipmaps", null));

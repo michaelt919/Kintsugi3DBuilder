@@ -1,2 +1,3 @@
 qcollectiongenerator helpCollection.qhcp -o userHelp.qhc
-mv userHelp.qhc ../resources/
+mv userHelp.qch ../resources/help/
+mv userHelp.qhc ../resources/help/

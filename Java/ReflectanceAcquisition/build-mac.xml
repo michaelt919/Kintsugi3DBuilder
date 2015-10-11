@@ -10,9 +10,9 @@
             name="ULFRenderer"
             displayname="ULF Renderer"
             identifier="org.culturalheritageimaging.ULFRenderer"
-        	shortversion="1.0a"
+        	shortversion="1.0a2"
             mainclassname="tetzlaff.ulf.app.ULFProgram"
-        	icon="icons/icon.icns">
+        	icon="resources/icons/icon.icns">
 			<!--<runtime dir="/Library/Java/JavaVirtualMachines/jdk1.8.0_20.jdk/Contents/Home" />-->
         	<classpath dir="./dist">
         		<include name="ULFRenderer.jar" />
@@ -24,6 +24,9 @@
         	<option value="-XstartOnFirstThread"/>
         	<!-- <option value="-Dapple.laf.useScreenMenuBar=true"/> -->
         </bundleapp>
+		<copy todir="./dist/ULFRenderer.app/Contents/Resources/resources/">
+			<fileset dir="./dist/resources/" />
+		</copy>
 	</target>
 	
 	<target name="create_run_jar">
@@ -45,8 +48,10 @@
         </jar>
 		<delete dir="./dist/ULFRenderer_lib/native"/>
 		<delete dir="./dist/ULFRenderer_lib"/>
+		<delete dir="./dist/resources"/>
 		<mkdir dir="./dist/ULFRenderer_lib"/>
 		<mkdir dir="./dist/ULFRenderer_lib/native"/>
+		<mkdir dir="./dist/resources"/>
 		<copy file="/Developer/java-deps/JAI-proxy/clibwrapper_jiio.jar" todir="./dist/ULFRenderer_lib"/>
 		<copy file="/Developer/java-deps/JAI-proxy/jai_imageio.jar" todir="./dist/ULFRenderer_lib"/>
 		<copy file="/Developer/java-deps/lwjgl-3.0.0b/jar/lwjgl.jar" todir="./dist/ULFRenderer_lib"/>
@@ -58,6 +63,12 @@
 		</copy>
 		<copy todir="./dist/ULFRenderer_lib/native">
     		<fileset dir="/Developer/java-deps/lwjgl-3.0.0b/native/" />
+		</copy>
+		<copy todir="./dist/resources/help">
+			<fileset dir="./resources/help" />
+		</copy>
+		<copy todir="./dist/resources/icons">
+			<fileset dir="./resources/icons" />
 		</copy>
 	</target>
 	

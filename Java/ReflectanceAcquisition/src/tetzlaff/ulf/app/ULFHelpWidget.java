@@ -9,15 +9,17 @@ public class ULFHelpWidget extends QTextBrowser {
 
 	private QHelpEngine helpEngine;
 	
-	public ULFHelpWidget(QHelpEngine engine, QWidget parent) {
+	public ULFHelpWidget(QHelpEngine engine, QWidget parent)
+	{
 		super(parent);
 		this.helpEngine = engine;
 	}
 	
-
+	@Override
     public Object loadResource(int type, QUrl name)
     {
-    	if (name.scheme() == "qthelp")
+		// Intercept any resources that come from the help engine
+    	if (name.scheme().equalsIgnoreCase("qthelp"))
     	{
             return helpEngine.fileData(name);
     	}

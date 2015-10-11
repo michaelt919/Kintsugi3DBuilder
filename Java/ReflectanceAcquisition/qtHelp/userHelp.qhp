@@ -1,22 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <QtHelpProject version="1.0">
-    <namespace>culturalheritageimaging.com.ulfrenderer.10</namespace>
+    <namespace>culturalheritageimaging.com.ulfrenderer</namespace>
     <virtualFolder>help</virtualFolder>
     <filterSection>
         <toc>
-            <section title="User Manual" ref="index.html">
-                <section title="Loading a PhotoScan Model" ref="./models.html#photoScanModel"/>
-                <section title="Loading a Prepared ZIP Model" ref="./models.html#zipModel"/>
-                <section title="Best Practices" ref="./models.html#recommendations"/>
-                <section title="Interacting with the Model" ref="./windows.html#renderer"/>
-                <section title="Settings Window" ref="./windows.html#settings"/>
-                <section title="Performance Considerations" ref="./technical.html#performance"/>
-                <section title="Troubleshooting" ref="./technical.html#troubleshooting"/>
-            </section>
+            <section title="User Manual" ref="index.html" />
+            <section title="Loading Models" ref="models.html">
+	             <section title="PhotoScan Model" ref="models.html#photoScanModel"/>
+	             <section title="Prepared ZIP Model" ref="models.html#zipModel"/>
+	             <section title="Best Practices" ref="models.html#recommendations"/>
+	        </section>
+	        <section title="Controls and Settings" ref="windows.html">
+	            <section title="Interacting with the Model" ref="windows.html#renderer"/>
+	            <section title="Settings Window" ref="windows.html#settings"/>
+	        </section>
+	        <section title="Technical Support" ref="technical.html">
+	            <section title="Performance Considerations" ref="technical.html#performance"/>
+	            <section title="Troubleshooting" ref="technical.html#troubleshooting"/>
+	        </section>
         </toc>
+        <!-- Note, everything MUST be embedded in the HTML files (images, css, scripts, etc) -->
         <files>
             <file>*.html</file>
-            <file>*.jpg</file>
         </files>
     </filterSection>
 </QtHelpProject>

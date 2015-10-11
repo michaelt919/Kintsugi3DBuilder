@@ -1,0 +1,182 @@
+body {
+    font-family: "Menlo", "Lucida Sans Typewriter", "Lucida Console", Consolas, mono-space;
+    background-color: #fcfcfc;
+    color: #222
+}
+
+.fonts-loaded body {
+    font-family: "Nitti iA", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 1.3125rem;
+    line-height: 1.42
+}
+
+h1, h2, h3, h4, h5, h6, p, ul, ol, li, a, span, blockquote, time {
+    font-size: 1.06rem;
+    line-height: 1.75;
+    letter-spacing: -0.033rem;
+    word-spacing: -0.033rem
+}
+
+.fonts-loaded h1, .fonts-loaded h2, .fonts-loaded h3, .fonts-loaded h4,
+.fonts-loaded h5, .fonts-loaded h6, .fonts-loaded p, .fonts-loaded ul,
+.fonts-loaded ol, .fonts-loaded li, .fonts-loaded a, .fonts-loaded span,
+.fonts-loaded blockquote, .fonts-loaded time {
+    font-size: 1.3125rem;
+    letter-spacing: normal;
+    line-height: inherit;
+    word-spacing: normal
+}
+
+h1 {
+    text-align: center;
+    text-transform: uppercase;
+    margin: 0 0 1.42rem
+}
+
+h2, h3, h4, h5 {
+    margin: 1.42rem 0 0
+}
+
+h2 {
+    text-align: center;
+    margin: 1.42rem 0
+}
+
+p {
+    margin: 0 0 1.6725rem
+}
+
+.fonts-loaded p {
+    margin: 0 0 1.42rem
+}
+
+a {
+    background-image: linear-gradient(to bottom, #222 75%, #222 75%);
+    text-shadow: -1px -1px 0 #fcfcfc, 1px -1px 0 #fcfcfc, -1px 1px 0 #fcfcfc, 1px 1px 0 #fcfcfc;
+    background-repeat: repeat-x;
+    background-size: 1px 1px;
+    background-position: 0 99.9%;
+    color: #222;
+    text-decoration: none
+}
+
+a.active {
+    background-clip: border-box;
+    background: #222 !important;
+    text-decoration: none;
+    border-radius: 0;
+    text-shadow: none;
+    padding: 1px;
+    margin: -1px;
+    color: #fff
+}
+
+a.enlarge {
+    background-image: none
+}
+
+.fonts-loaded a {
+    background-position: 0 94%
+}
+
+pre {
+    margin: 1.42rem 0;
+    padding: 0.71rem 1.42rem;
+    word-wrap: break-word;
+    white-space: pre-wrap
+}
+
+pre code {
+    padding-left: 0;
+    padding-right: 0
+}
+
+code, kbd, pre, samp {
+    font-family: "Nitti iA", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background-color: #e6e6e6
+}
+
+ol, ul {
+    padding: 0
+}
+
+ol ul, ul ul {
+    list-style: none;
+    padding: 0
+}
+
+ol ul > li:before, ul ul > li:before {
+    content: "–";
+    position: relative;
+    left: 0.71em
+}
+
+ol ul > li, ul ul > li {
+    text-indent: 0.71em
+}
+
+ol ol, ol ul, ul ol, ul ul {
+    margin: 1.42rem 0;
+    text-indent: 0
+}
+
+blockquote {
+    border: none;
+    margin: 1.42rem 0 1.42rem 2.84rem
+}
+
+.fonts-loaded blockquote {
+    font-size: 1.125rem
+}
+
+blockquote + div {
+    margin: -1.42rem auto 1.42rem auto;
+    font-style: italic;
+    max-width: 80%
+}
+
+blockquote + div:before {
+    content: '– '
+}
+
+hr {
+    display: inline-block;
+    margin: 1.136rem 0 0;
+    border: none;
+    width: 100%;
+    color: #222
+}
+
+hr:after {
+    display: inline-block;
+    letter-spacing: 0.25rem;
+    text-align: center;
+    content: '***';
+    width: 100%
+}
+
+table {
+    margin: 0 0 1.42rem;
+    font-size: 1.125rem
+}
+
+table tr {
+    border-bottom: 1px solid #222
+}
+
+table td, table th {
+    vertical-align: top;
+    padding: 0 1.42rem
+}
+
+table td:first-child, table th:first-child {
+    padding-left: 0
+}
+
+table td:last-child, table th:last-child {
+    padding-right: 0
+}
+
+.fonts-loaded table a {
+    font-size: 1.125rem
+}

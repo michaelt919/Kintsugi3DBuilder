@@ -651,7 +651,7 @@
   </action>
   <action name="actionHelp">
    <property name="text">
-    <string>Help</string>
+    <string>Show Help ...</string>
    </property>
   </action>
  </widget>
