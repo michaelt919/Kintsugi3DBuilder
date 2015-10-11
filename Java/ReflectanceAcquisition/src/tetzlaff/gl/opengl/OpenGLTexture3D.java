@@ -278,52 +278,41 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 		{
 			throw new IOException("The layer index specified (" + layerIndex + ") is out of bounds (layer count: " + this.depth + ").");
 		}
-		else if ((!rotate90 && (img.getWidth() != this.width || img.getHeight() != this.height)) ||
-				 (rotate90 && (img.getWidth() != this.height || img.getHeight() != this.width)))
+		else if (img.getWidth() != this.width || img.getHeight() != this.height)
 		{
 			throw new IOException("The texture to be loaded does not have the correct width and height.");
 		}
 		else
 		{
-			if(rotate90)
-			{
-				this.width = img.getHeight();
-				this.height = img.getWidth();				
-			}
-			else
-			{
-				this.width = img.getWidth();
-				this.height = img.getHeight();
-			}
+			this.width = img.getWidth();
+			this.height = img.getHeight();
 		}
 				
 		ByteBuffer buffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
 		IntBuffer intBuffer = buffer.asIntBuffer();
 		
-		if (rotate90)
+		if (flipVertical)
 		{
-			for (int x = img.getWidth()-1; x >= 0; x--)
+			for (int y = img.getHeight() - 1; y >= 0; y--)
 			{
-				for (int y = 0; y < img.getHeight(); y++)
+				for (int x = 0; x < img.getWidth(); x++)
 				{
-					if(flipVertical) { intBuffer.put(img.getRGB(img.getWidth() - x - 1, y)); }
-					else { intBuffer.put(img.getRGB(x, y)); }
+					intBuffer.put(img.getRGB(x, y));
 				}
 			}
 		}
 		else
 		{
-			for (int y = 0; y < img.getHeight(); y++)
+			for (int y = img.getHeight() - 1; y >= 0; y--)
 			{
 				for (int x = 0; x < img.getWidth(); x++)
 				{
-					if(rotate90) { intBuffer.put(img.getRGB(x, img.getHeight() - y - 1)); }
-					else { intBuffer.put(img.getRGB(x, y)); }
+					intBuffer.put(img.getRGB(x, y));
 				}
 			}
 		}
 		
-		glTexSubImage3D(this.getOpenGLTextureTarget(), 0, 0, 0, layerIndex, width, height, 1, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+		glTexSubImage3D(this.getOpenGLTextureTarget(), 0, 0, 0, layerIndex, img.getWidth(), img.getHeight(), 1, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
 		this.context.openGLErrorCheck();
 		
 		if (this.useMipmaps)

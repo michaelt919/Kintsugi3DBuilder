@@ -375,7 +375,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				loadingCallback.setMaximum(imageFileNames.size());
 			}
 
-			boolean needsRotation = false;
+//			boolean needsRotation = false;
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
 				imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
@@ -416,15 +416,17 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				}
 				myZip.getInputStream().close();
 
-				needsRotation = (img.getWidth() == textureArray.getHeight() && img.getHeight() == textureArray.getWidth());
-				if(!needsRotation &&
-						(img.getWidth() != textureArray.getWidth() || img.getHeight() != textureArray.getHeight()))
-				{
-					// Image resolution does not match
-					// TODO: resample image to match so we can proceed
-				}
+				// TODO: This is a beginning try at supporting rotated images, needs work
+//				needsRotation = false;
+//				(img.getWidth() == textureArray.getHeight() && img.getHeight() == textureArray.getWidth());
+//				if(!needsRotation &&
+//						(img.getWidth() != textureArray.getWidth() || img.getHeight() != textureArray.getHeight()))
+//				{
+//					// Image resolution does not match
+//					// TODO: resample image to match so we can proceed
+//				}
 				
-				this.textureArray.loadLayer(i, img, true, needsRotation);
+				this.textureArray.loadLayer(i, img, true, false);
 
 				if(loadingCallback != null) {
 					loadingCallback.setProgress(i+1);
