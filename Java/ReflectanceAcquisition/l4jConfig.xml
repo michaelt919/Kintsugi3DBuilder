@@ -1,10 +1,10 @@
 <launch4jConfig>
 
   <headerType>gui</headerType>
-  <jar>./dist/lib_win/ULFRenderer_win.jar</jar>
-  <outfile>./dist/lib_win/ULFRenderer.exe</outfile>
+  <jar>dist/ULFRenderer_fat.jar</jar>
+  <outfile>dist/lib_win/ULFRenderer.exe</outfile>
   <errTitle>ULFRenderer</errTitle>
-  <icon>./resources/icons/icon.ico</icon>
+  <icon>resources/icons/icon.ico</icon>
   <restartOnCrash>false</restartOnCrash>
 
   <priority>normal</priority>

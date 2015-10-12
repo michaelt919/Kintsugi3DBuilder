@@ -22,18 +22,8 @@
 						     classpath="${launch4j.dir}/launch4j.jar:${launch4j.dir}/lib/xstream.jar" />
 	
 	<!-- Configure in l4jConfig.xml -->
-	<target name="create_win_exe" depends="create_run_jar,copy_win_natives,copy_resources">
-		
-		<!-- Combine all external jars into one jar with ULFRenderer -->
-        <jar destfile="${winLibs.dir}/${ant.project.name}_win.jar" filesetmanifest="mergewithoutmain">
-            <manifest>
-                <attribute name="Main-Class" value="tetzlaff.ulf.app.ULFProgram"/>
-                <attribute name="Class-Path" value="."/>
-            </manifest>
-        	<zipgroupfileset dir="${stage.dir}" includes="${ant.project.name}.jar" />
-        	<zipgroupfileset dir="${winLibs.dir}" includes="*.jar" />
-		</jar>
-		
+	<target name="create_win_exe" depends="create_run_jar_with_deps,copy_win_natives,copy_resources">
+				
 		<!-- Wrap with exe -->
         <launch4j configFile="./l4jConfig.xml" />
 		
@@ -42,7 +32,7 @@
 			<fileset dir="${stage.dir}/resources" />
 		</copy>
 
-		<!-- Bundle the exe with all native libs and resources into a zip file -->
+		<!-- Bundle the exe with lwjgl native libs and resources into a zip file -->
 		<zip destfile="${winLibs.dir}/${ant.project.name}_win.zip" basedir="${winLibs.dir}">
 			<exclude name="**/*.jar" />
 		</zip>
@@ -103,6 +93,37 @@
            	</fileset>
         </jar>
 	</target>
+
+	<!-- Create the jar file w/o the unrelated classes (win only) -->
+	<target name="create_run_jar_with_deps">
+        <jar destfile="${stage.dir}/${ant.project.name}_fat.jar">
+            <manifest>
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
+                <attribute name="Rsrc-Main-Class" value="tetzlaff.ulf.app.ULFProgram"/>
+                <attribute name="Class-Path" value="."/>
+                <attribute name="Rsrc-Class-Path" value="./ lwjgl.jar qtjambi-4.8.6.jar qtjambi-native-win64-msvc2012x64-4.8.6.jar bugsplat.jar activation.jar mailapi.jar soap.jar BrowserLauncher2-1_3.jar"/>
+            </manifest>
+            <zipfileset src="jar-in-jar-loader.zip"/>
+        	<fileset dir="./bin">
+            	<patternset id="unrelated">
+            	    <exclude name="**/shaders-exclude/**" />
+            	    <exclude name="**/tetzlaff/phong/**" />
+            	    <exclude name="**/tetzlaff/phong/**" />
+            	    <exclude name="**/tetzlaff/phong/app/**" />
+            	    <exclude name="**/tetzlaff/texturefit/**" />
+    	            <exclude name="**/tetzlaff/textureupscale/**" />
+            	</patternset>
+           	</fileset>
+            <zipfileset dir="/Developer/java-deps/lwjgl-3.0.0b/jar" includes="lwjgl.jar"/>
+            <zipfileset dir="/Developer/java-deps/Qt-Jambi-4.8.6" includes="qtjambi-4.8.6.jar"/>
+            <zipfileset dir="/Developer/java-deps/Qt-Jambi-4.8.6" includes="qtjambi-native-win64-msvc2012x64-4.8.6.jar"/>
+            <zipfileset dir="/Developer/java-deps/BugSplatJava/lib" includes="bugsplat.jar"/>
+            <zipfileset dir="/Developer/java-deps/BugSplatJava/lib" includes="activation.jar"/>
+            <zipfileset dir="/Developer/java-deps/BugSplatJava/lib" includes="mailapi.jar"/>
+            <zipfileset dir="/Developer/java-deps/BugSplatJava/lib" includes="soap.jar"/>
+            <zipfileset dir="/Developer/java-deps/BrowserLauncher2" includes="BrowserLauncher2-1_3.jar"/>
+        </jar>
+	</target>
 	
 	<!-- Copy the native mac binaries to the staging area -->
 	<target name="copy_mac_natives">
@@ -134,24 +155,9 @@
 	
 	<!-- Copy the native windows binaries to the staging area -->
 	<target name="copy_win_natives">
-		<delete dir="${winLibs.dir}/native"/>
 		<delete dir="${winLibs.dir}"/>
-
-		<mkdir dir="${winLibs.dir}"/>
-		<mkdir dir="${winLibs.dir}/native"/>
-		
-		<copy file="${javaDeps.dir}/JAI-proxy/clibwrapper_jiio.jar" todir="${winLibs.dir}"/>
-		<copy file="${javaDeps.dir}/JAI-proxy/jai_imageio.jar" todir="${winLibs.dir}"/>
-		<copy file="${javaDeps.dir}/lwjgl-3.0.0b/jar/lwjgl.jar" todir="${winLibs.dir}"/>
-		<copy file="${javaDeps.dir}/BrowserLauncher2/BrowserLauncher2-1_3.jar" todir="${winLibs.dir}"/>
-		<copy file="${javaDeps.dir}/Qt-Jambi-4.8.6/qtjambi-4.8.6.jar" todir="${winLibs.dir}"/>
-		<copy file="${javaDeps.dir}/Qt-Jambi-4.8.6/qtjambi-native-win64-msvc2012x64-4.8.6.jar" todir="${winLibs.dir}"/>
-		
+		<mkdir dir="${winLibs.dir}"/>		
 		<copy todir="${winLibs.dir}">
-			<fileset dir="${javaDeps.dir}/BugSplatJava/lib/" />
-		</copy>
-		
-		<copy todir="${winLibs.dir}/native">
     		<fileset dir="${javaDeps.dir}/lwjgl-3.0.0b/native/">
             	<patternset id="winonly">
             	    <exclude name="*.so" />
