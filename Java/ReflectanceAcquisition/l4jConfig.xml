@@ -30,7 +30,6 @@
     <minVersion>1.8.0</minVersion>
     <jdkPreference>preferJre</jdkPreference>
     <runtimeBits>64</runtimeBits>
-    <opt>-XstartOnFirstThread</opt>
   </jre>
 
   <!--
