@@ -9,13 +9,13 @@
 	<property name="macLibs.dir" value="${stage.dir}/${macLibs.name}" />
 	<property name="winLibs.name" value="lib_win" />
 	<property name="winLibs.dir" value="${stage.dir}/${winLibs.name}" />
-	<property name="javaDeps.dir" location="/Developer/java-deps" />
+	<property name="javaDeps.dir" location="C:\java-deps" />
 	<property name="launch4j.dir" location="${javaDeps.dir}/launch4j" />
 
 	<!-- Used by the app bundler target -->
     <taskdef name="bundleapp"
-             classname="com.oracle.appbundler.AppBundlerTask"   
-             classpath="lib/appbundler-1.0.jar" />
+             classname="com.oracle.appbundler.AppBundlerTask"
+             classpath="${javaDeps.dir}/appbundler-1.0/appbundler-1.0.jar" />
 
 	<!-- Used by the exe bundler target -->
 	<taskdef name="launch4j" classname="net.sf.launch4j.ant.Launch4jTask"
@@ -114,14 +114,14 @@
     	            <exclude name="**/tetzlaff/textureupscale/**" />
             	</patternset>
            	</fileset>
-            <zipfileset dir="/Developer/java-deps/lwjgl-3.0.0b/jar" includes="lwjgl.jar"/>
-            <zipfileset dir="/Developer/java-deps/Qt-Jambi-4.8.6" includes="qtjambi-4.8.6.jar"/>
-            <zipfileset dir="/Developer/java-deps/Qt-Jambi-4.8.6" includes="qtjambi-native-win64-msvc2012x64-4.8.6.jar"/>
-            <zipfileset dir="/Developer/java-deps/BugSplatJava/lib" includes="bugsplat.jar"/>
-            <zipfileset dir="/Developer/java-deps/BugSplatJava/lib" includes="activation.jar"/>
-            <zipfileset dir="/Developer/java-deps/BugSplatJava/lib" includes="mailapi.jar"/>
-            <zipfileset dir="/Developer/java-deps/BugSplatJava/lib" includes="soap.jar"/>
-            <zipfileset dir="/Developer/java-deps/BrowserLauncher2" includes="BrowserLauncher2-1_3.jar"/>
+            <zipfileset dir="${javaDeps.dir}/lwjgl-3.0.0b/jar" includes="lwjgl.jar"/>
+            <zipfileset dir="${javaDeps.dir}/Qt-Jambi-4.8.6" includes="qtjambi-4.8.6.jar"/>
+            <zipfileset dir="${javaDeps.dir}/Qt-Jambi-4.8.6" includes="qtjambi-native-win64-msvc2012x64-4.8.6.jar"/>
+            <zipfileset dir="${javaDeps.dir}/BugSplatJava/lib" includes="bugsplat.jar"/>
+            <zipfileset dir="${javaDeps.dir}/BugSplatJava/lib" includes="activation.jar"/>
+            <zipfileset dir="${javaDeps.dir}/BugSplatJava/lib" includes="mailapi.jar"/>
+            <zipfileset dir="${javaDeps.dir}/BugSplatJava/lib" includes="soap.jar"/>
+            <zipfileset dir="${javaDeps.dir}/BrowserLauncher2" includes="BrowserLauncher2-1_3.jar"/>
         </jar>
 	</target>
 	
