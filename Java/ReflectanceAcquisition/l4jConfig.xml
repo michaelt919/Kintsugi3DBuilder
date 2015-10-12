@@ -1,0 +1,45 @@
+<launch4jConfig>
+
+  <headerType>gui</headerType>
+  <jar>./dist/lib_win/ULFRenderer_win.jar</jar>
+  <outfile>./dist/lib_win/ULFRenderer.exe</outfile>
+  <errTitle>ULFRenderer</errTitle>
+  <icon>./resources/icons/icon.ico</icon>
+  <restartOnCrash>false</restartOnCrash>
+
+  <priority>normal</priority>
+  <downloadUrl>http://java.com/download</downloadUrl>
+  <supportUrl>https://sites.google.com/site/ulfrenderer/</supportUrl>
+
+  <versionInfo>
+  	<fileVersion>1.0.0.0</fileVersion>
+  	<txtFileVersion>1.0alpha2</txtFileVersion>
+  	<productVersion>1.0.0.0</productVersion>
+  	<txtProductVersion>1.0alpha2</txtProductVersion>
+  	<productName>ULF Renderer</productName>
+  	<fileDescription>Tool for rendering photogrammetry models as unstructured light fields.</fileDescription>
+	<copyright>(c)2015 Cultural Heritage Imaging</copyright>
+	<companyName>Cultural Heritage Imaging</companyName>
+	<internalName>ULFRenderer</internalName>
+	<originalFilename>ULFRenderer.exe</originalFilename>
+  </versionInfo>
+  
+  <jre>
+    <bundledJre64Bit>false</bundledJre64Bit>
+    <bundledJreAsFallback>false</bundledJreAsFallback>
+    <minVersion>1.8.0</minVersion>
+    <jdkPreference>preferJre</jdkPreference>
+    <runtimeBits>64</runtimeBits>
+    <opt>-XstartOnFirstThread</opt>
+  </jre>
+
+  <!--
+  <splash>
+    <file>splash.bmp</file>
+    <waitForWindow>true</waitForWindow>
+    <timeout>60</timeout>
+    <timeoutErr>true</timeoutErr>
+  </splash>
+  -->
+
+</launch4jConfig>
