@@ -118,7 +118,7 @@ hdiutil detach "${DEVICE}"
 echo "Creating compressed image"
 hdiutil convert "${DMG_TMP}" -format UDZO -imagekey zlib-level=9 -o "${DMG_FINAL}"
 
-SetFileIcon -image ../resources/icons/FileIcon.icns -file "${DMG_FINAL}"
+/sandbox/bin/SetFileIcon -image ../resources/icons/FileIcon.icns -file "${DMG_FINAL}"
 
 # clean up
 rm -rf "${DMG_TMP}"
