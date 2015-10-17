@@ -41,7 +41,7 @@ import com.trolltech.qt.webkit.QWebView;
 
 public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 
-	private Ui_ULFRendererMainWindow gui;
+	private Ui_ULFRendererMainWindowToolbox gui;
 	private final ULFListModel model;
 	private boolean widgetClosed;
 	private boolean halfResDefault;
@@ -69,7 +69,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		this.widgetClosed = false;
 		this.model = model;
 		
-		gui = new Ui_ULFRendererMainWindow();
+		gui = new Ui_ULFRendererMainWindowToolbox();
 		gui.setupUi(this);
 		
 		if(this.model != null && this.model.getSelectedItem() != null) {
@@ -87,14 +87,14 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	    
 	    System.out.println("Namespace is: " + QHelpEngineCore.namespaceName(helpFilename));
 	    
-	    helpUrlBase = new QUrl("qthelp://culturalheritageimaging.com.ulfrenderer/help/");
+	    helpUrlBase = new QUrl(baseDir + "/resources/help/");
 	    QWebSettings.globalSettings().setAttribute(QWebSettings.WebAttribute.DeveloperExtrasEnabled, true);
 	    
 	    QWebPage delegatedPage = new QWebPage();
 	    delegatedPage.setLinkDelegationPolicy(QWebPage.LinkDelegationPolicy.DelegateAllLinks);
 	    helpViewer = new QWebView(this);
 	    helpViewer.setPage(delegatedPage);
-	    loadUrlForHelp(new QUrl(helpUrlBase + "index.html"));
+	    loadUrlForHelp(new QUrl(helpUrlBase + "index.md.html"));
 	    
 	    helpEngine.contentWidget().linkActivated.connect(this, "loadUrlForHelp(QUrl)");
 	    helpViewer.linkClicked.connect(this, "loadUrlForHelp(QUrl)");
@@ -298,7 +298,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	
 	// Add listener for the 'single' load button to read a single light field object.
 	@SuppressWarnings("unused")
-	private void on_actionLoad_single_model_triggered()
+	private void on_actionLoad_Single_Model_triggered()
 	{
 		if(blockSignals) { return; }
 		File lastDir = ULFProgram.getLastCamDefFileDirectory();
@@ -351,9 +351,15 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		}
 	}
 	
+	@SuppressWarnings("unused")
+	private void on_actionQuit_triggered()
+	{
+		this.close();
+	}
+	
 	// Add listener for the 'morph' load button to read many light field objects.
 	@SuppressWarnings("unused")
-	private void on_actionLoad_model_sequence_triggered()
+	private void on_actionLoad_Model_Sequence_triggered()
 	{
 		if(blockSignals) { return; }
 		File lastDir = ULFProgram.getLastSequenceFileDirectory();		
@@ -401,7 +407,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	}
 	
 	@SuppressWarnings("unused")
-	private void on_actionHelp_triggered()
+	private void on_actionShow_User_Guide_triggered()
 	{	
 		helpWindow.move(100, 100);
 	    helpWindow.resize(new QSize(1024, 600));
@@ -421,11 +427,15 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	}
 	
 	private void loadUrlForHelp(QUrl url)
-	{
+	{		
 		System.out.println("Loading URL: " + url.toString());
 		if(url.scheme().equalsIgnoreCase("qthelp"))
 		{
-		    helpViewer.setContent(helpEngine.fileData(url), "text/html", helpUrlBase);
+			// Replace the qthelp URL with a normal URL
+			String newURL = url.toString();
+			newURL = newURL.replace("qthelp://culturalheritageimaging.com.ulfrenderer/help/",
+									helpUrlBase.toString());
+			helpViewer.setUrl(new QUrl(newURL));
 		}
 		else
 		{
