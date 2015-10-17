@@ -160,52 +160,35 @@ DiffuseFit fitDiffuse()
             }
         }
         
-        vec3 averageColor = weightedSum.rgb / (weightedSum.r + weightedSum.g + weightedSum.b);
         mat3 m = inverse(a) * b;
         vec3 rgbFit = vec3(length(m[0]), length(m[1]), length(m[2]));
-        vec3 rgbWeights = weightedSum.rgb / rgbFit;
+        vec3 rgbScale = weightedSum.rgb / rgbFit;
         
         if (rgbFit.r == 0.0)
         {
-            rgbWeights.r = 0.0;
+            rgbScale.r = 0.0;
         }
         if (rgbFit.g == 0.0)
         {
-            rgbWeights.g = 0.0;
+            rgbScale.g = 0.0;
         }
         if (rgbFit.b == 0.0)
         {
-            rgbWeights.b = 0.0;
+            rgbScale.b = 0.0;
         }
-        
-        if (rgbWeights.r > rgbWeights.g && rgbWeights.r > rgbWeights.b)
-        {
-            // Red dominates
-            rgbWeights *= rgbFit.r / weightedSum.r;
-        }
-        else if (rgbWeights.g > rgbWeights.b)
-        {
-            // Green dominates
-            rgbWeights *= rgbFit.g / weightedSum.g;
-        }
-        else
-        {
-            // Blue dominates
-            rgbWeights *= rgbFit.b / weightedSum.b;
-        }
-        
+
         //vec4 solution = m * vec4(rgbWeights, 0.0);
-        vec3 solution = m * rgbWeights;
+        vec3 solution = m * rgbScale;
         
-        float intensity = length(solution.xyz);
         //float ambientIntensity = solution.w;
     
         float fit3Quality = clamp(fit3Weight * determinant(a) / weightedSum.a *
                                 clamp(dot(normalize(solution.xyz), geometricNormal), 0, 1), 0.0, 1.0);
         
-        fit.color = clamp(averageColor * intensity, 0, 1) * fit3Quality + 
-                        clamp(weightedSum.rgb / nDotLSum, 0, 1) * 
-                            clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality);
+        fit.color = clamp(weightedSum.rgb / max(max(rgbScale.r, rgbScale.g), rgbScale.b), 0, 1) * 
+                        fit3Quality + 
+                    clamp(weightedSum.rgb / nDotLSum, 0, 1) * 
+                        clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality);
         fit.normal = normalize(solution.xyz) * fit3Quality + fNormal * (1 - fit3Quality);
         debug = vec4(fit3Quality, clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality), 0.0, 1.0);
     }
