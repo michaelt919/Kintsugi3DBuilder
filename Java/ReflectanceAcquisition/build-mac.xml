@@ -9,7 +9,7 @@
 	<property name="macLibs.dir" value="${stage.dir}/${macLibs.name}" />
 	<property name="winLibs.name" value="lib_win" />
 	<property name="winLibs.dir" value="${stage.dir}/${winLibs.name}" />
-	<property name="javaDeps.dir" location="C:\java-deps" />
+	<property name="javaDeps.dir" location="/Developer/java-deps" />
 	<property name="launch4j.dir" location="${javaDeps.dir}/launch4j" />
 
 	<!-- Used by the app bundler target -->

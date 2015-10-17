@@ -1,0 +1,225 @@
+User Interface and Window Guide
+===============================
+
+This page describes all the windows and pieces of the user interface and how they work.  You can learn
+about menu options, controlling the model and changing the settings for the renderer.
+    
+[Return to guide contents](index.md.html)
+
+-------------------------------------------------------------------------------------------------------------
+    
+Main Model Window<a name="renderer"</a>
+-------------------------------------------------------------------------------------------------------------
+Once a model is loaded, you can interact with the object as you would with most objects in other 3d programs.
+This is often referred to as a 'trackball' controller
+        
+### Controls
+* Click and drag to rotate around the object's center
+* Use the mouse scroll wheel to zoom in and out
+        
+Settings Window<a name="settings"></a>
+-------------------------------------------------------------------------------------------------------------
+### Menus
+The settings window has two menus that are used to load models and access this help document.
+
+* Models can be loaded from the `File` menu
+	- Select `Load a Single Model` to load just one object
+	- You can load as many models as you like by selecting this more than once
+	- You can also load a `sequence` of related models (a feature that will be expanded in the future)
+* The `help` menu gives you access to this document.
+
+-------------------------------------------------------------------------------------------------------------
+### Model Loading Settings
+
+The Loading options (see Figure 1) are applied prior to loading a model.  If you change these options you
+must reload the model to see any difference.
+
+   **********************************************
+   *   .-------------------.                    *
+   *   |   Loading Models   \                   *
+   *   +---------------------+---------------.  *
+   *   |                                     |  *
+   *   |   X Compress Images  X Use Mipmaps  |  *
+   *   |                                     |  *
+   *   |  .-------------------------------.  |  *
+   *   |  |                               |  |  *
+   *   |  |  X Generate Depth Images      |  |  *
+   *   |  |                               |  |  *
+   *   |  |              .----.   .----.  |  |  *
+   *   |  |  Dimensions: |1024| X |1024|  |  |  *
+   *   |  |              '----'   '----'  |  |  *
+   *   |  '-------------------------------'  |  *
+   *   '-------------------------------------'  *
+   *                                            *
+   *--------------------------------------------*
+   * Figure 1: Model Loading Settings           *                                                          
+   **********************************************
+   
+* __Compress Images__ - Apply texture compression to the images as they are being loaded.  This will reduce
+	memory usage significantly but may result in some visual artifacts.
+	
+* __Use Mipmaps__ - Generate mipmap levels for every view.  This increases memory usage but may help
+	eliminate some visual artifacts that are the result of image resampling.
+	
+* __Generate Depth Maps__ - If the model has some parts that could cast a shadow on itself or otherwise
+	obstruct the surface than the depth maps will help it render properly.  If the model does not have these
+	features you may safely uncheck this box and reduce memory usage.
+	
+* __Dimensions__ - The resolution of the depth images.  Only applied if the `generate depth images` option is
+	enabled.
+
+-------------------------------------------------------------------------------------------------------------
+### Current Model Settings
+
+   **********************************************
+   *   .------------------.                     *
+   *   |   Current Model   \                    *
+   *   +--------------------+----------------.  *
+   *   |  .---------------------------+---.  |  *
+   *   |  | My Model.xml              | v |  |  *
+   *   |  '---------------------------+---'  |  *
+   *   |      .                              |  *
+   *   |  ----|----------------------------  |  *
+   *   |      '                              |  *
+   *   '-------------------------------------'  *
+   *                                            *
+   *--------------------------------------------*
+   * Figure 2: Current Model Settings           *                                                          
+   **********************************************
+
+The model options (see Figure 2) let you switch between multiple models if more than one is loaded or move
+through a sequence of models when the currently selected model is a sequence.  It also lets you visualize all
+of the view cameras around the model as small squares.
+
+* __Model Box__ - The first drop down box lets you select the currently active model if more than one has
+	been loaded.
+
+* __Model Slider__ - The slider is used to move through the stages of a model sequence. This will only be
+	enabled if there are stages to move through.
+
+-------------------------------------------------------------------------------------------------------------
+### Performance and Visual Settings
+These settings (see Figure 3) allow you to control various aspects of visual quality.  Changing these may
+help improve the performance of the renderer but usually come at the expense of lower visual quality.  They
+will not help reduce memory usage (see `Model Loading Options` above).
+
+   ***********************************************
+   *   .--------------------------------.        *
+   *   | Performance and Visual Settings \       *
+   *   +----------------------------------+---.  *
+   *   |                                      |  *
+   *   |  X Half-Resolution  X Multisampling  |  *
+   *   |                                .---. |  *
+   *   |  X k-nearest mode - k-samples: | 5 | |  *
+   *   |                                '---' |  *
+   *   |  ----------------------------------  |  *
+   *   |  X Show View Cameras                 |  *
+   *   |                    .-----.           |  *
+   *   |  Background Color: | ... |           |  *
+   *   |                    '-----'           |  *
+   *   '--------------------------------------'  *
+   *                                             *
+   *---------------------------------------------*
+   * Figure 3: Performance and Visual Settings   *                                                          
+   ***********************************************
+   
+* __Half-Resolution__ - Cut the number of pixels generated in half to help speed up rendering.  This is meant
+	to help with High-DPI displays and should be enabled if you have a retina display.  The system will
+	attempt to detect this on OS X and enable it automatically.
+
+* __Multisampling__ - Disable OpenGL multisampling.  This will also help speed up rendering but causes some
+	jagged lines to appear at the edge of the model.
+
+* __k-nearest mode__ - Blend only the 'k' nearest neighbors of highest weight as in the original Beuhler
+	algorithm.  This may help speed up rendering.
+
+* __k-samples__ - Set the 'k' value used by the Beuhler algorithm. Lower is faster but the value cannot be
+	less than 2.
+
+* __Show View Cameras__ - Visualize the location and orientation of the cameras.  Handy for double-checking
+	that the view information was loaded properly.
+
+* __Background Color__ - Change the color of the background in the main window.  It defaults to a 30% grey
+	value.
+
+-------------------------------------------------------------------------------------------------------------
+### Advanced Rendering Settings
+The weighting equation used by the ULF Renderer does have some user controlable options (see Figre 4).  While
+these should generally not need to be adjusted we make them available for those that want to experiment.
+
+   **********************************************
+   *   .----------------------------.           *
+   *   | Advanced Rendering Options  \          *
+   *   +------------------------------+------.  *
+   *   |                   .-----.           |  *
+   *   |            Gamma: | 2.2 |           |  *
+   *   |                   '-----'           |  *
+   *   |                                     |  *
+   *   |                   .-----.           |  *
+   *   |  Weight Exponent: |  16 |           |  *
+   *   |                   '-----'           |  *
+   *   |  ---------------------------------  |  *
+   *   |                           .-------. |  *
+   *   |  X Visibility Test - Bias:| 0.002 | |  *
+   *   |                           '-------' |  *
+   *   '-------------------------------------'  *
+   *                                            *
+   *--------------------------------------------*
+   * Figure 4: Advanced Rendering Settings      *                                                          
+   **********************************************
+   
+* __Gamma__ - Correction applied for non-linear image response curves (based on a standard gamma function).
+
+* __Weight Exponent__ - The 'alpha' value from the weight equation.  Increasing this causes more views to be
+	used at each point but will introduce blurryness.  Decreasing it will force the views to have a zero
+	effect sooner and results in sharper images.
+	
+* __Visibility Testing__ - Enable this option to eliminate views bleeding through onto parts of the geometry
+	that they could not see. Depth images are required for this to work.
+	
+* __Bias__ - Minimum value for detecting a difference between the depth in the depth image and the value in
+	the current view.  Make this small to help get less bleeding across visibility discontinunities.
+	Increase it to eliminate more bleeding.
+
+-------------------------------------------------------------------------------------------------------------
+### Resample Light Field
+
+   **********************************************
+   *   .-------------------------.              *
+   *   |   Resample Light Field   \             *
+   *   +---------------------------+---------.  *
+   *   |              .------.   .------.    |  *
+   *   |  Dimensions: | 1024 | X | 1024 |    |  *
+   *   |              '------'   '------'    |  *
+   *   |                     .----------.    |  *
+   *   |                    |  Resample  |   |  *
+   *   |                     '----------'    |  *
+   *   '-------------------------------------'  *
+   *                                            *
+   *--------------------------------------------*
+   * Figure 5: Resample Light Field Settings    *                                                          
+   **********************************************
+
+This is a special mode that allows you to resample all the views of a model so that they match some other set
+of views. You must have the target views ready in a .vset file.  Presently, it is intended for internal use.
+
+* __Dimensions__ - Specify the resolution of the resampled images.
+
+* __Resample__ - Start resampling. You will be prompted for a target vset file.
+
+-------------------------------------------------------------------------------------------------------------
+### Reporting Bugs
+
+At any time you can click the 'report bug' button to send a manual bug report.  This will take a screenshot
+and then generate and upload a 'crash report'.  Note that you should be sure to describe the issue in detail
+as the crash report will not be very helpful otherwise.
+
+
+-------------------------------------------------------------------------------------------------------------
+[Return to guide contents](index.md.html)
+
+                              ULF RENDERER 1.0 - USER GUIDE - Windows
+
+-------------------------------------------------------------------------------------------------------------                
+
+<style class="fallback">body{white-space:pre;font-family:monospace}</style><script src="markdeep.min.js"></script><script src="http://casual-effects.com/markdeep/latest/markdeep.min.js"></script>
