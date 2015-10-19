@@ -87,7 +87,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	    
 	    System.out.println("Namespace is: " + QHelpEngineCore.namespaceName(helpFilename));
 	    
-	    helpUrlBase = new QUrl(baseDir + "/resources/help/");
+	    helpUrlBase = new QUrl("file:/" + baseDir + "/resources/help/");
 	    QWebSettings.globalSettings().setAttribute(QWebSettings.WebAttribute.DeveloperExtrasEnabled, true);
 	    
 	    QWebPage delegatedPage = new QWebPage();
@@ -434,7 +434,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 			// Replace the qthelp URL with a normal URL
 			String newURL = url.toString();
 			newURL = newURL.replace("qthelp://culturalheritageimaging.com.ulfrenderer/help/",
-									helpUrlBase.toString());
+									"file:/" + helpUrlBase.toString());
 			helpViewer.setUrl(new QUrl(newURL));
 		}
 		else
