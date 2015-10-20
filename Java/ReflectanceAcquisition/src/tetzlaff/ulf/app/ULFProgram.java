@@ -61,6 +61,11 @@ public class ULFProgram
 	public static final String ERR_FILE = "errors";
 	
 	/**
+	 * Quick shortcut to tell if it is running on windows.
+	 */
+	public static boolean OS_IS_WINDOWS;
+	
+	/**
 	 * The User Preferences for the ULF application
 	 */
 	private static final Preferences PREFS = Preferences.userNodeForPackage(ULFProgram.class);
@@ -139,6 +144,10 @@ public class ULFProgram
 	        System.out.println("* Best Guess : " + (videoMemBestGuessMB<0?"??":videoMemBestGuessMB) + "MB");
 	        System.out.println("*********************\n");
 
+	        // Set the windows OS flag
+	        OS_IS_WINDOWS = System.getProperty("os.name").contains("win");
+	        OS_IS_WINDOWS = OS_IS_WINDOWS || System.getProperty("os.name").contains("Win");
+	        
 	    	// Check for and print supported image formats (some are not as easy as you would think)
 	    	checkSupportedImageFormats();
 
