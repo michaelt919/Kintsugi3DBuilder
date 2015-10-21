@@ -1209,7 +1209,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
         lightPositionList.add(lightOffset);
         lightIntensityList.add(lightIntensity);
 
-        float farPlane = findFarPlane(cameraPoseList);
+        float farPlane = findFarPlane(cameraPoseInvList) * globalScale;
         return new ViewSet<ContextType>(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
         		imageFileNames, imageOptions, farPlane / 16.0f, farPlane, context, loadingCallback);
     }
@@ -1220,14 +1220,14 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @param cameraPoseList The list of camera poses.
 	 * @return A far plane estimate.
 	 */
-	private static float findFarPlane(List<Matrix4> cameraPoseList)
+	private static float findFarPlane(List<Matrix4> cameraPoseInvList)
 	{
 		float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY, minZ = Float.POSITIVE_INFINITY;
 		float maxX = Float.NEGATIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY, maxZ = Float.NEGATIVE_INFINITY;
 		
-		for (Matrix4 pose : cameraPoseList)
+		for (int i = 0; i < cameraPoseInvList.size(); i++)
 		{
-			Vector3 position = new Matrix3(pose).transpose().times(new Vector3(pose.getColumn(3)).negated());
+			Vector4 position = cameraPoseInvList.get(i).getColumn(3);
 			minX = Math.min(minX, position.x);
 			minY = Math.min(minY, position.y);
 			minZ = Math.min(minZ, position.z);
