@@ -1113,10 +1113,53 @@ public class ViewSet<ContextType extends Context<ContextType>>
             cameras[i].transform = m1.times(globalRotation).times(Matrix4.scale(globalScale));
         	
             cameraPoseList.add(cameras[i].transform);
-            cameraPoseInvList.add(Matrix4.scale(1.0f / globalScale)
+            Matrix4 cameraPoseInv = Matrix4.scale(1.0f / globalScale)
         		.times(globalRotation.transpose())
         		.times(new Matrix4(new Matrix3(m1).transpose()))
-            	.times(Matrix4.translate(new Vector3(m1.getColumn(3).negated()))));
+            	.times(Matrix4.translate(new Vector3(m1.getColumn(3).negated())));
+            cameraPoseInvList.add(cameraPoseInv);
+            
+            Matrix4 expectedIdentity = cameraPoseInv.times(cameras[i].transform);
+            boolean error = false;
+        	for (int r = 0; r < 4; r++)
+            {
+            	for (int c = 0; c < 4; c++)
+            	{
+            		float expectedValue;
+            		if (r == c)
+            		{
+            			expectedValue = 1.0f;
+            		}
+            		else
+            		{
+            			expectedValue = 0.0f;
+            		}
+            		
+            		if(Math.abs(expectedIdentity.get(r, c) - expectedValue) > 0.001f)
+            		{
+            			error = true;
+            			break;
+            		}
+            	}
+            	if (error)
+            	{
+            		break;
+            	}
+            }
+            
+            if (error)
+            {
+	            System.err.println("Warning: matrix inverse could not be computed correctly - transformation is not affine.");
+				for (int r = 0; r < 4; r++)
+				{
+					for (int c = 0; c < 4; c++)
+					{
+						System.err.print("\t" + String.format("%.3f", expectedIdentity.get(r, c)));
+					}
+					System.err.println();
+				}
+            }
+            
             cameraProjectionIndexList.add(cameras[i].sensor.index);
             lightIndexList.add(0);
             imageFileNames.add(cameras[i].filename);
