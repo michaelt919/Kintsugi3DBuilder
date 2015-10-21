@@ -1,55 +1,189 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="create_app_bundle" name="Create Runnable Jar for Project ReflectanceAcquisition">
+<project default="create_app_bundle" name="ULFRenderer">
 	
-    <taskdef name="bundleapp"
-             classname="com.oracle.appbundler.AppBundlerTask"   
-             classpath="lib/appbundler-1.0.jar" />
+	<!-- Define some directories for easier customization per machine -->
+	<property name="base.dir" location="./" />
+	<property name="stage.dir" location="./dist" />
+	<property name="icons.dir" location="./resources/icons" />
+	<property name="macLibs.name" value="lib_mac" />
+	<property name="macLibs.dir" value="${stage.dir}/${macLibs.name}" />
+	<property name="winLibs.name" value="lib_win" />
+	<property name="winLibs.dir" value="${stage.dir}/${winLibs.name}" />
+	<property name="javaDeps.dir" location="/Developer/java-deps" />
+	<property name="launch4j.dir" location="${javaDeps.dir}/launch4j" />
 
-    <target name="create_app_bundle" depends="create_run_jar">
-        <bundleapp outputdirectory="./dist"
-            name="ULFRenderer"
+	<!-- Used by the app bundler target -->
+    <taskdef name="bundleapp"
+             classname="com.oracle.appbundler.AppBundlerTask"
+             classpath="${javaDeps.dir}/appbundler-1.0/appbundler-1.0.jar" />
+
+	<!-- Used by the exe bundler target -->
+	<taskdef name="launch4j" classname="net.sf.launch4j.ant.Launch4jTask"
+						     classpath="${launch4j.dir}/launch4j.jar:${launch4j.dir}/lib/xstream.jar" />
+	
+	<!-- Configure in l4jConfig.xml -->
+	<target name="create_win_exe" depends="create_run_jar_with_deps,copy_win_natives,copy_resources">
+				
+		<!-- Wrap with exe -->
+        <launch4j configFile="./l4jConfig.xml" />
+		
+		<!-- Copy resources temporarily -->
+		<copy todir="${winLibs.dir}/resources">
+			<fileset dir="${stage.dir}/resources" />
+		</copy>
+
+		<!-- Bundle the exe with lwjgl native libs and resources into a zip file -->
+		<zip destfile="${winLibs.dir}/${ant.project.name}_win.zip" basedir="${winLibs.dir}">
+			<exclude name="**/*.jar" />
+		</zip>
+
+		<!-- Move the final zip file out to the staging directory -->
+		<move file="${winLibs.dir}/${ant.project.name}_win.zip" todir="${stage.dir}" />
+	</target>
+
+    <target name="create_app_bundle" depends="create_run_jar,copy_mac_natives,copy_resources">
+    	
+    	<!-- Create the actual app bundle -->
+        <bundleapp outputdirectory="${stage.dir}"
+            name="${ant.project.name}"
             displayname="ULF Renderer"
             identifier="org.culturalheritageimaging.ULFRenderer"
-        	shortversion="1.0a"
+        	shortversion="1.0a2"
             mainclassname="tetzlaff.ulf.app.ULFProgram"
-        	icon="icons/icon.icns">
+        	icon="${icons.dir}/icon.icns">
 			<!--<runtime dir="/Library/Java/JavaVirtualMachines/jdk1.8.0_20.jdk/Contents/Home" />-->
-        	<classpath dir="./dist">
-        		<include name="ULFRenderer.jar" />
-        		<include name="ULFRenderer_lib/*.jar" />
+        	<classpath dir="${stage.dir}">
+        		<include name="${ant.project.name}.jar" />
+        		<include name="${macLibs.name}/*.jar" />
         	</classpath>
-        	<librarypath dir="./dist">
-        		<include name="ULFRenderer_lib/native/*" />
+        	<librarypath dir="${stage.dir}">
+        		<include name="${macLibs.name}/native/*" />
         	</librarypath>
         	<option value="-XstartOnFirstThread"/>
         	<!-- <option value="-Dapple.laf.useScreenMenuBar=true"/> -->
         </bundleapp>
+    	
+    	<!-- Copy some resources manually -->
+		<copy todir="${stage.dir}/${ant.project.name}.app/Contents/Resources/resources/">
+			<fileset dir="${stage.dir}/resources/" />
+		</copy>
+    	
+    	<!-- Turn into a DMG installer -->
+    	<exec dir="${base.dir}" executable="/bin/bash">
+    		<arg value="DMGMaker.sh" />
+    	</exec>
 	</target>
 	
+	<!-- Create the jar file w/o the unrelated classes (universal) -->
 	<target name="create_run_jar">
-        <jar destfile="./dist/ULFRenderer.jar" filesetmanifest="mergewithoutmain">
+        <jar destfile="${stage.dir}/${ant.project.name}.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Main-Class" value="tetzlaff.ulf.app.ULFProgram"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
-            <fileset dir="/Users/berriers/Programming/Bitbucket/kinectreflectancefields/Java/ReflectanceAcquisition/bin"/>
+            <fileset dir="./bin">
+            	<patternset id="unrelated">
+            	    <exclude name="**/shaders-exclude/**" />
+            	    <exclude name="**/tetzlaff/phong/**" />
+            	    <exclude name="**/tetzlaff/phong/**" />
+            	    <exclude name="**/tetzlaff/phong/app/**" />
+            	    <exclude name="**/tetzlaff/texturefit/**" />
+    	            <exclude name="**/tetzlaff/textureupscale/**" />
+            	</patternset>
+           	</fileset>
         </jar>
-		<delete dir="./dist/ULFRenderer_lib/native"/>
-		<delete dir="./dist/ULFRenderer_lib"/>
-		<mkdir dir="./dist/ULFRenderer_lib"/>
-		<mkdir dir="./dist/ULFRenderer_lib/native"/>
-		<copy file="/Developer/java-deps/JAI-proxy/clibwrapper_jiio.jar" todir="./dist/ULFRenderer_lib"/>
-		<copy file="/Developer/java-deps/JAI-proxy/jai_imageio.jar" todir="./dist/ULFRenderer_lib"/>
-		<copy file="/Developer/java-deps/lwjgl-3.0.0b/jar/lwjgl.jar" todir="./dist/ULFRenderer_lib"/>
-		<copy file="/Developer/java-deps/Qt-Jambi-4.8.6/qtjambi-4.8.6.jar" todir="./dist/ULFRenderer_lib"/>
-		<copy file="/Developer/java-deps/Qt-Jambi-4.8.6/qtjambi-native-macosx-gcc-4.8.6.jar" todir="./dist/ULFRenderer_lib"/>
-		<copy file="/Developer/java-deps/BrowserLauncher2/BrowserLauncher2-1_3.jar" todir="./dist/ULFRenderer_lib"/>
-		<copy todir="./dist/ULFRenderer_lib">
-			<fileset dir="/Developer/java-deps/BugSplatJava/lib/" />
+	</target>
+
+	<!-- Create the jar file w/o the unrelated classes (win only) -->
+	<target name="create_run_jar_with_deps">
+        <jar destfile="${stage.dir}/${ant.project.name}_fat.jar">
+            <manifest>
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
+                <attribute name="Rsrc-Main-Class" value="tetzlaff.ulf.app.ULFProgram"/>
+                <attribute name="Class-Path" value="."/>
+                <attribute name="Rsrc-Class-Path" value="./ lwjgl.jar qtjambi-4.8.6.jar qtjambi-native-win64-msvc2012x64-4.8.6.jar bugsplat.jar activation.jar mailapi.jar soap.jar BrowserLauncher2-1_3.jar"/>
+            </manifest>
+            <zipfileset src="jar-in-jar-loader.zip"/>
+        	<fileset dir="./bin">
+            	<patternset id="unrelated">
+            	    <exclude name="**/shaders-exclude/**" />
+            	    <exclude name="**/tetzlaff/phong/**" />
+            	    <exclude name="**/tetzlaff/phong/**" />
+            	    <exclude name="**/tetzlaff/phong/app/**" />
+            	    <exclude name="**/tetzlaff/texturefit/**" />
+    	            <exclude name="**/tetzlaff/textureupscale/**" />
+            	</patternset>
+           	</fileset>
+            <zipfileset dir="${javaDeps.dir}/lwjgl-3.0.0b/jar" includes="lwjgl.jar"/>
+            <zipfileset dir="${javaDeps.dir}/Qt-Jambi-4.8.6" includes="qtjambi-4.8.6.jar"/>
+            <zipfileset dir="${javaDeps.dir}/Qt-Jambi-4.8.6" includes="qtjambi-native-win64-msvc2012x64-4.8.6.jar"/>
+            <zipfileset dir="${javaDeps.dir}/BugSplatJava/lib" includes="bugsplat.jar"/>
+            <zipfileset dir="${javaDeps.dir}/BugSplatJava/lib" includes="activation.jar"/>
+            <zipfileset dir="${javaDeps.dir}/BugSplatJava/lib" includes="mailapi.jar"/>
+            <zipfileset dir="${javaDeps.dir}/BugSplatJava/lib" includes="soap.jar"/>
+            <zipfileset dir="${javaDeps.dir}/BrowserLauncher2" includes="BrowserLauncher2-1_3.jar"/>
+        </jar>
+	</target>
+	
+	<!-- Copy the native mac binaries to the staging area -->
+	<target name="copy_mac_natives">
+		<delete dir="${macLibs.dir}/native"/>
+		<delete dir="${macLibs.dir}"/>
+
+		<mkdir dir="${macLibs.dir}"/>
+		<mkdir dir="${macLibs.dir}/native"/>
+		
+		<copy file="${javaDeps.dir}/JAI-proxy/clibwrapper_jiio.jar" todir="${macLibs.dir}"/>
+		<copy file="${javaDeps.dir}/JAI-proxy/jai_imageio.jar" todir="${macLibs.dir}"/>
+		<copy file="${javaDeps.dir}/lwjgl-3.0.0b/jar/lwjgl.jar" todir="${macLibs.dir}"/>
+		<copy file="${javaDeps.dir}/BrowserLauncher2/BrowserLauncher2-1_3.jar" todir="${macLibs.dir}"/>
+		<copy file="${javaDeps.dir}/Qt-Jambi-4.8.6/qtjambi-4.8.6.jar" todir="${macLibs.dir}"/>
+		<copy file="${javaDeps.dir}/Qt-Jambi-4.8.6/qtjambi-native-macosx-gcc-4.8.6.jar" todir="${macLibs.dir}"/>
+		
+		<copy todir="${macLibs.dir}">
+			<fileset dir="${javaDeps.dir}/BugSplatJava/lib/" />
 		</copy>
-		<copy todir="./dist/ULFRenderer_lib/native">
-    		<fileset dir="/Developer/java-deps/lwjgl-3.0.0b/native/" />
+		
+		<copy todir="${macLibs.dir}/native">
+    		<fileset dir="${javaDeps.dir}/lwjgl-3.0.0b/native/">
+            	<patternset id="maconly">
+            	    <exclude name="*.dll" />
+            	</patternset>
+            </fileset>
 		</copy>
 	</target>
 	
+	<!-- Copy the native windows binaries to the staging area -->
+	<target name="copy_win_natives">
+		<delete dir="${winLibs.dir}"/>
+		<mkdir dir="${winLibs.dir}"/>		
+		<copy todir="${winLibs.dir}">
+    		<fileset dir="${javaDeps.dir}/lwjgl-3.0.0b/native/">
+            	<patternset id="winonly">
+            	    <exclude name="*.so" />
+            	    <exclude name="*.dylib" />
+            	</patternset>
+            </fileset>
+		</copy>
+	</target>
+	
+	<!-- Copy the resources to the staging area -->
+	<target name="copy_resources">
+		<delete dir="${stage.dir}/resources"/>
+		<mkdir dir="${stage.dir}/resources"/>
+		
+		<copy todir="${stage.dir}/resources/help">
+			<fileset dir="./resources/help" />
+		</copy>
+		
+		<copy todir="${stage.dir}/resources/icons">
+			<fileset dir="./resources/icons" />
+		</copy>
+	</target>
+
+	<!-- Clean up the staging area -->
+	<target name="clean" description="clean up">
+		<delete dir="${stage.dir}" />
+	</target>
+
 </project>

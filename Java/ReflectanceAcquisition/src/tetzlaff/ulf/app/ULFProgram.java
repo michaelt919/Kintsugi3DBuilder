@@ -48,7 +48,7 @@ public class ULFProgram
 	/**
 	 * Current version number (increment on milestone releases)
 	 */
-	public static final String VERSION = "1.0a";
+	public static final String VERSION = "1.0a2";
 	
 	/**
 	 * Name of the file used to log standard out (System.out)
@@ -59,6 +59,11 @@ public class ULFProgram
 	 * Name of the file used to log standard error (System.err)
 	 */
 	public static final String ERR_FILE = "errors";
+	
+	/**
+	 * Quick shortcut to tell if it is running on windows.
+	 */
+	public static boolean OS_IS_WINDOWS;
 	
 	/**
 	 * The User Preferences for the ULF application
@@ -92,10 +97,10 @@ public class ULFProgram
             BugSplat.Init("berriers_uwstout_edu", "ULFRenderer", VERSION);
             
             // Prepare log files, delete any old ones
-//            File logFile = File.createTempFile(LOG_FILE, ".log");
-//            File errFile = File.createTempFile(ERR_FILE, ".log");
-            File logFile = new File(LOG_FILE + ".txt"); logFile = logFile.getAbsoluteFile();
-            File errFile = new File(ERR_FILE + ".txt"); errFile = errFile.getAbsoluteFile();
+            File logFile = File.createTempFile(LOG_FILE, ".log");
+            File errFile = File.createTempFile(ERR_FILE, ".log");
+//            File logFile = new File(LOG_FILE + ".txt"); logFile = logFile.getAbsoluteFile();
+//            File errFile = new File(ERR_FILE + ".txt"); errFile = errFile.getAbsoluteFile();
             if(logFile.exists()) { logFile.delete(); }
             if(errFile.exists()) { errFile.delete(); }
 
@@ -139,6 +144,10 @@ public class ULFProgram
 	        System.out.println("* Best Guess : " + (videoMemBestGuessMB<0?"??":videoMemBestGuessMB) + "MB");
 	        System.out.println("*********************\n");
 
+	        // Set the windows OS flag
+	        OS_IS_WINDOWS = System.getProperty("os.name").contains("win");
+	        OS_IS_WINDOWS = OS_IS_WINDOWS || System.getProperty("os.name").contains("Win");
+	        
 	    	// Check for and print supported image formats (some are not as easy as you would think)
 	    	checkSupportedImageFormats();
 

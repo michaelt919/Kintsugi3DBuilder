@@ -95,9 +95,9 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	}
 
 	@Override
-	public void draw() 
+	public boolean draw() 
 	{
-		stages.get(currentStage).draw();
+		return stages.get(currentStage).draw();
 	}
 
 	@Override

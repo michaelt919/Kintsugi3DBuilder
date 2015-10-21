@@ -15,9 +15,11 @@ for form in *.ui; do
 	sed -i -e s#'Qt::AlignLeading,'##g "${form}.jui"
 	sed -i -e s#'Qt::Align'#'com.trolltech.qt.core.Qt.AlignmentFlag.Align'#g "${form}.jui"
 
+	sed -i -e s#'QAction::QuitRole'#'com.trolltech.qt.gui.QAction.MenuRole.QuitRole'#g "${form}.jui"
 	sed -i -e s#'QLayout::SetMinAndMaxSize'#'com.trolltech.qt.gui.QLayout.SizeConstraint.SetMinAndMaxSize'#g "${form}.jui"
 	sed -i -e s#'QFormLayout::ExpandingFieldsGrow'#'com.trolltech.qt.gui.QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow'#g "${form}.jui"
 	sed -i -e s#'QFrame::StyledPanel'#'com.trolltech.qt.gui.QFrame.Shape.StyledPanel'#g "${form}.jui"
+	sed -i -e s#'QFrame::Panel'#'com.trolltech.qt.gui.QFrame.Shape.Panel'#g "${form}.jui"
 	sed -i -e s#'QFrame::Raised'#'com.trolltech.qt.gui.QFrame.Shadow.Raised'#g "${form}.jui"
 	sed -i -e s#'QDialogButtonBox::'#'com.trolltech.qt.gui.QDialogButtonBox.StandardButton.'#g "${form}.jui"
 	sed -i -e s#'QProgressBar::TopToBottom'#'com.trolltech.qt.gui.QProgressBar.Direction.TopToBottom'#g "${form}.jui"
@@ -30,3 +32,4 @@ done
 
 cp tetzlaff/ulf/app/* ../src/tetzlaff/ulf/app/
 rm -rf tetzlaff/
+rm *.jui-e

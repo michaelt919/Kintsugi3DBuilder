@@ -3,6 +3,7 @@ package tetzlaff.gl.helpers;
 import java.io.File;
 
 import tetzlaff.gl.Context;
+import tetzlaff.gl.Framebuffer;
 import tetzlaff.interactive.EventPollable;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
@@ -52,7 +53,10 @@ public class InteractiveGraphics
 			{
 				context.makeContextCurrent();
 				drawable.update();
-				drawable.draw();
+				if(!drawable.draw())
+				{
+					clearDefaultBuffer();
+				}
 				context.flush();
 				if(screenshotRequested)
 				{
@@ -65,6 +69,12 @@ public class InteractiveGraphics
 				{
 					drawableError = drawable.getInitializeError();
 				}
+			}
+			
+			private void clearDefaultBuffer()
+			{
+		    	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
+	    		framebuffer.clearColorBuffer(0, 0.30f, 0.30f, 0.30f, 1.0f);
 			}
 
 			@Override
