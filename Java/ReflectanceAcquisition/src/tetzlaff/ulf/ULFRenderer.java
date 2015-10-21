@@ -255,9 +255,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.mainRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
     	this.mainRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
     	this.mainRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
-    	this.mainRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
-    	this.mainRenderable.program().setUniformBuffer("LightIntensities", lightField.viewSet.getLightIntensityBuffer());
-    	this.mainRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIntensityBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
+    	{
+	    	this.mainRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
+	    	this.mainRenderable.program().setUniformBuffer("LightIntensities", lightField.viewSet.getLightIntensityBuffer());
+	    	this.mainRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+    	}
     	this.mainRenderable.program().setUniform("cameraPoseCount", lightField.viewSet.getCameraPoseCount());
     	this.mainRenderable.program().setUniform("infiniteLightSources", true /* TODO */);
     	if (lightField.depthTextures != null)
