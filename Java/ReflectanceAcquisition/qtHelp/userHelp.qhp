@@ -1,35 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <QtHelpProject version="1.0">
-    <namespace>culturalheritageimaging.com.ulfrenderer.1.0</namespace>
+    <namespace>culturalheritageimaging.com.ulfrenderer</namespace>
     <virtualFolder>help</virtualFolder>
-    <customFilter name="ULF Renderer v1.0">
-        <filterAttribute>ulfrenderer</filterAttribute>
-        <filterAttribute>1.0</filterAttribute>
-    </customFilter>
     <filterSection>
-        <filterAttribute>ulfrenderer</filterAttribute>
-        <filterAttribute>1.0</filterAttribute>
         <toc>
-            <section title="User Manual" ref="index.html">
-                <section title="Loading a PhotoScan Model" ref="models.html#PhotoScanModel"/>
-                <section title="Loading a Prepared ZIP Model" ref="models.html#ZipModel"/>
-                <section title="Model Recommendations" ref="models.html#Recommendations"/>
-                <section title="Interacting with the Model" ref="windows.html#renderer"/>
-                <section title="Settings Window" ref="windows.html#settings"/>
-                <section title="Performance Considerations" ref="technical.html#Performance"/>
-                <section title="Troubleshooting" ref="technical.html#Troubleshooting"/>
-            </section>
+            <section title="User Manual Contents" ref="index.md.html" />
+            <section title="Loading Models" ref="models.md.html">
+	             <section title="PhotoScan Model" ref="models.md.html#photoScanModel"/>
+	             <section title="Prepared ZIP Model" ref="models.md.html#zipModel"/>
+	             <section title="Best Practices" ref="models.md.html#recommendations"/>
+	        </section>
+	        <section title="Controls and Settings" ref="windows.md.html">
+	            <section title="Interacting with the Model" ref="windows.md.html#renderer"/>
+	            <section title="Settings Window" ref="windows.md.html#settings"/>
+	        </section>
+	        <section title="Technical Support" ref="technical.md.html">
+	            <section title="Performance Considerations" ref="technical.md.html#performance"/>
+	            <section title="Troubleshooting" ref="technical.md.html#troubleshooting"/>
+	        </section>
         </toc>
-        <keywords><!--
-            <keyword name="foo" id="MyApplication::foo" ref="doc.html#foo"/>
-            <keyword name="bar" ref="doc.html#bar"/>
-            <keyword id="MyApplication::foobar" ref="doc.html#foobar"/>
-            -->
-        </keywords>
+        <!-- Note, everything MUST be embedded in the HTML files (images, css, scripts, etc)
         <files>
-            <file>classic.css</file>
             <file>*.html</file>
-            <file>*.jpg</file>
         </files>
+        -->
     </filterSection>
 </QtHelpProject>

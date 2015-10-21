@@ -3,15 +3,15 @@
 # by Andy Maloney
 # http://asmaloney.com/2013/07/howto/packaging-a-mac-os-x-application-using-a-dmg/
 
-DOC_NAME="ULFRenderer - User Guide.pdf"
+#DOC_NAME="ULFRenderer - User Guide.pdf"
 
 cd dist
-cp ../icons/Background.png ./
-cp "../${DOC_NAME}" ./
+cp ../resources/icons/Background.png ./
+#cp "../${DOC_NAME}" ./
 
 # set up your app name, version number, and background image file name
 APP_NAME="ULFRenderer"
-VERSION="1.0a"
+VERSION="1.0a2"
 DMG_BACKGROUND_IMG="Background.png"
 
 # you should not need to change these
@@ -98,8 +98,8 @@ echo '
            set arrangement of viewOptions to not arranged
            set icon size of viewOptions to 72
            set background picture of viewOptions to file ".background:'${DMG_BACKGROUND_IMG}'"
-           set position of item "'${APP_NAME}'.app" of container window to {160, 135}
-           set position of item "'${DOC_NAME}'" of container window to {160, 275}
+           set position of item "'${APP_NAME}'.app" of container window to {160, 205}
+#           set position of item "'${DOC_NAME}'" of container window to {160, 275}
            set position of item "Applications" of container window to {360, 205}
            close
            open
@@ -118,12 +118,12 @@ hdiutil detach "${DEVICE}"
 echo "Creating compressed image"
 hdiutil convert "${DMG_TMP}" -format UDZO -imagekey zlib-level=9 -o "${DMG_FINAL}"
 
-SetFileIcon -image ../icons/FileIcon.icns -file "${DMG_FINAL}"
+/sandbox/bin/SetFileIcon -image ../resources/icons/FileIcon.icns -file "${DMG_FINAL}"
 
 # clean up
 rm -rf "${DMG_TMP}"
 rm -rf "${STAGING_DIR}"
 rm -f Background.png
-rm -f "${DOC_NAME}"
+#rm -f "${DOC_NAME}"
 
 echo 'Done.'

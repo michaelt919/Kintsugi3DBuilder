@@ -15,25 +15,47 @@ import tetzlaff.window.WindowPosition;
 import tetzlaff.window.WindowSize;
 
 import com.trolltech.qt.core.QCoreApplication;
+import com.trolltech.qt.core.QDir;
 import com.trolltech.qt.core.QSize;
+import com.trolltech.qt.core.QUrl;
+import com.trolltech.qt.core.Qt;
 import com.trolltech.qt.core.Qt.WindowModality;
 import com.trolltech.qt.gui.QCloseEvent;
 import com.trolltech.qt.gui.QColor;
 import com.trolltech.qt.gui.QColorDialog;
+import com.trolltech.qt.gui.QDesktopServices;
+import com.trolltech.qt.gui.QDialog;
 import com.trolltech.qt.gui.QFileDialog;
+import com.trolltech.qt.gui.QPixmap;
 import com.trolltech.qt.gui.QFileDialog.Filter;
+import com.trolltech.qt.gui.QMainWindow;
 import com.trolltech.qt.gui.QMessageBox;
 import com.trolltech.qt.gui.QProgressDialog;
+import com.trolltech.qt.gui.QSplitter;
 import com.trolltech.qt.gui.QWidget;
+import com.trolltech.qt.help.QHelpEngine;
+import com.trolltech.qt.help.QHelpEngineCore;
+import com.trolltech.qt.webkit.QWebPage;
+import com.trolltech.qt.webkit.QWebSettings;
+import com.trolltech.qt.webkit.QWebView;
 
-public class ULFConfigQWidget extends QWidget implements EventPollable {
+public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 
-	private Ui_LightFieldConfigForm gui;
+	private Ui_ULFRendererMainWindowToolbox gui;
 	private final ULFListModel model;
 	private boolean widgetClosed;
 	private boolean halfResDefault;
 	private boolean blockSignals;
 	private QProgressDialog progressDialog;
+	
+	private String helpFilename;
+	private QHelpEngine helpEngine;
+	private QWidget helpWindow;
+	private QWebView helpViewer;
+	private QUrl helpUrlBase;
+	
+	private String baseDir;
+	private String baseScheme;
 	
 	public Signal0 loadingFinished;
 	
@@ -48,13 +70,49 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		this.widgetClosed = false;
 		this.model = model;
 		
-		gui = new Ui_LightFieldConfigForm();
+		gui = new Ui_ULFRendererMainWindowToolbox();
 		gui.setupUi(this);
 		
 		if(this.model != null && this.model.getSelectedItem() != null) {
 			this.model.getSelectedItem().setHalfResolution(isHighDPI);
 		}
 		
+		// Setup the help engine
+		baseDir = QDir.currentPath();
+		helpFilename = baseDir + "/resources/help/userHelp.qhc";
+		System.out.println("Looking for help as: " + helpFilename);
+		helpEngine = new QHelpEngine(helpFilename);
+	    if(!helpEngine.setupData()) {
+	    	System.err.println("There was an error loading the help data.");
+	    }
+	    
+	    System.out.println("Namespace is: " + QHelpEngineCore.namespaceName(helpFilename));
+	    
+	    if(ULFProgram.OS_IS_WINDOWS) { baseScheme = "file:/"; }
+	    else { baseScheme = ""; }
+	    
+	    helpUrlBase = new QUrl(baseDir + "/resources/help/");
+	    QWebSettings.globalSettings().setAttribute(QWebSettings.WebAttribute.DeveloperExtrasEnabled, true);
+	    
+	    QWebPage delegatedPage = new QWebPage();
+	    delegatedPage.setLinkDelegationPolicy(QWebPage.LinkDelegationPolicy.DelegateAllLinks);
+	    helpViewer = new QWebView(this);
+	    helpViewer.setPage(delegatedPage);
+	    loadUrlForHelp(new QUrl(baseScheme + helpUrlBase + "index.md.html"));
+	    
+	    helpEngine.contentWidget().linkActivated.connect(this, "loadUrlForHelp(QUrl)");
+	    helpViewer.linkClicked.connect(this, "loadUrlForHelp(QUrl)");
+		    
+	    QSplitter horizSplitter = new QSplitter(Qt.Orientation.Horizontal);
+	    QWidget content = helpEngine.contentWidget();
+	    content.setMaximumWidth(200);
+	    horizSplitter.insertWidget(0, content);
+	    horizSplitter.insertWidget(1, helpViewer);
+	    
+	    helpWindow = horizSplitter;
+	    helpWindow.setWindowTitle("ULF Renderer User Guide");
+	    helpWindow.setMinimumSize(640, 480);
+	    
 		// Setup the loading progress dialog
 		progressDialog = new QProgressDialog("Loading Model", "Cancel", 0, 0, this);
 		progressDialog.setWindowModality(WindowModality.ApplicationModal);
@@ -244,7 +302,7 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 	
 	// Add listener for the 'single' load button to read a single light field object.
 	@SuppressWarnings("unused")
-	private void on_loadSingleButton_clicked()
+	private void on_actionLoad_Single_Model_triggered()
 	{
 		if(blockSignals) { return; }
 		File lastDir = ULFProgram.getLastCamDefFileDirectory();
@@ -297,9 +355,15 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		}
 	}
 	
+	@SuppressWarnings("unused")
+	private void on_actionQuit_triggered()
+	{
+		this.close();
+	}
+	
 	// Add listener for the 'morph' load button to read many light field objects.
 	@SuppressWarnings("unused")
-	private void on_loadMultipleButton_clicked()
+	private void on_actionLoad_Model_Sequence_triggered()
 	{
 		if(blockSignals) { return; }
 		File lastDir = ULFProgram.getLastSequenceFileDirectory();		
@@ -319,6 +383,67 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 		catch (IOException ex) 
 		{
 			ex.printStackTrace();
+		}
+	}
+	
+	@SuppressWarnings("unused")
+	private void on_actionAbout_ULF_Renderer_triggered()
+	{
+		// Make the about dialog GUI
+		QDialog aboutDiag = new QDialog(this);
+		Ui_AboutDialog aboutGui = new Ui_AboutDialog();
+		aboutGui.setupUi(aboutDiag);
+		aboutGui.iconLabel.setPixmap(new QPixmap(baseDir + "/resources/icons/icon.png"));
+		
+		aboutDiag.setWindowModality(WindowModality.ApplicationModal);
+		aboutDiag.setModal(true);
+
+		// Center over rendering window
+		WindowSize winSize = ULFProgram.getRenderingWindowSize();
+		WindowPosition winPos = ULFProgram.getRendringWindowPosition();
+		aboutDiag.move(winPos.x + winSize.width/2 - aboutDiag.width()/2,
+					   winPos.y + winSize.height/2 - aboutDiag.height()/2);
+
+		aboutGui.textLabel.linkActivated.connect(this, "launchExternalUrl(String)");
+		
+		// Show it
+		aboutDiag.exec();
+	}
+	
+	@SuppressWarnings("unused")
+	private void on_actionShow_User_Guide_triggered()
+	{	
+		helpWindow.move(100, 100);
+	    helpWindow.resize(new QSize(1024, 600));
+		helpWindow.setVisible(true);
+	}
+
+	@SuppressWarnings("unused")
+	private void launchExternalUrl(String url)
+	{
+		QMessageBox.StandardButton answer = QMessageBox.question(this, "Open Link?",
+				"This link will open in an external applicaiton.");
+		
+		if(answer == QMessageBox.StandardButton.Ok)
+		{
+			QDesktopServices.openUrl(new QUrl(url));
+		}
+	}
+	
+	private void loadUrlForHelp(QUrl url)
+	{		
+		System.out.println("Loading URL: " + url.toString());
+		if(url.scheme().equalsIgnoreCase("qthelp"))
+		{
+			// Replace the qthelp URL with a normal URL
+			String newURL = url.toString();
+			newURL = newURL.replace("qthelp://culturalheritageimaging.com.ulfrenderer/help/",
+									baseScheme + helpUrlBase.toString());
+			helpViewer.setUrl(new QUrl(newURL));
+		}
+		else
+		{
+			helpViewer.setUrl(url);
 		}
 	}
 	
