@@ -65,6 +65,12 @@ import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DStencilBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthStencilBuilder;
 
+/**
+ * An implementation of a GL context built on OpenGL 3.3.
+ * A few enumerated values exposed in OpenGL 4 are also supported for future compatibility.
+ * @author Michael Tetzlaff
+ *
+ */
 public abstract class OpenGLContext implements Context<OpenGLContext>
 {
 	@Override
@@ -375,13 +381,13 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		return new OpenGLTexture3DDepthStencilBuilder(this, GL_TEXTURE_2D_ARRAY, width, height, length);
 	}
 
-	protected void unbindBuffer(int bufferTarget, int index)
+	void unbindBuffer(int bufferTarget, int index)
 	{
 		glBindBufferBase(bufferTarget, index, 0);
 		this.openGLErrorCheck();
 	}
 	
-	protected void unbindTextureUnit(int textureUnitIndex)
+	void unbindTextureUnit(int textureUnitIndex)
 	{
 		if (textureUnitIndex < 0)
 		{
@@ -398,7 +404,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		this.openGLErrorCheck();
 	}
 	
-	protected int getOpenGLInternalColorFormat(ColorFormat format)
+	int getOpenGLInternalColorFormat(ColorFormat format)
 	{
 		if (format.alphaBits > 0)
 		{
@@ -702,9 +708,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		}
 	}
 	
-	
-	
-	protected int getOpenGLCompressionFormat(CompressionFormat format)
+	int getOpenGLCompressionFormat(CompressionFormat format)
 	{
 		switch(format)
 		{
@@ -722,7 +726,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		}
 	}
 	
-	protected int getOpenGLInternalDepthFormat(int precision)
+	int getOpenGLInternalDepthFormat(int precision)
 	{
 		if (precision <= 16)
 		{
@@ -738,7 +742,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		}
 	}
 	
-	protected int getOpenGLInternalStencilFormat(int precision)
+	int getOpenGLInternalStencilFormat(int precision)
 	{
 		if (precision == 1)
 		{
@@ -758,7 +762,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		}
 	}
 	
-	protected int getOpenGLShaderType(ShaderType type)
+	int getOpenGLShaderType(ShaderType type)
 	{
 		switch(type)
 		{
@@ -772,7 +776,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		}
 	}
 	
-	protected int getOpenGLBufferUsage(BufferAccessType accessType, BufferAccessFrequency accessFreq)
+	int getOpenGLBufferUsage(BufferAccessType accessType, BufferAccessFrequency accessFreq)
 	{
 		switch(accessFreq)
 		{
