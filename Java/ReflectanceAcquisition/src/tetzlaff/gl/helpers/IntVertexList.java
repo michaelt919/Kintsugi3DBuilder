@@ -5,13 +5,35 @@ import java.nio.IntBuffer;
 
 import org.lwjgl.BufferUtils;
 
+/**
+ * A data structure for representing a list of vertices to be packed in a buffer.
+ * Each dimension of every vertex is to be represented as an 32-bit integer.
+ * Every vertex in the list has the same number of dimensions, which is the number of elements associated with a single vertex.
+ * @author Michael Tetzlaff
+ *
+ */
 public class IntVertexList
 {
+	/**
+	 * The native buffer in which the vertices are stored.
+	 */
 	private IntBuffer buffer;
 	
+	/**
+	 * The number of dimensions in each vertex.
+	 */
 	public final int dimensions;
+	
+	/**
+	 * The number of vertices in the list.
+	 */
 	public final int count;
 	
+	/**
+	 * Creates a new vertex list with the specified number of dimensions and vertices.
+	 * @param dimensions The number of dimensions in each vertex.
+	 * @param count The number of vertices in the list.
+	 */
 	public IntVertexList(int dimensions, int count)
 	{
 		if (dimensions < 0)
@@ -28,6 +50,14 @@ public class IntVertexList
 		this.buffer = BufferUtils.createIntBuffer(dimensions * count);
 	}
 	
+	/**
+	 * Creates a new vertex list with the specified number of dimensions and vertices, using a pre-existing buffer as storage.
+	 * Any data already in the buffer will persist.
+	 * A runtime exception will be thrown if the buffer is not big enough.
+	 * @param dimensions The number of dimensions in each vertex.
+	 * @param count The number of vertices in the list.
+	 * @param buffer The buffer to use as storage.
+	 */
 	public IntVertexList(int dimensions, int count, IntBuffer buffer)
 	{
 		if (dimensions < 0)
@@ -53,6 +83,12 @@ public class IntVertexList
 		this.buffer = buffer;
 	}
 	
+	/**
+	 * Creates a new vertex list with the specified number of dimensions and vertices, and an array of initial values to write to the buffer.
+	 * @param dimensions The number of dimensions in each vertex.
+	 * @param count The number of vertices in the list.
+	 * @param buffer The buffer to use to initialize the vertex list.
+	 */
 	public IntVertexList(int dimensions, int count, int[] buffer)
 	{
 		this(dimensions, count);
@@ -60,6 +96,12 @@ public class IntVertexList
 		this.buffer.flip();
 	}
 	
+	/**
+	 * Gets the value of a particular dimension of a particular vertex.
+	 * @param index The index of the vertex to retrieve.
+	 * @param dimension The dimension within the vertex to retrieve.
+	 * @return The value of the dimension of the vertex.
+	 */
 	public int get(int index, int dimension)
 	{
 		if (index < 0)
@@ -81,6 +123,12 @@ public class IntVertexList
 		return this.buffer.get(index * this.dimensions + dimension);
 	}
 	
+	/**
+	 * Sets the value of a particular dimension of a particular vertex.
+	 * @param index The index of the vertex to retrieve.
+	 * @param dimension The dimension within the vertex to retrieve.
+	 * @param value The value to set the dimension of the vertex to.
+	 */
 	public void set(int index, int dimension, int value)
 	{
 		if (index < 0)
@@ -102,6 +150,10 @@ public class IntVertexList
 		this.buffer.put(index * this.dimensions + dimension, value);
 	}
 	
+	/**
+	 * Gets the native buffer containing this vertex list which can be used by the GL.
+	 * @return
+	 */
 	public IntBuffer getBuffer()
 	{
 		return buffer;
