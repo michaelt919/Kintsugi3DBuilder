@@ -86,7 +86,7 @@ public class InteractiveGraphics
 			}
 
 			@Override
-			public void requestScreenshot(String fileFormat, File file)
+			public void requestDebugDump(String fileFormat, File file)
 			{
 				this.fileFormat = fileFormat;
 				this.file = file;
@@ -94,13 +94,13 @@ public class InteractiveGraphics
 			}
 			
 			@Override
-			public boolean hasDrawableError()
+			public boolean hasError()
 			{
 				return (drawableError!=null);
 			}
 
 			@Override
-			public Exception getDrawableError()
+			public Exception getError()
 			{
 				Exception tempRef = drawableError;
 				drawableError = null;
