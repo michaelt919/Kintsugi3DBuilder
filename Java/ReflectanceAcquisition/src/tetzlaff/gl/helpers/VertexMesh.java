@@ -10,16 +10,50 @@ import java.util.Scanner;
 
 import tetzlaff.helpers.ZipWrapper;
 
+/**
+ * A data structure for representing a vertex mesh consisting of vertex positions, surface normals, and texture coordinates.
+ * @author Michael Tetzlaff
+ *
+ */
 public class VertexMesh 
 {
+	/**
+	 * Whether or not the vertex mesh has surface normals.
+	 */
 	private boolean hasNormals;
+	
+	/**
+	 * Whether or not the vertex mesh has texture coordinates.
+	 */
 	private boolean hasTexCoords;
 	
+	/**
+	 * A packed list storing the vertex positions of the mesh.
+	 */
 	private FloatVertexList vertices;
+	
+	/**
+	 * A packed list storing the surface normals of the mesh.
+	 */
 	private FloatVertexList normals;
+	
+	/**
+	 * A packed list storing the texture coordinates of the mesh.
+	 */
 	private FloatVertexList texCoords;
+	
+	/**
+	 * The centroid of the mesh - that is, the average of all the vertex positions.
+	 */
 	private Vector3 centroid;
 
+	/**
+	 * Loads a new vertex mesh from a file.
+	 * @param fileFormat The file format.  Currently only Wavefront OBJ files are supported (fileFormat="OBJ").
+	 * A runtime exception will be thrown if an unsupported file format is specified.
+	 * @param file The file to load.
+	 * @throws IOException Thrown if any File I/O errors occur.
+	 */
 	public VertexMesh(String fileFormat, File file) throws IOException
 	{
 		ZipWrapper myZip = new ZipWrapper(file);
@@ -34,6 +68,10 @@ public class VertexMesh
 		}
 	}
 
+	/**
+	 * Initializes the mesh from a text stream containing the mesh in Wavefront OBJ format.
+	 * @param objStream The stream containing the mesh in Wavefront OBJ format.
+	 */
 	private void initFromOBJStream(InputStream objStream)
 	{
 		Date timestamp = new Date();
@@ -208,31 +246,55 @@ public class VertexMesh
 		System.out.println("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	}
 	
+	/**
+	 * Gets whether or not the mesh has surface normals.
+	 * @return true if the mesh has surface normals, false otherwise.
+	 */
 	public boolean hasNormals() 
 	{
 		return hasNormals;
 	}
 
+	/**
+	 * Gets whether or not the mesh has texture coordinates.
+	 * @return true if the mesh has texture coordinates, false otherwise.
+	 */
 	public boolean hasTexCoords() 
 	{
 		return hasTexCoords;
 	}
 
+	/**
+	 * Gets a packed list containing the vertex positions of the mesh that can be used by a GL.
+	 * @return A packed list containing the vertex positions.
+	 */
 	public FloatVertexList getVertices() 
 	{
 		return vertices;
 	}
 
+	/**
+	 * Gets a packed list containing the surface normals of the mesh that can be used by a GL.
+	 * @return A packed list containing the surface normals.
+	 */
 	public FloatVertexList getNormals() 
 	{
 		return normals;
 	}
 
+	/**
+	 * Gets a packed list containing the texture coordinates of the mesh that can be used by a GL.
+	 * @return A packed list containing the texture coordinates.
+	 */
 	public FloatVertexList getTexCoords() 
 	{
 		return texCoords;
 	}
 	
+	/**
+	 * Gets the centroid of the mesh - that is, the average of all the vertex positions.
+	 * @return The centroid of the mesh.
+	 */
 	public Vector3 getCentroid()
 	{
 		return centroid;
