@@ -12,6 +12,13 @@ import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector4;
 
+/**
+ * A renderer for a sequence of related unstructured light fields.
+ * This renderer acts as a aggregate ULFDrawable for each stage of the morph, with draw requests directed towards the currently active stage of the morph.
+ * @author Michael Tetzlaff
+ *
+ * @param <ContextType> The type of the context that will be used for rendering.
+ */
 public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable
 {
 	private ContextType context;
@@ -25,6 +32,15 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	private List<ULFRenderer<ContextType>> stages;
 	private int currentStage;
 
+	/**
+	 * Creates a new unstructured light field morph renderer.
+	 * @param contextThe GL context in which to perform the rendering.
+     * @param program The program to use for rendering.
+	 * @param lfmFile The file defining the stages of the light field morph to be loaded.
+	 * @param loadOptions The options to use when loading the light field.
+     * @param trackball The trackball controlling the movement of the virtual camera.
+	 * @throws FileNotFoundException Thrown due to a File I/O error occurring.
+	 */
 	public ULFMorphRenderer(ContextType context, Program<ContextType> program, File lfmFile, ULFLoadOptions loadOptions, Trackball trackball) throws FileNotFoundException 
 	{
 		this.context = context;
@@ -39,16 +55,28 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 		this.currentStage = 0;
 	}
 	
+	/**
+	 * Gets the currently active stage of the light field morph.
+	 * @return The currently active stage of the morph.
+	 */
 	public int getCurrentStage()
 	{
 		return this.currentStage;
 	}
 	
+	/**
+	 * Sets the currently active stage of the light field morph.
+	 * @param newStage The currently active stage of the morph.
+	 */
 	public void setCurrentStage(int newStage)
 	{
 		this.currentStage = newStage;
 	}
 	
+	/**
+	 * Gets the number of stages in the morph.
+	 * @return The number of stages in the morph.
+	 */
 	public int getStageCount()
 	{
 		return this.stages.size();

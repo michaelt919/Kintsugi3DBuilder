@@ -12,17 +12,41 @@ import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.MultiDrawable;
 import tetzlaff.gl.helpers.Trackball;
 
+/**
+ * An abstract class defining the skeleton of an implementation of a ULFListModel as a list of ULFDrawable entities.
+ * @author Michael Tetzlaff
+ *
+ * @param <ContextType> The type of the context that will be used for rendering.
+ */
 public abstract class ULFDrawableListModel<ContextType extends Context<ContextType>> extends AbstractListModel<ULFDrawable> implements ULFListModel
 {
 	private static final long serialVersionUID = 4167467314632694946L;
 	
+	/**
+	 * The context that will be used for rendering.
+	 */
 	protected final ContextType context;
+	
+	/**
+	 * The program to use for rendering.
+	 */
 	protected final Program<ContextType> program;
+	
+	/**
+	 * The trackball controlling the movement of the virtual camera.
+	 */
 	protected final Trackball trackball;
+	
+	
 	private MultiDrawable<ULFDrawable> ulfs;
 	private int effectiveSize;
 	private ULFLoadingMonitor loadingMonitor;
 	
+	/**
+	 * Creates a new ULFDrawableListModel.
+	 * @param context The context that will be used for rendering.
+	 * @param trackball The trackball controlling the movement of the virtual camera.
+	 */
 	public ULFDrawableListModel(ContextType context, Trackball trackball) 
 	{
 		this.context = context;
@@ -44,9 +68,33 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
         }
 	}
 	
-	protected abstract ULFDrawable createFromVSETFile(File vsetFilee, ULFLoadOptions loadOptions) throws IOException;
-	protected abstract ULFRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
-	protected abstract ULFDrawable createMorphFromLFMFile(File lfmFilee, ULFLoadOptions loadOptions) throws IOException;
+	/**
+	 * Required in order to define how to load an unstructured light field from a view set file.
+	 * @param vsetFile The view set file defining the light field to be added.
+	 * @param loadOptions The options to use when loading the light field.
+	 * @return A new unstructured light field as a ULFDrawable entity.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	protected abstract ULFDrawable createFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException;
+	
+	/**
+	 * Required in order to define how to load an unstructured light field from Agisoft PhotoScan.
+	 * @param xmlFile The Agisoft PhotoScan XML camera file defining the views of the light field to be added.
+     * @param meshFile The mesh exported from Agisoft PhotoScan to be used as proxy geometry.
+	 * @param loadOptions The options to use when loading the light field.
+	 * @return A new unstructured light field as a ULFDrawable entity.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	protected abstract ULFDrawable createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
+	
+	/**
+	 * Required in order to define how to load an unstructured light field morph.
+	 * @param lfmFile The light field morph file defining the morph to be added.
+	 * @param loadOptions The options to use when loading the light field.
+	 * @return A new unstructured light field morph as a ULFDrawable entity.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	protected abstract ULFDrawable createMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException;
 
 	@Override
 	public ULFDrawable addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
@@ -239,6 +287,10 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 		this.loadingMonitor = loadingMonitor;
 	}
 	
+	/**
+	 * Gets a master Drawable entity that can be used to simultaneously manage all currently loaded light fields and render the currently active one.
+	 * @return The master Drawable entity.
+	 */
 	public Drawable getDrawable()
 	{
 		return ulfs;

@@ -21,6 +21,12 @@ import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 
+/**
+ * An implementation of a renderer for a single unstructured light field.
+ * @author Michael Tetzlaff
+ *
+ * @param <ContextType> The type of the context that will be used for rendering.
+ */
 public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable
 {
     private Program<ContextType> program;
@@ -57,6 +63,14 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     
     private Exception initError;
     	
+    /**
+     * Creates a new unstructured light field renderer for rendering a light field defined by a VSET file.
+     * @param context The GL context in which to perform the rendering.
+     * @param program The program to use for rendering.
+     * @param vsetFile The view set file defining the light field to be rendered.
+     * @param loadOptions The options to use when loading the light field.
+     * @param trackball The trackball controlling the movement of the virtual camera.
+     */
     public ULFRenderer(ContextType context, Program<ContextType> program, File vsetFile, ULFLoadOptions loadOptions, Trackball trackball)
     {
     	this.context = context;
@@ -69,6 +83,15 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.kNeighborCount = 5;
     }
 
+    /**
+     * Creates a new unstructured light field renderer for rendering a light field from Agisoft PhotoScan.
+     * @param context The GL context in which to perform the rendering.
+     * @param program The program to use for rendering.
+     * @param xmlFile The Agisoft PhotoScan XML camera file defining the views to load.
+     * @param meshFile The mesh exported from Agisoft PhotoScan to be used as proxy geometry.
+     * @param loadOptions The options to use when loading the light field.
+     * @param trackball The trackball controlling the movement of the virtual camera.
+     */
     public ULFRenderer(ContextType context, Program<ContextType> program, File xmlFile, File meshFile, ULFLoadOptions loadOptions, Trackball trackball)
     {
     	this.context = context;
