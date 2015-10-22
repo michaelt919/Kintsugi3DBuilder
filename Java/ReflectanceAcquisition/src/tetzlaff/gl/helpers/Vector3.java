@@ -12,10 +12,12 @@ public class Vector3
 	 * The first dimension
 	 */
 	public final float x;
+	
 	/**
 	 * The second dimension
 	 */
 	public final float y;
+	
 	/**
 	 * The third dimension
 	 */
@@ -35,7 +37,7 @@ public class Vector3
 	}
 	
 	/**
-	 * Construct a vector in three dimensions from the given 2D vector and a scaler
+	 * Construct a vector in three dimensions from the given 2D vector and a scalar
 	 * value for the missing dimension.
 	 * @param v2 The 2D vector from which the x and y values are copied.
 	 * @param z Value of the third dimension.
@@ -71,7 +73,7 @@ public class Vector3
 	
 	/**
 	 * Construct a new vector as the subtraction of the given parameter from this.
-	 * @param other The vector to add.
+	 * @param other The vector to subtract.
 	 * @return A new vector that is the mathematical (componentwise) subtraction of 'other' from this.
 	 */
 	public Vector3 minus(Vector3 other)
@@ -93,8 +95,8 @@ public class Vector3
 	}
 	
 	/**
-	 * Construct a new vector that is the product of this and a given scaler.
-	 * @param s The scaler to multiply by.
+	 * Construct a new vector that is the product of this and a given scalar.
+	 * @param s The scalar to multiply by.
 	 * @return A new vector equal to (s*x, s*y, s*z)
 	 */
 	public Vector3 times(float s)
@@ -103,8 +105,8 @@ public class Vector3
 	}
 	
 	/**
-	 * Construct a new vector that is the quotient of this and a given scaler.
-	 * @param s The scaler to divide by.
+	 * Construct a new vector that is the quotient of this and a given scalar.
+	 * @param s The scalar to divide by.
 	 * @return A new vector equal to (x/s, y/s, z/s)
 	 */
 	public Vector3 dividedBy(float s)
@@ -113,9 +115,9 @@ public class Vector3
 	}
 	
 	/**
-	 * Compute the dot product (scaler product) of this vector and another given vector.
+	 * Compute the dot product (scalar product) of this vector and another given vector.
 	 * @param other The vector to use when computing the dot product.
-	 * @return A scaler value equal to the sum of x1*x2, y1*y2 and z1*z2.
+	 * @return A scalar value equal to the sum of x1*x2, y1*y2 and z1*z2.
 	 */
 	public float dot(Vector3 other)
 	{
@@ -137,8 +139,8 @@ public class Vector3
 	}
 	
 	/**
-	 * Compute a scaler value representing the length/magnitude of this vector.
-	 * @return A scaler value equal to square root of the sum of squares of the components.
+	 * Compute a scalar value representing the length/magnitude of this vector.
+	 * @return A scalar value equal to square root of the sum of squares of the components.
 	 */
 	public float length()
 	{
@@ -148,7 +150,7 @@ public class Vector3
 	/**
 	 * Calculate the distance between this and another given vector.
 	 * @param other The vector to compute the distance between.
-	 * @return A scaler value equal to the length of the different vector.
+	 * @return A scalar value equal to the distance from the other vector.
 	 */
 	public float distance(Vector3 other)
 	{
@@ -157,8 +159,8 @@ public class Vector3
 	
 	/**
 	 * Create a new vector with the same direction as this one but with unit
-	 * magnitude (a length of 1.0).  CAUTION!  May cause divide by zero error.
-	 * Do not attempt to normalize a zero-length vector.
+	 * magnitude (a length of 1.0).  
+	 * Attempting to normalize a zero-length vector will result in NaN values.
 	 * @return A new vector equal to this vector divided by it's length.
 	 */
 	public Vector3 normalized()
