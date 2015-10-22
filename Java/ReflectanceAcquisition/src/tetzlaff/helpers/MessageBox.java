@@ -1,4 +1,4 @@
-package tetzlaff.interactive;
+package tetzlaff.helpers;
 
 /**
  * An interface intended to be used to abstract away the details of the Message

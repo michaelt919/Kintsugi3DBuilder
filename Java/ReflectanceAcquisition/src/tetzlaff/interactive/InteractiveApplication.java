@@ -8,13 +8,28 @@ import java.util.Date;
 import java.util.List;
 
 import tetzlaff.gl.exceptions.GLException;
+import tetzlaff.helpers.ErrorMessage;
+import tetzlaff.helpers.ExceptionTranslator;
+import tetzlaff.helpers.MessageBox;
 
+/**
+ * An interactive application consisting of pollable components that only fire under certain circumstances (i.e. events)
+ * as well as a refreshable component that is updated as often as possible.
+ * @author Michael Tetzlaff
+ *
+ */
 public class InteractiveApplication
 {
 	private List<EventPollable> pollable;
 	private Refreshable refreshable;
+	private ExceptionTranslator exceptionTranslator;
 	private static MessageBox userMessageBox = null;
 	
+	/**
+	 * Creates a new interactive application.
+	 * @param pollable The primary pollable component of the application.
+	 * @param refreshable The refreshable component of the application.
+	 */
 	public InteractiveApplication(EventPollable pollable, Refreshable refreshable) 
 	{
 		this.pollable = new ArrayList<EventPollable>();
@@ -22,26 +37,56 @@ public class InteractiveApplication
 		this.refreshable = refreshable;
 	}
 	
+	/**
+	 * Sets the abstract message box in which error messages are to be placed.
+	 * @param newMessageBox The message box.
+	 */
 	public static void setMessageBox(MessageBox newMessageBox)
 	{
 		userMessageBox = newMessageBox;
 	}
 	
+	/**
+	 * Gets the abstract message box in which error messages are to be placed.
+	 * @return The message box.
+	 */
 	public static MessageBox getMessageBox()
 	{
 		return userMessageBox;
 	}
+	
+	/**
+	 * Sets a translator to be used to translate any exceptions that are thrown during execution into a more user-friendly error message.
+	 * @param translator The translator to use.
+	 */
+	public void setExceptionTranslator(ExceptionTranslator translator)
+	{
+		this.exceptionTranslator = translator;
+	}
 
+	/**
+	 * Adds an additional pollable component to the application.
+	 * @param pollable The new pollable component to add.
+	 */
 	public void addPollable(EventPollable pollable)
 	{
 		this.pollable.add(pollable);		
 	}
 	
-	public void requestScreenshot(String fileFormat, File file)
+	/**
+	 * Requests that the application save a description of its current state to a particular file for debugging purposes.
+	 * This request may be either handled by writing to the specified file in the requested format, or may be ignored.
+	 * @param fileFormat The desired format of the debug file to be written.
+	 * @param file The debug file to write to.
+	 */
+	public void requestDebugDump(String fileFormat, File file)
 	{
-		refreshable.requestScreenshot(fileFormat, file);
+		refreshable.requestDebugDump(fileFormat, file);
 	}
 	
+	/**
+	 * Runs the application.  This will block the active thread until the application terminates.
+	 */
 	public void run()
 	{
 		int pollingTime = 0;
@@ -57,30 +102,15 @@ public class InteractiveApplication
 		while (!shouldTerminate)
 		{
 			this.refreshable.refresh();
-			if(this.refreshable.hasDrawableError())
+			if(this.refreshable.hasError())
 			{
-				Exception drawableError = refreshable.getDrawableError();
-				drawableError.printStackTrace();
+				Exception error = refreshable.getError();
+				error.printStackTrace();
 
-				if(userMessageBox != null)
+				if(userMessageBox != null && exceptionTranslator != null)
 				{
-					if(drawableError instanceof GLException || (drawableError.getCause() != null && drawableError.getCause() instanceof GLException))
-					{
-						userMessageBox.warning("GL Rendering Error", "An error occured with the rendering system. " +
-								"Your GPU and/or video memory may be insufficient for rendering this model.\n\n[" +
-								drawableError.getMessage() + "]");
-					}
-					else if(drawableError instanceof FileNotFoundException || (drawableError.getCause() != null && drawableError.getCause() instanceof GLException))
-					{
-						userMessageBox.warning("Resource Error", "An error occured while loading resources. " +
-								"Check that all necessary files exist and that the proper paths were supplied.\n\n[" +
-								drawableError.getMessage() + "]");
-					}
-					else
-					{
-						userMessageBox.warning("Application Error", "An error occured that prevents this model from being rendered." +
-								"\n\n[" + drawableError.getMessage() + "]");
-					}
+					ErrorMessage errorMessage = exceptionTranslator.translate(error);
+					userMessageBox.warning(errorMessage.title, errorMessage.message);
 				}
 			}
 			
@@ -103,6 +133,11 @@ public class InteractiveApplication
 		this.refreshable.terminate();
 	}
 	
+	/**
+	 * Runs several applications simultaneously within the same thread.
+	 * This will block the active thread until all applications terminate.
+	 * @param apps
+	 */
 	public static void runSimultaneous(Iterable<InteractiveApplication> apps)
 	{
 		Collection<InteractiveApplication> activeApps = new ArrayList<InteractiveApplication>();

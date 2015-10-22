@@ -33,9 +33,9 @@ import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
+import tetzlaff.helpers.MessageBox;
 import tetzlaff.helpers.ZipWrapper;
 import tetzlaff.interactive.InteractiveApplication;
-import tetzlaff.interactive.MessageBox;
 
 /**
  * A class for organizing the GL resources that are necessary for view-dependent rendering.

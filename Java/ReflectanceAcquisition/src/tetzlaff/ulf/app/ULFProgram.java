@@ -30,8 +30,9 @@ import com.trolltech.qt.gui.QStyle;
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.helpers.GLExceptionTranslator;
+import tetzlaff.helpers.MessageBox;
 import tetzlaff.interactive.InteractiveApplication;
-import tetzlaff.interactive.MessageBox;
 import tetzlaff.ulf.ULFRendererList;
 import tetzlaff.window.WindowPosition;
 import tetzlaff.window.WindowSize;
@@ -169,6 +170,8 @@ public class ULFProgram
 	    	// Create a new application to run our event loop and give it the GLFWWindow for polling
 	    	// of events and the OpenGL context.  The ULFRendererList provides the drawable.
 	        app = InteractiveGraphics.createApplication(window, window, model.getDrawable());
+	        
+	        app.setExceptionTranslator(new GLExceptionTranslator());
 	        
 	        // Create an anonymous wrapper for QMessageBox
 	        InteractiveApplication.setMessageBox(new MessageBox() {
@@ -345,7 +348,7 @@ public class ULFProgram
     	if(screenshot.exists()) { screenshot.delete(); }
 
     	// Request and wait for the screenshot
-    	app.requestScreenshot("png", screenshot);
+    	app.requestDebugDump("png", screenshot);
     	int tries = 0, maxTries = 100;
         while(!screenshot.exists() && tries < maxTries)
         {
