@@ -38,10 +38,10 @@ import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.MessageBox;
 
 /**
- * A class for organizing the OpenGL resources that are necessary for view-dependent rendering.
+ * A class for organizing the GL resources that are necessary for view-dependent rendering.
  * @author Michael Tetzlaff
  *
- * @param <ContextType>
+ * @param <ContextType> The type of the context that the GL resources for this view set are to be used with.
  */
 public class ViewSet<ContextType extends Context<ContextType>>
 {
@@ -485,7 +485,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @param vsetFile The VSET file to load.
 	 * @param context The GL context in which to create the resources.
 	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(
 			File vsetFile, ContextType context) throws IOException
@@ -499,7 +499,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @param context The GL context in which to create the resources.
 	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
 	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(
 			File vsetFile, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
@@ -514,7 +514,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @param context The GL context in which to create the resources.
 	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
 	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
 			File vsetFile, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
@@ -761,7 +761,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @param imageOptions The requested options for loading the images in this dataset. 
 	 * @param context The GL context in which to create the resources.
 	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
 			File file, ViewSetImageOptions imageOptions, ContextType context) throws IOException
@@ -776,7 +776,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @param context The GL context in which to create the resources.
 	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
 	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
 			File file, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
@@ -793,7 +793,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @param context The GL context in which to create the resources.
 	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
 	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
 		File file, ViewSetImageOptions imageOptions, Vector3 lightOffset, Vector3 lightIntensity, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException

@@ -2,6 +2,13 @@ package tetzlaff.ulf;
 
 import tetzlaff.gl.helpers.Matrix4;
 
+/**
+ * Creates a perspective projection that also maintains camera distortion parameters.
+ * These parameters are maintained for reference only; they do not actually affect the projection matrix.
+ * The projection matrix is computed using nothing butthe sensor width and height and the parameter fy.
+ * @author Michael Tetzlaff
+ *
+ */
 public class DistortionProjection implements Projection
 {
     public final float width;
@@ -16,6 +23,23 @@ public class DistortionProjection implements Projection
     public final float p1;
     public final float p2;
     
+    /**
+     * Creates a new distortion projection.
+     * @param width The sensor width in some arbitrary units.
+     * @param height The sensor height in some arbitrary units.
+     * @param fx The "horizontal" focal distance in the same units as the sensor dimensions.
+     * It is expected that this parameter will be the same as fy after lens distortion is corrected and is therefore ignored when computing a projection matrix.
+     * @param fy The "vertical" focal distance in the same units as the sensor dimensions - this is the parameter that actually determines the field-of-view of the projection matrix.
+     * @param cx The horizontal center of projection.
+     * This parameter is for reference only and is not actually used when computing a projection matrix.
+     * @param cy The vertical center of projection.
+     * This parameter is for reference only and is not actually used when computing a projection matrix.
+     * @param k1 The "k1" camera distortion parameter.
+     * @param k2 The "k2" camera distortion parameter.
+     * @param k3 The "k3" camera distortion parameter.
+     * @param p1 The "p1" camera distortion parameter.
+     * @param p2 The "p2" camera distortion parameter.
+     */
     public DistortionProjection( 
 		float width, float height, 
 		float fx, float fy, 
@@ -36,6 +60,21 @@ public class DistortionProjection implements Projection
         this.p2 = p2;
     }
     
+    /**
+     * Creates a new distortion projection.  p1 and p2 are assumed to be zero.
+     * @param width The sensor width in some arbitrary units.
+     * @param height The sensor height in some arbitrary units.
+     * @param fx The "horizontal" focal distance in the same units as the sensor dimensions.
+     * It is expected that this parameter will be the same as fy after lens distortion is corrected and is therefore ignored when computing a projection matrix.
+     * @param fy The "vertical" focal distance in the same units as the sensor dimensions - this is the parameter that actually determines the field-of-view of the projection matrix.
+     * @param cx The horizontal center of projection.
+     * This parameter is for reference only and is not actually used when computing a projection matrix.
+     * @param cy The vertical center of projection.
+     * This parameter is for reference only and is not actually used when computing a projection matrix.
+     * @param k1 The "k1" camera distortion parameter.
+     * @param k2 The "k2" camera distortion parameter.
+     * @param k3 The "k3" camera distortion parameter.
+     */
     public DistortionProjection( 
 		float width, float height, 
 		float fx, float fy, 
@@ -45,6 +84,18 @@ public class DistortionProjection implements Projection
     	this(width, height, fx, fy, cx, cy, k1, k2, k3, 0.0f, 0.0f);
 	}
     
+    /**
+     * Creates a new distortion projection.  k1, k2, k3, p1, and p2 are assumed to be zero.
+     * @param width The sensor width in some arbitrary units.
+     * @param height The sensor height in some arbitrary units.
+     * @param fx The "horizontal" focal distance in the same units as the sensor dimensions.
+     * It is expected that this parameter will be the same as fy after lens distortion is corrected and is therefore ignored when computing a projection matrix.
+     * @param fy The "vertical" focal distance in the same units as the sensor dimensions - this is the parameter that actually determines the field-of-view of the projection matrix.
+     * @param cx The horizontal center of projection.
+     * This parameter is for reference only and is not actually used when computing a projection matrix.
+     * @param cy The vertical center of projection.
+     * This parameter is for reference only and is not actually used when computing a projection matrix.
+     */
     public DistortionProjection( 
 		float width, float height, 
 		float fx, float fy, 
