@@ -34,8 +34,8 @@ import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.helpers.ZipWrapper;
-import tetzlaff.interactive.InteractiveApplication;
-import tetzlaff.interactive.MessageBox;
+//import tetzlaff.interactive.InteractiveApplication;
+//import tetzlaff.interactive.MessageBox;
 
 /**
  * A class for organizing the OpenGL resources that are necessary for view-dependent rendering.
@@ -805,7 +805,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
         Camera camera = null;
         float globalScale = 1.0f;
         Matrix4 globalRotation = new Matrix4();
-        boolean globalRotationSet = false, globalScaleSet = false;
+//        boolean globalRotationSet = false, globalScaleSet = false;
         
         String version = "", chunkLabel = "", groupLabel = "";
         String sensorID = "", cameraID = "", imageFile = "";
@@ -1006,7 +1006,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
                                     if(expectedSize == 9)
                                     {
                                         System.out.println("\tSetting global rotation.");
-                                        globalRotationSet = true;
+//                                        globalRotationSet = true;
                                     	globalRotation = new Matrix4(new Matrix3(
                                             m[0], m[3], m[6],
                                             m[1], m[4], m[7],
@@ -1015,7 +1015,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
                                     else
                                     {
                                         System.out.println("\tSetting global transformation.");
-                                        globalRotationSet = true;
+ //                                       globalRotationSet = true;
                                     	globalRotation = new Matrix4(new Matrix3(
 	                                             m[0], 	m[4],  m[8],
 	                                             m[1],  m[5],  m[9],
@@ -1030,7 +1030,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
                         	if (camera == null)
                         	{
                                 System.out.println("\tSetting global scale.");
-                                globalScaleSet = true;
+//                                globalScaleSet = true;
                     			globalScale = 1.0f/Float.parseFloat(reader.getElementText());
                         	}
                         	break;
@@ -1096,20 +1096,21 @@ public class ViewSet<ContextType extends Context<ContextType>>
         }
         
         // Check for known troublesome cases and warn user
-        if(globalRotationSet && globalScaleSet)
-        {
-        	MessageBox userMessage = InteractiveApplication.getMessageBox();
-        	if(userMessage != null)
-        	{
-        		userMessage.warning(
-        			"Known Issue: Global Rotation and Scale",
-        			"This model has both a global rotation and a global scale. " +
-        			"There is a known problem with the ULF Renderer that these types " +
-        			"of modesl sometimes do not work.\n\nIf you experience problems please " +
-        			"let us know and consider submitting the model for further testing.\n" + 
-        			"(Select 'help -> about' for contact details.)");
-    		}
-        }
+        // Note: This seems to be fixed now so the message is disabled
+//        if(globalRotationSet && globalScaleSet)
+//        {
+//        	MessageBox userMessage = InteractiveApplication.getMessageBox();
+//        	if(userMessage != null)
+//        	{
+//        		userMessage.warning(
+//        			"Known Issue: Global Rotation and Scale",
+//        			"This model has both a global rotation and a global scale. " +
+//        			"There is a known problem with the ULF Renderer that these types " +
+//        			"of models sometimes do not work.\n\nIf you experience problems please " +
+//        			"let us know and consider submitting the model for further testing.\n" + 
+//        			"(Select 'help -> about' for contact details.)");
+//    		}
+//        }
 
         // Initialize internal lists
         List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
