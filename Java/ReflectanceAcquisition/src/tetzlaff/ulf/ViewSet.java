@@ -722,6 +722,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    String filename;
 	    Matrix4 transform;
 	    Sensor sensor;
+	    int orientation;
 	    
 	    Camera(String id)
 	    {
@@ -801,13 +802,13 @@ public class ViewSet<ContextType extends Context<ContextType>>
         
         Sensor sensor = null;
         Camera camera = null;
+
         float globalScale = 1.0f;
         Matrix4 globalRotation = new Matrix4();
-//        boolean globalRotationSet = false, globalScaleSet = false;
+        Vector3 globalTranslate = new Vector3(0.0f, 0.0f, 0.0f);
         
         String version = "", chunkLabel = "", groupLabel = "";
         String sensorID = "", cameraID = "", imageFile = "";
-        
         int intVersion = 0;
         
         XMLInputFactory factory = XMLInputFactory.newInstance();
@@ -820,271 +821,298 @@ public class ViewSet<ContextType extends Context<ContextType>>
                 int event = reader.next();
                 switch(event)
                 {
-                  case XMLStreamConstants.START_ELEMENT:
-                    switch (reader.getLocalName())
-                    {
-                        case "document":
-                            version = reader.getAttributeValue(null, "version");
-                            System.out.printf("PhotoScan XML version %s\n", version);
-                            String[] verComponents = version.split(".");
-                            for(int i=0; i<verComponents.length; i++)
-                            {
-                                intVersion *= 10;
-                                intVersion += Integer.parseInt(verComponents[i]);
-                            }
-                            break;
-                        case "chunk":
-                            chunkLabel = reader.getAttributeValue(null, "label");
-                            if(chunkLabel == null) { chunkLabel = "unnamed"; }
-                            System.out.printf("Reading chunk '%s'\n", chunkLabel);
-                            break;
-                        case "group":
-                            groupLabel = reader.getAttributeValue(null, "label");
-                            System.out.printf("Reading group '%s'\n", groupLabel);
-                            break;
-                        case "sensor":
-                            sensorID = reader.getAttributeValue(null, "id");
-                            System.out.printf("\tAdding sensor '%s'\n", sensorID);
-                            sensor = new Sensor(sensorID);
-                            break;
-                        case "camera":
-                            cameraID = reader.getAttributeValue(null, "id");
-                            if(cameraID == null || cameraSet.contains(new Camera(cameraID)))
-                            {
-                               camera = null;
-                            }
-                            else
-                            {
-                            	if (reader.getAttributeValue(null, "enabled").equals("true"))
-                            	{
-	                                sensorID = reader.getAttributeValue(null, "sensor_id");
-	                                imageFile = reader.getAttributeValue(null, "label");
-	                                System.out.printf("\tAdding camera %s, with sensor %s and image %s\n",
-	                                                    cameraID, sensorID, imageFile);
-	                                camera = new Camera(cameraID, sensorSet.get(sensorID));
-	                                camera.filename = imageFile;
-                            	}
-                            	else
-                            	{
-                            		camera = null;
-                            	}
-                            }
-                            break;
-                        case "image":
-                            if (camera != null)
-                            {
-                                camera.filename = reader.getAttributeValue(null, "path");
-                            }
-                            break;
-                        case "resolution":
-                            if (sensor != null)
-                            {
-                                sensor.width = Float.parseFloat(reader.getAttributeValue(null, "width"));
-                                sensor.height = Float.parseFloat(reader.getAttributeValue(null, "height"));
-                            }
-                            break;
-                        case "fx":
-                            if (sensor != null) 
-                            {
-                                sensor.fx = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "fy":
-                            if (sensor != null) 
-                            {
-                                sensor.fy = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "cx":
-                            if (sensor != null) 
-                            {
-                                sensor.cx = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "cy":
-                            if (sensor != null) 
-                            {
-                                sensor.cy = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "p1":
-                            if (sensor != null) 
-                            {
-                                sensor.p1 = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "p2":
-                            if (sensor != null) 
-                            {
-                                sensor.p2 = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "k1":
-                            if (sensor != null) 
-                            {
-                                sensor.k1 = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "k2":
-                            if (sensor != null) 
-                            {
-                                sensor.k2 = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "k3":
-                            if (sensor != null) 
-                            {
-                                sensor.k3 = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "k4":
-                            if (sensor != null) 
-                            {
-                                sensor.k4 = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "skew":
-                            if (sensor != null) 
-                            {
-                                sensor.skew = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                            
-                        case "transform":
-                            if(camera == null && version.equals("1.1.0")) break;
-                            
-                        case "rotation":    
-                            String[] components = reader.getElementText().split("\\s");
-                            if ((reader.getLocalName().equals("transform") && components.length < 16) ||
-                                (reader.getLocalName().equals("rotation") && components.length < 9))
-                            {
-                                System.err.println("Error: Not enough components in the transform/rotation matrix");
-                            }
-                            else
-                            {
-                                int expectedSize = 16;
-                                if(reader.getLocalName().equals("rotation")) expectedSize = 9;
-                                
-                                if(components.length > expectedSize)
-                                {
-                                    System.err.println("Warning: Too many components in the transform/rotation matrix, ignoring extras.");                                    
-                                }
-                                
-                                float[] m = new float[expectedSize];
-                                for (int i = 0; i < expectedSize; i++)
-                                {
-                                    m[i] = Float.parseFloat(components[i]);
-                                }
-                                                                
-                                if (camera != null)
-                                {
-                                    // Negate 2nd and 3rd column to rotate 180 degrees around x-axis
-                                	// Invert matrix by transposing rotation and negating translation
-                                    Matrix4 trans;
-                                    if(expectedSize == 9)
-                                    {
-                                        trans = new Matrix4(new Matrix3(
-                                            m[0],  m[3],  m[6],
-                                           -m[1], -m[4], -m[7],
-                                           -m[2], -m[5], -m[8]));
-                                    }
-                                    else
-                                    {
-                                        trans = new Matrix4(new Matrix3(
-	                                             m[0], 	m[4],  m[8],
-	                                            -m[1], -m[5], -m[9],
-	                                            -m[2], -m[6], -m[10]))
-	                                    	.times(Matrix4.translate(-m[3], -m[7], -m[11]));
-                                    }
-                                    
-                                    camera.transform = trans;
-                                }
-                                else
-                                {
-                                    if(expectedSize == 9)
-                                    {
-                                        System.out.println("\tSetting global rotation.");
-//                                        globalRotationSet = true;
-                                    	globalRotation = new Matrix4(new Matrix3(
-                                            m[0], m[3], m[6],
-                                            m[1], m[4], m[7],
-                                            m[2], m[5], m[8]));
-                                    }
-                                    else
-                                    {
-                                        System.out.println("\tSetting global transformation.");
- //                                       globalRotationSet = true;
-                                    	globalRotation = new Matrix4(new Matrix3(
-	                                             m[0], 	m[4],  m[8],
-	                                             m[1],  m[5],  m[9],
-	                                             m[2],  m[6],  m[10]))
-                                        	.times(Matrix4.translate(m[3], m[7], m[11]));
-                                    }
-                                }
-                            }
-                            break;
-                            
-                        case "scale":
-                        	if (camera == null)
-                        	{
-                                System.out.println("\tSetting global scale.");
-//                                globalScaleSet = true;
-                    			globalScale = 1.0f/Float.parseFloat(reader.getElementText());
-                        	}
-                        	break;
-                            
-                        case "property": case "projections": case "depth":
-                        case "frames": case "frame": case "meta": case "R":
-                        case "size": case "center": case "region": case "settings":
-                        case "ground_control": case "mesh": case "texture":
-                        case "model": case "calibration": case "thumbnail":
-                        case "point_cloud": case "points": case "sensors":
-                        case "cameras":
-                           // These can all be safely ignored if version is >= 0.9.1
-                        break;
-                        
-                        case "photo": case "tracks": case "depth_maps":
-                        case "depth_map": case "dense_cloud":
-                           if(intVersion < 110) 
-                           {
-                               System.out.printf("Unexpected tag '%s' for psz version %s\n",
-                                                   reader.getLocalName(), version);
-                           }
-                        break;
-                        
-                        default:
-                           System.out.printf("Unexpected tag '%s'\n", reader.getLocalName());                           
-                           break;
-                    }
-                    break;
-                    
-                case XMLStreamConstants.END_ELEMENT:
-                    switch (reader.getLocalName())
-                    {
-                    case "chunk":
-                        System.out.printf("Finished chunk '%s'\n", chunkLabel);
-                        chunkLabel = "";
-                        break;
-                    case "group":
-                        System.out.printf("Finished group '%s'\n", groupLabel);
-                        groupLabel = "";
-                        break;
-                    case "sensor":
-                        if(sensor != null)
-                        {
-                            sensorSet.put(sensor.id, sensor);
-                            sensor = null;
-                        }
-                        break;
-                    case "camera":
-                        if(camera != null && camera.transform != null)
-                        {
-                           cameraSet.add(camera);
-                           camera = null;
-                        }
-                        break;                        
-                    }
-                    break;
+	                case XMLStreamConstants.START_ELEMENT:
+	                    switch (reader.getLocalName())
+	                    {
+	                        case "document":
+	                            version = reader.getAttributeValue(null, "version");
+	                            String[] verComponents = version.split("\\.");
+	                            for(int i=0; i<verComponents.length; i++)
+	                            {
+	                                intVersion *= 10;
+	                                intVersion += Integer.parseInt(verComponents[i]);
+	                            }
+	                            System.out.printf("PhotoScan XML version %s (%d)\n", version, intVersion);
+	                            break;
+	                        case "chunk":
+	                            chunkLabel = reader.getAttributeValue(null, "label");
+	                            if(chunkLabel == null) { chunkLabel = "unnamed"; }
+	                            System.out.printf("Reading chunk '%s'\n", chunkLabel);
+	                            break;
+	                        case "group":
+	                            groupLabel = reader.getAttributeValue(null, "label");
+	                            System.out.printf("Reading group '%s'\n", groupLabel);
+	                            break;
+	                        case "sensor":
+	                            sensorID = reader.getAttributeValue(null, "id");
+	                            System.out.printf("\tAdding sensor '%s'\n", sensorID);
+	                            sensor = new Sensor(sensorID);
+	                            break;
+	                        case "camera":
+	                            cameraID = reader.getAttributeValue(null, "id");
+	                            if(cameraID == null || cameraSet.contains(new Camera(cameraID)))
+	                            {
+	                               camera = null;
+	                            }
+	                            else
+	                            {
+	                            	if (reader.getAttributeValue(null, "enabled").equals("true"))
+	                            	{
+		                                sensorID = reader.getAttributeValue(null, "sensor_id");
+		                                imageFile = reader.getAttributeValue(null, "label");
+		                                camera = new Camera(cameraID, sensorSet.get(sensorID));
+		                                camera.filename = imageFile;
+	                            	}
+	                            	else
+	                            	{
+	                            		camera = null;
+	                            	}
+	                            }
+	                            break;
+	                        case "orientation":
+	                        	if(camera != null)
+	                        	{
+	                        		camera.orientation = Integer.parseInt(reader.getElementText());
+	                        	}
+	                        	break;
+	                        case "image":
+	                            if (camera != null)
+	                            {
+	                                camera.filename = reader.getAttributeValue(null, "path");
+	                            }
+	                            break;
+	                        case "resolution":
+	                            if (sensor != null)
+	                            {
+	                                sensor.width = Float.parseFloat(reader.getAttributeValue(null, "width"));
+	                                sensor.height = Float.parseFloat(reader.getAttributeValue(null, "height"));
+	                            }
+	                            break;
+	                        case "fx":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.fx = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "fy":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.fy = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "cx":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.cx = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "cy":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.cy = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "p1":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.p1 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "p2":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.p2 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "k1":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.k1 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "k2":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.k2 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "k3":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.k3 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "k4":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.k4 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "skew":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.skew = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;                        	
+	
+	                        case "transform":
+	                            if(camera == null && intVersion >= 110)
+	                            {
+	                            	break;
+	                            }
+	                                                        
+	                        case "rotation":
+		                        {
+		                            String[] components = reader.getElementText().split("\\s");
+		                            if ((reader.getLocalName().equals("transform") && components.length < 16) ||
+		                                (reader.getLocalName().equals("rotation") && components.length < 9))
+		                            {
+		                                System.err.println("Error: Not enough components in the transform/rotation matrix");
+		                            }
+		                            else
+		                            {
+		                                int expectedSize = 16;
+		                                if(reader.getLocalName().equals("rotation")) expectedSize = 9;
+		                                
+		                                if(components.length > expectedSize)
+		                                {
+		                                    System.err.println("Warning: Too many components in the transform/rotation matrix, ignoring extras.");                                    
+		                                }
+		                                
+		                                float[] m = new float[expectedSize];
+		                                for (int i = 0; i < expectedSize; i++)
+		                                {
+		                                    m[i] = Float.parseFloat(components[i]);
+		                                }
+		                                                                
+		                                if (camera != null)
+		                                {
+		                                    // Negate 2nd and 3rd column to rotate 180 degrees around x-axis
+		                                	// Invert matrix by transposing rotation and negating translation
+		                                    Matrix4 trans;
+		                                    if(expectedSize == 9)
+		                                    {
+		                                        trans = new Matrix4(new Matrix3(
+		                                            m[0],  m[3],  m[6],
+		                                           -m[1], -m[4], -m[7],
+		                                           -m[2], -m[5], -m[8]));
+		                                    }
+		                                    else
+		                                    {
+		                                        trans = new Matrix4(new Matrix3(
+			                                             m[0], 	m[4],  m[8],
+			                                            -m[1], -m[5], -m[9],
+			                                            -m[2], -m[6], -m[10]))
+			                                    	.times(Matrix4.translate(-m[3], -m[7], -m[11]));
+		                                    }
+		                                    
+		                                    camera.transform = trans;
+		                                }
+		                                else
+		                                {
+		                                    if(expectedSize == 9)
+		                                    {
+		                                        System.out.println("\tSetting global rotation.");
+		                                    	globalRotation = new Matrix4(new Matrix3(
+		                                            m[0], m[3], m[6],
+		                                            m[1], m[4], m[7],
+		                                            m[2], m[5], m[8]));
+		                                    }
+		                                    else
+		                                    {
+		                                        System.out.println("\tSetting global transformation.");
+		                                    	globalRotation = new Matrix4(new Matrix3(
+			                                             m[0], 	m[4],  m[8],
+			                                             m[1],  m[5],  m[9],
+			                                             m[2],  m[6],  m[10]))
+		                                        	.times(Matrix4.translate(m[3], m[7], m[11]));
+		                                    }
+		                                }
+		                            }
+		                        }
+	                            break;
+	                            
+	                        case "translation":
+	                        	if (camera == null)
+	                        	{
+	                                System.out.println("\tSetting global translate.");
+	                                String[] components = reader.getElementText().split("\\s");
+	                                globalTranslate = new Vector3(
+	                                		Float.parseFloat(components[0]),
+	                                		Float.parseFloat(components[1]),
+	                                		Float.parseFloat(components[2]));
+	                        	}
+	                        	break;
+	                        	
+	                        case "scale":
+	                        	if (camera == null)
+	                        	{
+	                                System.out.println("\tSetting global scale.");
+	                    			globalScale = 1.0f/Float.parseFloat(reader.getElementText());
+	                        	}
+	                        	break;
+	                            
+	                        case "property": case "projections": case "depth":
+	                        case "frames": case "frame": case "meta": case "R":
+	                        case "size": case "center": case "region": case "settings":
+	                        case "ground_control": case "mesh": case "texture":
+	                        case "model": case "calibration": case "thumbnail":
+	                        case "point_cloud": case "points": case "sensors":
+	                        case "cameras":
+	                           // These can all be safely ignored if version is >= 0.9.1
+	                        break;
+	                        
+	                        case "photo": case "tracks": case "depth_maps":
+	                        case "depth_map": case "dense_cloud":
+	                           if(intVersion < 110) 
+	                           {
+	                               System.out.printf("Unexpected tag '%s' for psz version %s\n",
+	                                                   reader.getLocalName(), version);
+	                           }
+	                        break;
+	                        
+	                        default:
+	                           System.out.printf("Unexpected tag '%s'\n", reader.getLocalName());                           
+	                           break;
+	                    }
+	                    break;
+	                    
+	                case XMLStreamConstants.END_ELEMENT:
+	                {
+	                    switch (reader.getLocalName())
+	                    {
+		                    case "chunk":
+		                        System.out.printf("Finished chunk '%s'\n", chunkLabel);
+		                        chunkLabel = "";
+		                        break;
+		                    case "group":
+		                        System.out.printf("Finished group '%s'\n", groupLabel);
+		                        groupLabel = "";
+		                        break;
+		                    case "sensor":
+		                        if(sensor != null)
+		                        {
+		                            sensorSet.put(sensor.id, sensor);
+		                            sensor = null;
+		                        }
+		                        break;
+		                    case "camera":
+		                        if(camera != null && camera.transform != null)
+		                        {
+		                           cameraSet.add(camera);
+		                           System.out.printf("\tAdding camera %s, with sensor %s and image %s\n",
+		                                   cameraID, sensorID, imageFile);
+		                           camera = null;
+		                        }
+		                        else
+		                        {
+		                            System.out.printf("\tSkipping disabled camera %s, with sensor %s and image %s\n",
+		                                    cameraID, sensorID, imageFile);                        	
+		                        }
+		                        break;                        
+	                    }
+	                }
+	                break;
                 }
             }
         }
@@ -1092,23 +1120,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
         {
             e.printStackTrace();
         }
-        
-        // Check for known troublesome cases and warn user
-        // Note: This seems to be fixed now so the message is disabled
-//        if(globalRotationSet && globalScaleSet)
-//        {
-//        	MessageBox userMessage = InteractiveApplication.getMessageBox();
-//        	if(userMessage != null)
-//        	{
-//        		userMessage.warning(
-//        			"Known Issue: Global Rotation and Scale",
-//        			"This model has both a global rotation and a global scale. " +
-//        			"There is a known problem with the ULF Renderer that these types " +
-//        			"of models sometimes do not work.\n\nIf you experience problems please " +
-//        			"let us know and consider submitting the model for further testing.\n" + 
-//        			"(Select 'help -> about' for contact details.)");
-//    		}
-//        }
 
         // Initialize internal lists
         List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
@@ -1149,13 +1160,18 @@ public class ViewSet<ContextType extends Context<ContextType>>
         	Matrix4 m1 = cameras[i].transform;
         	
         	// TODO: Figure out the right way to integrate the global transforms
-            cameras[i].transform = m1.times(globalRotation).times(Matrix4.scale(globalScale));
-        	
+            cameras[i].transform = m1.times(Matrix4.translate(globalTranslate))
+            						 .times(globalRotation)
+            						 .times(Matrix4.scale(globalScale));
+        	            
             cameraPoseList.add(cameras[i].transform);
+            
+            // Compute inverse by just reversing steps to build transformation
             Matrix4 cameraPoseInv = Matrix4.scale(1.0f / globalScale)
-        		.times(globalRotation.transpose())
-        		.times(new Matrix4(new Matrix3(m1).transpose()))
-            	.times(Matrix4.translate(new Vector3(m1.getColumn(3).negated())));
+						        		   .times(globalRotation.transpose())
+            							   .times(Matrix4.translate(globalTranslate.negated()))
+						        		   .times(new Matrix4(new Matrix3(m1).transpose()))
+						            	   .times(Matrix4.translate(new Vector3(m1.getColumn(3).negated())));
             cameraPoseInvList.add(cameraPoseInv);
             
             Matrix4 expectedIdentity = cameraPoseInv.times(cameras[i].transform);
