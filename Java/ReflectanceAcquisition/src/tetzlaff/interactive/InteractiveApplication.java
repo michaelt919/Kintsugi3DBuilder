@@ -1,13 +1,11 @@
 package tetzlaff.interactive;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import tetzlaff.gl.exceptions.GLException;
 import tetzlaff.helpers.ErrorMessage;
 import tetzlaff.helpers.ExceptionTranslator;
 import tetzlaff.helpers.MessageBox;
