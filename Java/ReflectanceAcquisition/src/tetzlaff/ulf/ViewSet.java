@@ -1038,9 +1038,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	                                System.out.println("\tSetting global translate.");
 	                                String[] components = reader.getElementText().split("\\s");
 	                                globalTranslate = new Vector3(
-	                                		Float.parseFloat(components[0]),
-	                                		Float.parseFloat(components[1]),
-	                                		Float.parseFloat(components[2]));
+	                                		-Float.parseFloat(components[0]),
+	                                		-Float.parseFloat(components[1]),
+	                                		-Float.parseFloat(components[2]));
 	                        	}
 	                        	break;
 	                        	
@@ -1160,16 +1160,16 @@ public class ViewSet<ContextType extends Context<ContextType>>
         	Matrix4 m1 = cameras[i].transform;
         	
         	// TODO: Figure out the right way to integrate the global transforms
-            cameras[i].transform = m1.times(Matrix4.translate(globalTranslate))
-            						 .times(globalRotation)
+            cameras[i].transform = m1.times(globalRotation)
+            						 .times(Matrix4.translate(globalTranslate))
             						 .times(Matrix4.scale(globalScale));
         	            
             cameraPoseList.add(cameras[i].transform);
             
             // Compute inverse by just reversing steps to build transformation
             Matrix4 cameraPoseInv = Matrix4.scale(1.0f / globalScale)
-						        		   .times(globalRotation.transpose())
             							   .times(Matrix4.translate(globalTranslate.negated()))
+						        		   .times(globalRotation.transpose())
 						        		   .times(new Matrix4(new Matrix3(m1).transpose()))
 						            	   .times(Matrix4.translate(new Vector3(m1.getColumn(3).negated())));
             cameraPoseInvList.add(cameraPoseInv);
