@@ -1250,8 +1250,13 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			maxY = Math.max(maxY, position.y);
 			maxZ = Math.max(maxZ, position.z);
 		}
+	
+		// Corner-to-corner
+		float dX = (maxX-minX), dY = (maxY-minY), dZ = (maxZ-minZ);
+		return (float)Math.sqrt(dX*dX + dY*dY + dZ*dZ);
 		
-		return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
+		// Longest Side approach
+//		return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
 	}
 	
     public void writeVSETFileToStream(OutputStream outputStream)
