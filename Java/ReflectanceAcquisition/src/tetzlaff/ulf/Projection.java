@@ -16,4 +16,9 @@ public interface Projection
 	 * @return The projective transformation matrix.
 	 */
 	Matrix4 getProjectionMatrix(float nearPlane, float farPlane);
+	
+	/**
+	 * Convert to a string designed for use in a VSET file
+	 */
+	String toVSETString();
 }

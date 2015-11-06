@@ -206,6 +206,54 @@ public class Matrix3
 	}
 	
 	/**
+	 * Convert the given matrix (assumed to be a rotation matrix) to a quaternion.
+	 * @return The quaternion packed in a Vector4
+	 */
+	public Vector4 toQuaternion()
+	{
+        // Convert rotation matrix to quaternion
+        double[] q = new double[4];
+        double trace = get(0,0) + get(1,1) + get(2,2);
+        if (trace > 0)
+        {
+            double s = 0.5 / Math.sqrt(trace + 1.0);
+            q[3] = 0.25 / s;
+            q[0] = (get(1,2) - get(2,1)) * s;
+            q[1] = (get(2,0) - get(0,2)) * s;
+            q[2] = (get(0,1) - get(1,0)) * s;
+        }
+        else
+        {
+            if (get(0,0) > get(1,1) && get(0,0) > get(2,2))
+            {
+                double s = 2.0 * Math.sqrt(0.0 + get(0,0) - get(1,1) - get(2,2));
+                q[3] = (get(1,2) - get(2,1)) / s;
+                q[0] = 0.25 * s;
+                q[1] = (get(1,0) + get(0,1)) / s;
+                q[2] = (get(2,0) + get(0,2)) / s;
+            }
+            else if (get(1,1) > get(2,2))
+            {
+                double s = 2.0 * Math.sqrt(0.0 + get(1,1) - get(0,0) - get(2,2));
+                q[3] = (get(2,0) - get(0,2)) / s;
+                q[0] = (get(1,0) + get(0,1)) / s;
+                q[1] = 0.25 * s;
+                q[2] = (get(2,1) + get(1,2)) / s;
+            }
+            else
+            {
+                double s = 2.0 * Math.sqrt(0.0 + get(2,2) - get(0,0) - get(1,1));
+                q[3] = (get(0,1) - get(1,0)) / s;
+                q[0] = (get(2,0) + get(0,2)) / s;
+                q[1] = (get(2,1) + get(1,2)) / s;
+                q[2] = 0.25 * s;
+            }
+        }
+        
+        return new Vector4((float)q[0], (float)q[1], (float)q[2], (float)q[3]);
+	}
+
+	/**
 	 * Gets a new matrix that is the sum of this matrix and another matrix.
 	 * @param other The matrix to add to this one.
 	 * @return A new matrix that is the sum of the two matrices.
