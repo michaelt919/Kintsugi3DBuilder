@@ -36,4 +36,9 @@ public class SimpleProjection implements Projection
 		return Matrix4.perspective(this.verticalFieldOfView, this.aspectRatio, nearPlane, farPlane);
 	}
 
+    @Override
+    public String toVSETString()
+    {
+    	return String.format("f\t0\t0\t%.8f\t%.8f", aspectRatio, verticalFieldOfView);
+    }
 }

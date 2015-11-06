@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -54,7 +55,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * (Useful for visualizing the cameras on screen).
 	 */
 	private List<Matrix4> cameraPoseInvList;
-	
+
 	/**
 	 * A list of projection transformations defining the intrinsic properties of each camera.
 	 * This list can be much smaller than the number of views if the same intrinsic properties apply for multiple views.
@@ -531,6 +532,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		
 		float recommendedNearPlane = 0.0f;
 		float recommendedFarPlane = Float.MAX_VALUE;
+		List<Vector3> cameraLocList = new ArrayList<Vector3>();
+		List<Vector4> cameraQuatList = new ArrayList<Vector4>();
 		List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
 		List<Matrix4> cameraPoseInvList = new ArrayList<Matrix4>();
 		List<Matrix4> orderedCameraPoseList = new ArrayList<Matrix4>();
@@ -553,7 +556,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			}
 			else if (id.equals("p"))
 			{
-				// Pose from quaternion
+				// Pose from quaternion				
 				float x = scanner.nextFloat();
 				float y = scanner.nextFloat();
 				float z = scanner.nextFloat();
@@ -561,6 +564,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				float j = scanner.nextFloat();
 				float k = scanner.nextFloat();
 				float qr = scanner.nextFloat();
+				
+				cameraLocList.add(new Vector3(x, y, z));
+				cameraQuatList.add(new Vector4(i, j, k, qr));
 				
 				cameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
 					.times(Matrix4.translate(-x, -y, -z)));
@@ -687,27 +693,16 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    float k1;
 	    float k2;
 	    float k3;
-
-	    // TODO: Incorporate these values into the distortion object
-	    @SuppressWarnings("unused")
-		float p1;
-	    @SuppressWarnings("unused")
-		float p2;
-	    @SuppressWarnings("unused")
 	    float k4;
+		float p1;
+		float p2;
+	    // TODO: Incorporate this value into the distortion object
 	    @SuppressWarnings("unused")
 	    float skew;
 	    
 	    Sensor(String id)
 	    {
 	        this.id = id;
-	    }
-	    
-	    @SuppressWarnings("unused")
-		public String toVSETString()
-	    {
-	    	return "D\t" + this.cx/this.width + "\t" + this.cy/this.height + "\t" + (this.width/this.height) + "\t" + 
-	    			this.fx + "\t" + this.width + "\t" + this.k1 + "\t" + this.k2 + "\t" + this.k3 + "\t0\t0";
 	    }
 	}
 	
@@ -722,7 +717,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    String filename;
 	    Matrix4 transform;
 	    Sensor sensor;
-	    int orientation;
+	    
+	    @SuppressWarnings("unused")
+		int orientation;
 	    
 	    Camera(String id)
 	    {
@@ -740,17 +737,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    {
 	      Camera otherCam = (Camera)other;
 	      return (this.id.equals(otherCam.id));
-	    }
-
-	    @SuppressWarnings("unused")
-	    public String toVSETString()
-	    {
-	    	// TODO: Provide means to compute quaternion
-//	        Vector4 q = this.transform.getRotationAsQuaternion();	    	
-	        Vector4 q = new Vector4(0, 0, 0, 0);
-	        Vector4 t = this.transform.getColumn(3);
-	        return "p\t" + t.x + "\t" + t.y + "\t" + t.z + "\t" +
-	                q.x + "\t" + q.y + "\t" + q.z + "\t" + q.w;
 	    }
 	}
 
@@ -1104,11 +1090,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		                                   cameraID, sensorID, imageFile);
 		                           camera = null;
 		                        }
-		                        else
-		                        {
-		                            System.out.printf("\tSkipping disabled camera %s, with sensor %s and image %s\n",
-		                                    cameraID, sensorID, imageFile);                        	
-		                        }
 		                        break;                        
 	                    }
 	                }
@@ -1147,7 +1128,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
         		sensors[i].cy,
         		sensors[i].k1,
         		sensors[i].k2,
-        		sensors[i].k3
+        		sensors[i].k3,
+        		sensors[i].k4,
+        		sensors[i].p1,
+        		sensors[i].p2
     		));
         }
                 
@@ -1225,8 +1209,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
         lightIntensityList.add(lightIntensity);
 
         float farPlane = findFarPlane(cameraPoseInvList) * globalScale;
+        System.out.println("Near and far planes: " + (farPlane/16.0f) + ", " + (farPlane));
         return new ViewSet<ContextType>(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
-        		imageFileNames, imageOptions, farPlane / 16.0f, farPlane, context, loadingCallback);
+        		imageFileNames, imageOptions, farPlane / 32.0f, farPlane, context, loadingCallback);
     }
 	
 	/**
@@ -1261,27 +1246,46 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	
     public void writeVSETFileToStream(OutputStream outputStream)
     {
-    	/* These lists are not properly available, need to rethink this
-    	 * 
 	    PrintStream out = new PrintStream(outputStream);
 	    out.println("# Created by ULF Renderer from PhotoScan XML file");
-	    out.println("# " + sensors.length + (sensors.length==1?" Sensor":" Sensors"));
-	    for (Sensor sensor : sensors)
+
+	    out.println("# Estimated near and far planes");
+	    out.printf("c\t%.8f\t%.8f\n", recommendedNearPlane, recommendedFarPlane);
+	    
+	    out.println("# " + cameraProjectionList.size() + (cameraProjectionList.size()==1?" Sensor":" Sensors"));
+	    for (Projection proj : cameraProjectionList)
 	    {
-	        out.println(sensor.toVSETString());
+	        out.println(proj.toVSETString());
 	    }
 	
-	    out.println("\n# " + cameras.length + (cameras.length==1?" Camera":" Cameras"));
-	    for (Camera camera : cameras)
+	    out.println("\n# " + cameraPoseList.size() + (cameraPoseList.size()==1?" Camera":" Cameras"));
+	    for (Matrix4 pose : cameraPoseList)
 	    {
-	        out.println(camera.toVSETString());
+	    	Matrix3 rot = new Matrix3(pose);
+	    	Vector4 quat = rot.toQuaternion();
+	    	Vector4 loc = pose.getColumn(3);
+	    	out.printf("p\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+	    				loc.x, loc.y, loc.z, quat.x, quat.y, quat.z, quat.w);
 	    }
-	
-	    out.println("\n# " + cameras.length + (cameras.length==1?" View":" Views"));
-	    for (Camera camera : cameras)
+
+	    if(!lightPositionList.isEmpty())
 	    {
-	        out.println("v " + camera.getId() + " " + camera.getSensor().getId() + " 0 views/" + camera.getFilename().replace(".jpg", ".png"));
-	    } */
+		    out.println("\n# " + lightPositionList.size() + (lightPositionList.size()==1?" Light":" Lights"));
+		    for (int ID=0; ID < lightPositionList.size(); ID++)		    	
+		    {
+		    	Vector3 pos = lightPositionList.get(ID);
+		    	Vector3 intensity = lightIntensityList.get(ID);
+		    	out.printf("l\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f", pos.x, pos.y, pos.z, intensity.x, intensity.y, intensity.z);
+		    }	    
+	    }
+	    	    
+	    out.println("\n# " + cameraPoseList.size() + (cameraPoseList.size()==1?" View":" Views"));
+	    for (int ID=0; ID<cameraPoseList.size(); ID++)
+	    {
+	        out.printf("v\t%d\t%d\t%d\t%s\n", ID,  cameraProjectionIndexList.get(ID), lightIndexList.get(ID), imageFileNames.get(ID));
+	    }
+	    
+	    out.close();
     }
 
 	/**
