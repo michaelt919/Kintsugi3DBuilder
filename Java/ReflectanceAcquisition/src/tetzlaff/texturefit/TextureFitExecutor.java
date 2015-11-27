@@ -18,11 +18,16 @@ import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
+import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
+import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
+import tetzlaff.gl.helpers.FloatVertexList;
+import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ulf.ViewSet;
 
@@ -111,6 +116,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	Program<ContextType> projTexProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "texspace.vert"))
     			.addShader(ShaderType.FRAGMENT, new File("shaders", "projtex_single.frag"))
+    			.createProgram();
+    	
+    	Program<ContextType> lightFitProgram = context.getShaderProgramBuilder()
+    			.addShader(ShaderType.VERTEX, new File("shaders", "texspace.vert"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? "lightfit_texspace.frag" : "lightfit_imgspace.frag"))
     			.createProgram();
     	
     	Program<ContextType> diffuseFitProgram = context.getShaderProgramBuilder()
@@ -450,7 +460,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				);
 	        	
 	        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
-				System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " depth maps created.");
+				//System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " depth maps created.");
 	    	}
 
 	    	depthRenderingFBO.delete();
@@ -467,6 +477,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	System.out.println("Setting up model fitting...");
     	}
     	timestamp = new Date();
+    	
+    	FramebufferObject<ContextType> lightFitFramebuffer = 
+			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
+				.addColorAttachments(new ColorAttachmentSpec(ColorFormat.RGBA32F), 2)
+				.createFramebufferObject();
     	
     	FramebufferObject<ContextType> diffuseFitFramebuffer = 
 			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
@@ -487,6 +502,29 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         specularFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
         specularFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
         specularFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+        
+        Renderable<ContextType> lightFitRenderable = context.createRenderable(lightFitProgram);
+    	
+        lightFitRenderable.addVertexBuffer("position", positionBuffer);
+        lightFitRenderable.addVertexBuffer("texCoord", texCoordBuffer);
+        lightFitRenderable.addVertexBuffer("normal", normalBuffer);
+    	
+        lightFitRenderable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
+        lightFitRenderable.program().setUniform("gamma", param.getGamma());
+        lightFitRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
+        lightFitRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
+        lightFitRenderable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
+    	
+        lightFitRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
+    	
+    	if (!param.isImagePreprojectionUseEnabled())
+    	{
+    		lightFitRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
+    		lightFitRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
+    	}
+    	
+    	lightFitRenderable.program().setUniform("delta", param.getDiffuseDelta());
+    	lightFitRenderable.program().setUniform("iterations", param.getDiffuseIterations());
 
     	Renderable<ContextType> diffuseFitRenderable = context.createRenderable(diffuseFitProgram);
     	
@@ -571,23 +609,117 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	if (param.getTextureSubdivision() == 1)
 		{
 	    	System.out.println("Setup finished in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+	    	timestamp = new Date();
 		}
+    	
+    	System.out.println("Fitting light...");
     	
     	for (int row = 0; row < param.getTextureSubdivision(); row++)
     	{
 	    	for (int col = 0; col < param.getTextureSubdivision(); col++)
     		{
-		    	if (param.getTextureSubdivision() == 1)
-	    		{
-			    	System.out.println("Fitting diffuse...");
-			    	timestamp = new Date();
-	    		}
-		    	
-		    	Texture3D<ContextType> preprojectedViews = null;
+	    		Texture3D<ContextType> preprojectedViews = null;
 		    	
 		    	if (param.isImagePreprojectionUseEnabled())
 		    	{
 		    		preprojectedViews = context.get2DColorTextureArrayBuilder(subdivSize, subdivSize, viewSet.getCameraPoseCount()).createTexture();
+			    	
+					for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+					{
+						preprojectedViews.loadLayer(i, new File(new File(tmpDir, String.format("%04d", i)), String.format("r%04dc%04d.png", row, col)), true);
+					}
+		    		
+		    		lightFitRenderable.program().setTexture("viewImages", preprojectedViews);
+		    	}
+		    	else
+		    	{
+		    		lightFitRenderable.program().setTexture("viewImages", viewTextures);
+		    		lightFitRenderable.program().setTexture("depthImages", depthTextures);
+		    	}
+		    	
+		    	lightFitRenderable.program().setUniform("minTexCoord", 
+	    				new Vector2((float)col / (float)param.getTextureSubdivision(), (float)row / (float)param.getTextureSubdivision()));
+	    		
+		    	lightFitRenderable.program().setUniform("maxTexCoord", 
+	    				new Vector2((float)(col+1) / (float)param.getTextureSubdivision(), (float)(row+1) / (float)param.getTextureSubdivision()));
+		    	
+		    	lightFitRenderable.draw(PrimitiveMode.TRIANGLES, lightFitFramebuffer, col * subdivSize, row * subdivSize, subdivSize, subdivSize);
+		        context.finish();
+		        
+		        if (param.getTextureSubdivision() > 1)
+	    		{
+	    			System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+	    		}
+    		}
+    	}
+    	
+    	System.out.println("Aggregating light estimates...");
+    	
+    	float[] rawLightPositions = lightFitFramebuffer.readFloatingPointColorBufferRGBA(0);
+        float[] rawLightIntensities = lightFitFramebuffer.readFloatingPointColorBufferRGBA(1);
+        
+        lightFitFramebuffer.delete(); // No need for this anymore
+        
+        Vector4 lightPositionSum = new Vector4(0, 0, 0, 0);
+        Vector4 lightIntensitySum = new Vector4(0, 0, 0, 0);
+        
+        for (int i = 0; i < param.getTextureSize(); i++)
+        {
+        	for (int j = 0; j < param.getTextureSize(); j++)
+        	{
+        		int indexStart = (i * param.getTextureSize() + j) * 4;
+        		lightPositionSum = lightPositionSum.plus(
+        				new Vector4(rawLightPositions[indexStart+0], rawLightPositions[indexStart+1], rawLightPositions[indexStart+2], 1.0f)
+        					.times(rawLightPositions[indexStart+3]));
+        		lightIntensitySum = lightIntensitySum.plus(
+        				new Vector4(rawLightIntensities[indexStart+0], rawLightIntensities[indexStart+1], rawLightIntensities[indexStart+2], 1.0f)
+        					.times(rawLightIntensities[indexStart+3]));
+        	}
+        }
+        
+        Vector4 avgLightPosition = lightPositionSum.dividedBy(lightPositionSum.w);
+        Vector4 avgLightIntensity = lightIntensitySum.dividedBy(lightIntensitySum.w);
+        
+        System.out.println("Light position: " + avgLightPosition.x + " " + avgLightPosition.y + " " + avgLightPosition.z);
+        System.out.println("Light intensity: " + avgLightIntensity.x + " " + avgLightIntensity.y + " " + avgLightIntensity.z);
+        
+        FloatVertexList lightPositionList = new FloatVertexList(4, 1);
+    	lightPositionList.set(0, 0, avgLightPosition.x);
+    	lightPositionList.set(0, 1, avgLightPosition.y);
+    	lightPositionList.set(0, 2, avgLightPosition.z);
+    	lightPositionList.set(0, 3, 1.0f);
+    	
+        FloatVertexList lightIntensityList = new FloatVertexList(3, 1);
+        lightIntensityList.set(0, 0, avgLightIntensity.x);
+        lightIntensityList.set(0, 1, avgLightIntensity.y);
+        lightIntensityList.set(0, 2, avgLightIntensity.z);
+        
+        UniformBuffer<ContextType> lightPositionBuffer = context.createUniformBuffer().setData(lightPositionList);
+        UniformBuffer<ContextType> lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensityList);
+
+		diffuseFitRenderable.program().setUniformBuffer("LightPositions", lightPositionBuffer);
+		diffuseFitRenderable.program().setUniformBuffer("LightIntensities", lightIntensityBuffer);
+
+		specularFitRenderable.program().setUniformBuffer("LightPositions", lightPositionBuffer);
+		specularFitRenderable.program().setUniformBuffer("LightIntensities", lightIntensityBuffer);
+        
+    	for (int row = 0; row < param.getTextureSubdivision(); row++)
+    	{
+	    	for (int col = 0; col < param.getTextureSubdivision(); col++)
+    		{
+		    	Texture3D<ContextType> preprojectedViews = null;
+		        
+		    	if (param.getTextureSubdivision() == 1)
+	    		{
+		    		System.out.println("Light fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		        	
+		        	System.out.println("Fitting diffuse...");
+			    	timestamp = new Date();
+	    		}
+		    	
+		    	if (param.isImagePreprojectionUseEnabled())
+		    	{
+	    			preprojectedViews = context.get2DColorTextureArrayBuilder(subdivSize, subdivSize, viewSet.getCameraPoseCount()).createTexture();
 			    	
 					for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 					{
@@ -698,6 +830,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	        {
 	        	depthTextures.delete();
 	        }
+	        
+	        lightPositionBuffer.delete();
+	        lightIntensityBuffer.delete();
     	}
     	
     	if (param.getTextureSubdivision() > 1)
@@ -718,6 +853,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	holeFillRenderable.addVertexBuffer("position", rectBuffer);
     	
     	holeFillProgram.setUniform("minFillAlpha", 0.5f);
+		
+		System.out.println("Diffuse fill...");
     	
     	// Diffuse
     	FramebufferObject<ContextType> holeFillFrontFBO = diffuseFitFramebuffer;
@@ -739,10 +876,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     		FramebufferObject<ContextType> tmp = holeFillFrontFBO;
     		holeFillFrontFBO = holeFillBackFBO;
     		holeFillBackFBO = tmp;
-    		
-    		System.out.println("Diffuse fill iteration " + i + "/" + (param.getTextureSize() / 2) + " completed.");
     	}
     	diffuseFitFramebuffer = holeFillFrontFBO;
+		
+		System.out.println("Specular fill...");
     	
     	// Specular
     	holeFillFrontFBO = specularFitFramebuffer;
@@ -764,8 +901,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     		FramebufferObject<ContextType> tmp = holeFillFrontFBO;
     		holeFillFrontFBO = holeFillBackFBO;
     		holeFillBackFBO = tmp;
-    		
-    		System.out.println("Specular fill iteration " + i + "/" + (param.getTextureSize() / 2) + " completed.");
     	}
     	specularFitFramebuffer = holeFillFrontFBO;
 
@@ -848,15 +983,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    		//diffuseDebugFBO.saveColorBufferToFile(1, "PNG", new File(outputDirectory, String.format("debug/diffuse/projpos/%04d.png", i)));
 	    		
 	    		Matrix4 cameraPose = viewSet.getCameraPose(i);
-	    		Vector3 lightPosition = new Matrix3(cameraPose).transpose().times(
+	    		Vector3 debugLightPos = new Matrix3(cameraPose).transpose().times(
     				viewSet.getLightPosition(viewSet.getLightPositionIndex(i))
     					.minus(new Vector3(cameraPose.getColumn(3))));
 	    		int[] colorData = diffuseDebugFBO.readColorBufferARGB(0, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
 	    		float[] positionData = diffuseDebugFBO.readFloatingPointColorBufferRGBA(1, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
 	    		diffuseInfo.println(
-    				lightPosition.x + "\t" +
-					lightPosition.y + "\t" +
-					lightPosition.z + "\t" +
+    				debugLightPos.x + "\t" +
+					debugLightPos.y + "\t" +
+					debugLightPos.z + "\t" +
     				positionData[0] + "\t" +
     				positionData[1] + "\t" +
     				positionData[2] + "\t" +
