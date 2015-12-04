@@ -169,6 +169,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	
     	Texture3D<ContextType> viewTextures = null;
     	Texture3D<ContextType> depthTextures = null;
+    	Texture3D<ContextType> shadowTextures = null;
     	
     	if (param.isImagePreprojectionUseEnabled() && param.isImagePreprojectionGenerationEnabled())
     	{
@@ -683,6 +684,42 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         System.out.println("Light position: " + avgLightPosition.x + " " + avgLightPosition.y + " " + avgLightPosition.z);
         System.out.println("Light intensity: " + avgLightIntensity.x + " " + avgLightIntensity.y + " " + avgLightIntensity.z);
         
+        System.out.println("Creating shadow maps...");
+    	timestamp = new Date();
+    	
+    	// Build shadow maps for each view
+    	int width = viewTextures.getWidth();
+    	int height = viewTextures.getHeight();
+    	shadowTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
+    	
+    	// Don't automatically generate any texture attachments for this framebuffer object
+    	FramebufferObject<ContextType> shadowRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
+    	
+    	Renderable<ContextType> shadowRenderable = context.createRenderable(depthRenderingProgram);
+    	shadowRenderable.addVertexBuffer("position", positionBuffer);
+    	
+    	// Render each shadow map
+    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+    	{
+    		shadowRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
+    		shadowRenderingFBO.clearDepthBuffer();
+        	
+        	depthRenderingProgram.setUniform("model_view", Matrix4.translate(new Vector3(avgLightPosition).negated()).times(viewSet.getCameraPose(i)));
+    		depthRenderingProgram.setUniform("projection", 
+				viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
+    				.getProjectionMatrix(
+						viewSet.getRecommendedNearPlane(), 
+						viewSet.getRecommendedFarPlane()
+					)
+			);
+        	
+    		shadowRenderable.draw(PrimitiveMode.TRIANGLES, shadowRenderingFBO);
+    	}
+
+    	shadowRenderingFBO.delete();
+    	
+		System.out.println("Shadow maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        
         FloatVertexList lightPositionList = new FloatVertexList(4, 1);
     	lightPositionList.set(0, 0, avgLightPosition.x);
     	lightPositionList.set(0, 1, avgLightPosition.y);
@@ -732,6 +769,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	{
 			    	diffuseFitRenderable.program().setTexture("viewImages", viewTextures);
 			    	diffuseFitRenderable.program().setTexture("depthImages", depthTextures);
+			    	diffuseFitRenderable.program().setTexture("shadowImages", shadowTextures);
 		    	}
 		    	
 		    	diffuseFitRenderable.program().setUniform("minTexCoord", 
@@ -768,6 +806,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	{
 			    	specularFitRenderable.program().setTexture("viewImages", viewTextures);
 			    	specularFitRenderable.program().setTexture("depthImages", depthTextures);
+			    	specularFitRenderable.program().setTexture("shadowImages", shadowTextures);
 		    	}
 		    	
 		    	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
