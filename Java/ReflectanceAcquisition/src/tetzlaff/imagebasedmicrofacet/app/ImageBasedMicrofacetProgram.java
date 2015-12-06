@@ -66,7 +66,7 @@ public class ImageBasedMicrofacetProgram
     	// Add a trackball controller to the window for rotating the object (also responds to mouse scrolling)
     	// This is the 'controller' in the MVC arrangement.
     	List<Trackball> trackballs = new ArrayList<Trackball>(8);
-    	for (int i = 0; i < 4; i++)
+    	for (int i = 0; i < 5; i++)
     	{
     		Trackball newTrackball = new Trackball(1.0f, 0, 1, true);
     		newTrackball.addAsWindowListener(window);
