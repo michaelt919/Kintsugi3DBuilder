@@ -34,6 +34,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private Renderable<ContextType> mainRenderable;
     private Renderable<ContextType> indexRenderable;
     private Trackball trackball;
+    private Trackball globalTrackball;
     private ULFLoadingMonitor callback;
 
     private boolean viewIndexCacheEnabled;
@@ -64,6 +65,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.geometryFile = meshFile;
     	this.loadOptions = loadOptions;
     	this.trackball = trackball;
+    	this.globalTrackball = new Trackball(0.0f);
     	this.viewIndexCacheEnabled = false;
     	this.targetFPS = 30.0f;
     }
@@ -71,6 +73,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	public void setTrackball(Trackball trackball)
 	{
 		this.trackball = trackball;
+	}
+	
+	public void setGlobalTrackball(Trackball globalTrackball)
+	{
+		this.globalTrackball = globalTrackball;
 	}
     
     @Override
@@ -270,15 +277,15 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	
     	mainRenderable.program().setUniform("model_view", 
 			Matrix4.lookAt(
-				new Vector3(0.0f, 0.0f, 5.0f / trackball.getScale()), 
+				new Vector3(0.0f, 0.0f, 5.0f / trackball.getScale() / globalTrackball.getScale()), 
 				new Vector3(0.0f, 0.0f, 0.0f),
 				new Vector3(0.0f, 1.0f, 0.0f)
 			) // View
-			.times(trackball.getRotationMatrix())
+			.times(trackball.getRotationMatrix()).times(globalTrackball.getRotationMatrix())
 			.times(Matrix4.translate(lightField.proxy.getCentroid().negated())) // Model
 		);
     	
-    	mainRenderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
+    	mainRenderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 8, (float)size.width / (float)size.height, 0.01f, 100.0f));
     	
     	mainRenderable.program().setUniform("gamma", this.lightField.settings.getGamma());
     	mainRenderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());

@@ -58,6 +58,11 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	{
 		return this.trackballMatrix;
 	}
+
+	public void setRotationMatrix(Matrix4 rotationMatrix) 
+	{
+		this.oldTrackballMatrix = this.trackballMatrix = rotationMatrix;
+	}
 	
 	public float getScale()
 	{

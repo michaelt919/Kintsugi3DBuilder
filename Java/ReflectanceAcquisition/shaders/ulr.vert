@@ -13,9 +13,16 @@ out vec3 fNormal;
 
 out vec3 fViewPos;
 
+#define MAX_CAMERA_PROJECTION_COUNT 1024
+
+uniform CameraProjections
+{
+	mat4 cameraProjections[MAX_CAMERA_PROJECTION_COUNT];
+};
+
 void main(void)
 {
-	gl_Position = projection * model_view * vec4(position, 1.0);
+    gl_Position = projection * model_view * vec4(position, 1.0);
 	fPosition = position;
 	fTexCoord = texCoord;
 	fNormal = normal;

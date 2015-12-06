@@ -37,13 +37,26 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		this.trackballs = trackballs;
 		this.trackballs.get(0).setEnabled(true);
 		this.lightColors = new ArrayList<Vector3>(trackballs.size());
-		this.lightColors.add(new Vector3(1.0f, 1.0f, 1.0f));
+		//this.lightColors.add(new Vector3(1.0f, 1.0f, 1.0f));
+		this.lightColors.add(new Vector3(0.0f, 0.0f, 0.0f));
+		
 		for (int i = 1; i < this.trackballs.size(); i++)
 		{
 			this.trackballs.get(i).setEnabled(false);
 			this.lightColors.add(new Vector3(0.0f, 0.0f, 0.0f));
 		}
+
+		// Hard-coded lights
+		this.trackballs.get(1).setRotationMatrix(Matrix4.rotateX(Math.atan2(40, 90)).times(Matrix4.rotateY(Math.PI / 12))); // 6:30
+		this.trackballs.get(2).setRotationMatrix(Matrix4.rotateX(Math.atan2(40, 90)).times(Matrix4.rotateY(Math.PI * 2 / 3))); // 10:00
+		this.trackballs.get(3).setRotationMatrix(Matrix4.rotateX(Math.atan2(40, 90)).times(Matrix4.rotateY(-Math.PI / 2))); // 3:00
+
+		this.lightColors.set(1, new Vector3(1.0f, 1.0f, 1.0f));
+		this.lightColors.set(2, new Vector3(1.0f, 1.0f, 1.0f));
+		this.lightColors.set(3, new Vector3(1.0f, 1.0f, 1.0f));
+		
     	this.ulfRenderer = new ULFRenderer<ContextType>(context, program, indexProgram, xmlFile, meshFile, loadOptions, trackballs.get(0));
+    	this.ulfRenderer.setGlobalTrackball(this.trackballs.get(0));
     }
 
 	@Override
@@ -87,19 +100,20 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 				program.setTexture("normalMap", microfacetField.normalTexture);
 			}
 	
-			for (int i = 0; i < trackballs.size(); i++)
+			for (int i = 1; i < trackballs.size(); i++)
 			{
 				Matrix4 lightMatrix = Matrix4.lookAt(
-	    				new Vector3(0.0f, 0.0f, 5.0f / trackballs.get(i).getScale()), 
+	    				new Vector3(0.0f, 0.0f, 5.0f / trackballs.get(i).getScale() / trackballs.get(0).getScale()), 
 	    				new Vector3(0.0f, 0.0f, 0.0f),
 	    				new Vector3(0.0f, 1.0f, 0.0f)
 	    			) // View
 	    			.times(trackballs.get(i).getRotationMatrix())
+	    			.times(trackballs.get(0).getRotationMatrix()) // base transform
 	    			.times(Matrix4.translate(ulfRenderer.getLightField().proxy.getCentroid().negated()));
 				
-				program.setUniform("lightPos[" + i + "]", new Matrix3(lightMatrix).transpose().times(new Vector3(lightMatrix.getColumn(3).negated())));
-				program.setUniform("lightIntensity[" + i + "]", this.lightColors.get(i));
-				program.setUniform("virtualLightCount", Math.min(8, trackballs.size()));
+				program.setUniform("lightPos[" + (i-1) + "]", new Matrix3(lightMatrix).transpose().times(new Vector3(lightMatrix.getColumn(3).negated())));
+				program.setUniform("lightIntensity[" + (i-1) + "]", this.lightColors.get(i));
+				program.setUniform("virtualLightCount", Math.min(4, trackballs.size()-1));
 			}
 			
 			if (indexProgram != null)
@@ -259,10 +273,20 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	@Override
 	public void setActiveTrackball(int i) 
 	{
-		this.trackballs.get(getActiveTrackball()).setEnabled(false);
-		this.activeTrackball = i;
-		ulfRenderer.setTrackball(this.trackballs.get(i));
-		this.trackballs.get(i).setEnabled(true);
+		if (i < this.trackballs.size())
+		{
+			this.trackballs.get(getActiveTrackball()).setEnabled(false);
+			this.activeTrackball = i;
+			if (i > 0) 
+			{
+				ulfRenderer.setTrackball(this.trackballs.get(i));
+			}
+			else
+			{
+				ulfRenderer.setTrackball(new Trackball(0.0f)); // Use dummy trackball when controlling global transform.
+			}
+			this.trackballs.get(i).setEnabled(true);
+		}
 	}
 
 	@Override
