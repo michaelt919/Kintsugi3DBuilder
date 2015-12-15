@@ -35,12 +35,47 @@ import tetzlaff.helpers.ZipWrapper;
 
 public class ViewSet<ContextType extends Context<ContextType>>
 {
+	/**
+	 * A list of camera poses defining the transformation from object space to camera space for each view.
+	 * These are necessary to perform projective texture mapping.
+	 */
 	private List<Matrix4> cameraPoseList;
+	
+	/**
+	 * A list of inverted camera poses defining the transformation from camera space to object space for each view.
+	 * (Useful for visualizing the cameras on screen).
+	 */
+	private List<Matrix4> cameraPoseInvList;
+
+	/**
+	 * A list of projection transformations defining the intrinsic properties of each camera.
+	 * This list can be much smaller than the number of views if the same intrinsic properties apply for multiple views.
+	 */
 	private List<Projection> cameraProjectionList;
+	
+	/**
+	 * A list containing an entry for every view which designates the index of the projection transformation that should be used for each view.
+	 */
 	private List<Integer> cameraProjectionIndexList;
+	
+	/**
+	 * A list of light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
+	 */
 	private List<Vector3> lightPositionList;
+	
+	/**
+	 * A list of light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
+	 */
 	private List<Vector3> lightIntensityList;
+	
+	/**
+	 * A list containing an entry for every view which designates the index of the light source position and intensity that should be used for each view.
+	 */
 	private List<Integer> lightIndexList;
+	
 	private List<String> imageFileNames;
 	private File imageFilePath;
 	private File geometryFile; // Only when loading from VSET
