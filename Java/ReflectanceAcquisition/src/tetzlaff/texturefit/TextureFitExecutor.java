@@ -698,25 +698,49 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	Renderable<ContextType> shadowRenderable = context.createRenderable(depthRenderingProgram);
     	shadowRenderable.addVertexBuffer("position", positionBuffer);
     	
+    	final int shadowMapFarPlaneCushion = 2; // TODO decide where this should be defined
+    	
+    	// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
+    	FloatVertexList flattenedShadowMatrices = new FloatVertexList(16, viewSet.getCameraPoseCount());
+    	
     	// Render each shadow map
     	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
     	{
     		shadowRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
     		shadowRenderingFBO.clearDepthBuffer();
+    		
+    		Matrix4 modelView = Matrix4.lookAt(new Vector3(viewSet.getCameraPose(i).quickInverse(0.001f).times(avgLightPosition)), mesh.getCentroid(), new Vector3(0, 1, 0));
+        	depthRenderingProgram.setUniform("model_view", modelView);
         	
-        	depthRenderingProgram.setUniform("model_view", Matrix4.translate(new Vector3(avgLightPosition).negated()).times(viewSet.getCameraPose(i)));
-    		depthRenderingProgram.setUniform("projection", 
-				viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
-    				.getProjectionMatrix(
+    		Matrix4 projection = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
+					.getProjectionMatrix(
 						viewSet.getRecommendedNearPlane(), 
-						viewSet.getRecommendedFarPlane()
-					)
-			);
+						viewSet.getRecommendedFarPlane() * shadowMapFarPlaneCushion // double it for good measure
+					);
+    		depthRenderingProgram.setUniform("projection", projection);
         	
     		shadowRenderable.draw(PrimitiveMode.TRIANGLES, shadowRenderingFBO);
+    		
+    		Matrix4 fullTransform = projection.times(modelView);
+    		
+    		int d = 0;
+			for (int col = 0; col < 4; col++) // column
+			{
+				for (int row = 0; row < 4; row++) // row
+				{
+					flattenedShadowMatrices.set(i, d, fullTransform.get(row, col));
+					d++;
+				}
+			}
     	}
+		
+		// Create the uniform buffer
+		UniformBuffer<ContextType> shadowMatrixBuffer = context.createUniformBuffer().setData(flattenedShadowMatrices);
 
     	shadowRenderingFBO.delete();
+    	
+    	diffuseFitRenderable.program().setUniformBuffer("ShadowMatrices", shadowMatrixBuffer);
+    	specularFitRenderable.program().setUniformBuffer("ShadowMatrices", shadowMatrixBuffer);
     	
 		System.out.println("Shadow maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
         
@@ -870,8 +894,18 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	        	depthTextures.delete();
 	        }
 	        
+	        if (shadowTextures != null)
+	        {
+	        	shadowTextures.delete();
+	        }
+	        
 	        lightPositionBuffer.delete();
 	        lightIntensityBuffer.delete();
+	        
+	        if (shadowMatrixBuffer != null)
+	        {
+	        	shadowMatrixBuffer.delete();
+	        }
     	}
     	
     	if (param.getTextureSubdivision() > 1)
@@ -1126,6 +1160,26 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	        if (depthTextures != null)
 	        {
 	        	depthTextures.delete();
+	        }
+	        
+	        if (shadowTextures != null)
+	        {
+	        	shadowTextures.delete();
+	        }
+	        
+	        if (lightPositionBuffer != null)
+	        {
+	        	lightPositionBuffer.delete();
+	        }
+	        
+	        if (lightIntensityBuffer != null)
+	        {
+	        	lightIntensityBuffer.delete();
+	        }
+	        
+	        if (shadowMatrixBuffer != null)
+	        {
+	        	shadowMatrixBuffer.delete();
 	        }
 	    	
 			System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");

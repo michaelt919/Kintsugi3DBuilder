@@ -278,6 +278,30 @@ public class Matrix4
 		);
 	}
 	
+	/**
+	 * Performs a quick inverse of the matrix if the upper-left 3x3 is an orthogonal (rotation) matrix.
+	 * Throws an exception if this condition is not met (up to a specified tolerance).
+	 * With a tolerance of 1.0, the method will always return.
+	 * @param tolerance A tolerance for orthogonality.
+	 * @return The inverse of the matrix.
+	 */
+	public Matrix4 quickInverse(float tolerance)
+	{
+		Matrix3 rotation = new Matrix3(this);
+		
+		if (Math.abs(rotation.getColumn(0).dot(rotation.getColumn(0)) - 1.0f) > tolerance ||
+			Math.abs(rotation.getColumn(1).dot(rotation.getColumn(1)) - 1.0f) > tolerance ||
+			Math.abs(rotation.getColumn(2).dot(rotation.getColumn(2)) - 1.0f) > tolerance ||
+			Math.abs(rotation.getColumn(0).dot(rotation.getColumn(1))) > tolerance || 
+			Math.abs(rotation.getColumn(0).dot(rotation.getColumn(2))) > tolerance || 
+			Math.abs(rotation.getColumn(1).dot(rotation.getColumn(2))) > tolerance)
+		{
+			throw new IllegalStateException("Matrix is not orthogonal, therefore a quick inverse cannot be taken.");
+		}
+				
+		return new Matrix4(rotation.transpose()).times(Matrix4.translate(new Vector3(this.getColumn(3)).negated()));
+	}
+	
 	public float get(int row, int col)
 	{
 		return this.m[row][col];

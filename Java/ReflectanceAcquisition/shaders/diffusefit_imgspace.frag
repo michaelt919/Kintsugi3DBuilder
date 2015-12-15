@@ -53,6 +53,11 @@ uniform LightIndices
 	int lightIndices[MAX_CAMERA_POSE_COUNT];
 };
 
+uniform ShadowMatrices
+{
+	mat4 shadowMatrices[MAX_CAMERA_POSE_COUNT];
+};
+
 layout(location = 0) out vec4 diffuseColor;
 layout(location = 1) out vec4 normalMap;
 layout(location = 2) out vec4 ambient;
@@ -88,25 +93,25 @@ vec4 getColor(int index)
 				return vec4(0);
 			}
             
-            // vec4 shadowTexCoord = cameraProjections[cameraProjectionIndices[index]] * 
-                // (cameraPoses[index] * vec4(fPosition, 1.0) - lightPositions[lightIndices[index]]);
-            // shadowTexCoord /= shadowTexCoord.w;
-            // shadowTexCoord = (shadowTexCoord + vec4(1)) / 2;
+            vec4 shadowTexCoord = shadowMatrices[index] * vec4(fPosition, 1.0);
+            shadowTexCoord /= shadowTexCoord.w;
+            shadowTexCoord = (shadowTexCoord + vec4(1)) / 2;
             
-            // if (shadowTexCoord.x < 0 || shadowTexCoord.x > 1 || shadowTexCoord.y < 0 || shadowTexCoord.y > 1 ||
-                // shadowTexCoord.z < 0 /*|| shadowTexCoord.z > 1*/)
-            // {
-                // return vec4(0);
-            // }
-            // // else
-            // // {
-                // // float shadowImageDepth = texture(shadowImages, vec3(shadowTexCoord.xy, index)).r;
-                // // if (abs(shadowTexCoord.z - shadowImageDepth) > occlusionBias)
-                // // {
-                    // // // Occluded
-                    // // return vec4(0);
-                // // }
-            // // }
+            if (shadowTexCoord.x < 0 || shadowTexCoord.x > 1 || 
+                shadowTexCoord.y < 0 || shadowTexCoord.y > 1 ||
+                shadowTexCoord.z < 0 || shadowTexCoord.z > 1)
+            {
+                return vec4(0);
+            }
+            else
+            {
+                float shadowImageDepth = texture(shadowImages, vec3(shadowTexCoord.xy, index)).r;
+                if (abs(shadowTexCoord.z - shadowImageDepth) > occlusionBias)
+                {
+                    // Occluded
+                    return vec4(0);
+                }
+            }
 		}
         
         return pow(texture(viewImages, vec3(projTexCoord.xy, index)), vec4(gamma));
