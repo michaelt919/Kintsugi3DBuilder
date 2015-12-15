@@ -718,6 +718,18 @@ public class ULFConfigFrame extends JFrame {
 						}
 					});
 				}
+
+				@Override
+				public void startLoading() {
+					// TODO Auto-generated method stub
+					
+				}
+
+				@Override
+				public void setMaximum(double maximum) {
+					// TODO Auto-generated method stub
+					
+				}
 			});
 		}
 	}

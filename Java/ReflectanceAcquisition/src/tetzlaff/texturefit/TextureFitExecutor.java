@@ -86,7 +86,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	else if (fileExt.equalsIgnoreCase("xml"))
     	{
     		System.out.println("Loading from Agisoft Photoscan XML file.");
-    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null, lightOffset, lightIntensity, context);
+    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null, lightOffset, lightIntensity, context, null);
     	}
     	else
     	{
@@ -709,7 +709,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     		shadowRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
     		shadowRenderingFBO.clearDepthBuffer();
     		
-    		Matrix4 modelView = Matrix4.lookAt(new Vector3(viewSet.getCameraPose(i).quickInverse(0.001f).times(avgLightPosition)), mesh.getCentroid(), new Vector3(0, 1, 0));
+    		Matrix4 modelView = Matrix4.lookAt(new Vector3(viewSet.getCameraPoseInverse(i).times(avgLightPosition)), mesh.getCentroid(), new Vector3(0, 1, 0));
         	depthRenderingProgram.setUniform("model_view", modelView);
         	
     		Matrix4 projection = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
