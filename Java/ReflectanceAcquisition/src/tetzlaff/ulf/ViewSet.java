@@ -515,7 +515,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
 			File vsetFile, ViewSetImageOptions imageOptions, ContextType context) throws IOException
 	{
-		return ViewSet.loadFromVSETFile(vsetFile, new ViewSetImageOptions(null, false, false, false), context, null);
+		return ViewSet.loadFromVSETFile(vsetFile, imageOptions, context, null);
 	}
 
 	/**
@@ -1276,7 +1276,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    	Matrix3 rot = new Matrix3(pose);
 	    	Vector4 quat = rot.toQuaternion();
 	    	Vector4 loc = pose.getColumn(3);
-	    	out.printf("p\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+	    	out.printf("p\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n",
 	    				loc.x, loc.y, loc.z, quat.x, quat.y, quat.z, quat.w);
 	    }
 
@@ -1287,7 +1287,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		    {
 		    	Vector3 pos = lightPositionList.get(ID);
 		    	Vector3 intensity = lightIntensityList.get(ID);
-		    	out.printf("l\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f", pos.x, pos.y, pos.z, intensity.x, intensity.y, intensity.z);
+		    	out.printf("l\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n", pos.x, pos.y, pos.z, intensity.x, intensity.y, intensity.z);
 		    }	    
 	    }
 	    	    
@@ -1404,6 +1404,16 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public Vector3 getLightIntensity(int lightIndex) 
 	{
 		return this.lightIntensityList.get(lightIndex);
+	}
+	
+	public void setLightPosition(int lightIndex, Vector3 lightPosition)
+	{
+		this.lightPositionList.set(lightIndex, lightPosition); // TODO decide if this should result in a uniform buffer refresh
+	}
+	
+	public void setLightIntensity(int lightIndex, Vector3 lightIntensity)
+	{
+		this.lightIntensityList.set(lightIndex, lightIntensity); // TODO decide if this should result in a uniform buffer refresh
 	}
 	
 	/**

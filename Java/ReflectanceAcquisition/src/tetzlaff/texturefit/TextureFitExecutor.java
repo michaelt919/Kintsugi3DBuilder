@@ -3,6 +3,7 @@ package tetzlaff.texturefit;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Date;
@@ -683,6 +684,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         
         System.out.println("Light position: " + avgLightPosition.x + " " + avgLightPosition.y + " " + avgLightPosition.z);
         System.out.println("Light intensity: " + avgLightIntensity.x + " " + avgLightIntensity.y + " " + avgLightIntensity.z);
+        
+        viewSet.setLightPosition(0, new Vector3(avgLightPosition));
+        viewSet.setLightIntensity(0, new Vector3(avgLightIntensity));
+        viewSet.writeVSETFileToStream(new FileOutputStream(new File(outputDir, "default.vset")));
         
         System.out.println("Creating shadow maps...");
     	timestamp = new Date();

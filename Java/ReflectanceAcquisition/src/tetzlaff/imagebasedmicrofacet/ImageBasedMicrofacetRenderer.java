@@ -114,6 +114,17 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 				program.setUniform("lightPos[" + (i-1) + "]", new Matrix3(lightMatrix).transpose().times(new Vector3(lightMatrix.getColumn(3).negated())));
 				program.setUniform("lightIntensity[" + (i-1) + "]", this.lightColors.get(i));
 				program.setUniform("virtualLightCount", Math.min(4, trackballs.size()-1));
+				
+				if (microfacetField.shadowMatrixBuffer == null || microfacetField.shadowTextures == null)
+				{
+					program.setUniform("shadowTestingEnabled", false);
+				}
+				else
+				{
+					program.setUniform("shadowTestingEnabled", true);
+					program.setUniformBuffer("ShadowMatrices", microfacetField.shadowMatrixBuffer);
+					program.setTexture("shadowTextures", microfacetField.shadowTextures);
+				}
 			}
 			
 			if (indexProgram != null)
