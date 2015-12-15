@@ -63,6 +63,18 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 				model.getSelectedItem().setHalfResolution(halfResDefault);
 				loadingFinished.emit();
 			}
+
+			@Override
+			public void startLoading() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void setMaximum(double maximum) {
+				// TODO Auto-generated method stub
+				
+			}
 		});
 		this.blockSignals = false;
 		onModelChanged();

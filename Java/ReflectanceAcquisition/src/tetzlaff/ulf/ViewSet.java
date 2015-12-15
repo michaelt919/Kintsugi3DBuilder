@@ -6,6 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -31,8 +33,15 @@ import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.helpers.ZipWrapper;
 
+/**
+ * A class for organizing the GL resources that are necessary for view-dependent rendering.
+ * @author Michael Tetzlaff
+ *
+ * @param <ContextType> The type of the context that the GL resources for this view set are to be used with.
+ */
 public class ViewSet<ContextType extends Context<ContextType>>
 {
 	/**
@@ -76,22 +85,89 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 */
 	private List<Integer> lightIndexList;
 	
+	/**
+	 * A list containing the relative name of the image file corresponding to each view.
+	 */
 	private List<String> imageFileNames;
-	private File imageFilePath;
-	private File geometryFile; // Only when loading from VSET
 	
+	/**
+	 * The absolute file path to be used for loading images.
+	 */
+	private File filePath;
+	
+	/**
+	 * A GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
+	 * These are necessary to perform projective texture mapping.
+	 */
 	private UniformBuffer<ContextType> cameraPoseBuffer;
+	
+	/**
+	 * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
+	 */
 	private UniformBuffer<ContextType> cameraProjectionBuffer;
+	
+	/**
+	 * A GPU buffer containing for every view an index designating the projection transformation that should be used for each view.
+	 */
 	private UniformBuffer<ContextType> cameraProjectionIndexBuffer;
+	
+	/**
+	 * A GPU buffer containing light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 */
 	private UniformBuffer<ContextType> lightPositionBuffer;
+	
+	/**
+	 * A GPU buffer containing light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 */
 	private UniformBuffer<ContextType> lightIntensityBuffer;
+	
+	/**
+	 * A GPU buffer containing for every view an index designating the light source position and intensity that should be used for each view.
+	 */
 	private UniformBuffer<ContextType> lightIndexBuffer;
+	
+	/**
+	 * A texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
+	 */
 	private Texture3D<ContextType> textureArray;
+	
+	/**
+	 * The recommended near plane to use when rendering this view set.
+	 */
 	private float recommendedNearPlane;
+	
+	/**
+	 * The recommended far plane to use when rendering this view set.
+	 */
 	private float recommendedFarPlane;
 	
+	/**
+	 * Creates a new view set object, allocating and initializing GPU resources as appropriate.
+	 * @param cameraPoseList A list of camera poses defining the transformation from object space to camera space for each view.
+	 * These are necessary to perform projective texture mapping.
+	 * @param cameraPoseInvList A list of inverted camera poses defining the transformation from camera space to object space for each view.
+	 * (Useful for visualizing the cameras on screen).
+	 * @param cameraProjectionList A list of projection transformations defining the intrinsic properties of each camera.
+	 * This list can be much smaller than the number of views if the same intrinsic properties apply for multiple views.
+	 * @param cameraProjectionIndexList  A list containing an entry for every view which designates the index of the projection transformation that should be used for each view.
+	 * @param lightPositionList A list of light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
+	 * @param lightIntensityList A list of light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
+	 * @param lightIndexList A list containing an entry for every view which designates the index of the light source position and intensity that should be used for each view.
+	 * @param imageFileNames A list containing the relative name of the image file corresponding to each view.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param recommendedNearPlane A recommendation for the near plane to use when rendering this view set.
+	 * @param recommendedFarPlane A recommendation for the far plane to use when rendering this view set.
+	 * @param context The GL context in which to instantiate GPU resources.
+	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
+	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 */
 	public ViewSet(
 		List<Matrix4> cameraPoseList,
+		List<Matrix4> cameraPoseInvList,
 		List<Projection> cameraProjectionList,
 		List<Integer> cameraProjectionIndexList,
 		List<Vector3> lightPositionList,
@@ -99,25 +175,25 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Integer> lightIndexList,
 		List<String> imageFileNames, 
 		ViewSetImageOptions imageOptions,
-		File geometryFile,
 		float recommendedNearPlane,
 		float recommendedFarPlane,
-		ContextType context) throws IOException
+		ContextType context,
+		ULFLoadingMonitor loadingCallback) throws IOException
 	{
 		this.cameraPoseList = cameraPoseList;
+		this.cameraPoseInvList = cameraPoseInvList;
 		this.cameraProjectionList = cameraProjectionList;
 		this.cameraProjectionIndexList = cameraProjectionIndexList;
 		this.lightPositionList = lightPositionList;
 		this.lightIntensityList = lightIntensityList;
 		this.lightIndexList = lightIndexList;
 		this.imageFileNames = imageFileNames;
-		this.geometryFile = geometryFile;
 		this.recommendedNearPlane = recommendedNearPlane;
 		this.recommendedFarPlane = recommendedFarPlane;
 		
 		if (imageOptions != null)
 		{
-			this.imageFilePath = imageOptions.getFilePath();
+			this.filePath = imageOptions.getFilePath();
 		}
 		
 		// Store the poses in a uniform buffer
@@ -228,21 +304,30 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		{
 			Date timestamp = new Date();
 			File imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(0));
-			//ZipWrapper myZip = new ZipWrapper(imageFile);
+			ZipWrapper myZip = new ZipWrapper(imageFile);
 			
-			if (!imageFile.exists())
-			//if (!myZip.exists(imageFile))
+			if (!myZip.exists(imageFile))
 			{
-				System.err.printf("Warning: Image '%s' not found, trying '.png' extension instead.\n",
-								  imageFileNames.get(0));
-				String[] filenameParts = imageFileNames.get(0).split("\\.");
-		    	filenameParts[filenameParts.length - 1] = "png";
-		    	String pngFileName = String.join(".", filenameParts);
-		    	imageFile = new File(imageOptions.getFilePath(), pngFileName);
-		    	//myZip = new ZipWrapper(imageFile);
-		    	
-		    	if (!imageFile.exists())
-		    	//if(!myZip.exists(imageFile))
+				// Try some alternate file formats/extensions
+				String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
+				for(final String extension : altFormats)
+				{
+					String[] filenameParts = imageFileNames.get(0).split("\\.");
+			    	filenameParts[filenameParts.length - 1] = extension;
+			    	String altFileName = String.join(".", filenameParts);
+			    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);					
+			    	
+			    	System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
+			    	if(myZip.exists(imageFileGuess))
+			    	{
+				    	System.out.printf("Found!!\n");
+			    		imageFile = imageFileGuess;
+			    		break;
+			    	}
+				}
+
+				// Is it still not there?
+		    	if(!myZip.exists(imageFile))
 		    	{
 		    		throw new FileNotFoundException(
 		    				String.format("'%s' not found.", imageFileNames.get(0)));
@@ -250,14 +335,15 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			}
 			
 			// Read a single image to get the dimensions for the texture array
-			InputStream input = new FileInputStream(imageFile);//myZip.getInputStream();			
+			InputStream input = myZip.retrieveFile(imageFile);
 			BufferedImage img = ImageIO.read(input);
 			if(img == null)
 			{
 				throw new IOException(String.format("Error: Unsupported image format '%s'.",
 						imageFileNames.get(0)));				
 			}
-			
+			myZip.getInputStream().close();
+
 			ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder = 
 					context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), imageFileNames.size());
 			
@@ -282,34 +368,77 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			textureArrayBuilder.setLinearFilteringEnabled(true);
 			textureArray = textureArrayBuilder.createTexture();
 			
+			if(loadingCallback != null) {
+				loadingCallback.setMaximum(imageFileNames.size());
+			}
+
+//			boolean needsRotation = false;
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
 				imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
-				if (!imageFile.exists())
-				//if (!myZip.exists(imageFile))
+				if (!myZip.exists(imageFile))
 				{
-					String[] filenameParts = imageFileNames.get(i).split("\\.");
-			    	filenameParts[filenameParts.length - 1] = "png";
-			    	String pngFileName = String.join(".", filenameParts);
-			    	imageFile = new File(imageOptions.getFilePath(), pngFileName);
+					// Try some alternate file formats/extensions
+					String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
+					for(final String extension : altFormats)
+					{
+						String[] filenameParts = imageFileNames.get(i).split("\\.");
+				    	filenameParts[filenameParts.length - 1] = extension;
+				    	String altFileName = String.join(".", filenameParts);
+				    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);
+				    	
+				    	if(myZip.exists(imageFileGuess))
+				    	{
+				    		imageFile = imageFileGuess;
+				    		break;
+				    	}
+					}
 
-			    	if (!imageFile.exists())
-			    	//if(!myZip.exists(imageFile))
+					// Is it still not there?
+			    	if(!myZip.exists(imageFile))
 			    	{
 			    		throw new FileNotFoundException(
-			    				String.format("'%s' not found.", imageFileNames.get(0)));
+			    				String.format("'%s' not found.", imageFileNames.get(i)));
 			    	}
-				}
+				}				
 				
-				//myZip.retrieveFile(imageFile);
-				//this.textureArray.loadLayer(i, myZip, true);
+				myZip.retrieveFile(imageFile);
+
+				// Examine image
+				img = ImageIO.read(myZip.retrieveFile(imageFile));
+				if(img == null)
+				{
+					throw new IOException(String.format("Error: Unsupported image format '%s'.",
+							imageFileNames.get(i)));				
+				}
+				myZip.getInputStream().close();
+
+				// TODO: This is a beginning try at supporting rotated images, needs work
+//				needsRotation = false;
+//				(img.getWidth() == textureArray.getHeight() && img.getHeight() == textureArray.getWidth());
+//				if(!needsRotation &&
+//						(img.getWidth() != textureArray.getWidth() || img.getHeight() != textureArray.getHeight()))
+//				{
+//					// Image resolution does not match
+//					// TODO: resample image to match so we can proceed
+//				}
+				
 				this.textureArray.loadLayer(i, imageFile, true);
+
+				if(loadingCallback != null) {
+					loadingCallback.setProgress(i+1);
+				}
 			}
 
+			myZip.close();
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		}
 	}
 	
+	/**
+	 * Deletes all the GL resources associated with this view set.
+	 * Attempting to use these resources after calling this method will have undefined results.
+	 */
 	public void deleteOpenGLResources()
 	{
 		if (cameraPoseBuffer != null)
@@ -348,12 +477,58 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		}
 	}
 	
-	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(File vsetFile, ContextType context) throws IOException
+	/**
+	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param vsetFile The VSET file to load.
+	 * @param context The GL context in which to create the resources.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(
+			File vsetFile, ContextType context) throws IOException
 	{
-		return ViewSet.loadFromVSETFile(vsetFile, new ViewSetImageOptions(null, false, false, false), context);
+		return ViewSet.loadFromVSETFile(vsetFile, context, null);
 	}
 
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(File vsetFile, ViewSetImageOptions imageOptions, ContextType context) throws IOException
+	/**
+	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param vsetFile The VSET file to load.
+	 * @param context The GL context in which to create the resources.
+	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(
+			File vsetFile, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+	{
+		return ViewSet.loadFromVSETFile(vsetFile, new ViewSetImageOptions(null, false, false, false), context, loadingCallback);
+	}
+	
+	/**
+	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param vsetFile The VSET file to load.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param context The GL context in which to create the resources.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
+			File vsetFile, ViewSetImageOptions imageOptions, ContextType context) throws IOException
+	{
+		return ViewSet.loadFromVSETFile(vsetFile, new ViewSetImageOptions(null, false, false, false), context, null);
+	}
+
+	/**
+	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param vsetFile The VSET file to load.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param context The GL context in which to create the resources.
+	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
+			File vsetFile, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
 		Date timestamp = new Date();
 
@@ -369,8 +544,12 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		
 		float recommendedNearPlane = 0.0f;
 		float recommendedFarPlane = Float.MAX_VALUE;
+		List<Vector3> cameraLocList = new ArrayList<Vector3>();
+		List<Vector4> cameraQuatList = new ArrayList<Vector4>();
 		List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
+		List<Matrix4> cameraPoseInvList = new ArrayList<Matrix4>();
 		List<Matrix4> orderedCameraPoseList = new ArrayList<Matrix4>();
+		List<Matrix4> orderedCameraPoseInvList = new ArrayList<Matrix4>();
 		List<Projection> cameraProjectionList = new ArrayList<Projection>();
 		List<Vector3> lightPositionList = new ArrayList<Vector3>();
 		List<Vector3> lightIntensityList = new ArrayList<Vector3>();
@@ -389,7 +568,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			}
 			else if (id.equals("p"))
 			{
-				// Pose from quaternion
+				// Pose from quaternion				
 				float x = scanner.nextFloat();
 				float y = scanner.nextFloat();
 				float z = scanner.nextFloat();
@@ -398,8 +577,14 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				float k = scanner.nextFloat();
 				float qr = scanner.nextFloat();
 				
+				cameraLocList.add(new Vector3(x, y, z));
+				cameraQuatList.add(new Vector4(i, j, k, qr));
+				
 				cameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
 					.times(Matrix4.translate(-x, -y, -z)));
+				
+				cameraPoseInvList.add(Matrix4.translate(x, y, z)
+					.times(new Matrix4(Matrix3.fromQuaternion(i, j, k, qr).transpose())));
 				
 				scanner.nextLine();
 			}
@@ -475,6 +660,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				String imgFilename = scanner.nextLine().trim();
 				
 				orderedCameraPoseList.add(cameraPoseList.get(poseId));
+				orderedCameraPoseInvList.add(cameraPoseInvList.get(poseId));
 				cameraProjectionIndexList.add(projectionId);
 				lightIndexList.add(lightId);
 				imageFileNames.add(imgFilename);
@@ -496,13 +682,16 @@ public class ViewSet<ContextType extends Context<ContextType>>
 
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
-		File geometryFile =  new File(imageOptions.getFilePath(), "manifold.obj"); // TODO
-		
 		return new ViewSet<ContextType>(
-			orderedCameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, 
-			imageFileNames, imageOptions, geometryFile, recommendedNearPlane, recommendedFarPlane, context);
+			orderedCameraPoseList, orderedCameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, 
+			imageFileNames, imageOptions, recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
 	}
 	
+	/**
+	 * A private class for representing a "sensor" in an Agisoft PhotoScan XML file.
+	 * @author Michael Tetzlaff
+	 *
+	 */
 	private static class Sensor
 	{
 		int index;
@@ -516,6 +705,12 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    float k1;
 	    float k2;
 	    float k3;
+	    float k4;
+		float p1;
+		float p2;
+	    // TODO: Incorporate this value into the distortion object
+	    @SuppressWarnings("unused")
+	    float skew;
 	    
 	    Sensor(String id)
 	    {
@@ -523,12 +718,20 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    }
 	}
 	
+	/**
+	 * A private class for representing a "camera" in an Agisoft PhotoScan XML file.
+	 * @author Michael Tetzlaff
+	 *
+	 */
 	private static class Camera
 	{
 	    String id;
 	    String filename;
 	    Matrix4 transform;
 	    Sensor sensor;
+	    
+	    @SuppressWarnings("unused")
+		int orientation;
 	    
 	    Camera(String id)
 	    {
@@ -549,25 +752,61 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    }
 	}
 
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(File file, ViewSetImageOptions imageOptions, ContextType context) throws IOException
+	/**
+	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param file The Agisoft PhotoScan XML camera file to load.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param context The GL context in which to create the resources.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
+			File file, ViewSetImageOptions imageOptions, ContextType context) throws IOException
 	{
-		return loadFromAgisoftXMLFile(file, imageOptions, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), context);
+		return loadFromAgisoftXMLFile(file, imageOptions, context, null);
+	}
+
+	/**
+	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param file The Agisoft PhotoScan XML camera file to load.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param context The GL context in which to create the resources.
+	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
+			File file, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+	{
+		return loadFromAgisoftXMLFile(file, imageOptions, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), context, loadingCallback);
 	}
 	
+	/**
+	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param file The Agisoft PhotoScan XML camera file to load.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param lightOffset The default light position relative to the camera to use for every view..
+	 * @param lightIntensity The default light intensity to use for every view.
+	 * @param context The GL context in which to create the resources.
+	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
-		File file, ViewSetImageOptions imageOptions, Vector3 lightOffset, Vector3 lightIntensity, ContextType context) throws IOException
+		File file, ViewSetImageOptions imageOptions, Vector3 lightOffset, Vector3 lightIntensity, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
         
         Sensor sensor = null;
         Camera camera = null;
-        Matrix4 globalTransform = null;
+
         float globalScale = 1.0f;
+        Matrix4 globalRotation = new Matrix4();
+        Vector3 globalTranslate = new Vector3(0.0f, 0.0f, 0.0f);
         
-        String version = "", chunkLabel = "";
+        String version = "", chunkLabel = "", groupLabel = "";
         String sensorID = "", cameraID = "", imageFile = "";
-        
         int intVersion = 0;
         
         XMLInputFactory factory = XMLInputFactory.newInstance();
@@ -580,233 +819,293 @@ public class ViewSet<ContextType extends Context<ContextType>>
                 int event = reader.next();
                 switch(event)
                 {
-                  case XMLStreamConstants.START_ELEMENT:
-                    switch (reader.getLocalName())
-                    {
-                        case "document":
-                            version = reader.getAttributeValue(null, "version");
-                            System.out.printf("PhotoScan XML version %s\n", version);
-                            String[] verComponents = version.split(".");
-                            for(int i=0; i<verComponents.length; i++)
-                            {
-                                intVersion *= 10;
-                                intVersion += Integer.parseInt(verComponents[i]);
-                            }
-                            break;
-                        case "chunk":
-                            chunkLabel = reader.getAttributeValue(null, "label");
-                            System.out.printf("Reading chunk '%s'\n", chunkLabel);
-                            break;
-                        case "sensor":
-                            sensorID = reader.getAttributeValue(null, "id");
-                            System.out.printf("\tAdding sensor '%s'\n", sensorID);
-                            sensor = new Sensor(sensorID);
-                            break;
-                        case "camera":
-                            cameraID = reader.getAttributeValue(null, "id");
-                            if(cameraID == null || cameraSet.contains(new Camera(cameraID)))
-                            {
-                               camera = null;
-                            }
-                            else
-                            {
-                            	if (reader.getAttributeValue(null, "enabled").equals("true"))
-                            	{
-	                                sensorID = reader.getAttributeValue(null, "sensor_id");
-	                                imageFile = reader.getAttributeValue(null, "label");
-	                                System.out.printf("\tAdding camera %s, with sensor %s and image %s\n",
-	                                                    cameraID, sensorID, imageFile);
-	                                camera = new Camera(cameraID, sensorSet.get(sensorID));
-	                                camera.filename = imageFile;
-                            	}
-                            	else
-                            	{
-                            		camera = null;
-                            	}
-                            }
-                            break;
-                        case "image":
-                            if (camera != null)
-                            {
-                                camera.filename = reader.getAttributeValue(null, "path");
-                            }
-                            break;
-                        case "resolution":
-                            if (sensor != null)
-                            {
-                                sensor.width = Float.parseFloat(reader.getAttributeValue(null, "width"));
-                                sensor.height = Float.parseFloat(reader.getAttributeValue(null, "height"));
-                            }
-                            break;
-                        case "fx":
-                            if (sensor != null) 
-                            {
-                                sensor.fx = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "fy":
-                            if (sensor != null) 
-                            {
-                                sensor.fy = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "cx":
-                            if (sensor != null) 
-                            {
-                                sensor.cx = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "cy":
-                            if (sensor != null) 
-                            {
-                                sensor.cy = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "k1":
-                            if (sensor != null) 
-                            {
-                                sensor.k1 = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "k2":
-                            if (sensor != null) 
-                            {
-                                sensor.k2 = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                        case "k3":
-                            if (sensor != null) 
-                            {
-                                sensor.k3 = Float.parseFloat(reader.getElementText());
-                            }
-                            break;
-                            
-                        case "transform":
-                            if(camera == null && version.equals("1.1.0")) break;
-                            
-                        case "rotation":    
-                            String[] components = reader.getElementText().split("\\s");
-                            if ((reader.getLocalName().equals("transform") && components.length < 16) ||
-                                (reader.getLocalName().equals("rotation") && components.length < 9))
-                            {
-                                System.err.println("Error: Not enough components in the transform/rotation matrix");
-                            }
-                            else
-                            {
-                                int expectedSize = 16;
-                                if(reader.getLocalName().equals("rotation")) expectedSize = 9;
-                                
-                                if(components.length > expectedSize)
-                                {
-                                    System.err.println("Warning: Too many components in the transform/rotation matrix, ignoring extras.");                                    
-                                }
-                                
-                                float[] m = new float[expectedSize];
-                                for (int i = 0; i < expectedSize; i++)
-                                {
-                                    m[i] = Float.parseFloat(components[i]);
-                                }
-                                                                
-                                if (camera != null)
-                                {
-                                    // Negate 2nd and 3rd column to rotate 180 degrees around x-axis
-                                	// Invert matrix by transposing rotation and negating translation
-                                    Matrix4 trans;
-                                    if(expectedSize == 9)
-                                    {
-                                        trans = new Matrix4(new Matrix3(
-                                            m[0],  m[3],  m[6],
-                                           -m[1], -m[4], -m[7],
-                                           -m[2], -m[5], -m[8]));
-                                    }
-                                    else
-                                    {
-                                        trans = new Matrix4(new Matrix3(
-	                                             m[0], 	m[4],  m[8],
-	                                            -m[1], -m[5], -m[9],
-	                                            -m[2], -m[6], -m[10]))
-	                                    	.times(Matrix4.translate(-m[3], -m[7], -m[11]));
-                                    }
-                                    
-                                    camera.transform = trans;
-                                }
-                                else
-                                {
-                                    System.out.println("\tSetting global transformation.");
-                                    if(expectedSize == 9)
-                                    {
-                                        globalTransform = new Matrix4(new Matrix3(
-                                            m[0],  m[3],  m[6],
-                                            -m[1], -m[4], -m[7],
-                                            -m[2], -m[5], -m[8]));
-                                    }
-                                    else
-                                    {
-                                        globalTransform = new Matrix4(new Matrix3(
-	                                             m[0], 	m[4],  m[8],
-	                                            -m[1], -m[5], -m[9],
-	                                            -m[2], -m[6], -m[10]))
-                                        	.times(Matrix4.translate(-m[3], -m[7], -m[11]));
-                                    }
-                                }
-                            }
-                            break;
-                            
-                        case "scale":
-                        	if (camera == null)
-                        	{
-                        		globalScale = 1.0f / Float.parseFloat(reader.getElementText());
-                        	}
-                        	break;
-                            
-                        case "property": case "projections": case "depth":
-                        case "frames": case "frame": case "meta": case "R":
-                        case "size": case "center": case "region": case "settings":
-                        case "ground_control": case "mesh": case "texture":
-                        case "model": case "calibration": case "thumbnail":
-                        case "point_cloud": case "points": case "sensors":
-                        case "cameras":
-                           // These can all be safely ignored if version is >= 0.9.1
-                        break;
-                        
-                        case "photo": case "tracks": case "depth_maps":
-                        case "depth_map": case "dense_cloud":
-                           if(intVersion < 110) 
-                           {
-                               System.out.printf("Unexpected tag '%s' for psz version %s\n",
-                                                   reader.getLocalName(), version);
-                           }
-                        break;
-                        
-                        default:
-                           System.out.printf("Unexpected tag '%s'\n", reader.getLocalName());                           
-                           break;
-                    }
-                    break;
-                    
-                case XMLStreamConstants.END_ELEMENT:
-                    switch (reader.getLocalName())
-                    {
-                    case "chunk":
-                        System.out.printf("Finished chunk '%s'\n", chunkLabel);
-                        chunkLabel = "";
-                        break;
-                    case "sensor":
-                        if(sensor != null)
-                        {
-                            sensorSet.put(sensor.id, sensor);
-                            sensor = null;
-                        }
-                        break;
-                    case "camera":
-                        if(camera != null && camera.transform != null)
-                        {
-                           cameraSet.add(camera);
-                           camera = null;
-                        }
-                        break;                        
-                    }
-                    break;
+	                case XMLStreamConstants.START_ELEMENT:
+	                    switch (reader.getLocalName())
+	                    {
+	                        case "document":
+	                            version = reader.getAttributeValue(null, "version");
+	                            String[] verComponents = version.split("\\.");
+	                            for(int i=0; i<verComponents.length; i++)
+	                            {
+	                                intVersion *= 10;
+	                                intVersion += Integer.parseInt(verComponents[i]);
+	                            }
+	                            System.out.printf("PhotoScan XML version %s (%d)\n", version, intVersion);
+	                            break;
+	                        case "chunk":
+	                            chunkLabel = reader.getAttributeValue(null, "label");
+	                            if(chunkLabel == null) { chunkLabel = "unnamed"; }
+	                            System.out.printf("Reading chunk '%s'\n", chunkLabel);
+	                            break;
+	                        case "group":
+	                            groupLabel = reader.getAttributeValue(null, "label");
+	                            System.out.printf("Reading group '%s'\n", groupLabel);
+	                            break;
+	                        case "sensor":
+	                            sensorID = reader.getAttributeValue(null, "id");
+	                            System.out.printf("\tAdding sensor '%s'\n", sensorID);
+	                            sensor = new Sensor(sensorID);
+	                            break;
+	                        case "camera":
+	                            cameraID = reader.getAttributeValue(null, "id");
+	                            if(cameraID == null || cameraSet.contains(new Camera(cameraID)))
+	                            {
+	                               camera = null;
+	                            }
+	                            else
+	                            {
+	                            	if (reader.getAttributeValue(null, "enabled").equals("true"))
+	                            	{
+		                                sensorID = reader.getAttributeValue(null, "sensor_id");
+		                                imageFile = reader.getAttributeValue(null, "label");
+		                                camera = new Camera(cameraID, sensorSet.get(sensorID));
+		                                camera.filename = imageFile;
+	                            	}
+	                            	else
+	                            	{
+	                            		camera = null;
+	                            	}
+	                            }
+	                            break;
+	                        case "orientation":
+	                        	if(camera != null)
+	                        	{
+	                        		camera.orientation = Integer.parseInt(reader.getElementText());
+	                        	}
+	                        	break;
+	                        case "image":
+	                            if (camera != null)
+	                            {
+	                                camera.filename = reader.getAttributeValue(null, "path");
+	                            }
+	                            break;
+	                        case "resolution":
+	                            if (sensor != null)
+	                            {
+	                                sensor.width = Float.parseFloat(reader.getAttributeValue(null, "width"));
+	                                sensor.height = Float.parseFloat(reader.getAttributeValue(null, "height"));
+	                            }
+	                            break;
+	                        case "fx":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.fx = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "fy":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.fy = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "cx":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.cx = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "cy":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.cy = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "p1":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.p1 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "p2":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.p2 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "k1":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.k1 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "k2":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.k2 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "k3":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.k3 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "k4":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.k4 = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;
+	                        case "skew":
+	                            if (sensor != null) 
+	                            {
+	                                sensor.skew = Float.parseFloat(reader.getElementText());
+	                            }
+	                            break;                        	
+	
+	                        case "transform":
+	                            if(camera == null && intVersion >= 110)
+	                            {
+	                            	break;
+	                            }
+	                                                        
+	                        case "rotation":
+		                        {
+		                            String[] components = reader.getElementText().split("\\s");
+		                            if ((reader.getLocalName().equals("transform") && components.length < 16) ||
+		                                (reader.getLocalName().equals("rotation") && components.length < 9))
+		                            {
+		                                System.err.println("Error: Not enough components in the transform/rotation matrix");
+		                            }
+		                            else
+		                            {
+		                                int expectedSize = 16;
+		                                if(reader.getLocalName().equals("rotation")) expectedSize = 9;
+		                                
+		                                if(components.length > expectedSize)
+		                                {
+		                                    System.err.println("Warning: Too many components in the transform/rotation matrix, ignoring extras.");                                    
+		                                }
+		                                
+		                                float[] m = new float[expectedSize];
+		                                for (int i = 0; i < expectedSize; i++)
+		                                {
+		                                    m[i] = Float.parseFloat(components[i]);
+		                                }
+		                                                                
+		                                if (camera != null)
+		                                {
+		                                    // Negate 2nd and 3rd column to rotate 180 degrees around x-axis
+		                                	// Invert matrix by transposing rotation and negating translation
+		                                    Matrix4 trans;
+		                                    if(expectedSize == 9)
+		                                    {
+		                                        trans = new Matrix4(new Matrix3(
+		                                            m[0],  m[3],  m[6],
+		                                           -m[1], -m[4], -m[7],
+		                                           -m[2], -m[5], -m[8]));
+		                                    }
+		                                    else
+		                                    {
+		                                        trans = new Matrix4(new Matrix3(
+			                                             m[0], 	m[4],  m[8],
+			                                            -m[1], -m[5], -m[9],
+			                                            -m[2], -m[6], -m[10]))
+			                                    	.times(Matrix4.translate(-m[3], -m[7], -m[11]));
+		                                    }
+		                                    
+		                                    camera.transform = trans;
+		                                }
+		                                else
+		                                {
+		                                    if(expectedSize == 9)
+		                                    {
+		                                        System.out.println("\tSetting global rotation.");
+		                                    	globalRotation = new Matrix4(new Matrix3(
+		                                            m[0], m[3], m[6],
+		                                            m[1], m[4], m[7],
+		                                            m[2], m[5], m[8]));
+		                                    }
+		                                    else
+		                                    {
+		                                        System.out.println("\tSetting global transformation.");
+		                                    	globalRotation = new Matrix4(new Matrix3(
+			                                             m[0], 	m[4],  m[8],
+			                                             m[1],  m[5],  m[9],
+			                                             m[2],  m[6],  m[10]))
+		                                        	.times(Matrix4.translate(m[3], m[7], m[11]));
+		                                    }
+		                                }
+		                            }
+		                        }
+	                            break;
+	                            
+	                        case "translation":
+	                        	if (camera == null)
+	                        	{
+	                                System.out.println("\tSetting global translate.");
+	                                String[] components = reader.getElementText().split("\\s");
+	                                globalTranslate = new Vector3(
+	                                		-Float.parseFloat(components[0]),
+	                                		-Float.parseFloat(components[1]),
+	                                		-Float.parseFloat(components[2]));
+	                        	}
+	                        	break;
+	                        	
+	                        case "scale":
+	                        	if (camera == null)
+	                        	{
+	                                System.out.println("\tSetting global scale.");
+	                    			globalScale = 1.0f/Float.parseFloat(reader.getElementText());
+	                        	}
+	                        	break;
+	                            
+	                        case "property": case "projections": case "depth":
+	                        case "frames": case "frame": case "meta": case "R":
+	                        case "size": case "center": case "region": case "settings":
+	                        case "ground_control": case "mesh": case "texture":
+	                        case "model": case "calibration": case "thumbnail":
+	                        case "point_cloud": case "points": case "sensors":
+	                        case "cameras":
+	                           // These can all be safely ignored if version is >= 0.9.1
+	                        break;
+	                        
+	                        case "photo": case "tracks": case "depth_maps":
+	                        case "depth_map": case "dense_cloud":
+	                           if(intVersion < 110) 
+	                           {
+	                               System.out.printf("Unexpected tag '%s' for psz version %s\n",
+	                                                   reader.getLocalName(), version);
+	                           }
+	                        break;
+	                        
+	                        default:
+	                           System.out.printf("Unexpected tag '%s'\n", reader.getLocalName());                           
+	                           break;
+	                    }
+	                    break;
+	                    
+	                case XMLStreamConstants.END_ELEMENT:
+	                {
+	                    switch (reader.getLocalName())
+	                    {
+		                    case "chunk":
+		                        System.out.printf("Finished chunk '%s'\n", chunkLabel);
+		                        chunkLabel = "";
+		                        break;
+		                    case "group":
+		                        System.out.printf("Finished group '%s'\n", groupLabel);
+		                        groupLabel = "";
+		                        break;
+		                    case "sensor":
+		                        if(sensor != null)
+		                        {
+		                            sensorSet.put(sensor.id, sensor);
+		                            sensor = null;
+		                        }
+		                        break;
+		                    case "camera":
+		                        if(camera != null && camera.transform != null)
+		                        {
+		                           cameraSet.add(camera);
+		                           System.out.printf("\tAdding camera %s, with sensor %s and image %s\n",
+		                                   cameraID, sensorID, imageFile);
+		                           camera = null;
+		                        }
+		                        break;                        
+	                    }
+	                }
+	                break;
                 }
             }
         }
@@ -814,8 +1113,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
         {
             e.printStackTrace();
         }
-        
+
+        // Initialize internal lists
         List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
+        List<Matrix4> cameraPoseInvList = new ArrayList<Matrix4>();
 		List<Projection> cameraProjectionList = new ArrayList<Projection>();
 		List<Vector3> lightPositionList = new ArrayList<Vector3>();
 		List<Vector3> lightIntensityList = new ArrayList<Vector3>();
@@ -839,28 +1140,78 @@ public class ViewSet<ContextType extends Context<ContextType>>
         		sensors[i].cy,
         		sensors[i].k1,
         		sensors[i].k2,
-        		sensors[i].k3
+        		sensors[i].k3,
+        		sensors[i].k4,
+        		sensors[i].p1,
+        		sensors[i].p2
     		));
         }
-        
+                
         Camera[] cameras = cameraSet.toArray(new Camera[0]);
         
         // Fill out the camera pose, projection index, and light index lists
         for (int i = 0; i < cameras.length; i++)
         {
+        	// Apply the global transform to each camera
         	Matrix4 m1 = cameras[i].transform;
-            
-        	// Apply the global transform to each camera (if there is one)
-            if(globalTransform != null)
-            {
-            	cameras[i].transform = m1.times(globalTransform).times(Matrix4.scale(globalScale));
-            }
-            else
-            {
-            	cameras[i].transform = m1.times(Matrix4.scale(globalScale));
-            }
         	
+        	// TODO: Figure out the right way to integrate the global transforms
+            cameras[i].transform = m1.times(globalRotation)
+            						 .times(Matrix4.translate(globalTranslate))
+            						 .times(Matrix4.scale(globalScale));
+        	            
             cameraPoseList.add(cameras[i].transform);
+            
+            // Compute inverse by just reversing steps to build transformation
+            Matrix4 cameraPoseInv = Matrix4.scale(1.0f / globalScale)
+            							   .times(Matrix4.translate(globalTranslate.negated()))
+						        		   .times(globalRotation.transpose())
+						        		   .times(new Matrix4(new Matrix3(m1).transpose()))
+						            	   .times(Matrix4.translate(new Vector3(m1.getColumn(3).negated())));
+            cameraPoseInvList.add(cameraPoseInv);
+            
+            Matrix4 expectedIdentity = cameraPoseInv.times(cameras[i].transform);
+            boolean error = false;
+        	for (int r = 0; r < 4; r++)
+            {
+            	for (int c = 0; c < 4; c++)
+            	{
+            		float expectedValue;
+            		if (r == c)
+            		{
+            			expectedValue = 1.0f;
+            		}
+            		else
+            		{
+            			expectedValue = 0.0f;
+            		}
+            		
+            		if(Math.abs(expectedIdentity.get(r, c) - expectedValue) > 0.001f)
+            		{
+            			error = true;
+            			break;
+            		}
+            	}
+            	if (error)
+            	{
+            		break;
+            	}
+            }
+            
+            if (error)
+            {
+	            System.err.println("Warning: matrix inverse could not be computed correctly - transformation is not affine.");
+				for (int r = 0; r < 4; r++)
+				{
+					for (int c = 0; c < 4; c++)
+					{
+						System.err.print("\t" + String.format("%.3f", expectedIdentity.get(r, c)));
+					}
+					System.err.println();
+				}
+            }
+            
+            
             cameraProjectionIndexList.add(cameras[i].sensor.index);
             lightIndexList.add(0);
             imageFileNames.add(cameras[i].filename);
@@ -869,19 +1220,26 @@ public class ViewSet<ContextType extends Context<ContextType>>
         lightPositionList.add(lightOffset);
         lightIntensityList.add(lightIntensity);
 
-        float farPlane = findFarPlane(cameraPoseList);
-        return new ViewSet<ContextType>(cameraPoseList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
-        		imageFileNames, imageOptions, null, farPlane / 16.0f, farPlane, context);
+        float farPlane = findFarPlane(cameraPoseInvList) * globalScale;
+        System.out.println("Near and far planes: " + (farPlane/16.0f) + ", " + (farPlane));
+        return new ViewSet<ContextType>(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
+        		imageFileNames, imageOptions, farPlane / 32.0f, farPlane, context, loadingCallback);
     }
 	
-	private static float findFarPlane(List<Matrix4> cameraPoseList)
+	/**
+	 * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan XML file.
+	 * Assumes that the object must lie between all of the cameras in the file.
+	 * @param cameraPoseList The list of camera poses.
+	 * @return A far plane estimate.
+	 */
+	private static float findFarPlane(List<Matrix4> cameraPoseInvList)
 	{
 		float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY, minZ = Float.POSITIVE_INFINITY;
 		float maxX = Float.NEGATIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY, maxZ = Float.NEGATIVE_INFINITY;
 		
-		for (Matrix4 pose : cameraPoseList)
+		for (int i = 0; i < cameraPoseInvList.size(); i++)
 		{
-			Vector3 position = new Matrix3(pose).transpose().times(new Vector3(pose.getColumn(3)).negated());
+			Vector4 position = cameraPoseInvList.get(i).getColumn(3);
 			minX = Math.min(minX, position.x);
 			minY = Math.min(minY, position.y);
 			minZ = Math.min(minZ, position.z);
@@ -889,105 +1247,272 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			maxY = Math.max(maxY, position.y);
 			maxZ = Math.max(maxZ, position.z);
 		}
+	
+		// Corner-to-corner
+		float dX = (maxX-minX), dY = (maxY-minY), dZ = (maxZ-minZ);
+		return (float)Math.sqrt(dX*dX + dY*dY + dZ*dZ);
 		
-		return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
+		// Longest Side approach
+//		return Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
 	}
+	
+    public void writeVSETFileToStream(OutputStream outputStream)
+    {
+	    PrintStream out = new PrintStream(outputStream);
+	    out.println("# Created by ULF Renderer from PhotoScan XML file");
 
+	    out.println("# Estimated near and far planes");
+	    out.printf("c\t%.8f\t%.8f\n", recommendedNearPlane, recommendedFarPlane);
+	    
+	    out.println("# " + cameraProjectionList.size() + (cameraProjectionList.size()==1?" Sensor":" Sensors"));
+	    for (Projection proj : cameraProjectionList)
+	    {
+	        out.println(proj.toVSETString());
+	    }
+	
+	    out.println("\n# " + cameraPoseList.size() + (cameraPoseList.size()==1?" Camera":" Cameras"));
+	    for (Matrix4 pose : cameraPoseList)
+	    {
+	    	Matrix3 rot = new Matrix3(pose);
+	    	Vector4 quat = rot.toQuaternion();
+	    	Vector4 loc = pose.getColumn(3);
+	    	out.printf("p\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+	    				loc.x, loc.y, loc.z, quat.x, quat.y, quat.z, quat.w);
+	    }
+
+	    if(!lightPositionList.isEmpty())
+	    {
+		    out.println("\n# " + lightPositionList.size() + (lightPositionList.size()==1?" Light":" Lights"));
+		    for (int ID=0; ID < lightPositionList.size(); ID++)		    	
+		    {
+		    	Vector3 pos = lightPositionList.get(ID);
+		    	Vector3 intensity = lightIntensityList.get(ID);
+		    	out.printf("l\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f", pos.x, pos.y, pos.z, intensity.x, intensity.y, intensity.z);
+		    }	    
+	    }
+	    	    
+	    out.println("\n# " + cameraPoseList.size() + (cameraPoseList.size()==1?" View":" Views"));
+	    for (int ID=0; ID<cameraPoseList.size(); ID++)
+	    {
+	        out.printf("v\t%d\t%d\t%d\t%s\n", ID,  cameraProjectionIndexList.get(ID), lightIndexList.get(ID), imageFileNames.get(ID));
+	    }
+	    
+	    out.close();
+    }
+
+	/**
+	 * Gets the camera pose defining the transformation from object space to camera space for a particular view.
+	 * @param poseIndex The index of the camera pose to retrieve.
+	 * @return The camera pose as a 4x4 affine transformation matrix.
+	 */
 	public Matrix4 getCameraPose(int poseIndex) 
 	{
 		return this.cameraPoseList.get(poseIndex);
 	}
-	
-	public File getGeometryFile()
+
+	/**
+	 * Gets the inverse of the camera pose, defining the transformation from camera space to object space for a particular view.
+	 * @param poseIndex The index of the camera pose to retrieve.
+	 * @return The inverse camera pose as a 4x4 affine transformation matrix.
+	 */
+	public Matrix4 getCameraPoseInverse(int poseIndex) 
 	{
-		return this.geometryFile;
+		return this.cameraPoseInvList.get(poseIndex);
 	}
 	
+	/**
+	 * Gets the name of the geometry file associated with this view set.
+	 * @return The name of the geometry file.
+	 */
+	public String getGeometryFileName()
+	{
+		return "manifold.obj"; // TODO
+	}
+	
+	/**
+	 * Gets the geometry file associated with this view set.
+	 * @return The geometry file.
+	 */
+	public File getGeometryFile()
+	{
+		return new File(this.filePath, "manifold.obj"); // TODO
+	}
+	
+	/**
+	 * Gets the relative name of the image file corresponding to a particular view.
+	 * @param poseIndex The index of the image file to retrieve.
+	 * @return The image file's relative name.
+	 */
 	public String getImageFileName(int poseIndex)
 	{
 		return this.imageFileNames.get(poseIndex);
 	}
 
+	/**
+	 * Gets the image file corresponding to a particular view.
+	 * @param poseIndex The index of the image file to retrieve.
+	 * @return The image file.
+	 */
 	public File getImageFile(int poseIndex) 
 	{
-		return new File(this.imageFilePath, this.imageFileNames.get(poseIndex));
+		return new File(this.filePath, this.imageFileNames.get(poseIndex));
 	}
 
+	/**
+	 * Gets the projection transformation defining the intrinsic properties of a particular camera.
+	 * @param projectionIndex The index of the camera whose projection transformation is to be retrieved.
+	 * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
+	 * @return The projection transformation.
+	 */
 	public Projection getCameraProjection(int projectionIndex) 
 	{
 		return this.cameraProjectionList.get(projectionIndex);
 	}
 
+	/**
+	 * Gets the index of the projection transformation to be used for a particular view, 
+	 * which can subsequently be used with getCameraProjection() to obtain the corresponding projection transformation itself.
+	 * @param poseIndex The index of the view.
+	 * @return The index of the projection transformation.
+	 */
 	public Integer getCameraProjectionIndex(int poseIndex) 
 	{
 		return this.cameraProjectionIndexList.get(poseIndex);
 	}
 	
-	public Vector3 getLightPosition(int projectionIndex) 
+	/**
+	 * Gets the position of a particular light source.
+	 * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 * @param lightIndex The index of the light source.
+	 * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
+	 * @return The position of the light source.
+	 */
+	public Vector3 getLightPosition(int lightIndex) 
 	{
-		return this.lightPositionList.get(projectionIndex);
+		return this.lightPositionList.get(lightIndex);
 	}
 	
-	public Vector3 getLightIntensity(int projectionIndex) 
+	/**
+	 * Gets the intensity of a particular light source.
+	 * Used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 * @param lightIndex The index of the light source.
+	 * IMPORTANT: this is NOT usually the same as the index of the view to be retrieved.
+	 * @return The position of the light source.
+	 */
+	public Vector3 getLightIntensity(int lightIndex) 
 	{
-		return this.lightIntensityList.get(projectionIndex);
+		return this.lightIntensityList.get(lightIndex);
 	}
 	
+	/**
+	 * Gets the index of the light source to be used for a particular view,
+	 * which can subsequently be used with getLightPosition() and getLightIntensity() to obtain the actual position and intensity of the light source.
+	 * @param poseIndex The index of the view.
+	 * @return The index of the light source.
+	 */
 	public Integer getLightPositionIndex(int poseIndex) 
 	{
 		return this.lightIndexList.get(poseIndex);
 	}
 	
+	/**
+	 * Gets the number of camera poses defined in this view set.
+	 * @return The number of camera poses defined in this view set.
+	 */
 	public int getCameraPoseCount()
 	{
 		return this.cameraPoseList.size();
 	}
 	
+	/**
+	 * Gets the number of projection transformations defined in this view set.
+	 * @return The number of projection transformations defined in this view set.
+	 */
 	public int getCameraProjectionCount()
 	{
 		return this.cameraProjectionList.size();
 	}
 	
+	/**
+	 * Gets a GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
+	 * These are necessary to perform projective texture mapping.
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getCameraPoseBuffer()
 	{
 		return this.cameraPoseBuffer;
 	}
 	
+	/**
+	 * Gets a GPU buffer containing projection transformations defining the intrinsic properties of each camera.
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getCameraProjectionBuffer()
 	{
 		return this.cameraProjectionBuffer;
 	}
 	
+	/**
+	 * Gets a GPU buffer containing for every view an index designating the projection transformation that should be used for each view.
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getCameraProjectionIndexBuffer()
 	{
 		return this.cameraProjectionIndexBuffer;
 	}
 	
+	/**
+	 * Gets a GPU buffer containing light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * Assumed by convention to be in camera space.
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getLightPositionBuffer()
 	{
 		return this.lightPositionBuffer;
 	}
 	
+	/**
+	 * Gets a GPU buffer containing light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getLightIntensityBuffer()
 	{
 		return this.lightIntensityBuffer;
 	}
 	
+	/**
+	 * Gets a GPU buffer containing for every view an index designating the light source position and intensity that should be used for each view.
+	 * @return The requested uniform buffer.
+	 */
 	public UniformBuffer<ContextType> getLightIndexBuffer()
 	{
 		return this.lightIndexBuffer;
 	}
 
+	/**
+	 * Gets a texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
+	 * @return The requested texture array.
+	 */
 	public Texture3D<ContextType> getTextures() 
 	{
 		return this.textureArray;
 	}
 
+	/**
+	 * Gets the recommended near plane to use when rendering this view set.
+	 * @return The near plane value.
+	 */
 	public float getRecommendedNearPlane() 
 	{
 		return this.recommendedNearPlane;
 	}
 
+	/**
+	 * Gets the recommended far plane to use when rendering this view set.
+	 * @return The far plane value.
+	 */
 	public float getRecommendedFarPlane() 
 	{
 		return this.recommendedFarPlane;
