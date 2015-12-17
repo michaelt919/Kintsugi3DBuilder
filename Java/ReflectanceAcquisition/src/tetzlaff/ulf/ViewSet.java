@@ -544,8 +544,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		
 		float recommendedNearPlane = 0.0f;
 		float recommendedFarPlane = Float.MAX_VALUE;
-		List<Vector3> cameraLocList = new ArrayList<Vector3>();
-		List<Vector4> cameraQuatList = new ArrayList<Vector4>();
 		List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
 		List<Matrix4> cameraPoseInvList = new ArrayList<Matrix4>();
 		List<Matrix4> orderedCameraPoseList = new ArrayList<Matrix4>();
@@ -577,9 +575,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				float k = scanner.nextFloat();
 				float qr = scanner.nextFloat();
 				
-				cameraLocList.add(new Vector3(x, y, z));
-				cameraQuatList.add(new Vector4(i, j, k, qr));
-				
 				cameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
 					.times(Matrix4.translate(-x, -y, -z)));
 				
@@ -587,6 +582,18 @@ public class ViewSet<ContextType extends Context<ContextType>>
 					.times(new Matrix4(Matrix3.fromQuaternion(i, j, k, qr).transpose())));
 				
 				scanner.nextLine();
+			}
+			else if (id.equals("P"))
+			{
+				// Pose from matrix
+				Matrix4 newPose = new Matrix4(
+					scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
+					scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
+					scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), 
+					scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat());
+				
+				cameraPoseList.add(newPose);
+				cameraPoseInvList.add(newPose.quickInverse(0.001f));
 			}
 			else if (id.equals("d") || id.equals("D"))
 			{
@@ -1273,11 +1280,25 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    out.println("\n# " + cameraPoseList.size() + (cameraPoseList.size()==1?" Camera":" Cameras"));
 	    for (Matrix4 pose : cameraPoseList)
 	    {
-	    	Matrix3 rot = new Matrix3(pose);
-	    	Vector4 quat = rot.toQuaternion();
-	    	Vector4 loc = pose.getColumn(3);
-	    	out.printf("p\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n",
-	    				loc.x, loc.y, loc.z, quat.x, quat.y, quat.z, quat.w);
+	    	// TODO validate quaternion computation
+//	    	Matrix3 rot = new Matrix3(pose);
+//	    	if (rot.determinant() == 1.0f)
+//	    	{
+//	    		// No scale - use quaternion
+//	    		Vector4 quat = rot.toQuaternion();
+//		    	Vector4 loc = pose.getColumn(3);
+//		    	out.printf("p\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n",
+//		    				loc.x, loc.y, loc.z, quat.x, quat.y, quat.z, quat.w);
+//	    	}
+//	    	else
+	    	{
+	    		// Write a general 4x4 matrix
+	    		out.printf("P\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n",
+	    				pose.get(0, 0), pose.get(0, 1), pose.get(0, 2), pose.get(0, 3),
+	    				pose.get(1, 0), pose.get(1, 1), pose.get(1, 2), pose.get(1, 3),
+	    				pose.get(2, 0), pose.get(2, 1), pose.get(2, 2), pose.get(2, 3),
+	    				pose.get(3, 0), pose.get(3, 1), pose.get(3, 2), pose.get(3, 3));
+	    	}
 	    }
 
 	    if(!lightPositionList.isEmpty())
