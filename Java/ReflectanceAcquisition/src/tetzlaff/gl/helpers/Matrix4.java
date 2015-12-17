@@ -279,27 +279,41 @@ public class Matrix4
 	}
 	
 	/**
-	 * Performs a quick inverse of the matrix if the upper-left 3x3 is an orthogonal (rotation) matrix.
+	 * Performs a quick inverse of the matrix if the upper-left 3x3 is the product of an orthogonal (rotation) matrix and uniform scaling, and the final row is identity.
 	 * Throws an exception if this condition is not met (up to a specified tolerance).
-	 * With a tolerance of 1.0, the method will always return.
-	 * @param tolerance A tolerance for orthogonality.
+	 * @param tolerance A tolerance for the accuracy of the inverse matrix.
 	 * @return The inverse of the matrix.
 	 */
 	public Matrix4 quickInverse(float tolerance)
 	{
-		Matrix3 rotation = new Matrix3(this);
+		Matrix3 rotationScale = new Matrix3(this);
+		float scale = rotationScale.determinant();
 		
-		if (Math.abs(rotation.getColumn(0).dot(rotation.getColumn(0)) - 1.0f) > tolerance ||
-			Math.abs(rotation.getColumn(1).dot(rotation.getColumn(1)) - 1.0f) > tolerance ||
-			Math.abs(rotation.getColumn(2).dot(rotation.getColumn(2)) - 1.0f) > tolerance ||
-			Math.abs(rotation.getColumn(0).dot(rotation.getColumn(1))) > tolerance || 
-			Math.abs(rotation.getColumn(0).dot(rotation.getColumn(2))) > tolerance || 
-			Math.abs(rotation.getColumn(1).dot(rotation.getColumn(2))) > tolerance)
+		Matrix4 invCandidate = new Matrix4(rotationScale.transpose().times(1.0f / (scale * scale))).times(Matrix4.translate(new Vector3(this.getColumn(3)).negated()));
+		
+		Matrix4 identityCandidate = this.times(invCandidate);
+		
+		if (Math.abs(identityCandidate.get(0, 0) - 1.0f) > tolerance ||
+			Math.abs(identityCandidate.get(1, 1) - 1.0f) > tolerance ||
+			Math.abs(identityCandidate.get(2, 2) - 1.0f) > tolerance ||
+			Math.abs(identityCandidate.get(3, 3) - 1.0f) > tolerance ||
+			Math.abs(identityCandidate.get(0, 1)) > tolerance ||
+			Math.abs(identityCandidate.get(0, 2)) > tolerance ||
+			Math.abs(identityCandidate.get(0, 3)) > tolerance ||
+			Math.abs(identityCandidate.get(1, 0)) > tolerance ||
+			Math.abs(identityCandidate.get(1, 2)) > tolerance ||
+			Math.abs(identityCandidate.get(1, 3)) > tolerance ||
+			Math.abs(identityCandidate.get(2, 0)) > tolerance ||
+			Math.abs(identityCandidate.get(2, 1)) > tolerance ||
+			Math.abs(identityCandidate.get(2, 3)) > tolerance ||
+			Math.abs(identityCandidate.get(3, 0)) > tolerance ||
+			Math.abs(identityCandidate.get(3, 1)) > tolerance ||
+			Math.abs(identityCandidate.get(3, 2)) > tolerance)
 		{
-			throw new IllegalStateException("Matrix is not orthogonal, therefore a quick inverse cannot be taken.");
+			throw new IllegalStateException("A quick inverse cannot be taken.");
 		}
 				
-		return new Matrix4(rotation.transpose()).times(Matrix4.translate(new Vector3(this.getColumn(3)).negated()));
+		return invCandidate;
 	}
 	
 	public float get(int row, int col)

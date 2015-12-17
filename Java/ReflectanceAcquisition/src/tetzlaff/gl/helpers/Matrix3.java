@@ -316,6 +316,20 @@ public class Matrix3
 	}
 	
 	/**
+	 * Gets a new matrix that is the result of scaling this matrix.
+	 * @param factor The factor by which to scale.
+	 * @return A new matrix that is the result of scaling this matrix by the specified factor.
+	 */
+	public Matrix3 times(float factor)
+	{
+		return new Matrix3(
+			this.m[0][0] * factor, this.m[0][1] * factor, this.m[0][2] * factor,
+			this.m[1][0] * factor, this.m[1][1] * factor, this.m[1][2] * factor,
+			this.m[2][0] * factor, this.m[2][1] * factor, this.m[2][2] * factor
+		);
+	}
+	
+	/**
 	 * Gets a new matrix that is the negation of this matrix.
 	 * @return A new matrix with the values of this matrix, but negated.
 	 */
@@ -339,6 +353,13 @@ public class Matrix3
 			this.m[0][1], this.m[1][1], this.m[2][1],
 			this.m[0][2], this.m[1][2], this.m[2][2]
 		);
+	}
+	
+	public float determinant()
+	{
+		return this.m[0][0] * (this.m[1][1] * this.m[2][2] - this.m[2][1] * this.m[1][2])
+				- this.m[0][1] * (this.m[1][0] * this.m[2][2] - this.m[2][0] * this.m[1][2])
+				+ this.m[0][2] * (this.m[1][0] * this.m[2][1] - this.m[2][0] * this.m[1][1]);
 	}
 	
 	/**

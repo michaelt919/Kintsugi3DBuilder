@@ -9,6 +9,7 @@
 #define MAX_VIRTUAL_LIGHT_COUNT 4
 
 uniform bool occlusionEnabled;
+uniform bool shadowTestingEnabled;
 
 uniform float weightExponent;
 uniform float occlusionBias;
@@ -28,6 +29,7 @@ uniform int virtualLightCount;
 
 uniform sampler2DArray imageTextures;
 uniform sampler2DArray depthTextures;
+uniform sampler2DArray shadowTextures;
 
 uniform sampler2D normalMap;
 
@@ -65,6 +67,11 @@ uniform LightIntensities
 uniform LightIndices
 {
 	int lightIndices[MAX_CAMERA_POSE_COUNT];
+};
+
+uniform ShadowMatrices
+{
+    mat4 shadowMatrices[MAX_CAMERA_POSE_COUNT];
 };
 
 layout(location = 0) out vec4 fragColor;
@@ -225,6 +232,28 @@ vec4 getProjTexSample(int index, bool useMipmaps)
 				// Occluded
 				return vec4(0.0);
 			}
+            else if (shadowTestingEnabled)
+            {
+                vec4 shadowTexCoord = shadowMatrices[index] * vec4(fPosition, 1.0);
+                shadowTexCoord /= shadowTexCoord.w;
+                shadowTexCoord = (shadowTexCoord + vec4(1)) / 2;
+                
+                if (shadowTexCoord.x < 0 || shadowTexCoord.x > 1 || 
+                    shadowTexCoord.y < 0 || shadowTexCoord.y > 1 ||
+                    shadowTexCoord.z < 0 || shadowTexCoord.z > 1)
+                {
+                    return vec4(0);
+                }
+                else
+                {
+                    float shadowImageDepth = texture(shadowTextures, vec3(shadowTexCoord.xy, index)).r;
+                    if (abs(shadowTexCoord.z - shadowImageDepth) > occlusionBias)
+                    {
+                        // Occluded
+                        return vec4(0);
+                    }
+                }
+            }
 		}
         
         vec4 color;
@@ -269,7 +298,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 normalDir, bool useM
     
     vec4 precomputedSample = nDotV * vec4(sampleColor.rgb
             * (infiniteLightSources ? 1.0 : dot(sampleLightDirUnnorm, sampleLightDirUnnorm))
-            / lightIntensities[lightIndices[index]]
+        //    / lightIntensities[lightIndices[index]] // TODO uncomment this
             / computeGeometricAttenuation(sampleViewDir, sampleLightDir, normalDirCameraSpace), 
         sampleColor.a * nDotL);
         
