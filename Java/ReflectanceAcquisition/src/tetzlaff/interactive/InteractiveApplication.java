@@ -7,36 +7,48 @@ import java.util.List;
 
 public class InteractiveApplication
 {
-	private List<EventPollable> pollable;
-	private Refreshable refreshable;
+	private List<EventPollable> pollables;
+	private List<Refreshable> refreshables;
 	
 	public InteractiveApplication(EventPollable pollable, Refreshable refreshable) 
 	{
-		this.pollable = new ArrayList<EventPollable>();
-		this.pollable.add(pollable);
-		this.refreshable = refreshable;
+		this.pollables = new ArrayList<EventPollable>();
+		this.pollables.add(pollable);
+		this.refreshables = new ArrayList<Refreshable>();
+		this.refreshables.add(refreshable);
 	}
 
 	public void addPollable(EventPollable pollable)
 	{
-		this.pollable.add(pollable);		
+		this.pollables.add(pollable);		
+	}
+
+	public void addRefreshable(Refreshable refreshable)
+	{
+		this.refreshables.add(refreshable);		
 	}
 	
 	public void run()
 	{
 		int pollingTime = 0;
 		int refreshTime = 0;
-		this.refreshable.initialize();
+		for (Refreshable refreshable : this.refreshables)
+		{
+			refreshable.initialize();
+		}
 		Date startTimestamp = new Date();
 		Date timestampA = startTimestamp;
 		System.out.println("Main loop started.");
 		boolean shouldTerminate = false;
 		while (!shouldTerminate)
 		{
-			this.refreshable.refresh();
+			for (Refreshable refreshable : this.refreshables)
+			{
+				refreshable.refresh();
+			}
 			Date timestampB = new Date();
 			refreshTime += timestampB.getTime() - timestampA.getTime();
-			for (EventPollable poller : pollable)
+			for (EventPollable poller : pollables)
 			{
 				poller.pollEvents();
 				shouldTerminate = shouldTerminate || poller.shouldTerminate();
@@ -49,7 +61,10 @@ public class InteractiveApplication
 		System.out.println("Total time elapsed: " + (timestampA.getTime() - startTimestamp.getTime()) + " milliseconds");
 		System.out.println("Time spent polling for events: " + pollingTime + " milliseconds");
 		System.out.println("Time spent on refreshes: " + refreshTime + " milliseconds");
-		this.refreshable.terminate();
+		for (Refreshable refreshable : this.refreshables)
+		{
+			refreshable.terminate();
+		}
 	}
 	
 	public static void runSimultaneous(Iterable<InteractiveApplication> apps)
@@ -57,7 +72,10 @@ public class InteractiveApplication
 		Collection<InteractiveApplication> activeApps = new ArrayList<InteractiveApplication>();
 		for (InteractiveApplication app : apps)
 		{
-			app.refreshable.initialize();
+			for (Refreshable refreshable : app.refreshables)
+			{
+				refreshable.initialize();
+			}
 			activeApps.add(app);
 		}
 		
@@ -67,7 +85,7 @@ public class InteractiveApplication
 			for (InteractiveApplication app : activeApps)
 			{
 				boolean shouldTerminate = false;
-				for (EventPollable poller : app.pollable)
+				for (EventPollable poller : app.pollables)
 				{
 					shouldTerminate = shouldTerminate || poller.shouldTerminate();
 				}
@@ -79,18 +97,24 @@ public class InteractiveApplication
 			}
 			for (InteractiveApplication app : appsToTerminate)
 			{
-				app.refreshable.terminate();
+				for (Refreshable refreshable : app.refreshables)
+				{
+					refreshable.terminate();
+				}
 			}
 			activeApps.removeAll(appsToTerminate);
 			
 			for (InteractiveApplication app : activeApps)
 			{
-				app.refreshable.refresh();
+				for (Refreshable refreshable : app.refreshables)
+				{
+					refreshable.refresh();
+				}
 			}
 
 			for (InteractiveApplication app : activeApps)
 			{
-				for (EventPollable poller : app.pollable)
+				for (EventPollable poller : app.pollables)
 				{
 					poller.pollEvents();
 				}
