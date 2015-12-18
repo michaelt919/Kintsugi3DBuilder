@@ -46,6 +46,11 @@ public class VertexMesh
 	 * The centroid of the mesh - that is, the average of all the vertex positions.
 	 */
 	private Vector3 centroid;
+	
+	/**
+	 * The tangent vectors
+	 */
+	private FloatVertexList orthoTangents;
 
 	/**
 	 * Loads a new vertex mesh from a file.
@@ -81,9 +86,11 @@ public class VertexMesh
 		this.hasTexCoords = true;
 		
 		// Initialize dynamic tables to store the data from the file
-		List<Float> vertexList = new ArrayList<Float>();
-		List<Float> normalList = new ArrayList<Float>();
-		List<Float> texCoordList = new ArrayList<Float>();
+		List<Vector3> vertexList = new ArrayList<Vector3>(); // TODO why aren't these lists of Vector3?
+		List<Vector3> normalList = new ArrayList<Vector3>();
+		List<Vector3> tangentList = new ArrayList<Vector3>();
+		List<Vector3> bitangentList = new ArrayList<Vector3>();
+		List<Vector2> texCoordList = new ArrayList<Vector2>();
 		List<Integer> vertexIndexList = new ArrayList<Integer>();
 		List<Integer> normalIndexList = new ArrayList<Integer>();
 		List<Integer> texCoordIndexList = new ArrayList<Integer>();
@@ -104,17 +111,14 @@ public class VertexMesh
 					
 					sum = sum.plus(new Vector3(x,y,z));
 					
-					vertexList.add(x);
-					vertexList.add(y);
-					vertexList.add(z);
+					vertexList.add(new Vector3(x,y,z));
 				}
 				else if (id.equals("vt"))
 				{
 					// Texture coordinate
 					if (this.hasTexCoords)
 					{
-						texCoordList.add(scanner.nextFloat());
-						texCoordList.add(scanner.nextFloat());
+						texCoordList.add(new Vector2(scanner.nextFloat(), scanner.nextFloat()));
 					}
 				}
 				else if (id.equals("vn"))
@@ -128,9 +132,10 @@ public class VertexMesh
 						
 						// Normalize to unit length
 						float scale = 1.0f / (float)Math.sqrt(nx*nx + ny*ny + nz*nz);
-						normalList.add(nx * scale);
-						normalList.add(ny * scale);
-						normalList.add(nz * scale);
+						normalList.add(new Vector3(nx, ny, nz).times(scale));
+						
+						tangentList.add(new Vector3(0.0f, 0.0f, 0.0f));
+						bitangentList.add(new Vector3(0.0f, 0.0f, 0.0f));
 					}
 				}
 				else if (id.equals("f"))
@@ -197,6 +202,38 @@ public class VertexMesh
 							}
 						}
 					}
+					
+					if (this.hasTexCoords)
+					{
+						if (this.hasNormals)
+						{
+							Vector3 position0 = vertexList.get(vertexIndexList.get(vertexIndexList.size() - 3));
+							Vector3 position1 = vertexList.get(vertexIndexList.get(vertexIndexList.size() - 2));
+							Vector3 position2 = vertexList.get(vertexIndexList.get(vertexIndexList.size() - 1));
+
+							Vector2 texCoords0 = texCoordList.get(texCoordIndexList.get(texCoordIndexList.size() - 3));
+							Vector2 texCoords1 = texCoordList.get(texCoordIndexList.get(texCoordIndexList.size() - 2));
+							Vector2 texCoords2 = texCoordList.get(texCoordIndexList.get(texCoordIndexList.size() - 1));
+							
+							Vector3[] tangents = computeTangents(position0, position1, position2, texCoords0, texCoords1, texCoords2);
+							
+							int normalIndex0 = normalIndexList.get(normalIndexList.size() - 3);
+							int normalIndex1 = normalIndexList.get(normalIndexList.size() - 3);
+							int normalIndex2 = normalIndexList.get(normalIndexList.size() - 3);
+							
+							tangentList.set(normalIndex0, tangentList.get(normalIndex0).plus(tangents[0]));
+							tangentList.set(normalIndex1, tangentList.get(normalIndex1).plus(tangents[0]));
+							tangentList.set(normalIndex2, tangentList.get(normalIndex2).plus(tangents[0]));
+
+							bitangentList.set(normalIndex0, bitangentList.get(normalIndex0).plus(tangents[1]));
+							bitangentList.set(normalIndex1, bitangentList.get(normalIndex1).plus(tangents[1]));
+							bitangentList.set(normalIndex2, bitangentList.get(normalIndex2).plus(tangents[1]));
+						}
+						else
+						{
+							// TODO
+						}
+					}
 				}
 				
 				// Always advance to the next line.
@@ -206,15 +243,23 @@ public class VertexMesh
 		
 		centroid = sum.dividedBy(vertexList.size() / 3);
 		
+		ArrayList<Vector4> orthoTangentsList = new ArrayList<Vector4>();
+		
+		// Normalize and orthogonalize tangent vectors
+		for (int i = 0; i < tangentList.size(); i++)
+		{
+			orthoTangentsList.add(orthogonalizeTangent(normalList.get(i), tangentList.get(i), bitangentList.get(i)));
+		}
+		
 		// Copy the data from the dynamic tables into a data structure that OpenGL can use.
 		int vertexCount = vertexIndexList.size();
 		vertices = new FloatVertexList(3, vertexCount * 3);
 		int i = 0;
 		for (int k : vertexIndexList)
 		{
-			vertices.set(i, 0, vertexList.get(3 * k));
-			vertices.set(i, 1, vertexList.get(3 * k + 1));
-			vertices.set(i, 2, vertexList.get(3 * k + 2));
+			vertices.set(i, 0, vertexList.get(k).x);
+			vertices.set(i, 1, vertexList.get(k).y);
+			vertices.set(i, 2, vertexList.get(k).z);
 			i++;
 		}
 		
@@ -224,9 +269,9 @@ public class VertexMesh
 			i = 0;
 			for (int k : normalIndexList)
 			{
-				normals.set(i, 0, normalList.get(3 * k));
-				normals.set(i, 1, normalList.get(3 * k + 1));
-				normals.set(i, 2, normalList.get(3 * k + 2));
+				normals.set(i, 0, normalList.get(k).x);
+				normals.set(i, 1, normalList.get(k).y);
+				normals.set(i, 2, normalList.get(k).z);
 				i++;
 			}
 		}
@@ -237,13 +282,76 @@ public class VertexMesh
 			i = 0;
 			for (int k : texCoordIndexList)
 			{
-				texCoords.set(i, 0, texCoordList.get(2 * k));
-				texCoords.set(i, 1, texCoordList.get(2 * k + 1));
+				texCoords.set(i, 0, texCoordList.get(k).x);
+				texCoords.set(i, 1, texCoordList.get(k).y);
+				i++;
+			}
+		}
+		
+		if (hasTexCoords && hasNormals)
+		{
+			orthoTangents = new FloatVertexList(4, vertexCount * 3);
+			i = 0;
+			// TODO: How should I do tangentIndexList? 
+			for (int k : normalIndexList)
+			{
+				orthoTangents.set(i, 0, orthoTangentsList.get(k).x);
+				orthoTangents.set(i, 1, orthoTangentsList.get(k).y);
+				orthoTangents.set(i, 2, orthoTangentsList.get(k).z);
+				orthoTangents.set(i, 3, orthoTangentsList.get(k).w);
 				i++;
 			}
 		}
 		
 		System.out.println("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+	}
+	
+	private Vector3[] computeTangents(
+			Vector3 position0, Vector3 position1, Vector3 position2,
+			Vector2 texCoords0, Vector2 texCoords1, Vector2 texCoords2)
+	{
+		Vector3[] tangents = new Vector3[2];
+		
+		float s1 = texCoords1.x - texCoords0.x;
+		float s2 = texCoords2.x - texCoords0.x;
+		float t1 = texCoords1.y - texCoords0.y;
+		float t2 = texCoords2.y - texCoords0.y;
+		
+		float r = 1.0f / (s1 * t2 - s2 * t1);
+		
+		Vector3 q1 = position1.minus(position0);
+		Vector3 q2 = position2.minus(position0);
+		
+		tangents[0] = q1.times(r * t2).plus(q2.times(r * -t1));
+		tangents[1] = q1.times(r * -s2).plus(q2.times(r * s1));
+		
+		return tangents;
+	}
+	
+	private Vector4 orthogonalizeTangent(Vector3 normal, Vector3 tangent, Vector3 bitangent)
+	{
+		Vector3 orthoTangent;
+		Vector3 orthoBitangent;
+		
+		orthoTangent = tangent.minus(normal.times(normal.dot(tangent)));
+		
+		orthoBitangent = bitangent.minus(normal.times(normal.dot(bitangent)).minus(orthoTangent.times
+				(orthoTangent.dot(bitangent)).dividedBy(orthoTangent.dot(orthoTangent))));
+		
+		// dot product with normal gets value of 0 or really small e-7
+		// There is at least one value of Bitangent that is NaN. 
+		//System.out.println( "tangent" + orthoTangent.dot(normal) ); 
+		//System.out.println( "Bitangent" + orthoBitangent.dot(normal) );
+		if (Math.abs(orthoTangent.dot(normal)) > 10E-6)
+		{
+			System.out.println( "Tangent not 0" );
+		}
+		if (Math.abs(orthoBitangent.dot(normal)) > 10E-6)
+		{
+			System.out.println( "Bitangent not 0" );
+		}
+		
+		return new Vector4(orthoTangent, orthoBitangent.dot(normal.cross(orthoTangent)));
 	}
 	
 	/**
@@ -299,4 +407,10 @@ public class VertexMesh
 	{
 		return centroid;
 	}
+	
+	public FloatVertexList getOrthoTangents()
+	{
+		return orthoTangents;
+	}
+	
 }

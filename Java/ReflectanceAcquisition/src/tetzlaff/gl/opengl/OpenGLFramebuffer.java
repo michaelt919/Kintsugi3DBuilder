@@ -119,7 +119,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 	public void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException
 	{
         int[] pixels = this.readColorBufferARGB(attachmentIndex);
-        
+
         // Flip the array vertically
         FramebufferSize size = this.getSize();
         for (int y = 0; y < size.height / 2; y++)
