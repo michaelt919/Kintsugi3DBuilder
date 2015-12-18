@@ -7,26 +7,26 @@ import javax.swing.AbstractListModel;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
+import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.MultiDrawable;
-import tetzlaff.gl.helpers.Trackball;
 
 public abstract class ULFDrawableListModel<ContextType extends Context<ContextType>> extends AbstractListModel<ULFDrawable<ContextType>> implements ULFListModel<ContextType>
 {
 	private static final long serialVersionUID = 4167467314632694946L;
 	
 	protected final ContextType context;
-	protected final Trackball trackball;
+	protected final CameraController cameraController;
 	private Program<ContextType> program;
 	private Program<ContextType> indexProgram;
 	private MultiDrawable<ULFDrawable<ContextType>> ulfs;
 	private int effectiveSize;
 	private ULFLoadingMonitor loadingMonitor;
 	
-	protected ULFDrawableListModel(ContextType context, Program<ContextType> program, Trackball trackball) 
+	protected ULFDrawableListModel(ContextType context, Program<ContextType> program, CameraController cameraController) 
 	{
 		this.context = context;
-		this.trackball = trackball;
+		this.cameraController = cameraController;
 		this.ulfs = new MultiDrawable<ULFDrawable<ContextType>>();
 		this.effectiveSize = 0;
 		
@@ -63,6 +63,11 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 		{
 			ulf.setIndexProgram(program);
 		}
+	}
+	
+	protected CameraController getCameraController()
+	{
+		return this.cameraController;
 	}
 
 	@Override

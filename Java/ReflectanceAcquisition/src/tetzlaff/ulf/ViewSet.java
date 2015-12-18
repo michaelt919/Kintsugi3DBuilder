@@ -304,9 +304,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		{
 			Date timestamp = new Date();
 			File imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(0));
-			ZipWrapper myZip = new ZipWrapper(imageFile);
-			
-			if (!myZip.exists(imageFile))
+			//ZipWrapper myZip = new ZipWrapper(imageFile);
+
+			if (!imageFile.exists())
+			//if (!myZip.exists(imageFile))
 			{
 				// Try some alternate file formats/extensions
 				String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
@@ -318,7 +319,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);					
 			    	
 			    	System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
-			    	if(myZip.exists(imageFileGuess))
+			    	if (imageFileGuess.exists())
+			    	//if(myZip.exists(imageFileGuess))
 			    	{
 				    	System.out.printf("Found!!\n");
 			    		imageFile = imageFileGuess;
@@ -327,7 +329,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				}
 
 				// Is it still not there?
-		    	if(!myZip.exists(imageFile))
+				if (!imageFile.exists())
+		    	//if(!myZip.exists(imageFile))
 		    	{
 		    		throw new FileNotFoundException(
 		    				String.format("'%s' not found.", imageFileNames.get(0)));
@@ -335,14 +338,15 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			}
 			
 			// Read a single image to get the dimensions for the texture array
-			InputStream input = myZip.retrieveFile(imageFile);
+			InputStream input = new FileInputStream(imageFile); // myZip.retrieveFile(imageFile);
 			BufferedImage img = ImageIO.read(input);
 			if(img == null)
 			{
 				throw new IOException(String.format("Error: Unsupported image format '%s'.",
 						imageFileNames.get(0)));				
 			}
-			myZip.getInputStream().close();
+			//myZip.getInputStream().close();
+			input.close();
 
 			ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder = 
 					context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), imageFileNames.size());
@@ -376,7 +380,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			for (int i = 0; i < imageFileNames.size(); i++)
 			{
 				imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
-				if (!myZip.exists(imageFile))
+				if (!imageFile.exists())
+				//if (!myZip.exists(imageFile))
 				{
 					// Try some alternate file formats/extensions
 					String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
@@ -386,8 +391,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				    	filenameParts[filenameParts.length - 1] = extension;
 				    	String altFileName = String.join(".", filenameParts);
 				    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);
-				    	
-				    	if(myZip.exists(imageFileGuess))
+
+				    	if (imageFileGuess.exists())
+						//if (myZip.exists(imageFileGuess))
 				    	{
 				    		imageFile = imageFileGuess;
 				    		break;
@@ -395,23 +401,25 @@ public class ViewSet<ContextType extends Context<ContextType>>
 					}
 
 					// Is it still not there?
-			    	if(!myZip.exists(imageFile))
+					if (!imageFile.exists())
+					//if (!myZip.exists(imageFile))
 			    	{
 			    		throw new FileNotFoundException(
 			    				String.format("'%s' not found.", imageFileNames.get(i)));
 			    	}
-				}				
-				
-				myZip.retrieveFile(imageFile);
-
-				// Examine image
-				img = ImageIO.read(myZip.retrieveFile(imageFile));
-				if(img == null)
-				{
-					throw new IOException(String.format("Error: Unsupported image format '%s'.",
-							imageFileNames.get(i)));				
 				}
-				myZip.getInputStream().close();
+				
+//				myZip.retrieveFile(imageFile);
+				
+
+//				// Examine image
+//				img = ImageIO.read(myZip.retrieveFile(imageFile));
+//				if(img == null)
+//				{
+//					throw new IOException(String.format("Error: Unsupported image format '%s'.",
+//							imageFileNames.get(i)));				
+//				}
+//				myZip.getInputStream().close();
 
 				// TODO: This is a beginning try at supporting rotated images, needs work
 //				needsRotation = false;
@@ -430,7 +438,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				}
 			}
 
-			myZip.close();
+//			myZip.close();
 			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		}
 	}

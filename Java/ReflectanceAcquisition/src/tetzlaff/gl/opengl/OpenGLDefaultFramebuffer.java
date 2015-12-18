@@ -1,7 +1,6 @@
 package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
-
 import tetzlaff.gl.FramebufferSize;
 
 class OpenGLDefaultFramebuffer extends OpenGLFramebuffer

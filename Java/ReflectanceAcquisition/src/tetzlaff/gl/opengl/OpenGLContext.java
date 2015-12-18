@@ -1,5 +1,7 @@
 package tetzlaff.gl.opengl;
 
+import static org.lwjgl.opengl.EXTTextureCompressionS3TC.*;
+import static org.lwjgl.opengl.EXTTextureSRGB.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL14.*;
@@ -13,8 +15,6 @@ import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.opengl.GL40.*;
 import static org.lwjgl.opengl.GL41.*;
 import static org.lwjgl.opengl.GL43.*;
-import static org.lwjgl.opengl.EXTTextureCompressionS3TC.*;
-import static org.lwjgl.opengl.EXTTextureSRGB.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -52,18 +52,18 @@ import tetzlaff.gl.exceptions.GLInvalidValueException;
 import tetzlaff.gl.exceptions.GLOutOfMemoryException;
 import tetzlaff.gl.exceptions.GLStackOverflowException;
 import tetzlaff.gl.exceptions.GLStackUnderflowException;
-import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
+import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DColorBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DDepthBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DStencilBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DDepthStencilBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DFromBufferBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DFromFileBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DStencilBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DColorBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DStencilBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthStencilBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DStencilBuilder;
 
 public abstract class OpenGLContext implements Context<OpenGLContext>
 {

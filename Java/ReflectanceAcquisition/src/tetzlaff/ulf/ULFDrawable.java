@@ -6,8 +6,6 @@ import java.io.IOException;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.Drawable;
-import tetzlaff.gl.helpers.Trackball;
-import tetzlaff.gl.helpers.Vector3;
 
 public interface ULFDrawable<ContextType extends Context<ContextType>> extends Drawable
 {

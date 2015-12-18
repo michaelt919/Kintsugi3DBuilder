@@ -17,9 +17,9 @@ import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
+import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
-import tetzlaff.gl.helpers.Vector3;
 
 public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
@@ -33,8 +33,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	private ContextType context;
     private Renderable<ContextType> mainRenderable;
     private Renderable<ContextType> indexRenderable;
-    private Trackball trackball;
-    private Trackball globalTrackball;
+    private CameraController cameraController;
     private ULFLoadingMonitor callback;
 
     private boolean viewIndexCacheEnabled;
@@ -56,7 +55,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     
     private boolean multisamplingEnabled = true;
 
-    public ULFRenderer(ContextType context, Program<ContextType> program, Program<ContextType> viewIndexProgram, File cameraFile, File meshFile, ULFLoadOptions loadOptions, Trackball trackball)
+    public ULFRenderer(ContextType context, Program<ContextType> program, Program<ContextType> viewIndexProgram, File cameraFile, File meshFile, ULFLoadOptions loadOptions, CameraController cameraController)
     {
     	this.context = context;
     	this.program = program;
@@ -64,20 +63,14 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.cameraFile = cameraFile;
     	this.geometryFile = meshFile;
     	this.loadOptions = loadOptions;
-    	this.trackball = trackball;
-    	this.globalTrackball = new Trackball(0.0f);
+    	this.cameraController = cameraController;
     	this.viewIndexCacheEnabled = false;
     	this.targetFPS = 30.0f;
     }
 	
-	public void setTrackball(Trackball trackball)
+	public void setCameraController(CameraController cameraController)
 	{
-		this.trackball = trackball;
-	}
-	
-	public void setGlobalTrackball(Trackball globalTrackball)
-	{
-		this.globalTrackball = globalTrackball;
+		this.cameraController = cameraController;
 	}
     
     @Override
@@ -276,13 +269,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 		}
     	
     	mainRenderable.program().setUniform("model_view", 
-			Matrix4.lookAt(
-				new Vector3(0.0f, 0.0f, 5.0f / trackball.getScale() / globalTrackball.getScale()), 
-				new Vector3(0.0f, 0.0f, 0.0f),
-				new Vector3(0.0f, 1.0f, 0.0f)
-			) // View
-			.times(trackball.getRotationMatrix()).times(globalTrackball.getRotationMatrix())
-			.times(Matrix4.translate(lightField.proxy.getCentroid().negated())) // Model
+			cameraController.getViewMatrix()
+				.times(Matrix4.translate(lightField.proxy.getCentroid().negated())) // Model
 		);
     	
     	mainRenderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 8, (float)size.width / (float)size.height, 0.01f, 100.0f));
@@ -322,13 +310,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
         	this.indexRenderable.program().setUniform("cameraPoseCount", lightField.viewSet.getCameraPoseCount());
         	
         	indexRenderable.program().setUniform("model_view", 
-    			Matrix4.lookAt(
-    				new Vector3(0.0f, 0.0f, 5.0f / trackball.getScale()), 
-    				new Vector3(0.0f, 0.0f, 0.0f),
-    				new Vector3(0.0f, 1.0f, 0.0f)
-    			) // View
-    			.times(trackball.getRotationMatrix())
-    			.times(Matrix4.translate(lightField.proxy.getCentroid().negated())) // Model
+    			 cameraController.getViewMatrix() // View
+    			 	.times(Matrix4.translate(lightField.proxy.getCentroid().negated())) // Model
     		);
         	indexRenderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
         	

@@ -8,8 +8,8 @@ import java.io.InputStream;
 
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.DepthStencilTextureBuilder;
-import tetzlaff.gl.builders.FramebufferObjectBuilder;
 import tetzlaff.gl.builders.DepthTextureBuilder;
+import tetzlaff.gl.builders.FramebufferObjectBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.StencilTextureBuilder;
 import tetzlaff.gl.builders.TextureBuilder;

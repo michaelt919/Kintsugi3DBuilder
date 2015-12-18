@@ -9,10 +9,6 @@ import javax.imageio.ImageIO;
 
 import org.lwjgl.LWJGLUtil;
 
-import com.trolltech.qt.core.QCoreApplication;
-import com.trolltech.qt.core.Qt.ApplicationAttribute;
-import com.trolltech.qt.gui.QApplication;
-
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.InteractiveGraphics;
@@ -21,6 +17,10 @@ import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.ulf.ULFRendererList;
 import tetzlaff.window.glfw.GLFWWindow;
+
+import com.trolltech.qt.core.QCoreApplication;
+import com.trolltech.qt.core.Qt.ApplicationAttribute;
+import com.trolltech.qt.gui.QApplication;
 
 /**
  * ULFProgram is a container for the main entry point of the Unstructured Light Field
