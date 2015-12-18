@@ -6,10 +6,12 @@ uniform vec2 maxTexCoord;
 in vec3 position;
 in vec2 texCoord;
 in vec3 normal;
+in vec4 tangent;
 
 out vec3 fPosition;
 out vec2 fTexCoord;
 out vec3 fNormal;
+out vec4 fTangent;
 
 void main(void)
 {
@@ -17,4 +19,5 @@ void main(void)
 	fPosition = position;
 	fTexCoord = texCoord;
 	fNormal = normal;
+	fTangent = tangent;
 }

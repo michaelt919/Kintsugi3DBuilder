@@ -170,7 +170,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	
 	    	FramebufferObject<ContextType> projTexFBO = 
     			context.getFramebufferObjectBuilder(param.getTextureSize() / param.getTextureSubdivision(), param.getTextureSize() / param.getTextureSubdivision())
-    				.addColorAttachments(ColorFormat.RGBA32F, 4)
+    				.addColorAttachments(ColorFormat.RGBA32F, 5)
     				.createFramebufferObject();
 	    	Renderable<ContextType> projTexRenderable = context.createRenderable(projTexProgram);
 	    	
@@ -268,6 +268,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		projTexFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		projTexFBO.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		projTexFBO.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+			    		projTexFBO.clearColorBuffer(4, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		projTexRenderable.draw(PrimitiveMode.TRIANGLES, projTexFBO);
 			    		
 			    		//float[] halfAngles = projTexFBO.readFloatingPointColorBufferRGBA(2);
@@ -277,6 +278,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		projTexFBO.saveColorBufferToFile(1, "PNG", new File(viewDir, String.format("output1_r%04dc%04d.png", row, col)));
 			    		projTexFBO.saveColorBufferToFile(2, "PNG", new File(viewDir, String.format("output2_r%04dc%04d.png", row, col)));
 			    		projTexFBO.saveColorBufferToFile(3, "PNG", new File(viewDir, String.format("output3_r%04dc%04d.png", row, col)));
+			    		projTexFBO.saveColorBufferToFile(4, "PNG", new File(viewDir, String.format("predicted_r%04dc%04d.png", row, col)));
+
 			    		//System.out.println( "Half Theta: " + projTexFBO.readColorBufferARGB(2)[0] + " Difference Theta: " + projTexFBO.readColorBufferARGB(3)[0] );
 			    		
 			    	}

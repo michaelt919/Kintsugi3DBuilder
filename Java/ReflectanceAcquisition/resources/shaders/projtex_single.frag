@@ -23,6 +23,7 @@ layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec4 projTexCoord;
 layout(location = 2) out vec4 halfAngles;
 layout(location = 3) out vec4 differenceAngles;
+layout(location = 4) out vec4 predictedColor;
 
 void main()
 {
@@ -66,6 +67,7 @@ void main()
         halfAngles = vec4( halfTheta / acos(pi), halfPhi / acos(pi), 0, 1.0 );
         differenceAngles = vec4( diffTheta / acos(pi), diffPhi / acos(pi), 0, 1.0 );
         
+        predictedColor = vec4(vec3(max(dot(light, normal), 0.0) + pow(max(dot(normal, halfVector), 0.0), 25.0)), 1.0);
         
                
         //float dotProductInputVector = dot( light, normal );
