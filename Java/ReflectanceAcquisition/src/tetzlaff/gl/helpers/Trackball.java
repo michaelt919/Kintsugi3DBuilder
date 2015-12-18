@@ -12,6 +12,7 @@ import tetzlaff.window.listeners.ScrollListener;
 
 public class Trackball implements CameraController, CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener
 {
+	private int inversion = 1;
 	private boolean enabled = true;
 	private int primaryButtonIndex;
 	private int secondaryButtonIndex;
@@ -129,7 +130,7 @@ public class Trackball implements CameraController, CursorPositionListener, Mous
 					this.trackballMatrix = 
 						Matrix4.rotateAxis(
 							rotationVector.normalized(), 
-							this.mouseScale * rotationVector.length()
+							this.mouseScale * rotationVector.length() * this.inversion
 						)
 						.times(this.oldTrackballMatrix);
 				}
@@ -139,7 +140,7 @@ public class Trackball implements CameraController, CursorPositionListener, Mous
 				if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale))
 				{
 					this.trackballMatrix = 
-						Matrix4.rotateZ(this.mouseScale * (xpos - this.startX))
+						Matrix4.rotateZ(this.mouseScale * (xpos - this.startX) * this.inversion)
 							.times(this.oldTrackballMatrix);
 					
 					this.logScale = this.oldLogScale + this.mouseScale * (float)(ypos - this.startY);
@@ -172,5 +173,10 @@ public class Trackball implements CameraController, CursorPositionListener, Mous
 	public void setEnabled(boolean enabled)
 	{
 		this.enabled = enabled;
+	}
+	
+	public void setInverted(boolean inverted)
+	{
+		this.inversion = inverted ? -1 : 1;
 	}
 }

@@ -11,13 +11,22 @@ import org.lwjgl.LWJGLUtil;
 //import org.lwjgl.opengl.GLDebugMessageCallback;
 //import static org.lwjgl.opengl.KHRDebug.*;
 
+
+
+
+
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.helpers.CameraController;
+import tetzlaff.gl.helpers.FirstPersonController;
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.imagebasedmicrofacet.ImageBasedMicrofacetRendererList;
 import tetzlaff.imagebasedmicrofacet.TrackballLightController;
 import tetzlaff.interactive.InteractiveApplication;
+import tetzlaff.interactive.Refreshable;
+import tetzlaff.window.ModifierKeys;
+import tetzlaff.window.Window;
 import tetzlaff.window.glfw.GLFWWindow;
 
 /**
@@ -90,12 +99,23 @@ public class ImageBasedMicrofacetProgram
         
         TrackballLightController lightController = new TrackballLightController();
         lightController.addAsWindowListener(window);
+        
+        FirstPersonController fpController = new FirstPersonController();
+        fpController.addAsWindowListener(window);
+        
+        window.addMouseButtonPressListener((win, buttonIndex, mods) -> 
+        {
+        	fpController.setEnabled(false);
+    	});
+        
+        // Hybrid FP + Trackball controls
+        CameraController cameraController = () -> fpController.getViewMatrix().times(lightController.asCameraController().getViewMatrix());
 
         // Create a new 'renderer' to be attached to the window and the GUI.
         // This is the object that loads the ULF models and handles drawing them.  This object abstracts
         // the underlying data and provides ways of triggering events via the trackball and the user
         // interface later when it is passed to the ULFUserInterface object.
-        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, indexProgram, lightController.asCameraController(), lightController);
+        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, indexProgram, cameraController, lightController);
         
         window.addCharacterListener((win, c) -> {
         	if (c == 'p')
@@ -132,11 +152,33 @@ public class ImageBasedMicrofacetProgram
 					e.printStackTrace();
 				}
         	}
+        	else if (c == ' ')
+        	{
+        		fpController.setEnabled(!fpController.getEnabled());
+        	}
         });
 
     	// Create a new application to run our event loop and give it the GLFWWindow for polling
     	// of events and the OpenGL context.  The ULFRendererList provides the drawable.
         InteractiveApplication app = InteractiveGraphics.createApplication(window, window, model.getDrawable());
+        app.addRefreshable(new Refreshable() 
+        {
+			@Override
+			public void initialize() 
+			{
+			}
+
+			@Override
+			public void refresh() 
+			{
+				fpController.update();
+			}
+
+			@Override
+			public void terminate() 
+			{
+			}
+        });
 
 //        // Fire up the Qt Interface
 //		// Prepare the Qt GUI system
