@@ -23,7 +23,6 @@ import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.helpers.FloatVertexList;
-import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector2;

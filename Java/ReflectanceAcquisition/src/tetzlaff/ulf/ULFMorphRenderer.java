@@ -9,7 +9,7 @@ import java.util.Scanner;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
-import tetzlaff.gl.helpers.Trackball;
+import tetzlaff.gl.helpers.CameraController;
 
 public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
@@ -17,20 +17,20 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	private Program<ContextType> program;
     private File lfmFile;
     private ULFLoadOptions loadOptions;
-    private Trackball trackball;
+    private CameraController cameraController;
     private String id;
 
     private ULFLoadingMonitor callback;
 	private List<ULFRenderer<ContextType>> stages;
 	private int currentStage;
 
-	public ULFMorphRenderer(ContextType context, Program<ContextType> program, File lfmFile, ULFLoadOptions loadOptions, Trackball trackball) throws FileNotFoundException 
+	public ULFMorphRenderer(ContextType context, Program<ContextType> program, File lfmFile, ULFLoadOptions loadOptions, CameraController cameraController) throws FileNotFoundException 
 	{
 		this.context = context;
 		this.program = program;
 		this.lfmFile = lfmFile;
 		this.loadOptions = loadOptions;
-		this.trackball = trackball;
+		this.cameraController = cameraController;
 		
 		this.id = lfmFile.getParentFile().getName();
 		
@@ -63,7 +63,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 			while (scanner.hasNextLine())
 			{
 				String vsetFileName = scanner.nextLine();
-				stages.add(new ULFRenderer<ContextType>(context, program, null, new File(directory, vsetFileName), null, loadOptions, trackball));
+				stages.add(new ULFRenderer<ContextType>(context, program, null, new File(directory, vsetFileName), null, loadOptions, cameraController));
 			}
 			scanner.close();
 			

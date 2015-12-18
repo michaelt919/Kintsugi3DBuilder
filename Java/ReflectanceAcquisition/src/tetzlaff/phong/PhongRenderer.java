@@ -16,6 +16,7 @@ import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.VertexBuffer;
+import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
@@ -45,8 +46,8 @@ public class PhongRenderer<ContextType extends Context<ContextType>> implements 
 	
 	private ContextType context;
 	private File objFile;
-	private Trackball viewTrackball;
-	private Trackball lightTrackball;
+	private CameraController viewTrackball;
+	private CameraController lightTrackball;
 	
 	private VertexMesh mesh;
 	
@@ -65,7 +66,7 @@ public class PhongRenderer<ContextType extends Context<ContextType>> implements 
 	
 	private FramebufferObject<ContextType> shadowBuffer;
 	
-	public PhongRenderer(ContextType context, File objFile, Trackball viewTrackball, Trackball lightTrackball) 
+	public PhongRenderer(ContextType context, File objFile, CameraController viewTrackball, CameraController lightTrackball) 
 	{
 		this.context = context;
     	this.objFile = objFile;
@@ -139,18 +140,10 @@ public class PhongRenderer<ContextType extends Context<ContextType>> implements 
 	@Override
 	public void draw() 
 	{
-    	Matrix4 modelView = Matrix4.lookAt(
-				new Vector3(0.0f, 0.0f, 5.0f / viewTrackball.getScale()), 
-				new Vector3(0.0f, 0.0f, 0.0f),
-				new Vector3(0.0f, 1.0f, 0.0f)
-			) // View
-			.times(viewTrackball.getRotationMatrix()) // Trackball
-			.times(Matrix4.translate(mesh.getCentroid().negated())); // Model
+    	Matrix4 modelView = viewTrackball.getViewMatrix() // Trackball
+				.times(Matrix4.translate(mesh.getCentroid().negated())); // Model
 		
-		Vector3 lightPosition = 
-				(new Matrix3(lightTrackball.getRotationMatrix())
-					.times(new Vector3(0.0f, 0.0f, 5.0f)))
-					.plus(mesh.getCentroid());
+		Vector3 lightPosition = new Matrix3(lightTrackball.getViewMatrix()).times(mesh.getCentroid());
 		
 		this.shadowBuffer.clearDepthBuffer();
 		Matrix4 lightMatrix = 

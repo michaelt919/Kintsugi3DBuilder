@@ -2,9 +2,7 @@ package tetzlaff.imagebasedmicrofacet.app;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -16,10 +14,9 @@ import org.lwjgl.LWJGLUtil;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.InteractiveGraphics;
-import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.imagebasedmicrofacet.ImageBasedMicrofacetRendererList;
-import tetzlaff.imagebasedmicrofacet.LightController;
+import tetzlaff.imagebasedmicrofacet.TrackballLightController;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.window.glfw.GLFWWindow;
 
@@ -62,16 +59,6 @@ public class ImageBasedMicrofacetProgram
 //    		
 //    	};
 //    	glDebugMessageCallback(debugCallback, 0L);
-    	
-    	// Add a trackball controller to the window for rotating the object (also responds to mouse scrolling)
-    	// This is the 'controller' in the MVC arrangement.
-    	List<Trackball> trackballs = new ArrayList<Trackball>(8);
-    	for (int i = 0; i < 5; i++)
-    	{
-    		Trackball newTrackball = new Trackball(1.0f, 0, 1, true);
-    		newTrackball.addAsWindowListener(window);
-    		trackballs.add(newTrackball);
-    	}
 
     	Program<OpenGLContext> program;
         try
@@ -100,15 +87,15 @@ public class ImageBasedMicrofacetProgram
         	e.printStackTrace();
         	throw new IllegalStateException("The shader program could not be initialized.", e);
         }
+        
+        TrackballLightController lightController = new TrackballLightController();
+        lightController.addAsWindowListener(window);
 
         // Create a new 'renderer' to be attached to the window and the GUI.
         // This is the object that loads the ULF models and handles drawing them.  This object abstracts
         // the underlying data and provides ways of triggering events via the trackball and the user
         // interface later when it is passed to the ULFUserInterface object.
-        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, indexProgram, trackballs);
-        
-        LightController<OpenGLContext> lightController = new LightController<OpenGLContext>(model);
-        window.addCharacterListener(lightController);
+        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, indexProgram, lightController.asCameraController(), lightController);
         
         window.addCharacterListener((win, c) -> {
         	if (c == 'p')

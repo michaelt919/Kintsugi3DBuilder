@@ -2,9 +2,10 @@ package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL30.*; // mipmaps
-import static org.lwjgl.opengl.GL32.*; // multisampling
-
+import static org.lwjgl.opengl.GL30.*;
+ // mipmaps
+import static org.lwjgl.opengl.GL32.*;
+ // multisampling
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;

@@ -7,8 +7,23 @@
  ********************************************************************************/
 package tetzlaff.ulf.app;
 
-import com.trolltech.qt.core.*;
-import com.trolltech.qt.gui.*;
+import com.trolltech.qt.core.QSize;
+import com.trolltech.qt.gui.QCheckBox;
+import com.trolltech.qt.gui.QComboBox;
+import com.trolltech.qt.gui.QDoubleSpinBox;
+import com.trolltech.qt.gui.QFrame;
+import com.trolltech.qt.gui.QGridLayout;
+import com.trolltech.qt.gui.QGroupBox;
+import com.trolltech.qt.gui.QHBoxLayout;
+import com.trolltech.qt.gui.QLabel;
+import com.trolltech.qt.gui.QProgressBar;
+import com.trolltech.qt.gui.QPushButton;
+import com.trolltech.qt.gui.QSizePolicy;
+import com.trolltech.qt.gui.QSlider;
+import com.trolltech.qt.gui.QSpacerItem;
+import com.trolltech.qt.gui.QSpinBox;
+import com.trolltech.qt.gui.QVBoxLayout;
+import com.trolltech.qt.gui.QWidget;
 
 public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget>
 {

@@ -10,7 +10,7 @@ import tetzlaff.window.listeners.MouseButtonPressListener;
 import tetzlaff.window.listeners.MouseButtonReleaseListener;
 import tetzlaff.window.listeners.ScrollListener;
 
-public class Trackball implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener
+public class Trackball implements CameraController, CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener
 {
 	private boolean enabled = true;
 	private int primaryButtonIndex;
@@ -21,6 +21,8 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 	private float startY = Float.NaN;
 	
 	private float mouseScale = Float.NaN;
+	
+	private Vector3 cameraPosition;
 	
 	private Matrix4 oldTrackballMatrix;
 	private Matrix4 trackballMatrix;
@@ -39,6 +41,7 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 		this.oldLogScale = 0.0f;
 		this.logScale = 0.0f;
 		this.scale = 1.0f;
+		this.cameraPosition = new Vector3(0.0f, 0.0f, 5.0f);
 	}
 	
 	public Trackball(float sensitivity)
@@ -54,19 +57,44 @@ public class Trackball implements CursorPositionListener, MouseButtonPressListen
 		window.addScrollListener(this);
 	}
 	
-	public Matrix4 getRotationMatrix()
+	public Matrix4 getTrackballMatrix()
 	{
 		return this.trackballMatrix;
 	}
 
-	public void setRotationMatrix(Matrix4 rotationMatrix) 
+	public void setTrackballMatrix(Matrix4 matrix) 
 	{
-		this.oldTrackballMatrix = this.trackballMatrix = rotationMatrix;
+		this.oldTrackballMatrix = this.trackballMatrix = matrix;
 	}
 	
 	public float getScale()
 	{
 		return this.scale;
+	}
+	
+	public void setScale(float scale)
+	{
+		this.scale = scale;
+	}
+	
+	public Vector3 getCameraPosition()
+	{
+		return this.cameraPosition;
+	}
+	
+	public void setCameraPosition(Vector3 cameraPosition)
+	{
+		this.cameraPosition = cameraPosition;
+	}
+	
+	@Override
+	public Matrix4 getViewMatrix()
+	{
+		return Matrix4.lookAt(
+				this.cameraPosition.times(1.0f / this.getScale()), 
+				new Vector3(0.0f, 0.0f, 0.0f),
+				new Vector3(0.0f, 1.0f, 0.0f))
+			.times(this.getTrackballMatrix());
 	}
 
 	@Override

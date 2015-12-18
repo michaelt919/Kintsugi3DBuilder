@@ -17,8 +17,8 @@ import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
 
-import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.ColorFormat.DataType;
+import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;

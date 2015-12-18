@@ -1,11 +1,23 @@
 package tetzlaff.window.glfw;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.lwjgl.glfw.GLFWCharCallback;
+import org.lwjgl.glfw.GLFWCharModsCallback;
+import org.lwjgl.glfw.GLFWCursorEnterCallback;
+import org.lwjgl.glfw.GLFWCursorPosCallback;
+// Other misc. callbacks
+import org.lwjgl.glfw.GLFWDropCallback;
+import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
+// Keyboard callbacks
+import org.lwjgl.glfw.GLFWKeyCallback;
+// Mouse callbacks
+import org.lwjgl.glfw.GLFWMouseButtonCallback;
+import org.lwjgl.glfw.GLFWScrollCallback;
 // Window event callbacks
 import org.lwjgl.glfw.GLFWWindowCloseCallback;
 import org.lwjgl.glfw.GLFWWindowFocusCallback;
@@ -13,21 +25,6 @@ import org.lwjgl.glfw.GLFWWindowIconifyCallback;
 import org.lwjgl.glfw.GLFWWindowPosCallback;
 import org.lwjgl.glfw.GLFWWindowRefreshCallback;
 import org.lwjgl.glfw.GLFWWindowSizeCallback;
-
-// Keyboard callbacks
-import org.lwjgl.glfw.GLFWKeyCallback;
-import org.lwjgl.glfw.GLFWCharCallback;
-import org.lwjgl.glfw.GLFWCharModsCallback;
-
-// Mouse callbacks
-import org.lwjgl.glfw.GLFWMouseButtonCallback;
-import org.lwjgl.glfw.GLFWScrollCallback;
-import org.lwjgl.glfw.GLFWCursorEnterCallback;
-import org.lwjgl.glfw.GLFWCursorPosCallback;
-
-// Other misc. callbacks
-import org.lwjgl.glfw.GLFWDropCallback;
-import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 
 // Internal classes for wrapping GLFW callbacks
 import tetzlaff.window.listeners.CharacterListener;

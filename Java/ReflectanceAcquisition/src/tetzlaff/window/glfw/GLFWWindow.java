@@ -1,19 +1,19 @@
 package tetzlaff.window.glfw;
 
+import static org.lwjgl.glfw.Callbacks.*;
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.glfw.Callbacks.errorCallbackDescriptionString;
 
 import java.nio.ByteBuffer;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWvidmode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLContext;
-import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWvidmode;
 
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;

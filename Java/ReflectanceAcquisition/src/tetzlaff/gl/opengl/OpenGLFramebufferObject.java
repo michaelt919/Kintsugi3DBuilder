@@ -4,7 +4,6 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
-
 import java.nio.IntBuffer;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
