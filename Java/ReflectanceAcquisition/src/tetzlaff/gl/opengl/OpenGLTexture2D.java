@@ -3,9 +3,8 @@ package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.*;
- // mipmaps
+// mipmaps
 import static org.lwjgl.opengl.GL32.*;
- // multisampling
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -149,6 +148,8 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		{
 			super(context);
 			this.textureTarget = textureTarget;
+			this.width = width;
+			this.height = height;
 			this.format = format;
 			this.type = type;
 			this.buffer = buffer;
@@ -327,36 +328,41 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		this.height = height;
 		if (textureTarget == GL_TEXTURE_2D && multisamples > 1)
 		{
+			this.textureTarget = GL_TEXTURE_2D_MULTISAMPLE;
+			useLinearFiltering = false; // linear filtering not allowed with multisampling
+			useMipmaps = false; // mipmaps not allowed with multisampling
+			this.levelCount = 1;
 			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, multisamples, internalFormat, width, height, fixedMultisampleLocations);
+			this.context.openGLErrorCheck();
+			// TODO: multisample textures don't seem to work correctly
 		}
 		else
 		{
 			// Last four parameters are essentially meaningless, but are subject to certain validation conditions
 			glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, 0);
+			this.context.openGLErrorCheck();
+			this.init(useLinearFiltering, useMipmaps);
 		}
-		this.context.openGLErrorCheck();
-		this.init(width, height, useLinearFiltering, useMipmaps);
 	}
 	
 	private OpenGLTexture2D(OpenGLContext context, int textureTarget, int internalFormat, int width, int height, int format, int type, ByteBuffer buffer, boolean useLinearFiltering, boolean useMipmaps) 
 	{
-		// Create an empty texture to be used as a render target for a framebuffer.
 		super(context);
 		this.textureTarget = textureTarget;
 		this.bind();
 		this.width = width;
 		this.height = height;
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, buffer);
+		glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, type, buffer);
 		this.context.openGLErrorCheck();
-		this.init(width, height, useLinearFiltering, useMipmaps);
+		this.init(useLinearFiltering, useMipmaps);
 	}
 	
-	private void init(int width, int height, boolean useLinearFiltering, boolean useMipmaps)
+	private void init(boolean useLinearFiltering, boolean useMipmaps)
 	{
 		if (useMipmaps)
 		{
 			// Create mipmaps
-			glGenerateMipmap(GL_TEXTURE_2D);
+			glGenerateMipmap(this.textureTarget);
 	        this.context.openGLErrorCheck();
 	        
 	        // Calculate the number of mipmap levels
@@ -370,16 +376,16 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 			
 			if (useLinearFiltering)
 			{
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				glTexParameteri(this.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		        this.context.openGLErrorCheck();
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(this.textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		        this.context.openGLErrorCheck();
 			}
 			else
 			{
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+				glTexParameteri(this.textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 		        this.context.openGLErrorCheck();
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexParameteri(this.textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		        this.context.openGLErrorCheck();
 			}
 		}
@@ -390,19 +396,22 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 			
 			if (useLinearFiltering)
 			{
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(this.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		        this.context.openGLErrorCheck();
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(this.textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		        this.context.openGLErrorCheck();
 			}
 			else
 			{
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(this.textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		        this.context.openGLErrorCheck();
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexParameteri(this.textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		        this.context.openGLErrorCheck();
 			}
 		}
+		
+		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	}
 	
 	@Override

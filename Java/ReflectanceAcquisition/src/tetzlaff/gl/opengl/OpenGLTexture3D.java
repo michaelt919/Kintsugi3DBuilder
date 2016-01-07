@@ -255,6 +255,10 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 		        this.context.openGLErrorCheck();
 			}
 		}
+		
+		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	}
 	
 	@Override

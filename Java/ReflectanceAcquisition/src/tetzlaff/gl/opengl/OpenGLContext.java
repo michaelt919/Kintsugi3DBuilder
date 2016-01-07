@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import org.lwjgl.BufferUtils;
+
 import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.BufferAccessFrequency;
 import tetzlaff.gl.BufferAccessType;
@@ -34,6 +36,7 @@ import tetzlaff.gl.Program;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.Shader;
 import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.Texture1D;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
@@ -52,8 +55,14 @@ import tetzlaff.gl.exceptions.GLInvalidValueException;
 import tetzlaff.gl.exceptions.GLOutOfMemoryException;
 import tetzlaff.gl.exceptions.GLStackOverflowException;
 import tetzlaff.gl.exceptions.GLStackUnderflowException;
+import tetzlaff.gl.helpers.ByteVertexList;
+import tetzlaff.gl.helpers.DoubleVertexList;
+import tetzlaff.gl.helpers.FloatVertexList;
+import tetzlaff.gl.helpers.IntVertexList;
+import tetzlaff.gl.helpers.ShortVertexList;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
 import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture1D.OpenGLTexture1DFromBufferBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DColorBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DDepthBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DDepthStencilBuilder;
@@ -271,6 +280,56 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	public FramebufferObjectBuilder<OpenGLContext> getFramebufferObjectBuilder(int width, int height)
 	{
 		return new OpenGLFramebufferObjectBuilder(this, width, height);
+	}
+	
+	private int getPixelDataFormatFromDimensions(int dimensions)
+	{
+		switch(dimensions)
+		{
+		case 1: return GL_RED;
+		case 2: return GL_RG;
+		case 3: return GL_RGB;
+		case 4: return GL_RGBA;
+		default: throw new IllegalArgumentException("Data must be a vertex list of no more than 4 dimensions.");
+		}
+	}
+	
+	@Override
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(ByteVertexList data)
+	{
+		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.count, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_BYTE, data.getBuffer());
+	}
+	
+	@Override
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(ShortVertexList data)
+	{
+		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 2);
+		bb.asShortBuffer().put(data.getBuffer());
+		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.count, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_SHORT, bb);
+	}
+
+	@Override
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(IntVertexList data)
+	{
+		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
+		bb.asIntBuffer().put(data.getBuffer());
+		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.count, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_INT, bb);
+	}
+	
+	@Override
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(FloatVertexList data)
+	{
+		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
+		bb.asFloatBuffer().put(data.getBuffer());
+		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.count, getPixelDataFormatFromDimensions(data.dimensions), GL_FLOAT, bb);
+	}
+	
+	@Override
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(DoubleVertexList data)
+	{
+		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 8);
+		bb.asDoubleBuffer().put(data.getBuffer());
+		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.count, getPixelDataFormatFromDimensions(data.dimensions), GL_DOUBLE, bb);
 	}
 	
 	@Override

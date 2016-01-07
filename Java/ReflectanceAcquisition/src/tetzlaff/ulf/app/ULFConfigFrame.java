@@ -696,9 +696,11 @@ public class ULFConfigFrame extends JFrame {
 				@Override
 				public void setProgress(double progress)
 				{
-					SwingUtilities.invokeLater(new Runnable() {
+					SwingUtilities.invokeLater(new Runnable() 
+					{
 						@Override
-						public void run() {
+						public void run() 
+						{
 							loadingBar.setIndeterminate(false);
 							loadingBar.setValue((int)Math.round(progress * 100));
 						}						
@@ -708,23 +710,25 @@ public class ULFConfigFrame extends JFrame {
 				@Override
 				public void loadingComplete()
 				{
-					SwingUtilities.invokeLater(new Runnable() {
+					SwingUtilities.invokeLater(new Runnable() 
+					{
 						@Override
-						public void run() {
+						public void run() 
+						{
 							loadingFrame.setVisible(false);
 						}
 					});
 				}
 
 				@Override
-				public void startLoading() {
-					// TODO Auto-generated method stub
+				public void startLoading() 
+				{
 					
 				}
 
 				@Override
-				public void setMaximum(double maximum) {
-					// TODO Auto-generated method stub
+				public void setMaximum(double maximum) 
+				{
 					
 				}
 			});
