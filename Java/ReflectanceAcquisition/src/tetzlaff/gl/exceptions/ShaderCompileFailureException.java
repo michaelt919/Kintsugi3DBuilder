@@ -4,29 +4,28 @@ public class ShaderCompileFailureException extends RuntimeException
 {
 	private static final long serialVersionUID = 7556469381337373536L;
 
-	public ShaderCompileFailureException() {
+	public ShaderCompileFailureException() 
+	{
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
-	public ShaderCompileFailureException(String arg0, Throwable arg1, boolean arg2,
-			boolean arg3) {
-		super(arg0, arg1, arg2, arg3);
-		// TODO Auto-generated constructor stub
+	public ShaderCompileFailureException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)
+	{
+		super(message, cause, enableSuppression, writableStackTrace);
 	}
 
-	public ShaderCompileFailureException(String arg0, Throwable arg1) {
-		super(arg0, arg1);
-		// TODO Auto-generated constructor stub
+	public ShaderCompileFailureException(String message, Throwable cause) 
+	{
+		super(message, cause);
 	}
 
-	public ShaderCompileFailureException(String arg0) {
-		super(arg0);
-		// TODO Auto-generated constructor stub
+	public ShaderCompileFailureException(String message) 
+	{
+		super(message);
 	}
 
-	public ShaderCompileFailureException(Throwable arg0) {
-		super(arg0);
-		// TODO Auto-generated constructor stub
+	public ShaderCompileFailureException(Throwable cause) 
+	{
+		super(cause);
 	}
 }

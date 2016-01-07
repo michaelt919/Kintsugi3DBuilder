@@ -280,6 +280,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	mainRenderable.program().setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
     	mainRenderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
     	
+    	mainRenderable.program().setTexture("luminanceMap", this.lightField.viewSet.getLuminanceMap());
+    	
         FramebufferObject<ContextType> offscreenFBO;
         
         int fboWidth, fboHeight;
@@ -337,10 +339,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 			// Do first pass at half resolution to off-screen buffer
 			offscreenFBO = context.getFramebufferObjectBuilder(fboWidth, fboHeight)
 					.addColorAttachment(new ColorAttachmentSpec(ColorFormat.RGB8)
-						.setLinearFilteringEnabled(true)
-						) //.setMultisamples(4, true)) // TODO why doesn't this work?
-					.addDepthAttachment(new DepthAttachmentSpec(32, false)
-						) //.setMultisamples(4, true))
+						.setLinearFilteringEnabled(true))
+					.addDepthAttachment(new DepthAttachmentSpec(32, false))
 					.createFramebufferObject();
 			
 			offscreenFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);

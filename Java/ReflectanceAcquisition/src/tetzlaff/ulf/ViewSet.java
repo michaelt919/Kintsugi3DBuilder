@@ -15,6 +15,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.function.DoubleUnaryOperator;
 
 import javax.imageio.ImageIO;
 import javax.xml.stream.XMLInputFactory;
@@ -25,6 +26,7 @@ import javax.xml.stream.XMLStreamReader;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Context;
+import tetzlaff.gl.Texture1D;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.builders.ColorTextureBuilder;
@@ -96,6 +98,21 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	private File filePath;
 	
 	/**
+	 * The reference linear luminance values used for decoding pixel colors.
+	 */
+	private double[] linearLuminanceValues;
+	
+	/**
+	 * The reference encoded luminance values used for decoding pixel colors.
+	 */
+	private byte[] encodedLuminanceValues;
+	
+	/**
+	 * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
+	 */
+	private float gamma;
+	
+	/**
 	 * A GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
 	 * These are necessary to perform projective texture mapping.
 	 */
@@ -131,6 +148,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * A texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
 	 */
 	private Texture3D<ContextType> textureArray;
+	
+	/**
+	 * A 1D texture defining how encoded RGB values should be converted to linear luminance.
+	 */
+	private Texture1D<ContextType> luminanceMap;
 	
 	/**
 	 * The recommended near plane to use when rendering this view set.
@@ -175,6 +197,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Integer> lightIndexList,
 		List<String> imageFileNames, 
 		ViewSetImageOptions imageOptions,
+		float gamma,
+		double[] linearLuminanceValues,
+		byte[] encodedLuminanceValues,
 		float recommendedNearPlane,
 		float recommendedFarPlane,
 		ContextType context,
@@ -372,6 +397,14 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			textureArrayBuilder.setLinearFilteringEnabled(true);
 			textureArray = textureArrayBuilder.createTexture();
 			
+			if (linearLuminanceValues != null && encodedLuminanceValues != null)
+			{
+				this.linearLuminanceValues = linearLuminanceValues;
+				this.encodedLuminanceValues = encodedLuminanceValues;
+				this.gamma = gamma;
+				luminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues, gamma).createLuminanceMap(context);
+			}
+			
 			if(loadingCallback != null) {
 				loadingCallback.setMaximum(imageFileNames.size());
 			}
@@ -550,6 +583,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		
 		Scanner scanner = new Scanner(input);
 		
+		float recommendedGamma = 2.2f;
 		float recommendedNearPlane = 0.0f;
 		float recommendedFarPlane = Float.MAX_VALUE;
 		List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
@@ -562,6 +596,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Integer> cameraProjectionIndexList = new ArrayList<Integer>();
 		List<Integer> lightIndexList = new ArrayList<Integer>();
 		List<String> imageFileNames = new ArrayList<String>();
+		List<Double> linearLuminanceList = new ArrayList<Double>();
+		List<Byte> encodedLuminanceList = new ArrayList<Byte>();
 		
 		while (scanner.hasNext())
 		{
@@ -638,6 +674,19 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				
 				scanner.nextLine();
 			}
+			else if (id.equals("e"))
+			{
+				// Non-linear encoding
+				linearLuminanceList.add(scanner.nextDouble());
+				encodedLuminanceList.add((Byte)((byte)scanner.nextShort()));
+				scanner.nextLine();
+			}
+			else if (id.equals("g"))
+			{
+				// Gamma
+				recommendedGamma = scanner.nextFloat();
+				scanner.nextLine();
+			}
 			else if (id.equals("f"))
 			{
 				// Skip "center/offset" parameters which are not consistent across all VSET files
@@ -694,12 +743,24 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		{
 			imageOptions.setFilePath(vsetFile.getParentFile());
 		}
+		
+		double[] linearLuminance = new double[linearLuminanceList.size()];
+		for (int i = 0; i < linearLuminance.length; i++)
+		{
+			linearLuminance[i] = linearLuminanceList.get(i);
+		}
+		
+		byte[] encodedLuminance = new byte[encodedLuminanceList.size()];
+		for (int i = 0; i < encodedLuminance.length; i++)
+		{
+			encodedLuminance[i] = encodedLuminanceList.get(i);
+		}
 
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
 		return new ViewSet<ContextType>(
 			orderedCameraPoseList, orderedCameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, 
-			imageFileNames, imageOptions, recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
+			imageFileNames, imageOptions, recommendedGamma, linearLuminance, encodedLuminance, recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
 	}
 	
 	/**
@@ -1238,7 +1299,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
         float farPlane = findFarPlane(cameraPoseInvList) * globalScale;
         System.out.println("Near and far planes: " + (farPlane/16.0f) + ", " + (farPlane));
         return new ViewSet<ContextType>(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
-        		imageFileNames, imageOptions, farPlane / 32.0f, farPlane, context, loadingCallback);
+        		imageFileNames, imageOptions, 2.2f, null, null, farPlane / 32.0f, farPlane, context, loadingCallback);
     }
 	
 	/**
@@ -1537,6 +1598,15 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public Texture3D<ContextType> getTextures() 
 	{
 		return this.textureArray;
+	}
+	
+	/**
+	 * Gets a 1D texture instantiated on the GPU containing the luminance map for this dataset.
+	 * @return The requested luminance texture.
+	 */
+	public Texture1D<ContextType> getLuminanceMap()
+	{
+		return this.luminanceMap;
 	}
 
 	/**

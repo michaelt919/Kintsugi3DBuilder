@@ -13,7 +13,12 @@ import tetzlaff.gl.builders.FramebufferObjectBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.StencilTextureBuilder;
 import tetzlaff.gl.builders.TextureBuilder;
+import tetzlaff.gl.helpers.ByteVertexList;
+import tetzlaff.gl.helpers.DoubleVertexList;
 import tetzlaff.gl.helpers.FloatVertexList;
+import tetzlaff.gl.helpers.IntVertexList;
+import tetzlaff.gl.helpers.ShortVertexList;
+import tetzlaff.gl.opengl.OpenGLContext;
 
 /**
  * An interface for any OpenGL-like graphics context.
@@ -98,6 +103,12 @@ public interface Context<ContextType extends Context<ContextType>>
 	{
 		return get2DColorTextureBuilder(new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical);
 	}
+
+	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(ByteVertexList data);
+	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(ShortVertexList data);
+	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(IntVertexList data);
+	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(FloatVertexList data);
+	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(DoubleVertexList data);
 	
 	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height);
 	DepthTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DDepthTextureBuilder(int width, int height);

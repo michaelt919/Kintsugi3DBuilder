@@ -66,7 +66,7 @@ public class ShortVertexList
 		{
 			throw new IndexOutOfBoundsException("Index cannot be negative.");
 		}
-		if (index > this.count)
+		if (index >= this.count)
 		{
 			throw new IndexOutOfBoundsException("Index (" + index + ") is greater than the size of the vertex list (" + this.count + ").");
 		}		
@@ -74,7 +74,7 @@ public class ShortVertexList
 		{
 			throw new IndexOutOfBoundsException("Dimension cannot be negative.");
 		}
-		if (dimension > this.dimensions)
+		if (dimension >= this.dimensions)
 		{
 			throw new IndexOutOfBoundsException("Dimension (" + dimension + ") is greater than the dimensions of the vertex list (" + this.dimensions + ").");
 		}
@@ -87,7 +87,7 @@ public class ShortVertexList
 		{
 			throw new IndexOutOfBoundsException("Index cannot be negative.");
 		}
-		if (index > this.count)
+		if (index >= this.count)
 		{
 			throw new IndexOutOfBoundsException("Index (" + index + ") is greater than the size of the vertex list (" + this.count + ").");
 		}		
@@ -95,7 +95,7 @@ public class ShortVertexList
 		{
 			throw new IndexOutOfBoundsException("Dimension cannot be negative.");
 		}
-		if (dimension > this.dimensions)
+		if (dimension >= this.dimensions)
 		{
 			throw new IndexOutOfBoundsException("Dimension (" + dimension + ") is greater than the dimensions of the vertex list (" + this.dimensions + ").");
 		}

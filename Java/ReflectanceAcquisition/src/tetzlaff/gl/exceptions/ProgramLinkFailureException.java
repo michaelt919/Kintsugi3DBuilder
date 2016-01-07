@@ -4,29 +4,28 @@ public class ProgramLinkFailureException extends RuntimeException
 {
 	private static final long serialVersionUID = 8084771613401908824L;
 
-	public ProgramLinkFailureException() {
+	public ProgramLinkFailureException() 
+	{
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
-	public ProgramLinkFailureException(String arg0, Throwable arg1, boolean arg2,
-			boolean arg3) {
-		super(arg0, arg1, arg2, arg3);
-		// TODO Auto-generated constructor stub
+	public ProgramLinkFailureException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) 
+	{
+		super(message, cause, enableSuppression, writableStackTrace);
 	}
 
-	public ProgramLinkFailureException(String arg0, Throwable arg1) {
-		super(arg0, arg1);
-		// TODO Auto-generated constructor stub
+	public ProgramLinkFailureException(String message, Throwable cause) 
+	{
+		super(message, cause);
 	}
 
-	public ProgramLinkFailureException(String arg0) {
-		super(arg0);
-		// TODO Auto-generated constructor stub
+	public ProgramLinkFailureException(String message) 
+	{
+		super(message);
 	}
 
-	public ProgramLinkFailureException(Throwable arg0) {
-		super(arg0);
-		// TODO Auto-generated constructor stub
+	public ProgramLinkFailureException(Throwable cause)
+	{
+		super(cause);
 	}
 }

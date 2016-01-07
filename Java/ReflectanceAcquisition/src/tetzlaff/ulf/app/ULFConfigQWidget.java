@@ -65,14 +65,14 @@ public class ULFConfigQWidget extends QWidget implements EventPollable {
 			}
 
 			@Override
-			public void startLoading() {
-				// TODO Auto-generated method stub
+			public void startLoading() 
+			{
 				
 			}
 
 			@Override
-			public void setMaximum(double maximum) {
-				// TODO Auto-generated method stub
+			public void setMaximum(double maximum) 
+			{
 				
 			}
 		});
