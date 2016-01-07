@@ -16,6 +16,8 @@ uniform float occlusionBias;
 uniform float gamma;
 uniform bool infiniteLightSources;
 
+uniform sampler1D luminanceMap;
+
 uniform mat4 model_view;
 
 in vec3 fPosition;
@@ -266,7 +268,17 @@ vec4 getProjTexSample(int index, bool useMipmaps)
             color = textureLod(imageTextures, vec3(projTexCoord.xy, index), 0.0);
         }
 		
-		return (color.a < 0.9999 ? 0.0 : 1.0) * vec4(pow(color.rgb, vec3(gamma)), 1.0);
+        return (color.a < 0.9999 ? 0.0 : 1.0) * vec4(pow(color.rgb, vec3(gamma)), 1.0);
+        
+        vec3 colorGC = pow(color.rgb, vec3(gamma));
+        float scale = colorGC.r + colorGC.g + colorGC.b < 0.001 ? 0.0 : texture(luminanceMap, (colorGC.r + colorGC.g + colorGC.b) / 3).r * 3 / (colorGC.r + colorGC.g + colorGC.b) * 5;
+        return (color.a < 0.9999 ? 0.0 : 1.0) * vec4(colorGC.rgb * scale, 1.0);
+        
+        // return (color.a < 0.9999 ? 0.0 : 1.0) * 
+            // vec4(texture(luminanceMap, color.r).r, 
+                // texture(luminanceMap, color.g).r, 
+                // texture(luminanceMap, color.b).r, 
+                // 1.0);
 	}
 }
 
