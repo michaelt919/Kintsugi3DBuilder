@@ -71,11 +71,23 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			if (microfacetField.normalTexture == null)
 			{
 				program.setUniform("useNormalTexture", false);
+				program.setTexture("normalMap", null);
 			}
 			else
 			{
 				program.setUniform("useNormalTexture", true);
 				program.setTexture("normalMap", microfacetField.normalTexture);
+			}
+			
+			if (microfacetField.diffuseTexture == null)
+			{
+				program.setUniform("useDiffuseTexture", false);
+				program.setTexture("diffuseMap", null);
+			}
+			else
+			{
+				program.setUniform("useDiffuseTexture", true);
+				program.setTexture("diffuseMap", microfacetField.diffuseTexture);
 			}
 	
 			for (int i = 0; i < lightController.getLightCount(); i++)

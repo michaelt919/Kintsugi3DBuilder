@@ -3,6 +3,7 @@ package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.EXTTextureCompressionS3TC.*;
 import static org.lwjgl.opengl.EXTTextureSRGB.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL15.*;
@@ -453,7 +454,27 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		}
 		glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
 		this.openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_1D, 0);
+		this.openGLErrorCheck();
 		glBindTexture(GL_TEXTURE_2D, 0);
+		this.openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_3D, 0);
+		this.openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_1D_ARRAY, 0);
+		this.openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+		this.openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_RECTANGLE, 0);
+		this.openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_BUFFER, 0);
+		this.openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+		this.openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
+		this.openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+		this.openGLErrorCheck();
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 0);
 		this.openGLErrorCheck();
 	}
 	

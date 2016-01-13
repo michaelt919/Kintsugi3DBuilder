@@ -64,7 +64,8 @@ class OpenGLProgram implements Resource, Program<OpenGLContext>
 		programId = glCreateProgram();
 		this.context.openGLErrorCheck();
 		ownedShaders = new ArrayList<OpenGLShader>();
-		textureManager = new ResourceManager<OpenGLTexture>(this.context.getMaxCombinedTextureImageUnits());
+		// Use one less texture unit because we don't use texture unit 0.
+		textureManager = new ResourceManager<OpenGLTexture>(this.context.getMaxCombinedTextureImageUnits() - 1);
 		uniformBufferManager = new ResourceManager<OpenGLUniformBuffer>(this.context.getMaxCombinedUniformBlocks());
 	}
 	
@@ -128,16 +129,15 @@ class OpenGLProgram implements Resource, Program<OpenGLContext>
 		}
 		else
 		{
+			this.context.unbindTextureUnit(0); // Don't ever use texture unit 0
+			
 			for (int i = 0; i < textureManager.length; i++)
 			{
 				OpenGLTexture texture = textureManager.getResourceByUnit(i);
+				this.context.unbindTextureUnit(i + 1);
 				if (texture != null)
 				{
-					texture.bindToTextureUnit(i);
-				}
-				else
-				{
-					this.context.unbindTextureUnit(i);
+					texture.bindToTextureUnit(i + 1);
 				}
 			}
 			
@@ -174,7 +174,8 @@ class OpenGLProgram implements Resource, Program<OpenGLContext>
 		}
 		else if (texture instanceof OpenGLTexture)
 		{
-			int textureUnit = textureManager.assignResourceByKey(location, (OpenGLTexture)texture);
+			// We don't use texture unit 0, so add one to the resource ID.
+			int textureUnit = 1 + textureManager.assignResourceByKey(location, (OpenGLTexture)texture);
 			return this.setUniform(location, textureUnit);
 		}
 		else

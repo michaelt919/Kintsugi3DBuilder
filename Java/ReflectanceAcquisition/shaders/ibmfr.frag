@@ -33,10 +33,12 @@ uniform sampler2DArray imageTextures;
 uniform sampler2DArray depthTextures;
 uniform sampler2DArray shadowTextures;
 
+//uniform isampler2DArray viewIndexTextures;
+
+uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 
-uniform isampler2DArray viewIndexTextures;
-
+uniform bool useDiffuseTexture;
 uniform bool useNormalTexture;
 
 uniform CameraPoses
@@ -78,20 +80,20 @@ uniform ShadowMatrices
 
 layout(location = 0) out vec4 fragColor;
 
-int[SAMPLE_COUNT] readViewIndices()
-{
-    ivec4 prevViewIndices0 = texture(viewIndexTextures, vec3(fTexCoord, 0));
-    ivec4 prevViewIndices1 = texture(viewIndexTextures, vec3(fTexCoord, 1));
+// int[SAMPLE_COUNT] readViewIndices()
+// {
+    // ivec4 prevViewIndices0 = texture(viewIndexTextures, vec3(fTexCoord, 0));
+    // ivec4 prevViewIndices1 = texture(viewIndexTextures, vec3(fTexCoord, 1));
 
-    return int[SAMPLE_COUNT](
-        prevViewIndices0.x,
-        prevViewIndices0.y,
-        prevViewIndices0.z,
-        prevViewIndices0.w,
-        prevViewIndices1.x,
-        prevViewIndices1.y,
-        prevViewIndices1.z
-    );
+    // return int[SAMPLE_COUNT](
+        // prevViewIndices0.x,
+        // prevViewIndices0.y,
+        // prevViewIndices0.z,
+        // prevViewIndices0.w,
+        // prevViewIndices1.x,
+        // prevViewIndices1.y,
+        // prevViewIndices1.z
+    // );
     
     // ivec2 texSize = textureSize(viewIndexTextures, 0).xy;
     // vec2 texCoordExact = texSize * fTexCoord;
@@ -205,6 +207,13 @@ int[SAMPLE_COUNT] readViewIndices()
         // prevViewIndices1B.z >= 0 ? prevViewIndices1B.z :
         // prevViewIndices1C.z >= 0 ? prevViewIndices1C.z : prevViewIndices1D.z
     // );
+//}
+
+float fresnel(vec3 viewDir, vec3 halfwayDir)
+{
+    float fresnelStrength = 0.5; // TODO make this a uniform variable
+    return (1 - fresnelStrength) + 
+            fresnelStrength * pow(clamp(1 - dot(viewDir, halfwayDir), 0, 1), 5.0);
 }
 
 float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
@@ -291,7 +300,8 @@ float computeGeometricAttenuation(vec3 view, vec3 light, vec3 normal)
         / (dot(light, normal) * dot(view, normal));
 }
 
-vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 normalDir, bool useMipmaps)
+vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, 
+        vec3 normalDir, bool useMipmaps)
 {
     vec4 sampleColor = getProjTexSample(index, useMipmaps);
     vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
@@ -308,10 +318,16 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 normalDir, bool useM
     float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
     float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
     
-    vec4 precomputedSample = nDotV * vec4(sampleColor.rgb
-            * (infiniteLightSources ? 1.0 : dot(sampleLightDirUnnorm, sampleLightDirUnnorm))
+    vec3 diffuseContrib = diffuseColor * nDotL;
+    float invLightAtten = (infiniteLightSources ? 1.0 : dot(sampleLightDirUnnorm, sampleLightDirUnnorm));
+    float maxSpecular = invLightAtten - max(max(diffuseContrib.r, diffuseContrib.g), diffuseContrib.b);
+    
+    vec3 specularResidual = min(vec3(maxSpecular), sampleColor.rgb * invLightAtten - diffuseContrib);
+    
+    vec4 precomputedSample = nDotV * vec4(specularResidual
         //    / lightIntensities[lightIndices[index]] // TODO uncomment this
-            / computeGeometricAttenuation(sampleViewDir, sampleLightDir, normalDirCameraSpace), 
+            / computeGeometricAttenuation(sampleViewDir, sampleLightDir, normalDirCameraSpace)
+            / fresnel(sampleViewDir, sampleHalfDir), 
         sampleColor.a * nDotL);
         
     for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
@@ -327,7 +343,8 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 normalDir, bool useM
     return result;
 }
 
-vec3[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(vec3 normalDir)
+vec3[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(
+        vec3 diffuseColor, vec3 normalDir)
 {
 	vec4[MAX_VIRTUAL_LIGHT_COUNT] sums;
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
@@ -337,7 +354,8 @@ vec3[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(vec3 normalDir)
     
 	for (int i = 0; i < cameraPoseCount; i++)
 	{
-        vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample = computeSample(i, normalDir, true);
+        vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample = 
+            computeSample(i, diffuseColor, normalDir, true);
         
         for (int j = 0; j < MAX_VIRTUAL_LIGHT_COUNT; j++)
         {
@@ -353,33 +371,33 @@ vec3[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(vec3 normalDir)
 	return results;
 }
 
-vec3 computeMicrofacetDistributionsFast(vec3 normalDir)
-{
-    int viewIndices[SAMPLE_COUNT] = readViewIndices();
+// vec3 computeMicrofacetDistributionsFast(vec3 diffuseColor, vec3 normalDir)
+// {
+    // int viewIndices[SAMPLE_COUNT] = readViewIndices();
     
-    vec4 sum = vec4(0.0);
-	for (int i = 1; i < SAMPLE_COUNT; i++)
-	{
-        if (viewIndices[i] >= 0 && viewIndices[i] < MAX_CAMERA_POSE_COUNT)
-        {
-            // TODO multiple light sources
-            sum += computeSample(viewIndices[i], normalDir, false)[0];
-        }
-	}
+    // vec4 sum = vec4(0.0);
+	// for (int i = 1; i < SAMPLE_COUNT; i++)
+	// {
+        // if (viewIndices[i] >= 0 && viewIndices[i] < MAX_CAMERA_POSE_COUNT)
+        // {
+            // // TODO multiple light sources
+            // sum += computeSample(viewIndices[i], diffuseColor, normalDir, false)[0];
+        // }
+	// }
     
-    if (sum.a > 0.0)
-    {
-        return sum.rgb / sum.a;
-    }
-    else
-    {
-        return vec3(0);
-    }
-}
+    // if (sum.a > 0.0)
+    // {
+        // return sum.rgb / sum.a;
+    // }
+    // else
+    // {
+        // return vec3(0);
+    // }
+// }
 
 void main()
 {
-    vec3 viewDir = fViewPos - fPosition;
+    vec3 viewDir = normalize(fViewPos - fPosition);
     
     vec3 normalDir;
     if (useNormalTexture)
@@ -391,19 +409,35 @@ void main()
         normalDir = normalize(fNormal);
     }
     
-    vec3[] microfacetDistributions = computeMicrofacetDistributions(normalDir);
+    vec3 diffuseColor;
+    if (useDiffuseTexture)
+    {
+         diffuseColor = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
+    }
+    else
+    {
+        diffuseColor = vec3(0.0);
+    }
+    
+    vec3[] microfacetDistributions = computeMicrofacetDistributions(
+            diffuseColor, normalDir);
     vec3 reflectance = vec3(0.0);
     
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < virtualLightCount; i++)
     {
-        vec3 lightDir = lightPos[i] - fPosition;
-        float nDotL = max(0.0, dot(normalDir, normalize(lightDir)));
+        vec3 lightDirUnNorm = lightPos[i] - fPosition;
+        vec3 lightDir = normalize(lightDirUnNorm);
+        float nDotL = max(0.0, dot(normalDir, lightDir));
         
         if (nDotL > 0.0)
         {
-            reflectance += nDotL * microfacetDistributions[i] * lightIntensity[i]
-                * (infiniteLightSources ? 1.0 : 1.0 / dot(lightDir, lightDir))
-                * computeGeometricAttenuation(normalize(viewDir), normalize(lightDir), normalDir);
+            reflectance += nDotL * (diffuseColor + 
+                microfacetDistributions[i]
+                    * computeGeometricAttenuation(viewDir, lightDir, normalDir)
+                    * fresnel(viewDir, normalize(viewDir + lightDir) /* halfway */))
+                * lightIntensity[i]
+                * (infiniteLightSources ? 1.0 : 1.0 / 
+                    dot(lightDirUnNorm, lightDirUnNorm));
         }
     }
     

@@ -22,6 +22,7 @@ import tetzlaff.ulf.UnstructuredLightField;
 public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 {
 	public final UnstructuredLightField<ContextType> ulf;
+	public final Texture2D<ContextType> diffuseTexture;
 	public final Texture2D<ContextType> normalTexture;
 	public final Texture3D<ContextType> shadowTextures;
 	public final UniformBuffer<ContextType> shadowMatrixBuffer;
@@ -29,6 +30,20 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 	public SampledMicrofacetField(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, ContextType context) throws IOException
 	{
 		this.ulf = ulf;
+		
+		if (diffuseFile != null && diffuseFile.exists())
+		{
+			System.out.println("Diffuse texture found.");
+			diffuseTexture = context.get2DColorTextureBuilder(diffuseFile, true)
+					.setInternalFormat(ColorFormat.RGB8)
+					.setMipmapsEnabled(true)
+					.setLinearFilteringEnabled(true)
+					.createTexture();
+		}
+		else
+		{
+			diffuseTexture = null;
+		}
 		
 		if (normalFile != null && normalFile.exists())
 		{
