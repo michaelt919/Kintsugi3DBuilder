@@ -1,42 +1,12 @@
-#version 330
+#ifndef LIGHTFIT_GLSL
+#define LIGHTFIT_GLSL
 
-#define MAX_CAMERA_POSE_COUNT 1024
-#define MAX_CAMERA_PROJECTION_COUNT 1024
-#define MAX_LIGHT_COUNT 1024
+#include "../reflectance/reflectance.glsl"
 
-in vec3 fPosition;
-in vec2 fTexCoord;
-in vec3 fNormal;
-
-uniform sampler2DArray viewImages;
-uniform sampler2DArray depthImages;
-uniform int viewCount;
-uniform float gamma;
-
-uniform bool occlusionEnabled;
-uniform float occlusionBias;
-uniform bool infiniteLightSources;
+#line 7 2001
 
 uniform float delta;
 uniform int iterations;
-
-uniform CameraPoses
-{
-	mat4 cameraPoses[MAX_CAMERA_POSE_COUNT];
-};
-
-uniform CameraProjections
-{
-	mat4 cameraProjections[MAX_CAMERA_PROJECTION_COUNT];
-};
-
-uniform CameraProjectionIndices
-{
-	int cameraProjectionIndices[MAX_CAMERA_POSE_COUNT];
-};
-
-layout(location = 0) out vec4 lightPosition;
-layout(location = 1) out vec4 lightIntensity;
 
 struct LightFit
 {
@@ -44,34 +14,6 @@ struct LightFit
     float intensity;
     float quality;
 };
-
-vec4 getColor(int index)
-{
-    vec4 projTexCoord = cameraProjections[cameraProjectionIndices[index]] * cameraPoses[index] * 
-                            vec4(fPosition, 1.0);
-    projTexCoord /= projTexCoord.w;
-    projTexCoord = (projTexCoord + vec4(1)) / 2;
-	
-	if (projTexCoord.x < 0 || projTexCoord.x > 1 || projTexCoord.y < 0 || projTexCoord.y > 1 ||
-            projTexCoord.z < 0 || projTexCoord.z > 1)
-	{
-		return vec4(0);
-	}
-	else
-	{
-		if (occlusionEnabled)
-		{
-			float imageDepth = texture(depthImages, vec3(projTexCoord.xy, index)).r;
-			if (abs(projTexCoord.z - imageDepth) > occlusionBias)
-			{
-				// Occluded
-				return vec4(0);
-			}
-		}
-        
-        return pow(texture(viewImages, vec3(projTexCoord.xy, index)), vec4(gamma));
-	}
-}
 
 bool validateFit(LightFit fit)
 {
@@ -147,9 +89,4 @@ LightFit fitLight()
     return fit;
 }
 
-void main()
-{
-    LightFit fit = fitLight();
-    lightPosition = vec4(fit.position, fit.quality);
-    lightIntensity = vec4(vec3(fit.intensity), fit.quality);
-}
+#endif // LIGHTFIT_GLSL

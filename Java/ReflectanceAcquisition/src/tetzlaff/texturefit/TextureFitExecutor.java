@@ -109,48 +109,51 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	context.enableBackFaceCulling();
     	
     	Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
-    			.addShader(ShaderType.VERTEX, new File("shaders/depth.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders/depth.frag"))
+    			.addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
     			.createProgram();
     	
     	Program<ContextType> projTexProgram = context.getShaderProgramBuilder()
-    			.addShader(ShaderType.VERTEX, new File("shaders", "texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", "projtex_single.frag"))
+    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", "reflectance/projtex_single.frag"))
     			.createProgram();
     	
     	Program<ContextType> lightFitProgram = context.getShaderProgramBuilder()
-    			.addShader(ShaderType.VERTEX, new File("shaders", "texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? "lightfit_texspace.frag" : "lightfit_imgspace.frag"))
+    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
+    					"texturefit/lightfit_texspace.frag" : "texturefit/lightfit_imgspace.frag"))
     			.createProgram();
     	
     	Program<ContextType> diffuseFitProgram = context.getShaderProgramBuilder()
-    			.addShader(ShaderType.VERTEX, new File("shaders", "texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? "diffusefit_texspace.frag" : "diffusefit_imgspace.frag"))
+    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
+    					"texturefit/diffusefit_texspace.frag" : "texturefit/diffusefit_imgspace.frag"))
     			.createProgram();
 		
     	Program<ContextType> specularFitProgram = context.getShaderProgramBuilder()
-    			.addShader(ShaderType.VERTEX, new File("shaders", "texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? "specularfit_texspace.frag" : "specularfit_imgspace.frag"))
+    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
+    					"texturefit/specularfit_texspace.frag" : "texturefit/specularfit_imgspace.frag"))
     			.createProgram();
 		
     	Program<ContextType> diffuseDebugProgram = context.getShaderProgramBuilder()
-    			.addShader(ShaderType.VERTEX, new File("shaders", "texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", "projtex_multi.frag"))
+    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", "reflectance/projtex_multi.frag"))
     			.createProgram();
 		
     	Program<ContextType> specularDebugProgram = context.getShaderProgramBuilder()
-    			.addShader(ShaderType.VERTEX, new File("shaders", "texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", "speculardebug_imgspace.frag"))
+    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", "texturefit/speculardebug_imgspace.frag"))
     			.createProgram();
 		
     	Program<ContextType> textureRectProgram = context.getShaderProgramBuilder()
-    			.addShader(ShaderType.VERTEX, new File("shaders", "texturerect.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", "simpletexture.frag"))
+    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texture.vert"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", "common/texture.frag"))
     			.createProgram();
 		
     	Program<ContextType> holeFillProgram = context.getShaderProgramBuilder()
-    			.addShader(ShaderType.VERTEX, new File("shaders", "texturerect.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", "holefill.frag"))
+    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texture.vert"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", "texturefit/holefill.frag"))
     			.createProgram();
 		
     	System.out.println("Shader compilation completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -512,6 +515,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	
         lightFitRenderable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
         lightFitRenderable.program().setUniform("gamma", param.getGamma());
+        lightFitRenderable.program().setUniform("shadowTestEnabled", false);
         lightFitRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
         lightFitRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
         lightFitRenderable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
@@ -535,6 +539,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	
     	diffuseFitRenderable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
     	diffuseFitRenderable.program().setUniform("gamma", param.getGamma());
+    	diffuseFitRenderable.program().setUniform("shadowTestEnabled", param.isCameraVisibilityTestEnabled());
     	diffuseFitRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
     	diffuseFitRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
     	diffuseFitRenderable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
@@ -574,6 +579,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	specularFitRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
     	}
 
+    	specularFitRenderable.program().setUniform("shadowTestEnabled", param.isCameraVisibilityTestEnabled());
     	specularFitRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
     	specularFitRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
     	specularFitRenderable.program().setUniform("gamma", param.getGamma());

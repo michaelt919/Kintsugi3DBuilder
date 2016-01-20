@@ -1,16 +1,9 @@
-#version 330
+#ifndef SPECULARFIT_GLSL
+#define SPECULARFIT_GLSL
 
-#define MAX_CAMERA_POSE_COUNT 1024
-#define MAX_CAMERA_PROJECTION_COUNT 1024
-#define MAX_LIGHT_COUNT 1024
+#include "../reflectance/reflectance.glsl"
 
-in vec3 fPosition;
-in vec2 fTexCoord;
-in vec3 fNormal;
-
-uniform sampler2DArray viewImages;
-uniform sampler2DArray depthImages;
-uniform int viewCount;
+#line 7 2002
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
@@ -18,11 +11,6 @@ uniform sampler2D normalEstimate;
 uniform bool computeRoughness;
 uniform bool computeNormal;
 uniform bool trueBlinnPhong;
-
-uniform float gamma;
-uniform bool occlusionEnabled;
-uniform float occlusionBias;
-uniform bool infiniteLightSources;
 
 uniform float diffuseRemovalAmount;
 uniform float specularInfluenceScale;
@@ -34,91 +22,12 @@ uniform vec3 defaultSpecularColor;
 uniform float defaultSpecularRoughness;
 uniform float specularRoughnessScale;
 
-uniform CameraPoses
-{
-	mat4 cameraPoses[MAX_CAMERA_POSE_COUNT];
-};
-
-uniform CameraProjections
-{
-	mat4 cameraProjections[MAX_CAMERA_PROJECTION_COUNT];
-};
-
-uniform CameraProjectionIndices
-{
-	int cameraProjectionIndices[MAX_CAMERA_POSE_COUNT];
-};
-
-uniform LightPositions
-{
-	vec4 lightPositions[MAX_LIGHT_COUNT];
-};
-
-uniform LightIntensities
-{
-    vec3 lightIntensities[MAX_LIGHT_COUNT];
-};
-
-uniform LightIndices
-{
-	int lightIndices[MAX_CAMERA_POSE_COUNT];
-};
-
-layout(location = 0) out vec4 specularColor;
-layout(location = 1) out vec4 specularRoughness;
-layout(location = 2) out vec4 specularNormalMap;
-layout(location = 3) out vec4 debug;
-
 struct SpecularFit
 {
     vec3 color;
     float roughness;
     vec3 normal;
 };
-
-vec4 getColor(int index)
-{
-    vec4 projTexCoord = cameraProjections[cameraProjectionIndices[index]] * cameraPoses[index] * 
-                            vec4(fPosition, 1.0);
-    projTexCoord /= projTexCoord.w;
-    projTexCoord = (projTexCoord + vec4(1)) / 2;
-	
-	if (projTexCoord.x < 0 || projTexCoord.x > 1 || projTexCoord.y < 0 || projTexCoord.y > 1 ||
-            projTexCoord.z < 0 || projTexCoord.z > 1)
-	{
-		return vec4(0);
-	}
-	else
-	{
-		if (occlusionEnabled)
-		{
-			float imageDepth = texture(depthImages, vec3(projTexCoord.xy, index)).r;
-			if (abs(projTexCoord.z - imageDepth) > occlusionBias)
-			{
-				// Occluded
-				return vec4(0);
-			}
-		}
-        
-        return pow(texture(viewImages, vec3(projTexCoord.xy, index)), vec4(gamma));
-	}
-}
-
-vec3 getViewVector(int index)
-{
-    return transpose(mat3(cameraPoses[index])) * -cameraPoses[index][3].xyz - fPosition;
-}
-
-vec3 getLightVector(int index)
-{
-    return transpose(mat3(cameraPoses[index])) * 
-        (lightPositions[lightIndices[index]].xyz - cameraPoses[index][3].xyz) - fPosition;
-}
-
-vec3 getLightIntensity(int index)
-{
-    return lightIntensities[lightIndices[index]];
-}
 
 vec3 getDiffuseColor()
 {
@@ -325,10 +234,4 @@ SpecularFit fitSpecular()
     return fit;
 }
 
-void main()
-{
-    SpecularFit fit = fitSpecular();
-    specularColor = vec4(pow(fit.color, vec3(1 / gamma)), 1.0);
-    specularNormalMap = vec4(fit.normal * 0.5 + vec3(0.5), 1.0);
-    specularRoughness = vec4(vec3(fit.roughness / specularRoughnessScale), 1.0);
-}
+#endif // SPECULARFIT_GLSL

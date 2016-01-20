@@ -73,8 +73,8 @@ public class ImageBasedMicrofacetProgram
         try
         {
     		program = window.getShaderProgramBuilder()
-    				.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibmfr.frag"))
+    				.addShader(ShaderType.VERTEX, new File("shaders/ibr/ulr.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr.frag"))
     				.createProgram();
         }
         catch (IOException e)
@@ -87,8 +87,8 @@ public class ImageBasedMicrofacetProgram
         try
         {
         	indexProgram = window.getShaderProgramBuilder()
-    				.addShader(ShaderType.VERTEX, new File("shaders/simpletexspace.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibmfr_index.frag"))
+    				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr_index.frag"))
     				.createProgram();
         }
         catch (IOException e)
@@ -126,13 +126,13 @@ public class ImageBasedMicrofacetProgram
 	        	{
 	        		// reload program
 	        		Program<OpenGLContext> newProgram = window.getShaderProgramBuilder()
-							.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
-							.addShader(ShaderType.FRAGMENT, new File("shaders/ibmfr.frag"))
+	        				.addShader(ShaderType.VERTEX, new File("shaders/ibr/ulr.vert"))
+	        				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr.frag"))
 							.createProgram();
 		        	
 		        	Program<OpenGLContext> newIndexProgram = window.getShaderProgramBuilder()
-							.addShader(ShaderType.VERTEX, new File("shaders/simpletexspace.vert"))
-							.addShader(ShaderType.FRAGMENT, new File("shaders/ibmfr_index.frag"))
+		    				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+		    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr_index.frag"))
 							.createProgram();
 		        	
 		        	if (model.getProgram() != null)
