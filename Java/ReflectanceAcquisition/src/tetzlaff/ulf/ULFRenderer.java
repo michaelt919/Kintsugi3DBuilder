@@ -87,8 +87,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	try
 	        {
 	    		this.program = context.getShaderProgramBuilder()
-	    				.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File("shaders/ulr.frag"))
+	    				.addShader(ShaderType.VERTEX, new File("shaders/ibr/ulr.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ulr.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)
@@ -102,8 +102,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	try
 	        {
 	    		this.simpleTexProgram = context.getShaderProgramBuilder()
-	    				.addShader(ShaderType.VERTEX, new File("shaders/texturerect.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File("shaders/simpletexture.frag"))
+	    				.addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("shaders/common/texture.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)

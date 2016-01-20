@@ -1,8 +1,5 @@
 #version 330
 
-uniform vec2 minTexCoord;
-uniform vec2 maxTexCoord;
-
 in vec3 position;
 in vec2 texCoord;
 in vec3 normal;

@@ -72,8 +72,8 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 	    	
 	    	// Load the program
 	    	Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
-	    			.addShader(ShaderType.VERTEX, new File("shaders/depth.vert"))
-	    			.addShader(ShaderType.FRAGMENT, new File("shaders/depth.frag"))
+	    			.addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
+	    			.addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
 	    			.createProgram();
 	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 	    	depthRenderable.addVertexBuffer("position", ulf.positionBuffer);

@@ -56,8 +56,8 @@ public class ULFProgram
         try
         {
     		program = window.getShaderProgramBuilder()
-    				.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ulr.frag"))
+    				.addShader(ShaderType.VERTEX, new File("shaders/ibr/ulr.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ulr.frag"))
     				.createProgram();
         }
         catch (IOException e)
