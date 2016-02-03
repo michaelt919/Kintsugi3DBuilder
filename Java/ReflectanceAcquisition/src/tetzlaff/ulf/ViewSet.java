@@ -92,6 +92,14 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 */
 	private List<String> imageFileNames;
 	
+	private List<Vector3> absoluteLightPositionList;
+	private List<Vector3> absoluteLightIntensityList;
+	private List<Matrix4> secondaryCameraPoseList;
+	private List<Matrix4> secondaryCameraPoseInvList;
+	private List<Integer> secondaryCameraProjectionIndexList;
+	private List<Integer> secondaryLightIndexList;
+	private List<String> secondaryImageFileNames;
+	
 	/**
 	 * The absolute file path to be used for loading images.
 	 */
@@ -196,6 +204,13 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Vector3> lightIntensityList,
 		List<Integer> lightIndexList,
 		List<String> imageFileNames, 
+		List<Vector3> absoluteLightPositionList,
+		List<Vector3> absoluteLightIntensityList,
+		List<Matrix4> secondaryCameraPoseList,
+		List<Matrix4> secondaryCameraPoseInvList,
+		List<Integer> secondaryCameraProjectionIndexList,
+		List<Integer> secondaryLightIndexList,
+		List<String> secondaryImageFileNames, 
 		ViewSetImageOptions imageOptions,
 		float gamma,
 		double[] linearLuminanceValues,
@@ -212,6 +227,13 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		this.lightPositionList = lightPositionList;
 		this.lightIntensityList = lightIntensityList;
 		this.lightIndexList = lightIndexList;
+		this.absoluteLightPositionList = absoluteLightPositionList;
+		this.absoluteLightIntensityList = absoluteLightIntensityList;
+		this.secondaryCameraPoseList = secondaryCameraPoseList;
+		this.secondaryCameraPoseInvList = secondaryCameraPoseInvList;
+		this.secondaryCameraProjectionIndexList = secondaryCameraProjectionIndexList;
+		this.secondaryLightIndexList = secondaryLightIndexList;
+		this.secondaryImageFileNames = secondaryImageFileNames;
 		this.imageFileNames = imageFileNames;
 		this.recommendedNearPlane = recommendedNearPlane;
 		this.recommendedFarPlane = recommendedFarPlane;
@@ -598,6 +620,14 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<String> imageFileNames = new ArrayList<String>();
 		List<Double> linearLuminanceList = new ArrayList<Double>();
 		List<Byte> encodedLuminanceList = new ArrayList<Byte>();
+
+		List<Vector3> absoluteLightPositionList = new ArrayList<Vector3>();
+		List<Vector3> absoluteLightIntensityList = new ArrayList<Vector3>();
+		List<Matrix4> secondaryCameraPoseList = new ArrayList<Matrix4>();
+		List<Matrix4> secondaryCameraPoseInvList = new ArrayList<Matrix4>();
+		List<Integer> secondaryCameraProjectionIndexList = new ArrayList<Integer>();
+		List<Integer> secondaryLightIndexList = new ArrayList<Integer>();
+		List<String> secondaryImageFileNames = new ArrayList<String>();
 		
 		while (scanner.hasNext())
 		{
@@ -715,6 +745,21 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				// Skip the rest of the line
 				scanner.nextLine();
 			}
+			else if (id.equals("L"))
+			{
+				float x = scanner.nextFloat();
+				float y = scanner.nextFloat();
+				float z = scanner.nextFloat();
+				absoluteLightPositionList.add(new Vector3(x, y, z));
+				
+				float r = scanner.nextFloat();
+				float g = scanner.nextFloat();
+				float b = scanner.nextFloat();
+				absoluteLightIntensityList.add(new Vector3(r, g, b));
+
+				// Skip the rest of the line
+				scanner.nextLine();
+			}
 			else if (id.equals("v"))
 			{
 				int poseId = scanner.nextInt();
@@ -728,6 +773,20 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				cameraProjectionIndexList.add(projectionId);
 				lightIndexList.add(lightId);
 				imageFileNames.add(imgFilename);
+			}
+			else if (id.equals("V"))
+			{
+				int poseId = scanner.nextInt();
+				int projectionId = scanner.nextInt();
+				int lightId = scanner.nextInt();
+				
+				String imgFilename = scanner.nextLine().trim();
+				
+				secondaryCameraPoseList.add(cameraPoseList.get(poseId));
+				secondaryCameraPoseInvList.add(cameraPoseInvList.get(poseId));
+				secondaryCameraProjectionIndexList.add(projectionId);
+				secondaryLightIndexList.add(lightId);
+				secondaryImageFileNames.add(imgFilename);
 			}
 			else
 			{
@@ -759,8 +818,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
 		return new ViewSet<ContextType>(
-			orderedCameraPoseList, orderedCameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, 
-			imageFileNames, imageOptions, recommendedGamma, linearLuminance, encodedLuminance, recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
+			orderedCameraPoseList, orderedCameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
+			absoluteLightPositionList, absoluteLightIntensityList, secondaryCameraPoseList, secondaryCameraPoseInvList, secondaryCameraProjectionIndexList, secondaryLightIndexList, secondaryImageFileNames,
+			imageOptions, recommendedGamma, linearLuminance, encodedLuminance, recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
 	}
 	
 	/**
@@ -1297,9 +1357,20 @@ public class ViewSet<ContextType extends Context<ContextType>>
         lightIntensityList.add(lightIntensity);
 
         float farPlane = findFarPlane(cameraPoseInvList) * globalScale;
-        System.out.println("Near and far planes: " + (farPlane/16.0f) + ", " + (farPlane));
-        return new ViewSet<ContextType>(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList,
-        		imageFileNames, imageOptions, 2.2f, null, null, farPlane / 32.0f, farPlane, context, loadingCallback);
+        System.out.println("Near and far planes: " + (farPlane/32.0f) + ", " + (farPlane));
+        
+        // Not used
+		List<Vector3> absoluteLightPositionList = new ArrayList<Vector3>();
+		List<Vector3> absoluteLightIntensityList = new ArrayList<Vector3>();
+		List<Matrix4> secondaryCameraPoseList = new ArrayList<Matrix4>();
+		List<Matrix4> secondaryCameraPoseInvList = new ArrayList<Matrix4>();
+		List<Integer> secondaryCameraProjectionIndexList = new ArrayList<Integer>();
+		List<Integer> secondaryLightIndexList = new ArrayList<Integer>();
+		List<String> secondaryImageFileNames = new ArrayList<String>();
+        
+        return new ViewSet<ContextType>(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
+        		absoluteLightPositionList, absoluteLightIntensityList, secondaryCameraPoseList, secondaryCameraPoseInvList, secondaryCameraProjectionIndexList, secondaryLightIndexList, secondaryImageFileNames,
+        		imageOptions, 2.2f, null, null, farPlane / 32.0f, farPlane, context, loadingCallback);
     }
 	
 	/**
@@ -1625,5 +1696,50 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public float getRecommendedFarPlane() 
 	{
 		return this.recommendedFarPlane;
+	}
+	
+	public Vector3 getAbsoluteLightPosition(int absoluteLightIndex) 
+	{
+		return this.absoluteLightPositionList.get(absoluteLightIndex);
+	}
+	
+	public Vector3 getAbsoluteLightIntensity(int absoluteLightIndex) 
+	{
+		return this.absoluteLightIntensityList.get(absoluteLightIndex);
+	}
+	
+	public int getSecondaryCameraPoseCount()
+	{
+		return this.secondaryCameraPoseList.size();
+	}
+	
+	public Matrix4 getSecondaryCameraPose(int poseIndex) 
+	{
+		return this.secondaryCameraPoseList.get(poseIndex);
+	}
+	
+	public Matrix4 getSecondaryCameraPoseInverse(int poseIndex) 
+	{
+		return this.secondaryCameraPoseInvList.get(poseIndex);
+	}
+	
+	public Integer getSecondaryCameraProjectionIndex(int poseIndex) 
+	{
+		return this.secondaryCameraProjectionIndexList.get(poseIndex);
+	}
+	
+	public Integer getSecondaryLightIndex(int poseIndex) 
+	{
+		return this.secondaryLightIndexList.get(poseIndex);
+	}
+	
+	public String getSecondaryImageFileName(int poseIndex)
+	{
+		return this.secondaryImageFileNames.get(poseIndex);
+	}
+
+	public File getSecondaryImageFile(int poseIndex) 
+	{
+		return new File(this.filePath, this.secondaryImageFileNames.get(poseIndex));
 	}
 }

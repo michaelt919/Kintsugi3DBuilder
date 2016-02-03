@@ -156,6 +156,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     			.addShader(ShaderType.FRAGMENT, new File("shaders", "texturefit/holefill.frag"))
     			.createProgram();
 		
+    	Program<ContextType> ibmfrProgram = context.getShaderProgramBuilder()
+    			.addShader(ShaderType.VERTEX, new File("shaders", "ibr/ulr.vert"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", "ibr/ibmfr.frag"))
+    			.createProgram();
+		
     	System.out.println("Shader compilation completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	
     	System.out.println("Loading mesh...");
@@ -887,37 +892,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     		}
     	}
     	
-    	if (!DEBUG || param.isImagePreprojectionUseEnabled())
-    	{
-	        viewSet.deleteOpenGLResources();
-	        positionBuffer.delete();
-	        normalBuffer.delete();
-	        texCoordBuffer.delete();
-	        
-	        if (viewTextures != null)
-	        {
-	        	viewTextures.delete();
-	        }
-	        
-	        if (depthTextures != null)
-	        {
-	        	depthTextures.delete();
-	        }
-	        
-	        if (shadowTextures != null)
-	        {
-	        	shadowTextures.delete();
-	        }
-	        
-	        lightPositionBuffer.delete();
-	        lightIntensityBuffer.delete();
-	        
-	        if (shadowMatrixBuffer != null)
-	        {
-	        	shadowMatrixBuffer.delete();
-	        }
-    	}
-    	
     	if (param.getTextureSubdivision() > 1)
     	{
     		System.out.println("Model fitting completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -988,6 +962,228 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	specularFitFramebuffer = holeFillFrontFBO;
 
 		System.out.println("Empty regions filled in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+
+		// Fresnel
+		
+		float fresnelStrengthEstSum = 0.0f;
+    	
+    	Renderable<ContextType> fresnelRenderable = context.createRenderable(ibmfrProgram);
+    	
+    	fresnelRenderable.addVertexBuffer("position", positionBuffer);
+    	fresnelRenderable.addVertexBuffer("texCoord", texCoordBuffer);
+    	fresnelRenderable.addVertexBuffer("normal", normalBuffer);
+    	
+    	ibmfrProgram.setTexture("imageTextures", viewTextures);
+    	ibmfrProgram.setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
+    	ibmfrProgram.setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
+    	ibmfrProgram.setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
+    	ibmfrProgram.setUniform("cameraPoseCount", viewSet.getCameraPoseCount());
+    	if (depthTextures != null)
+		{
+    		ibmfrProgram.setTexture("depthTextures", depthTextures);
+		}
+    	ibmfrProgram.setUniform("gamma", param.getGamma());
+    	ibmfrProgram.setUniform("weightExponent", 16.0f); // TODO make weight exponent a parameter?
+    	ibmfrProgram.setUniform("occlusionEnabled", depthTextures != null && param.isCameraVisibilityTestEnabled());
+    	ibmfrProgram.setUniform("occlusionBias", param.getCameraVisibilityTestBias());
+    	
+    	if (param.getDiffuseComputedNormalWeight() == 0.0f)
+		{
+    		ibmfrProgram.setUniform("useNormalTexture", false);
+    		ibmfrProgram.setTexture("normalMap", null);
+		}
+		else
+		{
+			ibmfrProgram.setUniform("useNormalTexture", true);
+			ibmfrProgram.setTexture("normalMap", diffuseFitFramebuffer.getColorAttachmentTexture(1));
+		}
+		
+//		if (???) // TODO option to not use fitted diffuse texture map?
+//		{
+//			ibmfrProgram.setUniform("useDiffuseTexture", false);
+//			ibmfrProgram.setTexture("diffuseMap", null);
+//		}
+//		else
+		{
+			ibmfrProgram.setUniform("useDiffuseTexture", true);
+			ibmfrProgram.setTexture("diffuseMap",  diffuseFitFramebuffer.getColorAttachmentTexture(0));
+		}
+    	
+    	for (int i = 0; i < viewSet.getSecondaryCameraPoseCount(); i++)
+    	{
+    		File groundTruthImageFile = new File(imageDir, viewSet.getSecondaryImageFileName(i));
+    		BufferedImage groundTruthImage = ImageIO.read(groundTruthImageFile);
+
+        	FramebufferObject<ContextType> noFresnelFramebuffer =
+    			context.getFramebufferObjectBuilder(
+    					groundTruthImage.getWidth(), 
+    					groundTruthImage.getHeight())
+					.addColorAttachment().createFramebufferObject();
+        	
+        	FramebufferObject<ContextType> fresnelFramebuffer =
+    			context.getFramebufferObjectBuilder(
+    					groundTruthImage.getWidth(), 
+    					groundTruthImage.getHeight())
+					.addColorAttachment().createFramebufferObject();
+        	
+        	ibmfrProgram.setUniform("model_view", viewSet.getSecondaryCameraPose(i));
+        	ibmfrProgram.setUniform("projection", 
+    			viewSet.getCameraProjection(viewSet.getSecondaryCameraProjectionIndex(i))
+    				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+	
+			ibmfrProgram.setUniform("lightPos[0]", viewSet.getAbsoluteLightPosition(viewSet.getSecondaryLightIndex(i)));
+			ibmfrProgram.setUniform("lightIntensity[0]", viewSet.getAbsoluteLightIntensity(viewSet.getSecondaryLightIndex(i)));
+			ibmfrProgram.setUniform("virtualLightCount", 1);
+			
+//			if (shadowMatrixBuffer == null || shadowTextures == null)
+			{
+				ibmfrProgram.setUniform("shadowTestingEnabled", false); // TODO shadow testing for Fresnel fit
+			}
+//			else
+//			{
+//				ibmfrProgram.setUniform("shadowTestingEnabled", true);
+//				ibmfrProgram.setUniformBuffer("ShadowMatrices", shadowMatrixBuffer);
+//				ibmfrProgram.setTexture("shadowTextures", shadowTextures);
+//			}
+			
+			ibmfrProgram.setUniform("fresnelStrength", 0.5f); // gain = 2 at extreme grazing angles
+	    	
+	    	fresnelFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+	    	fresnelFramebuffer.clearDepthBuffer();
+	    	
+	    	fresnelRenderable.draw(PrimitiveMode.TRIANGLES, fresnelFramebuffer);
+	    	
+	    	fresnelFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDir, "debugFresnel" + i + ".png"));
+			
+			ibmfrProgram.setUniform("fresnelStrength", 0.0f);
+	    	
+			noFresnelFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+			noFresnelFramebuffer.clearDepthBuffer();
+	    	
+			fresnelRenderable.draw(PrimitiveMode.TRIANGLES, noFresnelFramebuffer);
+	    	
+			noFresnelFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDir, "debugNoFresnel" + i + ".png"));
+	    	
+        	FramebufferObject<ContextType> extraFresnelFramebuffer =
+    			context.getFramebufferObjectBuilder(
+    					groundTruthImage.getWidth(), 
+    					groundTruthImage.getHeight())
+					.addColorAttachment().createFramebufferObject();
+			
+			ibmfrProgram.setUniform("fresnelStrength", 0.96f);
+			extraFresnelFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+			extraFresnelFramebuffer.clearDepthBuffer();
+	    	fresnelRenderable.draw(PrimitiveMode.TRIANGLES, extraFresnelFramebuffer);
+	    	extraFresnelFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDir, "debugExtraFresnel" + i + ".png"));
+	    	
+	    	// Linear regression variables:
+	    	// Solving A x = v
+	    	// Matrix A'A = [ a,b; b,d ]
+	    	double a = 0.0; // Use doubles since numbers will be large
+	    	double b = 0.0;
+	    	double d = 0.0;
+	    	// vector A'v = [u, v]
+	    	double u = 0.0;
+	    	double v = 0.0;
+	    	
+	    	int[] fresnelData = fresnelFramebuffer.readColorBufferARGB(0);
+	    	int[] noFresnelData = noFresnelFramebuffer.readColorBufferARGB(0);
+	    	int k = 0;
+    		for (int y = 0; y < groundTruthImage.getHeight(); y++)
+	    	{
+    	    	for (int x = 0; x < groundTruthImage.getWidth(); x++)
+	    		{
+    	    		int fresnelARGB = fresnelData[k];
+    	    		int noFresnelARGB = noFresnelData[k];
+    				int gtARGB = groundTruthImage.getRGB(x, y);
+
+    				float alpha = ((fresnelARGB & 0xFF000000) >>> 24) / 255.0f;
+    				
+    	    		float fresnelRed = (float)Math.pow(((fresnelARGB & 0x00FF0000) >>> 16) / 255.0f, param.getGamma());
+    				float fresnelGreen = (float)Math.pow(((fresnelARGB & 0x0000FF00) >>> 8) / 255.0f, param.getGamma());
+    				float fresnelBlue = (float)Math.pow((fresnelARGB & 0x000000FF) / 255.0f, param.getGamma());
+
+    	    		float noFresnelRed = (float)Math.pow(((noFresnelARGB & 0x00FF0000) >>> 16) / 255.0f, param.getGamma());
+    				float noFresnelGreen = (float)Math.pow(((noFresnelARGB & 0x0000FF00) >>> 8) / 255.0f, param.getGamma());
+    				float noFresnelBlue = (float)Math.pow((noFresnelARGB & 0x000000FF) / 255.0f, param.getGamma());
+    				
+    				float fresnelOnlyRed = fresnelRed - noFresnelRed;
+    				float fresnelOnlyGreen = fresnelGreen - noFresnelGreen;
+    				float fresnelOnlyBlue = fresnelBlue - noFresnelBlue;
+					
+    	    		float gtRed = (float)Math.pow(((gtARGB & 0x00FF0000) >>> 16) / 255.0f, param.getGamma());
+    				float gtGreen = (float)Math.pow(((gtARGB & 0x0000FF00) >>> 8) / 255.0f, param.getGamma());
+    				float gtBlue = (float)Math.pow((gtARGB & 0x000000FF) / 255.0f, param.getGamma());
+    				
+    				a += alpha * (fresnelOnlyRed * fresnelOnlyRed +
+    						fresnelOnlyGreen * fresnelOnlyGreen +
+    						fresnelOnlyBlue * fresnelOnlyBlue);
+    				
+    				b += alpha * (fresnelOnlyRed * noFresnelRed +
+    						fresnelOnlyGreen * noFresnelGreen +
+    						fresnelOnlyBlue * noFresnelBlue);
+    				
+    				d += alpha * (noFresnelRed * noFresnelRed +
+    						noFresnelGreen * noFresnelGreen +
+    						noFresnelBlue * noFresnelBlue);
+    				
+    				u += alpha * (gtRed * fresnelOnlyRed +
+    						gtGreen * fresnelOnlyGreen +
+    						gtBlue * fresnelOnlyBlue);
+    				
+    				v += alpha * (gtRed * noFresnelRed +
+    						gtGreen * noFresnelGreen +
+    						gtBlue * noFresnelBlue);
+    				
+	    			k++;
+	    		}
+	    	}
+
+	    	noFresnelFramebuffer.delete();
+	    	fresnelFramebuffer.delete();
+	    	
+	    	// Evaluate (A'A)^-1 A'v
+	    	double detA = a * d - b * b;
+	    	double fresnelStrengthUnnorm = (d * u - b * v) / detA;
+	    	double nonFresnelStrengthUnnorm = (a * v - b * u) / detA;
+	    	
+	    	double fresnelStrengthEst = fresnelStrengthUnnorm / (fresnelStrengthUnnorm + nonFresnelStrengthUnnorm);
+	    	fresnelStrengthEstSum += fresnelStrengthEst;
+	    	System.out.println("Fresnel strength estimate (" + i + "): " + fresnelStrengthEst);
+    	}
+    	
+    	System.out.println("Fresnel strength estimate (final average): " + (fresnelStrengthEstSum / viewSet.getSecondaryCameraPoseCount()));
+    	
+    	if (!DEBUG || param.isImagePreprojectionUseEnabled())
+    	{
+	        viewSet.deleteOpenGLResources();
+	        positionBuffer.delete();
+	        normalBuffer.delete();
+	        texCoordBuffer.delete();
+	        
+	        if (viewTextures != null)
+	        {
+	        	viewTextures.delete();
+	        }
+	        
+	        if (depthTextures != null)
+	        {
+	        	depthTextures.delete();
+	        }
+	        
+	        if (shadowTextures != null)
+	        {
+	        	shadowTextures.delete();
+	        }
+	        
+	        lightPositionBuffer.delete();
+	        lightIntensityBuffer.delete();
+	        
+	        if (shadowMatrixBuffer != null)
+	        {
+	        	shadowMatrixBuffer.delete();
+	        }
+    	}
     	
     	System.out.println("Saving textures...");
     	timestamp = new Date();
@@ -1195,6 +1391,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}
 
+		ibmfrProgram.delete();
 		projTexProgram.delete();
 		diffuseFitProgram.delete();
 		specularFitProgram.delete();

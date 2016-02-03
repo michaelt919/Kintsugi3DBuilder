@@ -14,6 +14,7 @@ uniform bool shadowTestingEnabled;
 uniform float weightExponent;
 uniform float occlusionBias;
 uniform float gamma;
+uniform float fresnelStrength;
 uniform bool infiniteLightSources;
 
 uniform sampler1D luminanceMap;
@@ -211,7 +212,6 @@ layout(location = 0) out vec4 fragColor;
 
 float fresnel(vec3 viewDir, vec3 halfwayDir)
 {
-    float fresnelStrength = 0.5; // TODO make this a uniform variable
     return (1 - fresnelStrength) + 
             fresnelStrength * pow(clamp(1 - dot(viewDir, halfwayDir), 0, 1), 5.0);
 }
@@ -412,7 +412,7 @@ void main()
     vec3 diffuseColor;
     if (useDiffuseTexture)
     {
-         diffuseColor = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
+        diffuseColor = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
     }
     else
     {
