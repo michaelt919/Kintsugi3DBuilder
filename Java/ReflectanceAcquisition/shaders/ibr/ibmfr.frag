@@ -212,6 +212,7 @@ layout(location = 0) out vec4 fragColor;
 
 float fresnel(vec3 viewDir, vec3 halfwayDir)
 {
+    float fresnelStrength = 0.95;
     return (1 - fresnelStrength) + 
             fresnelStrength * pow(clamp(1 - dot(viewDir, halfwayDir), 0, 1), 5.0);
 }
@@ -277,10 +278,10 @@ vec4 getProjTexSample(int index, bool useMipmaps)
             color = textureLod(imageTextures, vec3(projTexCoord.xy, index), 0.0);
         }
 		
-        return (color.a < 0.9999 ? 0.0 : 1.0) * vec4(pow(color.rgb, vec3(gamma)), 1.0);
+        //return (color.a < 0.9999 ? 0.0 : 1.0) * vec4(pow(color.rgb, vec3(gamma)), 1.0);
         
         vec3 colorGC = pow(color.rgb, vec3(gamma));
-        float scale = colorGC.r + colorGC.g + colorGC.b < 0.001 ? 0.0 : texture(luminanceMap, (colorGC.r + colorGC.g + colorGC.b) / 3).r * 3 / (colorGC.r + colorGC.g + colorGC.b) * 5;
+        float scale = colorGC.r + colorGC.g + colorGC.b < 0.001 ? 0.0 : texture(luminanceMap, (colorGC.r + colorGC.g + colorGC.b) / 3).r * 3 / (colorGC.r + colorGC.g + colorGC.b) * 15;
         return (color.a < 0.9999 ? 0.0 : 1.0) * vec4(colorGC.rgb * scale, 1.0);
         
         // return (color.a < 0.9999 ? 0.0 : 1.0) * 

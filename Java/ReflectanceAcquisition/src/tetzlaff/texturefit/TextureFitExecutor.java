@@ -10,6 +10,9 @@ import java.util.Date;
 
 import javax.imageio.ImageIO;
 
+import org.ujmp.core.Matrix;
+import org.ujmp.core.SparseMatrix;
+
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.FramebufferObject;
@@ -60,6 +63,218 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		this.lightOffset = lightOffset;
 		this.lightIntensity = lightIntensity;
 		this.param = param;
+	}
+	
+	private void resample(float estRmsSlope, BufferedImage[] projectedImages)
+	{
+		int n = 16; // TODO
+		
+		float rMax = (float)Math.min(0.5*Math.sqrt(3), Math.sqrt(Math.sqrt(2) * estRmsSlope));
+
+		int dim = n*n*projectedImages[0].getHeight()*projectedImages[0].getWidth();
+		Matrix mTm = SparseMatrix.Factory.zeros(dim, dim);
+		Matrix mTx = SparseMatrix.Factory.zeros(dim, 1);
+		
+		float regularizationWeight = 1.0f; // TODO(?)
+		
+		int imgWidth = projectedImages[0].getWidth();
+		int imgHeight = projectedImages[0].getHeight();
+		
+		long indexBase = 0;
+		for (int y = 0; y < imgHeight - 1; y++)
+		{
+			for (int x = 0; x < imgWidth - 1; x++)
+			{
+				long indexCurrent = indexBase;
+				long indexRight = indexBase + n*n;
+				long indexBelow = indexBase + n*n * imgWidth;
+				
+				for (int p = 0; p < n*n; p++)
+				{
+					mTm.setAsFloat(mTm.getAsFloat(indexCurrent, indexCurrent) + 2 * regularizationWeight, indexCurrent, indexCurrent);
+					mTm.setAsFloat(mTm.getAsFloat(indexRight, indexRight) + regularizationWeight, indexRight, indexRight);
+					mTm.setAsFloat(mTm.getAsFloat(indexBelow, indexBelow) + regularizationWeight, indexBelow, indexBelow);
+					mTm.setAsFloat(mTm.getAsFloat(indexCurrent, indexRight) - regularizationWeight, indexCurrent, indexRight);
+					mTm.setAsFloat(mTm.getAsFloat(indexCurrent, indexBelow) - regularizationWeight, indexCurrent, indexBelow);
+					mTm.setAsFloat(mTm.getAsFloat(indexRight, indexCurrent) - regularizationWeight, indexRight, indexCurrent);
+					mTm.setAsFloat(mTm.getAsFloat(indexBelow, indexCurrent) - regularizationWeight, indexBelow, indexCurrent);
+					
+					indexCurrent++;
+					indexRight++;
+					indexBelow++;
+				}
+				
+				indexBase += n*n;
+			}
+		}
+		
+		for (int k = 0; k < projectedImages.length; k++)
+		{
+			indexBase = 0;
+			
+			for (int y = 0; y < imgHeight - 1; y++)
+			{
+				for (int x = 0; x < imgWidth - 1; x++)
+				{
+					float intensity;
+					
+					float u, v; // the tangent and bitangent components of the half-vector 
+		
+					float scale = (n-1) / rMax * (float)Math.sqrt(u*u+v*v) / Math.max(Math.abs(u), Math.abs(v));
+					
+					// Mapped coordinates for the specified half-vector
+					float iReal = scale * 0.5f * (1 + u);
+					float jReal = scale * 0.5f * (1 + v);
+
+					// Coordinate indices of the nearest sample points
+					int iRight = (int)Math.ceil(iReal);
+					int iLeft = (int)Math.floor(iReal);
+
+					int jAbove = (int)Math.ceil(jReal);
+					int jBelow = (int)Math.floor(jReal);
+					
+					// Indices of the sample points in the flattened vector
+					long[] indices = {
+						indexBase + iRight + jAbove * n,
+						indexBase + iRight + jBelow * n,
+						indexBase + iLeft + jAbove * n,
+						indexBase + iLeft + jBelow * n
+					};
+					
+					// Interpolation coefficients
+					float s, t;
+					
+					if (iRight == iLeft)
+					{
+						s = 0.0f;
+					}
+					else
+					{
+						s = (iReal - iLeft) / (iRight - iLeft);
+					}
+					
+					if (jAbove == jBelow)
+					{
+						t = 0.0f;
+					}
+					else
+					{
+						t = (jReal - jBelow) / (jAbove - jBelow);
+					}
+					
+					// Blending weights
+					float[] weights = { s * t, s * (1 - t), (1 - s) * t, (1 - s) * (1 - t) };
+					
+					// Accumulate in the least squares system
+					for (int q1 = 0; q1 < 4; q1++)
+					{
+						for (int q2 = 0; q2 < 4; q2++)
+						{
+							mTm.setAsFloat(mTm.getAsFloat(indices[q1], indices[q2]) + weights[q1] * weights[q2], indices[q1], indices[q2]);
+						}
+						
+						mTx.setAsFloat(mTx.getAsFloat(indices[q1], 0) + weights[q1] * intensity, indices[q1], 0);
+					}
+				}
+			}
+
+			indexBase += n*n;
+		}
+    		
+		// Solve using Cholesky decomposition
+		Matrix solution = Matrix.chol.solve(mTm, mTx);
+			
+//		if (param.isImagePreprojectionUseEnabled()) // Requires pre-projected images
+//    	{
+//				
+//			int[][] microfacetData = new int[param.getTextureSize() * param.getTextureSize()][param.getMicrofacetTextureCount()];
+//			
+//			float minHDotN = Math.max(0.5 + 0.5 / (param.getMicrofacetTextureCount() - 1), 1 - 0.8125 * estRmsSlope);
+//			float deltaHDotN = (1.0f - minHDotN) / (param.getMicrofacetTextureCount() - 1);
+//			
+//			// Accumulate samples in bins
+//			// Use OpenGL blending?
+//
+//			float[][] sumTheta;
+//			float[][] sumThetaSquared;
+//			float[][] sumReflectance;
+//			float[][] sumThetaTimesReflectance;
+//			float[][] sumWeights;
+//
+//			float[][] intercepts = new float[param.getTextureSize() * param.getTextureSize()][param.getMicrofacetTextureCount()];
+//			float[][] rates = new float[param.getTextureSize() * param.getTextureSize()][param.getMicrofacetTextureCount()];
+//			
+//			for (int i = 0; i < param.getMicrofacetTextureCount(); i++)
+//			{
+//				int k = 0;
+//				for (int y = 0; y < param.getTextureSize(); y++)
+//				{
+//					for (int x = 0; x < param.getTextureSize(); x++)
+//					{
+////						if (mask[k] > 0 && sumWeights[i][k] < threshold)
+////						{
+////							// Add samples from other texels to fill in missing information
+////							
+////							float sumWeights2 = sumWeights[i][k]; // TODO
+////							
+////							float sumTheta2 = sumWeights2 * sumTheta[i][k] / sumWeights[i][k];
+////							float sumThetaSquared2 = sumWeights2 * sumThetaSquared[i][k] / sumWeights[i][k];
+////							float sumReflectance2 = sumWeights2 * sumReflectance[i][k] / sumWeights[i][k];
+////							float sumThetaTimesReflectance2 = sumWeights2 * sumThetaTimesReflectance[i][k] / sumWeights[i][k];
+////							
+////							int kk = 0;
+////							for (int yy = 0; yy < param.getTextureSize(); yy++)
+////							{
+////								for (int xx = 0; xx < param.getTextureSize(); xx++)
+////								{
+////									float weight = ??;
+////									
+////									sumWeights2 += weight;
+////									sumTheta2 += weight * sumTheta[i][kk];
+////									sumThetaSquared2 += weight * sumThetaSquared[i][kk];
+////									sumReflectance2 += weight * sumReflectance[i][kk];
+////									sumThetaTimesReflectance2 += weight * sumThetaTimesReflectance[i][kk];
+////									
+////									kk++;
+////								}
+////							}
+////						}
+////						
+////						// Solve
+////						rates[i][k] = (sumThetaTimesReflectance2 - sumTheta2 * sumReflectance2 / sumWeights2) / (sumThetaSquared2 - sumTheta2 * sumTheta2 / sumWeights2);
+////						intercepts[i][k] = (sumReflectance2 - rates[i][k] * sumTheta2) / sumWeights2;
+//						
+//						// Solve
+//						rates[i][k] = (sumThetaTimesReflectance[i][k] - sumTheta[i][k] * sumReflectance[i][k] / sumWeights[i][k]) / (sumThetaSquared[i][k] - sumTheta[i][k] * sumTheta[i][k] / sumWeights[i][k]);
+//						intercepts[i][k] = (sumReflectance[i][k] - rates[i][k] * sumTheta[i][k]) / sumWeights[i][k];
+//						
+//						k++;
+//					}
+//				}
+//			}
+//			
+//			for (int i = 0; i < param.getMicrofacetTextureCount(); i++)
+//			{
+//				int k = 0;
+//				for (int y = 0; y < param.getTextureSize(); y++)
+//				{
+//					for (int x = 0; x < param.getTextureSize(); x++)
+//					{
+//						float theta1 = 
+//						
+//						float rate1 = rates[i][k];
+//						float rate2 = rates[i][k+1];
+//						
+//						float intercept1 = intercepts[i][k];
+//						float intercept2 = intercepts[i][k+1];
+//						
+//						float value = 0.5 * intercept1 + 0.5 * 
+//								
+//						k++;
+//					}
+//				}
+//			}
+//    	}
 	}
 
 	public void execute() throws IOException
@@ -154,11 +369,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	Program<ContextType> holeFillProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texture.vert"))
     			.addShader(ShaderType.FRAGMENT, new File("shaders", "texturefit/holefill.frag"))
-    			.createProgram();
-		
-    	Program<ContextType> ibmfrProgram = context.getShaderProgramBuilder()
-    			.addShader(ShaderType.VERTEX, new File("shaders", "ibr/ulr.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", "ibr/ibmfr.frag"))
     			.createProgram();
 		
     	System.out.println("Shader compilation completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -758,6 +968,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	specularFitRenderable.program().setUniformBuffer("ShadowMatrices", shadowMatrixBuffer);
     	
 		System.out.println("Shadow maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		
+		// Resample the reflectance data
+		resample();
+		
+		// Phong regression
         
         FloatVertexList lightPositionList = new FloatVertexList(4, 1);
     	lightPositionList.set(0, 0, avgLightPosition.x);
@@ -962,197 +1177,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	specularFitFramebuffer = holeFillFrontFBO;
 
 		System.out.println("Empty regions filled in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-
-		// Fresnel
-		
-		float fresnelStrengthEstSum = 0.0f;
-    	
-    	Renderable<ContextType> fresnelRenderable = context.createRenderable(ibmfrProgram);
-    	
-    	fresnelRenderable.addVertexBuffer("position", positionBuffer);
-    	fresnelRenderable.addVertexBuffer("texCoord", texCoordBuffer);
-    	fresnelRenderable.addVertexBuffer("normal", normalBuffer);
-    	
-    	ibmfrProgram.setTexture("imageTextures", viewTextures);
-    	ibmfrProgram.setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
-    	ibmfrProgram.setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
-    	ibmfrProgram.setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
-    	ibmfrProgram.setUniform("cameraPoseCount", viewSet.getCameraPoseCount());
-    	if (depthTextures != null)
-		{
-    		ibmfrProgram.setTexture("depthTextures", depthTextures);
-		}
-    	ibmfrProgram.setUniform("gamma", param.getGamma());
-    	ibmfrProgram.setUniform("weightExponent", 16.0f); // TODO make weight exponent a parameter?
-    	ibmfrProgram.setUniform("occlusionEnabled", depthTextures != null && param.isCameraVisibilityTestEnabled());
-    	ibmfrProgram.setUniform("occlusionBias", param.getCameraVisibilityTestBias());
-    	
-    	if (param.getDiffuseComputedNormalWeight() == 0.0f)
-		{
-    		ibmfrProgram.setUniform("useNormalTexture", false);
-    		ibmfrProgram.setTexture("normalMap", null);
-		}
-		else
-		{
-			ibmfrProgram.setUniform("useNormalTexture", true);
-			ibmfrProgram.setTexture("normalMap", diffuseFitFramebuffer.getColorAttachmentTexture(1));
-		}
-		
-//		if (???) // TODO option to not use fitted diffuse texture map?
-//		{
-//			ibmfrProgram.setUniform("useDiffuseTexture", false);
-//			ibmfrProgram.setTexture("diffuseMap", null);
-//		}
-//		else
-		{
-			ibmfrProgram.setUniform("useDiffuseTexture", true);
-			ibmfrProgram.setTexture("diffuseMap",  diffuseFitFramebuffer.getColorAttachmentTexture(0));
-		}
-    	
-    	for (int i = 0; i < viewSet.getSecondaryCameraPoseCount(); i++)
-    	{
-    		File groundTruthImageFile = new File(imageDir, viewSet.getSecondaryImageFileName(i));
-    		BufferedImage groundTruthImage = ImageIO.read(groundTruthImageFile);
-
-        	FramebufferObject<ContextType> noFresnelFramebuffer =
-    			context.getFramebufferObjectBuilder(
-    					groundTruthImage.getWidth(), 
-    					groundTruthImage.getHeight())
-					.addColorAttachment().createFramebufferObject();
-        	
-        	FramebufferObject<ContextType> fresnelFramebuffer =
-    			context.getFramebufferObjectBuilder(
-    					groundTruthImage.getWidth(), 
-    					groundTruthImage.getHeight())
-					.addColorAttachment().createFramebufferObject();
-        	
-        	ibmfrProgram.setUniform("model_view", viewSet.getSecondaryCameraPose(i));
-        	ibmfrProgram.setUniform("projection", 
-    			viewSet.getCameraProjection(viewSet.getSecondaryCameraProjectionIndex(i))
-    				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
-	
-			ibmfrProgram.setUniform("lightPos[0]", viewSet.getAbsoluteLightPosition(viewSet.getSecondaryLightIndex(i)));
-			ibmfrProgram.setUniform("lightIntensity[0]", viewSet.getAbsoluteLightIntensity(viewSet.getSecondaryLightIndex(i)));
-			ibmfrProgram.setUniform("virtualLightCount", 1);
-			
-//			if (shadowMatrixBuffer == null || shadowTextures == null)
-			{
-				ibmfrProgram.setUniform("shadowTestingEnabled", false); // TODO shadow testing for Fresnel fit
-			}
-//			else
-//			{
-//				ibmfrProgram.setUniform("shadowTestingEnabled", true);
-//				ibmfrProgram.setUniformBuffer("ShadowMatrices", shadowMatrixBuffer);
-//				ibmfrProgram.setTexture("shadowTextures", shadowTextures);
-//			}
-			
-			ibmfrProgram.setUniform("fresnelStrength", 0.5f); // gain = 2 at extreme grazing angles
-	    	
-	    	fresnelFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
-	    	fresnelFramebuffer.clearDepthBuffer();
-	    	
-	    	fresnelRenderable.draw(PrimitiveMode.TRIANGLES, fresnelFramebuffer);
-	    	
-	    	fresnelFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDir, "debugFresnel" + i + ".png"));
-			
-			ibmfrProgram.setUniform("fresnelStrength", 0.0f);
-	    	
-			noFresnelFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
-			noFresnelFramebuffer.clearDepthBuffer();
-	    	
-			fresnelRenderable.draw(PrimitiveMode.TRIANGLES, noFresnelFramebuffer);
-	    	
-			noFresnelFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDir, "debugNoFresnel" + i + ".png"));
-	    	
-        	FramebufferObject<ContextType> extraFresnelFramebuffer =
-    			context.getFramebufferObjectBuilder(
-    					groundTruthImage.getWidth(), 
-    					groundTruthImage.getHeight())
-					.addColorAttachment().createFramebufferObject();
-			
-			ibmfrProgram.setUniform("fresnelStrength", 0.96f);
-			extraFresnelFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
-			extraFresnelFramebuffer.clearDepthBuffer();
-	    	fresnelRenderable.draw(PrimitiveMode.TRIANGLES, extraFresnelFramebuffer);
-	    	extraFresnelFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDir, "debugExtraFresnel" + i + ".png"));
-	    	
-	    	// Linear regression variables:
-	    	// Solving A x = v
-	    	// Matrix A'A = [ a,b; b,d ]
-	    	double a = 0.0; // Use doubles since numbers will be large
-	    	double b = 0.0;
-	    	double d = 0.0;
-	    	// vector A'v = [u, v]
-	    	double u = 0.0;
-	    	double v = 0.0;
-	    	
-	    	int[] fresnelData = fresnelFramebuffer.readColorBufferARGB(0);
-	    	int[] noFresnelData = noFresnelFramebuffer.readColorBufferARGB(0);
-	    	int k = 0;
-    		for (int y = 0; y < groundTruthImage.getHeight(); y++)
-	    	{
-    	    	for (int x = 0; x < groundTruthImage.getWidth(); x++)
-	    		{
-    	    		int fresnelARGB = fresnelData[k];
-    	    		int noFresnelARGB = noFresnelData[k];
-    				int gtARGB = groundTruthImage.getRGB(x, y);
-
-    				float alpha = ((fresnelARGB & 0xFF000000) >>> 24) / 255.0f;
-    				
-    	    		float fresnelRed = (float)Math.pow(((fresnelARGB & 0x00FF0000) >>> 16) / 255.0f, param.getGamma());
-    				float fresnelGreen = (float)Math.pow(((fresnelARGB & 0x0000FF00) >>> 8) / 255.0f, param.getGamma());
-    				float fresnelBlue = (float)Math.pow((fresnelARGB & 0x000000FF) / 255.0f, param.getGamma());
-
-    	    		float noFresnelRed = (float)Math.pow(((noFresnelARGB & 0x00FF0000) >>> 16) / 255.0f, param.getGamma());
-    				float noFresnelGreen = (float)Math.pow(((noFresnelARGB & 0x0000FF00) >>> 8) / 255.0f, param.getGamma());
-    				float noFresnelBlue = (float)Math.pow((noFresnelARGB & 0x000000FF) / 255.0f, param.getGamma());
-    				
-    				float fresnelOnlyRed = fresnelRed - noFresnelRed;
-    				float fresnelOnlyGreen = fresnelGreen - noFresnelGreen;
-    				float fresnelOnlyBlue = fresnelBlue - noFresnelBlue;
-					
-    	    		float gtRed = (float)Math.pow(((gtARGB & 0x00FF0000) >>> 16) / 255.0f, param.getGamma());
-    				float gtGreen = (float)Math.pow(((gtARGB & 0x0000FF00) >>> 8) / 255.0f, param.getGamma());
-    				float gtBlue = (float)Math.pow((gtARGB & 0x000000FF) / 255.0f, param.getGamma());
-    				
-    				a += alpha * (fresnelOnlyRed * fresnelOnlyRed +
-    						fresnelOnlyGreen * fresnelOnlyGreen +
-    						fresnelOnlyBlue * fresnelOnlyBlue);
-    				
-    				b += alpha * (fresnelOnlyRed * noFresnelRed +
-    						fresnelOnlyGreen * noFresnelGreen +
-    						fresnelOnlyBlue * noFresnelBlue);
-    				
-    				d += alpha * (noFresnelRed * noFresnelRed +
-    						noFresnelGreen * noFresnelGreen +
-    						noFresnelBlue * noFresnelBlue);
-    				
-    				u += alpha * (gtRed * fresnelOnlyRed +
-    						gtGreen * fresnelOnlyGreen +
-    						gtBlue * fresnelOnlyBlue);
-    				
-    				v += alpha * (gtRed * noFresnelRed +
-    						gtGreen * noFresnelGreen +
-    						gtBlue * noFresnelBlue);
-    				
-	    			k++;
-	    		}
-	    	}
-
-	    	noFresnelFramebuffer.delete();
-	    	fresnelFramebuffer.delete();
-	    	
-	    	// Evaluate (A'A)^-1 A'v
-	    	double detA = a * d - b * b;
-	    	double fresnelStrengthUnnorm = (d * u - b * v) / detA;
-	    	double nonFresnelStrengthUnnorm = (a * v - b * u) / detA;
-	    	
-	    	double fresnelStrengthEst = fresnelStrengthUnnorm / (fresnelStrengthUnnorm + nonFresnelStrengthUnnorm);
-	    	fresnelStrengthEstSum += fresnelStrengthEst;
-	    	System.out.println("Fresnel strength estimate (" + i + "): " + fresnelStrengthEst);
-    	}
-    	
-    	System.out.println("Fresnel strength estimate (final average): " + (fresnelStrengthEstSum / viewSet.getSecondaryCameraPoseCount()));
     	
     	if (!DEBUG || param.isImagePreprojectionUseEnabled())
     	{
@@ -1391,7 +1415,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}
 
-		ibmfrProgram.delete();
 		projTexProgram.delete();
 		diffuseFitProgram.delete();
 		specularFitProgram.delete();
