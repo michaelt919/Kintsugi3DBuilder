@@ -11,10 +11,6 @@ import org.lwjgl.LWJGLUtil;
 //import org.lwjgl.opengl.GLDebugMessageCallback;
 //import static org.lwjgl.opengl.KHRDebug.*;
 
-
-
-
-
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.CameraController;
@@ -25,8 +21,6 @@ import tetzlaff.imagebasedmicrofacet.ImageBasedMicrofacetRendererList;
 import tetzlaff.imagebasedmicrofacet.TrackballLightController;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
-import tetzlaff.window.ModifierKeys;
-import tetzlaff.window.Window;
 import tetzlaff.window.glfw.GLFWWindow;
 
 /**

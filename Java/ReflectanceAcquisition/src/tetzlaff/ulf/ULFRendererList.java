@@ -6,7 +6,6 @@ import java.io.IOException;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.CameraController;
-import tetzlaff.gl.helpers.Trackball;
 
 public class ULFRendererList<ContextType extends Context<ContextType>> extends ULFDrawableListModel<ContextType>
 {

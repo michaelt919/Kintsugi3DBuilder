@@ -15,6 +15,7 @@ import org.ujmp.core.SparseMatrix;
 
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
+import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
@@ -50,6 +51,20 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	private Vector3 lightIntensity;
 	private TextureFitParameters param;
 	
+	private Program<ContextType> depthRenderingProgram;
+	private Program<ContextType> projTexProgram;
+	private Program<ContextType> lightFitProgram;
+	private Program<ContextType> diffuseFitProgram;
+	private Program<ContextType> specularFitProgram;
+	private Program<ContextType> diffuseDebugProgram;
+	private Program<ContextType> specularDebugProgram;
+	private Program<ContextType> textureRectProgram;
+	private Program<ContextType> holeFillProgram;
+	
+	private VertexBuffer<ContextType> positionBuffer;
+	private VertexBuffer<ContextType> texCoordBuffer;
+	private VertexBuffer<ContextType> normalBuffer;
+	
 	public TextureFitExecutor(ContextType context, File vsetFile, File objFile, File imageDir, File maskDir, File rescaleDir, File outputDir,
 			Vector3 lightOffset, Vector3 lightIntensity, TextureFitParameters param) 
 	{
@@ -65,39 +80,134 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		this.param = param;
 	}
 	
-	private void resample(float estRmsSlope, BufferedImage[] projectedImages)
+	private interface TextureSpaceCallback<ContextType extends Context<ContextType>>
 	{
-		int n = 16; // TODO
-		
-		float rMax = (float)Math.min(0.5*Math.sqrt(3), Math.sqrt(Math.sqrt(2) * estRmsSlope));
-
-		int dim = n*n*projectedImages[0].getHeight()*projectedImages[0].getWidth();
-		Matrix mTm = SparseMatrix.Factory.zeros(dim, dim);
-		Matrix mTx = SparseMatrix.Factory.zeros(dim, 1);
-		
+		void execute(Framebuffer<ContextType> framebuffer, int subdivRow, int subdivCol);
+	}
+	
+	private void projectIntoTextureSpace(ViewSet<ContextType> viewSet, int viewIndex, int textureSize, int textureSubdiv, TextureSpaceCallback<ContextType> callback) throws IOException
+	{
+		FramebufferObject<ContextType> projTexFBO = 
+			context.getFramebufferObjectBuilder(textureSize / textureSubdiv, textureSize / textureSubdiv)
+				.addColorAttachments(ColorFormat.RGBA32F, 2)
+				.createFramebufferObject();
+    	Renderable<ContextType> projTexRenderable = context.createRenderable(projTexProgram);
+    	
+    	projTexRenderable.addVertexBuffer("position", positionBuffer);
+    	projTexRenderable.addVertexBuffer("texCoord", texCoordBuffer);
+    	projTexRenderable.addVertexBuffer("normal", normalBuffer);
+    	
+    	projTexRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
+    	projTexRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
+    	
+    	File imageFile = new File(imageDir, viewSet.getImageFileName(viewIndex));
+		if (!imageFile.exists())
+		{
+			String[] filenameParts = viewSet.getImageFileName(viewIndex).split("\\.");
+	    	filenameParts[filenameParts.length - 1] = "png";
+	    	String pngFileName = String.join(".", filenameParts);
+	    	imageFile = new File(imageDir, pngFileName);
+		}
+    	
+    	Texture2D<ContextType> viewTexture;
+    	if (maskDir == null)
+    	{
+    		viewTexture = context.get2DColorTextureBuilder(imageFile, true)
+    						.setLinearFilteringEnabled(true)
+    						.setMipmapsEnabled(true)
+    						.createTexture();
+    	}
+    	else
+    	{
+    		File maskFile = new File(maskDir, viewSet.getImageFileName(viewIndex));
+			if (!maskFile.exists())
+			{
+				String[] filenameParts = viewSet.getImageFileName(viewIndex).split("\\.");
+		    	filenameParts[filenameParts.length - 1] = "png";
+		    	String pngFileName = String.join(".", filenameParts);
+		    	maskFile = new File(maskDir, pngFileName);
+			}
+			
+    		viewTexture = context.get2DColorTextureBuilder(imageFile, maskFile, true)
+    						.setLinearFilteringEnabled(true)
+    						.setMipmapsEnabled(true)
+    						.createTexture();
+    	}
+    	
+    	FramebufferObject<ContextType> depthFBO = 
+			context.getFramebufferObjectBuilder(viewTexture.getWidth(), viewTexture.getHeight())
+				.addDepthAttachment()
+				.createFramebufferObject();
+    	
+    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
+    	depthRenderable.addVertexBuffer("position", positionBuffer);
+    	
+    	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(viewIndex));
+		depthRenderingProgram.setUniform("projection", 
+			viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex))
+				.getProjectionMatrix(
+					viewSet.getRecommendedNearPlane(), 
+					viewSet.getRecommendedFarPlane()
+				)
+		);
+    	
+		depthFBO.clearDepthBuffer();
+    	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthFBO);
+    	
+    	projTexRenderable.program().setUniform("cameraPose", viewSet.getCameraPose(viewIndex));
+    	projTexRenderable.program().setUniform("cameraProjection", 
+    			viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex))
+    				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+    	
+    	projTexRenderable.program().setTexture("viewImage", viewTexture);
+    	projTexRenderable.program().setTexture("depthImage", depthFBO.getDepthAttachmentTexture());
+	
+    	for (int row = 0; row < textureSubdiv; row++)
+    	{
+	    	for (int col = 0; col < textureSubdiv; col++)
+    		{
+	    		projTexRenderable.program().setUniform("minTexCoord", 
+	    				new Vector2((float)col / (float)textureSubdiv, (float)row / (float)textureSubdiv));
+	    		
+	    		projTexRenderable.program().setUniform("maxTexCoord", 
+	    				new Vector2((float)(col+1) / (float)textureSubdiv, (float)(row+1) / (float)textureSubdiv));
+	    		
+	    		projTexFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+	    		projTexFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+	    		projTexFBO.clearDepthBuffer();
+	    		projTexRenderable.draw(PrimitiveMode.TRIANGLES, projTexFBO);
+	    		
+	    		callback.execute(projTexFBO, row, col);
+	    	}
+		}
+    	
+    	viewTexture.delete();
+    	depthFBO.delete();
+	}
+	
+	private void initResampleMatrix(Matrix matrix, int texWidth, int texHeight, int n)
+	{
 		float regularizationWeight = 1.0f; // TODO(?)
 		
-		int imgWidth = projectedImages[0].getWidth();
-		int imgHeight = projectedImages[0].getHeight();
-		
+		// Initialize regularization constraints
 		long indexBase = 0;
-		for (int y = 0; y < imgHeight - 1; y++)
+		for (int y = 0; y < texHeight - 1; y++)
 		{
-			for (int x = 0; x < imgWidth - 1; x++)
+			for (int x = 0; x < texWidth - 1; x++)
 			{
 				long indexCurrent = indexBase;
 				long indexRight = indexBase + n*n;
-				long indexBelow = indexBase + n*n * imgWidth;
+				long indexBelow = indexBase + n*n * texWidth;
 				
 				for (int p = 0; p < n*n; p++)
 				{
-					mTm.setAsFloat(mTm.getAsFloat(indexCurrent, indexCurrent) + 2 * regularizationWeight, indexCurrent, indexCurrent);
-					mTm.setAsFloat(mTm.getAsFloat(indexRight, indexRight) + regularizationWeight, indexRight, indexRight);
-					mTm.setAsFloat(mTm.getAsFloat(indexBelow, indexBelow) + regularizationWeight, indexBelow, indexBelow);
-					mTm.setAsFloat(mTm.getAsFloat(indexCurrent, indexRight) - regularizationWeight, indexCurrent, indexRight);
-					mTm.setAsFloat(mTm.getAsFloat(indexCurrent, indexBelow) - regularizationWeight, indexCurrent, indexBelow);
-					mTm.setAsFloat(mTm.getAsFloat(indexRight, indexCurrent) - regularizationWeight, indexRight, indexCurrent);
-					mTm.setAsFloat(mTm.getAsFloat(indexBelow, indexCurrent) - regularizationWeight, indexBelow, indexCurrent);
+					matrix.setAsFloat(matrix.getAsFloat(indexCurrent, indexCurrent) + 2 * regularizationWeight, indexCurrent, indexCurrent);
+					matrix.setAsFloat(matrix.getAsFloat(indexRight, indexRight) + regularizationWeight, indexRight, indexRight);
+					matrix.setAsFloat(matrix.getAsFloat(indexBelow, indexBelow) + regularizationWeight, indexBelow, indexBelow);
+					matrix.setAsFloat(matrix.getAsFloat(indexCurrent, indexRight) - regularizationWeight, indexCurrent, indexRight);
+					matrix.setAsFloat(matrix.getAsFloat(indexCurrent, indexBelow) - regularizationWeight, indexCurrent, indexBelow);
+					matrix.setAsFloat(matrix.getAsFloat(indexRight, indexCurrent) - regularizationWeight, indexRight, indexCurrent);
+					matrix.setAsFloat(matrix.getAsFloat(indexBelow, indexCurrent) - regularizationWeight, indexBelow, indexCurrent);
 					
 					indexCurrent++;
 					indexRight++;
@@ -107,174 +217,149 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				indexBase += n*n;
 			}
 		}
+	}
+	
+	private void accumResampleSystem(Matrix lhs, Matrix rhs, int texWidth, int texHeight, int n, float rMax, float[] colorDataRGBA, float[] halfAngleDataTBNA)
+	{
+		int indexBase = 0;
 		
-		for (int k = 0; k < projectedImages.length; k++)
+		for (int y = 0; y < texHeight; y++)
 		{
-			indexBase = 0;
-			
-			for (int y = 0; y < imgHeight - 1; y++)
+			for (int x = 0; x < texWidth; x++)
 			{
-				for (int x = 0; x < imgWidth - 1; x++)
+				float red = colorDataRGBA[((y*texWidth) + x) * 4];
+				float green = colorDataRGBA[((y*texWidth) + x) * 4 + 1];
+				float blue = colorDataRGBA[((y*texWidth) + x) * 4 + 2];
+				float alpha = colorDataRGBA[((y*texWidth) + x) * 4 + 3];
+				
+				if (alpha > 0.0f)
 				{
-					float intensity;
-					
-					float u, v; // the tangent and bitangent components of the half-vector 
+					// the tangent and bitangent components of the half-vector
+					float u = halfAngleDataTBNA[((y*texWidth) + x) * 4];
+					float v = halfAngleDataTBNA[((y*texWidth) + x) * 4 + 1]; 
 		
-					float scale = (n-1) / rMax * (float)Math.sqrt(u*u+v*v) / Math.max(Math.abs(u), Math.abs(v));
+					float r = (float)Math.sqrt(u*u+v*v);
 					
-					// Mapped coordinates for the specified half-vector
-					float iReal = scale * 0.5f * (1 + u);
-					float jReal = scale * 0.5f * (1 + v);
-
-					// Coordinate indices of the nearest sample points
-					int iRight = (int)Math.ceil(iReal);
-					int iLeft = (int)Math.floor(iReal);
-
-					int jAbove = (int)Math.ceil(jReal);
-					int jBelow = (int)Math.floor(jReal);
-					
-					// Indices of the sample points in the flattened vector
-					long[] indices = {
-						indexBase + iRight + jAbove * n,
-						indexBase + iRight + jBelow * n,
-						indexBase + iLeft + jAbove * n,
-						indexBase + iLeft + jBelow * n
-					};
-					
-					// Interpolation coefficients
-					float s, t;
-					
-					if (iRight == iLeft)
+					if (r <= rMax)
 					{
-						s = 0.0f;
-					}
-					else
-					{
-						s = (iReal - iLeft) / (iRight - iLeft);
-					}
-					
-					if (jAbove == jBelow)
-					{
-						t = 0.0f;
-					}
-					else
-					{
-						t = (jReal - jBelow) / (jAbove - jBelow);
-					}
-					
-					// Blending weights
-					float[] weights = { s * t, s * (1 - t), (1 - s) * t, (1 - s) * (1 - t) };
-					
-					// Accumulate in the least squares system
-					for (int q1 = 0; q1 < 4; q1++)
-					{
-						for (int q2 = 0; q2 < 4; q2++)
+						float scale = (n-1) / (rMax) * r / Math.max(Math.abs(u), Math.abs(v));
+						
+						// Mapped coordinates for the specified half-vector
+						float iReal = scale * 0.5f * (1 + u);
+						float jReal = scale * 0.5f * (1 + v);
+		
+						// Coordinate indices of the nearest sample points
+						int iRight = (int)Math.ceil(iReal);
+						int iLeft = (int)Math.floor(iReal);
+		
+						int jAbove = (int)Math.ceil(jReal);
+						int jBelow = (int)Math.floor(jReal);
+						
+						// Indices of the sample points in the flattened vector
+						long[] indices = {
+							indexBase + iRight + jAbove * n,
+							indexBase + iRight + jBelow * n,
+							indexBase + iLeft + jAbove * n,
+							indexBase + iLeft + jBelow * n
+						};
+						
+						// Interpolation coefficients
+						float s, t;
+						
+						if (iRight == iLeft)
 						{
-							mTm.setAsFloat(mTm.getAsFloat(indices[q1], indices[q2]) + weights[q1] * weights[q2], indices[q1], indices[q2]);
+							s = 0.0f;
+						}
+						else
+						{
+							s = (iReal - iLeft) / (iRight - iLeft);
 						}
 						
-						mTx.setAsFloat(mTx.getAsFloat(indices[q1], 0) + weights[q1] * intensity, indices[q1], 0);
+						if (jAbove == jBelow)
+						{
+							t = 0.0f;
+						}
+						else
+						{
+							t = (jReal - jBelow) / (jAbove - jBelow);
+						}
+						
+						// Blending weights
+						float[] weights = { s * t, s * (1 - t), (1 - s) * t, (1 - s) * (1 - t) };
+						
+						// Accumulate in the least squares system
+						for (int q1 = 0; q1 < 4; q1++)
+						{
+							for (int q2 = 0; q2 < 4; q2++)
+							{
+								lhs.setAsFloat(lhs.getAsFloat(indices[q1], indices[q2]) + weights[q1] * weights[q2], indices[q1], indices[q2]);
+							}
+							
+							rhs.setAsFloat(rhs.getAsFloat(indices[q1], 0) + weights[q1] * red, indices[q1], 0);
+							rhs.setAsFloat(rhs.getAsFloat(indices[q1], 1) + weights[q1] * green, indices[q1], 1);
+							rhs.setAsFloat(rhs.getAsFloat(indices[q1], 2) + weights[q1] * blue, indices[q1], 2);
+						}
 					}
 				}
-			}
 
-			indexBase += n*n;
+				indexBase += n*n;
+			}
 		}
+	}
+	
+	private void resample(ViewSet<ContextType> viewSet) throws IOException
+	{
+		System.out.println("Resampling...");
+		
+		int n = 8; // TODO
+		
+		int texSize = 256;
+
+		// REALLY big matrices (but sparse)
+		int dim = n*n*texSize*texSize;
+		Matrix mTm = SparseMatrix.Factory.zeros(dim, dim);
+		Matrix mTx = SparseMatrix.Factory.zeros(dim, 3);
+		
+		// The greatest projection the half vector can have on the tangent plane before specularity is assumed to be negligible.
+		float rMax = 0.5f * (float)Math.sqrt(3); //(float)Math.min(0.5*Math.sqrt(3), Math.sqrt(Math.sqrt(2) * maxRmsSlope));
+		
+		System.out.println("Initializing regularization constraints...");
+		
+		initResampleMatrix(mTm, texSize, texSize, n);
+		
+		System.out.println("Adding view samples...");
+		
+		for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
+		{
+			projectIntoTextureSpace(viewSet, k, texSize, 1, 
+				(framebuffer, row, col) -> 
+				{
+					if (DEBUG)
+			    	{
+						try
+	    				{
+	    					framebuffer.saveColorBufferToFile(0, "PNG", new File(new File(outputDir, "debug"), String.format("colors%04d.png", k)));
+	    					framebuffer.saveColorBufferToFile(1, "PNG", new File(new File(outputDir, "debug"), String.format("halfangle%04d.png", k)));
+	    				}
+	    				catch (IOException e)
+	    				{
+	    					e.printStackTrace();
+	    				}
+			    	}
+				});
+					//accumResampleSystem(mTm, mTx, texSize, texSize, n, rMax, 
+						//framebuffer.readFloatingPointColorBufferRGBA(0), 
+						//framebuffer.readFloatingPointColorBufferRGBA(1)));
+			
+	    	System.out.println("Completed " + (k+1) + "/" + viewSet.getCameraPoseCount() + " views...");
+		}
+		
+		System.out.println("Solving system...");
     		
 		// Solve using Cholesky decomposition
 		Matrix solution = Matrix.chol.solve(mTm, mTx);
-			
-//		if (param.isImagePreprojectionUseEnabled()) // Requires pre-projected images
-//    	{
-//				
-//			int[][] microfacetData = new int[param.getTextureSize() * param.getTextureSize()][param.getMicrofacetTextureCount()];
-//			
-//			float minHDotN = Math.max(0.5 + 0.5 / (param.getMicrofacetTextureCount() - 1), 1 - 0.8125 * estRmsSlope);
-//			float deltaHDotN = (1.0f - minHDotN) / (param.getMicrofacetTextureCount() - 1);
-//			
-//			// Accumulate samples in bins
-//			// Use OpenGL blending?
-//
-//			float[][] sumTheta;
-//			float[][] sumThetaSquared;
-//			float[][] sumReflectance;
-//			float[][] sumThetaTimesReflectance;
-//			float[][] sumWeights;
-//
-//			float[][] intercepts = new float[param.getTextureSize() * param.getTextureSize()][param.getMicrofacetTextureCount()];
-//			float[][] rates = new float[param.getTextureSize() * param.getTextureSize()][param.getMicrofacetTextureCount()];
-//			
-//			for (int i = 0; i < param.getMicrofacetTextureCount(); i++)
-//			{
-//				int k = 0;
-//				for (int y = 0; y < param.getTextureSize(); y++)
-//				{
-//					for (int x = 0; x < param.getTextureSize(); x++)
-//					{
-////						if (mask[k] > 0 && sumWeights[i][k] < threshold)
-////						{
-////							// Add samples from other texels to fill in missing information
-////							
-////							float sumWeights2 = sumWeights[i][k]; // TODO
-////							
-////							float sumTheta2 = sumWeights2 * sumTheta[i][k] / sumWeights[i][k];
-////							float sumThetaSquared2 = sumWeights2 * sumThetaSquared[i][k] / sumWeights[i][k];
-////							float sumReflectance2 = sumWeights2 * sumReflectance[i][k] / sumWeights[i][k];
-////							float sumThetaTimesReflectance2 = sumWeights2 * sumThetaTimesReflectance[i][k] / sumWeights[i][k];
-////							
-////							int kk = 0;
-////							for (int yy = 0; yy < param.getTextureSize(); yy++)
-////							{
-////								for (int xx = 0; xx < param.getTextureSize(); xx++)
-////								{
-////									float weight = ??;
-////									
-////									sumWeights2 += weight;
-////									sumTheta2 += weight * sumTheta[i][kk];
-////									sumThetaSquared2 += weight * sumThetaSquared[i][kk];
-////									sumReflectance2 += weight * sumReflectance[i][kk];
-////									sumThetaTimesReflectance2 += weight * sumThetaTimesReflectance[i][kk];
-////									
-////									kk++;
-////								}
-////							}
-////						}
-////						
-////						// Solve
-////						rates[i][k] = (sumThetaTimesReflectance2 - sumTheta2 * sumReflectance2 / sumWeights2) / (sumThetaSquared2 - sumTheta2 * sumTheta2 / sumWeights2);
-////						intercepts[i][k] = (sumReflectance2 - rates[i][k] * sumTheta2) / sumWeights2;
-//						
-//						// Solve
-//						rates[i][k] = (sumThetaTimesReflectance[i][k] - sumTheta[i][k] * sumReflectance[i][k] / sumWeights[i][k]) / (sumThetaSquared[i][k] - sumTheta[i][k] * sumTheta[i][k] / sumWeights[i][k]);
-//						intercepts[i][k] = (sumReflectance[i][k] - rates[i][k] * sumTheta[i][k]) / sumWeights[i][k];
-//						
-//						k++;
-//					}
-//				}
-//			}
-//			
-//			for (int i = 0; i < param.getMicrofacetTextureCount(); i++)
-//			{
-//				int k = 0;
-//				for (int y = 0; y < param.getTextureSize(); y++)
-//				{
-//					for (int x = 0; x < param.getTextureSize(); x++)
-//					{
-//						float theta1 = 
-//						
-//						float rate1 = rates[i][k];
-//						float rate2 = rates[i][k+1];
-//						
-//						float intercept1 = intercepts[i][k];
-//						float intercept2 = intercepts[i][k+1];
-//						
-//						float value = 0.5 * intercept1 + 0.5 * 
-//								
-//						k++;
-//					}
-//				}
-//			}
-//    	}
+		
+		
 	}
 
 	public void execute() throws IOException
@@ -323,50 +408,50 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		context.enableDepthTest();
     	context.enableBackFaceCulling();
     	
-    	Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
+    	depthRenderingProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
     			.addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
     			.createProgram();
     	
-    	Program<ContextType> projTexProgram = context.getShaderProgramBuilder()
+    	projTexProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
     			.addShader(ShaderType.FRAGMENT, new File("shaders", "reflectance/projtex_single.frag"))
     			.createProgram();
     	
-    	Program<ContextType> lightFitProgram = context.getShaderProgramBuilder()
+    	lightFitProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
     			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
     					"texturefit/lightfit_texspace.frag" : "texturefit/lightfit_imgspace.frag"))
     			.createProgram();
     	
-    	Program<ContextType> diffuseFitProgram = context.getShaderProgramBuilder()
+    	diffuseFitProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
     			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
     					"texturefit/diffusefit_texspace.frag" : "texturefit/diffusefit_imgspace.frag"))
     			.createProgram();
 		
-    	Program<ContextType> specularFitProgram = context.getShaderProgramBuilder()
+    	specularFitProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
     			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
     					"texturefit/specularfit_texspace.frag" : "texturefit/specularfit_imgspace.frag"))
     			.createProgram();
 		
-    	Program<ContextType> diffuseDebugProgram = context.getShaderProgramBuilder()
+    	diffuseDebugProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
     			.addShader(ShaderType.FRAGMENT, new File("shaders", "reflectance/projtex_multi.frag"))
     			.createProgram();
 		
-    	Program<ContextType> specularDebugProgram = context.getShaderProgramBuilder()
+    	specularDebugProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
     			.addShader(ShaderType.FRAGMENT, new File("shaders", "texturefit/speculardebug_imgspace.frag"))
     			.createProgram();
 		
-    	Program<ContextType> textureRectProgram = context.getShaderProgramBuilder()
+    	textureRectProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texture.vert"))
     			.addShader(ShaderType.FRAGMENT, new File("shaders", "common/texture.frag"))
     			.createProgram();
 		
-    	Program<ContextType> holeFillProgram = context.getShaderProgramBuilder()
+    	holeFillProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texture.vert"))
     			.addShader(ShaderType.FRAGMENT, new File("shaders", "texturefit/holefill.frag"))
     			.createProgram();
@@ -377,11 +462,19 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	timestamp = new Date();
     	
     	VertexMesh mesh = new VertexMesh("OBJ", objFile);
-    	VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(mesh.getVertices());
-    	VertexBuffer<ContextType> texCoordBuffer = context.createVertexBuffer().setData(mesh.getTexCoords());
-    	VertexBuffer<ContextType> normalBuffer = context.createVertexBuffer().setData(mesh.getNormals());
+    	positionBuffer = context.createVertexBuffer().setData(mesh.getVertices());
+    	texCoordBuffer = context.createVertexBuffer().setData(mesh.getTexCoords());
+    	normalBuffer = context.createVertexBuffer().setData(mesh.getNormals());
     	
     	System.out.println("Loading mesh completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+
+    	System.out.println("Resampling...");
+    	timestamp = new Date();
+    	
+		// Resample the reflectance data
+		resample(viewSet);
+
+    	System.out.println("Resampling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	
     	File tmpDir = new File(outputDir, "tmp");
     	
@@ -394,109 +487,25 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     		System.out.println("Pre-projecting images into texture space...");
 	    	timestamp = new Date();
 	    	
-	    	FramebufferObject<ContextType> projTexFBO = 
-    			context.getFramebufferObjectBuilder(param.getTextureSize() / param.getTextureSubdivision(), param.getTextureSize() / param.getTextureSubdivision())
-    				.addColorAttachments(ColorFormat.RGBA32F, 2)
-    				.createFramebufferObject();
-	    	Renderable<ContextType> projTexRenderable = context.createRenderable(projTexProgram);
-	    	
-	    	projTexRenderable.addVertexBuffer("position", positionBuffer);
-	    	projTexRenderable.addVertexBuffer("texCoord", texCoordBuffer);
-	    	projTexRenderable.addVertexBuffer("normal", normalBuffer);
-	    	
-	    	projTexRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
-	    	projTexRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
-	    	
 	    	tmpDir.mkdir();
 	    	
 	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 	    	{
-		    	File viewDir = new File(tmpDir, String.format("%04d", i));
-		    	viewDir.mkdir();
-		    	
-		    	File imageFile = new File(imageDir, viewSet.getImageFileName(i));
-				if (!imageFile.exists())
-				{
-					String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-			    	filenameParts[filenameParts.length - 1] = "png";
-			    	String pngFileName = String.join(".", filenameParts);
-			    	imageFile = new File(imageDir, pngFileName);
-				}
-		    	
-		    	Texture2D<ContextType> viewTexture;
-		    	if (maskDir == null)
-		    	{
-		    		viewTexture = context.get2DColorTextureBuilder(imageFile, true)
-		    						.setLinearFilteringEnabled(true)
-		    						.setMipmapsEnabled(true)
-		    						.createTexture();
-		    	}
-		    	else
-		    	{
-		    		File maskFile = new File(maskDir, viewSet.getImageFileName(i));
-					if (!maskFile.exists())
-					{
-						String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-				    	filenameParts[filenameParts.length - 1] = "png";
-				    	String pngFileName = String.join(".", filenameParts);
-				    	maskFile = new File(maskDir, pngFileName);
-					}
-					
-		    		viewTexture = context.get2DColorTextureBuilder(imageFile, maskFile, true)
-		    						.setLinearFilteringEnabled(true)
-		    						.setMipmapsEnabled(true)
-		    						.createTexture();
-		    	}
-		    	
-		    	FramebufferObject<ContextType> depthFBO = 
-	    			context.getFramebufferObjectBuilder(viewTexture.getWidth(), viewTexture.getHeight())
-	    				.addDepthAttachment()
-	    				.createFramebufferObject();
-		    	
-		    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
-		    	depthRenderable.addVertexBuffer("position", positionBuffer);
-		    	
-	        	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
-	    		depthRenderingProgram.setUniform("projection", 
-    				viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
-	    				.getProjectionMatrix(
-    						viewSet.getRecommendedNearPlane(), 
-    						viewSet.getRecommendedFarPlane()
-						)
-				);
+	    		File viewDir = new File(tmpDir, String.format("%04d", i));
+	        	viewDir.mkdir();
 	        	
-	    		depthFBO.clearDepthBuffer();
-	        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthFBO);
-	        	
-	        	projTexRenderable.program().setUniform("cameraPose", viewSet.getCameraPose(i));
-	        	projTexRenderable.program().setUniform("cameraProjection", 
-	        			viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
-	        				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
-		    	
-		    	projTexRenderable.program().setTexture("viewImage", viewTexture);
-		    	projTexRenderable.program().setTexture("depthImage", depthFBO.getDepthAttachmentTexture());
-	    	
-		    	for (int row = 0; row < param.getTextureSubdivision(); row++)
-		    	{
-			    	for (int col = 0; col < param.getTextureSubdivision(); col++)
-		    		{
-			    		projTexRenderable.program().setUniform("minTexCoord", 
-			    				new Vector2((float)col / (float)param.getTextureSubdivision(), (float)row / (float)param.getTextureSubdivision()));
-			    		
-			    		projTexRenderable.program().setUniform("maxTexCoord", 
-			    				new Vector2((float)(col+1) / (float)param.getTextureSubdivision(), (float)(row+1) / (float)param.getTextureSubdivision()));
-			    		
-			    		projTexFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-			    		projTexFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-			    		projTexFBO.clearDepthBuffer();
-			    		projTexRenderable.draw(PrimitiveMode.TRIANGLES, projTexFBO);
-			    		
-			    		projTexFBO.saveColorBufferToFile(0, "PNG", new File(viewDir, String.format("r%04dc%04d.png", row, col)));
-			    	}
-	    		}
-		    	
-		    	viewTexture.delete();
-	        	depthFBO.delete();
+	    		projectIntoTextureSpace(viewSet, i, param.getTextureSize(), param.getTextureSubdivision(), 
+	    			(framebuffer, row, col) -> 
+    				{
+	    				try
+	    				{
+	    					framebuffer.saveColorBufferToFile(0, "PNG", new File(viewDir, String.format("r%04dc%04d.png", row, col)));
+	    				}
+	    				catch (IOException e)
+	    				{
+	    					e.printStackTrace();
+	    				}
+					});
 		    	
 		    	System.out.println("Completed " + (i+1) + "/" + viewSet.getCameraPoseCount());
 	    	}
@@ -968,9 +977,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	specularFitRenderable.program().setUniformBuffer("ShadowMatrices", shadowMatrixBuffer);
     	
 		System.out.println("Shadow maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-		
-		// Resample the reflectance data
-		resample();
 		
 		// Phong regression
         
