@@ -5,7 +5,6 @@ import java.util.function.DoubleUnaryOperator;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture1D;
-import tetzlaff.gl.helpers.ByteVertexList;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.helpers.CubicHermiteSpline;
 

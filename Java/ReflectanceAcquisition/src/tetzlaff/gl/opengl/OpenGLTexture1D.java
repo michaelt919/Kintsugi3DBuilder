@@ -3,26 +3,12 @@ package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.*;
-// mipmaps
-import static org.lwjgl.opengl.GL32.*;
 
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 
-import javax.imageio.ImageIO;
-
-import org.lwjgl.BufferUtils;
-
-import tetzlaff.gl.ColorFormat.DataType;
 import tetzlaff.gl.Texture1D;
-import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
-import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
-import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
-import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
+// mipmaps
 
 class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLContext>
 {

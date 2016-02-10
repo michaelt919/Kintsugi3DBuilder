@@ -1,23 +1,24 @@
 #version 330
 
-#define MAX_CAMERA_POSE_COUNT 1024
-#define MAX_CAMERA_PROJECTION_COUNT 1024
-
 uniform bool occlusionEnabled;
 uniform float occlusionBias;
 
 in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
+in vec3 fTangent;
+in vec3 fBitangent;
 
 uniform sampler2D viewImage;
 uniform sampler2D depthImage;
 
 uniform mat4 cameraPose;
 uniform mat4 cameraProjection;
+uniform vec3 lightPosition;
 
 layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec4 projTexCoord;
+layout(location = 1) out vec4 halfAngleVector;
+layout(location = 2) out vec4 projTexCoord;
 
 void main()
 {
@@ -42,8 +43,21 @@ void main()
 			}
 		}
         
-        vec3 view = normalize(transpose(mat3(cameraPose)) * -cameraPose[3].xyz - fPosition);
-        vec3 normal = normalize(fNormal);
         fragColor = vec4(texture(viewImage, projTexCoord.xy).rgb, 1.0);
+        
+        vec3 normal = normalize(fNormal);
+        vec3 tangent = normalize(fTangent - dot(normal, fTangent));
+        vec3 bitangent = normalize(fBitangent) 
+            - dot(normal, fBitangent) * normal 
+            - dot(tangent, fBitangent) * tangent;
+        
+        mat3 tangentToObject = mat3(tangent, bitangent, normal);
+        mat3 objectToTangent = transpose(tangentToWorld);
+        
+        vec3 view = normalize(transpose(mat3(cameraPose)) * -cameraPose[3].xyz - fPosition);
+        vec3 light = normalize(transpose(mat3(cameraPose)) * (lightPosition - cameraPose.xyz) - fPosition);
+        vec3 half = normalize(view + light);
+        
+        halfAngleVector = vec4(objectToTangent * half, 1.0);
 	}
 }

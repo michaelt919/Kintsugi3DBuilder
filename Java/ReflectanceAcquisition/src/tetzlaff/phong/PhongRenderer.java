@@ -20,7 +20,6 @@ import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
-import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ulf.ViewSet;

@@ -19,7 +19,6 @@ import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.Matrix4;
-import tetzlaff.gl.helpers.Trackball;
 
 public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {

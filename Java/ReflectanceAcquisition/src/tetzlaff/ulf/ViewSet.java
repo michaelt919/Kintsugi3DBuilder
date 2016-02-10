@@ -15,7 +15,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.function.DoubleUnaryOperator;
 
 import javax.imageio.ImageIO;
 import javax.xml.stream.XMLInputFactory;
