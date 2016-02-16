@@ -47,17 +47,16 @@ void main()
         
         vec3 normal = normalize(fNormal);
         vec3 tangent = normalize(fTangent - dot(normal, fTangent));
-        vec3 bitangent = normalize(fBitangent) 
+        vec3 bitangent = normalize(fBitangent
             - dot(normal, fBitangent) * normal 
-            - dot(tangent, fBitangent) * tangent;
+            - dot(tangent, fBitangent) * tangent);
         
         mat3 tangentToObject = mat3(tangent, bitangent, normal);
-        mat3 objectToTangent = transpose(tangentToWorld);
+        mat3 objectToTangent = transpose(tangentToObject);
         
         vec3 view = normalize(transpose(mat3(cameraPose)) * -cameraPose[3].xyz - fPosition);
-        vec3 light = normalize(transpose(mat3(cameraPose)) * (lightPosition - cameraPose.xyz) - fPosition);
-        vec3 half = normalize(view + light);
-        
-        halfAngleVector = vec4(objectToTangent * half, 1.0);
+        vec3 light = normalize(transpose(mat3(cameraPose))
+                        * (lightPosition - cameraPose[3].xyz) - fPosition);
+        halfAngleVector = vec4(objectToTangent * normalize(view + light), 1.0);
 	}
 }
