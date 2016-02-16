@@ -294,10 +294,10 @@ vec4 getProjTexSample(int index, bool useMipmaps)
 
 float computeGeometricAttenuation(vec3 view, vec3 light, vec3 normal)
 {
-    vec3 half = normalize(view + light);
+    vec3 halfAngle = normalize(view + light);
     return min(1.0, min(
-        2.0 * dot(half, normal) * dot(view, normal) / dot(view, half),
-        2.0 * dot(half, normal) * dot(light, normal) / dot(view, half)))
+        2.0 * dot(halfAngle, normal) * dot(view, normal) / dot(view, halfAngle),
+        2.0 * dot(halfAngle, normal) * dot(light, normal) / dot(view, halfAngle)))
         / (dot(light, normal) * dot(view, normal));
 }
 

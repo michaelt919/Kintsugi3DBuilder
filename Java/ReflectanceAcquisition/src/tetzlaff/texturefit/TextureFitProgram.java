@@ -24,6 +24,7 @@ public class TextureFitProgram
 	        }
 	        catch (IOException ex)
 	        {
+				System.gc(); // Suggest garbage collection.
 	        	ex.printStackTrace();
 	        }
 		});
