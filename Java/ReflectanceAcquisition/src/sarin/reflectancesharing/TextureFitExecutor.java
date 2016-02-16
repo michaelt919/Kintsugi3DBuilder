@@ -154,7 +154,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(mesh.getVertices());
     	VertexBuffer<ContextType> texCoordBuffer = context.createVertexBuffer().setData(mesh.getTexCoords());
     	VertexBuffer<ContextType> normalBuffer = context.createVertexBuffer().setData(mesh.getNormals());
-    	VertexBuffer<ContextType> orthoTangentsBuffer = context.createVertexBuffer().setData(mesh.getOrthoTangents());
+    	VertexBuffer<ContextType> orthoTangentsBuffer = context.createVertexBuffer().setData(mesh.getTangents());
     	
     	System.out.println("Loading mesh completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	
