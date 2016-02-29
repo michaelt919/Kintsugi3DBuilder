@@ -50,7 +50,7 @@ public class VertexMesh
 	/**
 	 * The tangent vectors
 	 */
-	private FloatVertexList orthoTangents;
+	private FloatVertexList tangents;
 
 	/**
 	 * Loads a new vertex mesh from a file.
@@ -86,7 +86,7 @@ public class VertexMesh
 		this.hasTexCoords = true;
 		
 		// Initialize dynamic tables to store the data from the file
-		List<Vector3> vertexList = new ArrayList<Vector3>(); // TODO why aren't these lists of Vector3?
+		List<Vector3> vertexList = new ArrayList<Vector3>();
 		List<Vector3> normalList = new ArrayList<Vector3>();
 		List<Vector3> tangentList = new ArrayList<Vector3>();
 		List<Vector3> bitangentList = new ArrayList<Vector3>();
@@ -131,8 +131,7 @@ public class VertexMesh
 						float nz = scanner.nextFloat();
 						
 						// Normalize to unit length
-						float scale = 1.0f / (float)Math.sqrt(nx*nx + ny*ny + nz*nz);
-						normalList.add(new Vector3(nx, ny, nz).times(scale));
+						normalList.add(new Vector3(nx, ny, nz).normalized());
 						
 						tangentList.add(new Vector3(0.0f, 0.0f, 0.0f));
 						bitangentList.add(new Vector3(0.0f, 0.0f, 0.0f));
@@ -218,8 +217,8 @@ public class VertexMesh
 							Vector3[] tangents = computeTangents(position0, position1, position2, texCoords0, texCoords1, texCoords2);
 							
 							int normalIndex0 = normalIndexList.get(normalIndexList.size() - 3);
-							int normalIndex1 = normalIndexList.get(normalIndexList.size() - 3);
-							int normalIndex2 = normalIndexList.get(normalIndexList.size() - 3);
+							int normalIndex1 = normalIndexList.get(normalIndexList.size() - 2);
+							int normalIndex2 = normalIndexList.get(normalIndexList.size() - 1);
 							
 							tangentList.set(normalIndex0, tangentList.get(normalIndex0).plus(tangents[0]));
 							tangentList.set(normalIndex1, tangentList.get(normalIndex1).plus(tangents[0]));
@@ -290,15 +289,14 @@ public class VertexMesh
 		
 		if (hasTexCoords && hasNormals)
 		{
-			orthoTangents = new FloatVertexList(4, vertexCount * 3);
+			tangents = new FloatVertexList(4, vertexCount * 3);
 			i = 0;
-			// TODO: How should I do tangentIndexList? 
 			for (int k : normalIndexList)
 			{
-				orthoTangents.set(i, 0, orthoTangentsList.get(k).x);
-				orthoTangents.set(i, 1, orthoTangentsList.get(k).y);
-				orthoTangents.set(i, 2, orthoTangentsList.get(k).z);
-				orthoTangents.set(i, 3, orthoTangentsList.get(k).w);
+				tangents.set(i, 0, orthoTangentsList.get(k).x);
+				tangents.set(i, 1, orthoTangentsList.get(k).y);
+				tangents.set(i, 2, orthoTangentsList.get(k).z);
+				tangents.set(i, 3, orthoTangentsList.get(k).w);
 				i++;
 			}
 		}
@@ -333,10 +331,9 @@ public class VertexMesh
 		Vector3 orthoTangent;
 		Vector3 orthoBitangent;
 		
-		orthoTangent = tangent.minus(normal.times(normal.dot(tangent)));
-		
-		orthoBitangent = bitangent.minus(normal.times(normal.dot(bitangent)).minus(orthoTangent.times
-				(orthoTangent.dot(bitangent)).dividedBy(orthoTangent.dot(orthoTangent))));
+		// Normal vector is assumed to already be normalized
+		orthoTangent = tangent.minus(normal.times(normal.dot(tangent))).normalized();
+		orthoBitangent = bitangent.minus(normal.times(normal.dot(bitangent)).minus(orthoTangent.times(orthoTangent.dot(bitangent)))).normalized();
 		
 		// dot product with normal gets value of 0 or really small e-7
 		// There is at least one value of Bitangent that is NaN. 
@@ -408,9 +405,9 @@ public class VertexMesh
 		return centroid;
 	}
 	
-	public FloatVertexList getOrthoTangents()
+	public FloatVertexList getTangents()
 	{
-		return orthoTangents;
+		return tangents;
 	}
 	
 }
