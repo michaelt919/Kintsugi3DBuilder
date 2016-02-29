@@ -1,10 +1,14 @@
 package sarin.reflectancesharing;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.Writer;
 import java.util.Date;
 
 import javax.imageio.ImageIO;
@@ -25,6 +29,9 @@ import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ulf.ViewSet;
+
+import Jama.*;
+import java.util.Random;
 
 public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
@@ -170,7 +177,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	
 	    	FramebufferObject<ContextType> projTexFBO = 
     			context.getFramebufferObjectBuilder(param.getTextureSize() / param.getTextureSubdivision(), param.getTextureSize() / param.getTextureSubdivision())
-    				.addColorAttachments(ColorFormat.RGBA32F, 5)
+    				.addColorAttachments(ColorFormat.RGBA32F, 6)
     				.createFramebufferObject();
 	    	Renderable<ContextType> projTexRenderable = context.createRenderable(projTexProgram);
 	    	
@@ -184,6 +191,22 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	
 	    	tmpDir.mkdir();
 	    	
+	    	// Write c, lambda, and u,v,w to File 
+    		Writer coefficients = new BufferedWriter( new OutputStreamWriter(
+					new FileOutputStream("C:\\Users\\Sarin\\Downloads\\coefficients.txt"), "utf-8"));
+    		Writer lambdas = new BufferedWriter( new OutputStreamWriter(
+					new FileOutputStream("C:\\Users\\Sarin\\Downloads\\lambdas.txt"), "utf-8"));
+    		Writer uvw = new BufferedWriter( new OutputStreamWriter(
+					new FileOutputStream("C:\\Users\\Sarin\\Downloads\\uvw.txt"), "utf-8"));
+    		// initializing matrices to solve for the coefficients
+
+    		int numberOfPoints = 20;
+    		double[][] g = new double[numberOfPoints*viewSet.getCameraPoseCount()][3];
+    		double[][] p = new double[numberOfPoints*viewSet.getCameraPoseCount()][4];
+    		double[][] psi = new double[numberOfPoints*viewSet.getCameraPoseCount()][numberOfPoints*viewSet.getCameraPoseCount()];
+    		
+    		
+    		// viewSet.getCameraPoseCount() = 100
 	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 	    	{
 		    	File viewDir = new File(tmpDir, String.format("%04d", i));
@@ -247,13 +270,16 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	        	projTexRenderable.program().setUniform("cameraProjection", 
 	        			viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
 	        				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
-		    	
+		   
+	        	
 	        	// Sarin: added "lightPosition" variable to projTexRenderable (projtex_single.frag)
 	        	projTexRenderable.program().setUniform( "lightPosition", viewSet.getLightPosition(viewSet.getLightPositionIndex(i)));
 	        	
 		    	projTexRenderable.program().setTexture("viewImage", viewTexture);
 		    	projTexRenderable.program().setTexture("depthImage", depthFBO.getDepthAttachmentTexture());
-	    	
+		    
+		    	
+		    	//System.out.println( param.getTextureSubdivision()); // size is 1
 		    	for (int row = 0; row < param.getTextureSubdivision(); row++)
 		    	{
 			    	for (int col = 0; col < param.getTextureSubdivision(); col++)
@@ -269,6 +295,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		projTexFBO.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		projTexFBO.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		projTexFBO.clearColorBuffer(4, 0.0f, 0.0f, 0.0f, 0.0f);
+			    		projTexFBO.clearColorBuffer(5, 0.0f, 1.0f, 0.0f, 0.0f);
 			    		projTexRenderable.draw(PrimitiveMode.TRIANGLES, projTexFBO);
 			    		
 			    		//float[] halfAngles = projTexFBO.readFloatingPointColorBufferRGBA(2);
@@ -279,17 +306,198 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		projTexFBO.saveColorBufferToFile(2, "PNG", new File(viewDir, String.format("output2_r%04dc%04d.png", row, col)));
 			    		projTexFBO.saveColorBufferToFile(3, "PNG", new File(viewDir, String.format("output3_r%04dc%04d.png", row, col)));
 			    		projTexFBO.saveColorBufferToFile(4, "PNG", new File(viewDir, String.format("predicted_r%04dc%04d.png", row, col)));
-
-			    		//System.out.println( "Half Theta: " + projTexFBO.readColorBufferARGB(2)[0] + " Difference Theta: " + projTexFBO.readColorBufferARGB(3)[0] );
+			    		projTexFBO.saveColorBufferToFile(5, "PNG", new File(viewDir, String.format("uvwMapping%04dc%04d.png", row, col)));
 			    		
+			    		// this temp array will get the RGBA colors in an array, where each 4 consecutive arrays represent one pixel
+			    		// with R, G, B, A channels.
+			    		float[] temp = projTexFBO.readFloatingPointColorBufferRGBA(5);
+			    		float[] original = projTexFBO.readFloatingPointColorBufferRGBA(0);
+			    		
+			    		Random random = new Random();
+			    		/*double[][] g = new double[20][3];
+			    		double[][] p = new double[20][4];
+			    		double[][] psi = new double[20][20];*/
+			    		for( int j = 0; j < numberOfPoints; j ++ ){
+				    		// generate random numbers between 1 and 1048576/4=262144
+			    			int randomNumber = random.nextInt(original.length/4);
+			    			// generate random number until we get the corresponding pixel so that alpha of original image is not 0.
+			    			while( original[randomNumber*4+3] == 0.0 ){
+			    				randomNumber = random.nextInt(original.length/4);
+			    			}
+			    			
+			    			/*p[j][0] = 1;
+			    			p[j][1] = temp[randomNumber*4];
+			    			p[j][2] = temp[randomNumber*4+1];
+			    			p[j][3] = temp[randomNumber*4+2];
+			    			g[j][0] = original[randomNumber*4];
+			    			g[j][1] = original[randomNumber*4+1];
+			    			g[j][2] = original[randomNumber*4+2];*/
+			    			
+			    			p[numberOfPoints*i + j][0] = 1;
+			    			p[numberOfPoints*i + j][1] = temp[randomNumber*4];
+			    			p[numberOfPoints*i + j][2] = temp[randomNumber*4+1];
+			    			p[numberOfPoints*i + j][3] = temp[randomNumber*4+2];
+			    			g[numberOfPoints*i + j][0] = original[randomNumber*4];
+			    			g[numberOfPoints*i + j][1] = original[randomNumber*4+1];
+			    			g[numberOfPoints*i + j][2] = original[randomNumber*4+2];
+			    			
+			    			// write u,v,w to file
+			    			//writer.write( p[j][1] + " " + p[j][2] + " " + p[j][3] + " " );
+			    			
+			    			/*for( int k = 0; k < 20; k ++ ){
+			    				// distance formula 
+			    				psi[j][k] = Math.sqrt((p[j][1]-p[k][1])*(p[j][1]-p[k][1]) + (p[j][2]-p[k][2])*(p[j][2]-p[k][2])
+			    								+ (p[j][3]-p[k][3])*(p[j][3]-p[k][3]));
+			    			}*/
+			    			
+			    		}
+			    		
+			    		// create matrix of zero of size Psi.row+PT.row by Psi.col+P.col
+			    		/*Matrix BigMatrix = new Matrix( psi.length + p[0].length, psi[0].length + p[0].length);
+			    		for( int j = 0; j < psi.length; j ++ ){
+			    			for( int k = 0; k < psi[0].length; k++ ){
+			    				BigMatrix.set(j, k, psi[j][k]);
+			    			}
+			    		}
+			    		int a = 0;
+			    		int b = 0;
+			    		for( int j = psi.length; j < BigMatrix.getRowDimension(); j ++ ){
+			    			for( int k = 0; k < p.length; k ++ ){
+			    				// transpose of P
+			    				BigMatrix.set( j, k, p[b][a]); //PT.get(a, b))
+			    				b ++;
+			    			}
+			    			a ++;
+			    			b = 0;
+			    		}
+			    		b = 0;
+			    		for( int j = 0; j < p.length; j ++ ){
+			    			for( int k = psi[0].length; k < BigMatrix.getColumnDimension(); k ++ ){
+			    				BigMatrix.set( j, k, p[j][b]);
+			    				b ++;
+			    			}
+			    			b = 0;
+			    		}
+			    		// create matrix to store the coefficients that is being solved 
+			    		Matrix Coefficient = new Matrix( BigMatrix.getRowDimension(), 3 );
+			    		// create matrix to store G and zeros so that equation is compatible
+			    		Matrix GZero = new Matrix( BigMatrix.getRowDimension(), 3 );
+			    		for( int j = 0; j < g.length; j ++ ){
+			    			for( int k = 0; k < g[0].length; k ++ ){
+			    				GZero.set(j, k, g[j][k]);
+			    			}
+			    		}
+			    		
+			    		Coefficient = BigMatrix.solve(GZero);
+			    		Matrix solver = BigMatrix.times(Coefficient);
+			    		double threshold = 1E-7;
+			    		// test if solver is equal to gZero
+			    		for( int j = 0; j < 24; j++ ){
+			    			for( int k = 0; k < 3; k ++ ){
+			    				double diff = Math.abs(solver.get(j, k) - GZero.get(j, k));
+			    				if( diff > threshold ){
+			    					System.out.println("INCORRECT!!!!!");
+			    				}
+			    			}
+			    		}
+			    		// write lambda and c to file in the order of left to write and up to down from the Coefficient matrix
+			    		for( int j = 0; j < Coefficient.getRowDimension(); j ++ ){
+			    			for ( int k = 0; k < Coefficient.getColumnDimension(); k ++ ){
+			    				writer.write(Coefficient.get(j, k) + " ");
+			    			}
+			    		}*/
 			    	}
 	    		}
 		    	
 		    	viewTexture.delete();
 	        	depthFBO.delete();
 		    	
+	        	//writer.write("\n\n\n");
 		    	System.out.println("Completed " + (i+1) + "/" + viewSet.getCameraPoseCount());
 	    	}
+	    	
+	    	for( int j = 0; j < psi.length; j ++ )
+	    	{
+	    		for( int k = 0; k < psi[0].length; k ++ )
+	    		{
+    				// distance formula 
+    				psi[j][k] = Math.sqrt((p[j][1]-p[k][1])*(p[j][1]-p[k][1]) + (p[j][2]-p[k][2])*(p[j][2]-p[k][2])
+    								+ (p[j][3]-p[k][3])*(p[j][3]-p[k][3]));
+	    		}
+	    	}
+	    	// create matrix of zero of size Psi.row+PT.row by Psi.col+P.col
+    		Matrix BigMatrix = new Matrix( psi.length + p[0].length, psi[0].length + p[0].length);
+    		for( int j = 0; j < psi.length; j ++ ){
+    			for( int k = 0; k < psi[0].length; k++ ){
+    				BigMatrix.set(j, k, psi[j][k]);
+    			}
+    		}
+    		int a = 0;
+    		int b = 0;
+    		for( int j = psi.length; j < BigMatrix.getRowDimension(); j ++ ){
+    			for( int k = 0; k < p.length; k ++ ){
+    				// transpose of P
+    				BigMatrix.set( j, k, p[b][a]); //PT.get(a, b))
+    				b ++;
+    			}
+    			a ++;
+    			b = 0;
+    		}
+    		b = 0;
+    		for( int j = 0; j < p.length; j ++ ){
+    			for( int k = psi[0].length; k < BigMatrix.getColumnDimension(); k ++ ){
+    				BigMatrix.set( j, k, p[j][b]);
+    				b ++;
+    			}
+    			b = 0;
+    		}
+    		// create matrix to store the coefficients that is being solved 
+    		Matrix Coefficient = new Matrix( BigMatrix.getRowDimension(), 3 );
+    		// create matrix to store G and zeros so that equation is compatible
+    		Matrix GZero = new Matrix( BigMatrix.getRowDimension(), 3 );
+    		for( int j = 0; j < g.length; j ++ ){
+    			for( int k = 0; k < g[0].length; k ++ ){
+    				GZero.set(j, k, g[j][k]);
+    			}
+    		}
+    		
+    		Coefficient = BigMatrix.solve(GZero);
+    		Matrix solver = BigMatrix.times(Coefficient);
+    		double threshold = 1E-7;
+    		// test if solver is equal to gZero
+    		for( int j = 0; j < solver.getRowDimension(); j++ ){
+    			for( int k = 0; k < solver.getColumnDimension(); k ++ ){
+    				double diff = Math.abs(solver.get(j, k) - GZero.get(j, k));
+    				if( diff > threshold ){
+    					System.out.println("INCORRECT!!!!!");
+    				}
+    			}
+    		}
+    		// write lambda and c to file in the order of left to write and up to down from the Coefficient matrix
+    		for( int j = 0; j < psi.length ; j ++ ){
+    			for ( int k = 0; k < 3; k ++ ){
+    				lambdas.write(Coefficient.get(j, k) + " ");
+    			}
+    			lambdas.write("\r\n");
+    		}
+    		for( int j = psi.length; j < Coefficient.getRowDimension() ; j ++ ){
+    			for ( int k = 0; k < 3; k ++ ){
+    				coefficients.write(Coefficient.get(j, k) + " ");
+    			}
+    			coefficients.write("\r\n");
+    		}
+    		for( int j = 0; j < p.length; j ++ ){
+    			// k start from 1 because in p matrix, the first column is all 1's. 
+    			for( int k = 1; k < p[0].length; k ++ ){
+    				uvw.write(p[j][k] + " ");
+    			}
+    			uvw.write("\r\n");
+    		}
+
+    		lambdas.close();
+    		coefficients.close();
+    		uvw.close();
+    		
 	    	
 	    	System.out.println("Pre-projections completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}

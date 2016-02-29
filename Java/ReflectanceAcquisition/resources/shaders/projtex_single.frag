@@ -24,6 +24,7 @@ layout(location = 1) out vec4 projTexCoord;
 layout(location = 2) out vec4 halfAngles;
 layout(location = 3) out vec4 differenceAngles;
 layout(location = 4) out vec4 predictedColor;
+layout(location = 5) out vec4 uvwMapping;
 
 void main()
 {
@@ -54,25 +55,60 @@ void main()
         vec3 light = normalize( lightPosition - fPosition );
         fragColor = vec4(texture(viewImage, projTexCoord.xy).rgb, 1.0);
         
+        vec3 binormal = normalize( cross( normal, tangent ) );
+        mat3 rotationMatrix = transpose( mat3( tangent, binormal, normal ) );
+        
+        view = rotationMatrix * view;
+        light = rotationMatrix * light;
+        
         vec3 halfVector = normalize( light + view ); 
-        float halfTheta = acos( dot( halfVector, normal ) );
-        float diffTheta = acos( dot( view, halfVector ) );
+        float halfTheta = acos( halfVector.z );
+        float halfPhi = atan( halfVector.y , halfVector.x );
         
-        //float halfPhi = acos( dot( tangent, halfVector ) / ( sin( acos( dot( normal, halfVector ) ) ) ) );
-        float halfPhi = acos( dot( tangent, halfVector ) / ( sin( halfTheta ) ) );
-        float diffPhi = acos( dot( normalize( cross( light, halfVector ) ), normalize( cross( normal, halfVector ) ) ) ); 
-              
-        float pi = -1.0f;
-              
-        halfAngles = vec4( halfTheta / acos(pi), halfPhi / acos(pi), 0, 1.0 );
-        differenceAngles = vec4( diffTheta / acos(pi), diffPhi / acos(pi), 0, 1.0 );
+        float diffTheta = acos( dot( light, halfVector ) );
+       
+       // rotation about z-axis with negative halfPhi
+       	mat3 Rz = mat3( cos( halfPhi ), -sin( halfPhi ), 0,
+       					sin( halfPhi ), cos( halfPhi ), 0,
+       					0, 0, 1 );
+       	
+       	// rotation about y-axis with negative halfTheta
+       	mat3 Ry = mat3( cos( halfTheta ), 0, sin( halfTheta ),
+       					0, 1, 0,
+       					-sin( halfTheta ), 0, cos( halfTheta ) );
+       
+       	
+       	// R is rotation matrix to rotate halfVector into north pole
+      	mat3 R = Ry * Rz;
+       
+       	// light vector rotated by matrix R which becomes difference vector
+       	vec3 rotatedLight = R * light; 
+       	vec3 testVector = R * halfVector;
+       	float diffPhi = atan( rotatedLight.y , rotatedLight.x );
+       	 
+       	// halfTheta : [0, pi/2), diffPhi : [0, pi), diffTheta : [0, pi/2)     
+       	// divide by pi to scale it to be between 0 and 1. 
+        halfAngles = vec4( 2 * halfTheta / 3.1415927, (halfPhi / 3.1415927 + 1.0) / 2.0, 0, 1.0 );
+        differenceAngles = vec4( 2 * diffTheta / 3.1415927, (diffPhi / 3.1415927 + 1.0) / 2.0, 0, 1.0 );
         
-        predictedColor = vec4(vec3(max(dot(light, normal), 0.0) + pow(max(dot(normal, halfVector), 0.0), 25.0)), 1.0);
         
-               
-        //float dotProductInputVector = dot( light, normal );
-        //float inputAngle = acos( dotProductInputVector );
-        //float dotProductOutputVector = dot(view, normal );
-        //float outputAngle = acos( dotProductOutputVector ); 
+       	// (u, v, w) mapping
+       	float u = sin( halfTheta ) * cos( 2 * diffPhi );
+       	float v = sin( halfTheta ) * sin( 2 * diffPhi );
+       	float w = 2 * diffTheta / 3.1415927;
+       	
+       	uvwMapping = vec4( u, v, w, 1.0 );
+       	projTexCoord = vec4( testVector, 1.0 ); 
+       	
+       	
+        // TEST FOR DIFF THETA AND DIFF PHI
+        //projTexCoord = vec4( diffTheta, 0, 0, 1 );
+        //diffTheta = acos((R*light).z);
+        //differenceAngles = vec4( diffTheta, 0, 0, 1 );
+        //halfAngles = vec4( acos(rotatedLight.x / sin( diffTheta )), 0, 0, 1 );
+		//uvwMapping = vec4( diffPhi, 0, 0, 1 );
+
+        //predictedColor = vec4(vec3(max(dot(light, normal), 0.0) + pow(max(dot(normal, halfVector), 0.0), 25.0)), 1.0);
+        predictedColor = vec4(vec3(max(light.z, 0.0) + pow(max(halfVector.z, 0.0), 25.0)), 1.0);
 	}
 }
