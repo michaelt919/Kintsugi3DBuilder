@@ -10,11 +10,9 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import org.ujmp.core.DenseMatrix;
-import org.ujmp.core.Matrix;
-import org.ujmp.core.SparseMatrix;
-import org.ujmp.core.calculation.Calculation.Ret;
-import org.ujmp.core.doublematrix.stub.AbstractSparseDoubleMatrix2D;
+import org.ejml.data.DenseMatrix64F;
+import org.ejml.factory.LinearSolverFactory;
+import org.ejml.interfaces.linsol.LinearSolver;
 
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
@@ -89,7 +87,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		void execute(Framebuffer<ContextType> framebuffer, int subdivRow, int subdivCol);
 	}
 	
-	private double[][] constructRegularizationMatrix(
+	private double[][] getDirectionalRegularizationMatrix(
 			double linearityConstraintWeight,
 			double equalityConstraintWeight)
 	{
@@ -221,154 +219,102 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	depthFBO.delete();
 	}
 	
-	private void initResampleMatrix(Matrix matrix, int texWidth, int texHeight, int neighborhood)
+	private DenseMatrix64F createRegularizationMatrix(int directionalNeighborhood, int spatialNeighborhood, float directionalWeight, float spatialWeight)
 	{
-		float regularizationWeight = 1.0f; // TODO(?)
+		DenseMatrix64F matrix = new DenseMatrix64F(directionalNeighborhood * directionalNeighborhood * spatialNeighborhood * spatialNeighborhood);
 		
-		// Initialize regularization constraints
-		long indexBase = 0;
-		for (int y = 0; y < texHeight - 1; y++)
+		int index = 0;
+		
+		float halfDirectionalWeight = directionalWeight / 2;
+		float halfSpatialWeight = spatialWeight / 2;
+		
+		for (int s = 0; s < directionalNeighborhood - 1; s++)
 		{
-			for (int x = 0; x < texWidth - 1; x++)
+			int indexIncrS = index + (directionalNeighborhood * spatialNeighborhood * spatialNeighborhood);
+			
+			for (int t = 0; t < directionalNeighborhood - 1; t++)
 			{
-				long indexCurrent = indexBase;
-				long indexRight = indexBase + neighborhood*neighborhood;
-				long indexBelow = indexBase + neighborhood*neighborhood * texWidth;
+				int indexIncrT = index + (spatialNeighborhood * spatialNeighborhood);
 				
-				for (int p = 0; p < neighborhood*neighborhood; p++)
+				for (int u = 0; u < spatialNeighborhood - 1; u++)
 				{
-					matrix.setAsFloat(matrix.getAsFloat(indexCurrent, indexCurrent) + 2 * regularizationWeight, indexCurrent, indexCurrent);
-					matrix.setAsFloat(matrix.getAsFloat(indexRight, indexRight) + regularizationWeight, indexRight, indexRight);
-					matrix.setAsFloat(matrix.getAsFloat(indexBelow, indexBelow) + regularizationWeight, indexBelow, indexBelow);
-					matrix.setAsFloat(matrix.getAsFloat(indexCurrent, indexRight) - regularizationWeight, indexCurrent, indexRight);
-					matrix.setAsFloat(matrix.getAsFloat(indexCurrent, indexBelow) - regularizationWeight, indexCurrent, indexBelow);
-					matrix.setAsFloat(matrix.getAsFloat(indexRight, indexCurrent) - regularizationWeight, indexRight, indexCurrent);
-					matrix.setAsFloat(matrix.getAsFloat(indexBelow, indexCurrent) - regularizationWeight, indexBelow, indexCurrent);
+					int indexIncrU = index + spatialNeighborhood;
 					
-					indexCurrent++;
-					indexRight++;
-					indexBelow++;
+					for (int v = 0; v < spatialNeighborhood - 1; v++)
+					{
+						int indexIncrV = index + 1;
+						
+						matrix.set(index, index, matrix.get(index, index) + directionalWeight + spatialWeight);
+						matrix.set(indexIncrS, indexIncrS, matrix.get(indexIncrS, indexIncrS) + halfDirectionalWeight);
+						matrix.set(indexIncrT, indexIncrT, matrix.get(indexIncrT, indexIncrT) + halfDirectionalWeight);
+						matrix.set(indexIncrU, indexIncrU, matrix.get(indexIncrU, indexIncrU) + halfSpatialWeight);
+						matrix.set(indexIncrV, indexIncrV, matrix.get(indexIncrV, indexIncrV) + halfSpatialWeight);
+						matrix.set(index, indexIncrS, matrix.get(index, indexIncrS) - halfDirectionalWeight);
+						matrix.set(index, indexIncrT, matrix.get(index, indexIncrT) - halfDirectionalWeight);
+						matrix.set(index, indexIncrU, matrix.get(index, indexIncrU) - halfSpatialWeight);
+						matrix.set(index, indexIncrV, matrix.get(index, indexIncrV) - halfSpatialWeight);
+						matrix.set(indexIncrS, index, matrix.get(indexIncrS, index) - halfDirectionalWeight);
+						matrix.set(indexIncrT, index, matrix.get(indexIncrT, index) - halfDirectionalWeight);
+						matrix.set(indexIncrU, index, matrix.get(indexIncrU, index) - halfSpatialWeight);
+						matrix.set(indexIncrV, index, matrix.get(indexIncrV, index) - halfSpatialWeight);
+						
+						
+						index = indexIncrV;
+						indexIncrU++;
+						indexIncrT++;
+						indexIncrS++;
+					}
 				}
-				
-				indexBase += neighborhood*neighborhood;
 			}
+		}
+		
+		return matrix;
+	}
+	
+	private class MultidimensionalFloatArray
+	{
+		float[] data;
+		int[] dimensionLengths;
+		
+		public MultidimensionalFloatArray(int... dimensionLengths)
+		{
+			this.dimensionLengths = dimensionLengths.clone();
+			int dataSize = 1;
+			for (int k = 0; k < dimensionLengths.length; k++)
+			{
+				dataSize *= dimensionLengths[k];
+			}
+			this.data = new float[dataSize];
+		}
+		
+		private int findIndex(int... indices)
+		{
+			int index = 0;
+			for (int k = 0; k < dimensionLengths.length; k++)
+			{
+				index = index * dimensionLengths[k] + indices[k];
+			}
+			
+			return index;
+		}
+		
+		public float get(int... indices)
+		{
+			return data[findIndex(indices)];
+		}
+		
+		public void set(float value, int... indices)
+		{
+			data[findIndex(indices)] = value;
+		}
+		
+		public void accum(float value, int...indices)
+		{
+			data[findIndex(indices)] += value;
 		}
 	}
 	
-//	private void accumResampleSystems(Matrix[][] lhs, Matrix[][] rhs, int startTangentIndex, int startBitangentIndex, 
-//			int texWidth, int texHeight, int neighborhood, float rMax, float[] colorDataRGBA, float[] halfAngleDataTBNA)
-//	{
-//		if (neighborhood % 2 == 0)
-//		{
-//			throw new IllegalArgumentException("Neighborhood must be odd.");
-//		}
-//		
-//		long indexBase = (neighborhood * neighborhood - 1) / 2; // Center index
-//		int[] indexOffsets = { 0, neighborhood, 1, neighborhood + 1 };
-//		
-//		for (int y = 0; y < texHeight; y++)
-//		{
-//			for (int x = 0; x < texWidth; x++)
-//			{
-//				float red = colorDataRGBA[((y*texWidth) + x) * 4];
-//				float green = colorDataRGBA[((y*texWidth) + x) * 4 + 1];
-//				float blue = colorDataRGBA[((y*texWidth) + x) * 4 + 2];
-//				float alpha = colorDataRGBA[((y*texWidth) + x) * 4 + 3];
-//				
-//				if (alpha > 0.0f)
-//				{
-//					// the tangent and bitangent components of the half-vector
-//					float u = halfAngleDataTBNA[((y*texWidth) + x) * 4];
-//					float v = halfAngleDataTBNA[((y*texWidth) + x) * 4 + 1]; 
-//		
-//					float r = (float)Math.sqrt(u*u+v*v);
-//					
-//					if (r <= rMax)
-//					{
-//						float scale = (lhs.length-1) / (rMax) * r / Math.max(Math.abs(u), Math.abs(v));
-//						
-//						// Mapped coordinates for the specified half-vector
-//						float iReal = scale * 0.5f * (1 + u) - startTangentIndex;
-//						float jReal = scale * 0.5f * (1 + v) - startBitangentIndex;
-//		
-//						// Coordinate indices of the nearest sample points
-//						int iRight = (int)Math.ceil(iReal);
-//						int iLeft = (int)Math.floor(iReal);
-//		
-//						int jAbove = (int)Math.ceil(jReal);
-//						int jBelow = (int)Math.floor(jReal);
-//						
-//						// The four systems being modified
-//						Matrix[] localLhs = 
-//						{ 
-//							iRight >= lhs.length && jAbove >= lhs[iRight].length ? null : lhs[iRight][jAbove],
-//							iRight >= lhs.length && jBelow >= lhs[iRight].length ? null : lhs[iRight][jBelow], 
-//							iLeft >= lhs.length && jAbove >= lhs[iLeft].length ? null : lhs[iLeft][jAbove], 
-//							iLeft >= lhs.length && jBelow >= lhs[iLeft].length ? null : lhs[iLeft][jBelow]
-//						};
-//						
-//						Matrix[] localRhs = 
-//						{ 
-//							iRight >= rhs.length && jAbove >= rhs[iRight].length ? null : rhs[iRight][jAbove], 
-//							iRight >= rhs.length && jBelow >= rhs[iRight].length ? null : rhs[iRight][jBelow], 
-//							iLeft >= rhs.length && jAbove >= rhs[iLeft].length ? null : rhs[iLeft][jAbove], 
-//							iLeft >= rhs.length && jBelow >= rhs[iLeft].length ? null : rhs[iLeft][jBelow] 
-//						};
-//						
-//						// Interpolation coefficients
-//						float s, t;
-//						
-//						if (iRight == iLeft)
-//						{
-//							s = 0.0f;
-//						}
-//						else
-//						{
-//							s = (iReal - iLeft) / (iRight - iLeft);
-//						}
-//						
-//						if (jAbove == jBelow)
-//						{
-//							t = 0.0f;
-//						}
-//						else
-//						{
-//							t = (jReal - jBelow) / (jAbove - jBelow);
-//						}
-//						
-//						// Blending weights
-//						float[] weights = { s * t, s * (1 - t), (1 - s) * t, (1 - s) * (1 - t) };
-//						
-//						// Accumulate in the least squares systems
-//						for (int system = 0; system < 4; system++)
-//						{
-//							if (localLhs[system] != null && localRhs[system] != null)
-//							{
-//								for (int p = 0; p < 4; p++)
-//								{
-//									long row = indexBase + indexOffsets[system] - indexOffsets[p];
-//									
-//									for (int q = 0; q < 4; q++)
-//									{
-//										long column = indexBase + indexOffsets[system] - indexOffsets[q];
-//										localLhs[system].setAsFloat(localLhs[system].getAsFloat(row, column) + weights[p] * weights[q], row, column);
-//									}
-//									
-//									localRhs[system].setAsFloat(localRhs[system].getAsFloat(row, 0) + weights[p] * red, row, 0);
-//									localRhs[system].setAsFloat(localRhs[system].getAsFloat(row, 1) + weights[p] * green, row, 1);
-//									localRhs[system].setAsFloat(localRhs[system].getAsFloat(row, 2) + weights[p] * blue, row, 2);
-//								}
-//							}
-//						}
-//					}
-//				}
-//
-//				indexBase += neighborhood*neighborhood;
-//			}
-//		}
-//	}
-	
-	private void accumResampleSystem(Matrix lhs, Matrix rhs, int directionalRes, int spatialRes, float hDotTMax, 
+	private void accumResampleSystem(float[][][][][] lhsData, float[][][][][] rhsData, int directionalRes, int spatialRes, float hDotTMax, 
 			int dataRes, int dataStartX, int dataStartY, int dataWidth, int dataHeight, float[] colorDataRGBA, float[] halfAngleDataTBNA)
 	{
 		int[] coordinatesMax = { directionalRes, directionalRes, spatialRes, spatialRes };
@@ -422,7 +368,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 							interpolationCoefficients[i][1] = 1.0 - interpolationCoefficients[i][0];
 						}
 						
-						long[] indices = new long[16];
+						int[][] indices = new int[16][4];
 						double[] weights = new double[16];
 						
 						for (int i = 0; i < 16; i++)
@@ -432,7 +378,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 							for (int j = 0; j < 4; j++)
 							{
 								int selector = (i >> j) & 0x1;
-								indices[i] = coordinatesMax[j] * indices[i] + roundedCoordinatePairs[j][selector];
+								indices[i][j] = roundedCoordinatePairs[j][selector];
 								weights[i] *= interpolationCoefficients[j][selector];
 							}
 						}
@@ -440,14 +386,20 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 						// Accumulate in the least squares system
 						for (int p = 0; p < 16; p++)
 						{
+							float[] lhsRow = lhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
+							
 							for (int q = 0; q < 16; q++)
 							{
-								lhs.setAsFloat(lhs.getAsFloat(indices[p], indices[q]) + (float)(weights[p] * weights[q]), indices[p], indices[q]);
+								lhsRow[(indices[q][0] - indices[p][0] + 1) + (indices[q][1] - indices[p][1] + 1) * 3
+									 	+ (indices[q][2] - indices[p][2] + 1) * 9 + (indices[q][3] - indices[p][3] + 1) * 27]
+						 			+= (float)(weights[p] * weights[q]);
 							}
 							
-							rhs.setAsFloat(rhs.getAsFloat(indices[p], 0) + (float)weights[p] * red, indices[p], 0);
-							rhs.setAsFloat(rhs.getAsFloat(indices[p], 1) + (float)weights[p] * green, indices[p], 1);
-							rhs.setAsFloat(rhs.getAsFloat(indices[p], 2) + (float)weights[p] * blue, indices[p], 2);
+							float[] rhsRow = rhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
+							
+							rhsRow[0] += (float)weights[p] * red;
+							rhsRow[1] += (float)weights[p] * green;
+							rhsRow[2] += (float)weights[p] * blue;
 						}
 					}
 				}
@@ -455,8 +407,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		}
 	}
 	
-	private boolean buildPartitionSystem(Matrix lhs, Matrix rhs, int centerS, int centerT, int centerU, int centerV, 
-			int directionalRes, int spatialRes, int directionalNeighborhood, int spatialNeighborhood, Matrix lhsPartitionDest, Matrix rhsPartitionDest)
+	private boolean buildPartitionSystem(float[][][][][] lhsData, float[][][][][] rhsData, int centerS, int centerT, int centerU, int centerV, 
+			int directionalRes, int spatialRes, int directionalNeighborhood, int spatialNeighborhood, DenseMatrix64F lhsDest, DenseMatrix64F rhsDest)
 	{
 		boolean entryFound = false;
 		
@@ -475,48 +427,56 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		int maxU = Math.min(centerU + spatialRadius, spatialRes); 
 		int maxV = Math.min(centerV + spatialRadius, spatialRes);
 		
-		long partitionRowIndex = 0;
-		
 		for (int sRow = minS; sRow < maxS; sRow++)
 		{
 			for (int tRow = minT; tRow < maxT; tRow++)
 			{
 				for (int uRow = minU; uRow < maxU; uRow++)
 				{
+					int partitionRowIndex = spatialNeighborhood * (spatialNeighborhood * (directionalNeighborhood * 
+							(sRow - minS) + (tRow - minT)) + (uRow - minU));
+					
 					for (int vRow = minV; vRow < maxV; vRow++)
 					{
-						long rowIndex = spatialRes * (spatialRes * (directionalRes * sRow + tRow) + uRow) + vRow;
+						float[] lhsRow = lhsData[sRow][tRow][uRow][vRow];
 						
-						Matrix row = rhs.selectRows(Ret.LINK, rowIndex);
-						
-						entryFound = entryFound || row.isNotEmpty;
-						
-						for (State iteratorState : row.getColumnIterator())
+						for (int i = 0; i < lhsRow.length; i++)
 						{
-							long colIndex = iteratorState.colIndex;
+							int q = i;
 							
-							int vCol = (int)(colIndex % (spatialRes * spatialRes * directionalRes));
-							int uCol = (int)((colIndex / spatialRes) % (spatialRes * directionalRes));
-							int tCol = (int)((colIndex / (spatialRes * spatialRes)) % directionalRes);
-							int sCol = (int)(colIndex / (spatialRes * spatialRes * directionalRes));
+							int sCol = q % 3;
+							q /= 3;
+							int tCol = q % 3;
+							q /= 3;
+							int uCol = q % 3;
+							q /= 3;
+							int vCol = q % 3;
 							
 							if (minS <= sCol && sCol < maxS && minT <= tCol && tCol < maxT && 
 								minU <= uCol && uCol < maxU && minV <= vCol && vCol < maxV)
 							{
-								long partitionColumnIndex = spatialRes * (spatialRes * (directionalRes * (sCol - minS) + (tCol - minT)) + (uCol - minU)) + (vCol - minV);
-								lhsPartitionDest.setAsFloat(lhsPartitionDest.getAsFloat(partitionRowIndex, partitionColumnIndex) + iteratorState.value, partitionRowIndex, partitionColumnIndex);
+								int partitionColumnIndex = spatialNeighborhood * (spatialNeighborhood * (directionalNeighborhood * 
+										(sCol - minS) + (tCol - minT)) + (uCol - minU)) + (vCol - minV);
+
+								entryFound = entryFound || lhsRow[q] != 0.0;
+								
+								lhsDest.set(partitionRowIndex, partitionColumnIndex, lhsDest.get(partitionRowIndex, partitionColumnIndex) + lhsRow[q]);
 							}
 						}
 						
-						rhsPartitionDest.setAsFloat(rhsPartitionDest.getAsFloat(partitionRowIndex, 0) + rhs.getAsFloat(rowIndex, 0), partitionRowIndex, 0);
-						rhsPartitionDest.setAsFloat(rhsPartitionDest.getAsFloat(partitionRowIndex, 1) + rhs.getAsFloat(rowIndex, 1), partitionRowIndex, 1);
-						rhsPartitionDest.setAsFloat(rhsPartitionDest.getAsFloat(partitionRowIndex, 2) + rhs.getAsFloat(rowIndex, 2), partitionRowIndex, 2);
+						float[] rhsRow = rhsData[sRow][tRow][uRow][vRow];
+						
+						rhsDest.set(partitionRowIndex, 0, rhsDest.get(partitionRowIndex, 0) + rhsRow[0]);
+						rhsDest.set(partitionRowIndex, 1, rhsDest.get(partitionRowIndex, 1) + rhsRow[1]);
+						rhsDest.set(partitionRowIndex, 2, rhsDest.get(partitionRowIndex, 2) + rhsRow[2]);
 						
 						partitionRowIndex++;
 					}
 				}
 			}
 		}
+		
+		return entryFound;
 	}
 	
 	private void resample(ViewSet<ContextType> viewSet) throws IOException
@@ -525,6 +485,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		int spatialRes = 64;
 		int directionalNeighborhood = 3;
 		int spatialNeighborhood = 7;
+		float directionalRegularization = 0.125f;
+		float spatialRegularization = 0.875f;
 		
 		if (directionalNeighborhood % 2 == 0 || spatialNeighborhood % 2 == 0)
 		{
@@ -534,11 +496,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		// The greatest projection the half vector can have on the tangent plane before specularity is assumed to be negligible.
 		float hDotTMax = 0.5f * (float)Math.sqrt(3); //(float)Math.min(0.5*Math.sqrt(3), Math.sqrt(Math.sqrt(2) * maxRmsSlope));
 
-		int dim = directionalRes * directionalRes * spatialRes * spatialRes;
-		
-		Matrix lhs = SparseMatrix.Factory.zeros(dim, dim);
-		Matrix rhs = DenseMatrix.Factory.zeros(dim, 3);
-		Matrix regularizationMatrix;
+		float[][][][][] lhsData = new float[directionalRes][directionalRes][spatialRes][spatialRes][81];
+		float[][][][][] rhsData = new float[directionalRes][directionalRes][spatialRes][spatialRes][3];
+		DenseMatrix64F regularizationMatrix = createRegularizationMatrix(directionalNeighborhood, spatialNeighborhood, directionalRegularization, spatialRegularization);
 		
 		System.out.println("Sampling views...");
 		
@@ -562,7 +522,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    				}
 			    	}
 
-					accumResampleSystem(lhs, rhs, directionalRes, spatialRes, hDotTMax, param.getTextureSize(), 
+					accumResampleSystem(lhsData, rhsData, directionalRes, spatialRes, hDotTMax, param.getTextureSize(), 
 						row * param.getTextureSubdivision(), col * param.getTextureSubdivision(), param.getTextureSubdivision(), param.getTextureSubdivision(), 
 						framebuffer.readFloatingPointColorBufferRGBA(0), 
 						framebuffer.readFloatingPointColorBufferRGBA(1));
@@ -574,7 +534,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		System.out.println("Solving system...");
 		
 		int partitionDim = directionalNeighborhood * directionalNeighborhood * spatialNeighborhood * spatialNeighborhood;
-		long solutionRow = (partitionDim - 1) / 2;
+		int solutionRow = (partitionDim - 1) / 2;
+		
+		// Solve using Cholesky decomposition (TODO: temporarily using LU because it complains that the matrix isn't symmetric positive definite)
+		LinearSolver<DenseMatrix64F> solver = LinearSolverFactory.lu(partitionDim);
 		
 		for (int i = 0; i < directionalRes; i++)
 		{
@@ -595,17 +558,18 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 						
 						System.gc(); // Garbage collect any unneeded memory objects from the last iteration
 						
-						Matrix lhsPartition = regularizationMatrix.clone();
-						Matrix rhsPartition = DenseMatrix.Factory.zeros(partitionDim, 3);
+						DenseMatrix64F lhsPartition = regularizationMatrix.copy();
+						DenseMatrix64F rhsPartition = new DenseMatrix64F(partitionDim, 3);
 						
-						buildPartitionSystem(lhs, rhs, i, j, k, l, directionalRes, spatialRes, directionalNeighborhood, spatialNeighborhood, lhsPartition, rhsPartition);
+						buildPartitionSystem(lhsData, rhsData, i, j, k, l, directionalRes, spatialRes, directionalNeighborhood, spatialNeighborhood, lhsPartition, rhsPartition);
 			    		
-						// Solve using Cholesky decomposition (TODO: temporarily using LU because it complains that the matrix isn't symmetric positive definite)
-						Matrix solutionVector = Matrix.lu.solve(lhsPartition, rhsPartition);//Matrix.chol.solve(lhs, rhs);
+						solver.setA(lhsPartition);
+						DenseMatrix64F partitionSolution = new DenseMatrix64F(partitionDim, 3);
+						solver.solve(rhsPartition, partitionSolution);
 
-						solution[l][k][0] = solutionVector.getAsFloat(solutionRow, 0);
-						solution[l][k][1] = solutionVector.getAsFloat(solutionRow, 1);
-						solution[l][k][2] = solutionVector.getAsFloat(solutionRow, 2);
+						solution[l][k][0] = (float)partitionSolution.get(solutionRow, 0);
+						solution[l][k][1] = (float)partitionSolution.get(solutionRow, 1);
+						solution[l][k][2] = (float)partitionSolution.get(solutionRow, 2);
 
 				    	System.out.println("Completed " + (1 + l + (k + (j + i*directionalRes) * spatialRes) * spatialRes) + "/" + 
 				    			(directionalRes*directionalRes *spatialRes*spatialRes) + " samples ...");
