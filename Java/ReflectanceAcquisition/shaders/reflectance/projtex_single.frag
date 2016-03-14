@@ -57,6 +57,8 @@ void main()
         vec3 view = normalize(transpose(mat3(cameraPose)) * -cameraPose[3].xyz - fPosition);
         vec3 light = normalize(transpose(mat3(cameraPose))
                         * (lightPosition - cameraPose[3].xyz) - fPosition);
-        halfAngleVector = vec4(objectToTangent * normalize(view + light), 1.0);
+                        
+        fragColor = vec4(texture(viewImage, projTexCoord.xy).rgb, light.z);
+        halfAngleVector = vec4(objectToTangent * normalize(view + light), dot(light, normal));
 	}
 }
