@@ -89,7 +89,7 @@ public class PhongRenderer<ContextType extends Context<ContextType>> implements 
 		try
         {
     		this.program = context.getShaderProgramBuilder()
-					.addShader(ShaderType.VERTEX, new File("shaders/commong/imgspace.vert"))
+					.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
 					.addShader(ShaderType.FRAGMENT, new File("shaders/phong/phong.frag"))
 					.createProgram();
     		

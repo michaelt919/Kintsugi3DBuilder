@@ -889,8 +889,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
     		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 	    	framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-	    	framebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-	    	framebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
 			
         	System.out.println("Fitting light...");
         	
@@ -999,6 +997,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    		{
 			    	renderable.program().setTexture("viewImages", viewTextures);
 		    		renderable.program().setTexture("depthImages", depthTextures);
+			    	
+			    	renderable.program().setUniform("minTexCoord", 
+		    				new Vector2((float)col / (float)framebufferSubdiv, (float)row / (float)framebufferSubdiv));
+		    		
+			    	renderable.program().setUniform("maxTexCoord", 
+		    				new Vector2((float)(col+1) / (float)framebufferSubdiv, (float)(row+1) / (float)framebufferSubdiv));
 			    	
 			    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer, col * subdivSize, row * subdivSize, subdivSize, subdivSize);
 			        renderable.getContext().finish();
@@ -1570,59 +1574,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	
 	    		System.out.println("Depth maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	    	}
-	    	
-	    	if (param.getTextureSubdivision() > 1)
-	    	{
-		    	System.out.println("Beginning model fitting (" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " blocks)...");
-	    	}
-	    	else
-	    	{
-		    	System.out.println("Setting up model fitting...");
-	    	}
+
+	    	System.out.println("Beginning light fit...");
 	    	timestamp = new Date();
-	    	
-	    	FramebufferObject<ContextType> diffuseFitFramebuffer = 
-    			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
-					.addColorAttachments(4)
-					.createFramebufferObject();
-
-	    	FramebufferObject<ContextType> specularFitFramebuffer = 
-    			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
-					.addColorAttachments(4)
-					.createFramebufferObject();
-
-	    	diffuseFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-	    	diffuseFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-	    	diffuseFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-	    	diffuseFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-	    	
-	    	specularFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-	    	specularFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-	    	specularFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-	    	specularFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-	    	
-    		DiffuseFit<ContextType> diffuseFit = createDiffuseFit(diffuseFitFramebuffer, param.getTextureSubdivision());
-        	SpecularFit<ContextType> specularFit = createSpecularFit(specularFitFramebuffer, param.getTextureSubdivision());
-        	
-        	File diffuseTempDirectory = new File(tmpDir, "diffuse");
-	    	File normalTempDirectory = new File(tmpDir, "normal");
-	    	File specularTempDirectory = new File(tmpDir, "specular");
-	    	File roughnessTempDirectory = new File(tmpDir, "roughness");
-	    	File snormalTempDirectory = new File(tmpDir, "snormal");
-	    	
-	    	diffuseTempDirectory.mkdir();
-	    	normalTempDirectory.mkdir();
-	    	specularTempDirectory.mkdir();
-	    	roughnessTempDirectory.mkdir();
-	    	snormalTempDirectory.mkdir();
-	    	
-	    	int subdivSize = param.getTextureSize() / param.getTextureSubdivision();
-	    	
-	    	if (param.getTextureSubdivision() == 1)
-			{
-		    	System.out.println("Setup finished in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-		    	timestamp = new Date();
-			}
 	    	
 	    	LightFit<ContextType> lightFit;
 	    	
@@ -1646,6 +1600,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	        viewSet.setLightPosition(0, lightPosition);
 	        viewSet.setLightIntensity(0, lightIntensity);
 	        viewSet.writeVSETFileToStream(new FileOutputStream(new File(outputDir, "default.vset")));
+	        
+	        System.out.println("Light fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	        
 	        System.out.println("Creating shadow maps...");
 	    	timestamp = new Date();
@@ -1706,7 +1662,17 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			
 			// Phong regression
 	        
-	        FloatVertexList lightPositionList = new FloatVertexList(4, 1);
+	        if (param.getTextureSubdivision() > 1)
+	    	{
+		    	System.out.println("Beginning model fitting (" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " blocks)...");
+	    	}
+	    	else
+	    	{
+		    	System.out.println("Setting up model fitting...");
+	    	}
+	    	timestamp = new Date();
+	    	
+	    	FloatVertexList lightPositionList = new FloatVertexList(4, 1);
 	    	lightPositionList.set(0, 0, lightPosition.x);
 	    	lightPositionList.set(0, 1, lightPosition.y);
 	    	lightPositionList.set(0, 2, lightPosition.z);
@@ -1719,13 +1685,49 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	        
 	        lightPositionBuffer = context.createUniformBuffer().setData(lightPositionList);
 	        lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensityList);
+	    	
+	    	FramebufferObject<ContextType> diffuseFitFramebuffer = 
+    			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
+					.addColorAttachments(4)
+					.createFramebufferObject();
+
+	    	FramebufferObject<ContextType> specularFitFramebuffer = 
+    			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
+					.addColorAttachments(4)
+					.createFramebufferObject();
+
+	    	diffuseFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+	    	diffuseFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+	    	diffuseFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+	    	diffuseFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+	    	
+	    	specularFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+	    	specularFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+	    	specularFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+	    	specularFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+	    	
+    		DiffuseFit<ContextType> diffuseFit = createDiffuseFit(diffuseFitFramebuffer, param.getTextureSubdivision());
+        	SpecularFit<ContextType> specularFit = createSpecularFit(specularFitFramebuffer, param.getTextureSubdivision());
+        	
+        	File diffuseTempDirectory = new File(tmpDir, "diffuse");
+	    	File normalTempDirectory = new File(tmpDir, "normal");
+	    	File specularTempDirectory = new File(tmpDir, "specular");
+	    	File roughnessTempDirectory = new File(tmpDir, "roughness");
+	    	File snormalTempDirectory = new File(tmpDir, "snormal");
+	    	
+	    	diffuseTempDirectory.mkdir();
+	    	normalTempDirectory.mkdir();
+	    	specularTempDirectory.mkdir();
+	    	roughnessTempDirectory.mkdir();
+	    	snormalTempDirectory.mkdir();
+	    	
+	    	int subdivSize = param.getTextureSize() / param.getTextureSubdivision();
         
         	if (param.getTextureSubdivision() == 1)
         	{
         		Texture3D<ContextType> preprojectedViews = null;
-        		
-        		System.out.println("Light fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	        	
+        		System.out.println("Setup finished in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	        	System.out.println("Fitting diffuse...");
 		    	timestamp = new Date();
 		    	
