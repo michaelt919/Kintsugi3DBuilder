@@ -202,7 +202,7 @@ public class VertexMesh
 			}
 		}
 		
-		centroid = sum.dividedBy(vertexList.size() / 3);
+		centroid = sum.dividedBy(vertexList.size());
 		
 		ArrayList<Vector4> orthoTangentsList = new ArrayList<Vector4>();
 		
