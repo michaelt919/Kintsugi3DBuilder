@@ -1582,7 +1582,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @param poseIndex The index of the view.
 	 * @return The index of the light source.
 	 */
-	public Integer getLightPositionIndex(int poseIndex) 
+	public Integer getLightIndex(int poseIndex) 
 	{
 		return this.lightIndexList.get(poseIndex);
 	}

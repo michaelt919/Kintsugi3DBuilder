@@ -41,6 +41,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
 	// Debug parameters
 	private static final boolean DEBUG = true;
+	
+	private final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
 
 	private ContextType context;
 	private File vsetFile;
@@ -50,7 +52,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	private File rescaleDir;
 	private File outputDir;
 	private File tmpDir;
-	private Vector3 lightOffset;
+	private Vector3 lightPosition;
 	private Vector3 lightIntensity;
 	private TextureFitParameters param;
 	
@@ -61,6 +63,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	private Program<ContextType> lightFitProgram;
 	private Program<ContextType> diffuseFitProgram;
 	private Program<ContextType> specularFitProgram;
+	private Program<ContextType> specularResidProgram;
 	private Program<ContextType> diffuseDebugProgram;
 	private Program<ContextType> specularDebugProgram;
 	private Program<ContextType> textureRectProgram;
@@ -86,7 +89,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		this.maskDir = maskDir;
 		this.rescaleDir = rescaleDir;
 		this.outputDir = outputDir;
-		this.lightOffset = lightOffset;
+		this.lightPosition = lightOffset;
 		this.lightIntensity = lightIntensity;
 		this.param = param;
 	}
@@ -126,13 +129,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		};
 	}
 	
-	private void projectIntoTextureSpace(ViewSet<ContextType> viewSet, int viewIndex, int textureSize, int textureSubdiv, TextureSpaceCallback<ContextType> callback) throws IOException
+	private void projectIntoTextureSpace(ViewSet<ContextType> viewSet, Program<ContextType> program, int viewIndex, int textureSize, int textureSubdiv, TextureSpaceCallback<ContextType> callback) throws IOException
 	{
 		FramebufferObject<ContextType> projTexFBO = 
 			context.getFramebufferObjectBuilder(textureSize / textureSubdiv, textureSize / textureSubdiv)
 				.addColorAttachments(ColorFormat.RGBA32F, 2)
 				.createFramebufferObject();
-    	Renderable<ContextType> projTexRenderable = context.createRenderable(projTexProgram);
+    	Renderable<ContextType> projTexRenderable = context.createRenderable(program);
     	
     	projTexRenderable.addVertexBuffer("position", positionBuffer);
     	projTexRenderable.addVertexBuffer("texCoord", texCoordBuffer);
@@ -141,6 +144,34 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	
     	projTexRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
     	projTexRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
+    	
+    	projTexRenderable.program().setUniform("cameraPose", viewSet.getCameraPose(viewIndex));
+    	projTexRenderable.program().setUniform("cameraProjection", 
+    			viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex))
+    				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+    	
+    	projTexRenderable.program().setUniform("gamma", param.getGamma());
+    	
+    	if (lightIntensity != null)
+    	{
+    		projTexRenderable.program().setUniform("lightIntensity", lightIntensity);
+    	}
+    	else
+    	{
+    		projTexRenderable.program().setUniform("lightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
+    	}
+    	
+    	boolean enableShadowTest = param.isCameraVisibilityTestEnabled();
+    	
+    	if (lightPosition != null)
+    	{
+    		projTexRenderable.program().setUniform("lightPosition", lightPosition);
+    		enableShadowTest = enableShadowTest && !lightPosition.equals(new Vector3(0.0f, 0.0f, 0.0f));
+    	}
+    	else
+    	{
+    		projTexRenderable.program().setUniform("lightPosition", viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)));
+    	}
     	
     	File imageFile = new File(imageDir, viewSet.getImageFileName(viewIndex));
 		if (!imageFile.exists())
@@ -176,6 +207,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     						.createTexture();
     	}
     	
+    	projTexRenderable.program().setTexture("viewImage", viewTexture);
+    	
     	FramebufferObject<ContextType> depthFBO = 
 			context.getFramebufferObjectBuilder(viewTexture.getWidth(), viewTexture.getHeight())
 				.addDepthAttachment()
@@ -196,13 +229,41 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		depthFBO.clearDepthBuffer();
     	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthFBO);
     	
-    	projTexRenderable.program().setUniform("cameraPose", viewSet.getCameraPose(viewIndex));
-    	projTexRenderable.program().setUniform("cameraProjection", 
-    			viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex))
-    				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
-    	
-    	projTexRenderable.program().setTexture("viewImage", viewTexture);
     	projTexRenderable.program().setTexture("depthImage", depthFBO.getDepthAttachmentTexture());
+    	
+    	FramebufferObject<ContextType> shadowFBO = null;
+    	
+    	if (enableShadowTest)
+    	{
+        	Matrix4 shadowModelView = Matrix4.lookAt(new Vector3(viewSet.getCameraPoseInverse(viewIndex).times(new Vector4(lightPosition, 1.0f))), center, new Vector3(0, 1, 0));
+        	
+    		Matrix4 shadowProjection = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex))
+    				.getProjectionMatrix(
+    					viewSet.getRecommendedNearPlane(), 
+    					viewSet.getRecommendedFarPlane() * SHADOW_MAP_FAR_PLANE_CUSHION // double it for good measure
+    				);
+    		
+    		shadowFBO = context.getFramebufferObjectBuilder(viewTexture.getWidth(), viewTexture.getHeight())
+	    					.addDepthAttachment()
+	    					.createFramebufferObject();
+    		
+    		Renderable<ContextType> shadowRenderable = context.createRenderable(depthRenderingProgram);
+    		shadowRenderable.addVertexBuffer("position", positionBuffer);
+        	
+        	depthRenderingProgram.setUniform("model_view", shadowModelView);
+    		depthRenderingProgram.setUniform("projection", shadowProjection);
+        	
+    		shadowFBO.clearDepthBuffer();
+    		shadowRenderable.draw(PrimitiveMode.TRIANGLES, shadowFBO);
+    		
+    		projTexRenderable.program().setUniform("shadowTestEnabled", true);
+    		projTexRenderable.program().setUniform("shadowMatrix", shadowProjection.times(shadowModelView));
+        	projTexRenderable.program().setTexture("shadowImage", shadowFBO.getDepthAttachmentTexture());
+    	}
+    	else
+    	{
+    		projTexRenderable.program().setUniform("shadowTestEnabled", false);
+    	}
 	
     	for (int row = 0; row < textureSubdiv; row++)
     	{
@@ -226,6 +287,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	projTexFBO.delete();
     	viewTexture.delete();
     	depthFBO.delete();
+    	
+    	if (shadowFBO != null)
+		{
+    		shadowFBO.delete();
+		}
 	}
 	
 	private DenseMatrix64F createRegularizationMatrix(int directionalNeighborhood, int spatialNeighborhood, float directionalWeight, float spatialWeight)
@@ -358,9 +424,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				float blue = colorDataRGBA[((y*dataWidth) + x) * 4 + 2];
 				float alpha = colorDataRGBA[((y*dataWidth) + x) * 4 + 3];
 				
-				float nDotL = halfAngleDataTBNA[((y*dataWidth) + x) * 4 + 3]; 
-				
-				if (alpha > 0.0f && nDotL > 0.0f)
+				if (alpha > 0.0f)
 				{
 					// the tangent and bitangent components of the half-vector
 					float hDotT = halfAngleDataTBNA[((y*dataWidth) + x) * 4];
@@ -432,13 +496,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 							{
 								lhsRow[(indices[q][0] - indices[p][0] + 1) + (indices[q][1] - indices[p][1] + 1) * 3
 									 	+ (indices[q][2] - indices[p][2] + 1) * 9 + (indices[q][3] - indices[p][3] + 1) * 27]
-						 			+= (float)(weights[p] * weights[q] * nDotL);
+						 			+= (float)(weights[p] * weights[q] * alpha);
 							}
 							
-							rhsRow[0] += (float)weights[p] * red;
-							rhsRow[1] += (float)weights[p] * green;
-							rhsRow[2] += (float)weights[p] * blue;
-							rhsRow[3] += (float)weights[p] * nDotL;
+							rhsRow[0] += (float)weights[p] * red * alpha;
+							rhsRow[1] += (float)weights[p] * green * alpha;
+							rhsRow[2] += (float)weights[p] * blue * alpha;
 						}
 					}
 					
@@ -548,12 +611,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		return entryFound;
 	}
 	
-	private void resample(ViewSet<ContextType> viewSet) throws IOException
+	private void resample(ViewSet<ContextType> viewSet, Texture<ContextType> diffuseFitTexture, Texture<ContextType> normalFitTexture) throws IOException
 	{
-		int directionalRes = 128;
+		int directionalRes = 127;
 		int spatialRes = 7;
-		int directionalNeighborhood = 3;
-		int spatialNeighborhood = 7;
+		int directionalNeighborhood = 1;
+		int spatialNeighborhood = 1;
 		float directionalRegularization = 0.125f;
 		float spatialRegularization = 0.875f;
 		
@@ -576,11 +639,14 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		
 		System.out.println("Sampling views...");
 		
+		specularResidProgram.setTexture("diffuseEstimate", diffuseFitTexture);
+		specularResidProgram.setTexture("normalEstimate", normalFitTexture);
+		
 		for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
 		{
 			final int K = k;
 			
-			projectIntoTextureSpace(viewSet, k, param.getTextureSize(), param.getTextureSubdivision(),
+			projectIntoTextureSpace(viewSet, specularResidProgram, k, param.getTextureSize(), param.getTextureSubdivision(),
 				(framebuffer, row, col) -> 
 				{
 					if (DEBUG)
@@ -612,8 +678,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		int partitionDim = directionalNeighborhood * directionalNeighborhood * spatialNeighborhood * spatialNeighborhood;
 		int solutionRow = (partitionDim - 1) / 2;
 		
-		// Solve using Cholesky decomposition (TODO: temporarily using LU because it complains that the matrix isn't symmetric positive definite)
-		LinearSolver<DenseMatrix64F> solver = LinearSolverFactory.lu(partitionDim);
+		// Solve using Cholesky decomposition
+		LinearSolver<DenseMatrix64F> solver = LinearSolverFactory.chol(partitionDim);
 		
 		File directionalLayerDir = new File(outputDir, "directional-layers");
 		directionalLayerDir.mkdir();
@@ -741,75 +807,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			}
 		}
 	}
-	
-//	private void resample(ViewSet<ContextType> viewSet) throws IOException
-//	{
-//		int directionalRes = 64; // TODO
-//		int spatialRes = 32;
-//		int neighborhood = 3;
-//		
-//		// The greatest projection the half vector can have on the tangent plane before specularity is assumed to be negligible.
-//		float hDotTMax = 0.5f * (float)Math.sqrt(3); //(float)Math.min(0.5*Math.sqrt(3), Math.sqrt(Math.sqrt(2) * maxRmsSlope));
-//
-//		Matrix[][] lhs = new Matrix[1][1]; // TODO bigger partitioning?
-//		Matrix[][] rhs = new Matrix[1][1];
-//		int dim = neighborhood*neighborhood*spatialRes*spatialRes;
-//		for (int i = 0; i < directionalRes; i++)
-//		{
-//			final int I = i;
-//			for (int j = 0; j < directionalRes; j++)
-//			{
-//				System.gc(); // Garbage collect any unneeded memory objects from the last iteration
-//				
-//				System.out.println("Initializing regularization constraints...");
-//				
-//				final int J = j;
-//				lhs[0][0] = SparseMatrix.Factory.zeros(dim, dim);
-//				initResampleMatrix(lhs[0][0], spatialRes, spatialRes, neighborhood);
-//				rhs[0][0] = SparseMatrix.Factory.zeros(dim, 3);
-//				
-//				System.out.println("Sampling views...");
-//				
-//				for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
-//				{
-//					final int K = k;
-//					
-//					projectIntoTextureSpace(viewSet, k, spatialRes, 1, // TODO
-//						(framebuffer, row, col) -> 
-//						{
-//							if (DEBUG && I == 0 && J == 0)
-//					    	{
-//								try
-//			    				{
-//			    					framebuffer.saveColorBufferToFile(0, "PNG", new File(new File(outputDir, "debug"), String.format("colors%04d.png", K)));
-//			    					framebuffer.saveColorBufferToFile(1, "PNG", new File(new File(outputDir, "debug"), String.format("halfangle%04d.png", K)));
-//			    				}
-//			    				catch (IOException e)
-//			    				{
-//			    					e.printStackTrace();
-//			    				}
-//					    	}
-//
-//							accumResampleSystems(lhs, rhs, I, J, spatialRes, spatialRes, neighborhood, hDotTMax, 
-//								framebuffer.readFloatingPointColorBufferRGBA(0), 
-//								framebuffer.readFloatingPointColorBufferRGBA(1));
-//						});
-//					
-//			    	System.out.println("Completed " + (k+1) + "/" + viewSet.getCameraPoseCount() + " views...");
-//				}
-//				
-//				System.out.println("Solving system...");
-//				
-//				float[][][] solution = new float[spatialRes][spatialRes][3];
-//	    		
-//				// Solve using Cholesky decomposition (TODO: temporarily using LU because it complains that the matrix isn't symmetric positive definite)
-//				Matrix solutionVector = Matrix.lu.solve(lhs[i][j], rhs[i][j]);//Matrix.chol.solve(lhs[i][j], rhs[i][j]);
-//				extractSolution(solutionVector, spatialRes, spatialRes, neighborhood, solution);
-//
-//		    	System.out.println("Completed " + (i*directionalRes+j+1) + "/" + (directionalRes*directionalRes) + " sample directions ...");
-//			}
-//		}
-//	}
 	
 	private void loadMesh() throws IOException
 	{
@@ -1264,7 +1261,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	else if (fileExt.equalsIgnoreCase("xml"))
     	{
     		System.out.println("Loading from Agisoft Photoscan XML file.");
-    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null, lightOffset, lightIntensity, context, null);
+    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null, lightPosition, lightIntensity, context, null);
     	}
     	else
     	{
@@ -1316,6 +1313,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
 	    					"texturefit/specularfit_texspace.frag" : "texturefit/specularfit_imgspace.frag"))
 	    			.createProgram();
+	    	
+	    	specularResidProgram = context.getShaderProgramBuilder()
+	    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
+	    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
+	    					"texturefit/specularresid_texspace.frag" : "texturefit/specularresid_imgspace.frag"))
+	    			.createProgram();
 			
 	    	diffuseDebugProgram = context.getShaderProgramBuilder()
 	    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
@@ -1324,7 +1327,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			
 	    	specularDebugProgram = context.getShaderProgramBuilder()
 	    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-	    			.addShader(ShaderType.FRAGMENT, new File("shaders", "texturefit/speculardebug_imgspace.frag"))
+	    			.addShader(ShaderType.FRAGMENT, new File("shaders", "texturefit/specularresid_imgspace.frag"))
 	    			.createProgram();
 			
 	    	textureRectProgram = context.getShaderProgramBuilder()
@@ -1345,15 +1348,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	loadMesh();
 	    	
 	    	System.out.println("Loading mesh completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-	
-	    	System.out.println("Resampling...");
-	    	timestamp = new Date();
-	    	
-			// Resample the reflectance data
-//			resample(viewSet);
-//			System.gc(); // Garbage collect any unneeded memory objects from resampling
-	
-	    	System.out.println("Resampling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	    	
 	    	tmpDir = new File(outputDir, "tmp");
 	    	
@@ -1373,7 +1367,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    		File viewDir = new File(tmpDir, String.format("%04d", i));
 		        	viewDir.mkdir();
 		        	
-		    		projectIntoTextureSpace(viewSet, i, param.getTextureSize(), param.getTextureSubdivision(), 
+		    		projectIntoTextureSpace(viewSet, projTexProgram, i, param.getTextureSize(), param.getTextureSubdivision(), 
 		    			(framebuffer, row, col) -> 
 	    				{
 		    				try
@@ -1574,91 +1568,109 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	
 	    		System.out.println("Depth maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	    	}
-
-	    	System.out.println("Beginning light fit...");
-	    	timestamp = new Date();
 	    	
-	    	LightFit<ContextType> lightFit;
-	    	
-	    	if (param.isImagePreprojectionUseEnabled())
+	    	if (!param.areLightSourcesInfinite())
 	    	{
-	    		lightFit = createTexSpaceLightFit(param.getTextureSize(), param.getTextureSubdivision());
-	    	}
-	    	else
-	    	{
-	    		lightFit = createImgSpaceLightFit(viewTextures, depthTextures, param.getTextureSize(), param.getTextureSubdivision());
-	    	}
-
-    		lightFit.fit();
-    		
-    		Vector3 lightPosition = lightFit.getPosition();
-    		Vector3 lightIntensity = lightFit.getIntensity();
-	        
-	        System.out.println("Light position: " + lightPosition.x + " " + lightPosition.y + " " + lightPosition.z);
-	        System.out.println("Light intensity: " + lightIntensity.x + " " + lightIntensity.y + " " + lightIntensity.z);
-	        
-	        viewSet.setLightPosition(0, lightPosition);
-	        viewSet.setLightIntensity(0, lightIntensity);
-	        viewSet.writeVSETFileToStream(new FileOutputStream(new File(outputDir, "default.vset")));
-	        
-	        System.out.println("Light fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-	        
-	        System.out.println("Creating shadow maps...");
-	    	timestamp = new Date();
-	    	
-	    	// Build shadow maps for each view
-	    	int width = viewTextures.getWidth();
-	    	int height = viewTextures.getHeight();
-	    	shadowTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
-	    	
-	    	// Don't automatically generate any texture attachments for this framebuffer object
-	    	FramebufferObject<ContextType> shadowRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
-	    	
-	    	Renderable<ContextType> shadowRenderable = context.createRenderable(depthRenderingProgram);
-	    	shadowRenderable.addVertexBuffer("position", positionBuffer);
-	    	
-	    	final int shadowMapFarPlaneCushion = 2; // TODO decide where this should be defined
-	    	
-	    	// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-	    	FloatVertexList flattenedShadowMatrices = new FloatVertexList(16, viewSet.getCameraPoseCount());
-	    	
-	    	// Render each shadow map
-	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-	    	{
-	    		shadowRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
-	    		shadowRenderingFBO.clearDepthBuffer();
-	    		
-	    		Matrix4 modelView = Matrix4.lookAt(new Vector3(viewSet.getCameraPoseInverse(i).times(new Vector4(lightPosition, 1.0f))), center, new Vector3(0, 1, 0));
-	        	depthRenderingProgram.setUniform("model_view", modelView);
-	        	
-	    		Matrix4 projection = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
-						.getProjectionMatrix(
-							viewSet.getRecommendedNearPlane(), 
-							viewSet.getRecommendedFarPlane() * shadowMapFarPlaneCushion // double it for good measure
-						);
-	    		depthRenderingProgram.setUniform("projection", projection);
-	        	
-	    		shadowRenderable.draw(PrimitiveMode.TRIANGLES, shadowRenderingFBO);
-	    		
-	    		Matrix4 fullTransform = projection.times(modelView);
-	    		
-	    		int d = 0;
-				for (int col = 0; col < 4; col++) // column
-				{
-					for (int row = 0; row < 4; row++) // row
-					{
-						flattenedShadowMatrices.set(i, d, fullTransform.get(row, col));
-						d++;
-					}
-				}
-	    	}
-			
-			// Create the uniform buffer
-			shadowMatrixBuffer = context.createUniformBuffer().setData(flattenedShadowMatrices);
+		    	System.out.println("Beginning light fit...");
+		    	timestamp = new Date();
+		    	
+		    	LightFit<ContextType> lightFit;
+		    	
+		    	if (param.isImagePreprojectionUseEnabled())
+		    	{
+		    		lightFit = createTexSpaceLightFit(param.getTextureSize(), param.getTextureSubdivision());
+		    	}
+		    	else
+		    	{
+		    		lightFit = createImgSpaceLightFit(viewTextures, depthTextures, param.getTextureSize(), param.getTextureSubdivision());
+		    	}
 	
-	    	shadowRenderingFBO.delete();
-	    	
-			System.out.println("Shadow maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+	    		lightFit.fit();
+	    		
+	    		lightPosition = lightFit.getPosition();
+	    		lightIntensity = lightFit.getIntensity();
+		        
+		        System.out.println("Light position: " + lightPosition.x + " " + lightPosition.y + " " + lightPosition.z);
+		        System.out.println("Light intensity: " + lightIntensity.x + " " + lightIntensity.y + " " + lightIntensity.z);
+		        
+		        viewSet.setLightPosition(0, lightPosition);
+		        viewSet.setLightIntensity(0, lightIntensity);
+		        viewSet.writeVSETFileToStream(new FileOutputStream(new File(outputDir, "default.vset")));
+		        
+		        System.out.println("Light fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		        
+		        if (!param.isImagePreprojectionUseEnabled())
+		        {
+			        System.out.println("Creating shadow maps...");
+			    	timestamp = new Date();
+			    	
+			    	// Build shadow maps for each view
+			    	int width = viewTextures.getWidth();
+			    	int height = viewTextures.getHeight();
+			    	shadowTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
+			    	
+			    	// Don't automatically generate any texture attachments for this framebuffer object
+			    	FramebufferObject<ContextType> shadowRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
+			    	
+			    	Renderable<ContextType> shadowRenderable = context.createRenderable(depthRenderingProgram);
+			    	shadowRenderable.addVertexBuffer("position", positionBuffer);
+			    	
+			    	// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
+			    	FloatVertexList flattenedShadowMatrices = new FloatVertexList(16, viewSet.getCameraPoseCount());
+			    	
+			    	// Render each shadow map
+			    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+			    	{
+			    		shadowRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
+			    		shadowRenderingFBO.clearDepthBuffer();
+			    		
+			    		Matrix4 modelView = Matrix4.lookAt(new Vector3(viewSet.getCameraPoseInverse(i).times(new Vector4(lightPosition, 1.0f))), center, new Vector3(0, 1, 0));
+			        	depthRenderingProgram.setUniform("model_view", modelView);
+			        	
+			    		Matrix4 projection = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
+								.getProjectionMatrix(
+									viewSet.getRecommendedNearPlane(), 
+									viewSet.getRecommendedFarPlane() * SHADOW_MAP_FAR_PLANE_CUSHION // double it for good measure
+								);
+			    		depthRenderingProgram.setUniform("projection", projection);
+			        	
+			    		shadowRenderable.draw(PrimitiveMode.TRIANGLES, shadowRenderingFBO);
+			    		
+			    		Matrix4 fullTransform = projection.times(modelView);
+			    		
+			    		int d = 0;
+						for (int col = 0; col < 4; col++) // column
+						{
+							for (int row = 0; row < 4; row++) // row
+							{
+								flattenedShadowMatrices.set(i, d, fullTransform.get(row, col));
+								d++;
+							}
+						}
+			    	}
+					
+					// Create the uniform buffer
+					shadowMatrixBuffer = context.createUniformBuffer().setData(flattenedShadowMatrices);
+			
+			    	shadowRenderingFBO.delete();
+			    	
+					System.out.println("Shadow maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		        }
+				
+		    	FloatVertexList lightPositionList = new FloatVertexList(4, 1);
+		    	lightPositionList.set(0, 0, lightPosition.x);
+		    	lightPositionList.set(0, 1, lightPosition.y);
+		    	lightPositionList.set(0, 2, lightPosition.z);
+		    	lightPositionList.set(0, 3, 1.0f);
+		    	
+		        FloatVertexList lightIntensityList = new FloatVertexList(3, 1);
+		        lightIntensityList.set(0, 0, lightIntensity.x);
+		        lightIntensityList.set(0, 1, lightIntensity.y);
+		        lightIntensityList.set(0, 2, lightIntensity.z);
+		        
+		        lightPositionBuffer = context.createUniformBuffer().setData(lightPositionList);
+		        lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensityList);
+	    	}
 			
 			// Phong regression
 	        
@@ -1671,20 +1683,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	System.out.println("Setting up model fitting...");
 	    	}
 	    	timestamp = new Date();
-	    	
-	    	FloatVertexList lightPositionList = new FloatVertexList(4, 1);
-	    	lightPositionList.set(0, 0, lightPosition.x);
-	    	lightPositionList.set(0, 1, lightPosition.y);
-	    	lightPositionList.set(0, 2, lightPosition.z);
-	    	lightPositionList.set(0, 3, 1.0f);
-	    	
-	        FloatVertexList lightIntensityList = new FloatVertexList(3, 1);
-	        lightIntensityList.set(0, 0, lightIntensity.x);
-	        lightIntensityList.set(0, 1, lightIntensity.y);
-	        lightIntensityList.set(0, 2, lightIntensity.z);
-	        
-	        lightPositionBuffer = context.createUniformBuffer().setData(lightPositionList);
-	        lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensityList);
 	    	
 	    	FramebufferObject<ContextType> diffuseFitFramebuffer = 
     			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
@@ -1928,186 +1926,19 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	{
 		    	specularFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "sdebug.png"));
 	    	}
+	
+	    	System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+	    	
+	    	System.out.println("Resampling...");
+	    	timestamp = new Date();
+	    	
+			// Resample the reflectance data
+			resample(viewSet, diffuseFitFramebuffer.getColorAttachmentTexture(0), diffuseFitFramebuffer.getColorAttachmentTexture(1));
 	    	
 	    	diffuseFitFramebuffer.delete();
 	    	specularFitFramebuffer.delete();
 	
-	    	System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-	    	
-	//    	if (DEBUG && !param.isImagePreprojectionUseEnabled())
-	//    	{
-	//    		System.out.println("Generating diffuse debug info...");
-	//	    	timestamp = new Date();
-	//
-	//	    	new File(outputDir, "debug").mkdirs();
-	//    		
-	//	    	FramebufferObject<ContextType> diffuseDebugFBO = 
-	//    			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
-	//    				.addColorAttachments(ColorFormat.RGBA32F, 2)
-	//    				.createFramebufferObject();
-	//	    	
-	//	    	Renderable<ContextType> diffuseDebugRenderable = context.createRenderable(diffuseDebugProgram);
-	//	    	
-	//	    	diffuseDebugRenderable.program().setUniform("minTexCoord", new Vector2(0.0f, 0.0f));
-	//	    	diffuseDebugRenderable.program().setUniform("maxTexCoord", new Vector2(1.0f, 1.0f));
-	//	    	
-	//	    	diffuseDebugRenderable.addVertexBuffer("position", positionBuffer);
-	//	    	diffuseDebugRenderable.addVertexBuffer("texCoord", texCoordBuffer);
-	//	    	diffuseDebugRenderable.addVertexBuffer("normal", normalBuffer);
-	//
-	//	    	diffuseDebugRenderable.program().setTexture("viewImages", viewTextures);
-	//	    	diffuseDebugRenderable.program().setTexture("depthImages", depthTextures);
-	//	    	diffuseDebugRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
-	//	    	diffuseDebugRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
-	//	    	diffuseDebugRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
-	//	    	diffuseDebugRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
-	//	    	diffuseDebugRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
-	//	    	
-	//	    	//new File(outputDirectory, "debug/diffuse/projpos").mkdirs();
-	//	    	
-	//	    	PrintStream diffuseInfo = new PrintStream(new File(outputDir, "debug/diffuseInfo.txt"));
-	//	    	
-	//	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-	//	    	{
-	//	    		diffuseDebugRenderable.program().setUniform("viewIndex", i);
-	//	    		
-	//	    		diffuseDebugFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-	//	    		diffuseDebugFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-	//	    		diffuseDebugFBO.clearDepthBuffer();
-	//	    		diffuseDebugRenderable.draw(PrimitiveMode.TRIANGLES, diffuseDebugFBO);
-	//	    		
-	//	    		//diffuseDebugFBO.saveColorBufferToFile(0, "PNG", new File(outputDirectory, String.format("debug/diffuse/%04d.png", i)));
-	//	    		//diffuseDebugFBO.saveColorBufferToFile(1, "PNG", new File(outputDirectory, String.format("debug/diffuse/projpos/%04d.png", i)));
-	//	    		
-	//	    		Matrix4 cameraPose = viewSet.getCameraPose(i);
-	//	    		Vector3 debugLightPos = new Matrix3(cameraPose).transpose().times(
-	//    				viewSet.getLightPosition(viewSet.getLightPositionIndex(i))
-	//    					.minus(new Vector3(cameraPose.getColumn(3))));
-	//	    		int[] colorData = diffuseDebugFBO.readColorBufferARGB(0, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
-	//	    		float[] positionData = diffuseDebugFBO.readFloatingPointColorBufferRGBA(1, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
-	//	    		diffuseInfo.println(
-	//    				debugLightPos.x + "\t" +
-	//					debugLightPos.y + "\t" +
-	//					debugLightPos.z + "\t" +
-	//    				positionData[0] + "\t" +
-	//    				positionData[1] + "\t" +
-	//    				positionData[2] + "\t" +
-	//					((colorData[0] & 0xFF000000) >>> 24) + "\t" + 
-	//					((colorData[0] & 0x00FF0000) >>> 16) + "\t" + 
-	//					((colorData[0] & 0x0000FF00) >>> 8) + "\t" +
-	//					(colorData[0] & 0x000000FF));
-	//	    	}	
-	//	    	
-	//	    	diffuseInfo.flush();
-	//	    	diffuseInfo.close();	    	
-	//	    	
-	//	    	diffuseDebugFBO.delete();
-	//	    	
-	//			System.out.println("Diffuse debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-	//    		
-	//	    	System.out.println("Generating specular debug info...");
-	//	    	timestamp = new Date();
-	//    		
-	//	    	FramebufferObject<ContextType> specularDebugFBO = 
-	//    			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
-	//    				.addColorAttachments(ColorFormat.RGBA32F, 2)
-	//    				.createFramebufferObject();
-	//	    	Renderable<ContextType> specularDebugRenderable = context.createRenderable(specularDebugProgram);
-	//
-	//	    	specularDebugRenderable.program().setUniform("minTexCoord", new Vector2(0.0f, 0.0f));
-	//	    	specularDebugRenderable.program().setUniform("maxTexCoord", new Vector2(1.0f, 1.0f));
-	//	    	
-	//	    	specularDebugRenderable.addVertexBuffer("position", positionBuffer);
-	//	    	specularDebugRenderable.addVertexBuffer("texCoord", texCoordBuffer);
-	//	    	specularDebugRenderable.addVertexBuffer("normal", normalBuffer);
-	//
-	//	    	specularDebugRenderable.program().setTexture("viewImages", viewTextures);
-	//	    	specularDebugRenderable.program().setTexture("depthImages", depthTextures);
-	//	    	specularDebugRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
-	//	    	specularDebugRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
-	//	    	specularDebugRenderable.program().setTexture("diffuse", diffuseFitFramebuffer.getColorAttachmentTexture(0));
-	//	    	specularDebugRenderable.program().setTexture("normalMap", diffuseFitFramebuffer.getColorAttachmentTexture(1));
-	//	    	specularDebugRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
-	//	    	specularDebugRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
-	//	    	specularDebugRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
-	//	    	specularDebugRenderable.program().setUniform("gamma", param.getGamma());
-	//	    	specularDebugRenderable.program().setUniform("diffuseRemovalFactor", 1.0f);
-	//	    	specularDebugRenderable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
-	//	    	
-	//	    	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
-	//    		{
-	//	    		specularDebugRenderable.program().setUniformBuffer("LightPositions", viewSet.getLightPositionBuffer());
-	//	    		specularDebugRenderable.program().setUniformBuffer("LightIntensities", viewSet.getLightIntensityBuffer());
-	//	    		specularDebugRenderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
-	//    		}
-	//	    	
-	//	    	//new File(outputDirectory, "debug/specular/rDotV").mkdirs();
-	//	    	
-	//	    	PrintStream specularInfo = new PrintStream(new File(outputDir, "debug/specularInfo.txt"));
-	//	    	
-	//	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-	//	    	{
-	//	    		specularDebugRenderable.program().setUniform("viewIndex", i);
-	//	    		
-	//	    		specularDebugFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-	//	    		specularDebugFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-	//	    		specularDebugFBO.clearDepthBuffer();
-	//	    		specularDebugRenderable.draw(PrimitiveMode.TRIANGLES, specularDebugFBO);
-	//	    		
-	//	    		//specularDebugFBO.saveColorBufferToFile(0, "PNG", new File(outputDirectory, String.format("debug/specular/%04d.png", i)));
-	//	    		//specularDebugFBO.saveColorBufferToFile(1, "PNG", new File(outputDirectory, String.format("debug/specular/rDotV/%04d.png", i)));
-	//	    		
-	//	    		int[] colorData = specularDebugFBO.readColorBufferARGB(0, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
-	//	    		int[] rDotVData = specularDebugFBO.readColorBufferARGB(1, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
-	//	    		specularInfo.println(	(rDotVData[0] & 0x000000FF) + "\t" +
-	//									((colorData[0] & 0xFF000000) >>> 24) + "\t" + 
-	//	    							((colorData[0] & 0x00FF0000) >>> 16) + "\t" + 
-	//	    							((colorData[0] & 0x0000FF00) >>> 8) + "\t" +
-	//	    							(colorData[0] & 0x000000FF));
-	//	    	}
-	//	    	
-	//	    	specularInfo.flush();
-	//	    	specularInfo.close();
-	//	    	
-	//	    	specularDebugFBO.delete();
-	//	    	
-	//	        viewSet.deleteOpenGLResources();
-	//	        positionBuffer.delete();
-	//	        normalBuffer.delete();
-	//	        texCoordBuffer.delete();
-	//	        
-	//	        if (viewTextures != null)
-	//	        {
-	//	        	viewTextures.delete();
-	//	        }
-	//	        
-	//	        if (depthTextures != null)
-	//	        {
-	//	        	depthTextures.delete();
-	//	        }
-	//	        
-	//	        if (shadowTextures != null)
-	//	        {
-	//	        	shadowTextures.delete();
-	//	        }
-	//	        
-	//	        if (lightPositionBuffer != null)
-	//	        {
-	//	        	lightPositionBuffer.delete();
-	//	        }
-	//	        
-	//	        if (lightIntensityBuffer != null)
-	//	        {
-	//	        	lightIntensityBuffer.delete();
-	//	        }
-	//	        
-	//	        if (shadowMatrixBuffer != null)
-	//	        {
-	//	        	shadowMatrixBuffer.delete();
-	//	        }
-	//	    	
-	//			System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-	//    	}
+	    	System.out.println("Resampling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}
     	finally
     	{

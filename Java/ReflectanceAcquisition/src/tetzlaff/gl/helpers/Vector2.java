@@ -48,6 +48,20 @@ public class Vector2
 		this(v4.x, v4.y);
 	}
 	
+	@Override
+	public boolean equals(Object o)
+	{
+		if (o instanceof Vector2)
+		{
+			Vector2 other = (Vector2)o;
+			return other.x == this.x && other.y == this.y;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
 	/**
 	 * Construct a new vector as the sum of this one and the given parameter.
 	 * @param other The vector to add.

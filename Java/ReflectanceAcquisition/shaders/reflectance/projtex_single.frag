@@ -1,24 +1,18 @@
 #version 330
 
-uniform bool occlusionEnabled;
-uniform float occlusionBias;
-
 in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
 in vec3 fTangent;
 in vec3 fBitangent;
 
-uniform sampler2D viewImage;
-uniform sampler2D depthImage;
-
-uniform mat4 cameraPose;
-uniform mat4 cameraProjection;
-uniform vec3 lightPosition;
-
 layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec4 halfAngleVector;
 layout(location = 2) out vec4 projTexCoord;
+
+#include "reflectance_single.glsl"
+#include "imgspace_single.glsl"
+
+#line 16 1010
 
 void main()
 {
@@ -44,21 +38,5 @@ void main()
 		}
         
         fragColor = vec4(texture(viewImage, projTexCoord.xy).rgb, 1.0);
-        
-        vec3 normal = normalize(fNormal);
-        vec3 tangent = normalize(fTangent - dot(normal, fTangent));
-        vec3 bitangent = normalize(fBitangent
-            - dot(normal, fBitangent) * normal 
-            - dot(tangent, fBitangent) * tangent);
-        
-        mat3 tangentToObject = mat3(tangent, bitangent, normal);
-        mat3 objectToTangent = transpose(tangentToObject);
-        
-        vec3 view = normalize(transpose(mat3(cameraPose)) * -cameraPose[3].xyz - fPosition);
-        vec3 light = normalize(transpose(mat3(cameraPose))
-                        * (lightPosition - cameraPose[3].xyz) - fPosition);
-                        
-        fragColor = vec4(texture(viewImage, projTexCoord.xy).rgb, light.z);
-        halfAngleVector = vec4(objectToTangent * normalize(view + light), dot(light, normal));
 	}
 }
