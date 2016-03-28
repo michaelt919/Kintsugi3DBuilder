@@ -3,6 +3,8 @@ package tetzlaff.ulf;
 import java.io.File;
 import java.io.IOException;
 
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.Vector4;
 
@@ -11,7 +13,7 @@ import tetzlaff.gl.helpers.Vector4;
  * @author Michael Tetzlaff
  *
  */
-public interface ULFDrawable extends Drawable
+public interface ULFDrawable<ContextType extends Context<ContextType>> extends Drawable
 {
 	/**
 	 * Sets a loading monitor with callbacks that are fired when the light field finishes loading and/or at certain checkpoints when loading.
@@ -139,6 +141,12 @@ public interface ULFDrawable extends Drawable
 	 * @see setKNeighborsEnabled
 	 */
 	void setKNeighborCount(int kNeighborCount);
+	
+	/**
+	 * Sets the shader program to be used by the Unstructured Light Field renderer.
+	 * @param program The program to be used.
+	 */
+	void setProgram(Program<ContextType> program);
 	
 	/**
 	 * Requests that the unstructured light field be rendered using camera poses as defined by an external view set.
