@@ -63,9 +63,7 @@ SpecularResidualInfo computeSpecularResidualInfo()
         
         info.halfAngleVector = objectToTangent * normalize(view + light);
         
-        //info.halfAngleVector.xy = vec2(sqrt(info.halfAngleVector.x * info.halfAngleVector.x + info.halfAngleVector.y * info.halfAngleVector.y));
-        
-        //info.residual.rgb = vec3(0.3 * pow(max(0, dot(normalize(view + light), geometricNormal)), 100));
+        //info.residual.rgb = vec3(0.3 * pow(max(0, info.halfAngleVector.z), 10));
     }
     else
     {

@@ -294,9 +294,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		}
 	}
 	
-	private DenseMatrix64F createRegularizationMatrix(int directionalNeighborhood, int spatialNeighborhood, float directionalWeight, float spatialWeight)
+	private DenseMatrix64F createRegularizationMatrix(int directionalNeighborhood, int spatialNeighborhood, float directionalWeight, float spatialWeight, boolean isotropic)
 	{
-		int dim = directionalNeighborhood * directionalNeighborhood * spatialNeighborhood * spatialNeighborhood;
+		int dim = (isotropic ? 1 : directionalNeighborhood) * directionalNeighborhood * spatialNeighborhood * spatialNeighborhood;
 		DenseMatrix64F matrix = new DenseMatrix64F(dim, dim);
 		
 		int index = 0;
@@ -304,7 +304,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		float quarterDirectionalWeight = directionalWeight / 4;
 		float quarterSpatialWeight = spatialWeight / 4;
 		
-		for (int s = 0; s < directionalNeighborhood; s++)
+		for (int s = 0; s < (isotropic ? 1 : directionalNeighborhood); s++)
 		{
 			int indexIncrS = index + (directionalNeighborhood * spatialNeighborhood * spatialNeighborhood);
 			
@@ -320,7 +320,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					{
 						int indexIncrV = index + 1;
 						
-						if (s + 1 < directionalNeighborhood)
+						if (!isotropic && s + 1 < directionalNeighborhood)
 						{
 							matrix.set(index, index, matrix.get(index, index) + quarterDirectionalWeight);
 							matrix.set(indexIncrS, indexIncrS, matrix.get(indexIncrS, indexIncrS) + quarterDirectionalWeight);
@@ -407,10 +407,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		}
 	}
 	
-	private void accumResampleSystem(float[][][][][] lhsData, float[][][][][] rhsData,int directionalRes, int spatialRes,
-			float hDotTMax, int dataRes, int dataStartX, int dataStartY, int dataWidth, int dataHeight, float[] colorDataRGBA, float[] halfAngleDataTBNA)
+	private void accumResampleSystem(float[][][][][] lhsData, float[][][][][] rhsData, int directionalRes, int spatialRes,
+			float hDotTMax, boolean isotropic, int dataRes, int dataStartX, int dataStartY, int dataWidth, int dataHeight, float[] colorDataRGBA, float[] halfAngleDataTBNA)
 	{
-		int[] coordinatesMax = { directionalRes, directionalRes, spatialRes, spatialRes }; // exclusive
+		int[] coordinatesMax = isotropic ?
+			new int[] { directionalRes, spatialRes, spatialRes } :
+			new int[] { directionalRes, directionalRes, spatialRes, spatialRes }; // exclusive
 		
 		final double SIN_PI_OVER_8 = Math.sin(Math.PI / 8);
 		final double ONE_OVER_SQRT2 = Math.sqrt(0.5);
@@ -436,19 +438,33 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					double directionalScale = projHOntoTB / hDotTMax / Math.max(Math.abs(hDotT), Math.abs(hDotB));
 						
 					// Mapped coordinates for the specified half-vector and surface position
-					double[] coordinates =
+					double[] coordinates;
+					
+					if (isotropic)
 					{
-						0.5 * (directionalRes-1) * (1 + directionalScale * hDotT),
-						0.5 * (directionalRes-1) * (1 + directionalScale * hDotB),
-						(float) (x + dataStartX) * (float) (spatialRes-1) / (float) (dataRes-1),
-						(float) (y + dataStartY) * (float) (spatialRes-1) / (float) (dataRes-1)
+						coordinates = new double[]
+						{
+							(directionalRes-1) * (2 * hDotN - 1 + Math.sqrt(2) * (hDotN - 1)), //(directionalRes-1) * 2 * (hDotN - 0.5),
+							(float) (x + dataStartX) * (float) (spatialRes-1) / (float) (dataRes-1),
+							(float) (y + dataStartY) * (float) (spatialRes-1) / (float) (dataRes-1)
+						};
+					}
+					else
+					{
+						coordinates = new double[]
+						{
+							0.5 * (directionalRes-1) * (1 + directionalScale * hDotT),
+							0.5 * (directionalRes-1) * (1 + directionalScale * hDotB),
+							(float) (x + dataStartX) * (float) (spatialRes-1) / (float) (dataRes-1),
+							(float) (y + dataStartY) * (float) (spatialRes-1) / (float) (dataRes-1)
+						};
 					};
 
 					boolean outOfBounds = false;
-					int[][] roundedCoordinatePairs = new int[4][2];
-					double[][] interpolationCoefficients = new double[4][2];
+					int[][] roundedCoordinatePairs = new int[coordinates.length][2];
+					double[][] interpolationCoefficients = new double[coordinates.length][2];
 					
-					for (int i = 0; i < 4 && !outOfBounds; i++)
+					for (int i = 0; i < coordinates.length && !outOfBounds; i++)
 					{
 						roundedCoordinatePairs[i][0] = (int)Math.floor(coordinates[i]);
 						roundedCoordinatePairs[i][1] = (int)Math.ceil(coordinates[i]);
@@ -471,14 +487,14 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					
 					if (!outOfBounds)
 					{
-						int[][] indices = new int[16][4];
-						double[] weights = new double[16];
+						int[][] indices = new int[1 << coordinates.length][coordinates.length];
+						double[] weights = new double[indices.length];
 						
-						for (int i = 0; i < 16; i++)
+						for (int i = 0; i < indices.length; i++)
 						{
 							weights[i] = 1.0;
 							
-							for (int j = 0; j < 4; j++)
+							for (int j = 0; j < indices[i].length; j++)
 							{
 								int selector = (i >> j) & 0x1;
 								indices[i][j] = roundedCoordinatePairs[j][selector];
@@ -487,16 +503,28 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 						}
 						
 						// Accumulate in the least squares system
-						for (int p = 0; p < 16; p++)
+						for (int p = 0; p < indices.length; p++)
 						{
-							float[] lhsRow = lhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
-							float[] rhsRow = rhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
+							float[] lhsRow = isotropic ?
+								lhsData[0][indices[p][0]][indices[p][1]][indices[p][2]] :
+								lhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
+							float[] rhsRow = isotropic ? 
+								rhsData[0][indices[p][0]][indices[p][1]][indices[p][2]] :
+								rhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
 							
-							for (int q = 0; q < 16; q++)
+							for (int q = 0; q < indices.length; q++)
 							{
-								lhsRow[(indices[q][0] - indices[p][0] + 1) + (indices[q][1] - indices[p][1] + 1) * 3
-									 	+ (indices[q][2] - indices[p][2] + 1) * 9 + (indices[q][3] - indices[p][3] + 1) * 27]
-						 			+= (float)(weights[p] * weights[q] * alpha);
+								if (isotropic)
+								{
+									lhsRow[(indices[q][0] - indices[p][0] + 1) + (indices[q][1] - indices[p][1] + 1) * 3 + (indices[q][2] - indices[p][2] + 1) * 9]
+							 			+= (float)(weights[p] * weights[q] * alpha);
+								}
+								else
+								{
+									lhsRow[(indices[q][0] - indices[p][0] + 1) + (indices[q][1] - indices[p][1] + 1) * 3
+										 	+ (indices[q][2] - indices[p][2] + 1) * 9 + (indices[q][3] - indices[p][3] + 1) * 27]
+							 			+= (float)(weights[p] * weights[q] * alpha);
+								}
 							}
 							
 							rhsRow[0] += (float)weights[p] * red * alpha;
@@ -527,7 +555,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	}
 	
 	private boolean buildNeighborhoodSystem(float[][][][][] lhsData, float[][][][][] rhsData, int centerS, int centerT, int centerU, int centerV, 
-			int directionalRes, int spatialRes, int directionalNeighborhood, int spatialNeighborhood, DenseMatrix64F lhsDest, DenseMatrix64F rhsDest)
+			int directionalRes, int spatialRes, int directionalNeighborhood, int spatialNeighborhood, boolean isotropic, DenseMatrix64F lhsDest, DenseMatrix64F rhsDest)
 	{
 		boolean entryFound = false;
 		
@@ -535,13 +563,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		int spatialRadius = (spatialNeighborhood - 1) / 2;
 		
 		// minimum coordinates
-		int minS = centerS - directionalRadius;
+		int minS = isotropic ? 0 : centerS - directionalRadius;
 		int minT = centerT - directionalRadius;
 		int minU = centerU - spatialRadius;
 		int minV = centerV - spatialRadius;
 		
 		// maximum coordinates
-		int maxS = centerS + directionalRadius;
+		int maxS = isotropic ? 0 : centerS + directionalRadius;
 		int maxT = centerT + directionalRadius;
 		int maxU = centerU + spatialRadius;
 		int maxV = centerV + spatialRadius;
@@ -552,8 +580,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			{
 				for (int uRow = Math.max(0, minU); uRow <= maxU && uRow < spatialRes; uRow++)
 				{
-					int rowIndex = spatialNeighborhood * (spatialNeighborhood * (directionalNeighborhood * 
-							(sRow - minS) + (tRow - minT)) + (uRow - minU));
+					int rowIndex = spatialNeighborhood * (spatialNeighborhood * (directionalNeighborhood * (sRow - minS) + (tRow - minT)) + (uRow - minU));
 					
 					for (int vRow = Math.max(0, minV); vRow <= maxV && vRow < spatialRes; vRow++)
 					{
@@ -563,8 +590,16 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 						{
 							int q = i;
 							
-							int sCol = (q % 3) + sRow - 1;
-							q /= 3;
+							int sCol;
+							if (isotropic)
+							{
+								sCol = 0;
+							}
+							else
+							{
+								sCol = (q % 3) + sRow - 1;
+								q /= 3;
+							}
 							int tCol = (q % 3) + tRow - 1;
 							q /= 3;
 							int uCol = (q % 3) + uRow - 1;
@@ -574,8 +609,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 							if (minS <= sCol && sCol <= maxS && minT <= tCol && tCol <= maxT && 
 								minU <= uCol && uCol <= maxU && minV <= vCol && vCol <= maxV)
 							{
-								int columnIndex = spatialNeighborhood * (spatialNeighborhood * (directionalNeighborhood * 
-										(sCol - minS) + (tCol - minT)) + (uCol - minU)) + (vCol - minV);
+								int columnIndex = spatialNeighborhood * (spatialNeighborhood * (directionalNeighborhood * (sCol - minS) + (tCol - minT)) + (uCol - minU)) + (vCol - minV);
 
 								entryFound = entryFound || lhsRow[i] != 0.0;
 								
@@ -613,12 +647,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	
 	private void resample(ViewSet<ContextType> viewSet, Texture<ContextType> diffuseFitTexture, Texture<ContextType> normalFitTexture) throws IOException
 	{
-		int directionalRes = 127;
-		int spatialRes = 7;
-		int directionalNeighborhood = 1;
-		int spatialNeighborhood = 1;
+		int directionalRes = 511;
+		int spatialRes = 63;
+		int directionalNeighborhood = 3;
+		int spatialNeighborhood = 3;
 		float directionalRegularization = 0.125f;
 		float spatialRegularization = 0.875f;
+		boolean isotropic = true;
 		
 		if (directionalNeighborhood % 2 == 0 || spatialNeighborhood % 2 == 0)
 		{
@@ -628,9 +663,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		// The greatest projection the half vector can have on the tangent plane before specularity is assumed to be negligible.
 		float hDotTMax = 0.5f * (float)Math.sqrt(3); //(float)Math.min(0.5*Math.sqrt(3), Math.sqrt(Math.sqrt(2) * maxRmsSlope));
 		
-		float[][][][][] lhsData = new float[directionalRes][directionalRes][spatialRes][spatialRes][81];
-		float[][][][][] rhsData = new float[directionalRes][directionalRes][spatialRes][spatialRes][3];
-		DenseMatrix64F regularizationMatrix = createRegularizationMatrix(directionalNeighborhood, spatialNeighborhood, directionalRegularization, spatialRegularization);
+		float[][][][][] lhsData = isotropic ? 
+			new float[1][directionalRes][spatialRes][spatialRes][27] :
+			new float[directionalRes][directionalRes][spatialRes][spatialRes][81];
+		float[][][][][] rhsData = isotropic ?
+			new float[1][directionalRes][spatialRes][spatialRes][3] :
+			new float[directionalRes][directionalRes][spatialRes][spatialRes][3];
+		DenseMatrix64F regularizationMatrix = createRegularizationMatrix(directionalNeighborhood, spatialNeighborhood, directionalRegularization, spatialRegularization, isotropic);
 		
 		if (MatrixFeatures.nullity(regularizationMatrix) > 1)
 		{
@@ -664,7 +703,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					
 					int partitionSize = param.getTextureSize() / param.getTextureSubdivision();
 
-					accumResampleSystem(lhsData, rhsData, directionalRes, spatialRes, hDotTMax, param.getTextureSize(), 
+					accumResampleSystem(lhsData, rhsData, directionalRes, spatialRes, hDotTMax, isotropic, param.getTextureSize(), 
 						col * partitionSize, row * partitionSize, partitionSize, partitionSize, 
 						framebuffer.readFloatingPointColorBufferRGBA(0), 
 						framebuffer.readFloatingPointColorBufferRGBA(1));
@@ -675,7 +714,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		
 		System.out.println("Solving system...");
 		
-		int partitionDim = directionalNeighborhood * directionalNeighborhood * spatialNeighborhood * spatialNeighborhood;
+		int partitionDim = isotropic ? 
+			directionalNeighborhood * spatialNeighborhood * spatialNeighborhood :
+			directionalNeighborhood * directionalNeighborhood * spatialNeighborhood * spatialNeighborhood;
 		int solutionRow = (partitionDim - 1) / 2;
 		
 		// Solve using Cholesky decomposition
@@ -697,9 +738,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			System.out.println("Something's wrong...");
 		}
 		
-		float[][][][][] solution = new float[directionalRes][directionalRes][spatialRes][spatialRes][4];
+		float[][][][][] solution = isotropic ?
+			new float[1][directionalRes][spatialRes][spatialRes][4] :
+			new float[directionalRes][directionalRes][spatialRes][spatialRes][4];
 		
-		for (int i = 0; i < directionalRes; i++)
+		for (int i = 0; i < (isotropic ? 1 : directionalRes); i++)
 		{
 			for (int j = 0; j < directionalRes; j++)
 			{
@@ -710,7 +753,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					lhsNeighborhood.set(regularizationMatrix);
 					rhsNeighborhood.zero();
 					
-					if (buildNeighborhoodSystem(lhsData, rhsData, i, j, (spatialRes-1)/2, (spatialRes-1)/2, directionalRes, spatialRes, directionalNeighborhood, spatialRes, lhsNeighborhood, rhsNeighborhood))
+					if (buildNeighborhoodSystem(lhsData, rhsData, i, j, (spatialRes-1)/2, (spatialRes-1)/2, directionalRes, spatialRes, directionalNeighborhood, spatialRes, isotropic, 
+							lhsNeighborhood, rhsNeighborhood))
 					{
 						DenseMatrix64F neighborhoodSolution = new DenseMatrix64F(partitionDim, 3);
 						solver.setA(lhsNeighborhood);
@@ -722,7 +766,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 							{
 								float[] solutionEntry = solution[i][j][k][l];
 								
-								int currentRow = l + spatialRes * (k + spatialRes * (directionalNeighborhood * directionalNeighborhood - 1) / 2);
+								int currentRow = l + spatialRes * (k + spatialRes * ((isotropic ? 1 : directionalNeighborhood) * directionalNeighborhood - 1) / 2);
 		
 								solutionEntry[0] = (float)neighborhoodSolution.get(currentRow, 0);
 								solutionEntry[1] = (float)neighborhoodSolution.get(currentRow, 1);
@@ -746,7 +790,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 							lhsNeighborhood.set(regularizationMatrix);
 							rhsNeighborhood.zero();
 							
-							if (buildNeighborhoodSystem(lhsData, rhsData, i, j, k, l, directionalRes, spatialRes, directionalNeighborhood, spatialNeighborhood, lhsNeighborhood, rhsNeighborhood))
+							if (buildNeighborhoodSystem(lhsData, rhsData, i, j, k, l, directionalRes, spatialRes, directionalNeighborhood, spatialNeighborhood, isotropic, 
+									lhsNeighborhood, rhsNeighborhood))
 							{
 								DenseMatrix64F neighborhoodSolution = new DenseMatrix64F(partitionDim, 3);
 								solver.setA(lhsNeighborhood);
@@ -769,41 +814,148 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				}
 				
 				
-//				BufferedImage outImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
-//		        outImg.setRGB(0, 0, spatialRes, spatialRes, imageData, 0, spatialRes);
-//		        ImageIO.write(outImg, "PNG", new File(directionalLayerDir, i + "_" + j + ".png"));
-//
-//				System.out.println("Finished layer " + (1 + j + i * directionalRes) + "/" + (directionalRes * directionalRes) + " ...");
+				BufferedImage outImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
+		        outImg.setRGB(0, 0, spatialRes, spatialRes, imageData, 0, spatialRes);
+		        ImageIO.write(outImg, "PNG", new File(directionalLayerDir, (isotropic ? "" : i + "_") + j + ".png"));
+
+				System.out.println("Finished layer " + (1 + j + (isotropic ? 0 : i * directionalRes)) + "/" + ((isotropic ? 1 : directionalRes) * directionalRes) + " ...");
 			}
 		}
 		
-		for (int k = 0; k < spatialRes; k++)
+		if (isotropic)
 		{
-			for (int l = 0; l < spatialRes; l++)
+			double[] roughnessValues = new double[spatialRes*spatialRes];
+			double[] reflectivityValues = new double[spatialRes*spatialRes];
+			
+			int[] roughnessData = new int[spatialRes*spatialRes];
+			int[] reflectivityData = new int[spatialRes*spatialRes];
+			
+			for (int k = 0; k < spatialRes; k++)
 			{
-				int[] imageData = new int[directionalRes*directionalRes];
-				
-				for (int i = 0; i < directionalRes; i++)
+				for (int l = 0; l < spatialRes; l++)
 				{
+					// Integral of Specular reflectivity
+					// 		times microfacet probability
+					//		times microfacet slope squared
+					// over a hemisphere
+					double specularWeightedMeanSlope = 0.0;
+					
+					// Integral to find Specular reflectivity (low res)
+					double specularReflectivitySum = 0.0;
+					
+					double alphaSum = 0.0;
+					
 					for (int j = 0; j < directionalRes; j++)
 					{
-						float[] solutionEntry = solution[i][j][k][l];
+						float[] solutionEntry = solution[0][j][k][l];
 						
 						if (solutionEntry[3] > 0.0)
 						{
-							imageData[j + (directionalRes - i - 1) * directionalRes] = 0xFF000000 |
-								(Math.max(0, Math.min(255, (int)(solutionEntry[0] * 255.0))) << 16) |
-								(Math.max(0, Math.min(255, (int)(solutionEntry[1] * 255.0))) << 8) |
-								Math.max(0, Math.min(255, (int)(solutionEntry[2] * 255.0)));
+							double coord = (double)j / (double)(directionalRes - 1);
+							double nDotH = coord + (1 - coord) * Math.sqrt(0.5);
+							double alpha = (j == 0 || j == directionalRes - 1 ? 0.5 : 1.0) * solutionEntry[3];
+							double weight = alpha * (solutionEntry[0] + solutionEntry[1] + solutionEntry[2]) / 3;
+							specularWeightedMeanSlope += weight * (1 / nDotH - nDotH);
+							specularReflectivitySum += weight * nDotH;
+							alphaSum += alpha;
+						}
+					}
+					
+					double roughnessSq = specularWeightedMeanSlope / specularReflectivitySum;
+					double roughness = Math.sqrt(roughnessSq);
+					
+					// Assuming scaling by 1 / (pi * roughness^2)
+					double reflectivity = specularReflectivitySum * 2 * (1 - Math.sqrt(0.5)) / (alphaSum * roughnessSq);
+					
+					roughnessValues[l + (spatialRes - k - 1) * spatialRes] = roughness;
+					reflectivityValues[l + (spatialRes - k - 1) * spatialRes] = reflectivity;
+					
+					int roughnessPixelValue = Math.max(0, Math.min(255, (int)(roughness * 255.0)));
+					
+					int reflectivityPixelValue = Math.max(0, Math.min(255, (int)(reflectivity * 255.0)));
+					
+					roughnessData[l + (spatialRes - k - 1) * spatialRes] = 0xFF000000 | roughnessPixelValue << 16 | roughnessPixelValue << 8 | roughnessPixelValue;
+					reflectivityData[l + (spatialRes - k - 1) * spatialRes] = 0xFF000000 | reflectivityPixelValue << 16 | reflectivityPixelValue << 8 | reflectivityPixelValue;
+				}
+			}
+			
+			BufferedImage roughnessImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
+	        roughnessImg.setRGB(0, 0, spatialRes, spatialRes, roughnessData, 0, spatialRes);
+	        ImageIO.write(roughnessImg, "PNG", new File(outputDir, "roughness_beckmann.png"));
+			
+			BufferedImage reflectivityImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
+	        reflectivityImg.setRGB(0, 0, spatialRes, spatialRes, reflectivityData, 0, spatialRes);
+	        ImageIO.write(reflectivityImg, "PNG", new File(outputDir, "reflectivity_beckmann.png"));
+			
+			System.out.println("Wrote specular roughness image...");
+			
+			System.out.println("Writing debug layers...");
+			for (int j = 0; j < directionalRes; j++)
+			{
+				int[] imageData = new int[spatialRes*spatialRes];
+				
+				for (int k = 0; k < spatialRes; k++)
+				{
+					for (int l = 0; l < spatialRes; l++)
+					{
+						double roughness = roughnessValues[l + (spatialRes - k - 1) * spatialRes];
+						double reflectivity = reflectivityValues[l + (spatialRes - k - 1) * spatialRes];
+						
+						if (Double.isFinite(roughness) && roughness > 0.0)
+						{
+							double coord = (double)j / (double)(directionalRes - 1);
+							double nDotH = coord + (1 - coord) * Math.sqrt(0.5);
+							
+							double roughnessSq = roughness * roughness;
+							double nDotHSq = nDotH * nDotH;
+							
+							double reflectance = reflectivity * Math.exp((nDotHSq - 1) / (nDotHSq * roughnessSq)) / (nDotHSq * nDotHSq);
+							
+							imageData[k + (spatialRes - l - 1) * spatialRes] = 0xFF000000 |
+									(Math.max(0, Math.min(255, (int)(reflectance * 255.0))) << 16) |
+									(Math.max(0, Math.min(255, (int)(reflectance * 255.0))) << 8) |
+									Math.max(0, Math.min(255, (int)(reflectance * 255.0)));
 						}
 					}
 				}
 				
-				BufferedImage outImg = new BufferedImage(directionalRes, directionalRes, BufferedImage.TYPE_INT_ARGB);
-		        outImg.setRGB(0, 0, directionalRes, directionalRes, imageData, 0, directionalRes);
-		        ImageIO.write(outImg, "PNG", new File(spatialLayerDir, k + "_" + l + ".png"));
-				
-				System.out.println("Wrote debug image " + (1 + l + k * spatialRes) + "/" + (spatialRes * spatialRes) + " ...");
+				BufferedImage outImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
+		        outImg.setRGB(0, 0, spatialRes, spatialRes, imageData, 0, spatialRes);
+		        ImageIO.write(outImg, "PNG", new File(directionalLayerDir, j + ".png"));
+
+				System.out.println("Finished layer " + (1 + j) + "/" + directionalRes + " ...");
+			}
+		}
+		else
+		{
+			for (int k = 0; k < spatialRes; k++)
+			{
+				for (int l = 0; l < spatialRes; l++)
+				{
+					int[] imageData = new int[directionalRes*directionalRes];
+					
+					for (int i = 0; i < directionalRes; i++)
+					{
+						for (int j = 0; j < directionalRes; j++)
+						{
+							float[] solutionEntry = solution[i][j][k][l];
+							
+							if (solutionEntry[3] > 0.0)
+							{
+								imageData[j + (directionalRes - i - 1) * directionalRes] = 0xFF000000 |
+									(Math.max(0, Math.min(255, (int)(solutionEntry[0] * 255.0))) << 16) |
+									(Math.max(0, Math.min(255, (int)(solutionEntry[1] * 255.0))) << 8) |
+									Math.max(0, Math.min(255, (int)(solutionEntry[2] * 255.0)));
+							}
+						}
+					}
+					
+					BufferedImage outImg = new BufferedImage(directionalRes, directionalRes, BufferedImage.TYPE_INT_ARGB);
+			        outImg.setRGB(0, 0, directionalRes, directionalRes, imageData, 0, directionalRes);
+			        ImageIO.write(outImg, "PNG", new File(spatialLayerDir, k + "_" + l + ".png"));
+					
+					System.out.println("Wrote debug image " + (1 + l + k * spatialRes) + "/" + (spatialRes * spatialRes) + " ...");
+				}
 			}
 		}
 	}
