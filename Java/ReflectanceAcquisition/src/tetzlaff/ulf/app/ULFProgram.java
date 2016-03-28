@@ -135,7 +135,7 @@ public class ULFProgram
 	    	LWJGLUtil.initialize();
 
 	    	// Use OpenCL to make an informed guess at GPU memory
-	        checkGPUMemoryCapabilities();
+	    //    checkGPUMemoryCapabilities();
 
 	    	// Output some system information
 	        System.out.println("\n****** Sys Info *****");	    	
@@ -154,7 +154,7 @@ public class ULFProgram
 	        System.out.println("* Spec Version : " + System.getProperty("java.vm.specification.version"));
 	        System.out.println("* Spec Vendor  : " + System.getProperty("java.vm.specification.vendor"));
 	        System.out.println("**** Video Memory ***");
-	        System.out.println("* Best Guess : " + (videoMemBestGuessMB<0?"??":videoMemBestGuessMB) + "MB");
+	        System.out.println("* DISABLED"); //Best Guess : " + (videoMemBestGuessMB<0?"??":videoMemBestGuessMB) + "MB");
 	        System.out.println("*********************\n");
 
 	        // Set the windows OS flag
