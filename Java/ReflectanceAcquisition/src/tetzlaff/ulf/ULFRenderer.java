@@ -27,7 +27,7 @@ import tetzlaff.gl.helpers.Vector4;
  *
  * @param <ContextType> The type of the context that will be used for rendering.
  */
-public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable
+public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
     private Program<ContextType> program;
     
@@ -120,8 +120,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	try
 	        {
 	    		this.program = context.getShaderProgramBuilder()
-	    				.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File("shaders/ulr.frag"))
+	    				.addShader(ShaderType.VERTEX, new File("/shaders/ulr.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("/shaders/ulr.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)
@@ -135,8 +135,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	try
 	        {
 	    		this.simpleTexProgram = context.getShaderProgramBuilder()
-	    				.addShader(ShaderType.VERTEX, new File("shaders/texturerect.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File("shaders/simpletexture.frag"))
+	    				.addShader(ShaderType.VERTEX, new File("/shaders/texturerect.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("/shaders/simpletexture.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)
@@ -150,8 +150,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	try
 	        {
 	    		this.cameraVisProgram = context.getShaderProgramBuilder()
-	    				.addShader(ShaderType.VERTEX, new File("shaders/uniform3D.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File("shaders/uniform.frag"))
+	    				.addShader(ShaderType.VERTEX, new File("/shaders/uniform3D.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("/shaders/uniform.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)
@@ -572,5 +572,24 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	@Override
 	public void setKNeighborCount(int kNeighborCount) {
 		this.kNeighborCount = kNeighborCount;
+	}
+
+	@Override
+	public void setProgram(Program<ContextType> program) 
+	{
+		this.program = program;
+		
+		this.renderable = context.createRenderable(program);
+    	this.renderable.addVertexBuffer("position", this.lightField.positionBuffer);
+    	
+    	if (this.lightField.normalBuffer != null)
+    	{
+    		this.renderable.addVertexBuffer("normal", this.lightField.normalBuffer);
+    	}
+    	
+    	if (this.lightField.texCoordBuffer != null)
+    	{
+    		this.renderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+    	}
 	}
 }

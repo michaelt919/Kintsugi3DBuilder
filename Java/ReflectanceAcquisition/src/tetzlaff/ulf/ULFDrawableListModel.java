@@ -18,7 +18,7 @@ import tetzlaff.gl.helpers.Trackball;
  *
  * @param <ContextType> The type of the context that will be used for rendering.
  */
-public abstract class ULFDrawableListModel<ContextType extends Context<ContextType>> extends AbstractListModel<ULFDrawable> implements ULFListModel
+public abstract class ULFDrawableListModel<ContextType extends Context<ContextType>> extends AbstractListModel<ULFDrawable<ContextType>> implements ULFListModel<ContextType>
 {
 	private static final long serialVersionUID = 4167467314632694946L;
 	
@@ -30,7 +30,7 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	/**
 	 * The program to use for rendering.
 	 */
-	protected final Program<ContextType> program;
+	private Program<ContextType> program;
 	
 	/**
 	 * The trackball controlling the movement of the virtual camera.
@@ -38,7 +38,7 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	protected final Trackball trackball;
 	
 	
-	private MultiDrawable<ULFDrawable> ulfs;
+	private MultiDrawable<ULFDrawable<ContextType>> ulfs;
 	private int effectiveSize;
 	private ULFLoadingMonitor loadingMonitor;
 	
@@ -51,14 +51,14 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	{
 		this.context = context;
 		this.trackball = trackball;
-		this.ulfs = new MultiDrawable<ULFDrawable>();
+		this.ulfs = new MultiDrawable<ULFDrawable<ContextType>>();
 		this.effectiveSize = 0;
 		
 		try
         {
     		this.program = context.getShaderProgramBuilder()
-    				.addShader(ShaderType.VERTEX, new File("shaders/ulr.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ulr.frag"))
+    				.addShader(ShaderType.VERTEX, new File("/shaders/ulr.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("/shaders/ulr.frag"))
     				.createProgram();
         }
         catch (IOException e)
@@ -68,6 +68,20 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
         }
 	}
 	
+	public Program<ContextType> getProgram()
+	{
+		return this.program;
+	}
+	
+	public void setProgram(Program<ContextType> program)
+	{
+		this.program = program;
+		for (ULFDrawable<ContextType> ulf : ulfs)
+		{
+			ulf.setProgram(program);
+		}
+	}
+	
 	/**
 	 * Required in order to define how to load an unstructured light field from a view set file.
 	 * @param vsetFile The view set file defining the light field to be added.
@@ -75,7 +89,7 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	 * @return A new unstructured light field as a ULFDrawable entity.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	protected abstract ULFDrawable createFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract ULFDrawable<ContextType> createFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException;
 	
 	/**
 	 * Required in order to define how to load an unstructured light field from Agisoft PhotoScan.
@@ -85,7 +99,7 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	 * @return A new unstructured light field as a ULFDrawable entity.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	protected abstract ULFDrawable createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract ULFDrawable<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
 	
 	/**
 	 * Required in order to define how to load an unstructured light field morph.
@@ -94,12 +108,12 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	 * @return A new unstructured light field morph as a ULFDrawable entity.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	protected abstract ULFDrawable createMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract ULFDrawable<ContextType> createMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException;
 
 	@Override
-	public ULFDrawable addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
+	public ULFDrawable<ContextType> addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		ULFDrawable newItem = this.createFromVSETFile(vsetFile, loadOptions);
+		ULFDrawable<ContextType> newItem = this.createFromVSETFile(vsetFile, loadOptions);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
@@ -146,9 +160,9 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	}
 	
 	@Override
-	public ULFDrawable addFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException
+	public ULFDrawable<ContextType> addFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		ULFDrawable newItem = this.createFromAgisoftXMLFile(xmlFile, meshFile, loadOptions);
+		ULFDrawable<ContextType> newItem = this.createFromAgisoftXMLFile(xmlFile, meshFile, loadOptions);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
@@ -195,9 +209,9 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	}
 
 	@Override
-	public ULFDrawable addMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException 
+	public ULFDrawable<ContextType> addMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException 
 	{
-		ULFDrawable newItem = this.createMorphFromLFMFile(lfmFile, loadOptions);
+		ULFDrawable<ContextType> newItem = this.createMorphFromLFMFile(lfmFile, loadOptions);
 		newItem.setOnLoadCallback(new ULFLoadingMonitor()
 		{
 			@Override
@@ -250,13 +264,13 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	}
 
 	@Override
-	public ULFDrawable getElementAt(int index) 
+	public ULFDrawable<ContextType> getElementAt(int index) 
 	{
 		return ulfs.get(index);
 	}
 
 	@Override
-	public ULFDrawable getSelectedItem() 
+	public ULFDrawable<ContextType> getSelectedItem() 
 	{
 		return ulfs.getSelectedItem();
 	}
