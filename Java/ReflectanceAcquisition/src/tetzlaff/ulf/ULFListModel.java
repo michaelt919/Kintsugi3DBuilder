@@ -5,12 +5,14 @@ import java.io.IOException;
 
 import javax.swing.ComboBoxModel;
 
+import tetzlaff.gl.Context;
+
 /**
  * An interface for a list of unstructured light fields that also serves as the model for a combo box where a light field can be selected.
  * @author Michael Tetzlaff
  *
  */
-public interface ULFListModel extends ComboBoxModel<ULFDrawable>
+public interface ULFListModel<ContextType extends Context<ContextType>> extends ComboBoxModel<ULFDrawable<ContextType>>
 {
 	/**
 	 * Adds a new unstructured light field to the model from a view set file.
@@ -19,7 +21,7 @@ public interface ULFListModel extends ComboBoxModel<ULFDrawable>
 	 * @return The newly added unstructured light field as a ULFDrawable entity.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	ULFDrawable addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException;
+	ULFDrawable<ContextType> addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException;
 	
 	/**
 	 * Adds a new unstructured light field to the model from Agisoft PhotoScan.
@@ -29,7 +31,7 @@ public interface ULFListModel extends ComboBoxModel<ULFDrawable>
 	 * @return The newly added unstructured light field as a ULFDrawable entity.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	ULFDrawable addFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
+	ULFDrawable<ContextType> addFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
 	
 	/**
 	 * Adds a new unstructured light field morph to the model.
@@ -38,7 +40,7 @@ public interface ULFListModel extends ComboBoxModel<ULFDrawable>
 	 * @return The newly added unstructured light field morph as a ULFDrawable entity.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	ULFDrawable addMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException;
+	ULFDrawable<ContextType> addMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException;
 	
 	/**
 	 * Sets a loading monitor with callbacks that are fired when the light field finishes loading and/or at certain checkpoints when loading.
@@ -47,5 +49,5 @@ public interface ULFListModel extends ComboBoxModel<ULFDrawable>
 	void setLoadingMonitor(ULFLoadingMonitor loadingMonitor);
 	
 	@Override
-	ULFDrawable getSelectedItem();
+	ULFDrawable<ContextType> getSelectedItem();
 }

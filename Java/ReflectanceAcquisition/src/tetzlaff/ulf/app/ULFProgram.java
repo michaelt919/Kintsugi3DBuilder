@@ -2,7 +2,10 @@ package tetzlaff.ulf.app;
 
 import com.bugsplatsoftware.client.BugSplat;
 
+
+
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.LongBuffer;
@@ -13,11 +16,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
+
+
 import javax.imageio.ImageIO;
+
+
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLUtil;
 import org.lwjgl.opencl.*;
+
+
 
 import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.core.Qt;
@@ -27,6 +36,11 @@ import com.trolltech.qt.gui.QCursor;
 import com.trolltech.qt.gui.QMessageBox;
 import com.trolltech.qt.gui.QStyle;
 
+
+
+import tetzlaff.gl.Program;
+import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
@@ -178,6 +192,49 @@ public class ULFProgram
 	        // the underlying data and provides ways of triggering events via the trackball and the user
 	        // interface later when it is passed to the ULFUserInterface object.
 	        ULFRendererList<OpenGLContext> model = new ULFRendererList<OpenGLContext>(window, trackball);
+	        
+	        window.addCharacterListener((win, c) -> {
+	        	if (c == 'p')
+	        	{
+	        		System.out.println("reloading program...");
+	        		
+		        	try
+		        	{
+		        		// reload program
+		        		ProgramBuilder<OpenGLContext> programBuilder = window.getShaderProgramBuilder();
+		        		
+		        		try
+		        		{
+			        		programBuilder.addShader(ShaderType.VERTEX, new File("resources/shaders/ulr.vert")); // Should reload from outside the JAR file, in the executable directory
+		        		}
+		        		catch(FileNotFoundException e)
+		        		{
+		        			programBuilder.addShader(ShaderType.VERTEX, new File("/shaders/ulr.vert")); // Fallback
+		        		}
+		        		
+		        		try
+		        		{
+	        				programBuilder.addShader(ShaderType.FRAGMENT, new File("resources/shaders/ulr.frag")); // Should reload from outside the JAR file, in the executable directory
+		        		}
+		        		catch(FileNotFoundException e)
+		        		{
+		        			programBuilder.addShader(ShaderType.VERTEX, new File("/shaders/ulr.frag")); // Fallback
+		        		}
+						
+		        		Program<OpenGLContext> newProgram = programBuilder.createProgram();
+			        	
+			        	if (model.getProgram() != null)
+		        		{
+		        			model.getProgram().delete();
+		        		}
+			        	model.setProgram(newProgram);
+					} 
+		        	catch (Exception e) 
+		        	{
+						e.printStackTrace();
+					}
+	        	}
+	        });
 	
 	    	// Create a new application to run our event loop and give it the GLFWWindow for polling
 	    	// of events and the OpenGL context.  The ULFRendererList provides the drawable.

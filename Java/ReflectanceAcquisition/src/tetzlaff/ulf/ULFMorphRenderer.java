@@ -19,7 +19,7 @@ import tetzlaff.gl.helpers.Vector4;
  *
  * @param <ContextType> The type of the context that will be used for rendering.
  */
-public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable
+public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
 	private ContextType context;
 	private Program<ContextType> program;
@@ -256,6 +256,15 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 		{
 			context.disableMultisampling();			
 		}		
+	}
+
+	@Override
+	public void setProgram(Program<ContextType> program) 
+	{
+		for(ULFRenderer<ContextType> stage : stages)
+		{
+			stage.setProgram(program);
+		}
 	}
 
 	@Override

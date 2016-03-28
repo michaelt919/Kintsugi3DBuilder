@@ -20,13 +20,23 @@ class OpenGLShader implements Shader<OpenGLContext>
 	{
 		this.context = context;
 		
-		InputStream is = getClass().getResourceAsStream("/shaders/" + file.getName());
-		if(is == null)
-		{
-			throw new FileNotFoundException("/shaders/" + file.getName() + " (no such file or resource)");
-		}
+		Scanner scanner;
 		
-		Scanner scanner = new Scanner(is);
+		try
+		{
+			// Try to open an ordinary file first.
+			scanner = new Scanner(file);
+		}
+		catch(FileNotFoundException e)
+		{
+			InputStream is = getClass().getResourceAsStream(file.getPath().replace(File.separatorChar, '/'));
+			if(is == null)
+			{
+				throw new FileNotFoundException(file + " (no such file or resource)");
+			}
+			
+			scanner = new Scanner(is);
+		}
         scanner.useDelimiter("\\Z"); // EOF
         String source = scanner.next();
         scanner.close();
