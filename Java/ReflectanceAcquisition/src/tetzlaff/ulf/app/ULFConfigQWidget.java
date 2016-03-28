@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import tetzlaff.gl.helpers.Vector4;
+import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.interactive.EventPollable;
 import tetzlaff.ulf.ULFDrawable;
 import tetzlaff.ulf.ULFListModel;
@@ -42,7 +43,7 @@ import com.trolltech.qt.webkit.QWebView;
 public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 
 	private Ui_ULFRendererMainWindowToolbox gui;
-	private final ULFListModel model;
+	private final ULFListModel<OpenGLContext> model;
 	private boolean widgetClosed;
 	private boolean halfResDefault;
 	private boolean blockSignals;
@@ -59,7 +60,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	
 	public Signal0 loadingFinished;
 	
-	public ULFConfigQWidget(ULFListModel model, boolean isHighDPI, QWidget parent) {
+	public ULFConfigQWidget(ULFListModel<OpenGLContext> model, boolean isHighDPI, QWidget parent) {
 		super(parent);
 		this.blockSignals = true;
 
@@ -270,7 +271,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	@SuppressWarnings("unused")
 	private void on_backgroundColorButton_clicked()
 	{
-		ULFDrawable current = model.getSelectedItem();
+		ULFDrawable<OpenGLContext> current = model.getSelectedItem();
 		if(current != null && current.toString().compareToIgnoreCase("Error") != 0)
 		{
 			Vector4 curColor = current.getBackgroundColor();
