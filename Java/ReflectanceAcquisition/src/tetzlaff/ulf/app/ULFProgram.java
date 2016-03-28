@@ -5,19 +5,19 @@ import com.bugsplatsoftware.client.BugSplat;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.LongBuffer;
+//import java.nio.LongBuffer; // TODO: Update OpenCL code (not needed while this is disabled)
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
+// import java.util.List; // TODO: Update OpenCL code (not needed while this is disabled)
 import java.util.Set;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 
-import org.lwjgl.BufferUtils;
-import org.lwjgl.LWJGLUtil;
-import org.lwjgl.opencl.*;
+// import org.lwjgl.BufferUtils; // TODO: Update OpenCL code (not needed while this is disabled)
+// import org.lwjgl.LWJGLUtil;	// TODO: No longer present in LWJGL 3.0.0b build 64 (CONFIRM)
+// import org.lwjgl.opencl.*;	// TODO: Disabled for now (need to update for LWJGL 3.0.0b build 64)
 
 import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.core.Qt;
@@ -132,7 +132,7 @@ public class ULFProgram
             
             // Initialize the system environment vars and LWJGL
 	    	System.getenv();
-	    	LWJGLUtil.initialize();
+//	    	LWJGLUtil.initialize();	// TODO: seems to be gone in latest LWJGL 3.0.0b (build 64) CONFIRM!!
 
 	    	// Use OpenCL to make an informed guess at GPU memory
 	    //    checkGPUMemoryCapabilities();
@@ -306,33 +306,34 @@ public class ULFProgram
         System.out.println("Supported image formats: " + set);
     }
     
-    private static void checkGPUMemoryCapabilities()
-    {
-    	try {
-
-	    	//CL.create();
-    		long maxMem = -1;
-	    	CLPlatform platform = CLPlatform.getPlatforms().get(0);
-	    	if(platform != null)
-	    	{
-	    		List<CLDevice> devices = platform.getDevices(CL10.CL_DEVICE_TYPE_GPU);
-				LongBuffer memSize = BufferUtils.createLongBuffer(1);
-				for(CLDevice device : devices)
-				{
-					CL10.clGetDeviceInfo(device.getPointer(), CL10.CL_DEVICE_GLOBAL_MEM_SIZE, memSize, null);
-					if(memSize.get(0) > maxMem) { maxMem = memSize.get(0); }
-				}
-	    	}
-	    	
-	    	if(maxMem > 0)
-	    	{
-	    		videoMemBestGuessMB = maxMem/1048576;
-	    	}
-	    	//CL.destroy();
-    	} catch(Exception e) {
-    		e.printStackTrace();
-    	}
-    }
+	// TODO: Update for latest version of LWJGL 3, currently unused
+//    private static void checkGPUMemoryCapabilities()
+//    {
+//    	try {
+//
+//	    	//CL.create();
+//    		long maxMem = -1;
+//	    	CLPlatform platform = CLPlatform.getPlatforms().get(0);
+//	    	if(platform != null)
+//	    	{
+//	    		List<CLDevice> devices = platform.getDevices(CL10.CL_DEVICE_TYPE_GPU);
+//				LongBuffer memSize = BufferUtils.createLongBuffer(1);
+//				for(CLDevice device : devices)
+//				{
+//					CL10.clGetDeviceInfo(device., CL10.CL_DEVICE_GLOBAL_MEM_SIZE, memSize, null);
+//					if(memSize.get(0) > maxMem) { maxMem = memSize.get(0); }
+//				}
+//	    	}
+//	    	
+//	    	if(maxMem > 0)
+//	    	{
+//	    		videoMemBestGuessMB = maxMem/1048576;
+//	    	}
+//	    	//CL.destroy();
+//    	} catch(Exception e) {
+//    		e.printStackTrace();
+//    	}
+//    }
     
     public static WindowSize getRenderingWindowSize()
     {
