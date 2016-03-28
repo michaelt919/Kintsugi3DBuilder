@@ -3,19 +3,17 @@ package tetzlaff.window.glfw;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.glfw.Callbacks.errorCallbackDescriptionString;
 
 import java.nio.ByteBuffer;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.Sys;
+import org.lwjgl.Version;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GLContext;
 import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWvidmode;
+import org.lwjgl.glfw.GLFWVidMode;
 
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;
@@ -62,6 +60,9 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 	private boolean isDestroyed;
 	private WindowListenerManager listenerManager;
 
+	// Strong reference to callback to avoid auto garbage collection
+	private GLFWErrorCallback errorCallback;
+	
 	/**
 	 * Creates a new GLFW window.
 	 * @param width The width of the window, in logical pixels.
@@ -75,14 +76,8 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
 	 */
 	public GLFWWindow(int width, int height, String title, int x, int y, boolean resizable, int multisamples) 
 	{
-		glfwSetErrorCallback(new GLFWErrorCallback() 
-		{
-			@Override
-			public void invoke(int error, long description) 
-			{
-				throw new GLFWException(errorCallbackDescriptionString(description));
-			}
-		});
+		errorCallback = GLFWErrorCallback.createPrint(System.err);
+		glfwSetErrorCallback(errorCallback);
 		
         if ( glfwInit() != GL11.GL_TRUE )
         {
@@ -109,22 +104,24 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
         GLFWWindowCallback callback = new GLFWWindowCallback(this);
         this.listenerManager = callback;
 
-        ByteBuffer vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        // Query height and width of screen to set center point
+        GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
         if (x < 0)
         {
-        	x = (GLFWvidmode.width(vidmode) - width) / 2;
+        	x = (vidmode.width() - width) / 2;
         }
         if (y < 0)
         {
-        	y = (GLFWvidmode.height(vidmode) - height) / 2;
+        	y = (vidmode.height() - height) / 2;
         }
         glfwSetWindowPos(handle, x, y);
  
         glfwMakeContextCurrent(handle);
         glfwSwapInterval(1);
         
-        GLContext.createFromCurrent();
-        System.out.println("LWJGL version: " + Sys.getVersion());
+        GL.createCapabilities();  // Make a valid OpenGL Context
+        
+        System.out.println("LWJGL version: " + Version.getVersion());
         System.out.println("GLFW version: " + glfwGetVersionString());
         System.out.println("\n**** OpenGL Info ****");
         System.out.println("* GL_VERSION   : " + GL11.glGetString(GL11.GL_VERSION)); this.openGLErrorCheck();
