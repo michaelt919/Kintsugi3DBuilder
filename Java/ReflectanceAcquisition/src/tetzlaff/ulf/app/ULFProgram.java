@@ -7,8 +7,6 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import org.lwjgl.LWJGLUtil;
-
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.InteractiveGraphics;
@@ -17,10 +15,6 @@ import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.ulf.ULFRendererList;
 import tetzlaff.window.glfw.GLFWWindow;
-
-import com.trolltech.qt.core.QCoreApplication;
-import com.trolltech.qt.core.Qt.ApplicationAttribute;
-import com.trolltech.qt.gui.QApplication;
 
 /**
  * ULFProgram is a container for the main entry point of the Unstructured Light Field
@@ -38,7 +32,6 @@ public class ULFProgram
     {
     	System.getenv();
     	System.setProperty("org.lwjgl.util.DEBUG", "true");
-    	LWJGLUtil.initialize();
     	
     	// Check for and print supported image formats (some are not as easy as you would think)
     	checkSupportedImageFormats();
@@ -76,22 +69,10 @@ public class ULFProgram
     	// of events and the OpenGL context.  The ULFRendererList provides the drawable.
         InteractiveApplication app = InteractiveGraphics.createApplication(window, window, model.getDrawable());
 
-        // Fire up the Qt Interface
-		// Prepare the Qt GUI system
-        QApplication.initialize(args);
-        QCoreApplication.setOrganizationName("UW Stout");
-        QCoreApplication.setOrganizationDomain("uwstout.edu");
-        QCoreApplication.setApplicationName("PhotoScan Helper");
-        
-        // As far as I can tell, the OS X native menu bar doesn't work in Qt Jambi
-        // The Java process owns the native menu bar and won't relinquish it to Qt
-        QApplication.setAttribute(ApplicationAttribute.AA_DontUseNativeMenuBar);
-        
         // Create a user interface that examines the ULFRendererList for renderer settings and
         // selecting between different loaded models.
-        ULFConfigQWidget gui = new ULFConfigQWidget(model, window.isHighDPI(), null);
-        gui.showGUI();        
-        app.addPollable(gui);
+        ULFConfigFrame gui = new ULFConfigFrame(model, window.isHighDPI());
+        gui.showGUI();
         
     	// Make everything visible and start the event loop
     	window.show();

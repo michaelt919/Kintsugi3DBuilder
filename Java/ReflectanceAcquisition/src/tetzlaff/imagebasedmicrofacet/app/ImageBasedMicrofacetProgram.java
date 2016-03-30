@@ -7,7 +7,6 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import org.lwjgl.LWJGLUtil;
 //import org.lwjgl.opengl.GLDebugMessageCallback;
 //import static org.lwjgl.opengl.KHRDebug.*;
 
@@ -39,7 +38,6 @@ public class ImageBasedMicrofacetProgram
     {
     	System.getenv();
     	System.setProperty("org.lwjgl.util.DEBUG", "true");
-    	LWJGLUtil.initialize();
     	
     	// Check for and print supported image formats (some are not as easy as you would think)
     	checkSupportedImageFormats();
