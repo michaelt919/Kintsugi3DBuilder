@@ -67,7 +67,7 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
     		}
     		catch(FileNotFoundException e)
     		{
-    			programBuilder.addShader(ShaderType.VERTEX, new File("/resources/shaders/ulr.vert")); // Fallback
+    			programBuilder.addShader(ShaderType.VERTEX, new File("/shaders/ulr.vert")); // Fallback
     		}
     		
     		try
@@ -76,7 +76,7 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
     		}
     		catch(FileNotFoundException e)
     		{
-    			programBuilder.addShader(ShaderType.VERTEX, new File("/resources/shaders/ulr.frag")); // Fallback
+    			programBuilder.addShader(ShaderType.FRAGMENT, new File("/shaders/ulr.frag")); // Fallback
     		}
 			
     		this.program = programBuilder.createProgram();
