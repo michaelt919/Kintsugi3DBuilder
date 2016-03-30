@@ -201,7 +201,7 @@ public class ULFProgram
 		        		}
 		        		catch(FileNotFoundException e)
 		        		{
-		        			programBuilder.addShader(ShaderType.VERTEX, new File("/shaders/ulr.vert")); // Fallback
+		        			programBuilder.addShader(ShaderType.VERTEX, new File("/resources/shaders/ulr.vert")); // Fallback
 		        		}
 		        		
 		        		try
@@ -210,7 +210,7 @@ public class ULFProgram
 		        		}
 		        		catch(FileNotFoundException e)
 		        		{
-		        			programBuilder.addShader(ShaderType.VERTEX, new File("/shaders/ulr.frag")); // Fallback
+		        			programBuilder.addShader(ShaderType.VERTEX, new File("/resources/shaders/ulr.frag")); // Fallback
 		        		}
 						
 		        		Program<OpenGLContext> newProgram = programBuilder.createProgram();
