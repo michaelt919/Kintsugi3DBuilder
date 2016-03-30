@@ -89,13 +89,13 @@ public class PhongRenderer<ContextType extends Context<ContextType>> implements 
 		try
         {
     		this.program = context.getShaderProgramBuilder()
-					.addShader(ShaderType.VERTEX, new File("/resources/shaders/phong.vert"))
-					.addShader(ShaderType.FRAGMENT, new File("/resources/shaders/phong.frag"))
+					.addShader(ShaderType.VERTEX, new File("/shaders/phong.vert"))
+					.addShader(ShaderType.FRAGMENT, new File("/shaders/phong.frag"))
 					.createProgram();
     		
     		this.shadowProgram = context.getShaderProgramBuilder()
-					.addShader(ShaderType.VERTEX, new File("/resources/shaders/depth.vert"))
-					.addShader(ShaderType.FRAGMENT, new File("/resources/shaders/depth.frag"))
+					.addShader(ShaderType.VERTEX, new File("/shaders/depth.vert"))
+					.addShader(ShaderType.FRAGMENT, new File("/shaders/depth.frag"))
 					.createProgram();
 
 			this.mesh = new VertexMesh("OBJ", objFile);

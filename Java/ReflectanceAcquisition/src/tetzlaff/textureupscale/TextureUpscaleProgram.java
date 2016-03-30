@@ -35,8 +35,8 @@ public class TextureUpscaleProgram
         try
         {
 	    	Program<OpenGLContext> perlinNoiseProgram = context.getShaderProgramBuilder()
-    				.addShader(ShaderType.VERTEX, new File("/resources/shaders", "passthrough2d.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("/resources/shaders", "perlintex.frag"))
+    				.addShader(ShaderType.VERTEX, new File("/shaders", "passthrough2d.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("/shaders", "perlintex.frag"))
     				.createProgram();
 	    	Texture2D<OpenGLContext> permTexture = context.getPerlinNoiseTextureBuilder().createTexture();
 	    	perlinNoiseProgram.setTexture("permTexture", permTexture);

@@ -1,0 +1,160 @@
+Loading and Preparing Models
+============================
+A complete model for the ULF Renderer must provide the following three things:
+
+1. Surface Geometry (as an OBJ)
+2. Camera views (with camera distortion removed) as JPGs, PNGs or TIFFs.
+3. Camera location and orientations as a PhotoScan .xml file or a .vset file.
+
+Any program that can provide these three things can in theory be used with the renderer however, we have
+constructed it with _Agisoft PhotoScan_ in mind (which does provide the necessary info).  Furthermore, only
+certain formats for each of these items are supported.
+
+[Return to guide contents](index.md.html)
+
+-------------------------------------------------------------------------------------------------------------
+
+Loading a PhotoScan Model<a name="photoScanModel"></a>
+-------------------------------------------------------------------------------------------------------------
+If you have a fully processed model in PhotoScan you can export the appropriate data with the following
+steps:
+
+### Before Starting:
+- Make sure you have completed processing and fully generated the geometry for the object
+- If you have multiple chunks, you will only be able to export and render one of them. You can combine them
+	into one prior to exporting.
+- The chunk you want to export must not have any transformation applied to it.  Look for [R] next to the
+	chunk name.  If you see this, right click the chunk and say 'Reset Transform'.  Caution, this will loose
+	all object orientation and scale so save before you do this and then avoid saving the PSZ afterwards.
+
+### Exporting data:
+1. Right click the desired chunk and select `set active`
+   
+2. Right click the chunk again and select `Export->Export model`
+	* Export as a _Wavefront OBJ_ file with the settings shown in Figure 1.
+	* If you are using the non-pro version of PhotoScan your options will be slightly different but the
+		differences are unimportant.
+
+*******************************************************************
+*   .----------------------.                                      *
+*   |   Coordinate System   \                                     *
+*   +------------------------+---------------------------------.  *
+*   |  .------------------------------------------------+---.  |  *
+*   |  | Local Coordinates                              | v |  |  *
+*   |  '------------------------------------------------+---'  |  *
+*   |         .------------.  .------------.  .------------.   |  *
+*   |  Shift: | 0          |  | 0          |  | 0          |   |  *
+*   |         '------------'  '------------'  '------------'   |  *
+*   '----------------------------------------------------------'  *
+*                                                                 *
+*   .----------------------.                                      *
+*   |   Export Parameters   \                                     *
+*   +------------------------+---------------------------------.  *
+*   |  [ ] Vertex colors           [ ] Cameras                 |  *
+*   |  [X] Vertex normals                                      |  *
+*   |  [X] Export texture  (x) JPEG ( ) PNG  ( ) TIFF  ( ) EXR |  *
+*   |                       .-------------------------------.  |  *
+*   |  [ ] Include Comment: |                               |  |  *
+*   |                       '-------------------------------'  |  *
+*   |                                    .-----------------.   |  *
+*   |  [ ] Binary encoding     Precision | 6               |   |  *
+*   |                                    '-----------------'   |  *
+*   '----------------------------------------------------------'  *
+*                                                                 *
+*-----------------------------------------------------------------*
+* Figure 1: 'Export Model - Wavefront OBJ' dialog from PhotoScan  *                                                          
+*******************************************************************
+
+3. Select `Tools->Export->Export Cameras`
+    * Export the cameras as _PhotoScan XML_
+
+4. Select `Tools->Export->Undistort Photos`
+    * Make sure the settings match what is shown in Figure 2.
+    * You may provide a different file extension if you like (the renderer will search for other file
+    	types), but DO NOT modify the `{filename}` part.
+
+******************************************************
+*   .---------------.                                *
+*   |   Parameters   \                               *
+*   +-----------------+---------------------------.  *
+*   |                                             |  *
+*   |  [X] Correct distortions                    |  *
+*   |  [X] Center principle point                 |  *
+*   |  [X] Square pixels                          |  *
+*   |              .---------------------------.  |  *
+*   |  File Names: | {filename}.{fileext}      |  |  *
+*   |              '---------------------------'  |  *
+*   '---------------------------------------------'  *
+*                                                    *
+*   .-------------.                                  *
+*   |   Apply to   \                                 *
+*   +---------------+-----------------------------.  *
+*   |                                             |  *
+*   |  [X] All cameras      [ ] Entire workspace  |  *
+*   |  [ ] Selected cameras [ ] Current photo     |  *
+*   |                                             |  *
+*   '---------------------------------------------'  *
+*                                                    *
+*----------------------------------------------------*
+* Figure 2: 'Undistort Photos' dialog from PhotoScan *                                                          
+******************************************************
+
+### Loading Into the Renderer:
+1. Start the ULF Renderer and select `File->Load single model`
+2. Make sure the file type is set to `PhotoScan XML` and select your xml file
+3. Follow the prompts and provide the obj file and the directory with undistorted photos
+
+Prepared Zip Model<a name="zipModel"></a>
+-------------------------------------------------------------------------------------------------------------
+It is possible to prepare all of this data and collect it into a single ZIP archive.  We have provided
+several examples of this for you to try out.  Doing so requires the camera pose information to be provided as
+a .vset file.  The documentation for this file format is still yet to be created but there are plans to
+support exporting it directly from the renderer.  For now, this part is only intended for a pre-existing .zip
+archive provided with the renderer.
+
+### Loading Into the Renderer:
+1. Start the ULF Renderer and select `File->Load single model`
+2. Change the file type to .zip archive
+3. Select the prepared zip file
+
+Model Best Practices<a name="recommendations"></a>
+-------------------------------------------------------------------------------------------------------------
+When loading a PhotoScan model there are some important considerations that will ensure your model renders
+correctly in the ULF Renderer.  While we are striving to support all models created by PhotoScan at present
+some will cause errors and look incorrect.  The following workflow with photoscan avoids these issues.  If
+you find your model is not working consider re-processing the photos according to this workflow to correct
+the problem.
+
+1. Begin by photographing your object as you would for photogrammetry.  If you already have photos then you
+	do not need to re-take them, you can simply re-process them in PhotoScan.
+2. Import the photos into PhotoScan and process them using the workflow menu as follows:
+    * Align photos
+    * Build dense cloud
+    * Build Mesh
+    * Build Texture (optional)
+3. Do NOT apply any other steps including identification of scale bars, optimizing of the cameras in the
+	tools menu, or rotating and aligning of the object to match the global axies.
+4. Aligning individual cameras is okay if they do not converge and align successfully with the global 'Align
+	Photos' step.
+
+If you follow the above process and then export the model as described above you should be able to
+successfully render your object.
+
+Some parts of PhotoScan that may cause problems with our renderer at present are as follows:
+
+* Using `optimize cameras` to fit anything other than `f`, `cx`, `cy`, `k1`, `k2`, `k3`, `aspect`, `p1`,
+	and `p2`
+* Identifying scale bars and setting the global scale for a chunk
+* Having more than one chunk
+* Using `Rotate Object` to align the object with the global axies
+
+We are actively trying to correct these issues and plan to support them in a future release.
+
+-------------------------------------------------------------------------------------------------------------
+[Return to guide contents](index.md.html)
+
+                              ULF RENDERER 1.0 - USER GUIDE - Models
+
+-------------------------------------------------------------------------------------------------------------
+
+<style class="fallback">body{white-space:pre;font-family:monospace}</style><script src="markdeep.min.js"></script><script src="http://casual-effects.com/markdeep/latest/markdeep.min.js"></script>
