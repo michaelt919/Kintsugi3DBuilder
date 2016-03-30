@@ -12,7 +12,6 @@ hs_err*.log
 .classpath
 .recommenders
 .project
-.settings
 .DS_Store
 doxy-docs/*
 bin/*
@@ -25,8 +24,3 @@ syntax: regexp
 ^Java/ReflectanceAcquisition/datasets$
 syntax: regexp
 ^Java/ReflectanceAcquisition/textures$
-
-syntax: regexp
-^Java/ReflectanceAcquisition/target$
-syntax: regexp
-^Java/ReflectanceAcquisition/pom\.xml$
