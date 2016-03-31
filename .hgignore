@@ -11,13 +11,13 @@ hs_err*.log
 .metadata
 .classpath
 .recommenders
-.project
 .DS_Store
 doxy-docs/*
 bin/*
 lib/*
 doc/*
 dist/*
+target/*
 syntax: regexp
 ^Java/ReflectanceAcquisition/modelTesting\.nb$
 syntax: regexp
