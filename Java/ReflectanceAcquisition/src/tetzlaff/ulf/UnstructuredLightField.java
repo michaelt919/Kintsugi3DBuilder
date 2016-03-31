@@ -62,6 +62,11 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	 * The current rendering settings.
 	 */
     public final ULFSettings settings;
+    
+    /**
+     * The directory of the shader resources (to be wrapped in the JAR file).
+     */
+    public static final File SHADER_RESOURCE_DIRECTORY = new File("resources/shaders");
 	
     /**
      * Creates a new unstructured light field.
@@ -153,8 +158,8 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 		    	
 		    	// Load the program
 		    	depthRenderingProgram = context.getShaderProgramBuilder()
-		    			.addShader(ShaderType.VERTEX, new File("/shaders/depth.vert"))
-		    			.addShader(ShaderType.FRAGMENT, new File("/shaders/depth.frag"))
+		    			.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "depth.vert"))
+		    			.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "depth.frag"))
 		    			.createProgram();
 		    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 		    	depthRenderable.addVertexBuffer("position", positionBuffer);
@@ -243,8 +248,8 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 		    	
 		    	// Load the program
 		    	depthRenderingProgram = context.getShaderProgramBuilder()
-		    			.addShader(ShaderType.VERTEX, new File("/shaders/depth.vert"))
-		    			.addShader(ShaderType.FRAGMENT, new File("/shaders/depth.frag"))
+		    			.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "depth.vert"))
+		    			.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "depth.frag"))
 		    			.createProgram();
 		    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 		    	depthRenderable.addVertexBuffer("position", positionBuffer);

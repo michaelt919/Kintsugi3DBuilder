@@ -101,7 +101,7 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
 	 * @throws IOException Thrown if any file I/O problems occur when writing the file.
 	 */
 	void saveColorBufferToFile(int attachmentIndex, int x, int y, int width, int height, String fileFormat, File file) throws IOException;
-
+	
 	/**
 	 * Clears one of the framebuffer's color attachments.
 	 * @param attachmentIndex The index of the framebuffer attachment to be cleared.
@@ -111,6 +111,8 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
 	 * @param a The alpha component of the clear color.
 	 */
 	void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a);
+
+	void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a);
 	
 	/**
 	 * Clears the framebuffer's depth attachment.
