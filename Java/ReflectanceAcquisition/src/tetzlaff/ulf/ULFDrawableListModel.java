@@ -1,7 +1,6 @@
 package tetzlaff.ulf;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.swing.AbstractListModel;
@@ -9,7 +8,6 @@ import javax.swing.AbstractListModel;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
-import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.MultiDrawable;
 import tetzlaff.gl.helpers.Trackball;

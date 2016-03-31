@@ -3,7 +3,6 @@ package tetzlaff.ulf.app;
 import com.bugsplatsoftware.client.BugSplat;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 //import java.nio.LongBuffer; // TODO: Update OpenCL code (not needed while this is disabled)
@@ -34,7 +33,6 @@ import com.trolltech.qt.gui.QStyle;
 
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
-import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
