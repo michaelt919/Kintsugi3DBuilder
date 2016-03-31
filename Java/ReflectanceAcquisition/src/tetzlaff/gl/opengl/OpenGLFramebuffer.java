@@ -72,6 +72,25 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 	}
 	
 	@Override
+	public boolean isComplete()
+	{
+		int status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+		this.context.openGLErrorCheck();
+		
+		return status == GL_FRAMEBUFFER_COMPLETE;
+	}
+	
+	@Override
+	public void assertComplete()
+	{
+		if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			this.context.throwInvalidFramebufferOperationException();
+		}
+		this.context.openGLErrorCheck();
+	}
+	
+	@Override
 	public int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height)
 	{
 		this.bindForRead(attachmentIndex);
