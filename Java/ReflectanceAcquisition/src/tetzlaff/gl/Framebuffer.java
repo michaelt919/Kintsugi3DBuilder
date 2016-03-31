@@ -13,6 +13,17 @@ import java.io.IOException;
 public interface Framebuffer<ContextType extends Context<ContextType>> extends Contextual<ContextType>
 {
 	/**
+	 * Gets whether or not the framebuffer is framebuffer-complete.
+	 * @return true if the framebuffer is complete, false if it is incomplete.
+	 */
+	boolean isComplete();
+
+	/**
+	 * Throws a runtime exception if the framebuffer is not framebuffer complete.
+	 */
+	void assertComplete();
+	
+	/**
 	 * Gets the dimensions of the framebuffer (width and height)
 	 * @return An object containing the framebuffer dimensions.
 	 */
@@ -112,6 +123,14 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
 	 */
 	void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a);
 
+	/**
+	 * Clears one of the framebuffer's color attachments.
+	 * @param attachmentIndex The index of the framebuffer attachment to be cleared.
+	 * @param r The red component of the clear color.
+	 * @param g The green component of the clear color.
+	 * @param b The blue component of the clear color.
+	 * @param a The alpha component of the clear color.
+	 */
 	void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a);
 	
 	/**
