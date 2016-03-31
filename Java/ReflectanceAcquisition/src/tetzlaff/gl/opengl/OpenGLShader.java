@@ -29,7 +29,7 @@ class OpenGLShader implements Shader<OpenGLContext>
 		}
 		catch(FileNotFoundException e)
 		{
-			InputStream is = getClass().getResourceAsStream(file.getPath().replace(File.separatorChar, '/'));
+			InputStream is = getClass().getResourceAsStream('/' + file.getPath().replace(File.separatorChar, '/'));
 			if(is == null)
 			{
 				throw new FileNotFoundException(file + " (no such file or resource)");

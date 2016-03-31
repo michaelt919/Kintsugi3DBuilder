@@ -120,8 +120,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	try
 	        {
 	    		this.program = context.getShaderProgramBuilder()
-	    				.addShader(ShaderType.VERTEX, new File("/shaders/ulr.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File("/shaders/ulr.frag"))
+	    				.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)
@@ -135,8 +135,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	try
 	        {
 	    		this.simpleTexProgram = context.getShaderProgramBuilder()
-	    				.addShader(ShaderType.VERTEX, new File("/shaders/texturerect.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File("/shaders/simpletexture.frag"))
+	    				.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "texturerect.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "simpletexture.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)
@@ -150,8 +150,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	try
 	        {
 	    		this.cameraVisProgram = context.getShaderProgramBuilder()
-	    				.addShader(ShaderType.VERTEX, new File("/shaders/uniform3D.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File("/shaders/uniform.frag"))
+	    				.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "uniform3D.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "uniform.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)

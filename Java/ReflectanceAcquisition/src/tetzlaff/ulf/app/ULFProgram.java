@@ -20,6 +20,7 @@ import javax.imageio.ImageIO;
 // import org.lwjgl.LWJGLUtil;	// TODO: No longer present in LWJGL 3.0.0b build 64 (CONFIRM)
 // import org.lwjgl.opencl.*;	// TODO: Disabled for now (need to update for LWJGL 3.0.0b build 64)
 
+
 import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.core.Qt;
 import com.trolltech.qt.core.Qt.ApplicationAttribute;
@@ -27,6 +28,7 @@ import com.trolltech.qt.gui.QApplication;
 import com.trolltech.qt.gui.QCursor;
 import com.trolltech.qt.gui.QMessageBox;
 import com.trolltech.qt.gui.QStyle;
+
 
 
 
@@ -40,6 +42,7 @@ import tetzlaff.helpers.GLExceptionTranslator;
 import tetzlaff.helpers.MessageBox;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.ulf.ULFRendererList;
+import tetzlaff.ulf.UnstructuredLightField;
 import tetzlaff.window.WindowPosition;
 import tetzlaff.window.WindowSize;
 import tetzlaff.window.glfw.GLFWWindow;
@@ -192,28 +195,10 @@ public class ULFProgram
 	        		
 		        	try
 		        	{
-		        		// reload program
-		        		ProgramBuilder<OpenGLContext> programBuilder = window.getShaderProgramBuilder();
-		        		
-		        		try
-		        		{
-			        		programBuilder.addShader(ShaderType.VERTEX, new File("resources/shaders/ulr.vert")); // Should reload from outside the JAR file, in the executable directory
-		        		}
-		        		catch(FileNotFoundException e)
-		        		{
-		        			programBuilder.addShader(ShaderType.VERTEX, new File("/shaders/ulr.vert")); // Fallback
-		        		}
-		        		
-		        		try
-		        		{
-	        				programBuilder.addShader(ShaderType.FRAGMENT, new File("resources/shaders/ulr.frag")); // Should reload from outside the JAR file, in the executable directory
-		        		}
-		        		catch(FileNotFoundException e)
-		        		{
-		        			programBuilder.addShader(ShaderType.VERTEX, new File("/shaders/ulr.frag")); // Fallback
-		        		}
-						
-		        		Program<OpenGLContext> newProgram = programBuilder.createProgram();
+		        		Program<OpenGLContext> newProgram = window.getShaderProgramBuilder()
+		    					.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.vert"))
+		    					.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.frag"))
+		    					.createProgram();
 			        	
 			        	if (model.getProgram() != null)
 		        		{

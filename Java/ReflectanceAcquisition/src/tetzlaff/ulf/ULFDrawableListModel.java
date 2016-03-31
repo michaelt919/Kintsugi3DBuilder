@@ -13,7 +13,6 @@ import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.MultiDrawable;
 import tetzlaff.gl.helpers.Trackball;
-import tetzlaff.gl.opengl.OpenGLContext;
 
 /**
  * An abstract class defining the skeleton of an implementation of a ULFListModel as a list of ULFDrawable entities.
@@ -59,27 +58,10 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 		
 		try
         {
-			ProgramBuilder<ContextType> programBuilder = context.getShaderProgramBuilder();
-    		
-    		try
-    		{
-        		programBuilder.addShader(ShaderType.VERTEX, new File("resources/shaders/ulr.vert")); // Should load from outside the JAR file, in the executable directory
-    		}
-    		catch(FileNotFoundException e)
-    		{
-    			programBuilder.addShader(ShaderType.VERTEX, new File("/shaders/ulr.vert")); // Fallback
-    		}
-    		
-    		try
-    		{
-				programBuilder.addShader(ShaderType.FRAGMENT, new File("resources/shaders/ulr.frag")); // Should load from outside the JAR file, in the executable directory
-    		}
-    		catch(FileNotFoundException e)
-    		{
-    			programBuilder.addShader(ShaderType.FRAGMENT, new File("/shaders/ulr.frag")); // Fallback
-    		}
-			
-    		this.program = programBuilder.createProgram();
+			this.program = context.getShaderProgramBuilder()
+					.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.vert"))
+					.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.frag"))
+					.createProgram();
         }
         catch (IOException e)
         {
