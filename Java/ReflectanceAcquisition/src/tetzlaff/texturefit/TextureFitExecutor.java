@@ -647,8 +647,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	
 	private void resample(ViewSet<ContextType> viewSet, Texture<ContextType> diffuseFitTexture, Texture<ContextType> normalFitTexture) throws IOException
 	{
-		int directionalRes = 511;
-		int spatialRes = 63;
+		int directionalRes = 512;
+		int spatialRes = 64;
 		int directionalNeighborhood = 3;
 		int spatialNeighborhood = 3;
 		float directionalRegularization = 0.125f;
@@ -838,44 +838,61 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					// 		times microfacet probability
 					//		times microfacet slope squared
 					// over a hemisphere
-					double specularWeightedMeanSlope = 0.0;
+					double specularWeightedSlopeSum = 0.0;
 					
 					// Integral to find Specular reflectivity (low res)
 					double specularReflectivitySum = 0.0;
 					
 					double alphaSum = 0.0;
 					
+					double lastWeight = 0.0;
+					double lastNDotH = Math.sqrt(0.5);
+					double lastAlpha = 0.0;
+					
 					for (int j = 0; j < directionalRes; j++)
 					{
 						float[] solutionEntry = solution[0][j][k][l];
 						
-						if (solutionEntry[3] > 0.0)
+						double alpha = solutionEntry[3];
+						
+						if (alpha > 0.0)
 						{
 							double coord = (double)j / (double)(directionalRes - 1);
 							double nDotH = coord + (1 - coord) * Math.sqrt(0.5);
-							double alpha = (j == 0 || j == directionalRes - 1 ? 0.5 : 1.0) * solutionEntry[3];
-							double weight = alpha * (solutionEntry[0] + solutionEntry[1] + solutionEntry[2]) / 3;
-							specularWeightedMeanSlope += weight * (1 / nDotH - nDotH);
-							specularReflectivitySum += weight * nDotH;
-							alphaSum += alpha;
+							double weight = (solutionEntry[0] + solutionEntry[1] + solutionEntry[2]) / 3;
+							
+							// Trapezoidal rule for integration
+							specularWeightedSlopeSum += (weight * (1 / nDotH - nDotH) + lastWeight * (1 / lastNDotH - lastNDotH)) / 2 * (nDotH - lastNDotH);
+							specularReflectivitySum += (weight * nDotH + lastWeight * lastNDotH) / 2 * (nDotH - lastNDotH);
+							
+							alphaSum += (alpha + lastAlpha) / 2 * (nDotH - lastNDotH);
+							
+							lastWeight = weight;
+							lastNDotH = nDotH;
+							lastAlpha = alpha;
 						}
 					}
 					
-					double roughnessSq = specularWeightedMeanSlope / specularReflectivitySum;
-					double roughness = Math.sqrt(roughnessSq);
-					
-					// Assuming scaling by 1 / (pi * roughness^2)
-					double reflectivity = specularReflectivitySum * 2 * (1 - Math.sqrt(0.5)) / (alphaSum * roughnessSq);
-					
-					roughnessValues[l + (spatialRes - k - 1) * spatialRes] = roughness;
-					reflectivityValues[l + (spatialRes - k - 1) * spatialRes] = reflectivity;
-					
-					int roughnessPixelValue = Math.max(0, Math.min(255, (int)(roughness * 255.0)));
-					
-					int reflectivityPixelValue = Math.max(0, Math.min(255, (int)(reflectivity * 255.0)));
-					
-					roughnessData[l + (spatialRes - k - 1) * spatialRes] = 0xFF000000 | roughnessPixelValue << 16 | roughnessPixelValue << 8 | roughnessPixelValue;
-					reflectivityData[l + (spatialRes - k - 1) * spatialRes] = 0xFF000000 | reflectivityPixelValue << 16 | reflectivityPixelValue << 8 | reflectivityPixelValue;
+					if (alphaSum >= (1.0 - Math.sqrt(0.5)) - 0.01 && specularReflectivitySum > 0.0 && specularWeightedSlopeSum > 0.0)
+					{
+						double roughnessSq = specularWeightedSlopeSum / specularReflectivitySum;
+						double roughness = Math.sqrt(roughnessSq);
+						
+						// Assuming scaling by 1 / (pi * roughness^2)
+						double reflectivity = specularReflectivitySum * 2 / roughnessSq;
+						
+						double alpha = alphaSum / (1.0 - Math.sqrt(0.5));
+						
+						roughnessValues[l + (spatialRes - k - 1) * spatialRes] = roughness;
+						reflectivityValues[l + (spatialRes - k - 1) * spatialRes] = reflectivity;
+						
+						int roughnessPixelValue = Math.max(0, Math.min(255, (int)(roughness * 255.0)));
+						int reflectivityPixelValue = Math.max(0, Math.min(255, (int)(reflectivity * 255.0)));
+						int alphaPixelValue = Math.max(0, Math.min(255, (int)Math.ceil(alpha * 255.0)));
+						
+						roughnessData[l + (spatialRes - k - 1) * spatialRes] = alphaPixelValue << 24 | roughnessPixelValue << 16 | roughnessPixelValue << 8 | roughnessPixelValue;
+						reflectivityData[l + (spatialRes - k - 1) * spatialRes] = alphaPixelValue << 24 | reflectivityPixelValue << 16 | reflectivityPixelValue << 8 | reflectivityPixelValue;
+					}
 				}
 			}
 			
@@ -921,7 +938,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				
 				BufferedImage outImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
 		        outImg.setRGB(0, 0, spatialRes, spatialRes, imageData, 0, spatialRes);
-		        ImageIO.write(outImg, "PNG", new File(directionalLayerDir, j + ".png"));
+		        ImageIO.write(outImg, "PNG", new File(directionalLayerDir, "debug_" + j + ".png"));
 
 				System.out.println("Finished layer " + (1 + j) + "/" + directionalRes + " ...");
 			}

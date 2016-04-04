@@ -18,6 +18,6 @@ layout(location = 1) out vec4 halfAngleVector;
 void main()
 {
     SpecularResidualInfo spec = computeSpecularResidualInfo();
-    specularResidual = vec4(pow(spec.residual.rgb, vec3(1 / gamma)), spec.residual.a);
+    specularResidual = spec.residual;
     halfAngleVector = vec4(spec.halfAngleVector, 1.0);
 }
