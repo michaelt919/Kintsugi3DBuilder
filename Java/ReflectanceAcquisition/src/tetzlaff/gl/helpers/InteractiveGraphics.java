@@ -7,6 +7,7 @@ import tetzlaff.gl.Framebuffer;
 import tetzlaff.interactive.EventPollable;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
+import tetzlaff.window.Window;
 
 /**
  * An singleton factory object for binding together the given ContextType and Drawable as
@@ -38,6 +39,7 @@ public class InteractiveGraphics
 			private volatile boolean screenshotRequested = false;
 			private String fileFormat;
 			private File file;
+			private long fpsLastCheck = 0;
 			
 			private Exception drawableError = null;
 			
@@ -68,6 +70,17 @@ public class InteractiveGraphics
 				if(drawable.hasInitializeError())
 				{
 					drawableError = drawable.getInitializeError();
+				}
+				
+				if(((System.nanoTime()/1000000) - fpsLastCheck) > 1000 && pollable instanceof Window)
+				{
+					int FPS = drawable.getCurFPS();
+					if(FPS >= 0) {
+						Window myWin = (Window)pollable;
+						myWin.setWindowTitle(String.format("Unstructured Light Field Renderer, FPS: %3d [%3d, %3d]",
+								FPS, drawable.getMinFPS(), drawable.getMaxFPS()));
+					}
+					fpsLastCheck += 1000;
 				}
 			}
 			
