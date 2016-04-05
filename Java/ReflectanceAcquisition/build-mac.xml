@@ -160,9 +160,10 @@
 		<mkdir dir="${winLibs.dir}"/>		
 		<copy todir="${winLibs.dir}">
     		<fileset dir="${javaDeps.dir}/lwjgl-3.0.0b/native/">
-            	<patternset id="winonly">
+            	<patternset id="win64only">
             	    <exclude name="*.so" />
             	    <exclude name="*.dylib" />
+            	    <exclude name="*32.dll" />
             	</patternset>
             </fileset>
 		</copy>
