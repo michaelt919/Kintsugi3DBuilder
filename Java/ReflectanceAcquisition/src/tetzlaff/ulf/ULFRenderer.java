@@ -63,6 +63,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     
     private Exception initError;
     	
+    int fps, maxFPS, minFPS;
+    long lastFPS;
+    
     /**
      * Creates a new unstructured light field renderer for rendering a light field defined by a VSET file.
      * @param context The GL context in which to perform the rendering.
@@ -199,6 +202,10 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 				this.callback.loadingComplete();
 			}    		
     	}
+    	
+    	maxFPS = -Integer.MAX_VALUE;
+    	minFPS = Integer.MAX_VALUE;
+    	lastFPS = (System.nanoTime() / 1000000);
     }
 
 	@Override
@@ -309,7 +316,26 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	        }
     	}
     	
+    	updateFPS();
     	return true;
+    }
+        
+    public void updateFPS()
+    {
+        if ((System.nanoTime() / 1000000) - lastFPS > 1000)
+        {
+        	if(fps > 0)
+        	{
+	        	if(fps > maxFPS) { maxFPS = fps; }
+	        	if(fps < minFPS) { minFPS = fps; }
+	
+	        	System.out.printf("FPS: %d, [%d, %d]\n", fps, maxFPS, minFPS);
+        	}
+        	
+        	fps = 0;
+            lastFPS += 1000;
+        }
+        fps++;
     }
     
     private void drawCameras(Framebuffer<ContextType> framebuffer, FramebufferSize size)
