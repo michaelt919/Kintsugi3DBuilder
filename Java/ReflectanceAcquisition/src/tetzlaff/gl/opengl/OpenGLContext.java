@@ -334,6 +334,44 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	}
 	
 	@Override
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, ByteVertexList data)
+	{
+		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_BYTE, data.getBuffer());
+	}
+	
+	@Override
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, ShortVertexList data)
+	{
+		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 2);
+		bb.asShortBuffer().put(data.getBuffer());
+		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_SHORT, bb);
+	}
+
+	@Override
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, IntVertexList data)
+	{
+		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
+		bb.asIntBuffer().put(data.getBuffer());
+		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_INT, bb);
+	}
+	
+	@Override
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, FloatVertexList data)
+	{
+		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
+		bb.asFloatBuffer().put(data.getBuffer());
+		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.dimensions), GL_FLOAT, bb);
+	}
+	
+	@Override
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, DoubleVertexList data)
+	{
+		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 8);
+		bb.asDoubleBuffer().put(data.getBuffer());
+		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.dimensions), GL_DOUBLE, bb);
+	}
+	
+	@Override
 	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
 	{
 		return new OpenGLTexture2DFromFileBuilder(this, GL_TEXTURE_2D, imageStream, maskStream, flipVertical);
