@@ -907,15 +907,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 						
 						double alpha = (double)intervalCount / (double)(directionalRes - 1);
 						
-						roughnessValues[l + (spatialRes - k - 1) * spatialRes] = roughness;
-						reflectivityValues[l + (spatialRes - k - 1) * spatialRes] = reflectivity;
+						roughnessValues[k + l * spatialRes] = roughness;
+						reflectivityValues[k + l * spatialRes] = reflectivity;
 						
 						int roughnessPixelValue = Math.max(0, Math.min(255, (int)(roughness * 255.0)));
 						int reflectivityPixelValue = Math.max(0, Math.min(255, (int)(reflectivity * 255.0)));
 						int alphaPixelValue = Math.max(0, Math.min(255, (int)Math.ceil(alpha * 255.0)));
 						
-						roughnessData[l + (spatialRes - k - 1) * spatialRes] = alphaPixelValue << 24 | roughnessPixelValue << 16 | roughnessPixelValue << 8 | roughnessPixelValue;
-						reflectivityData[l + (spatialRes - k - 1) * spatialRes] = alphaPixelValue << 24 | reflectivityPixelValue << 16 | reflectivityPixelValue << 8 | reflectivityPixelValue;
+						roughnessData[k + (spatialRes - l - 1) * spatialRes] = alphaPixelValue << 24 | roughnessPixelValue << 16 | roughnessPixelValue << 8 | roughnessPixelValue;
+						reflectivityData[k + (spatialRes - l - 1) * spatialRes] = alphaPixelValue << 24 | reflectivityPixelValue << 16 | reflectivityPixelValue << 8 | reflectivityPixelValue;
 					}
 				}
 			}
@@ -939,8 +939,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				{
 					for (int l = 0; l < spatialRes; l++)
 					{
-						double roughness = roughnessValues[l + (spatialRes - k - 1) * spatialRes];
-						double reflectivity = reflectivityValues[l + (spatialRes - k - 1) * spatialRes];
+						double roughness = roughnessValues[k + l * spatialRes];
+						double reflectivity = reflectivityValues[k + l * spatialRes];
 						
 						if (Double.isFinite(roughness) && roughness > 0.0)
 						{
