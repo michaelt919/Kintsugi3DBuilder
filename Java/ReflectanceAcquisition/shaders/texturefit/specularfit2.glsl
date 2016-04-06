@@ -40,7 +40,7 @@ vec3 fitSpecular()
     vec3 geometricNormal = normalize(fNormal);
     vec3 diffuseNormal = getDiffuseNormalVector();
     vec3 diffuseColor = getDiffuseColor();
-    float roughness = getRoughness();
+    float roughness = 0.5;//getRoughness();
     
     vec4 sum = vec4(0);
     
@@ -53,10 +53,13 @@ vec3 fitSpecular()
         if (color.a * nDotV > 0)
         {
             vec3 lightPreNormalized = getLightVector(i);
-            vec3 attenuatedLightIntensity = infiniteLightSources ? getLightIntensity(i) : getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
+            vec3 attenuatedLightIntensity = infiniteLightSources ? 
+                getLightIntensity(i) : 
+                getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
             vec3 light = normalize(lightPreNormalized);
             
-            vec4 colorRemainder = removeDiffuse(color, diffuseColor, light, attenuatedLightIntensity, diffuseNormal);
+            vec4 colorRemainder = 
+                removeDiffuse(color, diffuseColor, light, attenuatedLightIntensity, diffuseNormal);
             
             vec3 half = normalize(view + light);
             float nDotH = dot(half, diffuseNormal);
@@ -69,7 +72,8 @@ vec3 fitSpecular()
                 float mfdEval = exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
                     / (nDotHSquared * nDotHSquared);
                 
-                sum += colorRemainder.a * mfdEval * vec4(colorRemainder.rgb, mfdEval);
+                //sum += colorRemainder.a * mfdEval * vec4(colorRemainder.rgb, mfdEval);
+                sum = max(sum, colorRemainder.a * vec4(colorRemainder.rgb, mfdEval));
             }
         }
     }
