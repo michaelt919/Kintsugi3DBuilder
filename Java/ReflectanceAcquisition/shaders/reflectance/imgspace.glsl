@@ -77,7 +77,7 @@ vec4 getColor(int index)
             }
         }
         
-        return pow(texture(viewImages, vec3(projTexCoord.xy, index)), vec4(gamma));
+        return texture(viewImages, vec3(projTexCoord.xy, index));
 	}
 }
 

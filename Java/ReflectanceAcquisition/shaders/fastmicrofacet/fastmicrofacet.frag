@@ -1,5 +1,7 @@
 #version 330
 
+#define PI 3.1415926535897932384626433832795
+
 uniform mat4 model_view;
 uniform mat4 lightMatrix;
 uniform vec3 lightPosition;
@@ -67,8 +69,10 @@ void main()
             / (nDotHSquared * nDotHSquared);
     }
         
+    // TODO light attenuation
+        
     fragColor = vec4(pow(
-        (ambientColor + lightColor * max(0.0, dot(lightDirection, normalDir))) * diffuseColor.rgb + 
+        (ambientColor + lightColor * max(0.0, dot(lightDirection, normalDir))) * diffuseColor.rgb / PI + 
             mfdEval * lightColor * specularColor.rgb, 
         vec3(1 / gamma)), 1.0);
 }

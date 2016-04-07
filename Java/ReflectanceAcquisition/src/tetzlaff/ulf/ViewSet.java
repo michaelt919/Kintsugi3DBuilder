@@ -423,7 +423,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				this.linearLuminanceValues = linearLuminanceValues;
 				this.encodedLuminanceValues = encodedLuminanceValues;
 				this.gamma = gamma;
-				luminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues, gamma).createLuminanceMap(context);
+				luminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues).createLuminanceMap(context);
 			}
 			
 			if(loadingCallback != null) {
@@ -706,7 +706,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			else if (id.equals("e"))
 			{
 				// Non-linear encoding
-				linearLuminanceList.add(scanner.nextDouble());
+				linearLuminanceList.add(scanner.nextDouble() / 100.0);
 				encodedLuminanceList.add((Byte)((byte)scanner.nextShort()));
 				scanner.nextLine();
 			}

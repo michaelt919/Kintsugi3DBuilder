@@ -45,7 +45,12 @@ DiffuseFit fitDiffuse()
         for (int i = 0; i < viewCount; i++)
         {
             vec3 view = normalize(getViewVector(i));
-            vec4 color = getColor(i);
+            
+            // Physically plausible values for the color components range from 0 to pi
+            // We don't need to scale by 1 / pi because we would just need to multiply by pi again
+            // at the end to get a diffuse albedo value.
+            vec4 color = getLinearColor(i);
+            
             float nDotV = dot(geometricNormal, view);
             if (color.a * nDotV > 0)
             {

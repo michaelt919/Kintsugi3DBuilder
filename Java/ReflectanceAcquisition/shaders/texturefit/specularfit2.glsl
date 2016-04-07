@@ -52,8 +52,10 @@ vec4 fitSpecular()
     for (int i = 0; i < viewCount; i++)
     {
         vec3 view = normalize(getViewVector(i));
-        vec4 color = getColor(i);
         float nDotV = dot(geometricNormal, view);
+        
+        // TODO do we need to divide by pi here?
+        vec4 color = getLinearColor(i);
         
         if (color.a * nDotV > 0)
         {

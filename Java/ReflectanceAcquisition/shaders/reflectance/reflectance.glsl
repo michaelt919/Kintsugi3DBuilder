@@ -1,14 +1,17 @@
 #ifndef REFLECTANCE_GLSL
 #define REFLECTANCE_GLSL
 
-#line 5 1000
+#include "linearize.glsl"
+
+#line 7 1000
+
+#define PI 3.1415926535897932384626433832795 // For convenience
 
 #define MAX_CAMERA_POSE_COUNT 1024
 #define MAX_LIGHT_COUNT 1024
 
 uniform int viewCount;
 uniform bool infiniteLightSources;
-uniform float gamma;
 
 uniform CameraPoses
 {
@@ -47,5 +50,10 @@ vec3 getLightIntensity(int index)
 }
 
 vec4 getColor(int index); // Defined by imgspace.glsl or texspace.glsl
+
+vec4 getLinearColor(int index)
+{
+    return linearizeColor(getColor(index));
+}
 
 #endif // REFLECTANCE_GLSL
