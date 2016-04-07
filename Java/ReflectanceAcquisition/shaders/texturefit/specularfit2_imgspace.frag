@@ -14,5 +14,5 @@ layout(location = 0) out vec4 specularColor;
 
 void main()
 {
-    specularColor = vec4(pow(fitSpecular(), vec3(1 / gamma)), 1.0);
+    specularColor = pow(fitSpecular(), vec4(1 / gamma));
 }

@@ -7,12 +7,11 @@ uniform vec3 lightColor;
 uniform vec3 ambientColor;
 uniform float gamma;
 uniform float shadowBias;
-uniform bool trueBlinnPhong;
 
 uniform sampler2D diffuse;
 uniform sampler2D normal;
 uniform sampler2D specular;
-uniform sampler3D microfacetDistribution;
+uniform sampler2D roughness;
 uniform sampler2D shadow;
 
 in vec3 fPosition;
@@ -38,12 +37,13 @@ vec4 textureAlphaRobust(sampler2D samp, vec2 coords)
 void main()
 {
     vec4 diffuseColor = pow(textureAlphaRobust(diffuse, fTexCoord), vec4(gamma));
-    vec4 specularColor = vec4(1.0);//pow(textureAlphaRobust(specular, fTexCoord), vec4(gamma));
+    vec4 specularColor = pow(textureAlphaRobust(specular, fTexCoord), vec4(gamma));
     vec3 normalDir = normalize((model_view * 
                 vec4(textureAlphaRobust(normal, fTexCoord).xyz * 2 - vec3(1.0), 0.0)).xyz);
     vec3 viewDir = normalize(-(model_view * vec4(fPosition, 1.0)).xyz);
     vec3 lightDirection = normalize((model_view * vec4(lightPosition - fPosition, 0.0)).xyz);
     float nDotH = max(0.0, dot(normalize(lightDirection + viewDir), normalDir));
+    float roughness = textureAlphaRobust(roughness, fTexCoord).r;
     
     // vec4 projTexCoords = lightMatrix * vec4(fPosition, 1.0);
     // projTexCoords /= projTexCoords.w;
@@ -55,9 +55,20 @@ void main()
         // fragColor = vec4(pow(ambientColor * diffuseColor.rgb, vec3(1 / gamma)), 1.0);
         // return;
     // }
+    
+    float mfdEval = 0.0;
+    
+    if (nDotH > 0.0)
+    {
+        float nDotHSquared = nDotH * nDotH;
+        float roughnessSquared = roughness * roughness;
+    
+        mfdEval = exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
+            / (nDotHSquared * nDotHSquared);
+    }
         
     fragColor = vec4(pow(
         (ambientColor + lightColor * max(0.0, dot(lightDirection, normalDir))) * diffuseColor.rgb + 
-            0 * texture(microfacetDistribution, vec3(fTexCoord, nDotH)).r * lightColor * specularColor.rgb, 
+            mfdEval * lightColor * specularColor.rgb, 
         vec3(1 / gamma)), 1.0);
 }

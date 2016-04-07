@@ -19,6 +19,7 @@ import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.Drawable;
+import tetzlaff.gl.helpers.LightController;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
@@ -32,8 +33,8 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 	
 	private ContextType context;
 	private File objFile;
-	private CameraController viewTrackball;
-	private CameraController lightTrackball;
+	private CameraController cameraController;
+	private LightController lightController;
 	
 	private VertexMesh mesh;
 	
@@ -44,19 +45,19 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 	private Texture2D<ContextType> diffuse;
 	private Texture2D<ContextType> normal;
 	private Texture2D<ContextType> specular;
-	private Texture3D<ContextType> microfacetDistribution;
+	private Texture2D<ContextType> roughness;
 	
 	private Renderable<ContextType> renderable;
 	private Renderable<ContextType> shadowRenderable;
 	
 	private FramebufferObject<ContextType> shadowBuffer;
 	
-	public FastMicrofacetRenderer(ContextType context, File objFile, CameraController viewTrackball, CameraController lightTrackball) 
+	public FastMicrofacetRenderer(ContextType context, File objFile, CameraController viewTrackball, LightController lightTrackball) 
 	{
 		this.context = context;
     	this.objFile = objFile;
-    	this.viewTrackball = viewTrackball;
-    	this.lightTrackball = lightTrackball;
+    	this.cameraController = viewTrackball;
+    	this.lightController = lightTrackball;
 	}
 
 	@Override
@@ -84,7 +85,7 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 			this.diffuse = context.get2DColorTextureBuilder(new File(texturePath, "diffuse.png"), true).createTexture();
 			this.normal = context.get2DColorTextureBuilder(new File(texturePath, "normal.png"), true).createTexture();
 			this.specular = context.get2DColorTextureBuilder(new File(texturePath, "specular.png"), true).createTexture();
-			//this.microfacetDistribution = context.get2DColorTextureArrayBuilder().createTexture();
+			this.roughness = context.get2DColorTextureBuilder(new File(texturePath, "roughness.png"), true).createTexture();
 			
 			this.renderable = context.createRenderable(this.program);
 			this.renderable.addVertexBuffer("position", this.positionBuffer);
@@ -111,18 +112,16 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 	@Override
 	public void draw() 
 	{
-    	Matrix4 modelView = viewTrackball.getViewMatrix() // Trackball
+    	Matrix4 modelView = cameraController.getViewMatrix() // Trackball
 				.times(Matrix4.translate(mesh.getCentroid().negated())); // Model
 		
-		Vector3 lightPosition = new Matrix3(lightTrackball.getViewMatrix()).times(mesh.getCentroid());
+    	
+    	Matrix4 lightMatrix = lightController.getLightMatrix(0)
+    			.times(Matrix4.translate(mesh.getCentroid().negated()));
+    	
+    	Vector3 lightPosition = new Matrix3(lightMatrix).transpose().times(new Vector3(lightMatrix.getColumn(3).negated()));
 		
 		this.shadowBuffer.clearDepthBuffer();
-		Matrix4 lightMatrix = 
-			Matrix4.lookAt(
-				lightPosition, 
-				mesh.getCentroid(),
-				new Vector3(0.0f, 1.0f, 0.0f)
-			);
     	
     	this.shadowRenderable.program().setUniform("model_view", lightMatrix);
     	this.shadowRenderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 2, 1.0f, 1.0f, 9.0f));
@@ -138,7 +137,7 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
     	this.renderable.program().setTexture("diffuse", this.diffuse);
     	this.renderable.program().setTexture("normal", this.normal);
     	this.renderable.program().setTexture("specular", this.specular);
-    	this.renderable.program().setTexture("microfacetDistribution", this.microfacetDistribution);
+    	this.renderable.program().setTexture("roughness", this.roughness);
     	this.renderable.program().setTexture("shadow", this.shadowBuffer.getDepthAttachmentTexture());
     	
     	this.renderable.program().setUniform("model_view", modelView);
@@ -149,7 +148,7 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
     	this.renderable.program().setUniform("gamma", 2.2f);
     	this.renderable.program().setUniform("shadowBias", 0.001f);
     	this.renderable.program().setUniform("ambientColor", new Vector3(0.05f, 0.05f, 0.05f));
-    	this.renderable.program().setUniform("lightColor", new Vector3(1.0f, 1.0f, 1.0f));
+    	this.renderable.program().setUniform("lightColor", lightController.getLightColor(0));
     	this.renderable.program().setUniform("lightPosition", lightPosition);
     	
     	this.renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
@@ -158,6 +157,9 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 	@Override
 	public void cleanup() 
 	{
+		this.program.delete();
+		this.shadowProgram.delete();
+		
 		this.positionBuffer.delete();
 		this.texCoordBuffer.delete();
 		this.normalBuffer.delete();
@@ -165,9 +167,42 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 		this.diffuse.delete();
 		this.normal.delete();
 		this.specular.delete();
-		this.microfacetDistribution.delete();
+		this.roughness.delete();
 		
 		this.shadowBuffer.delete();
+	}
+	
+	public void reloadShaders()
+	{
+		try
+        {
+			this.program.delete();
+			this.shadowProgram.delete();
+			
+    		this.program = context.getShaderProgramBuilder()
+					.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+					.addShader(ShaderType.FRAGMENT, new File("shaders/fastmicrofacet/fastmicrofacet.frag"))
+					.createProgram();
+    		
+    		this.shadowProgram = context.getShaderProgramBuilder()
+					.addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
+					.addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
+					.createProgram();
+			
+			this.renderable = context.createRenderable(this.program);
+			this.renderable.addVertexBuffer("position", this.positionBuffer);
+			this.renderable.addVertexBuffer("texCoord", this.texCoordBuffer);
+			this.renderable.addVertexBuffer("normal", this.normalBuffer);
+
+			this.shadowRenderable = context.createRenderable(this.shadowProgram);
+			this.shadowRenderable.addVertexBuffer("position", this.positionBuffer);
+			this.shadowRenderable.addVertexBuffer("texCoord", this.texCoordBuffer);
+			this.shadowRenderable.addVertexBuffer("normal", this.normalBuffer);
+		} 
+    	catch (IOException e) 
+    	{
+			e.printStackTrace();
+		}
 	}
 
 	public void resample(File targetVSETFile, File exportPath) throws IOException

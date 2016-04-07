@@ -7,9 +7,12 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.fastmicrofacet.FastMicrofacetRenderer;
+import tetzlaff.gl.helpers.CameraController;
+import tetzlaff.gl.helpers.FirstPersonController;
 import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.imagebasedmicrofacet.TrackballLightController;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.window.KeyCodes;
 import tetzlaff.window.glfw.GLFWWindow;
@@ -21,11 +24,19 @@ public class FastMicrofacetProgram
     	GLFWWindow window = new GLFWWindow(800, 800, "Phong Renderer", true, 4);
     	window.enableDepthTest();
     	
-    	Trackball viewTrackball = new Trackball(1.0f, 0, -1, true);
-    	viewTrackball.addAsWindowListener(window);
-    	
-    	Trackball lightTrackball = new Trackball(1.0f, 1, -1, false);
-    	lightTrackball.addAsWindowListener(window);
+    	TrackballLightController lightController = new TrackballLightController();
+        lightController.addAsWindowListener(window);
+         
+        FirstPersonController fpController = new FirstPersonController();
+        fpController.addAsWindowListener(window);
+         
+        window.addMouseButtonPressListener((win, buttonIndex, mods) -> 
+        {
+         	fpController.setEnabled(false);
+     	});
+         
+        // Hybrid FP + Trackball controls
+        CameraController cameraController = () -> fpController.getViewMatrix().times(lightController.asCameraController().getViewMatrix());
         
         JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
 		fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
@@ -33,7 +44,7 @@ public class FastMicrofacetProgram
 		
 		if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
 		{
-	        FastMicrofacetRenderer<OpenGLContext> renderer = new FastMicrofacetRenderer<OpenGLContext>(window, fileChooser.getSelectedFile(), viewTrackball, lightTrackball);
+	        FastMicrofacetRenderer<OpenGLContext> renderer = new FastMicrofacetRenderer<OpenGLContext>(window, fileChooser.getSelectedFile(), cameraController, lightController);
 	        
 	    	window.addKeyPressListener((targetWindow, keycode, mods) -> 
 	    	{
@@ -62,6 +73,10 @@ public class FastMicrofacetProgram
 	    					}
 	    				}
 	    			}
+	    		}
+	    		else if (keycode == KeyCodes.P)
+	    		{
+	    			renderer.reloadShaders();
 	    		}
 	    	});
 	        

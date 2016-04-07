@@ -2302,6 +2302,29 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	    	}
 	        	}
 				
+				// Fill holes
+				holeFillFrontFBO = specularFitFramebuffer;
+		    	for (int i = 0; i < param.getTextureSize() / 2; i++)
+		    	{
+		    		holeFillBackFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		holeFillBackFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		holeFillBackFBO.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		holeFillBackFBO.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		
+		    		holeFillProgram.setTexture("input0", holeFillFrontFBO.getColorAttachmentTexture(0));
+		    		holeFillProgram.setTexture("input1", holeFillFrontFBO.getColorAttachmentTexture(1));
+		    		holeFillProgram.setTexture("input2", holeFillFrontFBO.getColorAttachmentTexture(2));
+		    		holeFillProgram.setTexture("input3", holeFillFrontFBO.getColorAttachmentTexture(3));
+		    		
+		    		holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, holeFillBackFBO);
+		    		context.finish();
+		    		
+		    		FramebufferObject<ContextType> tmp = holeFillFrontFBO;
+		    		holeFillFrontFBO = holeFillBackFBO;
+		    		holeFillBackFBO = tmp;
+		    	}
+		    	specularFitFramebuffer = holeFillFrontFBO;
+				
     	    	specularFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "specularAlt.png"));
 			}
 			
