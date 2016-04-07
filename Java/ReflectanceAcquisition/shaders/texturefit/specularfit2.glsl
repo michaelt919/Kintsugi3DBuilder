@@ -5,8 +5,6 @@
 
 #line 7 2004
 
-const float PI = 3.1415926535897932384626433832795;
-
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
 uniform sampler2D roughnessEstimate;
@@ -42,7 +40,7 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, vec3 atten
     }
 }
 
-vec3 fitSpecular()
+vec4 fitSpecular()
 {
     vec3 geometricNormal = normalize(fNormal);
     vec3 diffuseNormal = getDiffuseNormalVector();
@@ -78,27 +76,13 @@ vec3 fitSpecular()
                 
                 float mfdEval = exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
                     / (nDotHSquared * nDotHSquared);
-    
-                if (isinf(colorRemainder.r) || isinf(colorRemainder.g) || isinf(colorRemainder.b) || isnan(colorRemainder.r) || isnan(colorRemainder.g) || isnan(colorRemainder.b))
-                {
-                    return vec3(1,0,0);
-                }
-                else if (isinf(colorRemainder.a) || isnan(colorRemainder.a))
-                {
-                    return vec3(1,0.5,0);
-                }
-                else if (isinf(mfdEval) || isnan(mfdEval))
-                {
-                    return vec3(1,1,0);
-                }
                 
                 sum += colorRemainder.a * mfdEval * vec4(colorRemainder.rgb, mfdEval);
-                //sum = max(sum, colorRemainder.a * vec4(colorRemainder.rgb, mfdEval));
             }
         }
     }
     
-    return sum.rgb / sum.a;
+    return sum / sum.a;
 }
 
 #endif // SPECULARFIT_GLSL
