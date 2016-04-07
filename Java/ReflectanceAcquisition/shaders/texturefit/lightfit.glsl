@@ -44,14 +44,18 @@ LightFit fitLight()
             vec3 viewNormal = (cameraPoses[i] * vec4(normal, 0.0)).xyz;
             vec3 surfacePosition = (cameraPoses[i] * vec4(fPosition, 1.0)).xyz;
             float nDotV = dot(viewNormal, normalize(-surfacePosition));
-            vec4 color = getColor(i);
+            
+            // Physically plausible values for the color components range from 0 to pi
+            // We don't need to scale by pi because it will just cancel out
+            // when we divide by the diffuse albedo estimate in the end.
+            vec4 color = getLinearColor(i);
             
             if (color.a * nDotV > 0)
             {
                 float lightSqr = dot(surfacePosition, surfacePosition);
                 vec3 scaledNormal = viewNormal * inversesqrt(lightSqr) / lightSqr;
                 vec3 sampleVector = vec3(scaledNormal.xy, -dot(scaledNormal, surfacePosition));
-                float intensity = dot(color.rgb, vec3(1));
+                float intensity = getLuminance(color.rgb);
                 
                 float weight = color.a * nDotV;
                 if (k != 0)
@@ -62,7 +66,7 @@ LightFit fitLight()
                     
                 a += weight * outerProduct(sampleVector, sampleVector);
                 b += weight * intensity * sampleVector;
-                weightedIntensitySum += weight * intensity;
+                weightedIntensitySum += weight * intensity / nDotV; // n dot v ~= n dot l (Lambert)
                 weightSum += weight;
             }
         }
@@ -81,8 +85,7 @@ LightFit fitLight()
     }
     else
     {
-        // ratio of outgoing light to target intensity value 
-        // (so that the diffuse albedo map ends up in an appropriate range)
+        // Effectively divide by a diffuse albedo estimate to get the light intensity alone.
         fit.intensity *= weightSum / weightedIntensitySum;
     }
     

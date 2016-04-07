@@ -11,7 +11,7 @@ uniform vec2 maxTexCoord;
 
 vec4 getColor()
 {
-    return pow(texture(viewImage, (fTexCoord - minTexCoord) / (maxTexCoord - minTexCoord)), vec4(gamma));
+    return texture(viewImage, (fTexCoord - minTexCoord) / (maxTexCoord - minTexCoord));
 }
 
 #endif // TEXSPACE_SINGLE_GLSL

@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -102,78 +101,58 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		void execute(Framebuffer<ContextType> framebuffer, int subdivRow, int subdivCol);
 	}
 	
-	private double[][] getDirectionalRegularizationMatrix(
-			double linearityConstraintWeight,
-			double equalityConstraintWeight)
-	{
-		double centerCenter = linearityConstraintWeight + equalityConstraintWeight;
-		double centerEdge = -0.125 * linearityConstraintWeight - 0.125 * equalityConstraintWeight;
-		double centerCorner = -0.125 * linearityConstraintWeight - 0.125 * equalityConstraintWeight;
-		double edgeSameEdge = 0.3125 * linearityConstraintWeight + 0.625 * equalityConstraintWeight;
-		double edgeAdjEdge = -0.125 * equalityConstraintWeight;
-		double edgeOppEdge = 0.0625 * linearityConstraintWeight;
-		double cornerSameCorner = 0.1875 * linearityConstraintWeight + 0.375 * equalityConstraintWeight;
-		double cornerAdjCorner = 0.0625 * linearityConstraintWeight;
-		double cornerOppCorner = 0.0625 * linearityConstraintWeight;
-		double edgeAdjCorner = -0.125 * linearityConstraintWeight - 0.125 * equalityConstraintWeight;
-		double edgeOppCorner = 0.0;
-		
-		return new double[][]
-		{
-			 { cornerSameCorner, edgeAdjCorner, cornerAdjCorner,  edgeAdjCorner, centerCorner, edgeOppCorner, cornerAdjCorner,  edgeOppCorner, cornerOppCorner  },
-			 { edgeAdjCorner, 	 edgeSameEdge,  edgeAdjCorner,    edgeAdjEdge,   centerEdge,   edgeAdjEdge,   edgeOppCorner,    edgeOppEdge,   edgeOppCorner    },
-			 { cornerAdjCorner,  edgeAdjCorner, cornerSameCorner, edgeOppCorner, centerCorner, edgeAdjCorner, cornerOppCorner,  edgeOppCorner, cornerAdjCorner  },
-			 { edgeAdjCorner,    edgeAdjEdge,   edgeOppCorner,    edgeSameEdge,  centerEdge,   edgeOppEdge,   edgeAdjCorner,    edgeAdjEdge,   edgeOppCorner    },
-			 { centerCorner,     centerEdge,    centerCorner,     centerEdge,    centerCenter, centerEdge,    centerCorner,     centerEdge,    centerCorner     },
-			 { edgeOppCorner,    edgeAdjEdge,   edgeAdjCorner,    edgeOppEdge,   centerEdge,   edgeSameEdge,  edgeOppCorner,    edgeAdjEdge,   edgeAdjCorner    },
-			 { cornerAdjCorner,  edgeOppCorner, cornerOppCorner,  edgeAdjCorner, centerCorner, edgeOppCorner, cornerSameCorner, edgeAdjCorner, cornerAdjCorner  },
-			 { edgeOppCorner,    edgeOppEdge,   edgeOppCorner,    edgeAdjEdge,   centerEdge,   edgeAdjEdge,   edgeAdjCorner,    edgeSameEdge,  edgeAdjCorner    },
-			 { cornerOppCorner,  edgeOppCorner, cornerAdjCorner,  edgeOppCorner, centerCorner, edgeAdjCorner, cornerAdjCorner,  edgeAdjCorner, cornerSameCorner }
-		};
-	}
-	
 	private void projectIntoTextureSpace(ViewSet<ContextType> viewSet, Program<ContextType> program, int viewIndex, int textureSize, int textureSubdiv, TextureSpaceCallback<ContextType> callback) throws IOException
 	{
-		FramebufferObject<ContextType> projTexFBO = 
+		FramebufferObject<ContextType> mainFBO = 
 			context.getFramebufferObjectBuilder(textureSize / textureSubdiv, textureSize / textureSubdiv)
 				.addColorAttachments(ColorFormat.RGBA32F, 2)
 				.createFramebufferObject();
-    	Renderable<ContextType> projTexRenderable = context.createRenderable(program);
+    	Renderable<ContextType> renderable = context.createRenderable(program);
     	
-    	projTexRenderable.addVertexBuffer("position", positionBuffer);
-    	projTexRenderable.addVertexBuffer("texCoord", texCoordBuffer);
-    	projTexRenderable.addVertexBuffer("normal", normalBuffer);
-    	projTexRenderable.addVertexBuffer("tangent", tangentBuffer);
+    	renderable.addVertexBuffer("position", positionBuffer);
+    	renderable.addVertexBuffer("texCoord", texCoordBuffer);
+    	renderable.addVertexBuffer("normal", normalBuffer);
+    	renderable.addVertexBuffer("tangent", tangentBuffer);
     	
-    	projTexRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
-    	projTexRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
+    	renderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
+    	renderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
     	
-    	projTexRenderable.program().setUniform("cameraPose", viewSet.getCameraPose(viewIndex));
-    	projTexRenderable.program().setUniform("cameraProjection", 
+    	renderable.program().setUniform("cameraPose", viewSet.getCameraPose(viewIndex));
+    	renderable.program().setUniform("cameraProjection", 
     			viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex))
     				.getProjectionMatrix(viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
     	
-    	projTexRenderable.program().setUniform("gamma", param.getGamma());
+    	renderable.program().setUniform("gamma", param.getGamma());
+    	
+    	if (viewSet.getLuminanceMap() == null)
+        {
+    		renderable.program().setUniform("useLuminanceMap", false);
+        }
+        else
+        {
+        	renderable.program().setUniform("useLuminanceMap", true);
+        	renderable.program().setTexture("luminanceMap", viewSet.getLuminanceMap());
+        }
     	
     	if (lightIntensity != null)
     	{
-    		projTexRenderable.program().setUniform("lightIntensity", lightIntensity);
+    		renderable.program().setUniform("lightIntensity", lightIntensity);
     	}
     	else
     	{
-    		projTexRenderable.program().setUniform("lightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
+    		renderable.program().setUniform("lightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
     	}
     	
     	boolean enableShadowTest = param.isCameraVisibilityTestEnabled();
     	
     	if (lightPosition != null)
     	{
-    		projTexRenderable.program().setUniform("lightPosition", lightPosition);
+    		renderable.program().setUniform("lightPosition", lightPosition);
     		enableShadowTest = enableShadowTest && !lightPosition.equals(new Vector3(0.0f, 0.0f, 0.0f));
     	}
     	else
     	{
-    		projTexRenderable.program().setUniform("lightPosition", viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)));
+    		renderable.program().setUniform("lightPosition", viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)));
     	}
     	
     	File imageFile = new File(imageDir, viewSet.getImageFileName(viewIndex));
@@ -210,7 +189,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     						.createTexture();
     	}
     	
-    	projTexRenderable.program().setTexture("viewImage", viewTexture);
+    	renderable.program().setTexture("viewImage", viewTexture);
     	
     	FramebufferObject<ContextType> depthFBO = 
 			context.getFramebufferObjectBuilder(viewTexture.getWidth(), viewTexture.getHeight())
@@ -232,7 +211,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		depthFBO.clearDepthBuffer();
     	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthFBO);
     	
-    	projTexRenderable.program().setTexture("depthImage", depthFBO.getDepthAttachmentTexture());
+    	renderable.program().setTexture("depthImage", depthFBO.getDepthAttachmentTexture());
     	
     	FramebufferObject<ContextType> shadowFBO = null;
     	
@@ -259,35 +238,35 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     		shadowFBO.clearDepthBuffer();
     		shadowRenderable.draw(PrimitiveMode.TRIANGLES, shadowFBO);
     		
-    		projTexRenderable.program().setUniform("shadowTestEnabled", true);
-    		projTexRenderable.program().setUniform("shadowMatrix", shadowProjection.times(shadowModelView));
-        	projTexRenderable.program().setTexture("shadowImage", shadowFBO.getDepthAttachmentTexture());
+    		renderable.program().setUniform("shadowTestEnabled", true);
+    		renderable.program().setUniform("shadowMatrix", shadowProjection.times(shadowModelView));
+        	renderable.program().setTexture("shadowImage", shadowFBO.getDepthAttachmentTexture());
     	}
     	else
     	{
-    		projTexRenderable.program().setUniform("shadowTestEnabled", false);
+    		renderable.program().setUniform("shadowTestEnabled", false);
     	}
 	
     	for (int row = 0; row < textureSubdiv; row++)
     	{
 	    	for (int col = 0; col < textureSubdiv; col++)
     		{
-	    		projTexRenderable.program().setUniform("minTexCoord", 
+	    		renderable.program().setUniform("minTexCoord", 
 	    				new Vector2((float)col / (float)textureSubdiv, (float)row / (float)textureSubdiv));
 	    		
-	    		projTexRenderable.program().setUniform("maxTexCoord", 
+	    		renderable.program().setUniform("maxTexCoord", 
 	    				new Vector2((float)(col+1) / (float)textureSubdiv, (float)(row+1) / (float)textureSubdiv));
 	    		
-	    		projTexFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-	    		projTexFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-	    		projTexFBO.clearDepthBuffer();
-	    		projTexRenderable.draw(PrimitiveMode.TRIANGLES, projTexFBO);
+	    		mainFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+	    		mainFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+	    		mainFBO.clearDepthBuffer();
+	    		renderable.draw(PrimitiveMode.TRIANGLES, mainFBO);
 	    		
-	    		callback.execute(projTexFBO, row, col);
+	    		callback.execute(mainFBO, row, col);
 	    	}
 		}
     	
-    	projTexFBO.delete();
+    	mainFBO.delete();
     	viewTexture.delete();
     	depthFBO.delete();
     	
@@ -367,58 +346,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		return matrix;
 	}
 	
-	private class MultidimensionalFloatArray
-	{
-		float[] data;
-		int[] dimensionLengths;
-		
-		public MultidimensionalFloatArray(int... dimensionLengths)
-		{
-			this.dimensionLengths = dimensionLengths.clone();
-			int dataSize = 1;
-			for (int k = 0; k < dimensionLengths.length; k++)
-			{
-				dataSize *= dimensionLengths[k];
-			}
-			this.data = new float[dataSize];
-		}
-		
-		private int findIndex(int... indices)
-		{
-			int index = 0;
-			for (int k = 0; k < dimensionLengths.length; k++)
-			{
-				index = index * dimensionLengths[k] + indices[k];
-			}
-			
-			return index;
-		}
-		
-		public float get(int... indices)
-		{
-			return data[findIndex(indices)];
-		}
-		
-		public void set(float value, int... indices)
-		{
-			data[findIndex(indices)] = value;
-		}
-		
-		public void accum(float value, int...indices)
-		{
-			data[findIndex(indices)] += value;
-		}
-	}
-	
 	private void accumResampleSystem(float[][][][][] lhsData, float[][][][][] rhsData, int directionalRes, int spatialRes,
 			float hDotTMax, boolean isotropic, int dataRes, int dataStartX, int dataStartY, int dataWidth, int dataHeight, float[] colorDataRGBA, float[] halfAngleDataTBNA)
 	{
 		int[] coordinatesMax = isotropic ?
 			new int[] { directionalRes, spatialRes, spatialRes } :
 			new int[] { directionalRes, directionalRes, spatialRes, spatialRes }; // exclusive
-		
-		final double SIN_PI_OVER_8 = Math.sin(Math.PI / 8);
-		final double ONE_OVER_SQRT2 = Math.sqrt(0.5);
 		
 		for (int y = 0; y < dataHeight; y++)
 		{
@@ -1027,6 +960,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	
         renderable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
         renderable.program().setUniform("gamma", param.getGamma());
+        if (viewSet.getLuminanceMap() == null)
+        {
+        	renderable.program().setUniform("useLuminanceMap", false);
+        }
+        else
+        {
+        	renderable.program().setUniform("useLuminanceMap", true);
+        	renderable.program().setTexture("luminanceMap", viewSet.getLuminanceMap());
+        }
         renderable.program().setUniform("shadowTestEnabled", false);
         renderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
         renderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
@@ -1233,6 +1175,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	renderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
     	renderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
     	renderable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
+    	if (viewSet.getLuminanceMap() == null)
+        {
+        	renderable.program().setUniform("useLuminanceMap", false);
+        }
+        else
+        {
+        	renderable.program().setUniform("useLuminanceMap", true);
+        	renderable.program().setTexture("luminanceMap", viewSet.getLuminanceMap());
+        }
     	
     	renderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
     	
@@ -1342,6 +1293,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	renderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
     	renderable.program().setUniform("gamma", param.getGamma());
     	renderable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
+    	if (viewSet.getLuminanceMap() == null)
+        {
+        	renderable.program().setUniform("useLuminanceMap", false);
+        }
+        else
+        {
+        	renderable.program().setUniform("useLuminanceMap", true);
+        	renderable.program().setTexture("luminanceMap", viewSet.getLuminanceMap());
+        }
     	
     	renderable.program().setUniform("computeRoughness", param.isSpecularRoughnessComputationEnabled());
     	renderable.program().setUniform("computeNormal", param.isSpecularNormalComputationEnabled());
@@ -1456,6 +1416,16 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	renderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
     	renderable.program().setUniform("gamma", param.getGamma());
     	renderable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
+
+    	if (viewSet.getLuminanceMap() == null)
+        {
+        	renderable.program().setUniform("useLuminanceMap", false);
+        }
+        else
+        {
+        	renderable.program().setUniform("useLuminanceMap", true);
+        	renderable.program().setTexture("luminanceMap", viewSet.getLuminanceMap());
+        }
     	
 		renderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
     	
@@ -1574,6 +1544,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	}
     	
     	System.out.println("Loading view set completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+    	
+    	if(viewSet.getLuminanceMap() == null)
+    	{
+    		System.out.println("WARNING: no luminance mapping found.  Reflectance values are not physically grounded.");
+    	}
     	
     	System.out.println("Loading and compiling shader programs...");
     	timestamp = new Date();

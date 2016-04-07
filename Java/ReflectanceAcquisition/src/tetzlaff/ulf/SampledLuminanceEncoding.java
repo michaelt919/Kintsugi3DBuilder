@@ -17,7 +17,7 @@ public class SampledLuminanceEncoding
 		this.decodeFunction = (encoded) -> Math.pow(encoded / 255.0f, gamma);
 	}
 	
-	public SampledLuminanceEncoding(double[] linear, byte[] encoded, float gammaEstimate)
+	public SampledLuminanceEncoding(double[] linear, byte[] encoded)
 	{
 		if (linear.length != encoded.length)
 		{
@@ -32,13 +32,11 @@ public class SampledLuminanceEncoding
 		}
 		x[x.length-1] = 255.0;
 		
-		double scale = (float)Math.pow(x[x.length-2] / 255.0, gammaEstimate) / linear[linear.length-1];
-		
 		double[] y = new double[linear.length + 2];
 		y[0] = 0;
 		for (int k = 1; k < y.length-1; k++)
 		{
-			y[k] = linear[k-1] * scale;
+			y[k] = linear[k-1];
 		}
 		y[y.length-1] = 1;
 		
