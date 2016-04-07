@@ -29,10 +29,17 @@ float getRoughness()
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, vec3 attenuatedLightIntensity, vec3 normal)
 {
     float nDotL = max(0, dot(light, normal));
-    vec3 diffuseContrib = diffuseColor * nDotL * attenuatedLightIntensity;
-    float cap = 1.0 - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
-    vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
-    return vec4(remainder / nDotL, originalColor.a * nDotL);
+    if (nDotL == 0.0)
+    {
+        return vec4(0);
+    }
+    else
+    {
+        vec3 diffuseContrib = diffuseColor * nDotL * attenuatedLightIntensity;
+        float cap = 1.0 - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
+        vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
+        return vec4(remainder / nDotL, originalColor.a * nDotL);
+    }
 }
 
 vec3 fitSpecular()
@@ -40,7 +47,7 @@ vec3 fitSpecular()
     vec3 geometricNormal = normalize(fNormal);
     vec3 diffuseNormal = getDiffuseNormalVector();
     vec3 diffuseColor = getDiffuseColor();
-    float roughness = 0.5;//getRoughness();
+    float roughness = getRoughness();
     
     vec4 sum = vec4(0);
     
@@ -71,9 +78,22 @@ vec3 fitSpecular()
                 
                 float mfdEval = exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
                     / (nDotHSquared * nDotHSquared);
+    
+                if (isinf(colorRemainder.r) || isinf(colorRemainder.g) || isinf(colorRemainder.b) || isnan(colorRemainder.r) || isnan(colorRemainder.g) || isnan(colorRemainder.b))
+                {
+                    return vec3(1,0,0);
+                }
+                else if (isinf(colorRemainder.a) || isnan(colorRemainder.a))
+                {
+                    return vec3(1,0.5,0);
+                }
+                else if (isinf(mfdEval) || isnan(mfdEval))
+                {
+                    return vec3(1,1,0);
+                }
                 
-                //sum += colorRemainder.a * mfdEval * vec4(colorRemainder.rgb, mfdEval);
-                sum = max(sum, colorRemainder.a * vec4(colorRemainder.rgb, mfdEval));
+                sum += colorRemainder.a * mfdEval * vec4(colorRemainder.rgb, mfdEval);
+                //sum = max(sum, colorRemainder.a * vec4(colorRemainder.rgb, mfdEval));
             }
         }
     }
