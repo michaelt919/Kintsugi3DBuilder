@@ -6,7 +6,7 @@ in vec3 fNormal;
 in vec3 fTangent;
 in vec3 fBitangent;
 
-layout(location = 0) out vec4 specularResidual;
+layout(location = 0) out vec4 packed_residual_nDotH_unused_alpha;
 layout(location = 1) out vec4 halfAngleVector;
 
 #include "../reflectance/reflectance_single.glsl"
@@ -18,6 +18,7 @@ layout(location = 1) out vec4 halfAngleVector;
 void main()
 {
     SpecularResidualInfo spec = computeSpecularResidualInfo();
-    specularResidual = spec.residual;
+    packed_residual_nDotH_alpha_unused = 
+        vec4(spec.residualLuminance, spec.halfAngleVector.z, 0.0, spec.alpha);
     halfAngleVector = vec4(spec.halfAngleVector, 1.0);
 }

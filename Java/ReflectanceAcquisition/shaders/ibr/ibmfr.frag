@@ -442,5 +442,5 @@ void main()
         }
     }
     
-    fragColor = vec4(pow(reflectance, vec3(1 / gamma)), 1.0);
+    fragColor = vec4(fTexCoord,0,1);//vec4(pow(reflectance, vec3(1 / gamma)), 1.0);
 }
