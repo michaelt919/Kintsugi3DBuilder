@@ -55,7 +55,7 @@ popd
 # figure out how big our DMG needs to be
 #  assumes our contents are at least 1M!
 SIZE=`du -sh "${STAGING_DIR}" | sed 's/\([0-9\.]*\)M\(.*\)/\1/'` 
-SIZE=`echo "${SIZE} + 1.0" | bc | awk '{print int($1+0.5)}'`
+SIZE=`echo "${SIZE} + 2.0" | bc | awk '{print int($1+0.5)}'`
 
 if [ $? -ne 0 ]; then
    echo "Error: Cannot compute size of staging dir"
@@ -99,7 +99,6 @@ echo '
            set icon size of viewOptions to 72
            set background picture of viewOptions to file ".background:'${DMG_BACKGROUND_IMG}'"
            set position of item "'${APP_NAME}'.app" of container window to {160, 205}
-#           set position of item "'${DOC_NAME}'" of container window to {160, 275}
            set position of item "Applications" of container window to {360, 205}
            close
            open

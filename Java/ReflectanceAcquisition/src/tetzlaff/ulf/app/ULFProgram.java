@@ -60,9 +60,9 @@ public class ULFProgram
 	
 	/**
 	 * Flag that indicates if standard out and standard error should be redirected to a file.
-	 * (This should be set to FALSE when building the deployment package).
+	 * (This should be set to FALSE when building the deployment package, good to follow DEV_MODE).
 	 */
-	public static final boolean DISABLE_STDOUT_REDIRECT = true;
+	public static final boolean DISABLE_STDOUT_REDIRECT = DEV_MODE;
 	
 	/**
 	 * Current version number (increment on milestone releases)

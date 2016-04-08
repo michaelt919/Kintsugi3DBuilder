@@ -77,6 +77,7 @@
 	
 	<!-- Create the jar file w/o the unrelated classes (universal) -->
 	<target name="create_run_jar">
+		<delete file="${stage.dir}/${ant.project.name}.jar" />
         <jar destfile="${stage.dir}/${ant.project.name}.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Main-Class" value="tetzlaff.ulf.app.ULFProgram"/>
@@ -84,14 +85,26 @@
             </manifest>
             <fileset dir="./bin">
             	<patternset id="unrelated">
+
+            		<!-- These are not part of the ULF Renderer -->
             	    <exclude name="**/shaders-exclude/**" />
             	    <exclude name="**/tetzlaff/phong/**" />
             	    <exclude name="**/tetzlaff/phong/**" />
             	    <exclude name="**/tetzlaff/phong/app/**" />
             	    <exclude name="**/tetzlaff/texturefit/**" />
     	            <exclude name="**/tetzlaff/textureupscale/**" />
+
+    	            <!-- We will include these in other ways -->
+            		<exclude name="**/help/**" />
+            		<exclude name="**/icons/**" />
+	        		<exclude name="**/shaders/**" />
+            		
             	</patternset>
            	</fileset>
+        	
+        	<!-- Embed the shaders (this ensures the proper path) -->
+        	<fileset dir="." includes="resources/shaders/" />
+        	
         </jar>
 	</target>
 
@@ -113,6 +126,11 @@
             	    <exclude name="**/tetzlaff/phong/app/**" />
             	    <exclude name="**/tetzlaff/texturefit/**" />
     	            <exclude name="**/tetzlaff/textureupscale/**" />
+
+    	            <!-- We will include these in other ways -->
+            		<exclude name="**/help/**" />
+            		<exclude name="**/icons/**" />
+	        		<exclude name="**/shaders/**" />
             	</patternset>
            	</fileset>
             <zipfileset dir="${javaDeps.dir}/lwjgl-3.0.0b/jar" includes="lwjgl.jar"/>
