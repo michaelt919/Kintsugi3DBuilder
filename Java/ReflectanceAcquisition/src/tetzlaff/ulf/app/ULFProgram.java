@@ -216,6 +216,13 @@ public class ULFProgram
 						e.printStackTrace();
 					}
 	        	}
+	        	else if (c == 'r')
+	        	{
+	        		if(model.getDrawable() != null)
+	        		{
+	        			model.getDrawable().resetFPSRange();
+	        		}
+	        	}
 	        });
 	
 	    	// Create a new application to run our event loop and give it the GLFWWindow for polling

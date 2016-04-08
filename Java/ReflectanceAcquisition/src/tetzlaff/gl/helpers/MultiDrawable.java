@@ -98,6 +98,58 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 	}
 
 	@Override
+	public void resetFPSRange() 
+	{
+		Drawable selected = this.getSelectedItem();
+		if (selected != null)
+		{
+			selected.resetFPSRange();
+		}
+	}
+	
+	@Override
+	public int getCurFPS() 
+	{
+		Drawable selected = this.getSelectedItem();
+		if (selected != null)
+		{
+			return selected.getCurFPS();
+		}
+		else
+		{
+			return -1;
+		}
+	}
+
+	@Override
+	public int getMinFPS() 
+	{
+		Drawable selected = this.getSelectedItem();
+		if (selected != null)
+		{
+			return selected.getMinFPS();
+		}
+		else
+		{
+			return -1;
+		}
+	}
+
+	@Override
+	public int getMaxFPS() 
+	{
+		Drawable selected = this.getSelectedItem();
+		if (selected != null)
+		{
+			return selected.getMaxFPS();
+		}
+		else
+		{
+			return -1;
+		}
+	}
+
+	@Override
 	public boolean draw() 
 	{
 		Drawable selected = this.getSelectedItem();
