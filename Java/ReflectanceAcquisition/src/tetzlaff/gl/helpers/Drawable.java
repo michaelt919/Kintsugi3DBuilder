@@ -50,6 +50,15 @@ public interface Drawable
 	void cleanup();
 	
 	/**
+	 * Retrieve information about frames per second for this drawable
+	 */
+	default int getCurFPS() { return -1; }
+	default int getMinFPS() { return -1; }
+	default int getMaxFPS() { return -1; }
+	
+	default void resetFPSRange() {}
+	
+	/**
 	 * During initialization if any errors occur, rather than having those be thrown from the
 	 * initialize function they can be querying for later. Initialize can store any generated
 	 * exception object and this method should return that object.  If no errors/exceptions

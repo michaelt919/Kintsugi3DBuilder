@@ -63,8 +63,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     
     private Exception initError;
     	
-    int fps, maxFPS, minFPS;
-    long lastFPS;
+    int curFPS, lastFPS, maxFPS, minFPS;
+    long lastFPSTime;
     
     /**
      * Creates a new unstructured light field renderer for rendering a light field defined by a VSET file.
@@ -203,9 +203,10 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 			}    		
     	}
     	
+    	lastFPS = 0;
     	maxFPS = -Integer.MAX_VALUE;
     	minFPS = Integer.MAX_VALUE;
-    	lastFPS = (System.nanoTime() / 1000000);
+    	lastFPSTime = (System.nanoTime() / 1000000);
     }
 
 	@Override
@@ -320,22 +321,38 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	return true;
     }
         
+    @Override
+    public void resetFPSRange() { 
+    	maxFPS = -Integer.MAX_VALUE;
+    	minFPS = Integer.MAX_VALUE;    	
+    }
+    
+    @Override
+    public int getCurFPS() { return lastFPS; }
+    
+    @Override
+    public int getMinFPS() { return minFPS; }
+
+    @Override
+    public int getMaxFPS() { return maxFPS; }
+
     public void updateFPS()
     {
-        if ((System.nanoTime() / 1000000) - lastFPS > 1000)
+        if ((System.nanoTime()/1000000) - lastFPSTime > 1000)
         {
-        	if(fps > 0)
+        	if(curFPS > 0)
         	{
-	        	if(fps > maxFPS) { maxFPS = fps; }
-	        	if(fps < minFPS) { minFPS = fps; }
+	        	if(curFPS > maxFPS) { maxFPS = curFPS; }
+	        	if(curFPS < minFPS) { minFPS = curFPS; }
+	        	lastFPS = curFPS;
 	
-	        	System.out.printf("FPS: %d, [%d, %d]\n", fps, maxFPS, minFPS);
+	        	System.out.printf("FPS: %d, [%d, %d]\n", lastFPS, maxFPS, minFPS);
         	}
         	
-        	fps = 0;
-            lastFPS += 1000;
+        	curFPS = 0;
+            lastFPSTime += 1000;
         }
-        fps++;
+        curFPS++;
     }
     
     private void drawCameras(Framebuffer<ContextType> framebuffer, FramebufferSize size)
