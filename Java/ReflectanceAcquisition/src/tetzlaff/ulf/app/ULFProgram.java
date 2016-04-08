@@ -59,6 +59,12 @@ public class ULFProgram
 	public static final boolean DEV_MODE = true;
 	
 	/**
+	 * Flag that indicates if standard out and standard error should be redirected to a file.
+	 * (This should be set to FALSE when building the deployment package).
+	 */
+	public static final boolean DISABLE_STDOUT_REDIRECT = true;
+	
+	/**
 	 * Current version number (increment on milestone releases)
 	 */
 	public static final String VERSION = "1.0a2";
@@ -104,13 +110,15 @@ public class ULFProgram
      */
     public static void main(String[] args)
     {
+        File logFile = new File("");
+        File errFile = new File("");
+        
     	// Surround with try-catch for BugSpat integration
     	try {
             // Init the bugsplat library with the database, application and version parameters
             BugSplat.Init("berriers_uwstout_edu", "ULFRenderer", VERSION);
             
             // Prepare log files, delete any old ones
-            File logFile, errFile;
             if(!DEV_MODE)
             {
 	            logFile = File.createTempFile(LOG_FILE, ".log");
@@ -125,17 +133,16 @@ public class ULFProgram
             if(errFile.exists()) { errFile.delete(); }
 
             // Redirect system output to log files
-            System.setOut(new PrintStream(logFile));
-            System.setErr(new PrintStream(errFile));
+            if(!DISABLE_STDOUT_REDIRECT)
+            {
+            	System.setOut(new PrintStream(logFile));
+            	System.setErr(new PrintStream(errFile));
+            }
             
             // Add header with timestamp to logs
             String timestamp = new SimpleDateFormat("MM/dd/yyy HH:mm:ss").format(new Date());
             System.out.println("ULF Renderer " + VERSION + ", Standard Log (" + timestamp + ")");
             System.err.println("ULF Renderer " + VERSION + ", Error Log (" + timestamp + ")");
-
-            // Add the logs to BugSplat crash report
-            BugSplat.AddAdditionalFile(errFile.getAbsolutePath());
-            BugSplat.AddAdditionalFile(logFile.getAbsolutePath());
             
             // Initialize the system environment vars and LWJGL
 	    	System.getenv();
@@ -300,16 +307,38 @@ public class ULFProgram
 	        // Set the GL window (so other funcs can access) and start the main event loop
 			app.run();
     	} catch(Exception e) {
-            // Set crash description (useful for filtering)
     		e.printStackTrace();
+	        QApplication.initialize(args);
+        	QMessageBox.critical(null, "Critical Error",
+        			"An error occured while initializing or running the main program.  Please see errors.txt for more details.");
+
+        	// Set crash description (useful for filtering)
             BugSplat.SetDescription("Crash Report, Exception, " + System.getProperty("os.name"));
+            
+            // Take care of the log files
+            if(!DISABLE_STDOUT_REDIRECT)
+            {
+	            if(errFile.exists()) { BugSplat.AddAdditionalFile(errFile.getAbsolutePath()); }
+	            if(logFile.exists()) { BugSplat.AddAdditionalFile(logFile.getAbsolutePath()); }
+            }
             
     		// Let BugSplat handle the exception and set error exit code
     		BugSplat.HandleException(e);
     	} catch(Throwable t) {
-            // Set crash description (useful for filtering)
     		t.printStackTrace();
+	        QApplication.initialize(args);
+        	QMessageBox.critical(null, "Critical Error",
+        			"An error occured while initializing or running the main program.  Please see errors.txt for more details.");
+
+        	// Set crash description (useful for filtering)
             BugSplat.SetDescription("Crash Report, Error, " + System.getProperty("os.name"));
+            
+            // Take care of the log files
+            if(!DISABLE_STDOUT_REDIRECT)
+            {
+	            if(errFile.exists()) { BugSplat.AddAdditionalFile(errFile.getAbsolutePath()); }
+	            if(logFile.exists()) { BugSplat.AddAdditionalFile(logFile.getAbsolutePath()); }
+            }
             
     		// Let BugSplat handle the exception and set error exit code
     		BugSplat.HandleException(new Exception(t));
