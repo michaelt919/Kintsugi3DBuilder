@@ -10,13 +10,15 @@ uniform sampler2D normalEstimate;
 
 struct SpecularResidualInfo
 {
-    vec4 residual;
+    float residualLuminance;
+    float alpha;
     vec3 halfAngleVector;
 };
 
 vec3 getDiffuseColor()
 {
-    return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
+    // Maximum possible diffuse reflectance is 1 / pi.
+    return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma)) / PI;
 }
 
 vec3 getDiffuseNormalVector()
@@ -39,7 +41,6 @@ SpecularResidualInfo computeSpecularResidualInfo()
 
     vec3 geometricNormal = normalize(fNormal);
     vec3 diffuseNormal = getDiffuseNormalVector();
-    vec3 diffuseColor = getDiffuseColor();
     
     vec3 view = normalize(getViewVector());
     
@@ -58,7 +59,9 @@ SpecularResidualInfo computeSpecularResidualInfo()
         vec3 attenuatedLightIntensity = infiniteLightSource ? lightIntensity : lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
         vec3 light = normalize(lightPreNormalized);
         
-        info.residual = removeDiffuse(color, diffuseColor, light, attenuatedLightIntensity, diffuseNormal);
+        vec4 residual = removeDiffuse(color, diffuseColor, light, attenuatedLightIntensity, diffuseNormal);
+        info.residualLuminance = getLuminance(residual.rgb);
+        info.alpha = residual.a;
         
         vec3 tangent = normalize(fTangent - dot(geometricNormal, fTangent));
         vec3 bitangent = normalize(fBitangent
@@ -69,17 +72,10 @@ SpecularResidualInfo computeSpecularResidualInfo()
         mat3 objectToTangent = transpose(tangentToObject);
         
         info.halfAngleVector = objectToTangent * normalize(view + light);
-        
-        //info.residual.rgb = vec3(0.3 * pow(max(0, info.halfAngleVector.z), 10));
-        float nDotH = max(0,dot(diffuseNormal, normalize(view + light)));
-        float nDotHSquared = nDotH * nDotH;
-        
-        //info.residual = vec4(0.5, 0.5, 0.5, 1.0);
-        //info.residual.rgb = vec3(0.5 * exp((nDotHSquared - 1) / (nDotHSquared * 0.0625)) / (nDotHSquared * nDotHSquared));
     }
     else
     {
-        info.residual.a = 0.0;
+        info.alpha = 0.0;
     }
     
     return info;

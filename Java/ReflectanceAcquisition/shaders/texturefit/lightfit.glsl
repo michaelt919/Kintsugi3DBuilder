@@ -86,6 +86,12 @@ LightFit fitLight()
     else
     {
         // Effectively divide by a diffuse albedo estimate to get the light intensity alone.
+        // The diffuse albedo is computed under the assumption that the incident light intensity is 
+        // effectively "one" at the object's position.
+        // This is reasonable since the luminance curve is balanced so that a reflectance of "one" 
+        // corresponds to 100% of the incident light being reflected diffusely.
+        // (Based on the XRite/MacBeth chart, which is at a location essentially the same distance
+        // from the light source as the object.)
         fit.intensity *= weightSum / weightedIntensitySum;
     }
     
