@@ -80,12 +80,7 @@ SpecularFit fitSpecular()
         vec3 view = normalize(getViewVector(i));
         float nDotV = dot(geometricNormal, view);
         
-        // Values of 1.0 for this color would correspond to the expected reflectance
-        // for an ideal diffuse reflector (diffuse albedo of 1)
-        // Hence, the maximum possible physically plausible reflectance is pi 
-        // (for a perfect specular surface reflecting all the incident light in the mirror direction)
-        // We need to scale this by 1/pi to give values in the range [0, 1].
-        vec4 color = getLinearColor() / PI;
+        vec4 color = getLinearColor(i);
     
         if (color.a * nDotV > 0)
         {

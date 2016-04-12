@@ -5,6 +5,8 @@
 
 #line 7 1001
 
+#define PI 3.1415926535897932384626433832795 // For convenience
+
 uniform bool infiniteLightSource;
 
 uniform mat4 cameraPose;

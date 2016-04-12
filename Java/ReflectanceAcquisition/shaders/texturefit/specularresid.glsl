@@ -17,7 +17,6 @@ struct SpecularResidualInfo
 
 vec3 getDiffuseColor()
 {
-    // Maximum possible diffuse reflectance is 1 / pi.
     return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma)) / PI;
 }
 
@@ -29,10 +28,17 @@ vec3 getDiffuseNormalVector()
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, vec3 attenuatedLightIntensity, vec3 normal)
 {
     float nDotL = max(0, dot(light, normal));
-    vec3 diffuseContrib = diffuseColor * nDotL * attenuatedLightIntensity;
-    float cap = 1.0 - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
-    vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
-    return vec4(remainder / nDotL, originalColor.a * nDotL);
+    if (nDotL == 0.0)
+    {
+        return vec4(0);
+    }
+    else
+    {
+        vec3 diffuseContrib = diffuseColor * nDotL * attenuatedLightIntensity;
+        float cap = 1.0 - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
+        vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
+        return vec4(remainder / nDotL, originalColor.a * nDotL);
+    }
 }
 
 SpecularResidualInfo computeSpecularResidualInfo()
@@ -41,6 +47,7 @@ SpecularResidualInfo computeSpecularResidualInfo()
 
     vec3 geometricNormal = normalize(fNormal);
     vec3 diffuseNormal = getDiffuseNormalVector();
+    vec3 diffuseColor = getDiffuseColor();
     
     vec3 view = normalize(getViewVector());
     
@@ -48,7 +55,10 @@ SpecularResidualInfo computeSpecularResidualInfo()
     // for an ideal diffuse reflector (diffuse albedo of 1)
     // Hence, the maximum possible physically plausible reflectance is pi 
     // (for a perfect specular surface reflecting all the incident light in the mirror direction)
-    // We need to scale this by 1/pi to give values in the range [0, 1].
+    // We should scale this by 1/pi to give values in the range [0, 1],
+    // but we don't need to now since there will be another pass to compute reflectivity later.
+    // Additionally removeDiffuse() depends on luminance values being in the same scale
+    // as in the original photographs.
     vec4 color = getLinearColor() / PI;
     
     float nDotV = dot(geometricNormal, view);
