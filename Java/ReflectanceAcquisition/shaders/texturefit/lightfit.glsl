@@ -45,41 +45,48 @@ LightFit fitLight()
             vec3 surfacePosition = (cameraPoses[i] * vec4(fPosition, 1.0)).xyz;
             float nDotV = dot(viewNormal, normalize(-surfacePosition));
             
-            vec4 color = vec4(vec3(0.01) / 
-                dot(vec3(1,2,0) - surfacePosition, vec3(1,2,0) - surfacePosition) *
-                max(0, dot(viewNormal, normalize(vec3(1,2,0) - surfacePosition))), 1.0); 
-            
             // Physically plausible values for the color components range from 0 to pi
             // We don't need to scale by pi because it will just cancel out
             // when we divide by the diffuse albedo estimate in the end.
-            //vec4 color = getLinearColor(i);
+            vec4 color = getLinearColor(i);
             
             if (color.a * nDotV > 0)
             {
                 vec3 lightUnnorm = fit.position-surfacePosition;
                 float lightSqr = dot(lightUnnorm, lightUnnorm);
-                vec3 scaledNormal = viewNormal * inversesqrt(lightSqr) / lightSqr;
+                vec3 scaledNormal = viewNormal * inversesqrt(lightSqr);
+                float nDotL = max(0, dot(scaledNormal, lightUnnorm));
+                scaledNormal /= lightSqr;
                 vec3 sampleVector = vec3(scaledNormal.xy, -dot(scaledNormal, surfacePosition));
                 float intensity = getLuminance(color.rgb);
                 
                 float weight = color.a * nDotV;
                 if (k != 0)
                 {
+                    // TODO: think more about whether error should be divided by fit.intensity
                     float error = intensity - fit.intensity * dot(scaledNormal, lightUnnorm);
                     weight *= exp(-error*error/(2*delta*delta));
                 }
                     
                 a += weight * outerProduct(sampleVector, sampleVector);
                 b += weight * intensity * sampleVector;
-                weightedIntensitySum += weight * intensity / nDotV; // n dot v ~= n dot l (Lambert)
-                weightSum += weight;
+                weightedIntensitySum += weight * intensity;
+                weightSum += weight * nDotL;
             }
         }
         
         vec3 solution = inverse(a) * b;
         fit.position = vec3(solution.xy, 0.0) / solution.z;
-        fit.intensity = solution.z;
-        fit.quality = clamp(solution.z * determinant(a) / weightSum, 0.0, 1.0);
+        // Intensity is close to:
+        // weighted sum of intensity * [n dot l / light distance squared]
+        // divided by weighted sum of [n dot l squared / light distance ^ 4]
+        // = estimate of intensity / n dot l * light distance squared
+        // = estimate of albedo * light distance squared
+        // = estimate of albedo * light intensity required to have an incident intensity of one
+        // at a typical surface position
+        // TODO: there are probably more robust ways to estimate the average light distance squared
+        fit.intensity = solution.z; 
+        fit.quality = max(solution.z * determinant(a) / weightSum, 0.0);
     }
     
     if (!validateFit(fit))

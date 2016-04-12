@@ -2192,120 +2192,120 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	System.out.println("Resampling...");
 	    	timestamp = new Date();
 	    	
-//			// Resample the reflectance data
-//			double[] roughnessValues = resample(viewSet, diffuseFitFramebuffer.getColorAttachmentTexture(0), diffuseFitFramebuffer.getColorAttachmentTexture(1));
-//			
-//	    	System.out.println("Creating specular reflectivity texture...");
-//			
-//			FloatVertexList roughnessList = new FloatVertexList(1, roughnessValues.length);
-//			
-//			for (int i = 0; i < roughnessValues.length; i++)
-//			{
-//				roughnessList.set(i, 0, (float)roughnessValues[i]);
-//			}
-//			
-//			if (roughnessValues != null)
-//			{
-//				Texture2D<ContextType> roughnessTexture = 
-//						context.get2DColorTextureBuilder(ROUGHNESS_TEXTURE_SIZE, ROUGHNESS_TEXTURE_SIZE, roughnessList)
-//							.setInternalFormat(ColorFormat.R32F)
-//							.setLinearFilteringEnabled(true)
-//							.setMipmapsEnabled(false)
-//							.createTexture();
-//				
-//				SpecularFit2<ContextType> specularFit2 = createSpecularFit2(specularFitFramebuffer, param.getTextureSubdivision());
-//				
-//				specularFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//				
-//				if (param.getTextureSubdivision() == 1)
-//	        	{
-//	        		Texture3D<ContextType> preprojectedViews = null;
-//			    	
-//			    	if (param.isImagePreprojectionUseEnabled())
-//			    	{
-//		    			preprojectedViews = context.get2DColorTextureArrayBuilder(subdivSize, subdivSize, viewSet.getCameraPoseCount()).createTexture();
-//				    	
-//						for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-//						{
-//							preprojectedViews.loadLayer(i, new File(new File(tmpDir, String.format("%04d", i)), String.format("r%04dc%04d.png", 0, 0)), true);
-//						}
-//			        
-//			        	specularFit2.fit(0, 0, preprojectedViews, null, null, 
-//			        			diffuseFitFramebuffer.getColorAttachmentTexture(0), diffuseFitFramebuffer.getColorAttachmentTexture(1), roughnessTexture);
-//			        	
-//			    		preprojectedViews.delete();
-//			    	}
-//		    		else
-//		    		{
-//		    			specularFit2.fit(0, 0, viewTextures, depthTextures, shadowTextures, 
-//		    					diffuseFitFramebuffer.getColorAttachmentTexture(0), diffuseFitFramebuffer.getColorAttachmentTexture(1), roughnessTexture);
-//		    		}
-//	        	}
-//	        	else
-//	        	{
-//	        		for (int row = 0; row < param.getTextureSubdivision(); row++)
-//	    	    	{
-//	    		    	for (int col = 0; col < param.getTextureSubdivision(); col++)
-//	    	    		{
-//	    	        		if (param.isImagePreprojectionUseEnabled())
-//	    			    	{
-//	    	        			Texture3D<ContextType> preprojectedViews = context.get2DColorTextureArrayBuilder(subdivSize, subdivSize, viewSet.getCameraPoseCount()).createTexture();
-//	    				    	
-//	    						for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-//	    						{
-//	    							preprojectedViews.loadLayer(i, new File(new File(tmpDir, String.format("%04d", i)), String.format("r%04dc%04d.png", row, col)), true);
-//	    						}
-//	    	    		        
-//	    	    		        specularFit2.fit(row, col, preprojectedViews, null, null, 
-//	    	    		        		diffuseFitFramebuffer.getColorAttachmentTexture(0), diffuseFitFramebuffer.getColorAttachmentTexture(1), roughnessTexture);
-//
-//	    	    	    		specularFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-//	    	    		        		"PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-//	    	    		        
-//	    	    	    		specularFitFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-//	    	    		        		"PNG", new File(roughnessTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-//	    	    		        
-//	    	    	    		specularFitFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-//	    	    		        		"PNG", new File(snormalTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-//
-//	    			    		preprojectedViews.delete();
-//	    			    	}
-//	    	        		else
-//	    	        		{
-//		    	        		specularFit2.fit(row, col, viewTextures, depthTextures, shadowTextures, 
-//	    	        				diffuseFitFramebuffer.getColorAttachmentTexture(0), diffuseFitFramebuffer.getColorAttachmentTexture(1), roughnessTexture);
-//	    	        		}
-//	    	        		
-//	    	        		System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-//	    	    		}
-//	    	    	}
-//	        	}
-//				
-//				// Fill holes
-//				holeFillFrontFBO = specularFitFramebuffer;
-//		    	for (int i = 0; i < param.getTextureSize() / 2; i++)
-//		    	{
-//		    		holeFillBackFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//		    		holeFillBackFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-//		    		holeFillBackFBO.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-//		    		holeFillBackFBO.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-//		    		
-//		    		holeFillProgram.setTexture("input0", holeFillFrontFBO.getColorAttachmentTexture(0));
-//		    		holeFillProgram.setTexture("input1", holeFillFrontFBO.getColorAttachmentTexture(1));
-//		    		holeFillProgram.setTexture("input2", holeFillFrontFBO.getColorAttachmentTexture(2));
-//		    		holeFillProgram.setTexture("input3", holeFillFrontFBO.getColorAttachmentTexture(3));
-//		    		
-//		    		holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, holeFillBackFBO);
-//		    		context.finish();
-//		    		
-//		    		FramebufferObject<ContextType> tmp = holeFillFrontFBO;
-//		    		holeFillFrontFBO = holeFillBackFBO;
-//		    		holeFillBackFBO = tmp;
-//		    	}
-//		    	specularFitFramebuffer = holeFillFrontFBO;
-//				
-//    	    	specularFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "specularAlt.png"));
-//			}
+			// Resample the reflectance data
+			double[] roughnessValues = resample(viewSet, diffuseFitFramebuffer.getColorAttachmentTexture(0), diffuseFitFramebuffer.getColorAttachmentTexture(1));
+			
+	    	System.out.println("Creating specular reflectivity texture...");
+			
+			FloatVertexList roughnessList = new FloatVertexList(1, roughnessValues.length);
+			
+			for (int i = 0; i < roughnessValues.length; i++)
+			{
+				roughnessList.set(i, 0, (float)roughnessValues[i]);
+			}
+			
+			if (roughnessValues != null)
+			{
+				Texture2D<ContextType> roughnessTexture = 
+						context.get2DColorTextureBuilder(ROUGHNESS_TEXTURE_SIZE, ROUGHNESS_TEXTURE_SIZE, roughnessList)
+							.setInternalFormat(ColorFormat.R32F)
+							.setLinearFilteringEnabled(true)
+							.setMipmapsEnabled(false)
+							.createTexture();
+				
+				SpecularFit2<ContextType> specularFit2 = createSpecularFit2(specularFitFramebuffer, param.getTextureSubdivision());
+				
+				specularFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+				
+				if (param.getTextureSubdivision() == 1)
+	        	{
+	        		Texture3D<ContextType> preprojectedViews = null;
+			    	
+			    	if (param.isImagePreprojectionUseEnabled())
+			    	{
+		    			preprojectedViews = context.get2DColorTextureArrayBuilder(subdivSize, subdivSize, viewSet.getCameraPoseCount()).createTexture();
+				    	
+						for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+						{
+							preprojectedViews.loadLayer(i, new File(new File(tmpDir, String.format("%04d", i)), String.format("r%04dc%04d.png", 0, 0)), true);
+						}
+			        
+			        	specularFit2.fit(0, 0, preprojectedViews, null, null, 
+			        			diffuseFitFramebuffer.getColorAttachmentTexture(0), diffuseFitFramebuffer.getColorAttachmentTexture(1), roughnessTexture);
+			        	
+			    		preprojectedViews.delete();
+			    	}
+		    		else
+		    		{
+		    			specularFit2.fit(0, 0, viewTextures, depthTextures, shadowTextures, 
+		    					diffuseFitFramebuffer.getColorAttachmentTexture(0), diffuseFitFramebuffer.getColorAttachmentTexture(1), roughnessTexture);
+		    		}
+	        	}
+	        	else
+	        	{
+	        		for (int row = 0; row < param.getTextureSubdivision(); row++)
+	    	    	{
+	    		    	for (int col = 0; col < param.getTextureSubdivision(); col++)
+	    	    		{
+	    	        		if (param.isImagePreprojectionUseEnabled())
+	    			    	{
+	    	        			Texture3D<ContextType> preprojectedViews = context.get2DColorTextureArrayBuilder(subdivSize, subdivSize, viewSet.getCameraPoseCount()).createTexture();
+	    				    	
+	    						for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+	    						{
+	    							preprojectedViews.loadLayer(i, new File(new File(tmpDir, String.format("%04d", i)), String.format("r%04dc%04d.png", row, col)), true);
+	    						}
+	    	    		        
+	    	    		        specularFit2.fit(row, col, preprojectedViews, null, null, 
+	    	    		        		diffuseFitFramebuffer.getColorAttachmentTexture(0), diffuseFitFramebuffer.getColorAttachmentTexture(1), roughnessTexture);
+
+	    	    	    		specularFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+	    	    		        		"PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+	    	    		        
+	    	    	    		specularFitFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+	    	    		        		"PNG", new File(roughnessTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+	    	    		        
+	    	    	    		specularFitFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
+	    	    		        		"PNG", new File(snormalTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+
+	    			    		preprojectedViews.delete();
+	    			    	}
+	    	        		else
+	    	        		{
+		    	        		specularFit2.fit(row, col, viewTextures, depthTextures, shadowTextures, 
+	    	        				diffuseFitFramebuffer.getColorAttachmentTexture(0), diffuseFitFramebuffer.getColorAttachmentTexture(1), roughnessTexture);
+	    	        		}
+	    	        		
+	    	        		System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+	    	    		}
+	    	    	}
+	        	}
+				
+				// Fill holes
+				holeFillFrontFBO = specularFitFramebuffer;
+		    	for (int i = 0; i < param.getTextureSize() / 2; i++)
+		    	{
+		    		holeFillBackFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		holeFillBackFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		holeFillBackFBO.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		holeFillBackFBO.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+		    		
+		    		holeFillProgram.setTexture("input0", holeFillFrontFBO.getColorAttachmentTexture(0));
+		    		holeFillProgram.setTexture("input1", holeFillFrontFBO.getColorAttachmentTexture(1));
+		    		holeFillProgram.setTexture("input2", holeFillFrontFBO.getColorAttachmentTexture(2));
+		    		holeFillProgram.setTexture("input3", holeFillFrontFBO.getColorAttachmentTexture(3));
+		    		
+		    		holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, holeFillBackFBO);
+		    		context.finish();
+		    		
+		    		FramebufferObject<ContextType> tmp = holeFillFrontFBO;
+		    		holeFillFrontFBO = holeFillBackFBO;
+		    		holeFillBackFBO = tmp;
+		    	}
+		    	specularFitFramebuffer = holeFillFrontFBO;
+				
+    	    	specularFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "specularAlt.png"));
+			}
 			
 			if (viewTextures != null)
 	        {
