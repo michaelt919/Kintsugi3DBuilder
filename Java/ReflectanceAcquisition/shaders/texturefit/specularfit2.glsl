@@ -11,7 +11,8 @@ uniform sampler2D roughnessEstimate;
 
 vec3 getDiffuseColor()
 {
-    return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
+    // Maximum possible diffuse reflectance is 1 / pi.
+    return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma)) / PI;
 }
 
 vec3 getDiffuseNormalVector()
@@ -24,7 +25,8 @@ float getRoughness()
     return texture(roughnessEstimate, fTexCoord).r;
 }
 
-vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, vec3 attenuatedLightIntensity, vec3 normal)
+vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, 
+    vec3 attenuatedLightIntensity, vec3 normal)
 {
     float nDotL = max(0, dot(light, normal));
     if (nDotL == 0.0)
@@ -54,7 +56,13 @@ vec4 fitSpecular()
         vec3 view = normalize(getViewVector(i));
         float nDotV = dot(geometricNormal, view);
         
-        // TODO do we need to divide by pi here?
+        // Values of 1.0 for this color would correspond to the expected reflectance
+        // for an ideal diffuse reflector (diffuse albedo of 1)
+        // Hence, the maximum possible physically plausible reflectance is pi 
+        // (for a perfect specular surface reflecting all the incident light in the mirror direction)
+        // We should scale this by 1/pi to give values in the range [0, 1],
+        // but we'll wait until the end, since removeDiffuse() depends on luminance values being 
+        // in the same scale as in the original photographs.
         vec4 color = getLinearColor(i);
         
         if (color.a * nDotV > 0)
@@ -84,7 +92,9 @@ vec4 fitSpecular()
         }
     }
     
-    return sum / sum.a;
+    // Dividing by the sum of weights to get the weighted average,
+    // and by pi to get the specular reflectivity in the correct scale (see comment above).
+    return sum / (PI * sum.a);
 }
 
 #endif // SPECULARFIT_GLSL
