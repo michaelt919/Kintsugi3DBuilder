@@ -10,7 +10,20 @@ uniform float gamma;
 
 float getLuminance(vec3 rgbColor)
 {
-    return dot(rgbColor, vec3(0.17697, 0.8124, 0.01063));
+    // linearized sRGB to CIE-Y
+    return dot(rgbColor, vec3(0.2126, 0.7152, 0.0722));
+}
+
+float getMaxLuminance()
+{
+    if (useLuminanceMap)
+    {
+        return texture(luminanceMap, 1.0).r;
+    }
+    else
+    {
+        return 1.0;
+    }
 }
 
 vec3 linearizeColor(vec3 nonlinearColor)
