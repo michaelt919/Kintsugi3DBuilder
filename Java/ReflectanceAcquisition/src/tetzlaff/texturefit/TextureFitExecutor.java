@@ -859,11 +859,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			
 			BufferedImage roughnessImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
 	        roughnessImg.setRGB(0, 0, spatialRes, spatialRes, roughnessData, 0, spatialRes);
-	        ImageIO.write(roughnessImg, "PNG", new File(outputDir, "roughness_beckmann.png"));
+	        ImageIO.write(roughnessImg, "PNG", new File(new File(outputDir, "textures"), "roughness.png"));
 			
 			BufferedImage reflectivityImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
 	        reflectivityImg.setRGB(0, 0, spatialRes, spatialRes, reflectivityData, 0, spatialRes);
-	        ImageIO.write(reflectivityImg, "PNG", new File(outputDir, "reflectivity_beckmann.png"));
+	        ImageIO.write(reflectivityImg, "PNG", new File(new File(outputDir, "textures"), "debug_reflectivity_beckmann.png"));
 			
 			System.out.println("Wrote specular roughness image...");
 			
@@ -2176,15 +2176,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    		diffuseFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "ddebug.png"));
 	    	}
 	
-	    	specularFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "specular.png"));
-	    	specularFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(textureDirectory, "roughness.png"));
+	    	specularFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "specular-old.png"));
+	    	specularFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(textureDirectory, "roughness-old.png"));
 	    	if (param.isSpecularNormalComputationEnabled())
 	    	{
-	    		specularFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "snormal.png"));
+	    		specularFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "snormal-old.png"));
 	    	}
 	    	if (DEBUG)
 	    	{
-		    	specularFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "sdebug.png"));
+		    	specularFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "sdebug-old.png"));
 	    	}
 	
 	    	System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -2304,7 +2304,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	}
 		    	specularFitFramebuffer = holeFillFrontFBO;
 				
-    	    	specularFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "specularAlt.png"));
+    	    	specularFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "specular.png"));
 			}
 			
 			if (viewTextures != null)

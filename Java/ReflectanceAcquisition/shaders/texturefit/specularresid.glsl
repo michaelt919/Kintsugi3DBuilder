@@ -17,7 +17,7 @@ struct SpecularResidualInfo
 
 vec3 getDiffuseColor()
 {
-    return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma)) / PI;
+    return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
 }
 
 vec3 getDiffuseNormalVector()
@@ -25,7 +25,8 @@ vec3 getDiffuseNormalVector()
     return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
 }
 
-vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, vec3 attenuatedLightIntensity, vec3 normal)
+vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, float maxLuminance,
+    vec3 light, vec3 attenuatedLightIntensity, vec3 normal)
 {
     float nDotL = max(0, dot(light, normal));
     if (nDotL == 0.0)
@@ -35,7 +36,7 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, vec3 atten
     else
     {
         vec3 diffuseContrib = diffuseColor * nDotL * attenuatedLightIntensity;
-        float cap = 1.0 - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
+        float cap = maxLuminance - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
         vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
         return vec4(remainder / nDotL, originalColor.a * nDotL);
     }
@@ -48,6 +49,7 @@ SpecularResidualInfo computeSpecularResidualInfo()
     vec3 geometricNormal = normalize(fNormal);
     vec3 diffuseNormal = getDiffuseNormalVector();
     vec3 diffuseColor = getDiffuseColor();
+    float maxLuminance = getMaxLuminance();
     
     vec3 view = normalize(getViewVector());
     
@@ -59,7 +61,7 @@ SpecularResidualInfo computeSpecularResidualInfo()
     // but we don't need to now since there will be another pass to compute reflectivity later.
     // Additionally removeDiffuse() depends on luminance values being in the same scale
     // as in the original photographs.
-    vec4 color = getLinearColor() / PI;
+    vec4 color = getLinearColor();
     
     float nDotV = dot(geometricNormal, view);
     
@@ -69,7 +71,8 @@ SpecularResidualInfo computeSpecularResidualInfo()
         vec3 attenuatedLightIntensity = infiniteLightSource ? lightIntensity : lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
         vec3 light = normalize(lightPreNormalized);
         
-        vec4 residual = removeDiffuse(color, diffuseColor, light, attenuatedLightIntensity, diffuseNormal);
+        vec4 residual = removeDiffuse(color, diffuseColor, maxLuminance, 
+            light, attenuatedLightIntensity, diffuseNormal);
         info.residualLuminance = getLuminance(residual.rgb);
         info.alpha = residual.a;
         
@@ -82,6 +85,12 @@ SpecularResidualInfo computeSpecularResidualInfo()
         mat3 objectToTangent = transpose(tangentToObject);
         
         info.halfAngleVector = objectToTangent * normalize(view + light);
+        
+        // // TODO debug code, remove this
+        // float roughnessSquared = 0.25 * 0.25;
+        // float nDotHSquared = info.halfAngleVector.z * info.halfAngleVector.z;
+        // info.residualLuminance = 0.5 * exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared))
+            // / (PI * roughnessSquared * nDotHSquared * nDotHSquared);
     }
     else
     {
