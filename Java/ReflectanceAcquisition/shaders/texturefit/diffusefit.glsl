@@ -105,7 +105,7 @@ DiffuseFit fitDiffuse()
                         fit3Quality + 
                     clamp(weightedSum.rgb / nDotLSum, 0, 1) * 
                         clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality);
-        fit.normal = normalize(solution.xyz) * fit3Quality + fNormal * (1 - fit3Quality);
+        fit.normal = normalize(normalize(solution.xyz) * fit3Quality + fNormal * (1 - fit3Quality));
         //debug = vec4(fit3Quality, clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality), 0.0, 1.0);
     }
     
@@ -125,7 +125,7 @@ DiffuseFit fitDiffuse()
         mat3 tangentToObject = mat3(tangent, bitangent, geometricNormal);
         mat3 objectToTangent = transpose(tangentToObject);
     
-        fit.normalTS = tangent//objectToTangent * fit.normal;
+        fit.normalTS = objectToTangent * fit.normal;
     }
     
     return fit;
