@@ -2,10 +2,12 @@
 
 #define PI 3.1415926535897932384626433832795
 
+#define LIGHT_COUNT 4
+
 uniform mat4 model_view;
-uniform mat4 lightMatrix;
-uniform vec3 lightPosition;
-uniform vec3 lightColor;
+uniform mat4 lightMatrices[LIGHT_COUNT];
+uniform vec3 lightPositions[LIGHT_COUNT];
+uniform vec3 lightColors[LIGHT_COUNT];
 uniform vec3 ambientColor;
 uniform float gamma;
 uniform float shadowBias;
@@ -41,11 +43,11 @@ void main()
     vec4 diffuseColor = pow(textureAlphaRobust(diffuse, fTexCoord), vec4(gamma));
     vec4 specularColor = pow(textureAlphaRobust(specular, fTexCoord), vec4(gamma));
     vec3 normalDir = normalize((model_view * 
-                vec4(textureAlphaRobust(normal, fTexCoord).xyz * 2 - vec3(1.0), 0.0)).xyz);
+                vec4(fNormal/*textureAlphaRobust(normal, fTexCoord).xyz * 2 - vec3(1.0)*/, 0.0)).xyz);
     vec3 viewDir = normalize(-(model_view * vec4(fPosition, 1.0)).xyz);
-    vec3 lightDirection = normalize((model_view * vec4(lightPosition - fPosition, 0.0)).xyz);
-    float nDotH = max(0.0, dot(normalize(lightDirection + viewDir), normalDir));
-    float roughness = textureAlphaRobust(roughness, fTexCoord).r;
+    vec2 roughnessVector = textureAlphaRobust(roughness, fTexCoord).ra;
+    float roughness = roughnessVector.x;
+    float roughnessAlpha = roughnessVector.y;
     
     // vec4 projTexCoords = lightMatrix * vec4(fPosition, 1.0);
     // projTexCoords /= projTexCoords.w;
@@ -58,21 +60,46 @@ void main()
         // return;
     // }
     
-    float mfdEval = 0.0;
+    float nDotV = max(0.0, dot(viewDir, normalDir));
+    float oneMinusNDotV = 1.0 - nDotV;
+    float oneMinusNDotVSquared = oneMinusNDotV * oneMinusNDotV;
     
-    if (nDotH > 0.0)
+    vec3 accumColor = ambientColor / PI * (diffuseColor.rgb + specularColor.rgb + (vec3(1.0) - diffuseColor.rgb - specularColor.rgb) * oneMinusNDotVSquared * oneMinusNDotVSquared * oneMinusNDotV);
+    
+    for (int i = 0; i < LIGHT_COUNT; i++)
     {
-        float nDotHSquared = nDotH * nDotH;
-        float roughnessSquared = roughness * roughness;
-    
-        mfdEval = exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
-            / (nDotHSquared * nDotHSquared);
-    }
+        vec3 lightDir = normalize((model_view * vec4(lightPositions[i] - fPosition, 0.0)).xyz);
+        vec3 halfDir = normalize(lightDir + viewDir);
         
+        float nDotL = max(0.0, dot(lightDir, normalDir));
+        float nDotH = max(0.0, dot(halfDir, normalDir));
+        float hDotV = max(0.0, dot(halfDir, viewDir));
+        
+        // Diffuse
+        accumColor += lightColors[i] * nDotL * diffuseColor.rgb / PI;
+    
+        if (nDotH > 0.0 && roughnessAlpha > 0.0)
+        {
+            float nDotHSquared = nDotH * nDotH;
+            float roughnessSquared = roughness * roughness;
+        
+            float mfdEval = exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
+                / (PI * nDotHSquared * nDotHSquared * roughnessSquared);
+                
+            float geomAtten = min(1.0, min(2 * nDotH * nDotV / hDotV, 2 * nDotH * nDotL / hDotV));
+                
+            float oneMinusHDotV = 1.0 - hDotV;
+            float oneMinusHDotVSquared = oneMinusHDotV * oneMinusHDotV;
+            
+            vec3 fresnel = specularColor.rgb + (vec3(1.0) - specularColor.rgb) *
+                    oneMinusHDotVSquared * oneMinusHDotVSquared * oneMinusHDotV;
+                
+            // Specular
+            accumColor += lightColors[i] * mfdEval * geomAtten * fresnel;
+        }
+    }
+    
     // TODO light attenuation
         
-    fragColor = vec4(pow(
-        (ambientColor + lightColor * max(0.0, dot(lightDirection, normalDir))) * diffuseColor.rgb / PI + 
-            mfdEval * lightColor * specularColor.rgb, 
-        vec3(1 / gamma)), 1.0);
+    fragColor = vec4(pow(accumColor * PI, vec3(1 / gamma)), 1.0);
 }

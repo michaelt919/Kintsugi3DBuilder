@@ -153,7 +153,7 @@ public class TrackballLightController implements LightController, CharacterListe
 		{
 			int selection = keycode - KeyCodes.ZERO;
 			
-			if (lightControls.get(selection))
+			if (selection < trackballs.size() && lightControls.get(selection))
 			{
 				lightControls.set(selection, false);
 				lightsControlled--;
