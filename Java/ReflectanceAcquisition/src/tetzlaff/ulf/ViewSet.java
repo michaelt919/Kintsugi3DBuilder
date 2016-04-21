@@ -345,6 +345,15 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			lightIndexBuffer = context.createUniformBuffer().setData(indexVertexList);
 		}
 		
+		// Luminance map texture
+		if (linearLuminanceValues != null && encodedLuminanceValues != null)
+		{
+			this.linearLuminanceValues = linearLuminanceValues;
+			this.encodedLuminanceValues = encodedLuminanceValues;
+			this.gamma = gamma;
+			luminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues).createLuminanceMap(context);
+		}
+		
 		// Read the images from a file
 		if (imageOptions != null && imageOptions.isLoadingRequested() && imageOptions.getFilePath() != null && imageFileNames != null && imageFileNames.size() > 0)
 		{
@@ -417,14 +426,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			
 			textureArrayBuilder.setLinearFilteringEnabled(true);
 			textureArray = textureArrayBuilder.createTexture();
-			
-			if (linearLuminanceValues != null && encodedLuminanceValues != null)
-			{
-				this.linearLuminanceValues = linearLuminanceValues;
-				this.encodedLuminanceValues = encodedLuminanceValues;
-				this.gamma = gamma;
-				luminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues).createLuminanceMap(context);
-			}
 			
 			if(loadingCallback != null) {
 				loadingCallback.setMaximum(imageFileNames.size());
@@ -706,7 +707,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			else if (id.equals("e"))
 			{
 				// Non-linear encoding
-				linearLuminanceList.add(scanner.nextDouble() / 100.0);
+				linearLuminanceList.add(scanner.nextDouble());
 				encodedLuminanceList.add((Byte)((byte)scanner.nextShort()));
 				scanner.nextLine();
 			}

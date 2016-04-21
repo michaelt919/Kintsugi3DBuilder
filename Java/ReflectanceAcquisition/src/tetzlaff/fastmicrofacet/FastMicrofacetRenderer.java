@@ -98,6 +98,10 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 			this.shadowRenderable.addVertexBuffer("normal", this.normalBuffer);
 			this.shadowBuffer = context.getFramebufferObjectBuilder(4096, 4096).addDepthAttachment().createFramebufferObject();
 		} 
+		catch (RuntimeException e)
+		{
+			e.printStackTrace();
+		}
     	catch (IOException e) 
     	{
 			e.printStackTrace();
@@ -112,46 +116,71 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 	@Override
 	public void draw() 
 	{
-    	Matrix4 modelView = cameraController.getViewMatrix() // Trackball
-				.times(Matrix4.translate(mesh.getCentroid().negated())); // Model
+		try
+		{
+	    	Matrix4 modelView = cameraController.getViewMatrix() // Trackball
+					.times(Matrix4.translate(mesh.getCentroid().negated())); // Model
+			
+	    	Vector3 lightPositions[] = new Vector3[lightController.getLightCount()];
+	    	for (int i = 0; i < lightController.getLightCount(); i++)
+			{
+	    		Matrix4 lightMatrix = lightController.getLightMatrix(i)
+	        			.times(Matrix4.translate(mesh.getCentroid().negated()));
+	    		
+	    		lightPositions[i] = new Matrix3(lightMatrix).transpose().times(new Vector3(lightMatrix.getColumn(3).negated()));
+			}
+			
+	//		this.shadowBuffer.clearDepthBuffer();
+	//    	
+	//    	this.shadowRenderable.program().setUniform("model_view", lightMatrix);
+	//    	this.shadowRenderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 2, 1.0f, 1.0f, 9.0f));
+	//    	this.shadowRenderable.draw(PrimitiveMode.TRIANGLES, this.shadowBuffer);
+			
+			Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
+	    	
+	    	FramebufferSize size = framebuffer.getSize();
+	    	
+	    	float gamma = 2.2f;
+	    	Vector3 ambientColor = new Vector3(0.01f, 0.01f, 0.01f);
+	    	
+	    	Vector3 clearColor = new Vector3(
+	    			(float)Math.pow(ambientColor.x, 1.0 / gamma),
+	    			(float)Math.pow(ambientColor.y, 1.0 / gamma),
+	    			(float)Math.pow(ambientColor.z, 1.0 / gamma));
+	    	
+	    	framebuffer.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
+	    	framebuffer.clearDepthBuffer();
+	
+	    	this.renderable.program().setTexture("diffuse", this.diffuse);
+	    	this.renderable.program().setTexture("normal", this.normal);
+	    	this.renderable.program().setTexture("specular", this.specular);
+	    	this.renderable.program().setTexture("roughness", this.roughness);
+	//    	this.renderable.program().setTexture("shadow", this.shadowBuffer.getDepthAttachmentTexture());
+	    	
+	    	this.renderable.program().setUniform("model_view", modelView);
+	    	this.renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
+	//    	this.renderable.program().setUniform("lightMatrix", Matrix4.perspective((float)Math.PI / 2, 1.0f, 1.0f, 9.0f).times(lightMatrix));
+	    	
+	    	// TODO settings UI
+	    	this.renderable.program().setUniform("gamma", 2.2f);
+	    	this.renderable.program().setUniform("shadowBias", 0.001f);
+	    	this.renderable.program().setUniform("ambientColor", ambientColor);
+	    	this.renderable.program().setUniform("lightColors[0]", lightController.getLightColor(0));
+	    	this.renderable.program().setUniform("lightColors[1]", lightController.getLightColor(1));
+	    	this.renderable.program().setUniform("lightColors[2]", lightController.getLightColor(2));
+	    	this.renderable.program().setUniform("lightColors[3]", lightController.getLightColor(3));
+	    	this.renderable.program().setUniform("lightPositions[0]", lightPositions[0]);
+	    	this.renderable.program().setUniform("lightPositions[1]", lightPositions[1]);
+	    	this.renderable.program().setUniform("lightPositions[2]", lightPositions[2]);
+	    	this.renderable.program().setUniform("lightPositions[3]", lightPositions[3]);
+	    	
+	    	this.renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+		}
+		catch (RuntimeException e)
+		{
+			e.printStackTrace(System.err);
+		}
 		
-    	
-    	Matrix4 lightMatrix = lightController.getLightMatrix(0)
-    			.times(Matrix4.translate(mesh.getCentroid().negated()));
-    	
-    	Vector3 lightPosition = new Matrix3(lightMatrix).transpose().times(new Vector3(lightMatrix.getColumn(3).negated()));
-		
-		this.shadowBuffer.clearDepthBuffer();
-    	
-    	this.shadowRenderable.program().setUniform("model_view", lightMatrix);
-    	this.shadowRenderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 2, 1.0f, 1.0f, 9.0f));
-    	this.shadowRenderable.draw(PrimitiveMode.TRIANGLES, this.shadowBuffer);
-		
-		Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
-    	
-    	FramebufferSize size = framebuffer.getSize();
-    	
-    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
-    	framebuffer.clearDepthBuffer();
-
-    	this.renderable.program().setTexture("diffuse", this.diffuse);
-    	this.renderable.program().setTexture("normal", this.normal);
-    	this.renderable.program().setTexture("specular", this.specular);
-    	this.renderable.program().setTexture("roughness", this.roughness);
-    	this.renderable.program().setTexture("shadow", this.shadowBuffer.getDepthAttachmentTexture());
-    	
-    	this.renderable.program().setUniform("model_view", modelView);
-    	this.renderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 4, (float)size.width / (float)size.height, 0.01f, 100.0f));
-    	this.renderable.program().setUniform("lightMatrix", Matrix4.perspective((float)Math.PI / 2, 1.0f, 1.0f, 9.0f).times(lightMatrix));
-    	
-    	// TODO settings UI
-    	this.renderable.program().setUniform("gamma", 2.2f);
-    	this.renderable.program().setUniform("shadowBias", 0.001f);
-    	this.renderable.program().setUniform("ambientColor", new Vector3(0.05f, 0.05f, 0.05f));
-    	this.renderable.program().setUniform("lightColor", lightController.getLightColor(0));
-    	this.renderable.program().setUniform("lightPosition", lightPosition);
-    	
-    	this.renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 	}
 
 	@Override
@@ -176,8 +205,18 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 	{
 		try
         {
-			this.program.delete();
-			this.shadowProgram.delete();
+			if (this.program != null)
+			{
+				this.program.delete();
+			}
+			
+			if (this.shadowProgram != null)
+			{
+				this.shadowProgram.delete();
+			}
+			
+			this.program = null;
+			this.shadowProgram = null;
 			
     		this.program = context.getShaderProgramBuilder()
 					.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))

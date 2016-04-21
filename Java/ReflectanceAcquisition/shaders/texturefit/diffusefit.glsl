@@ -14,6 +14,7 @@ struct DiffuseFit
 {
     vec3 color;
     vec3 normal;
+    vec3 normalTS;
     vec3 ambient;
 };
 
@@ -31,7 +32,7 @@ DiffuseFit fitDiffuse()
 {
     vec3 geometricNormal = normalize(fNormal);
     
-    DiffuseFit fit = DiffuseFit(vec3(0), vec3(0), vec3(0));
+    DiffuseFit fit = DiffuseFit(vec3(0), vec3(0), vec3(0), vec3(0));
     
     for (int k = 0; k < iterations; k++)
     {
@@ -105,7 +106,7 @@ DiffuseFit fitDiffuse()
                     clamp(weightedSum.rgb / nDotLSum, 0, 1) * 
                         clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality);
         fit.normal = normalize(solution.xyz) * fit3Quality + fNormal * (1 - fit3Quality);
-        debug = vec4(fit3Quality, clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality), 0.0, 1.0);
+        //debug = vec4(fit3Quality, clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality), 0.0, 1.0);
     }
     
     if (!validateFit(fit))
@@ -113,6 +114,18 @@ DiffuseFit fitDiffuse()
         fit.color = vec3(0.0);
         fit.normal = vec3(0.0);
         fit.ambient = vec3(0.0);
+    }
+    else
+    {
+        vec3 tangent = normalize(fTangent - dot(geometricNormal, fTangent));
+        vec3 bitangent = normalize(fBitangent
+            - dot(geometricNormal, fBitangent) * geometricNormal 
+            - dot(tangent, fBitangent) * tangent);
+            
+        mat3 tangentToObject = mat3(tangent, bitangent, geometricNormal);
+        mat3 objectToTangent = transpose(tangentToObject);
+    
+        fit.normalTS = tangent//objectToTangent * fit.normal;
     }
     
     return fit;

@@ -76,7 +76,15 @@ public class FastMicrofacetProgram
 	    		}
 	    		else if (keycode == KeyCodes.P)
 	    		{
-	    			renderer.reloadShaders();
+	    			System.out.println("Reloading shaders...");
+	    			try
+	    			{
+	    				renderer.reloadShaders();
+	    			}
+	    			catch(RuntimeException e)
+	    			{
+	    				e.printStackTrace(System.err);
+	    			}
 	    		}
 	    	});
 	        
