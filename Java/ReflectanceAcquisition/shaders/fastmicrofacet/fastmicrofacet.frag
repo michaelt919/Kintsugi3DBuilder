@@ -91,11 +91,20 @@ void main()
             float oneMinusHDotV = 1.0 - hDotV;
             float oneMinusHDotVSquared = oneMinusHDotV * oneMinusHDotV;
             
-            vec3 fresnel = specularColor.rgb + (vec3(1.0) - specularColor.rgb) *
-                    oneMinusHDotVSquared * oneMinusHDotVSquared * oneMinusHDotV;
+            float f0 = dot(specularColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+            float sqrtF0 = sqrt(f0);
+            float ior = (1 + sqrtF0) / (1 - sqrtF0);
+            float g = sqrt(ior*ior + hDotV * hDotV - 1);
+            float fresnel = 0.5 * pow(g - hDotV, 2) / pow(g + hDotV, 2)
+                * (1 + pow(hDotV * (g + hDotV) - 1, 2) / pow(hDotV * (g - hDotV) + 1, 2));
+            
+            vec3 fresnelReflectivity = specularColor.rgb + (vec3(1.0) - specularColor.rgb) *
+                    max(0, fresnel - f0) / (1.0 - f0);
+                    //max(0, oneMinusHDotVSquared * oneMinusHDotVSquared * oneMinusHDotV - f0) / (1.0 - f0);
+                    //oneMinusHDotVSquared * oneMinusHDotVSquared * oneMinusHDotV;
                 
             // Specular
-            accumColor += lightColors[i] * mfdEval * geomAtten * fresnel;
+            accumColor += lightColors[i] * mfdEval * geomAtten * fresnelReflectivity;
         }
     }
     

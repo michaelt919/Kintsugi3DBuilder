@@ -15,7 +15,6 @@ import tetzlaff.gl.Program;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
-import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.Drawable;

@@ -281,7 +281,7 @@ vec4 getProjTexSample(int index, bool useMipmaps)
         //return (color.a < 0.9999 ? 0.0 : 1.0) * vec4(pow(color.rgb, vec3(gamma)), 1.0);
         
         vec3 colorGC = pow(color.rgb, vec3(gamma));
-        float scale = colorGC.r + colorGC.g + colorGC.b < 0.001 ? 0.0 : texture(luminanceMap, (colorGC.r + colorGC.g + colorGC.b) / 3).r * 3 / (colorGC.r + colorGC.g + colorGC.b) * 15;
+        float scale = colorGC.r + colorGC.g + colorGC.b < 0.001 ? 0.0 : texture(luminanceMap, (colorGC.r + colorGC.g + colorGC.b) / 3).r * 3 / (colorGC.r + colorGC.g + colorGC.b);
         return (color.a < 0.9999 ? 0.0 : 1.0) * vec4(colorGC.rgb * scale, 1.0);
         
         // return (color.a < 0.9999 ? 0.0 : 1.0) * 
@@ -442,5 +442,5 @@ void main()
         }
     }
     
-    fragColor = vec4(fTexCoord,0,1);//vec4(pow(reflectance, vec3(1 / gamma)), 1.0);
+    fragColor = vec4(pow(reflectance, vec3(1 / gamma)), 1.0);
 }

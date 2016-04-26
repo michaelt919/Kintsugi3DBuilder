@@ -10,7 +10,6 @@ import tetzlaff.fastmicrofacet.FastMicrofacetRenderer;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.FirstPersonController;
 import tetzlaff.gl.helpers.InteractiveGraphics;
-import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.imagebasedmicrofacet.TrackballLightController;
 import tetzlaff.interactive.InteractiveApplication;
