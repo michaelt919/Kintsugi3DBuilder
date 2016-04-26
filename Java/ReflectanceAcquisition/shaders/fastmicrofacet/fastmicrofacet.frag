@@ -98,15 +98,15 @@ void main()
                 // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
                 // for Beckmann to Phong conversion
                     
-                float aV = 1.0 / (roughness * sqrt(1.0 - nDotL * nDotL) / nDotL);
+                float aV = 1.0 / (roughness * sqrt(1.0 - nDotV * nDotV) / nDotV);
                 float aVSq = aV * aV;
                 float aL = 1.0 / (roughness * sqrt(1.0 - nDotL * nDotL) / nDotL);
                 float aLSq = aL * aL;
                     
                 float geomAtten = 
-                    min(1.0, min(2 * nDotH * nDotV / hDotV, 2 * nDotH * nDotL / hDotV)) / nDotV;
-                    //(aV < 1.6 ? 3.535 * aV + 2.181 * aVSq / (1 + 2.276 * aV + 2.577 * aVSq) : 1.0)
-                    //    * (aL < 1.6 ? 3.535 * aL + 2.181 * aLSq / (1 + 2.276 * aL + 2.577 * aLSq) : 1.0);
+                    //min(1.0, min(2 * nDotH * nDotV / hDotV, 2 * nDotH * nDotL / hDotV)) / nDotV;
+                    (aV < 1.6 ? (3.535 * aV + 2.181 * aVSq) / (1 + 2.276 * aV + 2.577 * aVSq) : 1.0)
+                        * (aL < 1.6 ? (3.535 * aL + 2.181 * aLSq) / (1 + 2.276 * aL + 2.577 * aLSq) : 1.0);
                     // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
                     // for this formula
                 
