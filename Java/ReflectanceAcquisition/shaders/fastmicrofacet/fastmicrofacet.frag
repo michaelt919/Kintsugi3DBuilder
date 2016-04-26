@@ -60,55 +60,75 @@ void main()
         // return;
     // }
     
-    float nDotV = max(0.0, dot(viewDir, normalDir));
-    float oneMinusNDotV = 1.0 - nDotV;
-    float oneMinusNDotVSquared = oneMinusNDotV * oneMinusNDotV;
+    float nDotV = dot(viewDir, normalDir);
     
-    vec3 accumColor = ambientColor / PI * (diffuseColor.rgb + specularColor.rgb + (vec3(1.0) - diffuseColor.rgb - specularColor.rgb) * oneMinusNDotVSquared * oneMinusNDotVSquared * oneMinusNDotV);
-    
-    for (int i = 0; i < LIGHT_COUNT; i++)
+    if (nDotV < 0.0)
     {
-        vec3 lightDir = normalize((model_view * vec4(lightPositions[i] - fPosition, 0.0)).xyz);
-        vec3 halfDir = normalize(lightDir + viewDir);
-        
-        float nDotL = max(0.0, dot(lightDir, normalDir));
-        float nDotH = max(0.0, dot(halfDir, normalDir));
-        float hDotV = max(0.0, dot(halfDir, viewDir));
-        
-        // Diffuse
-        accumColor += lightColors[i] * nDotL * diffuseColor.rgb / PI;
-    
-        if (nDotH > 0.0 && roughnessAlpha > 0.0)
-        {
-            float nDotHSquared = nDotH * nDotH;
-            float roughnessSquared = roughness * roughness;
-        
-            float mfdEval = exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
-                / (PI * nDotHSquared * nDotHSquared * roughnessSquared);
-                
-            float geomAtten = min(1.0, min(2 * nDotH * nDotV / hDotV, 2 * nDotH * nDotL / hDotV));
-                
-            float oneMinusHDotV = 1.0 - hDotV;
-            float oneMinusHDotVSquared = oneMinusHDotV * oneMinusHDotV;
-            
-            float f0 = dot(specularColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-            float sqrtF0 = sqrt(f0);
-            float ior = (1 + sqrtF0) / (1 - sqrtF0);
-            float g = sqrt(ior*ior + hDotV * hDotV - 1);
-            float fresnel = 0.5 * pow(g - hDotV, 2) / pow(g + hDotV, 2)
-                * (1 + pow(hDotV * (g + hDotV) - 1, 2) / pow(hDotV * (g - hDotV) + 1, 2));
-            
-            vec3 fresnelReflectivity = specularColor.rgb + (vec3(1.0) - specularColor.rgb) *
-                    max(0, fresnel - f0) / (1.0 - f0);
-                    //max(0, oneMinusHDotVSquared * oneMinusHDotVSquared * oneMinusHDotV - f0) / (1.0 - f0);
-                    //oneMinusHDotVSquared * oneMinusHDotVSquared * oneMinusHDotV;
-                
-            // Specular
-            accumColor += lightColors[i] * mfdEval * geomAtten * fresnelReflectivity;
-        }
+        fragColor = vec4(0,0,0,1);
     }
-    
-    // TODO light attenuation
+    else
+    {
+        float oneMinusNDotV = 1.0 - nDotV;
+        float oneMinusNDotVSquared = oneMinusNDotV * oneMinusNDotV;
         
-    fragColor = vec4(pow(accumColor * PI, vec3(1 / gamma)), 1.0);
+        vec3 accumColor = ambientColor / PI * (diffuseColor.rgb + specularColor.rgb + (vec3(1.0) - diffuseColor.rgb - specularColor.rgb) * oneMinusNDotVSquared * oneMinusNDotVSquared * oneMinusNDotV);
+        
+        for (int i = 0; i < LIGHT_COUNT; i++)
+        {
+            vec3 lightDir = normalize((model_view * vec4(lightPositions[i] - fPosition, 0.0)).xyz);
+            vec3 halfDir = normalize(lightDir + viewDir);
+            
+            float nDotL = max(0.0, dot(lightDir, normalDir));
+            float nDotH = max(0.0, dot(halfDir, normalDir));
+            float hDotV = max(0.0, dot(halfDir, viewDir));
+            
+            // Diffuse
+            accumColor += lightColors[i] * nDotL * diffuseColor.rgb / PI;
+        
+            if (hDotV > 0.0 && nDotH > 0.0 && roughnessAlpha > 0.0)
+            {
+                float nDotHSquared = nDotH * nDotH;
+                float roughnessSquared = roughness * roughness;
+            
+                float mfdEval = 
+                    //max(0.0, pow(nDotH, 2 / roughnessSquared - 2) / (PI * roughnessSquared));
+                    exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
+                        / (PI * nDotHSquared * nDotHSquared * roughnessSquared);
+                    
+                // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
+                // for Beckmann to Phong conversion
+                    
+                float aV = 1.0 / (roughness * sqrt(1.0 - nDotL * nDotL) / nDotL);
+                float aVSq = aV * aV;
+                float aL = 1.0 / (roughness * sqrt(1.0 - nDotL * nDotL) / nDotL);
+                float aLSq = aL * aL;
+                    
+                float geomAtten = 
+                    min(1.0, min(2 * nDotH * nDotV / hDotV, 2 * nDotH * nDotL / hDotV)) / nDotV;
+                    //(aV < 1.6 ? 3.535 * aV + 2.181 * aVSq / (1 + 2.276 * aV + 2.577 * aVSq) : 1.0)
+                    //    * (aL < 1.6 ? 3.535 * aL + 2.181 * aLSq / (1 + 2.276 * aL + 2.577 * aLSq) : 1.0);
+                    // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
+                    // for this formula
+                
+                float f0 = dot(specularColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+                float sqrtF0 = sqrt(f0);
+                float ior = (1 + sqrtF0) / (1 - sqrtF0);
+                float g = sqrt(ior*ior + hDotV * hDotV - 1);
+                float fresnel = 0.5 * pow(g - hDotV, 2) / pow(g + hDotV, 2)
+                    * (1 + pow(hDotV * (g + hDotV) - 1, 2) / pow(hDotV * (g - hDotV) + 1, 2));
+                
+                vec3 fresnelReflectivity = specularColor.rgb + (vec3(1.0) - specularColor.rgb) *
+                        max(0, fresnel - f0) / (1.0 - f0);
+                        //(1.0 - hDotV) * (1.0 - hDotV) * (1.0 - hDotV) * 
+                        //    (1.0 - hDotV) * (1.0 - hDotV);
+                    
+                // Specular
+                accumColor += lightColors[i] * mfdEval * geomAtten * fresnelReflectivity;
+            }
+        }
+        
+        // TODO light attenuation
+            
+        fragColor = vec4(pow(accumColor * PI, vec3(1 / gamma)), 1.0);
+    }
 }
