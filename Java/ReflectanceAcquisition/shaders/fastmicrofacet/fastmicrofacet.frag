@@ -104,7 +104,7 @@ void main()
                 float aLSq = aL * aL;
                     
                 float geomAtten = 
-                    //min(1.0, min(2 * nDotH * nDotV / hDotV, 2 * nDotH * nDotL / hDotV)) / nDotV;
+                    //min(1.0, min(2 * nDotH * nDotV / hDotV, 2 * nDotH * nDotL / hDotV));
                     (aV < 1.6 ? (3.535 * aV + 2.181 * aVSq) / (1 + 2.276 * aV + 2.577 * aVSq) : 1.0)
                         * (aL < 1.6 ? (3.535 * aL + 2.181 * aLSq) / (1 + 2.276 * aL + 2.577 * aLSq) : 1.0);
                     // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
@@ -123,7 +123,7 @@ void main()
                         //    (1.0 - hDotV) * (1.0 - hDotV);
                     
                 // Specular
-                accumColor += lightColors[i] * mfdEval * geomAtten * fresnelReflectivity;
+                accumColor += lightColors[i] * mfdEval * geomAtten * fresnelReflectivity / (4 * nDotV);
             }
         }
         

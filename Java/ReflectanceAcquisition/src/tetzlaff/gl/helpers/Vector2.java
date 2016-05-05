@@ -16,6 +16,16 @@ public class Vector2
 	 * The second dimension
 	 */
 	public final float y;
+	
+	/**
+	 * Construct a vector in two dimensions with the given values.
+	 * @param value Value of both dimensions.
+	 */
+	public Vector2(float value)
+	{
+		this.x = value;
+		this.y = value;
+	}
 
 	/**
 	 * Construct a vector in two dimensions with the given values.

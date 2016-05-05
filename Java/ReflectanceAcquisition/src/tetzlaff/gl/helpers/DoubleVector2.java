@@ -11,6 +11,16 @@ public class DoubleVector2
 {
 	public final double x;
 	public final double y;
+	
+	/**
+	 * Construct a vector in two dimensions with the given values.
+	 * @param value Value of both dimensions.
+	 */
+	public DoubleVector2(double value)
+	{
+		this.x = value;
+		this.y = value;
+	}
 
 	public DoubleVector2(double x, double y)
 	{

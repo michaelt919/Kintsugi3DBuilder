@@ -174,7 +174,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		void execute(Framebuffer<ContextType> framebuffer, int subdivRow, int subdivCol);
 	}
 	
-	private void projectIntoTextureSpace(ViewSet<ContextType> viewSet, Program<ContextType> program, int viewIndex, int textureSize, int textureSubdiv, TextureSpaceCallback<ContextType> callback) throws IOException
+	private FramebufferObject<ContextType> projectIntoTextureSpace(ViewSet<ContextType> viewSet, Program<ContextType> program, int viewIndex, int textureSize, int textureSubdiv, TextureSpaceCallback<ContextType> callback) throws IOException
 	{
 		FramebufferObject<ContextType> mainFBO = 
 			context.getFramebufferObjectBuilder(textureSize / textureSubdiv, textureSize / textureSubdiv)
@@ -341,12 +341,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	
     	mainFBO.delete();
     	viewTexture.delete();
-    	depthFBO.delete();
     	
     	if (shadowFBO != null)
 		{
     		shadowFBO.delete();
 		}
+    	
+    	return depthFBO;
 	}
 	
 	private DenseMatrix64F createRegularizationMatrix(int directionalNeighborhood, int spatialNeighborhood, float directionalWeight, float spatialWeight, boolean isotropic)
@@ -698,7 +699,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		{
 			final int K = k;
 			
-			projectIntoTextureSpace(viewSet, specularResidProgram, k, param.getTextureSize(), 1/*param.getTextureSubdivision()*/,
+			FramebufferObject<ContextType> depthFBO = projectIntoTextureSpace(viewSet, specularResidProgram, k, param.getTextureSize(), 1/*param.getTextureSubdivision()*/,
 				(framebuffer, row, col) -> 
 				{
 					if (DEBUG)
@@ -721,6 +722,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 						framebuffer.readFloatingPointColorBufferRGBA(0), 
 						framebuffer.readFloatingPointColorBufferRGBA(1));
 				});
+			
+
+	    	depthFBO.delete();
 			
 	    	System.out.println("Completed " + (k+1) + "/" + viewSet.getCameraPoseCount() + " views...");
 		}
@@ -1676,7 +1680,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 //		biasedNormalBuffer.delete();
 //	}
 	
-	public void loadTextures() throws IOException
+	private double getLinearDepth(double nonLinearDepth, double nearPlane, double farPlane)
+	{
+		return 2 * nearPlane * farPlane / (farPlane + nearPlane - nonLinearDepth * (farPlane - nearPlane));
+	}
+	
+	private double loadTextures() throws IOException
 	{
 		if (param.isImagePreprojectionUseEnabled() && param.isImagePreprojectionGenerationEnabled())
     	{
@@ -1685,12 +1694,14 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	
 	    	tmpDir.mkdir();
 	    	
+	    	double minDepth = viewSet.getRecommendedFarPlane();
+	    	
 	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 	    	{
 	    		File viewDir = new File(tmpDir, String.format("%04d", i));
 	        	viewDir.mkdir();
 	        	
-	    		projectIntoTextureSpace(viewSet, projTexProgram, i, param.getTextureSize(), param.getTextureSubdivision(), 
+	    		FramebufferObject<ContextType> depthFBO = projectIntoTextureSpace(viewSet, projTexProgram, i, param.getTextureSize(), param.getTextureSubdivision(), 
 	    			(framebuffer, row, col) -> 
     				{
 	    				try
@@ -1702,11 +1713,25 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    					e.printStackTrace();
 	    				}
 					});
+	    		
+	    		if (i == 0)
+    			{
+		    		short[] depthBufferData = depthFBO.readDepthBuffer();
+		        	for (int j = 0; j < depthBufferData.length; j++)
+		        	{
+		        		int nonlinearDepth = 0xFFFF & (int)depthBufferData[j];
+		        		minDepth = Math.min(minDepth, getLinearDepth((double)nonlinearDepth / 0xFFFF, viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+		        	}
+    			}
+
+	        	depthFBO.delete();
 		    	
 		    	System.out.println("Completed " + (i+1) + "/" + viewSet.getCameraPoseCount());
 	    	}
 	    	
 	    	System.out.println("Pre-projections completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+	    	
+	    	return minDepth;
     	}
     	else if (!param.isImagePreprojectionUseEnabled())
     	{
@@ -1868,6 +1893,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 	    	depthRenderable.addVertexBuffer("position", positionBuffer);
 	    	
+	    	double minDepth = viewSet.getRecommendedFarPlane();
+	    	
 	    	// Render each depth texture
 	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 	    	{
@@ -1884,16 +1911,33 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				);
 	        	
 	        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+	        	
+	        	if (i == 0)
+	        	{
+		        	short[] depthBufferData = depthRenderingFBO.readDepthBuffer();
+		        	for (int j = 0; j < depthBufferData.length; j++)
+		        	{
+		        		int nonlinearDepth = 0xFFFF & (int)depthBufferData[j];
+		        		minDepth = Math.min(minDepth, getLinearDepth((double)nonlinearDepth / 0xFFFF, viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+		        	}
+	        	}
+	        	
 				//System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " depth maps created.");
 	    	}
 
 	    	depthRenderingFBO.delete();
 	    	
     		System.out.println("Depth maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+	    	
+	    	return minDepth;
+    	}
+    	else
+    	{
+    		return -1.0;
     	}
 	}
 	
-	public void fitLightSource() throws IOException
+	public void fitLightSource(double avgDistance) throws IOException
 	{
 		if (!param.areLightSourcesInfinite())
 		{
@@ -1922,10 +1966,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    		lightFit.fit();
 	    		
 	    		lightPosition = lightFit.getPosition();
-	    		lightIntensity = lightFit.getIntensity();
+	    		lightIntensity = new Vector3((float)(avgDistance * avgDistance));
+	    		//lightIntensity = lightFit.getIntensity();
 		        
 		        System.out.println("Light position: " + lightPosition.x + " " + lightPosition.y + " " + lightPosition.z);
-		        System.out.println("Light intensity: " + lightIntensity.x + " " + lightIntensity.y + " " + lightIntensity.z);
+		        System.out.println("Using light intensity: " + lightIntensity.x + " " + lightIntensity.y + " " + lightIntensity.z);
+		        System.out.println("(Light intensity from fit: " + lightFit.getIntensity().x + " " + lightFit.getIntensity().y + " " + lightFit.getIntensity().z + ")");
 		        
 		        viewSet.setLightPosition(0, lightPosition);
 		        viewSet.setLightIntensity(0, lightIntensity);
@@ -2078,8 +2124,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	tmpDir = new File(outputDir, "tmp");
 	    	
 	    	// Load textures, generate visibility depth textures, fit light source and generate shadow depth textures
-    		loadTextures();
-	    	fitLightSource();
+    		double avgDistance = loadTextures();
+	    	fitLightSource(avgDistance);
 	    	
 			// Phong regression
 	    	FramebufferObject<ContextType> diffuseFitFramebuffer;

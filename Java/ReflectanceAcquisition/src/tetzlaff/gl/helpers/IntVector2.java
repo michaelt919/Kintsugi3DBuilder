@@ -13,6 +13,16 @@ public class IntVector2
 {
 	public final int x;
 	public final int y;
+	
+	/**
+	 * Construct a vector in two dimensions with the given values.
+	 * @param value Value of both dimensions.
+	 */
+	public IntVector2(int value)
+	{
+		this.x = value;
+		this.y = value;
+	}
 
 	public IntVector2(int x, int y)
 	{

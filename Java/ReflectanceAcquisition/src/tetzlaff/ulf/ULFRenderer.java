@@ -250,7 +250,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
     	FramebufferSize size = framebuffer.getSize();
     			
-    	this.mainRenderable.program().setTexture("imageTextures", lightField.viewSet.getTextures());
+    	this.mainRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
     	this.mainRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
     	this.mainRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
     	this.mainRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
@@ -260,11 +260,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	this.mainRenderable.program().setUniformBuffer("LightIntensities", lightField.viewSet.getLightIntensityBuffer());
 	    	this.mainRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
     	}
-    	this.mainRenderable.program().setUniform("cameraPoseCount", lightField.viewSet.getCameraPoseCount());
+    	this.mainRenderable.program().setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
     	this.mainRenderable.program().setUniform("infiniteLightSources", true /* TODO */);
     	if (lightField.depthTextures != null)
 		{
-    		this.mainRenderable.program().setTexture("depthTextures", lightField.depthTextures);
+    		this.mainRenderable.program().setTexture("depthImages", lightField.depthTextures);
 		}
     	
     	mainRenderable.program().setUniform("model_view", 
