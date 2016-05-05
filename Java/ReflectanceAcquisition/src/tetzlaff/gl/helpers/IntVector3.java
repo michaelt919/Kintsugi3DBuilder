@@ -14,6 +14,17 @@ public class IntVector3
 	public final int x;
 	public final int y;
 	public final int z;
+	
+	/**
+	 * Construct a vector in three dimensions with the given values.
+	 * @param value Value of all three dimensions.
+	 */
+	public IntVector3(int value)
+	{
+		this.x = value;
+		this.y = value;
+		this.z = value;
+	}
 
 	public IntVector3(int x, int y, int z)
 	{

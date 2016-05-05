@@ -12,6 +12,17 @@ public class DoubleVector3
 	public final double x;
 	public final double y;
 	public final double z;
+	
+	/**
+	 * Construct a vector in three dimensions with the given values.
+	 * @param value Value of all three dimensions.
+	 */
+	public DoubleVector3(double value)
+	{
+		this.x = value;
+		this.y = value;
+		this.z = value;
+	}
 
 	public DoubleVector3(double x, double y, double z)
 	{

@@ -25,20 +25,20 @@ vec3 getDiffuseNormalVector()
     return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
 }
 
-vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, float maxLuminance,
+vec2 removeDiffuse(vec4 originalColor, vec3 diffuseColor, float maxLuminance,
     vec3 light, vec3 attenuatedLightIntensity, vec3 normal)
 {
     float nDotL = max(0, dot(light, normal));
     if (nDotL == 0.0)
     {
-        return vec4(0);
+        return vec2(0);
     }
     else
     {
         vec3 diffuseContrib = diffuseColor * nDotL * attenuatedLightIntensity;
         float cap = maxLuminance - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
-        vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
-        return vec4(remainder / nDotL, originalColor.a * nDotL);
+        float remainder = getLuminance(originalColor.rgb - diffuseContrib);
+        return vec2(remainder, originalColor.a);
     }
 }
 
@@ -71,10 +71,10 @@ SpecularResidualInfo computeSpecularResidualInfo()
         vec3 attenuatedLightIntensity = infiniteLightSource ? lightIntensity : lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
         vec3 light = normalize(lightPreNormalized);
         
-        vec4 residual = removeDiffuse(color, diffuseColor, maxLuminance, 
+        vec2 residualLuminance = removeDiffuse(color, diffuseColor, maxLuminance, 
             light, attenuatedLightIntensity, diffuseNormal);
-        info.residualLuminance = getLuminance(residual.rgb);
-        info.alpha = residual.a;
+        info.residualLuminance = residualLuminance.x * 4 * nDotV;
+        info.alpha = residualLuminance.y;
         
         vec3 tangent = normalize(fTangent - dot(geometricNormal, fTangent));
         vec3 bitangent = normalize(fBitangent

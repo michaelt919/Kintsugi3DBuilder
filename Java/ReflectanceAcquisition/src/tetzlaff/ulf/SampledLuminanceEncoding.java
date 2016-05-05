@@ -24,21 +24,19 @@ public class SampledLuminanceEncoding
 			throw new IllegalArgumentException("Input arrays must be of equal length.");
 		}
 		
-		double[] x = new double[encoded.length + 2];
+		double[] x = new double[encoded.length + 1];
 		x[0] = 0;
 		for (int k = 1; k < x.length-1; k++)
 		{
 			x[k] = (double)(0xFF & (int)encoded[k-1]);
 		}
-		x[x.length-1] = 255.0;
 		
-		double[] y = new double[linear.length + 2];
+		double[] y = new double[linear.length + 1];
 		y[0] = 0;
 		for (int k = 1; k < y.length-1; k++)
 		{
 			y[k] = linear[k-1];
 		}
-		y[y.length-1] = 1;
 		
 		this.decodeFunction = new CubicHermiteSpline(x, y, true);
 	}

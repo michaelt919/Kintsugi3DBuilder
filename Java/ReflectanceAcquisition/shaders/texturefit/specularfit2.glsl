@@ -37,7 +37,7 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, float maxLuminance,
         vec3 diffuseContrib = diffuseColor * nDotL * attenuatedLightIntensity;
         float cap = maxLuminance - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
         vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
-        return vec4(remainder / nDotL, originalColor.a * nDotL);
+        return vec4(remainder, originalColor.a);
     }
 }
 
@@ -61,8 +61,8 @@ vec4 fitSpecular()
         // for an ideal diffuse reflector (diffuse albedo of 1)
         // Hence, the maximum possible physically plausible reflectance is pi 
         // (for a perfect specular surface reflecting all the incident light in the mirror direction)
-        // However, for the Beckmann microfacet model, the maximum possible reflectance is 1 / (pi m^2)
-        // where m is the microfacet roughness.
+        // However, for the Torrance-Sparrow model with a Beckmann microfacet model,
+        // the maximum possible reflectance is 1 / (4 pi m^2), where m is the microfacet roughness.
         // Therefore, we don't need to actually scale by 1 / pi now
         // because we would just need to multiply by pi again at the end to get a specular albedo value.
         vec4 color = getLinearColor(i);
@@ -93,7 +93,8 @@ vec4 fitSpecular()
                     // vec3(PI * pow(0.5, 2.2) * exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared))
                         // / (PI * roughnessSquared * nDotHSquared * nDotHSquared));
                 
-                sum += colorRemainder.a * mfdEval * vec4(colorRemainder.rgb, mfdEval);
+                // Multiply by 4 n dot v to cancel out the denominator in the Cook-Torrance BRDF
+                sum += colorRemainder.a * mfdEval * vec4(colorRemainder.rgb * 4 * nDotV, mfdEval);
             }
         }
     }

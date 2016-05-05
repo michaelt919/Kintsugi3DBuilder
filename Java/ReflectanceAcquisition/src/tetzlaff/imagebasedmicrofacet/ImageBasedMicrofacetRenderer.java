@@ -45,7 +45,8 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		{
 			microfacetField = new SampledMicrofacetField<ContextType>(ulfRenderer.getLightField(), 
 					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "diffuse.png"),
-					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "normal.png"), context);
+					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "normal.png"),
+					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "specular.png"), context);
 		}
 		catch(IOException e)
 		{
@@ -89,6 +90,17 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 				program.setUniform("useDiffuseTexture", true);
 				program.setTexture("diffuseMap", microfacetField.diffuseTexture);
 			}
+			
+			if (microfacetField.specularTexture == null)
+			{
+				program.setUniform("useSpecularTexture", false);
+				program.setTexture("specularMap", null);
+			}
+			else
+			{
+				program.setUniform("useSpecularTexture", true);
+				program.setTexture("specularMap", microfacetField.specularTexture);
+			}
 	
 			for (int i = 0; i < lightController.getLightCount(); i++)
 			{
@@ -107,7 +119,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 				{
 					program.setUniform("shadowTestingEnabled", true);
 					program.setUniformBuffer("ShadowMatrices", microfacetField.shadowMatrixBuffer);
-					program.setTexture("shadowTextures", microfacetField.shadowTextures);
+					program.setTexture("shadowImages", microfacetField.shadowTextures);
 				}
 			}
 			

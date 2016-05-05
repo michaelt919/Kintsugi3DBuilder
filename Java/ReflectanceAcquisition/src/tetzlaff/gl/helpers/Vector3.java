@@ -20,6 +20,17 @@ public class Vector3
 	 * The third dimension
 	 */
 	public final float z;
+	
+	/**
+	 * Construct a vector in three dimensions with the given values.
+	 * @param value Value of all three dimensions.
+	 */
+	public Vector3(float value)
+	{
+		this.x = value;
+		this.y = value;
+		this.z = value;
+	}
 
 	/**
 	 * Construct a vector in three dimensions with the given values.
