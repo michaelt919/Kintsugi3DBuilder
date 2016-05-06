@@ -43,10 +43,13 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		ulfRenderer.initialize();
 		try
 		{
-			microfacetField = new SampledMicrofacetField<ContextType>(ulfRenderer.getLightField(), 
+			microfacetField = new SampledMicrofacetField<ContextType>(
+					ulfRenderer.getLightField(), 
 					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "diffuse.png"),
 					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "normal.png"),
-					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "specular.png"), context);
+					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "specular.png"),
+					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "roughness.png"), 
+					context);
 		}
 		catch(IOException e)
 		{
@@ -100,6 +103,17 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			{
 				program.setUniform("useSpecularTexture", true);
 				program.setTexture("specularMap", microfacetField.specularTexture);
+			}
+			
+			if (microfacetField.roughnessTexture == null)
+			{
+				program.setUniform("useRoughnessTexture", false);
+				program.setTexture("roughnessMap", null);
+			}
+			else
+			{
+				program.setUniform("useRoughnessTexture", true);
+				program.setTexture("roughnessMap", microfacetField.roughnessTexture);
 			}
 	
 			for (int i = 0; i < lightController.getLightCount(); i++)
