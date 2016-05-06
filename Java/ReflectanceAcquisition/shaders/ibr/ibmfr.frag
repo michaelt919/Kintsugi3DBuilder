@@ -24,12 +24,14 @@ uniform float weightExponent;
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
+uniform sampler2D roughnessMap;
 
 uniform bool useDiffuseTexture;
 uniform bool useNormalTexture;
 uniform bool useSpecularTexture;
+uniform bool useRoughnessTexture;
 
-vec3 computeFresnelReflectivity(vec3 specularColor, float hDotV)
+vec3 computeFresnelReflectivity(vec3 specularColor, vec3 grazingColor, float hDotV)
 {
     float f0 = dot(specularColor, vec3(0.2126, 0.7152, 0.0722));
     float sqrtF0 = sqrt(f0);
@@ -38,7 +40,7 @@ vec3 computeFresnelReflectivity(vec3 specularColor, float hDotV)
     float fresnel = 0.5 * pow(g - hDotV, 2) / pow(g + hDotV, 2)
         * (1 + pow(hDotV * (g + hDotV) - 1, 2) / pow(hDotV * (g - hDotV) + 1, 2));
         
-    return specularColor.rgb + (vec3(1.0) - specularColor.rgb) * max(0, fresnel - f0) / (1.0 - f0);
+    return specularColor + (grazingColor - specularColor) * max(0, fresnel - f0) / (1.0 - f0);
 }
 
 float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
@@ -65,13 +67,24 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
     }
 }
 
-vec2[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 normalDir, 
-    vec3 specularColor, float maxLuminance)
+float computeMicrofacetDistribution(float nDotH, float roughness)
+{
+    float nDotHSquared = nDotH * nDotH;
+    float roughnessSquared = roughness * roughness;
+    
+    return
+        //max(0.0, pow(nDotH, 2 / roughnessSquared - 2) / (PI * roughnessSquared));
+        exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
+            / (PI * nDotHSquared * nDotHSquared * roughnessSquared);
+}
+
+vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 normalDir, 
+    vec3 specularColor, float roughness, float maxLuminance)
 {
     vec4 sampleColor = getColor(index);
     if (sampleColor.a > 0.0)
     {
-        vec2 result[MAX_VIRTUAL_LIGHT_COUNT];
+        vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
         
         // All in camera space
         vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
@@ -89,12 +102,16 @@ vec2[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
     
         vec3 diffuseContrib = diffuseColor * nDotL ;// * attenuatedLightIntensity;
         
+        float mfd = computeMicrofacetDistribution(nDotH, roughness);
+        
         float geomAtten = computeGeometricAttenuation(nDotH, nDotV, nDotL, hDotV, hDotL);
         if (geomAtten > 0.0)
         {
             vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-            float precomputedSample = getLuminance(specularResid.rgb / specularColor)
-                * nDotV / computeGeometricAttenuation(nDotH, nDotV, nDotL, hDotV, hDotL);
+            //vec3 precomputedSample = vec3(getLuminance(specularResid.rgb / specularColor))
+            //vec3 precomputedSample = specularResid.rgb / specularColor
+            vec4 precomputedSample = vec4(specularResid.rgb * 4 * nDotV, 
+            sampleColor.a /* * mfd*/ * computeGeometricAttenuation(nDotH, nDotV, nDotL, hDotV, hDotL));
             
             vec3 virtualViewDir = normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
             
@@ -106,7 +123,8 @@ vec2[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
 
                 // Compute sample weight
                 float weight = computeSampleWeight(virtualHalfDir, sampleHalfDir);
-                result[lightPass] = weight * vec2(precomputedSample, sampleColor.a);
+                    //computeSampleWeight(vec3(dot(normalDirCameraSpace, virtualHalfDir) / sqrt(3.0)), vec3(nDotH) / sqrt(3.0));
+                result[lightPass] = weight * precomputedSample, sampleColor.a * mfd;
             }
         }
         
@@ -114,30 +132,30 @@ vec2[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
     }
     else
     {
-        vec2 result[MAX_VIRTUAL_LIGHT_COUNT];
+        vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
         for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
         {
-            result[lightPass] = vec2(0.0);
+            result[lightPass] = vec4(0.0);
         }
         return result;
     }
 }
 
-float[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(
-    vec3 diffuseColor, vec3 normalDir, vec3 specularColor)
+vec3[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(
+    vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness)
 {
     float maxLuminance = getMaxLuminance();
 
-	vec2[MAX_VIRTUAL_LIGHT_COUNT] sums;
+	vec4[MAX_VIRTUAL_LIGHT_COUNT] sums;
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
     {
-        sums[i] = vec2(0.0);
+        sums[i] = vec4(0.0);
     }
     
 	for (int i = 0; i < viewCount; i++)
 	{
-        vec2[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample = 
-            computeSample(i, diffuseColor, normalDir, specularColor, maxLuminance);
+        vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample = 
+            computeSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
         
         for (int j = 0; j < MAX_VIRTUAL_LIGHT_COUNT; j++)
         {
@@ -145,16 +163,16 @@ float[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(
         }
 	}
     
-    float[MAX_VIRTUAL_LIGHT_COUNT] results;
+    vec3[MAX_VIRTUAL_LIGHT_COUNT] results;
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
     {
         if (sums[i].y > 0.0)
         {
-            results[i] = sums[i].x / sums[i].y;
+            results[i] = sums[i].rgb / sums[i].a;
         }
         else
         {
-            results[i] = 0.0;
+            results[i] = vec3(0.0);
         }
     }
 	return results;
@@ -187,15 +205,30 @@ void main()
     vec3 specularColor;
     if (useSpecularTexture)
     {
-        specularColor = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
+        specularColor = pow(texture(specularMap, fTexCoord).rgb, vec3(gamma));
     }
     else
     {
         specularColor = vec3(0.5);
     }
     
-    float[] microfacetDistributions = 
-        computeMicrofacetDistributions(diffuseColor, normalDir, specularColor);
+    if (dot(specularColor, vec3(1)) < 0.01)
+    {
+        specularColor = vec3(0.5);
+    }
+    
+    float roughness;
+    // if (useRoughnessTexture)
+    // {
+        // roughness = texture(roughnessMap, fTexCoord).r;
+    // }
+    // else
+    {
+        roughness = 0.25; // TODO pass in a default?
+    }
+    
+    vec3[] microfacetDistributions = 
+        computeMicrofacetDistributions(diffuseColor, normalDir, specularColor, roughness);
     vec3 reflectance = vec3(0.0);
     
     float nDotV = dot(normalDir, viewDir);
@@ -212,11 +245,15 @@ void main()
             float hDotV = dot(halfDir, viewDir);
             float hDotL = dot(halfDir, lightDir);
             float nDotH = dot(normalDir, halfDir);
+            
+            //float mfd = computeMicrofacetDistribution(nDotH, roughness);
         
-            reflectance += nDotL * (diffuseColor + 
-                microfacetDistributions[i]
-                    * computeGeometricAttenuation(nDotH, nDotV, nDotL, hDotV, hDotL)
-                    * computeFresnelReflectivity(specularColor, hDotV))
+            reflectance += (nDotL * diffuseColor + 
+                    //mfd *
+                    computeGeometricAttenuation(nDotH, nDotV, nDotL, hDotV, hDotL)
+                    * computeFresnelReflectivity(microfacetDistributions[i],
+                        vec3(getLuminance(microfacetDistributions[i] / specularColor)), hDotV)
+                    / (4 * nDotV))
                 * lightIntensity[i]
                 * (infiniteLightSources ? 1.0 : 1.0 / 
                     dot(lightDirUnNorm, lightDirUnNorm));

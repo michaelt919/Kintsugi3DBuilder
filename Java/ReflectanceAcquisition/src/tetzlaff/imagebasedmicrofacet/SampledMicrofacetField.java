@@ -25,10 +25,11 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 	public final Texture2D<ContextType> diffuseTexture;
 	public final Texture2D<ContextType> normalTexture;
 	public final Texture2D<ContextType> specularTexture;
+	public final Texture2D<ContextType> roughnessTexture;
 	public final Texture3D<ContextType> shadowTextures;
 	public final UniformBuffer<ContextType> shadowMatrixBuffer;
 	
-	public SampledMicrofacetField(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, File specularFile, ContextType context) throws IOException
+	public SampledMicrofacetField(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, File specularFile, File roughnessFile, ContextType context) throws IOException
 	{
 		this.ulf = ulf;
 		
@@ -72,6 +73,20 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 		else
 		{
 			specularTexture = null;
+		}
+		
+		if (roughnessFile != null && roughnessFile.exists())
+		{
+			System.out.println("Roughness texture found.");
+			roughnessTexture = context.get2DColorTextureBuilder(roughnessFile, true)
+					.setInternalFormat(ColorFormat.R8)
+					.setMipmapsEnabled(true)
+					.setLinearFilteringEnabled(true)
+					.createTexture();
+		}
+		else
+		{
+			roughnessTexture = null;
 		}
 		
 		if (ulf.depthTextures != null)
