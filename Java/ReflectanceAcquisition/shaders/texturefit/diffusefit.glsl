@@ -40,8 +40,8 @@ DiffuseFit fitDiffuse()
         //mat4 b = mat4(0);
         mat3 a = mat3(0);
         mat3 b = mat3(0);
-        vec4 weightedSum = vec4(0.0);
-        float nDotLSum = 0.0;
+        vec4 weightedRadianceSum = vec4(0.0);
+        vec3 weightedIrradianceSum = vec3(0.0);
         
         for (int i = 0; i < viewCount; i++)
         {
@@ -68,17 +68,17 @@ DiffuseFit fitDiffuse()
                     weight *= exp(-dot(error,error)/(2*delta*delta));
                 }
                     
-                a += weight * outerProduct(lightNormalized, lightNormalized);
+                a += weight * attenuatedLightIntensity * attenuatedLightIntensity * outerProduct(lightNormalized, lightNormalized);
                 //b += weight * outerProduct(lightNormalized, vec4(color.rgb / attenuatedLightIntensity, 0.0));
-                b += weight * outerProduct(lightNormalized, color.rgb / attenuatedLightIntensity);
-                weightedSum += weight * vec4(color.rgb / attenuatedLightIntensity, 1.0);
-                nDotLSum += weight * max(0, dot(geometricNormal, lightNormalized));
+                b += weight * attenuatedLightIntensity * outerProduct(lightNormalized, color.rgb);
+                weightedRadianceSum += weight * vec4(color.rgb, 1.0);
+                weightedIrradianceSum += weight * attenuatedLightIntensity * max(0, dot(geometricNormal, lightNormalized));
             }
         }
         
         mat3 m = inverse(a) * b;
         vec3 rgbFit = vec3(length(m[0]), length(m[1]), length(m[2]));
-        vec3 rgbScale = weightedSum.rgb / rgbFit;
+        vec3 rgbScale = weightedRadianceSum.rgb / rgbFit;
         
         if (rgbFit.r == 0.0)
         {
@@ -98,15 +98,15 @@ DiffuseFit fitDiffuse()
         
         //float ambientIntensity = solution.w;
     
-        float fit3Quality = clamp(fit3Weight * determinant(a) / weightedSum.a *
+        float fit3Quality = clamp(fit3Weight * determinant(a) / weightedRadianceSum.a *
                                 clamp(dot(normalize(solution.xyz), geometricNormal), 0, 1), 0.0, 1.0);
         
-        fit.color = clamp(weightedSum.rgb / max(max(rgbScale.r, rgbScale.g), rgbScale.b), 0, 1) * 
+        fit.color = clamp(weightedRadianceSum.rgb / max(max(rgbScale.r, rgbScale.g), rgbScale.b), 0, 1) * 
                         fit3Quality + 
-                    clamp(weightedSum.rgb / nDotLSum, 0, 1) * 
-                        clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality);
+                    clamp(weightedRadianceSum.rgb / weightedIrradianceSum, 0, 1) * 
+                        clamp(fit1Weight * weightedIrradianceSum, 0, 1 - fit3Quality);
         fit.normal = normalize(normalize(solution.xyz) * fit3Quality + fNormal * (1 - fit3Quality));
-        //debug = vec4(fit3Quality, clamp(fit1Weight * nDotLSum, 0, 1 - fit3Quality), 0.0, 1.0);
+        //debug = vec4(fit3Quality, clamp(fit1Weight * weightedIrradianceSum, 0, 1 - fit3Quality), 0.0, 1.0);
     }
     
     if (!validateFit(fit))

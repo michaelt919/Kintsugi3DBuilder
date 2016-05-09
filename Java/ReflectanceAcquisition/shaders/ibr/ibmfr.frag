@@ -18,6 +18,7 @@ in vec3 fViewPos;
 uniform vec3 lightIntensity[MAX_VIRTUAL_LIGHT_COUNT];
 uniform vec3 lightPos[MAX_VIRTUAL_LIGHT_COUNT];
 uniform int virtualLightCount;
+uniform vec3 ambientColor;
 
 uniform float weightExponent;
 
