@@ -19,6 +19,7 @@ import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.Matrix4;
+import tetzlaff.gl.helpers.Vector3;
 
 public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
@@ -35,6 +36,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private CameraController cameraController;
     private ULFLoadingMonitor callback;
 
+    private Vector3 clearColor;
     private boolean viewIndexCacheEnabled;
     private boolean halfResEnabled;
     FramebufferObject<ContextType> indexFBO;
@@ -65,6 +67,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.cameraController = cameraController;
     	this.viewIndexCacheEnabled = false;
     	this.targetFPS = 30.0f;
+    	this.clearColor = new Vector3(0.0f);
     }
 	
 	public void setCameraController(CameraController cameraController)
@@ -342,7 +345,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 					.addDepthAttachment(new DepthAttachmentSpec(32, false))
 					.createFramebufferObject();
 			
-			offscreenFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+			offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
 	    	offscreenFBO.clearDepthBuffer();
 	        mainRenderable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
 	        context.flush();
@@ -358,7 +361,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	} 
     	else 
     	{
-    		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+    		framebuffer.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
     		framebuffer.clearDepthBuffer();
 	        mainRenderable.draw(PrimitiveMode.TRIANGLES, framebuffer);  
 	        context.flush();
@@ -545,6 +548,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	public void setMultisampling(boolean multisamplingEnabled)
 	{
 		this.multisamplingEnabled = multisamplingEnabled;
+	}
+
+	public void setClearColor(Vector3 clearColor) 
+	{
+		this.clearColor = clearColor;
 	}
 
 	@Override

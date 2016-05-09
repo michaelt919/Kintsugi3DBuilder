@@ -115,6 +115,16 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 				program.setUniform("useRoughnessTexture", true);
 				program.setTexture("roughnessMap", microfacetField.roughnessTexture);
 			}
+			
+			float gamma = 2.2f;
+	    	Vector3 ambientColor = new Vector3(0.02f, 0.02f, 0.02f);
+			program.setUniform("ambientColor", ambientColor);
+	    	
+	    	Vector3 clearColor = new Vector3(
+	    			(float)Math.pow(ambientColor.x, 1.0 / gamma),
+	    			(float)Math.pow(ambientColor.y, 1.0 / gamma),
+	    			(float)Math.pow(ambientColor.z, 1.0 / gamma));
+	    	ulfRenderer.setClearColor(clearColor);
 	
 			for (int i = 0; i < lightController.getLightCount(); i++)
 			{
