@@ -53,7 +53,6 @@ void main()
         vec3 normal = normalize(fNormal);
         vec3 tangent = normalize(fTangent.xyz);
         vec3 light = normalize( lightPosition - fPosition );
-        fragColor = vec4(texture(viewImage, projTexCoord.xy).rgb, 1.0);
         
         vec3 binormal = normalize( cross( normal, tangent ) );
         mat3 rotationMatrix = transpose( mat3( tangent, binormal, normal ) );
@@ -96,19 +95,39 @@ void main()
        	float u = sin( halfTheta ) * cos( 2 * diffPhi );
        	float v = sin( halfTheta ) * sin( 2 * diffPhi );
        	float w = 2 * diffTheta / 3.1415927;
-       	
-       	uvwMapping = vec4( u, v, w, 1.0 );
-       	projTexCoord = vec4( testVector, 1.0 ); 
-       	
-       	
+       	w = w;
+		
+        fragColor = vec4(pow(texture(viewImage, projTexCoord.xy).rgb, vec3(2.2)), 1.0);
+		//fragColor = vec4(texture(viewImage, projTexCoord.xy).rgb, 1.0 );
+		
+		if( light.z > 0.5){
+			uvwMapping = vec4( u, v, w, 1.0 );
+			
+			// Gamma correct the n dot l factor
+			fragColor = vec4( fragColor.xyz / light.z, 1.0 );
+			predictedColor = vec4( vec3((0.5 * light.z + 0.5 * pow(max(halfVector.z, 0.0), 25.0)) / light.z), 1.0);
+			//predictedColor = vec4( vec3(0.5) + 0.5 * pow(max(halfVector.z, 0.0), 25.0), 1.0);
+			//fragColor = predictedColor;
+		}
+		else{
+			uvwMapping = vec4( 0.0 );
+			predictedColor = vec4(0.0);
+			fragColor = vec4( 0.0 );
+			//fragColor = vec4( 1.0, 0, 0, 0 );
+		}
+			
+       	//projTexCoord = vec4( testVector, 1.0 ); 
+		
         // TEST FOR DIFF THETA AND DIFF PHI
         //projTexCoord = vec4( diffTheta, 0, 0, 1 );
         //diffTheta = acos((R*light).z);
         //differenceAngles = vec4( diffTheta, 0, 0, 1 );
         //halfAngles = vec4( acos(rotatedLight.x / sin( diffTheta )), 0, 0, 1 );
 		//uvwMapping = vec4( diffPhi, 0, 0, 1 );
-
+		
         //predictedColor = vec4(vec3(max(dot(light, normal), 0.0) + pow(max(dot(normal, halfVector), 0.0), 25.0)), 1.0);
-        predictedColor = vec4(vec3(max(light.z, 0.0) + pow(max(halfVector.z, 0.0), 25.0)), 1.0);
+        //predictedColor = vec4( vec3(0.5 * pow(max(halfVector.z, 0.0), 25.0)), 1.0);
+		//predictedColor = vec4(vec3(max(light.z, 0.0) + pow(max(halfVector.z, 0.0), 25.0)), 1.0);
+
 	}
 }

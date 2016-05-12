@@ -5,12 +5,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
+//import java.nio.file.Files;
 
-import tetzlaff.gl.ColorFormat;
+//import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.FramebufferObject;
+//import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
@@ -18,8 +18,8 @@ import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
-import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
-import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
+//import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
+//import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.Matrix4;
@@ -27,7 +27,7 @@ import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
-import tetzlaff.ulf.ViewSet;
+//import tetzlaff.ulf.ViewSet;
 
 /**
  * An implementation of a renderer for a single unstructured light field.
@@ -69,11 +69,11 @@ public class RBFRenderer<ContextType extends Context<ContextType>> implements Dr
 	 */
 	private VertexBuffer<ContextType> tangentBuffer;
 	
-	private UniformBuffer<ContextType> uniformBuffer;
+	//private UniformBuffer<ContextType> uniformBuffer;
 	private UniformBuffer<ContextType> uniformCoefficientBuffer;
 	private UniformBuffer<ContextType> uniformLambdaBuffer;
 	private UniformBuffer<ContextType> uniformUVWBuffer;
-    
+
     private Exception initError;
 
     /**
@@ -98,7 +98,7 @@ public class RBFRenderer<ContextType extends Context<ContextType>> implements Dr
     public void initialize() 
     {
     	// Initialize shaders
-    	if (this.program == null)
+    	if (this.program == null )
     	{
 	    	try
 	        {
@@ -112,7 +112,6 @@ public class RBFRenderer<ContextType extends Context<ContextType>> implements Dr
 	        	this.initError = e;
 	        }
     	} 	
-    	
     	try
     	{
     		mesh = new VertexMesh("OBJ", meshFile);
@@ -134,7 +133,7 @@ public class RBFRenderer<ContextType extends Context<ContextType>> implements Dr
             	
             	if (mesh.hasTexCoords())
                 {
-            		tangentBuffer = context.createVertexBuffer().setData(mesh.getOrthoTangents());
+            		tangentBuffer = context.createVertexBuffer().setData(mesh.getTangents());
                 }
             }
     	}
@@ -143,12 +142,11 @@ public class RBFRenderer<ContextType extends Context<ContextType>> implements Dr
         	this.initError = e;
         }
     	
-    	int numberOfPoints = 20;
+    	int numberOfPoints = 1000;
     	
-    	float[][] resultsFromFile = new float[numberOfPoints][numberOfPoints*3*2 + 4*3]; // TODO read from file
-    	FloatVertexList uniformLambdaData = new FloatVertexList(4, numberOfPoints*100); // TODO change 100 to viewSet count
-    	FloatVertexList uniformCoefficientData = new FloatVertexList(4, 4); // TODO change 100 to viewSet count
-    	FloatVertexList uniformUVWData = new FloatVertexList(4, numberOfPoints*100); // TODO change 100 to viewSet count
+    	FloatVertexList uniformLambdaData = new FloatVertexList(4, numberOfPoints); 
+    	FloatVertexList uniformCoefficientData = new FloatVertexList(4, 4); 
+    	FloatVertexList uniformUVWData = new FloatVertexList(4, numberOfPoints); 
     	// read from file
     	try {
 			FileReader coefficientReader = new FileReader("C:\\Users\\Sarin\\Downloads\\coefficients.txt");
@@ -162,6 +160,7 @@ public class RBFRenderer<ContextType extends Context<ContextType>> implements Dr
 				uniformCoefficientData.set(i, 2, Float.parseFloat(coefficients[2]));
 				i ++;
 			}
+			bufferedCoefficientReader.close();
 			FileReader lambdaReader = new FileReader("C:\\Users\\Sarin\\Downloads\\lambdas.txt");
 			BufferedReader bufferedLambdaReader = new BufferedReader(lambdaReader);
 			i = 0;
@@ -172,6 +171,7 @@ public class RBFRenderer<ContextType extends Context<ContextType>> implements Dr
 				uniformLambdaData.set(i, 2, Float.parseFloat(lambdas[2]));
 				i ++;
 			}
+			bufferedLambdaReader.close();
 			FileReader UVWReader = new FileReader("C:\\Users\\Sarin\\Downloads\\uvw.txt");
 			BufferedReader bufferedUVWReader = new BufferedReader(UVWReader);
 			i = 0;
@@ -182,6 +182,7 @@ public class RBFRenderer<ContextType extends Context<ContextType>> implements Dr
 				uniformUVWData.set(i, 2, Float.parseFloat(uvw[2]));
 				i ++;
 			}
+			bufferedUVWReader.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -217,10 +218,12 @@ public class RBFRenderer<ContextType extends Context<ContextType>> implements Dr
     	this.program.setUniformBuffer("Constants", uniformCoefficientBuffer);
     	this.program.setUniformBuffer("Lambdas", uniformLambdaBuffer);
     	this.program.setUniformBuffer("Thetas", uniformUVWBuffer);
+    	this.program.setUniform("debugMode", 0);
+    	this.program.setUniform("increment", 0);
     	
     	this.rectangleVBO = context.createRectangle();
 
-    	Renderable<ContextType> programRenderable = context.createRenderable(program);
+    	//Renderable<ContextType> programRenderable = context.createRenderable(program);
     	
     	/*try {
 			ViewSet<ContextType> viewSet = ViewSet.loadFromVSETFile( new File("C:\\Users\\Sarin\\Downloads\\sphere2\\Random100ViewSarin.vset"), context);
@@ -302,5 +305,13 @@ public class RBFRenderer<ContextType extends Context<ContextType>> implements Dr
 			System.err.println("Error saving to file " + file.getPath());
 			e.printStackTrace(System.err);
 		}
+	}
+
+	public void setDebugMode(int debugMode) {
+		this.program.setUniform("debugMode", debugMode);
+	}
+	
+	public void setIncrementMode(int increment){
+		this.program.setUniform("increment", increment);
 	}
 }

@@ -1,8 +1,6 @@
 #version 330
 
 uniform mat4 model_view;
-uniform int debugMode;
-uniform int increment;
 
 in vec3 fPosition;
 in vec2 fTexCoord;
@@ -25,18 +23,17 @@ uniform Constants
 
 uniform Lambdas
 {
-	vec4 lambdas[4000];
+	vec4 lambdas[2000];
 };
 
 uniform Thetas
 {
-	vec4 thetas[4000];
+	vec4 thetas[2000];
 };
 
 void main()
 {
-	//vec3 lightPosition = vec3(10, 0, 0);
-	vec3 lightPosition = vec3(-4.27785933, -2.219734788, 1.331426501);
+	vec3 lightPosition = vec3(10, 0, 0);
 	vec3 view = normalize(fViewPos - fPosition);
 	vec3 normal = normalize(fNormal);
 	vec3 tangent = normalize(fTangent.xyz);
@@ -83,12 +80,10 @@ void main()
 	//float w = max( 2 * diffTheta / 3.1415927, 0.0);
 	float w = 2 * diffTheta / 3.1415927;
 	// scale w so it has smaller impact 
-	w = w;
+	w = w * 0.5;
 	
 	vec3 uvwMapping = vec3( u, v, w );
-	// change 8
-	//vec3 firstPart = constants[0].xyz + u * constants[1].xyz + v * constants[2].xyz + w * constants[3].xyz;
-	vec3 firstPart = constants[0].xyz;
+	vec3 firstPart = constants[0].xyz + u * constants[1].xyz + v * constants[2].xyz + w * constants[3].xyz;
 	
 	vec3 ambient = vec3(0, 0, 0);
 	vec3 diffuseProduct = vec3(0.5, 0.5, 0);
@@ -99,15 +94,13 @@ void main()
 	vec3 specular = ks * specularProduct;
 	
 	// TODO: pass in the number of sample points instead of hard coding to 40
-	int N = 1000;
+	int N = 2000;
 	vec3 sum = firstPart;
-	//sum = vec3(0);
 	for (int i = 0; i < N; i++)
 	{
 		// scale w so it has smaller impact
-		vec3 newTheta = vec3( thetas[i].x, thetas[i].y, thetas[i].z );
-		vec3 secondPart = length(uvwMapping - newTheta) * lambdas[i].xyz;
-		//vec3 secondPart = pow(max(0.0,1.0 - length(uvwMapping - newTheta)/sqrt(2.0)), 100.0) * vec3(1.0);
+		vec3 newTheta = vec3( thetas[i].x, thetas[i].y, thetas[i].z*0.5 );
+		float secondPart = length(uvwMapping - newTheta) * lambdas[i].xyz;
 		sum += secondPart;
 	}
 	
@@ -115,64 +108,12 @@ void main()
 	//fragColor = vec4(firstPart/2 + vec3(0.5), 1);
 	//fragColor = vec4( vec3(1) * (v+0.5), 1);
 	//fragColor = vec4( vec3(1) * diffPhi, 1 );
-	if( light.z > 0 ){
-		//fragColor = vec4(sum * pow(light.z, 1/2.2) , 1);
-		fragColor = vec4(pow(sum * light.z, vec3(1/2.2)), 1.0);
-		//fragColor = vec4(sum * light.z, 1.0);
-	}
-	else{
-		fragColor = vec4(0);
-	}
-	if( debugMode == 1 ){
-		fragColor = vec4( vec3(pow(max(light.z, 0.0), 1/2.2)), 1.0);
-	}
-	else if( debugMode == 2 ) {
-		fragColor = vec4( pow(sum - firstPart, vec3(1/2.2)), 1 );
-	}
-	else if( debugMode == 3 ) {
-		fragColor = vec4( vec3(light.z *0.5 + 0.5), 1 );
-	}
-	else if( debugMode == 4 ){
-		fragColor = vec4( pow(firstPart, vec3(1/2.2)), 1 );
-	}
-	else if( debugMode == 5 ){
-		fragColor = vec4( uvwMapping, 1 );
-	}
-	else if( debugMode == 6 ){
-		fragColor = vec4(0.5 * fTangent.xyz + vec3(0.5), 1);
-	}
-	else if( debugMode == 7 ){
-		fragColor = vec4(0.5 * fNormal.xyz + vec3(0.5), 1);
-	}
-	else if( debugMode == 8 ){
-		fragColor = halfAngles;
-	}
-	else if( debugMode == 9 ){
-		fragColor = vec4( pow(diffuse + specular, vec3(1/2.2)), 1 );
-	}
-	else if( debugMode == 10 ){
-		sum = vec3(0);
-		for (int i = 0; i < N; i++)
-		{
-			// scale w so it has smaller impact
-			vec3 newTheta = vec3( thetas[i].x, thetas[i].y, thetas[i].z );
-			//vec3 secondPart = length(uvwMapping - newTheta) * lambdas[i].xyz;
-			vec3 secondPart = pow(max(0.0,1.0 - length(uvwMapping - newTheta)/sqrt(3.0)), 100.0) * vec3(1.0);
-			if (dot(lambdas[i].xyz, vec3(1)) > 0.0)
-			{
-				sum.g += secondPart.g;
-			}
-			else
-			{
-				sum.r += secondPart.r;
-			}
-		}
-		fragColor = vec4( sum, 1 );
-	}
-	else if( debugMode == 11 ){
-		vec3 newTheta = vec3( thetas[increment].x, thetas[increment].y, thetas[increment].z );
-		vec3 secondPart = length(uvwMapping - newTheta) * lambdas[increment].xyz;
-		fragColor = vec4( secondPart, 1 );
-	}
+	//if( light.z > 0 ){
+		fragColor = vec4(u, v, w, 1);
+	//}
+	//else{
+		//fragColor = vec4(0, 0, 0, 1);
+	//}
+	
 }
 

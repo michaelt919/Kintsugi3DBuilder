@@ -1,17 +1,22 @@
 package sarin.reflectancesharing;
 
-import java.awt.image.BufferedImage;
+//import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
+//import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.PrintStream;
+//import java.io.PrintStream;
 import java.io.Writer;
+import java.util.ArrayList;
+//import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-import javax.imageio.ImageIO;
+//import javax.imageio.ImageIO;
 
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
@@ -23,8 +28,8 @@ import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.VertexBuffer;
-import tetzlaff.gl.helpers.Matrix3;
-import tetzlaff.gl.helpers.Matrix4;
+//import tetzlaff.gl.helpers.Matrix3;
+//import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.VertexMesh;
@@ -32,6 +37,7 @@ import tetzlaff.ulf.ViewSet;
 
 import Jama.*;
 import java.util.Random;
+//import java.util.Set;
 
 public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
@@ -200,11 +206,19 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					new FileOutputStream("C:\\Users\\Sarin\\Downloads\\uvw.txt"), "utf-8"));
     		// initializing matrices to solve for the coefficients
 
-    		int numberOfPoints = 20;
-    		double[][] g = new double[numberOfPoints*viewSet.getCameraPoseCount()][3];
-    		double[][] p = new double[numberOfPoints*viewSet.getCameraPoseCount()][4];
-    		double[][] psi = new double[numberOfPoints*viewSet.getCameraPoseCount()][numberOfPoints*viewSet.getCameraPoseCount()];
+    		int numberOfPoints = 100;
+    		double[][] g; //= new double[numberOfPoints*viewSet.getCameraPoseCount()][3];
+    		double[][] p; //= new double[numberOfPoints*viewSet.getCameraPoseCount()][4];
     		
+    		int sampleIndex = 0;
+    		int tempCount = 0;
+    		
+    		// sumG is sum of original, which is RGB colors 
+    		Map<UvwBin, Vector3> sumG = new HashMap<UvwBin, Vector3>();
+    		Map<UvwBin, Integer> gCount = new HashMap<UvwBin, Integer>();
+    		// sumUvw is sum of temp, which is uvwMapping 
+    		Map<UvwBin, Vector3> sumUvw = new HashMap<UvwBin, Vector3>();
+    		Map<UvwBin, ArrayList<UvwBin>> arrayUvw = new HashMap<UvwBin, ArrayList<UvwBin>>();
     		
     		// viewSet.getCameraPoseCount() = 100
 	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
@@ -213,6 +227,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	viewDir.mkdir();
 		    	
 		    	File imageFile = new File(imageDir, viewSet.getImageFileName(i));
+		    	System.out.println(viewSet.getImageFileName(i));
 				if (!imageFile.exists())
 				{
 					String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
@@ -295,11 +310,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		projTexFBO.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		projTexFBO.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		projTexFBO.clearColorBuffer(4, 0.0f, 0.0f, 0.0f, 0.0f);
-			    		projTexFBO.clearColorBuffer(5, 0.0f, 1.0f, 0.0f, 0.0f);
+			    		projTexFBO.clearColorBuffer(5, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		projTexRenderable.draw(PrimitiveMode.TRIANGLES, projTexFBO);
-			    		
-			    		//float[] halfAngles = projTexFBO.readFloatingPointColorBufferRGBA(2);
-			    		//float[] differenceAngles = projTexFBO.readFloatingPointColorBufferRGBA(3);
 			    		
 			    		projTexFBO.saveColorBufferToFile(0, "PNG", new File(viewDir, String.format("r%04dc%04d.png", row, col)));
 			    		projTexFBO.saveColorBufferToFile(1, "PNG", new File(viewDir, String.format("output1_r%04dc%04d.png", row, col)));
@@ -314,97 +326,67 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		float[] original = projTexFBO.readFloatingPointColorBufferRGBA(0);
 			    		
 			    		Random random = new Random();
-			    		/*double[][] g = new double[20][3];
-			    		double[][] p = new double[20][4];
-			    		double[][] psi = new double[20][20];*/
+			    		int totalLength = original.length/4;
+			    		int intervals = totalLength / (numberOfPoints);
+			    		
+			    		//System.out.println( "totalLength: " + totalLength );
+			    		
+			    		for( int j = 0; j < totalLength; j ++ ){
+			    			if( original[j*4+3] == 0.0 ){
+			    				continue;
+			    			}
+			    			Vector3 gColor = new Vector3( original[j*4], original[j*4+1], original[j*4+2]);
+			    			//float phong = (float)Math.pow(Math.max(0.0, 1.0 - (temp[j*4]* temp[j*4] +temp[j*4+1]*temp[j*4+1])), 10);
+			    			//Vector3 gColor = new Vector3(phong, phong, phong);
+			    			Vector3 uvwCoord = new Vector3( temp[j*4], temp[j*4+1], temp[j*4+2] );
+			    			UvwBin binKey = new UvwBin(uvwCoord.x, uvwCoord.y, uvwCoord.z);
+			    			System.out.println(binKey + " " + uvwCoord.x + ", " + uvwCoord.y + ", " + uvwCoord.z);
+			    			if( sumG.containsKey(binKey) ){
+			    				Vector3 gValue = sumG.get(binKey);
+			    				Vector3 newGValue = new Vector3(gValue.x + gColor.x, gValue.y + gColor.y, gValue.z + gColor.z );
+			    				sumG.put(binKey, newGValue);
+			    				int count = gCount.get(binKey);
+			    				count ++;
+			    				gCount.put(binKey, count);
+			    				Vector3 uvwValue = sumUvw.get(binKey);
+			    				Vector3 newUvwValue = new Vector3(uvwValue.x + uvwCoord.x, uvwValue.y + uvwCoord.y, uvwValue.z + uvwCoord.z);
+			    				sumUvw.put(binKey, newUvwValue);
+			    			}
+			    			else{
+			    				sumG.put(binKey, gColor);
+			    				gCount.put(binKey, 1);
+			    				sumUvw.put(binKey, uvwCoord);
+			    				tempCount ++;
+			    			}
+			    		}
+			    		
+			    		//System.out.println( "sumG count: " + sumG.size() );
+			    		//System.out.println( "gCount count: " + gCount.size() );
+			    		
+			    		/*
 			    		for( int j = 0; j < numberOfPoints; j ++ ){
-				    		// generate random numbers between 1 and 1048576/4=262144
+				    		
+			    			// generate random numbers between 1 and 1048576/4=262144
 			    			int randomNumber = random.nextInt(original.length/4);
 			    			// generate random number until we get the corresponding pixel so that alpha of original image is not 0.
-			    			while( original[randomNumber*4+3] == 0.0 ){
+			    			int numTries = 0;
+			    			while( original[randomNumber*4+3] == 0.0 && numTries < 10000){ 
 			    				randomNumber = random.nextInt(original.length/4);
+			    				numTries++;
+			    			}
+			    			if (numTries >= 10000) {
+			    				continue;
 			    			}
 			    			
-			    			/*p[j][0] = 1;
-			    			p[j][1] = temp[randomNumber*4];
-			    			p[j][2] = temp[randomNumber*4+1];
-			    			p[j][3] = temp[randomNumber*4+2];
-			    			g[j][0] = original[randomNumber*4];
-			    			g[j][1] = original[randomNumber*4+1];
-			    			g[j][2] = original[randomNumber*4+2];*/
+			    			p[sampleIndex][0] = 1;
+			    			p[sampleIndex][1] = temp[randomNumber*4];
+			    			p[sampleIndex][2] = temp[randomNumber*4+1];
+			    			p[sampleIndex][3] = temp[randomNumber*4+2];
+			    			g[sampleIndex][0] = original[randomNumber*4];
+			    			g[sampleIndex][1] = original[randomNumber*4+1];
+			    			g[sampleIndex][2] = original[randomNumber*4+2];
+			    			sampleIndex++;
 			    			
-			    			p[numberOfPoints*i + j][0] = 1;
-			    			p[numberOfPoints*i + j][1] = temp[randomNumber*4];
-			    			p[numberOfPoints*i + j][2] = temp[randomNumber*4+1];
-			    			p[numberOfPoints*i + j][3] = temp[randomNumber*4+2];
-			    			g[numberOfPoints*i + j][0] = original[randomNumber*4];
-			    			g[numberOfPoints*i + j][1] = original[randomNumber*4+1];
-			    			g[numberOfPoints*i + j][2] = original[randomNumber*4+2];
-			    			
-			    			// write u,v,w to file
-			    			//writer.write( p[j][1] + " " + p[j][2] + " " + p[j][3] + " " );
-			    			
-			    			/*for( int k = 0; k < 20; k ++ ){
-			    				// distance formula 
-			    				psi[j][k] = Math.sqrt((p[j][1]-p[k][1])*(p[j][1]-p[k][1]) + (p[j][2]-p[k][2])*(p[j][2]-p[k][2])
-			    								+ (p[j][3]-p[k][3])*(p[j][3]-p[k][3]));
-			    			}*/
-			    			
-			    		}
-			    		
-			    		// create matrix of zero of size Psi.row+PT.row by Psi.col+P.col
-			    		/*Matrix BigMatrix = new Matrix( psi.length + p[0].length, psi[0].length + p[0].length);
-			    		for( int j = 0; j < psi.length; j ++ ){
-			    			for( int k = 0; k < psi[0].length; k++ ){
-			    				BigMatrix.set(j, k, psi[j][k]);
-			    			}
-			    		}
-			    		int a = 0;
-			    		int b = 0;
-			    		for( int j = psi.length; j < BigMatrix.getRowDimension(); j ++ ){
-			    			for( int k = 0; k < p.length; k ++ ){
-			    				// transpose of P
-			    				BigMatrix.set( j, k, p[b][a]); //PT.get(a, b))
-			    				b ++;
-			    			}
-			    			a ++;
-			    			b = 0;
-			    		}
-			    		b = 0;
-			    		for( int j = 0; j < p.length; j ++ ){
-			    			for( int k = psi[0].length; k < BigMatrix.getColumnDimension(); k ++ ){
-			    				BigMatrix.set( j, k, p[j][b]);
-			    				b ++;
-			    			}
-			    			b = 0;
-			    		}
-			    		// create matrix to store the coefficients that is being solved 
-			    		Matrix Coefficient = new Matrix( BigMatrix.getRowDimension(), 3 );
-			    		// create matrix to store G and zeros so that equation is compatible
-			    		Matrix GZero = new Matrix( BigMatrix.getRowDimension(), 3 );
-			    		for( int j = 0; j < g.length; j ++ ){
-			    			for( int k = 0; k < g[0].length; k ++ ){
-			    				GZero.set(j, k, g[j][k]);
-			    			}
-			    		}
-			    		
-			    		Coefficient = BigMatrix.solve(GZero);
-			    		Matrix solver = BigMatrix.times(Coefficient);
-			    		double threshold = 1E-7;
-			    		// test if solver is equal to gZero
-			    		for( int j = 0; j < 24; j++ ){
-			    			for( int k = 0; k < 3; k ++ ){
-			    				double diff = Math.abs(solver.get(j, k) - GZero.get(j, k));
-			    				if( diff > threshold ){
-			    					System.out.println("INCORRECT!!!!!");
-			    				}
-			    			}
-			    		}
-			    		// write lambda and c to file in the order of left to write and up to down from the Coefficient matrix
-			    		for( int j = 0; j < Coefficient.getRowDimension(); j ++ ){
-			    			for ( int k = 0; k < Coefficient.getColumnDimension(); k ++ ){
-			    				writer.write(Coefficient.get(j, k) + " ");
-			    			}
 			    		}*/
 			    	}
 	    		}
@@ -412,13 +394,133 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	viewTexture.delete();
 	        	depthFBO.delete();
 		    	
-	        	//writer.write("\n\n\n");
 		    	System.out.println("Completed " + (i+1) + "/" + viewSet.getCameraPoseCount());
 	    	}
 	    	
+    		/*g = new double[2000][3];
+    		p = new double[2000][4];
+	    	int inc = 0;
+	    	Set<UvwBin> uvwBinSet = sumG.keySet();
+	    	ArrayList<UvwBin> uvwBinList = new ArrayList<UvwBin>(uvwBinSet);
+	    	Collections.shuffle(uvwBinList);
+	    	for( UvwBin coord : uvwBinList ){
+	    		inc++;
+	    		if( inc > g.length ){
+	    			break;
+	    		}
+	    		
+	    		Vector3 gVector = sumG.get(coord);
+	    		g[sampleIndex][0] = gVector.x / gCount.get(coord);
+	    		g[sampleIndex][1] = gVector.y / gCount.get(coord);
+	    		g[sampleIndex][2] = gVector.z / gCount.get(coord);
+	    		Vector3 uvwVector = sumUvw.get(coord);
+	    		p[sampleIndex][0] = 1;
+	    		p[sampleIndex][1] = uvwVector.x / gCount.get(coord);
+	    		p[sampleIndex][2] = uvwVector.y / gCount.get(coord);
+	    		p[sampleIndex][3] = uvwVector.z / gCount.get(coord);
+	    		sampleIndex ++;
+
+	    	}
+	    	
+	    	System.out.println("Grabbed " + sampleIndex + " samples");
+	    	*/
+	    	
+	    	
+    		// Greedy Algorithm 
+    		// - compute radial basis function for each point
+    		// - find point with largest error 
+    		// - append point to samples/centers
+	    	
+	    	/*
+	    	 * 	Initialize variables
+	    	 */
+	    	int numberOfSamples = 1000;
+    		g = new double[numberOfSamples][3];
+    		p = new double[numberOfSamples][4];
+    		double[][] psi = null;
+    		Matrix Coefficient = null;
+    		Vector3[] constants = null; 
+    		Vector3[] lambdasConstants = null;
+	    	int inc = 0;
+	    	UvwBin maxErrorBin = null;
+	    	Map<UvwBin, Integer> maxChosen = new HashMap<UvwBin, Integer>();
+	    	
+	    	Iterator<UvwBin> coordIT = sumG.keySet().iterator();
+	    	
+	    /*	Map<Float, Integer> sampleDensityTable = new HashMap<Float, Integer>();
+	    	sampleDensityTable.put(0f, 4);
+	    	sampleDensityTable.put(0.1f, 5);
+	    	sampleDensityTable.put(0.2f, 6);
+	    	sampleDensityTable.put(0.3f, 8);
+	    	sampleDensityTable.put(0.4f, 9);
+	    	sampleDensityTable.put(0.5f, 11);
+	    	sampleDensityTable.put(0.6f, 12);
+	    	sampleDensityTable.put(0.7f, 14);
+	    	sampleDensityTable.put(0.8f, 16);*/
+	    	int[] sampleDensityTable = {4, 5, 6, 8, 9, 11, 12, 14, 16};
+	    	
+	    	float SCALE = 1f;
+	    	
+	    	for(float w = 0f; w <= 0.8f; w += 0.1f ){
+	    		int numRs = sampleDensityTable[(int) Math.round(w*10)]; 
+	    		int numThetas = sampleDensityTable[(int) Math.round(w*10)]; 
+	    		float deltaR = 1.0f / (numRs - 1);
+	    		float deltaTheta = (float) (2 * Math.PI) / numThetas;
+	    		
+	    		// add sample at (0, 0, w)
+	    		UvwBin coord = new UvwBin(0f*SCALE, 0f*SCALE, w*SCALE);
+	    		Vector3 gVector = sumG.get(coord);
+	    		if( gVector != null && !maxChosen.containsKey(coord) ){
+		    		g[sampleIndex][0] = gVector.x / gCount.get(coord);
+		    		g[sampleIndex][1] = gVector.y / gCount.get(coord);
+		    		g[sampleIndex][2] = gVector.z / gCount.get(coord);
+		    		Vector3 uvwVector = sumUvw.get(coord);
+		    		p[sampleIndex][0] = 1;
+		    		p[sampleIndex][1] = uvwVector.x / gCount.get(coord);
+		    		p[sampleIndex][2] = uvwVector.y / gCount.get(coord);
+		    		p[sampleIndex][3] = uvwVector.z / gCount.get(coord);
+		    		sampleIndex ++;
+		    		maxChosen.put(coord, 1);
+	    		}
+	    		for(int k = 1; k < numRs; k ++ ){
+	    			float startTheta;
+	    			if( (k % 2) == 1){
+	    				startTheta = deltaTheta / 2;
+	    			}
+	    			else{
+	    				startTheta = 0f;
+	    			}
+	    			float r = k * deltaR;
+	    			for( float theta = startTheta; theta < ((float) startTheta + 2 * Math.PI); theta += deltaTheta){
+	    				float u = (float) (r * Math.cos((double) theta)); 
+	    				float v = (float) (r * Math.sin((double) theta));
+	    				// compute dot(n, l) > 0
+	    				UvwBin newCoord = new UvwBin(u*SCALE, v*SCALE, w*SCALE);
+	    	    		Vector3 newVector = sumG.get(newCoord);
+	    	    		if( newVector != null && !maxChosen.containsKey(newCoord) ){
+		    	    		g[sampleIndex][0] = newVector.x / gCount.get(newCoord);
+		    	    		g[sampleIndex][1] = newVector.y / gCount.get(newCoord);
+		    	    		g[sampleIndex][2] = newVector.z / gCount.get(newCoord);
+		    	    		Vector3 newUvwVector = sumUvw.get(newCoord);
+		    	    		p[sampleIndex][0] = 1;
+		    	    		p[sampleIndex][1] = newUvwVector.x / gCount.get(newCoord);
+		    	    		p[sampleIndex][2] = newUvwVector.y / gCount.get(newCoord);
+		    	    		p[sampleIndex][3] = newUvwVector.z / gCount.get(newCoord);
+		    	    		sampleIndex ++ ;
+		    	    		maxChosen.put(newCoord, 1);
+	    	    		}
+	    			}
+	    		}
+	    		
+	    	}
+	    	
+	    	System.out.println("SampleIndex: " + sampleIndex);
+	    	
+	    	psi = new double[sampleIndex][sampleIndex];
+    		
 	    	for( int j = 0; j < psi.length; j ++ )
 	    	{
-	    		for( int k = 0; k < psi[0].length; k ++ )
+	    		for( int k = 0; k < psi.length; k ++ )
 	    		{
     				// distance formula 
     				psi[j][k] = Math.sqrt((p[j][1]-p[k][1])*(p[j][1]-p[k][1]) + (p[j][2]-p[k][2])*(p[j][2]-p[k][2])
@@ -426,7 +528,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    		}
 	    	}
 	    	// create matrix of zero of size Psi.row+PT.row by Psi.col+P.col
-    		Matrix BigMatrix = new Matrix( psi.length + p[0].length, psi[0].length + p[0].length);
+    		//Matrix BigMatrix = new Matrix( psi.length + p[0].length, psi[0].length + p[0].length);
+	    	// change 1
+	    	Matrix BigMatrix = new Matrix( psi.length + 1, psi[0].length + 1 );
     		for( int j = 0; j < psi.length; j ++ ){
     			for( int k = 0; k < psi[0].length; k++ ){
     				BigMatrix.set(j, k, psi[j][k]);
@@ -434,8 +538,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     		}
     		int a = 0;
     		int b = 0;
-    		for( int j = psi.length; j < BigMatrix.getRowDimension(); j ++ ){
-    			for( int k = 0; k < p.length; k ++ ){
+    		double[][] pt = new double[4][sampleIndex];
+    		//for( int j = psi.length; j < BigMatrix.getRowDimension(); j ++ ){
+    		// change 2
+    		for( int j = psi.length; j < psi.length + 1; j ++ ){
+    			for( int k = 0; k < sampleIndex; k ++ ){
     				// transpose of P
     				BigMatrix.set( j, k, p[b][a]); //PT.get(a, b))
     				b ++;
@@ -443,41 +550,86 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     			a ++;
     			b = 0;
     		}
+    		
+    		// change 3
+    		for( int j = 0; j < 4; j ++ ){
+    			for( int k = 0; k < sampleIndex; k ++ ){
+    				pt[j][k] = p[k][j];
+    			}
+    		} 
+    		
     		b = 0;
-    		for( int j = 0; j < p.length; j ++ ){
-    			for( int k = psi[0].length; k < BigMatrix.getColumnDimension(); k ++ ){
+    		for( int j = 0; j < sampleIndex; j ++ ){
+    			//for( int k = psi[0].length; k < BigMatrix.getColumnDimension(); k ++ ){
+    			// change 4
+    			for( int k = psi[0].length; k < psi[0].length + 1; k ++ ){
     				BigMatrix.set( j, k, p[j][b]);
     				b ++;
     			}
     			b = 0;
     		}
-    		// create matrix to store the coefficients that is being solved 
-    		Matrix Coefficient = new Matrix( BigMatrix.getRowDimension(), 3 );
+
+    		Coefficient = new Matrix( BigMatrix.getRowDimension(), 3 );
     		// create matrix to store G and zeros so that equation is compatible
     		Matrix GZero = new Matrix( BigMatrix.getRowDimension(), 3 );
-    		for( int j = 0; j < g.length; j ++ ){
+    		for( int j = 0; j < sampleIndex; j ++ ){
     			for( int k = 0; k < g[0].length; k ++ ){
     				GZero.set(j, k, g[j][k]);
     			}
     		}
     		
-    		Coefficient = BigMatrix.solve(GZero);
-    		Matrix solver = BigMatrix.times(Coefficient);
-    		double threshold = 1E-7;
-    		// test if solver is equal to gZero
-    		for( int j = 0; j < solver.getRowDimension(); j++ ){
-    			for( int k = 0; k < solver.getColumnDimension(); k ++ ){
-    				double diff = Math.abs(solver.get(j, k) - GZero.get(j, k));
-    				if( diff > threshold ){
-    					System.out.println("INCORRECT!!!!!");
-    				}
-    			}
+    		System.out.println(BigMatrix.getRowDimension());
+    		System.out.println(BigMatrix.getColumnDimension());
+    		try {
+    			Coefficient = BigMatrix.solve(GZero);
+    		} catch(RuntimeException e) {
+    			//coordIT.remove();
+    			System.out.println("Singular matrix cause by " + maxErrorBin);
+    			maxChosen.put(maxErrorBin, 1);
+    			sampleIndex--;
+    			maxErrorBin = null;
+    			
     		}
+    		System.out.println( "Solved! ");
+    		
+    		constants = new Vector3[1];
+    		lambdasConstants = new Vector3[sampleIndex];
+    		Vector3[] thetas = new Vector3[sampleIndex];
+    		int m = 0;
     		// write lambda and c to file in the order of left to write and up to down from the Coefficient matrix
+    		for( int j = 0; j < psi.length ; j ++ ){
+    			double[] temp = new double[3];
+    			for ( int k = 0; k < 3; k ++ ){
+    				temp[k] = Coefficient.get(j, k);
+    			}
+    			lambdasConstants[m] = new Vector3((float)temp[0], (float)temp[1], (float)temp[2]); 
+    			m ++ ;
+    		}
+    		m = 0;
+    		for( int j = psi.length; j < Coefficient.getRowDimension() ; j ++ ){
+    			double[] temp = new double[3];
+    			for ( int k = 0; k < 3; k ++ ){
+    				temp[k] = Coefficient.get(j, k);
+    			}
+    			constants[m] = new Vector3((float)temp[0], (float)temp[1], (float)temp[2]);
+    			m ++ ;
+    		}
+    		m = 0;
+    		for( int j = 0; j < sampleIndex; j ++ ){
+    			double[] temp = new double[3];
+    			// k start from 1 because in p matrix, the first column is all 1's. 
+    			for( int k = 1; k < p[0].length; k ++ ){
+    				temp[k-1] = p[j][k];
+    			}
+    			thetas[m] = new Vector3((float)temp[0], (float)temp[1], (float)temp[2]);
+    			m ++ ;
+    		}
+
+    	
     		for( int j = 0; j < psi.length ; j ++ ){
     			for ( int k = 0; k < 3; k ++ ){
     				lambdas.write(Coefficient.get(j, k) + " ");
-    			}
+    				}
     			lambdas.write("\r\n");
     		}
     		for( int j = psi.length; j < Coefficient.getRowDimension() ; j ++ ){
@@ -486,7 +638,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     			}
     			coefficients.write("\r\n");
     		}
-    		for( int j = 0; j < p.length; j ++ ){
+    		for( int j = 0; j < sampleIndex; j ++ ){
     			// k start from 1 because in p matrix, the first column is all 1's. 
     			for( int k = 1; k < p[0].length; k ++ ){
     				uvw.write(p[j][k] + " ");
@@ -497,687 +649,240 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     		lambdas.close();
     		coefficients.close();
     		uvw.close();
-    		
 	    	
+	    	
+	    	//for( UvwBin coord: uvwBinList ){
+	    	/*while(coordIT.hasNext()) {
+	    		UvwBin coord = coordIT.next();
+	    		
+	    		if( sampleIndex >= numberOfSamples ){
+	    			break;
+	    		}
+	    		// get first 20 random points
+	    		if( sampleIndex < 2 ){
+	    			Vector3 gVector = sumG.get(coord);
+		    		g[sampleIndex][0] = gVector.x / gCount.get(coord);
+		    		g[sampleIndex][1] = gVector.y / gCount.get(coord);
+		    		g[sampleIndex][2] = gVector.z / gCount.get(coord);
+		    		Vector3 uvwVector = sumUvw.get(coord);
+		    		p[sampleIndex][0] = 1;
+		    		p[sampleIndex][1] = uvwVector.x / gCount.get(coord);
+		    		p[sampleIndex][2] = uvwVector.y / gCount.get(coord);
+		    		p[sampleIndex][3] = uvwVector.z / gCount.get(coord);
+	    			sampleIndex++;
+	    			maxChosen.put(coord, 1);
+	    			continue;
+	    		}
+	    		// if have maximum bin that does not fit the RBF follow, include as sample point
+	    		if( maxErrorBin != null ){
+	    			//System.out.println( "Max Error Bin: " + maxErrorBin.u + " " + maxErrorBin.v + " " + maxErrorBin.w );
+	    			Vector3 gVector = sumG.get(maxErrorBin);
+		    		g[sampleIndex][0] = gVector.x / gCount.get(maxErrorBin);
+		    		g[sampleIndex][1] = gVector.y / gCount.get(maxErrorBin);
+		    		g[sampleIndex][2] = gVector.z / gCount.get(maxErrorBin);
+		    		Vector3 uvwVector = sumUvw.get(maxErrorBin);
+		    		p[sampleIndex][0] = 1;
+		    		p[sampleIndex][1] = uvwVector.x / gCount.get(maxErrorBin);
+		    		p[sampleIndex][2] = uvwVector.y / gCount.get(maxErrorBin);
+		    		p[sampleIndex][3] = uvwVector.z / gCount.get(maxErrorBin);
+		    		System.out.println("Adding max error bin: " + maxErrorBin + "(" + p[sampleIndex][1] + ", " + p[sampleIndex][2] + ", " + p[sampleIndex][3] + ")");
+	    			sampleIndex++;
+	    		}*/
+	    		/*
+	    		 *  Compute coefficients for this matrix of this sample size
+	    		 */
+	    		/*psi = new double[sampleIndex][sampleIndex];
+	    		
+		    	for( int j = 0; j < psi.length; j ++ )
+		    	{
+		    		for( int k = 0; k < psi.length; k ++ )
+		    		{
+	    				// distance formula 
+	    				psi[j][k] = Math.sqrt((p[j][1]-p[k][1])*(p[j][1]-p[k][1]) + (p[j][2]-p[k][2])*(p[j][2]-p[k][2])
+	    								+ (p[j][3]-p[k][3])*(p[j][3]-p[k][3]));
+		    		}
+		    	}
+		    	// create matrix of zero of size Psi.row+PT.row by Psi.col+P.col
+	    		//Matrix BigMatrix = new Matrix( psi.length + p[0].length, psi[0].length + p[0].length);
+		    	// change 1
+		    	Matrix BigMatrix = new Matrix( psi.length + 1, psi[0].length + 1 );
+	    		for( int j = 0; j < psi.length; j ++ ){
+	    			for( int k = 0; k < psi[0].length; k++ ){
+	    				BigMatrix.set(j, k, psi[j][k]);
+	    			}
+	    		}
+	    		int a = 0;
+	    		int b = 0;
+	    		double[][] pt = new double[4][sampleIndex];
+	    		//for( int j = psi.length; j < BigMatrix.getRowDimension(); j ++ ){
+	    		// change 2
+	    		for( int j = psi.length; j < psi.length + 1; j ++ ){
+	    			for( int k = 0; k < sampleIndex; k ++ ){
+	    				// transpose of P
+	    				BigMatrix.set( j, k, p[b][a]); //PT.get(a, b))
+	    				b ++;
+	    			}
+	    			a ++;
+	    			b = 0;
+	    		}
+	    		*/
+	    		// change 3
+	    	/*	for( int j = 0; j < 4; j ++ ){
+	    			for( int k = 0; k < sampleIndex; k ++ ){
+	    				pt[j][k] = p[k][j];
+	    			}
+	    		} */
+	    		/*
+	    		b = 0;
+	    		for( int j = 0; j < sampleIndex; j ++ ){
+	    			//for( int k = psi[0].length; k < BigMatrix.getColumnDimension(); k ++ ){
+	    			// change 4
+	    			for( int k = psi[0].length; k < psi[0].length + 1; k ++ ){
+	    				BigMatrix.set( j, k, p[j][b]);
+	    				b ++;
+	    			}
+	    			b = 0;
+	    		}
+	
+	    		//System.out.println("Rank of Psi: " + new Matrix(psi).rank());
+	    		//System.out.println("Row of Pt: " + new Matrix(pt).getRowDimension());
+	    		//System.out.println("Rank of Pt: " + new Matrix(pt).rank());
+	    		//System.out.println("Rank: " + BigMatrix.rank());
+	    		//System.out.println("Condition: " + BigMatrix.cond());
+	    		// create matrix to store the coefficients that is being solved 
+	    		Coefficient = new Matrix( BigMatrix.getRowDimension(), 3 );
+	    		// create matrix to store G and zeros so that equation is compatible
+	    		Matrix GZero = new Matrix( BigMatrix.getRowDimension(), 3 );
+	    		for( int j = 0; j < sampleIndex; j ++ ){
+	    			for( int k = 0; k < g[0].length; k ++ ){
+	    				GZero.set(j, k, g[j][k]);
+	    			}
+	    		}
+	    		
+	    		//SingularValueDecomposition BigSVD = BigMatrix.svd();
+	    		//Coefficient = BigSVD.getV().times(BigSVD.getS().inverse()).times(BigSVD.getU().transpose()).times(GZero);
+	    		System.out.println(BigMatrix.getRowDimension());
+	    		System.out.println(BigMatrix.getColumnDimension());
+	    		//System.out.println(BigMatrix.rank());
+	    		try {
+	    			Coefficient = BigMatrix.solve(GZero);
+	    		} catch(RuntimeException e) {
+	    			//coordIT.remove();
+	    			System.out.println("Singular matrix cause by " + maxErrorBin);
+	    			maxChosen.put(maxErrorBin, 1);
+	    			sampleIndex--;
+	    			maxErrorBin = null;
+	    			continue;
+	    		}
+	    		System.out.println( "Solved! ");
+	    		//Matrix solver = BigMatrix.times(Coefficient);
+	    	
+	    		//constants = new Vector3[4];
+	    		// change 5
+	    		constants = new Vector3[1];
+	    		lambdasConstants = new Vector3[sampleIndex];
+	    		Vector3[] thetas = new Vector3[sampleIndex];
+	    		int m = 0;
+	    		// write lambda and c to file in the order of left to write and up to down from the Coefficient matrix
+	    		for( int j = 0; j < psi.length ; j ++ ){
+	    			double[] temp = new double[3];
+	    			for ( int k = 0; k < 3; k ++ ){
+	    				temp[k] = Coefficient.get(j, k);
+	    			}
+	    			lambdasConstants[m] = new Vector3((float)temp[0], (float)temp[1], (float)temp[2]); 
+	    			m ++ ;
+	    		}
+	    		m = 0;
+	    		for( int j = psi.length; j < Coefficient.getRowDimension() ; j ++ ){
+	    			double[] temp = new double[3];
+	    			for ( int k = 0; k < 3; k ++ ){
+	    				temp[k] = Coefficient.get(j, k);
+	    			}
+	    			constants[m] = new Vector3((float)temp[0], (float)temp[1], (float)temp[2]);
+	    			m ++ ;
+	    		}
+	    		m = 0;
+	    		for( int j = 0; j < sampleIndex; j ++ ){
+	    			double[] temp = new double[3];
+	    			// k start from 1 because in p matrix, the first column is all 1's. 
+	    			for( int k = 1; k < p[0].length; k ++ ){
+	    				temp[k-1] = p[j][k];
+	    			}
+	    			thetas[m] = new Vector3((float)temp[0], (float)temp[1], (float)temp[2]);
+	    			m ++ ;
+	    		}
+
+	    		// this variable stores the UvwBin with maximum error in RBF formula
+	    		maxErrorBin = null;
+	    		float maxError = 0;
+	    		// this loop computes RBF at each UvwBin 
+	    		for( UvwBin bin: sumG.keySet()){
+	    			if (!maxChosen.containsKey(bin)) {
+	    			
+		    			if( maxErrorBin == null ){
+		    				System.out.println( "Got in here!");
+		    				
+		    				maxErrorBin = bin;
+		    			}
+		    			Vector3 pCoord = sumUvw.get( bin ).dividedBy(gCount.get(bin));
+		    			*/
+		    			// change 6
+		    			/*Vector3 uPart = constants[1].times(pCoord.x);
+		    			Vector3 vPart = constants[2].times(pCoord.y);
+		    			Vector3 zPart = constants[3].times(pCoord.z);
+			    		Vector3 firstPart = constants[0].plus(uPart).plus(vPart).plus(zPart);*/
+		    			/*Vector3 firstPart = constants[0];
+		    			Vector3 sum = firstPart;
+			    		for( int n = 0; n < sampleIndex; n++ ){
+			    			Vector3 newTheta = new Vector3(thetas[n].x, thetas[n].y, thetas[n].z );
+			    			Vector3 secondPart = lambdasConstants[n].times(pCoord.minus(newTheta).length());
+			    			sum = sum.plus(secondPart);
+		    			}
+			    		Vector3 gVector = sumG.get(bin);
+			    		gVector = gVector.dividedBy(gCount.get(bin));
+			    		// TODO: may need more than one point from the same bin: because before I had check to see if bin had 
+			    		// already been chosen, were getting duplicate bins. That means that even when that bin is added to the samples, 
+			    		// it's value still has the maximum error in RBF formula. 
+			    		if( sum.minus(gVector).length() > maxError ){
+			    			maxErrorBin = bin;
+			    			//maxError =  Math.abs( sum.length() - gVector.length());
+			    			maxError = sum.minus(gVector).length();
+			    		}
+	    			}
+	    		}
+	    		maxChosen.put(maxErrorBin, 1);
+	    		System.out.println("Highest Error Bin: " + maxErrorBin);
+	    		System.out.println("Max Error: " + maxError );
+	    	}*/
+	    	
+	    	/*// write lambda and c to file in the order of left to write and up to down from the Coefficient matrix
+    		for( int j = 0; j < psi.length ; j ++ ){
+    			for ( int k = 0; k < 3; k ++ ){
+    				lambdas.write(Coefficient.get(j, k) + " ");
+    				}
+    			lambdas.write("\r\n");
+    		}
+    		for( int j = psi.length; j < Coefficient.getRowDimension() ; j ++ ){
+    			for ( int k = 0; k < 3; k ++ ){
+    				coefficients.write(Coefficient.get(j, k) + " ");
+    			}
+    			coefficients.write("\r\n");
+    		}
+    		Vector3[] thetas = new Vector3[sampleIndex];
+    		for( int j = 0; j < sampleIndex; j ++ ){
+    			// k start from 1 because in p matrix, the first column is all 1's. 
+    			for( int k = 1; k < p[0].length; k ++ ){
+    				uvw.write(p[j][k] + " ");
+    			}
+    			uvw.write("\r\n");
+    		}
+
+    		lambdas.close();
+    		coefficients.close();
+    		uvw.close();*/
+    		
 	    	System.out.println("Pre-projections completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}
-//    	else
-//    	{
-//    		if (param.isImageRescalingEnabled())
-//    		{
-//    			System.out.println("Loading and rescaling images...");
-//    			timestamp = new Date();
-//    			
-//    			viewTextures = context.get2DColorTextureArrayBuilder(param.getImageWidth(), param.getImageHeight(), viewSet.getCameraPoseCount())
-//    							.setLinearFilteringEnabled(true)
-//    							.setMipmapsEnabled(true)
-//    							.createTexture();
-//    			
-//				// Create an FBO for downsampling
-//		    	FramebufferObject<ContextType> downsamplingFBO = 
-//	    			context.getFramebufferObjectBuilder(param.getImageWidth(), param.getImageHeight())
-//	    				.addEmptyColorAttachment()
-//	    				.createFramebufferObject();
-//		    	
-//		    	Renderable<ContextType> downsampleRenderable = context.createRenderable(textureRectProgram);
-//		    	VertexBuffer<ContextType> rectBuffer = context.createRectangle();
-//		    	downsampleRenderable.addVertexBuffer("position", rectBuffer);
-//		    	
-//		    	// Downsample and store each image
-//		    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-//		    	{
-//		    		File imageFile = new File(imageDir, viewSet.getImageFileName(i));
-//					if (!imageFile.exists())
-//					{
-//						String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-//				    	filenameParts[filenameParts.length - 1] = "png";
-//				    	String pngFileName = String.join(".", filenameParts);
-//				    	imageFile = new File(imageDir, pngFileName);
-//					}
-//		    		
-//		    		Texture2D<ContextType> fullSizeImage;
-//		    		if (maskDir == null)
-//	    			{
-//		    			fullSizeImage = context.get2DColorTextureBuilder(imageFile, true)
-//		    								.setLinearFilteringEnabled(true)
-//		    								.setMipmapsEnabled(true)
-//		    								.createTexture();
-//	    			}
-//		    		else
-//		    		{
-//		    			File maskFile = new File(maskDir, viewSet.getImageFileName(i));
-//						if (!maskFile.exists())
-//						{
-//							String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-//					    	filenameParts[filenameParts.length - 1] = "png";
-//					    	String pngFileName = String.join(".", filenameParts);
-//					    	maskFile = new File(maskDir, pngFileName);
-//						}
-//						
-//		    			fullSizeImage = context.get2DColorTextureBuilder(imageFile, maskFile, true)
-//											.setLinearFilteringEnabled(true)
-//											.setMipmapsEnabled(true)
-//											.createTexture();
-//		    		}
-//		    		
-//		    		downsamplingFBO.setColorAttachment(0, viewTextures.getLayerAsFramebufferAttachment(i));
-//		    		downsamplingFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//		        	
-//		    		textureRectProgram.setTexture("tex", fullSizeImage);
-//		        	
-//		        	downsampleRenderable.draw(PrimitiveMode.TRIANGLE_FAN, downsamplingFBO);
-//		        	context.finish();
-//		        	
-//		        	if (rescaleDir != null)
-//		        	{
-//				    	String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-//				    	filenameParts[filenameParts.length - 1] = "png";
-//				    	String pngFileName = String.join(".", filenameParts);
-//		        		downsamplingFBO.saveColorBufferToFile(0, "PNG", new File(rescaleDir, pngFileName));
-//		        	}
-//		        	
-//		        	fullSizeImage.delete();
-//		        	
-//					System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " images loaded and rescaled.");
-//		    	}
-//	
-//		    	rectBuffer.delete();
-//		    	downsamplingFBO.delete();
-//		    	
-//		    	// TODO why don't mipmaps work?
-//		    	//viewTextures.generateMipmaps();
-//		    	//context.finish();
-//		    	
-//	    		System.out.println("Image loading and rescaling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//    		}
-//    		else
-//    		{
-//	    		System.out.println("Loading images...");
-//		    	timestamp = new Date();
-//		    	
-//		    	// Read a single image to get the dimensions for the texture array
-//		    	File imageFile = new File(imageDir, viewSet.getImageFileName(0));
-//				if (!imageFile.exists())
-//				{
-//					String[] filenameParts = viewSet.getImageFileName(0).split("\\.");
-//			    	filenameParts[filenameParts.length - 1] = "png";
-//			    	String pngFileName = String.join(".", filenameParts);
-//			    	imageFile = new File(imageDir, pngFileName);
-//				}
-//				BufferedImage img = ImageIO.read(new FileInputStream(imageFile));
-//				viewTextures = context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount())
-//								.setLinearFilteringEnabled(true)
-//								.setMipmapsEnabled(true)
-//								.createTexture();
-//				
-//				for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-//				{
-//					imageFile = new File(imageDir, viewSet.getImageFileName(i));
-//					if (!imageFile.exists())
-//					{
-//						String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-//				    	filenameParts[filenameParts.length - 1] = "png";
-//				    	String pngFileName = String.join(".", filenameParts);
-//				    	imageFile = new File(imageDir, pngFileName);
-//					}
-//					
-//					if (maskDir == null)
-//					{
-//						viewTextures.loadLayer(i, imageFile, true, false);
-//					}
-//					else
-//					{
-//						File maskFile = new File(maskDir, viewSet.getImageFileName(i));
-//						if (!maskFile.exists())
-//						{
-//							String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-//					    	filenameParts[filenameParts.length - 1] = "png";
-//					    	String pngFileName = String.join(".", filenameParts);
-//					    	maskFile = new File(maskDir, pngFileName);
-//						}
-//						
-//						viewTextures.loadLayer(i, imageFile, maskFile, true, false);
-//					}
-//					
-//					System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " images loaded.");
-//				}
-//		    	
-//	    		System.out.println("Image loading completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//    		}
-    		
-//    		System.out.println("Creating depth maps...");
-//	    	timestamp = new Date();
-//	    	
-//	    	// Build depth textures for each view
-//	    	int width = viewTextures.getWidth();
-//	    	int height = viewTextures.getHeight();
-//	    	depthTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
-//	    	
-//	    	// Don't automatically generate any texture attachments for this framebuffer object
-//	    	FramebufferObject<ContextType> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
-//	    	
-//	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
-//	    	depthRenderable.addVertexBuffer("position", positionBuffer);
-//	    	
-//	    	// Render each depth texture
-//	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-//	    	{
-//	    		depthRenderingFBO.setDepthAttachment(depthTextures.getLayerAsFramebufferAttachment(i));
-//	        	depthRenderingFBO.clearDepthBuffer();
-//	        	
-//	        	depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(i));
-//	    		depthRenderingProgram.setUniform("projection", 
-//					viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(i))
-//	    				.getProjectionMatrix(
-//							viewSet.getRecommendedNearPlane(), 
-//							viewSet.getRecommendedFarPlane()
-//						)
-//				);
-//	        	
-//	        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
-//				System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " depth maps created.");
-//	    	}
-//
-//	    	depthRenderingFBO.delete();
-//	    	
-//    		System.out.println("Depth maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//    	}
-//    	
-//    	if (param.getTextureSubdivision() > 1)
-//    	{
-//	    	System.out.println("Beginning model fitting (" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " blocks)...");
-//    	}
-//    	else
-//    	{
-//	    	System.out.println("Setting up model fitting...");
-//    	}
-//    	timestamp = new Date();
-//    	
-//    	FramebufferObject<ContextType> diffuseFitFramebuffer = 
-//			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
-//				.addColorAttachments(4)
-//				.createFramebufferObject();
-//    	
-//    	FramebufferObject<ContextType> specularFitFramebuffer = 
-//			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
-//				.addColorAttachments(4)
-//				.createFramebufferObject();
-//    	
-//    	diffuseFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//    	diffuseFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-//    	diffuseFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-//    	diffuseFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-//    	
-//    	specularFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//        specularFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-//        specularFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-//        specularFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-//
-//    	Renderable<ContextType> diffuseFitRenderable = context.createRenderable(diffuseFitProgram);
-//    	
-//    	diffuseFitRenderable.addVertexBuffer("position", positionBuffer);
-//    	diffuseFitRenderable.addVertexBuffer("texCoord", texCoordBuffer);
-//    	diffuseFitRenderable.addVertexBuffer("normal", normalBuffer);
-//    	
-//    	diffuseFitRenderable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
-//    	diffuseFitRenderable.program().setUniform("gamma", param.getGamma());
-//    	diffuseFitRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
-//    	diffuseFitRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
-//    	
-//    	diffuseFitRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
-//    	
-//    	if (!param.isImagePreprojectionUseEnabled())
-//    	{
-//	    	diffuseFitRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
-//	    	diffuseFitRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
-//    	}
-//    	
-//    	diffuseFitRenderable.program().setUniform("delta", param.getDiffuseDelta());
-//    	diffuseFitRenderable.program().setUniform("iterations", param.getDiffuseIterations());
-//    	diffuseFitRenderable.program().setUniform("fit1Weight", param.getDiffuseInputNormalWeight());
-//    	diffuseFitRenderable.program().setUniform("fit3Weight", param.getDiffuseComputedNormalWeight());
-//    	
-//    	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
-//		{
-//    		diffuseFitRenderable.program().setUniformBuffer("LightPositions", viewSet.getLightPositionBuffer());
-//    		diffuseFitRenderable.program().setUniformBuffer("LightIntensities", viewSet.getLightIntensityBuffer());
-//    		diffuseFitRenderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
-//		}
-//    	
-//    	Renderable<ContextType> specularFitRenderable = context.createRenderable(specularFitProgram);
-//    	
-//    	specularFitRenderable.addVertexBuffer("position", positionBuffer);
-//    	specularFitRenderable.addVertexBuffer("texCoord", texCoordBuffer);
-//    	specularFitRenderable.addVertexBuffer("normal", normalBuffer);
-//
-//    	specularFitRenderable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
-//    	specularFitRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
-//    	
-//    	if (!param.isImagePreprojectionUseEnabled())
-//    	{
-//	    	specularFitRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
-//	    	specularFitRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
-//    	}
-//
-//    	specularFitRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
-//    	specularFitRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
-//    	specularFitRenderable.program().setUniform("gamma", param.getGamma());
-//    	
-//    	specularFitRenderable.program().setUniform("computeRoughness", param.isSpecularRoughnessComputationEnabled());
-//    	specularFitRenderable.program().setUniform("computeNormal", param.isSpecularNormalComputationEnabled());
-//    	specularFitRenderable.program().setUniform("trueBlinnPhong", param.isTrueBlinnPhongSpecularEnabled());
-//
-//    	specularFitRenderable.program().setUniform("diffuseRemovalAmount", param.getSpecularSubtractDiffuseAmount());
-//    	specularFitRenderable.program().setUniform("specularInfluenceScale", param.getSpecularInfluenceScale());
-//    	specularFitRenderable.program().setUniform("determinantThreshold", param.getSpecularDeterminantThreshold());
-//    	specularFitRenderable.program().setUniform("fit1Weight", param.getSpecularInputNormalDefaultRoughnessWeight());
-//    	specularFitRenderable.program().setUniform("fit2Weight", param.getSpecularInputNormalComputedRoughnessWeight());
-//    	specularFitRenderable.program().setUniform("fit4Weight", param.getSpecularComputedNormalWeight());
-//    	specularFitRenderable.program().setUniform("defaultSpecularColor", new Vector3(0.0f, 0.0f, 0.0f));
-//    	specularFitRenderable.program().setUniform("defaultSpecularRoughness", param.getDefaultSpecularRoughness());
-//    	specularFitRenderable.program().setUniform("specularRoughnessScale", param.getSpecularRoughnessCap());
-//
-//    	File diffuseTempDirectory = new File(tmpDir, "diffuse");
-//    	File normalTempDirectory = new File(tmpDir, "normal");
-//    	File specularTempDirectory = new File(tmpDir, "specular");
-//    	File roughnessTempDirectory = new File(tmpDir, "roughness");
-//    	File snormalTempDirectory = new File(tmpDir, "snormal");
-//    	
-//    	diffuseTempDirectory.mkdir();
-//    	normalTempDirectory.mkdir();
-//    	specularTempDirectory.mkdir();
-//    	roughnessTempDirectory.mkdir();
-//    	snormalTempDirectory.mkdir();
-//    	
-//    	int subdivSize = param.getTextureSize() / param.getTextureSubdivision();
-//    	
-//    	if (param.getTextureSubdivision() == 1)
-//		{
-//	    	System.out.println("Setup finished in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//		}
-//    	
-//    	for (int row = 0; row < param.getTextureSubdivision(); row++)
-//    	{
-//	    	for (int col = 0; col < param.getTextureSubdivision(); col++)
-//    		{
-//		    	if (param.getTextureSubdivision() == 1)
-//	    		{
-//			    	System.out.println("Fitting diffuse...");
-//			    	timestamp = new Date();
-//	    		}
-//		    	
-//		    	Texture3D<ContextType> preprojectedViews = null;
-//		    	
-//		    	if (param.isImagePreprojectionUseEnabled())
-//		    	{
-//		    		preprojectedViews = context.get2DColorTextureArrayBuilder(subdivSize, subdivSize, viewSet.getCameraPoseCount()).createTexture();
-//			    	
-//					for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-//					{
-//						preprojectedViews.loadLayer(i, new File(new File(tmpDir, String.format("%04d", i)), String.format("r%04dc%04d.png", row, col)), true, false);
-//					}
-//		    		
-//		    		diffuseFitRenderable.program().setTexture("viewImages", preprojectedViews);
-//		    	}
-//		    	else
-//		    	{
-//			    	diffuseFitRenderable.program().setTexture("viewImages", viewTextures);
-//			    	diffuseFitRenderable.program().setTexture("depthImages", depthTextures);
-//		    	}
-//		    	
-//		    	diffuseFitRenderable.program().setUniform("minTexCoord", 
-//	    				new Vector2((float)col / (float)param.getTextureSubdivision(), (float)row / (float)param.getTextureSubdivision()));
-//	    		
-//		    	diffuseFitRenderable.program().setUniform("maxTexCoord", 
-//	    				new Vector2((float)(col+1) / (float)param.getTextureSubdivision(), (float)(row+1) / (float)param.getTextureSubdivision()));
-//		    	
-//		        diffuseFitRenderable.draw(PrimitiveMode.TRIANGLES, diffuseFitFramebuffer, col * subdivSize, row * subdivSize, subdivSize, subdivSize);
-//		        context.finish();
-//		        
-//		        if (param.isImagePreprojectionUseEnabled())
-//		        {
-//			        diffuseFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-//			        		"PNG", new File(diffuseTempDirectory, String.format("r%04dc%04d.png", row, col)));
-//			        
-//			        diffuseFitFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-//			        		"PNG", new File(normalTempDirectory, String.format("r%04dc%04d.png", row, col)));
-//		        }
-//	    		
-//		        if (param.getTextureSubdivision() == 1)
-//		        {
-//		        	System.out.println("Diffuse fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//		        	
-//		        	System.out.println("Fitting specular...");
-//		        	timestamp = new Date();
-//		        }
-//		    	
-//		    	if (param.isImagePreprojectionUseEnabled())
-//		    	{
-//		    		specularFitRenderable.program().setTexture("viewImages", preprojectedViews);
-//		    	}
-//		    	else
-//		    	{
-//			    	specularFitRenderable.program().setTexture("viewImages", viewTextures);
-//			    	specularFitRenderable.program().setTexture("depthImages", depthTextures);
-//		    	}
-//		    	
-//		    	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
-//	    		{
-//		    		specularFitRenderable.program().setUniformBuffer("LightPositions", viewSet.getLightPositionBuffer());
-//		    		specularFitRenderable.program().setUniformBuffer("LightIntensities", viewSet.getLightIntensityBuffer());
-//		    		specularFitRenderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
-//	    		}
-//		    	
-//		    	specularFitRenderable.program().setUniform("minTexCoord", 
-//	    				new Vector2((float)col / (float)param.getTextureSubdivision(), (float)row / (float)param.getTextureSubdivision()));
-//	    		
-//		    	specularFitRenderable.program().setUniform("maxTexCoord", 
-//	    				new Vector2((float)(col+1) / (float)param.getTextureSubdivision(), (float)(row+1) / (float)param.getTextureSubdivision()));
-//
-//		    	specularFitRenderable.program().setTexture("diffuseEstimate", diffuseFitFramebuffer.getColorAttachmentTexture(0));
-//		    	specularFitRenderable.program().setTexture("normalEstimate", diffuseFitFramebuffer.getColorAttachmentTexture(1));
-//		        
-//	    		specularFitRenderable.draw(PrimitiveMode.TRIANGLES, specularFitFramebuffer, col * subdivSize, row * subdivSize, subdivSize, subdivSize);
-//	    		context.finish();
-//
-//	    		if (param.isImagePreprojectionUseEnabled())
-//	    		{
-//		    		specularFitFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-//			        		"PNG", new File(specularTempDirectory, String.format("r%04dc%04d.png", row, col)));
-//			        
-//		    		specularFitFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-//			        		"PNG", new File(roughnessTempDirectory, String.format("r%04dc%04d.png", row, col)));
-//			        
-//		    		specularFitFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
-//			        		"PNG", new File(snormalTempDirectory, String.format("r%04dc%04d.png", row, col)));
-//		    		
-//		    		preprojectedViews.delete();
-//		    	}
-//	    		
-//		    	if (param.getTextureSubdivision() > 1)
-//	    		{
-//	    			System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-//	    		}
-//		    	else
-//		    	{
-//			    	System.out.println("Specular fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//		        }
-//    		}
-//    	}
-//    	
-//    	if (!DEBUG || param.isImagePreprojectionUseEnabled())
-//    	{
-//	        viewSet.deleteOpenGLResources();
-//	        positionBuffer.delete();
-//	        normalBuffer.delete();
-//	        texCoordBuffer.delete();
-//	        
-//	        if (viewTextures != null)
-//	        {
-//	        	viewTextures.delete();
-//	        }
-//	        
-//	        if (depthTextures != null)
-//	        {
-//	        	depthTextures.delete();
-//	        }
-//    	}
-//    	
-//    	if (param.getTextureSubdivision() > 1)
-//    	{
-//    		System.out.println("Model fitting completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//    	}
-//    	
-//    	System.out.println("Filling empty regions...");
-//    	timestamp = new Date();
-//    	
-//    	FramebufferObject<ContextType> holeFillBackFBO = 
-//			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
-//				.addColorAttachments(4)
-//				.createFramebufferObject();
-//    	
-//    	Renderable<ContextType> holeFillRenderable = context.createRenderable(holeFillProgram);
-//    	VertexBuffer<ContextType> rectBuffer = context.createRectangle();
-//    	holeFillRenderable.addVertexBuffer("position", rectBuffer);
-//    	
-//    	holeFillProgram.setUniform("minFillAlpha", 0.5f);
-//    	
-//    	// Diffuse
-//    	FramebufferObject<ContextType> holeFillFrontFBO = diffuseFitFramebuffer;
-//    	for (int i = 0; i < param.getTextureSize() / 2; i++)
-//    	{
-//    		holeFillBackFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
-//    		holeFillBackFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-//    		holeFillBackFBO.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-//    		holeFillBackFBO.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-//    		
-//    		holeFillProgram.setTexture("input0", holeFillFrontFBO.getColorAttachmentTexture(0));
-//    		holeFillProgram.setTexture("input1", holeFillFrontFBO.getColorAttachmentTexture(1));
-//    		holeFillProgram.setTexture("input2", holeFillFrontFBO.getColorAttachmentTexture(2));
-//    		holeFillProgram.setTexture("input3", holeFillFrontFBO.getColorAttachmentTexture(3));
-//    		
-//    		holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, holeFillBackFBO);
-//    		context.finish();
-//    		
-//    		FramebufferObject<ContextType> tmp = holeFillFrontFBO;
-//    		holeFillFrontFBO = holeFillBackFBO;
-//    		holeFillBackFBO = tmp;
-//    		
-//    		System.out.println("Diffuse fill iteration " + i + "/" + (param.getTextureSize() / 2) + " completed.");
-//    	}
-//    	diffuseFitFramebuffer = holeFillFrontFBO;
-//    	
-//    	// Specular
-//    	holeFillFrontFBO = specularFitFramebuffer;
-//    	for (int i = 0; i < param.getTextureSize() / 2; i++)
-//    	{
-//    		holeFillBackFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//    		holeFillBackFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-//    		holeFillBackFBO.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-//    		holeFillBackFBO.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-//    		
-//    		holeFillProgram.setTexture("input0", holeFillFrontFBO.getColorAttachmentTexture(0));
-//    		holeFillProgram.setTexture("input1", holeFillFrontFBO.getColorAttachmentTexture(1));
-//    		holeFillProgram.setTexture("input2", holeFillFrontFBO.getColorAttachmentTexture(2));
-//    		holeFillProgram.setTexture("input3", holeFillFrontFBO.getColorAttachmentTexture(3));
-//    		
-//    		holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, holeFillBackFBO);
-//    		context.finish();
-//    		
-//    		FramebufferObject<ContextType> tmp = holeFillFrontFBO;
-//    		holeFillFrontFBO = holeFillBackFBO;
-//    		holeFillBackFBO = tmp;
-//    		
-//    		System.out.println("Specular fill iteration " + i + "/" + (param.getTextureSize() / 2) + " completed.");
-//    	}
-//    	specularFitFramebuffer = holeFillFrontFBO;
-//
-//		System.out.println("Empty regions filled in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//    	
-//    	System.out.println("Saving textures...");
-//    	timestamp = new Date();
-//    	
-//    	File textureDirectory = new File(outputDir, "textures");
-//    	
-//    	textureDirectory.mkdirs();
-//        
-//    	diffuseFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse.png"));
-//    	diffuseFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(textureDirectory, "normal.png"));
-//    	//diffuseFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "ambient.png"));
-//    	if (DEBUG)
-//    	{
-//    		diffuseFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "ddebug.png"));
-//    	}
-//
-//    	specularFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "specular.png"));
-//    	specularFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(textureDirectory, "roughness.png"));
-//    	if (param.isSpecularNormalComputationEnabled())
-//    	{
-//    		specularFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "snormal.png"));
-//    	}
-//    	if (DEBUG)
-//    	{
-//	    	specularFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "textures/sdebug.png"));
-//    	}
-//    	
-//    	diffuseFitFramebuffer.delete();
-//    	specularFitFramebuffer.delete();
-//
-//    	System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//    	
-//    	if (DEBUG && !param.isImagePreprojectionUseEnabled())
-//    	{
-//    		System.out.println("Generating diffuse debug info...");
-//	    	timestamp = new Date();
-//
-//	    	new File(outputDir, "debug").mkdirs();
-//    		
-//	    	FramebufferObject<ContextType> diffuseDebugFBO = 
-//    			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
-//    				.addColorAttachments(ColorFormat.RGBA32F, 2)
-//    				.createFramebufferObject();
-//	    	
-//	    	Renderable<ContextType> diffuseDebugRenderable = context.createRenderable(diffuseDebugProgram);
-//	    	
-//	    	diffuseDebugRenderable.program().setUniform("minTexCoord", new Vector2(0.0f, 0.0f));
-//	    	diffuseDebugRenderable.program().setUniform("maxTexCoord", new Vector2(1.0f, 1.0f));
-//	    	
-//	    	diffuseDebugRenderable.addVertexBuffer("position", positionBuffer);
-//	    	diffuseDebugRenderable.addVertexBuffer("texCoord", texCoordBuffer);
-//	    	diffuseDebugRenderable.addVertexBuffer("normal", normalBuffer);
-//
-//	    	diffuseDebugRenderable.program().setTexture("viewImages", viewTextures);
-//	    	diffuseDebugRenderable.program().setTexture("depthImages", depthTextures);
-//	    	diffuseDebugRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
-//	    	diffuseDebugRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
-//	    	diffuseDebugRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
-//	    	diffuseDebugRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
-//	    	diffuseDebugRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
-//	    	
-//	    	//new File(outputDirectory, "debug/diffuse/projpos").mkdirs();
-//	    	
-//	    	PrintStream diffuseInfo = new PrintStream(new File(outputDir, "debug/diffuseInfo.txt"));
-//	    	
-//	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-//	    	{
-//	    		diffuseDebugRenderable.program().setUniform("viewIndex", i);
-//	    		
-//	    		diffuseDebugFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//	    		diffuseDebugFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-//	    		diffuseDebugFBO.clearDepthBuffer();
-//	    		diffuseDebugRenderable.draw(PrimitiveMode.TRIANGLES, diffuseDebugFBO);
-//	    		
-//	    		//diffuseDebugFBO.saveColorBufferToFile(0, "PNG", new File(outputDirectory, String.format("debug/diffuse/%04d.png", i)));
-//	    		//diffuseDebugFBO.saveColorBufferToFile(1, "PNG", new File(outputDirectory, String.format("debug/diffuse/projpos/%04d.png", i)));
-//	    		
-//	    		Matrix4 cameraPose = viewSet.getCameraPose(i);
-//	    		Vector3 lightPosition = new Matrix3(cameraPose).transpose().times(
-//    				viewSet.getLightPosition(viewSet.getLightPositionIndex(i))
-//    					.minus(new Vector3(cameraPose.getColumn(3))));
-//	    		int[] colorData = diffuseDebugFBO.readColorBufferARGB(0, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
-//	    		float[] positionData = diffuseDebugFBO.readFloatingPointColorBufferRGBA(1, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
-//	    		diffuseInfo.println(
-//    				lightPosition.x + "\t" +
-//					lightPosition.y + "\t" +
-//					lightPosition.z + "\t" +
-//    				positionData[0] + "\t" +
-//    				positionData[1] + "\t" +
-//    				positionData[2] + "\t" +
-//					((colorData[0] & 0xFF000000) >>> 24) + "\t" + 
-//					((colorData[0] & 0x00FF0000) >>> 16) + "\t" + 
-//					((colorData[0] & 0x0000FF00) >>> 8) + "\t" +
-//					(colorData[0] & 0x000000FF));
-//	    	}	
-//	    	
-//	    	diffuseInfo.flush();
-//	    	diffuseInfo.close();	    	
-//	    	
-//	    	diffuseDebugFBO.delete();
-//	    	
-//			System.out.println("Diffuse debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//    		
-//	    	System.out.println("Generating specular debug info...");
-//	    	timestamp = new Date();
-//    		
-//	    	FramebufferObject<ContextType> specularDebugFBO = 
-//    			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
-//    				.addColorAttachments(ColorFormat.RGBA32F, 2)
-//    				.createFramebufferObject();
-//	    	Renderable<ContextType> specularDebugRenderable = context.createRenderable(specularDebugProgram);
-//
-//	    	specularDebugRenderable.program().setUniform("minTexCoord", new Vector2(0.0f, 0.0f));
-//	    	specularDebugRenderable.program().setUniform("maxTexCoord", new Vector2(1.0f, 1.0f));
-//	    	
-//	    	specularDebugRenderable.addVertexBuffer("position", positionBuffer);
-//	    	specularDebugRenderable.addVertexBuffer("texCoord", texCoordBuffer);
-//	    	specularDebugRenderable.addVertexBuffer("normal", normalBuffer);
-//
-//	    	specularDebugRenderable.program().setTexture("viewImages", viewTextures);
-//	    	specularDebugRenderable.program().setTexture("depthImages", depthTextures);
-//	    	specularDebugRenderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
-//	    	specularDebugRenderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
-//	    	specularDebugRenderable.program().setTexture("diffuse", diffuseFitFramebuffer.getColorAttachmentTexture(0));
-//	    	specularDebugRenderable.program().setTexture("normalMap", diffuseFitFramebuffer.getColorAttachmentTexture(1));
-//	    	specularDebugRenderable.program().setUniformBuffer("CameraPoses", viewSet.getCameraPoseBuffer());
-//	    	specularDebugRenderable.program().setUniformBuffer("CameraProjections", viewSet.getCameraProjectionBuffer());
-//	    	specularDebugRenderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
-//	    	specularDebugRenderable.program().setUniform("gamma", param.getGamma());
-//	    	specularDebugRenderable.program().setUniform("diffuseRemovalFactor", 1.0f);
-//	    	
-//	    	if (viewSet.getLightPositionBuffer() != null && viewSet.getLightIndexBuffer() != null)
-//    		{
-//	    		specularDebugRenderable.program().setUniformBuffer("LightPositions", viewSet.getLightPositionBuffer());
-//	    		specularDebugRenderable.program().setUniformBuffer("LightIntensities", viewSet.getLightIntensityBuffer());
-//	    		specularDebugRenderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
-//    		}
-//	    	
-//	    	//new File(outputDirectory, "debug/specular/rDotV").mkdirs();
-//	    	
-//	    	PrintStream specularInfo = new PrintStream(new File(outputDir, "debug/specularInfo.txt"));
-//	    	
-//	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-//	    	{
-//	    		specularDebugRenderable.program().setUniform("viewIndex", i);
-//	    		
-//	    		specularDebugFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//	    		specularDebugFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-//	    		specularDebugFBO.clearDepthBuffer();
-//	    		specularDebugRenderable.draw(PrimitiveMode.TRIANGLES, specularDebugFBO);
-//	    		
-//	    		//specularDebugFBO.saveColorBufferToFile(0, "PNG", new File(outputDirectory, String.format("debug/specular/%04d.png", i)));
-//	    		//specularDebugFBO.saveColorBufferToFile(1, "PNG", new File(outputDirectory, String.format("debug/specular/rDotV/%04d.png", i)));
-//	    		
-//	    		int[] colorData = specularDebugFBO.readColorBufferARGB(0, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
-//	    		int[] rDotVData = specularDebugFBO.readColorBufferARGB(1, DEBUG_PIXEL_X, DEBUG_PIXEL_Y, 1, 1);
-//	    		specularInfo.println(	(rDotVData[0] & 0x000000FF) + "\t" +
-//									((colorData[0] & 0xFF000000) >>> 24) + "\t" + 
-//	    							((colorData[0] & 0x00FF0000) >>> 16) + "\t" + 
-//	    							((colorData[0] & 0x0000FF00) >>> 8) + "\t" +
-//	    							(colorData[0] & 0x000000FF));
-//	    	}
-//	    	
-//	    	specularInfo.flush();
-//	    	specularInfo.close();
-//	    	
-//	    	specularDebugFBO.delete();
-//	    	
-//	        viewSet.deleteOpenGLResources();
-//	        positionBuffer.delete();
-//	        normalBuffer.delete();
-//	        texCoordBuffer.delete();
-//	        
-//	        if (viewTextures != null)
-//	        {
-//	        	viewTextures.delete();
-//	        }
-//	        
-//	        if (depthTextures != null)
-//	        {
-//	        	depthTextures.delete();
-//	        }
-//	    	
-//			System.out.println("Specular debug info completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-//    	}
 
 		projTexProgram.delete();
 		diffuseFitProgram.delete();
