@@ -331,7 +331,6 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		qualitySettings.add(chckbxHalfRes, gbc_chckbxHalfRes);
 		
 		JCheckBox chckbxMultisampling = new JCheckBox("Multisampling");
-		chckbxMultisampling.setSelected(true);
 		chckbxMultisampling.setToolTipText("Enable full screen multisampling for anti-aliasing (helps eliminate jagged edges)");
 		GridBagConstraints gbc_chckbxMultisampling = new GridBagConstraints();
 		gbc_chckbxMultisampling.gridx = 1;
@@ -453,6 +452,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 			spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
 			chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
 			spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
+			chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
 
 			model.getSelectedItem().setHalfResolution(isHighDPI);
 			chckbxHalfRes.setSelected(isHighDPI);
@@ -594,6 +594,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 				chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
 				spinnerOccBias.setValue((double)model.getSelectedItem().getOcclusionBias());
 				chckbxHalfRes.setSelected(model.getSelectedItem().getHalfResolution());
+				chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
 				
 				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
 				{

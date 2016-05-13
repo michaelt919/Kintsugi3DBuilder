@@ -15,8 +15,9 @@ uniform mat4 model_view;
 in vec3 fViewPos;
 
 #define MAX_VIRTUAL_LIGHT_COUNT 4
-uniform vec3 lightIntensity[MAX_VIRTUAL_LIGHT_COUNT];
-uniform vec3 lightPos[MAX_VIRTUAL_LIGHT_COUNT];
+uniform vec3 lightIntensityVirtual[MAX_VIRTUAL_LIGHT_COUNT];
+uniform vec3 lightPosVirtual[MAX_VIRTUAL_LIGHT_COUNT];
+uniform mat4 lightMatrixVirtual[MAX_VIRTUAL_LIGHT_COUNT];
 uniform int virtualLightCount;
 uniform vec3 ambientColor;
 
@@ -32,16 +33,21 @@ uniform bool useNormalTexture;
 uniform bool useSpecularTexture;
 uniform bool useRoughnessTexture;
 
+uniform bool useInverseLuminanceMap;
+uniform sampler1D inverseLuminanceMap;
+
+uniform sampler2DArray shadowMaps;
+
 vec3 computeFresnelReflectivity(vec3 specularColor, vec3 grazingColor, float hDotV)
 {
-    float f0 = dot(specularColor, vec3(0.2126, 0.7152, 0.0722));
-    float sqrtF0 = sqrt(f0);
-    float ior = (1 + sqrtF0) / (1 - sqrtF0);
-    float g = sqrt(ior*ior + hDotV * hDotV - 1);
-    float fresnel = 0.5 * pow(g - hDotV, 2) / pow(g + hDotV, 2)
-        * (1 + pow(hDotV * (g + hDotV) - 1, 2) / pow(hDotV * (g - hDotV) + 1, 2));
+    // float f0 = dot(specularColor, vec3(0.2126, 0.7152, 0.0722));
+    // float sqrtF0 = sqrt(f0);
+    // float ior = (1 + sqrtF0) / (1 - sqrtF0);
+    // float g = sqrt(ior*ior + hDotV * hDotV - 1);
+    // float fresnel = 0.5 * pow(g - hDotV, 2) / pow(g + hDotV, 2)
+        // * (1 + pow(hDotV * (g + hDotV) - 1, 2) / pow(hDotV * (g - hDotV) + 1, 2));
         
-    return specularColor + (grazingColor - specularColor) * max(0, fresnel - f0) / (1.0 - f0);
+    return specularColor + (grazingColor - specularColor) * pow(max(0.0, 1.0 - hDotV), 5.0);//max(0, fresnel - f0) / (1.0 - f0);
 }
 
 float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
@@ -51,7 +57,20 @@ float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
 
 float computeGeometricAttenuation(float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
 {
-    return min(1.0, 2.0 * min(nDotV / hDotV, nDotL / hDotL));
+    return min(1.0, 2.0 * nDotH * min(nDotV / hDotV, nDotL / hDotL));
+}
+
+float computeGeometricAttenuationSmith(float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
+{
+    float aV = 1.0 / (roughness * sqrt(1.0 - nDotV * nDotV) / nDotV);
+    float aVSq = aV * aV;
+    float aL = 1.0 / (roughness * sqrt(1.0 - nDotL * nDotL) / nDotL);
+    float aLSq = aL * aL;
+        
+    return (aV < 1.6 ? (3.535 * aV + 2.181 * aVSq) / (1 + 2.276 * aV + 2.577 * aVSq) : 1.0)
+            * (aL < 1.6 ? (3.535 * aL + 2.181 * aLSq) / (1 + 2.276 * aL + 2.577 * aLSq) : 1.0);
+        // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
+        // for this formula
 }
 
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float maxLuminance)
@@ -82,7 +101,7 @@ float computeMicrofacetDistribution(float nDotH, float roughness)
 vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 normalDir, 
     vec3 specularColor, float roughness, float maxLuminance)
 {
-    vec4 sampleColor = getColor(index);
+    vec4 sampleColor = getLinearColor(index);
     if (sampleColor.a > 0.0)
     {
         vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
@@ -91,9 +110,11 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
         vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
         vec3 sampleViewDir = normalize(-fragmentPos);
         vec3 sampleLightDirUnnorm = lightPositions[lightIndices[index]].xyz - fragmentPos;
-        vec3 sampleLightDir = normalize(sampleLightDirUnnorm);
+        float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
+        vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
         vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
         vec3 normalDirCameraSpace = (cameraPoses[index] * vec4(normalDir, 0.0)).xyz;
+        vec3 lightIntensity = getLightIntensity(index);
         
         float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
         float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
@@ -101,7 +122,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
         float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
         float hDotL = max(0, dot(sampleHalfDir, sampleLightDir));
     
-        vec3 diffuseContrib = diffuseColor * nDotL ;// * attenuatedLightIntensity;
+        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity / lightDistSquared;
         
         float mfd = computeMicrofacetDistribution(nDotH, roughness);
         
@@ -111,15 +132,17 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
             vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
             //vec3 precomputedSample = vec3(getLuminance(specularResid.rgb / specularColor))
             //vec3 precomputedSample = specularResid.rgb / specularColor
-            vec4 precomputedSample = vec4(specularResid.rgb * 4 * nDotV, 
-            sampleColor.a /* * mfd*/ * computeGeometricAttenuation(nDotH, nDotV, nDotL, hDotV, hDotL));
+            vec4 precomputedSample = getLuminance(specularColor) * vec4(specularResid.rgb * 4 * nDotV ,//* lightDistSquared / lightIntensity, 
+            sampleColor.a 
+            //    * mfd 
+                * computeGeometricAttenuation(nDotH, nDotV, nDotL, hDotV, hDotL));
             
             vec3 virtualViewDir = normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
             
             for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
             {
                 vec3 virtualLightDir = normalize((cameraPoses[index] * 
-                    vec4(lightPos[lightPass], 1.0)).xyz - fragmentPos);
+                    vec4(lightPosVirtual[lightPass], 1.0)).xyz - fragmentPos);
                 vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
 
                 // Compute sample weight
@@ -179,6 +202,41 @@ vec3[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(
 	return results;
 }
 
+vec4 tonemap(vec3 color, float alpha)
+{
+    if (useInverseLuminanceMap)
+    {
+        if (color.r <= 0.0 && color.g <= 0.0 && color.b <= 0.0)
+        {
+            fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        }
+        else
+        {
+            // Step 1: apply gamma correction
+            vec3 colorGamma = pow(color, vec3(1.0 / gamma));
+            
+            // Step 2: convert to CIE luminance
+            // Clamp to 1 so that the ratio computed in step 3 is well defined
+            // if the luminance value somehow exceeds 1.0
+            float luminanceSRGB = min(1.0, getLuminance(colorGamma));
+            
+            // Step 3: determine the ratio between the tonemapped and sRGB luminance
+            // Remove gamma correction from the single luminance value
+            // The lookup table will implicitly add it back in again.
+            float scale = texture(inverseLuminanceMap, pow(luminanceSRGB, gamma)).r 
+                / luminanceSRGB;
+                
+            // Step 4: return the color, scaled to have the correct luminance,
+            // but the original saturation and hue.
+            return vec4(colorGamma * scale, alpha);
+        }
+    }
+    else
+    {
+        return vec4(pow(color, vec3(1.0 / gamma)), alpha);
+    }
+}
+
 void main()
 {
     vec3 viewDir = normalize(fViewPos - fPosition);
@@ -204,13 +262,13 @@ void main()
     }
     
     vec3 specularColor;
-    if (useSpecularTexture)
+    // if (useSpecularTexture)
+    // {
+        // specularColor = pow(texture(specularMap, fTexCoord).rgb, vec3(gamma));
+    // }
+    // else
     {
-        specularColor = pow(texture(specularMap, fTexCoord).rgb, vec3(gamma));
-    }
-    else
-    {
-        specularColor = vec3(0.5);
+        specularColor = vec3(0.05);
     }
     
     if (dot(specularColor, vec3(1)) < 0.01)
@@ -225,7 +283,7 @@ void main()
     // }
     // else
     {
-        roughness = 0.25; // TODO pass in a default?
+        roughness = 0.1; // TODO pass in a default?
     }
     
     vec3[] microfacetDistributions = 
@@ -236,7 +294,18 @@ void main()
     
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < virtualLightCount; i++)
     {
-        vec3 lightDirUnNorm = lightPos[i] - fPosition;
+        vec4 projTexCoords = lightMatrixVirtual * vec4(fPosition, 1.0);
+        projTexCoords /= projTexCoords.w;
+        projTexCoord = (projTexCoord + vec4(1)) / 2;
+        
+        if (projTexCoord.x < 0 || projTexCoord.x > 1 || projTexCoord.y < 0 || projTexCoord.y > 1 ||
+            projTexCoord.z < 0 || projTexCoord.z > 1 || 
+            abs(texture(shadowMaps, projTexCoords.xy).r - projTexCoords.z) > occlusionBias)
+        {
+            continue; // TODO fixme
+        }
+    
+        vec3 lightDirUnNorm = lightPosVirtual[i] - fPosition;
         vec3 lightDir = normalize(lightDirUnNorm);
         float nDotL = max(0.0, dot(normalDir, lightDir));
         
@@ -247,19 +316,25 @@ void main()
             float hDotL = dot(halfDir, lightDir);
             float nDotH = dot(normalDir, halfDir);
             
-            //float mfd = computeMicrofacetDistribution(nDotH, roughness);
+            float mfd = computeMicrofacetDistribution(nDotH, roughness);
         
             reflectance += (nDotL * diffuseColor + 
                     //mfd *
+                    //nDotV * 
+                    //computeGeometricAttenuationSmith(roughness, nDotH, nDotV, nDotL, hDotV, hDotL)
                     computeGeometricAttenuation(nDotH, nDotV, nDotL, hDotV, hDotL)
-                    * computeFresnelReflectivity(microfacetDistributions[i],
-                        vec3(getLuminance(microfacetDistributions[i] / specularColor)), hDotV)
+                    * computeFresnelReflectivity(
+                        //specularColor * mfd,
+                        microfacetDistributions[i],
+                        //microfacetDistributions[i],
+                        vec3(getLuminance(microfacetDistributions[i] / specularColor)), 
+                        //vec3(getLuminance(microfacetDistributions[i] / specularColor)), 
+                        //vec3(mfd),
+                        hDotV)
                     / (4 * nDotV))
-                * lightIntensity[i]
-                * (infiniteLightSources ? 1.0 : 1.0 / 
-                    dot(lightDirUnNorm, lightDirUnNorm));
+                * lightIntensityVirtual[i] / dot(lightDirUnNorm, lightDirUnNorm);
         }
     }
     
-    fragColor = vec4(pow(reflectance, vec3(1 / gamma)), 1.0);
+    fragColor = tonemap(reflectance, 1.0);
 }

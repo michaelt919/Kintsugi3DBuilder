@@ -118,6 +118,12 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	{
 		return stages.get(currentStage).getLightField();
 	}
+	
+	@Override
+	public ViewSet<ContextType> getActiveViewSet()
+	{
+		return this.getLightField().viewSet;
+	}
 
 	@Override
 	public float getGamma() 
@@ -202,19 +208,18 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	{	
 		return this.stages.get(this.currentStage).getHalfResolution();
 	}
+	
+	@Override
+	public boolean getMultisampling()
+	{
+		return this.stages.get(this.currentStage).getMultisampling();	
+	}
+
 
 	@Override
 	public void setMultisampling(boolean multisamplingEnabled)
 	{
-		context.makeContextCurrent();
-		if(multisamplingEnabled)
-		{
-			context.enableMultisampling();
-		}
-		else
-		{
-			context.disableMultisampling();			
-		}		
+		this.stages.get(this.currentStage).setMultisampling(multisamplingEnabled);	
 	}
 
 	@Override

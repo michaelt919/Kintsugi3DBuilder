@@ -47,7 +47,7 @@ public class FastMicrofacetProgram
 	        
 	    	window.addKeyPressListener((targetWindow, keycode, mods) -> 
 	    	{
-	    		if (keycode == KeyCodes.R)
+	    		if (keycode == KeyCodes.O)
 	    		{
 	    			JFileChooser vsetFileChooser = new JFileChooser(new File("").getAbsolutePath());
 	    			vsetFileChooser.setDialogTitle("Choose a Target VSET File");

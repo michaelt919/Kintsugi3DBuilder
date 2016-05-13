@@ -15,7 +15,7 @@ layout(location = 3) out vec4 normalMapTS;
 #include "../reflectance/imgspace.glsl"
 #include "../texturefit/diffusefit.glsl"
 
-#line 17 0
+#line 19 0
 
 void main()
 {

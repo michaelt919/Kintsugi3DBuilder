@@ -162,6 +162,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	private Texture1D<ContextType> luminanceMap;
 	
 	/**
+	 * A 1D texture defining how encoded RGB values should be converted to linear luminance.
+	 */
+	private Texture1D<ContextType> inverseLuminanceMap;
+	
+	/**
 	 * The recommended near plane to use when rendering this view set.
 	 */
 	private float recommendedNearPlane;
@@ -352,6 +357,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			this.encodedLuminanceValues = encodedLuminanceValues;
 			this.gamma = gamma;
 			luminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues).createLuminanceMap(context);
+			inverseLuminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues).createInverseLuminanceMap(context);
 		}
 		
 		// Read the images from a file
@@ -1678,6 +1684,15 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public Texture1D<ContextType> getLuminanceMap()
 	{
 		return this.luminanceMap;
+	}
+	
+	/**
+	 * Gets a 1D texture instantiated on the GPU containing the inverse luminance map for this dataset.
+	 * @return The requested inverse luminance texture.
+	 */
+	public Texture1D<ContextType> getInverseLuminanceMap()
+	{
+		return this.inverseLuminanceMap;
 	}
 
 	/**

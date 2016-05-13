@@ -6,6 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
+import java.util.function.DoubleUnaryOperator;
+import java.util.function.IntToDoubleFunction;
 
 import javax.imageio.ImageIO;
 
@@ -40,12 +42,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
 	// Debug parameters
 	private static final boolean DEBUG = false;
-	private static final boolean SKIP_DIFFUSE_FIT = false;
+	private static final boolean SKIP_DIFFUSE_FIT = true;
 	private static final boolean SKIP_SPECULAR_FIT = false;
 	
 	private final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
 	
-	private final int ROUGHNESS_TEXTURE_SIZE = 128; // TODO decide where this should be defined
+	private final int ROUGHNESS_TEXTURE_SIZE = 1; // TODO decide where this should be defined
 
 	private ContextType context;
 	private File vsetFile;
@@ -441,128 +443,131 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					
 					float luminance = colorDataRGBA[((y*dataWidth) + x) * 4];
 					float hDotN =  colorDataRGBA[((y*dataWidth) + x) * 4 + 1];
-		
-					// Mapped coordinates for the specified half-vector and surface position
-					double[] coordinates;
 					
-					if (isotropic)
+					if (luminance > 0.0f && hDotN > 0.0f)
 					{
-						coordinates = new double[]
-						{
-							(directionalRes-1) * (2 * hDotN - 1 + Math.sqrt(2) * (hDotN - 1)), //(directionalRes-1) * 2 * (hDotN - 0.5),
-							(float) (x + dataStartX) * (float) (spatialRes-1) / (float) (dataRes-1),
-							(float) (y + dataStartY) * (float) (spatialRes-1) / (float) (dataRes-1)
-						};
-					}
-					else
-					{
-						// the tangent and bitangent components of the half-vector
-						float hDotT = halfAngleDataTBNA[((y*dataWidth) + x) * 4];
-						float hDotB = halfAngleDataTBNA[((y*dataWidth) + x) * 4 + 1]; 
+						// Mapped coordinates for the specified half-vector and surface position
+						double[] coordinates;
 						
-						double projHOntoTB = Math.sqrt(hDotT*hDotT+hDotB*hDotB);
-						double directionalScale = projHOntoTB / hDotTMax / Math.max(Math.abs(hDotT), Math.abs(hDotB));
-						
-						coordinates = new double[]
+						if (isotropic)
 						{
-							0.5 * (directionalRes-1) * (1 + directionalScale * hDotT),
-							0.5 * (directionalRes-1) * (1 + directionalScale * hDotB),
-							(float) (x + dataStartX) * (float) (spatialRes-1) / (float) (dataRes-1),
-							(float) (y + dataStartY) * (float) (spatialRes-1) / (float) (dataRes-1)
-						};
-					};
-
-					boolean outOfBounds = false;
-					int[][] roundedCoordinatePairs = new int[coordinates.length][2];
-					double[][] interpolationCoefficients = new double[coordinates.length][2];
-					
-					for (int i = 0; i < coordinates.length && !outOfBounds; i++)
-					{
-						roundedCoordinatePairs[i][0] = (int)Math.floor(coordinates[i]);
-						roundedCoordinatePairs[i][1] = (int)Math.ceil(coordinates[i]);
-
-						outOfBounds = outOfBounds || roundedCoordinatePairs[i][0] < 0 || roundedCoordinatePairs[i][1] >= coordinatesMax[i];
-						if (!outOfBounds)
-						{
-							if (roundedCoordinatePairs[i][1] == roundedCoordinatePairs[i][0])
+							coordinates = new double[]
 							{
-								interpolationCoefficients[i][0] = 0.0;
-							}
-							else
-							{
-								interpolationCoefficients[i][0] = (coordinates[i] - roundedCoordinatePairs[i][0]) / (roundedCoordinatePairs[i][1] - roundedCoordinatePairs[i][0]);
-							}
-							
-							interpolationCoefficients[i][1] = 1.0 - interpolationCoefficients[i][0];
+								(directionalRes-1) * (2 * hDotN - 1 + Math.sqrt(2) * (hDotN - 1)), //(directionalRes-1) * 2 * (hDotN - 0.5),
+								(float) (x + dataStartX) * (float) (spatialRes-1) / (float) (dataRes-1),
+								(float) (y + dataStartY) * (float) (spatialRes-1) / (float) (dataRes-1)
+							};
 						}
-					}
-					
-					if (!outOfBounds)
-					{
-						int[][] indices = new int[1 << coordinates.length][coordinates.length];
-						double[] weights = new double[indices.length];
-						
-						for (int i = 0; i < indices.length; i++)
+						else
 						{
-							weights[i] = 1.0;
+							// the tangent and bitangent components of the half-vector
+							float hDotT = halfAngleDataTBNA[((y*dataWidth) + x) * 4];
+							float hDotB = halfAngleDataTBNA[((y*dataWidth) + x) * 4 + 1]; 
 							
-							for (int j = 0; j < indices[i].length; j++)
+							double projHOntoTB = Math.sqrt(hDotT*hDotT+hDotB*hDotB);
+							double directionalScale = projHOntoTB / hDotTMax / Math.max(Math.abs(hDotT), Math.abs(hDotB));
+							
+							coordinates = new double[]
 							{
-								int selector = (i >> j) & 0x1;
-								indices[i][j] = roundedCoordinatePairs[j][selector];
-								weights[i] *= interpolationCoefficients[j][selector];
-							}
-						}
+								0.5 * (directionalRes-1) * (1 + directionalScale * hDotT),
+								0.5 * (directionalRes-1) * (1 + directionalScale * hDotB),
+								(float) (x + dataStartX) * (float) (spatialRes-1) / (float) (dataRes-1),
+								(float) (y + dataStartY) * (float) (spatialRes-1) / (float) (dataRes-1)
+							};
+						};
+	
+						boolean outOfBounds = false;
+						int[][] roundedCoordinatePairs = new int[coordinates.length][2];
+						double[][] interpolationCoefficients = new double[coordinates.length][2];
 						
-						// Accumulate in the least squares system
-						for (int p = 0; p < indices.length; p++)
+						for (int i = 0; i < coordinates.length && !outOfBounds; i++)
 						{
-							float[] lhsRow = isotropic ?
-								lhsData[0][indices[p][0]][indices[p][1]][indices[p][2]] :
-								lhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
-							float[] rhsRow = isotropic ? 
-								rhsData[0][indices[p][0]][indices[p][1]][indices[p][2]] :
-								rhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
-							
-							for (int q = 0; q < indices.length; q++)
+							roundedCoordinatePairs[i][0] = (int)Math.floor(coordinates[i]);
+							roundedCoordinatePairs[i][1] = (int)Math.ceil(coordinates[i]);
+	
+							outOfBounds = outOfBounds || roundedCoordinatePairs[i][0] < 0 || roundedCoordinatePairs[i][1] >= coordinatesMax[i];
+							if (!outOfBounds)
 							{
-								if (isotropic)
+								if (roundedCoordinatePairs[i][1] == roundedCoordinatePairs[i][0])
 								{
-									lhsRow[(indices[q][0] - indices[p][0] + 1) + (indices[q][1] - indices[p][1] + 1) * 3 + (indices[q][2] - indices[p][2] + 1) * 9]
-							 			+= (float)(weights[p] * weights[q] * alpha);
+									interpolationCoefficients[i][0] = 0.0;
 								}
 								else
 								{
-									lhsRow[(indices[q][0] - indices[p][0] + 1) + (indices[q][1] - indices[p][1] + 1) * 3
-										 	+ (indices[q][2] - indices[p][2] + 1) * 9 + (indices[q][3] - indices[p][3] + 1) * 27]
-							 			+= (float)(weights[p] * weights[q] * alpha);
+									interpolationCoefficients[i][0] = (coordinates[i] - roundedCoordinatePairs[i][0]) / (roundedCoordinatePairs[i][1] - roundedCoordinatePairs[i][0]);
+								}
+								
+								interpolationCoefficients[i][1] = 1.0 - interpolationCoefficients[i][0];
+							}
+						}
+						
+						if (!outOfBounds)
+						{
+							int[][] indices = new int[1 << coordinates.length][coordinates.length];
+							double[] weights = new double[indices.length];
+							
+							for (int i = 0; i < indices.length; i++)
+							{
+								weights[i] = 1.0;
+								
+								for (int j = 0; j < indices[i].length; j++)
+								{
+									int selector = (i >> j) & 0x1;
+									indices[i][j] = roundedCoordinatePairs[j][selector];
+									weights[i] *= interpolationCoefficients[j][selector];
 								}
 							}
 							
-							rhsRow[0] += (float)weights[p] * luminance * alpha;
-							
-//							rhsRow[0] += (float)weights[p] * red * alpha;
-//							rhsRow[1] += (float)weights[p] * green * alpha;
-//							rhsRow[2] += (float)weights[p] * blue * alpha;
+							// Accumulate in the least squares system
+							for (int p = 0; p < indices.length; p++)
+							{
+								float[] lhsRow = isotropic ?
+									lhsData[0][indices[p][0]][indices[p][1]][indices[p][2]] :
+									lhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
+								float[] rhsRow = isotropic ? 
+									rhsData[0][indices[p][0]][indices[p][1]][indices[p][2]] :
+									rhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
+								
+								for (int q = 0; q < indices.length; q++)
+								{
+									if (isotropic)
+									{
+										lhsRow[(indices[q][0] - indices[p][0] + 1) + (indices[q][1] - indices[p][1] + 1) * 3 + (indices[q][2] - indices[p][2] + 1) * 9]
+								 			+= (float)(weights[p] * weights[q] * alpha);
+									}
+									else
+									{
+										lhsRow[(indices[q][0] - indices[p][0] + 1) + (indices[q][1] - indices[p][1] + 1) * 3
+											 	+ (indices[q][2] - indices[p][2] + 1) * 9 + (indices[q][3] - indices[p][3] + 1) * 27]
+								 			+= (float)(weights[p] * weights[q] * alpha);
+									}
+								}
+								
+								rhsRow[0] += (float)weights[p] * luminance * alpha;
+								
+	//							rhsRow[0] += (float)weights[p] * red * alpha;
+	//							rhsRow[1] += (float)weights[p] * green * alpha;
+	//							rhsRow[2] += (float)weights[p] * blue * alpha;
+							}
 						}
+						
+	//					if (SIN_PI_OVER_8 < hDotN && hDotN < ONE_OVER_SQRT2)
+	//					{
+	//						// Evaluate 2 - 2( 2( 2( 2x^2 - 1 )^2 - 1 )^2 - 1 )^2
+	//						double weight = 2.0 * hDotN  * hDotN  - 1.0;   // First square
+	//						       weight = 2.0 * weight * weight - 1.0;   // Second square
+	//						       weight = 2.0 * weight * weight - 1.0;   // Third square
+	//						       weight = 2.0 * (1.0 - weight * weight); // Fourth square
+	//				        
+	//				        diffuseLowResData[?][?][0] += weight * red;
+	//				        diffuseLowResData[?][?][1] += weight * green;
+	//				        diffuseLowResData[?][?][2] += weight * blue;
+	//				        
+	//				        diffuseHighResData[?][?][0] += weight * red;
+	//				        diffuseHighResData[?][?][1] += weight * green;
+	//				        diffuseHighResData[?][?][2] += weight * blue;
+	//					}
 					}
-					
-//					if (SIN_PI_OVER_8 < hDotN && hDotN < ONE_OVER_SQRT2)
-//					{
-//						// Evaluate 2 - 2( 2( 2( 2x^2 - 1 )^2 - 1 )^2 - 1 )^2
-//						double weight = 2.0 * hDotN  * hDotN  - 1.0;   // First square
-//						       weight = 2.0 * weight * weight - 1.0;   // Second square
-//						       weight = 2.0 * weight * weight - 1.0;   // Third square
-//						       weight = 2.0 * (1.0 - weight * weight); // Fourth square
-//				        
-//				        diffuseLowResData[?][?][0] += weight * red;
-//				        diffuseLowResData[?][?][1] += weight * green;
-//				        diffuseLowResData[?][?][2] += weight * blue;
-//				        
-//				        diffuseHighResData[?][?][0] += weight * red;
-//				        diffuseHighResData[?][?][1] += weight * green;
-//				        diffuseHighResData[?][?][2] += weight * blue;
-//					}
 				}
 			}
 		}
@@ -851,85 +856,21 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			{
 				for (int l = 0; l < spatialRes; l++)
 				{
-					// Integral of Specular reflectivity
-					// 		times microfacet probability
-					//		times microfacet slope squared
-					// 		times d [n dot h]
-					// as [n dot h] goes from [n dot h]_min to 1
-					double specularWeightedSlopeSum = 0.0;
+					final int K = k;
+					final int L = l;
 					
-					// Integral to find Specular reflectivity (low res)
-					double specularReflectivitySum = 0.0;
+					SpecularParams specularParams = computeSpecularParams(directionalRes, Math.sqrt(0.5), (j) -> solution[0][j][K][L][0], (j) -> solution[0][j][K][L][3]);
 					
-					double lastAlpha;
-					
-					// In case the first step(s) are missing
-					int j = 0;
-					do
+					if (specularParams != null)
 					{
-						lastAlpha = solution[0][j][k][l][3];
-						j++;
-					}
-					while (j < directionalRes && lastAlpha == 0.0);
-					
-					float[] solutionEntry = solution[0][j-1][k][l];
-					double lastWeight = (solutionEntry[0] + solutionEntry[1] + solutionEntry[2]) / 3;
-					
-					double coord = (double)(j - 1) / (double)(directionalRes - 1);
-					double lastNDotH = coord + (1 - coord) * Math.sqrt(0.5);
-					
-					specularWeightedSlopeSum += lastWeight * (1 / lastNDotH - lastNDotH) * (lastNDotH - Math.sqrt(0.5));
-					specularReflectivitySum += lastWeight * lastNDotH * (lastNDotH - Math.sqrt(0.5));
-					
-					int intervalCount = 0;
-					
-					for ( ; j < directionalRes; j++)
-					{
-						solutionEntry = solution[0][j][k][l];
+						roughnessValues[k + l * spatialRes] = specularParams.roughness;
+						reflectivityValues[k + l * spatialRes] = specularParams.reflectivity;
 						
-						double alpha = solutionEntry[3];
+						int roughnessPixelValue = Math.max(0, Math.min(255, (int)(specularParams.roughness * 255.0)));
+						int reflectivityPixelValue = Math.max(0, Math.min(255, (int)(Math.pow(specularParams.reflectivity, 1.0 / 2.2) * 255.0)));
 						
-						if (alpha > 0.0)
-						{
-							coord = (double)j / (double)(directionalRes - 1);
-							double nDotH = coord + (1 - coord) * Math.sqrt(0.5);
-							double weight = (solutionEntry[0] + solutionEntry[1] + solutionEntry[2]) / 3;
-							
-							// Trapezoidal rule for integration
-							specularWeightedSlopeSum += (weight * (1 / nDotH - nDotH) + lastWeight * (1 / lastNDotH - lastNDotH)) / 2 * (nDotH - lastNDotH);
-							specularReflectivitySum += (weight * nDotH + lastWeight * lastNDotH) / 2 * (nDotH - lastNDotH);
-							
-							intervalCount++;
-							
-							lastWeight = weight;
-							lastNDotH = nDotH;
-							lastAlpha = alpha;
-						}
-					}
-					
-					// In case the final step(s) were missing
-					specularWeightedSlopeSum += lastWeight * (1 / lastNDotH - lastNDotH) * (1.0 - lastNDotH);
-					specularReflectivitySum += lastWeight * lastNDotH * (1.0 - lastNDotH);
-					
-					if (intervalCount > 0 && specularReflectivitySum > 0.0 && specularWeightedSlopeSum > 0.0)
-					{
-						double roughnessSq = specularWeightedSlopeSum / specularReflectivitySum;
-						double roughness = Math.sqrt(roughnessSq);
-						
-						// Assuming scaling by 1 / (pi * roughness^2)
-						double reflectivity = specularReflectivitySum * 2 / roughnessSq;
-						
-						double alpha = (double)intervalCount / (double)(directionalRes - 1);
-						
-						roughnessValues[k + l * spatialRes] = roughness;
-						reflectivityValues[k + l * spatialRes] = reflectivity;
-						
-						int roughnessPixelValue = Math.max(0, Math.min(255, (int)(roughness * 255.0)));
-						int reflectivityPixelValue = Math.max(0, Math.min(255, (int)(reflectivity * 255.0)));
-						int alphaPixelValue = Math.max(0, Math.min(255, (int)Math.ceil(alpha * 255.0)));
-						
-						roughnessData[k + (spatialRes - l - 1) * spatialRes] = alphaPixelValue << 24 | roughnessPixelValue << 16 | roughnessPixelValue << 8 | roughnessPixelValue;
-						reflectivityData[k + (spatialRes - l - 1) * spatialRes] = alphaPixelValue << 24 | reflectivityPixelValue << 16 | reflectivityPixelValue << 8 | reflectivityPixelValue;
+						roughnessData[k + (spatialRes - l - 1) * spatialRes] = 0xFF000000 | roughnessPixelValue << 16 | roughnessPixelValue << 8 | roughnessPixelValue;
+						reflectivityData[k + (spatialRes - l - 1) * spatialRes] = 0xFF000000 | reflectivityPixelValue << 16 | reflectivityPixelValue << 8 | reflectivityPixelValue;
 					}
 				}
 			}
@@ -1017,6 +958,183 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			
 			return null; // TODO
 		}
+	}
+	
+	private static class SpecularParams
+	{
+		public final double reflectivity;
+		public final double roughness;
+		
+		public SpecularParams(double reflectivity, double roughness)
+		{
+			this.reflectivity = reflectivity;
+			this.roughness = roughness;
+		}
+	}
+	
+	private static SpecularParams computeSpecularParams(int directionalRes, double nDotHStart, IntToDoubleFunction residualLookup, IntToDoubleFunction alphaLookup)
+	{
+		// Integral of Specular reflectivity
+		// 		times microfacet probability
+		//		times microfacet slope squared
+		// 		times d [n dot h]
+		// as [n dot h] goes from [n dot h]_min to 1
+		double specularWeightedSlopeSum = 0.0;
+		
+		// Integral to find Specular reflectivity (low res)
+		double specularReflectivitySum = 0.0;
+		
+		double lastAlpha;
+		
+		// In case the first step(s) are missing
+		int j = 0;
+		do
+		{
+			lastAlpha = alphaLookup.applyAsDouble(j);
+			j++;
+		}
+		while (j < directionalRes && lastAlpha == 0.0);
+		
+		double lastWeight = residualLookup.applyAsDouble(j-1);
+		
+		double coord = (double)(j - 1) / (double)(directionalRes - 1);
+		double lastNDotH = coord + (1 - coord) * nDotHStart;
+		
+		specularWeightedSlopeSum += lastWeight * (1 / lastNDotH - lastNDotH) * (lastNDotH - nDotHStart);
+		specularReflectivitySum += lastWeight * lastNDotH * (lastNDotH - nDotHStart);
+		
+		int intervalCount = 0;
+		
+		for ( ; j < directionalRes; j++)
+		{
+			double alpha = alphaLookup.applyAsDouble(j);
+			
+			if (alpha > 0.0)
+			{
+				coord = (double)j / (double)(directionalRes - 1);
+				double nDotH = coord + (1 - coord) * nDotHStart;
+				double weight = Math.max(0.0, residualLookup.applyAsDouble(j));
+				
+				// Trapezoidal rule for integration
+				specularWeightedSlopeSum += (weight * (1 / nDotH - nDotH) + lastWeight * (1 / lastNDotH - lastNDotH)) / 2 * (nDotH - lastNDotH);
+				specularReflectivitySum += (weight * nDotH + lastWeight * lastNDotH) / 2 * (nDotH - lastNDotH);
+				
+				intervalCount++;
+				
+				lastWeight = weight;
+				lastNDotH = nDotH;
+				lastAlpha = alpha;
+			}
+		}
+		
+		// In case the final step(s) were missing
+		specularWeightedSlopeSum += lastWeight * (1 / lastNDotH - lastNDotH) * (1.0 - lastNDotH);
+		specularReflectivitySum += lastWeight * lastNDotH * (1.0 - lastNDotH);
+		
+		if (intervalCount > 0 && specularReflectivitySum > 0.0 && specularWeightedSlopeSum > 0.0)
+		{
+			double roughnessSq = specularWeightedSlopeSum / specularReflectivitySum;
+			double roughness = Math.sqrt(roughnessSq);
+			
+			// Assuming scaling by 1 / pi
+			double reflectivity = 2 * specularReflectivitySum;
+			
+			return new SpecularParams(reflectivity, roughness);
+		}
+		else
+		{
+			return null;
+		}
+	}
+	
+	private SpecularParams resample2(ViewSet<ContextType> viewSet, Texture<ContextType> diffuseFitTexture, Texture<ContextType> normalFitTexture) throws IOException
+	{
+		int directionalRes = 4096;
+		
+		double[] reflectanceSums = new double[directionalRes];
+		double[] weightSums = new double[directionalRes];
+		
+		System.out.println("Sampling views...");
+		
+		specularResidProgram.setTexture("diffuseEstimate", diffuseFitTexture);
+		specularResidProgram.setTexture("normalEstimate", normalFitTexture);
+		
+		for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
+		{
+			final int K = k;
+			
+			FramebufferObject<ContextType> depthFBO = projectIntoTextureSpace(viewSet, specularResidProgram, k, param.getTextureSize(), 1,
+				(framebuffer, row, col) -> 
+				{
+					if (DEBUG)
+			    	{
+						try
+	    				{
+	    					framebuffer.saveColorBufferToFile(0, "PNG", new File(new File(outputDir, "debug"), String.format("colors%04d.png", K)));
+	    					framebuffer.saveColorBufferToFile(1, "PNG", new File(new File(outputDir, "debug"), String.format("halfangle%04d.png", K)));
+	    				}
+	    				catch (IOException e)
+	    				{
+	    					e.printStackTrace();
+	    				}
+			    	}
+					
+					int partitionSize = param.getTextureSize();
+					
+					float[] pixelData = framebuffer.readFloatingPointColorBufferRGBA(0);
+						
+					for (int y = 0; y < partitionSize; y++)
+					{
+						for (int x = 0; x < partitionSize; x++)
+						{
+							float alpha = pixelData[((y*partitionSize) + x) * 4 + 3];
+							
+							if (alpha > 0.0f)
+							{
+								float luminance = pixelData[((y*partitionSize) + x) * 4];
+								float hDotN =  pixelData[((y*partitionSize) + x) * 4 + 1];
+								
+								if (luminance > 0.0f && hDotN > 0.0f)
+								{
+									double bin = (directionalRes-1) * (2 * hDotN - 1 + Math.sqrt(2) * (hDotN - 1)); //(directionalRes-1) * 2 * (hDotN - 0.5)
+				
+									int binFloor = (int)Math.floor(bin);
+									int binCeil = (int)Math.ceil(bin);
+									
+									double s, t;
+				
+									if (binFloor >= 0 && binCeil < directionalRes)
+									{
+										if (binFloor == binCeil)
+										{
+											t = 0.0;
+										}
+										else
+										{
+											t = (bin - binFloor);
+										}
+										
+										s = 1.0 - t;
+										
+										reflectanceSums[binFloor] += s * luminance;
+										reflectanceSums[binCeil] += t * luminance;
+										
+										weightSums[binFloor] += s * alpha;
+										weightSums[binCeil] += t * alpha;
+									}
+								}
+							}
+						}
+					}
+				});
+			
+
+	    	depthFBO.delete();
+			
+	    	System.out.println("Completed " + (k+1) + "/" + viewSet.getCameraPoseCount() + " views...");
+		}
+		
+		return computeSpecularParams(directionalRes, Math.sqrt(0.5), (j) -> reflectanceSums[j] / weightSums[j], (j) -> 1.0);
 	}
 	
 	private void loadMesh() throws IOException
@@ -2398,7 +2516,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	if (!SKIP_SPECULAR_FIT)
 	    	{
 				// Resample the reflectance data
-				double[] roughnessValues = resample(viewSet, diffuseTexture, normalTexture);
+	    		SpecularParams specularParams = resample2(viewSet, diffuseTexture, normalTexture);
+	    		System.out.println("Reflectivity: " + specularParams.reflectivity);
+	    		System.out.println("Roughness: " + specularParams.roughness);
+				double[] roughnessValues = {specularParams.roughness};
+	    		//double[] roughnessValues = resample(viewSet, diffuseTexture, normalTexture);
 				
 		    	System.out.println("Creating specular reflectivity texture...");
 				

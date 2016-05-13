@@ -18,8 +18,10 @@ import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.CameraController;
+import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 
 public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
@@ -54,7 +56,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private File resampleVSETFile;
     private File resampleExportPath;
     
-    private boolean multisamplingEnabled = true;
+    private boolean multisamplingEnabled = false;
 
     public ULFRenderer(ContextType context, Program<ContextType> program, Program<ContextType> viewIndexProgram, File cameraFile, File meshFile, ULFLoadOptions loadOptions, CameraController cameraController)
     {
@@ -272,6 +274,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	
     	mainRenderable.program().setUniform("model_view", 
 			cameraController.getViewMatrix()
+			//	.times(Matrix4.scale(1.0f / lightField.proxy.getBoundingRadius()))
+			//	.times(Matrix4.scale(1.0f / new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length()))
+			//	.times(new Matrix4(new Matrix3(lightField.viewSet.getCameraPose(0))))
 				.times(Matrix4.translate(lightField.proxy.getCentroid().negated())) // Model
 		);
     	
@@ -315,6 +320,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
         	
         	indexRenderable.program().setUniform("model_view", 
     			 cameraController.getViewMatrix() // View
+ 					.times(Matrix4.scale(1.0f / lightField.proxy.getBoundingRadius()))
     			 	.times(Matrix4.translate(lightField.proxy.getCentroid().negated())) // Model
     		);
         	indexRenderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
@@ -393,6 +399,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 			viewIndexCacheTexturesBack = null;
     	}
     }
+	
+	@Override
+	public ViewSet<ContextType> getActiveViewSet()
+	{
+		return this.lightField.viewSet;
+	}
     
     public File getVSETFile()
     {
@@ -542,6 +554,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	public boolean isViewIndexCacheEnabled()
 	{
 		return this.viewIndexCacheEnabled;
+	}
+
+	@Override
+	public boolean getMultisampling()
+	{
+		return this.multisamplingEnabled;
 	}
 
 	@Override

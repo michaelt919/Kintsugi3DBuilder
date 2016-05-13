@@ -11,10 +11,12 @@ import tetzlaff.helpers.CubicHermiteSpline;
 public class SampledLuminanceEncoding 
 {
 	public final DoubleUnaryOperator decodeFunction;
+	public final DoubleUnaryOperator encodeFunction;
 	
 	public SampledLuminanceEncoding(float gamma)
 	{
 		this.decodeFunction = (encoded) -> Math.pow(encoded / 255.0f, gamma);
+		this.encodeFunction = (encoded) -> Math.pow(encoded / 255.0f, 1.0f / gamma);
 	}
 	
 	public SampledLuminanceEncoding(double[] linear, byte[] encoded)
@@ -39,11 +41,13 @@ public class SampledLuminanceEncoding
 		}
 		
 		this.decodeFunction = new CubicHermiteSpline(x, y, true);
+		this.encodeFunction = new CubicHermiteSpline(y, x, true);
 	}
 	
-	public SampledLuminanceEncoding(DoubleUnaryOperator decodeFunction)
+	public SampledLuminanceEncoding(DoubleUnaryOperator decodeFunction, DoubleUnaryOperator encodeFunction)
 	{
 		this.decodeFunction = decodeFunction;
+		this.encodeFunction = encodeFunction;
 	}
 	
 	public FloatVertexList sampleDecodeFunction()
@@ -57,9 +61,28 @@ public class SampledLuminanceEncoding
 		return sampledDecodeFunction;
 	}
 	
+	public FloatVertexList sampleEncodeFunction()
+	{
+		FloatVertexList sampledEncodeFunction = new FloatVertexList(1, 256);
+		for (int i = 0; i < 256; i++)
+		{
+			sampledEncodeFunction.set(i, 0, (float)encodeFunction.applyAsDouble((double)i / 255.0) / 255.0f);
+		}
+		
+		return sampledEncodeFunction;
+	}
+	
 	public <ContextType extends Context<ContextType>> Texture1D<ContextType> createLuminanceMap(ContextType context)
 	{
 		return context.get1DColorTextureBuilder(sampleDecodeFunction())
+				.setInternalFormat(ColorFormat.R32F)
+				.setLinearFilteringEnabled(true)
+				.createTexture();
+	}
+	
+	public <ContextType extends Context<ContextType>> Texture1D<ContextType> createInverseLuminanceMap(ContextType context)
+	{
+		return context.get1DColorTextureBuilder(sampleEncodeFunction())
 				.setInternalFormat(ColorFormat.R32F)
 				.setLinearFilteringEnabled(true)
 				.createTexture();

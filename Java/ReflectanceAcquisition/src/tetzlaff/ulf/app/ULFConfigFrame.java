@@ -331,7 +331,6 @@ public class ULFConfigFrame extends JFrame {
 		qualitySettings.add(chckbxHalfRes, gbc_chckbxHalfRes);
 		
 		JCheckBox chckbxMultisampling = new JCheckBox("Multisampling");
-		chckbxMultisampling.setSelected(true);
 		chckbxMultisampling.setToolTipText("Enable full screen multisampling for anti-aliasing (helps eliminate jagged edges)");
 		GridBagConstraints gbc_chckbxMultisampling = new GridBagConstraints();
 		gbc_chckbxMultisampling.gridx = 1;
@@ -456,6 +455,7 @@ public class ULFConfigFrame extends JFrame {
 
 			model.getSelectedItem().setHalfResolution(isHighDPI);
 			chckbxHalfRes.setSelected(isHighDPI);
+			chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
 		}
 		
 		// Add listener for the 'single' load button to read a single light field object.
@@ -594,6 +594,7 @@ public class ULFConfigFrame extends JFrame {
 				chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
 				spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
 				chckbxHalfRes.setSelected(model.getSelectedItem().getHalfResolution());
+				chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
 				
 				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
 				{

@@ -20,6 +20,9 @@ public class VertexMesh
 	private FloatVertexList texCoords;
 	private FloatVertexList tangents;
 	private Vector3 centroid;
+	private Vector3 boundingBoxCenter;
+	private Vector3 boundingBoxSize;
+	private float boundingRadius;
 
 	public VertexMesh(String fileFormat, File file) throws IOException
 	{
@@ -212,17 +215,37 @@ public class VertexMesh
 			orthoTangentsList.add(orthogonalizeTangent(normalList.get(i), tangentList.get(i), bitangentList.get(i)));
 		}
 		
+		float boundingBoxMinX = 0.0f, boundingBoxMinY = 0.0f, boundingBoxMinZ = 0.0f,
+				boundingBoxMaxX = 0.0f, boundingBoxMaxY = 0.0f, boundingBoxMaxZ = 0.0f;
+		this.boundingRadius = 0.0f;
+		
 		// Copy the data from the dynamic tables into a data structure that OpenGL can use.
 		int vertexCount = vertexIndexList.size();
 		vertices = new FloatVertexList(3, vertexCount * 3);
 		int i = 0;
 		for (int k : vertexIndexList)
 		{
-			vertices.set(i, 0, vertexList.get(k).x);
-			vertices.set(i, 1, vertexList.get(k).y);
-			vertices.set(i, 2, vertexList.get(k).z);
+			Vector3 vertex = vertexList.get(k);
+			
+			boundingBoxMinX = Math.min(boundingBoxMinX, vertex.x);
+			boundingBoxMinY = Math.min(boundingBoxMinY, vertex.y);
+			boundingBoxMinZ = Math.min(boundingBoxMinZ, vertex.z);
+			
+			boundingBoxMaxX = Math.max(boundingBoxMaxX, vertex.x);
+			boundingBoxMaxY = Math.max(boundingBoxMaxY, vertex.y);
+			boundingBoxMaxZ = Math.max(boundingBoxMaxZ, vertex.z);
+			
+			this.boundingRadius = Math.max(this.boundingRadius, vertex.minus(centroid).length());
+		
+			vertices.set(i, 0, vertex.x);
+			vertices.set(i, 1, vertex.y);
+			vertices.set(i, 2, vertex.z);
+			
 			i++;
 		}
+		
+		this.boundingBoxCenter = new Vector3((boundingBoxMinX + boundingBoxMaxX) / 2, (boundingBoxMinY + boundingBoxMaxY) / 2, (boundingBoxMinZ + boundingBoxMaxZ) / 2);
+		this.boundingBoxSize = new Vector3(boundingBoxMaxX - boundingBoxMinX, boundingBoxMaxY - boundingBoxMinY, boundingBoxMaxZ - boundingBoxMinZ);
 		
 		if (hasNormals)
 		{
@@ -328,6 +351,21 @@ public class VertexMesh
 	public Vector3 getCentroid()
 	{
 		return centroid;
+	}
+	
+	public float getBoundingRadius()
+	{
+		return boundingRadius;
+	}
+	
+	public Vector3 getBoundingBoxCenter()
+	{
+		return boundingBoxCenter;
+	}
+	
+	public Vector3 getBoundingBoxSize()
+	{
+		return boundingBoxSize;
 	}
 	
 	public FloatVertexList getTangents()
