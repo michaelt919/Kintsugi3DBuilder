@@ -41,6 +41,13 @@ public class Matrix3
         m[2][2] = m33;
     }
 	
+	public Matrix3(Vector3 col1, Vector3 col2, Vector3 col3)
+	{
+		this (col1.x, col2.x, col3.x,
+			  col1.y, col2.y, col3.y,
+		      col1.z, col2.z, col3.z );
+	}
+	
 	/**
 	 * Creates a 4x4 matrix from a 3x3 matrix by dropping the fourth row and column.
 	 * @param m4 The 4x4 matrix.

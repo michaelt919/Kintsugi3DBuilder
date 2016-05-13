@@ -158,8 +158,8 @@ public class Matrix4
 	{
 		Vector3 f = center.minus(eye).normalized();
 		up = up.normalized();
-		Vector3 s = f.cross(up);
-		Vector3 u = s.cross(f);
+		Vector3 s = f.cross(up).normalized();
+		Vector3 u = s.cross(f).normalized();
 		
 		return new Matrix4(
 			s.x, 	s.y, 	s.z, 	0.0f,
@@ -287,9 +287,9 @@ public class Matrix4
 	public Matrix4 quickInverse(float tolerance)
 	{
 		Matrix3 rotationScale = new Matrix3(this);
-		float scale = rotationScale.determinant();
+		float scaleSquared = (float)Math.pow(rotationScale.determinant(), 2.0 / 3.0);
 		
-		Matrix4 invCandidate = new Matrix4(rotationScale.transpose().times(1.0f / (scale * scale))).times(Matrix4.translate(new Vector3(this.getColumn(3)).negated()));
+		Matrix4 invCandidate = new Matrix4(rotationScale.transpose().times(1.0f / scaleSquared)).times(Matrix4.translate(new Vector3(this.getColumn(3)).negated()));
 		
 		Matrix4 identityCandidate = this.times(invCandidate);
 		

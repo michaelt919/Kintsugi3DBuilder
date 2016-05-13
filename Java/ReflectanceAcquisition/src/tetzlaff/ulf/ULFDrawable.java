@@ -10,6 +10,8 @@ import tetzlaff.gl.helpers.Drawable;
 public interface ULFDrawable<ContextType extends Context<ContextType>> extends Drawable
 {
 	void setOnLoadCallback(ULFLoadingMonitor callback);
+
+	ViewSet<ContextType> getActiveViewSet();
 	
 	float getGamma();
 	float getWeightExponent();
@@ -17,6 +19,7 @@ public interface ULFDrawable<ContextType extends Context<ContextType>> extends D
 	float getOcclusionBias();
 	boolean isViewIndexCacheEnabled();
 	boolean getHalfResolution();
+	boolean getMultisampling();
 	
 	void setGamma(float gamma);
 	void setWeightExponent(float weightExponent);

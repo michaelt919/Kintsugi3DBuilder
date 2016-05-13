@@ -10,12 +10,19 @@ import javax.imageio.ImageIO;
 //import org.lwjgl.opengl.GLDebugMessageCallback;
 //import static org.lwjgl.opengl.KHRDebug.*;
 
+
+
+
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.FirstPersonController;
 import tetzlaff.gl.helpers.InteractiveGraphics;
+import tetzlaff.gl.helpers.LightController;
+import tetzlaff.gl.helpers.Matrix4;
+import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.imagebasedmicrofacet.HardcodedLightController;
 import tetzlaff.imagebasedmicrofacet.ImageBasedMicrofacetRendererList;
 import tetzlaff.imagebasedmicrofacet.TrackballLightController;
 import tetzlaff.interactive.InteractiveApplication;
@@ -30,6 +37,36 @@ import tetzlaff.window.glfw.GLFWWindow;
  */
 public class ImageBasedMicrofacetProgram
 {
+	private static class MetaLightController implements LightController
+	{
+		public boolean hardcodedMode = false;
+		public TrackballLightController normalController;
+		public HardcodedLightController hardcodedController;
+
+		@Override
+		public int getLightCount() 
+		{
+			return hardcodedMode ? hardcodedController.getLightCount() : normalController.getLightCount();
+		}
+
+		@Override
+		public Vector3 getLightColor(int i) 
+		{
+			return hardcodedMode ? hardcodedController.getLightColor(i) : normalController.getLightColor(i);
+		}
+
+		@Override
+		public Matrix4 getLightMatrix(int i) 
+		{
+			return hardcodedMode ? hardcodedController.getLightMatrix(i) : normalController.getLightMatrix(i);
+		}
+		
+		public CameraController asCameraController()
+		{
+			return hardcodedMode ? hardcodedController.asCameraController() : normalController.asCameraController();
+		}
+	}
+	
     /**
      * The main entry point for the Unstructured Light Field (ULF) renderer application.
      * @param args The usual command line arguments
@@ -89,8 +126,11 @@ public class ImageBasedMicrofacetProgram
         	throw new IllegalStateException("The shader program could not be initialized.", e);
         }
         
+        MetaLightController metaLightController = new MetaLightController();
+        
         TrackballLightController lightController = new TrackballLightController();
         lightController.addAsWindowListener(window);
+    	metaLightController.normalController = lightController;
         
         FirstPersonController fpController = new FirstPersonController();
         fpController.addAsWindowListener(window);
@@ -101,13 +141,17 @@ public class ImageBasedMicrofacetProgram
     	});
         
         // Hybrid FP + Trackball controls
-        CameraController cameraController = () -> fpController.getViewMatrix().times(lightController.asCameraController().getViewMatrix());
+        CameraController cameraController = () -> fpController.getViewMatrix().times(metaLightController.asCameraController().getViewMatrix());
 
         // Create a new 'renderer' to be attached to the window and the GUI.
         // This is the object that loads the ULF models and handles drawing them.  This object abstracts
         // the underlying data and provides ways of triggering events via the trackball and the user
         // interface later when it is passed to the ULFUserInterface object.
-        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, indexProgram, cameraController, lightController);
+        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, indexProgram, cameraController, metaLightController);
+    	
+    	HardcodedLightController hardcodedLightController = new HardcodedLightController(() -> model.getSelectedItem().getActiveViewSet());
+    	hardcodedLightController.addAsWindowListener(window);
+    	metaLightController.hardcodedController = hardcodedLightController;
         
         window.addCharacterListener((win, c) -> {
         	if (c == 'p')
@@ -143,6 +187,10 @@ public class ImageBasedMicrofacetProgram
 	        	{
 					e.printStackTrace();
 				}
+        	}
+        	else if (c == 'o')
+        	{
+        		metaLightController.hardcodedMode = !metaLightController.hardcodedMode;
         	}
         	else if (c == ' ')
         	{

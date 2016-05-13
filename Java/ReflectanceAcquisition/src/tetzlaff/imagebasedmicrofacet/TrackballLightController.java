@@ -8,6 +8,7 @@ import tetzlaff.gl.helpers.LightController;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.window.KeyCodes;
 import tetzlaff.window.ModifierKeys;
 import tetzlaff.window.Window;
@@ -188,7 +189,8 @@ public class TrackballLightController implements LightController, CharacterListe
 	@Override
 	public Vector3 getLightColor(int i) 
 	{
-		return this.lightColors.get(i);
+		Vector3 lightDisplacement = new Vector3(this.getLightMatrix(i).times(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)));
+		return this.lightColors.get(i).times(lightDisplacement.dot(lightDisplacement));
 	}
 
 	@Override

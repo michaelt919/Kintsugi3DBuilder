@@ -163,4 +163,37 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 			shadowMatrixBuffer = null;
 		}
 	}
+	
+	public void deleteOpenGLResources()
+	{
+		if (diffuseTexture != null)
+		{
+			diffuseTexture.delete();
+		}
+		
+		if (normalTexture != null)
+		{
+			normalTexture.delete();
+		}
+		
+		if (specularTexture != null)
+		{
+			specularTexture.delete();
+		}
+		
+		if (roughnessTexture != null)
+		{
+			roughnessTexture.delete();
+		}
+		
+		if (shadowTextures != null)
+		{
+			shadowTextures.delete();
+		}
+		
+		if (shadowMatrixBuffer != null)
+		{
+			shadowMatrixBuffer.delete();
+		}
+	}
 }

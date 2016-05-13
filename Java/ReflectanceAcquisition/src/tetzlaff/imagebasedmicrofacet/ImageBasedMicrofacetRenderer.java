@@ -4,33 +4,47 @@ import java.io.File;
 import java.io.IOException;
 
 import tetzlaff.gl.Context;
+import tetzlaff.gl.FramebufferObject;
+import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
+import tetzlaff.gl.Renderable;
+import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.LightController;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.ulf.ULFDrawable;
 import tetzlaff.ulf.ULFLoadOptions;
 import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFRenderer;
+import tetzlaff.ulf.ViewSet;
 
 public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
 	private ContextType context;
 	private Program<ContextType> program;
 	private Program<ContextType> indexProgram;
+	private Program<ContextType> shadowProgram;
 	private ULFRenderer<ContextType> ulfRenderer;
 	private SampledMicrofacetField<ContextType> microfacetField;
 	private LightController lightController;
 	private ULFLoadingMonitor callback;
 	private boolean suppressErrors = false;
 	
-	public ImageBasedMicrofacetRenderer(ContextType context, Program<ContextType> program, Program<ContextType> indexProgram, File xmlFile, File meshFile, ULFLoadOptions loadOptions, 
+	Texture3D<ContextType> shadowMaps;
+	FramebufferObject<ContextType> shadowFramebuffer;
+	Renderable<ContextType> shadowRenderable;
+	
+	public ImageBasedMicrofacetRenderer(ContextType context, Program<ContextType> program, Program<ContextType> indexProgram, Program<ContextType> shadowProgram, File xmlFile, File meshFile, ULFLoadOptions loadOptions, 
 			CameraController cameraController, LightController lightController)
     {
 		this.context = context;
+		
 		this.program = program;
+		this.indexProgram = indexProgram;
+		this.shadowProgram = shadowProgram;
 
     	this.lightController = lightController;
     	
@@ -50,6 +64,15 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "specular.png"),
 					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "roughness.png"), 
 					context);
+			
+			shadowMaps = context.get2DDepthTextureArrayBuilder(2048, 2048, lightController.getLightCount()).createTexture();
+
+			shadowFramebuffer = context.getFramebufferObjectBuilder(2048, 2048)
+				.addDepthAttachment()
+				.createFramebufferObject();
+			
+			shadowRenderable = context.createRenderable(shadowProgram);
+			shadowRenderable.addVertexBuffer("position", microfacetField.ulf.positionBuffer);
 		}
 		catch(IOException e)
 		{
@@ -116,8 +139,30 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 				program.setTexture("roughnessMap", microfacetField.roughnessTexture);
 			}
 			
+			if (microfacetField.ulf.viewSet.getLuminanceMap() == null)
+			{
+				program.setUniform("useLuminanceMap", false);
+				program.setTexture("luminanceMap", null);
+			}
+			else
+			{
+				program.setUniform("useLuminanceMap", true);
+				program.setTexture("luminanceMap", microfacetField.ulf.viewSet.getLuminanceMap());
+			}
+			
+			if (microfacetField.ulf.viewSet.getInverseLuminanceMap() == null)
+			{
+				program.setUniform("useInverseLuminanceMap", false);
+				program.setTexture("inverseLuminanceMap", null);
+			}
+			else
+			{
+				program.setUniform("useInverseLuminanceMap", true);
+				program.setTexture("inverseLuminanceMap", microfacetField.ulf.viewSet.getInverseLuminanceMap());
+			}
+			
 			float gamma = 2.2f;
-	    	Vector3 ambientColor = new Vector3(0.02f, 0.02f, 0.02f);
+	    	Vector3 ambientColor = new Vector3(0.0f, 0.0f, 0.0f);
 			program.setUniform("ambientColor", ambientColor);
 	    	
 	    	Vector3 clearColor = new Vector3(
@@ -125,14 +170,31 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	    			(float)Math.pow(ambientColor.y, 1.0 / gamma),
 	    			(float)Math.pow(ambientColor.z, 1.0 / gamma));
 	    	ulfRenderer.setClearColor(clearColor);
-	
+	    	
+			program.setUniform("infiniteLightSources", false);
+			
+			Matrix4 lightProjection = Matrix4.perspective((float)Math.PI / 4, 1.0f, 0.01f, 100.0f);
+			
 			for (int i = 0; i < lightController.getLightCount(); i++)
 			{
 				Matrix4 lightMatrix = lightController.getLightMatrix(i)
+						.times(Matrix4.scale(1.0f / ulfRenderer.getLightField().proxy.getBoundingRadius()))
 		    			.times(Matrix4.translate(ulfRenderer.getLightField().proxy.getCentroid().negated()));
 				
-				program.setUniform("lightPos[" + i + "]", new Matrix3(lightMatrix).transpose().times(new Vector3(lightMatrix.getColumn(3).negated())));
-				program.setUniform("lightIntensity[" + i + "]", lightController.getLightColor(i));
+				shadowProgram.setUniform("modelView", lightMatrix);
+				shadowProgram.setUniform("projection", lightProjection);
+				
+				shadowFramebuffer.setDepthAttachment(shadowMaps.getLayerAsFramebufferAttachment(i));
+				shadowRenderable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
+				
+				program.setUniform("lightPosVirtual[" + i + "]", 
+					new Vector3(lightMatrix.quickInverse(0.001f).times(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)))
+				);
+				program.setUniform("lightIntensityVirtual[" + i + "]", 
+						lightController.getLightColor(i)
+							.times(ulfRenderer.getLightField().proxy.getBoundingRadius() 
+									* ulfRenderer.getLightField().proxy.getBoundingRadius()));
+				program.setUniform("lightMatrixVirtual[" + i + "]", lightProjection.times(lightMatrix));
 				program.setUniform("virtualLightCount", Math.min(4, lightController.getLightCount()));
 				
 				if (microfacetField.shadowMatrixBuffer == null || microfacetField.shadowTextures == null)
@@ -146,6 +208,8 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 					program.setTexture("shadowImages", microfacetField.shadowTextures);
 				}
 			}
+			
+			program.setTexture("shadowMaps", shadowMaps);
 			
 			if (indexProgram != null)
 			{
@@ -183,9 +247,22 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	public void cleanup() 
 	{
 		ulfRenderer.cleanup();
-		if (microfacetField.normalTexture != null)
+		if (microfacetField != null)
 		{
-			microfacetField.normalTexture.delete();
+			microfacetField.deleteOpenGLResources();
+			microfacetField = null;
+		}
+		
+		if (shadowMaps != null)
+		{
+			shadowMaps.delete();
+			shadowMaps = null;
+		}
+		
+		if (shadowFramebuffer != null)
+		{
+			shadowFramebuffer.delete();
+			shadowFramebuffer = null;
 		}
 	}
 
@@ -193,6 +270,12 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	public void setOnLoadCallback(ULFLoadingMonitor callback) 
 	{
 		this.callback = callback;
+	}
+	
+	@Override
+	public ViewSet<ContextType> getActiveViewSet()
+	{
+		return this.microfacetField.ulf.viewSet;
 	}
 
 	@Override
@@ -253,6 +336,12 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	public void setHalfResolution(boolean halfResEnabled) 
 	{
 		ulfRenderer.setHalfResolution(halfResEnabled);
+	}
+
+	@Override
+	public boolean getMultisampling() 
+	{
+		return ulfRenderer.getMultisampling();
 	}
 
 	@Override

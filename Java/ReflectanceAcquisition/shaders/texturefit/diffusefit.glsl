@@ -57,22 +57,24 @@ DiffuseFit fitDiffuse()
             {
                 //vec4 light = vec4(getLightVector(i), 1.0);
                 vec3 light = getLightVector(i);
-                vec3 attenuatedLightIntensity = infiniteLightSources ? 
+                vec3 attenuatedIncidentRadiance = infiniteLightSources ? 
                     getLightIntensity(i) : getLightIntensity(i) / (dot(light, light));
                 vec3 lightNormalized = normalize(light);
                 
                 float weight = color.a * nDotV;
                 if (k != 0)
                 {
-                    vec3 error = color.rgb - fit.color * dot(fit.normal, lightNormalized) * attenuatedLightIntensity;
+                    vec3 error = color.rgb - fit.color * dot(fit.normal, lightNormalized) * attenuatedIncidentRadiance;
                     weight *= exp(-dot(error,error)/(2*delta*delta));
                 }
+                
+                float attenuatedLuminance = getLuminance(attenuatedIncidentRadiance);
                     
-                a += weight * attenuatedLightIntensity * attenuatedLightIntensity * outerProduct(lightNormalized, lightNormalized);
-                //b += weight * outerProduct(lightNormalized, vec4(color.rgb / attenuatedLightIntensity, 0.0));
-                b += weight * attenuatedLightIntensity * outerProduct(lightNormalized, color.rgb);
+                a += weight * outerProduct(lightNormalized, lightNormalized);
+                //b += weight * outerProduct(lightNormalized, vec4(color.rgb / attenuatedIncidentRadiance, 0.0));
+                b += weight * outerProduct(lightNormalized, color.rgb / attenuatedIncidentRadiance);
                 weightedRadianceSum += weight * vec4(color.rgb, 1.0);
-                weightedIrradianceSum += weight * attenuatedLightIntensity * max(0, dot(geometricNormal, lightNormalized));
+                weightedIrradianceSum += weight * attenuatedIncidentRadiance * max(0, dot(geometricNormal, lightNormalized));
             }
         }
         
