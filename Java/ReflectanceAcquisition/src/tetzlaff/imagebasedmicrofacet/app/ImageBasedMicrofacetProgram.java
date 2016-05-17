@@ -13,6 +13,9 @@ import javax.imageio.ImageIO;
 
 
 
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.CameraController;
@@ -24,6 +27,7 @@ import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.imagebasedmicrofacet.HardcodedLightController;
 import tetzlaff.imagebasedmicrofacet.ImageBasedMicrofacetRendererList;
+import tetzlaff.imagebasedmicrofacet.OverrideableLightController;
 import tetzlaff.imagebasedmicrofacet.TrackballLightController;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
@@ -37,7 +41,7 @@ import tetzlaff.window.glfw.GLFWWindow;
  */
 public class ImageBasedMicrofacetProgram
 {
-	private static class MetaLightController implements LightController
+	private static class MetaLightController implements OverrideableLightController
 	{
 		public boolean hardcodedMode = false;
 		public TrackballLightController normalController;
@@ -64,6 +68,28 @@ public class ImageBasedMicrofacetProgram
 		public CameraController asCameraController()
 		{
 			return hardcodedMode ? hardcodedController.asCameraController() : normalController.asCameraController();
+		}
+
+		@Override
+		public void overrideCameraPose(Matrix4 cameraPoseOverride) 
+		{
+			if (hardcodedMode)
+			{
+				hardcodedController.overrideCameraPose(cameraPoseOverride);
+			}
+			else
+			{
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		@Override
+		public void removeCameraPoseOverride() 
+		{
+			if (hardcodedMode)
+			{
+				hardcodedController.removeCameraPoseOverride();
+			}
 		}
 	}
 	
@@ -112,12 +138,26 @@ public class ImageBasedMicrofacetProgram
         	throw new IllegalStateException("The shader program could not be initialized.", e);
         }
 
-    	Program<OpenGLContext> indexProgram;
+//    	Program<OpenGLContext> indexProgram;
+//        try
+//        {
+//        	indexProgram = window.getShaderProgramBuilder()
+//    				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+//    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr_index.frag"))
+//    				.createProgram();
+//        }
+//        catch (IOException e)
+//        {
+//        	e.printStackTrace();
+//        	throw new IllegalStateException("The shader program could not be initialized.", e);
+//        }
+
+    	Program<OpenGLContext> shadowProgram;
         try
         {
-        	indexProgram = window.getShaderProgramBuilder()
-    				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr_index.frag"))
+    		shadowProgram = window.getShaderProgramBuilder()
+	    			.addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
+	    			.addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
     				.createProgram();
         }
         catch (IOException e)
@@ -147,9 +187,12 @@ public class ImageBasedMicrofacetProgram
         // This is the object that loads the ULF models and handles drawing them.  This object abstracts
         // the underlying data and provides ways of triggering events via the trackball and the user
         // interface later when it is passed to the ULFUserInterface object.
-        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, indexProgram, cameraController, metaLightController);
+        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, null/*indexProgram*/, shadowProgram, cameraController, metaLightController);
     	
-    	HardcodedLightController hardcodedLightController = new HardcodedLightController(() -> model.getSelectedItem().getActiveViewSet());
+    	HardcodedLightController hardcodedLightController = 
+    			new HardcodedLightController(
+					() -> model.getSelectedItem().getActiveViewSet(),
+					() -> model.getSelectedItem().getActiveProxy());
     	hardcodedLightController.addAsWindowListener(window);
     	metaLightController.hardcodedController = hardcodedLightController;
         
@@ -166,10 +209,10 @@ public class ImageBasedMicrofacetProgram
 	        				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr.frag"))
 							.createProgram();
 		        	
-		        	Program<OpenGLContext> newIndexProgram = window.getShaderProgramBuilder()
-		    				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-		    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr_index.frag"))
-							.createProgram();
+//		        	Program<OpenGLContext> newIndexProgram = window.getShaderProgramBuilder()
+//		    				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+//		    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr_index.frag"))
+//							.createProgram();
 		        	
 		        	if (model.getProgram() != null)
 	        		{
@@ -177,18 +220,18 @@ public class ImageBasedMicrofacetProgram
 	        		}
 		        	model.setProgram(newProgram);
 		        	
-		        	if (model.getIndexProgram() != null)
-	        		{
-	        			model.getIndexProgram().delete();
-	        		}
-		        	model.setIndexProgram(newIndexProgram);
+//		        	if (model.getIndexProgram() != null)
+//	        		{
+//	        			model.getIndexProgram().delete();
+//	        		}
+//		        	model.setIndexProgram(newIndexProgram);
 				} 
 	        	catch (Exception e) 
 	        	{
 					e.printStackTrace();
 				}
         	}
-        	else if (c == 'o')
+        	else if (c == 'l')
         	{
         		metaLightController.hardcodedMode = !metaLightController.hardcodedMode;
         	}

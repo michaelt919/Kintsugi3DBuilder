@@ -11,9 +11,9 @@ public class ULFRendererList<ContextType extends Context<ContextType>> extends U
 {
 	private static final long serialVersionUID = -8199166231586786343L;
 
-	public ULFRendererList(ContextType context, Program<ContextType> program, CameraController cameraController) 
+	public ULFRendererList(ContextType context, Program<ContextType> program, Program<ContextType> indexProgram, CameraController cameraController) 
 	{
-		super(context, program, cameraController);
+		super(context, program, indexProgram, cameraController);
 	}
 	
 	@Override

@@ -63,7 +63,7 @@ public class ULFProgram
         // This is the object that loads the ULF models and handles drawing them.  This object abstracts
         // the underlying data and provides ways of triggering events via the trackball and the user
         // interface later when it is passed to the ULFUserInterface object.
-        ULFRendererList<OpenGLContext> model = new ULFRendererList<OpenGLContext>(window, program, trackball);
+        ULFRendererList<OpenGLContext> model = new ULFRendererList<OpenGLContext>(window, program, null, trackball);
 
     	// Create a new application to run our event loop and give it the GLFWWindow for polling
     	// of events and the OpenGL context.  The ULFRendererList provides the drawable.
