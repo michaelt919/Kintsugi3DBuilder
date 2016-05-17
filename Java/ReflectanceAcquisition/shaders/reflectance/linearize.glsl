@@ -46,8 +46,8 @@ vec3 linearizeColor(vec3 nonlinearColor)
             
             // Step 3: determine the ratio between the linear and nonlinear luminance
             // Reapply gamma correction to the single luminance value
-            float scale = texture(luminanceMap, pow(luminanceNonlinear, 1.0 / gamma)).r 
-                / luminanceNonlinear;
+            float scale = //texture(luminanceMap, pow(luminanceNonlinear, 1.0 / gamma)).r / luminanceNonlinear;
+                getMaxLuminance();
                 
             // Step 4: return the color, scaled to have the correct luminance,
             // but the original saturation and hue.

@@ -6,12 +6,14 @@ import java.io.IOException;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.Drawable;
+import tetzlaff.gl.helpers.VertexMesh;
 
 public interface ULFDrawable<ContextType extends Context<ContextType>> extends Drawable
 {
 	void setOnLoadCallback(ULFLoadingMonitor callback);
 
 	ViewSet<ContextType> getActiveViewSet();
+	VertexMesh getActiveProxy();
 	
 	float getGamma();
 	float getWeightExponent();

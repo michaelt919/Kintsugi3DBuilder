@@ -15,23 +15,25 @@ public class ImageBasedMicrofacetRendererList<ContextType extends Context<Contex
 	private static final long serialVersionUID = -8199166231586786343L;
 	
 	private LightController lightController;
+	private Program<ContextType> shadowProgram;
 
-	public ImageBasedMicrofacetRendererList(ContextType context, Program<ContextType> program, Program<ContextType> indexProgram, CameraController cameraController, LightController lightController) 
+	public ImageBasedMicrofacetRendererList(ContextType context, Program<ContextType> program, Program<ContextType> indexProgram, Program<ContextType> shadowProgram, CameraController cameraController, LightController lightController) 
 	{
-		super(context, program, cameraController);
+		super(context, program, indexProgram, cameraController);
 		this.lightController = lightController;
+		this.shadowProgram = shadowProgram;
 	}
 	
 	@Override
 	protected ImageBasedMicrofacetRenderer<ContextType> createFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		return new ImageBasedMicrofacetRenderer<ContextType>(context, this.getProgram(), this.getIndexProgram(), vsetFile, null, loadOptions, this.getCameraController(), lightController);
+		return new ImageBasedMicrofacetRenderer<ContextType>(context, this.getProgram(), this.getIndexProgram(), this.shadowProgram, vsetFile, null, loadOptions, this.getCameraController(), lightController);
 	}
 	
 	@Override
 	protected ImageBasedMicrofacetRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException
 	{
-		return new ImageBasedMicrofacetRenderer<ContextType>(context, this.getProgram(), this.getIndexProgram(), xmlFile, meshFile, loadOptions, this.getCameraController(), lightController);
+		return new ImageBasedMicrofacetRenderer<ContextType>(context, this.getProgram(), this.getIndexProgram(), this.shadowProgram, xmlFile, meshFile, loadOptions, this.getCameraController(), lightController);
 	}
 	
 	@Override

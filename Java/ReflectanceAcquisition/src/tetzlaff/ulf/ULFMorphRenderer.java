@@ -10,6 +10,7 @@ import java.util.Scanner;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.helpers.CameraController;
+import tetzlaff.gl.helpers.VertexMesh;
 
 public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
@@ -123,6 +124,12 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	public ViewSet<ContextType> getActiveViewSet()
 	{
 		return this.getLightField().viewSet;
+	}
+	
+	@Override
+	public VertexMesh getActiveProxy()
+	{
+		return this.getLightField().proxy;
 	}
 
 	@Override

@@ -3,7 +3,9 @@ package tetzlaff.ulf;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Date;
+import java.util.function.Consumer;
 
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
@@ -22,6 +24,7 @@ import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
+import tetzlaff.gl.helpers.VertexMesh;
 
 public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
@@ -55,6 +58,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private int resampleWidth, resampleHeight;
     private File resampleVSETFile;
     private File resampleExportPath;
+    
+	private Consumer<Matrix4> resampleSetupCallback;
+	private Runnable resampleCompleteCallback; 
     
     private boolean multisamplingEnabled = false;
 
@@ -218,6 +224,33 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 			}
     	}
 	}
+	
+	private void setupForDraw()
+	{
+		this.mainRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
+    	this.mainRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
+    	this.mainRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
+    	this.mainRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIntensityBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
+    	{
+	    	this.mainRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
+	    	this.mainRenderable.program().setUniformBuffer("LightIntensities", lightField.viewSet.getLightIntensityBuffer());
+	    	this.mainRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+    	}
+    	this.mainRenderable.program().setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
+    	this.mainRenderable.program().setUniform("infiniteLightSources", true /* TODO */);
+    	if (lightField.depthTextures != null)
+		{
+    		this.mainRenderable.program().setTexture("depthImages", lightField.depthTextures);
+		}
+    	
+    	this.mainRenderable.program().setUniform("gamma", this.lightField.settings.getGamma());
+    	this.mainRenderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
+    	this.mainRenderable.program().setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
+    	this.mainRenderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
+    	
+    	this.mainRenderable.program().setTexture("luminanceMap", this.lightField.viewSet.getLuminanceMap());
+	}
     
     @Override
     public void draw()
@@ -254,23 +287,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	
     	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
     	FramebufferSize size = framebuffer.getSize();
-    			
-    	this.mainRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
-    	this.mainRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
-    	this.mainRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-    	this.mainRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
-    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIntensityBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
-    	{
-	    	this.mainRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
-	    	this.mainRenderable.program().setUniformBuffer("LightIntensities", lightField.viewSet.getLightIntensityBuffer());
-	    	this.mainRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
-    	}
-    	this.mainRenderable.program().setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
-    	this.mainRenderable.program().setUniform("infiniteLightSources", true /* TODO */);
-    	if (lightField.depthTextures != null)
-		{
-    		this.mainRenderable.program().setTexture("depthImages", lightField.depthTextures);
-		}
+    	
+    	this.setupForDraw();
     	
     	mainRenderable.program().setUniform("model_view", 
 			cameraController.getViewMatrix()
@@ -281,13 +299,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 		);
     	
     	mainRenderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 8, (float)size.width / (float)size.height, 0.01f, 100.0f));
-    	
-    	mainRenderable.program().setUniform("gamma", this.lightField.settings.getGamma());
-    	mainRenderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
-    	mainRenderable.program().setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
-    	mainRenderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
-    	
-    	mainRenderable.program().setTexture("luminanceMap", this.lightField.viewSet.getLuminanceMap());
     	
         FramebufferObject<ContextType> offscreenFBO;
         
@@ -401,6 +412,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     }
 	
 	@Override
+	public VertexMesh getActiveProxy()
+	{
+		return this.lightField.proxy;
+	}
+	
+	@Override
 	public ViewSet<ContextType> getActiveViewSet()
 	{
 		return this.lightField.viewSet;
@@ -490,19 +507,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, new ViewSetImageOptions(null, false, false, false), context);
 		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleWidth, resampleHeight).addColorAttachment().createFramebufferObject();
     	
-    	this.mainRenderable.program().setTexture("imageTextures", lightField.viewSet.getTextures());
-    	this.mainRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
-    	this.mainRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-    	this.mainRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
-    	this.mainRenderable.program().setUniform("cameraPoseCount", lightField.viewSet.getCameraPoseCount());
-    	if (lightField.depthTextures != null)
-		{
-    		this.mainRenderable.program().setTexture("depthTextures", lightField.depthTextures);
-		}
-    	this.mainRenderable.program().setUniform("gamma", this.lightField.settings.getGamma());
-    	this.mainRenderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
-    	this.mainRenderable.program().setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
-    	this.mainRenderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
+    	this.setupForDraw();
     	
 		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 		{
@@ -510,6 +515,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	mainRenderable.program().setUniform("projection", 
     			targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
     				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
+	    	
+	    	this.resampleSetupCallback.accept(targetViewSet.getCameraPose(i));
 	    	
 	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
 	    	framebuffer.clearDepthBuffer();
@@ -526,10 +533,14 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	        }
 		}
 		
+		this.resampleCompleteCallback.run();
+		
 		Files.copy(resampleVSETFile.toPath(), 
-			new File(resampleExportPath, resampleVSETFile.getName()).toPath());
+			new File(resampleExportPath, resampleVSETFile.getName()).toPath(),
+			StandardCopyOption.REPLACE_EXISTING);
 		Files.copy(lightField.viewSet.getGeometryFile().toPath(), 
-			new File(resampleExportPath, lightField.viewSet.getGeometryFile().getName()).toPath());
+			new File(resampleExportPath, lightField.viewSet.getGeometryFile().getName()).toPath(),
+			StandardCopyOption.REPLACE_EXISTING);
 	}
 
 	@Override
@@ -609,5 +620,15 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	{
     		this.indexRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
     	}
+	}
+
+	public void setResampleSetupCallback(Consumer<Matrix4> resampleSetupCallback) 
+	{
+		this.resampleSetupCallback = resampleSetupCallback;
+	}
+
+	public void setResampleCompleteCallback(Runnable resampleCompleteCallback) 
+	{
+		this.resampleCompleteCallback = resampleCompleteCallback;
 	}
 }

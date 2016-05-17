@@ -23,7 +23,7 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	private int effectiveSize;
 	private ULFLoadingMonitor loadingMonitor;
 	
-	protected ULFDrawableListModel(ContextType context, Program<ContextType> program, CameraController cameraController) 
+	protected ULFDrawableListModel(ContextType context, Program<ContextType> program, Program<ContextType> indexProgram, CameraController cameraController) 
 	{
 		this.context = context;
 		this.cameraController = cameraController;
@@ -31,6 +31,7 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 		this.effectiveSize = 0;
 		
 		this.program = program;
+		this.indexProgram = indexProgram;
 	}
 	
 	protected abstract ULFDrawable<ContextType> createFromVSETFile(File vsetFilee, ULFLoadOptions loadOptions) throws IOException;
