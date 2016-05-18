@@ -17,6 +17,9 @@ public interface Projection
 	 */
 	Matrix4 getProjectionMatrix(float nearPlane, float farPlane);
 	
+	float getVerticalFieldOfView();
+	float getAspectRatio();
+	
 	/**
 	 * Convert to a string designed for use in a VSET file
 	 */

@@ -189,9 +189,7 @@ public class TrackballLightController implements LightController, CharacterListe
 	@Override
 	public Vector3 getLightColor(int i) 
 	{
-		float lightDist = new Vector3(this.getLightMatrix(i).times(new Vector4(0.0f, 0.0f, 0.0f, 1.0f))).length();
-		
-		return this.lightColors.get(i).times(lightDist * lightDist);
+		return this.lightColors.get(i);
 	}
 
 	@Override
