@@ -132,9 +132,21 @@ public class DistortionProjection implements Projection
 	}
     
     @Override
+    public float getAspectRatio()
+    {
+    	return width / height;
+    }
+    
+    @Override
+    public float getVerticalFieldOfView()
+    {
+    	return 2.0f*(float)Math.atan2(height, 2*fy);
+    }
+    
+    @Override
     public Matrix4 getProjectionMatrix(float nearPlane, float farPlane)
     {
-    	return Matrix4.perspective(2.0f*(float)Math.atan2(height, 2*fy), width/height, nearPlane, farPlane);
+    	return Matrix4.perspective(this.getVerticalFieldOfView(), this.getAspectRatio(), nearPlane, farPlane);
     }
     
     @Override

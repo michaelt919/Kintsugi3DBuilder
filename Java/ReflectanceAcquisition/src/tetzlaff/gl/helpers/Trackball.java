@@ -42,7 +42,7 @@ public class Trackball implements CameraController, CursorPositionListener, Mous
 		this.oldLogScale = 0.0f;
 		this.logScale = 0.0f;
 		this.scale = 1.0f;
-		this.cameraPosition = new Vector3(0.0f, 0.0f, 5.0f);
+		this.cameraPosition = new Vector3(0.0f, 0.0f, 1.0f);
 	}
 	
 	public Trackball(float sensitivity)

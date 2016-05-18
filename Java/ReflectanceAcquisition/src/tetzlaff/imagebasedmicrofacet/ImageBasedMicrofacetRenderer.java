@@ -205,13 +205,21 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	
 	private void setupLight(int lightIndex)
 	{
-		Matrix4 lightMatrix = lightController.getLightMatrix(lightIndex)
-				.times(Matrix4.scale(1.0f / ulfRenderer.getLightField().proxy.getBoundingRadius()))
-    			.times(Matrix4.translate(ulfRenderer.getLightField().proxy.getCentroid().negated()));
+    	float scale = new Vector3(microfacetField.ulf.viewSet.getCameraPose(0).times(new Vector4(microfacetField.ulf.proxy.getCentroid(), 1.0f))).length();
+
+		Matrix4 lightMatrix = Matrix4.scale(scale)
+			.times(lightController.getLightMatrix(lightIndex))
+			.times(Matrix4.scale(1.0f / scale))
+			.times(new Matrix4(new Matrix3(microfacetField.ulf.viewSet.getCameraPose(0))))
+			.times(Matrix4.translate(microfacetField.ulf.proxy.getCentroid().negated()));
 		
 		float lightDist = new Vector3(lightMatrix.times(new Vector4(this.microfacetField.ulf.proxy.getCentroid(), 1.0f))).length();
 		
-		Matrix4 lightProjection = Matrix4.perspective(2.0f * (float)Math.atan(1.0f / lightDist), 1.0f, lightDist - 1.0f, lightDist + 1.0f);
+		float radius = this.microfacetField.ulf.proxy.getBoundingRadius();
+		
+		Matrix4 lightProjection = Matrix4.perspective(2.0f * (float)Math.atan(radius / lightDist), 1.0f, 
+				lightDist - radius,
+				lightDist + radius);
 		
 		shadowProgram.setUniform("model_view", lightMatrix);
 		shadowProgram.setUniform("projection", lightProjection);
@@ -225,11 +233,10 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		program.setUniform("lightPosVirtual[" + lightIndex + "]", lightPos);
 		
 		Vector3 controllerLightIntensity = lightController.getLightColor(lightIndex);
+		float lightDistance = new Vector3(lightMatrix.times(new Vector4(microfacetField.ulf.proxy.getCentroid(), 1.0f))).length();
 		
 		program.setUniform("lightIntensityVirtual[" + lightIndex + "]", 
-				controllerLightIntensity.times(
-					ulfRenderer.getLightField().proxy.getBoundingRadius() 
-					* ulfRenderer.getLightField().proxy.getBoundingRadius()));
+				controllerLightIntensity.times(lightDistance * lightDistance * microfacetField.ulf.viewSet.getLightIntensity(0).y / (scale * scale)));
 		program.setUniform("lightMatrixVirtual[" + lightIndex + "]", lightProjection.times(lightMatrix));
 		program.setUniform("virtualLightCount", Math.min(4, lightController.getLightCount()));
 		

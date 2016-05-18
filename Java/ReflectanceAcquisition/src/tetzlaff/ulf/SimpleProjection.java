@@ -29,6 +29,18 @@ public class SimpleProjection implements Projection
 		this.aspectRatio = aspectRatio;
 		this.verticalFieldOfView = verticalFieldOfView;
 	}
+	
+	@Override
+	public float getVerticalFieldOfView()
+	{
+		return verticalFieldOfView;
+	}
+	
+	@Override
+	public float getAspectRatio()
+	{
+		return aspectRatio;
+	}
 
 	@Override
 	public Matrix4 getProjectionMatrix(float nearPlane, float farPlane) 

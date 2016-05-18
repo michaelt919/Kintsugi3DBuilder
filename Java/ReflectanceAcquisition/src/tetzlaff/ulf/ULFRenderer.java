@@ -290,15 +290,18 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	
     	this.setupForDraw();
     	
-    	mainRenderable.program().setUniform("model_view", 
-			cameraController.getViewMatrix()
-			//	.times(Matrix4.scale(1.0f / lightField.proxy.getBoundingRadius()))
-			//	.times(Matrix4.scale(1.0f / new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length()))
-			//	.times(new Matrix4(new Matrix3(lightField.viewSet.getCameraPose(0))))
-				.times(Matrix4.translate(lightField.proxy.getCentroid().negated())) // Model
-		);
+    	float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length();
+
+    	mainRenderable.program().setUniform("model_view", Matrix4.scale(scale)
+    			.times(cameraController.getViewMatrix())
+    			.times(Matrix4.scale(1.0f / scale))
+    			.times(new Matrix4(new Matrix3(lightField.viewSet.getCameraPose(0))))
+    			.times(Matrix4.translate(lightField.proxy.getCentroid().negated())));
     	
-    	mainRenderable.program().setUniform("projection", Matrix4.perspective((float)Math.PI / 8, (float)size.width / (float)size.height, 0.01f, 100.0f));
+    	mainRenderable.program().setUniform("projection", Matrix4.perspective(
+    			lightField.viewSet.getCameraProjection(0).getVerticalFieldOfView(), 
+    			(float)size.width / (float)size.height, 
+    			0.01f * scale, 100.0f * scale));
     	
         FramebufferObject<ContextType> offscreenFBO;
         
