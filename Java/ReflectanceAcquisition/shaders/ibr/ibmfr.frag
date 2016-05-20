@@ -39,29 +39,38 @@ uniform sampler1D inverseLuminanceMap;
 
 uniform sampler2DArray shadowMaps;
 
-vec3 computeFresnelReflectivity(vec3 specularColor, vec3 grazingColor, float hDotV)
+vec3 computeFresnelReflectivityActual(vec3 specularColor, vec3 grazingColor, float hDotV)
 {
-    // float f0 = dot(specularColor, vec3(0.2126, 0.7152, 0.0722));
-    // float sqrtF0 = sqrt(f0);
-    // float ior = (1 + sqrtF0) / (1 - sqrtF0);
-    // float g = sqrt(ior*ior + hDotV * hDotV - 1);
-    // float fresnel = 0.5 * pow(g - hDotV, 2) / pow(g + hDotV, 2)
-        // * (1 + pow(hDotV * (g + hDotV) - 1, 2) / pow(hDotV * (g - hDotV) + 1, 2));
+    float maxLuminance = dot(grazingColor, vec3(0.2126, 0.7152, 0.0722));
+    float f0 = dot(specularColor, vec3(0.2126, 0.7152, 0.0722)) / maxLuminance;
+    float sqrtF0 = sqrt(f0);
+    float ior = (1 + sqrtF0) / (1 - sqrtF0);
+    float g = sqrt(ior*ior + hDotV * hDotV - 1);
+    float fresnel = 0.5 * pow(g - hDotV, 2) / pow(g + hDotV, 2)
+        * (1 + pow(hDotV * (g + hDotV) - 1, 2) / pow(hDotV * (g - hDotV) + 1, 2));
         
-    return specularColor + (grazingColor - specularColor) * pow(max(0.0, 1.0 - hDotV), 5.0);//max(0, fresnel - f0) / (1.0 - f0);
+    return specularColor + (grazingColor - specularColor) * max(0, fresnel - f0) / (1.0 - f0);
 }
 
-float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
+vec3 computeFresnelReflectivitySchlick(vec3 specularColor, vec3 grazingColor, float hDotV)
 {
-	return 1.0 / (1.0 - pow(max(0.0, dot(targetDir, sampleDir)), weightExponent)) - 1.0;
+    return specularColor + (grazingColor - specularColor) * pow(max(0.0, 1.0 - hDotV), 5.0);
 }
 
-float computeGeometricAttenuation(float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
+vec3 fresnel(vec3 specularColor, vec3 grazingColor, float hDotV)
+{
+    return computeFresnelReflectivityActual(specularColor, grazingColor, hDotV);
+    //return computeFresnelReflectivitySchlick(specularColor, grazingColor, hDotV);
+}
+
+float computeGeometricAttenuationVCavity(
+    float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
 {
     return min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
 }
 
-float computeGeometricAttenuationSmith(float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
+float computeGeometricAttenuationSmith(
+    float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
 {
     float aV = 1.0 / (roughness * sqrt(1.0 - nDotV * nDotV) / nDotV);
     float aVSq = aV * aV;
@@ -72,6 +81,41 @@ float computeGeometricAttenuationSmith(float roughness, float nDotH, float nDotV
             * (aL < 1.6 ? (3.535 * aL + 2.181 * aLSq) / (1 + 2.276 * aL + 2.577 * aLSq) : 1.0);
         // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
         // for this formula
+}
+
+float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
+{
+    //return nDotV * nDotL;
+    //return computeGeometricAttenuationVCavity(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+    return computeGeometricAttenuationSmith(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+}
+
+float computeMicrofacetDistributionBeckmann(float nDotH, float roughness)
+{
+    float nDotHSquared = nDotH * nDotH;
+    float roughnessSquared = roughness * roughness;
+    
+    return exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
+            / (PI * nDotHSquared * nDotHSquared * roughnessSquared);
+}
+
+float computeMicrofacetDistributionPhong(float nDotH, float roughness)
+{
+    float nDotHSquared = nDotH * nDotH;
+    float roughnessSquared = roughness * roughness;
+    
+    return max(0.0, pow(nDotH, 2 / roughnessSquared - 2) / (PI * roughnessSquared));
+}
+
+float dist(float nDotH, float roughness)
+{
+    return computeMicrofacetDistributionBeckmann(nDotH, roughness);
+    //return computeMicrofacetDistributionPhong(nDotH, roughness);
+}
+
+float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
+{
+	return 1.0 / (1.0 - pow(max(0.0, dot(targetDir, sampleDir)), weightExponent)) - 1.0;
 }
 
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float maxLuminance)
@@ -86,17 +130,6 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
         vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
         return vec4(remainder, originalColor.a);
     }
-}
-
-float computeMicrofacetDistribution(float nDotH, float roughness)
-{
-    float nDotHSquared = nDotH * nDotH;
-    float roughnessSquared = roughness * roughness;
-    
-    return
-        //max(0.0, pow(nDotH, 2 / roughnessSquared - 2) / (PI * roughnessSquared));
-        exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
-            / (PI * nDotHSquared * nDotHSquared * roughnessSquared);
 }
 
 vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 normalDir, 
@@ -125,20 +158,13 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
     
         vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity / lightDistSquared;
         
-        //float mfd = computeMicrofacetDistribution(nDotH, roughness);
-        
-        float geomAtten = 
-                        //nDotL * nDotV;
-                        computeGeometricAttenuation(nDotH, nDotV, nDotL, hDotV, hDotL);
+        float geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
         if (geomAtten > 0.0)
         {
             vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-            //vec3 precomputedSample = vec3(getLuminance(specularResid.rgb / specularColor))
-            //vec3 precomputedSample = specularResid.rgb / specularColor
-            vec4 precomputedSample = getLuminance(specularColor) * vec4(specularResid.rgb * 4 * nDotV * lightDistSquared / lightIntensity, 
-            sampleColor.a 
-            //    * mfd 
-                * geomAtten);
+            vec4 precomputedSample = vec4(specularResid.rgb 
+                * 4 * nDotV * lightDistSquared / lightIntensity, 
+                sampleColor.a * geomAtten);
             
             vec3 virtualViewDir = normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
             
@@ -150,8 +176,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
 
                 // Compute sample weight
                 float weight = computeSampleWeight(virtualHalfDir, sampleHalfDir);
-                    //computeSampleWeight(vec3(dot(normalDirCameraSpace, virtualHalfDir) / sqrt(3.0)), vec3(nDotH) / sqrt(3.0));
-                result[lightPass] = weight * precomputedSample ;//, sampleColor.a * mfd;
+                result[lightPass] = weight * precomputedSample ;
             }
         }
         
@@ -168,7 +193,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
     }
 }
 
-vec3[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(
+vec3[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
     vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness)
 {
     float maxLuminance = getMaxLuminance();
@@ -205,37 +230,37 @@ vec3[MAX_VIRTUAL_LIGHT_COUNT] computeMicrofacetDistributions(
 	return results;
 }
 
-vec4 tonemap(vec3 color, float alpha)
-{
-    if (useInverseLuminanceMap)
-    {
-        if (color.r <= 0.0 && color.g <= 0.0 && color.b <= 0.0)
-        {
-            fragColor = vec4(0.0, 0.0, 0.0, 1.0);
-        }
-        else
-        {
-            // Step 1: convert to CIE luminance
-            // Clamp to 1 so that the ratio computed in step 3 is well defined
-            // if the luminance value somehow exceeds 1.0
-            float luminance = min(0.5, getLuminance(color));
+// vec4 tonemap(vec3 color, float alpha)
+// {
+    // if (useInverseLuminanceMap)
+    // {
+        // if (color.r <= 0.0 && color.g <= 0.0 && color.b <= 0.0)
+        // {
+            // fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        // }
+        // else
+        // {
+            // // Step 1: convert to CIE luminance
+            // // Clamp to 1 so that the ratio computed in step 3 is well defined
+            // // if the luminance value somehow exceeds 1.0
+            // float luminance = getLuminance(color);
+            // float scaledLuminance = min(1.0, luminance / getMaxLuminance());
             
-            // Step 2: determine the ratio between the tonemapped and linear luminance
-            // Remove implicit gamma correction from the lookup table
-            float scale = //pow(texture(inverseLuminanceMap, luminance).r, gamma) / luminance;
-                1.0 / getMaxLuminance();
+            // // Step 2: determine the ratio between the tonemapped and linear luminance
+            // // Remove implicit gamma correction from the lookup table
+            // float scale = pow(texture(inverseLuminanceMap, scaledLuminance).r, gamma) / luminance;
                 
-            // Step 3: return the color, scaled to have the correct luminance,
-            // but the original saturation and hue.
-            // Step 4: apply gamma correction
-            return vec4(pow(color * scale, vec3(1.0 / gamma)), alpha);
-        }
-    }
-    else
-    {
-        return vec4(pow(color, vec3(1.0 / gamma)), alpha);
-    }
-}
+            // // Step 3: return the color, scaled to have the correct luminance,
+            // // but the original saturation and hue.
+            // // Step 4: apply gamma correction
+            // return vec4(pow(color * scale, vec3(1.0 / gamma)), alpha);
+        // }
+    // }
+    // else
+    // {
+        // return vec4(pow(color, vec3(1.0 / gamma)), alpha);
+    // }
+// }
 
 void main()
 {
@@ -286,8 +311,7 @@ void main()
         roughness = 0.1; // TODO pass in a default?
     }
     
-    vec3[] microfacetDistributions = 
-        computeMicrofacetDistributions(diffuseColor, normalDir, specularColor, roughness);
+    vec3[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
     vec3 reflectance = vec3(0.0);
     
     float nDotV = dot(normalDir, viewDir);
@@ -313,31 +337,18 @@ void main()
                 float hDotL = dot(halfDir, lightDir);
                 float nDotH = dot(normalDir, halfDir);
                 
-                float mfd = computeMicrofacetDistribution(nDotH, roughness);
+                //vec3 mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
+                vec3 mfdFresnel = fresnel(weightedAverages[i], 
+                    vec3(getLuminance(weightedAverages[i] / specularColor)), 
+                    hDotV);
             
                 reflectance += (nDotL * diffuseColor + 
-                        //mfd *
-                        //nDotV * 
-                        //computeGeometricAttenuationSmith(roughness, nDotH, nDotV, nDotL, hDotV, hDotL)
-                        computeGeometricAttenuation(nDotH, nDotV, nDotL, hDotV, hDotL)
-                        //nDotL * nDotV
-                        * computeFresnelReflectivity(
-                            //vec3(1,0,0),
-                            //vec3(0,1,0),
-                            //vec3(0.5),
-                            //specularColor * mfd,
-                            microfacetDistributions[i],
-                            //microfacetDistributions[i],
-                            vec3(getLuminance(microfacetDistributions[i] / specularColor)), 
-                            //vec3(getLuminance(microfacetDistributions[i] / specularColor)), 
-                            //vec3(mfd),
-                            hDotV)
-                        / (4 * nDotV)
-                    )
-                    * 0.01 * lightIntensityVirtual[i] / dot(lightDirUnNorm, lightDirUnNorm);
+                    mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV))
+                    * lightIntensityVirtual[i] / dot(lightDirUnNorm, lightDirUnNorm);
             }
         }
     }
     
-    fragColor = tonemap(reflectance, 1.0);
+    fragColor = vec4(pow(reflectance / getMaxLuminance(), vec3(1.0 / gamma)), 1.0);
+       // tonemap(reflectance, 1.0);
 }
