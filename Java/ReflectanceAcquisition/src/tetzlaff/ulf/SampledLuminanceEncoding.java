@@ -68,7 +68,7 @@ public class SampledLuminanceEncoding
 		FloatVertexList sampledEncodeFunction = new FloatVertexList(1, 256);
 		for (int i = 0; i < 256; i++)
 		{
-			sampledEncodeFunction.set(i, 0, (float)encodeFunction.applyAsDouble((double)i / 255.0) / 255.0f);
+			sampledEncodeFunction.set(i, 0, (float)encodeFunction.applyAsDouble((double)i / 255.0 * decodeFunction.applyAsDouble(255.0)) / 255.0f);
 		}
 		
 		return sampledEncodeFunction;
