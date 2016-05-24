@@ -59,8 +59,8 @@ vec3 computeFresnelReflectivitySchlick(vec3 specularColor, vec3 grazingColor, fl
 
 vec3 fresnel(vec3 specularColor, vec3 grazingColor, float hDotV)
 {
-    return computeFresnelReflectivityActual(specularColor, grazingColor, hDotV);
-    //return computeFresnelReflectivitySchlick(specularColor, grazingColor, hDotV);
+    //return computeFresnelReflectivityActual(specularColor, grazingColor, hDotV);
+    return computeFresnelReflectivitySchlick(specularColor, grazingColor, hDotV);
 }
 
 float computeGeometricAttenuationVCavity(
@@ -337,10 +337,17 @@ void main()
                 float hDotL = dot(halfDir, lightDir);
                 float nDotH = dot(normalDir, halfDir);
                 
-                //vec3 mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
-                vec3 mfdFresnel = fresnel(weightedAverages[i], 
-                    vec3(getLuminance(weightedAverages[i] / specularColor)), 
-                    hDotV);
+                vec3 mfdFresnel;
+                float residLuminance = getLuminance(weightedAverages[i]);
+                if (residLuminance <= 0.0)
+                {
+                    mfdFresnel = vec3(0,0,0);
+                }
+                else
+                {
+                    mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(residLuminance), hDotV));
+                    //mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
+                }
             
                 reflectance += (nDotL * diffuseColor + 
                     mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV))

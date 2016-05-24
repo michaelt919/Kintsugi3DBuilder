@@ -351,7 +351,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		}
 		
 		// Luminance map texture
-		if (linearLuminanceValues != null && encodedLuminanceValues != null)
+		if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
 		{
 			this.linearLuminanceValues = linearLuminanceValues;
 			this.encodedLuminanceValues = encodedLuminanceValues;
