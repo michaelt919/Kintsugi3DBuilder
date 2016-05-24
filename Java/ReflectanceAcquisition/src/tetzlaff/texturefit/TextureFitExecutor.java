@@ -42,7 +42,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
 	// Debug parameters
 	private static final boolean DEBUG = false;
-	private static final boolean SKIP_DIFFUSE_FIT = true;
+	private static final boolean SKIP_DIFFUSE_FIT = false;
 	private static final boolean SKIP_SPECULAR_FIT = false;
 	
 	private final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
