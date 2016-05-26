@@ -311,8 +311,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		String camDefFilename = QFileDialog.getOpenFileName(this,
 									"Select a camera definition file", lastDir.getAbsolutePath(),
 									new Filter("Agisoft Photoscan XML (*.xml);;" +
-											   "View Set Files (*.vset);;" +
-											   "Zip Archive (*.zip)"));
+											   "View Set Files (*.vset)"));
 		if(camDefFilename.isEmpty()) return;
 
 		try
