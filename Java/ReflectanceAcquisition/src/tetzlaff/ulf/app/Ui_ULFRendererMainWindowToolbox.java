@@ -235,7 +235,6 @@ public class Ui_ULFRendererMainWindowToolbox implements com.trolltech.qt.QUiForm
 
         multisamplingCheckBox = new QCheckBox(renderingOptionsPage);
         multisamplingCheckBox.setObjectName("multisamplingCheckBox");
-        multisamplingCheckBox.setChecked(true);
 
         horizontalLayout_2.addWidget(multisamplingCheckBox);
 
