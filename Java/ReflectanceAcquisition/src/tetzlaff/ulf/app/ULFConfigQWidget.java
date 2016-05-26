@@ -217,6 +217,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 				gui.kNeighborCountSpinBox.setValue(model.getSelectedItem().getKNeighborCount());
 				
 				model.getSelectedItem().setHalfResolution(gui.halfResCheckBox.isChecked());
+				model.getSelectedItem().setMultisampling(gui.multisamplingCheckBox.isChecked());
 				model.getSelectedItem().setVisualizeCameras(gui.showCamerasCheckBox.isChecked());
 
 				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
@@ -511,6 +512,14 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	{
 		if(blockSignals) { return; }
 		model.getSelectedItem().setHalfResolution(isChecked);
+	}
+
+	// Add listener for changes to multisampling checkbox.
+	@SuppressWarnings("unused")
+	private void on_multisamplingCheckBox_toggled(boolean isChecked)
+	{
+		if(blockSignals) { return; }
+		model.getSelectedItem().setMultisampling(isChecked);
 	}
 
 	// Add listener for changes to occlusion checkbox.

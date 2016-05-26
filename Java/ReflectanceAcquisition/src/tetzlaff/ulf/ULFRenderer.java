@@ -43,6 +43,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private boolean kNeighborsEnabled;
     private int kNeighborCount;
     
+    private boolean multisamplingEnabled;
     private boolean halfResEnabled;
     private FramebufferObject<ContextType> halfResFBO;
     private Program<ContextType> simpleTexProgram;
@@ -245,6 +246,16 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     @Override
     public boolean draw()
     {
+		context.makeContextCurrent();
+		if(multisamplingEnabled && !halfResEnabled)
+		{
+			context.enableMultisampling();
+		}
+		else
+		{
+			context.disableMultisampling();			
+		}
+    	
     	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
     	FramebufferSize size = framebuffer.getSize();
     			
@@ -504,6 +515,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	
 	private void resample() throws IOException
 	{
+		context.makeContextCurrent();
+		context.disableMultisampling();	
+		
 		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, new ViewSetImageOptions(null, false, false, false), context, null);
 		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleWidth, resampleHeight).addColorAttachment().createFramebufferObject();
     	
@@ -571,15 +585,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	@Override
 	public void setMultisampling(boolean multisamplingEnabled)
 	{
-		context.makeContextCurrent();
-		if(multisamplingEnabled)
-		{
-			context.enableMultisampling();
-		}
-		else
-		{
-			context.disableMultisampling();			
-		}
+		this.multisamplingEnabled = multisamplingEnabled;
 	}
 
 	@Override
