@@ -91,7 +91,7 @@ SpecularFit fitSpecular()
             vec4 colorRemainder = removeDiffuse(color, diffuseColor, lightNormalized, attenuatedLightIntensity, diffuseNormal);
             float intensity = colorRemainder.r / attenuatedLightIntensity.r + 
                                 colorRemainder.g / attenuatedLightIntensity.g + 
-                                colorRemainder.b / attenuatedLightIntensity,b;
+                                colorRemainder.b / attenuatedLightIntensity.b;
             
             vec3 half = normalize(view + lightNormalized);
             float nDotH = dot(half, diffuseNormal);

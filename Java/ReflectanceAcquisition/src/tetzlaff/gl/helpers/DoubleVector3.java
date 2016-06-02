@@ -87,6 +87,14 @@ public class DoubleVector3
 			this.x * other.y - this.y * other.x
 		);
 	}
+	public DoubleMatrix3 outerProduct(DoubleVector3 other)
+	{
+		return new DoubleMatrix3(
+			this.x * other.x, this.y * other.x, this.z * other.x,
+			this.x * other.y, this.y * other.y, this.z * other.y,
+			this.x * other.z, this.y * other.z, this.z * other.z
+		);
+	}
 	
 	public double length()
 	{

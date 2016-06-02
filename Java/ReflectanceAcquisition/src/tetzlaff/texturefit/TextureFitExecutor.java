@@ -3,8 +3,10 @@ package tetzlaff.texturefit;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Date;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.IntToDoubleFunction;
@@ -30,7 +32,11 @@ import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
+import tetzlaff.gl.helpers.DoubleMatrix3;
+import tetzlaff.gl.helpers.DoubleVector2;
+import tetzlaff.gl.helpers.DoubleVector3;
 import tetzlaff.gl.helpers.FloatVertexList;
+import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
@@ -859,7 +865,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					final int K = k;
 					final int L = l;
 					
-					SpecularParams specularParams = computeSpecularParams(directionalRes, Math.sqrt(0.5), (j) -> solution[0][j][K][L][0], (j) -> solution[0][j][K][L][3]);
+					SpecularParams specularParams = computeSpecularParams(directionalRes, Math.sqrt(0.5), (j) -> solution[0][j][K][L][0], (j) -> solution[0][j][K][L][3], new File(outputDir, "mfd.csv"));
 					
 					if (specularParams != null)
 					{
@@ -972,8 +978,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		}
 	}
 	
-	private static SpecularParams computeSpecularParams(int directionalRes, double nDotHStart, IntToDoubleFunction residualLookup, IntToDoubleFunction alphaLookup)
+	private static SpecularParams computeSpecularParams(int directionalRes, double nDotHStart, IntToDoubleFunction residualLookup, IntToDoubleFunction alphaLookup, File mfdFile) throws IOException
 	{
+		PrintStream mfdStream = new PrintStream(mfdFile);
+		
 		// Integral of Specular reflectivity
 		// 		times microfacet probability
 		//		times microfacet slope squared
@@ -984,36 +992,44 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		// Integral to find Specular reflectivity (low res)
 		double specularReflectivitySum = 0.0;
 		
-		double lastAlpha;
+		double alpha;
 		
 		// In case the first step(s) are missing
 		int j = 0;
 		do
 		{
-			lastAlpha = alphaLookup.applyAsDouble(j);
+			alpha = alphaLookup.applyAsDouble(j);
 			j++;
 		}
-		while (j < directionalRes && lastAlpha == 0.0);
+		while (j < directionalRes && alpha == 0.0);
 		
-		double lastWeight = residualLookup.applyAsDouble(j-1);
+		double lastWeight = residualLookup.applyAsDouble(j);
 		
-		double coord = (double)(j - 1) / (double)(directionalRes - 1);
+		double coord = (double)j / (double)(directionalRes - 1);
 		double lastNDotH = coord + (1 - coord) * nDotHStart;
+		
+		mfdStream.print(lastNDotH + ",");
+		mfdStream.print(lastWeight + ",");
+		mfdStream.println(alpha);
 		
 		specularWeightedSlopeSum += lastWeight * (1 / lastNDotH - lastNDotH) * (lastNDotH - nDotHStart);
 		specularReflectivitySum += lastWeight * lastNDotH * (lastNDotH - nDotHStart);
 		
 		int intervalCount = 0;
 		
-		for ( ; j < directionalRes; j++)
+		for (j++; j < directionalRes; j++)
 		{
-			double alpha = alphaLookup.applyAsDouble(j);
+			alpha = alphaLookup.applyAsDouble(j);
 			
 			if (alpha > 0.0)
 			{
 				coord = (double)j / (double)(directionalRes - 1);
 				double nDotH = coord + (1 - coord) * nDotHStart;
 				double weight = Math.max(0.0, residualLookup.applyAsDouble(j));
+
+				mfdStream.print(nDotH + ",");
+				mfdStream.print(weight + ",");
+				mfdStream.println(alpha);
 				
 				// Trapezoidal rule for integration
 				specularWeightedSlopeSum += (weight * (1 / nDotH - nDotH) + lastWeight * (1 / lastNDotH - lastNDotH)) / 2 * (nDotH - lastNDotH);
@@ -1023,7 +1039,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				
 				lastWeight = weight;
 				lastNDotH = nDotH;
-				lastAlpha = alpha;
 			}
 		}
 		
@@ -1031,14 +1046,60 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		specularWeightedSlopeSum += lastWeight * (1 / lastNDotH - lastNDotH) * (1.0 - lastNDotH);
 		specularReflectivitySum += lastWeight * lastNDotH * (1.0 - lastNDotH);
 		
+		mfdStream.close();
+		
 		if (intervalCount > 0 && specularReflectivitySum > 0.0 && specularWeightedSlopeSum > 0.0)
 		{
 			double roughnessSq = specularWeightedSlopeSum / specularReflectivitySum;
-			double roughness = Math.sqrt(roughnessSq);
 			
 			// Assuming scaling by 1 / pi
 			double reflectivity = 2 * specularReflectivitySum;
 			
+			double diffuseEst = 0.0;
+			
+			// Solving for parameter vector: [ roughness^2, reflectivity, diffuse ]
+			DoubleMatrix3 jacobianSquared = new DoubleMatrix3(0.0f);
+			DoubleVector3 jacobianTimesResiduals = new DoubleVector3(0.0f);
+			
+			int i = 0;
+			double deltaRoughnessSq;
+			double deltaReflectivity;
+			do
+			{
+				for (j = 0; j < directionalRes; j++)
+				{
+					alpha = alphaLookup.applyAsDouble(j);
+					if (alpha > 0.0)
+					{
+						coord = (double)j / (double)(directionalRes - 1);
+						double nDotH = coord + (1 - coord) * nDotHStart;
+						double nDotHSquared = nDotH * nDotH;
+						
+						// Scaled by pi
+						double mfdEst = Math.exp((nDotHSquared - 1) / (nDotHSquared * roughnessSq))
+								/ (roughnessSq * nDotHSquared * nDotHSquared);
+						
+						double mfdDeriv = -mfdEst * (nDotHSquared * (roughnessSq + 1) - 1) 
+								/ (roughnessSq * roughnessSq * nDotHSquared);
+						
+						double residual = residualLookup.applyAsDouble(j) - diffuseEst - reflectivity * mfdEst;
+						
+						DoubleVector3 derivs = new DoubleVector3(reflectivity * mfdDeriv, mfdEst, 1.0);
+						
+						jacobianSquared = jacobianSquared.plus(derivs.outerProduct(derivs));
+						jacobianTimesResiduals = jacobianTimesResiduals.plus(derivs.times(residual));
+					}
+				}
+				
+				DoubleVector3 paramDelta = jacobianSquared.inverse().times(jacobianTimesResiduals);
+				deltaRoughnessSq = paramDelta.x;
+				deltaReflectivity = paramDelta.y;
+				roughnessSq += deltaRoughnessSq;
+				reflectivity += deltaReflectivity;
+			}
+			while(++i < 100 && new DoubleVector2(deltaRoughnessSq / roughnessSq, deltaReflectivity / reflectivity).length() < 0.001);
+
+			double roughness = Math.sqrt(roughnessSq);
 			return new SpecularParams(reflectivity, roughness);
 		}
 		else
@@ -1134,7 +1195,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	System.out.println("Completed " + (k+1) + "/" + viewSet.getCameraPoseCount() + " views...");
 		}
 		
-		return computeSpecularParams(directionalRes, Math.sqrt(0.5), (j) -> reflectanceSums[j] / weightSums[j], (j) -> 1.0);
+		return computeSpecularParams(directionalRes, Math.sqrt(0.5), (j) -> reflectanceSums[j] / weightSums[j], (j) -> 1.0, new File(outputDir, "mfd.csv"));
 	}
 	
 	private void loadMesh() throws IOException
