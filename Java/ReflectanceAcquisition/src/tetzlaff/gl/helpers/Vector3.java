@@ -138,13 +138,27 @@ public class Vector3
 	}
 	
 	/**
-	 * Compute the dot product (scaler product) of this vector and another given vector.
+	 * Compute the dot product (scalar product) of this vector and another given vector.
 	 * @param other The vector to use when computing the dot product.
-	 * @return A scaler value equal to the sum of x1*x2, y1*y2 and z1*z2.
+	 * @return A scalar value equal to the sum of x1*x2, y1*y2 and z1*z2.
 	 */
 	public float dot(Vector3 other)
 	{
 		return this.x * other.x + this.y * other.y + this.z * other.z;
+	}
+	
+	/**
+	 * Compute the outer product of this vector and another given vector.
+	 * @param other The vector to use when computing the outer product.
+	 * @return The matrix that is the outer product of the vectors.
+	 */
+	public Matrix3 outerProduct(Vector3 other)
+	{
+		return new Matrix3(
+			this.x * other.x, this.y * other.x, this.z * other.x,
+			this.x * other.y, this.y * other.y, this.z * other.y,
+			this.x * other.z, this.y * other.z, this.z * other.z
+		);
 	}
 	
 	/**
