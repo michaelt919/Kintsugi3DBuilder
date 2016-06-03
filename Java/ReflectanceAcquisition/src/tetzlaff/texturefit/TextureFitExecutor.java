@@ -48,7 +48,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
 	// Debug parameters
 	private static final boolean DEBUG = false;
-	private static final boolean SKIP_DIFFUSE_FIT = false;
+	private static final boolean SKIP_DIFFUSE_FIT = true;
 	private static final boolean SKIP_SPECULAR_FIT = false;
 	
 	private final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
@@ -978,6 +978,32 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		}
 	}
 	
+	private static double computeSumSqError(double roughnessSq, double reflectivity, double diffuseEst, int directionalRes, double nDotHStart, IntToDoubleFunction residualLookup, IntToDoubleFunction alphaLookup)
+	{
+		double sumSqError = 0.0;
+		
+		// Evaluate error
+		for (int j = 0; j < directionalRes; j++)
+		{
+			double alpha = alphaLookup.applyAsDouble(j);
+			if (alpha > 0.0)
+			{
+				double coord = (double)j / (double)(directionalRes - 1);
+				double nDotH = coord + (1 - coord) * nDotHStart;
+				double nDotHSquared = nDotH * nDotH;
+				
+				// Scaled by pi
+				double mfdEst = Math.exp((nDotHSquared - 1) / (nDotHSquared * roughnessSq))
+						/ (roughnessSq * nDotHSquared * nDotHSquared);
+				
+				double error = residualLookup.applyAsDouble(j) - diffuseEst - reflectivity * mfdEst;
+				sumSqError += error * error;
+			}
+		}
+		
+		return sumSqError;
+	}
+	
 	private static SpecularParams computeSpecularParams(int directionalRes, double nDotHStart, IntToDoubleFunction residualLookup, IntToDoubleFunction alphaLookup, File mfdFile) throws IOException
 	{
 		PrintStream mfdStream = new PrintStream(mfdFile);
@@ -1057,6 +1083,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			
 			double diffuseEst = 0.0;
 			
+			double sumSqError;
+			double nextSumSqError = computeSumSqError(roughnessSq, reflectivity, diffuseEst, directionalRes, nDotHStart, residualLookup, alphaLookup);
+			
 			// Solving for parameter vector: [ roughness^2, reflectivity, diffuse ]
 			DoubleMatrix3 jacobianSquared = new DoubleMatrix3(0.0f);
 			DoubleVector3 jacobianTimesResiduals = new DoubleVector3(0.0f);
@@ -1064,8 +1093,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			int i = 0;
 			double deltaRoughnessSq;
 			double deltaReflectivity;
+			double deltaDiffuseEst;
+			double shiftFraction = 1.0;
+			
 			do
 			{
+				sumSqError = nextSumSqError;
+				
 				for (j = 0; j < directionalRes; j++)
 				{
 					alpha = alphaLookup.applyAsDouble(j);
@@ -1091,13 +1125,50 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					}
 				}
 				
+				DoubleMatrix3 jacobianSquaredInverse = jacobianSquared.inverse();
+				DoubleMatrix3 identityTest = jacobianSquaredInverse.times(jacobianSquared);
+				
 				DoubleVector3 paramDelta = jacobianSquared.inverse().times(jacobianTimesResiduals);
-				deltaRoughnessSq = paramDelta.x;
-				deltaReflectivity = paramDelta.y;
-				roughnessSq += deltaRoughnessSq;
-				reflectivity += deltaReflectivity;
+				deltaRoughnessSq = shiftFraction * paramDelta.x;
+				deltaReflectivity = shiftFraction * paramDelta.y;
+				deltaDiffuseEst = shiftFraction * paramDelta.z;
+				double nextRoughnessSq = roughnessSq + deltaRoughnessSq;
+				double nextReflectivity = reflectivity + deltaReflectivity;
+				double nextDiffuseEst = diffuseEst + deltaDiffuseEst;
+				
+				while(nextRoughnessSq < 0.0 || nextReflectivity < 0.0)
+				{
+					shiftFraction /= 2;
+					deltaRoughnessSq /= 2;
+					deltaReflectivity /= 2;
+					deltaDiffuseEst /= 2;
+
+					nextRoughnessSq = roughnessSq + deltaRoughnessSq;
+					nextReflectivity = reflectivity + deltaReflectivity;
+					nextDiffuseEst = diffuseEst + deltaDiffuseEst;
+				}
+				
+				nextSumSqError = computeSumSqError(nextRoughnessSq, nextReflectivity, nextDiffuseEst, directionalRes, nDotHStart, residualLookup, alphaLookup);
+				
+				while(nextSumSqError >= sumSqError)
+				{
+					shiftFraction /= 2;
+					deltaRoughnessSq /= 2;
+					deltaReflectivity /= 2;
+					deltaDiffuseEst /= 2;
+
+					nextRoughnessSq = roughnessSq + deltaRoughnessSq;
+					nextReflectivity = reflectivity + deltaReflectivity;
+					nextDiffuseEst = diffuseEst + deltaDiffuseEst;
+					
+					nextSumSqError = computeSumSqError(nextRoughnessSq, nextReflectivity, nextDiffuseEst, directionalRes, nDotHStart, residualLookup, alphaLookup);
+				}
+				
+				roughnessSq = nextRoughnessSq;
+				reflectivity = nextReflectivity;
+				diffuseEst = nextDiffuseEst;
 			}
-			while(++i < 100 && new DoubleVector2(deltaRoughnessSq / roughnessSq, deltaReflectivity / reflectivity).length() < 0.001);
+			while(++i < 100 && (sumSqError - nextSumSqError) / sumSqError > 0.001);
 
 			double roughness = Math.sqrt(roughnessSq);
 			return new SpecularParams(reflectivity, roughness);
