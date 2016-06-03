@@ -364,7 +364,7 @@ public class DoubleMatrix3
 	
 	/**
 	 * Gets the determinant of this matrix.
-	 * @return The determinant.
+	 * @return The matrix determinant.
 	 */
 	public double determinant()
 	{
@@ -373,6 +373,10 @@ public class DoubleMatrix3
 				+ this.m[0][2] * (this.m[1][0] * this.m[2][1] - this.m[2][0] * this.m[1][1]);
 	}
 	
+	/**
+	 * Gets the inverse of this matrix.
+	 * @return The matrix inverse.
+	 */
 	public DoubleMatrix3 inverse()
 	{
 		double det = this.determinant();
