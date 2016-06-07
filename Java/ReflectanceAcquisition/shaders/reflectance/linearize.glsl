@@ -26,6 +26,11 @@ float getMaxLuminance()
     }
 }
 
+float getMaxTonemappingScale()
+{
+	return 5.0;
+}
+
 vec3 linearizeColor(vec3 nonlinearColor)
 {
     if (useLuminanceMap)
@@ -39,20 +44,27 @@ vec3 linearizeColor(vec3 nonlinearColor)
             // Step 1: remove gamma correction
             vec3 colorGamma = pow(nonlinearColor, vec3(gamma));
             
-            // // Step 2: convert to CIE luminance
-            // // Clamp to 1 so that the ratio computed in step 3 is well defined
-            // // if the luminance value somehow exceeds 1.0
-            // float luminanceNonlinear = min(1.0, getLuminance(colorGamma));
-            
-            // // Step 3: determine the ratio between the linear and nonlinear luminance
-            // // Reapply gamma correction to the single luminance value
-            // float scale = texture(luminanceMap, pow(luminanceNonlinear, 1.0 / gamma)).r / luminanceNonlinear;
-                
-            // // Step 4: return the color, scaled to have the correct luminance,
-            // // but the original saturation and hue.
-            // return colorGamma * scale;
-            
-            return colorGamma * getMaxLuminance();
+            // Step 2: convert to CIE luminance
+            // Clamp to 1 so that the ratio computed in step 3 is well defined
+            // if the luminance value somehow exceeds 1.0
+            float luminanceNonlinear = getLuminance(colorGamma);
+			
+			float maxLuminance = getMaxLuminance();
+			
+			if (luminanceNonlinear > 1.0)
+			{
+				return colorGamma * maxLuminance;
+			}
+			else
+			{
+				// Step 3: determine the ratio between the linear and nonlinear luminance
+				// Reapply gamma correction to the single luminance value
+				float scale = min(getMaxTonemappingScale() * maxLuminance, texture(luminanceMap, pow(luminanceNonlinear, 1.0 / gamma)).r / luminanceNonlinear);
+					
+				// Step 4: return the color, scaled to have the correct luminance,
+				// but the original saturation and hue.
+				return colorGamma * scale;
+			}
         }
     }
     else

@@ -24,8 +24,8 @@ public class FirstPersonController implements CameraController, KeyPressListener
 	private float phi;
 	
 	private boolean ignoreSensitivity = false;
-	private float sensitivity = 0.1f;
-	private float speed = 0.1f;
+	private float sensitivity = 0.5f;
+	private float speed = 0.01f;
 	
 	public FirstPersonController()
 	{
