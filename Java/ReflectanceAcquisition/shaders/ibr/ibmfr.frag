@@ -42,7 +42,7 @@ uniform sampler2DArray shadowMaps;
 vec3 computeFresnelReflectivityActual(vec3 specularColor, vec3 grazingColor, float hDotV)
 {
     float maxLuminance = dot(grazingColor, vec3(0.2126, 0.7152, 0.0722));
-    float f0 = dot(specularColor, vec3(0.2126, 0.7152, 0.0722)) / maxLuminance;
+    float f0 = clamp(dot(specularColor, vec3(0.2126, 0.7152, 0.0722)) / maxLuminance, 0.001, 0.999);
     float sqrtF0 = sqrt(f0);
     float ior = (1 + sqrtF0) / (1 - sqrtF0);
     float g = sqrt(ior*ior + hDotV * hDotV - 1);
@@ -59,6 +59,7 @@ vec3 computeFresnelReflectivitySchlick(vec3 specularColor, vec3 grazingColor, fl
 
 vec3 fresnel(vec3 specularColor, vec3 grazingColor, float hDotV)
 {
+	//return specularColor;
     //return computeFresnelReflectivityActual(specularColor, grazingColor, hDotV);
     return computeFresnelReflectivitySchlick(specularColor, grazingColor, hDotV);
 }
@@ -86,8 +87,8 @@ float computeGeometricAttenuationSmith(
 float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
 {
     //return nDotV * nDotL;
-    //return computeGeometricAttenuationVCavity(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
-    return computeGeometricAttenuationSmith(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+    return computeGeometricAttenuationVCavity(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+    //return computeGeometricAttenuationSmith(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
 }
 
 float computeMicrofacetDistributionBeckmann(float nDotH, float roughness)
@@ -232,37 +233,45 @@ vec3[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
 	return results;
 }
 
-// vec4 tonemap(vec3 color, float alpha)
-// {
-    // if (useInverseLuminanceMap)
-    // {
-        // if (color.r <= 0.0 && color.g <= 0.0 && color.b <= 0.0)
-        // {
-            // fragColor = vec4(0.0, 0.0, 0.0, 1.0);
-        // }
-        // else
-        // {
-            // // Step 1: convert to CIE luminance
-            // // Clamp to 1 so that the ratio computed in step 3 is well defined
-            // // if the luminance value somehow exceeds 1.0
-            // float luminance = getLuminance(color);
-            // float scaledLuminance = min(1.0, luminance / getMaxLuminance());
-            
-            // // Step 2: determine the ratio between the tonemapped and linear luminance
-            // // Remove implicit gamma correction from the lookup table
-            // float scale = pow(texture(inverseLuminanceMap, scaledLuminance).r, gamma) / luminance;
-                
-            // // Step 3: return the color, scaled to have the correct luminance,
-            // // but the original saturation and hue.
-            // // Step 4: apply gamma correction
-            // return vec4(pow(color * scale, vec3(1.0 / gamma)), alpha);
-        // }
-    // }
-    // else
-    // {
-        // return vec4(pow(color, vec3(1.0 / gamma)), alpha);
-    // }
-// }
+vec4 tonemap(vec3 color, float alpha)
+{
+    if (useInverseLuminanceMap)
+    {
+        if (color.r <= 0.0 && color.g <= 0.0 && color.b <= 0.0)
+        {
+            fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        }
+        else
+        {
+            // Step 1: convert to CIE luminance
+            // Clamp to 1 so that the ratio computed in step 3 is well defined
+            // if the luminance value somehow exceeds 1.0
+            float luminance = getLuminance(color);
+			float maxLuminance = getMaxLuminance();
+			if (luminance >= maxLuminance)
+			{
+				return vec4(pow(color / maxLuminance, vec3(1.0 / gamma)), alpha);
+			}
+			else
+			{
+				float scaledLuminance = min(1.0, luminance / maxLuminance);
+				
+				// Step 2: determine the ratio between the tonemapped and linear luminance
+				// Remove implicit gamma correction from the lookup table
+				float scale = pow(texture(inverseLuminanceMap, scaledLuminance).r, gamma) / luminance;
+					
+				// Step 3: return the color, scaled to have the correct luminance,
+				// but the original saturation and hue.
+				// Step 4: apply gamma correction
+				return vec4(pow(color * scale, vec3(1.0 / gamma)), alpha);
+			}
+        }
+    }
+    else
+    {
+        return vec4(pow(color, vec3(1.0 / gamma)), alpha);
+    }
+}
 
 void main()
 {
@@ -340,15 +349,15 @@ void main()
                 float nDotH = dot(normalDir, halfDir);
                 
                 vec3 mfdFresnel;
-                float residLuminance = getLuminance(weightedAverages[i]);
-                if (residLuminance <= 0.0)
+                float grazingIntensity = getLuminance(weightedAverages[i] / specularColor);
+                if (grazingIntensity <= 0.0)
                 {
                     mfdFresnel = vec3(0,0,0);
                 }
                 else
                 {
-                    mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(residLuminance), hDotV));
-					//mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
+                    //mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(grazingIntensity), hDotV));
+					mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
                     //mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
                 }
             
@@ -359,6 +368,5 @@ void main()
         }
     }
     
-    fragColor = vec4(pow(reflectance / getMaxLuminance(), vec3(1.0 / gamma)), 1.0);
-       // tonemap(reflectance, 1.0);
+    fragColor = tonemap(reflectance, 1.0);
 }

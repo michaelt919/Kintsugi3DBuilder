@@ -64,16 +64,16 @@ public class HardcodedLightController implements LightController, OverrideableLi
 		{
 			return new Vector3(1.0f);
 		}
-//		else 
-//			if (i == 1)
-//		{
-//			return new Vector3((float)Math.pow(2.0, 1.2));
-//		}
-//		else 
-//			if (i == 2)
-//		{
-//			return new Vector3((float)Math.sqrt(2));
-//		}
+		else 
+			if (i == 1)
+		{
+			return new Vector3((float)Math.pow(2.0, 1.2));
+		}
+		else 
+			if (i == 2)
+		{
+			return new Vector3((float)Math.sqrt(2));
+		}
 		else
 		{
 			return new Vector3(0.0f);
