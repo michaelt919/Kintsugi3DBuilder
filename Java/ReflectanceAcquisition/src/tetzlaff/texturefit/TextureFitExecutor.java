@@ -1150,7 +1150,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				
 				nextSumSqError = computeSumSqError(nextRoughnessSq, nextReflectivity, nextDiffuseEst, directionalRes, nDotHStart, residualLookup, alphaLookup);
 				
-				while(nextSumSqError >= sumSqError)
+				while(nextSumSqError > sumSqError)
 				{
 					shiftFraction /= 2;
 					deltaRoughnessSq /= 2;

@@ -95,8 +95,9 @@ float computeMicrofacetDistributionBeckmann(float nDotH, float roughness)
     float nDotHSquared = nDotH * nDotH;
     float roughnessSquared = roughness * roughness;
     
+	// Assume scaling by pi
     return exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
-            / (PI * nDotHSquared * nDotHSquared * roughnessSquared);
+            / (nDotHSquared * nDotHSquared * roughnessSquared);
 }
 
 float computeMicrofacetDistributionPhong(float nDotH, float roughness)
@@ -104,7 +105,8 @@ float computeMicrofacetDistributionPhong(float nDotH, float roughness)
     float nDotHSquared = nDotH * nDotH;
     float roughnessSquared = roughness * roughness;
     
-    return max(0.0, pow(nDotH, 2 / roughnessSquared - 2) / (PI * roughnessSquared));
+	// Assume scaling by pi
+    return max(0.0, pow(nDotH, 2 / roughnessSquared - 2) / (roughnessSquared));
 }
 
 float dist(float nDotH, float roughness)
@@ -115,7 +117,7 @@ float dist(float nDotH, float roughness)
 
 float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
 {
-	return 1.0 / (1.0 - pow(max(0.0, dot(targetDir, sampleDir)), weightExponent)) - 1.0;
+	return min(1000000, 1.0 / (1.0 - pow(max(0.0, dot(targetDir, sampleDir)), weightExponent)) - 1.0);
 }
 
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float maxLuminance)
@@ -293,13 +295,13 @@ void main()
     }
     else
     {
-        specularColor = vec3(0.05); // TODO pass in a default?
+        specularColor = vec3(0.040504154647770796); // TODO pass in a default?
     }
     
-    if (dot(specularColor, vec3(1)) < 0.01)
-    {
-        specularColor = vec3(0.5);
-    }
+    // if (dot(specularColor, vec3(1)) < 0.01)
+    // {
+        // specularColor = vec3(0.5);
+    // }
     
     float roughness;
     if (useRoughnessTexture)
@@ -308,7 +310,7 @@ void main()
     }
     else
     {
-        roughness = 0.1; // TODO pass in a default?
+        roughness = 0.15497160220259953; // TODO pass in a default?
     }
     
     vec3[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
@@ -346,10 +348,11 @@ void main()
                 else
                 {
                     mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(residLuminance), hDotV));
+					//mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
                     //mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
                 }
             
-                reflectance += (nDotL * diffuseColor + 
+                reflectance += (fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) +
                     mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV))
                     * lightIntensityVirtual[i] / dot(lightDirUnNorm, lightDirUnNorm);
             }

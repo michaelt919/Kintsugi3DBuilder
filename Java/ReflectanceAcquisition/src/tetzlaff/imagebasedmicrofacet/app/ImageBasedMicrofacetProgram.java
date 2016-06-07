@@ -231,10 +231,10 @@ public class ImageBasedMicrofacetProgram
 					e.printStackTrace();
 				}
         	}
-//        	else if (c == 'l')
-//        	{
-//        		metaLightController.hardcodedMode = !metaLightController.hardcodedMode;
-//        	}
+        	else if (c == 'l')
+        	{
+        		metaLightController.hardcodedMode = !metaLightController.hardcodedMode;
+        	}
         	else if (c == ' ')
         	{
         		fpController.setEnabled(!fpController.getEnabled());

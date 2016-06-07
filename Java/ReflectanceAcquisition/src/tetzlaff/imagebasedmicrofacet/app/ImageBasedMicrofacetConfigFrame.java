@@ -613,10 +613,11 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 			}
 		});
 		
+		JFileChooser vsetFileChooser = new JFileChooser(new File("").getAbsolutePath());
+		
 		// Add listener for the 'resample' button to generate new vies for the current light field.
 		btnResample.addActionListener(e -> 
 		{
-			JFileChooser vsetFileChooser = new JFileChooser(new File("").getAbsolutePath());
 			vsetFileChooser.setDialogTitle("Choose a Target VSET File");
 			vsetFileChooser.removeChoosableFileFilter(vsetFileChooser.getAcceptAllFileFilter());
 			vsetFileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
