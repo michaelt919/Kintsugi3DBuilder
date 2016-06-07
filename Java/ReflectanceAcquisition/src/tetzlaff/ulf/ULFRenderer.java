@@ -508,7 +508,10 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	private void resample() throws IOException
 	{
 		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, new ViewSetImageOptions(null, false, false, false), context);
-		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleWidth, resampleHeight).addColorAttachment().createFramebufferObject();
+		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleWidth, resampleHeight)
+				.addColorAttachment()
+				.addDepthAttachment()
+				.createFramebufferObject();
     	
     	this.setupForDraw();
     	

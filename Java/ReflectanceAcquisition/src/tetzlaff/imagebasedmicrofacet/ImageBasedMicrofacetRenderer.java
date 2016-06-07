@@ -63,7 +63,15 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			
 			if (lightController instanceof OverrideableLightController)
 			{
-				((OverrideableLightController)lightController).overrideCameraPose(modelView);
+		    	float scale = new Vector3(microfacetField.ulf.viewSet.getCameraPose(0)
+		    			.times(new Vector4(microfacetField.ulf.proxy.getCentroid(), 1.0f))).length();
+				
+				((OverrideableLightController)lightController).overrideCameraPose(
+						Matrix4.scale(1.0f / scale)
+							.times(modelView)
+							.times(Matrix4.translate(microfacetField.ulf.proxy.getCentroid()))
+			    			.times(new Matrix4(new Matrix3(microfacetField.ulf.viewSet.getCameraPose(0).transpose())))
+							.times(Matrix4.scale(scale)));
 			}
 			
 			for (int i = 0; i < lightController.getLightCount(); i++)
