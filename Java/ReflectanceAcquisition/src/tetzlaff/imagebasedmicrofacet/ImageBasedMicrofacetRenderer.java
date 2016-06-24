@@ -96,6 +96,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "normal.png"),
 					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "specular.png"),
 					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "roughness.png"), 
+					new File(ulfRenderer.getGeometryFile().getParentFile(), "mfd.csv"), 
 					context);
 			
 			shadowMaps = context.get2DDepthTextureArrayBuilder(2048, 2048, lightController.getLightCount()).createTexture();
@@ -175,6 +176,17 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			program.setTexture("roughnessMap", microfacetField.roughnessTexture);
 		}
 		
+		if (microfacetField.mfdTexture == null)
+		{
+			program.setUniform("useMFDTexture", false);
+			program.setTexture("mfdMap", null);
+		}
+		else
+		{
+			program.setUniform("useMFDTexture", true);
+			program.setTexture("mfdMap", microfacetField.mfdTexture);
+		}
+		
 		if (microfacetField.ulf.viewSet.getLuminanceMap() == null)
 		{
 			program.setUniform("useLuminanceMap", false);
@@ -225,7 +237,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		
 		float radius = this.microfacetField.ulf.proxy.getBoundingRadius();
 		
-		Matrix4 lightProjection = Matrix4.perspective(2.0f * (float)Math.atan(radius / lightDist), 1.0f, 
+		Matrix4 lightProjection = Matrix4.perspective(/*2.0f * (float)Math.atan(radius / lightDist)*/1.5f, 1.0f, 
 				lightDist - radius,
 				lightDist + radius);
 		

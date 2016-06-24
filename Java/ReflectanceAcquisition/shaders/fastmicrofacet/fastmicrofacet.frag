@@ -109,6 +109,8 @@ void main()
                         * (aL < 1.6 ? (3.535 * aL + 2.181 * aLSq) / (1 + 2.276 * aL + 2.577 * aLSq) : 1.0);
                     // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
                     // for this formula
+					
+				geomAtten = nDotV * nDotL;
                 
                 float f0 = dot(specularColor.rgb, vec3(0.2126, 0.7152, 0.0722));
                 float sqrtF0 = sqrt(f0);

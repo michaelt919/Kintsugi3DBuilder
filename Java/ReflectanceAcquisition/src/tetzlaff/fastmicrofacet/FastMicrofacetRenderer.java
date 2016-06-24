@@ -140,7 +140,7 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 	    	FramebufferSize size = framebuffer.getSize();
 	    	
 	    	float gamma = 2.2f;
-	    	Vector3 ambientColor = new Vector3(0.02f, 0.02f, 0.02f);
+	    	Vector3 ambientColor = new Vector3(0.0f, 0.0f, 0.0f);
 	    	
 	    	Vector3 clearColor = new Vector3(
 	    			(float)Math.pow(ambientColor.x, 1.0 / gamma),

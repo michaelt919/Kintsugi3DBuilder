@@ -19,6 +19,6 @@ void main()
 {
     SpecularResidualInfo spec = computeSpecularResidualInfo();
     packed_residual_nDotH_unused_alpha = 
-        vec4(spec.residualLuminance, spec.halfAngleVector.z, 0.0, spec.alpha);
+		vec4(spec.residualLuminance, spec.halfAngleVector.z, 0.0, spec.alpha);
     halfAngleVector = vec4(spec.halfAngleVector, 1.0);
 }

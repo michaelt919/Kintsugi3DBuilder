@@ -4,6 +4,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -77,7 +78,8 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 							this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER)) ? GL_RGBA_INTEGER : GL_RGBA,
 					this.areMultisampleLocationsFixed(),
 					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled());
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
 		}
 	}
 	
@@ -111,7 +113,8 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 					GL_DEPTH_COMPONENT,
 					this.areMultisampleLocationsFixed(),
 					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled());
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
 		}
 	}
 	
@@ -145,7 +148,8 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 					GL_STENCIL_INDEX,
 					this.areMultisampleLocationsFixed(),
 					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled());
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
 		}
 	}
 	
@@ -179,12 +183,13 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 					GL_DEPTH_STENCIL,
 					this.areMultisampleLocationsFixed(),
 					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled());
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
 		}
 	}
 	
 	private OpenGLTexture3D(OpenGLContext context, int textureTarget, int multisamples, int internalFormat, int width, int height, int layerCount, int format, 
-			boolean fixedSampleLocations, boolean useLinearFiltering, boolean useMipmaps) 
+			boolean fixedSampleLocations, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy) 
 	{
 		// Create and allocate a 3D texture or 2D texture array
 		super(context);
@@ -257,8 +262,19 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 		}
 		
 		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        this.context.openGLErrorCheck();
+        
 		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        this.context.openGLErrorCheck();
+        
 		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        this.context.openGLErrorCheck();
+		
+		if (maxAnisotropy > 1.0f)
+		{
+			glTexParameterf(textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+	        this.context.openGLErrorCheck();
+		}
 	}
 	
 	@Override

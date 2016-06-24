@@ -1,5 +1,6 @@
 package tetzlaff.gl.opengl;
 
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.*;
@@ -56,11 +57,12 @@ class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLContext>
 					this.type,
 					this.buffer,
 					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled());
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
 		}
 	}
 	
-	private OpenGLTexture1D(OpenGLContext context, int textureTarget, int internalFormat, int width, int format, int type, ByteBuffer buffer, boolean useLinearFiltering, boolean useMipmaps) 
+	private OpenGLTexture1D(OpenGLContext context, int textureTarget, int internalFormat, int width, int format, int type, ByteBuffer buffer, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy) 
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
 		super(context);
@@ -122,6 +124,13 @@ class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLContext>
 		}
 		
 		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        this.context.openGLErrorCheck();
+		
+		if (maxAnisotropy > 1.0f)
+		{
+			glTexParameterf(textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+	        this.context.openGLErrorCheck();
+		}
 	}
 	
 	@Override
