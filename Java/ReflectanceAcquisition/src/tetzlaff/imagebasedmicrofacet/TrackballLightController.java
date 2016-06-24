@@ -129,7 +129,7 @@ public class TrackballLightController implements LightController, CharacterListe
 					this.trackballs.get(this.activeTrackball).setEnabled(true);
 				}
 			}
-			else if (selection != activeTrackball && !lightControls.get(selection))
+			else if (selection < lightControls.size() && selection != activeTrackball && !lightControls.get(selection))
 			{
 				lightControls.set(selection, true);
 				lightsControlled++;

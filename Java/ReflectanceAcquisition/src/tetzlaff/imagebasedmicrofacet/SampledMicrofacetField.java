@@ -2,6 +2,9 @@ package tetzlaff.imagebasedmicrofacet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
 
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
@@ -10,6 +13,7 @@ import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.Texture1D;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
@@ -27,9 +31,10 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 	public final Texture2D<ContextType> specularTexture;
 	public final Texture2D<ContextType> roughnessTexture;
 	public final Texture3D<ContextType> shadowTextures;
+	public final Texture1D<ContextType> mfdTexture;
 	public final UniformBuffer<ContextType> shadowMatrixBuffer;
 	
-	public SampledMicrofacetField(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, File specularFile, File roughnessFile, ContextType context) throws IOException
+	public SampledMicrofacetField(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, File specularFile, File roughnessFile, File mfdFile, ContextType context) throws IOException
 	{
 		this.ulf = ulf;
 		
@@ -87,6 +92,59 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 		else
 		{
 			roughnessTexture = null;
+		}
+		
+		if (mfdFile != null && mfdFile.exists())
+		{
+			System.out.println("Microfacet distribution file found.");
+			
+			FloatVertexList mfdList = null;
+			
+			try(Scanner mfdScanner = new Scanner(mfdFile))
+			{
+				ArrayList<Double> probabilities = new ArrayList<Double>();
+				
+				mfdScanner.useDelimiter(",");
+				while(mfdScanner.hasNext())
+				{
+					mfdScanner.nextDouble(); // Skip the n dot h entry
+					probabilities.add(mfdScanner.nextDouble());
+					if (mfdScanner.hasNextLine())
+					{
+						mfdScanner.nextLine();
+					}
+				}
+	
+				mfdList = new FloatVertexList(1, probabilities.size());
+				
+				int i = 0;
+				for (Double probability : probabilities)
+				{
+					mfdList.set(i, 0, (float)probability.doubleValue());
+					i++;
+				}
+			}
+			catch(NoSuchElementException e)
+			{
+				System.err.println("Invalid microfacet distribution file:");
+				e.printStackTrace();
+			}
+			
+			if (mfdList != null)
+			{
+				mfdTexture = context.get1DColorTextureBuilder(mfdList)
+						.setInternalFormat(ColorFormat.R32F)
+						.setLinearFilteringEnabled(true)
+						.createTexture();
+			}
+			else
+			{
+				mfdTexture = null;
+			}
+		}
+		else
+		{
+			mfdTexture = null;
 		}
 		
 		if (ulf.depthTextures != null)

@@ -28,11 +28,13 @@ uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 uniform sampler2D roughnessMap;
+uniform sampler1D mfdMap;
 
 uniform bool useDiffuseTexture;
 uniform bool useNormalTexture;
 uniform bool useSpecularTexture;
 uniform bool useRoughnessTexture;
+uniform bool useMFDTexture;
 
 uniform bool useInverseLuminanceMap;
 uniform sampler1D inverseLuminanceMap;
@@ -70,7 +72,7 @@ float computeGeometricAttenuationVCavity(
     return min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
 }
 
-float computeGeometricAttenuationSmith(
+float computeGeometricAttenuationSmithBeckmann(
     float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
 {
     float aV = 1.0 / (roughness * sqrt(1.0 - nDotV * nDotV) / nDotV);
@@ -88,7 +90,17 @@ float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV, 
 {
     //return nDotV * nDotL;
     return computeGeometricAttenuationVCavity(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
-    //return computeGeometricAttenuationSmith(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+    //return computeGeometricAttenuationSmithBeckmann(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+}
+
+float computeMicrofacetDistributionGGX(float nDotH, float roughness)
+{
+	float roughnessSquared = roughness * roughness;
+	float nDotHSquared = nDotH * nDotH;
+	float q = roughnessSquared + (1 - nDotHSquared) / nDotHSquared;
+
+	// Assume scaling by pi
+	return roughnessSquared / (nDotHSquared * nDotHSquared * q * q);
 }
 
 float computeMicrofacetDistributionBeckmann(float nDotH, float roughness)
@@ -107,12 +119,14 @@ float computeMicrofacetDistributionPhong(float nDotH, float roughness)
     float roughnessSquared = roughness * roughness;
     
 	// Assume scaling by pi
-    return max(0.0, pow(nDotH, 2 / roughnessSquared - 2) / (roughnessSquared));
+    return max(0.0, pow(nDotH, 2 / 2/roughnessSquared - 2) / (roughnessSquared));
 }
 
 float dist(float nDotH, float roughness)
 {
-    return computeMicrofacetDistributionBeckmann(nDotH, roughness);
+	//return texture(mfdMap, nDotH).r / 0.1822322092566941;
+	return computeMicrofacetDistributionGGX(nDotH, roughness);
+    //return computeMicrofacetDistributionBeckmann(nDotH, roughness);
     //return computeMicrofacetDistributionPhong(nDotH, roughness);
 }
 
@@ -179,6 +193,13 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
 
                 // Compute sample weight
                 float weight = computeSampleWeight(virtualHalfDir, sampleHalfDir);
+				
+				// float virtualNDotH = dot(normalDirCameraSpace, virtualHalfDir);
+				// float sampleNDotH = dot(normalDirCameraSpace, sampleHalfDir);
+				// float weight = computeSampleWeight(
+					// vec3(virtualNDotH, sqrt(1.0 - virtualNDotH * virtualNDotH), 0.0),
+					// vec3(sampleNDotH, sqrt(1.0 - sampleNDotH * sampleNDotH), 0.0));
+				// float weight = 1.0 / abs(virtualNDotH - sampleNDotH);
                 result[lightPass] = weight * precomputedSample ;
             }
         }
@@ -248,23 +269,23 @@ vec4 tonemap(vec3 color, float alpha)
             // if the luminance value somehow exceeds 1.0
             float luminance = getLuminance(color);
 			float maxLuminance = getMaxLuminance();
-			if (luminance >= maxLuminance)
+			// if (luminance >= maxLuminance)
 			{
 				return vec4(pow(color / maxLuminance, vec3(1.0 / gamma)), alpha);
 			}
-			else
-			{
-				float scaledLuminance = min(1.0, luminance / maxLuminance);
+			// else
+			// {
+				// float scaledLuminance = min(1.0, luminance / maxLuminance);
 				
-				// Step 2: determine the ratio between the tonemapped and linear luminance
-				// Remove implicit gamma correction from the lookup table
-				float scale = pow(texture(inverseLuminanceMap, scaledLuminance).r, gamma) / luminance;
+				// // Step 2: determine the ratio between the tonemapped and linear luminance
+				// // Remove implicit gamma correction from the lookup table
+				// float scale = pow(texture(inverseLuminanceMap, scaledLuminance).r, gamma) / luminance;
 					
-				// Step 3: return the color, scaled to have the correct luminance,
-				// but the original saturation and hue.
-				// Step 4: apply gamma correction
-				return vec4(pow(color * scale, vec3(1.0 / gamma)), alpha);
-			}
+				// // Step 3: return the color, scaled to have the correct luminance,
+				// // but the original saturation and hue.
+				// // Step 4: apply gamma correction
+				// return vec4(pow(color * scale, vec3(1.0 / gamma)), alpha);
+			// }
         }
     }
     else
@@ -319,7 +340,7 @@ void main()
     }
     else
     {
-        roughness = 0.15497160220259953; // TODO pass in a default?
+        roughness = 0.45; // TODO pass in a default?
     }
     
     vec3[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
@@ -341,7 +362,7 @@ void main()
             
             if (projTexCoord.x >= 0 && projTexCoord.x <= 1 && projTexCoord.y >= 0 && projTexCoord.y <= 1 
                 && projTexCoord.z >= 0 && projTexCoord.z <= 1
-                && texture(shadowMaps, vec3(projTexCoord.xy, i)).r - projTexCoord.z >= -0.02)
+                && texture(shadowMaps, vec3(projTexCoord.xy, i)).r - projTexCoord.z >= -0.01)
             {
                 vec3 halfDir = normalize(viewDir + lightDir);
                 float hDotV = dot(halfDir, viewDir);
@@ -357,11 +378,36 @@ void main()
                 else
                 {
                     //mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(grazingIntensity), hDotV));
-					mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
-                    //mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
+					//mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
+                    mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
+					
+					// mfdFresnel = -max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV))
+									// + fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness))
+									// + vec3(0.5);
+					
+					// mfdFresnel = vec3(getLuminance(max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV))),
+						// getLuminance(fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness))),
+						// getLuminance(fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness))));
+					
+					// mfdFresnel = nDotH < sqrt(0.5) ? vec3(0.0) : fresnel(specularColor, vec3(1.0), hDotV)
+						// * vec3(texture(mfdMap,(nDotH-sqrt(0.5))/(1.0-sqrt(0.5))).r) 
+						// * 1 / 0.12459144371535306;
+					
+					// float error = getLuminance(nDotH < sqrt(0.5) ? vec3(0.0) : fresnel(specularColor, vec3(1.0), hDotV) * 
+							// vec3(texture(mfdMap,(nDotH-sqrt(0.5))/(1.0-sqrt(0.5))).r) 
+							// * 1 / 0.12459144371535306)
+						// - getLuminance(max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV)));
+					
+					// mfdFresnel = //nDotH < sqrt(0.5) ? vec3(1,0,0) :
+					// //	getLuminance(fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness)))
+					// //		* vec3(0,1,0) + 
+						// max(0,error)
+							// * vec3(1,0,1) +
+						// max(0, -error)
+							// * vec3(0,1,0);
                 }
             
-                reflectance += (fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) +
+                reflectance += (//fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
                     mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV))
                     * lightIntensityVirtual[i] / dot(lightDirUnNorm, lightDirUnNorm);
             }

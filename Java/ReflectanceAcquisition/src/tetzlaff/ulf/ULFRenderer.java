@@ -299,7 +299,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     			.times(Matrix4.translate(lightField.proxy.getCentroid().negated())));
     	
     	mainRenderable.program().setUniform("projection", Matrix4.perspective(
-    			lightField.viewSet.getCameraProjection(0).getVerticalFieldOfView(), 
+    			(float)(1.0),
+    			//lightField.viewSet.getCameraProjection(0).getVerticalFieldOfView(), 
     			(float)size.width / (float)size.height, 
     			0.01f * scale, 100.0f * scale));
     	

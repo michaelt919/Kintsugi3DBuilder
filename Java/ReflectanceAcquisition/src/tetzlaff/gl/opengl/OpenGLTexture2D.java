@@ -5,6 +5,7 @@ import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.*;
 // mipmaps
 import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -131,7 +132,8 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 					GL_UNSIGNED_BYTE,
 					buffer,
 					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled());
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
 		}
 	}
 	
@@ -178,7 +180,8 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 					this.type,
 					this.buffer,
 					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled());
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
 		}
 	}
 	
@@ -221,7 +224,8 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 							this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER)) ? GL_RGBA_INTEGER : GL_RGBA,
 					this.areMultisampleLocationsFixed(),
 					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled());
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
 		}
 	}
 	
@@ -252,7 +256,8 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 					GL_DEPTH_COMPONENT,
 					this.areMultisampleLocationsFixed(),
 					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled());
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
 		}
 	}
 	
@@ -283,7 +288,8 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 					GL_STENCIL_INDEX,
 					this.areMultisampleLocationsFixed(),
 					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled());
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
 		}
 	}
 	
@@ -314,11 +320,13 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 					GL_DEPTH_STENCIL,
 					this.areMultisampleLocationsFixed(),
 					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled());
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
 		}
 	}
 	
-	private OpenGLTexture2D(OpenGLContext context, int textureTarget, int multisamples, int internalFormat, int width, int height, int format, boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps)
+	private OpenGLTexture2D(OpenGLContext context, int textureTarget, int multisamples, int internalFormat, int width, int height, int format, 
+			boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
 		super(context);
@@ -343,9 +351,16 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 			this.context.openGLErrorCheck();
 			this.init(useLinearFiltering, useMipmaps);
 		}
+		
+		if (maxAnisotropy > 1.0f)
+		{
+			glTexParameterf(textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+	        this.context.openGLErrorCheck();
+		}
 	}
 	
-	private OpenGLTexture2D(OpenGLContext context, int textureTarget, int internalFormat, int width, int height, int format, int type, ByteBuffer buffer, boolean useLinearFiltering, boolean useMipmaps) 
+	private OpenGLTexture2D(OpenGLContext context, int textureTarget, int internalFormat, int width, int height, int format, int type, ByteBuffer buffer, 
+			boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy) 
 	{
 		super(context);
 		this.textureTarget = textureTarget;
@@ -355,6 +370,12 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, type, buffer);
 		this.context.openGLErrorCheck();
 		this.init(useLinearFiltering, useMipmaps);
+		
+		if (maxAnisotropy > 1.0f)
+		{
+			glTexParameterf(textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+	        this.context.openGLErrorCheck();
+		}
 	}
 	
 	private void init(boolean useLinearFiltering, boolean useMipmaps)
@@ -411,7 +432,10 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		}
 		
 		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        this.context.openGLErrorCheck();
+        
 		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        this.context.openGLErrorCheck();
 	}
 	
 	@Override

@@ -431,6 +431,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			}
 			
 			textureArrayBuilder.setLinearFilteringEnabled(true);
+			textureArrayBuilder.setMaxAnisotropy(16.0f);
 			textureArray = textureArrayBuilder.createTexture();
 			
 			if(loadingCallback != null) {
