@@ -11,7 +11,21 @@ uniform float gamma;
 float getLuminance(vec3 rgbColor)
 {
     // linearized sRGB to CIE-Y
-    return dot(rgbColor, vec3(0.2126, 0.7152, 0.0722));
+    return dot(rgbColor, vec3(0.2126729, 0.7151522, 0.0721750));
+}
+
+vec3 rgbToXYZ(vec3 rgbColor)
+{
+	return mat3(vec3(0.4124564, 0.2126729, 0.0193339),
+		vec3(0.3575761, 0.7151522, 0.1191920),
+		vec3(0.1804375, 0.0721750, 0.9503041)) * rgbColor;
+}
+
+vec3 xyzToRGB(vec3 xyzColor)
+{
+	return mat3(vec3(3.2404542, -0.9692660, 0.0556434),
+		vec3(-1.5371385, 1.8760108, -0.2040259),
+		vec3(-0.4985314, 0.0415560, 1.0572252)) * xyzColor;
 }
 
 float getMaxLuminance()
