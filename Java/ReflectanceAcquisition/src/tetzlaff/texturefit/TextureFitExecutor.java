@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Date;
 import java.util.function.DoubleUnaryOperator;
+import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
 
 import javax.imageio.ImageIO;
@@ -54,8 +55,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	private static final boolean SKIP_FINAL_DIFFUSE = false;
 	
 	private final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
-	
 	private final int ROUGHNESS_TEXTURE_SIZE = 1; // TODO decide where this should be defined
+	
+	private static final double GAMMA = 2.2;
+	private static final double GAMMA_INV = 1.0 / GAMMA;
 
 	private ContextType context;
 	private File vsetFile;
@@ -360,614 +363,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	return depthFBO;
 	}
 	
-	private DenseMatrix64F createRegularizationMatrix(int directionalNeighborhood, int spatialNeighborhood, float directionalWeight, float spatialWeight, boolean isotropic)
-	{
-		int dim = (isotropic ? 1 : directionalNeighborhood) * directionalNeighborhood * spatialNeighborhood * spatialNeighborhood;
-		DenseMatrix64F matrix = new DenseMatrix64F(dim, dim);
-		
-		int index = 0;
-		
-		float quarterDirectionalWeight = directionalWeight / 4;
-		float quarterSpatialWeight = spatialWeight / 4;
-		
-		for (int s = 0; s < (isotropic ? 1 : directionalNeighborhood); s++)
-		{
-			int indexIncrS = index + (directionalNeighborhood * spatialNeighborhood * spatialNeighborhood);
-			
-			for (int t = 0; t < directionalNeighborhood; t++)
-			{
-				int indexIncrT = index + (spatialNeighborhood * spatialNeighborhood);
-				
-				for (int u = 0; u < spatialNeighborhood; u++)
-				{
-					int indexIncrU = index + spatialNeighborhood;
-					
-					for (int v = 0; v < spatialNeighborhood; v++)
-					{
-						int indexIncrV = index + 1;
-						
-						if (!isotropic && s + 1 < directionalNeighborhood)
-						{
-							matrix.set(index, index, matrix.get(index, index) + quarterDirectionalWeight);
-							matrix.set(indexIncrS, indexIncrS, matrix.get(indexIncrS, indexIncrS) + quarterDirectionalWeight);
-							matrix.set(index, indexIncrS, matrix.get(index, indexIncrS) - quarterDirectionalWeight);
-							matrix.set(indexIncrS, index, matrix.get(indexIncrS, index) - quarterDirectionalWeight);
-						}
-
-						if (t + 1 < directionalNeighborhood)
-						{
-							matrix.set(index, index, matrix.get(index, index) + quarterDirectionalWeight);
-							matrix.set(indexIncrT, indexIncrT, matrix.get(indexIncrT, indexIncrT) + quarterDirectionalWeight);
-							matrix.set(index, indexIncrT, matrix.get(index, indexIncrT) - quarterDirectionalWeight);
-							matrix.set(indexIncrT, index, matrix.get(indexIncrT, index) - quarterDirectionalWeight);
-						}
-
-						if (u + 1 < spatialNeighborhood)
-						{
-							matrix.set(index, index, matrix.get(index, index) + quarterSpatialWeight);
-							matrix.set(indexIncrU, indexIncrU, matrix.get(indexIncrU, indexIncrU) + quarterSpatialWeight);
-							matrix.set(index, indexIncrU, matrix.get(index, indexIncrU) - quarterSpatialWeight);
-							matrix.set(indexIncrU, index, matrix.get(indexIncrU, index) - quarterSpatialWeight);
-						}
-
-						if (v + 1 < spatialNeighborhood)
-						{
-							matrix.set(index, index, matrix.get(index, index) + quarterSpatialWeight);
-							matrix.set(indexIncrV, indexIncrV, matrix.get(indexIncrV, indexIncrV) + quarterSpatialWeight);
-							matrix.set(index, indexIncrV, matrix.get(index, indexIncrV) - quarterSpatialWeight);
-							matrix.set(indexIncrV, index, matrix.get(indexIncrV, index) - quarterSpatialWeight);
-						}
-						
-						index = indexIncrV;
-						indexIncrU++;
-						indexIncrT++;
-						indexIncrS++;
-					}
-				}
-			}
-		}
-		
-		return matrix;
-	}
-	
-	private void accumResampleSystem(float[][][][][] lhsData, float[][][][][] rhsData, int directionalRes, int spatialRes,
-			float hDotTMax, boolean isotropic, int dataRes, int dataStartX, int dataStartY, int dataWidth, int dataHeight, float[] colorDataRGBA, float[] halfAngleDataTBNA)
-	{
-		int[] coordinatesMax = isotropic ?
-			new int[] { directionalRes, spatialRes, spatialRes } :
-			new int[] { directionalRes, directionalRes, spatialRes, spatialRes }; // exclusive
-		
-		for (int y = 0; y < dataHeight; y++)
-		{
-			for (int x = 0; x < dataWidth; x++)
-			{
-				float alpha = colorDataRGBA[((y*dataWidth) + x) * 4 + 3];
-				
-				if (alpha > 0.0f)
-				{
-					//float red = colorDataRGBA[((y*dataWidth) + x) * 4];
-					//float green = colorDataRGBA[((y*dataWidth) + x) * 4 + 1];
-					//float blue = colorDataRGBA[((y*dataWidth) + x) * 4 + 2];
-					
-					float luminance = colorDataRGBA[((y*dataWidth) + x) * 4];
-					float hDotN =  colorDataRGBA[((y*dataWidth) + x) * 4 + 1];
-					
-					if (luminance > 0.0f && hDotN > 0.0f)
-					{
-						// Mapped coordinates for the specified half-vector and surface position
-						double[] coordinates;
-						
-						if (isotropic)
-						{
-							coordinates = new double[]
-							{
-								(directionalRes-1) * (2 * hDotN - 1 + Math.sqrt(2) * (hDotN - 1)), //(directionalRes-1) * 2 * (hDotN - 0.5),
-								(float) (x + dataStartX) * (float) (spatialRes-1) / (float) (dataRes-1),
-								(float) (y + dataStartY) * (float) (spatialRes-1) / (float) (dataRes-1)
-							};
-						}
-						else
-						{
-							// the tangent and bitangent components of the half-vector
-							float hDotT = halfAngleDataTBNA[((y*dataWidth) + x) * 4];
-							float hDotB = halfAngleDataTBNA[((y*dataWidth) + x) * 4 + 1]; 
-							
-							double projHOntoTB = Math.sqrt(hDotT*hDotT+hDotB*hDotB);
-							double directionalScale = projHOntoTB / hDotTMax / Math.max(Math.abs(hDotT), Math.abs(hDotB));
-							
-							coordinates = new double[]
-							{
-								0.5 * (directionalRes-1) * (1 + directionalScale * hDotT),
-								0.5 * (directionalRes-1) * (1 + directionalScale * hDotB),
-								(float) (x + dataStartX) * (float) (spatialRes-1) / (float) (dataRes-1),
-								(float) (y + dataStartY) * (float) (spatialRes-1) / (float) (dataRes-1)
-							};
-						};
-	
-						boolean outOfBounds = false;
-						int[][] roundedCoordinatePairs = new int[coordinates.length][2];
-						double[][] interpolationCoefficients = new double[coordinates.length][2];
-						
-						for (int i = 0; i < coordinates.length && !outOfBounds; i++)
-						{
-							roundedCoordinatePairs[i][0] = (int)Math.floor(coordinates[i]);
-							roundedCoordinatePairs[i][1] = (int)Math.ceil(coordinates[i]);
-	
-							outOfBounds = outOfBounds || roundedCoordinatePairs[i][0] < 0 || roundedCoordinatePairs[i][1] >= coordinatesMax[i];
-							if (!outOfBounds)
-							{
-								if (roundedCoordinatePairs[i][1] == roundedCoordinatePairs[i][0])
-								{
-									interpolationCoefficients[i][0] = 0.0;
-								}
-								else
-								{
-									interpolationCoefficients[i][0] = (coordinates[i] - roundedCoordinatePairs[i][0]) / (roundedCoordinatePairs[i][1] - roundedCoordinatePairs[i][0]);
-								}
-								
-								interpolationCoefficients[i][1] = 1.0 - interpolationCoefficients[i][0];
-							}
-						}
-						
-						if (!outOfBounds)
-						{
-							int[][] indices = new int[1 << coordinates.length][coordinates.length];
-							double[] weights = new double[indices.length];
-							
-							for (int i = 0; i < indices.length; i++)
-							{
-								weights[i] = 1.0;
-								
-								for (int j = 0; j < indices[i].length; j++)
-								{
-									int selector = (i >> j) & 0x1;
-									indices[i][j] = roundedCoordinatePairs[j][selector];
-									weights[i] *= interpolationCoefficients[j][selector];
-								}
-							}
-							
-							// Accumulate in the least squares system
-							for (int p = 0; p < indices.length; p++)
-							{
-								float[] lhsRow = isotropic ?
-									lhsData[0][indices[p][0]][indices[p][1]][indices[p][2]] :
-									lhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
-								float[] rhsRow = isotropic ? 
-									rhsData[0][indices[p][0]][indices[p][1]][indices[p][2]] :
-									rhsData[indices[p][0]][indices[p][1]][indices[p][2]][indices[p][3]];
-								
-								for (int q = 0; q < indices.length; q++)
-								{
-									if (isotropic)
-									{
-										lhsRow[(indices[q][0] - indices[p][0] + 1) + (indices[q][1] - indices[p][1] + 1) * 3 + (indices[q][2] - indices[p][2] + 1) * 9]
-								 			+= (float)(weights[p] * weights[q] * alpha);
-									}
-									else
-									{
-										lhsRow[(indices[q][0] - indices[p][0] + 1) + (indices[q][1] - indices[p][1] + 1) * 3
-											 	+ (indices[q][2] - indices[p][2] + 1) * 9 + (indices[q][3] - indices[p][3] + 1) * 27]
-								 			+= (float)(weights[p] * weights[q] * alpha);
-									}
-								}
-								
-								rhsRow[0] += (float)weights[p] * luminance * alpha;
-								
-	//							rhsRow[0] += (float)weights[p] * red * alpha;
-	//							rhsRow[1] += (float)weights[p] * green * alpha;
-	//							rhsRow[2] += (float)weights[p] * blue * alpha;
-							}
-						}
-						
-	//					if (SIN_PI_OVER_8 < hDotN && hDotN < ONE_OVER_SQRT2)
-	//					{
-	//						// Evaluate 2 - 2( 2( 2( 2x^2 - 1 )^2 - 1 )^2 - 1 )^2
-	//						double weight = 2.0 * hDotN  * hDotN  - 1.0;   // First square
-	//						       weight = 2.0 * weight * weight - 1.0;   // Second square
-	//						       weight = 2.0 * weight * weight - 1.0;   // Third square
-	//						       weight = 2.0 * (1.0 - weight * weight); // Fourth square
-	//				        
-	//				        diffuseLowResData[?][?][0] += weight * red;
-	//				        diffuseLowResData[?][?][1] += weight * green;
-	//				        diffuseLowResData[?][?][2] += weight * blue;
-	//				        
-	//				        diffuseHighResData[?][?][0] += weight * red;
-	//				        diffuseHighResData[?][?][1] += weight * green;
-	//				        diffuseHighResData[?][?][2] += weight * blue;
-	//					}
-					}
-				}
-			}
-		}
-	}
-	
-	private boolean buildNeighborhoodSystem(float[][][][][] lhsData, float[][][][][] rhsData, int centerS, int centerT, int centerU, int centerV, 
-			int directionalRes, int spatialRes, int directionalNeighborhood, int spatialNeighborhood, boolean isotropic, DenseMatrix64F lhsDest, DenseMatrix64F rhsDest)
-	{
-		boolean entryFound = false;
-		
-		int directionalRadius = (directionalNeighborhood - 1) / 2;
-		int spatialRadius = (spatialNeighborhood - 1) / 2;
-		
-		// minimum coordinates
-		int minS = isotropic ? 0 : centerS - directionalRadius;
-		int minT = centerT - directionalRadius;
-		int minU = centerU - spatialRadius;
-		int minV = centerV - spatialRadius;
-		
-		// maximum coordinates
-		int maxS = isotropic ? 0 : centerS + directionalRadius;
-		int maxT = centerT + directionalRadius;
-		int maxU = centerU + spatialRadius;
-		int maxV = centerV + spatialRadius;
-		
-		for (int sRow = Math.max(0, minS); sRow <= maxS && sRow < directionalRes; sRow++)
-		{
-			for (int tRow = Math.max(0, minT); tRow <= maxT && tRow < directionalRes; tRow++)
-			{
-				for (int uRow = Math.max(0, minU); uRow <= maxU && uRow < spatialRes; uRow++)
-				{
-					int rowIndex = spatialNeighborhood * (spatialNeighborhood * (directionalNeighborhood * (sRow - minS) + (tRow - minT)) + (uRow - minU));
-					
-					for (int vRow = Math.max(0, minV); vRow <= maxV && vRow < spatialRes; vRow++)
-					{
-						float[] lhsRow = lhsData[sRow][tRow][uRow][vRow];
-						
-						for (int i = 0; i < lhsRow.length; i++)
-						{
-							int q = i;
-							
-							int sCol;
-							if (isotropic)
-							{
-								sCol = 0;
-							}
-							else
-							{
-								sCol = (q % 3) + sRow - 1;
-								q /= 3;
-							}
-							int tCol = (q % 3) + tRow - 1;
-							q /= 3;
-							int uCol = (q % 3) + uRow - 1;
-							q /= 3;
-							int vCol = (q % 3) + vRow - 1;
-							
-							if (minS <= sCol && sCol <= maxS && minT <= tCol && tCol <= maxT && 
-								minU <= uCol && uCol <= maxU && minV <= vCol && vCol <= maxV)
-							{
-								int columnIndex = spatialNeighborhood * (spatialNeighborhood * (directionalNeighborhood * (sCol - minS) + (tCol - minT)) + (uCol - minU)) + (vCol - minV);
-
-								entryFound = entryFound || lhsRow[i] != 0.0;
-								
-								lhsDest.set(rowIndex, columnIndex, lhsDest.get(rowIndex, columnIndex) + lhsRow[i]);
-							}
-							else if (	(minS > sCol || sCol > maxS || sCol == sRow) &&
-										(minT > tCol || tCol > maxT || tCol == tRow) &&
-										(minU > uCol || uCol > maxU || uCol == uRow) &&
-										(minV > vCol || vCol > maxV || vCol == vRow))
-								// Selecting column nodes that are outside the neighborhood boundary 
-								// but aligned with the row node in every dimension in which they are inside the neighborhood boundary.
-								// For each dimension in which the column node is outside the neighborhood boundary, 
-								// we want to add its weight to the adjacent row node's diagonal to account for the column node not being in the system to be solved.
-								// The case where s|t|u|vCol == s|t|u|vRow for each s|t|u|v will never fall here since it will be in the original "if" case.
-							{
-								entryFound = entryFound || lhsRow[i] != 0.0;
-								lhsDest.set(rowIndex, rowIndex, lhsDest.get(rowIndex, rowIndex) + lhsRow[i]);
-							}
-						}
-						
-						float[] rhsRow = rhsData[sRow][tRow][uRow][vRow];
-						
-						rhsDest.set(rowIndex, 0, rhsDest.get(rowIndex, 0) + rhsRow[0]);
-						rhsDest.set(rowIndex, 1, rhsDest.get(rowIndex, 1) + rhsRow[1]);
-						rhsDest.set(rowIndex, 2, rhsDest.get(rowIndex, 2) + rhsRow[2]);
-						
-						rowIndex++;
-					}
-				}
-			}
-		}
-		
-		return entryFound;
-	}
-	
-	private double[] resample(ViewSet<ContextType> viewSet, Texture<ContextType> diffuseFitTexture, Texture<ContextType> normalFitTexture) throws IOException
-	{
-		int directionalRes = 128;
-		int spatialRes = ROUGHNESS_TEXTURE_SIZE;
-		int directionalNeighborhood = 1;
-		int spatialNeighborhood = 1;
-		float directionalRegularization = 0.125f;
-		float spatialRegularization = 0.875f;
-		boolean isotropic = true;
-		
-		if (directionalNeighborhood % 2 == 0 || spatialNeighborhood % 2 == 0)
-		{
-			throw new IllegalArgumentException("Directional and spatial neighborhoods must be odd.");
-		}
-		
-		// The greatest projection the half vector can have on the tangent plane before specularity is assumed to be negligible.
-		float hDotTMax = 0.5f * (float)Math.sqrt(3); //(float)Math.min(0.5*Math.sqrt(3), Math.sqrt(Math.sqrt(2) * maxRmsSlope));
-		
-		float[][][][][] lhsData = isotropic ? 
-			new float[1][directionalRes][spatialRes][spatialRes][27] :
-			new float[directionalRes][directionalRes][spatialRes][spatialRes][81];
-		float[][][][][] rhsData = isotropic ?
-			new float[1][directionalRes][spatialRes][spatialRes][3] :
-			new float[directionalRes][directionalRes][spatialRes][spatialRes][3];
-		DenseMatrix64F regularizationMatrix = createRegularizationMatrix(directionalNeighborhood, spatialNeighborhood, directionalRegularization, spatialRegularization, isotropic);
-		
-		if (MatrixFeatures.nullity(regularizationMatrix) > 1)
-		{
-			System.out.println("Something's wrong...");
-		}
-		
-		System.out.println("Sampling views...");
-		
-		specularResidProgram.setTexture("diffuseEstimate", diffuseFitTexture);
-		specularResidProgram.setTexture("normalEstimate", normalFitTexture);
-		
-		for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
-		{
-			final int K = k;
-			
-			FramebufferObject<ContextType> depthFBO = projectIntoTextureSpace(viewSet, specularResidProgram, k, param.getTextureSize(), 1/*param.getTextureSubdivision()*/,
-				(framebuffer, row, col) -> 
-				{
-					if (DEBUG)
-			    	{
-						try
-	    				{
-	    					framebuffer.saveColorBufferToFile(0, "PNG", new File(new File(outputDir, "debug"), String.format("colors%04d.png", K)));
-	    					framebuffer.saveColorBufferToFile(1, "PNG", new File(new File(outputDir, "debug"), String.format("halfangle%04d.png", K)));
-	    				}
-	    				catch (IOException e)
-	    				{
-	    					e.printStackTrace();
-	    				}
-			    	}
-					
-					int partitionSize = param.getTextureSize() ;// / param.getTextureSubdivision();
-
-					accumResampleSystem(lhsData, rhsData, directionalRes, spatialRes, hDotTMax, isotropic, param.getTextureSize(), 
-						col * partitionSize, row * partitionSize, partitionSize, partitionSize, 
-						framebuffer.readFloatingPointColorBufferRGBA(0), 
-						framebuffer.readFloatingPointColorBufferRGBA(1));
-				});
-			
-
-	    	depthFBO.delete();
-			
-	    	System.out.println("Completed " + (k+1) + "/" + viewSet.getCameraPoseCount() + " views...");
-		}
-		
-		System.out.println("Solving system...");
-		
-		int partitionDim = isotropic ? 
-			directionalNeighborhood * spatialNeighborhood * spatialNeighborhood :
-			directionalNeighborhood * directionalNeighborhood * spatialNeighborhood * spatialNeighborhood;
-		int solutionRow = (partitionDim - 1) / 2;
-		
-		// Solve using Cholesky decomposition
-		LinearSolver<DenseMatrix64F> solver = LinearSolverFactory.chol(partitionDim);
-		
-		File directionalLayerDir = new File(outputDir, "directional-layers");
-		directionalLayerDir.mkdir();
-
-		File spatialLayerDir = new File(outputDir, "spatial-layers");
-		spatialLayerDir.mkdir();
-		
-		DenseMatrix64F lhsNeighborhood = regularizationMatrix.copy(); // new DenseMatrix64F(partitionDim, partitionDim);
-		DenseMatrix64F rhsNeighborhood = new DenseMatrix64F(partitionDim, 3);
-		
-		// Test
-		lhsNeighborhood.set(solutionRow, solutionRow, lhsNeighborhood.get(solutionRow, solutionRow) + 1.0);
-		if (MatrixFeatures.nullity(lhsNeighborhood) > 0)
-		{
-			System.out.println("Something's wrong...");
-		}
-		
-		float[][][][][] solution = isotropic ?
-			new float[1][directionalRes][spatialRes][spatialRes][4] :
-			new float[directionalRes][directionalRes][spatialRes][spatialRes][4];
-		
-		for (int i = 0; i < (isotropic ? 1 : directionalRes); i++)
-		{
-			for (int j = 0; j < directionalRes; j++)
-			{
-				int[] imageData = new int[spatialRes*spatialRes];
-				
-				if (spatialNeighborhood == spatialRes)
-				{
-					lhsNeighborhood.set(regularizationMatrix);
-					rhsNeighborhood.zero();
-					
-					if (buildNeighborhoodSystem(lhsData, rhsData, i, j, (spatialRes-1)/2, (spatialRes-1)/2, directionalRes, spatialRes, directionalNeighborhood, spatialRes, isotropic, 
-							lhsNeighborhood, rhsNeighborhood))
-					{
-						DenseMatrix64F neighborhoodSolution = new DenseMatrix64F(partitionDim, 3);
-						solver.setA(lhsNeighborhood);
-						solver.solve(rhsNeighborhood, neighborhoodSolution);
-						
-						for (int k = 0; k < spatialRes; k++)
-						{
-							for (int l = 0; l < spatialRes; l++)
-							{
-								float[] solutionEntry = solution[i][j][k][l];
-								
-								int currentRow = l + spatialRes * (k + spatialRes * ((isotropic ? 1 : directionalNeighborhood) * directionalNeighborhood - 1) / 2);
-		
-								solutionEntry[0] = (float)neighborhoodSolution.get(currentRow, 0);
-								solutionEntry[1] = (float)neighborhoodSolution.get(currentRow, 1);
-								solutionEntry[2] = (float)neighborhoodSolution.get(currentRow, 2);
-								solutionEntry[3] = 1.0f;
-								
-								imageData[k + (spatialRes - l - 1) * spatialRes] = 0xFF000000 |
-										(Math.max(0, Math.min(255, (int)(solutionEntry[0] * 255.0))) << 16) |
-										(Math.max(0, Math.min(255, (int)(solutionEntry[1] * 255.0))) << 8) |
-										Math.max(0, Math.min(255, (int)(solutionEntry[2] * 255.0)));
-							}
-						}
-					}
-				}
-				else
-				{
-					for (int k = 0; k < spatialRes; k++)
-					{
-						for (int l = 0; l < spatialRes; l++)
-						{
-							lhsNeighborhood.set(regularizationMatrix);
-							rhsNeighborhood.zero();
-							
-							if (buildNeighborhoodSystem(lhsData, rhsData, i, j, k, l, directionalRes, spatialRes, directionalNeighborhood, spatialNeighborhood, isotropic, 
-									lhsNeighborhood, rhsNeighborhood))
-							{
-								DenseMatrix64F neighborhoodSolution = new DenseMatrix64F(partitionDim, 3);
-								solver.setA(lhsNeighborhood);
-								solver.solve(rhsNeighborhood, neighborhoodSolution);
-								
-								float[] solutionEntry = solution[i][j][k][l];
-		
-								solutionEntry[0] = (float)neighborhoodSolution.get(solutionRow, 0);
-								solutionEntry[1] = (float)neighborhoodSolution.get(solutionRow, 1);
-								solutionEntry[2] = (float)neighborhoodSolution.get(solutionRow, 2);
-								solutionEntry[3] = 1.0f;
-								
-								imageData[k + (spatialRes - l - 1) * spatialRes] = 0xFF000000 |
-										(Math.max(0, Math.min(255, (int)(solutionEntry[0] * 255.0))) << 16) |
-										(Math.max(0, Math.min(255, (int)(solutionEntry[1] * 255.0))) << 8) |
-										Math.max(0, Math.min(255, (int)(solutionEntry[2] * 255.0)));
-							}
-						}
-					}
-				}
-				
-				
-				BufferedImage outImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
-		        outImg.setRGB(0, 0, spatialRes, spatialRes, imageData, 0, spatialRes);
-		        ImageIO.write(outImg, "PNG", new File(directionalLayerDir, (isotropic ? "" : i + "_") + j + ".png"));
-
-				System.out.println("Finished layer " + (1 + j + (isotropic ? 0 : i * directionalRes)) + "/" + ((isotropic ? 1 : directionalRes) * directionalRes) + " ...");
-			}
-		}
-		
-		if (isotropic)
-		{
-			double[] roughnessValues = new double[spatialRes*spatialRes];
-			double[] reflectivityValues = new double[spatialRes*spatialRes];
-			
-			int[] roughnessData = new int[spatialRes*spatialRes];
-			int[] reflectivityData = new int[spatialRes*spatialRes];
-			
-			for (int k = 0; k < spatialRes; k++)
-			{
-				for (int l = 0; l < spatialRes; l++)
-				{
-					final int K = k;
-					final int L = l;
-					
-					SpecularParams specularParams = computeSpecularParams(directionalRes, Math.sqrt(0.5), (j) -> solution[0][j][K][L][0], (j) -> solution[0][j][K][L][3], new File(outputDir, "mfd.csv"));
-					
-					if (specularParams != null)
-					{
-						roughnessValues[k + l * spatialRes] = specularParams.roughness;
-						reflectivityValues[k + l * spatialRes] = specularParams.reflectivity;
-						
-						int roughnessPixelValue = Math.max(0, Math.min(255, (int)(specularParams.roughness * 255.0)));
-						int reflectivityPixelValue = Math.max(0, Math.min(255, (int)(Math.pow(specularParams.reflectivity, 1.0 / 2.2) * 255.0)));
-						
-						roughnessData[k + (spatialRes - l - 1) * spatialRes] = 0xFF000000 | roughnessPixelValue << 16 | roughnessPixelValue << 8 | roughnessPixelValue;
-						reflectivityData[k + (spatialRes - l - 1) * spatialRes] = 0xFF000000 | reflectivityPixelValue << 16 | reflectivityPixelValue << 8 | reflectivityPixelValue;
-					}
-				}
-			}
-			
-			BufferedImage roughnessImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
-	        roughnessImg.setRGB(0, 0, spatialRes, spatialRes, roughnessData, 0, spatialRes);
-	        ImageIO.write(roughnessImg, "PNG", new File(new File(outputDir, "textures"), "roughness.png"));
-			
-			BufferedImage reflectivityImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
-	        reflectivityImg.setRGB(0, 0, spatialRes, spatialRes, reflectivityData, 0, spatialRes);
-	        ImageIO.write(reflectivityImg, "PNG", new File(new File(outputDir, "textures"), "debug_reflectivity_beckmann.png"));
-			
-			System.out.println("Wrote specular roughness image...");
-			
-			System.out.println("Writing debug layers...");
-			for (int j = 0; j < directionalRes; j++)
-			{
-				int[] imageData = new int[spatialRes*spatialRes];
-				
-				for (int k = 0; k < spatialRes; k++)
-				{
-					for (int l = 0; l < spatialRes; l++)
-					{
-						double roughness = roughnessValues[k + l * spatialRes];
-						double reflectivity = reflectivityValues[k + l * spatialRes];
-						
-						if (Double.isFinite(roughness) && roughness > 0.0)
-						{
-							double coord = (double)j / (double)(directionalRes - 1);
-							double nDotH = coord + (1 - coord) * Math.sqrt(0.5);
-							
-							double roughnessSq = roughness * roughness;
-							double nDotHSq = nDotH * nDotH;
-							
-							double reflectance = reflectivity * Math.exp((nDotHSq - 1) / (nDotHSq * roughnessSq)) / (nDotHSq * nDotHSq);
-							
-							imageData[k + (spatialRes - l - 1) * spatialRes] = 0xFF000000 |
-									(Math.max(0, Math.min(255, (int)(reflectance * 255.0))) << 16) |
-									(Math.max(0, Math.min(255, (int)(reflectance * 255.0))) << 8) |
-									Math.max(0, Math.min(255, (int)(reflectance * 255.0)));
-						}
-					}
-				}
-				
-				BufferedImage outImg = new BufferedImage(spatialRes, spatialRes, BufferedImage.TYPE_INT_ARGB);
-		        outImg.setRGB(0, 0, spatialRes, spatialRes, imageData, 0, spatialRes);
-		        ImageIO.write(outImg, "PNG", new File(directionalLayerDir, "debug_" + j + ".png"));
-
-				System.out.println("Finished layer " + (1 + j) + "/" + directionalRes + " ...");
-			}
-			
-			return roughnessValues;
-		}
-		else
-		{
-			for (int k = 0; k < spatialRes; k++)
-			{
-				for (int l = 0; l < spatialRes; l++)
-				{
-					int[] imageData = new int[directionalRes*directionalRes];
-					
-					for (int i = 0; i < directionalRes; i++)
-					{
-						for (int j = 0; j < directionalRes; j++)
-						{
-							float[] solutionEntry = solution[i][j][k][l];
-							
-							if (solutionEntry[3] > 0.0)
-							{
-								imageData[j + (directionalRes - i - 1) * directionalRes] = 0xFF000000 |
-									(Math.max(0, Math.min(255, (int)(solutionEntry[0] * 255.0))) << 16) |
-									(Math.max(0, Math.min(255, (int)(solutionEntry[1] * 255.0))) << 8) |
-									Math.max(0, Math.min(255, (int)(solutionEntry[2] * 255.0)));
-							}
-						}
-					}
-					
-					BufferedImage outImg = new BufferedImage(directionalRes, directionalRes, BufferedImage.TYPE_INT_ARGB);
-			        outImg.setRGB(0, 0, directionalRes, directionalRes, imageData, 0, directionalRes);
-			        ImageIO.write(outImg, "PNG", new File(spatialLayerDir, k + "_" + l + ".png"));
-					
-					System.out.println("Wrote debug image " + (1 + l + k * spatialRes) + "/" + (spatialRes * spatialRes) + " ...");
-				}
-			}
-			
-			return null; // TODO
-		}
-	}
-	
 	private static class SpecularParams
 	{
 		public final double reflectivity;
@@ -982,20 +377,23 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		}
 	}
 	
-	private static double computeSumSqError(double roughnessSq, double reflectivity, double remainder, int directionalRes, double nDotHStart, IntToDoubleFunction residualTimesAlphaLookup, IntToDoubleFunction alphaLookup)
+	private static double computeSumSqError(double roughnessSq, double reflectivity, double remainder, int directionalRes, double nDotHStart, 
+			IntFunction<Vector3> colorSumLookup, IntFunction<Vector3> colorSquareSumLookup, 
+			IntToDoubleFunction diffuseAlphaLookup, IntToDoubleFunction specularAlphaLookup, IntToDoubleFunction contributionSumLookup)
 	{
 		double sumSqError = 0.0;
 		
 		// Evaluate error
 		for (int j = 0; j < directionalRes; j++)
 		{
-			double alpha = alphaLookup.applyAsDouble(j);
-			if (alpha > 0.0)
+			double specularAlpha = specularAlphaLookup.applyAsDouble(j);
+			if (specularAlpha > 0.0)
 			{
 				double coord = (double)j / (double)(directionalRes - 1);
 				double nDotH = coord + (1 - coord) * nDotHStart;
+				double contributionSum = contributionSumLookup.applyAsDouble(j);
 				
-				if (nDotH > 0.0)
+				if (nDotH > 0.0 && contributionSum > 0.0)
 				{
 					double nDotHSquared = nDotH * nDotH;
 					
@@ -1007,8 +405,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					double q1 = roughnessSq + (1.0 - nDotHSquared) / nDotHSquared;
 					double mfdEst = roughnessSq / (nDotHSquared * nDotHSquared * q1 * q1);
 					
-					double error = residualTimesAlphaLookup.applyAsDouble(j) - alpha * (remainder + reflectivity * mfdEst);
-					sumSqError += error * error;
+//					double error = colorSumLookup.apply(j).y - specularAlpha * (remainder + reflectivity * mfdEst);
+//					sumSqError += error * error;
+					
+					double fit = Math.pow((diffuseAlphaLookup.applyAsDouble(j) * remainder + specularAlpha * reflectivity * mfdEst) / contributionSum, GAMMA_INV);
+					double luminanceSum = colorSumLookup.apply(j).y;
+					double sqError = colorSquareSumLookup.apply(j).y - 2 * luminanceSum * fit + contributionSum * fit * fit;
+					sumSqError += sqError;
 				}
 			}
 		}
@@ -1016,7 +419,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		return sumSqError;
 	}
 	
-	private static SpecularParams computeSpecularParams(int directionalRes, double nDotHStart, IntToDoubleFunction residualTimesAlphaLookup, IntToDoubleFunction alphaLookup, File mfdFile) throws IOException
+	private static SpecularParams computeSpecularParams(int directionalRes, double nDotHStart, 
+			IntFunction<Vector3> colorSumLookup, IntFunction<Vector3> colorSquareSumLookup, 
+			IntToDoubleFunction diffuseWeightSumLookup, IntToDoubleFunction specularWeightSumLookup, IntToDoubleFunction contributionSumLookup,
+			File mfdFile) throws IOException
 	{
 		PrintStream mfdStream = new PrintStream(mfdFile);
 		
@@ -1030,7 +436,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		// Integral to find Specular reflectivity (low res)
 		double specularReflectivitySum = 0.0;
 		
-		double alpha;
+		double contributionSum;
 		double nDotH;
 		
 		final double SQRT_HALF = Math.sqrt(0.5);
@@ -1039,35 +445,39 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		int j = 0;
 		do
 		{
-			alpha = alphaLookup.applyAsDouble(j);
+			contributionSum = contributionSumLookup.applyAsDouble(j);
 			double coord = (double)j / (double)(directionalRes - 1);
 			nDotH = coord + (1 - coord) * nDotHStart;
 			
-			if (alpha == 0.0)
+			if (contributionSum == 0.0)
 			{
 				mfdStream.println(nDotH + ",0.0,0.0");
 			}
 			else if (nDotH < SQRT_HALF)
 			{
-				double weight = Math.max(0.0, residualTimesAlphaLookup.applyAsDouble(j)) / alpha;
-
 				mfdStream.print(nDotH + ",");
-				mfdStream.print(weight + ",");
-				mfdStream.println(alpha);
+				mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).x) / contributionSum + ",");
+				mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).y) / contributionSum + ",");
+				mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).z) / contributionSum + ",");
+				mfdStream.println(contributionSum);
 			}
 			
 			j++;
 		}
-		while (j < directionalRes-1 && (alpha == 0.0 || nDotH < SQRT_HALF));
+		while (j < directionalRes-1 && (contributionSum == 0.0 || nDotH < SQRT_HALF));
 		
-		double lastWeight = residualTimesAlphaLookup.applyAsDouble(j) / alpha;
+		double specularWeightSum = specularWeightSumLookup.applyAsDouble(j);
+		double lastWeight = colorSumLookup.apply(j).y / specularWeightSum;
 		
 		double coord = (double)j / (double)(directionalRes - 1);
 		double lastNDotH = coord + (1 - coord) * nDotHStart;
 		
 		mfdStream.print(lastNDotH + ",");
+
+		mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).x) / specularWeightSum + ",");
 		mfdStream.print(lastWeight + ",");
-		mfdStream.println(alpha);
+		mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).z) / specularWeightSum + ",");
+		mfdStream.println(specularWeightSum);
 		
 		if (lastNDotH > 0.0)
 		{
@@ -1083,22 +493,26 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		
 		for (j++; j < directionalRes; j++)
 		{
-			alpha = alphaLookup.applyAsDouble(j);
+			specularWeightSum = specularWeightSumLookup.applyAsDouble(j);
 			
 			coord = (double)j / (double)(directionalRes - 1);
 			nDotH = coord + (1 - coord) * nDotHStart;
 			
-			if (alpha <= 0.0)
+			if (specularWeightSum <= 0.0)
 			{
 				mfdStream.println(nDotH + ",0.0,0.0");
 			}
 			else
 			{
-				double weight = Math.max(0.0, residualTimesAlphaLookup.applyAsDouble(j)) / alpha;
+				double weight = Math.max(0.0, colorSumLookup.apply(j).y) / specularWeightSum;
 
 				mfdStream.print(nDotH + ",");
-				mfdStream.print(weight + ",");
-				mfdStream.println(alpha);
+
+				contributionSum = contributionSumLookup.applyAsDouble(j);
+				mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).x) / contributionSum + ",");
+				mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).y) / contributionSum + ",");
+				mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).z) / contributionSum + ",");
+				mfdStream.println(specularWeightSum);
 				
 				// Trapezoidal rule for integration
 				if (lastNDotH > 0.0)
@@ -1145,7 +559,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			double remainder = 0.0;
 			
 			double sumSqError;
-			double nextSumSqError = computeSumSqError(roughnessSq, reflectivity, remainder, directionalRes, nDotHStart, residualTimesAlphaLookup, alphaLookup);
+			double nextSumSqError = computeSumSqError(roughnessSq, reflectivity, remainder, directionalRes, nDotHStart, 
+					colorSumLookup, colorSquareSumLookup, diffuseWeightSumLookup, specularWeightSumLookup, contributionSumLookup);
 			
 			int i = 0;
 			double deltaRoughnessSq;
@@ -1163,13 +578,14 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				
 				for (j = 0; j < directionalRes; j++)
 				{
-					alpha = alphaLookup.applyAsDouble(j);
-					if (alpha > 0.0)
+					specularWeightSum = specularWeightSumLookup.applyAsDouble(j);
+					if (specularWeightSum > 0.0)
 					{
 						coord = (double)j / (double)(directionalRes - 1);
 						nDotH = coord + (1 - coord) * nDotHStart;
+						contributionSum = contributionSumLookup.applyAsDouble(j);
 						
-						if (nDotH > 0.0)
+						if (nDotH > 0.0  && contributionSum > 0.0 )
 						{
 							double nDotHSquared = nDotH * nDotH;
 							
@@ -1186,12 +602,24 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 							double q2 = 1.0 + (roughnessSq - 1.0) * nDotHSquared;
 							double mfdDeriv = (1.0 - (roughnessSq + 1.0) * nDotHSquared) / (q2 * q2 * q2);
 									
-							double residualTimesAlpha = (residualTimesAlphaLookup.applyAsDouble(j) - alpha * (remainder + reflectivity * mfdEst));
+//							double residualWeighted = (colorSumLookup.apply(j).y - specularWeightSum * (remainder + reflectivity * mfdEst));
+//							DoubleVector3 derivsWeighted = new DoubleVector3(specularWeightSum * reflectivity * mfdDeriv, specularWeightSum * mfdEst, specularWeightSum);
+
+							double diffuseWeightSum = diffuseWeightSumLookup.applyAsDouble(j);
+							double currentFit = (diffuseWeightSum * remainder + reflectivity * mfdEst * specularWeightSum) / contributionSum;
+							double residualWeighted = colorSumLookup.apply(j).y // already gamma corrected
+									- contributionSum * Math.pow(currentFit, GAMMA_INV);
 							
-							DoubleVector3 derivs = new DoubleVector3(alpha * reflectivity * mfdDeriv, alpha * mfdEst, alpha);
+							double dw = GAMMA_INV * Math.pow(currentFit, GAMMA_INV - 1);
+							DoubleVector3 derivsWeighted = new DoubleVector3(
+									dw * specularWeightSum * reflectivity * mfdDeriv, 
+									dw * specularWeightSum * mfdEst, 
+									dw * diffuseWeightSum);
 							
-							jacobianSquared = jacobianSquared.plus(derivs.outerProduct(derivs));
-							jacobianTimesResiduals = jacobianTimesResiduals.plus(derivs.times(residualTimesAlpha));
+							DoubleVector3 derivsUnweighted = derivsWeighted.times(1.0 / contributionSum);
+							
+							jacobianSquared = jacobianSquared.plus(derivsUnweighted.outerProduct(derivsWeighted));
+							jacobianTimesResiduals = jacobianTimesResiduals.plus(derivsUnweighted.times(residualWeighted));
 						}
 					}
 				}
@@ -1219,7 +647,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					nextRemainder = remainder + deltaRemainder;
 				}
 				
-				nextSumSqError = computeSumSqError(nextRoughnessSq, nextReflectivity, nextRemainder, directionalRes, nDotHStart, residualTimesAlphaLookup, alphaLookup);
+				nextSumSqError = computeSumSqError(nextRoughnessSq, nextReflectivity, nextRemainder, directionalRes, nDotHStart, 
+						colorSumLookup, colorSquareSumLookup, diffuseWeightSumLookup, specularWeightSumLookup, contributionSumLookup);
 				
 				while(nextSumSqError > sumSqError)
 				{
@@ -1232,7 +661,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					nextReflectivity = reflectivity + deltaReflectivity;
 					nextRemainder = remainder + deltaRemainder;
 					
-					nextSumSqError = computeSumSqError(nextRoughnessSq, nextReflectivity, nextRemainder, directionalRes, nDotHStart, residualTimesAlphaLookup, alphaLookup);
+					nextSumSqError = computeSumSqError(nextRoughnessSq, nextReflectivity, nextRemainder, directionalRes, nDotHStart, 
+							colorSumLookup, colorSquareSumLookup, diffuseWeightSumLookup, specularWeightSumLookup, contributionSumLookup);
 				}
 				
 				roughnessSq = nextRoughnessSq;
@@ -1250,12 +680,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		}
 	}
 	
-	private SpecularParams resample2(ViewSet<ContextType> viewSet, Texture<ContextType> diffuseFitTexture, Texture<ContextType> normalFitTexture) throws IOException
+	private SpecularParams resample(ViewSet<ContextType> viewSet, Texture<ContextType> diffuseFitTexture, Texture<ContextType> normalFitTexture) throws IOException
 	{
 		int directionalRes = 4096;
 		
-		double[] reflectanceSums = new double[directionalRes];
-		double[] weightSums = new double[directionalRes];
+		double[][] colorSums = new double[directionalRes][3];
+		double[][] colorSquareSums = new double[directionalRes][3];
+		double[] diffuseWeightSums = new double[directionalRes];
+		double[] specularWeightSums = new double[directionalRes];
+		double[] contributionSums = new double[directionalRes];
 		
 		System.out.println("Sampling views...");
 		
@@ -1274,7 +707,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 						try
 	    				{
 	    					framebuffer.saveColorBufferToFile(0, "PNG", new File(new File(outputDir, "debug"), String.format("colors%04d.png", K)));
-	    					framebuffer.saveColorBufferToFile(1, "PNG", new File(new File(outputDir, "debug"), String.format("halfangle%04d.png", K)));
+	    					framebuffer.saveColorBufferToFile(1, "PNG", new File(new File(outputDir, "debug"), String.format("geom%04d.png", K)));
 	    				}
 	    				catch (IOException e)
 	    				{
@@ -1284,47 +717,71 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					
 					int partitionSize = param.getTextureSize();
 					
-					float[] pixelData = framebuffer.readFloatingPointColorBufferRGBA(0);
+					float[] colorData = framebuffer.readFloatingPointColorBufferRGBA(0);
+					float[] geomData = framebuffer.readFloatingPointColorBufferRGBA(1);
 						
 					for (int y = 0; y < partitionSize; y++)
 					{
 						for (int x = 0; x < partitionSize; x++)
 						{
-							float alpha = pixelData[((y*partitionSize) + x) * 4 + 3];
+							float colorX = (float)Math.pow(colorData[((y*partitionSize) + x) * 4 + 0], GAMMA_INV);
+							float colorY = (float)Math.pow(colorData[((y*partitionSize) + x) * 4 + 1], GAMMA_INV);
+							float colorZ = (float)Math.pow(colorData[((y*partitionSize) + x) * 4 + 2], GAMMA_INV);
+							float xSquared = colorX * colorX;
+							float ySquared = colorY * colorY;
+							float zSquared = colorZ * colorZ;
+							float nDotL = colorData[((y*partitionSize) + x) * 4 + 3];
+							float nDotH =  geomData[((y*partitionSize) + x) * 4 + 2];
+							float geomRatio = geomData[((y*partitionSize) + x) * 4 + 3];
 							
-							if (alpha > 0.0f)
+							if (nDotL > 0.0f && nDotH > 0.0f && geomRatio > 0.0f)
 							{
-								float luminanceTimesAlpha = pixelData[((y*partitionSize) + x) * 4];
-								float hDotN =  pixelData[((y*partitionSize) + x) * 4 + 1];
+								double bin = (directionalRes-1) * nDotH; //(directionalRes-1) * 2 * (hDotN - 0.5)
+			
+								int binFloor = (int)Math.floor(bin);
+								int binCeil = (int)Math.ceil(bin);
 								
-								if (luminanceTimesAlpha > 0.0f && hDotN > 0.0f)
+								double s, t;
+			
+								if (binFloor >= 0 && binCeil < directionalRes)
 								{
-									double bin = (directionalRes-1) * hDotN; //(directionalRes-1) * 2 * (hDotN - 0.5)
-				
-									int binFloor = (int)Math.floor(bin);
-									int binCeil = (int)Math.ceil(bin);
-									
-									double s, t;
-				
-									if (binFloor >= 0 && binCeil < directionalRes)
+									if (binFloor == binCeil)
 									{
-										if (binFloor == binCeil)
-										{
-											t = 0.0;
-										}
-										else
-										{
-											t = (bin - binFloor);
-										}
-										
-										s = 1.0 - t;
-										
-										reflectanceSums[binFloor] += s * luminanceTimesAlpha;
-										reflectanceSums[binCeil] += t * luminanceTimesAlpha;
-										
-										weightSums[binFloor] += s * alpha;
-										weightSums[binCeil] += t * alpha;
+										t = 0.0;
 									}
+									else
+									{
+										t = (bin - binFloor);
+									}
+									
+									s = 1.0 - t;
+									
+									colorSums[binFloor][0] += s * colorX;
+									colorSums[binCeil][0] += t * colorX;
+									
+									colorSums[binFloor][1] += s * colorY;
+									colorSums[binCeil][1] += t * colorY;
+									
+									colorSums[binFloor][2] += s * colorZ;
+									colorSums[binCeil][2] += t * colorZ;
+									
+									colorSquareSums[binFloor][0] += s * xSquared;
+									colorSquareSums[binCeil][0] += t * xSquared;
+									
+									colorSquareSums[binFloor][1] += s * ySquared;
+									colorSquareSums[binCeil][1] += t * ySquared;
+									
+									colorSquareSums[binFloor][2] += s * zSquared;
+									colorSquareSums[binCeil][2] += t * zSquared;
+									
+									diffuseWeightSums[binFloor] += s * nDotL;
+									diffuseWeightSums[binCeil] += t * nDotL;
+									
+									specularWeightSums[binFloor] += s * nDotL * geomRatio;
+									specularWeightSums[binCeil] += t * nDotL * geomRatio;
+									
+									contributionSums[binFloor] += s;
+									contributionSums[binFloor] += t;
 								}
 							}
 						}
@@ -1338,7 +795,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		}
 		
 		//return computeSpecularParams(directionalRes, 0.0, (j) -> weightSums[j] > 0.0 ? reflectanceSums[j] / weightSums[j] : 0.0, (j) -> weightSums[j] > 0.0 ? 1.0 : 0.0, new File(outputDir, "mfd.csv"));
-		return computeSpecularParams(directionalRes, 0.0, (j) -> reflectanceSums[j], (j) -> weightSums[j], new File(outputDir, "mfd.csv"));
+		return computeSpecularParams(directionalRes, 0.0, 
+				(j) -> new Vector3((float)colorSums[j][0], (float)colorSums[j][1], (float)colorSums[j][2]), 
+				(j) -> new Vector3((float)colorSquareSums[j][0], (float)colorSquareSums[j][1], (float)colorSquareSums[j][2]), 
+				(j) -> diffuseWeightSums[j], 
+				(j) -> specularWeightSums[j], 
+				(j) -> contributionSums[j],
+				new File(outputDir, "mfd.csv"));
 	}
 	
 	private void loadMesh() throws IOException
@@ -2716,7 +2179,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	if (!SKIP_SPECULAR_FIT)
 	    	{
 				// Resample the reflectance data
-	    		SpecularParams specularParams = resample2(viewSet, diffuseTexture, normalTexture);
+	    		SpecularParams specularParams = resample(viewSet, diffuseTexture, normalTexture);
 	    		System.out.println("Reflectivity: " + specularParams.reflectivity);
 	    		System.out.println("Roughness: " + specularParams.roughness);
 	    		System.out.println("Remainder: " + specularParams.remainder);

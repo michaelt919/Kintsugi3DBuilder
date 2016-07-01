@@ -10,9 +10,10 @@ uniform sampler2D normalEstimate;
 
 struct SpecularResidualInfo
 {
-    float residualLuminance;
-    float alpha;
+    vec3 residualXYZ;
+	float nDotL;
     vec3 halfAngleVector;
+	float geomRatio;
 };
 
 vec3 getDiffuseColor()
@@ -75,14 +76,14 @@ SpecularResidualInfo computeSpecularResidualInfo()
     if (color.a * nDotV > 0)
     {
         vec3 lightPreNormalized = getLightVector();
-        vec3 attenuatedLightIntensity = infiniteLightSource ? lightIntensity : lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
+        vec3 attenuatedLightIntensity = infiniteLightSource ? 
+			lightIntensity : lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
         vec3 light = normalize(lightPreNormalized);
-        info.residualLuminance = color.a * getLuminance(color.rgb / attenuatedLightIntensity) * 4 * nDotV;
+		info.nDotL = max(0, dot(geometricNormal, light));
+		
+        info.residualXYZ = rgbToXYZ(color.rgb / attenuatedLightIntensity);
+				
 		vec3 halfAngle = normalize(light + view);
-        info.alpha = color.a * 
-			min(1.0, 2.0 * max(0, dot(geometricNormal, halfAngle)) * min(nDotV, max(0, dot(geometricNormal, light))) 
-				/ max(0, dot(view, halfAngle)));
-        
         vec3 tangent = normalize(fTangent - dot(geometricNormal, fTangent));
         vec3 bitangent = normalize(fBitangent
             - dot(geometricNormal, fBitangent) * geometricNormal 
@@ -91,7 +92,11 @@ SpecularResidualInfo computeSpecularResidualInfo()
         mat3 tangentToObject = mat3(tangent, bitangent, geometricNormal);
         mat3 objectToTangent = transpose(tangentToObject);
         
+		
         info.halfAngleVector = objectToTangent * normalize(view + light);
+		info.geomRatio = 
+			max(0.0, min(1.0, 2.0 * max(0, info.halfAngleVector.z) * min(nDotV, info.nDotL)) / max(0, dot(view, halfAngle)))
+			/ (4 * nDotV * info.nDotL);
         
         // // TODO debug code, remove this
         // float roughnessSquared = 0.03846153846153846153846153846154; //0.25 * 0.25;
@@ -101,7 +106,10 @@ SpecularResidualInfo computeSpecularResidualInfo()
     }
     else
     {
-        info.alpha = 0.0;
+        info.residualXYZ = vec3(0);
+		info.nDotL = 0.0;
+		info.halfAngleVector = vec3(0.0);
+		info.geomRatio = 0.0;
     }
     
     return info;
