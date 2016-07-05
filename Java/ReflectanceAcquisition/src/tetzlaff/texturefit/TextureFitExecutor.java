@@ -474,10 +474,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		
 		mfdStream.print(lastNDotH + ",");
 
-		mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).x) / specularWeightSum + ",");
-		mfdStream.print(lastWeight + ",");
-		mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).z) / specularWeightSum + ",");
-		mfdStream.println(specularWeightSum);
+		mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).x) / contributionSum + ",");
+		mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).y) / contributionSum + ",");
+		mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).z) / contributionSum + ",");
+		mfdStream.println(contributionSum);
 		
 		if (lastNDotH > 0.0)
 		{
@@ -512,7 +512,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).x) / contributionSum + ",");
 				mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).y) / contributionSum + ",");
 				mfdStream.print(Math.max(0.0, colorSumLookup.apply(j).z) / contributionSum + ",");
-				mfdStream.println(specularWeightSum);
+				mfdStream.println(contributionSum);
 				
 				// Trapezoidal rule for integration
 				if (lastNDotH > 0.0)
