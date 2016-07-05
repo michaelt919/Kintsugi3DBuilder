@@ -101,7 +101,7 @@ TwoColorFit fitSpecular()
 				float diffuseWeight = color.a * nDotL;
 				float specularWeight = color.a * mfdEval / (4 * nDotV) * min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
 				
-				vec3 colorScaled = nDotV * color.a * color.rgb / attenuatedLightIntensity;
+				vec3 colorScaled = color.a * color.rgb / attenuatedLightIntensity;
 				
 				vec2 weights = vec2(diffuseWeight, specularWeight);
 				a += outerProduct(weights, weights);
