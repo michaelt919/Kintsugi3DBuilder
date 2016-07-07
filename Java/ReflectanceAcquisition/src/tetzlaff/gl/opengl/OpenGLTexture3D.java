@@ -1,10 +1,10 @@
 package tetzlaff.gl.opengl;
 
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
-import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

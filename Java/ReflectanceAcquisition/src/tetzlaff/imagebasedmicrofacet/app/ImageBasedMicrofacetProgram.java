@@ -7,21 +7,11 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-//import org.lwjgl.opengl.GLDebugMessageCallback;
-//import static org.lwjgl.opengl.KHRDebug.*;
-
-
-
-
-import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileNameExtensionFilter;
-
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.FirstPersonController;
 import tetzlaff.gl.helpers.InteractiveGraphics;
-import tetzlaff.gl.helpers.LightController;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.opengl.OpenGLContext;
@@ -32,6 +22,8 @@ import tetzlaff.imagebasedmicrofacet.TrackballLightController;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.window.glfw.GLFWWindow;
+//import org.lwjgl.opengl.GLDebugMessageCallback;
+//import static org.lwjgl.opengl.KHRDebug.*;
 
 /**
  * ULFProgram is a container for the main entry point of the Unstructured Light Field

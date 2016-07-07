@@ -3,9 +3,10 @@
 
 #include "../reflectance/reflectance.glsl"
 
-#line 7 2004
+#line 7 2006
 
 #define SHIFT_FRACTION 0.00390625 // 1/256
+#define MAX_ERROR 3.402822E38 // Max 32-bit floating-point is 3.4028235E38
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
@@ -41,11 +42,11 @@ struct ErrorResult
 
 ErrorResult calculateError()
 {
-	float prevSumSqError, terminated = texture(prevSumSqError, fTexCoord).xy;
+	vec4 prevSumSqError = texture(prevSumSqError, fTexCoord);
 	
-	if (terminated > 0.0)
+	if (prevSumSqError.x < 1.0)
 	{
-		return ErrorResult(prevSumSqError, true);
+		return ErrorResult(prevSumSqError.y, true);
 	}
 	else
 	{
@@ -97,9 +98,11 @@ ErrorResult calculateError()
 			}
 		}
 		
-		if (sumSqError > prevSumSqError)
+		sumSqError = min(sumSqError, MAX_ERROR);
+		
+		if (sumSqError > prevSumSqError.y)
 		{
-			return ErrorResult(prevSumSqError, true);
+			return ErrorResult(prevSumSqError.y, true);
 		}
 		else
 		{

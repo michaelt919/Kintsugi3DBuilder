@@ -7,7 +7,7 @@ in vec3 fNormal;
 layout(location = 0) out vec2 sumSqError;
 
 #include "../reflectance/reflectance.glsl"
-#include "../reflectance/imgspace.glsl"
+#include "../reflectance/texspace.glsl"
 #include "errorcalc.glsl"
 
 #line 14 0
