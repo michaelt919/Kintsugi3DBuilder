@@ -24,9 +24,6 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL14;
-import org.lwjgl.opengl.GL21;
 
 import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.BufferAccessFrequency;

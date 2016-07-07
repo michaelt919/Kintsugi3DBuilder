@@ -1,9 +1,6 @@
 package tetzlaff.imagebasedmicrofacet;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
 
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.LightController;
@@ -14,12 +11,7 @@ import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ulf.ViewSet;
-import tetzlaff.window.KeyCodes;
-import tetzlaff.window.ModifierKeys;
 import tetzlaff.window.Window;
-import tetzlaff.window.listeners.CharacterListener;
-import tetzlaff.window.listeners.KeyPressListener;
-import tetzlaff.window.listeners.KeyReleaseListener;
 
 public class HardcodedLightController implements LightController, OverrideableLightController
 {

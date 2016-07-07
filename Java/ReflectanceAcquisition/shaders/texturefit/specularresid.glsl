@@ -5,9 +5,6 @@
 
 #line 7 2003
 
-uniform sampler2D diffuseEstimate;
-uniform sampler2D normalEstimate;
-
 struct SpecularResidualInfo
 {
     vec3 residualXYZ;
@@ -16,47 +13,11 @@ struct SpecularResidualInfo
 	float geomRatio;
 };
 
-vec3 getDiffuseColor()
-{
-    return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
-}
-
-vec3 getDiffuseNormalVector()
-{
-    return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
-}
-
-// struct DiffuseRemovalResult
-// {
-	// float luminance;
-	// float alpha;
-	// float nDotL;
-// }
-
-// DiffuseRemovalResult removeDiffuse(vec4 originalColor, vec3 diffuseColor, float maxLuminance,
-    // vec3 light, vec3 attenuatedLightIntensity, vec3 normal)
-// {
-    // float nDotL = max(0, dot(light, normal));
-    // if (nDotL == 0.0)
-    // {
-        // return vec2(0);
-    // }
-    // else
-    // {
-        // vec3 diffuseContrib = diffuseColor * nDotL * attenuatedLightIntensity;
-        // float cap = maxLuminance - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
-        // float remainder = getLuminance((originalColor.rgb - diffuseContrib) / attenuatedLightIntensity);
-        // return DiffuseRemovalResult(remainder, originalColor.a, nDotL);
-    // }
-// }
-
 SpecularResidualInfo computeSpecularResidualInfo()
 {
     SpecularResidualInfo info;
 
-    vec3 geometricNormal = normalize(fNormal);
-    vec3 diffuseNormal = getDiffuseNormalVector();
-    vec3 diffuseColor = getDiffuseColor();
+    vec3 normal = normalize(fNormal);
     float maxLuminance = getMaxLuminance();
     
     vec3 view = normalize(getViewVector());
@@ -71,7 +32,7 @@ SpecularResidualInfo computeSpecularResidualInfo()
     // as in the original photographs.
     vec4 color = getLinearColor();
     
-    float nDotV = dot(geometricNormal, view);
+    float nDotV = dot(normal, view);
     
     if (color.a * nDotV > 0)
     {
@@ -79,17 +40,17 @@ SpecularResidualInfo computeSpecularResidualInfo()
         vec3 attenuatedLightIntensity = infiniteLightSource ? 
 			lightIntensity : lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
         vec3 light = normalize(lightPreNormalized);
-		info.nDotL = max(0, dot(geometricNormal, light));
+		info.nDotL = max(0, dot(normal, light));
 		
         info.residualXYZ = rgbToXYZ(color.rgb / attenuatedLightIntensity);
 				
 		vec3 halfAngle = normalize(light + view);
-        vec3 tangent = normalize(fTangent - dot(geometricNormal, fTangent));
+        vec3 tangent = normalize(fTangent - dot(normal, fTangent));
         vec3 bitangent = normalize(fBitangent
-            - dot(geometricNormal, fBitangent) * geometricNormal 
+            - dot(normal, fBitangent) * normal 
             - dot(tangent, fBitangent) * tangent);
             
-        mat3 tangentToObject = mat3(tangent, bitangent, geometricNormal);
+        mat3 tangentToObject = mat3(tangent, bitangent, normal);
         mat3 objectToTangent = transpose(tangentToObject);
         
 		
