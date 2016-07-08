@@ -271,7 +271,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     @Override
     public boolean draw()
     {
-		context.makeContextCurrent();
+    	context.makeContextCurrent();
+    	context.enableBackFaceCulling();
 		if(multisamplingEnabled && !halfResEnabled)
 		{
 			context.enableMultisampling();

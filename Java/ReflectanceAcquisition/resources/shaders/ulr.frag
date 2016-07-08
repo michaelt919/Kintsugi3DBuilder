@@ -3,6 +3,7 @@
 #define MAX_SAMPLE_COUNT 10
 
 #define MAX_CAMERA_POSE_COUNT 1024
+#define MAX_CAMERA_POSE_COUNT_DIV_4 256
 #define MAX_CAMERA_PROJECTION_COUNT 1024
 
 uniform bool occlusionEnabled;
@@ -25,24 +26,30 @@ in vec3 fViewPos;
 uniform sampler2DArray imageTextures;
 uniform sampler2DArray depthTextures;
 
-uniform CameraPoses
+layout(std140) uniform CameraPoses
 {
 	mat4 cameraPoses[MAX_CAMERA_POSE_COUNT];
 };
 
 uniform int cameraPoseCount;
 
-uniform CameraProjections
+layout(std140) uniform CameraProjections
 {
 	mat4 cameraProjections[MAX_CAMERA_PROJECTION_COUNT];
 };
 
-uniform CameraProjectionIndices
+layout(std140) uniform CameraProjectionIndices
 {
-	int cameraProjectionIndices[MAX_CAMERA_POSE_COUNT];
+	// Needs to be in groups of 4 for std140 layout
+	ivec4 cameraProjectionIndices[MAX_CAMERA_POSE_COUNT_DIV_4];
 };
 
 layout(location = 0) out vec4 fragColor;
+
+mat4 getCameraProjection(int cameraPoseIndex)
+{
+	return cameraProjections[cameraProjectionIndices[cameraPoseIndex / 4][cameraPoseIndex % 4]];
+}
 
 float computeSampleWeight(vec3 cameraPos, vec3 samplePos, vec3 fragmentPos)
 {
@@ -59,7 +66,7 @@ float getSampleWeight(int index)
 vec4 getLightFieldSample(int index)
 {
 	vec4 fragPos = cameraPoses[index] * vec4(fPosition, 1.0);
-	vec4 projTexCoord = cameraProjections[cameraProjectionIndices[index]] * fragPos;
+	vec4 projTexCoord = getCameraProjection(index) * fragPos;
 	projTexCoord = projTexCoord / projTexCoord.w;
 	projTexCoord = (projTexCoord + vec4(1)) / 2;
 	
@@ -89,7 +96,7 @@ vec4 getLightFieldSample(int index)
 vec4 getLightFieldSampleNoMipmap(int index)
 {
 	vec4 fragPos = cameraPoses[index] * vec4(fPosition, 1.0);
-	vec4 projTexCoord = cameraProjections[cameraProjectionIndices[index]] * fragPos;
+	vec4 projTexCoord = getCameraProjection(index) * fragPos;
 	projTexCoord = projTexCoord / projTexCoord.w;
 	projTexCoord = (projTexCoord + vec4(1)) / 2;
 	
