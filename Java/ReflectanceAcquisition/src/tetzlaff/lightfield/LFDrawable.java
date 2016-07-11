@@ -23,7 +23,7 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf;
+package tetzlaff.lightfield;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,17 +34,17 @@ import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.Vector4;
 
 /**
- * Defines an interface for an object that draws unstructured light fields.
+ * Defines an interface for an object that draws light fields.
  * @author Michael Tetzlaff
  *
  */
-public interface ULFDrawable<ContextType extends Context<ContextType>> extends Drawable
+public interface LFDrawable<ContextType extends Context<ContextType>> extends Drawable
 {
 	/**
 	 * Sets a loading monitor with callbacks that are fired when the light field finishes loading and/or at certain checkpoints when loading.
 	 * @param callback The loading monitor.
 	 */
-	void setOnLoadCallback(ULFLoadingMonitor callback);
+	void setOnLoadCallback(LFLoadingMonitor callback);
 	
 	/**
 	 * Gets the exponent of the gamma curve when applying color correction on the final rendering and inverse color correction on the input images.
@@ -168,13 +168,13 @@ public interface ULFDrawable<ContextType extends Context<ContextType>> extends D
 	void setKNeighborCount(int kNeighborCount);
 	
 	/**
-	 * Sets the shader program to be used by the Unstructured Light Field renderer.
+	 * Sets the shader program to be used by the Light Field renderer.
 	 * @param program The program to be used.
 	 */
 	void setProgram(Program<ContextType> program);
 	
 	/**
-	 * Requests that the unstructured light field be rendered using camera poses as defined by an external view set.
+	 * Requests that the light field be rendered using camera poses as defined by an external view set.
 	 * @param width The width of each output image.
 	 * @param height The height of each output image.
 	 * @param targetVSETFile The view set file containing the camera poses from which to render.

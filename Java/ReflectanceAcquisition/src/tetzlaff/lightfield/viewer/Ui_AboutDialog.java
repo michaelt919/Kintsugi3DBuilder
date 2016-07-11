@@ -24,13 +24,13 @@
  *
  */
 /********************************************************************************
- ** Form generated from reading ui file 'ULFRendererAbout.ui.jui'
+ ** Form generated from reading ui file 'LFViewerAbout.ui.jui'
  **
  ** Created by: Qt User Interface Compiler version 4.8.6
  **
  ** WARNING! All changes made in this file will be lost when recompiling ui file!
  ********************************************************************************/
-package tetzlaff.ulf.app;
+package tetzlaff.lightfield.viewer;
 
 import com.trolltech.qt.core.*;
 import com.trolltech.qt.gui.*;
@@ -113,10 +113,10 @@ public class Ui_AboutDialog implements com.trolltech.qt.QUiForm<QDialog>
 
     void retranslateUi(QDialog AboutDialog)
     {
-        AboutDialog.setWindowTitle(com.trolltech.qt.core.QCoreApplication.translate("AboutDialog", "About ULF Renderer v1.0", null));
+        AboutDialog.setWindowTitle(com.trolltech.qt.core.QCoreApplication.translate("AboutDialog", "About LF Viewer v1.0", null));
         iconLabel.setText("");
         textLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("AboutDialog", "<html><body>\n"+
-"<h2>ULF Renderer</h2>\n"+
+"<h2>LF Viewer</h2>\n"+
 "<h3>Version: 1.0 (alpha 2)</h3>\n"+
 "\n"+
 "<p>Originally written by:<ul>\n"+

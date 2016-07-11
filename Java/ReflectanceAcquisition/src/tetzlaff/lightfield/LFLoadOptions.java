@@ -23,14 +23,14 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf;
+package tetzlaff.lightfield;
 
 /**
- * A model of the available options when loading an unstructured light field.
+ * A model of the available options when loading a light field.
  * @author Michael Tetzlaff
  *
  */
-public class ULFLoadOptions 
+public class LFLoadOptions 
 {
 	/**
 	 * The options to use when loading color images.
@@ -53,13 +53,13 @@ public class ULFLoadOptions
 	private int depthImageHeight;
 	
 	/**
-	 * Creates a new object for modeling unstructured light field loading options.
+	 * Creates a new object for modeling light field loading options.
 	 * @param imageOptions The options to use when loading color images.
 	 * @param depthImagesRequested Whether or not to generate depth images for visibility testing.
 	 * @param depthImageWidth  The width of the depth images to be generated (if requested).
 	 * @param depthImageHeight The height of the depth images to be generated (if requested).
 	 */
-	public ULFLoadOptions(ViewSetImageOptions imageOptions, boolean depthImagesRequested, int depthImageWidth, int depthImageHeight) 
+	public LFLoadOptions(ViewSetImageOptions imageOptions, boolean depthImagesRequested, int depthImageWidth, int depthImageHeight) 
 	{
 		this.imageOptions = imageOptions;
 		this.depthImagesRequested = depthImagesRequested;

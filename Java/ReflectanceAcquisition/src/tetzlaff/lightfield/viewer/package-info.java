@@ -24,10 +24,10 @@
  *
  */
 /**
- * Provides top level objects for viewing unstructured light fields as well
+ * Provides top level objects for viewing light fields as well
  * as controlling their settings.
  *
  * @since 1.0
- * @see tetzlaff.ulf
+ * @see tetzlaff.lightfield
  */
-package tetzlaff.ulf.app;
+package tetzlaff.lightfield.viewer;

@@ -1,9 +1,9 @@
 <launch4jConfig>
 
   <headerType>gui</headerType>
-  <jar>dist/ULFRenderer_fat.jar</jar>
-  <outfile>dist/lib_win/ULFRenderer.exe</outfile>
-  <errTitle>ULFRenderer</errTitle>
+  <jar>dist/LFViewer_fat.jar</jar>
+  <outfile>dist/lib_win/LFViewer.exe</outfile>
+  <errTitle>LFViewer</errTitle>
   <icon>resources/icons/icon.ico</icon>
   <restartOnCrash>false</restartOnCrash>
 
@@ -16,12 +16,12 @@
   	<txtFileVersion>1.0alpha2</txtFileVersion>
   	<productVersion>1.0.0.0</productVersion>
   	<txtProductVersion>1.0alpha2</txtProductVersion>
-  	<productName>ULF Renderer</productName>
+  	<productName>LF Viewer</productName>
   	<fileDescription>Tool for rendering photogrammetry models as unstructured light fields.</fileDescription>
 	<copyright>(c)2015 Cultural Heritage Imaging</copyright>
 	<companyName>Cultural Heritage Imaging</companyName>
-	<internalName>ULFRenderer</internalName>
-	<originalFilename>ULFRenderer.exe</originalFilename>
+	<internalName>LFViewer</internalName>
+	<originalFilename>LFViewer.exe</originalFilename>
   </versionInfo>
   
   <jre>

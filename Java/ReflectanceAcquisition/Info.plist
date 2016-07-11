@@ -9,13 +9,13 @@
 	<key>CFBundleIconFile</key>
 	<string>icons/icon.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.culturalheritageimaging.ULFRenderer</string>
+	<string>org.culturalheritageimaging.LFViewer</string>
 	<key>CFBundleDisplayName</key>
-	<string>ULF Renderer</string>
+	<string>LF Viewer</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>ULFRenderer</string>
+	<string>LFViewer</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -29,7 +29,7 @@
 	<key>JVMRuntime</key>
 	<string>Java</string>
 	<key>JVMMainClassName</key>
-	<string>tetzlaff.ulf.app.ULFProgram</string>
+	<string>tetzlaff.lightfield.viewer.LFViewer</string>
 	<key>JVMOptions</key>
 	<array/>
 	<key>JVMArguments</key>

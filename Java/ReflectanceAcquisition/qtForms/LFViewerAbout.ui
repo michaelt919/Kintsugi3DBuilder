@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>About ULF Renderer v1.0</string>
+   <string>About LF Viewer v1.0</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -95,7 +95,7 @@
        </property>
        <property name="text">
         <string>&lt;html&gt;&lt;body&gt;
-&lt;h2&gt;ULF Renderer&lt;/h2&gt;
+&lt;h2&gt;LF Viewer&lt;/h2&gt;
 &lt;h3&gt;Version: 1.0 (alpha 2)&lt;/h3&gt;
 
 &lt;p&gt;Originally written by:&lt;ul&gt;

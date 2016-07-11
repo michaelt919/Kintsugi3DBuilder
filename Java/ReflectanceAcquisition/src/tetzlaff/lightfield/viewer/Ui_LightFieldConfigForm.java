@@ -24,25 +24,19 @@
  *
  */
 /********************************************************************************
- ** Form generated from reading ui file 'ULFRendererQMainWindow.ui.jui'
+ ** Form generated from reading ui file 'LightFieldConfig.ui.jui'
  **
  ** Created by: Qt User Interface Compiler version 4.8.6
  **
  ** WARNING! All changes made in this file will be lost when recompiling ui file!
  ********************************************************************************/
-package tetzlaff.ulf.app;
+package tetzlaff.lightfield.viewer;
 
 import com.trolltech.qt.core.*;
 import com.trolltech.qt.gui.*;
 
-public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainWindow>
+public class Ui_LightFieldConfigForm implements com.trolltech.qt.QUiForm<QWidget>
 {
-    public QAction actionLoad_single_model;
-    public QAction actionLoad_model_sequence;
-    public QAction actionQuit;
-    public QAction actionAbout_ULF_Renderer;
-    public QAction actionHelp;
-    public QWidget centralwidget;
     public QVBoxLayout verticalLayout_6;
     public QGroupBox loadOptionsGroupBox;
     public QVBoxLayout verticalLayout_2;
@@ -57,6 +51,9 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
     public QSpinBox depthImageWidthSpinner;
     public QLabel depthImageXLabel;
     public QSpinBox depthImageHeightSpinner;
+    public QHBoxLayout horizontalLayout_2;
+    public QPushButton loadSingleButton;
+    public QPushButton loadMultipleButton;
     public QGroupBox modelOptionsGroupBox;
     public QVBoxLayout verticalLayout_3;
     public QComboBox modelComboBox;
@@ -102,34 +99,18 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
     public QSpacerItem horizontalSpacer_2;
     public QToolButton reportBugButton;
     public QSpacerItem verticalSpacer;
-    public QMenuBar menubar;
-    public QMenu menuFile;
-    public QMenu menuHelp;
-    public QStatusBar statusbar;
 
-    public Ui_ULFRendererMainWindow() { super(); }
+    public Ui_LightFieldConfigForm() { super(); }
 
-    public void setupUi(QMainWindow ULFRendererMainWindow)
+    public void setupUi(QWidget LightFieldConfigForm)
     {
-        ULFRendererMainWindow.setObjectName("ULFRendererMainWindow");
-        ULFRendererMainWindow.resize(new QSize(345, 780).expandedTo(ULFRendererMainWindow.minimumSizeHint()));
-        ULFRendererMainWindow.setMinimumSize(new QSize(345, 780));
-        ULFRendererMainWindow.setMaximumSize(new QSize(345, 780));
-        actionLoad_single_model = new QAction(ULFRendererMainWindow);
-        actionLoad_single_model.setObjectName("actionLoad_single_model");
-        actionLoad_model_sequence = new QAction(ULFRendererMainWindow);
-        actionLoad_model_sequence.setObjectName("actionLoad_model_sequence");
-        actionQuit = new QAction(ULFRendererMainWindow);
-        actionQuit.setObjectName("actionQuit");
-        actionAbout_ULF_Renderer = new QAction(ULFRendererMainWindow);
-        actionAbout_ULF_Renderer.setObjectName("actionAbout_ULF_Renderer");
-        actionHelp = new QAction(ULFRendererMainWindow);
-        actionHelp.setObjectName("actionHelp");
-        centralwidget = new QWidget(ULFRendererMainWindow);
-        centralwidget.setObjectName("centralwidget");
-        verticalLayout_6 = new QVBoxLayout(centralwidget);
+        LightFieldConfigForm.setObjectName("LightFieldConfigForm");
+        LightFieldConfigForm.resize(new QSize(345, 774).expandedTo(LightFieldConfigForm.minimumSizeHint()));
+        LightFieldConfigForm.setMinimumSize(new QSize(345, 774));
+        LightFieldConfigForm.setMaximumSize(new QSize(345, 774));
+        verticalLayout_6 = new QVBoxLayout(LightFieldConfigForm);
         verticalLayout_6.setObjectName("verticalLayout_6");
-        loadOptionsGroupBox = new QGroupBox(centralwidget);
+        loadOptionsGroupBox = new QGroupBox(LightFieldConfigForm);
         loadOptionsGroupBox.setObjectName("loadOptionsGroupBox");
         verticalLayout_2 = new QVBoxLayout(loadOptionsGroupBox);
         verticalLayout_2.setSpacing(5);
@@ -209,10 +190,25 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
 
         verticalLayout_2.addWidget(frame);
 
+        horizontalLayout_2 = new QHBoxLayout();
+        horizontalLayout_2.setObjectName("horizontalLayout_2");
+        loadSingleButton = new QPushButton(loadOptionsGroupBox);
+        loadSingleButton.setObjectName("loadSingleButton");
+
+        horizontalLayout_2.addWidget(loadSingleButton);
+
+        loadMultipleButton = new QPushButton(loadOptionsGroupBox);
+        loadMultipleButton.setObjectName("loadMultipleButton");
+
+        horizontalLayout_2.addWidget(loadMultipleButton);
+
+
+        verticalLayout_2.addLayout(horizontalLayout_2);
+
 
         verticalLayout_6.addWidget(loadOptionsGroupBox);
 
-        modelOptionsGroupBox = new QGroupBox(centralwidget);
+        modelOptionsGroupBox = new QGroupBox(LightFieldConfigForm);
         modelOptionsGroupBox.setObjectName("modelOptionsGroupBox");
         verticalLayout_3 = new QVBoxLayout(modelOptionsGroupBox);
         verticalLayout_3.setObjectName("verticalLayout_3");
@@ -235,7 +231,7 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
 
         verticalLayout_6.addWidget(modelOptionsGroupBox);
 
-        renderingOptionsGroupBox = new QGroupBox(centralwidget);
+        renderingOptionsGroupBox = new QGroupBox(LightFieldConfigForm);
         renderingOptionsGroupBox.setObjectName("renderingOptionsGroupBox");
         verticalLayout_4 = new QVBoxLayout(renderingOptionsGroupBox);
         verticalLayout_4.setObjectName("verticalLayout_4");
@@ -397,7 +393,7 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
 
         verticalLayout_6.addWidget(renderingOptionsGroupBox);
 
-        qualityOptionsGroupBox = new QGroupBox(centralwidget);
+        qualityOptionsGroupBox = new QGroupBox(LightFieldConfigForm);
         qualityOptionsGroupBox.setObjectName("qualityOptionsGroupBox");
         horizontalLayout_5 = new QHBoxLayout(qualityOptionsGroupBox);
         horizontalLayout_5.setObjectName("horizontalLayout_5");
@@ -415,7 +411,7 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
 
         verticalLayout_6.addWidget(qualityOptionsGroupBox);
 
-        resampleGroupBox = new QGroupBox(centralwidget);
+        resampleGroupBox = new QGroupBox(LightFieldConfigForm);
         resampleGroupBox.setObjectName("resampleGroupBox");
         verticalLayout_5 = new QVBoxLayout(resampleGroupBox);
         verticalLayout_5.setObjectName("verticalLayout_5");
@@ -483,7 +479,7 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
 
         horizontalLayout_8.addItem(horizontalSpacer_2);
 
-        reportBugButton = new QToolButton(centralwidget);
+        reportBugButton = new QToolButton(LightFieldConfigForm);
         reportBugButton.setObjectName("reportBugButton");
 
         horizontalLayout_8.addWidget(reportBugButton);
@@ -495,18 +491,6 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
 
         verticalLayout_6.addItem(verticalSpacer);
 
-        ULFRendererMainWindow.setCentralWidget(centralwidget);
-        menubar = new QMenuBar(ULFRendererMainWindow);
-        menubar.setObjectName("menubar");
-        menubar.setGeometry(new QRect(0, 0, 345, 22));
-        menuFile = new QMenu(menubar);
-        menuFile.setObjectName("menuFile");
-        menuHelp = new QMenu(menubar);
-        menuHelp.setObjectName("menuHelp");
-        ULFRendererMainWindow.setMenuBar(menubar);
-        statusbar = new QStatusBar(ULFRendererMainWindow);
-        statusbar.setObjectName("statusbar");
-        ULFRendererMainWindow.setStatusBar(statusbar);
         depImageDimensionsLabel.setBuddy(depthImageWidthSpinner);
         depthImageXLabel.setBuddy(depthImageHeightSpinner);
         kNeighborCountLabel.setBuddy(kNeighborCountSpinBox);
@@ -516,59 +500,69 @@ public class Ui_ULFRendererMainWindow implements com.trolltech.qt.QUiForm<QMainW
         visibilityBiasLabel.setBuddy(visibilityBiasSpinBox);
         resampleDimensionsLabel.setBuddy(resampleWidthSpinner);
         resampleXLabel.setBuddy(resampleHeightSpinner);
+        QWidget.setTabOrder(compressCheckBox, mipmapsCheckbox);
+        QWidget.setTabOrder(mipmapsCheckbox, generateDepthImagesCheckBox);
+        QWidget.setTabOrder(generateDepthImagesCheckBox, depthImageWidthSpinner);
+        QWidget.setTabOrder(depthImageWidthSpinner, depthImageHeightSpinner);
+        QWidget.setTabOrder(depthImageHeightSpinner, loadSingleButton);
+        QWidget.setTabOrder(loadSingleButton, loadMultipleButton);
+        QWidget.setTabOrder(loadMultipleButton, modelComboBox);
+        QWidget.setTabOrder(modelComboBox, modelSlider);
+        QWidget.setTabOrder(modelSlider, showCamerasCheckBox);
+        QWidget.setTabOrder(showCamerasCheckBox, kNearestNeighborsCheckBox);
+        QWidget.setTabOrder(kNearestNeighborsCheckBox, gammaSpinBox);
+        QWidget.setTabOrder(gammaSpinBox, exponentSpinBox);
+        QWidget.setTabOrder(exponentSpinBox, visibilityCheckBox);
+        QWidget.setTabOrder(visibilityCheckBox, visibilityBiasSpinBox);
+        QWidget.setTabOrder(visibilityBiasSpinBox, halfResCheckBox);
+        QWidget.setTabOrder(halfResCheckBox, multisamplingCheckBox);
+        QWidget.setTabOrder(multisamplingCheckBox, resampleWidthSpinner);
+        QWidget.setTabOrder(resampleWidthSpinner, resampleHeightSpinner);
+        QWidget.setTabOrder(resampleHeightSpinner, resampleButton);
+        QWidget.setTabOrder(resampleButton, reportBugButton);
+        retranslateUi(LightFieldConfigForm);
+        generateDepthImagesCheckBox.clicked.connect(depImageDimensionsLabel, "setEnabled(boolean)");
+        generateDepthImagesCheckBox.clicked.connect(depthImageWidthSpinner, "setEnabled(boolean)");
+        generateDepthImagesCheckBox.clicked.connect(depthImageXLabel, "setEnabled(boolean)");
+        generateDepthImagesCheckBox.clicked.connect(depthImageHeightSpinner, "setEnabled(boolean)");
+        visibilityCheckBox.clicked.connect(visibilityBiasLabel, "setEnabled(boolean)");
+        visibilityCheckBox.clicked.connect(visibilityBiasSpinBox, "setEnabled(boolean)");
+        kNearestNeighborsCheckBox.toggled.connect(kNeighborCountLabel, "setEnabled(boolean)");
+        kNearestNeighborsCheckBox.toggled.connect(kNeighborCountSpinBox, "setEnabled(boolean)");
 
-        menubar.addAction(menuFile.menuAction());
-        menubar.addAction(menuHelp.menuAction());
-        menuFile.addAction(actionLoad_single_model);
-        menuFile.addAction(actionLoad_model_sequence);
-        menuFile.addSeparator();
-        menuFile.addAction(actionQuit);
-        menuHelp.addAction(actionHelp);
-        menuHelp.addSeparator();
-        menuHelp.addAction(actionAbout_ULF_Renderer);
-        retranslateUi(ULFRendererMainWindow);
-
-        ULFRendererMainWindow.connectSlotsByName();
+        LightFieldConfigForm.connectSlotsByName();
     } // setupUi
 
-    void retranslateUi(QMainWindow ULFRendererMainWindow)
+    void retranslateUi(QWidget LightFieldConfigForm)
     {
-        ULFRendererMainWindow.setWindowTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "ULF Renderer Settings", null));
-        actionLoad_single_model.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load single model ...", null));
-        actionLoad_single_model.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load a single model into the renderer from data stored on the drive.", null));
-        actionLoad_model_sequence.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load model sequence ...", null));
-        actionLoad_model_sequence.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load a model sequence file describing several models into the renderer from data stored on the drive.", null));
-        actionQuit.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Quit", null));
-        actionAbout_ULF_Renderer.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "About ULF Renderer", null));
-        actionAbout_ULF_Renderer.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Get more information about the ULF Renderer application.", null));
-        actionHelp.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Show Help ...", null));
-        loadOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Load Options", null));
-        compressCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Compress Images", null));
-        mipmapsCheckbox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Use Mipmaps", null));
-        generateDepthImagesCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Generate Depth Images", null));
-        depImageDimensionsLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Dimensions:", null));
-        depthImageXLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "X", null));
-        modelOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Model Options", null));
-        showCamerasCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Show view cameras", null));
-        renderingOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Rendering Options", null));
-        kNearestNeighborsCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "k-nearest mode", null));
-        kNeighborCountLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "- k-samples:", null));
-        backgroundColorLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Background Color: ", null));
-        backgroundColorButton.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "...", null));
-        gammaLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Gamma:", null));
-        exponentLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Weight Exponent:", null));
-        visibilityCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Visibility Testing -", null));
-        visibilityBiasLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Bias:", null));
-        qualityOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Quality Options", null));
-        halfResCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Half-Resolution", null));
-        multisamplingCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Multisampling", null));
-        resampleGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Resample Light Field", null));
-        resampleDimensionsLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Dimensions:", null));
-        resampleXLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "X", null));
-        resampleButton.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Resample", null));
-        reportBugButton.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Report Bug", null));
-        menuFile.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "File", null));
-        menuHelp.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindow", "Help", null));
+        LightFieldConfigForm.setWindowTitle(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Light Field Config", null));
+        loadOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Load Options", null));
+        compressCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Compress Images", null));
+        mipmapsCheckbox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Use Mipmaps", null));
+        generateDepthImagesCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Generate Depth Images", null));
+        depImageDimensionsLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Dimensions:", null));
+        depthImageXLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "X", null));
+        loadSingleButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Load Single ...", null));
+        loadMultipleButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Load Multiple ...", null));
+        modelOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Model Options", null));
+        showCamerasCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Show view cameras", null));
+        renderingOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Rendering Options", null));
+        kNearestNeighborsCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "k-nearest mode", null));
+        kNeighborCountLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "- k-samples:", null));
+        backgroundColorLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Background Color: ", null));
+        backgroundColorButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "...", null));
+        gammaLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Gamma:", null));
+        exponentLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Weight Exponent:", null));
+        visibilityCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Visibility Testing -", null));
+        visibilityBiasLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Bias:", null));
+        qualityOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Quality Options", null));
+        halfResCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Half-Resolution", null));
+        multisamplingCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Multisampling", null));
+        resampleGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Resample Light Field", null));
+        resampleDimensionsLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Dimensions:", null));
+        resampleXLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "X", null));
+        resampleButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Resample", null));
+        reportBugButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LightFieldConfigForm", "Report Bug", null));
     } // retranslateUi
 
 }

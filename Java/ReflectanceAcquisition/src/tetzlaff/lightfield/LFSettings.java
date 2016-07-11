@@ -23,14 +23,14 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf;
+package tetzlaff.lightfield;
 
 /**
- * A model of the rendering settings for unstructured light fields.
+ * A model of the rendering settings for light fields.
  * @author Michael Tetzlaff
  *
  */
-public class ULFSettings 
+public class LFSettings 
 {
     /**
      * The exponent of the gamma curve when applying color correction on the final rendering and inverse color correction on the input images.
@@ -55,7 +55,7 @@ public class ULFSettings
     /**
      * Creates a settings model with the default options.
      */
-	public ULFSettings() 
+	public LFSettings() 
 	{
 	}
 

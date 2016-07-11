@@ -23,7 +23,7 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf.app;
+package tetzlaff.lightfield.viewer;
 
 import com.bugsplatsoftware.client.BugSplat;
 
@@ -45,6 +45,7 @@ import javax.imageio.ImageIO;
 // import org.lwjgl.opencl.*;	// TODO: Disabled for now (need to update for LWJGL 3.0.0b build 64)
 
 
+
 import com.trolltech.qt.core.QCoreApplication;
 import com.trolltech.qt.core.Qt;
 import com.trolltech.qt.core.Qt.ApplicationAttribute;
@@ -52,6 +53,7 @@ import com.trolltech.qt.gui.QApplication;
 import com.trolltech.qt.gui.QCursor;
 import com.trolltech.qt.gui.QMessageBox;
 import com.trolltech.qt.gui.QStyle;
+
 
 
 
@@ -64,19 +66,18 @@ import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.helpers.GLExceptionTranslator;
 import tetzlaff.helpers.MessageBox;
 import tetzlaff.interactive.InteractiveApplication;
-import tetzlaff.ulf.ULFRendererList;
-import tetzlaff.ulf.UnstructuredLightField;
+import tetzlaff.lightfield.LFRendererList;
+import tetzlaff.lightfield.LightField;
 import tetzlaff.window.WindowPosition;
 import tetzlaff.window.WindowSize;
 import tetzlaff.window.glfw.GLFWWindow;
 
 /**
- * ULFProgram is a container for the main entry point of the Unstructured Light Field
- * rendering program.
+ * LFViewer is a container for the main entry point of the Light Field Viewer program.
  * 
  * @author Michael Tetzlaff
  */
-public class ULFProgram
+public class LFViewer
 {
 	/**
 	 * Flag that indicates compiling in development mode (set to false to build deploy package)
@@ -110,9 +111,9 @@ public class ULFProgram
 	public static boolean OS_IS_WINDOWS;
 	
 	/**
-	 * The User Preferences for the ULF application
+	 * The User Preferences for the LFViewer application
 	 */
-	private static final Preferences PREFS = Preferences.userNodeForPackage(ULFProgram.class);
+	private static final Preferences PREFS = Preferences.userNodeForPackage(LFViewer.class);
 	
 	/**
 	 * The GLFW window object that is the main rendering window
@@ -130,7 +131,7 @@ public class ULFProgram
 	private static long videoMemBestGuessMB = -1;
 	
     /**
-     * The main entry point for the Unstructured Light Field (ULF) renderer application.
+     * The main entry point for the Light Field (LF) Viewer application.
      * @param args The usual command line arguments
      */
     public static void main(String[] args)
@@ -141,7 +142,7 @@ public class ULFProgram
     	// Surround with try-catch for BugSpat integration
     	try {
             // Init the bugsplat library with the database, application and version parameters
-            BugSplat.Init("berriers_uwstout_edu", "ULFRenderer", VERSION);
+            BugSplat.Init("berriers_uwstout_edu", "LFViewer", VERSION);
             
             // Prepare log files, delete any old ones
             if(!DEV_MODE)
@@ -166,8 +167,8 @@ public class ULFProgram
             
             // Add header with timestamp to logs
             String timestamp = new SimpleDateFormat("MM/dd/yyy HH:mm:ss").format(new Date());
-            System.out.println("ULF Renderer " + VERSION + ", Standard Log (" + timestamp + ")");
-            System.err.println("ULF Renderer " + VERSION + ", Error Log (" + timestamp + ")");
+            System.out.println("LF Viewer " + VERSION + ", Standard Log (" + timestamp + ")");
+            System.err.println("LF Viewer " + VERSION + ", Error Log (" + timestamp + ")");
             
             // Initialize the system environment vars and LWJGL
 	    	System.getenv();
@@ -204,7 +205,7 @@ public class ULFProgram
 	    	checkSupportedImageFormats();
 
 	    	// Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
-	    	window = new GLFWWindow(800, 800, "Unstructured Light Field Renderer", true, 4);
+	    	window = new GLFWWindow(800, 800, "Light Field Viewer", true, 4);
 	    	window.enableDepthTest();
 	
 	    	// Add a trackball controller to the window for rotating the object (also responds to mouse scrolling)
@@ -213,10 +214,9 @@ public class ULFProgram
 	        trackball.addAsWindowListener(window);
 	
 	        // Create a new 'renderer' to be attached to the window and the GUI.
-	        // This is the object that loads the ULF models and handles drawing them.  This object abstracts
-	        // the underlying data and provides ways of triggering events via the trackball and the user
-	        // interface later when it is passed to the ULFUserInterface object.
-	        ULFRendererList<OpenGLContext> model = new ULFRendererList<OpenGLContext>(window, trackball);
+	        // This is the object that loads the light field models and handles drawing them.  This object abstracts
+	        // the underlying data and provides ways of triggering events via the trackball and the user interface later.
+	        LFRendererList<OpenGLContext> model = new LFRendererList<OpenGLContext>(window, trackball);
 	        
 	        window.addCharacterListener((win, c) -> {
 	        	if (c == 'p')
@@ -226,8 +226,8 @@ public class ULFProgram
 		        	try
 		        	{
 		        		Program<OpenGLContext> newProgram = window.getShaderProgramBuilder()
-		    					.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.vert"))
-		    					.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.frag"))
+		    					.addShader(ShaderType.VERTEX, new File(LightField.SHADER_RESOURCE_DIRECTORY, "ulr.vert"))
+		    					.addShader(ShaderType.FRAGMENT, new File(LightField.SHADER_RESOURCE_DIRECTORY, "ulr.frag"))
 		    					.createProgram();
 			        	
 			        	if (model.getProgram() != null)
@@ -251,7 +251,7 @@ public class ULFProgram
 	        });
 	
 	    	// Create a new application to run our event loop and give it the GLFWWindow for polling
-	    	// of events and the OpenGL context.  The ULFRendererList provides the drawable.
+	    	// of events and the OpenGL context.  The LFRendererList provides the drawable.
 	        app = InteractiveGraphics.createApplication(window, window, model.getDrawable());
 	        
 	        app.setExceptionTranslator(new GLExceptionTranslator());
@@ -297,15 +297,15 @@ public class ULFProgram
 	        QApplication.initialize(args);
 	        QCoreApplication.setOrganizationName("Cultural Heritage Imaging");
 	        QCoreApplication.setOrganizationDomain("culturalheritageimaging.org");
-	        QCoreApplication.setApplicationName("ULF Renderer");
+	        QCoreApplication.setApplicationName("LF Viewer");
 	        
 	        // As far as I can tell, the OS X native menu bar doesn't work in Qt Jambi
 	        // The Java process owns the native menu bar and won't relinquish it to Qt
 	        QApplication.setAttribute(ApplicationAttribute.AA_DontUseNativeMenuBar);
 	        
-	        // Create a user interface that examines the ULFRendererList for renderer settings and
+	        // Create a user interface that examines the LFRendererList for renderer settings and
 	        // selecting between different loaded models.
-	        ULFConfigQWidget gui = new ULFConfigQWidget(model, window.isHighDPI(), null);
+	        LFConfigQWidget gui = new LFConfigQWidget(model, window.isHighDPI(), null);
 	        app.addPollable(gui);
 	        
 	        // Move windows to nice initial locations

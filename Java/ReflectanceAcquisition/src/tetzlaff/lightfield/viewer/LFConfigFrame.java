@@ -23,7 +23,7 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf.app;
+package tetzlaff.lightfield.viewer;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -56,22 +56,20 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.ulf.ULFDrawable;
-import tetzlaff.ulf.ULFListModel;
-import tetzlaff.ulf.ULFLoadOptions;
-import tetzlaff.ulf.ULFLoadingMonitor;
-import tetzlaff.ulf.ULFMorphRenderer;
-import tetzlaff.ulf.ViewSetImageOptions;
+import tetzlaff.lightfield.LFDrawable;
+import tetzlaff.lightfield.LFListModel;
+import tetzlaff.lightfield.LFLoadOptions;
+import tetzlaff.lightfield.LFLoadingMonitor;
+import tetzlaff.lightfield.LFMorphRenderer;
+import tetzlaff.lightfield.ViewSetImageOptions;
 
 /**
- * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
- * interface in ULFUserInterface offering the same options but uses a more flexible approach to layout
- * and groups controls into title frames wherever possible.  This was designed with WindowBuilder
+ * Swing GUI for managing the settings of a list of LFRenderer objects.  This was designed with WindowBuilder
  * inside Eclipse and should be able to be updated/edited in that same program.
  * 
  * @author Seth Berrier
  */
-public class ULFConfigFrame extends JFrame {
+public class LFConfigFrame extends JFrame {
 
 	private static final long serialVersionUID = 3234328215460573228L;
 
@@ -82,7 +80,7 @@ public class ULFConfigFrame extends JFrame {
 
 	/**
 	 * Build and layout the GUI in the central content pane.  Also sets all appropriate listeners to update
-	 * the given ULFListModel parameter.
+	 * the given LFListModel parameter.
 	 * 
 	 * @param model The model that abstracts the underlying light field data and provides entries for the combo
 	 * box.  It is expected that this will be empty (but not null) when the GUI is initially constructed and
@@ -90,7 +88,7 @@ public class ULFConfigFrame extends JFrame {
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public ULFConfigFrame(ULFListModel<OpenGLContext> model, boolean isHighDPI)
+	public LFConfigFrame(LFListModel<OpenGLContext> model, boolean isHighDPI)
 	{		
 		setResizable(false);
 		setTitle("Light Field Config");
@@ -220,7 +218,7 @@ public class ULFConfigFrame extends JFrame {
 		gbl_selectionPanel.rowWeights = new double[]{0.0, 0.0};
 		selectionPanel.setLayout(gbl_selectionPanel);
 		
-		JComboBox<ULFDrawable<OpenGLContext>> comboBoxObjects = new JComboBox<ULFDrawable<OpenGLContext>>();
+		JComboBox<LFDrawable<OpenGLContext>> comboBoxObjects = new JComboBox<LFDrawable<OpenGLContext>>();
 		GridBagConstraints gbc_comboBoxObjects = new GridBagConstraints();
 		gbc_comboBoxObjects.gridwidth = 2;
 		gbc_comboBoxObjects.insets = new Insets(0, 0, 5, 0);
@@ -242,14 +240,14 @@ public class ULFConfigFrame extends JFrame {
 		// Add listener for changes to the morph slider.
 		sliderObjects.addChangeListener(e ->
 		{
-			if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
+			if (model.getSelectedItem() instanceof LFMorphRenderer<?>)
 			{
-				((ULFMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(sliderObjects.getValue());
+				((LFMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(sliderObjects.getValue());
 			}
 		});
 		
 		JPanel renderingOptionsPanel = new JPanel();
-		renderingOptionsPanel.setToolTipText("Options to control the ULF rendering algorithm");
+		renderingOptionsPanel.setToolTipText("Options to control the light field rendering algorithm");
 		renderingOptionsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Rendering Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		contentPane.add(renderingOptionsPanel);
 		GridBagLayout gbl_renderingOptionsPanel = new GridBagLayout();
@@ -508,7 +506,7 @@ public class ULFConfigFrame extends JFrame {
 				
 				try 
 				{
-					ULFLoadOptions loadOptions = new ULFLoadOptions(
+					LFLoadOptions loadOptions = new LFLoadOptions(
 							new ViewSetImageOptions(null, true, chckbxUseMipmaps.isSelected(), chckbxCompressImages.isSelected()),
 							chckbxGenerateDepthImages.isSelected(), (Integer)spinnerDepthWidth.getValue(), (Integer)spinnerDepthHeight.getValue());
 					
@@ -554,7 +552,7 @@ public class ULFConfigFrame extends JFrame {
 		// Add listener for the 'morph' load button to read many light field objects.
 		btnLoadMultiple.addActionListener(e -> 
 		{
-			ULFLoadOptions loadOptions = new ULFLoadOptions(
+			LFLoadOptions loadOptions = new LFLoadOptions(
 					new ViewSetImageOptions(null, true, chckbxUseMipmaps.isSelected(), chckbxCompressImages.isSelected()),
 					chckbxGenerateDepthImages.isSelected(), (Integer)spinnerDepthWidth.getValue(), (Integer)spinnerDepthHeight.getValue());
 			
@@ -623,9 +621,9 @@ public class ULFConfigFrame extends JFrame {
 				spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
 				chckbxHalfRes.setSelected(model.getSelectedItem().getHalfResolution());
 				
-				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
+				if (model.getSelectedItem() instanceof LFMorphRenderer<?>)
 				{
-					ULFMorphRenderer<?> morph = (ULFMorphRenderer<?>)(model.getSelectedItem());
+					LFMorphRenderer<?> morph = (LFMorphRenderer<?>)(model.getSelectedItem());
 					int currentStage = morph.getCurrentStage();
 					sliderObjects.setEnabled(true);
 					sliderObjects.setMaximum(morph.getStageCount() - 1);
@@ -719,7 +717,7 @@ public class ULFConfigFrame extends JFrame {
 		// Create callback monitor to show the loading window when the model is being read
 		if(model != null)
 		{
-			model.setLoadingMonitor(new ULFLoadingMonitor()
+			model.setLoadingMonitor(new LFLoadingMonitor()
 			{
 				private double maximum = 100;
 				

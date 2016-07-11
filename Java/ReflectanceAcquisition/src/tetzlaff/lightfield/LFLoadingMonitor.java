@@ -23,17 +23,17 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf;
+package tetzlaff.lightfield;
 
 /**
- * A monitor that fires callbacks at key points during the loading of an unstructured light field.
+ * A monitor that fires callbacks at key points during the loading of a light field.
  * @author Michael Tetzlaff
  *
  */
-public interface ULFLoadingMonitor 
+public interface LFLoadingMonitor 
 {
 	/**
-	 * A callback fired when the unstructured light field starts to load.
+	 * A callback fired when the light field starts to load.
 	 * This will always be fired before setProgress() or loadingComplete().
 	 */
 	void startLoading();

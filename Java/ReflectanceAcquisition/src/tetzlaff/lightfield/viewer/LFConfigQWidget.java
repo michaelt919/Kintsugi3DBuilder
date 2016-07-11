@@ -23,7 +23,7 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf.app;
+package tetzlaff.lightfield.viewer;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,12 +31,12 @@ import java.io.IOException;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.interactive.EventPollable;
-import tetzlaff.ulf.ULFDrawable;
-import tetzlaff.ulf.ULFListModel;
-import tetzlaff.ulf.ULFLoadOptions;
-import tetzlaff.ulf.ULFLoadingMonitor;
-import tetzlaff.ulf.ULFMorphRenderer;
-import tetzlaff.ulf.ViewSetImageOptions;
+import tetzlaff.lightfield.LFDrawable;
+import tetzlaff.lightfield.LFListModel;
+import tetzlaff.lightfield.LFLoadOptions;
+import tetzlaff.lightfield.LFLoadingMonitor;
+import tetzlaff.lightfield.LFMorphRenderer;
+import tetzlaff.lightfield.ViewSetImageOptions;
 import tetzlaff.window.WindowPosition;
 import tetzlaff.window.WindowSize;
 
@@ -65,10 +65,10 @@ import com.trolltech.qt.webkit.QWebPage;
 import com.trolltech.qt.webkit.QWebSettings;
 import com.trolltech.qt.webkit.QWebView;
 
-public class ULFConfigQWidget extends QMainWindow implements EventPollable {
+public class LFConfigQWidget extends QMainWindow implements EventPollable {
 
-	private Ui_ULFRendererMainWindowToolbox gui;
-	private final ULFListModel<OpenGLContext> model;
+	private Ui_LFViewerMainWindowToolbox gui;
+	private final LFListModel<OpenGLContext> model;
 	private boolean widgetClosed;
 	private boolean halfResDefault;
 	private boolean blockSignals;
@@ -85,7 +85,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	
 	public Signal0 loadingFinished;
 	
-	public ULFConfigQWidget(ULFListModel<OpenGLContext> model, boolean isHighDPI, QWidget parent) {
+	public LFConfigQWidget(LFListModel<OpenGLContext> model, boolean isHighDPI, QWidget parent) {
 		super(parent);
 		this.blockSignals = true;
 
@@ -96,7 +96,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		this.widgetClosed = false;
 		this.model = model;
 		
-		gui = new Ui_ULFRendererMainWindowToolbox();
+		gui = new Ui_LFViewerMainWindowToolbox();
 		gui.setupUi(this);
 		
 		if(this.model != null && this.model.getSelectedItem() != null) {
@@ -114,7 +114,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	    
 	    System.out.println("Namespace is: " + QHelpEngineCore.namespaceName(helpFilename));
 	    
-	    if(ULFProgram.OS_IS_WINDOWS) { baseScheme = "file:/"; }
+	    if(LFViewer.OS_IS_WINDOWS) { baseScheme = "file:/"; }
 	    else { baseScheme = ""; }
 	    
 	    helpUrlBase = new QUrl(baseDir + "/resources/help/");
@@ -136,7 +136,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	    horizSplitter.insertWidget(1, helpViewer);
 	    
 	    helpWindow = horizSplitter;
-	    helpWindow.setWindowTitle("ULF Renderer User Guide");
+	    helpWindow.setWindowTitle("LF Viewer User Guide");
 	    helpWindow.setMinimumSize(640, 480);
 	    
 		// Setup the loading progress dialog
@@ -151,7 +151,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		
 		gui.halfResCheckBox.setChecked(halfResDefault);
 
-		this.model.setLoadingMonitor(new ULFLoadingMonitor() {
+		this.model.setLoadingMonitor(new LFLoadingMonitor() {
 
 			@Override
 			public void startLoading()
@@ -245,9 +245,9 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 				model.getSelectedItem().setMultisampling(gui.multisamplingCheckBox.isChecked());
 				model.getSelectedItem().setVisualizeCameras(gui.showCamerasCheckBox.isChecked());
 
-				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
+				if (model.getSelectedItem() instanceof LFMorphRenderer<?>)
 				{
-					ULFMorphRenderer<?> morph = (ULFMorphRenderer<?>)(model.getSelectedItem());
+					LFMorphRenderer<?> morph = (LFMorphRenderer<?>)(model.getSelectedItem());
 					int currentStage = morph.getCurrentStage();
 					gui.modelSlider.setEnabled(true);
 					gui.modelSlider.setMaximum(morph.getStageCount() - 1);
@@ -265,13 +265,13 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		blockSignals = false;
 	}
 	
-	public ULFLoadOptions getLoadOptionsFromGui()
+	public LFLoadOptions getLoadOptionsFromGui()
 	{
 		ViewSetImageOptions vsetOpts = 
 				new ViewSetImageOptions(null, true,
 						gui.mipmapsCheckbox.isChecked(),
 						gui.compressCheckBox.isChecked());
-		ULFLoadOptions loadOptions = new ULFLoadOptions(vsetOpts,
+		LFLoadOptions loadOptions = new LFLoadOptions(vsetOpts,
 				gui.generateDepthImagesCheckBox.isChecked(),
 				gui.depthImageWidthSpinner.value(),
 				gui.depthImageHeightSpinner.value());
@@ -287,8 +287,8 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		
 		// Make dialog visible and set position
 		QSize dlgSize = progressDialog.size();
-		WindowSize winSize = ULFProgram.getRenderingWindowSize();
-		WindowPosition winPos = ULFProgram.getRendringWindowPosition();
+		WindowSize winSize = LFViewer.getRenderingWindowSize();
+		WindowPosition winPos = LFViewer.getRendringWindowPosition();
 		progressDialog.move(winPos.x + winSize.width/2 - dlgSize.width()/2,
 							winPos.y + winSize.height/2 - dlgSize.height()/2);
 		progressDialog.setHidden(false);
@@ -297,7 +297,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	@SuppressWarnings("unused")
 	private void on_backgroundColorButton_clicked()
 	{
-		ULFDrawable<OpenGLContext> current = model.getSelectedItem();
+		LFDrawable<OpenGLContext> current = model.getSelectedItem();
 		if(current != null && current.toString().compareToIgnoreCase("Error") != 0)
 		{
 			Vector4 curColor = current.getBackgroundColor();
@@ -323,7 +323,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		if(result == QMessageBox.StandardButton.No.value()) return;
 		
 		try {
-			ULFProgram.generateBugReport();
+			LFViewer.generateBugReport();
 		} catch (IOException e) {}
 	}
 	
@@ -332,7 +332,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	private void on_actionLoad_Single_Model_triggered()
 	{
 		if(blockSignals) { return; }
-		File lastDir = ULFProgram.getLastCamDefFileDirectory();
+		File lastDir = LFViewer.getLastCamDefFileDirectory();
 		String camDefFilename = QFileDialog.getOpenFileName(this,
 									"Select a camera definition file", lastDir.getAbsolutePath(),
 									new Filter("Agisoft Photoscan XML (*.xml);;" +
@@ -343,7 +343,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		{
 			// Update last selected cam def file directory
 			lastDir = new File(camDefFilename); lastDir.getParentFile();
-			ULFProgram.setLastCamDefFileDirectory(lastDir);
+			LFViewer.setLastCamDefFileDirectory(lastDir);
 			
 			if(camDefFilename.toUpperCase().endsWith(".ZIP"))
 			{
@@ -352,7 +352,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 				System.out.printf("Zip file name converted to '%s'\n", camDefFilename);
 			}
 			
-			ULFLoadOptions loadOptions = getLoadOptionsFromGui();
+			LFLoadOptions loadOptions = getLoadOptionsFromGui();
 			
 			if (camDefFilename.toUpperCase().endsWith(".XML"))
 			{
@@ -392,14 +392,14 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	private void on_actionLoad_Model_Sequence_triggered()
 	{
 		if(blockSignals) { return; }
-		File lastDir = ULFProgram.getLastSequenceFileDirectory();		
+		File lastDir = LFViewer.getLastSequenceFileDirectory();		
 		String sequenceFilename = QFileDialog.getOpenFileName(this,
 				"Select a sequence file", lastDir.getAbsolutePath(),
 				new Filter("light field sequence file (*.lfm)"));
 		if(sequenceFilename.isEmpty()) return;
 	
 		lastDir = new File(sequenceFilename);
-		ULFProgram.setLastSequenceFileDirectory(lastDir);
+		LFViewer.setLastSequenceFileDirectory(lastDir);
 		
 		try 
 		{
@@ -413,7 +413,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 	}
 	
 	@SuppressWarnings("unused")
-	private void on_actionAbout_ULF_Renderer_triggered()
+	private void on_actionAbout_triggered()
 	{
 		// Make the about dialog GUI
 		QDialog aboutDiag = new QDialog(this);
@@ -425,8 +425,8 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		aboutDiag.setModal(true);
 
 		// Center over rendering window
-		WindowSize winSize = ULFProgram.getRenderingWindowSize();
-		WindowPosition winPos = ULFProgram.getRendringWindowPosition();
+		WindowSize winSize = LFViewer.getRenderingWindowSize();
+		WindowPosition winPos = LFViewer.getRendringWindowPosition();
 		aboutDiag.move(winPos.x + winSize.width/2 - aboutDiag.width()/2,
 					   winPos.y + winSize.height/2 - aboutDiag.height()/2);
 
@@ -463,7 +463,7 @@ public class ULFConfigQWidget extends QMainWindow implements EventPollable {
 		{
 			// Replace the qthelp URL with a normal URL
 			String newURL = url.toString();
-			newURL = newURL.replace("qthelp://culturalheritageimaging.com.ulfrenderer/help/",
+			newURL = newURL.replace("qthelp://org.culturalheritageimaging.lfviewer/help/",
 									baseScheme + helpUrlBase.toString());
 			helpViewer.setUrl(new QUrl(newURL));
 		}

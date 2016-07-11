@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="create_app_bundle" name="ULFRenderer">
+<project default="create_app_bundle" name="LFViewer">
 	
 	<!-- Define some directories for easier customization per machine -->
 	<property name="base.dir" location="./" />
@@ -47,10 +47,10 @@
     	<!-- Create the actual app bundle -->
         <bundleapp outputdirectory="${stage.dir}"
             name="${ant.project.name}"
-            displayname="ULF Renderer"
-            identifier="org.culturalheritageimaging.ULFRenderer"
+            displayname="LF Viewer"
+            identifier="org.culturalheritageimaging.LFViewer"
         	shortversion="1.0a2"
-            mainclassname="tetzlaff.ulf.app.ULFProgram"
+            mainclassname="tetzlaff.lightfield.viewer.LFViewer.java"
         	icon="${icons.dir}/icon.icns">
 			<!--<runtime dir="/Library/Java/JavaVirtualMachines/jdk1.8.0_20.jdk/Contents/Home" />-->
         	<classpath dir="${stage.dir}">
@@ -80,19 +80,11 @@
 		<delete file="${stage.dir}/${ant.project.name}.jar" />
         <jar destfile="${stage.dir}/${ant.project.name}.jar" filesetmanifest="mergewithoutmain">
             <manifest>
-                <attribute name="Main-Class" value="tetzlaff.ulf.app.ULFProgram"/>
+                <attribute name="Main-Class" value="tetzlaff.tetzlaff.lightfield.viewer.LFViewer.java"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
             <fileset dir="./bin">
             	<patternset id="unrelated">
-
-            		<!-- These are not part of the ULF Renderer -->
-            	    <exclude name="**/shaders-exclude/**" />
-            	    <exclude name="**/tetzlaff/phong/**" />
-            	    <exclude name="**/tetzlaff/phong/**" />
-            	    <exclude name="**/tetzlaff/phong/app/**" />
-            	    <exclude name="**/tetzlaff/texturefit/**" />
-    	            <exclude name="**/tetzlaff/textureupscale/**" />
 
     	            <!-- We will include these in other ways -->
             		<exclude name="**/help/**" />
@@ -113,7 +105,7 @@
         <jar destfile="${stage.dir}/${ant.project.name}_fat.jar">
             <manifest>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
-                <attribute name="Rsrc-Main-Class" value="tetzlaff.ulf.app.ULFProgram"/>
+                <attribute name="Rsrc-Main-Class" value="tetzlaff.lightfield.viewer.LFViewer"/>
                 <attribute name="Class-Path" value="."/>
                 <attribute name="Rsrc-Class-Path" value="./ lwjgl.jar qtjambi-4.8.6.jar qtjambi-native-win64-msvc2012x64-4.8.6.jar bugsplat.jar activation.jar mailapi.jar soap.jar BrowserLauncher2-1_3.jar"/>
             </manifest>
