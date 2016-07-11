@@ -23,7 +23,7 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf;
+package tetzlaff.lightfield;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -207,7 +207,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		float recommendedNearPlane,
 		float recommendedFarPlane,
 		ContextType context,
-		ULFLoadingMonitor loadingCallback) throws IOException
+		LFLoadingMonitor loadingCallback) throws IOException
 	{
 		this.cameraPoseList = cameraPoseList;
 		this.cameraPoseInvList = cameraPoseInvList;
@@ -526,7 +526,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(
-			File vsetFile, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+			File vsetFile, ContextType context, LFLoadingMonitor loadingCallback) throws IOException
 	{
 		return ViewSet.loadFromVSETFile(vsetFile, new ViewSetImageOptions(null, false, false, false), context, loadingCallback);
 	}
@@ -541,7 +541,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
-			File vsetFile, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+			File vsetFile, ViewSetImageOptions imageOptions, ContextType context, LFLoadingMonitor loadingCallback) throws IOException
 	{
 		Date timestamp = new Date();
 
@@ -789,7 +789,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
-			File file, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+			File file, ViewSetImageOptions imageOptions, ContextType context, LFLoadingMonitor loadingCallback) throws IOException
 	{
 		return loadFromAgisoftXMLFile(file, imageOptions, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), context, loadingCallback);
 	}
@@ -806,7 +806,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
-		File file, ViewSetImageOptions imageOptions, Vector3 lightOffset, Vector3 lightIntensity, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+		File file, ViewSetImageOptions imageOptions, Vector3 lightOffset, Vector3 lightIntensity, ContextType context, LFLoadingMonitor loadingCallback) throws IOException
 	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
@@ -1272,7 +1272,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
     public void writeVSETFileToStream(OutputStream outputStream)
     {
 	    PrintStream out = new PrintStream(outputStream);
-	    out.println("# Created by ULF Renderer from PhotoScan XML file");
+	    out.println("# Created by LF Viewer from PhotoScan XML file");
 
 	    out.println("# Estimated near and far planes");
 	    out.printf("c\t%.8f\t%.8f\n", recommendedNearPlane, recommendedFarPlane);

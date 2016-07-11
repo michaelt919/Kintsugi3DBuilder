@@ -23,7 +23,7 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf;
+package tetzlaff.lightfield;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,9 +43,9 @@ import tetzlaff.gl.helpers.VertexMesh;
  * This includes a proxy geometry and depth textures for visibility testing, in addition to a view set.
  * @author Michael Tetzlaff
  *
- * @param <ContextType> The type of the context that the GL resources for this unstructured light field are to be used with.
+ * @param <ContextType> The type of the context that the GL resources for this light field are to be used with.
  */
-public class UnstructuredLightField<ContextType extends Context<ContextType>>
+public class LightField<ContextType extends Context<ContextType>>
 {
 	/**
 	 * An arbitrary user-friendly identifier.
@@ -85,7 +85,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	/**
 	 * The current rendering settings.
 	 */
-    public final ULFSettings settings;
+    public final LFSettings settings;
     
     /**
      * The directory of the shader resources (to be wrapped in the JAR file).
@@ -103,8 +103,8 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
      * @param normalBuffer A vertex buffer containing the surface normals of the vertices in the proxy geometry as 3D vectors.
      * @param settings The current rendering settings.
      */
-	public UnstructuredLightField(String id, ViewSet<ContextType> viewSet, VertexMesh proxy, Texture3D<ContextType> depthTextures, 
-			VertexBuffer<ContextType> positionBuffer, VertexBuffer<ContextType> texCoordBuffer, VertexBuffer<ContextType> normalBuffer, ULFSettings settings) 
+	public LightField(String id, ViewSet<ContextType> viewSet, VertexMesh proxy, Texture3D<ContextType> depthTextures, 
+			VertexBuffer<ContextType> positionBuffer, VertexBuffer<ContextType> texCoordBuffer, VertexBuffer<ContextType> normalBuffer, LFSettings settings) 
 	{
     	this.id = id;
 		this.viewSet = viewSet;
@@ -143,7 +143,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	}
 	
 	private static <ContextType extends Context<ContextType>> 
-		Texture3D<ContextType> generateDepthTextures(ContextType context, ULFLoadOptions loadOptions, ViewSet<ContextType> viewSet, VertexBuffer<ContextType> positionBuffer) throws IOException
+		Texture3D<ContextType> generateDepthTextures(ContextType context, LFLoadOptions loadOptions, ViewSet<ContextType> viewSet, VertexBuffer<ContextType> positionBuffer) throws IOException
 	{
 		Texture3D<ContextType> depthTextures;
 		
@@ -163,8 +163,8 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	    	
 	    	// Load the program
 	    	depthRenderingProgram = context.getShaderProgramBuilder()
-	    			.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "depth.vert"))
-	    			.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "depth.frag"))
+	    			.addShader(ShaderType.VERTEX, new File(LightField.SHADER_RESOURCE_DIRECTORY, "depth.vert"))
+	    			.addShader(ShaderType.FRAGMENT, new File(LightField.SHADER_RESOURCE_DIRECTORY, "depth.frag"))
 	    			.createProgram();
 	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 	    	depthRenderable.addVertexBuffer("position", positionBuffer);
@@ -218,17 +218,17 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 
 	/**
 	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan along with a specific geometric proxy 
-	 * and initializes a corresponding UnstructuredLightField object with all associated GPU resources.
+	 * and initializes a corresponding LightField object with all associated GPU resources.
 	 * @param xmlFile The Agisoft PhotoScan XML camera file to load.
 	 * @param meshFile The mesh exported from Agisoft PhotoScan to be used as proxy geometry.
-	 * @param loadOptions The requested options for loading the unstructured light field.
+	 * @param loadOptions The requested options for loading the light field.
 	 * @param context The GL context in which to create the resources.
 	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
-	 * @return The newly created UnstructuredLightField object.
+	 * @return The newly created LightField object.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>>
-		UnstructuredLightField<ContextType> loadFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+		LightField<ContextType> loadFromAgisoftXMLFile(File xmlFile, File meshFile, LFLoadOptions loadOptions, ContextType context, LFLoadingMonitor loadingCallback) throws IOException
 	{
 		ViewSet<ContextType> viewSet;
 		VertexMesh proxy;
@@ -256,20 +256,20 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
         	normalBuffer = context.createVertexBuffer().setData(proxy.getNormals());
         }
         
-    	return new UnstructuredLightField<ContextType>(directoryPath.getName(), viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
+    	return new LightField<ContextType>(directoryPath.getName(), viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new LFSettings());
 	}
 	
 	/**
-	 * Loads a VSET file and creates and initializes a corresponding UnstructuredLightField object with all associated GPU resources.
+	 * Loads a VSET file and creates and initializes a corresponding LightField object with all associated GPU resources.
 	 * @param vsetFile The VSET file to load.
-	 * @param loadOptions The requested options for loading the unstructured light field.
+	 * @param loadOptions The requested options for loading the light field.
 	 * @param contextThe GL context in which to create the resources.
 	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
-	 * @return The newly created UnstructuredLightField object.
+	 * @return The newly created LightField object.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>>
-		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, ULFLoadOptions loadOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+		LightField<ContextType> loadFromVSETFile(File vsetFile, LFLoadOptions loadOptions, ContextType context, LFLoadingMonitor loadingCallback) throws IOException
 	{
 		ViewSet<ContextType> viewSet;
 		VertexMesh proxy;
@@ -297,7 +297,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
         	normalBuffer = context.createVertexBuffer().setData(proxy.getNormals());
         }
         
-    	return new UnstructuredLightField<ContextType>(directoryPath.getName(), viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
+    	return new LightField<ContextType>(directoryPath.getName(), viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new LFSettings());
 	}
 	
 	@Override

@@ -23,47 +23,27 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf;
+package tetzlaff.lightfield;
 
 import tetzlaff.gl.helpers.Matrix4;
 
 /**
- * A simple perspective projection defined simply by aspect ratio and field of view.
+ * An interface for a definition of 3D to 2D projection that can be expressed as a projective transformation matrix.
  * @author Michael Tetzlaff
  *
  */
-public class SimpleProjection implements Projection
+public interface Projection 
 {
 	/**
-	 * The aspect ratio.
+	 * Gets the projective transformation matrix for this projection.
+	 * @param nearPlane The plane in 3D Cartesian space that will get mapped to the plane z=1.
+	 * @param farPlane The plane in 3D Cartesian space that will get mapped to the plane z=-1.
+	 * @return The projective transformation matrix.
 	 */
-	public final float aspectRatio;
+	Matrix4 getProjectionMatrix(float nearPlane, float farPlane);
 	
 	/**
-	 * The field of view.
+	 * Convert to a string designed for use in a VSET file
 	 */
-	public final float verticalFieldOfView;
-	
-	/**
-	 * Creates a new simple perspective projection.
-	 * @param aspectRatio The aspect ratio.
-	 * @param verticalFieldOfView The field of view.
-	 */
-	public SimpleProjection(float aspectRatio, float verticalFieldOfView) 
-	{
-		this.aspectRatio = aspectRatio;
-		this.verticalFieldOfView = verticalFieldOfView;
-	}
-
-	@Override
-	public Matrix4 getProjectionMatrix(float nearPlane, float farPlane) 
-	{
-		return Matrix4.perspective(this.verticalFieldOfView, this.aspectRatio, nearPlane, farPlane);
-	}
-
-    @Override
-    public String toVSETString()
-    {
-    	return String.format("f\t0\t0\t%.8f\t%.8f", aspectRatio, verticalFieldOfView);
-    }
+	String toVSETString();
 }

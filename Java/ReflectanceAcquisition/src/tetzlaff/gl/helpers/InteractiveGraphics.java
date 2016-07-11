@@ -102,7 +102,8 @@ public class InteractiveGraphics
 					int FPS = drawable.getCurFPS();
 					if(FPS >= 0) {
 						Window myWin = (Window)pollable;
-						myWin.setWindowTitle(String.format("Unstructured Light Field Renderer, FPS: %3d [%3d, %3d]",
+						// TODO title should not be hard coded here.
+						myWin.setWindowTitle(String.format("Light Field Viewer, FPS: %3d [%3d, %3d]",
 								FPS, drawable.getMinFPS(), drawable.getMaxFPS()));
 					}
 					fpsLastCheck += 1000;

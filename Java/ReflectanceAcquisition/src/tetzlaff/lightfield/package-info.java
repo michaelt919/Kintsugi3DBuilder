@@ -23,26 +23,13 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf.app;
-
-import com.trolltech.qt.core.Qt.WindowModality;
-import com.trolltech.qt.gui.QDialog;
-import com.trolltech.qt.gui.QPixmap;
-import com.trolltech.qt.gui.QWidget;
-
-public class ULFAboutQDialog extends QDialog {
-
-	Ui_AboutDialog gui;
-	
-	public ULFAboutQDialog(QWidget parent) {
-		super(parent);
-		
-		gui = new Ui_AboutDialog();
-		gui.setupUi(this);
-		
-		gui.iconLabel.setPixmap(new QPixmap("classpath:images#/icons/icon.png"));
-		
-		this.setWindowModality(WindowModality.ApplicationModal);
-		this.setModal(true);
-	}
-}
+/**
+ * Low level objects for loading, manipulating and rendering unstructured light
+ * field data based on the algorithm presented in the paper &quot;Improved Appearance
+ * Rendering for Photogrammetrically Acquired 3D Models&quot; by Berrier et al. (from
+ * proceedings of Digital Heritage 2015)
+ *
+ * @since 1.0
+ * @see tetzlaff.lightfield.viewer
+ */
+package tetzlaff.lightfield;

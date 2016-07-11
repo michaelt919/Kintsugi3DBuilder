@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ULFRendererMainWindow</class>
- <widget class="QMainWindow" name="ULFRendererMainWindow">
+ <class>LFViewerMainWindow</class>
+ <widget class="QMainWindow" name="LFViewerMainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>ULF Renderer Settings</string>
+   <string>LF Viewer Settings</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -614,7 +614,7 @@
     </property>
     <addaction name="actionHelp"/>
     <addaction name="separator"/>
-    <addaction name="actionAbout_ULF_Renderer"/>
+    <addaction name="actionAbout_LF_Viewer"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
@@ -641,12 +641,12 @@
     <string>Quit</string>
    </property>
   </action>
-  <action name="actionAbout_ULF_Renderer">
+  <action name="actionAbout_LF_Viewer">
    <property name="text">
-    <string>About ULF Renderer</string>
+    <string>About LF Viewer</string>
    </property>
    <property name="toolTip">
-    <string>Get more information about the ULF Renderer application.</string>
+    <string>Get more information about the LF Viewer application.</string>
    </property>
   </action>
   <action name="actionHelp">

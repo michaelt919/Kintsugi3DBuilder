@@ -23,7 +23,7 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf;
+package tetzlaff.lightfield;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,12 +38,12 @@ import tetzlaff.gl.helpers.MultiDrawable;
 import tetzlaff.gl.helpers.Trackball;
 
 /**
- * An abstract class defining the skeleton of an implementation of a ULFListModel as a list of ULFDrawable entities.
+ * An abstract class defining the skeleton of an implementation of a LFListModel as a list of LFDrawable entities.
  * @author Michael Tetzlaff
  *
  * @param <ContextType> The type of the context that will be used for rendering.
  */
-public abstract class ULFDrawableListModel<ContextType extends Context<ContextType>> extends AbstractListModel<ULFDrawable<ContextType>> implements ULFListModel<ContextType>
+public abstract class LFDrawableListModel<ContextType extends Context<ContextType>> extends AbstractListModel<LFDrawable<ContextType>> implements LFListModel<ContextType>
 {
 	private static final long serialVersionUID = 4167467314632694946L;
 	
@@ -63,27 +63,27 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	protected final Trackball trackball;
 	
 	
-	private MultiDrawable<ULFDrawable<ContextType>> ulfs;
+	private MultiDrawable<LFDrawable<ContextType>> lightfields;
 	private int effectiveSize;
-	private ULFLoadingMonitor loadingMonitor;
+	private LFLoadingMonitor loadingMonitor;
 	
 	/**
-	 * Creates a new ULFDrawableListModel.
+	 * Creates a new LFDrawableListModel.
 	 * @param context The context that will be used for rendering.
 	 * @param trackball The trackball controlling the movement of the virtual camera.
 	 */
-	public ULFDrawableListModel(ContextType context, Trackball trackball) 
+	public LFDrawableListModel(ContextType context, Trackball trackball) 
 	{
 		this.context = context;
 		this.trackball = trackball;
-		this.ulfs = new MultiDrawable<ULFDrawable<ContextType>>();
+		this.lightfields = new MultiDrawable<LFDrawable<ContextType>>();
 		this.effectiveSize = 0;
 		
 		try
         {
 			this.program = context.getShaderProgramBuilder()
-					.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.vert"))
-					.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.frag"))
+					.addShader(ShaderType.VERTEX, new File(LightField.SHADER_RESOURCE_DIRECTORY, "ulr.vert"))
+					.addShader(ShaderType.FRAGMENT, new File(LightField.SHADER_RESOURCE_DIRECTORY, "ulr.frag"))
 					.createProgram();
         }
         catch (IOException e)
@@ -101,45 +101,45 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	public void setProgram(Program<ContextType> program)
 	{
 		this.program = program;
-		for (ULFDrawable<ContextType> ulf : ulfs)
+		for (LFDrawable<ContextType> lf : lightfields)
 		{
-			ulf.setProgram(program);
+			lf.setProgram(program);
 		}
 	}
 	
 	/**
-	 * Required in order to define how to load an unstructured light field from a view set file.
+	 * Required in order to define how to load an light field from a view set file.
 	 * @param vsetFile The view set file defining the light field to be added.
 	 * @param loadOptions The options to use when loading the light field.
-	 * @return A new unstructured light field as a ULFDrawable entity.
+	 * @return A new light field as a LFDrawable entity.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	protected abstract ULFDrawable<ContextType> createFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract LFDrawable<ContextType> createFromVSETFile(File vsetFile, LFLoadOptions loadOptions) throws IOException;
 	
 	/**
-	 * Required in order to define how to load an unstructured light field from Agisoft PhotoScan.
+	 * Required in order to define how to load a light field from Agisoft PhotoScan.
 	 * @param xmlFile The Agisoft PhotoScan XML camera file defining the views of the light field to be added.
      * @param meshFile The mesh exported from Agisoft PhotoScan to be used as proxy geometry.
 	 * @param loadOptions The options to use when loading the light field.
-	 * @return A new unstructured light field as a ULFDrawable entity.
+	 * @return A new light field as a LFDrawable entity.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	protected abstract ULFDrawable<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract LFDrawable<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, LFLoadOptions loadOptions) throws IOException;
 	
 	/**
-	 * Required in order to define how to load an unstructured light field morph.
+	 * Required in order to define how to load a light field morph.
 	 * @param lfmFile The light field morph file defining the morph to be added.
 	 * @param loadOptions The options to use when loading the light field.
-	 * @return A new unstructured light field morph as a ULFDrawable entity.
+	 * @return A new light field morph as a LFDrawable entity.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	protected abstract ULFDrawable<ContextType> createMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException;
+	protected abstract LFDrawable<ContextType> createMorphFromLFMFile(File lfmFile, LFLoadOptions loadOptions) throws IOException;
 
 	@Override
-	public ULFDrawable<ContextType> addFromVSETFile(File vsetFile, ULFLoadOptions loadOptions) throws IOException
+	public LFDrawable<ContextType> addFromVSETFile(File vsetFile, LFLoadOptions loadOptions) throws IOException
 	{
-		ULFDrawable<ContextType> newItem = this.createFromVSETFile(vsetFile, loadOptions);
-		newItem.setOnLoadCallback(new ULFLoadingMonitor()
+		LFDrawable<ContextType> newItem = this.createFromVSETFile(vsetFile, loadOptions);
+		newItem.setOnLoadCallback(new LFLoadingMonitor()
 		{
 			@Override
 			public void startLoading()
@@ -171,24 +171,24 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 			@Override
 			public void loadingComplete()
 			{
-				ulfs.setSelectedItem(newItem);
-				effectiveSize = ulfs.size();
+				lightfields.setSelectedItem(newItem);
+				effectiveSize = lightfields.size();
 				if (loadingMonitor != null)
 				{
 					loadingMonitor.loadingComplete();
 				}
-				fireIntervalAdded(this, ulfs.size() - 1, ulfs.size() - 1);
+				fireIntervalAdded(this, lightfields.size() - 1, lightfields.size() - 1);
 			}
 		});
-		ulfs.add(newItem);
+		lightfields.add(newItem);
 		return newItem;
 	}
 	
 	@Override
-	public ULFDrawable<ContextType> addFromAgisoftXMLFile(File xmlFile, File meshFile, ULFLoadOptions loadOptions) throws IOException
+	public LFDrawable<ContextType> addFromAgisoftXMLFile(File xmlFile, File meshFile, LFLoadOptions loadOptions) throws IOException
 	{
-		ULFDrawable<ContextType> newItem = this.createFromAgisoftXMLFile(xmlFile, meshFile, loadOptions);
-		newItem.setOnLoadCallback(new ULFLoadingMonitor()
+		LFDrawable<ContextType> newItem = this.createFromAgisoftXMLFile(xmlFile, meshFile, loadOptions);
+		newItem.setOnLoadCallback(new LFLoadingMonitor()
 		{
 			@Override
 			public void startLoading()
@@ -220,24 +220,24 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 			@Override
 			public void loadingComplete()
 			{
-				ulfs.setSelectedItem(newItem);
-				effectiveSize = ulfs.size();
+				lightfields.setSelectedItem(newItem);
+				effectiveSize = lightfields.size();
 				if (loadingMonitor != null)
 				{
 					loadingMonitor.loadingComplete();
 				}
-				fireIntervalAdded(this, ulfs.size() - 1, ulfs.size() - 1);
+				fireIntervalAdded(this, lightfields.size() - 1, lightfields.size() - 1);
 			}
 		});
-		ulfs.add(newItem);
+		lightfields.add(newItem);
 		return newItem;
 	}
 
 	@Override
-	public ULFDrawable<ContextType> addMorphFromLFMFile(File lfmFile, ULFLoadOptions loadOptions) throws IOException 
+	public LFDrawable<ContextType> addMorphFromLFMFile(File lfmFile, LFLoadOptions loadOptions) throws IOException 
 	{
-		ULFDrawable<ContextType> newItem = this.createMorphFromLFMFile(lfmFile, loadOptions);
-		newItem.setOnLoadCallback(new ULFLoadingMonitor()
+		LFDrawable<ContextType> newItem = this.createMorphFromLFMFile(lfmFile, loadOptions);
+		newItem.setOnLoadCallback(new LFLoadingMonitor()
 		{
 			@Override
 			public void startLoading()
@@ -269,16 +269,16 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 			@Override
 			public void loadingComplete()
 			{
-				ulfs.setSelectedItem(newItem);
-				effectiveSize = ulfs.size();
+				lightfields.setSelectedItem(newItem);
+				effectiveSize = lightfields.size();
 				if (loadingMonitor != null)
 				{
 					loadingMonitor.loadingComplete();
 				}
-				fireIntervalAdded(this, ulfs.size() - 1, ulfs.size() - 1);
+				fireIntervalAdded(this, lightfields.size() - 1, lightfields.size() - 1);
 			}
 		});
-		ulfs.add(newItem);
+		lightfields.add(newItem);
 		return newItem;
 	}
 
@@ -289,15 +289,15 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	}
 
 	@Override
-	public ULFDrawable<ContextType> getElementAt(int index) 
+	public LFDrawable<ContextType> getElementAt(int index) 
 	{
-		return ulfs.get(index);
+		return lightfields.get(index);
 	}
 
 	@Override
-	public ULFDrawable<ContextType> getSelectedItem() 
+	public LFDrawable<ContextType> getSelectedItem() 
 	{
-		return ulfs.getSelectedItem();
+		return lightfields.getSelectedItem();
 	}
 
 	@Override
@@ -305,15 +305,15 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	{
 		if (item == null)
 		{
-			ulfs.setSelectedItem(null);
+			lightfields.setSelectedItem(null);
 		}
 		else
 		{
-			for (int i = 0; i < ulfs.size(); i++)
+			for (int i = 0; i < lightfields.size(); i++)
 			{
-				if (ulfs.get(i) == item)
+				if (lightfields.get(i) == item)
 				{
-					ulfs.setSelectedIndex(i);
+					lightfields.setSelectedIndex(i);
 				}
 			}
 		}
@@ -321,7 +321,7 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	}
 	
 	@Override
-	public void setLoadingMonitor(ULFLoadingMonitor loadingMonitor)
+	public void setLoadingMonitor(LFLoadingMonitor loadingMonitor)
 	{
 		this.loadingMonitor = loadingMonitor;
 	}
@@ -332,6 +332,6 @@ public abstract class ULFDrawableListModel<ContextType extends Context<ContextTy
 	 */
 	public Drawable getDrawable()
 	{
-		return ulfs;
+		return lightfields;
 	}
 }

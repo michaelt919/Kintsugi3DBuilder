@@ -23,35 +23,26 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf.app;
+package tetzlaff.lightfield.viewer;
 
-import com.trolltech.qt.core.QUrl;
-import com.trolltech.qt.gui.QTextBrowser;
+import com.trolltech.qt.core.Qt.WindowModality;
+import com.trolltech.qt.gui.QDialog;
+import com.trolltech.qt.gui.QPixmap;
 import com.trolltech.qt.gui.QWidget;
-import com.trolltech.qt.help.QHelpEngine;
 
-public class ULFHelpWidget extends QTextBrowser {
+public class LFAboutQDialog extends QDialog {
 
-	private QHelpEngine helpEngine;
+	Ui_AboutDialog gui;
 	
-	public ULFHelpWidget(QHelpEngine engine, QWidget parent)
-	{
+	public LFAboutQDialog(QWidget parent) {
 		super(parent);
-		this.helpEngine = engine;
+		
+		gui = new Ui_AboutDialog();
+		gui.setupUi(this);
+		
+		gui.iconLabel.setPixmap(new QPixmap("classpath:images#/icons/icon.png"));
+		
+		this.setWindowModality(WindowModality.ApplicationModal);
+		this.setModal(true);
 	}
-	
-	@Override
-    public Object loadResource(int type, QUrl name)
-    {
-		// Intercept any resources that come from the help engine
-    	if (name.scheme().equalsIgnoreCase("qthelp"))
-    	{
-            return helpEngine.fileData(name);
-    	}
-        else
-        {
-            return super.loadResource(type, name);
-        }
-    }
-
 }

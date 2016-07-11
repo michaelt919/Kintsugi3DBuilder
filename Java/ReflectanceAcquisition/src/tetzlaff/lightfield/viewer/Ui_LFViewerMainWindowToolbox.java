@@ -24,24 +24,24 @@
  *
  */
 /********************************************************************************
- ** Form generated from reading ui file 'ULFRendererQMainWindowToolbox.ui.jui'
+ ** Form generated from reading ui file 'LFViewerQMainWindowToolbox.ui.jui'
  **
  ** Created by: Qt User Interface Compiler version 4.8.6
  **
  ** WARNING! All changes made in this file will be lost when recompiling ui file!
  ********************************************************************************/
-package tetzlaff.ulf.app;
+package tetzlaff.lightfield.viewer;
 
 import com.trolltech.qt.core.*;
 import com.trolltech.qt.gui.*;
 
-public class Ui_ULFRendererMainWindowToolbox implements com.trolltech.qt.QUiForm<QMainWindow>
+public class Ui_LFViewerMainWindowToolbox implements com.trolltech.qt.QUiForm<QMainWindow>
 {
     public QAction actionLoad_Single_Model;
     public QAction actionLoad_Model_Sequence;
     public QAction actionQuit;
     public QAction actionShow_User_Guide;
-    public QAction actionAbout_ULF_Renderer;
+    public QAction actionAbout;
     public QWidget centralwidget;
     public QVBoxLayout verticalLayout_9;
     public QGroupBox loadOptionsGroupBox;
@@ -113,26 +113,26 @@ public class Ui_ULFRendererMainWindowToolbox implements com.trolltech.qt.QUiForm
     public QMenu menuHelp;
     public QStatusBar statusbar;
 
-    public Ui_ULFRendererMainWindowToolbox() { super(); }
+    public Ui_LFViewerMainWindowToolbox() { super(); }
 
-    public void setupUi(QMainWindow ULFRendererMainWindowToolbox)
+    public void setupUi(QMainWindow LFViewerMainWindowToolbox)
     {
-        ULFRendererMainWindowToolbox.setObjectName("ULFRendererMainWindowToolbox");
-        ULFRendererMainWindowToolbox.resize(new QSize(350, 636).expandedTo(ULFRendererMainWindowToolbox.minimumSizeHint()));
-        ULFRendererMainWindowToolbox.setMinimumSize(new QSize(350, 636));
-        ULFRendererMainWindowToolbox.setMaximumSize(new QSize(350, 636));
-        actionLoad_Single_Model = new QAction(ULFRendererMainWindowToolbox);
+        LFViewerMainWindowToolbox.setObjectName("LFViewerMainWindowToolbox");
+        LFViewerMainWindowToolbox.resize(new QSize(350, 636).expandedTo(LFViewerMainWindowToolbox.minimumSizeHint()));
+        LFViewerMainWindowToolbox.setMinimumSize(new QSize(350, 636));
+        LFViewerMainWindowToolbox.setMaximumSize(new QSize(350, 636));
+        actionLoad_Single_Model = new QAction(LFViewerMainWindowToolbox);
         actionLoad_Single_Model.setObjectName("actionLoad_Single_Model");
-        actionLoad_Model_Sequence = new QAction(ULFRendererMainWindowToolbox);
+        actionLoad_Model_Sequence = new QAction(LFViewerMainWindowToolbox);
         actionLoad_Model_Sequence.setObjectName("actionLoad_Model_Sequence");
-        actionQuit = new QAction(ULFRendererMainWindowToolbox);
+        actionQuit = new QAction(LFViewerMainWindowToolbox);
         actionQuit.setObjectName("actionQuit");
         actionQuit.setMenuRole(com.trolltech.qt.gui.QAction.MenuRole.QuitRole);
-        actionShow_User_Guide = new QAction(ULFRendererMainWindowToolbox);
+        actionShow_User_Guide = new QAction(LFViewerMainWindowToolbox);
         actionShow_User_Guide.setObjectName("actionShow_User_Guide");
-        actionAbout_ULF_Renderer = new QAction(ULFRendererMainWindowToolbox);
-        actionAbout_ULF_Renderer.setObjectName("actionAbout_ULF_Renderer");
-        centralwidget = new QWidget(ULFRendererMainWindowToolbox);
+        actionAbout = new QAction(LFViewerMainWindowToolbox);
+        actionAbout.setObjectName("actionAbout");
+        centralwidget = new QWidget(LFViewerMainWindowToolbox);
         centralwidget.setObjectName("centralwidget");
         verticalLayout_9 = new QVBoxLayout(centralwidget);
         verticalLayout_9.setObjectName("verticalLayout_9");
@@ -332,7 +332,7 @@ public class Ui_ULFRendererMainWindowToolbox implements com.trolltech.qt.QUiForm
 
         verticalLayout_5.addItem(verticalSpacer_2);
 
-        optionsToolox.addItem(renderingOptionsPage, com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Performance and Visual Settings", null));
+        optionsToolox.addItem(renderingOptionsPage, com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Performance and Visual Settings", null));
         qualityOptionsPage = new QWidget();
         qualityOptionsPage.setObjectName("qualityOptionsPage");
         qualityOptionsPage.setGeometry(new QRect(0, 0, 298, 182));
@@ -440,7 +440,7 @@ public class Ui_ULFRendererMainWindowToolbox implements com.trolltech.qt.QUiForm
 
         verticalLayout_4.addItem(verticalSpacer);
 
-        optionsToolox.addItem(qualityOptionsPage, com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Advanced Rendering Options", null));
+        optionsToolox.addItem(qualityOptionsPage, com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Advanced Rendering Options", null));
         resampleLFPage = new QWidget();
         resampleLFPage.setObjectName("resampleLFPage");
         resampleLFPage.setGeometry(new QRect(0, 0, 298, 182));
@@ -505,7 +505,7 @@ public class Ui_ULFRendererMainWindowToolbox implements com.trolltech.qt.QUiForm
 
         verticalLayout_8.addItem(verticalSpacer_3);
 
-        optionsToolox.addItem(resampleLFPage, com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Resample Light Field", null));
+        optionsToolox.addItem(resampleLFPage, com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Resample Light Field", null));
 
         verticalLayout_6.addWidget(optionsToolox);
 
@@ -526,18 +526,18 @@ public class Ui_ULFRendererMainWindowToolbox implements com.trolltech.qt.QUiForm
 
         verticalLayout_9.addLayout(horizontalLayout_8);
 
-        ULFRendererMainWindowToolbox.setCentralWidget(centralwidget);
-        menubar = new QMenuBar(ULFRendererMainWindowToolbox);
+        LFViewerMainWindowToolbox.setCentralWidget(centralwidget);
+        menubar = new QMenuBar(LFViewerMainWindowToolbox);
         menubar.setObjectName("menubar");
         menubar.setGeometry(new QRect(0, 0, 350, 22));
         menuFile = new QMenu(menubar);
         menuFile.setObjectName("menuFile");
         menuHelp = new QMenu(menubar);
         menuHelp.setObjectName("menuHelp");
-        ULFRendererMainWindowToolbox.setMenuBar(menubar);
-        statusbar = new QStatusBar(ULFRendererMainWindowToolbox);
+        LFViewerMainWindowToolbox.setMenuBar(menubar);
+        statusbar = new QStatusBar(LFViewerMainWindowToolbox);
         statusbar.setObjectName("statusbar");
-        ULFRendererMainWindowToolbox.setStatusBar(statusbar);
+        LFViewerMainWindowToolbox.setStatusBar(statusbar);
         depImageDimensionsLabel.setBuddy(depthImageWidthSpinner);
         depthImageXLabel.setBuddy(depthImageHeightSpinner);
         kNeighborCountLabel.setBuddy(kNeighborCountSpinBox);
@@ -554,54 +554,54 @@ public class Ui_ULFRendererMainWindowToolbox implements com.trolltech.qt.QUiForm
         menuFile.addAction(actionQuit);
         menuHelp.addAction(actionShow_User_Guide);
         menuHelp.addSeparator();
-        menuHelp.addAction(actionAbout_ULF_Renderer);
-        retranslateUi(ULFRendererMainWindowToolbox);
+        menuHelp.addAction(actionAbout);
+        retranslateUi(LFViewerMainWindowToolbox);
 
         optionsToolox.setCurrentIndex(0);
 
 
-        ULFRendererMainWindowToolbox.connectSlotsByName();
+        LFViewerMainWindowToolbox.connectSlotsByName();
     } // setupUi
 
-    void retranslateUi(QMainWindow ULFRendererMainWindowToolbox)
+    void retranslateUi(QMainWindow LFViewerMainWindowToolbox)
     {
-        ULFRendererMainWindowToolbox.setWindowTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "ULF Renderer Settings", null));
-        actionLoad_Single_Model.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "&Load Single Model ...", null));
-        actionLoad_Model_Sequence.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Load Model Sequence ...", null));
-        actionLoad_Model_Sequence.setIconText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Load Model &Sequence", null));
-        actionQuit.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "&Quit", null));
-        actionQuit.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Exit ULF Renderer", null));
-        actionShow_User_Guide.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Show &User Guide ...", null));
-        actionShow_User_Guide.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Show the HTML users guide with info on creating and loading models, settings, and troubleshooting.", null));
-        actionAbout_ULF_Renderer.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "&About ULF Renderer", null));
-        actionAbout_ULF_Renderer.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Information about version, authors, copyright, licensing, and support.", null));
-        loadOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Loading Models", null));
-        compressCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Compress Images", null));
-        mipmapsCheckbox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Use Mipmaps", null));
-        generateDepthImagesCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Generate Depth Images", null));
-        depImageDimensionsLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Dimensions:", null));
-        depthImageXLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "X", null));
-        modelOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Current Model", null));
-        halfResCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Half-Resolution", null));
-        multisamplingCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Multisampling", null));
-        kNearestNeighborsCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "k-nearest mode", null));
-        kNeighborCountLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "- k-samples:", null));
-        showCamerasCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Show view cameras", null));
-        backgroundColorLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Background Color: ", null));
-        backgroundColorButton.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "...", null));
-        optionsToolox.setItemText(optionsToolox.indexOf(renderingOptionsPage), com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Performance and Visual Settings", null));
-        gammaLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Gamma:", null));
-        exponentLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Weight Exponent:", null));
-        visibilityCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Visibility Testing -", null));
-        visibilityBiasLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Bias:", null));
-        optionsToolox.setItemText(optionsToolox.indexOf(qualityOptionsPage), com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Advanced Rendering Options", null));
-        resampleDimensionsLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Dimensions:", null));
-        resampleXLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "X", null));
-        resampleButton.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Resample", null));
-        optionsToolox.setItemText(optionsToolox.indexOf(resampleLFPage), com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Resample Light Field", null));
-        reportBugButton.setText(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "Report Bug", null));
-        menuFile.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "&File", null));
-        menuHelp.setTitle(com.trolltech.qt.core.QCoreApplication.translate("ULFRendererMainWindowToolbox", "&Help", null));
+        LFViewerMainWindowToolbox.setWindowTitle(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "LF Viewer Settings", null));
+        actionLoad_Single_Model.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "&Load Single Model ...", null));
+        actionLoad_Model_Sequence.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Load Model Sequence ...", null));
+        actionLoad_Model_Sequence.setIconText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Load Model &Sequence", null));
+        actionQuit.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "&Quit", null));
+        actionQuit.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Exit LF Viewer", null));
+        actionShow_User_Guide.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Show &User Guide ...", null));
+        actionShow_User_Guide.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Show the HTML users guide with info on creating and loading models, settings, and troubleshooting.", null));
+        actionAbout.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "&About LF Viewer", null));
+        actionAbout.setToolTip(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Information about version, authors, copyright, licensing, and support.", null));
+        loadOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Loading Models", null));
+        compressCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Compress Images", null));
+        mipmapsCheckbox.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Use Mipmaps", null));
+        generateDepthImagesCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Generate Depth Images", null));
+        depImageDimensionsLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Dimensions:", null));
+        depthImageXLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "X", null));
+        modelOptionsGroupBox.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Current Model", null));
+        halfResCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Half-Resolution", null));
+        multisamplingCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Multisampling", null));
+        kNearestNeighborsCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "k-nearest mode", null));
+        kNeighborCountLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "- k-samples:", null));
+        showCamerasCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Show view cameras", null));
+        backgroundColorLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Background Color: ", null));
+        backgroundColorButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "...", null));
+        optionsToolox.setItemText(optionsToolox.indexOf(renderingOptionsPage), com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Performance and Visual Settings", null));
+        gammaLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Gamma:", null));
+        exponentLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Weight Exponent:", null));
+        visibilityCheckBox.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Visibility Testing -", null));
+        visibilityBiasLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Bias:", null));
+        optionsToolox.setItemText(optionsToolox.indexOf(qualityOptionsPage), com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Advanced Rendering Options", null));
+        resampleDimensionsLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Dimensions:", null));
+        resampleXLabel.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "X", null));
+        resampleButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Resample", null));
+        optionsToolox.setItemText(optionsToolox.indexOf(resampleLFPage), com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Resample Light Field", null));
+        reportBugButton.setText(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "Report Bug", null));
+        menuFile.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "&File", null));
+        menuHelp.setTitle(com.trolltech.qt.core.QCoreApplication.translate("LFViewerMainWindowToolbox", "&Help", null));
     } // retranslateUi
 
 }

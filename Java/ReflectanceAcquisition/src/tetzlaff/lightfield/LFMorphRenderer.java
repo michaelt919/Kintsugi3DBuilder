@@ -23,7 +23,7 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf;
+package tetzlaff.lightfield;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -38,27 +38,27 @@ import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector4;
 
 /**
- * A renderer for a sequence of related unstructured light fields.
- * This renderer acts as a aggregate ULFDrawable for each stage of the morph, with draw requests directed towards the currently active stage of the morph.
+ * A renderer for a sequence of related light fields.
+ * This renderer acts as a aggregate LFDrawable for each stage of the morph, with draw requests directed towards the currently active stage of the morph.
  * @author Michael Tetzlaff
  *
  * @param <ContextType> The type of the context that will be used for rendering.
  */
-public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
+public class LFMorphRenderer<ContextType extends Context<ContextType>> implements LFDrawable<ContextType>
 {
 	private ContextType context;
 	private Program<ContextType> program;
     private File lfmFile;
-    private ULFLoadOptions loadOptions;
+    private LFLoadOptions loadOptions;
     private Trackball trackball;
     private String id;
 
-    private ULFLoadingMonitor callback;
-	private List<ULFRenderer<ContextType>> stages;
+    private LFLoadingMonitor callback;
+	private List<LFRenderer<ContextType>> stages;
 	private int currentStage;
 
 	/**
-	 * Creates a new unstructured light field morph renderer.
+	 * Creates a new light field morph renderer.
 	 * @param contextThe GL context in which to perform the rendering.
      * @param program The program to use for rendering.
 	 * @param lfmFile The file defining the stages of the light field morph to be loaded.
@@ -66,7 +66,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
      * @param trackball The trackball controlling the movement of the virtual camera.
 	 * @throws FileNotFoundException Thrown due to a File I/O error occurring.
 	 */
-	public ULFMorphRenderer(ContextType context, Program<ContextType> program, File lfmFile, ULFLoadOptions loadOptions, Trackball trackball) throws FileNotFoundException 
+	public LFMorphRenderer(ContextType context, Program<ContextType> program, File lfmFile, LFLoadOptions loadOptions, Trackball trackball) throws FileNotFoundException 
 	{
 		this.context = context;
 		this.program = program;
@@ -76,7 +76,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 		
 		this.id = lfmFile.getParentFile().getName();
 		
-		this.stages = new ArrayList<ULFRenderer<ContextType>>();
+		this.stages = new ArrayList<LFRenderer<ContextType>>();
 		this.currentStage = 0;
 	}
 	
@@ -117,12 +117,12 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 			while (scanner.hasNextLine())
 			{
 				String vsetFileName = scanner.nextLine();
-				stages.add(new ULFRenderer<ContextType>(context, program, new File(directory, vsetFileName), loadOptions, trackball));
+				stages.add(new LFRenderer<ContextType>(context, program, new File(directory, vsetFileName), loadOptions, trackball));
 			}
 			scanner.close();
 			
 			int stagesLoaded = 0;
-			for(ULFRenderer<ContextType> stage : stages)
+			for(LFRenderer<ContextType> stage : stages)
 			{
 				System.out.println(stage.getVSETFile());
 				callback.setProgress((double)stagesLoaded / (double)stages.size());
@@ -141,7 +141,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void update() 
 	{
-		for(ULFRenderer<ContextType> stage : stages)
+		for(LFRenderer<ContextType> stage : stages)
 		{
 			stage.update();
 		}
@@ -162,19 +162,19 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void cleanup() 
 	{
-		for(ULFRenderer<ContextType> stage : stages)
+		for(LFRenderer<ContextType> stage : stages)
 		{
 			stage.cleanup();
 		}
 	}
 
 	@Override
-	public void setOnLoadCallback(ULFLoadingMonitor callback) 
+	public void setOnLoadCallback(LFLoadingMonitor callback) 
 	{
 		this.callback = callback;
 	}
 	
-	public UnstructuredLightField<ContextType> getLightField()
+	public LightField<ContextType> getLightField()
 	{
 		return stages.get(currentStage).getLightField();
 	}
@@ -206,7 +206,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void setGamma(float gamma)
 	{
-		for (ULFRenderer<ContextType> stage : stages)
+		for (LFRenderer<ContextType> stage : stages)
 		{
 			stage.getLightField().settings.setGamma(gamma);
 		}
@@ -215,7 +215,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void setWeightExponent(float weightExponent) 
 	{
-		for (ULFRenderer<ContextType> stage : stages)
+		for (LFRenderer<ContextType> stage : stages)
 		{
 			stage.getLightField().settings.setWeightExponent(weightExponent);
 		}
@@ -224,7 +224,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void setOcclusionEnabled(boolean occlusionEnabled) 
 	{
-		for (ULFRenderer<ContextType> stage : stages)
+		for (LFRenderer<ContextType> stage : stages)
 		{
 			stage.getLightField().settings.setOcclusionEnabled(occlusionEnabled);
 		}
@@ -233,7 +233,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void setOcclusionBias(float occlusionBias) 
 	{
-		for (ULFRenderer<ContextType> stage : stages)
+		for (LFRenderer<ContextType> stage : stages)
 		{
 			stage.getLightField().settings.setOcclusionBias(occlusionBias);
 		}
@@ -286,7 +286,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void setProgram(Program<ContextType> program) 
 	{
-		for(ULFRenderer<ContextType> stage : stages)
+		for(LFRenderer<ContextType> stage : stages)
 		{
 			stage.setProgram(program);
 		}
@@ -294,7 +294,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 
 	@Override
 	public void setBackgroundColor(Vector4 RGBA) {
-		for (ULFRenderer<ContextType> stage : stages)
+		for (LFRenderer<ContextType> stage : stages)
 		{
 			stage.setBackgroundColor(RGBA);
 		}
@@ -312,7 +312,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 
 	@Override
 	public void setKNeighborsEnabled(boolean kNeighborsEnabled) {
-		for (ULFRenderer<ContextType> stage : stages)
+		for (LFRenderer<ContextType> stage : stages)
 		{
 			stage.setKNeighborsEnabled(kNeighborsEnabled);
 		}
@@ -325,7 +325,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 
 	@Override
 	public void setKNeighborCount(int kNeighborCount) {
-		for (ULFRenderer<ContextType> stage : stages)
+		for (LFRenderer<ContextType> stage : stages)
 		{
 			stage.setKNeighborCount(kNeighborCount);
 		}

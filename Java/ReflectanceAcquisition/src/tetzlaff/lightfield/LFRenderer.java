@@ -23,7 +23,7 @@
  *     along with LF Viewer.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package tetzlaff.ulf;
+package tetzlaff.lightfield;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,23 +47,23 @@ import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 
 /**
- * An implementation of a renderer for a single unstructured light field.
+ * An implementation of a renderer for a single light field.
  * @author Michael Tetzlaff
  *
  * @param <ContextType> The type of the context that will be used for rendering.
  */
-public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
+public class LFRenderer<ContextType extends Context<ContextType>> implements LFDrawable<ContextType>
 {
     private Program<ContextType> program;
     
     private File cameraFile;
     private File meshFile;
-    private ULFLoadOptions loadOptions;
-    private UnstructuredLightField<ContextType> lightField;
+    private LFLoadOptions loadOptions;
+    private LightField<ContextType> lightField;
 	private ContextType context;
     private Renderable<ContextType> renderable;
     private Trackball trackball;
-    private ULFLoadingMonitor callback;
+    private LFLoadingMonitor callback;
 
     private boolean kNeighborsEnabled;
     private int kNeighborCount;
@@ -93,14 +93,14 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     long lastFPSTime;
     
     /**
-     * Creates a new unstructured light field renderer for rendering a light field defined by a VSET file.
+     * Creates a new light field renderer for rendering a light field defined by a VSET file.
      * @param context The GL context in which to perform the rendering.
      * @param program The program to use for rendering.
      * @param vsetFile The view set file defining the light field to be rendered.
      * @param loadOptions The options to use when loading the light field.
      * @param trackball The trackball controlling the movement of the virtual camera.
      */
-    public ULFRenderer(ContextType context, Program<ContextType> program, File vsetFile, ULFLoadOptions loadOptions, Trackball trackball)
+    public LFRenderer(ContextType context, Program<ContextType> program, File vsetFile, LFLoadOptions loadOptions, Trackball trackball)
     {
     	this.context = context;
     	this.program = program;
@@ -113,7 +113,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     }
 
     /**
-     * Creates a new unstructured light field renderer for rendering a light field from Agisoft PhotoScan.
+     * Creates a new light field renderer for rendering a light field from Agisoft PhotoScan.
      * @param context The GL context in which to perform the rendering.
      * @param program The program to use for rendering.
      * @param xmlFile The Agisoft PhotoScan XML camera file defining the views to load.
@@ -121,7 +121,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
      * @param loadOptions The options to use when loading the light field.
      * @param trackball The trackball controlling the movement of the virtual camera.
      */
-    public ULFRenderer(ContextType context, Program<ContextType> program, File xmlFile, File meshFile, ULFLoadOptions loadOptions, Trackball trackball)
+    public LFRenderer(ContextType context, Program<ContextType> program, File xmlFile, File meshFile, LFLoadOptions loadOptions, Trackball trackball)
     {
     	this.context = context;
     	this.program = program;
@@ -135,7 +135,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     }
     
     @Override
-    public void setOnLoadCallback(ULFLoadingMonitor callback)
+    public void setOnLoadCallback(LFLoadingMonitor callback)
     {
     	this.callback = callback;
     }
@@ -149,8 +149,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	try
 	        {
 	    		this.program = context.getShaderProgramBuilder()
-	    				.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "ulr.frag"))
+	    				.addShader(ShaderType.VERTEX, new File(LightField.SHADER_RESOURCE_DIRECTORY, "ulr.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File(LightField.SHADER_RESOURCE_DIRECTORY, "ulr.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)
@@ -164,8 +164,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	try
 	        {
 	    		this.simpleTexProgram = context.getShaderProgramBuilder()
-	    				.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "texturerect.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "simpletexture.frag"))
+	    				.addShader(ShaderType.VERTEX, new File(LightField.SHADER_RESOURCE_DIRECTORY, "texturerect.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File(LightField.SHADER_RESOURCE_DIRECTORY, "simpletexture.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)
@@ -179,8 +179,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	try
 	        {
 	    		this.cameraVisProgram = context.getShaderProgramBuilder()
-	    				.addShader(ShaderType.VERTEX, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "uniform3D.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File(UnstructuredLightField.SHADER_RESOURCE_DIRECTORY, "uniform.frag"))
+	    				.addShader(ShaderType.VERTEX, new File(LightField.SHADER_RESOURCE_DIRECTORY, "uniform3D.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File(LightField.SHADER_RESOURCE_DIRECTORY, "uniform.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)
@@ -199,11 +199,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 
     		if (this.cameraFile.getName().toUpperCase().endsWith(".XML"))
     		{
-    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.meshFile, this.loadOptions, this.context, callback);
+    			this.lightField = LightField.loadFromAgisoftXMLFile(this.cameraFile, this.meshFile, this.loadOptions, this.context, callback);
     		}
     		else
     		{
-    			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.context, callback);
+    			this.lightField = LightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.context, callback);
     		}
     			    	
 	    	this.renderable = context.createRenderable(program);
@@ -469,7 +469,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	return this.cameraFile;
     }
     
-    public UnstructuredLightField<ContextType> getLightField()
+    public LightField<ContextType> getLightField()
     {
     	return this.lightField;
     }

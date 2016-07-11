@@ -3,14 +3,14 @@
 # by Andy Maloney
 # http://asmaloney.com/2013/07/howto/packaging-a-mac-os-x-application-using-a-dmg/
 
-#DOC_NAME="ULFRenderer - User Guide.pdf"
+#DOC_NAME="LF Viewer - User Guide.pdf"
 
 cd dist
 cp ../resources/icons/Background.png ./
 #cp "../${DOC_NAME}" ./
 
 # set up your app name, version number, and background image file name
-APP_NAME="ULFRenderer"
+APP_NAME="LFViewer"
 VERSION="1.0a2"
 DMG_BACKGROUND_IMG="Background.png"
 

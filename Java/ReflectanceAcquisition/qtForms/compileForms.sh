@@ -26,10 +26,10 @@ for form in *.ui; do
 	sed -i -e s#'QDockWidget::'#'com.trolltech.qt.gui.QDockWidget.DockWidgetFeature.'#g "${form}.jui"
 	sed -i -e s#'(bool)'#'(boolean)'#g "${form}.jui"
 
-	juic.sh -p tetzlaff.ulf.app "${form}.jui"
+	juic.sh -p tetzlaff.lightfield.viewer "${form}.jui"
 	rm "${form}.jui"
 done
 
-cp tetzlaff/ulf/app/* ../src/tetzlaff/ulf/app/
+cp tetzlaff/lightfield/viewer/* ../src/tetzlaff/lightfield/viewer/
 rm -rf tetzlaff/
 rm *.jui-e
