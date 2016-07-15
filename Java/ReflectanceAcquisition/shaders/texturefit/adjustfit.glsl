@@ -5,7 +5,8 @@
 
 #line 7 2005
 
-#define SHIFT_FRACTION 0.00390625 // 1/256
+//#define SHIFT_FRACTION 0.01171875 // 3/256
+#define SHIFT_FRACTION 0.125
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
@@ -50,14 +51,15 @@ ParameterizedFit adjustFit()
 	else
 	{
 		vec3 geometricNormal = normalize(fNormal);
-		vec3 diffuseNormal = getDiffuseNormalVector();
-		vec3 prevDiffuseColor = getDiffuseColor();
-		vec3 prevSpecularColor = getSpecularColor();
-		float prevRoughness = getRoughness();
+		vec3 diffuseNormal = geometricNormal;//getDiffuseNormalVector();
+		vec3 prevDiffuseColor = vec3(0.5);//max(vec3(pow(SHIFT_FRACTION, gamma)), getDiffuseColor());
+		vec3 prevSpecularColor = vec3(0.5);//max(vec3(pow(SHIFT_FRACTION, gamma)), getSpecularColor());
+		float prevRoughness = 0.5;//max(SHIFT_FRACTION, getRoughness());
 		float roughnessSquared = prevRoughness * prevRoughness;
-		float maxLuminance = getMaxLuminance();
 		float gammaInv = 1.0 / gamma;
 		
+		// Partitioned matrix:  [ A B ]
+		//						[ C D ]
 		mat3   mA = mat3(0);
 		mat4x3 mB = mat4x3(0);
 		mat3x4 mC = mat3x4(0);
@@ -106,7 +108,7 @@ ParameterizedFit adjustFit()
 					
 					vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity), vec3(gammaInv));
 					vec3 currentFit = prevDiffuseColor * nDotL + prevSpecularColor * mfdEval * geomRatio;
-					vec3 colorResidual = colorScaled - pow(currentFit, vec3(gammaInv));
+					vec3 colorResidual = /*colorScaled*/ - pow(currentFit, vec3(gammaInv));
 					
 					vec3 innerDeriv = gammaInv * pow(currentFit, vec3(gammaInv - 1));
 					mat3 innerDerivMatrix = 
@@ -121,7 +123,10 @@ ParameterizedFit adjustFit()
 						specularReflectivityDerivs[2],
 						geomRatio * mfdDeriv * prevSpecularColor * innerDeriv);
 						
-					mA += transpose(diffuseDerivs) * diffuseDerivs;
+					mat3 diffuseDerivs2 = nDotL * innerDerivMatrix;
+					mat3 diffuseDerivsTranspose = transpose(diffuseDerivs2);
+						
+					mA += diffuseDerivsTranspose * diffuseDerivs;
 					mB += transpose(diffuseDerivs) * specularDerivs;
 					mC += transpose(specularDerivs) * diffuseDerivs;
 					mD += transpose(specularDerivs) * specularDerivs;
@@ -139,11 +144,18 @@ ParameterizedFit adjustFit()
 			- mAInverse * mB * schurInverse * v2;
 		
 		vec4 specularAdj = -schurInverse * mC * mAInverse * v1 + schurInverse * v2;
+		
+		vec3 diffuseAdjLinearized = 
+			diffuseAdj * pow(prevDiffuseColor, vec3(gammaInv - 1.0)) * gammaInv;
+		vec4 specularAdjLinearized = 
+			specularAdj * vec4(pow(prevSpecularColor, vec3(gammaInv - 1.0)) * gammaInv, 1.0);
 			
-		float scale = SHIFT_FRACTION / sqrt(dot(diffuseAdj, diffuseAdj) + dot(specularAdj, specularAdj));
+		float scale = SHIFT_FRACTION / 
+			sqrt((dot(diffuseAdjLinearized, diffuseAdjLinearized)
+				+ dot(specularAdjLinearized, specularAdjLinearized)));
 		
 		return ParameterizedFit(
-			prevDiffuseColor + scale * diffuseAdj, 
+			0.5 * normalize(mA[0]) + vec3(0.5),//prevDiffuseColor + scale * diffuseAdj, 
 			diffuseNormal,
 			prevSpecularColor + scale * specularAdj.rgb,
 			prevRoughness + scale * specularAdj.a);

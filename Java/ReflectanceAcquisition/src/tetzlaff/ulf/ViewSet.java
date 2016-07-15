@@ -872,6 +872,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    String filename;
 	    Matrix4 transform;
 	    Sensor sensor;
+	    int lightIndex;
 	    
 	    @SuppressWarnings("unused")
 		int orientation;
@@ -881,10 +882,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	        this.id = id;
 	    }
 	    
-	    Camera(String id, Sensor sensor)
+	    Camera(String id, Sensor sensor, int lightIndex)
 	    {
 	        this.id = id;
 	        this.sensor = sensor;
+	        this.lightIndex = lightIndex;
 	    }
 	    
 	    @Override
@@ -943,6 +945,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
         
         Sensor sensor = null;
         Camera camera = null;
+        int lightIndex = -1;
+        int nextLightIndex = 0;
+        int defaultLightIndex = -1;
 
         float globalScale = 1.0f;
         Matrix4 globalRotation = new Matrix4();
@@ -983,6 +988,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	                        case "group":
 	                            groupLabel = reader.getAttributeValue(null, "label");
 	                            System.out.printf("Reading group '%s'\n", groupLabel);
+	                            lightIndex = nextLightIndex;
+	                            nextLightIndex++;
+	                            System.out.printf("Light index: " + lightIndex);
 	                            break;
 	                        case "sensor":
 	                            sensorID = reader.getAttributeValue(null, "id");
@@ -999,9 +1007,17 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	                            {
 	                            	if (reader.getAttributeValue(null, "enabled").equals("true"))
 	                            	{
+	                            		if (lightIndex < 0)
+	                            		{
+	                            			// Set default light index
+	                            			lightIndex = defaultLightIndex = nextLightIndex;
+	                            			nextLightIndex++;
+	                            			System.out.println("Using default light index: " + lightIndex);
+	                            		}
+	                            		
 		                                sensorID = reader.getAttributeValue(null, "sensor_id");
 		                                imageFile = reader.getAttributeValue(null, "label");
-		                                camera = new Camera(cameraID, sensorSet.get(sensorID));
+		                                camera = new Camera(cameraID, sensorSet.get(sensorID), lightIndex);
 		                                camera.filename = imageFile;
 	                            	}
 	                            	else
@@ -1189,7 +1205,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	                        	if (camera == null)
 	                        	{
 	                                System.out.println("\tSetting global scale.");
-	                    			globalScale = 1.0f/Float.parseFloat(reader.getElementText());
+	                    			globalScale = 1.0f / Float.parseFloat(reader.getElementText());
 	                        	}
 	                        	break;
 	                            
@@ -1229,6 +1245,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		                    case "group":
 		                        System.out.printf("Finished group '%s'\n", groupLabel);
 		                        groupLabel = "";
+		                        lightIndex = defaultLightIndex;
 		                        break;
 		                    case "sensor":
 		                        if(sensor != null)
@@ -1297,17 +1314,19 @@ public class ViewSet<ContextType extends Context<ContextType>>
         {
         	// Apply the global transform to each camera
         	Matrix4 m1 = cameras[i].transform;
+        	Vector3 displacement = new Vector3(m1.getColumn(3));
+        	m1 = Matrix4.translate(displacement.times(1.0f / globalScale).minus(displacement)).times(m1);
         	
         	// TODO: Figure out the right way to integrate the global transforms
             cameras[i].transform = m1.times(globalRotation)
             						 .times(Matrix4.translate(globalTranslate))
-            						 .times(Matrix4.scale(globalScale));
+            					;//	 .times(Matrix4.scale(globalScale));
         	            
             cameraPoseList.add(cameras[i].transform);
             
             // Compute inverse by just reversing steps to build transformation
-            Matrix4 cameraPoseInv = Matrix4.scale(1.0f / globalScale)
-            							   .times(Matrix4.translate(globalTranslate.negated()))
+            Matrix4 cameraPoseInv = //Matrix4.scale(1.0f / globalScale)
+            						/*	   .times*/(Matrix4.translate(globalTranslate.negated()))
 						        		   .times(globalRotation.transpose())
 						        		   .times(new Matrix4(new Matrix3(m1).transpose()))
 						            	   .times(Matrix4.translate(new Vector3(m1.getColumn(3).negated())));
@@ -1356,12 +1375,15 @@ public class ViewSet<ContextType extends Context<ContextType>>
             
             
             cameraProjectionIndexList.add(cameras[i].sensor.index);
-            lightIndexList.add(0);
+            lightIndexList.add(cameras[i].lightIndex);
             imageFileNames.add(cameras[i].filename);
         }
         
-        lightPositionList.add(lightOffset);
-        lightIntensityList.add(lightIntensity);
+        for (int i = 0; i < nextLightIndex; i++)
+        {
+	        lightPositionList.add(lightOffset);
+	        lightIntensityList.add(lightIntensity);
+        }
 
         float farPlane = findFarPlane(cameraPoseInvList) * globalScale;
         System.out.println("Near and far planes: " + (farPlane/32.0f) + ", " + (farPlane));
@@ -1611,6 +1633,15 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public int getCameraProjectionCount()
 	{
 		return this.cameraProjectionList.size();
+	}
+	
+	/**
+	 * Gets the number of lights defined in this view set.
+	 * @return The number of projection transformations defined in this view set.
+	 */
+	public int getLightCount()
+	{
+		return this.lightPositionList.size();
 	}
 	
 	/**

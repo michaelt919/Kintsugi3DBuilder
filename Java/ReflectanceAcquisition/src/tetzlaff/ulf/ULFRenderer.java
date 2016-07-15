@@ -285,6 +285,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 			context.disableMultisampling();			
 		}
     	
+    	context.enableBackFaceCulling();
+    	
     	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
     	FramebufferSize size = framebuffer.getSize();
     	
