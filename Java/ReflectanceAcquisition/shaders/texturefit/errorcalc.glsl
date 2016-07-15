@@ -5,7 +5,6 @@
 
 #line 7 2006
 
-#define SHIFT_FRACTION 0.00390625 // 1/256
 #define MAX_ERROR 3.402822E38 // Max 32-bit floating-point is 3.4028235E38
 
 uniform sampler2D diffuseEstimate;

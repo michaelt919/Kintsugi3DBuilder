@@ -228,14 +228,17 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
     	float scale = new Vector3(microfacetField.ulf.viewSet.getCameraPose(0).times(new Vector4(microfacetField.ulf.proxy.getCentroid(), 1.0f))).length();
 
 		Matrix4 lightMatrix = Matrix4.scale(scale)
-			.times(lightController.getLightMatrix(lightIndex))
-			.times(Matrix4.scale(1.0f / scale))
-			.times(new Matrix4(new Matrix3(microfacetField.ulf.viewSet.getCameraPose(0))))
-			.times(Matrix4.translate(microfacetField.ulf.proxy.getCentroid().negated()));
+				.times(lightController.getLightMatrix(lightIndex))
+				.times(Matrix4.scale(1.0f / scale))
+				.times(new Matrix4(new Matrix3(microfacetField.ulf.viewSet.getCameraPose(0))))
+				.times(Matrix4.translate(microfacetField.ulf.proxy.getCentroid().negated()));
 		
 		float lightDist = new Vector3(lightMatrix.times(new Vector4(this.microfacetField.ulf.proxy.getCentroid(), 1.0f))).length();
 		
-		float radius = this.microfacetField.ulf.proxy.getBoundingRadius();
+		float radius = (float)
+			(new Matrix3(microfacetField.ulf.viewSet.getCameraPose(0))
+				.times(new Vector3(this.microfacetField.ulf.proxy.getBoundingRadius()))
+				.length() / Math.sqrt(3));
 		
 		Matrix4 lightProjection = Matrix4.perspective(/*2.0f * (float)Math.atan(radius / lightDist)*/1.5f, 1.0f, 
 				lightDist - radius,

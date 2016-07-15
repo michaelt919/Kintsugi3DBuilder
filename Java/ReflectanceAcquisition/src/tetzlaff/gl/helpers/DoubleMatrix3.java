@@ -52,11 +52,18 @@ public class DoubleMatrix3
 	 * Creates a 4x4 matrix from a 3x3 matrix by dropping the fourth row and column.
 	 * @param m4 The 4x4 matrix.
 	 */
-	public DoubleMatrix3(Matrix4 m4)
+	public DoubleMatrix3(/*Double*/Matrix4 m4) // TODO make a DoubleMatrix4 class
 	{
 		this(	m4.get(0,0),	m4.get(0,1),	m4.get(0,2),
 				m4.get(1,0),	m4.get(1,1),	m4.get(1,2),
 				m4.get(2,0),	m4.get(2,1),	m4.get(2,2)		);
+	}
+	
+	public DoubleMatrix3(Matrix3 m3)
+	{
+		this(	m3.get(0,0),	m3.get(0,1),	m3.get(0,2),
+				m3.get(1,0),	m3.get(1,1),	m3.get(1,2),
+				m3.get(2,0),	m3.get(2,1),	m3.get(2,2)		);
 	}
 
 	/**

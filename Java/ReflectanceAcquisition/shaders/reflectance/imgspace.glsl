@@ -15,24 +15,29 @@ uniform bool occlusionEnabled;
 uniform bool shadowTestEnabled;
 uniform float occlusionBias;
 
-uniform CameraProjections
+layout(std140) uniform CameraProjections
 {
 	mat4 cameraProjections[MAX_CAMERA_PROJECTION_COUNT];
 };
 
-uniform CameraProjectionIndices
+layout(std140) uniform CameraProjectionIndices
 {
-	int cameraProjectionIndices[MAX_CAMERA_POSE_COUNT];
+	ivec4 cameraProjectionIndices[MAX_CAMERA_POSE_COUNT_DIV_4];
 };
 
-uniform ShadowMatrices
+layout(std140) uniform ShadowMatrices
 {
 	mat4 shadowMatrices[MAX_CAMERA_POSE_COUNT];
 };
 
+int getCameraProjectionIndex(int index)
+{
+	return cameraProjectionIndices[index/4][index%4];
+}
+
 vec4 getColor(int index)
 {
-    vec4 projTexCoord = cameraProjections[cameraProjectionIndices[index]] * cameraPoses[index] * 
+    vec4 projTexCoord = cameraProjections[getCameraProjectionIndex(index)] * cameraPoses[index] * 
                             vec4(fPosition, 1.0);
     projTexCoord /= projTexCoord.w;
     projTexCoord = (projTexCoord + vec4(1)) / 2;

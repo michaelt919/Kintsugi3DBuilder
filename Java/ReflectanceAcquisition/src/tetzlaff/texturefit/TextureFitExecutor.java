@@ -41,7 +41,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
 	// Debug parameters
 	private static final boolean DEBUG = true;
-	private static final boolean SKIP_DIFFUSE_FIT = true;
+	private static final boolean SKIP_DIFFUSE_FIT = false;
 	private static final boolean SKIP_SPECULAR_FIT = false;
 	private static final boolean SKIP_FINAL_DIFFUSE = false;
 	
@@ -59,8 +59,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	private File rescaleDir;
 	private File outputDir;
 	private File tmpDir;
-	private Vector3 lightPosition;
-	private Vector3 lightIntensity;
 	private TextureFitParameters param;
 	
 	private ViewSet<ContextType> viewSet;
@@ -104,8 +102,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		this.maskDir = maskDir;
 		this.rescaleDir = rescaleDir;
 		this.outputDir = outputDir;
-		this.lightPosition = lightOffset;
-		this.lightIntensity = lightIntensity;
 		this.param = param;
 	}
 	
@@ -231,26 +227,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         	renderable.program().setTexture("luminanceMap", viewSet.getLuminanceMap());
         }
     	
-    	if (lightIntensity != null)
-    	{
-    		renderable.program().setUniform("lightIntensity", lightIntensity);
-    	}
-    	else
-    	{
-    		renderable.program().setUniform("lightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
-    	}
-    	
     	boolean enableShadowTest = param.isCameraVisibilityTestEnabled();
-    	
-    	if (lightPosition != null)
-    	{
-    		renderable.program().setUniform("lightPosition", lightPosition);
-    		enableShadowTest = enableShadowTest && !lightPosition.equals(new Vector3(0.0f, 0.0f, 0.0f));
-    	}
-    	else
-    	{
-    		renderable.program().setUniform("lightPosition", viewSet.getLightPosition(viewSet.getLightIndex(viewIndex)));
-    	}
+
+    	Vector3 lightPosition = viewSet.getLightPosition(viewSet.getLightIndex(viewIndex));
+    	renderable.program().setUniform("lightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
+    	renderable.program().setUniform("lightPosition", lightPosition);
     	
     	File imageFile = new File(imageDir, viewSet.getImageFileName(viewIndex));
 		if (!imageFile.exists())
@@ -855,6 +836,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     		renderable.program().setUniformBuffer("CameraProjectionIndices", viewSet.getCameraProjectionIndexBuffer());
     	}
     	
+    	renderable.program().setUniformBuffer("LightIndices", viewSet.getLightIndexBuffer());
+    	
     	renderable.program().setUniform("delta", param.getDiffuseDelta());
     	renderable.program().setUniform("iterations", 1/*param.getDiffuseIterations()*/); // TODO rework light fitting
     	
@@ -889,7 +872,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	this.framebufferSubdiv = framebufferSubdiv;
 		}
     	
-    	void fit() throws IOException
+    	void fit(int lightIndex) throws IOException
     	{
     		FramebufferObject<ContextType> framebuffer = 
 				renderable.getContext().getFramebufferObjectBuilder(framebufferSize, framebufferSize)
@@ -898,9 +881,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
     		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 	    	framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-			
-        	System.out.println("Fitting light...");
         	
+        	renderable.program().setUniform("lightIndex", lightIndex);
         	fitTexture(renderable, framebuffer);
 
     		framebuffer.saveColorBufferToFile(1, "PNG", new File(outputDir, "lightDebug.png"));
@@ -1455,7 +1437,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	
 	    	tmpDir.mkdir();
 	    	
-	    	double minDepth = viewSet.getRecommendedFarPlane();
+    		double minDepth = viewSet.getRecommendedFarPlane();
 	    	
 	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 	    	{
@@ -1649,8 +1631,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	
 	    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
 	    	depthRenderable.addVertexBuffer("position", positionBuffer);
-	    	
-	    	double minDepth = viewSet.getRecommendedFarPlane();
+
+    		double minDepth = viewSet.getRecommendedFarPlane();
 	    	
 	    	// Render each depth texture
 	    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
@@ -1698,18 +1680,20 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	{
 		if (!param.areLightSourcesInfinite())
 		{
-    		if (lightPosition == null || lightPosition.equals(new Vector3(0.0f, 0.0f, 0.0f)))
-	    	{
-    			lightPosition = viewSet.getLightPosition(0);
-    			lightIntensity = viewSet.getLightIntensity(0);
-	    	}
-			
-			if (lightPosition == null || lightPosition.equals(new Vector3(0.0f, 0.0f, 0.0f)))
+			Vector3 firstLightPosition = viewSet.getLightPosition(0);
+    		if (firstLightPosition == null || firstLightPosition.equals(new Vector3(0.0f, 0.0f, 0.0f)))
 	    	{
 		    	System.out.println("Beginning light fit...");
-		    	Date timestamp = new Date();
 		    	
-		    	LightFit<ContextType> lightFit;
+	    		Vector3 lightIntensity = new Vector3((float)(avgDistance * avgDistance));
+		        System.out.println("Using light intensity: " + lightIntensity.x + " " + lightIntensity.y + " " + lightIntensity.z);
+		        
+		    	Date timestamp = new Date();
+				
+		    	FloatVertexList lightPositionList = new FloatVertexList(4, viewSet.getLightCount());
+		        FloatVertexList lightIntensityList = new FloatVertexList(3, viewSet.getLightCount());
+		        
+	    		LightFit<ContextType> lightFit;
 		    	
 		    	if (param.isImagePreprojectionUseEnabled())
 		    	{
@@ -1719,31 +1703,48 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	{
 		    		lightFit = createImgSpaceLightFit(viewTextures, depthTextures, param.getTextureSize(), param.getTextureSubdivision());
 		    	}
-	
-	    		lightFit.fit();
-	    		
-	    		lightPosition = lightFit.getPosition();
-	    		lightIntensity = new Vector3((float)(avgDistance * avgDistance));
-	    		//lightIntensity = lightFit.getIntensity();
 		        
-		        System.out.println("Light position: " + lightPosition.x + " " + lightPosition.y + " " + lightPosition.z);
-		        System.out.println("Using light intensity: " + lightIntensity.x + " " + lightIntensity.y + " " + lightIntensity.z);
-		        System.out.println("(Light intensity from fit: " + lightFit.getIntensity().x + " " + lightFit.getIntensity().y + " " + lightFit.getIntensity().z + ")");
-		        
-		        viewSet.setLightPosition(0, lightPosition);
-		        viewSet.setLightIntensity(0, lightIntensity);
+		    	for (int i = 0; i < viewSet.getLightCount(); i++)
+		    	{
+		    		System.out.println("Fitting light " + i + "...");
+		
+		    		lightFit.fit(i);
+		    		
+		    		Vector3 lightPosition = lightFit.getPosition();
+		    		//lightIntensity = lightFit.getIntensity();
+			        
+			        System.out.println("Light position: " + lightPosition.x + " " + lightPosition.y + " " + lightPosition.z);
+			        System.out.println("(Light intensity from fit: " + lightFit.getIntensity().x + " " + lightFit.getIntensity().y + " " + lightFit.getIntensity().z + ")");
+		    		
+			    	lightPositionList.set(i, 0, lightPosition.x);
+			    	lightPositionList.set(i, 1, lightPosition.y);
+			    	lightPositionList.set(i, 2, lightPosition.z);
+			    	lightPositionList.set(i, 3, 1.0f);
+			    	
+			        lightIntensityList.set(i, 0, lightIntensity.x);
+			        lightIntensityList.set(i, 1, lightIntensity.y);
+			        lightIntensityList.set(i, 2, lightIntensity.z);
+			        
+			        viewSet.setLightPosition(i, lightPosition);
+			        viewSet.setLightIntensity(i, lightIntensity);
+		    	}
+		    	
 		        viewSet.writeVSETFileToStream(new FileOutputStream(new File(outputDir, "default.vset")));
+		        
+		        lightPositionBuffer = context.createUniformBuffer().setData(lightPositionList);
+		        lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensityList);
 		        
 		        System.out.println("Light fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	    	}
 	    	else
 	    	{
 	    		System.out.println("Skipping light fit.");
-	    		System.out.println("Light position: " + lightPosition.x + " " + lightPosition.y + " " + lightPosition.z);
-		        System.out.println("Light intensity: " + lightIntensity.x + " " + lightIntensity.y + " " + lightIntensity.z);
 		        
-		        viewSet.setLightPosition(0, lightPosition);
-		        viewSet.setLightIntensity(0, lightIntensity);
+		        lightPositionBuffer = viewSet.getLightPositionBuffer();
+		        lightIntensityBuffer = viewSet.getLightIntensityBuffer();
+		        
+		        //viewSet.setLightPosition(0, lightPosition);
+		        //viewSet.setLightIntensity(0, lightIntensity);
 	    	}
 	        
 //	        if (!param.isImagePreprojectionUseEnabled())
@@ -1803,20 +1804,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 //		    	
 //				System.out.println("Shadow maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 //	        }
-			
-	    	FloatVertexList lightPositionList = new FloatVertexList(4, 1);
-	    	lightPositionList.set(0, 0, lightPosition.x);
-	    	lightPositionList.set(0, 1, lightPosition.y);
-	    	lightPositionList.set(0, 2, lightPosition.z);
-	    	lightPositionList.set(0, 3, 1.0f);
-	    	
-	        FloatVertexList lightIntensityList = new FloatVertexList(3, 1);
-	        lightIntensityList.set(0, 0, lightIntensity.x);
-	        lightIntensityList.set(0, 1, lightIntensity.y);
-	        lightIntensityList.set(0, 2, lightIntensity.z);
-	        
-	        lightPositionBuffer = context.createUniformBuffer().setData(lightPositionList);
-	        lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensityList);
 		}
 	}
 
@@ -1843,7 +1830,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	else if (fileExt.equalsIgnoreCase("xml"))
     	{
     		System.out.println("Loading from Agisoft Photoscan XML file.");
-    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null, lightPosition, lightIntensity, context, null);
+    		viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile, null, new Vector3(0.0f), new Vector3(1.0f), context, null);
     	}
     	else
     	{
@@ -2127,7 +2114,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 							.addColorAttachments(ColorFormat.RG32F, 1)
 							.createFramebufferObject();
 					
-					frontErrorFramebuffer.clearColorBuffer(0, Float.MAX_VALUE, 1.0f, 0.0f, 0.0f);
+					frontErrorFramebuffer.clearColorBuffer(0, 1.0f, Float.MAX_VALUE, 0.0f, 0.0f);
 		    		backErrorFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 		    		
 		    		if (param.isImagePreprojectionUseEnabled())
@@ -2170,8 +2157,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    		FramebufferObject<ContextType> tmp = frontErrorFramebuffer;
 		    		frontErrorFramebuffer = backErrorFramebuffer;
 		    		backErrorFramebuffer = tmp;
+		    		
+		    		System.out.println("Adjusting fit...");
 					
-					for (int i = 0; i < 2048; i++)
+					for (int i = 0; i < 1/*768*/; i++)
 					{
 			    		backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -2219,9 +2208,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		
 			    		context.finish();
 			    		
-			    		backFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse-test1.png"));
-			    		backFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "specular-test1.png"));
-			    		backFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-test1.png"));
+			    		//if (i % 32 == 0)
+				    	{
+					    	backFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse-test1.png"));
+				    		backFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "specular-test1.png"));
+				    		backFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-test1.png"));
+				    	}
 			    		
 			    		backErrorFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		
@@ -2260,7 +2252,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		
 			    		context.finish();
 			    		
-			    		backErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "error-mask-test.png"));
+			    		//if (i % 32 == 0)
+				    	{
+					    	backErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "error-mask-test.png"));
+				    	}
 			    		
 			    		tmp = frontErrorFramebuffer;
 			    		frontErrorFramebuffer = backErrorFramebuffer;
@@ -2275,9 +2270,14 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		finalizeRenderable.draw(PrimitiveMode.TRIANGLE_FAN, frontFramebuffer);
 			    		context.finish();
 
-			    		frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse-test2.png"));
-			    		frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "specular-test2.png"));
-			    		frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-test2.png"));
+			    		//if (i % 32 == 0)
+				    	{
+				    		frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse-test2.png"));
+				    		frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "specular-test2.png"));
+				    		frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-test2.png"));
+				    	}
+			    		
+			    		System.out.println("Iteration " + (i+1) + "/768 complete.");
 					}
 			    	
 			    	frontErrorFramebuffer.delete();
