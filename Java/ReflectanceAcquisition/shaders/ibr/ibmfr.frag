@@ -379,7 +379,7 @@ void main()
                 }
                 else
                 {
-                    mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(grazingIntensity), hDotV));
+                    //mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(grazingIntensity), hDotV));
 					//mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
                     //mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
 					
@@ -392,8 +392,10 @@ void main()
 						// getLuminance(fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness))));
 						
 						
-					// vec3 reference = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
-					// vec3 fitted = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
+					vec3 reference = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
+					vec3 fitted = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
+					
+					mfdFresnel = reference;
 					
 					// vec3 referenceXYZ = rgbToXYZ(reference);
 					// vec3 fittedXYZ = rgbToXYZ(fitted);
@@ -426,7 +428,7 @@ void main()
 				
 				vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
             
-                reflectance += (fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
+                reflectance += (//fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
                     mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV))
                     * lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed);
             }

@@ -43,7 +43,7 @@ vec4 getColor(int index)
     projTexCoord = (projTexCoord + vec4(1)) / 2;
 	
 	if (projTexCoord.x < 0 || projTexCoord.x > 1 || projTexCoord.y < 0 || projTexCoord.y > 1 ||
-            projTexCoord.z < 0 || projTexCoord.z > 1)
+        projTexCoord.z < 0 || projTexCoord.z > 1)
 	{
 		return vec4(0);
 	}

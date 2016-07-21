@@ -125,7 +125,8 @@ ParameterizedFit fitSpecular()
     // Dividing by the sum of weights to get the weighted average.
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
     // for texels where there isn't enough information at the specular peak.
-    return ParameterizedFit(finalDiffuseColor, diffuseNormal, finalSpecularColor, roughness);
+    //return ParameterizedFit(finalDiffuseColor, diffuseNormal, finalSpecularColor, roughness);
+	return ParameterizedFit(vec3(0.5), geometricNormal, vec3(0.5), 0.5);
 }
 
 #endif // SPECULARFIT_GLSL

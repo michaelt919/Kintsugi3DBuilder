@@ -1385,7 +1385,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	        lightIntensityList.add(lightIntensity);
         }
 
-        float farPlane = findFarPlane(cameraPoseInvList) * globalScale;
+        float farPlane = findFarPlane(cameraPoseInvList);
         System.out.println("Near and far planes: " + (farPlane/32.0f) + ", " + (farPlane));
         
         // Not used

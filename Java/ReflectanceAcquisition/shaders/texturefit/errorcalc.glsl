@@ -99,11 +99,11 @@ ErrorResult calculateError()
 		
 		sumSqError = min(sumSqError, MAX_ERROR);
 		
-		if (sumSqError > prevSumSqError.y)
-		{
-			return ErrorResult(prevSumSqError.y, true);
-		}
-		else
+		// if (sumSqError > prevSumSqError.y)
+		// {
+			// return ErrorResult(prevSumSqError.y, true);
+		// }
+		// else
 		{
 			return ErrorResult(sumSqError, false);
 		}

@@ -40,8 +40,8 @@ import tetzlaff.ulf.ViewSet;
 public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
 	// Debug parameters
-	private static final boolean DEBUG = true;
-	private static final boolean SKIP_DIFFUSE_FIT = false;
+	private static final boolean DEBUG = false;
+	private static final boolean SKIP_DIFFUSE_FIT = true;
 	private static final boolean SKIP_SPECULAR_FIT = false;
 	private static final boolean SKIP_FINAL_DIFFUSE = false;
 	
@@ -122,38 +122,34 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	
     	lightFitProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
-    					"texturefit/lightfit_texspace.frag" : "texturefit/lightfit_imgspace.frag"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", 
+    					(param.isImagePreprojectionUseEnabled() ? "texturefit/lightfit_texspace.frag" : "texturefit/lightfit_imgspace.frag")))
     			.createProgram();
     	
     	diffuseFitProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
-    					"texturefit/diffusefit_texspace.frag" : "texturefit/diffusefit_imgspace.frag"))
-    			.createProgram();
-		
-    	specularFitProgram = context.getShaderProgramBuilder()
-    			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
-    					"texturefit/specularfit_texspace.frag" : "texturefit/specularfit_imgspace.frag"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", 
+    					(param.isImagePreprojectionUseEnabled() ? "texturefit/diffusefit_texspace.frag" : "texturefit/diffusefit_imgspace.frag")))
     			.createProgram();
 		
     	specularFit2Program = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
-    					"texturefit/specularfit2_texspace.frag" : "texturefit/specularfit2_imgspace.frag"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", 
+    					(param.isImagePreprojectionUseEnabled() ? "texturefit/specularfit2_texspace.frag" : "texturefit/specularfit2_imgspace.frag")))
     			.createProgram();
 		
     	adjustFitProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
-    					"texturefit/adjustfit_texspace.frag" : "texturefit/adjustfit_imgspace.frag"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders",
+    					"texturefit/adjustfit_debug.frag"))
+    					//(param.isImagePreprojectionUseEnabled() ? "texturefit/adjustfit_texspace.frag" : "texturefit/adjustfit_imgspace.frag")))
     			.createProgram();
 		
     	errorCalcProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", param.isImagePreprojectionUseEnabled() ? 
-    					"texturefit/errorcalc_texspace.frag" : "texturefit/errorcalc_imgspace.frag"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", 
+    					"texturefit/errorcalc_debug.frag"))
+    					//(param.isImagePreprojectionUseEnabled() ? "texturefit/errorcalc_texspace.frag" : "texturefit/errorcalc_imgspace.frag")))
     			.createProgram();
     	
     	specularResidProgram = context.getShaderProgramBuilder()
@@ -2160,7 +2156,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    		
 		    		System.out.println("Adjusting fit...");
 					
-					for (int i = 0; i < 1/*768*/; i++)
+					for (int i = 0; i < 1 && i < 768; i++)
 					{
 			    		backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
