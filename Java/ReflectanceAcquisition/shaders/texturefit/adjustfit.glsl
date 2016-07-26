@@ -5,14 +5,14 @@
 
 #line 7 2005
 
-//#define SHIFT_FRACTION 0.01171875 // 3/256
-#define SHIFT_FRACTION 0.125
+#define MIN_ALBEDO    0.000005		// ~ 1/256 ^ gamma
+#define MIN_ROUGHNESS 0.00390625	// 1/256
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
 uniform sampler2D specularEstimate;
 uniform sampler2D roughnessEstimate;
-uniform sampler2D prevSumSqError;
+uniform sampler2D errorTexture;
 
 vec3 getDiffuseColor()
 {
@@ -44,7 +44,9 @@ struct ParameterizedFit
 
 ParameterizedFit adjustFit()
 {
-	if (texture(prevSumSqError, fTexCoord).x < 1.0)
+	float dampingFactor = texture(errorTexture, fTexCoord).x;
+
+	if (dampingFactor == 0.0)
 	{
 		discard;
 	}
@@ -52,9 +54,9 @@ ParameterizedFit adjustFit()
 	{
 		vec3 geometricNormal = normalize(fNormal);
 		vec3 diffuseNormal = getDiffuseNormalVector();
-		vec3 prevDiffuseColor = rgbToXYZ(max(vec3(pow(SHIFT_FRACTION, gamma)), getDiffuseColor()));
-		vec3 prevSpecularColor = rgbToXYZ(max(vec3(pow(SHIFT_FRACTION, gamma)), getSpecularColor()));
-		float prevRoughness = max(SHIFT_FRACTION, getRoughness());
+		vec3 prevDiffuseColor = rgbToXYZ(max(vec3(MIN_ALBEDO), getDiffuseColor()));
+		vec3 prevSpecularColor = rgbToXYZ(max(vec3(MIN_ALBEDO), getSpecularColor()));
+		float prevRoughness = max(MIN_ROUGHNESS, getRoughness());
 		float roughnessSquared = prevRoughness * prevRoughness;
 		float gammaInv = 1.0 / gamma;
 		
@@ -68,7 +70,7 @@ ParameterizedFit adjustFit()
 		vec3 v1 = vec3(0);
 		vec4 v2 = vec4(0);
 		
-		int i = 6;//for (int i = 0; i < 7 && i < viewCount; i++)
+		for (int i = 0; i < viewCount; i++)
 		{
 			vec3 view = normalize(getViewVector(i));
 			float nDotV = max(0, dot(diffuseNormal, view));
@@ -79,7 +81,7 @@ ParameterizedFit adjustFit()
 			// Both the Phong model and the Cook Torrance with a Beckmann distribution also have a 1/pi factor.
 			// By adopting the convention that all reflectance values are scaled by pi in this shader,
 			// We can avoid division by pi here as well as avoiding the 1/pi factors in the parameterized models.
-			vec4 color = getColor(i);//getLinearColor(i);
+			vec4 color = getLinearColor(i);
 			
 			if (color.a > 0 && nDotV > 0 && dot(geometricNormal, view) > 0)
 			{
@@ -98,48 +100,53 @@ ParameterizedFit adjustFit()
 					float nDotHSquared = nDotH * nDotH;
 						
 					float q1 = roughnessSquared + (1.0 - nDotHSquared) / nDotHSquared;
+					float mfdEval = roughnessSquared / (nDotHSquared * nDotHSquared * q1 * q1);
+						
+					float q2 = 1.0 + (roughnessSquared - 1.0) * nDotHSquared;
+					float mfdDeriv = (1.0 - (roughnessSquared + 1.0) * nDotHSquared) / (q2 * q2 * q2);
 					
-					if (q1 > 0.1 && q1 < 10.0) // TODO remove this
-					{
-						float mfdEval = roughnessSquared / (nDotHSquared * nDotHSquared * q1 * q1);
+					float hDotV = max(0, dot(half, view));
+					float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
+					
+					vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity), vec3(gammaInv));
+					vec3 currentFit = prevDiffuseColor * nDotL + prevSpecularColor * mfdEval * geomRatio;
+					vec3 colorResidual = colorScaled - pow(currentFit, vec3(gammaInv));
+					
+					vec3 innerDeriv = gammaInv * pow(currentFit, vec3(gammaInv - 1));
+					mat3 innerDerivMatrix = 
+						mat3(vec3(innerDeriv.r, 0, 0),
+							vec3(0, innerDeriv.g, 0),
+							vec3(0, 0, innerDeriv.b));
+					mat3 diffuseDerivs = nDotL * innerDerivMatrix;
+					mat3 diffuseDerivsTranspose = transpose(mat3(1) * diffuseDerivs); // Workaround for driver bug
+					
+					mat3 specularReflectivityDerivs = mfdEval * geomRatio * innerDerivMatrix;
+					mat4x3 specularDerivs = mat4x3(
+						specularReflectivityDerivs[0],
+						specularReflectivityDerivs[1],
+						specularReflectivityDerivs[2],
+						geomRatio * mfdDeriv * prevSpecularColor * innerDeriv);
+					mat3x4 specularDerivsTranspose = transpose(mat3(1) * specularDerivs); // Workaround for driver bug
 						
-						float q2 = 1.0 + (roughnessSquared - 1.0) * nDotHSquared;
-						float mfdDeriv = (1.0 - (roughnessSquared + 1.0) * nDotHSquared) / (q2 * q2 * q2);
-						
-						float hDotV = max(0, dot(half, view));
-						float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
-						
-						vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity), vec3(gammaInv));
-						vec3 currentFit = prevDiffuseColor * nDotL + prevSpecularColor * mfdEval * geomRatio;
-						vec3 colorResidual = colorScaled - pow(currentFit, vec3(gammaInv)); //pow(prevDiffuseColor * nDotL + 0.667 * prevSpecularColor * mfdEval * geomRatio, vec3(gammaInv)) - pow(currentFit, vec3(gammaInv));
-						
-						vec3 innerDeriv = gammaInv * pow(currentFit, vec3(gammaInv - 1));
-						mat3 innerDerivMatrix = 
-							mat3(vec3(innerDeriv.r, 0, 0),
-								vec3(0, innerDeriv.g, 0),
-								vec3(0, 0, innerDeriv.b));
-						mat3 diffuseDerivs = nDotL * innerDerivMatrix;
-						mat3 diffuseDerivsTranspose = transpose(mat3(1) * diffuseDerivs); // Workaround for driver bug
-						
-						mat3 specularReflectivityDerivs = mfdEval * mat3(1);//mfdEval * geomRatio * innerDerivMatrix;
-						mat4x3 specularDerivs = mat4x3(
-							specularReflectivityDerivs[0],
-							specularReflectivityDerivs[1],
-							specularReflectivityDerivs[2],
-							geomRatio * mfdDeriv * prevSpecularColor * innerDeriv);
-						mat3x4 specularDerivsTranspose = transpose(mat3(1) * specularDerivs); // Workaround for driver bug
-							
-						mA += diffuseDerivsTranspose * diffuseDerivs;
-						mB += diffuseDerivsTranspose * specularDerivs;
-						mC += specularDerivsTranspose * diffuseDerivs;
-						mD += specularDerivsTranspose * specularDerivs;
-						
-						v1 += /*diffuseDerivsTranspose * */colorResidual;
-						v2 += /*specularDerivsTranspose * colorResidual; */ vec4(sign(colorResidual) * abs(colorResidual * vec3(1 / (q1 * q1))), 1.0);
-					}
+					mA += diffuseDerivsTranspose * diffuseDerivs;
+					mB += diffuseDerivsTranspose * specularDerivs;
+					mC += specularDerivsTranspose * diffuseDerivs;
+					mD += specularDerivsTranspose * specularDerivs;
+					
+					v1 += diffuseDerivsTranspose * colorResidual;
+					v2 += specularDerivsTranspose * colorResidual;
 				}
 			}
 		}
+		
+		mA += mat3(	vec3(dampingFactor * mA[0][0], 0, 0), 
+					vec3(0, dampingFactor * mA[1][1], 0), 
+					vec3(0, 0, dampingFactor * mA[2][2]) );
+			
+		mD += mat4(	vec4(dampingFactor * mD[0][0], 0, 0, 0), 
+					vec4(0, dampingFactor * mD[1][1], 0, 0), 
+					vec4(0, 0, dampingFactor * mD[2][2], 0),
+					vec4(0, 0, 0, dampingFactor * mD[3][3]) );
 		
 		mat3 mAInverse = inverse(mA);
 		mat4 schurInverse = inverse(mD - mC * mAInverse * mB);
@@ -170,20 +177,24 @@ ParameterizedFit adjustFit()
 				// + length(testZero1[3]) + length(testZero2[0]) + length(testZero2[1]) 
 				// + length(testZero2[2]));
 		
-		// Attempt to linearize the adjustment scale
-		vec3 diffuseAdjLinearized = 
-			diffuseAdj * pow(prevDiffuseColor, vec3(gammaInv - 1.0)) * gammaInv;
-		vec4 specularAdjLinearized = 
-			specularAdj * vec4(pow(prevSpecularColor, vec3(gammaInv - 1.0)) * gammaInv, 1.0);
-		float scale = min(SHIFT_FRACTION, SHIFT_FRACTION / 
-			sqrt((dot(diffuseAdjLinearized, diffuseAdjLinearized)
-				+ dot(specularAdjLinearized, specularAdjLinearized))));
+		
+		
+		// // Attempt to linearize the adjustment scale
+		// vec3 diffuseAdjLinearized = 
+			// diffuseAdj * pow(prevDiffuseColor, vec3(gammaInv - 1.0)) * gammaInv;
+		// vec4 specularAdjLinearized = 
+			// specularAdj * vec4(pow(prevSpecularColor, vec3(gammaInv - 1.0)) * gammaInv, 1.0);
+		// float shiftFraction = min(SHIFT_FRACTION, SHIFT_FRACTION / 
+			// sqrt((dot(diffuseAdjLinearized, diffuseAdjLinearized)
+				// + dot(specularAdjLinearized, specularAdjLinearized))));
+		
+		
 		
 		return ParameterizedFit(
-			isnan(v1.x) || isinf(v1.x) ? vec3(1,0,0) : vec3(v1.xy, 0) + vec3(0.5),//xyzToRGB(prevDiffuseColor + scale * diffuseAdj), 
+			xyzToRGB(prevDiffuseColor + /* shiftFraction * */diffuseAdj), 
 			diffuseNormal,
-			isnan(v2.x) || isinf(v2.x) ? vec3(1,0,0) : vec3(v2.xy, 0) + vec3(0.5),//xyzToRGB(prevSpecularColor + scale * specularAdj.xyz),
-			v2.w + 0.5);//prevRoughness + scale * specularAdj.w);
+			xyzToRGB(prevSpecularColor + /* shiftFraction * */specularAdj.xyz),
+			prevRoughness + /* shiftFraction * */specularAdj.w);
 	}
 }
 

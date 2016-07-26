@@ -6,12 +6,14 @@
 #line 7 2006
 
 #define MAX_ERROR 3.402822E38 // Max 32-bit floating-point is 3.4028235E38
+#define MIN_SHIFT_FRACTION 0.00390625 // 1/256
+//#define MIN_SHIFT_FRACTION 0.01171875 // 3/256
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
 uniform sampler2D specularEstimate;
 uniform sampler2D roughnessEstimate;
-uniform sampler2D prevSumSqError;
+uniform sampler2D errorTexture;
 
 vec3 getDiffuseColor()
 {
@@ -35,17 +37,18 @@ float getRoughness()
 
 struct ErrorResult
 {
+	bool mask;
+	float dampingFactor;
 	float sumSqError;
-	bool terminated;
 };
 
 ErrorResult calculateError()
 {
-	vec4 prevSumSqError = texture(prevSumSqError, fTexCoord);
+	vec4 prevErrorResult = texture(errorTexture, fTexCoord);
 	
-	if (prevSumSqError.x < 1.0)
+	if (prevErrorResult.x <= MIN_SHIFT_FRACTION)
 	{
-		return ErrorResult(prevSumSqError.y, true);
+		return ErrorResult(false, 0.0, prevErrorResult.y);
 	}
 	else
 	{
@@ -99,13 +102,15 @@ ErrorResult calculateError()
 		
 		sumSqError = min(sumSqError, MAX_ERROR);
 		
-		// if (sumSqError > prevSumSqError.y)
-		// {
-			// return ErrorResult(prevSumSqError.y, true);
-		// }
-		// else
+		if (sumSqError >= prevErrorResult.y)
 		{
-			return ErrorResult(sumSqError, false);
+			//return ErrorResult(false, prevErrorResult.x / 2, prevErrorResult.y);
+			return ErrorResult(false, prevErrorResult.x * 2, prevErrorResult.y);
+		}
+		else
+		{
+			//return ErrorResult(true, prevErrorResult.x, sumSqError);
+			return ErrorResult(true, prevErrorResult.x / 2, sumSqError);
 		}
 	}
 }

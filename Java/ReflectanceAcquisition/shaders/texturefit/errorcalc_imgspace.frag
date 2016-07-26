@@ -4,23 +4,26 @@ in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
 
-layout(location = 0) out vec2 sumSqError;
+layout(location = 0) out vec2 errorResult;
+layout(location = 1) out float mask;
 
 #include "../reflectance/reflectance.glsl"
 #include "../reflectance/imgspace.glsl"
 #include "errorcalc.glsl"
 
-#line 14 0
+#line 15 0
 
 void main()
 {
 	ErrorResult errorResult = calculateError();
-	if (errorResult.terminated)
+	if (errorResult.mask)
 	{
-		sumSqError = vec2(0.0, errorResult.sumSqError);
+		errorResult = vec2(errorResult.dampingFactor, errorResult.sumSqError);
+		mask = 1;
 	}
 	else
 	{
-		sumSqError = vec2(1.0, errorResult.sumSqError);
+		errorResult = vec2(errorResult.dampingFactor, errorResult.sumSqError);
+		mask = 0;
 	}
 }

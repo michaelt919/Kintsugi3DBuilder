@@ -7,7 +7,7 @@
 
 #define DIFFUSE_COLOR vec3(0.5)
 #define SPECULAR_COLOR vec3(0.5)
-#define ROUGHNESS_SQUARED 0.25
+#define ROUGHNESS_SQUARED 0.0625
 
 vec4 getColor(int index)
 {
