@@ -1258,25 +1258,25 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		
 		void fitImageSpace(Framebuffer<ContextType> framebuffer, Texture<ContextType> viewImages, Texture<ContextType> depthImages, Texture<ContextType> shadowImages, 
 				Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, Texture<ContextType> specularEstimate, Texture<ContextType> roughnessEstimate,
-				Texture<ContextType> prevSumSqError, SubdivisionRenderingCallback callback) throws IOException
+				Texture<ContextType> errorTexture, SubdivisionRenderingCallback callback) throws IOException
 		{
 			base.renderable.program().setTexture("diffuseEstimate", diffuseEstimate);
 			base.renderable.program().setTexture("normalEstimate", normalEstimate);
 			base.renderable.program().setTexture("specularEstimate", specularEstimate);
 			base.renderable.program().setTexture("roughnessEstimate", roughnessEstimate);
-			base.renderable.program().setTexture("prevSumSqError", prevSumSqError);
+			base.renderable.program().setTexture("errorTexture", errorTexture);
 	    	base.fitImageSpace(framebuffer, viewImages, depthImages, shadowImages, callback);
 		}
 		
 		void fitTextureSpace(Framebuffer<ContextType> framebuffer, File preprocessDirectory, 
 				Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, Texture<ContextType> specularEstimate, Texture<ContextType> roughnessEstimate,
-				Texture<ContextType> prevSumSqError, SubdivisionRenderingCallback callback) throws IOException
+				Texture<ContextType> errorTexture, SubdivisionRenderingCallback callback) throws IOException
 		{
 			base.renderable.program().setTexture("diffuseEstimate", diffuseEstimate);
 			base.renderable.program().setTexture("normalEstimate", normalEstimate);
 			base.renderable.program().setTexture("specularEstimate", specularEstimate);
 			base.renderable.program().setTexture("roughnessEstimate", roughnessEstimate);
-			base.renderable.program().setTexture("prevSumSqError", prevSumSqError);
+			base.renderable.program().setTexture("errorTexture", errorTexture);
 	    	base.fitTextureSpace(framebuffer, preprocessDirectory, callback);
 		}
 	}
@@ -1299,25 +1299,25 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		
 		void fitImageSpace(Framebuffer<ContextType> framebuffer, Texture<ContextType> viewImages, Texture<ContextType> depthImages, Texture<ContextType> shadowImages, 
 				Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, Texture<ContextType> specularEstimate, Texture<ContextType> roughnessEstimate,
-				Texture<ContextType> prevSumSqError, SubdivisionRenderingCallback callback) throws IOException
+				Texture<ContextType> errorTexture, SubdivisionRenderingCallback callback) throws IOException
 		{
 			base.renderable.program().setTexture("diffuseEstimate", diffuseEstimate);
 			base.renderable.program().setTexture("normalEstimate", normalEstimate);
 			base.renderable.program().setTexture("specularEstimate", specularEstimate);
 			base.renderable.program().setTexture("roughnessEstimate", roughnessEstimate);
-			base.renderable.program().setTexture("prevSumSqError", prevSumSqError);
+			base.renderable.program().setTexture("errorTexture", errorTexture);
 	    	base.fitImageSpace(framebuffer, viewImages, depthImages, shadowImages, callback);
 		}
 		
 		void fitTextureSpace(Framebuffer<ContextType> framebuffer, File preprocessDirectory, 
 				Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, Texture<ContextType> specularEstimate, Texture<ContextType> roughnessEstimate,
-				Texture<ContextType> prevSumSqError, SubdivisionRenderingCallback callback) throws IOException
+				Texture<ContextType> errorTexture, SubdivisionRenderingCallback callback) throws IOException
 		{
 			base.renderable.program().setTexture("diffuseEstimate", diffuseEstimate);
 			base.renderable.program().setTexture("normalEstimate", normalEstimate);
 			base.renderable.program().setTexture("specularEstimate", specularEstimate);
 			base.renderable.program().setTexture("roughnessEstimate", roughnessEstimate);
-			base.renderable.program().setTexture("prevSumSqError", prevSumSqError);
+			base.renderable.program().setTexture("errorTexture", errorTexture);
 	    	base.fitTextureSpace(framebuffer, preprocessDirectory, callback);
 		}
 	}
@@ -2103,11 +2103,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					FramebufferObject<ContextType> frontErrorFramebuffer = 
 						context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
 							.addColorAttachments(ColorFormat.RG32F, 1)
+							.addColorAttachments(ColorFormat.R8, 1)
 							.createFramebufferObject();
 
 					FramebufferObject<ContextType> backErrorFramebuffer = 
 						context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
 							.addColorAttachments(ColorFormat.RG32F, 1)
+							.addColorAttachments(ColorFormat.R8, 1)
 							.createFramebufferObject();
 					
 					frontErrorFramebuffer.clearColorBuffer(0, 1.0f, Float.MAX_VALUE, 0.0f, 0.0f);
@@ -2156,7 +2158,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    		
 		    		System.out.println("Adjusting fit...");
 					
-					for (int i = 0; i < 1 && i < 768; i++)
+					for (int i = 0; i < 16; i++)
 					{
 			    		backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -2261,7 +2263,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		finalizeProgram.setTexture("input1", backFramebuffer.getColorAttachmentTexture(1));
 			    		finalizeProgram.setTexture("input2", backFramebuffer.getColorAttachmentTexture(2));
 			    		finalizeProgram.setTexture("input3", backFramebuffer.getColorAttachmentTexture(3));
-			    		finalizeProgram.setTexture("alphaMask", frontErrorFramebuffer.getColorAttachmentTexture(0));
+			    		finalizeProgram.setTexture("alphaMask", frontErrorFramebuffer.getColorAttachmentTexture(1));
 			    		
 			    		finalizeRenderable.draw(PrimitiveMode.TRIANGLE_FAN, frontFramebuffer);
 			    		context.finish();
@@ -2273,7 +2275,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				    		frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-test2.png"));
 				    	}
 			    		
-			    		System.out.println("Iteration " + (i+1) + "/768 complete.");
+			    		System.out.println("Iteration " + (i+1) + " complete.");
 					}
 			    	
 			    	frontErrorFramebuffer.delete();

@@ -18,23 +18,6 @@ float getRoughness()
     return texture(roughnessEstimate, fTexCoord).r;
 }
 
-// vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, float maxLuminance,
-    // vec3 light, vec3 attenuatedLightIntensity, vec3 normal)
-// {
-    // float nDotL = max(0, dot(light, normal));
-    // if (nDotL == 0.0)
-    // {
-        // return vec4(0);
-    // }
-    // else
-    // {
-        // vec3 diffuseContrib = diffuseColor * nDotL * attenuatedLightIntensity;
-        // float cap = maxLuminance - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
-        // vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
-        // return vec4(remainder, originalColor.a);
-    // }
-// }
-
 struct ParameterizedFit
 {
 	vec3 diffuseColor;
@@ -126,7 +109,7 @@ ParameterizedFit fitSpecular()
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
     // for texels where there isn't enough information at the specular peak.
     //return ParameterizedFit(finalDiffuseColor, diffuseNormal, finalSpecularColor, roughness);
-	return ParameterizedFit(vec3(0.5), geometricNormal, vec3(0.5), 0.5);
+	return ParameterizedFit(vec3(0.5), geometricNormal, vec3(0.25), 0.25);
 }
 
 #endif // SPECULARFIT_GLSL
