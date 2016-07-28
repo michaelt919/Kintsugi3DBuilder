@@ -28,8 +28,17 @@ struct ParameterizedFit
 
 ParameterizedFit fitSpecular()
 {
-    vec3 geometricNormal = normalize(fNormal);
-    vec3 diffuseNormal = getDiffuseNormalVector();
+    vec3 normal = normalize(fNormal);
+		
+	vec3 tangent = normalize(fTangent - dot(normal, fTangent));
+	vec3 bitangent = normalize(fBitangent
+		- dot(normal, fBitangent) * normal 
+		- dot(tangent, fBitangent) * tangent);
+		
+	mat3 tangentToObject = mat3(tangent, bitangent, normal);
+	vec3 shadingNormalTS = getDiffuseNormalVector();
+	vec3 shadingNormal = tangentToObject * shadingNormalTS;
+		
     float roughness = getRoughness();
     float roughnessSquared = roughness * roughness;
     float maxLuminance = getMaxLuminance();
@@ -51,18 +60,18 @@ ParameterizedFit fitSpecular()
 		// We can avoid division by pi here as well as avoiding the 1/pi factors in the parameterized models.
         vec4 color = getLinearColor(i);
         
-        if (color.a * dot(view, geometricNormal) > 0)
+        if (color.a * dot(view, normal) > 0)
         {
             vec3 lightPreNormalized = getLightVector(i);
             vec3 attenuatedLightIntensity = infiniteLightSources ? 
                 getLightIntensity(i) : 
                 getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
             vec3 light = normalize(lightPreNormalized);
-			float nDotL = max(0, dot(light, diffuseNormal));
-			float nDotV = max(0, dot(diffuseNormal, view));
+			float nDotL = max(0, dot(light, shadingNormal));
+			float nDotV = max(0, dot(shadingNormal, view));
             
             vec3 half = normalize(view + light);
-            float nDotH = dot(half, diffuseNormal);
+            float nDotH = dot(half, shadingNormal);
             
             if (nDotV > 0 && nDotH > 0.0)
             {
@@ -108,8 +117,8 @@ ParameterizedFit fitSpecular()
     // Dividing by the sum of weights to get the weighted average.
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
     // for texels where there isn't enough information at the specular peak.
-    //return ParameterizedFit(finalDiffuseColor, diffuseNormal, finalSpecularColor, roughness);
-	return ParameterizedFit(vec3(0.5), geometricNormal, vec3(0.25), 0.25);
+    return ParameterizedFit(finalDiffuseColor, shadingNormalTS, finalSpecularColor, roughness);
+	//return ParameterizedFit(vec3(0.5), geometricNormal, vec3(0.25), 0.25);
 }
 
 #endif // SPECULARFIT_GLSL
