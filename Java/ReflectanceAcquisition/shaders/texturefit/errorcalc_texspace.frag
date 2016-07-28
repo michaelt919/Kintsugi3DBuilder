@@ -3,8 +3,10 @@
 in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
+in vec3 fTangent;
+in vec3 fBitangent;
 
-layout(location = 0) out vec2 errorResult;
+layout(location = 0) out vec2 errorResultOut;
 layout(location = 1) out float mask;
 
 #include "../reflectance/reflectance.glsl"
@@ -18,12 +20,12 @@ void main()
 	ErrorResult errorResult = calculateError();
 	if (errorResult.mask)
 	{
-		errorResult = vec2(errorResult.dampingFactor, errorResult.sumSqError);
+		errorResultOut = vec2(errorResult.dampingFactor, errorResult.sumSqError);
 		mask = 1;
 	}
 	else
 	{
-		errorResult = vec2(errorResult.dampingFactor, errorResult.sumSqError);
+		errorResultOut = vec2(errorResult.dampingFactor, errorResult.sumSqError);
 		mask = 0;
 	}
 }

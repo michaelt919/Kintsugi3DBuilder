@@ -52,8 +52,16 @@ ErrorResult calculateError()
 	}
 	else
 	{
-		vec3 geometricNormal = normalize(fNormal);
-		vec3 diffuseNormal = getDiffuseNormalVector();
+		vec3 normal = normalize(fNormal);
+		
+		vec3 tangent = normalize(fTangent - dot(normal, fTangent));
+        vec3 bitangent = normalize(fBitangent
+            - dot(normal, fBitangent) * normal 
+            - dot(tangent, fBitangent) * tangent);
+            
+        mat3 tangentToObject = mat3(tangent, bitangent, normal);
+		vec3 shadingNormal = tangentToObject * getDiffuseNormalVector();
+		
 		vec3 diffuseColor = getDiffuseColor();
 		vec3 specularColor = getSpecularColor();
 		float roughness = getRoughness();
@@ -66,20 +74,20 @@ ErrorResult calculateError()
 		for (int i = 0; i < viewCount; i++)
 		{
 			vec3 view = normalize(getViewVector(i));
-			float nDotV = max(0, dot(diffuseNormal, view));
+			float nDotV = max(0, dot(shadingNormal, view));
 			vec4 color = getLinearColor(i);
 			
-			if (color.a > 0 && nDotV > 0 && dot(geometricNormal, view) > 0)
+			if (color.a > 0 && nDotV > 0 && dot(normal, view) > 0)
 			{
 				vec3 lightPreNormalized = getLightVector(i);
 				vec3 attenuatedLightIntensity = infiniteLightSources ? 
 					getLightIntensity(i) : 
 					getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
 				vec3 light = normalize(lightPreNormalized);
-				float nDotL = max(0, dot(light, diffuseNormal));
+				float nDotL = max(0, dot(light, shadingNormal));
 				
 				vec3 half = normalize(view + light);
-				float nDotH = dot(half, diffuseNormal);
+				float nDotH = dot(half, shadingNormal);
 				
 				if (nDotL > 0.0 && nDotH > 0.0)
 				{

@@ -5,8 +5,8 @@
 
 #line 7 2005
 
-#define MIN_ALBEDO    0.000005		// ~ 1/256 ^ gamma
-#define MIN_ROUGHNESS 0.00390625	// 1/256
+#define MIN_ALBEDO    0	// 0.000005		// ~ 1/256 ^ gamma
+#define MIN_ROUGHNESS 0	// 0.00390625	// 1/256
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
@@ -16,22 +16,39 @@ uniform sampler2D errorTexture;
 
 vec3 getDiffuseColor()
 {
-    return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
+    return 0.5 * pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma))
+		+ 0.125 * ( pow(textureOffset(diffuseEstimate, fTexCoord, ivec2(0,+1)).rgb, vec3(gamma))
+					+ pow(textureOffset(diffuseEstimate, fTexCoord, ivec2(0,-1)).rgb, vec3(gamma))
+					+ pow(textureOffset(diffuseEstimate, fTexCoord, ivec2(+1,0)).rgb, vec3(gamma))
+					+ pow(textureOffset(diffuseEstimate, fTexCoord, ivec2(-1,0)).rgb, vec3(gamma)) );
 }
 
 vec3 getDiffuseNormalVector()
 {
-    return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
+    return normalize(
+		0.5 * texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1)
+		+ 0.125 * ( textureOffset(normalEstimate, fTexCoord, ivec2(0,+1)).xyz * 2 - vec3(1,1,1)
+					+ textureOffset(normalEstimate, fTexCoord, ivec2(0,-1)).xyz * 2 - vec3(1,1,1)
+					+ textureOffset(normalEstimate, fTexCoord, ivec2(+1,0)).xyz * 2 - vec3(1,1,1)
+					+ textureOffset(normalEstimate, fTexCoord, ivec2(-1,0)).xyz * 2 - vec3(1,1,1) ) );
 }
 
 vec3 getSpecularColor()
 {
-    return pow(texture(specularEstimate, fTexCoord).rgb, vec3(gamma));
+    return 0.5 * pow(texture(specularEstimate, fTexCoord).rgb, vec3(gamma))
+		+ 0.125 * ( pow(textureOffset(specularEstimate, fTexCoord, ivec2(0,+1)).rgb, vec3(gamma))
+					+ pow(textureOffset(specularEstimate, fTexCoord, ivec2(0,-1)).rgb, vec3(gamma))
+					+ pow(textureOffset(specularEstimate, fTexCoord, ivec2(+1,0)).rgb, vec3(gamma))
+					+ pow(textureOffset(specularEstimate, fTexCoord, ivec2(-1,0)).rgb, vec3(gamma)) );
 }
 
 float getRoughness()
 {
-    return texture(roughnessEstimate, fTexCoord).r;
+    return 0.5 * texture(roughnessEstimate, fTexCoord).r
+		+ 0.125 * ( textureOffset(roughnessEstimate, fTexCoord, ivec2(0,+1)).r
+					+ textureOffset(roughnessEstimate, fTexCoord, ivec2(0,-1)).r
+					+ textureOffset(roughnessEstimate, fTexCoord, ivec2(+1,0)).r
+					+ textureOffset(roughnessEstimate, fTexCoord, ivec2(-1,0)).r );
 }
 
 struct ParameterizedFit
@@ -52,8 +69,17 @@ ParameterizedFit adjustFit()
 	}
 	else
 	{
-		vec3 geometricNormal = normalize(fNormal);
-		vec3 diffuseNormal = getDiffuseNormalVector();
+		vec3 normal = normalize(fNormal);
+		
+		vec3 tangent = normalize(fTangent - dot(normal, fTangent));
+        vec3 bitangent = normalize(fBitangent
+            - dot(normal, fBitangent) * normal 
+            - dot(tangent, fBitangent) * tangent);
+            
+        mat3 tangentToObject = mat3(tangent, bitangent, normal);
+		vec3 shadingNormalTS = getDiffuseNormalVector();
+		vec3 shadingNormal = tangentToObject * shadingNormalTS;
+		
 		vec3 prevDiffuseColor = rgbToXYZ(max(vec3(MIN_ALBEDO), getDiffuseColor()));
 		vec3 prevSpecularColor = rgbToXYZ(max(vec3(MIN_ALBEDO), getSpecularColor()));
 		float prevRoughness = max(MIN_ROUGHNESS, getRoughness());
@@ -73,7 +99,7 @@ ParameterizedFit adjustFit()
 		for (int i = 0; i < viewCount; i++)
 		{
 			vec3 view = normalize(getViewVector(i));
-			float nDotV = max(0, dot(diffuseNormal, view));
+			float nDotV = max(0, dot(shadingNormal, view));
 			
 			// Values of 1.0 for this color would correspond to the expected reflectance
 			// for an ideal diffuse reflector (diffuse albedo of 1), which is a reflectance of 1 / pi.
@@ -83,17 +109,17 @@ ParameterizedFit adjustFit()
 			// We can avoid division by pi here as well as avoiding the 1/pi factors in the parameterized models.
 			vec4 color = getLinearColor(i);
 			
-			if (color.a > 0 && nDotV > 0 && dot(geometricNormal, view) > 0)
+			if (color.a > 0 && nDotV > 0 && dot(normal, view) > 0)
 			{
 				vec3 lightPreNormalized = getLightVector(i);
 				vec3 attenuatedLightIntensity = infiniteLightSources ? 
 					getLightIntensity(i) : 
 					getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
 				vec3 light = normalize(lightPreNormalized);
-				float nDotL = max(0, dot(light, diffuseNormal));
+				float nDotL = max(0, dot(light, shadingNormal));
 				
 				vec3 half = normalize(view + light);
-				float nDotH = dot(half, diffuseNormal);
+				float nDotH = dot(half, shadingNormal);
 				
 				if (nDotL > 0.0 && nDotH > 0.0)
 				{
@@ -148,8 +174,27 @@ ParameterizedFit adjustFit()
 					vec4(0, 0, dampingFactor * mD[2][2], 0),
 					vec4(0, 0, 0, dampingFactor * mD[3][3]) );
 		
-		mat3 mAInverse = inverse(mA);
-		mat4 schurInverse = inverse(mD - mC * mAInverse * mB);
+		mat3 mAInverse;
+		mat4 schurInverse;
+		
+		if (determinant(mA) > 0.0) // TODO there might be a better way to do this - make sure damping coefficients are never zero?
+		{
+			mAInverse = inverse(mA);
+			mat4 schurComplement = mD - mC * mAInverse * mB;
+			if (determinant(schurComplement) > 0.0)
+			{
+				schurInverse = inverse(schurComplement);
+			}
+			else
+			{
+				schurInverse = mat4(0.0);
+			}
+		}
+		else
+		{
+			mAInverse = mat3(0.0);
+			schurInverse = mat4(0.0);
+		}
 		
 		vec3 diffuseAdj = (mAInverse + mAInverse * mB * schurInverse * mC * mAInverse) * v1 
 			- mAInverse * mB * schurInverse * v2;
@@ -192,7 +237,7 @@ ParameterizedFit adjustFit()
 		
 		return ParameterizedFit(
 			xyzToRGB(prevDiffuseColor + /* shiftFraction * */diffuseAdj), 
-			diffuseNormal,
+			shadingNormalTS,
 			xyzToRGB(prevSpecularColor + /* shiftFraction * */specularAdj.xyz),
 			prevRoughness + /* shiftFraction * */specularAdj.w);
 	}

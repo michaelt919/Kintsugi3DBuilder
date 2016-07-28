@@ -28,8 +28,6 @@ SpecularResidualInfo computeSpecularResidualInfo()
     // (for a perfect specular surface reflecting all the incident light in the mirror direction)
     // We should scale this by 1/pi to give values in the range [0, 1],
     // but we don't need to now since there will be another pass to compute reflectivity later.
-    // Additionally removeDiffuse() depends on luminance values being in the same scale
-    // as in the original photographs.
     vec4 color = getLinearColor();
     
     float nDotV = dot(normal, view);
