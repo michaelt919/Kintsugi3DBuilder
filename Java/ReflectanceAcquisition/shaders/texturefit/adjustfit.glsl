@@ -7,6 +7,7 @@
 
 #define MIN_ALBEDO    0	// 0.000005		// ~ 1/256 ^ gamma
 #define MIN_ROUGHNESS 0	// 0.00390625	// 1/256
+#define MIN_DIAGONAL  0.01 
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
@@ -16,39 +17,106 @@ uniform sampler2D errorTexture;
 
 vec3 getDiffuseColor()
 {
-    return 0.5 * pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma))
-		+ 0.125 * ( pow(textureOffset(diffuseEstimate, fTexCoord, ivec2(0,+1)).rgb, vec3(gamma))
-					+ pow(textureOffset(diffuseEstimate, fTexCoord, ivec2(0,-1)).rgb, vec3(gamma))
-					+ pow(textureOffset(diffuseEstimate, fTexCoord, ivec2(+1,0)).rgb, vec3(gamma))
-					+ pow(textureOffset(diffuseEstimate, fTexCoord, ivec2(-1,0)).rgb, vec3(gamma)) );
+	vec4 center = texture(diffuseEstimate, fTexCoord);
+	vec4 up = textureOffset(diffuseEstimate, fTexCoord, ivec2(0,+1));
+	vec4 down = textureOffset(diffuseEstimate, fTexCoord, ivec2(0,-1));
+	vec4 left = textureOffset(diffuseEstimate, fTexCoord, ivec2(+1,0));
+	vec4 right = textureOffset(diffuseEstimate, fTexCoord, ivec2(-1,0));
+	
+	vec4 weightedSum = 0.5 * center.a * vec4(pow(center.rgb, vec3(gamma)), 1.0) 
+		+ 0.125 * (up.a * vec4(pow(up.rgb, vec3(gamma)), 1.0)
+			+ down.a * vec4(pow(down.rgb, vec3(gamma)), 1.0)
+			+ left.a * vec4(pow(left.rgb, vec3(gamma)), 1.0)
+			+ right.a * vec4(pow(right.rgb, vec3(gamma)), 1.0));
+
+    return weightedSum.rgb / weightedSum.a;
 }
 
 vec3 getDiffuseNormalVector()
 {
-    return normalize(
-		0.5 * texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1)
-		+ 0.125 * ( textureOffset(normalEstimate, fTexCoord, ivec2(0,+1)).xyz * 2 - vec3(1,1,1)
-					+ textureOffset(normalEstimate, fTexCoord, ivec2(0,-1)).xyz * 2 - vec3(1,1,1)
-					+ textureOffset(normalEstimate, fTexCoord, ivec2(+1,0)).xyz * 2 - vec3(1,1,1)
-					+ textureOffset(normalEstimate, fTexCoord, ivec2(-1,0)).xyz * 2 - vec3(1,1,1) ) );
+    vec4 center = texture(normalEstimate, fTexCoord);
+	vec4 up = textureOffset(normalEstimate, fTexCoord, ivec2(0,+1));
+	vec4 down = textureOffset(normalEstimate, fTexCoord, ivec2(0,-1));
+	vec4 left = textureOffset(normalEstimate, fTexCoord, ivec2(+1,0));
+	vec4 right = textureOffset(normalEstimate, fTexCoord, ivec2(-1,0));
+	
+	vec3 weightedSum = 0.5 * center.a * (center.xyz * 2 - vec3(1,1,1))
+		+ 0.125 * (up.a * (up.xyz * 2 - vec3(1,1,1))
+			+ down.a * (down.xyz * 2 - vec3(1,1,1))
+			+ left.a * (left.xyz * 2 - vec3(1,1,1))
+			+ right.a * (right.xyz * 2 - vec3(1,1,1)));
+
+    return normalize(weightedSum.xyz);
 }
 
 vec3 getSpecularColor()
 {
-    return 0.5 * pow(texture(specularEstimate, fTexCoord).rgb, vec3(gamma))
-		+ 0.125 * ( pow(textureOffset(specularEstimate, fTexCoord, ivec2(0,+1)).rgb, vec3(gamma))
-					+ pow(textureOffset(specularEstimate, fTexCoord, ivec2(0,-1)).rgb, vec3(gamma))
-					+ pow(textureOffset(specularEstimate, fTexCoord, ivec2(+1,0)).rgb, vec3(gamma))
-					+ pow(textureOffset(specularEstimate, fTexCoord, ivec2(-1,0)).rgb, vec3(gamma)) );
+    vec4 center = texture(specularEstimate, fTexCoord);
+	vec4 up = textureOffset(specularEstimate, fTexCoord, ivec2(0,+1));
+	vec4 down = textureOffset(specularEstimate, fTexCoord, ivec2(0,-1));
+	vec4 left = textureOffset(specularEstimate, fTexCoord, ivec2(+1,0));
+	vec4 right = textureOffset(specularEstimate, fTexCoord, ivec2(-1,0));
+	
+	vec4 weightedSum = 0.5 * center.a * vec4(pow(center.rgb, vec3(gamma)), 1.0) 
+		+ 0.125 * (up.a * vec4(pow(up.rgb, vec3(gamma)), 1.0)
+			+ down.a * vec4(pow(down.rgb, vec3(gamma)), 1.0)
+			+ left.a * vec4(pow(left.rgb, vec3(gamma)), 1.0)
+			+ right.a * vec4(pow(right.rgb, vec3(gamma)), 1.0));
+
+    return weightedSum.rgb / weightedSum.a;
 }
 
 float getRoughness()
 {
-    return 0.5 * texture(roughnessEstimate, fTexCoord).r
-		+ 0.125 * ( textureOffset(roughnessEstimate, fTexCoord, ivec2(0,+1)).r
-					+ textureOffset(roughnessEstimate, fTexCoord, ivec2(0,-1)).r
-					+ textureOffset(roughnessEstimate, fTexCoord, ivec2(+1,0)).r
-					+ textureOffset(roughnessEstimate, fTexCoord, ivec2(-1,0)).r );
+    vec4 center = texture(roughnessEstimate, fTexCoord);
+	vec4 up = textureOffset(roughnessEstimate, fTexCoord, ivec2(0,+1));
+	vec4 down = textureOffset(roughnessEstimate, fTexCoord, ivec2(0,-1));
+	vec4 left = textureOffset(roughnessEstimate, fTexCoord, ivec2(+1,0));
+	vec4 right = textureOffset(roughnessEstimate, fTexCoord, ivec2(-1,0));
+	
+	vec2 weightedSum = 0.5 * center.a * vec2(center.r, 1.0)
+		+ 0.125 * (up.a * vec2(up.r, 1.0) + down.a * vec2(down.r, 1.0)
+			+ left.a * vec2(left.r, 1.0) + right.a * vec2(right.r, 1.0));
+
+    return weightedSum.x / weightedSum.y;
+}
+
+// All vectors should be in tangent space
+// Result needs to be multiplied by specular reflectivity and derivative due to gamma
+vec2 computeSpecularNormalDerivs(vec3 normal, vec3 light, vec3 view, vec3 half,
+	float hDotV, float nDotL, float nDotV, float nDotH, float nDotHSq, float mSq, float geom)
+{
+	float a = (mSq - 1) * nDotHSq;
+	float b = a + 1;
+	float c = 1 - 3 * a;
+	float d = normal.z * nDotV * nDotV * b * b * b;
+	
+	if (geom < 1)
+	{
+		vec3 mask;
+		float nDotM;
+		if (nDotL < nDotV)
+		{
+			mask = light;
+			nDotM = nDotL;
+		}
+		else
+		{
+			mask = view;
+			nDotM = nDotV;
+		}
+		
+		return mSq / (2 * d * hDotV) * 
+			(nDotV * (normal.z * (half.xy * nDotM * c + mask.xy * nDotH * b)
+						- normal.xy * (half.z * nDotM * c + mask.z * nDotH * b))
+				+ nDotM * nDotH * b * (normal.xy * view.z - normal.z * view.xy));
+	}
+	else
+	{
+		return mSq / (4 * d) * 
+			(4 * (mSq - 1) * nDotH * nDotV * (normal.xy * half.z - normal.z * half.xy)
+				+ b * (normal.xy * view.z - normal.z * view.xy));
+	}
 }
 
 struct ParameterizedFit
@@ -77,6 +145,7 @@ ParameterizedFit adjustFit()
             - dot(tangent, fBitangent) * tangent);
             
         mat3 tangentToObject = mat3(tangent, bitangent, normal);
+		mat3 objectToTangent = transpose(mat3(1) * tangentToObject); // Workaround for driver bug
 		vec3 shadingNormalTS = getDiffuseNormalVector();
 		vec3 shadingNormal = tangentToObject * shadingNormalTS;
 		
@@ -86,20 +155,28 @@ ParameterizedFit adjustFit()
 		float roughnessSquared = prevRoughness * prevRoughness;
 		float gammaInv = 1.0 / gamma;
 		
-		// Partitioned matrix:  [ A B ]
-		//						[ C D ]
+		// Partitioned matrix:  [ A B C ]
+		//						[ D E F ]
+		//						[ G H I ]
 		mat3   mA = mat3(0);
 		mat4x3 mB = mat4x3(0);
-		mat3x4 mC = mat3x4(0);
-		mat4   mD = mat4(0);
+		mat2x3 mC = mat2x3(0);
+		mat3x4 mD = mat3x4(0);
+		mat4   mE = mat4(0);
+		mat2x4 mF = mat2x4(0);
+		mat3x2 mG = mat3x2(0);
+		mat4x2 mH = mat4x2(0);
+		mat2   mI = mat2(0);
 		
 		vec3 v1 = vec3(0);
 		vec4 v2 = vec4(0);
+		vec2 v3 = vec2(0);
 		
 		for (int i = 0; i < viewCount; i++)
 		{
 			vec3 view = normalize(getViewVector(i));
 			float nDotV = max(0, dot(shadingNormal, view));
+			vec3 viewTS = objectToTangent * view;
 			
 			// Values of 1.0 for this color would correspond to the expected reflectance
 			// for an ideal diffuse reflector (diffuse albedo of 1), which is a reflectance of 1 / pi.
@@ -117,9 +194,11 @@ ParameterizedFit adjustFit()
 					getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
 				vec3 light = normalize(lightPreNormalized);
 				float nDotL = max(0, dot(light, shadingNormal));
+				vec3 lightTS = objectToTangent * light;
 				
 				vec3 half = normalize(view + light);
 				float nDotH = dot(half, shadingNormal);
+				vec3 halfTS = objectToTangent * half;
 				
 				if (nDotL > 0.0 && nDotH > 0.0)
 				{
@@ -132,74 +211,79 @@ ParameterizedFit adjustFit()
 					float mfdDeriv = (1.0 - (roughnessSquared + 1.0) * nDotHSquared) / (q2 * q2 * q2);
 					
 					float hDotV = max(0, dot(half, view));
-					float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
+					float geom = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
+					float geomRatio = geom / (4 * nDotV);
 					
 					vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity), vec3(gammaInv));
 					vec3 currentFit = prevDiffuseColor * nDotL + prevSpecularColor * mfdEval * geomRatio;
 					vec3 colorResidual = colorScaled - pow(currentFit, vec3(gammaInv));
 					
-					vec3 innerDeriv = gammaInv * pow(currentFit, vec3(gammaInv - 1));
-					mat3 innerDerivMatrix = 
-						mat3(vec3(innerDeriv.r, 0, 0),
-							vec3(0, innerDeriv.g, 0),
-							vec3(0, 0, innerDeriv.b));
-					mat3 diffuseDerivs = nDotL * innerDerivMatrix;
+					vec3 outerDeriv = gammaInv * pow(currentFit, vec3(gammaInv - 1));
+					mat3 outerDerivMatrix = 
+						mat3(vec3(outerDeriv.r, 0, 0),
+							vec3(0, outerDeriv.g, 0),
+							vec3(0, 0, outerDeriv.b));
+					mat3 diffuseDerivs = nDotL * outerDerivMatrix;
 					mat3 diffuseDerivsTranspose = transpose(mat3(1) * diffuseDerivs); // Workaround for driver bug
 					
-					mat3 specularReflectivityDerivs = mfdEval * geomRatio * innerDerivMatrix;
+					mat3 specularReflectivityDerivs = mfdEval * geomRatio * outerDerivMatrix;
 					mat4x3 specularDerivs = mat4x3(
 						specularReflectivityDerivs[0],
 						specularReflectivityDerivs[1],
 						specularReflectivityDerivs[2],
-						geomRatio * mfdDeriv * prevSpecularColor * innerDeriv);
+						geomRatio * mfdDeriv * prevSpecularColor * outerDeriv);
 					mat3x4 specularDerivsTranspose = transpose(mat3(1) * specularDerivs); // Workaround for driver bug
+					
+					mat2x3 normalDerivs = 
+						outerProduct(prevDiffuseColor * outerDeriv, 
+							lightTS.xy - light.z * normal.xy / normal.z)
+						+ outerProduct(prevSpecularColor * outerDeriv,
+							computeSpecularNormalDerivs(shadingNormalTS, lightTS, viewTS, halfTS, 
+								hDotV, nDotL, nDotV, nDotH, nDotHSquared, roughnessSquared, geom));
+					mat3x2 normalDerivsTranspose = transpose(mat3(1) * normalDerivs);
 						
 					mA += diffuseDerivsTranspose * diffuseDerivs;
 					mB += diffuseDerivsTranspose * specularDerivs;
-					mC += specularDerivsTranspose * diffuseDerivs;
-					mD += specularDerivsTranspose * specularDerivs;
+					mC += diffuseDerivsTranspose * normalDerivs;
+					mD += specularDerivsTranspose * diffuseDerivs;
+					mE += specularDerivsTranspose * specularDerivs;
+					mF += specularDerivsTranspose * normalDerivs;
+					mG += normalDerivsTranspose * diffuseDerivs;
+					mH += normalDerivsTranspose * specularDerivs;
+					mI += normalDerivsTranspose * normalDerivs;
 					
 					v1 += diffuseDerivsTranspose * colorResidual;
 					v2 += specularDerivsTranspose * colorResidual;
+					v3 += normalDerivsTranspose * colorResidual;
 				}
 			}
 		}
 		
-		mA += mat3(	vec3(dampingFactor * mA[0][0], 0, 0), 
-					vec3(0, dampingFactor * mA[1][1], 0), 
-					vec3(0, 0, dampingFactor * mA[2][2]) );
+		mA += mat3(	vec3(dampingFactor * min(mA[0][0], MIN_DIAGONAL), 0, 0), 
+					vec3(0, dampingFactor * min(mA[1][1], MIN_DIAGONAL), 0), 
+					vec3(0, 0, dampingFactor * min(mA[2][2], MIN_DIAGONAL)) );
 			
-		mD += mat4(	vec4(dampingFactor * mD[0][0], 0, 0, 0), 
-					vec4(0, dampingFactor * mD[1][1], 0, 0), 
-					vec4(0, 0, dampingFactor * mD[2][2], 0),
-					vec4(0, 0, 0, dampingFactor * mD[3][3]) );
+		mE += mat4(	vec4(dampingFactor * min(mE[0][0], MIN_DIAGONAL), 0, 0, 0), 
+					vec4(0, dampingFactor * min(mE[1][1], MIN_DIAGONAL), 0, 0), 
+					vec4(0, 0, dampingFactor * min(mE[2][2], MIN_DIAGONAL), 0),
+					vec4(0, 0, 0, dampingFactor * min(mE[3][3], MIN_DIAGONAL)) );
+					
+		mI += mat2( vec2(dampingFactor * min(mI[0][0], MIN_DIAGONAL), 0),
+					vec2(0, dampingFactor * min(mI[1][1], MIN_DIAGONAL)) );
 		
-		mat3 mAInverse;
-		mat4 schurInverse;
+		mat3 mAInverse = inverse(mA);
+		mat4 schurComplementE_ABD = mE - mD * mAInverse * mB;
+		mat4 schurInverseE_ABD = inverse(schurComplementE_ABD);
 		
-		if (determinant(mA) > 0.0) // TODO there might be a better way to do this - make sure damping coefficients are never zero?
-		{
-			mAInverse = inverse(mA);
-			mat4 schurComplement = mD - mC * mAInverse * mB;
-			if (determinant(schurComplement) > 0.0)
-			{
-				schurInverse = inverse(schurComplement);
-			}
-			else
-			{
-				schurInverse = mat4(0.0);
-			}
-		}
-		else
-		{
-			mAInverse = mat3(0.0);
-			schurInverse = mat4(0.0);
-		}
+		// mat2 schurComplementI = 
+			// mI - mG * ((mAInverse + mAInverse * mB * schurInverseE_ABD * mD * mAInverse) * mC
+						// - mAInverse * mB * schurInverseE_ABD * mF)
+			// + mH * schurInverseE_ABD * mD * mAInverse * mC 
+			// + schurInverseE_ABD * mF;
+		// mat2 shurInverseI = inverse(schurComplementI);
 		
-		vec3 diffuseAdj = (mAInverse + mAInverse * mB * schurInverse * mC * mAInverse) * v1 
-			- mAInverse * mB * schurInverse * v2;
-		
-		vec4 specularAdj = -schurInverse * mC * mAInverse * v1 + schurInverse * v2;
+		vec3 diffuseAdj = mAInverse * (v1 + mB * schurInverseE_ABD * (mD * mAInverse * v1 - v2));
+		vec4 specularAdj = schurInverseE_ABD * (v2 - mD * mAInverse * v1);
 		
 		// mat3 testIdentity1 = (mAInverse + mAInverse * mB * schurInverse * mC * mAInverse) * mA 
 			// - mAInverse * mB * schurInverse * mC;
