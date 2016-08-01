@@ -7,7 +7,7 @@
 
 #define MIN_ALBEDO    0	// 0.000005		// ~ 1/256 ^ gamma
 #define MIN_ROUGHNESS 0	// 0.00390625	// 1/256
-#define MIN_DIAGONAL  0.01 
+#define MIN_DIAGONAL  0.000001 
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
@@ -259,31 +259,38 @@ ParameterizedFit adjustFit()
 			}
 		}
 		
-		mA += mat3(	vec3(dampingFactor * min(mA[0][0], MIN_DIAGONAL), 0, 0), 
-					vec3(0, dampingFactor * min(mA[1][1], MIN_DIAGONAL), 0), 
-					vec3(0, 0, dampingFactor * min(mA[2][2], MIN_DIAGONAL)) );
+		mA += mat3(	vec3(dampingFactor * max(mA[0][0], MIN_DIAGONAL), 0, 0), 
+					vec3(0, dampingFactor * max(mA[1][1], MIN_DIAGONAL), 0), 
+					vec3(0, 0, dampingFactor * max(mA[2][2], MIN_DIAGONAL)) );
 			
-		mE += mat4(	vec4(dampingFactor * min(mE[0][0], MIN_DIAGONAL), 0, 0, 0), 
-					vec4(0, dampingFactor * min(mE[1][1], MIN_DIAGONAL), 0, 0), 
-					vec4(0, 0, dampingFactor * min(mE[2][2], MIN_DIAGONAL), 0),
-					vec4(0, 0, 0, dampingFactor * min(mE[3][3], MIN_DIAGONAL)) );
+		mE += mat4(	vec4(dampingFactor * max(mE[0][0], MIN_DIAGONAL), 0, 0, 0), 
+					vec4(0, dampingFactor * max(mE[1][1], MIN_DIAGONAL), 0, 0), 
+					vec4(0, 0, dampingFactor * max(mE[2][2], MIN_DIAGONAL), 0),
+					vec4(0, 0, 0, dampingFactor * max(mE[3][3], MIN_DIAGONAL)) );
 					
-		mI += mat2( vec2(dampingFactor * min(mI[0][0], MIN_DIAGONAL), 0),
-					vec2(0, dampingFactor * min(mI[1][1], MIN_DIAGONAL)) );
+		mI += mat2( vec2(dampingFactor * max(mI[0][0], MIN_DIAGONAL), 0),
+					vec2(0, dampingFactor * max(mI[1][1], MIN_DIAGONAL)) );
 		
 		mat3 mAInverse = inverse(mA);
 		mat4 schurComplementE_ABD = mE - mD * mAInverse * mB;
 		mat4 schurInverseE_ABD = inverse(schurComplementE_ABD);
 		
-		// mat2 schurComplementI = 
-			// mI - mG * ((mAInverse + mAInverse * mB * schurInverseE_ABD * mD * mAInverse) * mC
-						// - mAInverse * mB * schurInverseE_ABD * mF)
-			// + mH * schurInverseE_ABD * mD * mAInverse * mC 
-			// + schurInverseE_ABD * mF;
-		// mat2 shurInverseI = inverse(schurComplementI);
+		mat2x4 mZ = schurInverseE_ABD * (mF - mD * mAInverse * mC);
+		mat2x3 mY = mAInverse * (mC - mB * mZ);
 		
-		vec3 diffuseAdj = mAInverse * (v1 + mB * schurInverseE_ABD * (mD * mAInverse * v1 - v2));
-		vec4 specularAdj = schurInverseE_ABD * (v2 - mD * mAInverse * v1);
+		mat2 schurComplementI = mI - mG * mY - mH * mZ;
+		mat2 schurInverseI = inverse(schurComplementI);
+		
+		// if (determinant(mA) > 0.0 && determinant(schurComplementE_ABD) > 0.0 
+			// && determinant(schurComplementI) > 0.0)
+	//	{
+			vec4 specularAdjInit = schurInverseE_ABD * (v2 - mD * mAInverse * v1);
+			vec3 diffuseAdjInit = mAInverse * (v1 - mB * specularAdjInit);
+			
+			vec2 normalAdj = schurInverseI * (v3 - mG * diffuseAdjInit - mH * specularAdjInit);
+			vec4 specularAdj = specularAdjInit - mZ * normalAdj;
+			vec3 diffuseAdj = diffuseAdjInit - mY * normalAdj;
+	//	}
 		
 		// mat3 testIdentity1 = (mAInverse + mAInverse * mB * schurInverse * mC * mAInverse) * mA 
 			// - mAInverse * mB * schurInverse * mC;
@@ -317,11 +324,11 @@ ParameterizedFit adjustFit()
 			// sqrt((dot(diffuseAdjLinearized, diffuseAdjLinearized)
 				// + dot(specularAdjLinearized, specularAdjLinearized))));
 		
-		
+		vec2 newNormalXY = shadingNormalTS.xy + normalAdj;
 		
 		return ParameterizedFit(
 			xyzToRGB(prevDiffuseColor + /* shiftFraction * */diffuseAdj), 
-			shadingNormalTS,
+			vec3(newNormalXY, sqrt(1 - dot(newNormalXY, newNormalXY))),
 			xyzToRGB(prevSpecularColor + /* shiftFraction * */specularAdj.xyz),
 			prevRoughness + /* shiftFraction * */specularAdj.w);
 	}

@@ -150,6 +150,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    		this.mainRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
 	    	}
 	    	
+	    	if (this.lightField.tangentBuffer != null)
+	    	{
+	    		this.mainRenderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
+	    	}
+	    	
 	    	if(viewIndexProgram != null)
 	    	{
 		    	this.indexRenderable = context.createRenderable(viewIndexProgram);
@@ -609,6 +614,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	if (this.lightField.texCoordBuffer != null)
     	{
     		this.mainRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+    	}
+    	
+    	if (this.lightField.texCoordBuffer != null)
+    	{
+    		this.mainRenderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
     	}
 	}
 	

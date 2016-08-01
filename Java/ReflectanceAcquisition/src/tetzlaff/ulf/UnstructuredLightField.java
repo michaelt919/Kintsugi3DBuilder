@@ -21,11 +21,13 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	public final VertexBuffer<ContextType> positionBuffer;
 	public final VertexBuffer<ContextType> texCoordBuffer;
 	public final VertexBuffer<ContextType> normalBuffer;
+	public final VertexBuffer<ContextType> tangentBuffer;
 	public final Texture3D<ContextType> depthTextures;
     public final ULFSettings settings;
 	
 	public UnstructuredLightField(String id, ViewSet<ContextType> viewSet, VertexMesh proxy, Texture3D<ContextType> depthTextures, 
-			VertexBuffer<ContextType> positionBuffer, VertexBuffer<ContextType> texCoordBuffer, VertexBuffer<ContextType> normalBuffer, ULFSettings settings) 
+			VertexBuffer<ContextType> positionBuffer, VertexBuffer<ContextType> texCoordBuffer, VertexBuffer<ContextType> normalBuffer, 
+			VertexBuffer<ContextType> tangentBuffer, ULFSettings settings) 
 	{
     	this.id = id;
 		this.viewSet = viewSet;
@@ -34,6 +36,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 		this.positionBuffer = positionBuffer;
 		this.texCoordBuffer = texCoordBuffer;
 		this.normalBuffer = normalBuffer;
+		this.tangentBuffer = tangentBuffer;
 		this.settings = settings;
 	}
 	
@@ -129,7 +132,14 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
         	normalBuffer = context.createVertexBuffer().setData(proxy.getNormals());
         }
         
-    	return new UnstructuredLightField<ContextType>(directoryPath.toString(), viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
+        VertexBuffer<ContextType> tangentBuffer = null;
+        if (proxy.hasTexCoords() && proxy.hasNormals())
+        {
+        	tangentBuffer = context.createVertexBuffer().setData(proxy.getTangents());
+        }
+        
+    	return new UnstructuredLightField<ContextType>(directoryPath.toString(), viewSet, proxy, depthTextures, 
+    			positionBuffer, texCoordBuffer, normalBuffer, tangentBuffer, new ULFSettings());
 	}
 	
 	public static <ContextType extends Context<ContextType>>
@@ -206,7 +216,14 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
         	normalBuffer = context.createVertexBuffer().setData(proxy.getNormals());
         }
         
-    	return new UnstructuredLightField<ContextType>(directoryPath.toString(), viewSet, proxy, depthTextures, positionBuffer, texCoordBuffer, normalBuffer, new ULFSettings());
+        VertexBuffer<ContextType> tangentBuffer = null;
+        if (proxy.hasTexCoords() && proxy.hasNormals())
+        {
+        	tangentBuffer = context.createVertexBuffer().setData(proxy.getTangents());
+        }
+        
+    	return new UnstructuredLightField<ContextType>(directoryPath.toString(), viewSet, proxy, depthTextures, 
+    			positionBuffer, texCoordBuffer, normalBuffer, tangentBuffer, new ULFSettings());
 	}
 	
 	@Override
