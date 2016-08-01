@@ -3,6 +3,8 @@
 in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
+in vec3 fTangent;
+in vec3 fBitangent;
 
 layout(location = 0) out vec4 fragColor;
 
@@ -301,7 +303,18 @@ void main()
     vec3 normalDir;
     if (useNormalTexture)
     {
-        normalDir = normalize(texture(normalMap, fTexCoord).xyz * 2 - vec3(1.0));
+        vec3 normalDirTS = normalize(texture(normalMap, fTexCoord).xyz * 2 - vec3(1.0));
+		
+		vec3 gNormal = normalize(fNormal);
+        vec3 tangent = normalize(fTangent - dot(gNormal, fTangent));
+        vec3 bitangent = normalize(fBitangent
+            - dot(gNormal, fBitangent) * gNormal 
+            - dot(tangent, fBitangent) * tangent);
+            
+        mat3 tangentToObject = mat3(tangent, bitangent, gNormal);
+		normalDir = tangentToObject * normalDirTS;
+		
+		//normalDir = gNormal;//normalDirTS;
     }
     else
     {
