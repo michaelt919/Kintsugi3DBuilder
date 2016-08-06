@@ -11,7 +11,7 @@ layout(location = 0) out vec4 fragColor;
 #include "../reflectance/reflectance.glsl"
 #include "../reflectance/imgspace.glsl"
 
-#line 13 0
+#line 15 0
 
 uniform mat4 projection;
 uniform mat4 model_view;
@@ -310,11 +310,11 @@ void main()
         vec3 bitangent = normalize(fBitangent
             - dot(gNormal, fBitangent) * gNormal 
             - dot(tangent, fBitangent) * tangent);
-            
         mat3 tangentToObject = mat3(tangent, bitangent, gNormal);
-		normalDir = tangentToObject * normalDirTS;
 		
-		//normalDir = gNormal;//normalDirTS;
+		normalDir = tangentToObject * normalDirTS;
+		//normalDir = gNormal;
+		//normalDIr = normalDirTS;
     }
     else
     {
@@ -394,7 +394,7 @@ void main()
                 {
                     //mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(grazingIntensity), hDotV));
 					//mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
-                    mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
+                    //mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
 					
 					// mfdFresnel = -max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV))
 									// + fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness))
@@ -405,17 +405,33 @@ void main()
 						// getLuminance(fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness))));
 						
 						
-					// vec3 reference = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
-					// vec3 fitted = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
+					vec3 reference = min(vec3(dist(nDotH, roughness)), max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV)));
+					vec3 fitted = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
 					
 					// mfdFresnel = reference;
 					
-					// vec3 referenceXYZ = rgbToXYZ(reference);
-					// vec3 fittedXYZ = rgbToXYZ(fitted);
+					vec3 referenceXYZ = rgbToXYZ(reference);
+					vec3 fittedXYZ = rgbToXYZ(fitted);
 				
-					// // Pseudo-LAB color space
-					// vec3 referenceLAB = vec3(referenceXYZ.y, 5 * (referenceXYZ.x - referenceXYZ.y), 2 * (referenceXYZ.y - referenceXYZ.z));
-					// vec3 fittedLAB = vec3(fittedXYZ.y, 5 * (fittedXYZ.x - fittedXYZ.y), 2 * (fittedXYZ.y - fittedXYZ.z));
+					// Pseudo-LAB color space
+					vec3 referenceLAB = vec3(referenceXYZ.y, 5 * (referenceXYZ.x - referenceXYZ.y), 2 * (referenceXYZ.y - referenceXYZ.z));
+					vec3 fittedLAB = vec3(fittedXYZ.y, 5 * (fittedXYZ.x - fittedXYZ.y), 2 * (fittedXYZ.y - fittedXYZ.z));
+					
+					vec3 resultLAB = 
+						//fittedLAB;
+						vec3(fittedLAB.x, referenceLAB.yz / referenceLAB.x * fittedLAB.x);
+						//vec3(referenceLAB.x, fittedLAB.yz / fittedLAB.x * referenceLAB.x);
+						//referenceLAB;
+					vec3 resultXYZ = vec3(resultLAB.x + 0.2 * resultLAB.y, resultLAB.x, resultLAB.x - 0.5 * resultLAB.z);
+					vec3 resultRGB = xyzToRGB(resultXYZ);
+					
+					mfdFresnel = 
+						fitted;
+						//vec3(fittedLAB.x);
+						//vec3(referenceLAB.x);
+						//vec3(referenceLAB.x, vec2(fittedLAB.x));
+						//resultRGB;
+						//referenceLAB - fittedLAB + vec3(0.5);
 					
 					// mfdFresnel = reference;
 						// //vec3(0.5 - referenceLAB.y / sqrt(referenceLAB.x), 0.5, 0.5 - referenceLAB.z / sqrt(referenceLAB.x));
@@ -441,7 +457,7 @@ void main()
 				
 				vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
             
-                reflectance += (fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
+                reflectance += (//fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
                     mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV))
                     * lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed);
             }

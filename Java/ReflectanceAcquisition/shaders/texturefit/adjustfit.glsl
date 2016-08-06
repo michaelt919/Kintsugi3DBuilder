@@ -5,8 +5,8 @@
 
 #line 7 2005
 
-#define MIN_ALBEDO    0	// 0.000005		// ~ 1/256 ^ gamma
-#define MIN_ROUGHNESS 0	// 0.00390625	// 1/256
+#define MIN_ALBEDO     0.000005		// ~ 1/256 ^ gamma
+#define MIN_ROUGHNESS  0.00390625	// 1/256
 #define MIN_DIAGONAL  0.000001 
 
 uniform sampler2D diffuseEstimate;
@@ -29,7 +29,8 @@ vec3 getDiffuseColor()
 			+ left.a * vec4(pow(left.rgb, vec3(gamma)), 1.0)
 			+ right.a * vec4(pow(right.rgb, vec3(gamma)), 1.0));
 
-    return weightedSum.rgb / weightedSum.a;
+    //return weightedSum.rgb / weightedSum.a;
+	return pow(center.rgb, vec3(gamma));
 }
 
 vec3 getDiffuseNormalVector()
@@ -46,7 +47,8 @@ vec3 getDiffuseNormalVector()
 			+ left.a * (left.xyz * 2 - vec3(1,1,1))
 			+ right.a * (right.xyz * 2 - vec3(1,1,1)));
 
-    return normalize(weightedSum.xyz);
+    //return normalize(weightedSum.xyz);
+	return normalize(center.xyz * 2 - vec3(1,1,1));
 }
 
 vec3 getSpecularColor()
@@ -63,7 +65,8 @@ vec3 getSpecularColor()
 			+ left.a * vec4(pow(left.rgb, vec3(gamma)), 1.0)
 			+ right.a * vec4(pow(right.rgb, vec3(gamma)), 1.0));
 
-    return weightedSum.rgb / weightedSum.a;
+    //return weightedSum.rgb / weightedSum.a;
+	return pow(center.rgb, vec3(gamma));
 }
 
 float getRoughness()
@@ -78,7 +81,8 @@ float getRoughness()
 		+ 0.125 * (up.a * vec2(up.r, 1.0) + down.a * vec2(down.r, 1.0)
 			+ left.a * vec2(left.r, 1.0) + right.a * vec2(right.r, 1.0));
 
-    return weightedSum.x / weightedSum.y;
+    //return weightedSum.x / weightedSum.y;
+	return center.r;
 }
 
 // All vectors should be in tangent space
@@ -149,10 +153,10 @@ ParameterizedFit adjustFit()
 		vec3 shadingNormalTS = getDiffuseNormalVector();
 		vec3 shadingNormal = tangentToObject * shadingNormalTS;
 		
-		vec3 prevDiffuseColor = rgbToXYZ(max(vec3(MIN_ALBEDO), getDiffuseColor()));
+		vec3 prevDiffuseColor = vec3(0);//rgbToXYZ(max(vec3(MIN_ALBEDO), getDiffuseColor()));
 		vec3 prevSpecularColor = rgbToXYZ(max(vec3(MIN_ALBEDO), getSpecularColor()));
-		float prevRoughness = max(MIN_ROUGHNESS, getRoughness());
-		float roughnessSquared = prevRoughness * prevRoughness;
+		float roughness = max(MIN_ROUGHNESS, getRoughness());
+		float roughnessSquared = roughness * roughness;
 		float gammaInv = 1.0 / gamma;
 		
 		// Partitioned matrix:  [ A B C ]
@@ -208,7 +212,8 @@ ParameterizedFit adjustFit()
 					float mfdEval = roughnessSquared / (nDotHSquared * nDotHSquared * q1 * q1);
 						
 					float q2 = 1.0 + (roughnessSquared - 1.0) * nDotHSquared;
-					float mfdDeriv = (1.0 - (roughnessSquared + 1.0) * nDotHSquared) / (q2 * q2 * q2);
+					//float mfdDeriv = (1.0 - (roughnessSquared + 1.0) * nDotHSquared) / (q2 * q2 * q2);
+					float mfdDerivOverRoughnessSquared = 2 * (1 - nDotHSquared) / (q2 * q2 * q2);
 					
 					float hDotV = max(0, dot(half, view));
 					float geom = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
@@ -226,17 +231,23 @@ ParameterizedFit adjustFit()
 					mat3 diffuseDerivs = nDotL * outerDerivMatrix;
 					mat3 diffuseDerivsTranspose = transpose(mat3(1) * diffuseDerivs); // Workaround for driver bug
 					
-					mat3 specularReflectivityDerivs = mfdEval * geomRatio * outerDerivMatrix;
+					mat3 specularReflectivityDerivs = 
+						roughnessSquared * 
+						mfdEval * geomRatio * outerDerivMatrix;
+						
 					mat4x3 specularDerivs = mat4x3(
 						specularReflectivityDerivs[0],
 						specularReflectivityDerivs[1],
 						specularReflectivityDerivs[2],
-						geomRatio * mfdDeriv * prevSpecularColor * outerDeriv);
+						geomRatio * 
+						//mfdDeriv * 
+						mfdDerivOverRoughnessSquared * 
+						prevSpecularColor * outerDeriv);
 					mat3x4 specularDerivsTranspose = transpose(mat3(1) * specularDerivs); // Workaround for driver bug
 					
 					mat2x3 normalDerivs = 
 						outerProduct(prevDiffuseColor * outerDeriv, 
-							lightTS.xy - light.z * normal.xy / normal.z)
+							lightTS.xy - lightTS.z * shadingNormalTS.xy / shadingNormalTS.z)
 						+ outerProduct(prevSpecularColor * outerDeriv,
 							computeSpecularNormalDerivs(shadingNormalTS, lightTS, viewTS, halfTS, 
 								hDotV, nDotL, nDotV, nDotH, nDotHSquared, roughnessSquared, geom));
@@ -271,7 +282,7 @@ ParameterizedFit adjustFit()
 		mI += mat2( vec2(dampingFactor * max(mI[0][0], MIN_DIAGONAL), 0),
 					vec2(0, dampingFactor * max(mI[1][1], MIN_DIAGONAL)) );
 		
-		mat3 mAInverse = inverse(mA);
+		mat3 mAInverse = mat3(0);//inverse(mA);
 		mat4 schurComplementE_ABD = mE - mD * mAInverse * mB;
 		mat4 schurInverseE_ABD = inverse(schurComplementE_ABD);
 		
@@ -290,6 +301,10 @@ ParameterizedFit adjustFit()
 			vec2 normalAdj = schurInverseI * (v3 - mG * diffuseAdjInit - mH * specularAdjInit);
 			vec4 specularAdj = specularAdjInit - mZ * normalAdj;
 			vec3 diffuseAdj = diffuseAdjInit - mY * normalAdj;
+			
+			// vec2 normalAdj = vec2(0.0);
+			// vec4 specularAdj = specularAdjInit;
+			// vec3 diffuseAdj = diffuseAdjInit;
 	//	}
 		
 		// mat3 testIdentity1 = (mAInverse + mAInverse * mB * schurInverse * mC * mAInverse) * mA 
@@ -324,13 +339,30 @@ ParameterizedFit adjustFit()
 			// sqrt((dot(diffuseAdjLinearized, diffuseAdjLinearized)
 				// + dot(specularAdjLinearized, specularAdjLinearized))));
 		
-		vec2 newNormalXY = shadingNormalTS.xy + normalAdj;
-		
-		return ParameterizedFit(
-			xyzToRGB(prevDiffuseColor + /* shiftFraction * */diffuseAdj), 
-			vec3(newNormalXY, sqrt(1 - dot(newNormalXY, newNormalXY))),
-			xyzToRGB(prevSpecularColor + /* shiftFraction * */specularAdj.xyz),
-			prevRoughness + /* shiftFraction * */specularAdj.w);
+		if (isinf(normalAdj.x) || isnan(normalAdj.x) || isinf(normalAdj.y) || isnan(normalAdj.y)
+			|| isinf(diffuseAdj.x) || isnan(diffuseAdj.x) || isinf(diffuseAdj.y) || isnan(diffuseAdj.y)
+			|| isinf(diffuseAdj.z) || isnan(diffuseAdj.z) 
+			|| isinf(specularAdj.x) || isnan(specularAdj.x) || isinf(specularAdj.y) || isnan(specularAdj.y) 
+			|| isinf(specularAdj.z) || isnan(specularAdj.z) || isinf(specularAdj.w) || isnan(specularAdj.w))
+		{
+			return ParameterizedFit(
+				xyzToRGB(prevDiffuseColor), 
+				shadingNormalTS,
+				xyzToRGB(prevSpecularColor),
+				roughness);
+		}
+		else
+		{
+			vec2 newNormalXY = shadingNormalTS.xy + normalAdj;
+			float newRoughnessSquared = max(0.0, roughnessSquared + /* shiftFraction * */specularAdj.w);
+			
+			return ParameterizedFit(
+				xyzToRGB(prevDiffuseColor + /* shiftFraction * */diffuseAdj), 
+				vec3(newNormalXY, sqrt(max(0.0, 1 - dot(newNormalXY, newNormalXY)))),
+				//xyzToRGB(prevSpecularColor + /* shiftFraction * */specularAdj.xyz),
+				xyzToRGB((prevSpecularColor / roughnessSquared + /* shiftFraction * */specularAdj.xyz) * newRoughnessSquared),
+				sqrt(newRoughnessSquared));
+		}
 	}
 }
 

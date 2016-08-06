@@ -5,15 +5,24 @@
 
 #line 7 1109
 
-#define DIFFUSE_COLOR vec3(0.5)
-#define SPECULAR_COLOR vec3(0.5)
-#define ROUGHNESS_SQUARED 0.0625
+#define DIFFUSE_COLOR vec3(pow(0.5, 2.2))
+#define SPECULAR_COLOR vec3(pow(0.5, 2.2))
+#define ROUGHNESS_SQUARED 0.25
 
 vec4 getColor(int index)
 {
     vec3 normal = normalize(fNormal);
     vec3 view = normalize(getViewVector(index));
 	float nDotV = max(0, dot(normal, view));
+	
+	vec3 tangent = normalize(fTangent - dot(normal, fTangent));
+	vec3 bitangent = normalize(fBitangent
+		- dot(normal, fBitangent) * normal 
+		- dot(tangent, fBitangent) * tangent);
+	mat3 tangentToObject = mat3(tangent, bitangent, normal);
+	vec3 shadingNormal = 
+		//tangentToObject * normalize(vec3(0.5, 0.0, 1.0));
+		tangentToObject * normalize(vec3(0.5 * cos(8 * 3.14 * fTexCoord), 1.0));
 	
 	if (nDotV > 0)
 	{
@@ -22,12 +31,13 @@ vec4 getColor(int index)
 			getLightIntensity(index) : 
 			getLightIntensity(index) / (dot(lightPreNormalized, lightPreNormalized));
 		vec3 light = normalize(lightPreNormalized);
-		float nDotL = max(0, dot(light, normal));
+		float nDotL = max(0, dot(light, shadingNormal));
+		nDotV = max(0, dot(view, shadingNormal));
 		
 		vec3 half = normalize(view + light);
-		float nDotH = dot(half, normal);
+		float nDotH = dot(half, shadingNormal);
 		
-		if (nDotH > 0.0)
+		if (nDotV > 0.0 && nDotH > 0.0)
 		{
 			float nDotHSquared = nDotH * nDotH;
 			
