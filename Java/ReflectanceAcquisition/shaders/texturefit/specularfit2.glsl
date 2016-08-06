@@ -72,35 +72,38 @@ ParameterizedFit fitSpecular()
             
             vec3 half = normalize(view + light);
             float nDotH = dot(half, shadingNormal);
+			float nDotHSquared = nDotH * nDotH;
             
-            if (nDotV > 0 && nDotH > 0.0)
+            if (nDotV > 0 && nDotHSquared > 0.0)
             {
-                float nDotHSquared = nDotH * nDotH;
                 
                 // float mfdEval = exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
                     // / (roughnessSquared * nDotHSquared * nDotHSquared);
 					
 				float q = roughnessSquared + (1 - nDotHSquared) / nDotHSquared;
-				float mfdEval =  roughnessSquared / (nDotHSquared * nDotHSquared * q * q);
+				float mfdEval = roughnessSquared / (nDotHSquared * nDotHSquared * q * q);
 				
 				float hDotV = max(0, dot(half, view));
 					
 				float diffuseWeight = color.a * nDotL;
 				float specularWeight = color.a * mfdEval / (4 * nDotV) * min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
 				
-				vec3 colorScaled = color.a * color.rgb / attenuatedLightIntensity;
-				
-				vec2 weights = vec2(diffuseWeight, specularWeight);
-				a += outerProduct(weights, weights);
-				diffuseWeightedSum += diffuseWeight * vec4(colorScaled, diffuseWeight);
-				specularWeightedSum += specularWeight * vec4(colorScaled, specularWeight);
+				if (!isnan(specularWeight) && !isinf(specularWeight) && specularWeight != 0)
+				{
+					vec3 colorScaled = color.a * color.rgb / attenuatedLightIntensity;
+					
+					vec2 weights = vec2(diffuseWeight, specularWeight);
+					a += outerProduct(weights, weights);
+					diffuseWeightedSum += diffuseWeight * vec4(colorScaled, diffuseWeight);
+					specularWeightedSum += specularWeight * vec4(colorScaled, specularWeight);
+				}
             }
         }
     }
 	
 	mat2x3 solution = transpose(inverse(a) * 
 		transpose(mat2x3(diffuseWeightedSum.rgb, specularWeightedSum.rgb)));
-	vec3 diffuseColorA = clamp(solution[0], vec3(0.0), diffuseWeightedSum.rgb);
+	vec3 diffuseColorA = vec3(0);//clamp(solution[0], vec3(0.0), diffuseWeightedSum.rgb);
 	vec3 specularColorA = clamp(solution[1], vec3(0.0), 16.0 * roughnessSquared * specularWeightedSum.rgb);
 	
 	vec3 diffuseColorB = clamp(diffuseWeightedSum.rgb / diffuseWeightedSum.a, 
@@ -118,7 +121,7 @@ ParameterizedFit fitSpecular()
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
     // for texels where there isn't enough information at the specular peak.
     return ParameterizedFit(finalDiffuseColor, shadingNormalTS, finalSpecularColor, roughness);
-	//return ParameterizedFit(vec3(0.5), geometricNormal, vec3(0.25), 0.25);
+	//return ParameterizedFit(vec3(pow(0.5, 2.2)), shadingNormalTS, vec3(pow(0.5, 2.2)), 0.5);
 }
 
 #endif // SPECULARFIT_GLSL

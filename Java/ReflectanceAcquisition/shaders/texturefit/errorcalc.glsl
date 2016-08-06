@@ -6,7 +6,8 @@
 #line 7 2006
 
 #define MAX_ERROR 3.402822E38 // Max 32-bit floating-point is 3.4028235E38
-#define MIN_SHIFT_FRACTION 0.00390625 // 1/256
+#define MIN_DAMPING_FACTOR 0.00390625 // 1/256
+#define MAX_DAMPING_FACTOR 1000000
 //#define MIN_SHIFT_FRACTION 0.01171875 // 3/256
 
 uniform sampler2D diffuseEstimate;
@@ -46,7 +47,7 @@ ErrorResult calculateError()
 {
 	vec4 prevErrorResult = texture(errorTexture, fTexCoord);
 	
-	if (prevErrorResult.x <= MIN_SHIFT_FRACTION)
+	if (prevErrorResult.x <= MIN_DAMPING_FACTOR || prevErrorResult.x >= MAX_DAMPING_FACTOR)
 	{
 		return ErrorResult(false, 0.0, prevErrorResult.y);
 	}
@@ -62,8 +63,8 @@ ErrorResult calculateError()
         mat3 tangentToObject = mat3(tangent, bitangent, normal);
 		vec3 shadingNormal = tangentToObject * getDiffuseNormalVector();
 		
-		vec3 diffuseColor = getDiffuseColor();
-		vec3 specularColor = getSpecularColor();
+		vec3 diffuseColor = rgbToXYZ(getDiffuseColor());
+		vec3 specularColor = rgbToXYZ(getSpecularColor());
 		float roughness = getRoughness();
 		float roughnessSquared = roughness * roughness;
 		float maxLuminance = getMaxLuminance();

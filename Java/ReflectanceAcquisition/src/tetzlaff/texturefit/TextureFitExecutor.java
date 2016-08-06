@@ -2103,6 +2103,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    	frontFramebuffer = tmp;
 
 			    	frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse-raw.png"));
+			    	frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(textureDirectory, "normal-raw.png"));
 			    	frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "specular-raw.png"));
 			    	frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-raw.png"));
 					
@@ -2162,7 +2163,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    		
 		    		context.finish();
 		    		
-		    		//backErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "error-mask-init.png"));
+//		    		backErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "error-mask-init.png"));
 		    		
 		    		tmp = frontErrorFramebuffer;
 		    		frontErrorFramebuffer = backErrorFramebuffer;
@@ -2170,7 +2171,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    		
 		    		System.out.println("Adjusting fit...");
 					
-					for (int i = 0; i < 16; i++)
+					for (int i = 0; i < 64; i++)
 					{
 			    		backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -2221,6 +2222,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 //			    		//if (i % 32 == 0)
 //				    	{
 //					    	backFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse-test1.png"));
+//				    		backFramebuffer.saveColorBufferToFile(1, "PNG", new File(textureDirectory, "normal-test1.png"));
 //				    		backFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "specular-test1.png"));
 //				    		backFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-test1.png"));
 //				    	}
@@ -2283,12 +2285,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 //			    		//if (i % 32 == 0)
 //				    	{
 //				    		frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse-test2.png"));
+//				    		frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(textureDirectory, "normal-test2.png"));
 //				    		frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "specular-test2.png"));
 //				    		frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-test2.png"));
 //				    	}
 			    		
 			    		System.out.println("Iteration " + (i+1) + " complete.");
 					}
+					
+		    		frontErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "error-mask-final.png"));
 			    	
 			    	frontErrorFramebuffer.delete();
 			    	backErrorFramebuffer.delete();
