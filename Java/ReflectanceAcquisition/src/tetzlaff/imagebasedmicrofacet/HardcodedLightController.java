@@ -59,12 +59,14 @@ public class HardcodedLightController implements LightController, OverrideableLi
 		else 
 			if (i == 1)
 		{
-			return new Vector3((float)Math.pow(2.0, 1.2));
+			Vector3 lightPosition = new Vector3(-80.0f, 44.0f, -74.0f).times(1.0f / 77.0f);
+			return new Vector3((float)Math.pow(2.0, 1.2) / lightPosition.dot(lightPosition));
 		}
 		else 
 			if (i == 2)
 		{
-			return new Vector3((float)Math.sqrt(2));
+			Vector3 lightPosition = new Vector3(81.0f, 36.0f, 12.0f).times(1.0f / 77.0f);
+			return new Vector3((float)Math.pow(2.0, 0.5) / lightPosition.dot(lightPosition));
 		}
 		else
 		{
@@ -115,13 +117,11 @@ public class HardcodedLightController implements LightController, OverrideableLi
 			
 			if (i == 1)
 			{
-				lightPosition = new Vector3(-80.0f, 44.0f, -74.0f).minus(new Vector3(0.0f, 0.0f, 0.0f))
-						.times(1.0f / 77.0f);
+				lightPosition = new Vector3(-80.0f, 44.0f, -74.0f).times(1.0f / 77.0f);
 			}
 			else if (i == 2)
 			{
-				lightPosition = new Vector3(81.0f, 36.0f, 12.0f).minus(new Vector3(0.0f, 0.0f, 0.0f))
-						.times(1.0f / 77.0f);
+				lightPosition = new Vector3(81.0f, 36.0f, 12.0f).times(1.0f / 77.0f);
 			}
 			
 			Matrix3 projectedCameraRotation = Matrix3.scale(1.0f, 0.0f, 1.0f).times(new Matrix3(cameraPose));

@@ -298,13 +298,13 @@ ParameterizedFit adjustFit()
 			vec4 specularAdjInit = schurInverseE_ABD * (v2 - mD * mAInverse * v1);
 			vec3 diffuseAdjInit = mAInverse * (v1 - mB * specularAdjInit);
 			
-			vec2 normalAdj = schurInverseI * (v3 - mG * diffuseAdjInit - mH * specularAdjInit);
-			vec4 specularAdj = specularAdjInit - mZ * normalAdj;
-			vec3 diffuseAdj = diffuseAdjInit - mY * normalAdj;
+			// vec2 normalAdj = schurInverseI * (v3 - mG * diffuseAdjInit - mH * specularAdjInit);
+			// vec4 specularAdj = specularAdjInit - mZ * normalAdj;
+			// vec3 diffuseAdj = diffuseAdjInit - mY * normalAdj;
 			
-			// vec2 normalAdj = vec2(0.0);
-			// vec4 specularAdj = specularAdjInit;
-			// vec3 diffuseAdj = diffuseAdjInit;
+			vec2 normalAdj = vec2(0.0);
+			vec4 specularAdj = specularAdjInit;
+			vec3 diffuseAdj = diffuseAdjInit;
 	//	}
 		
 		// mat3 testIdentity1 = (mAInverse + mAInverse * mB * schurInverse * mC * mAInverse) * mA 

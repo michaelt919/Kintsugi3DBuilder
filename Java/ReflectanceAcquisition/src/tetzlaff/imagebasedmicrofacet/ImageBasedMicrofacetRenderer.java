@@ -240,7 +240,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 				.times(new Vector3(this.microfacetField.ulf.proxy.getBoundingRadius()))
 				.length() / Math.sqrt(3));
 		
-		Matrix4 lightProjection = Matrix4.perspective(/*2.0f * (float)Math.atan(radius / lightDist)*/1.5f, 1.0f, 
+		Matrix4 lightProjection = Matrix4.perspective(2.0f * (float)Math.atan(radius / lightDist) /*1.5f*/, 1.0f, 
 				lightDist - radius,
 				lightDist + radius);
 		
