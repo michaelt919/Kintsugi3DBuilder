@@ -41,7 +41,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
 	// Debug parameters
 	private static final boolean DEBUG = false;
-	private static final boolean SKIP_DIFFUSE_FIT = true;
+	private static final boolean SKIP_DIFFUSE_FIT = false;
 	private static final boolean SKIP_SPECULAR_FIT = false;
 	
 	private final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
@@ -2003,17 +2003,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	System.out.println("Resampling...");
 	    	timestamp = new Date();
 	    	
-	    	Texture2D<ContextType> normalTexture;
-	    	
-	    	if (SKIP_DIFFUSE_FIT)
-	    	{
-	    		normalTexture = context.get2DColorTextureBuilder(new File(textureDirectory, "normal.png"), true).createTexture();
-	    	}
-	    	else
-	    	{
-	    		normalTexture = diffuseFitFramebuffer.getColorAttachmentTexture(1);
-	    	}
-	    	
 	    	if (!SKIP_SPECULAR_FIT)
 	    	{
 				// Resample the reflectance data
@@ -2075,7 +2064,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    	if (param.isImagePreprojectionUseEnabled())
 			    	{
 			    		final FramebufferObject<ContextType> currentFramebuffer = backFramebuffer;
-			    		specularFit.fitTextureSpace(tmpDir, frontFramebuffer.getColorAttachmentTexture(1), roughnessTexture,
+			    		specularFit.fitTextureSpace(tmpDir, 
+		    				SKIP_DIFFUSE_FIT ? frontFramebuffer.getColorAttachmentTexture(1) : diffuseFitFramebuffer.getColorAttachmentTexture(3), 
+		    				roughnessTexture,
 		    				(row, col) ->
 		    				{
 		    					currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
@@ -2090,7 +2081,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    	}
 			    	else
 			    	{
-			    		specularFit.fitImageSpace(viewTextures, depthTextures, shadowTextures, frontFramebuffer.getColorAttachmentTexture(1), roughnessTexture, 
+			    		specularFit.fitImageSpace(viewTextures, depthTextures, shadowTextures, 
+			    				SKIP_DIFFUSE_FIT ? frontFramebuffer.getColorAttachmentTexture(1) : diffuseFitFramebuffer.getColorAttachmentTexture(3), 
+		    				roughnessTexture, 
 		    				(row, col) -> 
 	    					{
 	    						System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
@@ -2328,11 +2321,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	    	backFramebuffer.delete();
 				}
 	    	}
-			
-			if (SKIP_DIFFUSE_FIT)
-			{
-				normalTexture.delete();
-			}
 			
 			if (viewTextures != null)
 	        {

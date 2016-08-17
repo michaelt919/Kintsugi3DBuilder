@@ -103,7 +103,9 @@ ParameterizedFit fitSpecular()
 	
 	mat2x3 solution = transpose(inverse(a) * 
 		transpose(mat2x3(diffuseWeightedSum.rgb, specularWeightedSum.rgb)));
-	vec3 diffuseColorA = vec3(0);//clamp(solution[0], vec3(0.0), diffuseWeightedSum.rgb);
+	vec3 diffuseColorA = 
+		//vec3(0);
+		clamp(solution[0], vec3(0.0), diffuseWeightedSum.rgb);
 	vec3 specularColorA = clamp(solution[1], vec3(0.0), 16.0 * roughnessSquared * specularWeightedSum.rgb);
 	
 	vec3 diffuseColorB = clamp(diffuseWeightedSum.rgb / diffuseWeightedSum.a, 

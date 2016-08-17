@@ -88,11 +88,20 @@ float computeGeometricAttenuationSmithBeckmann(
         // for this formula
 }
 
+float computeGeometricAttenuationSmithGGX(
+	float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
+{
+	float roughnessSq = roughness * roughness;
+	return 4 / (1 + sqrt(1 + roughnessSq * (1 / (nDotV * nDotV) - 1.0)))
+			 / (1 + sqrt(1 + roughnessSq * (1 / (nDotL * nDotL) - 1.0)));
+}
+
 float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
 {
     //return nDotV * nDotL;
-    return computeGeometricAttenuationVCavity(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+    //return computeGeometricAttenuationVCavity(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
     //return computeGeometricAttenuationSmithBeckmann(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+	return computeGeometricAttenuationSmithGGX(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
 }
 
 float computeMicrofacetDistributionGGX(float nDotH, float roughness)
@@ -260,9 +269,9 @@ vec4 tonemap(vec3 color, float alpha)
 {
     if (useInverseLuminanceMap)
     {
-        if (color.r <= 0.0 && color.g <= 0.0 && color.b <= 0.0)
+        if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
         {
-            fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+            return vec4(0.0, 0.0, 0.0, 1.0);
         }
         else
         {
@@ -271,23 +280,23 @@ vec4 tonemap(vec3 color, float alpha)
             // if the luminance value somehow exceeds 1.0
             float luminance = getLuminance(color);
 			float maxLuminance = getMaxLuminance();
-			// if (luminance >= maxLuminance)
+			if (luminance >= maxLuminance)
 			{
 				return vec4(pow(color / maxLuminance, vec3(1.0 / gamma)), alpha);
 			}
-			// else
-			// {
-				// float scaledLuminance = min(1.0, luminance / maxLuminance);
+			else
+			{
+				float scaledLuminance = min(1.0, luminance / maxLuminance);
 				
-				// // Step 2: determine the ratio between the tonemapped and linear luminance
-				// // Remove implicit gamma correction from the lookup table
-				// float scale = pow(texture(inverseLuminanceMap, scaledLuminance).r, gamma) / luminance;
+				// Step 2: determine the ratio between the tonemapped and linear luminance
+				// Remove implicit gamma correction from the lookup table
+				float scale = pow(texture(inverseLuminanceMap, scaledLuminance).r, gamma) / luminance;
 					
-				// // Step 3: return the color, scaled to have the correct luminance,
-				// // but the original saturation and hue.
-				// // Step 4: apply gamma correction
-				// return vec4(pow(color * scale, vec3(1.0 / gamma)), alpha);
-			// }
+				// Step 3: return the color, scaled to have the correct luminance,
+				// but the original saturation and hue.
+				// Step 4: apply gamma correction
+				return vec4(pow(color * scale, vec3(1.0 / gamma)), alpha);
+			}
         }
     }
     else
@@ -354,7 +363,7 @@ void main()
     }
     else
     {
-        roughness = 0.1; // TODO pass in a default?
+        roughness = 1; // TODO pass in a default?
     }
     
     vec3[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
@@ -392,7 +401,7 @@ void main()
                 }
                 else
                 {
-                    //mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(grazingIntensity), hDotV));
+                    mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(grazingIntensity), hDotV));
 					//mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
                     //mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
 					
@@ -405,33 +414,36 @@ void main()
 						// getLuminance(fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness))));
 						
 						
-					vec3 reference = min(vec3(dist(nDotH, roughness)), max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV)));
-					vec3 fitted = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
+					// vec3 reference = 
+						// max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
+						// //min(vec3(dist(nDotH, roughness)), max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV)));
+					// vec3 fitted = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
 					
-					// mfdFresnel = reference;
+					// // mfdFresnel = reference;
 					
-					vec3 referenceXYZ = rgbToXYZ(reference);
-					vec3 fittedXYZ = rgbToXYZ(fitted);
+					// vec3 referenceXYZ = rgbToXYZ(reference);
+					// vec3 fittedXYZ = rgbToXYZ(fitted);
 				
-					// Pseudo-LAB color space
-					vec3 referenceLAB = vec3(referenceXYZ.y, 5 * (referenceXYZ.x - referenceXYZ.y), 2 * (referenceXYZ.y - referenceXYZ.z));
-					vec3 fittedLAB = vec3(fittedXYZ.y, 5 * (fittedXYZ.x - fittedXYZ.y), 2 * (fittedXYZ.y - fittedXYZ.z));
+					// // Pseudo-LAB color space
+					// vec3 referenceLAB = vec3(referenceXYZ.y, 5 * (referenceXYZ.x - referenceXYZ.y), 2 * (referenceXYZ.y - referenceXYZ.z));
+					// vec3 fittedLAB = vec3(fittedXYZ.y, 5 * (fittedXYZ.x - fittedXYZ.y), 2 * (fittedXYZ.y - fittedXYZ.z));
 					
-					vec3 resultLAB = 
-						//fittedLAB;
-						vec3(fittedLAB.x, referenceLAB.yz / referenceLAB.x * fittedLAB.x);
-						//vec3(referenceLAB.x, fittedLAB.yz / fittedLAB.x * referenceLAB.x);
-						//referenceLAB;
-					vec3 resultXYZ = vec3(resultLAB.x + 0.2 * resultLAB.y, resultLAB.x, resultLAB.x - 0.5 * resultLAB.z);
-					vec3 resultRGB = xyzToRGB(resultXYZ);
+					// vec3 resultLAB = 
+						// //fittedLAB;
+						// vec3(fittedLAB.x, referenceLAB.yz / referenceLAB.x * fittedLAB.x);
+						// //vec3(referenceLAB.x, fittedLAB.yz / fittedLAB.x * referenceLAB.x);
+						// //referenceLAB;
+					// vec3 resultXYZ = vec3(resultLAB.x + 0.2 * resultLAB.y, resultLAB.x, resultLAB.x - 0.5 * resultLAB.z);
+					// vec3 resultRGB = xyzToRGB(resultXYZ);
 					
-					mfdFresnel = 
-						fitted;
-						//vec3(fittedLAB.x);
-						//vec3(referenceLAB.x);
-						//vec3(referenceLAB.x, vec2(fittedLAB.x));
-						//resultRGB;
-						//referenceLAB - fittedLAB + vec3(0.5);
+					// mfdFresnel = 
+						// reference;
+						// //fitted;
+						// //vec3(fittedLAB.x);
+						// //vec3(referenceLAB.x);
+						// //vec3(referenceLAB.x, vec2(fittedLAB.x));
+						// //resultRGB;
+						// //referenceLAB - fittedLAB + vec3(0.5);
 					
 					// mfdFresnel = reference;
 						// //vec3(0.5 - referenceLAB.y / sqrt(referenceLAB.x), 0.5, 0.5 - referenceLAB.z / sqrt(referenceLAB.x));
@@ -457,7 +469,7 @@ void main()
 				
 				vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
             
-                reflectance += (//fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
+                reflectance += (fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
                     mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV))
                     * lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed);
             }
