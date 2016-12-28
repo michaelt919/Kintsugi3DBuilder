@@ -30,11 +30,14 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 	public final Texture2D<ContextType> normalTexture;
 	public final Texture2D<ContextType> specularTexture;
 	public final Texture2D<ContextType> roughnessTexture;
+	public final Texture2D<ContextType> environmentLowResTexture;
+	public final Texture2D<ContextType> environmentHighResTexture;
 	public final Texture3D<ContextType> shadowTextures;
 	public final Texture1D<ContextType> mfdTexture;
 	public final UniformBuffer<ContextType> shadowMatrixBuffer;
 	
-	public SampledMicrofacetField(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, File specularFile, File roughnessFile, File mfdFile, ContextType context) throws IOException
+	public SampledMicrofacetField(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, File specularFile, File roughnessFile, 
+			File environmentLowResFile, File environmentHighResFile, File mfdFile, ContextType context) throws IOException
 	{
 		this.ulf = ulf;
 		
@@ -92,6 +95,34 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 		else
 		{
 			roughnessTexture = null;
+		}
+		
+		if (environmentLowResFile != null && environmentLowResFile.exists())
+		{
+			System.out.println("Low res environment texture found.");
+			environmentLowResTexture = context.get2DColorTextureBuilder(environmentLowResFile, true)
+					.setInternalFormat(ColorFormat.RGB8)
+					.setMipmapsEnabled(true)
+					.setLinearFilteringEnabled(true)
+					.createTexture();
+		}
+		else
+		{
+			environmentLowResTexture = null;
+		}
+		
+		if (environmentHighResFile != null && environmentHighResFile.exists())
+		{
+			System.out.println("High res environment texture found.");
+			environmentHighResTexture = context.get2DColorTextureBuilder(environmentHighResFile, true)
+					.setInternalFormat(ColorFormat.RGB8)
+					.setMipmapsEnabled(true)
+					.setLinearFilteringEnabled(true)
+					.createTexture();
+		}
+		else
+		{
+			environmentHighResTexture = null;
 		}
 		
 		if (mfdFile != null && mfdFile.exists())
@@ -242,6 +273,16 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 		if (roughnessTexture != null)
 		{
 			roughnessTexture.delete();
+		}
+		
+		if (environmentLowResTexture != null)
+		{
+			environmentLowResTexture.delete();
+		}
+		
+		if (environmentHighResTexture != null)
+		{
+			environmentHighResTexture.delete();
 		}
 		
 		if (shadowTextures != null)

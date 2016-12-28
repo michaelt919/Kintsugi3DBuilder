@@ -71,7 +71,7 @@ public class ImageBasedMicrofacetProgram
 			}
 			else
 			{
-				throw new UnsupportedOperationException();
+				normalController.overrideCameraPose(cameraPoseOverride);
 			}
 		}
 
@@ -81,6 +81,10 @@ public class ImageBasedMicrofacetProgram
 			if (hardcodedMode)
 			{
 				hardcodedController.removeCameraPoseOverride();
+			}
+			else
+			{
+				normalController.removeCameraPoseOverride();
 			}
 		}
 	}

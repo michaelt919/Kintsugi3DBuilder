@@ -18,7 +18,7 @@ out vec3 fViewPos;
 
 #define MAX_CAMERA_PROJECTION_COUNT 1024
 
-uniform CameraProjections
+layout(std140) uniform CameraProjections
 {
 	mat4 cameraProjections[MAX_CAMERA_PROJECTION_COUNT];
 };

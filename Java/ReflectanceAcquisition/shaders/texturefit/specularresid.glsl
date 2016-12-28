@@ -5,6 +5,10 @@
 
 #line 7 2003
 
+uniform sampler2D diffuseEstimate;
+uniform sampler2D normalEstimate;
+uniform bool useDiffuseEstimate;
+
 struct SpecularResidualInfo
 {
     vec3 residualXYZ;
@@ -12,6 +16,31 @@ struct SpecularResidualInfo
     vec3 halfAngleVector;
 	float geomRatio;
 };
+
+vec3 getDiffuseColor()
+{
+    return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
+}
+
+vec3 getDiffuseNormalVector()
+{
+    return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
+}
+
+vec3 removeDiffuse(vec4 originalColor, vec3 diffuseColor, float maxLuminance,
+    float nDotL, vec3 attenuatedLightIntensity, vec3 normal)
+{
+    if (nDotL <= 0.0)
+    {
+        return vec3(0);
+    }
+    else
+    {
+        vec3 diffuseContrib = diffuseColor * nDotL * attenuatedLightIntensity;
+        float cap = maxLuminance - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
+        return rgbToXYZ((originalColor.rgb - diffuseContrib) / attenuatedLightIntensity);
+    }
+}
 
 SpecularResidualInfo computeSpecularResidualInfo()
 {
@@ -40,7 +69,10 @@ SpecularResidualInfo computeSpecularResidualInfo()
         vec3 light = normalize(lightPreNormalized);
 		info.nDotL = max(0, dot(normal, light));
 		
-        info.residualXYZ = rgbToXYZ(color.rgb / attenuatedLightIntensity);
+        info.residualXYZ = useDiffuseEstimate ? 
+			removeDiffuse(color, getDiffuseColor(), maxLuminance, info.nDotL, attenuatedLightIntensity, 
+				getDiffuseNormalVector())
+			: rgbToXYZ(color.rgb / attenuatedLightIntensity);
 				
 		vec3 halfAngle = normalize(light + view);
         vec3 tangent = normalize(fTangent - dot(normal, fTangent));

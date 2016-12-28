@@ -11,7 +11,7 @@ public class TextureFitParameters
 	private int imageHeight = 1024;
 	private int textureSize = 2048;
 	private int textureSubdivision = 8;
-	private boolean imageRescalingEnabled = true;
+	private boolean imageRescalingEnabled = false;
 	private boolean imagePreprojectionUseEnabled = false;
 	private boolean imagePreprojectionGenerationEnabled = false;
 	
