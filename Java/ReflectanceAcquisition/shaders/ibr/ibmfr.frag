@@ -15,6 +15,7 @@ layout(location = 0) out vec4 fragColor;
 
 uniform mat4 projection;
 uniform mat4 model_view;
+uniform mat4 envMapMatrix;
 in vec3 fViewPos;
 
 #define MAX_VIRTUAL_LIGHT_COUNT 4
@@ -30,18 +31,38 @@ uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 uniform sampler2D roughnessMap;
+uniform sampler2D environmentMap;
 uniform sampler1D mfdMap;
 
 uniform bool useDiffuseTexture;
 uniform bool useNormalTexture;
 uniform bool useSpecularTexture;
 uniform bool useRoughnessTexture;
+uniform bool useEnvironmentTexture;
 uniform bool useMFDTexture;
 
 uniform bool useInverseLuminanceMap;
 uniform sampler1D inverseLuminanceMap;
 
 uniform sampler2DArray shadowMaps;
+
+vec3 getEnvironment(vec3 lightDirection)
+{
+	return pow(texture(environmentMap, 
+		vec2(0.5 * atan(-lightDirection.x, -lightDirection.z), 
+				atan(lightDirection.y)) / PI + vec2(0.5)
+		).rgb,
+		vec3(2.2));
+}
+
+vec3 getEnvironmentDiffuse(vec3 normalDirection)
+{
+	return pow(textureLod(environmentMap, 
+		vec2(0.5 * atan(-normalDirection.x, -normalDirection.z), 
+				atan(normalDirection.y)) / PI + vec2(0.5), 
+		2).rgb,
+		vec3(2.2));
+}
 
 vec3 computeFresnelReflectivityActual(vec3 specularColor, vec3 grazingColor, float hDotV)
 {
@@ -74,8 +95,7 @@ float computeGeometricAttenuationVCavity(
     return min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
 }
 
-float computeGeometricAttenuationSmithBeckmann(
-    float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
+float computeGeometricAttenuationSmithBeckmann(float roughness, float nDotV, float nDotL)
 {
     float aV = 1.0 / (roughness * sqrt(1.0 - nDotV * nDotV) / nDotV);
     float aVSq = aV * aV;
@@ -88,8 +108,7 @@ float computeGeometricAttenuationSmithBeckmann(
         // for this formula
 }
 
-float computeGeometricAttenuationSmithGGX(
-	float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
+float computeGeometricAttenuationSmithGGX(float roughness, float nDotV, float nDotL)
 {
 	float roughnessSq = roughness * roughness;
 	return 4 / (1 + sqrt(1 + roughnessSq * (1 / (nDotV * nDotV) - 1.0)))
@@ -99,9 +118,9 @@ float computeGeometricAttenuationSmithGGX(
 float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
 {
     //return nDotV * nDotL;
-    //return computeGeometricAttenuationVCavity(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
-    //return computeGeometricAttenuationSmithBeckmann(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
-	return computeGeometricAttenuationSmithGGX(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+    return computeGeometricAttenuationVCavity(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+    //return computeGeometricAttenuationSmithBeckmann(roughness, nDotV, nDotL);
+	//return computeGeometricAttenuationSmithGGX(roughness, nDotV, nDotL);
 }
 
 float computeMicrofacetDistributionGGX(float nDotH, float roughness)
@@ -160,6 +179,95 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
     }
 }
 
+vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir, 
+    vec3 specularColor, float roughness, float maxLuminance)
+{
+    vec4 sampleColor = getLinearColor(index);
+    if (sampleColor.a > 0.0)
+    {
+        vec4 result = vec4(0.0);
+        
+        // All in camera space
+        vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
+        vec3 sampleViewDir = normalize(-fragmentPos);
+        vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(index)].xyz - fragmentPos;
+        float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
+        vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
+        vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
+        vec3 normalDirCameraSpace = normalize((cameraPoses[index] * vec4(normalDir, 0.0)).xyz);
+        vec3 lightIntensity = getLightIntensity(index);
+        
+        float nDotL_sample = max(0, dot(normalDirCameraSpace, sampleLightDir));
+        float nDotV_sample = max(0, dot(normalDirCameraSpace, sampleViewDir));
+        float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
+        float hDotV_sample = max(0, dot(sampleHalfDir, sampleViewDir));
+        float hDotL_sample = max(0, dot(sampleHalfDir, sampleLightDir));
+    
+        vec3 diffuseContrib = diffuseColor * nDotL_sample * lightIntensity / lightDistSquared;
+        
+        float geomAttenSample = geom(roughness, nDotH, nDotV_sample, nDotL_sample, 
+			hDotV_sample, hDotL_sample);
+		
+        if (nDotV_sample > 0.0 && geomAttenSample > 0.0)
+        {
+			vec3 virtualViewDir = normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
+            vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
+		
+			float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
+			float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
+			float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
+			float hDotL_virtual = max(0, dot(sampleHalfDir, virtualLightDir));
+		
+			float geomAttenVirtual = geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, 
+				hDotV_virtual, hDotL_virtual);
+		
+            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL_sample, maxLuminance);
+			
+			// vec3 mfd = specularResid.rgb * 4 * nDotV_sample * lightDistSquared / lightIntensity;
+			// float mfd_mono = getLuminance(mfd / specularColor);
+            
+            // result = vec4(fresnel(mfd, vec3(mfd_mono), hDotV_virtual)
+					// * geomAttenVirtual / (4 * nDotV_virtual) * lightIntensityVirtual[0]
+					// * getEnvironment((envMapMatrix * vec4(virtualLightDir, 0)).xyz), mfd_mono);
+					
+			vec3 mfd = specularResid.rgb * lightDistSquared / lightIntensity;
+            
+            result = vec4(mfd * nDotL_virtual
+				* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
+									* virtualLightDir), 
+				dist(nDotH, roughness) / 4
+				/*getLuminance(mfd / specularColor)*/);
+        }
+        
+        return result;
+    }
+    else
+    {
+       return vec4(0.0);
+    }
+}
+
+vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness)
+{
+	float maxLuminance = getMaxLuminance();
+
+	vec4 sum = vec4(0.0);
+    
+	for (int i = 0; i < viewCount; i++)
+	{
+        sum += computeEnvironmentSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
+	}
+    
+    if (sum.y > 0.0)
+	{
+		return sum.rgb / max(4, sum.a);
+	}
+	else
+	{
+		return vec3(0.0);
+	}
+}
+
 vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 normalDir, 
     vec3 specularColor, float roughness, float maxLuminance)
 {
@@ -211,7 +319,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
 					// vec3(virtualNDotH, sqrt(1.0 - virtualNDotH * virtualNDotH), 0.0),
 					// vec3(sampleNDotH, sqrt(1.0 - sampleNDotH * sampleNDotH), 0.0));
 				// float weight = 1.0 / abs(virtualNDotH - sampleNDotH);
-                result[lightPass] = weight * precomputedSample ;
+                result[lightPass] = weight * precomputedSample;
             }
         }
         
@@ -265,43 +373,118 @@ vec3[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
 	return results;
 }
 
+vec3 linearToSRGB(vec3 color)
+{
+	//return pow(color, vec3(1.0/2.2));
+
+	vec3 sRGBColor;
+
+	if(color.r <= 0.0031308)
+	{
+		sRGBColor.r = 12.92 * color.r;
+	}
+	else
+	{
+		sRGBColor.r = (1.055) * pow(color.r, 1.0/2.4) - 0.055;
+	}
+
+	if(color.g <= 0.0031308)
+	{
+		sRGBColor.g = 12.92 * color.g;
+	}
+	else
+	{
+		sRGBColor.g = (1.055) * pow(color.g, 1.0/2.4) - 0.055;
+	}
+
+	if(color.b <= 0.0031308)
+	{
+		sRGBColor.b = 12.92 * color.b;
+	}
+	else
+	{
+		sRGBColor.b = (1.055) * pow(color.b, 1.0/2.4) - 0.055;
+	}
+	
+	return sRGBColor;
+}
+
+vec3 sRGBToLinear(vec3 sRGBColor)
+{
+	//return pow(sRGBColor, vec3(2.2));
+
+	vec3 linearColor;
+	
+	if(sRGBColor.r <= 0.04045)
+	{
+		linearColor.r = sRGBColor.r / 12.92;
+	}
+	else
+	{
+		linearColor.r = pow((sRGBColor.r + 0.055) / 1.055, 2.4);
+	}
+	
+	if(sRGBColor.g <= 0.04045)
+	{
+		linearColor.g = sRGBColor.g / 12.92;
+	}
+	else
+	{
+		linearColor.g = pow((sRGBColor.g + 0.055) / 1.055, 2.4);
+	}
+	
+	if(sRGBColor.b <= 0.04045)
+	{
+		linearColor.b = sRGBColor.b / 12.92;
+	}
+	else
+	{
+		linearColor.b = pow((sRGBColor.b + 0.055) / 1.055, 2.4);
+	}
+	
+	return linearColor;
+}
+
 vec4 tonemap(vec3 color, float alpha)
 {
-    if (useInverseLuminanceMap)
-    {
-        if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
-        {
-            return vec4(0.0, 0.0, 0.0, 1.0);
-        }
-        else
-        {
-            // Step 1: convert to CIE luminance
-            // Clamp to 1 so that the ratio computed in step 3 is well defined
-            // if the luminance value somehow exceeds 1.0
-            float luminance = getLuminance(color);
-			float maxLuminance = getMaxLuminance();
-			if (luminance >= maxLuminance)
-			{
-				return vec4(pow(color / maxLuminance, vec3(1.0 / gamma)), alpha);
-			}
-			else
-			{
-				float scaledLuminance = min(1.0, luminance / maxLuminance);
+    // if (useInverseLuminanceMap)
+    // {
+        // if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
+        // {
+            // return vec4(0.0, 0.0, 0.0, 1.0);
+        // }
+        // else
+        // {
+            // // Step 1: convert to CIE luminance
+            // // Clamp to 1 so that the ratio computed in step 3 is well defined
+            // // if the luminance value somehow exceeds 1.0
+            // float luminance = getLuminance(color);
+			// float maxLuminance = getMaxLuminance();
+			// if (luminance >= maxLuminance)
+			// {
+				// return vec4(linearToSRGB(color / maxLuminance), alpha);
+			// }
+			// else
+			// {
+				// float scaledLuminance = min(1.0, luminance / maxLuminance);
 				
-				// Step 2: determine the ratio between the tonemapped and linear luminance
-				// Remove implicit gamma correction from the lookup table
-				float scale = pow(texture(inverseLuminanceMap, scaledLuminance).r, gamma) / luminance;
+				// // Step 2: determine the ratio between the tonemapped and linear luminance
+				// // Remove implicit gamma correction from the lookup table
+				// float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
+				// float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
+				// float scale = tonemappedNoGamma / luminance;
 					
-				// Step 3: return the color, scaled to have the correct luminance,
-				// but the original saturation and hue.
-				// Step 4: apply gamma correction
-				return vec4(pow(color * scale, vec3(1.0 / gamma)), alpha);
-			}
-        }
-    }
-    else
+				// // Step 3: return the color, scaled to have the correct luminance,
+				// // but the original saturation and hue.
+				// // Step 4: apply gamma correction
+				// vec3 colorScaled = color * scale;
+				// return vec4(linearToSRGB(colorScaled), alpha);
+			// }
+        // }
+    // }
+    // else
     {
-        return vec4(pow(color, vec3(1.0 / gamma)), alpha);
+        return vec4(linearToSRGB(color), alpha);
     }
 }
 
@@ -321,9 +504,9 @@ void main()
             - dot(tangent, fBitangent) * tangent);
         mat3 tangentToObject = mat3(tangent, bitangent, gNormal);
 		
-		normalDir = tangentToObject * normalDirTS;
+		//normalDir = tangentToObject * normalDirTS;
 		//normalDir = gNormal;
-		//normalDIr = normalDirTS;
+		normalDir = normalDirTS;
     }
     else
     {
@@ -363,7 +546,7 @@ void main()
     }
     else
     {
-        roughness = 1; // TODO pass in a default?
+        roughness = 0.25; // TODO pass in a default?
     }
     
     vec3[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
@@ -476,5 +659,22 @@ void main()
         }
     }
     
-    fragColor = tonemap(reflectance, 1.0);
+    
+	
+	fragColor = tonemap(
+		10 * (fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
+				getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz) / 4,
+				1.0)//nDotV)
+			+ diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz)), 
+		1.0);
+		
+	//fragColor = tonemap(reflectance, 1.0);
+	
+	//fragColor = tonemap(getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz), 1.0);
+	
+	//fragColor = tonemap((cameraPoses[0] * vec4(-reflect(viewDir, normalDir), 0.0)).xyz * 0.5 + vec3(0.5), 1.0);
+	//fragColor = tonemap(vec3(((cameraPoses[0] * vec4(-reflect(viewDir, normalDir), 0.0)).xyz * 0.5 + vec3(0.5)).y), 1.0);
+	//fragColor = tonemap(vec3((model_view * vec4(normalDir, 0.0)).y) * 0.5 + vec3(0.5), 1.0);
+	//fragColor = tonemap(vec3((transpose(mat3(cameraPoses[0])) * normalDir).y) * 0.5 + vec3(0.5), 1.0);
+	
 }

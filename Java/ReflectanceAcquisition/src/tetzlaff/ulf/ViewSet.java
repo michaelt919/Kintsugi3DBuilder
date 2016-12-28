@@ -674,7 +674,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 					scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat());
 				
 				cameraPoseList.add(newPose);
-				cameraPoseInvList.add(newPose.quickInverse(0.001f));
+				cameraPoseInvList.add(newPose.quickInverse(0.002f));
 			}
 			else if (id.equals("d") || id.equals("D"))
 			{
@@ -731,7 +731,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				scanner.next();
 				
 				float aspect = scanner.nextFloat();
-				float fovy = scanner.nextFloat();
+				float fovy = (float)(scanner.nextFloat() * Math.PI / 180.0);
 				
 				cameraProjectionList.add(new SimpleProjection(aspect, fovy));
 				

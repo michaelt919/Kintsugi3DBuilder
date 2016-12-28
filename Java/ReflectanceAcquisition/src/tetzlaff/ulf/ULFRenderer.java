@@ -16,6 +16,7 @@ import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
@@ -49,6 +50,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private Texture3D<ContextType> viewIndexCacheTexturesBack;
     private Program<ContextType> simpleTexProgram;
     private Renderable<ContextType> simpleTexRenderable;
+
+    private Program<ContextType> environmentBackgroundProgram;
+    private Renderable<ContextType> environmentBackgroundRenderable;
     
     private float targetFPS;
     private long lastFrame = 0;
@@ -121,6 +125,21 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	        	e.printStackTrace();
 	        }
     	}
+		
+    	if (this.environmentBackgroundProgram == null)
+    	{
+	    	try
+	        {
+	    		this.environmentBackgroundProgram = context.getShaderProgramBuilder()
+	    				.addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("shaders/common/envbackgroundtexture.frag"))
+	    				.createProgram();
+	        }
+	        catch (IOException e)
+	        {
+	        	e.printStackTrace();
+	        }
+    	}
     	
     	try 
     	{
@@ -173,6 +192,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    				
 	    	this.simpleTexRenderable = context.createRenderable(simpleTexProgram);
 	    	this.simpleTexRenderable.addVertexBuffer("position", context.createRectangle());
+			
+	    	this.environmentBackgroundRenderable = context.createRenderable(environmentBackgroundProgram);
+	    	this.environmentBackgroundRenderable.addVertexBuffer("position", context.createRectangle());
 	    	
         	indexFBO = context.getFramebufferObjectBuilder(this.lightField.depthTextures.getWidth(), this.lightField.depthTextures.getHeight())
 					.addEmptyColorAttachments(2)
@@ -260,6 +282,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     @Override
     public void draw()
     {
+    	draw(null, null);
+    }
+    
+    public void draw(Texture2D<ContextType> environmentMap, Matrix4 envMapMatrix)
+    {
     	if (offset == stride)
     	{
     		offset = 0;
@@ -299,13 +326,15 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	
     	float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length();
 
-    	mainRenderable.program().setUniform("model_view", Matrix4.scale(scale)
+    	Matrix4 modelView, projection;
+    	
+    	mainRenderable.program().setUniform("model_view", modelView = Matrix4.scale(scale)
     			.times(cameraController.getViewMatrix())
     			.times(Matrix4.scale(1.0f / scale))
     			.times(new Matrix4(new Matrix3(lightField.viewSet.getCameraPose(0))))
     			.times(Matrix4.translate(lightField.proxy.getCentroid().negated())));
     	
-    	mainRenderable.program().setUniform("projection", Matrix4.perspective(
+    	mainRenderable.program().setUniform("projection", projection = Matrix4.perspective(
     			//(float)(1.0),
     			lightField.viewSet.getCameraProjection(0).getVerticalFieldOfView(), 
     			(float)size.width / (float)size.height, 
@@ -390,6 +419,20 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	else 
     	{
     		framebuffer.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
+    		
+    		if (environmentMap != null)
+			{
+				environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
+				environmentBackgroundProgram.setTexture("env", environmentMap);
+				environmentBackgroundProgram.setUniform("model_view", modelView);
+				environmentBackgroundProgram.setUniform("projection", projection);
+				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
+				
+				context.disableDepthTest();
+				//this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+				context.enableDepthTest();
+			}
+    		
     		framebuffer.clearDepthBuffer();
 	        mainRenderable.draw(PrimitiveMode.TRIANGLES, framebuffer);  
 	        context.flush();

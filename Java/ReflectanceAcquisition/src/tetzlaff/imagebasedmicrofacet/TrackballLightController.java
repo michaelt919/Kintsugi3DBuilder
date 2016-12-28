@@ -15,7 +15,7 @@ import tetzlaff.window.listeners.CharacterListener;
 import tetzlaff.window.listeners.KeyPressListener;
 import tetzlaff.window.listeners.KeyReleaseListener;
 
-public class TrackballLightController implements LightController, CharacterListener, KeyPressListener, KeyReleaseListener
+public class TrackballLightController implements OverrideableLightController, CharacterListener, KeyPressListener, KeyReleaseListener
 {
 	private int activeTrackball;
 	private List<Vector3> lightColors;
@@ -23,6 +23,7 @@ public class TrackballLightController implements LightController, CharacterListe
 	private List<Boolean> lightControls;
 	private int lightsControlled = 0;
 	private Trackball lightControlTrackball;
+	private Matrix4 cameraPoseOverride;
 	
 	public TrackballLightController()
 	{
@@ -57,7 +58,7 @@ public class TrackballLightController implements LightController, CharacterListe
 	
 	public CameraController asCameraController()
 	{
-		return () -> trackballs.get(this.activeTrackball).getViewMatrix();
+		return () -> cameraPoseOverride != null ? cameraPoseOverride : trackballs.get(this.activeTrackball).getViewMatrix();
 	}
 	
 	public void addAsWindowListener(Window window)
@@ -207,5 +208,17 @@ public class TrackballLightController implements LightController, CharacterListe
 		{
 			return this.trackballs.get(i).getViewMatrix();
 		}
+	}
+
+	@Override
+	public void overrideCameraPose(Matrix4 cameraPoseOverride) 
+	{
+		this.cameraPoseOverride = cameraPoseOverride;
+	}
+
+	@Override
+	public void removeCameraPoseOverride()
+	{
+		this.cameraPoseOverride = null;
 	}
 }
