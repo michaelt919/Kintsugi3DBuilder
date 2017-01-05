@@ -341,10 +341,10 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		resamplePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Resample Light Field", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		contentPane.add(resamplePanel);
 		GridBagLayout gbl_resamplePanel = new GridBagLayout();
-		gbl_resamplePanel.columnWidths = new int[]{0, 0, 0, 0, 0};
-		gbl_resamplePanel.rowHeights = new int[]{0, 0, 0};
-		gbl_resamplePanel.columnWeights = new double[]{0.0, 1.0, 0.0, 1.0, Double.MIN_VALUE};
-		gbl_resamplePanel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_resamplePanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0};
+		gbl_resamplePanel.rowHeights = new int[]{0, 0, 0, 0};
+		gbl_resamplePanel.columnWeights = new double[]{0.0, 1.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+		gbl_resamplePanel.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
 		resamplePanel.setLayout(gbl_resamplePanel);
 		
 		JLabel lblNewDimensions = new JLabel("New Dimensions:");
@@ -376,18 +376,28 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		GridBagConstraints gbc_spinnerHeight = new GridBagConstraints();
 		gbc_spinnerHeight.insets = new Insets(0, 0, 5, 0);
 		gbc_spinnerHeight.fill = GridBagConstraints.HORIZONTAL;
-		gbc_spinnerHeight.gridx = 3;
+		gbc_spinnerHeight.gridx = 4;
 		gbc_spinnerHeight.gridy = 0;
 		resamplePanel.add(spinnerHeight, gbc_spinnerHeight);
 		
 		JButton btnResample = new JButton("Resample");
 		btnResample.setToolTipText("Resample all images of the currently active object to the above dimensions");
 		GridBagConstraints gbc_btnResample = new GridBagConstraints();
+		gbc_btnResample.insets = new Insets(0, 0, 5, 0);
 		gbc_btnResample.anchor = GridBagConstraints.EAST;
-		gbc_btnResample.gridwidth = 4;
+		gbc_btnResample.gridwidth = 5;
 		gbc_btnResample.gridx = 0;
 		gbc_btnResample.gridy = 1;
 		resamplePanel.add(btnResample, gbc_btnResample);
+		
+		JButton btnFidelity = new JButton("Fidelity Metric");
+		btnFidelity.setToolTipText("Evaluate the fidelity of the image-based sampling.");
+		GridBagConstraints gbc_btnFidelity = new GridBagConstraints();
+		gbc_btnFidelity.anchor = GridBagConstraints.EAST;
+		gbc_btnFidelity.gridwidth = 5;
+		gbc_btnFidelity.gridx = 3;
+		gbc_btnFidelity.gridy = 2;
+		resamplePanel.add(btnFidelity, gbc_btnFidelity);
 
 		// Set the combo box model to the parameter
 		if(model != null) { comboBoxObjects.setModel(model); }
@@ -425,6 +435,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 			lblX.setEnabled(false);
 			spinnerHeight.setEnabled(false);
 			btnResample.setEnabled(false);
+			btnFidelity.setEnabled(false);
 		}
 		else
 		{
@@ -447,6 +458,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 			lblX.setEnabled(true);
 			spinnerHeight.setEnabled(true);
 			btnResample.setEnabled(true);
+			btnFidelity.setEnabled(true);
 			
 			spinnerGamma.setValue(model.getSelectedItem().getGamma());
 			spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
@@ -569,6 +581,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 				lblX.setEnabled(false);
 				spinnerHeight.setEnabled(false);
 				btnResample.setEnabled(false);
+				btnFidelity.setEnabled(false);
 			}
 			else
 			{
@@ -588,6 +601,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 				lblX.setEnabled(true);
 				spinnerHeight.setEnabled(true);
 				btnResample.setEnabled(true);
+				btnFidelity.setEnabled(true);
 				
 				spinnerGamma.setValue((double)model.getSelectedItem().getGamma());
 				spinnerExponent.setValue((double)model.getSelectedItem().getWeightExponent());
@@ -644,6 +658,30 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 					{
 						ex.printStackTrace();
 					}
+				}
+			}
+		});
+		
+		JFileChooser fidelityFileChooser = new JFileChooser(new File("").getAbsolutePath());
+		
+		// Add listener for the 'resample' button to generate new vies for the current light field.
+		btnFidelity.addActionListener(e -> 
+		{
+			fidelityFileChooser.setDialogTitle("Choose an Export Directory");
+			fidelityFileChooser.removeChoosableFileFilter(fidelityFileChooser.getAcceptAllFileFilter());
+			fidelityFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			
+			if (fidelityFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				try 
+				{
+					loadingBar.setIndeterminate(true);
+					loadingFrame.setVisible(true);
+					model.getSelectedItem().requestFidelity(fidelityFileChooser.getSelectedFile());
+				} 
+				catch (IOException ex)
+				{
+					ex.printStackTrace();
 				}
 			}
 		});

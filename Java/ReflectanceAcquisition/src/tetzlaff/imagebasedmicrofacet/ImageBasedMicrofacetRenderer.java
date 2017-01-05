@@ -89,6 +89,17 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			}
 		});
 		
+		ulfRenderer.setFidelitySetupCallback((index) ->
+		{
+			setupForDraw();
+			
+			ViewSet<ContextType> vset = microfacetField.ulf.viewSet;
+			Vector3 lightIntensity = vset.getLightIntensity(vset.getLightIndex(index));
+			Vector4 lightPos = vset.getCameraPose(index).quickInverse(0.002f).times(new Vector4(vset.getLightPosition(vset.getLightIndex(index)), 1.0f));
+			
+			setupLightForFidelity(lightIntensity, new Vector3(lightPos));
+		});
+		
 		try
 		{
 			microfacetField = new SampledMicrofacetField<ContextType>(
@@ -235,6 +246,17 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
     	
 		program.setUniform("infiniteLightSources", false);
 		program.setTexture("shadowMaps", shadowMaps);
+		
+		if (microfacetField.shadowMatrixBuffer == null || microfacetField.shadowTextures == null)
+		{
+			program.setUniform("shadowTestingEnabled", false);
+		}
+		else
+		{
+			program.setUniform("shadowTestingEnabled", true);
+			program.setUniformBuffer("ShadowMatrices", microfacetField.shadowMatrixBuffer);
+			program.setTexture("shadowImages", microfacetField.shadowTextures);
+		}
 	}
 	
 	private Matrix4 setupLight(int lightIndex)
@@ -282,16 +304,37 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		program.setUniform("lightMatrixVirtual[" + lightIndex + "]", lightProjection.times(lightMatrix));
 		program.setUniform("virtualLightCount", Math.min(4, lightController.getLightCount()));
 		
-		if (microfacetField.shadowMatrixBuffer == null || microfacetField.shadowTextures == null)
-		{
-			program.setUniform("shadowTestingEnabled", false);
-		}
-		else
-		{
-			program.setUniform("shadowTestingEnabled", true);
-			program.setUniformBuffer("ShadowMatrices", microfacetField.shadowMatrixBuffer);
-			program.setTexture("shadowImages", microfacetField.shadowTextures);
-		}
+		return lightMatrix;
+	}
+	
+	private Matrix4 setupLightForFidelity(Vector3 lightIntensity, Vector3 lightPos)
+	{
+		float lightDist = lightPos.distance(this.microfacetField.ulf.proxy.getCentroid());
+		
+		float radius = (float)
+			(new Matrix3(microfacetField.ulf.viewSet.getCameraPose(0))
+				.times(new Vector3(this.microfacetField.ulf.proxy.getBoundingRadius()))
+				.length() / Math.sqrt(3));
+		
+		Matrix4 lightProjection = Matrix4.perspective(2.0f * (float)Math.atan(radius / lightDist) /*1.5f*/, 1.0f, 
+				lightDist - radius,
+				lightDist + radius);
+		
+		Matrix4 lightMatrix = Matrix4.lookAt(lightPos, this.microfacetField.ulf.proxy.getCentroid(), new Vector3(0.0f, 1.0f, 0.0f));
+		
+    	shadowProgram.setUniform("model_view", lightMatrix);
+		shadowProgram.setUniform("projection", lightProjection);
+		
+		shadowFramebuffer.setDepthAttachment(shadowMaps.getLayerAsFramebufferAttachment(0));
+		shadowFramebuffer.clearDepthBuffer();
+		shadowRenderable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
+		
+		program.setUniform("lightPosVirtual[0]", lightPos);
+		
+		program.setUniform("lightIntensityVirtual[0]", lightIntensity);
+		program.setUniform("lightMatrixVirtual[0]", lightProjection.times(lightMatrix));
+		
+		program.setUniform("virtualLightCount", 1);
 		
 		return lightMatrix;
 	}
@@ -476,6 +519,12 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	public void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException 
 	{
 		ulfRenderer.requestResample(width, height, targetVSETFile, exportPath);
+	}
+
+	@Override
+	public void requestFidelity(File exportPath) throws IOException 
+	{
+		ulfRenderer.requestFidelity(exportPath);
 	}
 
 	@Override

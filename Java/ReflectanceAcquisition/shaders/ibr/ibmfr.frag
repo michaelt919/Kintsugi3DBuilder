@@ -18,6 +18,9 @@ uniform mat4 model_view;
 uniform mat4 envMapMatrix;
 in vec3 fViewPos;
 
+uniform bool skipViewEnabled;
+uniform int skipView;
+
 #define MAX_VIRTUAL_LIGHT_COUNT 4
 uniform vec3 lightIntensityVirtual[MAX_VIRTUAL_LIGHT_COUNT];
 uniform vec3 lightPosVirtual[MAX_VIRTUAL_LIGHT_COUNT];
@@ -349,13 +352,16 @@ vec3[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
     
 	for (int i = 0; i < viewCount; i++)
 	{
-        vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample = 
-            computeSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
-        
-        for (int j = 0; j < MAX_VIRTUAL_LIGHT_COUNT; j++)
-        {
-            sums[j] += microfacetSample[j];
-        }
+		if (!skipViewEnabled || i != skipView)
+		{
+			vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample = 
+				computeSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
+			
+			for (int j = 0; j < MAX_VIRTUAL_LIGHT_COUNT; j++)
+			{
+				sums[j] += microfacetSample[j];
+			}
+		}
 	}
     
     vec3[MAX_VIRTUAL_LIGHT_COUNT] results;
@@ -661,14 +667,14 @@ void main()
     
     
 	
-	fragColor = tonemap(
-		10 * (fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
-				getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz) / 4,
-				1.0)//nDotV)
-			+ diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz)), 
-		1.0);
+	// fragColor = tonemap(
+		// 10 * (fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
+				// getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz) / 4,
+				// 1.0)//nDotV)
+			// + diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz)), 
+		// 1.0);
 		
-	//fragColor = tonemap(reflectance, 1.0);
+	fragColor = tonemap(reflectance, 1.0);
 	
 	//fragColor = tonemap(getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz), 1.0);
 	

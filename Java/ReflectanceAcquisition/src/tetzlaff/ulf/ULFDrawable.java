@@ -36,4 +36,5 @@ public interface ULFDrawable<ContextType extends Context<ContextType>> extends D
 	void setIndexProgram(Program<ContextType> program);
 	
 	void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException;
+	void requestFidelity(File exportPath) throws IOException;
 }
