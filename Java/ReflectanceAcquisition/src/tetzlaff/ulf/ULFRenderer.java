@@ -1,11 +1,16 @@
 package tetzlaff.ulf;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.awt.image.renderable.RenderedImageFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.function.Consumer;
+
+import javax.imageio.ImageIO;
 
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
@@ -21,6 +26,7 @@ import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.CameraController;
+import tetzlaff.gl.helpers.DoubleVector3;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
@@ -64,7 +70,13 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private File resampleExportPath;
     
 	private Consumer<Matrix4> resampleSetupCallback;
-	private Runnable resampleCompleteCallback; 
+	private Runnable resampleCompleteCallback;
+
+	private boolean fidelityRequested;
+    private File fidelityExportPath;
+    
+	private Consumer<Integer> fidelitySetupCallback;
+	private Runnable fidelityCompleteCallback;
     
     private boolean multisamplingEnabled = false;
 
@@ -250,6 +262,22 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 				this.callback.loadingComplete();
 			}
     	}
+    	else if (this.fidelityRequested)
+    	{
+    		try
+    		{
+				this.generateFidelityDiffs();
+			} 
+    		catch (Exception e) 
+    		{
+				e.printStackTrace();
+			}
+    		this.fidelityRequested = false;
+    		if (this.callback != null)
+			{
+				this.callback.loadingComplete();
+			}
+    	}
 	}
 	
 	private void setupForDraw()
@@ -277,6 +305,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	this.mainRenderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
     	
     	this.mainRenderable.program().setTexture("luminanceMap", this.lightField.viewSet.getLuminanceMap());
+
+    	this.mainRenderable.program().setUniform("skipViewEnabled", false);
+    	this.mainRenderable.program().setUniform("skipView", -1);
 	}
     
     @Override
@@ -601,6 +632,118 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	}
 
 	@Override
+	public void requestFidelity(File exportPath) throws IOException
+	{
+		this.fidelityRequested = true;
+		this.fidelityExportPath = exportPath;
+	}
+	
+	private void generateFidelityDiffs() throws IOException
+	{
+		System.out.println("\nView Importance:");
+		
+		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
+		{
+			File imgFile = this.lightField.viewSet.getImageFile(i);
+			File pngFile = new File(imgFile.getAbsolutePath().substring(0, imgFile.getAbsolutePath().lastIndexOf('.')) + ".png");
+			if (!imgFile.exists() && pngFile.exists())
+			{
+				imgFile = pngFile;
+			}
+	    	BufferedImage gtBuffered = ImageIO.read(imgFile);
+	    	int[] gtARGB = gtBuffered.getRGB(0, 0, gtBuffered.getWidth(), gtBuffered.getHeight(), null, 0, gtBuffered.getWidth());
+			
+			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(gtBuffered.getWidth(), gtBuffered.getHeight())
+					.addColorAttachment(ColorFormat.RGBA8)
+					.addDepthAttachment()
+					.createFramebufferObject();
+	    	
+	    	this.setupForDraw();
+	    	
+	    	mainRenderable.program().setUniform("model_view", this.lightField.viewSet.getCameraPose(i));
+	    	mainRenderable.program().setUniform("projection", 
+	    			this.lightField.viewSet.getCameraProjection(this.lightField.viewSet.getCameraProjectionIndex(i))
+    				.getProjectionMatrix(this.lightField.viewSet.getRecommendedNearPlane(), this.lightField.viewSet.getRecommendedFarPlane()));
+
+	    	mainRenderable.program().setUniform("skipViewEnabled", true);
+	    	mainRenderable.program().setUniform("skipView", i);
+	    	
+	    	if (this.fidelitySetupCallback != null)
+    		{
+	    		this.fidelitySetupCallback.accept(i);
+    		}
+	    	
+	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+	    	framebuffer.clearDepthBuffer();
+	    	
+	    	mainRenderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+	    	
+	    	File approxFile = new File(fidelityExportPath, "approx" + File.separator + pngFile.getName());
+	    	File diffFile = new File(fidelityExportPath, "diff" + File.separator + pngFile.getName());
+	    	
+	    	approxFile.getParentFile().mkdirs();
+	        framebuffer.saveColorBufferToFile(0, "PNG", approxFile);
+	        
+	        double sumSqError = 0.0;
+
+	    	diffFile.getParentFile().mkdirs();
+	    	int[] approxARGB = framebuffer.readColorBufferARGB(0);
+	    	int[] diffARGB = new int[gtARGB.length];
+	    	int flipK = gtBuffered.getWidth() * (gtBuffered.getHeight() - 1);
+	    	for (int k = 0; k < gtARGB.length && k < gtARGB.length; k++)
+	    	{
+    			int approxA = (approxARGB[flipK] & 0xFF000000) >>> 24;
+				int approxR = (approxARGB[flipK] & 0x00FF0000) >>> 16;
+				int approxG = (approxARGB[flipK] & 0x0000FF00) >>> 8;
+				int approxB = approxARGB[flipK] & 0x000000FF;
+
+				int gtA = (gtARGB[k] & 0xFF000000) >>> 24;
+				int gtR = (gtARGB[k] & 0x00FF0000) >>> 16;
+				int gtG = (gtARGB[k] & 0x0000FF00) >>> 8;
+				int gtB = gtARGB[k] & 0x000000FF;
+				
+				DoubleVector3 diff = new DoubleVector3(Math.pow(gtR/255.0, 2.2) - Math.pow(approxR/255.0, 2.2), 
+						Math.pow(gtG/255.0, 2.2) - Math.pow(approxG/255.0, 2.2), 
+						Math.pow(gtB/255.0, 2.2) - Math.pow(approxB/255.0, 2.2));
+				
+				int diffR = Math.max(0, Math.min(255, (int)Math.round(255 * Math.pow(diff.x + 0.5, 1.0/2.2)) ));
+				int diffG = Math.max(0, Math.min(255, (int)Math.round(255 * Math.pow(diff.y + 0.5, 1.0/2.2)) ));
+				int diffB = Math.max(0, Math.min(255, (int)Math.round(255 * Math.pow(diff.z + 0.5, 1.0/2.2)) ));
+				int diffA = gtA == 255 && approxA == 255 ? 255 : 0;
+				
+				sumSqError += diff.dot(diff);
+				
+				diffARGB[k] = (diffA << 24) | (diffR << 16) | (diffG << 8) | diffB;
+				
+				flipK++;
+				if (flipK % gtBuffered.getWidth() == 0)
+				{
+					flipK -= 2 * gtBuffered.getWidth();
+				}
+	    	}
+	    	
+	    	System.out.println(pngFile.getName() + " " + sumSqError);
+	    	
+	    	BufferedImage diffImg = new BufferedImage(gtBuffered.getWidth(), gtBuffered.getHeight(), BufferedImage.TYPE_INT_ARGB);
+	    	diffImg.setRGB(0, 0, gtBuffered.getWidth(), gtBuffered.getHeight(), diffARGB, 0, gtBuffered.getWidth());
+	    	ImageIO.write(diffImg, "PNG", diffFile);
+	        
+	        if (this.callback != null)
+	        {
+	        	this.callback.setProgress((double) i / (double) this.lightField.viewSet.getCameraPoseCount());
+	        }
+		}
+
+    	mainRenderable.program().setUniform("skipViewEnabled", false);
+    	mainRenderable.program().setUniform("skipView", -1);
+		
+		if (this.fidelityCompleteCallback != null)
+		{
+    		this.fidelityCompleteCallback.run();
+		}
+	}
+
+	@Override
 	public void setHalfResolution(boolean halfResEnabled)
 	{
 		this.halfResEnabled = halfResEnabled;
@@ -692,5 +835,15 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	public void setResampleCompleteCallback(Runnable resampleCompleteCallback) 
 	{
 		this.resampleCompleteCallback = resampleCompleteCallback;
+	}
+
+	public void setFidelitySetupCallback(Consumer<Integer> fidelitySetupCallback) 
+	{
+		this.fidelitySetupCallback = fidelitySetupCallback;
+	}
+
+	public void setFidelityCompleteCallback(Runnable fidelityCompleteCallback) 
+	{
+		this.fidelityCompleteCallback = fidelityCompleteCallback;
 	}
 }

@@ -205,6 +205,12 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	}
 
 	@Override
+	public void requestFidelity(File exportPath) throws IOException 
+	{
+		this.stages.get(this.currentStage).requestFidelity(exportPath);
+	}
+
+	@Override
 	public void setHalfResolution(boolean halfResEnabled)
 	{	
 		this.stages.get(this.currentStage).setHalfResolution(halfResEnabled);
