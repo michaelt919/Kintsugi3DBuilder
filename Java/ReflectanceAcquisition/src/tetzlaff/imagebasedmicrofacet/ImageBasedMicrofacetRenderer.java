@@ -39,6 +39,10 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	FramebufferObject<ContextType> shadowFramebuffer;
 	Renderable<ContextType> shadowRenderable;
 	
+    private boolean btfRequested;
+    private int btfWidth, btfHeight;
+    private File btfExportPath;
+	
 	public ImageBasedMicrofacetRenderer(ContextType context, Program<ContextType> program, Program<ContextType> indexProgram, Program<ContextType> shadowProgram, 
 			File xmlFile, File meshFile, ULFLoadOptions loadOptions, CameraController cameraController, LightController lightController)
     {
@@ -136,7 +140,22 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	@Override
 	public void update() 
 	{
-		ulfRenderer.update(); // Resample requests handled here
+    	if (this.btfRequested)
+    	{
+    		try
+    		{
+				this.exportBTF();
+			} 
+    		catch (Exception e) 
+    		{
+				e.printStackTrace();
+			}
+    		this.btfRequested = false;
+    	}
+    	else
+    	{
+    		ulfRenderer.update(); // Resample requests handled here
+    	}
 		
 		if (callback != null)
 		{
@@ -144,99 +163,105 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		}
 	}
 	
+	
 	private void setupForDraw()
+	{
+		this.setupForDraw(this.program);
+	}
+	
+	public void setupForDraw(Program<ContextType> p)
 	{
 		if (microfacetField.normalTexture == null)
 		{
-			program.setUniform("useNormalTexture", false);
-			program.setTexture("normalMap", null);
+			p.setUniform("useNormalTexture", false);
+			p.setTexture("normalMap", null);
 		}
 		else
 		{
-			program.setUniform("useNormalTexture", true);
-			program.setTexture("normalMap", microfacetField.normalTexture);
+			p.setUniform("useNormalTexture", true);
+			p.setTexture("normalMap", microfacetField.normalTexture);
 		}
 		
 		if (microfacetField.diffuseTexture == null)
 		{
-			program.setUniform("useDiffuseTexture", false);
-			program.setTexture("diffuseMap", null);
+			p.setUniform("useDiffuseTexture", false);
+			p.setTexture("diffuseMap", null);
 		}
 		else
 		{
-			program.setUniform("useDiffuseTexture", true);
-			program.setTexture("diffuseMap", microfacetField.diffuseTexture);
+			p.setUniform("useDiffuseTexture", true);
+			p.setTexture("diffuseMap", microfacetField.diffuseTexture);
 		}
 		
 		if (microfacetField.specularTexture == null)
 		{
-			program.setUniform("useSpecularTexture", false);
-			program.setTexture("specularMap", null);
+			p.setUniform("useSpecularTexture", false);
+			p.setTexture("specularMap", null);
 		}
 		else
 		{
-			program.setUniform("useSpecularTexture", true);
-			program.setTexture("specularMap", microfacetField.specularTexture);
+			p.setUniform("useSpecularTexture", true);
+			p.setTexture("specularMap", microfacetField.specularTexture);
 		}
 		
 		if (microfacetField.roughnessTexture == null)
 		{
-			program.setUniform("useRoughnessTexture", false);
-			program.setTexture("roughnessMap", null);
+			p.setUniform("useRoughnessTexture", false);
+			p.setTexture("roughnessMap", null);
 		}
 		else
 		{
-			program.setUniform("useRoughnessTexture", true);
-			program.setTexture("roughnessMap", microfacetField.roughnessTexture);
+			p.setUniform("useRoughnessTexture", true);
+			p.setTexture("roughnessMap", microfacetField.roughnessTexture);
 		}
 		
 		if (microfacetField.environmentLowResTexture == null)
 		{
-			program.setUniform("useEnvironmentTexture", false);
-			program.setTexture("environmentMap", null);
+			p.setUniform("useEnvironmentTexture", false);
+			p.setTexture("environmentMap", null);
 		}
 		else
 		{
-			program.setUniform("useEnvironmentTexture", true);
-			program.setTexture("environmentMap", microfacetField.environmentLowResTexture);
+			p.setUniform("useEnvironmentTexture", true);
+			p.setTexture("environmentMap", microfacetField.environmentLowResTexture);
 		}
 		
 		if (microfacetField.mfdTexture == null)
 		{
-			program.setUniform("useMFDTexture", false);
-			program.setTexture("mfdMap", null);
+			p.setUniform("useMFDTexture", false);
+			p.setTexture("mfdMap", null);
 		}
 		else
 		{
-			program.setUniform("useMFDTexture", true);
-			program.setTexture("mfdMap", microfacetField.mfdTexture);
+			p.setUniform("useMFDTexture", true);
+			p.setTexture("mfdMap", microfacetField.mfdTexture);
 		}
 		
 		if (microfacetField.ulf.viewSet.getLuminanceMap() == null)
 		{
-			program.setUniform("useLuminanceMap", false);
-			program.setTexture("luminanceMap", null);
+			p.setUniform("useLuminanceMap", false);
+			p.setTexture("luminanceMap", null);
 		}
 		else
 		{
-			program.setUniform("useLuminanceMap", true);
-			program.setTexture("luminanceMap", microfacetField.ulf.viewSet.getLuminanceMap());
+			p.setUniform("useLuminanceMap", true);
+			p.setTexture("luminanceMap", microfacetField.ulf.viewSet.getLuminanceMap());
 		}
 		
 		if (microfacetField.ulf.viewSet.getInverseLuminanceMap() == null)
 		{
-			program.setUniform("useInverseLuminanceMap", false);
-			program.setTexture("inverseLuminanceMap", null);
+			p.setUniform("useInverseLuminanceMap", false);
+			p.setTexture("inverseLuminanceMap", null);
 		}
 		else
 		{
-			program.setUniform("useInverseLuminanceMap", true);
-			program.setTexture("inverseLuminanceMap", microfacetField.ulf.viewSet.getInverseLuminanceMap());
+			p.setUniform("useInverseLuminanceMap", true);
+			p.setTexture("inverseLuminanceMap", microfacetField.ulf.viewSet.getInverseLuminanceMap());
 		}
 		
 		float gamma = 2.2f;
     	Vector3 ambientColor = new Vector3(0.0f, 0.0f, 0.0f);
-		program.setUniform("ambientColor", ambientColor);
+		p.setUniform("ambientColor", ambientColor);
     	
     	Vector3 clearColor = new Vector3(
     			(float)Math.pow(ambientColor.x, 1.0 / gamma),
@@ -244,18 +269,18 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
     			(float)Math.pow(ambientColor.z, 1.0 / gamma));
     	ulfRenderer.setClearColor(clearColor);
     	
-		program.setUniform("infiniteLightSources", false);
-		program.setTexture("shadowMaps", shadowMaps);
+		p.setUniform("infiniteLightSources", false);
+		p.setTexture("shadowMaps", shadowMaps);
 		
 		if (microfacetField.shadowMatrixBuffer == null || microfacetField.shadowTextures == null)
 		{
-			program.setUniform("shadowTestingEnabled", false);
+			p.setUniform("shadowTestingEnabled", false);
 		}
 		else
 		{
-			program.setUniform("shadowTestingEnabled", true);
-			program.setUniformBuffer("ShadowMatrices", microfacetField.shadowMatrixBuffer);
-			program.setTexture("shadowImages", microfacetField.shadowTextures);
+			p.setUniform("shadowTestingEnabled", true);
+			p.setUniformBuffer("ShadowMatrices", microfacetField.shadowMatrixBuffer);
+			p.setTexture("shadowImages", microfacetField.shadowTextures);
 		}
 	}
 	
@@ -525,6 +550,65 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	public void requestFidelity(File exportPath) throws IOException 
 	{
 		ulfRenderer.requestFidelity(exportPath);
+	}
+
+	@Override
+	public void requestBTF(int width, int height, File exportPath) throws IOException 
+	{
+		this.btfRequested = true;
+		this.btfWidth = width;
+		this.btfHeight = height;
+		this.btfExportPath = exportPath;
+	}
+	
+	private void exportBTF()
+	{	
+		try
+        {
+			Program<ContextType> btfProgram = context.getShaderProgramBuilder()
+    				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr.frag"))
+    				.createProgram();
+			
+			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(btfWidth, btfHeight)
+					.addColorAttachment()
+					.createFramebufferObject();
+	    	
+	    	Renderable<ContextType> renderable = context.createRenderable(btfProgram);
+	    	renderable.addVertexBuffer("position", ulfRenderer.getLightField().positionBuffer);
+	    	renderable.addVertexBuffer("texCoord", ulfRenderer.getLightField().texCoordBuffer);
+	    	renderable.addVertexBuffer("normal", ulfRenderer.getLightField().normalBuffer);
+	    	renderable.addVertexBuffer("tangent", ulfRenderer.getLightField().tangentBuffer);
+	    	
+	    	ulfRenderer.setupForDraw(btfProgram);
+	    	this.setupForDraw(btfProgram);
+	    	
+	    	btfProgram.setUniform("useTSOverrides", true);
+	    	
+			for (int i = 1; i <= 90; i++)
+			{
+				double theta = i / 180.0f * Math.PI;
+		    	btfProgram.setUniform("virtualLightCount", 1);
+		    	btfProgram.setUniform("lightDirTSOverride", new Vector3(-(float)Math.sin(theta), 0.0f, (float)Math.cos(theta)));
+		    	btfProgram.setUniform("viewDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
+				
+		    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+		    	
+		    	File exportFile = new File(btfExportPath, String.format("%02d.png", i));
+		    	exportFile.getParentFile().mkdirs();
+		        framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+		        
+		        if (this.callback != null)
+		        {
+		        	this.callback.setProgress((double) i / (double) 90);
+		        }
+			}
+        }
+        catch (IOException e)
+        {
+        	e.printStackTrace();
+        }
 	}
 
 	@Override
