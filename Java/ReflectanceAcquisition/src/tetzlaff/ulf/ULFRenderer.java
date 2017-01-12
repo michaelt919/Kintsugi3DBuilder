@@ -282,32 +282,37 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	
 	private void setupForDraw()
 	{
-		this.mainRenderable.program().setTexture("viewImages", lightField.viewSet.getTextures());
-    	this.mainRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
-    	this.mainRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-    	this.mainRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+		this.setupForDraw(this.mainRenderable.program());
+	}
+	
+	public void setupForDraw(Program<ContextType> program)
+	{
+		program.setTexture("viewImages", lightField.viewSet.getTextures());
+		program.setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
+		program.setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
+		program.setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
     	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIntensityBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
     	{
-	    	this.mainRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
-	    	this.mainRenderable.program().setUniformBuffer("LightIntensities", lightField.viewSet.getLightIntensityBuffer());
-	    	this.mainRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+    		program.setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
+    		program.setUniformBuffer("LightIntensities", lightField.viewSet.getLightIntensityBuffer());
+    		program.setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
     	}
-    	this.mainRenderable.program().setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
-    	this.mainRenderable.program().setUniform("infiniteLightSources", true /* TODO */);
+    	program.setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
+    	program.setUniform("infiniteLightSources", true /* TODO */);
     	if (lightField.depthTextures != null)
 		{
-    		this.mainRenderable.program().setTexture("depthImages", lightField.depthTextures);
+    		program.setTexture("depthImages", lightField.depthTextures);
 		}
     	
-    	this.mainRenderable.program().setUniform("gamma", this.lightField.settings.getGamma());
-    	this.mainRenderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
-    	this.mainRenderable.program().setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
-    	this.mainRenderable.program().setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
+    	program.setUniform("gamma", this.lightField.settings.getGamma());
+    	program.setUniform("weightExponent", this.lightField.settings.getWeightExponent());
+    	program.setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
+    	program.setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
     	
-    	this.mainRenderable.program().setTexture("luminanceMap", this.lightField.viewSet.getLuminanceMap());
+    	program.setTexture("luminanceMap", this.lightField.viewSet.getLuminanceMap());
 
-    	this.mainRenderable.program().setUniform("skipViewEnabled", false);
-    	this.mainRenderable.program().setUniform("skipView", -1);
+    	program.setUniform("skipViewEnabled", false);
+    	program.setUniform("skipView", -1);
 	}
     
     @Override
@@ -587,6 +592,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 		this.resampleExportPath = exportPath;
 	}
 	
+	public void drawIntoFramebuffer(FramebufferObject<ContextType> framebuffer)
+	{
+		mainRenderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+	}
+	
 	private void resample() throws IOException
 	{
 		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, new ViewSetImageOptions(null, false, false, false), context);
@@ -845,5 +855,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	public void setFidelityCompleteCallback(Runnable fidelityCompleteCallback) 
 	{
 		this.fidelityCompleteCallback = fidelityCompleteCallback;
+	}
+
+	@Override
+	public void requestBTF(int width, int height, File exportPath)
+			throws IOException 
+	{
+		throw new UnsupportedOperationException();
 	}
 }

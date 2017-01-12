@@ -37,4 +37,5 @@ public interface ULFDrawable<ContextType extends Context<ContextType>> extends D
 	
 	void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException;
 	void requestFidelity(File exportPath) throws IOException;
+	void requestBTF(int width, int height, File exportPath) throws IOException;
 }

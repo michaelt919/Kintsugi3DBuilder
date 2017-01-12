@@ -34,6 +34,8 @@ import tetzlaff.ulf.ULFLoadOptions;
 import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFMorphRenderer;
 import tetzlaff.ulf.ViewSetImageOptions;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
@@ -342,9 +344,9 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		contentPane.add(resamplePanel);
 		GridBagLayout gbl_resamplePanel = new GridBagLayout();
 		gbl_resamplePanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0};
-		gbl_resamplePanel.rowHeights = new int[]{0, 0, 0, 0};
+		gbl_resamplePanel.rowHeights = new int[]{0, 0, 0, 0, 0};
 		gbl_resamplePanel.columnWeights = new double[]{0.0, 1.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
-		gbl_resamplePanel.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_resamplePanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		resamplePanel.setLayout(gbl_resamplePanel);
 		
 		JLabel lblNewDimensions = new JLabel("New Dimensions:");
@@ -393,11 +395,22 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		JButton btnFidelity = new JButton("Fidelity Metric");
 		btnFidelity.setToolTipText("Evaluate the fidelity of the image-based sampling.");
 		GridBagConstraints gbc_btnFidelity = new GridBagConstraints();
+		gbc_btnFidelity.insets = new Insets(0, 0, 5, 0);
 		gbc_btnFidelity.anchor = GridBagConstraints.EAST;
 		gbc_btnFidelity.gridwidth = 5;
-		gbc_btnFidelity.gridx = 3;
+		gbc_btnFidelity.gridx = 0;
 		gbc_btnFidelity.gridy = 2;
 		resamplePanel.add(btnFidelity, gbc_btnFidelity);
+		
+		JButton btnBTFExport = new JButton("Export BTF");		
+		btnBTFExport.setToolTipText("Evaluate the fidelity of the image-based sampling.");
+		GridBagConstraints gbc_button = new GridBagConstraints();
+		gbc_button.anchor = GridBagConstraints.EAST;
+		gbc_button.gridwidth = 5;
+		gbc_button.insets = new Insets(0, 0, 0, 5);
+		gbc_button.gridx = 0;
+		gbc_button.gridy = 3;
+		resamplePanel.add(btnBTFExport, gbc_button);
 
 		// Set the combo box model to the parameter
 		if(model != null) { comboBoxObjects.setModel(model); }
@@ -678,6 +691,32 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 					loadingBar.setIndeterminate(true);
 					loadingFrame.setVisible(true);
 					model.getSelectedItem().requestFidelity(fidelityFileChooser.getSelectedFile());
+				} 
+				catch (IOException ex)
+				{
+					ex.printStackTrace();
+				}
+			}
+		});
+		
+		JFileChooser btfFileChooser = new JFileChooser(new File("").getAbsolutePath());
+		
+		btnBTFExport.addActionListener(e ->
+		{
+			btfFileChooser.setDialogTitle("Choose an Export Directory");
+			btfFileChooser.removeChoosableFileFilter(btfFileChooser.getAcceptAllFileFilter());
+			btfFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			
+			if (btfFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				try 
+				{
+					loadingBar.setIndeterminate(true);
+					loadingFrame.setVisible(true);
+					model.getSelectedItem().requestBTF(
+						(Integer)spinnerWidth.getValue(),
+						(Integer)spinnerHeight.getValue(),
+						btfFileChooser.getSelectedFile());
 				} 
 				catch (IOException ex)
 				{

@@ -264,4 +264,11 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	{
 		this.stages.get(this.currentStage).setViewIndexCacheEnabled(viewIndexCacheEnabled);
 	}
+
+	@Override
+	public void requestBTF(int width, int height, File exportPath)
+			throws IOException 
+	{
+		throw new UnsupportedOperationException();
+	}
 }
