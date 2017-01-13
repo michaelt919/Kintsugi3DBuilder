@@ -309,6 +309,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
                 sampleColor.a * geomAtten);
             
 			mat3 tangentToObject = mat3(0.0);
+			
 			vec3 virtualViewDir;
 			if (useTSOverrides)
 			{
@@ -331,7 +332,8 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
                 vec3 virtualLightDir;
 				if (useTSOverrides)
 				{
-					virtualLightDir = normalize(mat3(cameraPoses[index]) * tangentToObject * lightDirTSOverride);
+					virtualLightDir = 
+						normalize(mat3(cameraPoses[index]) * tangentToObject * lightDirTSOverride);
 				}
 				else
 				{
@@ -343,6 +345,11 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
 
                 // Compute sample weight
                 float weight = computeSampleWeight(virtualHalfDir, sampleHalfDir);
+				
+				
+                // float weight = computeSampleWeight(
+					// normalize(vec3(1,1,10) * (transpose(tangentToObject) * virtualHalfDir)), 
+					// normalize(vec3(1,1,10) * (transpose(tangentToObject) * sampleHalfDir)));
 				
 				// float virtualNDotH = dot(normalDirCameraSpace, virtualHalfDir);
 				// float sampleNDotH = dot(normalDirCameraSpace, sampleHalfDir);
@@ -367,7 +374,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
     }
 }
 
-vec3[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
+vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
     vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness)
 {
     float maxLuminance = getMaxLuminance();
@@ -392,16 +399,16 @@ vec3[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
 		}
 	}
     
-    vec3[MAX_VIRTUAL_LIGHT_COUNT] results;
+    vec4[MAX_VIRTUAL_LIGHT_COUNT] results;
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
     {
         if (sums[i].y > 0.0)
         {
-            results[i] = sums[i].rgb / max(0.01, sums[i].a);
+            results[i] = vec4(sums[i].rgb / max(0.01, sums[i].a), sums[i].a);
         }
         else
         {
-            results[i] = vec3(0.0);
+            results[i] = vec4(0.0);
         }
     }
 	return results;
@@ -481,42 +488,42 @@ vec3 sRGBToLinear(vec3 sRGBColor)
 
 vec4 tonemap(vec3 color, float alpha)
 {
-    if (useInverseLuminanceMap)
-    {
-        if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
-        {
-            return vec4(0.0, 0.0, 0.0, 1.0);
-        }
-        else
-        {
-            // Step 1: convert to CIE luminance
-            // Clamp to 1 so that the ratio computed in step 3 is well defined
-            // if the luminance value somehow exceeds 1.0
-            float luminance = getLuminance(color);
-			float maxLuminance = getMaxLuminance();
-			if (luminance >= maxLuminance)
-			{
-				return vec4(linearToSRGB(color / maxLuminance), alpha);
-			}
-			else
-			{
-				float scaledLuminance = min(1.0, luminance / maxLuminance);
+    // if (useInverseLuminanceMap)
+    // {
+        // if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
+        // {
+            // return vec4(0.0, 0.0, 0.0, 1.0);
+        // }
+        // else
+        // {
+            // // Step 1: convert to CIE luminance
+            // // Clamp to 1 so that the ratio computed in step 3 is well defined
+            // // if the luminance value somehow exceeds 1.0
+            // float luminance = getLuminance(color);
+			// float maxLuminance = getMaxLuminance();
+			// if (luminance >= maxLuminance)
+			// {
+				// return vec4(linearToSRGB(color / maxLuminance), alpha);
+			// }
+			// else
+			// {
+				// float scaledLuminance = min(1.0, luminance / maxLuminance);
 				
-				// Step 2: determine the ratio between the tonemapped and linear luminance
-				// Remove implicit gamma correction from the lookup table
-				float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
-				float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
-				float scale = tonemappedNoGamma / luminance;
+				// // Step 2: determine the ratio between the tonemapped and linear luminance
+				// // Remove implicit gamma correction from the lookup table
+				// float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
+				// float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
+				// float scale = tonemappedNoGamma / luminance;
 					
-				// Step 3: return the color, scaled to have the correct luminance,
-				// but the original saturation and hue.
-				// Step 4: apply gamma correction
-				vec3 colorScaled = color * scale;
-				return vec4(linearToSRGB(colorScaled), alpha);
-			}
-        }
-    }
-    else
+				// // Step 3: return the color, scaled to have the correct luminance,
+				// // but the original saturation and hue.
+				// // Step 4: apply gamma correction
+				// vec3 colorScaled = color * scale;
+				// return vec4(linearToSRGB(colorScaled), alpha);
+			// }
+        // }
+    // }
+    // else
     {
         return vec4(linearToSRGB(color), alpha);
     }
@@ -585,7 +592,7 @@ void main()
         roughness = 0.25; // TODO pass in a default?
     }
     
-    vec3[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
+    vec4[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
 	
 	vec3 ambient = vec3(0.0); // TODO make this an input variable
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
@@ -629,21 +636,22 @@ void main()
                 float nDotH = useTSOverrides ? halfDir.z : dot(normalDir, halfDir);
                 
                 vec3 mfdFresnel;
-                float grazingIntensity = getLuminance(weightedAverages[i] / specularColor);
+                float grazingIntensity = getLuminance(weightedAverages[i].rgb 
+					/ max(vec3(1 / weightedAverages[i].a), specularColor));
                 if (grazingIntensity <= 0.0)
                 {
                     mfdFresnel = vec3(0,0,0);
                 }
                 else
                 {
-                    mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(grazingIntensity), hDotV));
-					//mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
+                    mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i].rgb, vec3(grazingIntensity), hDotV));
+					//mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
                     //mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
 					
 					
 					// The following debug code for visualizing differences between reference and fitted in perceptually linear color space
 					
-					// vec3 reference = max(vec3(0.0), fresnel(weightedAverages[i], vec3(dist(nDotH, roughness)), hDotV));
+					// vec3 reference = max(vec3(0.0), fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
 					// vec3 fitted = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
 					
 					// vec3 referenceXYZ = rgbToXYZ(reference);
