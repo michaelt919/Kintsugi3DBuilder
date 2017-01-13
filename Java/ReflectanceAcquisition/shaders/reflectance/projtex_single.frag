@@ -7,6 +7,7 @@ in vec3 fTangent;
 in vec3 fBitangent;
 
 layout(location = 0) out vec4 fragColor;
+layout(location = 1) out vec4 shadingInfo;
 layout(location = 2) out vec4 projTexCoord;
 
 #include "reflectance_single.glsl"
@@ -36,7 +37,18 @@ void main()
 				discard;
 			}
 		}
-        
+			
         fragColor = vec4(texture(viewImage, projTexCoord.xy).rgb, 1.0);
+	
+		// vec3 view = normalize(getViewVector());
+		// vec3 lightPreNormalized = getLightVector();
+		// vec3 attenuatedLightIntensity = // infiniteLightSources ? lightIntensity : 
+			// lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
+		// vec3 light = normalize(lightPreNormalized);
+		// vec3 halfway = normalize(light + view);
+		// vec3 normal = normalize(fNormal);
+		// shadingInfo = vec4(dot(normal, light), dot(normal, halfway), dot(normal, view), 1.0);
+		
+		// fragColor = vec4(pow(getLinearColor().rgb / attenuatedLightIntensity, vec3(1.0 / gamma)), 1.0);
 	}
 }

@@ -153,7 +153,7 @@ ParameterizedFit adjustFit()
 		vec3 shadingNormalTS = getDiffuseNormalVector();
 		vec3 shadingNormal = tangentToObject * shadingNormalTS;
 		
-		vec3 prevDiffuseColor = vec3(0);//rgbToXYZ(max(vec3(MIN_ALBEDO), getDiffuseColor()));
+		vec3 prevDiffuseColor = rgbToXYZ(max(vec3(MIN_ALBEDO), getDiffuseColor()));
 		vec3 prevSpecularColor = rgbToXYZ(max(vec3(MIN_ALBEDO), getSpecularColor()));
 		float roughness = max(MIN_ROUGHNESS, getRoughness());
 		float roughnessSquared = roughness * roughness;

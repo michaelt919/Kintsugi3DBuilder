@@ -194,7 +194,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	{
 		FramebufferObject<ContextType> mainFBO = 
 			context.getFramebufferObjectBuilder(textureSize / textureSubdiv, textureSize / textureSubdiv)
-				.addColorAttachments(ColorFormat.RGBA32F, 2)
+				.addColorAttachments(ColorFormat.RGBA32F, 3)
 				.createFramebufferObject();
     	Renderable<ContextType> renderable = context.createRenderable(program);
     	
@@ -333,6 +333,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    		
 	    		mainFBO.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 	    		mainFBO.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+	    		mainFBO.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
 	    		mainFBO.clearDepthBuffer();
 	    		renderable.draw(PrimitiveMode.TRIANGLES, mainFBO);
 	    		
@@ -1251,16 +1252,19 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		}
 		
 		void fitImageSpace(Texture<ContextType> viewImages, Texture<ContextType> depthImages, Texture<ContextType> shadowImages, 
-				Texture<ContextType> normalEstimate, Texture<ContextType> roughnessEstimate, SubdivisionRenderingCallback callback) throws IOException
+				Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, Texture<ContextType> roughnessEstimate, SubdivisionRenderingCallback callback) throws IOException
 		{
+			base.renderable.program().setTexture("diffuseEstimate", diffuseEstimate);
 			base.renderable.program().setTexture("normalEstimate", normalEstimate);
 			base.renderable.program().setTexture("roughnessEstimate", roughnessEstimate);
 	    	base.fitImageSpace(framebuffer, viewImages, depthImages, shadowImages, callback);
 		}
 		
-		void fitTextureSpace(File preprocessDirectory, Texture<ContextType> normalEstimate, Texture<ContextType> roughnessEstimate, SubdivisionRenderingCallback callback)
+		void fitTextureSpace(File preprocessDirectory, Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, Texture<ContextType> roughnessEstimate,
+				SubdivisionRenderingCallback callback)
 			throws IOException
 		{
+			base.renderable.program().setTexture("diffuseEstimate", diffuseEstimate);
 			base.renderable.program().setTexture("normalEstimate", normalEstimate);
 			base.renderable.program().setTexture("roughnessEstimate", roughnessEstimate);
 	    	base.fitTextureSpace(framebuffer, preprocessDirectory, callback);
@@ -1473,6 +1477,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    				try
 	    				{
 	    					framebuffer.saveColorBufferToFile(0, "PNG", new File(viewDir, String.format("r%04dc%04d.png", row, col)));
+	    					if (DEBUG)
+	    					{
+	    						framebuffer.saveColorBufferToFile(1, "PNG", new File(viewDir, String.format("geomInfo_r%04dc%04d.png", row, col)));
+	    					}
 	    				}
 	    				catch (IOException e)
 	    				{
@@ -1875,7 +1883,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	}
 		
 		context.enableDepthTest();
-    	context.enableBackFaceCulling();
+    	//context.enableBackFaceCulling();
     	
     	try
     	{
@@ -2057,7 +2065,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					
 					for (int i = 0; i < roughnessValues.length; i++)
 					{
-						roughnessList.set(i, 0, (float)roughnessValues[i]);
+						roughnessList.set(i, 0, Math.max(0.125f, (float)roughnessValues[i]));
 					}
 					
 					if (roughnessValues != null)
@@ -2097,6 +2105,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				    	{
 				    		final FramebufferObject<ContextType> currentFramebuffer = backFramebuffer;
 				    		specularFit.fitTextureSpace(tmpDir, 
+			    				SKIP_DIFFUSE_FIT ? frontFramebuffer.getColorAttachmentTexture(0) : diffuseFitFramebuffer.getColorAttachmentTexture(0),
 			    				SKIP_DIFFUSE_FIT ? frontFramebuffer.getColorAttachmentTexture(1) : diffuseFitFramebuffer.getColorAttachmentTexture(3), 
 			    				roughnessTexture,
 			    				(row, col) ->
@@ -2114,7 +2123,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				    	else
 				    	{
 				    		specularFit.fitImageSpace(viewTextures, depthTextures, shadowTextures, 
-				    				SKIP_DIFFUSE_FIT ? frontFramebuffer.getColorAttachmentTexture(1) : diffuseFitFramebuffer.getColorAttachmentTexture(3), 
+			    				SKIP_DIFFUSE_FIT ? frontFramebuffer.getColorAttachmentTexture(0) : diffuseFitFramebuffer.getColorAttachmentTexture(0),
+			    				SKIP_DIFFUSE_FIT ? frontFramebuffer.getColorAttachmentTexture(1) : diffuseFitFramebuffer.getColorAttachmentTexture(3), 
 			    				roughnessTexture, 
 			    				(row, col) -> 
 		    					{
@@ -2244,13 +2254,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				    		
 				    		context.finish();
 				    		
-	//			    		//if (i % 32 == 0)
-	//				    	{
-	//					    	backFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse-test1.png"));
-	//				    		backFramebuffer.saveColorBufferToFile(1, "PNG", new File(textureDirectory, "normal-test1.png"));
-	//				    		backFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "specular-test1.png"));
-	//				    		backFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-test1.png"));
-	//				    	}
+				    		if (i % 32 == 0)
+					    	{
+						    	backFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse-test1.png"));
+					    		backFramebuffer.saveColorBufferToFile(1, "PNG", new File(textureDirectory, "normal-test1.png"));
+					    		backFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "specular-test1.png"));
+					    		backFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-test1.png"));
+					    	}
 				    		
 				    		backErrorFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 				    		
@@ -2289,10 +2299,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				    		
 				    		context.finish();
 				    		
-	//			    		//if (i % 32 == 0)
-	//				    	{
-	//					    	backErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "error-mask-test.png"));
-	//				    	}
+				    		if (i % 32 == 0)
+					    	{
+						    	backErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "error-mask-test.png"));
+					    	}
 				    		
 				    		tmp = frontErrorFramebuffer;
 				    		frontErrorFramebuffer = backErrorFramebuffer;
@@ -2307,13 +2317,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				    		finalizeRenderable.draw(PrimitiveMode.TRIANGLE_FAN, frontFramebuffer);
 				    		context.finish();
 	
-	//			    		//if (i % 32 == 0)
-	//				    	{
-	//				    		frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse-test2.png"));
-	//				    		frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(textureDirectory, "normal-test2.png"));
-	//				    		frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "specular-test2.png"));
-	//				    		frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-test2.png"));
-	//				    	}
+				    		if (i % 32 == 0)
+					    	{
+					    		frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(textureDirectory, "diffuse-test2.png"));
+					    		frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(textureDirectory, "normal-test2.png"));
+					    		frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "specular-test2.png"));
+					    		frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(textureDirectory, "roughness-test2.png"));
+					    	}
 				    		
 				    		System.out.println("Iteration " + (i+1) + " complete.");
 						}
