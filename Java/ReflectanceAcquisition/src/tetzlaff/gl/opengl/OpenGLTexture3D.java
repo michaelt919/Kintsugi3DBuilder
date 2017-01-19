@@ -321,6 +321,9 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 				}
 			}
 		}
+
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+		this.context.openGLErrorCheck();
 		
 		glTexSubImage3D(this.getOpenGLTextureTarget(), 0, 0, 0, layerIndex, img.getWidth(), img.getHeight(), 1, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
 		this.context.openGLErrorCheck();
@@ -396,6 +399,9 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 				}
 			}
 		}
+
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+		this.context.openGLErrorCheck();
 		
 		glTexSubImage3D(this.getOpenGLTextureTarget(), 0, 0, 0, layerIndex, colorImg.getWidth(), colorImg.getHeight(), 1, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
 		this.context.openGLErrorCheck();

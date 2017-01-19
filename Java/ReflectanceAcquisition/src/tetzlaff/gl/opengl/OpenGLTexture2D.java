@@ -367,6 +367,30 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		this.bind();
 		this.width = width;
 		this.height = height;
+		
+		if (type == GL_UNSIGNED_SHORT_5_6_5 || type == GL_UNSIGNED_SHORT_5_6_5_REV || type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+				 type == GL_UNSIGNED_SHORT_4_4_4_4_REV || type == GL_UNSIGNED_SHORT_5_5_5_1 || type == GL_UNSIGNED_SHORT_1_5_5_5_REV)
+		{
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
+			this.context.openGLErrorCheck();
+		}
+		else if (format == GL_RGBA || format == GL_BGRA || format == GL_RGBA_INTEGER || format == GL_RGBA_INTEGER || type == GL_UNSIGNED_INT || type == GL_INT || type == GL_FLOAT ||
+				type == GL_UNSIGNED_INT_8_8_8_8 || type == GL_UNSIGNED_INT_8_8_8_8_REV || type == GL_UNSIGNED_INT_10_10_10_2 || type == GL_UNSIGNED_INT_2_10_10_10_REV)
+		{
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+			this.context.openGLErrorCheck();
+		}
+		else if (type == GL_UNSIGNED_SHORT || type == GL_SHORT)
+		{
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
+			this.context.openGLErrorCheck();
+		}
+		else
+		{
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			this.context.openGLErrorCheck();
+		}
+		
 		glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, type, buffer);
 		this.context.openGLErrorCheck();
 		this.init(useLinearFiltering, useMipmaps);

@@ -2175,8 +2175,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    				frontErrorFramebuffer.getColorAttachmentTexture(0),
 			    				(row, col) ->
 			    				{
-		    	    	    		System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
-		    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//		    	    	    		System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
+//		    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
 			    				});
 				    	}
 				    	else
@@ -2191,8 +2191,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    				frontErrorFramebuffer.getColorAttachmentTexture(0),
 			    				(row, col) -> 
 		    					{
-		    						System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
-		    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//		    						System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
+//		    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
 		    					});
 				    	}
 			    		
@@ -2231,8 +2231,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	//			    					currentFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize, 
 	//		    	    		        		"PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
 			    	    	    		
-			    	    	    		System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
-			    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//			    	    	    		System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
+//			    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
 				    				});
 					    	}
 					    	else
@@ -2247,8 +2247,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				    				frontErrorFramebuffer.getColorAttachmentTexture(0),
 				    				(row, col) -> 
 			    					{
-			    						System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
-			    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//			    						System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
+//			    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
 			    					});
 					    	}
 				    		
@@ -2276,8 +2276,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				    				frontErrorFramebuffer.getColorAttachmentTexture(0),
 				    				(row, col) ->
 				    				{
-			    	    	    		System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
-			    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//			    	    	    		System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
+//			    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
 				    				});
 					    	}
 					    	else
@@ -2292,8 +2292,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				    				frontErrorFramebuffer.getColorAttachmentTexture(0),
 				    				(row, col) -> 
 			    					{
-			    						System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
-			    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+//			    						System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" + 
+//			    	    	    				(param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
 			    					});
 					    	}
 				    		
