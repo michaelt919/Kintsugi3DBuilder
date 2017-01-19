@@ -76,6 +76,9 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 	{
 		this.bindForRead(attachmentIndex);
 		ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(width * height * 4);
+
+		glPixelStorei(GL_PACK_ALIGNMENT, 4);
+		this.context.openGLErrorCheck();
 		
 		// use BGRA because due to byte order differences it ends up being ARGB
 		glReadPixels(x, y, width, height, GL_BGRA, GL_UNSIGNED_BYTE, pixelBuffer);
@@ -98,6 +101,9 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 	{
 		this.bindForRead(attachmentIndex);
 		FloatBuffer pixelBuffer = BufferUtils.createFloatBuffer(width * height * 4);
+
+		glPixelStorei(GL_PACK_ALIGNMENT, 4);
+		this.context.openGLErrorCheck();
 		
 		glReadPixels(x, y, width, height, GL_RGBA, GL_FLOAT, pixelBuffer);
 		this.context.openGLErrorCheck();
@@ -163,7 +169,10 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 	public short[] readDepthBuffer(int x, int y, int width, int height)
 	{
 		this.bindForRead(0);
-		ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(width * height * 4);
+		ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(width * height * 2);
+
+		glPixelStorei(GL_PACK_ALIGNMENT, 2);
+		this.context.openGLErrorCheck();
 		
 		glReadPixels(x, y, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, pixelBuffer);
 		this.context.openGLErrorCheck();

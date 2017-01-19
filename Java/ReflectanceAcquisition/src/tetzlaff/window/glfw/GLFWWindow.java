@@ -101,7 +101,10 @@ public class GLFWWindow extends OpenGLContext implements Window, EventPollable
         
         GL.createCapabilities(); // Make a valid OpenGL Context
         System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
-        System.out.println("LWJGL version: " + Version.getVersion());
+        System.out.println("LWJGL version: " + 
+        		String.valueOf(Version.VERSION_MAJOR) + '.' + Version.VERSION_MINOR + '.' + Version.VERSION_REVISION + 
+        		(Version.BUILD_TYPE == Version.BuildType.ALPHA ? "a" : Version.BUILD_TYPE == Version.BuildType.BETA ? "b" : "")
+        		/*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
         System.out.println("GLFW version: " + glfwGetVersionString());
         
         if (multisamples > 0)
