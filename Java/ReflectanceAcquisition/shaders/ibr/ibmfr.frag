@@ -168,7 +168,7 @@ float dist(float nDotH, float roughness)
 
 float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
 {
-	return min(1000000, 1.0 / (1.0 - pow(max(0.0, dot(targetDir, sampleDir)), weightExponent)) - 1.0);
+	return 1.0 / max(0.000001, 1.0 - pow(max(0.0, dot(targetDir, sampleDir)), weightExponent)) - 1.0;
 }
 
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float maxLuminance)
@@ -488,42 +488,42 @@ vec3 sRGBToLinear(vec3 sRGBColor)
 
 vec4 tonemap(vec3 color, float alpha)
 {
-    // if (useInverseLuminanceMap)
-    // {
-        // if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
-        // {
-            // return vec4(0.0, 0.0, 0.0, 1.0);
-        // }
-        // else
-        // {
-            // // Step 1: convert to CIE luminance
-            // // Clamp to 1 so that the ratio computed in step 3 is well defined
-            // // if the luminance value somehow exceeds 1.0
-            // float luminance = getLuminance(color);
-			// float maxLuminance = getMaxLuminance();
-			// if (luminance >= maxLuminance)
-			// {
-				// return vec4(linearToSRGB(color / maxLuminance), alpha);
-			// }
-			// else
-			// {
-				// float scaledLuminance = min(1.0, luminance / maxLuminance);
+    if (useInverseLuminanceMap)
+    {
+        if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
+        {
+            return vec4(0.0, 0.0, 0.0, 1.0);
+        }
+        else
+        {
+            // Step 1: convert to CIE luminance
+            // Clamp to 1 so that the ratio computed in step 3 is well defined
+            // if the luminance value somehow exceeds 1.0
+            float luminance = getLuminance(color);
+			float maxLuminance = getMaxLuminance();
+			if (luminance >= maxLuminance)
+			{
+				return vec4(linearToSRGB(color / maxLuminance), alpha);
+			}
+			else
+			{
+				float scaledLuminance = min(1.0, luminance / maxLuminance);
 				
-				// // Step 2: determine the ratio between the tonemapped and linear luminance
-				// // Remove implicit gamma correction from the lookup table
-				// float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
-				// float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
-				// float scale = tonemappedNoGamma / luminance;
+				// Step 2: determine the ratio between the tonemapped and linear luminance
+				// Remove implicit gamma correction from the lookup table
+				float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
+				float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
+				float scale = tonemappedNoGamma / luminance;
 					
-				// // Step 3: return the color, scaled to have the correct luminance,
-				// // but the original saturation and hue.
-				// // Step 4: apply gamma correction
-				// vec3 colorScaled = color * scale;
-				// return vec4(linearToSRGB(colorScaled), alpha);
-			// }
-        // }
-    // }
-    // else
+				// Step 3: return the color, scaled to have the correct luminance,
+				// but the original saturation and hue.
+				// Step 4: apply gamma correction
+				vec3 colorScaled = color * scale;
+				return vec4(linearToSRGB(colorScaled), alpha);
+			}
+        }
+    }
+    else
     {
         return vec4(linearToSRGB(color), alpha);
     }

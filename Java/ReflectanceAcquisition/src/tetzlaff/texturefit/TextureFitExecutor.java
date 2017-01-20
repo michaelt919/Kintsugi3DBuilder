@@ -41,6 +41,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
 	// Debug parameters
 	private static final boolean DEBUG = false;
+	private static final boolean SKIP_LIGHT_FIT = false;
 	private static final boolean SKIP_DIFFUSE_FIT = false;
 	private static final boolean SKIP_SPECULAR_FIT = false;
 	private static final boolean GCH_2016 = false;
@@ -1711,8 +1712,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	{
 		if (!param.areLightSourcesInfinite())
 		{
-			Vector3 firstLightPosition = viewSet.getLightPosition(0);
-    		if (firstLightPosition == null || firstLightPosition.equals(new Vector3(0.0f, 0.0f, 0.0f)))
+			if (!SKIP_LIGHT_FIT)
 	    	{
 		    	System.out.println("Beginning light fit...");
 		    	
@@ -1773,9 +1773,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		        
 		        lightPositionBuffer = viewSet.getLightPositionBuffer();
 		        lightIntensityBuffer = viewSet.getLightIntensityBuffer();
-		        
-		        //viewSet.setLightPosition(0, lightPosition);
-		        //viewSet.setLightIntensity(0, lightIntensity);
 	    	}
 	        
 //	        if (!param.isImagePreprojectionUseEnabled())
@@ -1900,7 +1897,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	
 	    	// Load textures, generate visibility depth textures, fit light source and generate shadow depth textures
     		double avgDistance = loadTextures();
-	    	fitLightSource(avgDistance);
+    		fitLightSource(avgDistance);
 	    	
 			// Phong regression
 	    	FramebufferObject<ContextType> diffuseFitFramebuffer;

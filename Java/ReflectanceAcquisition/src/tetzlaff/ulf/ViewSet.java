@@ -1437,13 +1437,23 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    PrintStream out = new PrintStream(outputStream);
 	    out.println("# Created by ULF Renderer from PhotoScan XML file");
 
-	    out.println("# Estimated near and far planes");
+	    out.println("\n# Estimated near and far planes");
 	    out.printf("c\t%.8f\t%.8f\n", recommendedNearPlane, recommendedFarPlane);
 	    
-	    out.println("# " + cameraProjectionList.size() + (cameraProjectionList.size()==1?" Sensor":" Sensors"));
+	    out.println("\n# " + cameraProjectionList.size() + (cameraProjectionList.size()==1?" Sensor":" Sensors"));
 	    for (Projection proj : cameraProjectionList)
 	    {
 	        out.println(proj.toVSETString());
+	    }
+	    
+	    if (linearLuminanceValues != null && encodedLuminanceValues != null)
+	    {
+		    out.println("\n# Luminance encoding: Munsell 2/3.5/5.6.5/8/9.5");
+		    out.println("#\tCIE-Y/100\tEncoded");
+		    for(int i = 0; i < linearLuminanceValues.length && i < encodedLuminanceValues.length; i++)
+		    {
+		    	out.printf("e\t%.8f\t\t%3d\n", linearLuminanceValues[i], 0x00FF & encodedLuminanceValues[i]);
+		    }
 	    }
 	
 	    out.println("\n# " + cameraPoseList.size() + (cameraPoseList.size()==1?" Camera":" Cameras"));
