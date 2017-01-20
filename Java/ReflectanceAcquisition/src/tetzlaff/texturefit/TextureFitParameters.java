@@ -20,7 +20,7 @@ public class TextureFitParameters
 	// Diffuse fitting parameters
 	private float diffuseDelta = 0.1f;
 	private int diffuseIterations = 16;
-	private float diffuseComputedNormalWeight = 1.0f;
+	private float diffuseComputedNormalWeight = 0.0f;
 	private float diffuseInputNormalWeight = Float.MAX_VALUE;
 	
 	// Specular fitting parameters

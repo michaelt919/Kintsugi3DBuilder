@@ -616,7 +616,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	
 	    	this.resampleSetupCallback.accept(targetViewSet.getCameraPose(i));
 	    	
-	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
 	    	framebuffer.clearDepthBuffer();
 	    	
 	    	mainRenderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
