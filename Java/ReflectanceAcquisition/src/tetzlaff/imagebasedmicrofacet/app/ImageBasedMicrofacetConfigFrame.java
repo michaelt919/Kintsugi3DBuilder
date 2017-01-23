@@ -28,14 +28,19 @@ import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.Context;
+import tetzlaff.gl.helpers.LightController;
 import tetzlaff.ulf.ULFDrawable;
 import tetzlaff.ulf.ULFListModel;
 import tetzlaff.ulf.ULFLoadOptions;
 import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFMorphRenderer;
 import tetzlaff.ulf.ViewSetImageOptions;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+
+import javax.swing.JTabbedPane;
+import javax.swing.JColorChooser;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
@@ -45,7 +50,8 @@ import java.awt.event.ActionEvent;
  * 
  * @author Seth Berrier
  */
-public class ImageBasedMicrofacetConfigFrame extends JFrame {
+public class ImageBasedMicrofacetConfigFrame extends JFrame 
+{
 
 	private static final long serialVersionUID = 3234328215460573228L;
 
@@ -64,20 +70,36 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public <ContextType extends Context<ContextType>> ImageBasedMicrofacetConfigFrame(ULFListModel<ContextType> model, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> ImageBasedMicrofacetConfigFrame(ULFListModel<ContextType> model, LightController lightController, boolean isHighDPI)
 	{		
 		setResizable(false);
 		setTitle("Light Field Config");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(10, 10, 332, 539);
+		setBounds(10, 10, 940, 539);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
+		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.X_AXIS));
+
+		JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
+		
+		// Create a separate loading window positioned over the GLFW window with
+		// nothing but an infinite progress bar.  Make it undecorated.
+		JFrame loadingFrame = new JFrame("Loading...");
+		loadingFrame.setUndecorated(true);
+		JProgressBar loadingBar = new JProgressBar();
+		loadingBar.setIndeterminate(true);
+		loadingFrame.getContentPane().add(loadingBar);
+		loadingFrame.pack();
+		loadingFrame.setLocationRelativeTo(null);
+		
+		JPanel panel_2 = new JPanel();
+		contentPane.add(panel_2);
+		panel_2.setLayout(new BoxLayout(panel_2, BoxLayout.Y_AXIS));
 		
 		JPanel loadingPanel = new JPanel();
+		panel_2.add(loadingPanel);
 		loadingPanel.setBorder(new TitledBorder(null, "Load Options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		contentPane.add(loadingPanel);
 		GridBagLayout gbl_loadingPanel = new GridBagLayout();
 		gbl_loadingPanel.columnWidths = new int[] {140, 140};
 		gbl_loadingPanel.rowHeights = new int[] {0, 0, 0, 0};
@@ -159,12 +181,12 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		lblX_1.setLabelFor(spinnerDepthHeight);
 		spinnerDepthHeight.setEnabled(false);
 		spinnerDepthHeight.setModel(new SpinnerNumberModel(new Integer(1024), new Integer(1), null, new Integer(1)));
-		GridBagConstraints gbc_spinner_1 = new GridBagConstraints();
-		gbc_spinner_1.fill = GridBagConstraints.HORIZONTAL;
-		gbc_spinner_1.insets = new Insets(0, 0, 0, 5);
-		gbc_spinner_1.gridx = 3;
-		gbc_spinner_1.gridy = 1;
-		panel.add(spinnerDepthHeight, gbc_spinner_1);
+		GridBagConstraints gbc_spinnerDepthHeight = new GridBagConstraints();
+		gbc_spinnerDepthHeight.fill = GridBagConstraints.HORIZONTAL;
+		gbc_spinnerDepthHeight.insets = new Insets(0, 0, 0, 5);
+		gbc_spinnerDepthHeight.gridx = 3;
+		gbc_spinnerDepthHeight.gridy = 1;
+		panel.add(spinnerDepthHeight, gbc_spinnerDepthHeight);
 				
 		JButton btnLoadSingle = new JButton("Load Single...");
 		GridBagConstraints gbc_btnLoadSingle = new GridBagConstraints();
@@ -184,9 +206,9 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		btnLoadMultiple.setToolTipText("Load multiple objects");
 		
 		JPanel selectionPanel = new JPanel();
+		panel_2.add(selectionPanel);
 		selectionPanel.setToolTipText("Options for loading and changing the current object");
 		selectionPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Model Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		contentPane.add(selectionPanel);
 		GridBagLayout gbl_selectionPanel = new GridBagLayout();
 		gbl_selectionPanel.columnWidths = new int[] {0, 0, 0};
 		gbl_selectionPanel.rowHeights = new int[] {0, 0};
@@ -213,19 +235,10 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		gbc_sliderObjects.gridy = 1;
 		selectionPanel.add(sliderObjects, gbc_sliderObjects);
 		
-		// Add listener for changes to the morph slider.
-		sliderObjects.addChangeListener(e ->
-		{
-			if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
-			{
-				((ULFMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(sliderObjects.getValue());
-			}
-		});
-		
 		JPanel renderingOptionsPanel = new JPanel();
+		panel_2.add(renderingOptionsPanel);
 		renderingOptionsPanel.setToolTipText("Options to control the ULF rendering algorithm");
 		renderingOptionsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Rendering Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		contentPane.add(renderingOptionsPanel);
 		GridBagLayout gbl_renderingOptionsPanel = new GridBagLayout();
 		gbl_renderingOptionsPanel.columnWidths = new int[]{0, 0, 0, 0, 0};
 		gbl_renderingOptionsPanel.rowHeights = new int[]{0, 0, 0, 0, 0};
@@ -315,8 +328,8 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		renderingOptionsPanel.add(spinnerOccBias, gbc_spinnerOccBias);
 		
 		JPanel qualitySettings = new JPanel();
+		panel_2.add(qualitySettings);
 		qualitySettings.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Quality Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		contentPane.add(qualitySettings);
 		GridBagLayout gbl_qualitySettings = new GridBagLayout();
 		gbl_qualitySettings.columnWidths = new int[]{0, 0, 0};
 		gbl_qualitySettings.rowHeights = new int[]{0, 0};
@@ -340,13 +353,13 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		qualitySettings.add(chckbxMultisampling, gbc_chckbxMultisampling);
 		
 		JPanel resamplePanel = new JPanel();
+		panel_2.add(resamplePanel);
 		resamplePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Resample Light Field", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		contentPane.add(resamplePanel);
 		GridBagLayout gbl_resamplePanel = new GridBagLayout();
 		gbl_resamplePanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0};
-		gbl_resamplePanel.rowHeights = new int[]{0, 0, 0, 0, 0};
-		gbl_resamplePanel.columnWeights = new double[]{0.0, 1.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
-		gbl_resamplePanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_resamplePanel.rowHeights = new int[] {0, 0};
+		gbl_resamplePanel.columnWeights = new double[]{1.0, 1.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+		gbl_resamplePanel.rowWeights = new double[]{0.0, 1.0};
 		resamplePanel.setLayout(gbl_resamplePanel);
 		
 		JLabel lblNewDimensions = new JLabel("New Dimensions:");
@@ -376,54 +389,214 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 		JSpinner spinnerHeight = new JSpinner(new SpinnerNumberModel(1024, 1, 8192, 1));
 		spinnerHeight.setToolTipText("New view height");
 		GridBagConstraints gbc_spinnerHeight = new GridBagConstraints();
-		gbc_spinnerHeight.insets = new Insets(0, 0, 5, 0);
+		gbc_spinnerHeight.gridwidth = 2;
+		gbc_spinnerHeight.insets = new Insets(0, 0, 5, 5);
 		gbc_spinnerHeight.fill = GridBagConstraints.HORIZONTAL;
-		gbc_spinnerHeight.gridx = 4;
+		gbc_spinnerHeight.gridx = 3;
 		gbc_spinnerHeight.gridy = 0;
 		resamplePanel.add(spinnerHeight, gbc_spinnerHeight);
 		
+		JPanel panel_1 = new JPanel();
+		panel_1.setBorder(null);
+		GridBagConstraints gbc_panel_1 = new GridBagConstraints();
+		gbc_panel_1.gridwidth = 5;
+		gbc_panel_1.insets = new Insets(0, 0, 5, 5);
+		gbc_panel_1.fill = GridBagConstraints.VERTICAL;
+		gbc_panel_1.gridx = 0;
+		gbc_panel_1.gridy = 1;
+		resamplePanel.add(panel_1, gbc_panel_1);
+		panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.X_AXIS));
+		
 		JButton btnResample = new JButton("Resample");
+		panel_1.add(btnResample);
 		btnResample.setToolTipText("Resample all images of the currently active object to the above dimensions");
-		GridBagConstraints gbc_btnResample = new GridBagConstraints();
-		gbc_btnResample.insets = new Insets(0, 0, 5, 0);
-		gbc_btnResample.anchor = GridBagConstraints.EAST;
-		gbc_btnResample.gridwidth = 5;
-		gbc_btnResample.gridx = 0;
-		gbc_btnResample.gridy = 1;
-		resamplePanel.add(btnResample, gbc_btnResample);
 		
 		JButton btnFidelity = new JButton("Fidelity Metric");
+		panel_1.add(btnFidelity);
 		btnFidelity.setToolTipText("Evaluate the fidelity of the image-based sampling.");
-		GridBagConstraints gbc_btnFidelity = new GridBagConstraints();
-		gbc_btnFidelity.insets = new Insets(0, 0, 5, 0);
-		gbc_btnFidelity.anchor = GridBagConstraints.EAST;
-		gbc_btnFidelity.gridwidth = 5;
-		gbc_btnFidelity.gridx = 0;
-		gbc_btnFidelity.gridy = 2;
-		resamplePanel.add(btnFidelity, gbc_btnFidelity);
 		
 		JButton btnBTFExport = new JButton("Export BTF");		
+		panel_1.add(btnBTFExport);
 		btnBTFExport.setToolTipText("Evaluate the fidelity of the image-based sampling.");
-		GridBagConstraints gbc_button = new GridBagConstraints();
-		gbc_button.anchor = GridBagConstraints.EAST;
-		gbc_button.gridwidth = 5;
-		gbc_button.insets = new Insets(0, 0, 0, 5);
-		gbc_button.gridx = 0;
-		gbc_button.gridy = 3;
-		resamplePanel.add(btnBTFExport, gbc_button);
-
+		
+		JPanel panel_3 = new JPanel();
+		contentPane.add(panel_3);
+		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		panel_3.add(tabbedPane);
+		
+		JPanel panel_4 = new JPanel();
+		tabbedPane.addTab("Light 0", null, panel_4, null);
+		GridBagLayout gbl_panel_4 = new GridBagLayout();
+		gbl_panel_4.columnWidths = new int[] {100, 100, 0};
+		gbl_panel_4.rowHeights = new int[] {329, 0};
+		gbl_panel_4.columnWeights = new double[]{0.0};
+		gbl_panel_4.rowWeights = new double[]{0.0, 0.0};
+		panel_4.setLayout(gbl_panel_4);
+		
+		JColorChooser light0ColorChooser = new JColorChooser();
+		GridBagConstraints gbc_light0ColorChooser = new GridBagConstraints();
+		gbc_light0ColorChooser.insets = new Insets(0, 0, 5, 0);
+		gbc_light0ColorChooser.gridwidth = 3;
+		gbc_light0ColorChooser.anchor = GridBagConstraints.NORTHWEST;
+		gbc_light0ColorChooser.gridx = 0;
+		gbc_light0ColorChooser.gridy = 0;
+		panel_4.add(light0ColorChooser, gbc_light0ColorChooser);
+		
+		JLabel lblLightIntensity = new JLabel("Light Intensity:");
+		GridBagConstraints gbc_lblLightIntensity = new GridBagConstraints();
+		gbc_lblLightIntensity.insets = new Insets(0, 0, 0, 5);
+		gbc_lblLightIntensity.gridx = 0;
+		gbc_lblLightIntensity.gridy = 1;
+		panel_4.add(lblLightIntensity, gbc_lblLightIntensity);
+		
+		JSpinner light0IntensitySpinner = new JSpinner();
+		light0IntensitySpinner.setModel(new SpinnerNumberModel(1.0, 0.0, 100.0, 0.05));
+		GridBagConstraints gbc_light0IntensitySpinner = new GridBagConstraints();
+		gbc_light0IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_light0IntensitySpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_light0IntensitySpinner.gridx = 1;
+		gbc_light0IntensitySpinner.gridy = 1;
+		panel_4.add(light0IntensitySpinner, gbc_light0IntensitySpinner);
+		
+		JPanel panel_5 = new JPanel();
+		tabbedPane.addTab("Light 1", null, panel_5, null);
+		GridBagLayout gbl_panel_5 = new GridBagLayout();
+		gbl_panel_5.columnWidths = new int[]{100, 100, 0, 0};
+		gbl_panel_5.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_5.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_5.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		panel_5.setLayout(gbl_panel_5);
+		
+		JColorChooser light1ColorChooser = new JColorChooser();
+		GridBagConstraints gbc_light1ColorChooser = new GridBagConstraints();
+		gbc_light1ColorChooser.anchor = GridBagConstraints.NORTHWEST;
+		gbc_light1ColorChooser.gridwidth = 3;
+		gbc_light1ColorChooser.insets = new Insets(0, 0, 5, 0);
+		gbc_light1ColorChooser.gridx = 0;
+		gbc_light1ColorChooser.gridy = 0;
+		panel_5.add(light1ColorChooser, gbc_light1ColorChooser);
+		
+		JLabel label_1 = new JLabel("Light Intensity:");
+		GridBagConstraints gbc_label_1 = new GridBagConstraints();
+		gbc_label_1.insets = new Insets(0, 0, 0, 5);
+		gbc_label_1.gridx = 0;
+		gbc_label_1.gridy = 1;
+		panel_5.add(label_1, gbc_label_1);
+		
+		JSpinner light1IntensitySpinner = new JSpinner();
+		light1IntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 100.0, 0.05));
+		GridBagConstraints gbc_light1IntensitySpinner = new GridBagConstraints();
+		gbc_light1IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_light1IntensitySpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_light1IntensitySpinner.gridx = 1;
+		gbc_light1IntensitySpinner.gridy = 1;
+		panel_5.add(light1IntensitySpinner, gbc_light1IntensitySpinner);
+		
+		JPanel panel_6 = new JPanel();
+		tabbedPane.addTab("Light 2", null, panel_6, null);
+		GridBagLayout gbl_panel_6 = new GridBagLayout();
+		gbl_panel_6.columnWidths = new int[]{100, 100, 0, 0};
+		gbl_panel_6.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_6.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_6.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		panel_6.setLayout(gbl_panel_6);
+		
+		JColorChooser light2ColorChooser = new JColorChooser();
+		GridBagConstraints gbc_light2ColorChooser = new GridBagConstraints();
+		gbc_light2ColorChooser.anchor = GridBagConstraints.NORTHWEST;
+		gbc_light2ColorChooser.gridwidth = 3;
+		gbc_light2ColorChooser.insets = new Insets(0, 0, 5, 0);
+		gbc_light2ColorChooser.gridx = 0;
+		gbc_light2ColorChooser.gridy = 0;
+		panel_6.add(light2ColorChooser, gbc_light2ColorChooser);
+		
+		JLabel label_2 = new JLabel("Light Intensity:");
+		GridBagConstraints gbc_label_2 = new GridBagConstraints();
+		gbc_label_2.insets = new Insets(0, 0, 0, 5);
+		gbc_label_2.gridx = 0;
+		gbc_label_2.gridy = 1;
+		panel_6.add(label_2, gbc_label_2);
+		
+		JSpinner light2IntensitySpinner = new JSpinner();
+		light2IntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 100.0, 0.05));
+		GridBagConstraints gbc_light2IntensitySpinner = new GridBagConstraints();
+		gbc_light2IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_light2IntensitySpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_light2IntensitySpinner.gridx = 1;
+		gbc_light2IntensitySpinner.gridy = 1;
+		panel_6.add(light2IntensitySpinner, gbc_light2IntensitySpinner);
+		
+		JPanel panel_7 = new JPanel();
+		tabbedPane.addTab("Light 3", null, panel_7, null);
+		GridBagLayout gbl_panel_7 = new GridBagLayout();
+		gbl_panel_7.columnWidths = new int[]{100, 100, 0, 0};
+		gbl_panel_7.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_7.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_7.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		panel_7.setLayout(gbl_panel_7);
+		
+		JColorChooser light3ColorChooser = new JColorChooser();
+		GridBagConstraints gbc_light3ColorChooser = new GridBagConstraints();
+		gbc_light3ColorChooser.anchor = GridBagConstraints.NORTHWEST;
+		gbc_light3ColorChooser.gridwidth = 3;
+		gbc_light3ColorChooser.insets = new Insets(0, 0, 5, 0);
+		gbc_light3ColorChooser.gridx = 0;
+		gbc_light3ColorChooser.gridy = 0;
+		panel_7.add(light3ColorChooser, gbc_light3ColorChooser);
+		
+		JLabel label_3 = new JLabel("Light Intensity:");
+		GridBagConstraints gbc_label_3 = new GridBagConstraints();
+		gbc_label_3.insets = new Insets(0, 0, 0, 5);
+		gbc_label_3.gridx = 0;
+		gbc_label_3.gridy = 1;
+		panel_7.add(label_3, gbc_label_3);
+		
+		JSpinner light3IntensitySpinner = new JSpinner();
+		light3IntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 100.0, 0.05));
+		GridBagConstraints gbc_light3IntensitySpinner = new GridBagConstraints();
+		gbc_light3IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_light3IntensitySpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_light3IntensitySpinner.gridx = 1;
+		gbc_light3IntensitySpinner.gridy = 1;
+		panel_7.add(light3IntensitySpinner, gbc_light3IntensitySpinner);
+		
+		JPanel panel_8 = new JPanel();
+		tabbedPane.addTab("Ambient Light", null, panel_8, null);
+		GridBagLayout gbl_panel_8 = new GridBagLayout();
+		gbl_panel_8.columnWidths = new int[]{100, 100, 0, 0};
+		gbl_panel_8.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_8.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_8.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		panel_8.setLayout(gbl_panel_8);
+		
+		JColorChooser ambientColorChooser = new JColorChooser();
+		GridBagConstraints gbc_ambientColorChooser = new GridBagConstraints();
+		gbc_ambientColorChooser.anchor = GridBagConstraints.NORTHWEST;
+		gbc_ambientColorChooser.gridwidth = 3;
+		gbc_ambientColorChooser.insets = new Insets(0, 0, 5, 0);
+		gbc_ambientColorChooser.gridx = 0;
+		gbc_ambientColorChooser.gridy = 0;
+		panel_8.add(ambientColorChooser, gbc_ambientColorChooser);
+		
+		JLabel label_4 = new JLabel("Light Intensity:");
+		GridBagConstraints gbc_label_4 = new GridBagConstraints();
+		gbc_label_4.insets = new Insets(0, 0, 0, 5);
+		gbc_label_4.gridx = 0;
+		gbc_label_4.gridy = 1;
+		panel_8.add(label_4, gbc_label_4);
+		
+		JSpinner ambientIntensitySpinner = new JSpinner();
+		ambientIntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.01));
+		GridBagConstraints gbc_ambientIntensitySpinner = new GridBagConstraints();
+		gbc_ambientIntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_ambientIntensitySpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_ambientIntensitySpinner.gridx = 1;
+		gbc_ambientIntensitySpinner.gridy = 1;
+		panel_8.add(ambientIntensitySpinner, gbc_ambientIntensitySpinner);
+		
 		// Set the combo box model to the parameter
 		if(model != null) { comboBoxObjects.setModel(model); }
-		
-		// Create a separate loading window positioned over the GLFW window with
-		// nothing but an infinite progress bar.  Make it undecorated.
-		JFrame loadingFrame = new JFrame("Loading...");
-		loadingFrame.setUndecorated(true);
-		JProgressBar loadingBar = new JProgressBar();
-		loadingBar.setIndeterminate(true);
-		loadingFrame.getContentPane().add(loadingBar);
-		loadingFrame.pack();
-		loadingFrame.setLocationRelativeTo(null);
 		
 		// Set initial values from the 'model' parameter
 		if (model == null || model.getSelectedItem() == null)
@@ -449,6 +622,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 			spinnerHeight.setEnabled(false);
 			btnResample.setEnabled(false);
 			btnFidelity.setEnabled(false);
+			btnBTFExport.setEnabled(false);
 		}
 		else
 		{
@@ -472,6 +646,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 			spinnerHeight.setEnabled(true);
 			btnResample.setEnabled(true);
 			btnFidelity.setEnabled(true);
+			btnBTFExport.setEnabled(true);
 			
 			spinnerGamma.setValue(model.getSelectedItem().getGamma());
 			spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
@@ -483,10 +658,208 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 			chckbxHalfRes.setSelected(isHighDPI);
 		}
 		
+		btnBTFExport.addActionListener(e ->
+		{
+			fileChooser.setDialogTitle("Choose an Export Directory");
+			fileChooser.resetChoosableFileFilters();
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			
+			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				try 
+				{
+					loadingBar.setIndeterminate(true);
+					loadingFrame.setVisible(true);
+					model.getSelectedItem().requestBTF(
+						(Integer)spinnerWidth.getValue(),
+						(Integer)spinnerHeight.getValue(),
+						fileChooser.getSelectedFile());
+				} 
+				catch (IOException ex)
+				{
+					ex.printStackTrace();
+				}
+			}
+		});
+		
+		// Add listener for the 'resample' button to generate new vies for the current light field.
+		btnFidelity.addActionListener(e -> 
+		{
+			fileChooser.setDialogTitle("Choose an Export Directory");
+			fileChooser.resetChoosableFileFilters();
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			
+			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				try 
+				{
+					loadingBar.setIndeterminate(true);
+					loadingFrame.setVisible(true);
+					model.getSelectedItem().requestFidelity(fileChooser.getSelectedFile());
+				} 
+				catch (IOException ex)
+				{
+					ex.printStackTrace();
+				}
+			}
+		});
+		
+		// Add listener for the 'resample' button to generate new vies for the current light field.
+		btnResample.addActionListener(e -> 
+		{
+			fileChooser.setDialogTitle("Choose a Target VSET File");
+			fileChooser.resetChoosableFileFilters();
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
+			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				JFileChooser exportFileChooser = new JFileChooser(fileChooser.getSelectedFile().getParentFile());
+				exportFileChooser.setDialogTitle("Choose an Export Directory");
+				exportFileChooser.removeChoosableFileFilter(exportFileChooser.getAcceptAllFileFilter());
+				exportFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				
+				if (exportFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+				{
+					try 
+					{
+						loadingBar.setIndeterminate(true);
+						loadingFrame.setVisible(true);
+						model.getSelectedItem().requestResample(
+							(Integer)spinnerWidth.getValue(),
+							(Integer)spinnerHeight.getValue(), 
+							fileChooser.getSelectedFile(), 
+							exportFileChooser.getSelectedFile());
+					} 
+					catch (IOException ex)
+					{
+						ex.printStackTrace();
+					}
+				}
+			}
+		});
+		
+		// Add listener for changes to half resolution checkbox.
+		chckbxHalfRes.addChangeListener(e ->
+		{
+			model.getSelectedItem().setHalfResolution(chckbxHalfRes.isSelected());
+		});
+		
+		// Add listener for changes to multisampling checkbox.
+		chckbxMultisampling.addChangeListener(e ->
+		{
+			model.getSelectedItem().setMultisampling(chckbxMultisampling.isSelected());
+		});
+		
+		// Add listener for changes to the gamma spinner.
+		spinnerGamma.addChangeListener(e ->
+		{
+			model.getSelectedItem().setGamma((float)(double)(Double)spinnerGamma.getModel().getValue());
+		});
+		
+		// Add listener for changes to the alpha weight spinner.
+		spinnerExponent.addChangeListener(e ->
+		{
+			model.getSelectedItem().setWeightExponent((float)(double)(Double)spinnerExponent.getModel().getValue());
+		});
+		
+		// Add listener for changes to occlusion checkbox.
+		chckbxOcclusion.addChangeListener(e ->
+		{			
+			boolean selected = chckbxOcclusion.isSelected();
+			model.getSelectedItem().setOcclusionEnabled(selected);
+			lblBias.setEnabled(selected);
+			spinnerOccBias.setEnabled(selected);
+		});
+		
+		// Add listener for changes to the occlusion bias spinner.
+		spinnerOccBias.addChangeListener(e ->
+		{
+			model.getSelectedItem().setOcclusionBias((float)(double)(Double)spinnerOccBias.getModel().getValue());
+		});
+		
+		// Add listener for changes to the morph slider.
+		sliderObjects.addChangeListener(e ->
+		{
+			if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
+			{
+				((ULFMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(sliderObjects.getValue());
+			}
+		});
+		
+		// Respond to combo box item changed event
+		comboBoxObjects.addItemListener(e ->
+		{
+			if (model == null || model.getSelectedItem() == null)
+			{
+				lblGamma.setEnabled(false);
+				spinnerGamma.setEnabled(false);
+				lblWeightExponent.setEnabled(false);
+				spinnerExponent.setEnabled(false);
+				chckbxOcclusion.setEnabled(false);
+				lblBias.setEnabled(false);
+				spinnerOccBias.setEnabled(false);
+
+				chckbxHalfRes.setEnabled(false);
+				chckbxMultisampling.setEnabled(false);
+
+				lblNewDimensions.setEnabled(false);
+				spinnerWidth.setEnabled(false);
+				lblX.setEnabled(false);
+				spinnerHeight.setEnabled(false);
+				btnResample.setEnabled(false);
+				btnFidelity.setEnabled(false);
+				btnBTFExport.setEnabled(false);
+			}
+			else
+			{
+				lblGamma.setEnabled(true);
+				spinnerGamma.setEnabled(true);
+				lblWeightExponent.setEnabled(true);
+				spinnerExponent.setEnabled(true);
+				chckbxOcclusion.setEnabled(true);
+				lblBias.setEnabled(true);
+				spinnerOccBias.setEnabled(true);
+
+				chckbxHalfRes.setEnabled(true);
+				chckbxMultisampling.setEnabled(true);
+				
+				lblNewDimensions.setEnabled(true);
+				spinnerWidth.setEnabled(true);
+				lblX.setEnabled(true);
+				spinnerHeight.setEnabled(true);
+				btnResample.setEnabled(true);
+				btnFidelity.setEnabled(true);
+				btnBTFExport.setEnabled(true);
+				
+				spinnerGamma.setValue((double)model.getSelectedItem().getGamma());
+				spinnerExponent.setValue((double)model.getSelectedItem().getWeightExponent());
+				chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
+				spinnerOccBias.setValue((double)model.getSelectedItem().getOcclusionBias());
+				chckbxHalfRes.setSelected(model.getSelectedItem().getHalfResolution());
+				chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
+				
+				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
+				{
+					ULFMorphRenderer<?> morph = (ULFMorphRenderer<?>)(model.getSelectedItem());
+					int currentStage = morph.getCurrentStage();
+					sliderObjects.setEnabled(true);
+					sliderObjects.setMaximum(morph.getStageCount() - 1);
+					sliderObjects.setValue(currentStage);
+				}
+				else
+				{
+					sliderObjects.setMaximum(0);
+					sliderObjects.setValue(0);
+					sliderObjects.setEnabled(false);
+				}
+			}
+		});
+		
 		// Add listener for the 'single' load button to read a single light field object.
 		btnLoadSingle.addActionListener(e -> 
 		{
-			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
 			fileChooser.setDialogTitle("Select a camera definition file");
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
 			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Agisoft Photoscan XML files", "xml"));
@@ -511,12 +884,12 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 					
 					if (file.getName().toUpperCase().endsWith(".XML"))
 					{
-						JFileChooser meshChooser = new JFileChooser(file.getParentFile());
-						meshChooser.setDialogTitle("Select the corresponding mesh");
-						meshChooser.removeChoosableFileFilter(meshChooser.getAcceptAllFileFilter());
-						meshChooser.addChoosableFileFilter(new FileNameExtensionFilter("Wavefront OBJ files", "obj"));
+						fileChooser.resetChoosableFileFilters();
+						fileChooser.setDialogTitle("Select the corresponding mesh");
+						fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+						fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Wavefront OBJ files", "obj"));
 						
-						if (meshChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+						if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 						{
 							JFileChooser imageChooser = new JFileChooser(file.getParentFile());
 							imageChooser.setDialogTitle("Select the undistorted image directory");
@@ -525,7 +898,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 							if (imageChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 							{
 								loadOptions.getImageOptions().setFilePath(imageChooser.getSelectedFile());
-								model.addFromAgisoftXMLFile(file, meshChooser.getSelectedFile(), loadOptions);
+								model.addFromAgisoftXMLFile(file, fileChooser.getSelectedFile(), loadOptions);
 							}
 						}
 					}
@@ -555,7 +928,8 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 					new ViewSetImageOptions(null, true, chckbxUseMipmaps.isSelected(), chckbxCompressImages.isSelected()),
 					chckbxGenerateDepthImages.isSelected(), (Integer)spinnerDepthWidth.getValue(), (Integer)spinnerDepthHeight.getValue());
 			
-			JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
+			fileChooser.setDialogTitle("Select a light field morph");
+			fileChooser.resetChoosableFileFilters();
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
 			fileChooser.setFileFilter(new FileNameExtensionFilter("Light Field Morph files (.lfm)", "lfm"));
 			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
@@ -573,158 +947,6 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 			}
 		});
 		
-		// Respond to combo box item changed event
-		comboBoxObjects.addItemListener(e ->
-		{
-			if (model == null || model.getSelectedItem() == null)
-			{
-				lblGamma.setEnabled(false);
-				spinnerGamma.setEnabled(false);
-				lblWeightExponent.setEnabled(false);
-				spinnerExponent.setEnabled(false);
-				chckbxOcclusion.setEnabled(false);
-				lblBias.setEnabled(false);
-				spinnerOccBias.setEnabled(false);
-
-				chckbxHalfRes.setEnabled(false);
-				chckbxMultisampling.setEnabled(false);
-
-				lblNewDimensions.setEnabled(false);
-				spinnerWidth.setEnabled(false);
-				lblX.setEnabled(false);
-				spinnerHeight.setEnabled(false);
-				btnResample.setEnabled(false);
-				btnFidelity.setEnabled(false);
-			}
-			else
-			{
-				lblGamma.setEnabled(true);
-				spinnerGamma.setEnabled(true);
-				lblWeightExponent.setEnabled(true);
-				spinnerExponent.setEnabled(true);
-				chckbxOcclusion.setEnabled(true);
-				lblBias.setEnabled(true);
-				spinnerOccBias.setEnabled(true);
-
-				chckbxHalfRes.setEnabled(true);
-				chckbxMultisampling.setEnabled(true);
-				
-				lblNewDimensions.setEnabled(true);
-				spinnerWidth.setEnabled(true);
-				lblX.setEnabled(true);
-				spinnerHeight.setEnabled(true);
-				btnResample.setEnabled(true);
-				btnFidelity.setEnabled(true);
-				
-				spinnerGamma.setValue((double)model.getSelectedItem().getGamma());
-				spinnerExponent.setValue((double)model.getSelectedItem().getWeightExponent());
-				chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
-				spinnerOccBias.setValue((double)model.getSelectedItem().getOcclusionBias());
-				chckbxHalfRes.setSelected(model.getSelectedItem().getHalfResolution());
-				chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
-				
-				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
-				{
-					ULFMorphRenderer<?> morph = (ULFMorphRenderer<?>)(model.getSelectedItem());
-					int currentStage = morph.getCurrentStage();
-					sliderObjects.setEnabled(true);
-					sliderObjects.setMaximum(morph.getStageCount() - 1);
-					sliderObjects.setValue(currentStage);
-				}
-				else
-				{
-					sliderObjects.setMaximum(0);
-					sliderObjects.setValue(0);
-					sliderObjects.setEnabled(false);
-				}
-			}
-		});
-		
-		JFileChooser vsetFileChooser = new JFileChooser(new File("").getAbsolutePath());
-		
-		// Add listener for the 'resample' button to generate new vies for the current light field.
-		btnResample.addActionListener(e -> 
-		{
-			vsetFileChooser.setDialogTitle("Choose a Target VSET File");
-			vsetFileChooser.removeChoosableFileFilter(vsetFileChooser.getAcceptAllFileFilter());
-			vsetFileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
-			if (vsetFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-			{
-				JFileChooser exportFileChooser = new JFileChooser(vsetFileChooser.getSelectedFile().getParentFile());
-				exportFileChooser.setDialogTitle("Choose an Export Directory");
-				exportFileChooser.removeChoosableFileFilter(exportFileChooser.getAcceptAllFileFilter());
-				exportFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				
-				if (exportFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-				{
-					try 
-					{
-						loadingBar.setIndeterminate(true);
-						loadingFrame.setVisible(true);
-						model.getSelectedItem().requestResample(
-							(Integer)spinnerWidth.getValue(),
-							(Integer)spinnerHeight.getValue(), 
-							vsetFileChooser.getSelectedFile(), 
-							exportFileChooser.getSelectedFile());
-					} 
-					catch (IOException ex)
-					{
-						ex.printStackTrace();
-					}
-				}
-			}
-		});
-		
-		JFileChooser fidelityFileChooser = new JFileChooser(new File("").getAbsolutePath());
-		
-		// Add listener for the 'resample' button to generate new vies for the current light field.
-		btnFidelity.addActionListener(e -> 
-		{
-			fidelityFileChooser.setDialogTitle("Choose an Export Directory");
-			fidelityFileChooser.removeChoosableFileFilter(fidelityFileChooser.getAcceptAllFileFilter());
-			fidelityFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			
-			if (fidelityFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-			{
-				try 
-				{
-					loadingBar.setIndeterminate(true);
-					loadingFrame.setVisible(true);
-					model.getSelectedItem().requestFidelity(fidelityFileChooser.getSelectedFile());
-				} 
-				catch (IOException ex)
-				{
-					ex.printStackTrace();
-				}
-			}
-		});
-		
-		JFileChooser btfFileChooser = new JFileChooser(new File("").getAbsolutePath());
-		
-		btnBTFExport.addActionListener(e ->
-		{
-			btfFileChooser.setDialogTitle("Choose an Export Directory");
-			btfFileChooser.removeChoosableFileFilter(btfFileChooser.getAcceptAllFileFilter());
-			btfFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			
-			if (btfFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-			{
-				try 
-				{
-					loadingBar.setIndeterminate(true);
-					loadingFrame.setVisible(true);
-					model.getSelectedItem().requestBTF(
-						(Integer)spinnerWidth.getValue(),
-						(Integer)spinnerHeight.getValue(),
-						btfFileChooser.getSelectedFile());
-				} 
-				catch (IOException ex)
-				{
-					ex.printStackTrace();
-				}
-			}
-		});
-		
 		chckbxGenerateDepthImages.addChangeListener(e ->
 		{
 			boolean enabled = chckbxGenerateDepthImages.isSelected();
@@ -732,45 +954,6 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame {
 			spinnerDepthWidth.setEnabled(enabled);
 			lblX_1.setEnabled(enabled);
 			spinnerDepthHeight.setEnabled(enabled);
-		});
-		
-		// Add listener for changes to the gamma spinner.
-		spinnerGamma.addChangeListener(e ->
-		{
-			model.getSelectedItem().setGamma((float)(double)(Double)spinnerGamma.getModel().getValue());
-		});
-		
-		// Add listener for changes to the alpha weight spinner.
-		spinnerExponent.addChangeListener(e ->
-		{
-			model.getSelectedItem().setWeightExponent((float)(double)(Double)spinnerExponent.getModel().getValue());
-		});
-		
-		// Add listener for changes to half resolution checkbox.
-		chckbxHalfRes.addChangeListener(e ->
-		{
-			model.getSelectedItem().setHalfResolution(chckbxHalfRes.isSelected());
-		});
-		
-		// Add listener for changes to multisampling checkbox.
-		chckbxMultisampling.addChangeListener(e ->
-		{
-			model.getSelectedItem().setMultisampling(chckbxMultisampling.isSelected());
-		});
-
-		// Add listener for changes to occlusion checkbox.
-		chckbxOcclusion.addChangeListener(e ->
-		{			
-			boolean selected = chckbxOcclusion.isSelected();
-			model.getSelectedItem().setOcclusionEnabled(selected);
-			lblBias.setEnabled(selected);
-			spinnerOccBias.setEnabled(selected);
-		});
-		
-		// Add listener for changes to the occlusion bias spinner.
-		spinnerOccBias.addChangeListener(e ->
-		{
-			model.getSelectedItem().setOcclusionBias((float)(double)(Double)spinnerOccBias.getModel().getValue());
 		});
 		
 		// Create callback monitor to show the loading window when the model is being read

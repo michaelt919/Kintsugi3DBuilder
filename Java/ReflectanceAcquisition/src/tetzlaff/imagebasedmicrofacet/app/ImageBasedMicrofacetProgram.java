@@ -50,7 +50,13 @@ public class ImageBasedMicrofacetProgram
 		{
 			return hardcodedMode ? hardcodedController.getLightColor(i) : normalController.getLightColor(i);
 		}
-
+		
+		@Override
+		public void setLightColor(int i, Vector3 lightColor)
+		{
+			normalController.setLightColor(i, lightColor);
+		}
+		
 		@Override
 		public Matrix4 getLightMatrix(int i) 
 		{
@@ -272,7 +278,7 @@ public class ImageBasedMicrofacetProgram
         
         // Create a user interface that examines the ULFRendererList for renderer settings and
         // selecting between different loaded models.
-        ImageBasedMicrofacetConfigFrame gui = new ImageBasedMicrofacetConfigFrame(model, window.isHighDPI());
+        ImageBasedMicrofacetConfigFrame gui = new ImageBasedMicrofacetConfigFrame(model, lightController, window.isHighDPI());
         gui.showGUI();        
         //app.addPollable(gui); // Needed for Qt UI
         
