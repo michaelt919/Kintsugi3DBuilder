@@ -18,6 +18,7 @@ import tetzlaff.window.listeners.KeyReleaseListener;
 public class TrackballLightController implements OverrideableLightController, CharacterListener, KeyPressListener, KeyReleaseListener
 {
 	private int activeTrackball;
+	Vector3 ambientLightColor;
 	private List<Vector3> lightColors;
 	private List<Trackball> trackballs;
 	private List<Boolean> lightControls;
@@ -78,39 +79,39 @@ public class TrackballLightController implements OverrideableLightController, Ch
 	@Override
 	public void characterTyped(Window window, char c) 
 	{
-		switch(c)
-		{
-		case 't':
-			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(1.0f / 32.0f, 0.0f, 0.0f)));
-			break;
-		case 'r':
-			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(-1.0f / 32.0f, 0.0f, 0.0f)));
-			if (this.lightColors.get(activeTrackball).x < 0.0f)
-			{
-				this.lightColors.set(activeTrackball, new Vector3(0.0f, this.lightColors.get(activeTrackball).y, this.lightColors.get(activeTrackball).z));
-			}
-			break;
-		case 'g':
-			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(0.0f, 1.0f / 32.0f, 0.0f)));
-			break;
-		case 'f':
-			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(0.0f, -1.0f / 32.0f, 0.0f)));
-			if (this.lightColors.get(activeTrackball).y < 0.0f)
-			{
-				this.lightColors.set(activeTrackball, new Vector3(this.lightColors.get(activeTrackball).x, 0.0f, this.lightColors.get(activeTrackball).z));
-			}
-			break;
-		case 'b':
-			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(0.0f, 0.0f, 1.0f / 32.0f)));
-			break;
-		case 'v':
-			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(0.0f, 0.0f, -1.0f / 32.0f)));
-			if (this.lightColors.get(activeTrackball).z < 0.0f)
-			{
-				this.lightColors.set(activeTrackball, new Vector3(this.lightColors.get(activeTrackball).x, this.lightColors.get(activeTrackball).y, 0.0f));
-			}
-			break;
-		}
+//		switch(c)
+//		{
+//		case 't':
+//			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(1.0f / 32.0f, 0.0f, 0.0f)));
+//			break;
+//		case 'r':
+//			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(-1.0f / 32.0f, 0.0f, 0.0f)));
+//			if (this.lightColors.get(activeTrackball).x < 0.0f)
+//			{
+//				this.lightColors.set(activeTrackball, new Vector3(0.0f, this.lightColors.get(activeTrackball).y, this.lightColors.get(activeTrackball).z));
+//			}
+//			break;
+//		case 'g':
+//			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(0.0f, 1.0f / 32.0f, 0.0f)));
+//			break;
+//		case 'f':
+//			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(0.0f, -1.0f / 32.0f, 0.0f)));
+//			if (this.lightColors.get(activeTrackball).y < 0.0f)
+//			{
+//				this.lightColors.set(activeTrackball, new Vector3(this.lightColors.get(activeTrackball).x, 0.0f, this.lightColors.get(activeTrackball).z));
+//			}
+//			break;
+//		case 'b':
+//			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(0.0f, 0.0f, 1.0f / 32.0f)));
+//			break;
+//		case 'v':
+//			this.lightColors.set(activeTrackball, this.lightColors.get(activeTrackball).plus(new Vector3(0.0f, 0.0f, -1.0f / 32.0f)));
+//			if (this.lightColors.get(activeTrackball).z < 0.0f)
+//			{
+//				this.lightColors.set(activeTrackball, new Vector3(this.lightColors.get(activeTrackball).x, this.lightColors.get(activeTrackball).y, 0.0f));
+//			}
+//			break;
+//		}
 	}
 
 	@Override
@@ -226,5 +227,17 @@ public class TrackballLightController implements OverrideableLightController, Ch
 	public void removeCameraPoseOverride()
 	{
 		this.cameraPoseOverride = null;
+	}
+
+	@Override
+	public Vector3 getAmbientLightColor() 
+	{
+		return this.ambientLightColor;
+	}
+
+	@Override
+	public void setAmbientLightColor(Vector3 ambientLightColor) 
+	{
+		this.ambientLightColor = ambientLightColor;
 	}
 }
