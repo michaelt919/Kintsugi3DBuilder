@@ -191,6 +191,12 @@ public class TrackballLightController implements OverrideableLightController, Ch
 	{
 		return this.lightColors.get(i);
 	}
+	
+	@Override
+	public void setLightColor(int i, Vector3 lightColor)
+	{
+		this.lightColors.set(i, lightColor);
+	}
 
 	@Override
 	public Matrix4 getLightMatrix(int i) 

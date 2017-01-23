@@ -73,6 +73,12 @@ public class HardcodedLightController implements LightController, OverrideableLi
 			return new Vector3(0.0f);
 		}
 	}
+	
+	@Override
+	public void setLightColor(int i, Vector3 lightColor)
+	{
+		// Ignore
+	}
 
 	@Override
 	public Matrix4 getLightMatrix(int i) 
