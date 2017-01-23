@@ -93,6 +93,18 @@ public class ImageBasedMicrofacetProgram
 				normalController.removeCameraPoseOverride();
 			}
 		}
+
+		@Override
+		public Vector3 getAmbientLightColor() 
+		{
+			return hardcodedMode ? hardcodedController.getAmbientLightColor() : normalController.getAmbientLightColor();
+		}
+
+		@Override
+		public void setAmbientLightColor(Vector3 ambientLightColor) 
+		{
+			normalController.setAmbientLightColor(ambientLightColor);
+		}
 	}
 	
     /**

@@ -29,6 +29,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.helpers.LightController;
+import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.ulf.ULFDrawable;
 import tetzlaff.ulf.ULFListModel;
 import tetzlaff.ulf.ULFLoadOptions;
@@ -41,6 +42,11 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.JTabbedPane;
 import javax.swing.JColorChooser;
+
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
@@ -426,7 +432,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		panel_3.add(tabbedPane);
 		
 		JPanel panel_4 = new JPanel();
-		tabbedPane.addTab("Light 0", null, panel_4, null);
+		tabbedPane.addTab("Light 1", null, panel_4, null);
 		GridBagLayout gbl_panel_4 = new GridBagLayout();
 		gbl_panel_4.columnWidths = new int[] {100, 100, 0};
 		gbl_panel_4.rowHeights = new int[] {329, 0};
@@ -460,7 +466,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		panel_4.add(light0IntensitySpinner, gbc_light0IntensitySpinner);
 		
 		JPanel panel_5 = new JPanel();
-		tabbedPane.addTab("Light 1", null, panel_5, null);
+		tabbedPane.addTab("Light 2", null, panel_5, null);
 		GridBagLayout gbl_panel_5 = new GridBagLayout();
 		gbl_panel_5.columnWidths = new int[]{100, 100, 0, 0};
 		gbl_panel_5.rowHeights = new int[]{329, 0, 0};
@@ -494,7 +500,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		panel_5.add(light1IntensitySpinner, gbc_light1IntensitySpinner);
 		
 		JPanel panel_6 = new JPanel();
-		tabbedPane.addTab("Light 2", null, panel_6, null);
+		tabbedPane.addTab("Light 3", null, panel_6, null);
 		GridBagLayout gbl_panel_6 = new GridBagLayout();
 		gbl_panel_6.columnWidths = new int[]{100, 100, 0, 0};
 		gbl_panel_6.rowHeights = new int[]{329, 0, 0};
@@ -528,7 +534,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		panel_6.add(light2IntensitySpinner, gbc_light2IntensitySpinner);
 		
 		JPanel panel_7 = new JPanel();
-		tabbedPane.addTab("Light 3", null, panel_7, null);
+		tabbedPane.addTab("Light 4", null, panel_7, null);
 		GridBagLayout gbl_panel_7 = new GridBagLayout();
 		gbl_panel_7.columnWidths = new int[]{100, 100, 0, 0};
 		gbl_panel_7.rowHeights = new int[]{329, 0, 0};
@@ -594,6 +600,96 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		gbc_ambientIntensitySpinner.gridx = 1;
 		gbc_ambientIntensitySpinner.gridy = 1;
 		panel_8.add(ambientIntensitySpinner, gbc_ambientIntensitySpinner);
+		
+		light0ColorChooser.getSelectionModel().addChangeListener(e ->
+		{
+			lightController.setLightColor(0, new Vector3(
+				(float)light0ColorChooser.getColor().getRed() / 255.0f,
+				(float)light0ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light0ColorChooser.getColor().getBlue() / 255.0f)
+				.times((Float)light0IntensitySpinner.getValue()));
+		});
+		
+		light0IntensitySpinner.addChangeListener(e ->
+		{
+			lightController.setLightColor(0, new Vector3(
+				(float)light0ColorChooser.getColor().getRed() / 255.0f,
+				(float)light0ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light0ColorChooser.getColor().getBlue() / 255.0f)
+				.times((Float)light0IntensitySpinner.getValue()));
+		});
+		
+		light1ColorChooser.getSelectionModel().addChangeListener(e ->
+		{
+			lightController.setLightColor(0, new Vector3(
+				(float)light1ColorChooser.getColor().getRed() / 255.0f,
+				(float)light1ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light1ColorChooser.getColor().getBlue() / 255.0f)
+				.times((Float)light1IntensitySpinner.getValue()));
+		});
+		
+		light1IntensitySpinner.addChangeListener(e ->
+		{
+			lightController.setLightColor(0, new Vector3(
+				(float)light1ColorChooser.getColor().getRed() / 255.0f,
+				(float)light1ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light1ColorChooser.getColor().getBlue() / 255.0f)
+				.times((Float)light2IntensitySpinner.getValue()));
+		});
+		
+		light2ColorChooser.getSelectionModel().addChangeListener(e ->
+		{
+			lightController.setLightColor(0, new Vector3(
+				(float)light2ColorChooser.getColor().getRed() / 255.0f,
+				(float)light2ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light2ColorChooser.getColor().getBlue() / 255.0f)
+				.times((Float)light2IntensitySpinner.getValue()));
+		});
+		
+		light2IntensitySpinner.addChangeListener(e ->
+		{
+			lightController.setLightColor(0, new Vector3(
+				(float)light2ColorChooser.getColor().getRed() / 255.0f,
+				(float)light2ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light2ColorChooser.getColor().getBlue() / 255.0f)
+				.times((Float)light2IntensitySpinner.getValue()));
+		});
+		
+		light3ColorChooser.getSelectionModel().addChangeListener(e ->
+		{
+			lightController.setLightColor(0, new Vector3(
+				(float)light3ColorChooser.getColor().getRed() / 255.0f,
+				(float)light3ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light3ColorChooser.getColor().getBlue() / 255.0f)
+				.times((Float)light3IntensitySpinner.getValue()));
+		});
+		
+		light3IntensitySpinner.addChangeListener(e ->
+		{
+			lightController.setLightColor(0, new Vector3(
+				(float)light3ColorChooser.getColor().getRed() / 255.0f,
+				(float)light3ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light3ColorChooser.getColor().getBlue() / 255.0f)
+				.times((Float)light3IntensitySpinner.getValue()));
+		});
+		
+		ambientColorChooser.getSelectionModel().addChangeListener(e ->
+		{
+			lightController.setAmbientLightColor(new Vector3(
+				(float)ambientColorChooser.getColor().getRed() / 255.0f,
+				(float)ambientColorChooser.getColor().getGreen() / 255.0f,
+				(float)ambientColorChooser.getColor().getBlue() / 255.0f)
+				.times((Float)ambientIntensitySpinner.getValue()));
+		});
+		
+		ambientIntensitySpinner.addChangeListener(e ->
+		{
+			lightController.setAmbientLightColor(new Vector3(
+				(float)ambientColorChooser.getColor().getRed() / 255.0f,
+				(float)ambientColorChooser.getColor().getGreen() / 255.0f,
+				(float)ambientColorChooser.getColor().getBlue() / 255.0f)
+				.times((Float)ambientIntensitySpinner.getValue()));
+		});
 		
 		// Set the combo box model to the parameter
 		if(model != null) { comboBoxObjects.setModel(model); }

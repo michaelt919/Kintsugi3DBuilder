@@ -156,4 +156,16 @@ public class HardcodedLightController implements LightController, OverrideableLi
 	{
 		this.cameraPoseOverride = null;
 	}
+
+	@Override
+	public Vector3 getAmbientLightColor() 
+	{
+		return new Vector3(0.0f);
+	}
+
+	@Override
+	public void setAmbientLightColor(Vector3 ambientLightColor) 
+	{
+		// Ignore
+	}
 }
