@@ -47,6 +47,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
+import java.awt.Dimension;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
@@ -81,11 +82,10 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		setResizable(false);
 		setTitle("Light Field Config");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(10, 10, 940, 539);
+		setBounds(10, 10, 960, 550);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.X_AXIS));
 
 		JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
 		
@@ -98,9 +98,21 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		loadingFrame.getContentPane().add(loadingBar);
 		loadingFrame.pack();
 		loadingFrame.setLocationRelativeTo(null);
+		GridBagLayout gbl_contentPane = new GridBagLayout();
+		gbl_contentPane.columnWidths = new int[] {300, 630};
+		gbl_contentPane.rowHeights = new int[] {0};
+		gbl_contentPane.columnWeights = new double[]{0.0, 0.0};
+		gbl_contentPane.rowWeights = new double[]{1.0};
+		contentPane.setLayout(gbl_contentPane);
 		
 		JPanel panel_2 = new JPanel();
-		contentPane.add(panel_2);
+		GridBagConstraints gbc_panel_2 = new GridBagConstraints();
+		gbc_panel_2.fill = GridBagConstraints.VERTICAL;
+		gbc_panel_2.anchor = GridBagConstraints.WEST;
+		gbc_panel_2.insets = new Insets(0, 0, 0, 5);
+		gbc_panel_2.gridx = 0;
+		gbc_panel_2.gridy = 0;
+		contentPane.add(panel_2, gbc_panel_2);
 		panel_2.setLayout(new BoxLayout(panel_2, BoxLayout.Y_AXIS));
 		
 		JPanel loadingPanel = new JPanel();
@@ -130,7 +142,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		gbc_chckbxUseMipmaps.gridx = 1;
 		gbc_chckbxUseMipmaps.gridy = 0;
 		loadingPanel.add(chckbxUseMipmaps, gbc_chckbxUseMipmaps);
-			
+		
 		JPanel panel = new JPanel();
 		panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		GridBagConstraints gbc_panel = new GridBagConstraints();
@@ -193,7 +205,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		gbc_spinnerDepthHeight.gridx = 3;
 		gbc_spinnerDepthHeight.gridy = 1;
 		panel.add(spinnerDepthHeight, gbc_spinnerDepthHeight);
-				
+		
 		JButton btnLoadSingle = new JButton("Load Single...");
 		GridBagConstraints gbc_btnLoadSingle = new GridBagConstraints();
 		gbc_btnLoadSingle.anchor = GridBagConstraints.NORTH;
@@ -218,15 +230,15 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		GridBagLayout gbl_selectionPanel = new GridBagLayout();
 		gbl_selectionPanel.columnWidths = new int[] {0, 0, 0};
 		gbl_selectionPanel.rowHeights = new int[] {0, 0};
-		gbl_selectionPanel.columnWeights = new double[]{1.0, 1.0, Double.MIN_VALUE};
+		gbl_selectionPanel.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
 		gbl_selectionPanel.rowWeights = new double[]{0.0, 0.0};
 		selectionPanel.setLayout(gbl_selectionPanel);
 		
 		JComboBox<ULFDrawable<ContextType>> comboBoxObjects = new JComboBox<ULFDrawable<ContextType>>();
 		GridBagConstraints gbc_comboBoxObjects = new GridBagConstraints();
+		gbc_comboBoxObjects.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboBoxObjects.gridwidth = 2;
 		gbc_comboBoxObjects.insets = new Insets(0, 0, 5, 0);
-		gbc_comboBoxObjects.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboBoxObjects.gridx = 0;
 		gbc_comboBoxObjects.gridy = 0;
 		selectionPanel.add(comboBoxObjects, gbc_comboBoxObjects);
@@ -425,334 +437,108 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		panel_1.add(btnBTFExport);
 		btnBTFExport.setToolTipText("Evaluate the fidelity of the image-based sampling.");
 		
-		JPanel panel_3 = new JPanel();
-		contentPane.add(panel_3);
-		
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		panel_3.add(tabbedPane);
-		
-		JPanel panel_4 = new JPanel();
-		tabbedPane.addTab("Light 1", null, panel_4, null);
-		GridBagLayout gbl_panel_4 = new GridBagLayout();
-		gbl_panel_4.columnWidths = new int[] {100, 100, 0};
-		gbl_panel_4.rowHeights = new int[] {329, 0};
-		gbl_panel_4.columnWeights = new double[]{0.0};
-		gbl_panel_4.rowWeights = new double[]{0.0, 0.0};
-		panel_4.setLayout(gbl_panel_4);
-		
-		JColorChooser light0ColorChooser = new JColorChooser();
-		GridBagConstraints gbc_light0ColorChooser = new GridBagConstraints();
-		gbc_light0ColorChooser.insets = new Insets(0, 0, 5, 0);
-		gbc_light0ColorChooser.gridwidth = 3;
-		gbc_light0ColorChooser.anchor = GridBagConstraints.NORTHWEST;
-		gbc_light0ColorChooser.gridx = 0;
-		gbc_light0ColorChooser.gridy = 0;
-		panel_4.add(light0ColorChooser, gbc_light0ColorChooser);
-		
-		JLabel lblLightIntensity = new JLabel("Light Intensity:");
-		GridBagConstraints gbc_lblLightIntensity = new GridBagConstraints();
-		gbc_lblLightIntensity.insets = new Insets(0, 0, 0, 5);
-		gbc_lblLightIntensity.gridx = 0;
-		gbc_lblLightIntensity.gridy = 1;
-		panel_4.add(lblLightIntensity, gbc_lblLightIntensity);
-		
-		JSpinner light0IntensitySpinner = new JSpinner();
-		light0IntensitySpinner.setModel(new SpinnerNumberModel(1.0, 0.0, 100.0, 0.05));
-		GridBagConstraints gbc_light0IntensitySpinner = new GridBagConstraints();
-		gbc_light0IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
-		gbc_light0IntensitySpinner.insets = new Insets(0, 0, 0, 5);
-		gbc_light0IntensitySpinner.gridx = 1;
-		gbc_light0IntensitySpinner.gridy = 1;
-		panel_4.add(light0IntensitySpinner, gbc_light0IntensitySpinner);
-		
-		JPanel panel_5 = new JPanel();
-		tabbedPane.addTab("Light 2", null, panel_5, null);
-		GridBagLayout gbl_panel_5 = new GridBagLayout();
-		gbl_panel_5.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_5.rowHeights = new int[]{329, 0, 0};
-		gbl_panel_5.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel_5.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-		panel_5.setLayout(gbl_panel_5);
-		
-		JColorChooser light1ColorChooser = new JColorChooser();
-		GridBagConstraints gbc_light1ColorChooser = new GridBagConstraints();
-		gbc_light1ColorChooser.anchor = GridBagConstraints.NORTHWEST;
-		gbc_light1ColorChooser.gridwidth = 3;
-		gbc_light1ColorChooser.insets = new Insets(0, 0, 5, 0);
-		gbc_light1ColorChooser.gridx = 0;
-		gbc_light1ColorChooser.gridy = 0;
-		panel_5.add(light1ColorChooser, gbc_light1ColorChooser);
-		
-		JLabel label_1 = new JLabel("Light Intensity:");
-		GridBagConstraints gbc_label_1 = new GridBagConstraints();
-		gbc_label_1.insets = new Insets(0, 0, 0, 5);
-		gbc_label_1.gridx = 0;
-		gbc_label_1.gridy = 1;
-		panel_5.add(label_1, gbc_label_1);
-		
-		JSpinner light1IntensitySpinner = new JSpinner();
-		light1IntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 100.0, 0.05));
-		GridBagConstraints gbc_light1IntensitySpinner = new GridBagConstraints();
-		gbc_light1IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
-		gbc_light1IntensitySpinner.insets = new Insets(0, 0, 0, 5);
-		gbc_light1IntensitySpinner.gridx = 1;
-		gbc_light1IntensitySpinner.gridy = 1;
-		panel_5.add(light1IntensitySpinner, gbc_light1IntensitySpinner);
-		
-		JPanel panel_6 = new JPanel();
-		tabbedPane.addTab("Light 3", null, panel_6, null);
-		GridBagLayout gbl_panel_6 = new GridBagLayout();
-		gbl_panel_6.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_6.rowHeights = new int[]{329, 0, 0};
-		gbl_panel_6.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel_6.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-		panel_6.setLayout(gbl_panel_6);
-		
-		JColorChooser light2ColorChooser = new JColorChooser();
-		GridBagConstraints gbc_light2ColorChooser = new GridBagConstraints();
-		gbc_light2ColorChooser.anchor = GridBagConstraints.NORTHWEST;
-		gbc_light2ColorChooser.gridwidth = 3;
-		gbc_light2ColorChooser.insets = new Insets(0, 0, 5, 0);
-		gbc_light2ColorChooser.gridx = 0;
-		gbc_light2ColorChooser.gridy = 0;
-		panel_6.add(light2ColorChooser, gbc_light2ColorChooser);
-		
-		JLabel label_2 = new JLabel("Light Intensity:");
-		GridBagConstraints gbc_label_2 = new GridBagConstraints();
-		gbc_label_2.insets = new Insets(0, 0, 0, 5);
-		gbc_label_2.gridx = 0;
-		gbc_label_2.gridy = 1;
-		panel_6.add(label_2, gbc_label_2);
-		
-		JSpinner light2IntensitySpinner = new JSpinner();
-		light2IntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 100.0, 0.05));
-		GridBagConstraints gbc_light2IntensitySpinner = new GridBagConstraints();
-		gbc_light2IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
-		gbc_light2IntensitySpinner.insets = new Insets(0, 0, 0, 5);
-		gbc_light2IntensitySpinner.gridx = 1;
-		gbc_light2IntensitySpinner.gridy = 1;
-		panel_6.add(light2IntensitySpinner, gbc_light2IntensitySpinner);
-		
-		JPanel panel_7 = new JPanel();
-		tabbedPane.addTab("Light 4", null, panel_7, null);
-		GridBagLayout gbl_panel_7 = new GridBagLayout();
-		gbl_panel_7.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_7.rowHeights = new int[]{329, 0, 0};
-		gbl_panel_7.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel_7.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-		panel_7.setLayout(gbl_panel_7);
-		
-		JColorChooser light3ColorChooser = new JColorChooser();
-		GridBagConstraints gbc_light3ColorChooser = new GridBagConstraints();
-		gbc_light3ColorChooser.anchor = GridBagConstraints.NORTHWEST;
-		gbc_light3ColorChooser.gridwidth = 3;
-		gbc_light3ColorChooser.insets = new Insets(0, 0, 5, 0);
-		gbc_light3ColorChooser.gridx = 0;
-		gbc_light3ColorChooser.gridy = 0;
-		panel_7.add(light3ColorChooser, gbc_light3ColorChooser);
-		
-		JLabel label_3 = new JLabel("Light Intensity:");
-		GridBagConstraints gbc_label_3 = new GridBagConstraints();
-		gbc_label_3.insets = new Insets(0, 0, 0, 5);
-		gbc_label_3.gridx = 0;
-		gbc_label_3.gridy = 1;
-		panel_7.add(label_3, gbc_label_3);
-		
-		JSpinner light3IntensitySpinner = new JSpinner();
-		light3IntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 100.0, 0.05));
-		GridBagConstraints gbc_light3IntensitySpinner = new GridBagConstraints();
-		gbc_light3IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
-		gbc_light3IntensitySpinner.insets = new Insets(0, 0, 0, 5);
-		gbc_light3IntensitySpinner.gridx = 1;
-		gbc_light3IntensitySpinner.gridy = 1;
-		panel_7.add(light3IntensitySpinner, gbc_light3IntensitySpinner);
-		
-		JPanel panel_8 = new JPanel();
-		tabbedPane.addTab("Ambient Light", null, panel_8, null);
-		GridBagLayout gbl_panel_8 = new GridBagLayout();
-		gbl_panel_8.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_8.rowHeights = new int[]{329, 0, 0};
-		gbl_panel_8.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel_8.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-		panel_8.setLayout(gbl_panel_8);
-		
-		JColorChooser ambientColorChooser = new JColorChooser();
-		GridBagConstraints gbc_ambientColorChooser = new GridBagConstraints();
-		gbc_ambientColorChooser.anchor = GridBagConstraints.NORTHWEST;
-		gbc_ambientColorChooser.gridwidth = 3;
-		gbc_ambientColorChooser.insets = new Insets(0, 0, 5, 0);
-		gbc_ambientColorChooser.gridx = 0;
-		gbc_ambientColorChooser.gridy = 0;
-		panel_8.add(ambientColorChooser, gbc_ambientColorChooser);
-		
-		JLabel label_4 = new JLabel("Light Intensity:");
-		GridBagConstraints gbc_label_4 = new GridBagConstraints();
-		gbc_label_4.insets = new Insets(0, 0, 0, 5);
-		gbc_label_4.gridx = 0;
-		gbc_label_4.gridy = 1;
-		panel_8.add(label_4, gbc_label_4);
-		
-		JSpinner ambientIntensitySpinner = new JSpinner();
-		ambientIntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.01));
-		GridBagConstraints gbc_ambientIntensitySpinner = new GridBagConstraints();
-		gbc_ambientIntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
-		gbc_ambientIntensitySpinner.insets = new Insets(0, 0, 0, 5);
-		gbc_ambientIntensitySpinner.gridx = 1;
-		gbc_ambientIntensitySpinner.gridy = 1;
-		panel_8.add(ambientIntensitySpinner, gbc_ambientIntensitySpinner);
-		
-		light0ColorChooser.getSelectionModel().addChangeListener(e ->
-		{
-			lightController.setLightColor(0, new Vector3(
-				(float)light0ColorChooser.getColor().getRed() / 255.0f,
-				(float)light0ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light0ColorChooser.getColor().getBlue() / 255.0f)
-				.times((Float)light0IntensitySpinner.getValue()));
-		});
-		
-		light0IntensitySpinner.addChangeListener(e ->
-		{
-			lightController.setLightColor(0, new Vector3(
-				(float)light0ColorChooser.getColor().getRed() / 255.0f,
-				(float)light0ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light0ColorChooser.getColor().getBlue() / 255.0f)
-				.times((Float)light0IntensitySpinner.getValue()));
-		});
-		
-		light1ColorChooser.getSelectionModel().addChangeListener(e ->
-		{
-			lightController.setLightColor(0, new Vector3(
-				(float)light1ColorChooser.getColor().getRed() / 255.0f,
-				(float)light1ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light1ColorChooser.getColor().getBlue() / 255.0f)
-				.times((Float)light1IntensitySpinner.getValue()));
-		});
-		
-		light1IntensitySpinner.addChangeListener(e ->
-		{
-			lightController.setLightColor(0, new Vector3(
-				(float)light1ColorChooser.getColor().getRed() / 255.0f,
-				(float)light1ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light1ColorChooser.getColor().getBlue() / 255.0f)
-				.times((Float)light2IntensitySpinner.getValue()));
-		});
-		
-		light2ColorChooser.getSelectionModel().addChangeListener(e ->
-		{
-			lightController.setLightColor(0, new Vector3(
-				(float)light2ColorChooser.getColor().getRed() / 255.0f,
-				(float)light2ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light2ColorChooser.getColor().getBlue() / 255.0f)
-				.times((Float)light2IntensitySpinner.getValue()));
-		});
-		
-		light2IntensitySpinner.addChangeListener(e ->
-		{
-			lightController.setLightColor(0, new Vector3(
-				(float)light2ColorChooser.getColor().getRed() / 255.0f,
-				(float)light2ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light2ColorChooser.getColor().getBlue() / 255.0f)
-				.times((Float)light2IntensitySpinner.getValue()));
-		});
-		
-		light3ColorChooser.getSelectionModel().addChangeListener(e ->
-		{
-			lightController.setLightColor(0, new Vector3(
-				(float)light3ColorChooser.getColor().getRed() / 255.0f,
-				(float)light3ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light3ColorChooser.getColor().getBlue() / 255.0f)
-				.times((Float)light3IntensitySpinner.getValue()));
-		});
-		
-		light3IntensitySpinner.addChangeListener(e ->
-		{
-			lightController.setLightColor(0, new Vector3(
-				(float)light3ColorChooser.getColor().getRed() / 255.0f,
-				(float)light3ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light3ColorChooser.getColor().getBlue() / 255.0f)
-				.times((Float)light3IntensitySpinner.getValue()));
-		});
-		
-		ambientColorChooser.getSelectionModel().addChangeListener(e ->
-		{
-			lightController.setAmbientLightColor(new Vector3(
-				(float)ambientColorChooser.getColor().getRed() / 255.0f,
-				(float)ambientColorChooser.getColor().getGreen() / 255.0f,
-				(float)ambientColorChooser.getColor().getBlue() / 255.0f)
-				.times((Float)ambientIntensitySpinner.getValue()));
-		});
-		
-		ambientIntensitySpinner.addChangeListener(e ->
-		{
-			lightController.setAmbientLightColor(new Vector3(
-				(float)ambientColorChooser.getColor().getRed() / 255.0f,
-				(float)ambientColorChooser.getColor().getGreen() / 255.0f,
-				(float)ambientColorChooser.getColor().getBlue() / 255.0f)
-				.times((Float)ambientIntensitySpinner.getValue()));
-		});
-		
 		// Set the combo box model to the parameter
-		if(model != null) { comboBoxObjects.setModel(model); }
-		
-		// Set initial values from the 'model' parameter
-		if (model == null || model.getSelectedItem() == null)
-		{
-			comboBoxObjects.setEnabled(false);
-			sliderObjects.setEnabled(false);
+				if(model != null) { comboBoxObjects.setModel(model); }
+				
+				// Set initial values from the 'model' parameter
+				if (model == null || model.getSelectedItem() == null)
+				{
+					comboBoxObjects.setEnabled(false);
+					sliderObjects.setEnabled(false);
 
-			lblGamma.setEnabled(false);
-			spinnerGamma.setEnabled(false);
-			lblWeightExponent.setEnabled(false);
-			spinnerExponent.setEnabled(false);
-			chckbxOcclusion.setEnabled(false);
-			lblBias.setEnabled(false);
-			spinnerOccBias.setEnabled(false);
+					lblGamma.setEnabled(false);
+					spinnerGamma.setEnabled(false);
+					lblWeightExponent.setEnabled(false);
+					spinnerExponent.setEnabled(false);
+					chckbxOcclusion.setEnabled(false);
+					lblBias.setEnabled(false);
+					spinnerOccBias.setEnabled(false);
+					
+					chckbxHalfRes.setSelected(isHighDPI);
+					chckbxHalfRes.setEnabled(false);
+					chckbxMultisampling.setEnabled(false);
+
+					lblNewDimensions.setEnabled(false);
+					spinnerWidth.setEnabled(false);
+					lblX.setEnabled(false);
+					spinnerHeight.setEnabled(false);
+					btnResample.setEnabled(false);
+					btnFidelity.setEnabled(false);
+					btnBTFExport.setEnabled(false);
+				}
+				else
+				{
+					comboBoxObjects.setEnabled(model.getSize()>1?true:false);
+					sliderObjects.setEnabled(model.getSize()>1?true:false);
+
+					lblGamma.setEnabled(true);
+					spinnerGamma.setEnabled(true);
+					lblWeightExponent.setEnabled(true);
+					spinnerExponent.setEnabled(true);
+					chckbxOcclusion.setEnabled(true);
+					lblBias.setEnabled(true);
+					spinnerOccBias.setEnabled(true);
+
+					chckbxHalfRes.setEnabled(true);
+					chckbxMultisampling.setEnabled(true);
+					
+					lblNewDimensions.setEnabled(true);
+					spinnerWidth.setEnabled(true);
+					lblX.setEnabled(true);
+					spinnerHeight.setEnabled(true);
+					btnResample.setEnabled(true);
+					btnFidelity.setEnabled(true);
+					btnBTFExport.setEnabled(true);
+					
+					spinnerGamma.setValue(model.getSelectedItem().getGamma());
+					spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
+					chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
+					spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
+					chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
+
+					model.getSelectedItem().setHalfResolution(isHighDPI);
+					chckbxHalfRes.setSelected(isHighDPI);
+				}
+				
+				// Create callback monitor to show the loading window when the model is being read
+				if(model != null)
+				{
+					model.setLoadingMonitor(new ULFLoadingMonitor()
+					{
+						@Override
+						public void setProgress(double progress)
+						{
+							SwingUtilities.invokeLater(new Runnable() {
+								@Override
+								public void run() {
+									loadingBar.setIndeterminate(false);
+									loadingBar.setValue((int)Math.round(progress * 100));
+								}						
+							});
+						}
 			
-			chckbxHalfRes.setSelected(isHighDPI);
-			chckbxHalfRes.setEnabled(false);
-			chckbxMultisampling.setEnabled(false);
+						@Override
+						public void loadingComplete()
+						{
+							SwingUtilities.invokeLater(new Runnable() {
+								@Override
+								public void run() {
+									loadingFrame.setVisible(false);
+								}
+							});
+						}
 
-			lblNewDimensions.setEnabled(false);
-			spinnerWidth.setEnabled(false);
-			lblX.setEnabled(false);
-			spinnerHeight.setEnabled(false);
-			btnResample.setEnabled(false);
-			btnFidelity.setEnabled(false);
-			btnBTFExport.setEnabled(false);
-		}
-		else
-		{
-			comboBoxObjects.setEnabled(model.getSize()>1?true:false);
-			sliderObjects.setEnabled(model.getSize()>1?true:false);
+						@Override
+						public void startLoading() {
+							
+						}
 
-			lblGamma.setEnabled(true);
-			spinnerGamma.setEnabled(true);
-			lblWeightExponent.setEnabled(true);
-			spinnerExponent.setEnabled(true);
-			chckbxOcclusion.setEnabled(true);
-			lblBias.setEnabled(true);
-			spinnerOccBias.setEnabled(true);
-
-			chckbxHalfRes.setEnabled(true);
-			chckbxMultisampling.setEnabled(true);
-			
-			lblNewDimensions.setEnabled(true);
-			spinnerWidth.setEnabled(true);
-			lblX.setEnabled(true);
-			spinnerHeight.setEnabled(true);
-			btnResample.setEnabled(true);
-			btnFidelity.setEnabled(true);
-			btnBTFExport.setEnabled(true);
-			
-			spinnerGamma.setValue(model.getSelectedItem().getGamma());
-			spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
-			chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
-			spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
-			chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
-
-			model.getSelectedItem().setHalfResolution(isHighDPI);
-			chckbxHalfRes.setSelected(isHighDPI);
-		}
+						@Override
+						public void setMaximum(double maximum) {
+							
+						}
+					});
+				}
 		
 		btnBTFExport.addActionListener(e ->
 		{
@@ -1052,45 +838,275 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 			spinnerDepthHeight.setEnabled(enabled);
 		});
 		
-		// Create callback monitor to show the loading window when the model is being read
-		if(model != null)
+		JPanel panel_3 = new JPanel();
+		GridBagConstraints gbc_panel_3 = new GridBagConstraints();
+		gbc_panel_3.anchor = GridBagConstraints.NORTHWEST;
+		gbc_panel_3.gridx = 1;
+		gbc_panel_3.gridy = 0;
+		contentPane.add(panel_3, gbc_panel_3);
+		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		panel_3.add(tabbedPane);
+		
+		JPanel panel_4 = new JPanel();
+		tabbedPane.addTab("Light 1", null, panel_4, null);
+		GridBagLayout gbl_panel_4 = new GridBagLayout();
+		gbl_panel_4.columnWidths = new int[] {100, 100, 0};
+		gbl_panel_4.rowHeights = new int[] {329, 0};
+		gbl_panel_4.columnWeights = new double[]{0.0};
+		gbl_panel_4.rowWeights = new double[]{0.0, 0.0};
+		panel_4.setLayout(gbl_panel_4);
+		
+		JColorChooser light0ColorChooser = new JColorChooser();
+		GridBagConstraints gbc_light0ColorChooser = new GridBagConstraints();
+		gbc_light0ColorChooser.insets = new Insets(0, 0, 5, 0);
+		gbc_light0ColorChooser.gridwidth = 3;
+		gbc_light0ColorChooser.anchor = GridBagConstraints.NORTHWEST;
+		gbc_light0ColorChooser.gridx = 0;
+		gbc_light0ColorChooser.gridy = 0;
+		panel_4.add(light0ColorChooser, gbc_light0ColorChooser);
+		
+		JLabel lblLightIntensity = new JLabel("Light Intensity:");
+		GridBagConstraints gbc_lblLightIntensity = new GridBagConstraints();
+		gbc_lblLightIntensity.insets = new Insets(0, 0, 0, 5);
+		gbc_lblLightIntensity.gridx = 0;
+		gbc_lblLightIntensity.gridy = 1;
+		panel_4.add(lblLightIntensity, gbc_lblLightIntensity);
+		
+		JSpinner light0IntensitySpinner = new JSpinner();
+		light0IntensitySpinner.setModel(new SpinnerNumberModel(1.0, 0.0, 100.0, 0.05));
+		GridBagConstraints gbc_light0IntensitySpinner = new GridBagConstraints();
+		gbc_light0IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_light0IntensitySpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_light0IntensitySpinner.gridx = 1;
+		gbc_light0IntensitySpinner.gridy = 1;
+		panel_4.add(light0IntensitySpinner, gbc_light0IntensitySpinner);
+		
+		JPanel panel_5 = new JPanel();
+		tabbedPane.addTab("Light 2", null, panel_5, null);
+		GridBagLayout gbl_panel_5 = new GridBagLayout();
+		gbl_panel_5.columnWidths = new int[]{100, 100, 0, 0};
+		gbl_panel_5.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_5.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_5.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		panel_5.setLayout(gbl_panel_5);
+		
+		JColorChooser light1ColorChooser = new JColorChooser();
+		GridBagConstraints gbc_light1ColorChooser = new GridBagConstraints();
+		gbc_light1ColorChooser.anchor = GridBagConstraints.NORTHWEST;
+		gbc_light1ColorChooser.gridwidth = 3;
+		gbc_light1ColorChooser.insets = new Insets(0, 0, 5, 0);
+		gbc_light1ColorChooser.gridx = 0;
+		gbc_light1ColorChooser.gridy = 0;
+		panel_5.add(light1ColorChooser, gbc_light1ColorChooser);
+		
+		JLabel label_1 = new JLabel("Light Intensity:");
+		GridBagConstraints gbc_label_1 = new GridBagConstraints();
+		gbc_label_1.insets = new Insets(0, 0, 0, 5);
+		gbc_label_1.gridx = 0;
+		gbc_label_1.gridy = 1;
+		panel_5.add(label_1, gbc_label_1);
+		
+		JSpinner light1IntensitySpinner = new JSpinner();
+		light1IntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 100.0, 0.05));
+		GridBagConstraints gbc_light1IntensitySpinner = new GridBagConstraints();
+		gbc_light1IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_light1IntensitySpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_light1IntensitySpinner.gridx = 1;
+		gbc_light1IntensitySpinner.gridy = 1;
+		panel_5.add(light1IntensitySpinner, gbc_light1IntensitySpinner);
+		
+		JPanel panel_6 = new JPanel();
+		tabbedPane.addTab("Light 3", null, panel_6, null);
+		GridBagLayout gbl_panel_6 = new GridBagLayout();
+		gbl_panel_6.columnWidths = new int[]{100, 100, 0, 0};
+		gbl_panel_6.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_6.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_6.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		panel_6.setLayout(gbl_panel_6);
+		
+		JColorChooser light2ColorChooser = new JColorChooser();
+		GridBagConstraints gbc_light2ColorChooser = new GridBagConstraints();
+		gbc_light2ColorChooser.anchor = GridBagConstraints.NORTHWEST;
+		gbc_light2ColorChooser.gridwidth = 3;
+		gbc_light2ColorChooser.insets = new Insets(0, 0, 5, 0);
+		gbc_light2ColorChooser.gridx = 0;
+		gbc_light2ColorChooser.gridy = 0;
+		panel_6.add(light2ColorChooser, gbc_light2ColorChooser);
+		
+		JLabel label_2 = new JLabel("Light Intensity:");
+		GridBagConstraints gbc_label_2 = new GridBagConstraints();
+		gbc_label_2.insets = new Insets(0, 0, 0, 5);
+		gbc_label_2.gridx = 0;
+		gbc_label_2.gridy = 1;
+		panel_6.add(label_2, gbc_label_2);
+		
+		JSpinner light2IntensitySpinner = new JSpinner();
+		light2IntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 100.0, 0.05));
+		GridBagConstraints gbc_light2IntensitySpinner = new GridBagConstraints();
+		gbc_light2IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_light2IntensitySpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_light2IntensitySpinner.gridx = 1;
+		gbc_light2IntensitySpinner.gridy = 1;
+		panel_6.add(light2IntensitySpinner, gbc_light2IntensitySpinner);
+		
+		JPanel panel_7 = new JPanel();
+		tabbedPane.addTab("Light 4", null, panel_7, null);
+		GridBagLayout gbl_panel_7 = new GridBagLayout();
+		gbl_panel_7.columnWidths = new int[]{100, 100, 0, 0};
+		gbl_panel_7.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_7.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_7.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		panel_7.setLayout(gbl_panel_7);
+		
+		JColorChooser light3ColorChooser = new JColorChooser();
+		GridBagConstraints gbc_light3ColorChooser = new GridBagConstraints();
+		gbc_light3ColorChooser.anchor = GridBagConstraints.NORTHWEST;
+		gbc_light3ColorChooser.gridwidth = 3;
+		gbc_light3ColorChooser.insets = new Insets(0, 0, 5, 0);
+		gbc_light3ColorChooser.gridx = 0;
+		gbc_light3ColorChooser.gridy = 0;
+		panel_7.add(light3ColorChooser, gbc_light3ColorChooser);
+		
+		JLabel label_3 = new JLabel("Light Intensity:");
+		GridBagConstraints gbc_label_3 = new GridBagConstraints();
+		gbc_label_3.insets = new Insets(0, 0, 0, 5);
+		gbc_label_3.gridx = 0;
+		gbc_label_3.gridy = 1;
+		panel_7.add(label_3, gbc_label_3);
+		
+		JSpinner light3IntensitySpinner = new JSpinner();
+		light3IntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 100.0, 0.05));
+		GridBagConstraints gbc_light3IntensitySpinner = new GridBagConstraints();
+		gbc_light3IntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_light3IntensitySpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_light3IntensitySpinner.gridx = 1;
+		gbc_light3IntensitySpinner.gridy = 1;
+		panel_7.add(light3IntensitySpinner, gbc_light3IntensitySpinner);
+		
+		JPanel panel_8 = new JPanel();
+		tabbedPane.addTab("Ambient Light", null, panel_8, null);
+		GridBagLayout gbl_panel_8 = new GridBagLayout();
+		gbl_panel_8.columnWidths = new int[]{100, 100, 0, 0};
+		gbl_panel_8.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_8.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_8.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		panel_8.setLayout(gbl_panel_8);
+		
+		JColorChooser ambientColorChooser = new JColorChooser();
+		GridBagConstraints gbc_ambientColorChooser = new GridBagConstraints();
+		gbc_ambientColorChooser.anchor = GridBagConstraints.NORTHWEST;
+		gbc_ambientColorChooser.gridwidth = 3;
+		gbc_ambientColorChooser.insets = new Insets(0, 0, 5, 0);
+		gbc_ambientColorChooser.gridx = 0;
+		gbc_ambientColorChooser.gridy = 0;
+		panel_8.add(ambientColorChooser, gbc_ambientColorChooser);
+		
+		JLabel label_4 = new JLabel("Light Intensity:");
+		GridBagConstraints gbc_label_4 = new GridBagConstraints();
+		gbc_label_4.insets = new Insets(0, 0, 0, 5);
+		gbc_label_4.gridx = 0;
+		gbc_label_4.gridy = 1;
+		panel_8.add(label_4, gbc_label_4);
+		
+		JSpinner ambientIntensitySpinner = new JSpinner();
+		ambientIntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.01));
+		GridBagConstraints gbc_ambientIntensitySpinner = new GridBagConstraints();
+		gbc_ambientIntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_ambientIntensitySpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_ambientIntensitySpinner.gridx = 1;
+		gbc_ambientIntensitySpinner.gridy = 1;
+		panel_8.add(ambientIntensitySpinner, gbc_ambientIntensitySpinner);
+		
+		light0ColorChooser.getSelectionModel().addChangeListener(e ->
 		{
-			model.setLoadingMonitor(new ULFLoadingMonitor()
-			{
-				@Override
-				public void setProgress(double progress)
-				{
-					SwingUtilities.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							loadingBar.setIndeterminate(false);
-							loadingBar.setValue((int)Math.round(progress * 100));
-						}						
-					});
-				}
-	
-				@Override
-				public void loadingComplete()
-				{
-					SwingUtilities.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							loadingFrame.setVisible(false);
-						}
-					});
-				}
-
-				@Override
-				public void startLoading() {
-					
-				}
-
-				@Override
-				public void setMaximum(double maximum) {
-					
-				}
-			});
-		}
+			lightController.setLightColor(0, new Vector3(
+				(float)light0ColorChooser.getColor().getRed() / 255.0f,
+				(float)light0ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light0ColorChooser.getColor().getBlue() / 255.0f)
+				.times((float)((double)((Double)light0IntensitySpinner.getValue()))));
+		});
+		
+		light0IntensitySpinner.addChangeListener(e ->
+		{
+			lightController.setLightColor(0, new Vector3(
+				(float)light0ColorChooser.getColor().getRed() / 255.0f,
+				(float)light0ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light0ColorChooser.getColor().getBlue() / 255.0f)
+				.times((float)((double)((Double)light0IntensitySpinner.getValue()))));
+		});
+		
+		light1ColorChooser.getSelectionModel().addChangeListener(e ->
+		{
+			lightController.setLightColor(1, new Vector3(
+				(float)light1ColorChooser.getColor().getRed() / 255.0f,
+				(float)light1ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light1ColorChooser.getColor().getBlue() / 255.0f)
+				.times((float)((double)((Double)light1IntensitySpinner.getValue()))));
+		});
+		
+		light1IntensitySpinner.addChangeListener(e ->
+		{
+			lightController.setLightColor(1, new Vector3(
+				(float)light1ColorChooser.getColor().getRed() / 255.0f,
+				(float)light1ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light1ColorChooser.getColor().getBlue() / 255.0f)
+				.times((float)((double)((Double)light1IntensitySpinner.getValue()))));
+		});
+		
+		light2ColorChooser.getSelectionModel().addChangeListener(e ->
+		{
+			lightController.setLightColor(2, new Vector3(
+				(float)light2ColorChooser.getColor().getRed() / 255.0f,
+				(float)light2ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light2ColorChooser.getColor().getBlue() / 255.0f)
+				.times((float)((double)((Double)light2IntensitySpinner.getValue()))));
+		});
+		
+		light2IntensitySpinner.addChangeListener(e ->
+		{
+			lightController.setLightColor(2, new Vector3(
+				(float)light2ColorChooser.getColor().getRed() / 255.0f,
+				(float)light2ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light2ColorChooser.getColor().getBlue() / 255.0f)
+				.times((float)((double)((Double)light2IntensitySpinner.getValue()))));
+		});
+		
+		light3ColorChooser.getSelectionModel().addChangeListener(e ->
+		{
+			lightController.setLightColor(3, new Vector3(
+				(float)light3ColorChooser.getColor().getRed() / 255.0f,
+				(float)light3ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light3ColorChooser.getColor().getBlue() / 255.0f)
+				.times((float)((double)((Double)light3IntensitySpinner.getValue()))));
+		});
+		
+		light3IntensitySpinner.addChangeListener(e ->
+		{
+			lightController.setLightColor(3, new Vector3(
+				(float)light3ColorChooser.getColor().getRed() / 255.0f,
+				(float)light3ColorChooser.getColor().getGreen() / 255.0f,
+				(float)light3ColorChooser.getColor().getBlue() / 255.0f)
+				.times((float)((double)((Double)light3IntensitySpinner.getValue()))));
+		});
+		
+		ambientColorChooser.getSelectionModel().addChangeListener(e ->
+		{
+			lightController.setAmbientLightColor(new Vector3(
+				(float)ambientColorChooser.getColor().getRed() / 255.0f,
+				(float)ambientColorChooser.getColor().getGreen() / 255.0f,
+				(float)ambientColorChooser.getColor().getBlue() / 255.0f)
+				.times((float)((double)((Double)ambientIntensitySpinner.getValue()))));
+		});
+		
+		ambientIntensitySpinner.addChangeListener(e ->
+		{
+			lightController.setAmbientLightColor(new Vector3(
+				(float)ambientColorChooser.getColor().getRed() / 255.0f,
+				(float)ambientColorChooser.getColor().getGreen() / 255.0f,
+				(float)ambientColorChooser.getColor().getBlue() / 255.0f)
+				.times((float)((double)((Double)ambientIntensitySpinner.getValue()))));
+		});
 	}
 	
 	/**

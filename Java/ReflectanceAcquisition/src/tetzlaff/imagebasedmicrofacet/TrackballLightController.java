@@ -55,6 +55,8 @@ public class TrackballLightController implements OverrideableLightController, Ch
     		
     		lightControls.add(false);
     	}
+    	
+    	this.ambientLightColor = new Vector3(0.0f);
 	}
 	
 	public CameraController asCameraController()
@@ -117,9 +119,9 @@ public class TrackballLightController implements OverrideableLightController, Ch
 	@Override
 	public void keyPressed(Window window, int keycode, ModifierKeys mods) 
 	{
-		if (keycode >= KeyCodes.ZERO && keycode <= KeyCodes.SEVEN)
+		if (keycode >= KeyCodes.ONE && keycode <= KeyCodes.FOUR)
 		{
-			int selection = keycode - KeyCodes.ZERO;
+			int selection = keycode - KeyCodes.ONE;
 
 			if (mods.getAltModifier())
 			{
@@ -151,9 +153,9 @@ public class TrackballLightController implements OverrideableLightController, Ch
 	@Override
 	public void keyReleased(Window window, int keycode, ModifierKeys mods) 
 	{
-		if (keycode >= KeyCodes.ZERO && keycode <= KeyCodes.SEVEN)
+		if (keycode >= KeyCodes.ONE && keycode <= KeyCodes.FOUR)
 		{
-			int selection = keycode - KeyCodes.ZERO;
+			int selection = keycode - KeyCodes.ONE;
 			
 			if (selection < trackballs.size() && lightControls.get(selection))
 			{

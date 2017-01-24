@@ -594,9 +594,8 @@ void main()
     
     vec4[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
 	
-	vec3 ambient = vec3(0.0); // TODO make this an input variable
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
-    vec3 reflectance = fresnel(ambient * diffuseColor, ambient, nDotV);
+    vec3 reflectance = fresnel(ambientColor * (diffuseColor + specularColor), ambientColor, nDotV);
     
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < virtualLightCount; i++)
     {
