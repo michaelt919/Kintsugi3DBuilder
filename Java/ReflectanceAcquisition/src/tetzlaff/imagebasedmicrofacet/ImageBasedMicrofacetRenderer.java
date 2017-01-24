@@ -260,13 +260,12 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		}
 		
 		float gamma = 2.2f;
-    	Vector3 ambientColor = new Vector3(0.0f, 0.0f, 0.0f);
-		p.setUniform("ambientColor", ambientColor);
+		p.setUniform("ambientColor", lightController.getAmbientLightColor());
     	
     	Vector3 clearColor = new Vector3(
-    			(float)Math.pow(ambientColor.x, 1.0 / gamma),
-    			(float)Math.pow(ambientColor.y, 1.0 / gamma),
-    			(float)Math.pow(ambientColor.z, 1.0 / gamma));
+    			(float)Math.pow(lightController.getAmbientLightColor().x, 1.0 / gamma),
+    			(float)Math.pow(lightController.getAmbientLightColor().y, 1.0 / gamma),
+    			(float)Math.pow(lightController.getAmbientLightColor().z, 1.0 / gamma));
     	ulfRenderer.setClearColor(clearColor);
     	
 		p.setUniform("infiniteLightSources", false);
@@ -632,5 +631,11 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		this.indexProgram = program;
 		ulfRenderer.setIndexProgram(program);
 		suppressErrors = false;
+	}
+	
+	@Override
+	public String toString()
+	{
+		return this.ulfRenderer.toString();
 	}
 }
