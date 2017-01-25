@@ -17,6 +17,8 @@ public interface Texture3D<ContextType extends Context<ContextType>> extends Tex
 	int getWidth();
 	int getHeight();
 	int getDepth();
+
+	void setTextureWrap(TextureWrapMode wrapS, TextureWrapMode wrapT, TextureWrapMode wrapR);
 	
 	void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical) throws IOException;
 	void loadLayer(int layerIndex, ZipWrapper zipFile, boolean flipVertical) throws IOException;
