@@ -13,4 +13,6 @@ public interface Texture1D<ContextType extends Context<ContextType>> extends Tex
 	 * @return The width of the texture.
 	 */
 	int getWidth();
+	
+	void setTextureWrap(TextureWrapMode wrap);
 }

@@ -3,9 +3,11 @@ package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL30.*;
 // mipmaps
 import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL44.*;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -19,6 +21,7 @@ import org.lwjgl.BufferUtils;
 
 import tetzlaff.gl.ColorFormat.DataType;
 import tetzlaff.gl.Texture2D;
+import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
@@ -31,6 +34,8 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 	private int height;
 	private int multisamples;
 	private int levelCount;
+	private TextureWrapMode wrapS = TextureWrapMode.None;
+	private TextureWrapMode wrapT = TextureWrapMode.None;
 	
 	static class OpenGLTexture2DFromFileBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
 	{
@@ -489,5 +494,49 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 	protected int getLevelCount() 
 	{
 		return this.levelCount;
+	}
+
+	@Override
+	public void setTextureWrap(TextureWrapMode wrapS, TextureWrapMode wrapT)
+	{
+		this.bind();
+		switch(wrapS)
+		{
+		case None: 
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			this.context.openGLErrorCheck();
+			break;
+		case MirrorOnce:
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_MIRROR_CLAMP_TO_EDGE);
+			this.context.openGLErrorCheck();
+			break;
+		case Repeat:
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			this.context.openGLErrorCheck();
+			break;
+		case MirroredRepeat:
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+			this.context.openGLErrorCheck();
+			break;
+		}
+		switch(wrapT)
+		{
+		case None: 
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			this.context.openGLErrorCheck();
+			break;
+		case MirrorOnce:
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_MIRROR_CLAMP_TO_EDGE);
+			this.context.openGLErrorCheck();
+			break;
+		case Repeat:
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			this.context.openGLErrorCheck();
+			break;
+		case MirroredRepeat:
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+			this.context.openGLErrorCheck();
+			break;
+		}
 	}
 }

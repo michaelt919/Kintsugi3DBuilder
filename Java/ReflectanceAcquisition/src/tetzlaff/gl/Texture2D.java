@@ -19,4 +19,6 @@ public interface Texture2D<ContextType extends Context<ContextType>> extends Tex
 	 * @return The height of the texture.
 	 */
 	int getHeight();
+
+	void setTextureWrap(TextureWrapMode wrapS, TextureWrapMode wrapT);
 }

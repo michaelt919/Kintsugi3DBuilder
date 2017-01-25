@@ -3,11 +3,14 @@ package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL44.*;
 
 import java.nio.ByteBuffer;
 
 import tetzlaff.gl.Texture1D;
+import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
 // mipmaps
 
@@ -173,5 +176,30 @@ class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLContext>
 	protected int getLevelCount() 
 	{
 		return this.levelCount;
+	}
+
+	@Override
+	public void setTextureWrap(TextureWrapMode wrap) 
+	{
+		this.bind();
+		switch(wrap)
+		{
+		case None: 
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			this.context.openGLErrorCheck();
+			break;
+		case MirrorOnce:
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_MIRROR_CLAMP_TO_EDGE);
+			this.context.openGLErrorCheck();
+			break;
+		case Repeat:
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			this.context.openGLErrorCheck();
+			break;
+		case MirroredRepeat:
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+			this.context.openGLErrorCheck();
+			break;
+		}
 	}
 }
