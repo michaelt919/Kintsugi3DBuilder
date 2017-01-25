@@ -100,16 +100,17 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		loadingFrame.setLocationRelativeTo(null);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[] {300, 630};
-		gbl_contentPane.rowHeights = new int[] {0};
-		gbl_contentPane.columnWeights = new double[]{0.0, 0.0};
-		gbl_contentPane.rowWeights = new double[]{1.0};
+		gbl_contentPane.rowHeights = new int[] {0, 100};
+		gbl_contentPane.columnWeights = new double[]{0.0, 1.0};
+		gbl_contentPane.rowWeights = new double[]{1.0, 1.0};
 		contentPane.setLayout(gbl_contentPane);
 		
 		JPanel panel_2 = new JPanel();
 		GridBagConstraints gbc_panel_2 = new GridBagConstraints();
+		gbc_panel_2.gridheight = 2;
 		gbc_panel_2.fill = GridBagConstraints.VERTICAL;
 		gbc_panel_2.anchor = GridBagConstraints.WEST;
-		gbc_panel_2.insets = new Insets(0, 0, 0, 5);
+		gbc_panel_2.insets = new Insets(0, 0, 5, 5);
 		gbc_panel_2.gridx = 0;
 		gbc_panel_2.gridy = 0;
 		contentPane.add(panel_2, gbc_panel_2);
@@ -840,6 +841,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		
 		JPanel panel_3 = new JPanel();
 		GridBagConstraints gbc_panel_3 = new GridBagConstraints();
+		gbc_panel_3.insets = new Insets(0, 0, 5, 0);
 		gbc_panel_3.anchor = GridBagConstraints.NORTHWEST;
 		gbc_panel_3.gridx = 1;
 		gbc_panel_3.gridy = 0;
@@ -1017,6 +1019,21 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		gbc_ambientIntensitySpinner.gridx = 1;
 		gbc_ambientIntensitySpinner.gridy = 1;
 		panel_8.add(ambientIntensitySpinner, gbc_ambientIntensitySpinner);
+		
+		JPanel panel_9 = new JPanel();
+		GridBagConstraints gbc_panel_9 = new GridBagConstraints();
+		gbc_panel_9.insets = new Insets(0, 0, 5, 0);
+		gbc_panel_9.fill = GridBagConstraints.BOTH;
+		gbc_panel_9.gridx = 1;
+		gbc_panel_9.gridy = 1;
+		contentPane.add(panel_9, gbc_panel_9);
+		
+		JCheckBox chckbxEnvironmentMapping = new JCheckBox("Environment mapping");
+		chckbxEnvironmentMapping.addChangeListener((e) ->
+		{
+			lightController.setEnvironmentMappingEnabled(chckbxEnvironmentMapping.isSelected());
+		});
+		panel_9.add(chckbxEnvironmentMapping);
 		
 		light0ColorChooser.getSelectionModel().addChangeListener(e ->
 		{

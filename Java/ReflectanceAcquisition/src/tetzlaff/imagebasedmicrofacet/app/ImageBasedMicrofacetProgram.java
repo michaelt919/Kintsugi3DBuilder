@@ -105,6 +105,18 @@ public class ImageBasedMicrofacetProgram
 		{
 			normalController.setAmbientLightColor(ambientLightColor);
 		}
+
+		@Override
+		public boolean getEnvironmentMappingEnabled() 
+		{
+			return hardcodedMode ? hardcodedController.getEnvironmentMappingEnabled() : normalController.getEnvironmentMappingEnabled();
+		}
+
+		@Override
+		public void setEnvironmentMappingEnabled(boolean enabled) 
+		{
+			normalController.setEnvironmentMappingEnabled(enabled);
+		}
 	}
 	
     /**
@@ -233,6 +245,8 @@ public class ImageBasedMicrofacetProgram
 	        			model.getProgram().delete();
 	        		}
 		        	model.setProgram(newProgram);
+		        	
+		        	model.getSelectedItem().reloadHelperShaders();
 		        	
 //		        	if (model.getIndexProgram() != null)
 //	        		{

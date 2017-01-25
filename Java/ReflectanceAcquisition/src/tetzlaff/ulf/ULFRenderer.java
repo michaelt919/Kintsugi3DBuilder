@@ -104,6 +104,28 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     {
     	this.callback = callback;
     }
+    
+    @Override
+    public void reloadHelperShaders()
+    {
+    	try
+        {
+			Program<ContextType> newProgram = context.getShaderProgramBuilder()
+    				.addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/common/envbackgroundtexture.frag"))
+    				.createProgram();
+
+			this.environmentBackgroundProgram.delete();
+    		this.environmentBackgroundProgram = newProgram;
+    		
+	    	this.environmentBackgroundRenderable = context.createRenderable(environmentBackgroundProgram);
+	    	this.environmentBackgroundRenderable.addVertexBuffer("position", context.createRectangle());
+        }
+        catch (IOException e)
+        {
+        	e.printStackTrace();
+        }
+    }
  
     @Override
     public void initialize() 
@@ -465,7 +487,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
 				
 				context.disableDepthTest();
-				//this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+				this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
 				context.enableDepthTest();
 			}
     		
