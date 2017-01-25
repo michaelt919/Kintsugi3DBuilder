@@ -54,19 +54,17 @@ uniform vec3 viewDirTSOverride;
 
 vec3 getEnvironment(vec3 lightDirection)
 {
+	vec2 lightDirXZ = normalize(lightDirection.xz);
 	return pow(texture(environmentMap, 
-		vec2(0.5 * atan(-lightDirection.x, -lightDirection.z), 
-				atan(lightDirection.y)) / PI + vec2(0.5)
-		).rgb,
+		vec2(atan(-lightDirXZ[0], -lightDirXZ[1]) / 2, asin(lightDirection.y)) / PI + vec2(0.5)).rgb,
 		vec3(2.2));
 }
 
 vec3 getEnvironmentDiffuse(vec3 normalDirection)
 {
+	vec2 normalDirXZ = normalize(normalDirection.xz);
 	return pow(textureLod(environmentMap, 
-		vec2(0.5 * atan(-normalDirection.x, -normalDirection.z), 
-				atan(normalDirection.y)) / PI + vec2(0.5), 
-		2).rgb,
+		vec2(atan(-normalDirXZ[0], -normalDirXZ[1]) / 2, asin(normalDirection.y)) / PI + vec2(0.5), 2).rgb,
 		vec3(2.2));
 }
 
@@ -238,10 +236,10 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 					
 			vec3 mfd = specularResid.rgb * lightDistSquared / lightIntensity;
             
-            result = vec4(mfd * nDotL_virtual
+            result = vec4(/*mfd * nDotL_virtual*/1.0
 				* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
 									* virtualLightDir), 
-				dist(nDotH, roughness) / 4
+				/*dist(nDotH, roughness) / 4*/1.0
 				/*getLuminance(mfd / specularColor)*/);
         }
         
@@ -266,7 +264,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
     
     if (sum.y > 0.0)
 	{
-		return sum.rgb / max(4, sum.a);
+		return sum.rgb / max(1000000, sum.a);
 	}
 	else
 	{
@@ -595,7 +593,22 @@ void main()
     vec4[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
 	
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
-    vec3 reflectance = fresnel(ambientColor * (diffuseColor + specularColor), ambientColor, nDotV);
+    vec3 reflectance;
+
+	if (useEnvironmentTexture)
+	{
+		// reflectance = 
+			// fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
+				// getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz) / 4, nDotV)
+			// + diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+	
+		// For debugging environment mapping:
+		reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
+	}
+	else
+	{
+		reflectance = fresnel(ambientColor * (diffuseColor + specularColor), ambientColor, nDotV);
+	}
     
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < virtualLightCount; i++)
     {
@@ -622,7 +635,8 @@ void main()
 				vec4 projTexCoord = lightMatrixVirtual[i] * vec4(fPosition, 1.0);
 				projTexCoord /= projTexCoord.w;
 				projTexCoord = (projTexCoord + vec4(1)) / 2;
-				shadow = !(projTexCoord.x >= 0 && projTexCoord.x <= 1 && projTexCoord.y >= 0 && projTexCoord.y <= 1 
+				shadow = !(projTexCoord.x >= 0 && projTexCoord.x <= 1 
+					&& projTexCoord.y >= 0 && projTexCoord.y <= 1 
 					&& projTexCoord.z >= 0 && projTexCoord.z <= 1
 					&& texture(shadowMaps, vec3(projTexCoord.xy, i)).r - projTexCoord.z >= -0.01);
 			}
@@ -675,13 +689,4 @@ void main()
     }
 		
 	fragColor = tonemap(vec3(reflectance), 1.0);
-    
-	// fragColor = tonemap(
-		// 10 * (fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
-				// getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz) / 4,
-				// 1.0)//nDotV)
-			// + diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz)), 
-		// 1.0);
-	
-	//fragColor = tonemap(getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz), 1.0);
 }

@@ -168,4 +168,16 @@ public class HardcodedLightController implements LightController, OverrideableLi
 	{
 		// Ignore
 	}
+
+	@Override
+	public boolean getEnvironmentMappingEnabled() 
+	{
+		return false;
+	}
+
+	@Override
+	public void setEnvironmentMappingEnabled(boolean enabled) 
+	{
+		// Ignore
+	}
 }

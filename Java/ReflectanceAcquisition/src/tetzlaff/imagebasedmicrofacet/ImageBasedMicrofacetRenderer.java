@@ -215,7 +215,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			p.setTexture("roughnessMap", microfacetField.roughnessTexture);
 		}
 		
-		if (microfacetField.environmentLowResTexture == null)
+		if (microfacetField.environmentLowResTexture == null || !lightController.getEnvironmentMappingEnabled())
 		{
 			p.setUniform("useEnvironmentTexture", false);
 			p.setTexture("environmentMap", null);
@@ -402,7 +402,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 //				indexProgram.setUniform("lightIntensity", new Vector3(1.0f, 1.0f, 1.0f));
 			}
 			
-			ulfRenderer.draw(microfacetField.environmentHighResTexture, envMapMatrix);
+			ulfRenderer.draw(lightController.getEnvironmentMappingEnabled() ? microfacetField.environmentHighResTexture : null, envMapMatrix);
 		}
 		catch(Exception e)
 		{
@@ -637,5 +637,11 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	public String toString()
 	{
 		return this.ulfRenderer.toString();
+	}
+
+	@Override
+	public void reloadHelperShaders() 
+	{
+		this.ulfRenderer.reloadHelperShaders();
 	}
 }

@@ -19,6 +19,7 @@ public class TrackballLightController implements OverrideableLightController, Ch
 {
 	private int activeTrackball;
 	Vector3 ambientLightColor;
+	private boolean environmentMappingEnabled;
 	private List<Vector3> lightColors;
 	private List<Trackball> trackballs;
 	private List<Boolean> lightControls;
@@ -241,5 +242,17 @@ public class TrackballLightController implements OverrideableLightController, Ch
 	public void setAmbientLightColor(Vector3 ambientLightColor) 
 	{
 		this.ambientLightColor = ambientLightColor;
+	}
+
+	@Override
+	public boolean getEnvironmentMappingEnabled() 
+	{
+		return this.environmentMappingEnabled;
+	}
+
+	@Override
+	public void setEnvironmentMappingEnabled(boolean enabled) 
+	{
+		this.environmentMappingEnabled = enabled;
 	}
 }

@@ -271,4 +271,13 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	{
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void reloadHelperShaders() 
+	{
+		for(ULFRenderer<ContextType> stage : stages)
+		{
+			stage.reloadHelperShaders();
+		}
+	}
 }

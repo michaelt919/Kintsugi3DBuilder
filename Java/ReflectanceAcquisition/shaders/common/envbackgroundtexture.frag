@@ -15,8 +15,9 @@ void main()
 {
 	vec4 unprojected = inverse(projection) * vec4(fTexCoord * 2 - vec2(1), 0, 1);
 
-	vec4 viewDir = envMapMatrix * inverse(model_view) * (unprojected / unprojected.w);
+	vec3 viewDir = 
+		normalize((envMapMatrix * inverse(model_view) * vec4(unprojected.xyz / unprojected.w, 0.0)).xyz);
 
-    fragColor = texture(env, vec2(0.5 * atan(-viewDir.x, -viewDir.z), 
-					atan(viewDir.y)) / PI + vec2(0.5));
+	vec2 viewDirXZ = normalize(viewDir.xz);
+    fragColor = texture(env, vec2(atan(-viewDirXZ[0], -viewDirXZ[1]) / 2, asin(viewDir.y)) / PI + vec2(0.5));
 }
