@@ -16,6 +16,7 @@ import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture1D;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
+import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.Matrix4;
@@ -105,6 +106,8 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 					.setMipmapsEnabled(true)
 					.setLinearFilteringEnabled(true)
 					.createTexture();
+			
+			environmentLowResTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
 		}
 		else
 		{
@@ -119,6 +122,8 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 					.setMipmapsEnabled(true)
 					.setLinearFilteringEnabled(true)
 					.createTexture();
+			
+			environmentHighResTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
 		}
 		else
 		{

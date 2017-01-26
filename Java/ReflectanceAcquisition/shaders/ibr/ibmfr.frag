@@ -1,4 +1,4 @@
-#version 330
+#version 400
 
 in vec3 fPosition;
 in vec2 fTexCoord;
@@ -54,18 +54,21 @@ uniform vec3 viewDirTSOverride;
 
 vec3 getEnvironment(vec3 lightDirection)
 {
-	vec2 lightDirXZ = normalize(lightDirection.xz);
-	return pow(texture(environmentMap, 
-		vec2(atan(-lightDirXZ[0], -lightDirXZ[1]) / 2, asin(lightDirection.y)) / PI + vec2(0.5)).rgb,
-		vec3(2.2));
+	vec2 texCoords = vec2(atan(-lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
+						/ PI + vec2(0.5);
+	
+	// To prevent seams when the texture wraps around
+	float lod1 = textureQueryLod(environmentMap, texCoords).y;
+	float lod2 = textureQueryLod(environmentMap, mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0)).y;
+	
+	return pow(textureLod(environmentMap, texCoords, min(lod1, lod2)).rgb, vec3(2.2));
 }
 
 vec3 getEnvironmentDiffuse(vec3 normalDirection)
 {
-	vec2 normalDirXZ = normalize(normalDirection.xz);
-	return pow(textureLod(environmentMap, 
-		vec2(atan(-normalDirXZ[0], -normalDirXZ[1]) / 2, asin(normalDirection.y)) / PI + vec2(0.5), 2).rgb,
-		vec3(2.2));
+	vec2 texCoords = vec2(atan(-normalDirection.x, -normalDirection.z) / 2, asin(normalDirection.y))
+						/ PI + vec2(0.5);
+	return pow(textureLod(environmentMap, texCoords, 2).rgb, vec3(2.2));
 }
 
 vec3 computeFresnelReflectivityActual(vec3 specularColor, vec3 grazingColor, float hDotV)
@@ -486,42 +489,42 @@ vec3 sRGBToLinear(vec3 sRGBColor)
 
 vec4 tonemap(vec3 color, float alpha)
 {
-    if (useInverseLuminanceMap)
-    {
-        if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
-        {
-            return vec4(0.0, 0.0, 0.0, 1.0);
-        }
-        else
-        {
-            // Step 1: convert to CIE luminance
-            // Clamp to 1 so that the ratio computed in step 3 is well defined
-            // if the luminance value somehow exceeds 1.0
-            float luminance = getLuminance(color);
-			float maxLuminance = getMaxLuminance();
-			if (luminance >= maxLuminance)
-			{
-				return vec4(linearToSRGB(color / maxLuminance), alpha);
-			}
-			else
-			{
-				float scaledLuminance = min(1.0, luminance / maxLuminance);
+    // if (useInverseLuminanceMap)
+    // {
+        // if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
+        // {
+            // return vec4(0.0, 0.0, 0.0, 1.0);
+        // }
+        // else
+        // {
+            // // Step 1: convert to CIE luminance
+            // // Clamp to 1 so that the ratio computed in step 3 is well defined
+            // // if the luminance value somehow exceeds 1.0
+            // float luminance = getLuminance(color);
+			// float maxLuminance = getMaxLuminance();
+			// if (luminance >= maxLuminance)
+			// {
+				// return vec4(linearToSRGB(color / maxLuminance), alpha);
+			// }
+			// else
+			// {
+				// float scaledLuminance = min(1.0, luminance / maxLuminance);
 				
-				// Step 2: determine the ratio between the tonemapped and linear luminance
-				// Remove implicit gamma correction from the lookup table
-				float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
-				float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
-				float scale = tonemappedNoGamma / luminance;
+				// // Step 2: determine the ratio between the tonemapped and linear luminance
+				// // Remove implicit gamma correction from the lookup table
+				// float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
+				// float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
+				// float scale = tonemappedNoGamma / luminance;
 					
-				// Step 3: return the color, scaled to have the correct luminance,
-				// but the original saturation and hue.
-				// Step 4: apply gamma correction
-				vec3 colorScaled = color * scale;
-				return vec4(linearToSRGB(colorScaled), alpha);
-			}
-        }
-    }
-    else
+				// // Step 3: return the color, scaled to have the correct luminance,
+				// // but the original saturation and hue.
+				// // Step 4: apply gamma correction
+				// vec3 colorScaled = color * scale;
+				// return vec4(linearToSRGB(colorScaled), alpha);
+			// }
+        // }
+    // }
+    // else
     {
         return vec4(linearToSRGB(color), alpha);
     }
@@ -597,13 +600,14 @@ void main()
 
 	if (useEnvironmentTexture)
 	{
-		// reflectance = 
-			// fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
-				// getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz) / 4, nDotV)
-			// + diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+		reflectance = 
+			fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
+				getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz) / 4, nDotV)
+			+ diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 	
 		// For debugging environment mapping:
-		reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
+		//reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
+		//reflectance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 	}
 	else
 	{
@@ -657,7 +661,8 @@ void main()
                 }
                 else
                 {
-                    mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i].rgb, vec3(grazingIntensity), hDotV));
+                    mfdFresnel =
+						max(vec3(0.0), fresnel(weightedAverages[i].rgb, vec3(grazingIntensity), hDotV));
 					//mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
                     //mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
 					
@@ -683,7 +688,8 @@ void main()
             
                 reflectance += (fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
                     mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV))
-                    * (useTSOverrides ? vec3(1.0) : lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed));
+                    * (useTSOverrides ? vec3(1.0) : 
+						lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed));
             }
         }
     }

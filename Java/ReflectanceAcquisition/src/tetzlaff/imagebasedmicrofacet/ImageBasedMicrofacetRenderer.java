@@ -151,16 +151,16 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 				e.printStackTrace();
 			}
     		this.btfRequested = false;
+    		
+    		if (callback != null)
+    		{
+    			callback.loadingComplete();
+    		}
     	}
     	else
     	{
     		ulfRenderer.update(); // Resample requests handled here
     	}
-		
-		if (callback != null)
-		{
-			callback.loadingComplete();
-		}
 	}
 	
 	
@@ -441,6 +441,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	public void setOnLoadCallback(ULFLoadingMonitor callback) 
 	{
 		this.callback = callback;
+		ulfRenderer.setOnLoadCallback(callback);
 	}
 	
 	@Override
