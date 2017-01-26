@@ -48,6 +48,7 @@ import java.beans.PropertyChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
@@ -100,7 +101,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		loadingFrame.setLocationRelativeTo(null);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[] {300, 630};
-		gbl_contentPane.rowHeights = new int[] {0, 100};
+		gbl_contentPane.rowHeights = new int[] {0, 180};
 		gbl_contentPane.columnWeights = new double[]{0.0, 1.0};
 		gbl_contentPane.rowWeights = new double[]{1.0, 1.0};
 		contentPane.setLayout(gbl_contentPane);
@@ -439,107 +440,107 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		btnBTFExport.setToolTipText("Evaluate the fidelity of the image-based sampling.");
 		
 		// Set the combo box model to the parameter
-				if(model != null) { comboBoxObjects.setModel(model); }
-				
-				// Set initial values from the 'model' parameter
-				if (model == null || model.getSelectedItem() == null)
-				{
-					comboBoxObjects.setEnabled(false);
-					sliderObjects.setEnabled(false);
+		if(model != null) { comboBoxObjects.setModel(model); }
+		
+		// Set initial values from the 'model' parameter
+		if (model == null || model.getSelectedItem() == null)
+		{
+			comboBoxObjects.setEnabled(false);
+			sliderObjects.setEnabled(false);
 
-					lblGamma.setEnabled(false);
-					spinnerGamma.setEnabled(false);
-					lblWeightExponent.setEnabled(false);
-					spinnerExponent.setEnabled(false);
-					chckbxOcclusion.setEnabled(false);
-					lblBias.setEnabled(false);
-					spinnerOccBias.setEnabled(false);
-					
-					chckbxHalfRes.setSelected(isHighDPI);
-					chckbxHalfRes.setEnabled(false);
-					chckbxMultisampling.setEnabled(false);
-
-					lblNewDimensions.setEnabled(false);
-					spinnerWidth.setEnabled(false);
-					lblX.setEnabled(false);
-					spinnerHeight.setEnabled(false);
-					btnResample.setEnabled(false);
-					btnFidelity.setEnabled(false);
-					btnBTFExport.setEnabled(false);
-				}
-				else
-				{
-					comboBoxObjects.setEnabled(model.getSize()>1?true:false);
-					sliderObjects.setEnabled(model.getSize()>1?true:false);
-
-					lblGamma.setEnabled(true);
-					spinnerGamma.setEnabled(true);
-					lblWeightExponent.setEnabled(true);
-					spinnerExponent.setEnabled(true);
-					chckbxOcclusion.setEnabled(true);
-					lblBias.setEnabled(true);
-					spinnerOccBias.setEnabled(true);
-
-					chckbxHalfRes.setEnabled(true);
-					chckbxMultisampling.setEnabled(true);
-					
-					lblNewDimensions.setEnabled(true);
-					spinnerWidth.setEnabled(true);
-					lblX.setEnabled(true);
-					spinnerHeight.setEnabled(true);
-					btnResample.setEnabled(true);
-					btnFidelity.setEnabled(true);
-					btnBTFExport.setEnabled(true);
-					
-					spinnerGamma.setValue(model.getSelectedItem().getGamma());
-					spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
-					chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
-					spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
-					chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
-
-					model.getSelectedItem().setHalfResolution(isHighDPI);
-					chckbxHalfRes.setSelected(isHighDPI);
-				}
-				
-				// Create callback monitor to show the loading window when the model is being read
-				if(model != null)
-				{
-					model.setLoadingMonitor(new ULFLoadingMonitor()
-					{
-						@Override
-						public void setProgress(double progress)
-						{
-							SwingUtilities.invokeLater(new Runnable() {
-								@Override
-								public void run() {
-									loadingBar.setIndeterminate(false);
-									loadingBar.setValue((int)Math.round(progress * 100));
-								}						
-							});
-						}
+			lblGamma.setEnabled(false);
+			spinnerGamma.setEnabled(false);
+			lblWeightExponent.setEnabled(false);
+			spinnerExponent.setEnabled(false);
+			chckbxOcclusion.setEnabled(false);
+			lblBias.setEnabled(false);
+			spinnerOccBias.setEnabled(false);
 			
-						@Override
-						public void loadingComplete()
-						{
-							SwingUtilities.invokeLater(new Runnable() {
-								@Override
-								public void run() {
-									loadingFrame.setVisible(false);
-								}
-							});
-						}
+			chckbxHalfRes.setSelected(isHighDPI);
+			chckbxHalfRes.setEnabled(false);
+			chckbxMultisampling.setEnabled(false);
 
-						@Override
-						public void startLoading() {
-							
-						}
+			lblNewDimensions.setEnabled(false);
+			spinnerWidth.setEnabled(false);
+			lblX.setEnabled(false);
+			spinnerHeight.setEnabled(false);
+			btnResample.setEnabled(false);
+			btnFidelity.setEnabled(false);
+			btnBTFExport.setEnabled(false);
+		}
+		else
+		{
+			comboBoxObjects.setEnabled(model.getSize()>1?true:false);
+			sliderObjects.setEnabled(model.getSize()>1?true:false);
 
+			lblGamma.setEnabled(true);
+			spinnerGamma.setEnabled(true);
+			lblWeightExponent.setEnabled(true);
+			spinnerExponent.setEnabled(true);
+			chckbxOcclusion.setEnabled(true);
+			lblBias.setEnabled(true);
+			spinnerOccBias.setEnabled(true);
+
+			chckbxHalfRes.setEnabled(true);
+			chckbxMultisampling.setEnabled(true);
+			
+			lblNewDimensions.setEnabled(true);
+			spinnerWidth.setEnabled(true);
+			lblX.setEnabled(true);
+			spinnerHeight.setEnabled(true);
+			btnResample.setEnabled(true);
+			btnFidelity.setEnabled(true);
+			btnBTFExport.setEnabled(true);
+			
+			spinnerGamma.setValue(model.getSelectedItem().getGamma());
+			spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
+			chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
+			spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
+			chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
+
+			model.getSelectedItem().setHalfResolution(isHighDPI);
+			chckbxHalfRes.setSelected(isHighDPI);
+		}
+		
+		// Create callback monitor to show the loading window when the model is being read
+		if(model != null)
+		{
+			model.setLoadingMonitor(new ULFLoadingMonitor()
+			{
+				@Override
+				public void setProgress(double progress)
+				{
+					SwingUtilities.invokeLater(new Runnable() {
 						@Override
-						public void setMaximum(double maximum) {
-							
+						public void run() {
+							loadingBar.setIndeterminate(false);
+							loadingBar.setValue((int)Math.round(progress * 100));
+						}						
+					});
+				}
+	
+				@Override
+				public void loadingComplete()
+				{
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							loadingFrame.setVisible(false);
 						}
 					});
 				}
+
+				@Override
+				public void startLoading() {
+					
+				}
+
+				@Override
+				public void setMaximum(double maximum) {
+					
+				}
+			});
+		}
 		
 		btnBTFExport.addActionListener(e ->
 		{
@@ -853,17 +854,18 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		JPanel panel_4 = new JPanel();
 		tabbedPane.addTab("Light 1", null, panel_4, null);
 		GridBagLayout gbl_panel_4 = new GridBagLayout();
-		gbl_panel_4.columnWidths = new int[] {100, 100, 0};
-		gbl_panel_4.rowHeights = new int[] {329, 0};
-		gbl_panel_4.columnWeights = new double[]{0.0};
-		gbl_panel_4.rowWeights = new double[]{0.0, 0.0};
+		gbl_panel_4.columnWidths = new int[] {100, 100, 0, 0};
+		gbl_panel_4.rowHeights = new int[] {0, 0, 0};
+		gbl_panel_4.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_4.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		panel_4.setLayout(gbl_panel_4);
 		
 		JColorChooser light0ColorChooser = new JColorChooser();
+		light0ColorChooser.setPreviewPanel(new JPanel());
 		GridBagConstraints gbc_light0ColorChooser = new GridBagConstraints();
-		gbc_light0ColorChooser.insets = new Insets(0, 0, 5, 0);
 		gbc_light0ColorChooser.gridwidth = 3;
 		gbc_light0ColorChooser.anchor = GridBagConstraints.NORTHWEST;
+		gbc_light0ColorChooser.insets = new Insets(0, 0, 5, 5);
 		gbc_light0ColorChooser.gridx = 0;
 		gbc_light0ColorChooser.gridy = 0;
 		panel_4.add(light0ColorChooser, gbc_light0ColorChooser);
@@ -888,12 +890,13 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		tabbedPane.addTab("Light 2", null, panel_5, null);
 		GridBagLayout gbl_panel_5 = new GridBagLayout();
 		gbl_panel_5.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_5.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_5.rowHeights = new int[] {0, 0, 0};
 		gbl_panel_5.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gbl_panel_5.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		panel_5.setLayout(gbl_panel_5);
 		
 		JColorChooser light1ColorChooser = new JColorChooser();
+		light1ColorChooser.setPreviewPanel(new JPanel());
 		GridBagConstraints gbc_light1ColorChooser = new GridBagConstraints();
 		gbc_light1ColorChooser.anchor = GridBagConstraints.NORTHWEST;
 		gbc_light1ColorChooser.gridwidth = 3;
@@ -922,12 +925,13 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		tabbedPane.addTab("Light 3", null, panel_6, null);
 		GridBagLayout gbl_panel_6 = new GridBagLayout();
 		gbl_panel_6.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_6.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_6.rowHeights = new int[] {0, 0, 0};
 		gbl_panel_6.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gbl_panel_6.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		panel_6.setLayout(gbl_panel_6);
 		
 		JColorChooser light2ColorChooser = new JColorChooser();
+		light2ColorChooser.setPreviewPanel(new JPanel());
 		GridBagConstraints gbc_light2ColorChooser = new GridBagConstraints();
 		gbc_light2ColorChooser.anchor = GridBagConstraints.NORTHWEST;
 		gbc_light2ColorChooser.gridwidth = 3;
@@ -956,12 +960,13 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		tabbedPane.addTab("Light 4", null, panel_7, null);
 		GridBagLayout gbl_panel_7 = new GridBagLayout();
 		gbl_panel_7.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_7.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_7.rowHeights = new int[] {0, 0, 0};
 		gbl_panel_7.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gbl_panel_7.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		panel_7.setLayout(gbl_panel_7);
 		
 		JColorChooser light3ColorChooser = new JColorChooser();
+		light3ColorChooser.setPreviewPanel(new JPanel());
 		GridBagConstraints gbc_light3ColorChooser = new GridBagConstraints();
 		gbc_light3ColorChooser.anchor = GridBagConstraints.NORTHWEST;
 		gbc_light3ColorChooser.gridwidth = 3;
@@ -990,12 +995,13 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		tabbedPane.addTab("Ambient Light", null, panel_8, null);
 		GridBagLayout gbl_panel_8 = new GridBagLayout();
 		gbl_panel_8.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_8.rowHeights = new int[]{329, 0, 0};
+		gbl_panel_8.rowHeights = new int[] {0, 0, 0};
 		gbl_panel_8.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gbl_panel_8.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		panel_8.setLayout(gbl_panel_8);
 		
 		JColorChooser ambientColorChooser = new JColorChooser();
+		ambientColorChooser.setPreviewPanel(new JPanel());
 		GridBagConstraints gbc_ambientColorChooser = new GridBagConstraints();
 		gbc_ambientColorChooser.anchor = GridBagConstraints.NORTHWEST;
 		gbc_ambientColorChooser.gridwidth = 3;

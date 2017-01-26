@@ -229,6 +229,6 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	@Override
 	public String toString()
 	{
-		return this.id;
+		return this.id.length() > 32 ? "..." + this.id.substring(this.id.length()-31, this.id.length()) : this.id;
 	}
 }
