@@ -239,11 +239,10 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 					
 			vec3 mfd = specularResid.rgb * lightDistSquared / lightIntensity;
             
-            result = vec4(/*mfd * nDotL_virtual*/1.0
+            result = vec4(mfd * nDotL_virtual
 				* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
-									* virtualLightDir), 
-				/*dist(nDotH, roughness) / 4*/1.0
-				/*getLuminance(mfd / specularColor)*/);
+									* virtualLightDir),
+				getLuminance(mfd / specularColor));
         }
         
         return result;
@@ -267,7 +266,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
     
     if (sum.y > 0.0)
 	{
-		return sum.rgb / max(1000000, sum.a);
+		return sum.rgb / clamp(sum.a, 1.0, 1000000.0);
 	}
 	else
 	{
@@ -601,8 +600,8 @@ void main()
 	if (useEnvironmentTexture)
 	{
 		reflectance = 
-			fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
-				getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz) / 4, nDotV)
+			 fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
+				 getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz), nDotV)
 			+ diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 	
 		// For debugging environment mapping:
