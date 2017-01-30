@@ -1,4 +1,4 @@
-#version 400
+#version 330
 
 uniform sampler2D env;
 in vec2 fTexCoord;
@@ -21,13 +21,15 @@ void main()
 	vec2 texCoords = vec2(atan(-viewDir.x, -viewDir.z) / 2, asin(viewDir.y)) / PI + vec2(0.5);
 		
 	// To prevent seams when the texture wraps around
-	float lod1 = textureQueryLod(env, texCoords).y;
-	float lod2 = textureQueryLod(env, mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0)).y;
-		
-    fragColor = textureLod(env, texCoords, min(lod1, lod2));
 	
-	// Something like this might be an alternative that doesn't require OpenGL 4:
-	// vec4 color1 = texture(env, mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0));
-	// vec4 color2 = texture(env, texCoords);
-	// fragColor = mix(color1, color2, 2.0 * abs(texCoords.x - 0.5));
+	// OpenGL 4.0 version
+	// float lod1 = textureQueryLod(env, texCoords).y;
+	// float lod2 = textureQueryLod(env, mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0)).y;
+		
+    // fragColor = textureLod(env, texCoords, min(lod1, lod2));
+	
+	// Alternative that doesn't require OpenGL 4:
+	vec4 color1 = texture(env, texCoords);
+	vec4 color2 = texture(env, mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0));
+	fragColor = mix(color1, color2, 2.0 * abs(texCoords.x - 0.5));
 }

@@ -180,4 +180,10 @@ public class HardcodedLightController implements LightController, OverrideableLi
 	{
 		// Ignore
 	}
+
+	@Override
+	public int getSelectedLightIndex() 
+	{
+		return 0;
+	}
 }

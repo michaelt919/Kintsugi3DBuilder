@@ -1,4 +1,4 @@
-#version 400
+#version 330
 
 in vec3 fPosition;
 in vec2 fTexCoord;
@@ -58,10 +58,17 @@ vec3 getEnvironment(vec3 lightDirection)
 						/ PI + vec2(0.5);
 	
 	// To prevent seams when the texture wraps around
-	float lod1 = textureQueryLod(environmentMap, texCoords).y;
-	float lod2 = textureQueryLod(environmentMap, mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0)).y;
 	
-	return pow(textureLod(environmentMap, texCoords, min(lod1, lod2)).rgb, vec3(2.2));
+	// OpenGL 4.0 version
+	// float lod1 = textureQueryLod(environmentMap, texCoords).y;
+	// float lod2 = textureQueryLod(environmentMap, mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0)).y;
+	
+	// return pow(textureLod(environmentMap, texCoords, min(lod1, lod2)).rgb, vec3(2.2));
+	
+	// Alternative that doesn't require OpenGL 4:
+	vec4 color1 = texture(environmentMap, texCoords);
+	vec4 color2 = texture(environmentMap, mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0));
+	return pow(mix(color1, color2, 2.0 * abs(texCoords.x - 0.5)).rgb, vec3(2.2));
 }
 
 vec3 getEnvironmentDiffuse(vec3 normalDirection)

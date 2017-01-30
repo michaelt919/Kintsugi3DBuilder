@@ -336,6 +336,29 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	program.setUniform("skipViewEnabled", false);
     	program.setUniform("skipView", -1);
 	}
+	
+	public Matrix4 getModelViewMatrix()
+	{
+    	float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length();
+		
+		return Matrix4.scale(scale)
+    			.times(cameraController.getViewMatrix())
+    			.times(Matrix4.scale(1.0f / scale))
+    			.times(new Matrix4(new Matrix3(lightField.viewSet.getCameraPose(0))))
+    			.times(Matrix4.translate(lightField.proxy.getCentroid().negated()));
+	}
+	
+	public Matrix4 getProjectionMatrix()
+	{
+    	FramebufferSize size = context.getDefaultFramebuffer().getSize();
+		float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length();
+		
+		return Matrix4.perspective(
+    			//(float)(1.0),
+    			lightField.viewSet.getCameraProjection(0).getVerticalFieldOfView(), 
+    			(float)size.width / (float)size.height, 
+    			0.01f * scale, 100.0f * scale);
+	}
     
     @Override
     public void draw()
@@ -382,21 +405,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	
     	this.setupForDraw();
     	
-    	float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length();
 
     	Matrix4 modelView, projection;
     	
-    	mainRenderable.program().setUniform("model_view", modelView = Matrix4.scale(scale)
-    			.times(cameraController.getViewMatrix())
-    			.times(Matrix4.scale(1.0f / scale))
-    			.times(new Matrix4(new Matrix3(lightField.viewSet.getCameraPose(0))))
-    			.times(Matrix4.translate(lightField.proxy.getCentroid().negated())));
-    	
-    	mainRenderable.program().setUniform("projection", projection = Matrix4.perspective(
-    			//(float)(1.0),
-    			lightField.viewSet.getCameraProjection(0).getVerticalFieldOfView(), 
-    			(float)size.width / (float)size.height, 
-    			0.01f * scale, 100.0f * scale));
+    	mainRenderable.program().setUniform("model_view", modelView = getModelViewMatrix());
+    	mainRenderable.program().setUniform("projection", projection = getProjectionMatrix());
     	
         FramebufferObject<ContextType> offscreenFBO;
         
