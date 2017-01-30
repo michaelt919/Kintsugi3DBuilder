@@ -255,4 +255,10 @@ public class TrackballLightController implements OverrideableLightController, Ch
 	{
 		this.environmentMappingEnabled = enabled;
 	}
+
+	@Override
+	public int getSelectedLightIndex() 
+	{
+		return this.activeTrackball;
+	}
 }

@@ -117,6 +117,12 @@ public class ImageBasedMicrofacetProgram
 		{
 			normalController.setEnvironmentMappingEnabled(enabled);
 		}
+
+		@Override
+		public int getSelectedLightIndex() 
+		{
+			return hardcodedMode ? hardcodedController.getSelectedLightIndex() : normalController.getSelectedLightIndex();
+		}
 	}
 	
     /**

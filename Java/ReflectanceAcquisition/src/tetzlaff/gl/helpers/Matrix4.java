@@ -53,6 +53,14 @@ public class Matrix4
         buffer.flip();
     }
 	
+	public Matrix4(Vector4 column1, Vector4 column2, Vector4 column3, Vector4 column4)
+    {
+        this(	column1.x, column2.x, column3.x, column4.x,
+        		column1.y, column2.y, column3.y, column4.y, 
+        		column1.z, column2.z, column3.z, column4.z, 
+        		column1.w, column2.w, column3.w, column4.w	);
+    }
+	
 	public Matrix4(Matrix3 m3, float tx, float ty, float tz)
 	{
 		this(	m3.get(0,0),	m3.get(0,1),	m3.get(0,2),	tx,
