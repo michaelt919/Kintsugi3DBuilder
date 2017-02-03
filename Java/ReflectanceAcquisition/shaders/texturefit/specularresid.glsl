@@ -1,9 +1,7 @@
 #ifndef SPECULARFIT_GLSL
 #define SPECULARFIT_GLSL
 
-#include "../reflectance/reflectance_single.glsl"
-
-#line 7 2003
+#line 5 2003
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
