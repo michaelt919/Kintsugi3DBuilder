@@ -669,9 +669,15 @@ void main()
                 {
                     mfdFresnel =
 						max(vec3(0.0), fresnel(weightedAverages[i].rgb, vec3(grazingIntensity), hDotV));
-					//mfdFresnel = max(vec3(0.0), fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
+					//mfdFresnel = max(vec3(0.0), 
+						// fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
                     //mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
 					
+					
+					// mfdFresnel = max(vec3(0.0), 
+							// fresnel(vec3(getLuminance(weightedAverages[i].rgb)), 
+								// vec3(grazingIntensity), hDotV))
+						// * specularColor / getLuminance(specularColor);
 					
 					// The following debug code for visualizing differences between reference and fitted in perceptually linear color space
 					
