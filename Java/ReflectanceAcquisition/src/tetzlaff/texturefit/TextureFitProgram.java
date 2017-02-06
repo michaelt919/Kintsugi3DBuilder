@@ -29,6 +29,6 @@ public class TextureFitProgram
 	        }
 		});
 		
-		gui.show();
+		gui.setVisible(true);
 	}
 }

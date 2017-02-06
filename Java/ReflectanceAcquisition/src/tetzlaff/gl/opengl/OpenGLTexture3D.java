@@ -39,10 +39,6 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 	private boolean useMipmaps;
 	private boolean staleMipmaps;
 	
-	private TextureWrapMode wrapS = TextureWrapMode.None;
-	private TextureWrapMode wrapT = TextureWrapMode.None;
-	private TextureWrapMode wrapR = TextureWrapMode.None;
-	
 	public static class OpenGLTexture3DColorBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture3D>
 	{
 		private int textureTarget;

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tetzlaff.gl.helpers.CameraController;
-import tetzlaff.gl.helpers.LightController;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.helpers.Vector3;

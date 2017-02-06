@@ -1805,7 +1805,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			        viewSet.setLightIntensity(i, lightIntensity);
 		    	}
 		    	
-		        viewSet.writeVSETFileToStream(new FileOutputStream(new File(outputDir, "default.vset")));
+		    	FileOutputStream outputStream = new FileOutputStream(new File(outputDir, "default.vset"));
+		        viewSet.writeVSETFileToStream(outputStream);
+		    	outputStream.flush();
+		    	outputStream.close();
 		        
 		        lightPositionBuffer = context.createUniformBuffer().setData(lightPositionList);
 		        lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensityList);
