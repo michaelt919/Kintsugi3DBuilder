@@ -1,8 +1,6 @@
 package tetzlaff.ulf;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
-import java.awt.image.renderable.RenderedImageFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

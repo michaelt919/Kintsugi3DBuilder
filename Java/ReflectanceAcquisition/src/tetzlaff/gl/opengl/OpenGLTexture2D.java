@@ -34,8 +34,6 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 	private int height;
 	private int multisamples;
 	private int levelCount;
-	private TextureWrapMode wrapS = TextureWrapMode.None;
-	private TextureWrapMode wrapT = TextureWrapMode.None;
 	
 	static class OpenGLTexture2DFromFileBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
 	{

@@ -10,6 +10,7 @@ import java.io.IOException;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -19,6 +20,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
+import javax.swing.JTabbedPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -36,19 +38,6 @@ import tetzlaff.ulf.ULFLoadOptions;
 import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFMorphRenderer;
 import tetzlaff.ulf.ViewSetImageOptions;
-
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-
-import javax.swing.JTabbedPane;
-import javax.swing.JColorChooser;
-
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the

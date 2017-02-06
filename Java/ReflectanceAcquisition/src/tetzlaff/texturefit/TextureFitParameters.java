@@ -22,20 +22,6 @@ public class TextureFitParameters
 	private int diffuseIterations = 16;
 	private float diffuseComputedNormalWeight = 0.0f;
 	private float diffuseInputNormalWeight = Float.MAX_VALUE;
-	
-	// Specular fitting parameters
-	private boolean specularRoughnessComputationEnabled = true;
-	private boolean specularNormalComputationEnabled = false;
-	private boolean trueBlinnPhongSpecularEnabled = true;
-	
-	private float specularSubtractDiffuseAmount = 0.98f;
-	private float specularInfluenceScale = 0.35f;
-	private float specularDeterminantThreshold = 0.002f;
-	private float specularComputedNormalWeight = 0.0f;
-	private float specularInputNormalComputedRoughnessWeight = 1.0f;
-	private float specularInputNormalDefaultRoughnessWeight = 1.0f;
-	private float defaultSpecularRoughness = 0.25f;
-	private float specularRoughnessCap = 0.5f;
 
 	public TextureFitParameters() 
 	{
@@ -152,99 +138,6 @@ public class TextureFitParameters
 
 	public void setDiffuseInputNormalWeight(float diffuseInputNormalWeight) {
 		this.diffuseInputNormalWeight = diffuseInputNormalWeight;
-	}
-
-	public boolean isSpecularRoughnessComputationEnabled() {
-		return this.specularRoughnessComputationEnabled;
-	}
-
-	public void setSpecularRoughnessComputationEnabled(
-			boolean specularRoughnessComputationEnabled) {
-		this.specularRoughnessComputationEnabled = specularRoughnessComputationEnabled;
-	}
-
-	public boolean isSpecularNormalComputationEnabled() {
-		return this.specularNormalComputationEnabled;
-	}
-
-	public void setSpecularNormalComputationEnabled(
-			boolean specularNormalComputationEnabled) {
-		this.specularNormalComputationEnabled = specularNormalComputationEnabled;
-	}
-
-	public boolean isTrueBlinnPhongSpecularEnabled() {
-		return this.trueBlinnPhongSpecularEnabled;
-	}
-
-	public void setTrueBlinnPhongSpecularEnabled(
-			boolean trueBlinnPhongSpecularEnabled) {
-		this.trueBlinnPhongSpecularEnabled = trueBlinnPhongSpecularEnabled;
-	}
-
-	public float getSpecularSubtractDiffuseAmount() {
-		return this.specularSubtractDiffuseAmount;
-	}
-
-	public void setSpecularSubtractDiffuseAmount(float specularSubtractDiffuseAmount) {
-		this.specularSubtractDiffuseAmount = specularSubtractDiffuseAmount;
-	}
-
-	public float getSpecularInfluenceScale() {
-		return this.specularInfluenceScale;
-	}
-
-	public void setSpecularInfluenceScale(float specularInfluenceScale) {
-		this.specularInfluenceScale = specularInfluenceScale;
-	}
-
-	public float getSpecularDeterminantThreshold() {
-		return this.specularDeterminantThreshold;
-	}
-
-	public void setSpecularDeterminantThreshold(float specularDeterminantThreshold) {
-		this.specularDeterminantThreshold = specularDeterminantThreshold;
-	}
-
-	public float getSpecularComputedNormalWeight() {
-		return this.specularComputedNormalWeight;
-	}
-
-	public void setSpecularComputedNormalWeight(float specularComputedNormalWeight) {
-		this.specularComputedNormalWeight = specularComputedNormalWeight;
-	}
-
-	public float getSpecularInputNormalComputedRoughnessWeight() {
-		return this.specularInputNormalComputedRoughnessWeight;
-	}
-
-	public void setSpecularInputNormalComputedRoughnessWeight(
-			float specularInputNormalComputedRoughnessWeight) {
-		this.specularInputNormalComputedRoughnessWeight = specularInputNormalComputedRoughnessWeight;
-	}
-
-	public float getSpecularInputNormalDefaultRoughnessWeight() {
-		return this.specularInputNormalDefaultRoughnessWeight;
-	}
-
-	public void setSpecularInputNormalDefaultRoughnessWeight(
-			float specularInputNormalDefaultRoughnessWeight) {
-		this.specularInputNormalDefaultRoughnessWeight = specularInputNormalDefaultRoughnessWeight;
-	}
-
-	public float getDefaultSpecularRoughness() {
-		return this.defaultSpecularRoughness;
-	}
-
-	public void setDefaultSpecularRoughness(float defaultSpecularRoughness) {
-		this.defaultSpecularRoughness = defaultSpecularRoughness;
-	}
-
-	public float getSpecularRoughnessCap() {
-		return this.specularRoughnessCap;
-	}
-
-	public void setSpecularRoughnessCap(float specularRoughnessCap) {
-		this.specularRoughnessCap = specularRoughnessCap;
 	}
 
 	public boolean areLightSourcesInfinite() {
