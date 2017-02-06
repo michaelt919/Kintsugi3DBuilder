@@ -144,8 +144,4 @@ public class TextureFitParameters
 		return this.areLightSourcesInfinite;
 	}
 
-	public void setLightSourcesInfinite(boolean infinite) {
-		this.areLightSourcesInfinite = infinite;
-	}
-
 }
