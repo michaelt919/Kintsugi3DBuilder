@@ -22,126 +22,267 @@ public class TextureFitParameters
 	private int diffuseIterations = 16;
 	private float diffuseComputedNormalWeight = 0.0f;
 	private float diffuseInputNormalWeight = Float.MAX_VALUE;
+	
+	private boolean debugModeEnabled = false;
+	private boolean lightIntensityEstimationEnabled = true;
+	private boolean lightOffsetEstimationEnabled = false;
+	private boolean diffuseTextureEnabled = true;
+	private boolean normalTextureEnabled = false;
+	private boolean specularTextureEnabled = true;
+	private boolean levenbergMarquardtOptimizationEnabled = true;
+	private boolean roughnessTextureEnabled = false;
+	
+	private double[] linearLuminanceValues;
+	private byte[] encodedLuminanceValues;
 
 	public TextureFitParameters() 
 	{
 	}
 
-	public float getGamma() {
+	public float getGamma() 
+	{
 		return this.gamma;
 	}
 
-	public void setGamma(float gamma) {
+	public void setGamma(float gamma) 
+	{
 		this.gamma = gamma;
 	}
 
-	public boolean isCameraVisibilityTestEnabled() {
+	public boolean isCameraVisibilityTestEnabled()
+	{
 		return this.cameraVisibilityTestEnabled;
 	}
 
-	public void setCameraVisibilityTestEnabled(boolean cameraVisibilityTestEnabled) {
+	public void setCameraVisibilityTestEnabled(boolean cameraVisibilityTestEnabled) 
+	{
 		this.cameraVisibilityTestEnabled = cameraVisibilityTestEnabled;
 	}
 
-	public float getCameraVisibilityTestBias() {
+	public float getCameraVisibilityTestBias() 
+	{
 		return this.cameraVisibilityTestBias;
 	}
 
-	public void setCameraVisibilityTestBias(float cameraVisibilityTestBias) {
+	public void setCameraVisibilityTestBias(float cameraVisibilityTestBias) 
+	{
 		this.cameraVisibilityTestBias = cameraVisibilityTestBias;
 	}
 
-	public int getImageWidth() {
+	public int getImageWidth() 
+	{
 		return this.imageWidth;
 	}
 
-	public void setImageWidth(int imageWidth) {
+	public void setImageWidth(int imageWidth) 
+	{
 		this.imageWidth = imageWidth;
 	}
 
-	public int getImageHeight() {
+	public int getImageHeight() 
+	{
 		return this.imageHeight;
 	}
 
-	public void setImageHeight(int imageHeight) {
+	public void setImageHeight(int imageHeight) 
+	{
 		this.imageHeight = imageHeight;
 	}
 
-	public int getTextureSize() {
+	public int getTextureSize() 
+	{
 		return this.textureSize;
 	}
 
-	public void setTextureSize(int textureSize) {
+	public void setTextureSize(int textureSize) 
+	{
 		this.textureSize = textureSize;
 	}
 
-	public int getTextureSubdivision() {
+	public int getTextureSubdivision() 
+	{
 		return this.textureSubdivision;
 	}
 
-	public void setTextureSubdivision(int textureSubdivision) {
+	public void setTextureSubdivision(int textureSubdivision) 
+	{
 		this.textureSubdivision = textureSubdivision;
 	}
 
-	public boolean isImageRescalingEnabled() {
+	public boolean isImageRescalingEnabled() 
+	{
 		return this.imageRescalingEnabled;
 	}
 
-	public void setImageRescalingEnabled(boolean imageRescalingEnabled) {
+	public void setImageRescalingEnabled(boolean imageRescalingEnabled) 
+	{
 		this.imageRescalingEnabled = imageRescalingEnabled;
 	}
 
-	public boolean isImagePreprojectionUseEnabled() {
+	public boolean isImagePreprojectionUseEnabled()
+	{
 		return this.imagePreprojectionUseEnabled;
 	}
 
-	public void setImagePreprojectionUseEnabled(boolean imagePreprojectionUseEnabled) {
+	public void setImagePreprojectionUseEnabled(boolean imagePreprojectionUseEnabled) 
+	{
 		this.imagePreprojectionUseEnabled = imagePreprojectionUseEnabled;
 	}
 
-	public boolean isImagePreprojectionGenerationEnabled() {
+	public boolean isImagePreprojectionGenerationEnabled() 
+	{
 		return this.imagePreprojectionGenerationEnabled;
 	}
 
 	public void setImagePreprojectionGenerationEnabled(
-			boolean imagePreprojectionGenerationEnabled) {
+			boolean imagePreprojectionGenerationEnabled) 
+	{
 		this.imagePreprojectionGenerationEnabled = imagePreprojectionGenerationEnabled;
 	}
 
-	public float getDiffuseDelta() {
+	public float getDiffuseDelta() 
+	{
 		return this.diffuseDelta;
 	}
 
-	public void setDiffuseDelta(float diffuseDelta) {
+	public void setDiffuseDelta(float diffuseDelta) 
+	{
 		this.diffuseDelta = diffuseDelta;
 	}
 
-	public int getDiffuseIterations() {
+	public int getDiffuseIterations() 
+	{
 		return this.diffuseIterations;
 	}
 
-	public void setDiffuseIterations(int diffuseIterations) {
+	public void setDiffuseIterations(int diffuseIterations) 
+	{
 		this.diffuseIterations = diffuseIterations;
 	}
 
-	public float getDiffuseComputedNormalWeight() {
+	public float getDiffuseComputedNormalWeight() 
+	{
 		return this.diffuseComputedNormalWeight;
 	}
 
-	public void setDiffuseComputedNormalWeight(float diffuseComputedNormalWeight) {
+	public void setDiffuseComputedNormalWeight(float diffuseComputedNormalWeight) 
+	{
 		this.diffuseComputedNormalWeight = diffuseComputedNormalWeight;
 	}
 
-	public float getDiffuseInputNormalWeight() {
+	public float getDiffuseInputNormalWeight()
+	{
 		return this.diffuseInputNormalWeight;
 	}
 
-	public void setDiffuseInputNormalWeight(float diffuseInputNormalWeight) {
+	public void setDiffuseInputNormalWeight(float diffuseInputNormalWeight) 
+	{
 		this.diffuseInputNormalWeight = diffuseInputNormalWeight;
 	}
 
-	public boolean areLightSourcesInfinite() {
+	public boolean areLightSourcesInfinite() 
+	{
 		return this.areLightSourcesInfinite;
+	}
+
+	public boolean isLightOffsetEstimationEnabled() 
+	{
+		return this.lightOffsetEstimationEnabled;
+	}
+
+	public void setLightOffsetEstimationEnabled(boolean lightOffsetEstimationEnabled) 
+	{
+		this.lightOffsetEstimationEnabled = lightOffsetEstimationEnabled;
+	}
+
+	public boolean isDiffuseTextureEnabled() 
+	{
+		return this.diffuseTextureEnabled;
+	}
+
+	public void setDiffuseTextureEnabled(boolean diffuseTextureEnabled) 
+	{
+		this.diffuseTextureEnabled = diffuseTextureEnabled;
+	}
+
+	public boolean isNormalTextureEnabled() 
+	{
+		return this.normalTextureEnabled;
+	}
+
+	public void setNormalTextureEnabled(boolean normalTextureEnabled) 
+	{
+		this.normalTextureEnabled = normalTextureEnabled;
+	}
+
+	public boolean isSpecularTextureEnabled() 
+	{
+		return this.specularTextureEnabled;
+	}
+
+	public void setSpecularTextureEnabled(boolean specularTextureEnabled) 
+	{
+		this.specularTextureEnabled = specularTextureEnabled;
+	}
+
+	public boolean isLevenbergMarquardtOptimizationEnabled() 
+	{
+		return this.levenbergMarquardtOptimizationEnabled;
+	}
+
+	public void setLevenbergMarquardtOptimizationEnabled(boolean levenbergMarquardtOptimizationEnabled)
+	{
+		this.levenbergMarquardtOptimizationEnabled = levenbergMarquardtOptimizationEnabled;
+	}
+
+	public boolean isRoughnessTextureEnabled() 
+	{
+		return this.roughnessTextureEnabled;
+	}
+
+	public void setRoughnessTextureEnabled(boolean roughnessTextureEnabled) 
+	{
+		this.roughnessTextureEnabled = roughnessTextureEnabled;
+	}
+
+	public double[] getLinearLuminanceValues() 
+	{
+		return this.linearLuminanceValues;
+	}
+
+	public void setLinearLuminanceValues(double[] linearLuminanceValues) 
+	{
+		this.linearLuminanceValues = linearLuminanceValues;
+	}
+
+	public byte[] getEncodedLuminanceValues() 
+	{
+		return this.encodedLuminanceValues;
+	}
+
+	public void setEncodedLuminanceValues(byte[] encodedLuminanceValues) 
+	{
+		this.encodedLuminanceValues = encodedLuminanceValues;
+	}
+
+	public boolean isLightIntensityEstimationEnabled() 
+	{
+		return lightIntensityEstimationEnabled;
+	}
+
+	public void setLightIntensityEstimationEnabled(boolean lightIntensityEstimationEnabled) 
+	{
+		this.lightIntensityEstimationEnabled = lightIntensityEstimationEnabled;
+	}
+
+	public boolean isDebugModeEnabled()
+	{
+		return debugModeEnabled;
+	}
+
+	public void setDebugModeEnabled(boolean debugModeEnabled) 
+	{
+		this.debugModeEnabled = debugModeEnabled;
 	}
 
 }
