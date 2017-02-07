@@ -3,10 +3,16 @@ package tetzlaff.texturefit;
 import java.awt.BorderLayout;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
@@ -19,17 +25,27 @@ import javax.swing.JTabbedPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListDataListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import tetzlaff.gl.NullContext;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.ulf.SampledLuminanceEncoding;
+import tetzlaff.ulf.ViewSet;
+
 import javax.swing.border.TitledBorder;
+
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+
 import javax.swing.UIManager;
+
 import java.awt.Color;
-import java.awt.FlowLayout;
+
+import javax.swing.JComboBox;
+import javax.swing.SpinnerModel;
 
 public class TextureFitUserInterface extends JFrame
 {
@@ -45,6 +61,7 @@ public class TextureFitUserInterface extends JFrame
 	private FilePicker outputDirectoryPicker;
 	
 	private JSpinner gammaSpinner;
+	
 	private JCheckBox cameraVisCheckBox;
 	private JSpinner cameraVisBiasSpinner;
 	
@@ -57,12 +74,30 @@ public class TextureFitUserInterface extends JFrame
 	private JCheckBox imagePreprojUseCheckBox;
 	private JCheckBox imagePreprojReuseCheckBox;
 
-	private JSpinner[] lightOffsetSpinners;
-	private JSpinner[] lightIntensitySpinners;
 	private JSpinner diffuseDeltaSpinner;
 	private JSpinner diffuseIterationsSpinner;
 	private JSpinner diffuseCompNormalSpinner;
 	
+	private JComboBox<String> primaryViewComboBox;
+	
+	private ViewSet<NullContext> currentViewSet;
+
+	private JSpinner spinnerXRiteWhite;
+	private JSpinner spinnerXRiteNeutral80;
+	private JSpinner spinnerXRiteNeutral65;
+	private JSpinner spinnerXRiteNeutral50;
+	private JSpinner spinnerXRiteNeutral35;
+	private JSpinner spinnerXRiteBlack;
+	private JCheckBox chckbxUseXriteMeasurements;
+	private JCheckBox chckbxComputeDiffuseTexture;
+	private JCheckBox chckbxComputeSpecularTexture;
+	private JCheckBox chckbxLevenbergMarquardtSpecularOptimization;
+	private JCheckBox chckbxEstimateLightOffset;
+	private JCheckBox chckbxComputeNormalMap;
+	private JCheckBox chckbxSpatiallyvaryingRoughnessMap;
+	private JCheckBox checkBoxEstimateGlobalLightIntensity;
+	private JCheckBox chckbxDebugMode;
+
 	private class FilePicker
 	{
 		File file = null;
@@ -71,6 +106,7 @@ public class TextureFitUserInterface extends JFrame
 	public TextureFitUserInterface() 
 	{
 		super("Texture Generation Program");
+		
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLocation(10, 10);
 		this.setSize(256, 256);
@@ -88,12 +124,10 @@ public class TextureFitUserInterface extends JFrame
 		vsetFilePicker = new FilePicker();
 		
 		JFileChooser vsetFileChooser = new JFileChooser();
-		vsetFileChooser.removeChoosableFileFilter(vsetFileChooser.getAcceptAllFileFilter());
 		
 		objFilePicker = new FilePicker();
 		
 		JFileChooser fileChooser = new JFileChooser();
-		fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
 		
 		imageDirectoryPicker = new FilePicker();
 		
@@ -219,6 +253,9 @@ public class TextureFitUserInterface extends JFrame
 				fileChooser.setCurrentDirectory(vsetFilePicker.file.getParentFile());
 			}
 			
+			fileChooser.resetChoosableFileFilters();
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			
 			for (FileFilter filter : Arrays.asList(new FileNameExtensionFilter("Wavefront OBJ files (.obj)", "obj")))
 			{
 				fileChooser.addChoosableFileFilter(filter);
@@ -238,6 +275,9 @@ public class TextureFitUserInterface extends JFrame
 			{
 				vsetFileChooser.setCurrentDirectory(vsetFilePicker.file.getParentFile());
 			}
+
+			vsetFileChooser.resetChoosableFileFilters();
+			vsetFileChooser.removeChoosableFileFilter(vsetFileChooser.getAcceptAllFileFilter());
 			
 			for (FileFilter filter : Arrays.asList(
 							new FileNameExtensionFilter("Agisoft Photoscan XML files (.xml)", "xml"),
@@ -251,6 +291,47 @@ public class TextureFitUserInterface extends JFrame
 				vsetFilePicker.file = vsetFileChooser.getSelectedFile();
 				String fileString = vsetFilePicker.file.toString();
 				vsetLabel.setText(fileString.length() < 32 ? fileString : "..." + fileString.substring(fileString.length() - 32));
+				
+				try
+				{
+					if (fileString.endsWith(".vset"))
+					{
+						currentViewSet = ViewSet.loadFromVSETFile(new File(fileString));
+					}
+					else if (fileString.endsWith(".xml"))
+					{
+						currentViewSet = ViewSet.loadFromAgisoftXMLFile(new File(fileString));
+					}
+					
+					List<String> cameraPoseNames = new ArrayList<String>();
+					for (int i = 0; i < currentViewSet.getCameraPoseCount(); i++)
+					{
+						cameraPoseNames.add(currentViewSet.getImageFileName(i));
+					}
+					
+					cameraPoseNames.sort((e1, e2) -> e1.compareTo(e2));
+					
+					String[] cameraPoseNameArray = new String[cameraPoseNames.size()];
+					cameraPoseNames.toArray(cameraPoseNameArray);
+					
+					primaryViewComboBox.setModel(new DefaultComboBoxModel<String>(cameraPoseNameArray));
+					
+					SampledLuminanceEncoding luminanceEncoding = currentViewSet.getLuminanceEncodingFunction();
+					
+					if (luminanceEncoding != null)
+					{
+						spinnerXRiteBlack.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.031));
+						spinnerXRiteNeutral35.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.090));
+						spinnerXRiteNeutral50.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.198));
+						spinnerXRiteNeutral65.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.362));
+						spinnerXRiteNeutral80.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.591));
+						spinnerXRiteWhite.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.9));
+					}
+				}
+				catch(IOException ex)
+				{
+					ex.printStackTrace();
+				}
 			}
 		});
 		
@@ -289,6 +370,31 @@ public class TextureFitUserInterface extends JFrame
 		labelWrapper4.add(label4);
 		loadBox4.add(labelWrapper4);
 		
+		JPanel panel_4 = new JPanel();
+		filePanel.add(panel_4);
+		GridBagLayout gbl_panel_4 = new GridBagLayout();
+		gbl_panel_4.columnWidths = new int[] {80, 400};
+		gbl_panel_4.rowHeights = new int[] {30};
+		gbl_panel_4.columnWeights = new double[]{0.0, 0.0};
+		gbl_panel_4.rowWeights = new double[]{0.0};
+		panel_4.setLayout(gbl_panel_4);
+		
+		JLabel lblPrimaryView = new JLabel("Primary View:");
+		GridBagConstraints gbc_lblPrimaryView = new GridBagConstraints();
+		gbc_lblPrimaryView.anchor = GridBagConstraints.EAST;
+		gbc_lblPrimaryView.insets = new Insets(0, 0, 0, 5);
+		gbc_lblPrimaryView.gridx = 0;
+		gbc_lblPrimaryView.gridy = 0;
+		panel_4.add(lblPrimaryView, gbc_lblPrimaryView);
+		
+		primaryViewComboBox = new JComboBox<String>();
+		GridBagConstraints gbc_comboBox = new GridBagConstraints();
+		gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboBox.insets = new Insets(0, 0, 0, 5);
+		gbc_comboBox.gridx = 1;
+		gbc_comboBox.gridy = 0;
+		panel_4.add(primaryViewComboBox, gbc_comboBox);
+		
 		loadButton4.addActionListener(e4 -> 
 		{
 			if (outputDirectoryPicker.file == null && vsetFilePicker.file != null)
@@ -320,112 +426,125 @@ public class TextureFitUserInterface extends JFrame
 		});
 		
 		JPanel basicSettingsPanel = new JPanel();
-		SpinnerNumberModel gammaModel = new SpinnerNumberModel((double) defaults.getGamma(), (double) 1.0f, (double) 99.0f, (double) 0.1f);
 		
 		JPanel colorCheckerPanel = new JPanel();
 		tabbedPane.addTab("ColorChecker Measurements", null, colorCheckerPanel, null);
 		GridBagLayout gbl_colorCheckerPanel = new GridBagLayout();
 		gbl_colorCheckerPanel.columnWidths = new int[] {60, 60};
-		gbl_colorCheckerPanel.rowHeights = new int[] {0, 30, 30, 30, 30, 30, 30};
+		gbl_colorCheckerPanel.rowHeights = new int[] {0, 0, 30, 30, 30, 30, 30, 30};
 		gbl_colorCheckerPanel.columnWeights = new double[]{0.0, 0.0};
-		gbl_colorCheckerPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+		gbl_colorCheckerPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 		colorCheckerPanel.setLayout(gbl_colorCheckerPanel);
 		
-		JCheckBox chckbxUseXriteMeasurements = new JCheckBox("Use ColorChecker measurements");
+		JLabel label_1 = new JLabel("Gamma:");
+		GridBagConstraints gbc_label_1 = new GridBagConstraints();
+		gbc_label_1.insets = new Insets(0, 0, 5, 5);
+		gbc_label_1.gridx = 0;
+		gbc_label_1.gridy = 0;
+		colorCheckerPanel.add(label_1, gbc_label_1);
+		
+		gammaSpinner = new JSpinner(new SpinnerNumberModel((double) defaults.getGamma(), (double) 1.0f, (double) 99.0f, (double) 0.1f));
+		GridBagConstraints gbc_spinner = new GridBagConstraints();
+		gbc_spinner.insets = new Insets(0, 0, 5, 0);
+		gbc_spinner.gridx = 1;
+		gbc_spinner.gridy = 0;
+		colorCheckerPanel.add(gammaSpinner, gbc_spinner);
+		
+		chckbxUseXriteMeasurements = new JCheckBox("Use ColorChecker measurements");
 		GridBagConstraints gbc_chckbxUseXriteMeasurements = new GridBagConstraints();
 		gbc_chckbxUseXriteMeasurements.gridwidth = 2;
-		gbc_chckbxUseXriteMeasurements.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxUseXriteMeasurements.insets = new Insets(0, 0, 5, 0);
 		gbc_chckbxUseXriteMeasurements.gridx = 0;
-		gbc_chckbxUseXriteMeasurements.gridy = 0;
+		gbc_chckbxUseXriteMeasurements.gridy = 1;
 		colorCheckerPanel.add(chckbxUseXriteMeasurements, gbc_chckbxUseXriteMeasurements);
 		
 		JLabel lblWhite = new JLabel("White:");
 		GridBagConstraints gbc_lblWhite = new GridBagConstraints();
 		gbc_lblWhite.insets = new Insets(0, 0, 5, 5);
 		gbc_lblWhite.gridx = 0;
-		gbc_lblWhite.gridy = 1;
+		gbc_lblWhite.gridy = 2;
 		colorCheckerPanel.add(lblWhite, gbc_lblWhite);
 		
-		JSpinner spinnerXRiteWhite = new JSpinner();
+		spinnerXRiteWhite = new JSpinner();
 		spinnerXRiteWhite.setModel(new SpinnerNumberModel(243, 0, 255, 1));
 		GridBagConstraints gbc_spinnerXRiteWhite = new GridBagConstraints();
 		gbc_spinnerXRiteWhite.insets = new Insets(0, 0, 5, 0);
 		gbc_spinnerXRiteWhite.gridx = 1;
-		gbc_spinnerXRiteWhite.gridy = 1;
+		gbc_spinnerXRiteWhite.gridy = 2;
 		colorCheckerPanel.add(spinnerXRiteWhite, gbc_spinnerXRiteWhite);
 		
-		JLabel spinnerXRiteNeutral80 = new JLabel("Neutral 8");
+		JLabel labelXRiteNeutral80 = new JLabel("Neutral 8");
+		GridBagConstraints gbc_labelXRiteNeutral80 = new GridBagConstraints();
+		gbc_labelXRiteNeutral80.insets = new Insets(0, 0, 5, 5);
+		gbc_labelXRiteNeutral80.gridx = 0;
+		gbc_labelXRiteNeutral80.gridy = 3;
+		colorCheckerPanel.add(labelXRiteNeutral80, gbc_labelXRiteNeutral80);
+		
+		spinnerXRiteNeutral80 = new JSpinner();
+		spinnerXRiteNeutral80.setModel(new SpinnerNumberModel(201, 0, 255, 1));
 		GridBagConstraints gbc_spinnerXRiteNeutral80 = new GridBagConstraints();
-		gbc_spinnerXRiteNeutral80.insets = new Insets(0, 0, 5, 5);
-		gbc_spinnerXRiteNeutral80.gridx = 0;
-		gbc_spinnerXRiteNeutral80.gridy = 2;
+		gbc_spinnerXRiteNeutral80.insets = new Insets(0, 0, 5, 0);
+		gbc_spinnerXRiteNeutral80.gridx = 1;
+		gbc_spinnerXRiteNeutral80.gridy = 3;
 		colorCheckerPanel.add(spinnerXRiteNeutral80, gbc_spinnerXRiteNeutral80);
 		
-		JSpinner spinner_3 = new JSpinner();
-		spinner_3.setModel(new SpinnerNumberModel(201, 0, 255, 1));
-		GridBagConstraints gbc_spinner_3 = new GridBagConstraints();
-		gbc_spinner_3.insets = new Insets(0, 0, 5, 0);
-		gbc_spinner_3.gridx = 1;
-		gbc_spinner_3.gridy = 2;
-		colorCheckerPanel.add(spinner_3, gbc_spinner_3);
+		JLabel labelXRiteNeutral65 = new JLabel("Neutral 6.5");
+		GridBagConstraints gbc_labelXRiteNeutral65 = new GridBagConstraints();
+		gbc_labelXRiteNeutral65.insets = new Insets(0, 0, 5, 5);
+		gbc_labelXRiteNeutral65.gridx = 0;
+		gbc_labelXRiteNeutral65.gridy = 4;
+		colorCheckerPanel.add(labelXRiteNeutral65, gbc_labelXRiteNeutral65);
 		
-		JLabel spinnerXRiteNeutral65 = new JLabel("Neutral 6.5");
+		spinnerXRiteNeutral65 = new JSpinner();
+		spinnerXRiteNeutral65.setModel(new SpinnerNumberModel(161, 0, 255, 1));
 		GridBagConstraints gbc_spinnerXRiteNeutral65 = new GridBagConstraints();
-		gbc_spinnerXRiteNeutral65.insets = new Insets(0, 0, 5, 5);
-		gbc_spinnerXRiteNeutral65.gridx = 0;
-		gbc_spinnerXRiteNeutral65.gridy = 3;
+		gbc_spinnerXRiteNeutral65.insets = new Insets(0, 0, 5, 0);
+		gbc_spinnerXRiteNeutral65.gridx = 1;
+		gbc_spinnerXRiteNeutral65.gridy = 4;
 		colorCheckerPanel.add(spinnerXRiteNeutral65, gbc_spinnerXRiteNeutral65);
-		
-		JSpinner spinner_2 = new JSpinner();
-		spinner_2.setModel(new SpinnerNumberModel(161, 0, 255, 1));
-		GridBagConstraints gbc_spinner_2 = new GridBagConstraints();
-		gbc_spinner_2.insets = new Insets(0, 0, 5, 0);
-		gbc_spinner_2.gridx = 1;
-		gbc_spinner_2.gridy = 3;
-		colorCheckerPanel.add(spinner_2, gbc_spinner_2);
 		
 		JLabel lblNeutral_3 = new JLabel("Neutral 5");
 		GridBagConstraints gbc_lblNeutral_3 = new GridBagConstraints();
 		gbc_lblNeutral_3.insets = new Insets(0, 0, 5, 5);
 		gbc_lblNeutral_3.gridx = 0;
-		gbc_lblNeutral_3.gridy = 4;
+		gbc_lblNeutral_3.gridy = 5;
 		colorCheckerPanel.add(lblNeutral_3, gbc_lblNeutral_3);
 		
-		JSpinner spinnerXRiteNeutral50 = new JSpinner();
+		spinnerXRiteNeutral50 = new JSpinner();
 		spinnerXRiteNeutral50.setModel(new SpinnerNumberModel(122, 0, 255, 1));
 		GridBagConstraints gbc_spinnerXRiteNeutral50 = new GridBagConstraints();
 		gbc_spinnerXRiteNeutral50.insets = new Insets(0, 0, 5, 0);
 		gbc_spinnerXRiteNeutral50.gridx = 1;
-		gbc_spinnerXRiteNeutral50.gridy = 4;
+		gbc_spinnerXRiteNeutral50.gridy = 5;
 		colorCheckerPanel.add(spinnerXRiteNeutral50, gbc_spinnerXRiteNeutral50);
 		
 		JLabel lblNeutral_1 = new JLabel("Neutral 3.5");
 		GridBagConstraints gbc_lblNeutral_1 = new GridBagConstraints();
 		gbc_lblNeutral_1.insets = new Insets(0, 0, 5, 5);
 		gbc_lblNeutral_1.gridx = 0;
-		gbc_lblNeutral_1.gridy = 5;
+		gbc_lblNeutral_1.gridy = 6;
 		colorCheckerPanel.add(lblNeutral_1, gbc_lblNeutral_1);
 		
-		JSpinner spinnerXRiteNeutral35 = new JSpinner();
+		spinnerXRiteNeutral35 = new JSpinner();
 		spinnerXRiteNeutral35.setModel(new SpinnerNumberModel(85, 0, 255, 1));
 		GridBagConstraints gbc_spinnerXRiteNeutral35 = new GridBagConstraints();
 		gbc_spinnerXRiteNeutral35.insets = new Insets(0, 0, 5, 0);
 		gbc_spinnerXRiteNeutral35.gridx = 1;
-		gbc_spinnerXRiteNeutral35.gridy = 5;
+		gbc_spinnerXRiteNeutral35.gridy = 6;
 		colorCheckerPanel.add(spinnerXRiteNeutral35, gbc_spinnerXRiteNeutral35);
 		
 		JLabel lblBlack = new JLabel("Black:");
 		GridBagConstraints gbc_lblBlack = new GridBagConstraints();
 		gbc_lblBlack.insets = new Insets(0, 0, 0, 5);
 		gbc_lblBlack.gridx = 0;
-		gbc_lblBlack.gridy = 6;
+		gbc_lblBlack.gridy = 7;
 		colorCheckerPanel.add(lblBlack, gbc_lblBlack);
 		
-		JSpinner spinnerXRiteBlack = new JSpinner();
+		spinnerXRiteBlack = new JSpinner();
 		spinnerXRiteBlack.setModel(new SpinnerNumberModel(53, 0, 255, 1));
 		GridBagConstraints gbc_spinnerXRiteBlack = new GridBagConstraints();
 		gbc_spinnerXRiteBlack.gridx = 1;
-		gbc_spinnerXRiteBlack.gridy = 6;
+		gbc_spinnerXRiteBlack.gridy = 7;
 		colorCheckerPanel.add(spinnerXRiteBlack, gbc_spinnerXRiteBlack);
 		GridBagLayout gbl_basicSettingsPanel = new GridBagLayout();
 		gbl_basicSettingsPanel.columnWidths = new int[]{510, 0};
@@ -530,7 +649,8 @@ public class TextureFitUserInterface extends JFrame
 		gbc_textureSizeSpinner.gridy = 0;
 		panel_5.add(textureSizeSpinner, gbc_textureSizeSpinner);
 		
-		JCheckBox chckbxComputeDiffuseTexture = new JCheckBox("Compute Diffuse Texture");
+		chckbxComputeDiffuseTexture = new JCheckBox("Compute diffuse texture");
+		chckbxComputeDiffuseTexture.setSelected(true);
 		GridBagConstraints gbc_chckbxComputeDiffuseTexture = new GridBagConstraints();
 		gbc_chckbxComputeDiffuseTexture.gridwidth = 2;
 		gbc_chckbxComputeDiffuseTexture.insets = new Insets(0, 0, 5, 5);
@@ -538,7 +658,8 @@ public class TextureFitUserInterface extends JFrame
 		gbc_chckbxComputeDiffuseTexture.gridy = 1;
 		panel_5.add(chckbxComputeDiffuseTexture, gbc_chckbxComputeDiffuseTexture);
 		
-		JCheckBox chckbxComputeSpecularTexture = new JCheckBox("Compute Specular Textures");
+		chckbxComputeSpecularTexture = new JCheckBox("Compute specular texture");
+		chckbxComputeSpecularTexture.setSelected(true);
 		GridBagConstraints gbc_chckbxComputeSpecularTexture = new GridBagConstraints();
 		gbc_chckbxComputeSpecularTexture.gridwidth = 2;
 		gbc_chckbxComputeSpecularTexture.insets = new Insets(0, 0, 0, 5);
@@ -546,39 +667,23 @@ public class TextureFitUserInterface extends JFrame
 		gbc_chckbxComputeSpecularTexture.gridy = 2;
 		panel_5.add(chckbxComputeSpecularTexture, gbc_chckbxComputeSpecularTexture);
 		tabbedPane.addTab("Basic Settings", basicSettingsPanel);
-		SpinnerNumberModel lightOffsetModelX = new SpinnerNumberModel(0.0f, -99.0f, 99.0f, 0.001f);
-		SpinnerNumberModel lightOffsetModelY = new SpinnerNumberModel(0.0f, -99.0f, 99.0f, 0.001f);
-		SpinnerNumberModel lightOffsetModelZ = new SpinnerNumberModel(0.0f, -99.0f, 99.0f, 0.001f);
-		
-		SpinnerNumberModel lightIntensityModelX = new SpinnerNumberModel(1.0f, 0.0f, 9999.0f, 0.001f);
-		SpinnerNumberModel lightIntensityModelY = new SpinnerNumberModel(1.0f, 0.0f, 9999.0f, 0.001f);
-		SpinnerNumberModel lightIntensityModelZ = new SpinnerNumberModel(1.0f, 0.0f, 9999.0f, 0.001f);
-		SpinnerNumberModel diffuseDeltaModel = new SpinnerNumberModel((double) defaults.getDiffuseDelta(), (double) 0.0f, (double) 1.0f, (double) 0.01f);
-		SpinnerNumberModel diffuseIterationsModel = new SpinnerNumberModel((double) defaults.getDiffuseIterations(), (double) 0.0f, (double) 999.0f, (double) 1.0f);
-		SpinnerNumberModel diffuseCompNormalModel = new SpinnerNumberModel((double) Math.min(9999.0f, defaults.getDiffuseComputedNormalWeight()), (double) 0.0f, (double) 9999.0f, (double) 0.1f);
-		SpinnerNumberModel diffuseInputNormalModel = new SpinnerNumberModel((double) Math.min(9999.0f, defaults.getDiffuseInputNormalWeight()), (double) 0.0f, (double) 9999.0f, (double) 0.1f);
 		
 		JPanel advancedSettingsPanel = new JPanel();
 		GridBagLayout gbl_advancedSettingsPanel = new GridBagLayout();
 		gbl_advancedSettingsPanel.columnWidths = new int[] {30, 30, 30, 30};
-		gbl_advancedSettingsPanel.rowHeights = new int[] {30, 30, 30, 30, 30, 30, 30, 30, 30, 30};
+		gbl_advancedSettingsPanel.rowHeights = new int[] {30, 30, 30, 30, 30, 0, 30, 30, 30, 30, 30};
 		gbl_advancedSettingsPanel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0};
-		gbl_advancedSettingsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+		gbl_advancedSettingsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 		advancedSettingsPanel.setLayout(gbl_advancedSettingsPanel);
-		JLabel gammaLabel = new JLabel("Gamma" + ":");
-		GridBagConstraints gbc_gammaLabel = new GridBagConstraints();
-		gbc_gammaLabel.insets = new Insets(0, 0, 5, 5);
-		gbc_gammaLabel.gridx = 0;
-		gbc_gammaLabel.gridy = 0;
-		advancedSettingsPanel.add(gammaLabel, gbc_gammaLabel);
-		gammaSpinner = new JSpinner(gammaModel);
-		GridBagConstraints gbc_gammaSpinner = new GridBagConstraints();
-		gbc_gammaSpinner.insets = new Insets(0, 0, 5, 5);
-		gbc_gammaSpinner.gridx = 1;
-		gbc_gammaSpinner.gridy = 0;
-		advancedSettingsPanel.add(gammaSpinner, gbc_gammaSpinner);
 		
-		cameraVisCheckBox = new JCheckBox("Enable Camera Visibility Test", defaults.isCameraVisibilityTestEnabled());
+		chckbxDebugMode = new JCheckBox("Debug mode");
+		GridBagConstraints gbc_chckbxDebugMode = new GridBagConstraints();
+		gbc_chckbxDebugMode.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxDebugMode.gridx = 0;
+		gbc_chckbxDebugMode.gridy = 0;
+		advancedSettingsPanel.add(chckbxDebugMode, gbc_chckbxDebugMode);
+		
+		cameraVisCheckBox = new JCheckBox("Enable camera visibility test", defaults.isCameraVisibilityTestEnabled());
 		GridBagConstraints gbc_cameraVisCheckBox = new GridBagConstraints();
 		gbc_cameraVisCheckBox.gridwidth = 2;
 		gbc_cameraVisCheckBox.anchor = GridBagConstraints.WEST;
@@ -587,7 +692,7 @@ public class TextureFitUserInterface extends JFrame
 		gbc_cameraVisCheckBox.gridy = 1;
 		advancedSettingsPanel.add(cameraVisCheckBox, gbc_cameraVisCheckBox);
 		cameraVisCheckBox.setBorder(new EmptyBorder(5, 10, 5, 10));
-		JLabel cameraVisBiasLabel = new JLabel("Camera Visibility Test Bias" + ":");
+		JLabel cameraVisBiasLabel = new JLabel("Camera visibility test bias:");
 		GridBagConstraints gbc_cameraVisBiasLabel = new GridBagConstraints();
 		gbc_cameraVisBiasLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_cameraVisBiasLabel.gridx = 0;
@@ -602,7 +707,7 @@ public class TextureFitUserInterface extends JFrame
 		
 		JSpinner.NumberEditor cameraVisBiasNumberEditor = new JSpinner.NumberEditor(cameraVisBiasSpinner, "0.0000");
 		cameraVisBiasSpinner.setEditor(cameraVisBiasNumberEditor);
-		JLabel textureBlockSizeLabel = new JLabel("Texture Block Size:");
+		JLabel textureBlockSizeLabel = new JLabel("Texture block size:");
 		GridBagConstraints gbc_textureBlockSizeLabel = new GridBagConstraints();
 		gbc_textureBlockSizeLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_textureBlockSizeLabel.gridx = 0;
@@ -624,44 +729,63 @@ public class TextureFitUserInterface extends JFrame
 		gbc_imagePreprojReuseCheckBox.gridy = 4;
 		advancedSettingsPanel.add(imagePreprojReuseCheckBox, gbc_imagePreprojReuseCheckBox);
 		imagePreprojReuseCheckBox.setBorder(new EmptyBorder(5, 10, 5, 10));
+		
+		checkBoxEstimateGlobalLightIntensity = new JCheckBox("Estimate global light intensity from primary view");
+		checkBoxEstimateGlobalLightIntensity.setSelected(true);
+		GridBagConstraints gbc_checkBoxEstimateGlobalLightIntensity = new GridBagConstraints();
+		gbc_checkBoxEstimateGlobalLightIntensity.anchor = GridBagConstraints.WEST;
+		gbc_checkBoxEstimateGlobalLightIntensity.gridwidth = 2;
+		gbc_checkBoxEstimateGlobalLightIntensity.insets = new Insets(0, 0, 5, 5);
+		gbc_checkBoxEstimateGlobalLightIntensity.gridx = 0;
+		gbc_checkBoxEstimateGlobalLightIntensity.gridy = 5;
+		advancedSettingsPanel.add(checkBoxEstimateGlobalLightIntensity, gbc_checkBoxEstimateGlobalLightIntensity);
 		JLabel diffuseDeltaLabel = new JLabel("\"Delta\" for diffuse fit:");
 		GridBagConstraints gbc_diffuseDeltaLabel = new GridBagConstraints();
 		gbc_diffuseDeltaLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_diffuseDeltaLabel.gridx = 0;
-		gbc_diffuseDeltaLabel.gridy = 5;
+		gbc_diffuseDeltaLabel.gridy = 6;
 		advancedSettingsPanel.add(diffuseDeltaLabel, gbc_diffuseDeltaLabel);
-		diffuseDeltaSpinner = new JSpinner(diffuseDeltaModel);
+		diffuseDeltaSpinner = new JSpinner(new SpinnerNumberModel((double) defaults.getDiffuseDelta(), (double) 0.0f, (double) 1.0f, (double) 0.01f));
 		GridBagConstraints gbc_diffuseDeltaSpinner = new GridBagConstraints();
 		gbc_diffuseDeltaSpinner.fill = GridBagConstraints.HORIZONTAL;
 		gbc_diffuseDeltaSpinner.insets = new Insets(0, 0, 5, 5);
 		gbc_diffuseDeltaSpinner.gridx = 1;
-		gbc_diffuseDeltaSpinner.gridy = 5;
+		gbc_diffuseDeltaSpinner.gridy = 6;
 		advancedSettingsPanel.add(diffuseDeltaSpinner, gbc_diffuseDeltaSpinner);
 		JLabel diffuseIterationsLabel = new JLabel("Diffuse fit iterations:");
 		GridBagConstraints gbc_diffuseIterationsLabel = new GridBagConstraints();
 		gbc_diffuseIterationsLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_diffuseIterationsLabel.gridx = 0;
-		gbc_diffuseIterationsLabel.gridy = 6;
+		gbc_diffuseIterationsLabel.gridy = 7;
 		advancedSettingsPanel.add(diffuseIterationsLabel, gbc_diffuseIterationsLabel);
-		diffuseIterationsSpinner = new JSpinner(diffuseIterationsModel);
+		diffuseIterationsSpinner = new JSpinner(new SpinnerNumberModel((double) defaults.getDiffuseIterations(), (double) 0.0f, (double) 999.0f, (double) 1.0f));
 		GridBagConstraints gbc_diffuseIterationsSpinner = new GridBagConstraints();
 		gbc_diffuseIterationsSpinner.insets = new Insets(0, 0, 5, 5);
 		gbc_diffuseIterationsSpinner.gridx = 1;
-		gbc_diffuseIterationsSpinner.gridy = 6;
+		gbc_diffuseIterationsSpinner.gridy = 7;
 		advancedSettingsPanel.add(diffuseIterationsSpinner, gbc_diffuseIterationsSpinner);
 		
 		tabbedPane.addTab("Advanced Settings", advancedSettingsPanel);
+		
+		chckbxLevenbergMarquardtSpecularOptimization = new JCheckBox("Levenberg-Marquardt specular optimization");
+		chckbxLevenbergMarquardtSpecularOptimization.setSelected(true);
+		GridBagConstraints gbc_chckbxLevenbergMarquardtSpecularOptimization = new GridBagConstraints();
+		gbc_chckbxLevenbergMarquardtSpecularOptimization.gridwidth = 2;
+		gbc_chckbxLevenbergMarquardtSpecularOptimization.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxLevenbergMarquardtSpecularOptimization.gridx = 0;
+		gbc_chckbxLevenbergMarquardtSpecularOptimization.gridy = 8;
+		advancedSettingsPanel.add(chckbxLevenbergMarquardtSpecularOptimization, gbc_chckbxLevenbergMarquardtSpecularOptimization);
 		
 		JPanel experimentalSettingsPanel = new JPanel();
 		tabbedPane.addTab("Experimental Settings", experimentalSettingsPanel);
 		GridBagLayout gbl_experimentalSettingsPanel = new GridBagLayout();
 		gbl_experimentalSettingsPanel.columnWidths = new int[] {127, 127, 0};
-		gbl_experimentalSettingsPanel.rowHeights = new int[] {30, 30, 30};
+		gbl_experimentalSettingsPanel.rowHeights = new int[] {30, 30, 30, 0};
 		gbl_experimentalSettingsPanel.columnWeights = new double[]{0.0, 0.0, 0.0};
-		gbl_experimentalSettingsPanel.rowWeights = new double[]{0.0, 0.0, 0.0};
+		gbl_experimentalSettingsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0};
 		experimentalSettingsPanel.setLayout(gbl_experimentalSettingsPanel);
 		
-		JCheckBox chckbxEstimateLightOffset = new JCheckBox("Estimate Light Offset");
+		chckbxEstimateLightOffset = new JCheckBox("Estimate light offset");
 		GridBagConstraints gbc_chckbxEstimateLightOffset = new GridBagConstraints();
 		gbc_chckbxEstimateLightOffset.gridwidth = 2;
 		gbc_chckbxEstimateLightOffset.anchor = GridBagConstraints.NORTHWEST;
@@ -670,7 +794,7 @@ public class TextureFitUserInterface extends JFrame
 		gbc_chckbxEstimateLightOffset.gridy = 0;
 		experimentalSettingsPanel.add(chckbxEstimateLightOffset, gbc_chckbxEstimateLightOffset);
 		
-		JCheckBox chckbxComputeNormalMap = new JCheckBox("Compute Normal Map");
+		chckbxComputeNormalMap = new JCheckBox("Compute normal map");
 		GridBagConstraints gbc_chckbxComputeNormalMap = new GridBagConstraints();
 		gbc_chckbxComputeNormalMap.gridwidth = 2;
 		gbc_chckbxComputeNormalMap.anchor = GridBagConstraints.NORTHWEST;
@@ -678,20 +802,27 @@ public class TextureFitUserInterface extends JFrame
 		gbc_chckbxComputeNormalMap.gridx = 0;
 		gbc_chckbxComputeNormalMap.gridy = 1;
 		experimentalSettingsPanel.add(chckbxComputeNormalMap, gbc_chckbxComputeNormalMap);
-		JLabel diffuseComplNormalLabel = new JLabel("Computed Normal Weight" + ":");
+		JLabel diffuseComplNormalLabel = new JLabel("Computed normal weight:");
 		GridBagConstraints gbc_diffuseComplNormalLabel = new GridBagConstraints();
 		gbc_diffuseComplNormalLabel.anchor = GridBagConstraints.WEST;
-		gbc_diffuseComplNormalLabel.insets = new Insets(0, 0, 0, 5);
+		gbc_diffuseComplNormalLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_diffuseComplNormalLabel.gridx = 0;
 		gbc_diffuseComplNormalLabel.gridy = 2;
 		experimentalSettingsPanel.add(diffuseComplNormalLabel, gbc_diffuseComplNormalLabel);
-		diffuseCompNormalSpinner = new JSpinner(diffuseCompNormalModel);
+		diffuseCompNormalSpinner = new JSpinner(new SpinnerNumberModel((double) Math.min(9999.0f, defaults.getDiffuseComputedNormalWeight()), (double) 0.0f, (double) 9999.0f, (double) 0.1f));
 		GridBagConstraints gbc_diffuseCompNormalSpinner = new GridBagConstraints();
-		gbc_diffuseCompNormalSpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_diffuseCompNormalSpinner.insets = new Insets(0, 0, 5, 5);
 		gbc_diffuseCompNormalSpinner.anchor = GridBagConstraints.WEST;
 		gbc_diffuseCompNormalSpinner.gridx = 1;
 		gbc_diffuseCompNormalSpinner.gridy = 2;
 		experimentalSettingsPanel.add(diffuseCompNormalSpinner, gbc_diffuseCompNormalSpinner);
+		
+		chckbxSpatiallyvaryingRoughnessMap = new JCheckBox("Spatially-varying roughness map");
+		GridBagConstraints gbc_chckbxSpatiallyvaryingRoughnessMap = new GridBagConstraints();
+		gbc_chckbxSpatiallyvaryingRoughnessMap.insets = new Insets(0, 0, 0, 5);
+		gbc_chckbxSpatiallyvaryingRoughnessMap.gridx = 0;
+		gbc_chckbxSpatiallyvaryingRoughnessMap.gridy = 3;
+		experimentalSettingsPanel.add(chckbxSpatiallyvaryingRoughnessMap, gbc_chckbxSpatiallyvaryingRoughnessMap);
 		
 		Box executeBox = new Box(BoxLayout.X_AXIS);
 		JPanel executeWrapper = new JPanel();
@@ -742,22 +873,6 @@ public class TextureFitUserInterface extends JFrame
 		return outputDirectoryPicker.file;
 	}
 	
-	public Vector3 getLightOffset()
-	{
-		return new Vector3(
-			getValueAsFloat(this.lightOffsetSpinners[0]),
-			getValueAsFloat(this.lightOffsetSpinners[1]),
-			getValueAsFloat(this.lightOffsetSpinners[2]));
-	}
-	
-	public Vector3 getLightIntensity()
-	{
-		return new Vector3(
-			getValueAsFloat(this.lightIntensitySpinners[0]),
-			getValueAsFloat(this.lightIntensitySpinners[1]),
-			getValueAsFloat(this.lightIntensitySpinners[2]));
-	}
-	
 	private float getValueAsFloat(JSpinner spinner)
 	{
 		return (float)((double)((Double)spinner.getValue()));
@@ -786,8 +901,37 @@ public class TextureFitUserInterface extends JFrame
 		param.setImageHeight(getValueAsInt(this.imageHeightSpinner));
 		param.setDiffuseDelta(getValueAsFloat(this.diffuseDeltaSpinner));
 		param.setDiffuseIterations(getValueAsInt(this.diffuseIterationsSpinner));
-		param.setDiffuseComputedNormalWeight(getValueAsFloat(this.diffuseCompNormalSpinner));
+		param.setDiffuseComputedNormalWeight(this.chckbxComputeNormalMap.isSelected() ? getValueAsFloat(this.diffuseCompNormalSpinner) : 0.0f);
 		param.setDiffuseInputNormalWeight(Float.MAX_VALUE);
+		param.setDiffuseTextureEnabled(this.chckbxComputeDiffuseTexture.isSelected());
+		param.setNormalTextureEnabled(this.chckbxComputeNormalMap.isSelected());
+		param.setSpecularTextureEnabled(this.chckbxComputeSpecularTexture.isSelected());
+		param.setRoughnessTextureEnabled(this.chckbxSpatiallyvaryingRoughnessMap.isSelected());
+		param.setLightIntensityEstimationEnabled(this.checkBoxEstimateGlobalLightIntensity.isSelected());
+		param.setLightOffsetEstimationEnabled(this.chckbxEstimateLightOffset.isSelected());
+		param.setLevenbergMarquardtOptimizationEnabled(this.chckbxLevenbergMarquardtSpecularOptimization.isSelected());
+		param.setDebugModeEnabled(this.chckbxDebugMode.isSelected());
+		
+		if (this.chckbxUseXriteMeasurements.isSelected())
+		{
+			param.setLinearLuminanceValues(new double[] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 });
+			param.setEncodedLuminanceValues(new byte[]
+			{
+				(byte)getValueAsInt(this.spinnerXRiteBlack),
+				(byte)getValueAsInt(this.spinnerXRiteNeutral35),
+				(byte)getValueAsInt(this.spinnerXRiteNeutral50),
+				(byte)getValueAsInt(this.spinnerXRiteNeutral65),
+				(byte)getValueAsInt(this.spinnerXRiteNeutral80),
+				(byte)getValueAsInt(this.spinnerXRiteWhite)
+			});
+		}
+		else
+		{
+			// Use pre-existing luminance levels or defaults
+			param.setLinearLuminanceValues(null);
+			param.setEncodedLuminanceValues(null);
+		}
+		
 		return param;
 	}
 	

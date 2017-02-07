@@ -23,6 +23,9 @@ public class VertexMesh
 	private Vector3 boundingBoxCenter;
 	private Vector3 boundingBoxSize;
 	private float boundingRadius;
+	
+	private String materialFileName = null;
+	private String materialName = null;
 
 	public VertexMesh(String fileFormat, File file) throws IOException
 	{
@@ -67,7 +70,23 @@ public class VertexMesh
 			while(scanner.hasNext())
 			{
 				String id = scanner.next();
-				if (id.equals("v"))
+				if (id.equals("mtllib"))
+				{
+					if (materialFileName == null)
+					{
+						// Use first material filename found
+						materialFileName = scanner.nextLine();
+					}
+				}
+				else if (id.equals("usemtl"))
+				{
+					if (materialName == null)
+					{
+						// Use first material found
+						materialName = scanner.nextLine();
+					}
+				}
+				else if (id.equals("v"))
 				{
 					// Vertex position
 					float x = scanner.nextFloat();
@@ -371,5 +390,15 @@ public class VertexMesh
 	public FloatVertexList getTangents()
 	{
 		return tangents;
+	}
+
+	public String getMaterialFileName() 
+	{
+		return this.materialFileName;
+	}
+
+	public String getMaterialName() 
+	{
+		return this.materialName;
 	}
 }

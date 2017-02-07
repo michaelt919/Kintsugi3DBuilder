@@ -25,6 +25,7 @@ import javax.xml.stream.XMLStreamReader;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Context;
+import tetzlaff.gl.NullContext;
 import tetzlaff.gl.Texture1D;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
@@ -103,6 +104,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * The absolute file path to be used for loading images.
 	 */
 	private File filePath;
+	
+	/**
+	 * The relative name of the mesh file.
+	 */
+	private String geometryFileName;
 	
 	/**
 	 * The reference linear luminance values used for decoding pixel colors.
@@ -216,6 +222,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Integer> secondaryLightIndexList,
 		List<String> secondaryImageFileNames, 
 		ViewSetImageOptions imageOptions,
+		File imageFilePath,
+		String geometryFileName,
 		float gamma,
 		double[] linearLuminanceValues,
 		byte[] encodedLuminanceValues,
@@ -239,209 +247,145 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		this.secondaryLightIndexList = secondaryLightIndexList;
 		this.secondaryImageFileNames = secondaryImageFileNames;
 		this.imageFileNames = imageFileNames;
+		this.geometryFileName = geometryFileName;
 		this.recommendedNearPlane = recommendedNearPlane;
 		this.recommendedFarPlane = recommendedFarPlane;
-		
-		if (imageOptions != null)
-		{
-			this.filePath = imageOptions.getFilePath();
-		}
-		
-		// Store the poses in a uniform buffer
-		if (cameraPoseList != null && cameraPoseList.size() > 0)
-		{
-			// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-			FloatVertexList flattenedPoseMatrices = new FloatVertexList(16, cameraPoseList.size());
-			
-			for (int k = 0; k < cameraPoseList.size(); k++)
-			{
-				int d = 0;
-				for (int col = 0; col < 4; col++) // column
-				{
-					for (int row = 0; row < 4; row++) // row
-					{
-						flattenedPoseMatrices.set(k, d, cameraPoseList.get(k).get(row, col));
-						d++;
-					}
-				}
-			}
-			
-			// Create the uniform buffer
-			cameraPoseBuffer = context.createUniformBuffer().setData(flattenedPoseMatrices);
-		}
-		
-		// Store the camera projections in a uniform buffer
-		if (cameraProjectionList != null && cameraProjectionList.size() > 0)
-		{
-			// Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
-			FloatVertexList flattenedProjectionMatrices = new FloatVertexList(16, cameraProjectionList.size());
-			
-			for (int k = 0; k < cameraProjectionList.size(); k++)
-			{
-				int d = 0;
-				for (int col = 0; col < 4; col++) // column
-				{
-					for (int row = 0; row < 4; row++) // row
-					{
-						Matrix4 projection = cameraProjectionList.get(k).getProjectionMatrix(recommendedNearPlane, recommendedFarPlane);
-						flattenedProjectionMatrices.set(k, d, projection.get(row, col));
-						d++;
-					}
-				}
-			}
-			
-			// Create the uniform buffer
-			cameraProjectionBuffer = context.createUniformBuffer().setData(flattenedProjectionMatrices);
-		}
-		
-		// Store the camera projection indices in a uniform buffer
-		if (cameraProjectionIndexList != null && cameraProjectionIndexList.size() > 0)
-		{
-			int[] indexArray = new int[cameraProjectionIndexList.size()];
-			for (int i = 0; i < indexArray.length; i++)
-			{
-				indexArray[i] = cameraProjectionIndexList.get(i);
-			}
-			IntVertexList indexVertexList = new IntVertexList(1, cameraProjectionIndexList.size(), indexArray);
-			cameraProjectionIndexBuffer = context.createUniformBuffer().setData(indexVertexList);
-		}
-		
-		// Store the light positions in a uniform buffer
-		if (lightPositionList != null && lightPositionList.size() > 0)
-		{
-			FloatVertexList lightPositions = new FloatVertexList(4, lightPositionList.size());
-			for (int k = 0; k < lightPositionList.size(); k++)
-			{
-				lightPositions.set(k, 0, lightPositionList.get(k).x);
-				lightPositions.set(k, 1, lightPositionList.get(k).y);
-				lightPositions.set(k, 2, lightPositionList.get(k).z);
-				lightPositions.set(k, 3, 1.0f);
-			}
-			
-			// Create the uniform buffer
-			lightPositionBuffer = context.createUniformBuffer().setData(lightPositions);
-		}
-		
-		// Store the light positions in a uniform buffer
-		if (lightIntensityList != null && lightIntensityList.size() > 0)
-		{
-			FloatVertexList lightIntensities = new FloatVertexList(4, lightIntensityList.size());
-			for (int k = 0; k < lightPositionList.size(); k++)
-			{
-				lightIntensities.set(k, 0, lightIntensityList.get(k).x);
-				lightIntensities.set(k, 1, lightIntensityList.get(k).y);
-				lightIntensities.set(k, 2, lightIntensityList.get(k).z);
-				lightIntensities.set(k, 3, 1.0f);
-			}
-			
-			// Create the uniform buffer
-			lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensities);
-		}
-		
-		// Store the light indices indices in a uniform buffer
-		if (lightIndexList != null && lightIndexList.size() > 0)
-		{
-			int[] indexArray = new int[lightIndexList.size()];
-			for (int i = 0; i < indexArray.length; i++)
-			{
-				indexArray[i] = lightIndexList.get(i);
-			}
-			IntVertexList indexVertexList = new IntVertexList(1, lightIndexList.size(), indexArray);
-			lightIndexBuffer = context.createUniformBuffer().setData(indexVertexList);
-		}
-		
-		// Luminance map texture
-		if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
+		this.gamma = gamma;
+
+		if (linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
 		{
 			this.linearLuminanceValues = linearLuminanceValues;
 			this.encodedLuminanceValues = encodedLuminanceValues;
-			this.gamma = gamma;
-			luminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues).createLuminanceMap(context);
-			inverseLuminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues).createInverseLuminanceMap(context);
 		}
 		
-		// Read the images from a file
-		if (imageOptions != null && imageOptions.isLoadingRequested() && imageOptions.getFilePath() != null && imageFileNames != null && imageFileNames.size() > 0)
+		if (imageFilePath == null && imageOptions != null)
 		{
-			Date timestamp = new Date();
-			File imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(0));
-			//ZipWrapper myZip = new ZipWrapper(imageFile);
-
-			if (!imageFile.exists())
-			//if (!myZip.exists(imageFile))
+			this.filePath = imageOptions.getFilePath();
+		}
+		else
+		{
+			this.filePath = imageFilePath;
+		}
+		
+		if (context != null)
+		{
+			// Store the poses in a uniform buffer
+			if (cameraPoseList != null && cameraPoseList.size() > 0)
 			{
-				// Try some alternate file formats/extensions
-				String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
-				for(final String extension : altFormats)
+				// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
+				FloatVertexList flattenedPoseMatrices = new FloatVertexList(16, cameraPoseList.size());
+				
+				for (int k = 0; k < cameraPoseList.size(); k++)
 				{
-					String[] filenameParts = imageFileNames.get(0).split("\\.");
-			    	filenameParts[filenameParts.length - 1] = extension;
-			    	String altFileName = String.join(".", filenameParts);
-			    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);					
-			    	
-			    	System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
-			    	if (imageFileGuess.exists())
-			    	//if(myZip.exists(imageFileGuess))
-			    	{
-				    	System.out.printf("Found!!\n");
-			    		imageFile = imageFileGuess;
-			    		break;
-			    	}
+					int d = 0;
+					for (int col = 0; col < 4; col++) // column
+					{
+						for (int row = 0; row < 4; row++) // row
+						{
+							flattenedPoseMatrices.set(k, d, cameraPoseList.get(k).get(row, col));
+							d++;
+						}
+					}
 				}
-
-				// Is it still not there?
-				if (!imageFile.exists())
-		    	//if(!myZip.exists(imageFile))
-		    	{
-		    		throw new FileNotFoundException(
-		    				String.format("'%s' not found.", imageFileNames.get(0)));
-		    	}
+				
+				// Create the uniform buffer
+				cameraPoseBuffer = context.createUniformBuffer().setData(flattenedPoseMatrices);
 			}
 			
-			// Read a single image to get the dimensions for the texture array
-			InputStream input = new FileInputStream(imageFile); // myZip.retrieveFile(imageFile);
-			BufferedImage img = ImageIO.read(input);
-			if(img == null)
+			// Store the camera projections in a uniform buffer
+			if (cameraProjectionList != null && cameraProjectionList.size() > 0)
 			{
-				throw new IOException(String.format("Error: Unsupported image format '%s'.",
-						imageFileNames.get(0)));				
-			}
-			//myZip.getInputStream().close();
-			input.close();
-
-			ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder = 
-					context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), imageFileNames.size());
-			
-			if (imageOptions.isCompressionRequested())
-			{
-				textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
-			}
-			else
-			{
-				textureArrayBuilder.setInternalFormat(ColorFormat.RGBA8);
-			}
-			
-			if (imageOptions.areMipmapsRequested())
-			{
-				textureArrayBuilder.setMipmapsEnabled(true);
-			}
-			else
-			{
-				textureArrayBuilder.setMipmapsEnabled(false);
+				// Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
+				FloatVertexList flattenedProjectionMatrices = new FloatVertexList(16, cameraProjectionList.size());
+				
+				for (int k = 0; k < cameraProjectionList.size(); k++)
+				{
+					int d = 0;
+					for (int col = 0; col < 4; col++) // column
+					{
+						for (int row = 0; row < 4; row++) // row
+						{
+							Matrix4 projection = cameraProjectionList.get(k).getProjectionMatrix(recommendedNearPlane, recommendedFarPlane);
+							flattenedProjectionMatrices.set(k, d, projection.get(row, col));
+							d++;
+						}
+					}
+				}
+				
+				// Create the uniform buffer
+				cameraProjectionBuffer = context.createUniformBuffer().setData(flattenedProjectionMatrices);
 			}
 			
-			textureArrayBuilder.setLinearFilteringEnabled(true);
-			textureArrayBuilder.setMaxAnisotropy(16.0f);
-			textureArray = textureArrayBuilder.createTexture();
-			
-			if(loadingCallback != null) {
-				loadingCallback.setMaximum(imageFileNames.size());
-			}
-
-//			boolean needsRotation = false;
-			for (int i = 0; i < imageFileNames.size(); i++)
+			// Store the camera projection indices in a uniform buffer
+			if (cameraProjectionIndexList != null && cameraProjectionIndexList.size() > 0)
 			{
-				imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
+				int[] indexArray = new int[cameraProjectionIndexList.size()];
+				for (int i = 0; i < indexArray.length; i++)
+				{
+					indexArray[i] = cameraProjectionIndexList.get(i);
+				}
+				IntVertexList indexVertexList = new IntVertexList(1, cameraProjectionIndexList.size(), indexArray);
+				cameraProjectionIndexBuffer = context.createUniformBuffer().setData(indexVertexList);
+			}
+			
+			// Store the light positions in a uniform buffer
+			if (lightPositionList != null && lightPositionList.size() > 0)
+			{
+				FloatVertexList lightPositions = new FloatVertexList(4, lightPositionList.size());
+				for (int k = 0; k < lightPositionList.size(); k++)
+				{
+					lightPositions.set(k, 0, lightPositionList.get(k).x);
+					lightPositions.set(k, 1, lightPositionList.get(k).y);
+					lightPositions.set(k, 2, lightPositionList.get(k).z);
+					lightPositions.set(k, 3, 1.0f);
+				}
+				
+				// Create the uniform buffer
+				lightPositionBuffer = context.createUniformBuffer().setData(lightPositions);
+			}
+			
+			// Store the light positions in a uniform buffer
+			if (lightIntensityList != null && lightIntensityList.size() > 0)
+			{
+				FloatVertexList lightIntensities = new FloatVertexList(4, lightIntensityList.size());
+				for (int k = 0; k < lightPositionList.size(); k++)
+				{
+					lightIntensities.set(k, 0, lightIntensityList.get(k).x);
+					lightIntensities.set(k, 1, lightIntensityList.get(k).y);
+					lightIntensities.set(k, 2, lightIntensityList.get(k).z);
+					lightIntensities.set(k, 3, 1.0f);
+				}
+				
+				// Create the uniform buffer
+				lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensities);
+			}
+			
+			// Store the light indices indices in a uniform buffer
+			if (lightIndexList != null && lightIndexList.size() > 0)
+			{
+				int[] indexArray = new int[lightIndexList.size()];
+				for (int i = 0; i < indexArray.length; i++)
+				{
+					indexArray[i] = lightIndexList.get(i);
+				}
+				IntVertexList indexVertexList = new IntVertexList(1, lightIndexList.size(), indexArray);
+				lightIndexBuffer = context.createUniformBuffer().setData(indexVertexList);
+			}
+			
+			// Luminance map texture
+			if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
+			{
+				luminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues).createLuminanceMap(context);
+				inverseLuminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues).createInverseLuminanceMap(context);
+			}
+			
+			// Read the images from a file
+			if (imageOptions != null && imageOptions.isLoadingRequested() && imageOptions.getFilePath() != null && imageFileNames != null && imageFileNames.size() > 0)
+			{
+				Date timestamp = new Date();
+				File imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(0));
+				//ZipWrapper myZip = new ZipWrapper(imageFile);
+	
 				if (!imageFile.exists())
 				//if (!myZip.exists(imageFile))
 				{
@@ -449,59 +393,135 @@ public class ViewSet<ContextType extends Context<ContextType>>
 					String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
 					for(final String extension : altFormats)
 					{
-						String[] filenameParts = imageFileNames.get(i).split("\\.");
+						String[] filenameParts = imageFileNames.get(0).split("\\.");
 				    	filenameParts[filenameParts.length - 1] = extension;
 				    	String altFileName = String.join(".", filenameParts);
-				    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);
-
+				    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);					
+				    	
+				    	System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
 				    	if (imageFileGuess.exists())
-						//if (myZip.exists(imageFileGuess))
+				    	//if(myZip.exists(imageFileGuess))
 				    	{
+					    	System.out.printf("Found!!\n");
 				    		imageFile = imageFileGuess;
 				    		break;
 				    	}
 					}
-
+	
 					// Is it still not there?
 					if (!imageFile.exists())
-					//if (!myZip.exists(imageFile))
+			    	//if(!myZip.exists(imageFile))
 			    	{
 			    		throw new FileNotFoundException(
-			    				String.format("'%s' not found.", imageFileNames.get(i)));
+			    				String.format("'%s' not found.", imageFileNames.get(0)));
 			    	}
 				}
 				
-//				myZip.retrieveFile(imageFile);
-				
-
-//				// Examine image
-//				img = ImageIO.read(myZip.retrieveFile(imageFile));
-//				if(img == null)
-//				{
-//					throw new IOException(String.format("Error: Unsupported image format '%s'.",
-//							imageFileNames.get(i)));				
-//				}
-//				myZip.getInputStream().close();
-
-				// TODO: This is a beginning try at supporting rotated images, needs work
-//				needsRotation = false;
-//				(img.getWidth() == textureArray.getHeight() && img.getHeight() == textureArray.getWidth());
-//				if(!needsRotation &&
-//						(img.getWidth() != textureArray.getWidth() || img.getHeight() != textureArray.getHeight()))
-//				{
-//					// Image resolution does not match
-//					// TODO: resample image to match so we can proceed
-//				}
-				
-				this.textureArray.loadLayer(i, imageFile, true);
-
-				if(loadingCallback != null) {
-					loadingCallback.setProgress(i+1);
+				// Read a single image to get the dimensions for the texture array
+				InputStream input = new FileInputStream(imageFile); // myZip.retrieveFile(imageFile);
+				BufferedImage img = ImageIO.read(input);
+				if(img == null)
+				{
+					throw new IOException(String.format("Error: Unsupported image format '%s'.",
+							imageFileNames.get(0)));				
 				}
+				//myZip.getInputStream().close();
+				input.close();
+	
+				ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder = 
+						context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), imageFileNames.size());
+				
+				if (imageOptions.isCompressionRequested())
+				{
+					textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
+				}
+				else
+				{
+					textureArrayBuilder.setInternalFormat(ColorFormat.RGBA8);
+				}
+				
+				if (imageOptions.areMipmapsRequested())
+				{
+					textureArrayBuilder.setMipmapsEnabled(true);
+				}
+				else
+				{
+					textureArrayBuilder.setMipmapsEnabled(false);
+				}
+				
+				textureArrayBuilder.setLinearFilteringEnabled(true);
+				textureArrayBuilder.setMaxAnisotropy(16.0f);
+				textureArray = textureArrayBuilder.createTexture();
+				
+				if(loadingCallback != null) {
+					loadingCallback.setMaximum(imageFileNames.size());
+				}
+	
+	//			boolean needsRotation = false;
+				for (int i = 0; i < imageFileNames.size(); i++)
+				{
+					imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
+					if (!imageFile.exists())
+					//if (!myZip.exists(imageFile))
+					{
+						// Try some alternate file formats/extensions
+						String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
+						for(final String extension : altFormats)
+						{
+							String[] filenameParts = imageFileNames.get(i).split("\\.");
+					    	filenameParts[filenameParts.length - 1] = extension;
+					    	String altFileName = String.join(".", filenameParts);
+					    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);
+	
+					    	if (imageFileGuess.exists())
+							//if (myZip.exists(imageFileGuess))
+					    	{
+					    		imageFile = imageFileGuess;
+					    		break;
+					    	}
+						}
+	
+						// Is it still not there?
+						if (!imageFile.exists())
+						//if (!myZip.exists(imageFile))
+				    	{
+				    		throw new FileNotFoundException(
+				    				String.format("'%s' not found.", imageFileNames.get(i)));
+				    	}
+					}
+					
+	//				myZip.retrieveFile(imageFile);
+					
+	
+	//				// Examine image
+	//				img = ImageIO.read(myZip.retrieveFile(imageFile));
+	//				if(img == null)
+	//				{
+	//					throw new IOException(String.format("Error: Unsupported image format '%s'.",
+	//							imageFileNames.get(i)));				
+	//				}
+	//				myZip.getInputStream().close();
+	
+					// TODO: This is a beginning try at supporting rotated images, needs work
+	//				needsRotation = false;
+	//				(img.getWidth() == textureArray.getHeight() && img.getHeight() == textureArray.getWidth());
+	//				if(!needsRotation &&
+	//						(img.getWidth() != textureArray.getWidth() || img.getHeight() != textureArray.getHeight()))
+	//				{
+	//					// Image resolution does not match
+	//					// TODO: resample image to match so we can proceed
+	//				}
+					
+					this.textureArray.loadLayer(i, imageFile, true);
+	
+					if(loadingCallback != null) {
+						loadingCallback.setProgress(i+1);
+					}
+				}
+	
+	//			myZip.close();
+				System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 			}
-
-//			myZip.close();
-			System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		}
 	}
 	
@@ -545,6 +565,17 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		{
 			textureArray.delete();
 		}
+	}
+	
+	/**
+	 * Loads a VSET file but does not create any GPU resources.
+	 * @param vsetFile The VSET file to load.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	public static ViewSet<NullContext> loadFromVSETFile(File vsetFile) throws IOException
+	{
+		return ViewSet.loadFromVSETFile(vsetFile, null);
 	}
 	
 	/**
@@ -600,6 +631,25 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
 			File vsetFile, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
+		return loadFromVSETFile(vsetFile, imageOptions, 2.2f, null, null, context, loadingCallback);
+	}
+	
+	/**
+	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * @param vsetFile The VSET file to load.
+	 * @param imageOptions The requested options for loading the images in this dataset. 
+	 * @param gamma The exponential parameter of the gamma curve used for tonemapping.
+	 * @param linearLuminanceValues Calibrated luminance levels in a linear space between 0.0 and 1.0
+	 * @param encodedLuminanceValues The 8-bit values that the calibrated luminance levels are mapped to, between 0 and 255 - values are treated as unsigned bytes.
+	 * @param context The GL context in which to create the resources.
+	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
+			File vsetFile, ViewSetImageOptions imageOptions, float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues,
+			ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+	{
 		Date timestamp = new Date();
 
 		ZipWrapper myZip = new ZipWrapper(vsetFile);		
@@ -636,169 +686,194 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Integer> secondaryLightIndexList = new ArrayList<Integer>();
 		List<String> secondaryImageFileNames = new ArrayList<String>();
 		
+		String meshFileName = "manifold.obj";
+		File filePath = null;
+		
 		while (scanner.hasNext())
 		{
 			String id = scanner.next();
-			if (id.equals("c"))
+			switch(id)
 			{
-				recommendedNearPlane = scanner.nextFloat();
-				recommendedFarPlane = scanner.nextFloat();
-				scanner.nextLine();
-			}
-			else if (id.equals("p"))
-			{
-				// Pose from quaternion				
-				float x = scanner.nextFloat();
-				float y = scanner.nextFloat();
-				float z = scanner.nextFloat();
-				float i = scanner.nextFloat();
-				float j = scanner.nextFloat();
-				float k = scanner.nextFloat();
-				float qr = scanner.nextFloat();
-				
-				cameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
-					.times(Matrix4.translate(-x, -y, -z)));
-				
-				cameraPoseInvList.add(Matrix4.translate(x, y, z)
-					.times(new Matrix4(Matrix3.fromQuaternion(i, j, k, qr).transpose())));
-				
-				scanner.nextLine();
-			}
-			else if (id.equals("P"))
-			{
-				// Pose from matrix
-				Matrix4 newPose = new Matrix4(
-					scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
-					scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
-					scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), 
-					scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat());
-				
-				cameraPoseList.add(newPose);
-				cameraPoseInvList.add(newPose.quickInverse(0.002f));
-			}
-			else if (id.equals("d") || id.equals("D"))
-			{
-				// Skip "center/offset" parameters which are not consistent across all VSET files
-				scanner.nextFloat();
-				scanner.nextFloat();
-				
-				float aspect = scanner.nextFloat();
-				float focalLength = scanner.nextFloat();
-				
-				float sensorWidth, k1;
-				float k2, k3;
-				if (id.equals("D"))
+				case "c":
 				{
-					sensorWidth = scanner.nextFloat();
-					k1 = scanner.nextFloat();
-					k2 = scanner.nextFloat();
-					k3 = scanner.nextFloat();
+					recommendedNearPlane = scanner.nextFloat();
+					recommendedFarPlane = scanner.nextFloat();
+					scanner.nextLine();
+					break;
 				}
-				else
+				case "m":
 				{
-					sensorWidth = 32.0f; // Default sensor width
-					k1 = scanner.nextFloat();
-					k2 = k3 = 0.0f;
+					meshFileName = scanner.nextLine();
+					break;
 				}
-				
-				float sensorHeight = sensorWidth / aspect;
-				
-				cameraProjectionList.add(new DistortionProjection(
-					sensorWidth, sensorHeight, 
-					focalLength, focalLength,
-					sensorWidth / 2, sensorHeight / 2, k1, k2, k3
-				));
-				
-				scanner.nextLine();
-			}
-			else if (id.equals("e"))
-			{
-				// Non-linear encoding
-				linearLuminanceList.add(scanner.nextDouble());
-				encodedLuminanceList.add((Byte)((byte)scanner.nextShort()));
-				scanner.nextLine();
-			}
-			else if (id.equals("g"))
-			{
-				// Gamma
-				recommendedGamma = scanner.nextFloat();
-				scanner.nextLine();
-			}
-			else if (id.equals("f"))
-			{
-				// Skip "center/offset" parameters which are not consistent across all VSET files
-				scanner.next();
-				scanner.next();
-				
-				float aspect = scanner.nextFloat();
-				float fovy = (float)(scanner.nextFloat() * Math.PI / 180.0);
-				
-				cameraProjectionList.add(new SimpleProjection(aspect, fovy));
-				
-				scanner.nextLine();
-			}
-			else if (id.equals("l"))
-			{
-				float x = scanner.nextFloat();
-				float y = scanner.nextFloat();
-				float z = scanner.nextFloat();
-				lightPositionList.add(new Vector3(x, y, z));
-				
-				float r = scanner.nextFloat();
-				float g = scanner.nextFloat();
-				float b = scanner.nextFloat();
-				lightIntensityList.add(new Vector3(r, g, b));
-
-				// Skip the rest of the line
-				scanner.nextLine();
-			}
-			else if (id.equals("L"))
-			{
-				float x = scanner.nextFloat();
-				float y = scanner.nextFloat();
-				float z = scanner.nextFloat();
-				absoluteLightPositionList.add(new Vector3(x, y, z));
-				
-				float r = scanner.nextFloat();
-				float g = scanner.nextFloat();
-				float b = scanner.nextFloat();
-				absoluteLightIntensityList.add(new Vector3(r, g, b));
-
-				// Skip the rest of the line
-				scanner.nextLine();
-			}
-			else if (id.equals("v"))
-			{
-				int poseId = scanner.nextInt();
-				int projectionId = scanner.nextInt();
-				int lightId = scanner.nextInt();
-				
-				String imgFilename = scanner.nextLine().trim();
-				
-				orderedCameraPoseList.add(cameraPoseList.get(poseId));
-				orderedCameraPoseInvList.add(cameraPoseInvList.get(poseId));
-				cameraProjectionIndexList.add(projectionId);
-				lightIndexList.add(lightId);
-				imageFileNames.add(imgFilename);
-			}
-			else if (id.equals("V"))
-			{
-				int poseId = scanner.nextInt();
-				int projectionId = scanner.nextInt();
-				int lightId = scanner.nextInt();
-				
-				String imgFilename = scanner.nextLine().trim();
-				
-				secondaryCameraPoseList.add(cameraPoseList.get(poseId));
-				secondaryCameraPoseInvList.add(cameraPoseInvList.get(poseId));
-				secondaryCameraProjectionIndexList.add(projectionId);
-				secondaryLightIndexList.add(lightId);
-				secondaryImageFileNames.add(imgFilename);
-			}
-			else
-			{
-				// Skip unrecognized line
-				scanner.nextLine();
+				case "i":
+				{
+					filePath = new File(scanner.nextLine());
+				}
+				case "p":
+				{
+					// Pose from quaternion				
+					float x = scanner.nextFloat();
+					float y = scanner.nextFloat();
+					float z = scanner.nextFloat();
+					float i = scanner.nextFloat();
+					float j = scanner.nextFloat();
+					float k = scanner.nextFloat();
+					float qr = scanner.nextFloat();
+					
+					cameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
+						.times(Matrix4.translate(-x, -y, -z)));
+					
+					cameraPoseInvList.add(Matrix4.translate(x, y, z)
+						.times(new Matrix4(Matrix3.fromQuaternion(i, j, k, qr).transpose())));
+					
+					scanner.nextLine();
+					break;
+				}
+				case "P":
+				{
+					// Pose from matrix
+					Matrix4 newPose = new Matrix4(
+						scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
+						scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
+						scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), 
+						scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat());
+					
+					cameraPoseList.add(newPose);
+					cameraPoseInvList.add(newPose.quickInverse(0.002f));
+					break;
+				}
+				case "d":
+				case "D":
+				{
+					// Skip "center/offset" parameters which are not consistent across all VSET files
+					scanner.nextFloat();
+					scanner.nextFloat();
+					
+					float aspect = scanner.nextFloat();
+					float focalLength = scanner.nextFloat();
+					
+					float sensorWidth, k1;
+					float k2, k3;
+					if (id.equals("D"))
+					{
+						sensorWidth = scanner.nextFloat();
+						k1 = scanner.nextFloat();
+						k2 = scanner.nextFloat();
+						k3 = scanner.nextFloat();
+					}
+					else
+					{
+						sensorWidth = 32.0f; // Default sensor width
+						k1 = scanner.nextFloat();
+						k2 = k3 = 0.0f;
+					}
+					
+					float sensorHeight = sensorWidth / aspect;
+					
+					cameraProjectionList.add(new DistortionProjection(
+						sensorWidth, sensorHeight, 
+						focalLength, focalLength,
+						sensorWidth / 2, sensorHeight / 2, k1, k2, k3
+					));
+					
+					scanner.nextLine();
+					break;
+				}
+				case "e":
+				{
+					// Non-linear encoding
+					linearLuminanceList.add(scanner.nextDouble());
+					encodedLuminanceList.add((Byte)((byte)scanner.nextShort()));
+					scanner.nextLine();
+					break;
+				}
+				case "g":
+				{
+					// Gamma
+					recommendedGamma = scanner.nextFloat();
+					scanner.nextLine();
+					break;
+				}
+				case "f":
+				{
+					// Skip "center/offset" parameters which are not consistent across all VSET files
+					scanner.next();
+					scanner.next();
+					
+					float aspect = scanner.nextFloat();
+					float fovy = (float)(scanner.nextFloat() * Math.PI / 180.0);
+					
+					cameraProjectionList.add(new SimpleProjection(aspect, fovy));
+					
+					scanner.nextLine();
+					break;
+				}
+				case "l":
+				{
+					float x = scanner.nextFloat();
+					float y = scanner.nextFloat();
+					float z = scanner.nextFloat();
+					lightPositionList.add(new Vector3(x, y, z));
+					
+					float r = scanner.nextFloat();
+					float g = scanner.nextFloat();
+					float b = scanner.nextFloat();
+					lightIntensityList.add(new Vector3(r, g, b));
+	
+					// Skip the rest of the line
+					scanner.nextLine();
+					break;
+				}
+				case "L":
+				{
+					float x = scanner.nextFloat();
+					float y = scanner.nextFloat();
+					float z = scanner.nextFloat();
+					absoluteLightPositionList.add(new Vector3(x, y, z));
+					
+					float r = scanner.nextFloat();
+					float g = scanner.nextFloat();
+					float b = scanner.nextFloat();
+					absoluteLightIntensityList.add(new Vector3(r, g, b));
+	
+					// Skip the rest of the line
+					scanner.nextLine();
+					break;
+				}
+				case "v":
+				{
+					int poseId = scanner.nextInt();
+					int projectionId = scanner.nextInt();
+					int lightId = scanner.nextInt();
+					
+					String imgFilename = scanner.nextLine().trim();
+					
+					orderedCameraPoseList.add(cameraPoseList.get(poseId));
+					orderedCameraPoseInvList.add(cameraPoseInvList.get(poseId));
+					cameraProjectionIndexList.add(projectionId);
+					lightIndexList.add(lightId);
+					imageFileNames.add(imgFilename);
+					break;
+				}
+				case "V":
+				{
+					int poseId = scanner.nextInt();
+					int projectionId = scanner.nextInt();
+					int lightId = scanner.nextInt();
+					
+					String imgFilename = scanner.nextLine().trim();
+					
+					secondaryCameraPoseList.add(cameraPoseList.get(poseId));
+					secondaryCameraPoseInvList.add(cameraPoseInvList.get(poseId));
+					secondaryCameraProjectionIndexList.add(projectionId);
+					secondaryLightIndexList.add(lightId);
+					secondaryImageFileNames.add(imgFilename);
+					break;
+				}
+				default:
+					// Skip unrecognized line
+					scanner.nextLine();
 			}
 		}
 		
@@ -827,7 +902,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		return new ViewSet<ContextType>(
 			orderedCameraPoseList, orderedCameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
 			absoluteLightPositionList, absoluteLightIntensityList, secondaryCameraPoseList, secondaryCameraPoseInvList, secondaryCameraProjectionIndexList, secondaryLightIndexList, secondaryImageFileNames,
-			imageOptions, recommendedGamma, linearLuminance, encodedLuminance, recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
+			imageOptions, filePath, meshFileName, recommendedGamma, linearLuminance, encodedLuminance, recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
 	}
 	
 	/**
@@ -898,6 +973,17 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	}
 
 	/**
+	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan but does not create any GPU resources.
+	 * @param file The Agisoft PhotoScan XML camera file to load.
+	 * @return The newly created ViewSet object.
+	 * @throws IOException Thrown due to a File I/O error occurring.
+	 */
+	public static ViewSet<NullContext> loadFromAgisoftXMLFile(File file) throws IOException
+	{
+		return loadFromAgisoftXMLFile(file, null, null);
+	}
+
+	/**
 	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan and initializes a corresponding ViewSet object with all associated GPU resources.
 	 * @param file The Agisoft PhotoScan XML camera file to load.
 	 * @param imageOptions The requested options for loading the images in this dataset. 
@@ -923,22 +1009,24 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
 			File file, ViewSetImageOptions imageOptions, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
-		return loadFromAgisoftXMLFile(file, imageOptions, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f), context, loadingCallback);
+		return loadFromAgisoftXMLFile(file, imageOptions, 2.2f, null, null, context, loadingCallback);
 	}
 	
 	/**
 	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan and initializes a corresponding ViewSet object with all associated GPU resources.
 	 * @param file The Agisoft PhotoScan XML camera file to load.
 	 * @param imageOptions The requested options for loading the images in this dataset. 
-	 * @param lightOffset The default light position relative to the camera to use for every view..
-	 * @param lightIntensity The default light intensity to use for every view.
+	 * @param gamma The exponential parameter of the gamma curve used for tonemapping.
+	 * @param linearLuminanceValues Calibrated luminance levels in a linear space between 0.0 and 1.0
+	 * @param encodedLuminanceValues The 8-bit values that the calibrated luminance levels are mapped to, between 0 and 255 - values are treated as unsigned bytes.
 	 * @param context The GL context in which to create the resources.
 	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
 	 * @return The newly created ViewSet object.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
 	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
-		File file, ViewSetImageOptions imageOptions, Vector3 lightOffset, Vector3 lightIntensity, ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
+		File file, ViewSetImageOptions imageOptions, float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues,
+		ContextType context, ULFLoadingMonitor loadingCallback) throws IOException
 	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
@@ -1381,8 +1469,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
         
         for (int i = 0; i < nextLightIndex; i++)
         {
-	        lightPositionList.add(lightOffset);
-	        lightIntensityList.add(lightIntensity);
+	        lightPositionList.add(new Vector3(0.0f));
+	        lightIntensityList.add(new Vector3(1.0f));
         }
 
         float farPlane = findFarPlane(cameraPoseInvList);
@@ -1398,8 +1486,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<String> secondaryImageFileNames = new ArrayList<String>();
         
         return new ViewSet<ContextType>(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
-        		absoluteLightPositionList, absoluteLightIntensityList, secondaryCameraPoseList, secondaryCameraPoseInvList, secondaryCameraProjectionIndexList, secondaryLightIndexList, secondaryImageFileNames,
-        		imageOptions, 2.2f, null, null, farPlane / 32.0f, farPlane, context, loadingCallback);
+    		absoluteLightPositionList, absoluteLightIntensityList, secondaryCameraPoseList, secondaryCameraPoseInvList, secondaryCameraProjectionIndexList, secondaryLightIndexList, secondaryImageFileNames,
+    		imageOptions, null, null, gamma, linearLuminanceValues, encodedLuminanceValues, farPlane / 32.0f, farPlane, context, loadingCallback);
     }
 	
 	/**
@@ -1436,6 +1524,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
     {
 	    PrintStream out = new PrintStream(outputStream);
 	    out.println("# Created by ULF Renderer from PhotoScan XML file");
+	    
+	    out.println("\n Geometry file name");
+	    out.println("m " + geometryFileName);
+	    out.println("\n Image file path");
+	    out.println("i " + filePath);
 
 	    out.println("\n# Estimated near and far planes");
 	    out.printf("c\t%.8f\t%.8f\n", recommendedNearPlane, recommendedFarPlane);
@@ -1526,7 +1619,16 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 */
 	public String getGeometryFileName()
 	{
-		return "manifold.obj"; // TODO
+		return geometryFileName;
+	}
+	
+	/**
+	 * Sets the name of the geometry file associated with this view set.
+	 * @param fileName The name of the geometry file.
+	 */
+	public void setGeometryFileName(String fileName)
+	{
+		this.geometryFileName = fileName;
 	}
 	
 	/**
@@ -1535,7 +1637,25 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 */
 	public File getGeometryFile()
 	{
-		return new File(this.filePath, "manifold.obj"); // TODO
+		return new File(geometryFileName);
+	}
+	
+	/**
+	 * Gets the image file path associated with this view set.
+	 * @return The image file path.
+	 */
+	public File getImageFilePath()
+	{
+		return this.filePath;
+	}
+	
+	/**
+	 * Sets the image file path associated with this view set.
+	 * @param imageFilePath The image file path.
+	 */
+	public void setImageFilePath(File imageFilePath)
+	{
+		this.filePath = imageFilePath;
 	}
 	
 	/**
@@ -1799,4 +1919,62 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	{
 		return new File(this.filePath, this.secondaryImageFileNames.get(poseIndex));
 	}
+	
+	public SampledLuminanceEncoding getLuminanceEncodingFunction()
+	{
+		if (linearLuminanceValues == null || encodedLuminanceValues == null)
+		{
+			return null;
+		}
+		else
+		{
+			return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
+		}
+	}
+	
+//	public static class LuminanceEncoding
+//	{
+//		public final double linearValue;
+//		public final byte encodedValue;
+//		
+//		public LuminanceEncoding(double linearValue, byte encodedValue)
+//		{
+//			this.linearValue = linearValue;
+//			this.encodedValue = encodedValue;
+//		}
+//		
+//		public LuminanceEncoding(double linearValue, short encodedValue)
+//		{
+//			this(linearValue, (byte)(0xFF & encodedValue));
+//		}
+//	}
+//	
+//	public Iterator<LuminanceEncoding> getLuminanceEncodingIterator()
+//	{
+//		if (this.linearLuminanceValues == null || this.encodedLuminanceValues == null)
+//		{
+//			return null;
+//		}
+//		else
+//		{
+//			return new Iterator<LuminanceEncoding>()
+//			{
+//				private int index = 0;
+//	
+//				@Override
+//				public boolean hasNext() 
+//				{
+//					return index < linearLuminanceValues.length && index < encodedLuminanceValues.length;
+//				}
+//	
+//				@Override
+//				public LuminanceEncoding next() 
+//				{
+//					LuminanceEncoding next = new LuminanceEncoding(linearLuminanceValues[index], encodedLuminanceValues[index]);
+//					index++;
+//					return next;
+//				}
+//			};
+//		}
+//	}
 }
