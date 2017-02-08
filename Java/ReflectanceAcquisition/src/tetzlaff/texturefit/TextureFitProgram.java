@@ -1,7 +1,17 @@
 package tetzlaff.texturefit;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+
+
+import java.io.PrintStream;
+
+import javax.swing.JOptionPane;
+
+
+
+import tetzlaff.gl.exceptions.GLOutOfMemoryException;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.window.glfw.GLFWWindow;
 
@@ -26,6 +36,31 @@ public class TextureFitProgram
 	        {
 				System.gc(); // Suggest garbage collection.
 	        	ex.printStackTrace();
+	        	JOptionPane.showMessageDialog(gui, ex.getMessage(), "Error reading file (" + ex.getClass().getName() + ")", JOptionPane.ERROR_MESSAGE);
+	        }
+	        catch (GLOutOfMemoryException ex)
+	        {
+				System.gc(); // Suggest garbage collection.
+	        	ex.printStackTrace();
+	        	ByteArrayOutputStream stackTraceStream = new ByteArrayOutputStream();
+	        	PrintStream stackTracePrintStream = new PrintStream(stackTraceStream);
+	        	ex.printStackTrace(stackTracePrintStream);
+	        	stackTracePrintStream.flush();
+	        	stackTracePrintStream.close();
+	        	JOptionPane.showMessageDialog(gui, "You've run out of graphics memory.  " +
+	        			"Reduce the number of photos, or try using either smaller photos or pre-projected photos to reduce the amount of graphics memory usage.  Stack Trace: " + 
+	        			stackTraceStream.toString(), "Out of graphics memory", JOptionPane.ERROR_MESSAGE);
+	        }
+	        catch (Exception ex)
+	        {
+	        	System.gc(); // Suggest garbage collection.
+	        	ex.printStackTrace();
+	        	ByteArrayOutputStream stackTraceStream = new ByteArrayOutputStream();
+	        	PrintStream stackTracePrintStream = new PrintStream(stackTraceStream);
+	        	ex.printStackTrace(stackTracePrintStream);
+	        	stackTracePrintStream.flush();
+	        	stackTracePrintStream.close();
+	        	JOptionPane.showMessageDialog(gui, stackTraceStream.toString(), ex.getClass().getName(), JOptionPane.ERROR_MESSAGE);
 	        }
 		});
 		

@@ -183,6 +183,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	private float recommendedFarPlane;
 	
 	/**
+	 * The index of the view that sets the initial orientation when viewing, is used for color calibration, etc.
+	 */
+	private int primaryViewIndex = 0;
+	
+	/**
 	 * Creates a new view set object, allocating and initializing GPU resources as appropriate.
 	 * @param cameraPoseList A list of camera poses defining the transformation from object space to camera space for each view.
 	 * These are necessary to perform projective texture mapping.
@@ -252,7 +257,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		this.recommendedFarPlane = recommendedFarPlane;
 		this.gamma = gamma;
 
-		if (linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
+		if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
 		{
 			this.linearLuminanceValues = linearLuminanceValues;
 			this.encodedLuminanceValues = encodedLuminanceValues;
@@ -709,6 +714,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				case "i":
 				{
 					filePath = new File(scanner.nextLine());
+					break;
 				}
 				case "p":
 				{
@@ -880,7 +886,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		scanner.close();
 		myZip.close();
 		
-		if (imageOptions.getFilePath() == null)
+		if (imageOptions != null && imageOptions.getFilePath() == null)
 		{
 			imageOptions.setFilePath(vsetFile.getParentFile());
 		}
@@ -1525,9 +1531,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    PrintStream out = new PrintStream(outputStream);
 	    out.println("# Created by ULF Renderer from PhotoScan XML file");
 	    
-	    out.println("\n Geometry file name");
+	    out.println("\n# Geometry file name (mesh)");
 	    out.println("m " + geometryFileName);
-	    out.println("\n Image file path");
+	    out.println("\n# Image file path");
 	    out.println("i " + filePath);
 
 	    out.println("\n# Estimated near and far planes");
@@ -1585,9 +1591,15 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    }
 	    	    
 	    out.println("\n# " + cameraPoseList.size() + (cameraPoseList.size()==1?" View":" Views"));
+	    
+	    // Primary view first (so that next time the view set is loaded it will be index 0)
+	    out.printf("v\t%d\t%d\t%d\t%s\n", primaryViewIndex,  cameraProjectionIndexList.get(primaryViewIndex), lightIndexList.get(primaryViewIndex), imageFileNames.get(primaryViewIndex));
 	    for (int ID=0; ID<cameraPoseList.size(); ID++)
 	    {
-	        out.printf("v\t%d\t%d\t%d\t%s\n", ID,  cameraProjectionIndexList.get(ID), lightIndexList.get(ID), imageFileNames.get(ID));
+	    	if (ID != primaryViewIndex)
+	    	{
+	    		out.printf("v\t%d\t%d\t%d\t%s\n", ID,  cameraProjectionIndexList.get(ID), lightIndexList.get(ID), imageFileNames.get(ID));
+	    	}
 	    }
 	    
 	    out.close();
@@ -1676,6 +1688,25 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public File getImageFile(int poseIndex) 
 	{
 		return new File(this.filePath, this.imageFileNames.get(poseIndex));
+	}
+    
+    public int getPrimaryViewIndex()
+    {
+    	return this.primaryViewIndex;
+    }
+	
+	public void setPrimaryView(int poseIndex)
+	{
+		this.primaryViewIndex = poseIndex;
+	}
+	
+	public void setPrimaryView(String viewName)
+	{
+		int poseIndex = this.imageFileNames.indexOf(viewName);
+		if (poseIndex >= 0)
+		{
+			this.primaryViewIndex = poseIndex;
+		}
 	}
 
 	/**
