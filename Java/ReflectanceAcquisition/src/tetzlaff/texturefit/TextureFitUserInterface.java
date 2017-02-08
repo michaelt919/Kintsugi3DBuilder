@@ -309,23 +309,26 @@ public class TextureFitUserInterface extends JFrame
 						cameraPoseNames.add(currentViewSet.getImageFileName(i));
 					}
 					
+					String primaryViewName = cameraPoseNames.get(0);
+					
 					cameraPoseNames.sort((e1, e2) -> e1.compareTo(e2));
 					
 					String[] cameraPoseNameArray = new String[cameraPoseNames.size()];
 					cameraPoseNames.toArray(cameraPoseNameArray);
 					
 					primaryViewComboBox.setModel(new DefaultComboBoxModel<String>(cameraPoseNameArray));
+					primaryViewComboBox.setSelectedItem(primaryViewName);
 					
 					SampledLuminanceEncoding luminanceEncoding = currentViewSet.getLuminanceEncodingFunction();
 					
 					if (luminanceEncoding != null)
 					{
-						spinnerXRiteBlack.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.031));
-						spinnerXRiteNeutral35.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.090));
-						spinnerXRiteNeutral50.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.198));
-						spinnerXRiteNeutral65.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.362));
-						spinnerXRiteNeutral80.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.591));
-						spinnerXRiteWhite.setValue(luminanceEncoding.encodeFunction.applyAsDouble(0.9));
+						spinnerXRiteBlack.setValue((int)Math.round(luminanceEncoding.encodeFunction.applyAsDouble(0.031)));
+						spinnerXRiteNeutral35.setValue((int)Math.round(luminanceEncoding.encodeFunction.applyAsDouble(0.090)));
+						spinnerXRiteNeutral50.setValue((int)Math.round(luminanceEncoding.encodeFunction.applyAsDouble(0.198)));
+						spinnerXRiteNeutral65.setValue((int)Math.round(luminanceEncoding.encodeFunction.applyAsDouble(0.362)));
+						spinnerXRiteNeutral80.setValue((int)Math.round(luminanceEncoding.encodeFunction.applyAsDouble(0.591)));
+						spinnerXRiteWhite.setValue((int)Math.round(luminanceEncoding.encodeFunction.applyAsDouble(0.9)));
 					}
 				}
 				catch(IOException ex)
@@ -891,7 +894,7 @@ public class TextureFitUserInterface extends JFrame
 		param.setCameraVisibilityTestBias(getValueAsFloat(this.cameraVisBiasSpinner));
 		param.setTextureSize(getValueAsInt(this.textureSizeSpinner));
 		
-		int textureSubdiv = (int)Math.ceil((double)getValueAsInt(this.textureBlockSizeSpinner) / (double)getValueAsInt(this.textureSizeSpinner));
+		int textureSubdiv = (int)Math.ceil((double)getValueAsInt(this.textureSizeSpinner) / (double)getValueAsInt(this.textureBlockSizeSpinner));
 		param.setTextureSubdivision(textureSubdiv);
 		
 		param.setImagePreprojectionUseEnabled(this.imagePreprojUseCheckBox.isSelected());
@@ -912,17 +915,19 @@ public class TextureFitUserInterface extends JFrame
 		param.setLevenbergMarquardtOptimizationEnabled(this.chckbxLevenbergMarquardtSpecularOptimization.isSelected());
 		param.setDebugModeEnabled(this.chckbxDebugMode.isSelected());
 		
+		param.setPrimaryViewName((String)this.primaryViewComboBox.getSelectedItem());
+		
 		if (this.chckbxUseXriteMeasurements.isSelected())
 		{
 			param.setLinearLuminanceValues(new double[] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 });
 			param.setEncodedLuminanceValues(new byte[]
 			{
-				(byte)getValueAsInt(this.spinnerXRiteBlack),
-				(byte)getValueAsInt(this.spinnerXRiteNeutral35),
-				(byte)getValueAsInt(this.spinnerXRiteNeutral50),
-				(byte)getValueAsInt(this.spinnerXRiteNeutral65),
-				(byte)getValueAsInt(this.spinnerXRiteNeutral80),
-				(byte)getValueAsInt(this.spinnerXRiteWhite)
+				(byte)((int)((Integer)this.spinnerXRiteBlack.getValue())),
+				(byte)((int)((Integer)this.spinnerXRiteNeutral35.getValue())),
+				(byte)((int)((Integer)this.spinnerXRiteNeutral50.getValue())),
+				(byte)((int)((Integer)this.spinnerXRiteNeutral65.getValue())),
+				(byte)((int)((Integer)this.spinnerXRiteNeutral80.getValue())),
+				(byte)((int)((Integer)this.spinnerXRiteWhite.getValue()))
 			});
 		}
 		else

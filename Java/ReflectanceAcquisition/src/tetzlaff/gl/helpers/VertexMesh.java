@@ -75,7 +75,7 @@ public class VertexMesh
 					if (materialFileName == null)
 					{
 						// Use first material filename found
-						materialFileName = scanner.nextLine();
+						materialFileName = scanner.next();
 					}
 				}
 				else if (id.equals("usemtl"))
@@ -83,7 +83,7 @@ public class VertexMesh
 					if (materialName == null)
 					{
 						// Use first material found
-						materialName = scanner.nextLine();
+						materialName = scanner.next();
 					}
 				}
 				else if (id.equals("v"))

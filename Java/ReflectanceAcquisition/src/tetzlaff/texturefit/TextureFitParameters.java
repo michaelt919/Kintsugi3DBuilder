@@ -34,6 +34,8 @@ public class TextureFitParameters
 	
 	private double[] linearLuminanceValues;
 	private byte[] encodedLuminanceValues;
+	
+	private String primaryViewName;
 
 	public TextureFitParameters() 
 	{
@@ -183,6 +185,16 @@ public class TextureFitParameters
 	public boolean areLightSourcesInfinite() 
 	{
 		return this.areLightSourcesInfinite;
+	}
+
+	public String getPrimaryViewName() 
+	{
+		return primaryViewName;
+	}
+
+	public void setPrimaryViewName(String primaryViewName) 
+	{
+		this.primaryViewName = primaryViewName;
 	}
 
 	public boolean isLightOffsetEstimationEnabled() 
