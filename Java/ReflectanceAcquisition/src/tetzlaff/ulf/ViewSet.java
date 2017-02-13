@@ -1649,7 +1649,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 */
 	public File getGeometryFile()
 	{
-		return new File(geometryFileName);
+		return new File(this.filePath, geometryFileName);
 	}
 	
 	/**

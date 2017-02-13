@@ -17,6 +17,7 @@ import static org.lwjgl.opengl.GL40.*;
 import static org.lwjgl.opengl.GL41.*;
 import static org.lwjgl.opengl.GL43.*;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -69,6 +70,7 @@ import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DDepthBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DDepthStencilBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DFromBufferBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DFromFileBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DFromHDRFileBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DStencilBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DColorBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthBuilder;
@@ -375,6 +377,12 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
 	{
 		return new OpenGLTexture2DFromFileBuilder(this, GL_TEXTURE_2D, imageStream, maskStream, flipVertical);
+	}
+	
+	@Override
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureFromHDRBuilder(BufferedInputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
+	{
+		return new OpenGLTexture2DFromHDRFileBuilder(this, GL_TEXTURE_2D, imageStream, maskStream, flipVertical);
 	}
 	
 	@Override

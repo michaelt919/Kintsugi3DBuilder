@@ -166,7 +166,8 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "specular.png"),
 					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "roughness.png"), 
 					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "environment_lowres.png"), 
-					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "environment_highres.png"), 
+					//new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "environment_highres.png"),
+					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "environment_highres.hdr"),
 					new File(ulfRenderer.getGeometryFile().getParentFile(), "mfd.csv"), 
 					context);
 			
@@ -268,7 +269,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			p.setTexture("roughnessMap", microfacetField.roughnessTexture);
 		}
 		
-		if (microfacetField.environmentLowResTexture == null || !lightController.getEnvironmentMappingEnabled())
+		if (microfacetField.environmentHighResTexture == null || !lightController.getEnvironmentMappingEnabled())
 		{
 			p.setUniform("useEnvironmentTexture", false);
 			p.setTexture("environmentMap", null);
@@ -276,7 +277,8 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		else
 		{
 			p.setUniform("useEnvironmentTexture", true);
-			p.setTexture("environmentMap", microfacetField.environmentLowResTexture);
+			p.setTexture("environmentMap", microfacetField.environmentHighResTexture);
+			p.setUniform("environmentMipMapLevel", 9/*microfacetField.environmentHighResTexture.getLevelCount()*/);
 		}
 		
 		if (microfacetField.mfdTexture == null)

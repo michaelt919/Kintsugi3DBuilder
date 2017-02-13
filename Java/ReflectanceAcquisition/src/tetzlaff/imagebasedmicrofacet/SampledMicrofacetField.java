@@ -118,7 +118,7 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 		{
 			System.out.println("High res environment texture found.");
 			environmentHighResTexture = context.get2DColorTextureBuilder(environmentHighResFile, true)
-					.setInternalFormat(ColorFormat.RGB8)
+					.setInternalFormat(ColorFormat.RGB32F)
 					.setMipmapsEnabled(true)
 					.setLinearFilteringEnabled(true)
 					.createTexture();
