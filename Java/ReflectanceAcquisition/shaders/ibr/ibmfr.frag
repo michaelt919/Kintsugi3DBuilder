@@ -33,6 +33,7 @@ uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 uniform sampler2D roughnessMap;
+uniform int environmentMipMapLevel;
 uniform sampler2D environmentMap;
 uniform sampler1D mfdMap;
 
@@ -66,8 +67,9 @@ vec3 getEnvironment(vec3 lightDirection)
 	// return pow(textureLod(environmentMap, texCoords, min(lod1, lod2)).rgb, vec3(2.2));
 	
 	// Alternative that doesn't require OpenGL 4:
-	vec4 color1 = texture(environmentMap, texCoords);
-	vec4 color2 = texture(environmentMap, mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0));
+	vec4 color1 = textureLod(environmentMap, texCoords, environmentMipMapLevel);
+	vec4 color2 = textureLod(environmentMap, 
+		mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0), environmentMipMapLevel);
 	return pow(mix(color1, color2, 2.0 * abs(texCoords.x - 0.5)).rgb, vec3(2.2));
 }
 

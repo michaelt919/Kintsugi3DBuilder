@@ -10,9 +10,11 @@ import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL44.*;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import javax.imageio.ImageIO;
@@ -26,6 +28,7 @@ import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
+import tetzlaff.helpers.RadianceImageLoader;
 
 class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 {
@@ -50,7 +53,7 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 			if (maskStream != null)
 			{
 				this.maskImg = ImageIO.read(maskStream);
-				if (maskImg.getWidth() != colorImg.getWidth() || maskImg.getHeight() != maskImg.getHeight())
+				if (maskImg.getWidth() != colorImg.getWidth() || maskImg.getHeight() != colorImg.getHeight())
 				{
 					throw new IllegalArgumentException("Color image and mask image must have the same dimensions.");
 				}
@@ -133,6 +136,89 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 					height,
 					GL_BGRA,
 					GL_UNSIGNED_BYTE,
+					buffer,
+					this.isLinearFilteringEnabled(),
+					this.areMipmapsEnabled(),
+					this.getMaxAnisotropy());
+		}
+	}
+	
+	static class OpenGLTexture2DFromHDRFileBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
+	{
+		private int textureTarget;
+		private RadianceImageLoader.Image colorImg;
+		private BufferedImage maskImg = null;
+		
+		OpenGLTexture2DFromHDRFileBuilder(OpenGLContext context, int textureTarget, BufferedInputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
+		{
+			super(context);
+			this.textureTarget = textureTarget;
+			this.colorImg = new RadianceImageLoader().read(imageStream, flipVertical, true);
+			if (maskStream != null)
+			{
+				this.maskImg = ImageIO.read(maskStream);
+				if (maskImg.getWidth() != colorImg.width || maskImg.getHeight() != colorImg.height)
+				{
+					throw new IllegalArgumentException("Color image and mask image must have the same dimensions.");
+				}
+			}
+		}
+		
+		@Override
+		public OpenGLTexture2D createTexture() 
+		{
+			int width = colorImg.width;
+			int height = colorImg.height;
+			ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.width * colorImg.height * (maskImg == null ? 12 : 16));
+			FloatBuffer floatBuffer = buffer.asFloatBuffer();
+
+			int k = 0;
+			if (maskImg == null)
+			{
+				for (int y = 0; y < colorImg.height; y++)
+				{
+					for (int x = 0; x < colorImg.width; x++)
+					{
+						floatBuffer.put(colorImg.data[k++]);
+						floatBuffer.put(colorImg.data[k++]);
+						floatBuffer.put(colorImg.data[k++]);
+					}
+				}
+			}
+			else
+			{
+				for (int y = 0; y < colorImg.height; y++)
+				{
+					for (int x = 0; x < colorImg.width; x++)
+					{
+						floatBuffer.put(colorImg.data[k++]);
+						floatBuffer.put(colorImg.data[k++]);
+						floatBuffer.put(colorImg.data[k++]);
+						
+						// Use green channel of the mask image for alpha
+						floatBuffer.put((float)((maskImg.getRGB(x, y) & 0x0000ff00) >>> 8) / 255.0f);
+					}
+				}
+			}
+			
+			int colorFormat;
+			if (this.isInternalFormatCompressed())
+			{
+				colorFormat = this.context.getOpenGLCompressionFormat(this.getInternalCompressionFormat());
+			}
+			else
+			{
+				colorFormat = this.context.getOpenGLInternalColorFormat(this.getInternalColorFormat());
+			}
+			
+			return new OpenGLTexture2D(
+					this.context,
+					this.textureTarget, 
+					colorFormat, 
+					width,
+					height,
+					maskImg == null ? GL_RGB : GL_RGBA,
+					GL_FLOAT,
 					buffer,
 					this.isLinearFilteringEnabled(),
 					this.areMipmapsEnabled(),
