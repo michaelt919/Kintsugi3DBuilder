@@ -29,7 +29,7 @@ public class TextureFitParameters
 	private boolean diffuseTextureEnabled = true;
 	private boolean normalTextureEnabled = false;
 	private boolean specularTextureEnabled = true;
-	private boolean levenbergMarquardtOptimizationEnabled = true;
+	private boolean levenbergMarquardtOptimizationEnabled = false;
 	private boolean roughnessTextureEnabled = false;
 	
 	private double[] linearLuminanceValues;

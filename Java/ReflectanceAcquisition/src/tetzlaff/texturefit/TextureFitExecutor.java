@@ -501,7 +501,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			
 			if (specularWeightSum == 0.0)
 			{
-				mfdStream.println(nDotH + ",0.0,0.0");
+				mfdStream.println(nDotH + ",0.0,0.0,0.0,0.0");
 			}
 			else if (nDotH < SQRT_HALF)
 			{
@@ -550,7 +550,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			
 			if (specularWeightSum <= 0.0)
 			{
-				mfdStream.println(nDotH + ",0.0,0.0");
+				mfdStream.println(nDotH + ",0.0,0.0,0.0,0.0");
 			}
 			else
 			{
@@ -646,7 +646,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 							nDotH = coord + (1 - coord) * nDotHStart;
 							contributionSum = contributionSumLookup.applyAsDouble(j);
 							
-							if (nDotH > 0.0  && contributionSum > 0.0 )
+							if (nDotH > 0.0 && contributionSum > 0.0 )
 							{
 								double nDotHSquared = nDotH * nDotH;
 								
@@ -1938,7 +1938,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	}
 	    	else
 	    	{
-	    		materialStream.println("Ka 0.0 0.0 0.0");
+	    		materialStream.println("Ka " + specularParams.reflectivity + " " + specularParams.reflectivity + " " + specularParams.reflectivity);
 	    	}
     	}
     	
@@ -1961,6 +1961,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	else
     	{
     		materialStream.println("Ks " + specularParams.reflectivity + " " + specularParams.reflectivity + " " + specularParams.reflectivity);
+	    	materialStream.println("Ns " + (2.0 / (specularParams.roughness * specularParams.roughness) - 2.0)); // Fallback for non-PBR
+	    	materialStream.println("Pr " + specularParams.roughness);
     	}
     	
     	if (param.isNormalTextureEnabled())
@@ -2011,7 +2013,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	auxDir.mkdirs();
     	
     	outputDir.mkdir();
-    	if (param.isDebugModeEnabled() && param.isSpecularTextureEnabled())
+    	if (param.isDebugModeEnabled())
     	{
     		new File(auxDir, "specularResidDebug").mkdir();
     	}

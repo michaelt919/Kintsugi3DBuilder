@@ -1,6 +1,7 @@
 package tetzlaff.texturefit;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 
 
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import javax.swing.JOptionPane;
+
 
 
 
@@ -25,12 +27,36 @@ public class TextureFitProgram
 		{
 	        try
 	        {
-	        	OpenGLContext context = new GLFWWindow(800, 800, "Texture Generation");
-	    		new TextureFitExecutor<OpenGLContext>(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(), 
-	    				gui.getRescaleDirectory(), gui.getOutputDirectory(), gui.getParameters())
-	    				.execute();
-		        GLFWWindow.closeAllWindows();
-		        System.out.println("Process terminated with no errors.");
+	        	if (gui.getCameraFile() == null)
+	        	{
+	        		JOptionPane.showMessageDialog(gui, "No camera file selected.", "Please select a camera file.", JOptionPane.ERROR_MESSAGE);
+	        	}
+	        	else if (gui.getModelFile() == null)
+	        	{
+	        		JOptionPane.showMessageDialog(gui, "No model file selected.", "Please select a model file.", JOptionPane.ERROR_MESSAGE);
+	        	}
+	        	else if (gui.getImageDirectory() == null)
+	        	{
+	        		JOptionPane.showMessageDialog(gui, "No undistorted photo directory selected.", "Please select an undistorted photo directory.", JOptionPane.ERROR_MESSAGE);
+	        	}
+	        	else if (gui.getOutputDirectory() == null)
+	        	{
+	        		JOptionPane.showMessageDialog(gui, "No destination directory selected.", "Please select a destination directory for models and textures.", JOptionPane.ERROR_MESSAGE);
+	        	}
+	        	else if (gui.getParameters().isImageRescalingEnabled() && gui.getRescaleDirectory() == null)
+	        	{
+	        		JOptionPane.showMessageDialog(gui, "No resized photo destination selected.", "Please select a destination directory for resized photos, or disable photo resizing.", JOptionPane.ERROR_MESSAGE);
+	        	}
+	        	else
+	        	{
+	        		OpenGLContext context = new GLFWWindow(800, 800, "Texture Generation");
+		        	
+		        	new TextureFitExecutor<OpenGLContext>(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(), 
+		    				gui.getRescaleDirectory(), gui.getOutputDirectory(), gui.getParameters())
+		    				.execute();
+			        GLFWWindow.closeAllWindows();
+			        System.out.println("Process terminated with no errors.");
+	        	}
 	        }
 	        catch (IOException ex)
 	        {

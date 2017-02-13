@@ -91,12 +91,12 @@ public class TextureFitUserInterface extends JFrame
 	private JCheckBox chckbxUseXriteMeasurements;
 	private JCheckBox chckbxComputeDiffuseTexture;
 	private JCheckBox chckbxComputeSpecularTexture;
-	private JCheckBox chckbxLevenbergMarquardtSpecularOptimization;
 	private JCheckBox chckbxEstimateLightOffset;
 	private JCheckBox chckbxComputeNormalMap;
 	private JCheckBox chckbxSpatiallyvaryingRoughnessMap;
 	private JCheckBox checkBoxEstimateGlobalLightIntensity;
 	private JCheckBox chckbxDebugMode;
+	private JCheckBox chckbxLevenbergMarquardtSpecularOptimization;
 
 	private class FilePicker
 	{
@@ -241,6 +241,11 @@ public class TextureFitUserInterface extends JFrame
 			if (fileChooser1.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 			{
 				imageDirectoryPicker.file = fileChooser1.getSelectedFile();
+				
+				// Clear mask directory
+				maskDirectoryPicker.file = null;
+				label2.setText("");
+				
 				String fileString = imageDirectoryPicker.file.toString();
 				label1.setText(fileString.length() < 32 ? fileString : "..." + fileString.substring(fileString.length() - 32));
 			}
@@ -346,7 +351,7 @@ public class TextureFitUserInterface extends JFrame
 		Box loadBox3 = new Box(BoxLayout.X_AXIS);
 		panel.add(loadBox3);
 		JPanel loadWrapper3 = new JPanel();
-		JButton loadButton3 = new JButton("Select Destination for Rescaled Images...");
+		JButton loadButton3 = new JButton("Select Destination for Resized Photos...");
 		loadWrapper3.add(loadButton3);
 		loadWrapper3.setBorder(new EmptyBorder(0, 10, 0, 10));
 		loadBox3.add(loadWrapper3);
@@ -770,22 +775,13 @@ public class TextureFitUserInterface extends JFrame
 		
 		tabbedPane.addTab("Advanced Settings", advancedSettingsPanel);
 		
-		chckbxLevenbergMarquardtSpecularOptimization = new JCheckBox("Levenberg-Marquardt specular optimization");
-		chckbxLevenbergMarquardtSpecularOptimization.setSelected(true);
-		GridBagConstraints gbc_chckbxLevenbergMarquardtSpecularOptimization = new GridBagConstraints();
-		gbc_chckbxLevenbergMarquardtSpecularOptimization.gridwidth = 2;
-		gbc_chckbxLevenbergMarquardtSpecularOptimization.insets = new Insets(0, 0, 5, 5);
-		gbc_chckbxLevenbergMarquardtSpecularOptimization.gridx = 0;
-		gbc_chckbxLevenbergMarquardtSpecularOptimization.gridy = 8;
-		advancedSettingsPanel.add(chckbxLevenbergMarquardtSpecularOptimization, gbc_chckbxLevenbergMarquardtSpecularOptimization);
-		
 		JPanel experimentalSettingsPanel = new JPanel();
 		tabbedPane.addTab("Experimental Settings", experimentalSettingsPanel);
 		GridBagLayout gbl_experimentalSettingsPanel = new GridBagLayout();
 		gbl_experimentalSettingsPanel.columnWidths = new int[] {127, 127, 0};
-		gbl_experimentalSettingsPanel.rowHeights = new int[] {30, 30, 30, 0};
+		gbl_experimentalSettingsPanel.rowHeights = new int[] {30, 30, 30, 0, 0};
 		gbl_experimentalSettingsPanel.columnWeights = new double[]{0.0, 0.0, 0.0};
-		gbl_experimentalSettingsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0};
+		gbl_experimentalSettingsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0};
 		experimentalSettingsPanel.setLayout(gbl_experimentalSettingsPanel);
 		
 		chckbxEstimateLightOffset = new JCheckBox("Estimate light offset");
@@ -820,11 +816,20 @@ public class TextureFitUserInterface extends JFrame
 		gbc_diffuseCompNormalSpinner.gridy = 2;
 		experimentalSettingsPanel.add(diffuseCompNormalSpinner, gbc_diffuseCompNormalSpinner);
 		
+		chckbxLevenbergMarquardtSpecularOptimization = new JCheckBox("Levenberg-Marquardt specular optimization");
+		GridBagConstraints gbc_chckbxLevenbergMarquardtSpecularOptimization = new GridBagConstraints();
+		gbc_chckbxLevenbergMarquardtSpecularOptimization.anchor = GridBagConstraints.WEST;
+		gbc_chckbxLevenbergMarquardtSpecularOptimization.gridwidth = 2;
+		gbc_chckbxLevenbergMarquardtSpecularOptimization.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxLevenbergMarquardtSpecularOptimization.gridx = 0;
+		gbc_chckbxLevenbergMarquardtSpecularOptimization.gridy = 3;
+		experimentalSettingsPanel.add(chckbxLevenbergMarquardtSpecularOptimization, gbc_chckbxLevenbergMarquardtSpecularOptimization);
+		
 		chckbxSpatiallyvaryingRoughnessMap = new JCheckBox("Spatially-varying roughness map");
 		GridBagConstraints gbc_chckbxSpatiallyvaryingRoughnessMap = new GridBagConstraints();
 		gbc_chckbxSpatiallyvaryingRoughnessMap.insets = new Insets(0, 0, 0, 5);
 		gbc_chckbxSpatiallyvaryingRoughnessMap.gridx = 0;
-		gbc_chckbxSpatiallyvaryingRoughnessMap.gridy = 3;
+		gbc_chckbxSpatiallyvaryingRoughnessMap.gridy = 4;
 		experimentalSettingsPanel.add(chckbxSpatiallyvaryingRoughnessMap, gbc_chckbxSpatiallyvaryingRoughnessMap);
 		
 		Box executeBox = new Box(BoxLayout.X_AXIS);
