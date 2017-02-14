@@ -2051,7 +2051,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	
     		viewSet.setGeometryFileName(objFile.getName());
 	    	Path relativePathToRescaledImages = outputDir.toPath().relativize(imageDir.toPath());
-	    	viewSet.setImageFilePath(relativePathToRescaledImages.toFile());
+	    	viewSet.setRelativeImagePathName(relativePathToRescaledImages.toString());
 	    	
 	    	FileOutputStream outputStream = new FileOutputStream(new File(outputDir, vsetFile.getName().split("\\.")[0] + ".vset"));
 	        viewSet.writeVSETFileToStream(outputStream);

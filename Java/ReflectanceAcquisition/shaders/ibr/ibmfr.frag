@@ -77,7 +77,7 @@ vec3 getEnvironmentDiffuse(vec3 normalDirection)
 {
 	vec2 texCoords = vec2(atan(-normalDirection.x, -normalDirection.z) / 2, asin(normalDirection.y))
 						/ PI + vec2(0.5);
-	return pow(textureLod(environmentMap, texCoords, 2).rgb, vec3(2.2));
+	return pow(textureLod(environmentMap, texCoords, environmentMipMapLevel + 2).rgb, vec3(2.2));
 }
 
 vec3 computeFresnelReflectivityActual(vec3 specularColor, vec3 grazingColor, float hDotV)

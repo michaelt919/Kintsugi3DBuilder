@@ -159,15 +159,22 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		
 		try
 		{
+			// TODO read texture names from MTL file
+			String prefix = ulfRenderer.getLightField().viewSet.getGeometryFileName().split("\\.")[0];
+			String diffuseTextureName = prefix + "_Kd.png";
+			String normalTextureName = prefix + "_norm.png";
+			String specularTextureName = prefix + "_Ks.png";
+			String roughnessTextureName = prefix + "_Pr.png";
+			
 			microfacetField = new SampledMicrofacetField<ContextType>(
 					ulfRenderer.getLightField(), 
-					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "diffuse.png"),
-					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "normal.png"),
-					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "specular.png"),
-					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "roughness.png"), 
-					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "environment_lowres.png"), 
+					new File(ulfRenderer.getGeometryFile().getParentFile(), diffuseTextureName),
+					new File(ulfRenderer.getGeometryFile().getParentFile(), normalTextureName),
+					new File(ulfRenderer.getGeometryFile().getParentFile(), specularTextureName),
+					new File(ulfRenderer.getGeometryFile().getParentFile(), roughnessTextureName), 
+					new File(ulfRenderer.getGeometryFile().getParentFile(), "environment_lowres.png"), 
 					//new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "environment_highres.png"),
-					new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "environment_highres.hdr"),
+					new File(ulfRenderer.getGeometryFile().getParentFile(), "environment_highres.hdr"),
 					new File(ulfRenderer.getGeometryFile().getParentFile(), "mfd.csv"), 
 					context);
 			
