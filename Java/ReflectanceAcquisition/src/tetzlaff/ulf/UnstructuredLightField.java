@@ -156,8 +156,8 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 		Texture3D<ContextType> depthTextures = null;
 		
 		File directoryPath = vsetFile.getParentFile();
-        proxy = new VertexMesh("OBJ", new File(directoryPath, "manifold.obj")); // TODO don't have geometry filename hard-coded
         viewSet = ViewSet.loadFromVSETFile(vsetFile, loadOptions.getImageOptions(), context);
+        proxy = new VertexMesh("OBJ", viewSet.getGeometryFile());
         VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(proxy.getVertices());
         
         if (loadOptions.areDepthImagesRequested())

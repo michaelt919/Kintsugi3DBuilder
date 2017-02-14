@@ -101,9 +101,14 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	private List<String> secondaryImageFileNames;
 	
 	/**
-	 * The absolute file path to be used for loading images.
+	 * The absolute file path to be used for loading all resources.
 	 */
 	private File filePath;
+	
+	/**
+	 * The relative file path to be used for loading images.
+	 */
+	private String relativeImagePath;
 	
 	/**
 	 * The relative name of the mesh file.
@@ -227,7 +232,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Integer> secondaryLightIndexList,
 		List<String> secondaryImageFileNames, 
 		ViewSetImageOptions imageOptions,
-		File imageFilePath,
+		String imagePathName,
 		String geometryFileName,
 		float gamma,
 		double[] linearLuminanceValues,
@@ -263,14 +268,12 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			this.encodedLuminanceValues = encodedLuminanceValues;
 		}
 		
-		if (imageFilePath == null && imageOptions != null)
+		if (imageOptions != null)
 		{
 			this.filePath = imageOptions.getFilePath();
 		}
-		else
-		{
-			this.filePath = imageFilePath;
-		}
+		
+		this.relativeImagePath = imagePathName;
 		
 		if (context != null)
 		{
@@ -388,7 +391,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			if (imageOptions != null && imageOptions.isLoadingRequested() && imageOptions.getFilePath() != null && imageFileNames != null && imageFileNames.size() > 0)
 			{
 				Date timestamp = new Date();
-				File imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(0));
+				File imageFile = this.getImageFile(0);
 				//ZipWrapper myZip = new ZipWrapper(imageFile);
 	
 				if (!imageFile.exists())
@@ -465,7 +468,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	//			boolean needsRotation = false;
 				for (int i = 0; i < imageFileNames.size(); i++)
 				{
-					imageFile = new File(imageOptions.getFilePath(), imageFileNames.get(i));
+					imageFile = getImageFile(i);
 					if (!imageFile.exists())
 					//if (!myZip.exists(imageFile))
 					{
@@ -692,7 +695,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<String> secondaryImageFileNames = new ArrayList<String>();
 		
 		String meshFileName = "manifold.obj";
-		File filePath = null;
+		String relativeImageFilePath = null;
 		
 		while (scanner.hasNext())
 		{
@@ -708,12 +711,12 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				}
 				case "m":
 				{
-					meshFileName = scanner.nextLine();
+					meshFileName = scanner.nextLine().trim();
 					break;
 				}
 				case "i":
 				{
-					filePath = new File(scanner.nextLine());
+					relativeImageFilePath = scanner.nextLine().trim();
 					break;
 				}
 				case "p":
@@ -906,9 +909,12 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
 		return new ViewSet<ContextType>(
-			orderedCameraPoseList, orderedCameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
-			absoluteLightPositionList, absoluteLightIntensityList, secondaryCameraPoseList, secondaryCameraPoseInvList, secondaryCameraProjectionIndexList, secondaryLightIndexList, secondaryImageFileNames,
-			imageOptions, filePath, meshFileName, recommendedGamma, linearLuminance, encodedLuminance, recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
+			orderedCameraPoseList, orderedCameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, 
+			lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
+			absoluteLightPositionList, absoluteLightIntensityList, secondaryCameraPoseList, secondaryCameraPoseInvList, 
+			secondaryCameraProjectionIndexList, secondaryLightIndexList, secondaryImageFileNames,
+			imageOptions, relativeImageFilePath, meshFileName, recommendedGamma, linearLuminance, encodedLuminance,
+			recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
 	}
 	
 	/**
@@ -1491,9 +1497,12 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Integer> secondaryLightIndexList = new ArrayList<Integer>();
 		List<String> secondaryImageFileNames = new ArrayList<String>();
         
-        return new ViewSet<ContextType>(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
-    		absoluteLightPositionList, absoluteLightIntensityList, secondaryCameraPoseList, secondaryCameraPoseInvList, secondaryCameraProjectionIndexList, secondaryLightIndexList, secondaryImageFileNames,
-    		imageOptions, null, null, gamma, linearLuminanceValues, encodedLuminanceValues, farPlane / 32.0f, farPlane, context, loadingCallback);
+        return new ViewSet<ContextType>(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, 
+    		lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
+    		absoluteLightPositionList, absoluteLightIntensityList, secondaryCameraPoseList, secondaryCameraPoseInvList, 
+    		secondaryCameraProjectionIndexList, secondaryLightIndexList, secondaryImageFileNames,
+    		imageOptions, null, null, gamma, linearLuminanceValues, encodedLuminanceValues, 
+    		farPlane / 32.0f, farPlane, context, loadingCallback);
     }
 	
 	/**
@@ -1534,7 +1543,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    out.println("\n# Geometry file name (mesh)");
 	    out.println("m " + geometryFileName);
 	    out.println("\n# Image file path");
-	    out.println("i " + filePath);
+	    out.println("i " + relativeImagePath);
 
 	    out.println("\n# Estimated near and far planes");
 	    out.printf("c\t%.8f\t%.8f\n", recommendedNearPlane, recommendedFarPlane);
@@ -1658,16 +1667,25 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 */
 	public File getImageFilePath()
 	{
-		return this.filePath;
+		return new File(this.filePath, relativeImagePath);
 	}
 	
 	/**
 	 * Sets the image file path associated with this view set.
 	 * @param imageFilePath The image file path.
 	 */
-	public void setImageFilePath(File imageFilePath)
+	public String getRelativeImagePathName()
 	{
-		this.filePath = imageFilePath;
+		return this.relativeImagePath;
+	}
+	
+	/**
+	 * Sets the image file path associated with this view set.
+	 * @param imageFilePath The image file path.
+	 */
+	public void setRelativeImagePathName(String relativeImagePath)
+	{
+		this.relativeImagePath = relativeImagePath;
 	}
 	
 	/**
@@ -1687,7 +1705,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 */
 	public File getImageFile(int poseIndex) 
 	{
-		return new File(this.filePath, this.imageFileNames.get(poseIndex));
+		return new File(this.getImageFilePath(), this.imageFileNames.get(poseIndex));
 	}
     
     public int getPrimaryViewIndex()
@@ -1948,7 +1966,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 
 	public File getSecondaryImageFile(int poseIndex) 
 	{
-		return new File(this.filePath, this.secondaryImageFileNames.get(poseIndex));
+		return new File(this.getImageFilePath(), this.secondaryImageFileNames.get(poseIndex));
 	}
 	
 	public SampledLuminanceEncoding getLuminanceEncodingFunction()
