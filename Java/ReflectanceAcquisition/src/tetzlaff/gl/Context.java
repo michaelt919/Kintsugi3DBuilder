@@ -19,7 +19,6 @@ import tetzlaff.gl.helpers.DoubleVertexList;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.ShortVertexList;
-import tetzlaff.gl.opengl.OpenGLContext;
 
 /**
  * An interface for any OpenGL-like graphics context.

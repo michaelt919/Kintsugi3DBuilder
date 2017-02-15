@@ -35,6 +35,7 @@ uniform sampler2D specularMap;
 uniform sampler2D roughnessMap;
 uniform sampler2D environmentMap;
 uniform int environmentMipMapLevel;
+uniform int diffuseEnvironmentMipMapLevel;
 uniform float environmentMapGamma;
 uniform sampler1D mfdMap;
 
@@ -78,7 +79,7 @@ vec3 getEnvironmentDiffuse(vec3 normalDirection)
 {
 	vec2 texCoords = vec2(atan(normalDirection.x, -normalDirection.z) / 2, asin(normalDirection.y))
 						/ PI + vec2(0.5);
-	return pow(textureLod(environmentMap, texCoords, environmentMipMapLevel + 1).rgb, 
+	return pow(textureLod(environmentMap, texCoords, diffuseEnvironmentMipMapLevel).rgb, 
 		vec3(environmentMapGamma));
 }
 

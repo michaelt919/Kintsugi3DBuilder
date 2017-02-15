@@ -6,6 +6,7 @@ import java.io.IOException;
 import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.AlphaBlendingFunction.Weight;
 import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.ColorFormat.DataType;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
@@ -171,10 +172,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 					new File(ulfRenderer.getGeometryFile().getParentFile(), diffuseTextureName),
 					new File(ulfRenderer.getGeometryFile().getParentFile(), normalTextureName),
 					new File(ulfRenderer.getGeometryFile().getParentFile(), specularTextureName),
-					new File(ulfRenderer.getGeometryFile().getParentFile(), roughnessTextureName), 
-					new File(ulfRenderer.getGeometryFile().getParentFile(), "environment_lowres.png"), 
-					//new File(new File(ulfRenderer.getGeometryFile().getParentFile(), "textures"), "environment_highres.png"),
-					new File(ulfRenderer.getGeometryFile().getParentFile(), "environment_highres.hdr"),
+					new File(ulfRenderer.getGeometryFile().getParentFile(), roughnessTextureName),
 					new File(ulfRenderer.getGeometryFile().getParentFile(), "mfd.csv"), 
 					context);
 			
@@ -276,17 +274,24 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			p.setTexture("roughnessMap", microfacetField.roughnessTexture);
 		}
 		
-		if (microfacetField.environmentHighResTexture == null || !lightController.getEnvironmentMappingEnabled())
+		if (ulfRenderer.getEnvironmentTexture() == null || !lightController.getEnvironmentMappingEnabled())
 		{
 			p.setUniform("useEnvironmentTexture", false);
 			p.setTexture("environmentMap", null);
+			ulfRenderer.setEnvironmentTextureEnabled(false);
 		}
 		else
 		{
 			p.setUniform("useEnvironmentTexture", true);
-			p.setTexture("environmentMap", microfacetField.environmentHighResTexture);
-			p.setUniform("environmentMipMapLevel", 9/*microfacetField.environmentHighResTexture.getLevelCount()*/);
-			p.setUniform("environmentMapGamma", 1.0f); // TODO set to 2.2 if environment map isn't HDR.
+			p.setTexture("environmentMap", ulfRenderer.getEnvironmentTexture());
+			p.setUniform("environmentMipMapLevel", Math.max(0, ulfRenderer.getEnvironmentTexture().getMipmapLevelCount() 
+					- Math.max(2, (int)Math.floor(0.5 * Math.log(microfacetField.ulf.viewSet.getCameraPoseCount()) / Math.log(2.0)))));
+			p.setUniform("diffuseEnvironmentMipMapLevel", ulfRenderer.getEnvironmentTexture().getMipmapLevelCount() - 2);
+			p.setUniform("environmentMapGamma", 
+					ulfRenderer.getEnvironmentTexture().isInternalFormatCompressed() || 
+					ulfRenderer.getEnvironmentTexture().getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
+					? 2.2f : 1.0f);
+			ulfRenderer.setEnvironmentTextureEnabled(true);
 		}
 		
 		if (microfacetField.mfdTexture == null)
@@ -476,7 +481,8 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 //				indexProgram.setUniform("lightIntensity", new Vector3(1.0f, 1.0f, 1.0f));
 			}
 			
-			ulfRenderer.draw(lightController.getEnvironmentMappingEnabled() ? microfacetField.environmentHighResTexture : null, envMapMatrix);
+			ulfRenderer.setEnvironmentMatrix(envMapMatrix);
+			ulfRenderer.draw();
 			
 			FramebufferSize windowSize = context.getDefaultFramebuffer().getSize();
 			
@@ -748,6 +754,18 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		this.indexProgram = program;
 		ulfRenderer.setIndexProgram(program);
 		suppressErrors = false;
+	}
+	
+	@Override
+	public Texture2D<ContextType> getEnvironmentTexture()
+	{
+		return this.ulfRenderer.getEnvironmentTexture();
+	}
+	
+	@Override
+	public void setEnvironment(File environmentFile) throws IOException
+	{
+		this.ulfRenderer.setEnvironment(environmentFile);
 	}
 	
 	@Override

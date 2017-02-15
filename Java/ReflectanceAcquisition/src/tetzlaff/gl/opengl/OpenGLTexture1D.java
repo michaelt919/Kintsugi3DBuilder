@@ -9,6 +9,8 @@ import static org.lwjgl.opengl.GL44.*;
 
 import java.nio.ByteBuffer;
 
+import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Texture1D;
 import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
@@ -41,34 +43,58 @@ class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLContext>
 		@Override
 		public OpenGLTexture1D createTexture() 
 		{
-			int colorFormat;
 			if (this.isInternalFormatCompressed())
 			{
-				colorFormat = this.context.getOpenGLCompressionFormat(this.getInternalCompressionFormat());
+				return new OpenGLTexture1D(
+						this.context,
+						this.textureTarget,
+						this.getInternalCompressionFormat(),
+						this.width,
+						this.format,
+						this.type,
+						this.buffer,
+						this.isLinearFilteringEnabled(),
+						this.areMipmapsEnabled(),
+						this.getMaxAnisotropy());
 			}
 			else
 			{
-				colorFormat = this.context.getOpenGLInternalColorFormat(this.getInternalColorFormat());
+				return new OpenGLTexture1D(
+						this.context,
+						this.textureTarget,
+						this.getInternalColorFormat(),
+						this.width,
+						this.format,
+						this.type,
+						this.buffer,
+						this.isLinearFilteringEnabled(),
+						this.areMipmapsEnabled(),
+						this.getMaxAnisotropy());
 			}
-			
-			return new OpenGLTexture1D(
-					this.context,
-					this.textureTarget, 
-					colorFormat, 
-					this.width,
-					this.format,
-					this.type,
-					this.buffer,
-					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled(),
-					this.getMaxAnisotropy());
 		}
 	}
 	
-	private OpenGLTexture1D(OpenGLContext context, int textureTarget, int internalFormat, int width, int format, int type, ByteBuffer buffer, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy) 
+	private OpenGLTexture1D(OpenGLContext context, int textureTarget, ColorFormat colorFormat, int width, int format, int type, ByteBuffer buffer, 
+			boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy) 
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
-		super(context);
+		super(context, colorFormat);
+		
+		init(context, textureTarget, context.getOpenGLInternalColorFormat(colorFormat), width, format, type, buffer, useLinearFiltering, useMipmaps, maxAnisotropy);
+	}
+	
+	private OpenGLTexture1D(OpenGLContext context, int textureTarget, CompressionFormat compressionFormat, int width, int format, int type, ByteBuffer buffer, 
+			boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy) 
+	{
+		// Create an empty texture to be used as a render target for a framebuffer.
+		super(context, compressionFormat);
+		
+		init(context, textureTarget, context.getOpenGLCompressionFormat(compressionFormat), width, format, type, buffer, useLinearFiltering, useMipmaps, maxAnisotropy);
+	}
+	
+	private void init(OpenGLContext context, int textureTarget, int internalFormat, int width, int format, int type, ByteBuffer buffer,
+			boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy) 
+	{
 		this.textureTarget = textureTarget;
 		this.bind();
 		this.width = width;
@@ -173,7 +199,7 @@ class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLContext>
 	}
 
 	@Override
-	protected int getLevelCount() 
+	public int getMipmapLevelCount() 
 	{
 		return this.levelCount;
 	}

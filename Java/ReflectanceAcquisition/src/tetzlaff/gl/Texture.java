@@ -11,5 +11,9 @@ package tetzlaff.gl;
  */
 public interface Texture<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
-
+	int getMipmapLevelCount();
+	ColorFormat getInternalUncompressedColorFormat();
+	CompressionFormat getInternalCompressedColorFormat();
+	boolean isInternalFormatCompressed();
+	TextureType getTextureType();
 }

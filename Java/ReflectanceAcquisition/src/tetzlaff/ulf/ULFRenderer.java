@@ -21,6 +21,9 @@ import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
+import tetzlaff.gl.TextureWrapMode;
+import tetzlaff.gl.ColorFormat.DataType;
+import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.CameraController;
@@ -54,6 +57,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     private Texture3D<ContextType> viewIndexCacheTexturesBack;
     private Program<ContextType> simpleTexProgram;
     private Renderable<ContextType> simpleTexRenderable;
+    
+    private File newEnvironmentFile = null;
+    private boolean environmentTextureEnabled;
+    private Texture2D<ContextType> environmentTexture;
+    private Matrix4 envMapMatrix = null;
 
     private Program<ContextType> environmentBackgroundProgram;
     private Renderable<ContextType> environmentBackgroundRenderable;
@@ -266,6 +274,44 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	@Override
 	public void update()
 	{
+		if (this.newEnvironmentFile != null)
+		{
+			File environmentFile = this.newEnvironmentFile;
+			this.newEnvironmentFile = null;
+			
+			try
+			{
+				System.out.println("Loading new environment texture.");
+				ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> textureBuilder 
+						= context.get2DColorTextureBuilder(environmentFile, true);
+				if (environmentFile.getName().endsWith(".hdr"))
+				{
+					textureBuilder.setInternalFormat(ColorFormat.RGB32F);
+				}
+				else
+				{
+					textureBuilder.setInternalFormat(ColorFormat.RGB8);
+				}
+				Texture2D<ContextType> newEnvironmentTexture = 
+					textureBuilder
+						.setMipmapsEnabled(true)
+						.setLinearFilteringEnabled(true)
+						.createTexture();
+				newEnvironmentTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
+	
+				if (this.environmentTexture != null)
+				{
+					this.environmentTexture.delete();
+				}
+				
+				this.environmentTexture = newEnvironmentTexture;
+			}
+			catch (Exception e) 
+    		{
+				e.printStackTrace();
+			}
+		}
+		
     	if (this.resampleRequested)
     	{
     		try
@@ -360,11 +406,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     
     @Override
     public void draw()
-    {
-    	draw(null, null);
-    }
-    
-    public void draw(Texture2D<ContextType> environmentMap, Matrix4 envMapMatrix)
     {
     	if (offset == stride)
     	{
@@ -489,14 +530,18 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
     	{
     		framebuffer.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
     		
-    		if (environmentMap != null)
+    		if (environmentTexture != null && environmentTextureEnabled)
 			{
 				environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
-				environmentBackgroundProgram.setTexture("env", environmentMap);
+				environmentBackgroundProgram.setTexture("env", environmentTexture);
 				environmentBackgroundProgram.setUniform("model_view", modelView);
 				environmentBackgroundProgram.setUniform("projection", projection);
 				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
-				environmentBackgroundProgram.setUniform("gamma", 2.2f); // TODO set to 1.0 if environment map isn't HDR.
+
+				environmentBackgroundProgram.setUniform("gamma", 
+						environmentTexture.isInternalFormatCompressed() || 
+						environmentTexture.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
+						? 1.0f : 2.2f);
 				
 				context.disableDepthTest();
 				this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
@@ -896,5 +941,40 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 			throws IOException 
 	{
 		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public Texture2D<ContextType> getEnvironmentTexture()
+	{
+		return this.environmentTexture;
+	}
+
+	@Override
+	public void setEnvironment(File environmentFile) throws IOException
+	{
+		if (environmentFile != null && environmentFile.exists())
+		{
+			this.newEnvironmentFile = environmentFile;
+		}
+	}
+	
+	public boolean getEnvironmentTextureEnabled()
+	{
+		return this.environmentTextureEnabled;
+	}
+	
+	public void setEnvironmentTextureEnabled(boolean enabled)
+	{
+		this.environmentTextureEnabled = enabled;
+	}
+	
+	public Matrix4 getEnvironmentMatrix()
+	{
+		return this.envMapMatrix;
+	}
+	
+	public void setEnvironmentMatrix(Matrix4 matrix)
+	{
+		this.envMapMatrix = matrix;
 	}
 }

@@ -4,7 +4,10 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
+import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Texture;
+import tetzlaff.gl.TextureType;
 
 abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment
 {
@@ -12,11 +15,28 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 	
 	private int textureId;
 	
-	OpenGLTexture(OpenGLContext context) 
+	private ColorFormat colorFormat = null;
+	private CompressionFormat compressionFormat = null;
+	private TextureType textureType;
+	
+	OpenGLTexture(OpenGLContext context, TextureType textureType)
 	{
 		this.context = context;
+		this.textureType = textureType;
 		this.textureId = glGenTextures();
 		this.context.openGLErrorCheck();
+	}
+	
+	OpenGLTexture(OpenGLContext context, ColorFormat colorFormat) 
+	{
+		this(context, TextureType.COLOR);
+		this.colorFormat = colorFormat;
+	}
+	
+	OpenGLTexture(OpenGLContext context, CompressionFormat compressionFormat) 
+	{
+		this(context, TextureType.COLOR);
+		this.compressionFormat = compressionFormat;
 	}
 	
 	@Override
@@ -25,8 +45,31 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 		return this.context;
 	}
 	
+	@Override
+	public ColorFormat getInternalUncompressedColorFormat()
+	{
+		return this.colorFormat;
+	}
+	
+	@Override
+	public CompressionFormat getInternalCompressedColorFormat()
+	{
+		return this.compressionFormat;
+	}
+	
+	@Override
+	public boolean isInternalFormatCompressed()
+	{
+		return this.compressionFormat != null;
+	}
+	
+	@Override
+	public TextureType getTextureType()
+	{
+		return textureType;
+	}
+	
 	abstract int getOpenGLTextureTarget();
-	abstract int getLevelCount();
 	
 	void bind()
 	{
@@ -69,9 +112,9 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 		{
 			throw new IllegalArgumentException("Texture level cannot be negative.");
 		}
-		if (level > this.getLevelCount())
+		if (level > this.getMipmapLevelCount())
 		{
-			throw new IllegalArgumentException("Illegal level index: " + level + ".  The texture only has " + this.getLevelCount() + " levels.");
+			throw new IllegalArgumentException("Illegal level index: " + level + ".  The texture only has " + this.getMipmapLevelCount() + " levels.");
 		}
 		glFramebufferTexture(GL_DRAW_FRAMEBUFFER, attachment, this.textureId, level);
 		this.context.openGLErrorCheck();
