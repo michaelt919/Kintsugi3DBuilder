@@ -33,8 +33,9 @@ uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 uniform sampler2D roughnessMap;
-uniform int environmentMipMapLevel;
 uniform sampler2D environmentMap;
+uniform int environmentMipMapLevel;
+uniform float environmentMapGamma;
 uniform sampler1D mfdMap;
 
 uniform bool useDiffuseTexture;
@@ -55,7 +56,7 @@ uniform vec3 viewDirTSOverride;
 
 vec3 getEnvironment(vec3 lightDirection)
 {
-	vec2 texCoords = vec2(atan(-lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
+	vec2 texCoords = vec2(atan(lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
 						/ PI + vec2(0.5);
 	
 	// To prevent seams when the texture wraps around
@@ -70,14 +71,15 @@ vec3 getEnvironment(vec3 lightDirection)
 	vec4 color1 = textureLod(environmentMap, texCoords, environmentMipMapLevel);
 	vec4 color2 = textureLod(environmentMap, 
 		mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0), environmentMipMapLevel);
-	return pow(mix(color1, color2, 2.0 * abs(texCoords.x - 0.5)).rgb, vec3(2.2));
+	return pow(mix(color1, color2, 2.0 * abs(texCoords.x - 0.5)).rgb, vec3(environmentMapGamma));
 }
 
 vec3 getEnvironmentDiffuse(vec3 normalDirection)
 {
-	vec2 texCoords = vec2(atan(-normalDirection.x, -normalDirection.z) / 2, asin(normalDirection.y))
+	vec2 texCoords = vec2(atan(normalDirection.x, -normalDirection.z) / 2, asin(normalDirection.y))
 						/ PI + vec2(0.5);
-	return pow(textureLod(environmentMap, texCoords, environmentMipMapLevel + 2).rgb, vec3(2.2));
+	return pow(textureLod(environmentMap, texCoords, environmentMipMapLevel + 1).rgb, 
+		vec3(environmentMapGamma));
 }
 
 vec3 computeFresnelReflectivityActual(vec3 specularColor, vec3 grazingColor, float hDotV)

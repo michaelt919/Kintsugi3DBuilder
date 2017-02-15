@@ -286,6 +286,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			p.setUniform("useEnvironmentTexture", true);
 			p.setTexture("environmentMap", microfacetField.environmentHighResTexture);
 			p.setUniform("environmentMipMapLevel", 9/*microfacetField.environmentHighResTexture.getLevelCount()*/);
+			p.setUniform("environmentMapGamma", 1.0f); // TODO set to 2.2 if environment map isn't HDR.
 		}
 		
 		if (microfacetField.mfdTexture == null)
