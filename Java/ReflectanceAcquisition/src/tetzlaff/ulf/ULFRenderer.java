@@ -496,6 +496,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 				environmentBackgroundProgram.setUniform("model_view", modelView);
 				environmentBackgroundProgram.setUniform("projection", projection);
 				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
+				environmentBackgroundProgram.setUniform("gamma", 2.2f); // TODO set to 1.0 if environment map isn't HDR.
 				
 				context.disableDepthTest();
 				this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
