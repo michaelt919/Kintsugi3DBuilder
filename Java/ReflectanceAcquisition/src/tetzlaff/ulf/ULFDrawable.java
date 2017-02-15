@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
+import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.VertexMesh;
 
@@ -35,8 +36,12 @@ public interface ULFDrawable<ContextType extends Context<ContextType>> extends D
 	void setProgram(Program<ContextType> program);
 	void setIndexProgram(Program<ContextType> program);
 	void reloadHelperShaders();
+
+	Texture2D<ContextType> getEnvironmentTexture();
+	void setEnvironment(File environmentFile) throws IOException;
 	
 	void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException;
 	void requestFidelity(File exportPath) throws IOException;
 	void requestBTF(int width, int height, File exportPath) throws IOException;
+
 }

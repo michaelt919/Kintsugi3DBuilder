@@ -1,17 +1,10 @@
 package tetzlaff.texturefit;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-
-
-
 import java.io.PrintStream;
 
 import javax.swing.JOptionPane;
-
-
-
 
 import tetzlaff.gl.exceptions.GLOutOfMemoryException;
 import tetzlaff.gl.opengl.OpenGLContext;

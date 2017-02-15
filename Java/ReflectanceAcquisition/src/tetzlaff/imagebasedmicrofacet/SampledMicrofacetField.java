@@ -16,7 +16,6 @@ import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture1D;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
-import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.Matrix4;
@@ -31,14 +30,12 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 	public final Texture2D<ContextType> normalTexture;
 	public final Texture2D<ContextType> specularTexture;
 	public final Texture2D<ContextType> roughnessTexture;
-	public final Texture2D<ContextType> environmentLowResTexture;
-	public final Texture2D<ContextType> environmentHighResTexture;
 	public final Texture3D<ContextType> shadowTextures;
 	public final Texture1D<ContextType> mfdTexture;
 	public final UniformBuffer<ContextType> shadowMatrixBuffer;
 	
 	public SampledMicrofacetField(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, File specularFile, File roughnessFile, 
-			File environmentLowResFile, File environmentHighResFile, File mfdFile, ContextType context) throws IOException
+			File mfdFile, ContextType context) throws IOException
 	{
 		this.ulf = ulf;
 		
@@ -98,37 +95,7 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 			roughnessTexture = null;
 		}
 		
-		if (environmentLowResFile != null && environmentLowResFile.exists())
-		{
-			System.out.println("Low res environment texture found.");
-			environmentLowResTexture = context.get2DColorTextureBuilder(environmentLowResFile, true)
-					.setInternalFormat(ColorFormat.RGB8)
-					.setMipmapsEnabled(true)
-					.setLinearFilteringEnabled(true)
-					.createTexture();
-			
-			environmentLowResTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
-		}
-		else
-		{
-			environmentLowResTexture = null;
-		}
 		
-		if (environmentHighResFile != null && environmentHighResFile.exists())
-		{
-			System.out.println("High res environment texture found.");
-			environmentHighResTexture = context.get2DColorTextureBuilder(environmentHighResFile, true)
-					.setInternalFormat(ColorFormat.RGB32F)
-					.setMipmapsEnabled(true)
-					.setLinearFilteringEnabled(true)
-					.createTexture();
-			
-			environmentHighResTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
-		}
-		else
-		{
-			environmentHighResTexture = null;
-		}
 		
 		if (mfdFile != null && mfdFile.exists())
 		{
@@ -278,16 +245,6 @@ public class SampledMicrofacetField<ContextType extends Context<ContextType>>
 		if (roughnessTexture != null)
 		{
 			roughnessTexture.delete();
-		}
-		
-		if (environmentLowResTexture != null)
-		{
-			environmentLowResTexture.delete();
-		}
-		
-		if (environmentHighResTexture != null)
-		{
-			environmentHighResTexture.delete();
 		}
 		
 		if (shadowTextures != null)

@@ -9,6 +9,7 @@ import java.util.Scanner;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
+import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.VertexMesh;
 
@@ -279,5 +280,17 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 		{
 			stage.reloadHelperShaders();
 		}
+	}
+	
+	@Override
+	public Texture2D<ContextType> getEnvironmentTexture()
+	{
+		return this.stages.get(this.currentStage).getEnvironmentTexture();
+	}
+	
+	@Override
+	public void setEnvironment(File environmentFile) throws IOException 
+	{
+		this.stages.get(this.currentStage).setEnvironment(environmentFile);
 	}
 }

@@ -1667,7 +1667,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 */
 	public File getImageFilePath()
 	{
-		return new File(this.filePath, relativeImagePath);
+		return this.relativeImagePath == null ? this.filePath : new File(this.filePath, relativeImagePath);
 	}
 	
 	/**

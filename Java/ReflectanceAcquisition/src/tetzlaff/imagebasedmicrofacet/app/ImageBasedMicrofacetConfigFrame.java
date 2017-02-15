@@ -39,6 +39,9 @@ import tetzlaff.ulf.ULFLoadingMonitor;
 import tetzlaff.ulf.ULFMorphRenderer;
 import tetzlaff.ulf.ViewSetImageOptions;
 
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
  * interface in ULFUserInterface offering the same options but uses a more flexible approach to layout
@@ -90,14 +93,13 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		loadingFrame.setLocationRelativeTo(null);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[] {300, 630};
-		gbl_contentPane.rowHeights = new int[] {0, 180};
+		gbl_contentPane.rowHeights = new int[] {0};
 		gbl_contentPane.columnWeights = new double[]{0.0, 1.0};
-		gbl_contentPane.rowWeights = new double[]{1.0, 1.0};
+		gbl_contentPane.rowWeights = new double[]{1.0};
 		contentPane.setLayout(gbl_contentPane);
 		
 		JPanel panel_2 = new JPanel();
 		GridBagConstraints gbc_panel_2 = new GridBagConstraints();
-		gbc_panel_2.gridheight = 2;
 		gbc_panel_2.fill = GridBagConstraints.VERTICAL;
 		gbc_panel_2.anchor = GridBagConstraints.WEST;
 		gbc_panel_2.insets = new Insets(0, 0, 5, 5);
@@ -579,7 +581,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 			}
 		});
 		
-		// Add listener for the 'resample' button to generate new vies for the current light field.
+		// Add listener for the 'resample' button to generate new views for the current light field.
 		btnResample.addActionListener(e -> 
 		{
 			fileChooser.setDialogTitle("Choose a Target VSET File");
@@ -734,6 +736,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		btnLoadSingle.addActionListener(e -> 
 		{
 			fileChooser.setDialogTitle("Select a camera definition file");
+			fileChooser.resetChoosableFileFilters();
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
 			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Agisoft Photoscan XML files", "xml"));
 			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("View Set files", "vset"));
@@ -844,7 +847,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		tabbedPane.addTab("Light 1", null, panel_4, null);
 		GridBagLayout gbl_panel_4 = new GridBagLayout();
 		gbl_panel_4.columnWidths = new int[] {100, 100, 0, 0};
-		gbl_panel_4.rowHeights = new int[] {0, 0, 0};
+		gbl_panel_4.rowHeights = new int[] {20, 20, 20};
 		gbl_panel_4.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gbl_panel_4.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		panel_4.setLayout(gbl_panel_4);
@@ -981,19 +984,19 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		panel_7.add(light3IntensitySpinner, gbc_light3IntensitySpinner);
 		
 		JPanel panel_8 = new JPanel();
-		tabbedPane.addTab("Ambient Light", null, panel_8, null);
+		tabbedPane.addTab("Ambient/Environment Light", null, panel_8, null);
 		GridBagLayout gbl_panel_8 = new GridBagLayout();
-		gbl_panel_8.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_8.rowHeights = new int[] {0, 0, 0};
-		gbl_panel_8.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel_8.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_8.columnWidths = new int[]{100, 100, 0, 0, 0};
+		gbl_panel_8.rowHeights = new int[] {20, 20, 20, 0, 20};
+		gbl_panel_8.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_8.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		panel_8.setLayout(gbl_panel_8);
 		
 		JColorChooser ambientColorChooser = new JColorChooser();
 		ambientColorChooser.setPreviewPanel(new JPanel());
 		GridBagConstraints gbc_ambientColorChooser = new GridBagConstraints();
 		gbc_ambientColorChooser.anchor = GridBagConstraints.NORTHWEST;
-		gbc_ambientColorChooser.gridwidth = 3;
+		gbc_ambientColorChooser.gridwidth = 4;
 		gbc_ambientColorChooser.insets = new Insets(0, 0, 5, 0);
 		gbc_ambientColorChooser.gridx = 0;
 		gbc_ambientColorChooser.gridy = 0;
@@ -1001,7 +1004,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		
 		JLabel label_4 = new JLabel("Light Intensity:");
 		GridBagConstraints gbc_label_4 = new GridBagConstraints();
-		gbc_label_4.insets = new Insets(0, 0, 0, 5);
+		gbc_label_4.insets = new Insets(0, 0, 5, 5);
 		gbc_label_4.gridx = 0;
 		gbc_label_4.gridy = 1;
 		panel_8.add(label_4, gbc_label_4);
@@ -1010,25 +1013,52 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		ambientIntensitySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.01));
 		GridBagConstraints gbc_ambientIntensitySpinner = new GridBagConstraints();
 		gbc_ambientIntensitySpinner.fill = GridBagConstraints.HORIZONTAL;
-		gbc_ambientIntensitySpinner.insets = new Insets(0, 0, 0, 5);
+		gbc_ambientIntensitySpinner.insets = new Insets(0, 0, 5, 5);
 		gbc_ambientIntensitySpinner.gridx = 1;
 		gbc_ambientIntensitySpinner.gridy = 1;
 		panel_8.add(ambientIntensitySpinner, gbc_ambientIntensitySpinner);
 		
-		JPanel panel_9 = new JPanel();
-		GridBagConstraints gbc_panel_9 = new GridBagConstraints();
-		gbc_panel_9.insets = new Insets(0, 0, 5, 0);
-		gbc_panel_9.fill = GridBagConstraints.BOTH;
-		gbc_panel_9.gridx = 1;
-		gbc_panel_9.gridy = 1;
-		contentPane.add(panel_9, gbc_panel_9);
-		
 		JCheckBox chckbxEnvironmentMapping = new JCheckBox("Environment mapping");
+		GridBagConstraints gbc_chckbxEnvironmentMapping = new GridBagConstraints();
+		gbc_chckbxEnvironmentMapping.gridwidth = 2;
+		gbc_chckbxEnvironmentMapping.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxEnvironmentMapping.gridx = 0;
+		gbc_chckbxEnvironmentMapping.gridy = 2;
+		panel_8.add(chckbxEnvironmentMapping, gbc_chckbxEnvironmentMapping);
+		
+		JButton btnLoadEnvironmentTexture = new JButton("Load environment texture file...");
+		btnLoadEnvironmentTexture.addActionListener(e -> 
+		{
+			fileChooser.setDialogTitle("Select an environment texture");
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			fileChooser.resetChoosableFileFilters();
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Low dynamic range image", "jpg", "jpeg", "png", "bmp", "wbmp", "gif"));
+			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Radiance HDR image", "hdr"));
+			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				File file = fileChooser.getSelectedFile();
+				try 
+				{
+					model.getSelectedItem().setEnvironment(file);
+				} 
+				catch (Exception ex) 
+				{
+					ex.printStackTrace();
+				}
+			}
+		});
+		GridBagConstraints gbc_btnLoadEnvironmentTexture = new GridBagConstraints();
+		gbc_btnLoadEnvironmentTexture.gridwidth = 2;
+		gbc_btnLoadEnvironmentTexture.insets = new Insets(0, 0, 0, 5);
+		gbc_btnLoadEnvironmentTexture.gridx = 0;
+		gbc_btnLoadEnvironmentTexture.gridy = 3;
+		panel_8.add(btnLoadEnvironmentTexture, gbc_btnLoadEnvironmentTexture);
 		chckbxEnvironmentMapping.addChangeListener((e) ->
 		{
 			lightController.setEnvironmentMappingEnabled(chckbxEnvironmentMapping.isSelected());
 		});
-		panel_9.add(chckbxEnvironmentMapping);
 		
 		light0ColorChooser.getSelectionModel().addChangeListener(e ->
 		{

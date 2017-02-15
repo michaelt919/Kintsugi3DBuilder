@@ -20,8 +20,11 @@ import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
 
+import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.ColorFormat.DataType;
+import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Texture3D;
+import tetzlaff.gl.TextureType;
 import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
@@ -58,31 +61,42 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 		@Override
 		public OpenGLTexture3D createTexture() 
 		{
-			int colorFormat;
 			if (this.isInternalFormatCompressed())
 			{
-				colorFormat = this.context.getOpenGLCompressionFormat(this.getInternalCompressionFormat());
+				return new OpenGLTexture3D(
+						this.context,
+						this.textureTarget, 
+						this.getMultisamples(),
+						this.getInternalCompressionFormat(), 
+						this.width,
+						this.height,
+						this.depth,
+						(!this.isInternalFormatCompressed() && 
+							(this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER || 
+								this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER)) ? GL_RGBA_INTEGER : GL_RGBA,
+						this.areMultisampleLocationsFixed(),
+						this.isLinearFilteringEnabled(),
+						this.areMipmapsEnabled(),
+						this.getMaxAnisotropy());
 			}
 			else
 			{
-				colorFormat = this.context.getOpenGLInternalColorFormat(this.getInternalColorFormat());
+				return new OpenGLTexture3D(
+						this.context,
+						this.textureTarget, 
+						this.getMultisamples(),
+						this.getInternalColorFormat(), 
+						this.width,
+						this.height,
+						this.depth,
+						(!this.isInternalFormatCompressed() && 
+							(this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER || 
+								this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER)) ? GL_RGBA_INTEGER : GL_RGBA,
+						this.areMultisampleLocationsFixed(),
+						this.isLinearFilteringEnabled(),
+						this.areMipmapsEnabled(),
+						this.getMaxAnisotropy());
 			}
-			
-			return new OpenGLTexture3D(
-					this.context,
-					this.textureTarget, 
-					this.getMultisamples(),
-					colorFormat, 
-					this.width,
-					this.height,
-					this.depth,
-					(!this.isInternalFormatCompressed() && 
-						(this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER || 
-							this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER)) ? GL_RGBA_INTEGER : GL_RGBA,
-					this.areMultisampleLocationsFixed(),
-					this.isLinearFilteringEnabled(),
-					this.areMipmapsEnabled(),
-					this.getMaxAnisotropy());
 		}
 	}
 	
@@ -109,7 +123,8 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 					this.context,
 					this.textureTarget, 
 					this.getMultisamples(),
-					this.context.getOpenGLInternalDepthFormat(this.getInternalPrecision()), 
+					TextureType.DEPTH,
+					this.getInternalPrecision(),
 					this.width,
 					this.height,
 					this.depth,
@@ -144,7 +159,8 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 					this.context,
 					this.textureTarget, 
 					this.getMultisamples(),
-					this.context.getOpenGLInternalStencilFormat(this.getInternalPrecision()), 
+					TextureType.STENCIL,
+					this.getInternalPrecision(), 
 					this.width,
 					this.height,
 					this.depth,
@@ -179,7 +195,8 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 					this.context,
 					this.textureTarget, 
 					this.getMultisamples(),
-					this.isFloatingPointEnabled() ? GL_DEPTH32F_STENCIL8 : GL_DEPTH24_STENCIL8, 
+					this.isFloatingPointEnabled() ? TextureType.FLOATING_POINT_DEPTH_STENCIL : TextureType.DEPTH_STENCIL, 
+					this.isFloatingPointEnabled() ? 40 : 32,
 					this.width,
 					this.height,
 					this.depth,
@@ -191,12 +208,59 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 		}
 	}
 	
-	private OpenGLTexture3D(OpenGLContext context, int textureTarget, int multisamples, int internalFormat, int width, int height, int layerCount, int format, 
+	private OpenGLTexture3D(OpenGLContext context, int textureTarget, int multisamples, ColorFormat colorFormat, int width, int height, int layerCount, int format, 
 			boolean fixedSampleLocations, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy) 
 	{
 		// Create and allocate a 3D texture or 2D texture array
-		super(context);
+		super(context, colorFormat);
+		init(context, textureTarget, multisamples, this.context.getOpenGLInternalColorFormat(colorFormat), width, height, layerCount, format, 
+				fixedSampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
+	}
+	
+	private OpenGLTexture3D(OpenGLContext context, int textureTarget, int multisamples, CompressionFormat compressionFormat, int width, int height, int layerCount, int format, 
+			boolean fixedSampleLocations, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy) 
+	{
+		// Create and allocate a 3D texture or 2D texture array
+		super(context, compressionFormat);
+		init(context, textureTarget, multisamples, this.context.getOpenGLCompressionFormat(compressionFormat), width, height, layerCount, format, 
+				fixedSampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
+	}
+	
+	private OpenGLTexture3D(OpenGLContext context, int textureTarget, int multisamples, TextureType textureType, int precision, int width, int height, int layerCount, int format, 
+			boolean fixedSampleLocations, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy) 
+	{
+		// Create and allocate a 3D texture or 2D texture array
+		super(context, textureType);
+
+		int internalFormat;
+		switch(textureType)
+		{
+		case DEPTH: 
+			internalFormat = context.getOpenGLInternalDepthFormat(precision);
+			break;
+		case STENCIL:
+			internalFormat = context.getOpenGLInternalStencilFormat(precision);
+			break;
+		case DEPTH_STENCIL:
+			internalFormat = GL_DEPTH24_STENCIL8;
+			break;
+		case FLOATING_POINT_DEPTH_STENCIL:
+			internalFormat = GL_DEPTH32F_STENCIL8;
+			break;
+		case COLOR:
+		default:
+			internalFormat = context.getOpenGLInternalColorFormat(
+				new ColorFormat(precision, precision, precision, precision, ColorFormat.DataType.NORMALIZED_FIXED_POINT));
+			break;
+		}
 		
+		init(context, textureTarget, multisamples, internalFormat, width, height, layerCount, format, 
+				fixedSampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
+	}
+	
+	private void init(OpenGLContext context, int textureTarget, int multisamples, int internalFormat, int width, int height, int layerCount, int format, 
+			boolean fixedSampleLocations, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy) 
+	{
 		this.textureTarget = textureTarget;
 		this.width = width;
 		this.height = height;
@@ -477,7 +541,7 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 	}
 	
 	@Override
-	protected int getLevelCount() 
+	public int getMipmapLevelCount() 
 	{
 		return this.mipmapCount;
 	}
