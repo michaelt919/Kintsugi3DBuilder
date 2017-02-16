@@ -545,7 +545,7 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 			// Last four parameters are essentially meaningless, but are subject to certain validation conditions
 			glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, 0);
 			this.context.openGLErrorCheck();
-			this.init(useLinearFiltering, useMipmaps);
+			this.initFilteringAndMipmaps(useLinearFiltering, useMipmaps);
 		}
 		
 		if (maxAnisotropy > 1.0f)
@@ -588,7 +588,7 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		
 		glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, type, buffer);
 		this.context.openGLErrorCheck();
-		this.init(useLinearFiltering, useMipmaps);
+		this.initFilteringAndMipmaps(useLinearFiltering, useMipmaps);
 		
 		if (maxAnisotropy > 1.0f)
 		{
@@ -597,7 +597,7 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		}
 	}
 	
-	private void init(boolean useLinearFiltering, boolean useMipmaps)
+	private void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps)
 	{
 		if (useMipmaps)
 		{
@@ -608,7 +608,7 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 	        // Calculate the number of mipmap levels
 			this.levelCount = 0;
 			int dim = Math.max(width, height);
-			while (dim > 0)
+			while (dim > 1)
 			{
 				this.levelCount++;
 				dim /= 2;
