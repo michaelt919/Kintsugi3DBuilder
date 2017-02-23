@@ -1,7 +1,9 @@
 package tetzlaff.imagebasedmicrofacet.app;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,8 +33,10 @@ import tetzlaff.window.glfw.GLFWWindow;
  * 
  * @author Michael Tetzlaff
  */
-public class ImageBasedMicrofacetProgram
+public class ImageBasedRenderingProgram
 {
+	private static final boolean DEBUG = false;
+	
 	private static class MetaLightController implements OverrideableLightController
 	{
 		public boolean hardcodedMode = false;
@@ -125,20 +129,16 @@ public class ImageBasedMicrofacetProgram
 		}
 	}
 	
-    /**
-     * The main entry point for the Unstructured Light Field (ULF) renderer application.
-     * @param args The usual command line arguments
-     */
-    public static void main(String[] args) 
-    {
-    	System.getenv();
+	public static void runProgram()
+	{
+		System.getenv();
     	System.setProperty("org.lwjgl.util.DEBUG", "true");
     	
     	// Check for and print supported image formats (some are not as easy as you would think)
     	checkSupportedImageFormats();
 
     	// Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
-    	GLFWWindow window = new GLFWWindow(800, 800, "Image-Based Microfacet Renderer", true, 4);
+    	GLFWWindow window = new GLFWWindow(800, 800, "Image-Based Rendering Program", true, 4);
     	window.enableDepthTest();
     	
 //    	org.lwjgl.opengl.GL11.glEnable(GL_DEBUG_OUTPUT);
@@ -320,6 +320,24 @@ public class ImageBasedMicrofacetProgram
 
 		// The event loop has terminated so cleanup the windows and exit with a successful return code.
         GLFWWindow.closeAllWindows();
+	}
+	
+    /**
+     * The main entry point for the Unstructured Light Field (ULF) renderer application.
+     * @param args The usual command line arguments
+     * @throws FileNotFoundException 
+     */
+    public static void main(String[] args) throws FileNotFoundException 
+    {
+    	if (!DEBUG)
+    	{
+	    	PrintStream out = new PrintStream("out.log");
+	    	PrintStream err = new PrintStream("err.log");
+    		System.setOut(out);
+    		System.setErr(err);
+    	}
+
+		runProgram();
         System.exit(0);
     }
         
