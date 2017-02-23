@@ -73,7 +73,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 	public <ContextType extends Context<ContextType>> ImageBasedMicrofacetConfigFrame(ULFListModel<ContextType> model, LightController lightController, boolean isHighDPI)
 	{		
 		setResizable(false);
-		setTitle("Light Field Config");
+		setTitle("Image-Based Rendering Settings");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(10, 10, 960, 550);
 		contentPane = new JPanel();

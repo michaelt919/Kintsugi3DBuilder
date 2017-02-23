@@ -1,6 +1,7 @@
 package tetzlaff.texturefit;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -10,10 +11,12 @@ import tetzlaff.gl.exceptions.GLOutOfMemoryException;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.window.glfw.GLFWWindow;
 
-public class TextureFitProgram
+public class TextureGenerationProgram
 {
-	public static void main(String[] args)
-    {
+	private final static boolean DEBUG = false;
+	
+	private static void runProgram()
+	{
 		TextureFitUserInterface gui = new TextureFitUserInterface();
     	
 		gui.addExecuteButtonActionListener(e -> 
@@ -84,5 +87,18 @@ public class TextureFitProgram
 		});
 		
 		gui.setVisible(true);
+	}
+	
+	public static void main(String[] args) throws FileNotFoundException
+    {
+		if (!DEBUG)
+		{
+	    	PrintStream out = new PrintStream("out.log");
+	    	PrintStream err = new PrintStream("err.log");
+    		System.setOut(out);
+    		System.setErr(err);
+    	}
+
+		runProgram();
 	}
 }

@@ -404,7 +404,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 						String[] filenameParts = imageFileNames.get(0).split("\\.");
 				    	filenameParts[filenameParts.length - 1] = extension;
 				    	String altFileName = String.join(".", filenameParts);
-				    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);					
+				    	File imageFileGuess = new File(imageFile.getParentFile(), altFileName);					
 				    	
 				    	System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
 				    	if (imageFileGuess.exists())
@@ -479,7 +479,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 							String[] filenameParts = imageFileNames.get(i).split("\\.");
 					    	filenameParts[filenameParts.length - 1] = extension;
 					    	String altFileName = String.join(".", filenameParts);
-					    	File imageFileGuess = new File(imageOptions.getFilePath(), altFileName);
+					    	File imageFileGuess = new File(imageFile.getParentFile(), altFileName);
 	
 					    	if (imageFileGuess.exists())
 							//if (myZip.exists(imageFileGuess))
