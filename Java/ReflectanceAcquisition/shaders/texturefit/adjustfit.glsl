@@ -7,6 +7,7 @@
 
 #define MIN_ALBEDO     0.000005		// ~ 1/256 ^ gamma
 #define MIN_ROUGHNESS  0.00390625	// 1/256
+#define MAX_ROUGHNESS  0.70710678 // sqrt(1/2)
 #define MIN_DIAGONAL  0.000001 
 
 uniform sampler2D diffuseEstimate;
@@ -253,19 +254,21 @@ ParameterizedFit adjustFit()
 								hDotV, nDotL, nDotV, nDotH, nDotHSquared, roughnessSquared, geom));
 					mat3x2 normalDerivsTranspose = transpose(mat3(1) * normalDerivs);
 						
-					mA += diffuseDerivsTranspose * diffuseDerivs;
-					mB += diffuseDerivsTranspose * specularDerivs;
-					mC += diffuseDerivsTranspose * normalDerivs;
-					mD += specularDerivsTranspose * diffuseDerivs;
-					mE += specularDerivsTranspose * specularDerivs;
-					mF += specularDerivsTranspose * normalDerivs;
-					mG += normalDerivsTranspose * diffuseDerivs;
-					mH += normalDerivsTranspose * specularDerivs;
-					mI += normalDerivsTranspose * normalDerivs;
+					float weight = 1.0;//clamp(1 / nDotH, 0, 1000000);
+						
+					mA += weight * diffuseDerivsTranspose * diffuseDerivs;
+					mB += weight * diffuseDerivsTranspose * specularDerivs;
+					mC += weight * diffuseDerivsTranspose * normalDerivs;
+					mD += weight * specularDerivsTranspose * diffuseDerivs;
+					mE += weight * specularDerivsTranspose * specularDerivs;
+					mF += weight * specularDerivsTranspose * normalDerivs;
+					mG += weight * normalDerivsTranspose * diffuseDerivs;
+					mH += weight * normalDerivsTranspose * specularDerivs;
+					mI += weight * normalDerivsTranspose * normalDerivs;
 					
-					v1 += diffuseDerivsTranspose * colorResidual;
-					v2 += specularDerivsTranspose * colorResidual;
-					v3 += normalDerivsTranspose * colorResidual;
+					v1 += weight * diffuseDerivsTranspose * colorResidual;
+					v2 += weight * specularDerivsTranspose * colorResidual;
+					v3 += weight * normalDerivsTranspose * colorResidual;
 				}
 			}
 		}
@@ -361,7 +364,7 @@ ParameterizedFit adjustFit()
 				vec3(newNormalXY, sqrt(max(0.0, 1 - dot(newNormalXY, newNormalXY)))),
 				//xyzToRGB(prevSpecularColor + /* shiftFraction * */specularAdj.xyz),
 				xyzToRGB((prevSpecularColor / roughnessSquared + /* shiftFraction * */specularAdj.xyz) * newRoughnessSquared),
-				sqrt(newRoughnessSquared));
+				clamp(sqrt(newRoughnessSquared), MIN_ROUGHNESS, MAX_ROUGHNESS));
 		}
 	}
 }

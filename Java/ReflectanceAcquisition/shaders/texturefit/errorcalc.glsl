@@ -6,7 +6,7 @@
 #line 7 2006
 
 #define MAX_ERROR 3.402822E38 // Max 32-bit floating-point is 3.4028235E38
-#define MIN_DAMPING_FACTOR 0.00390625 // 1/256
+#define MIN_DAMPING_FACTOR 0.0078125 // 1/256
 #define MAX_DAMPING_FACTOR 1000000
 //#define MIN_SHIFT_FRACTION 0.01171875 // 3/256
 
@@ -47,7 +47,7 @@ ErrorResult calculateError()
 {
 	vec4 prevErrorResult = texture(errorTexture, fTexCoord);
 	
-	if (prevErrorResult.x <= MIN_DAMPING_FACTOR || prevErrorResult.x >= MAX_DAMPING_FACTOR)
+	if (prevErrorResult.x < MIN_DAMPING_FACTOR || prevErrorResult.x > MAX_DAMPING_FACTOR)
 	{
 		return ErrorResult(false, 0.0, prevErrorResult.y);
 	}
@@ -104,7 +104,8 @@ ErrorResult calculateError()
 					vec3 currentFit = diffuseColor * nDotL + specularColor * mfdEval * geomRatio;
 					vec3 colorResidual = colorScaled - pow(currentFit, vec3(gammaInv));
 					
-					sumSqError += dot(colorResidual, colorResidual);
+					float weight = 1.0;//clamp(1 / nDotH, 0, 1000000);
+					sumSqError += weight * dot(colorResidual, colorResidual);
 				}
 			}
 		}

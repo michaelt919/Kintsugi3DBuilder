@@ -710,20 +710,29 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	    	
 	    	btfProgram.setUniform("useTSOverrides", true);
 	    	
-			for (int i = 1; i <= 179; i++)
-			{
-				double theta = i / 180.0f * Math.PI;
-		    	btfProgram.setUniform("virtualLightCount", 1);
-		    	btfProgram.setUniform("lightDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
-		    	btfProgram.setUniform("viewDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
+	    	////////////////////////////////
 	    	
-//	    	for (int i = 1; i <= 90; i++)
+//	    	// Backscattering
+//			for (int i = 1; i <= 179; i++)
 //			{
 //				double theta = i / 180.0f * Math.PI;
 //		    	btfProgram.setUniform("virtualLightCount", 1);
-//		    	btfProgram.setUniform("lightDirTSOverride", new Vector3(-(float)Math.sin(theta), 0.0f, (float)Math.cos(theta)));
+//		    	btfProgram.setUniform("lightDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
 //		    	btfProgram.setUniform("viewDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
+	    	
+	    	// Joey's lab
+	    	for (int i = 1; i <= 90; i++)
+			{
+				double theta = i / 180.0f * Math.PI;
+		    	btfProgram.setUniform("virtualLightCount", 1);
+		    	btfProgram.setUniform("lightIntensityVirtual[0]", lightController.getLightColor(0));
+		    	btfProgram.setUniform("lightDirTSOverride", new Vector3(-(float)(Math.sin(theta)*Math.sqrt(0.5)), -(float)(Math.sin(theta)*Math.sqrt(0.5)), (float)Math.cos(theta)));
+		    	btfProgram.setUniform("viewDirTSOverride", new Vector3((float)(Math.cos(theta)*Math.sqrt(0.5)), (float)(Math.cos(theta)*Math.sqrt(0.5)), (float)Math.sin(theta)));
+		    	
+	    	////////////////////////////////
 				
+		    	context.disableBackFaceCulling();
+		    	
 		    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 		    	

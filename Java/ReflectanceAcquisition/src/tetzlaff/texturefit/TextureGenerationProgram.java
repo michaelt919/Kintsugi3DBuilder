@@ -13,7 +13,7 @@ import tetzlaff.window.glfw.GLFWWindow;
 
 public class TextureGenerationProgram
 {
-	private final static boolean DEBUG = false;
+	private final static boolean DEBUG = true;
 	
 	private static void runProgram()
 	{

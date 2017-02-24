@@ -731,105 +731,82 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	{
 		System.out.println("\nView Importance:");
 		
+		Vector3 baseDisplacement = new Vector3(this.lightField.viewSet.getCameraPose(this.lightField.viewSet.getPrimaryViewIndex()).quickInverse(0.001f)
+										.times(new Vector4(this.lightField.proxy.getCentroid(), 1.0f)));
+		double baseDistanceSquared = baseDisplacement.dot(baseDisplacement);
+		
+		Program<ContextType> fidelityProgram = context.getShaderProgramBuilder()
+				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/fidelity.frag"))
+				.createProgram();
+		
+		context.disableBackFaceCulling();
+    	
+    	Renderable<ContextType> renderable = context.createRenderable(fidelityProgram);
+    	renderable.addVertexBuffer("position", this.getLightField().positionBuffer);
+    	renderable.addVertexBuffer("texCoord", this.getLightField().texCoordBuffer);
+    	renderable.addVertexBuffer("normal", this.getLightField().normalBuffer);
+    	renderable.addVertexBuffer("tangent", this.getLightField().tangentBuffer);
+    	setupForDraw(fidelityProgram);
+		
 		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
 		{
-			File imgFile = this.lightField.viewSet.getImageFile(i);
-			File pngFile = new File(imgFile.getAbsolutePath().substring(0, imgFile.getAbsolutePath().lastIndexOf('.')) + ".png");
-			if (!imgFile.exists() && pngFile.exists())
-			{
-				imgFile = pngFile;
-			}
-	    	BufferedImage gtBuffered = ImageIO.read(imgFile);
-	    	int[] gtARGB = gtBuffered.getRGB(0, 0, gtBuffered.getWidth(), gtBuffered.getHeight(), null, 0, gtBuffered.getWidth());
-			
-			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(gtBuffered.getWidth(), gtBuffered.getHeight())
-					.addColorAttachment(ColorFormat.RGBA8)
-					.addDepthAttachment()
+			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(1024, 1024)
+					.addColorAttachment(ColorFormat.R32F)
 					.createFramebufferObject();
 	    	
 	    	this.setupForDraw();
 	    	
-	    	mainRenderable.program().setUniform("model_view", this.lightField.viewSet.getCameraPose(i));
-	    	mainRenderable.program().setUniform("projection", 
+	    	renderable.program().setUniform("model_view", this.lightField.viewSet.getCameraPose(i));
+	    	renderable.program().setUniform("projection", 
 	    			this.lightField.viewSet.getCameraProjection(this.lightField.viewSet.getCameraProjectionIndex(i))
     				.getProjectionMatrix(this.lightField.viewSet.getRecommendedNearPlane(), this.lightField.viewSet.getRecommendedFarPlane()));
 
-	    	mainRenderable.program().setUniform("skipViewEnabled", true);
-	    	mainRenderable.program().setUniform("skipView", i);
+	    	renderable.program().setUniform("viewIndex", i);
 	    	
 	    	if (this.fidelitySetupCallback != null)
     		{
 	    		this.fidelitySetupCallback.accept(i);
     		}
 	    	
-	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+	    	framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
 	    	framebuffer.clearDepthBuffer();
 	    	
-	    	mainRenderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+	    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 	    	
-	    	File approxFile = new File(fidelityExportPath, "approx" + File.separator + pngFile.getName());
-	    	File diffFile = new File(fidelityExportPath, "diff" + File.separator + pngFile.getName());
-	    	
-	    	approxFile.getParentFile().mkdirs();
-	        framebuffer.saveColorBufferToFile(0, "PNG", approxFile);
+	    	File fidelityImage = new File(fidelityExportPath, this.lightField.viewSet.getImageFileName(i));
+	        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
 	        
 	        double sumSqError = 0.0;
 
-	    	diffFile.getParentFile().mkdirs();
-	    	int[] approxARGB = framebuffer.readColorBufferARGB(0);
-	    	int[] diffARGB = new int[gtARGB.length];
-	    	int flipK = gtBuffered.getWidth() * (gtBuffered.getHeight() - 1);
-	    	for (int k = 0; k < gtARGB.length && k < gtARGB.length; k++)
+	    	float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
+	    	for (int k = 0; 4 * k + 3 < fidelityArray.length; k++)
 	    	{
-    			int approxA = (approxARGB[flipK] & 0xFF000000) >>> 24;
-				int approxR = (approxARGB[flipK] & 0x00FF0000) >>> 16;
-				int approxG = (approxARGB[flipK] & 0x0000FF00) >>> 8;
-				int approxB = approxARGB[flipK] & 0x000000FF;
-
-				int gtA = (gtARGB[k] & 0xFF000000) >>> 24;
-				int gtR = (gtARGB[k] & 0x00FF0000) >>> 16;
-				int gtG = (gtARGB[k] & 0x0000FF00) >>> 8;
-				int gtB = gtARGB[k] & 0x000000FF;
-				
-				DoubleVector3 diff = new DoubleVector3(Math.pow(gtR/255.0, 2.2) - Math.pow(approxR/255.0, 2.2), 
-						Math.pow(gtG/255.0, 2.2) - Math.pow(approxG/255.0, 2.2), 
-						Math.pow(gtB/255.0, 2.2) - Math.pow(approxB/255.0, 2.2));
-				
-				int diffR = Math.max(0, Math.min(255, (int)Math.round(255 * Math.pow(diff.x + 0.5, 1.0/2.2)) ));
-				int diffG = Math.max(0, Math.min(255, (int)Math.round(255 * Math.pow(diff.y + 0.5, 1.0/2.2)) ));
-				int diffB = Math.max(0, Math.min(255, (int)Math.round(255 * Math.pow(diff.z + 0.5, 1.0/2.2)) ));
-				int diffA = gtA == 255 && approxA == 255 ? 255 : 0;
-				
-				sumSqError += diff.dot(diff);
-				
-				diffARGB[k] = (diffA << 24) | (diffR << 16) | (diffG << 8) | diffB;
-				
-				flipK++;
-				if (flipK % gtBuffered.getWidth() == 0)
-				{
-					flipK -= 2 * gtBuffered.getWidth();
-				}
+    			if (fidelityArray[4 * k] >= 0.0f)
+    			{
+					sumSqError += fidelityArray[4 * k];
+    			}
 	    	}
-	    	
-	    	System.out.println(pngFile.getName() + " " + sumSqError);
-	    	
-	    	BufferedImage diffImg = new BufferedImage(gtBuffered.getWidth(), gtBuffered.getHeight(), BufferedImage.TYPE_INT_ARGB);
-	    	diffImg.setRGB(0, 0, gtBuffered.getWidth(), gtBuffered.getHeight(), diffARGB, 0, gtBuffered.getWidth());
-	    	ImageIO.write(diffImg, "PNG", diffFile);
+
+	        
+	        Vector3 cameraDisplacement = new Vector3(this.lightField.viewSet.getCameraPose(i)
+					.times(new Vector4(this.lightField.proxy.getCentroid(), 1.0f)));
+	        
+	    	System.out.println(this.lightField.viewSet.getImageFileName(i) + " " + cameraDisplacement.dot(cameraDisplacement) + " " 
+	    			+ sumSqError * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared);
 	        
 	        if (this.callback != null)
 	        {
 	        	this.callback.setProgress((double) i / (double) this.lightField.viewSet.getCameraPoseCount());
 	        }
 		}
-
-    	mainRenderable.program().setUniform("skipViewEnabled", false);
-    	mainRenderable.program().setUniform("skipView", -1);
 		
 		if (this.fidelityCompleteCallback != null)
 		{
     		this.fidelityCompleteCallback.run();
 		}
+		
+		fidelityProgram.delete();
 	}
 
 	@Override
