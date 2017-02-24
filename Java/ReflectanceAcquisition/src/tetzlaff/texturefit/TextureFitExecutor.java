@@ -2311,7 +2311,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 							.addColorAttachments(ColorFormat.R8, 1)
 							.createFramebufferObject();
 					
-					frontErrorFramebuffer.clearColorBuffer(0, 1.0f, Float.MAX_VALUE, 0.0f, 0.0f);
+					frontErrorFramebuffer.clearColorBuffer(0, 128.0f, Float.MAX_VALUE, 0.0f, 0.0f);
 		    		backErrorFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 		    		
 		    		if (param.isImagePreprojectionUseEnabled())
@@ -2355,7 +2355,20 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    		frontErrorFramebuffer = backErrorFramebuffer;
 		    		backErrorFramebuffer = tmp;
 		    		
+		    		double lastSumSqError = 0.0;
+		    		float[] errorData = frontErrorFramebuffer.readFloatingPointColorBufferRGBA(0);
+		    		for (int j = 0; j * 4 + 3 < errorData.length; j++)
+		    		{
+		    			lastSumSqError += errorData[j * 4 + 1]; // Green channel holds squared error
+		    		}
+		    		
+		    		float dampingFactor = 128.0f;
+		    		
+		    		System.out.println("Sum squared error: " + lastSumSqError);
+		    		
 		    		System.out.println("Adjusting fit...");
+		    		
+		    		boolean saveDebugTextures = false;
 					
 					for (int i = 0; i < 64; i++)
 					{
@@ -2363,6 +2376,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+			    		
+			    		// hack to override damping factor and never discard the result - TODO make this more elegant
+			    		//frontErrorFramebuffer.clearColorBuffer(0, dampingFactor, Float.MAX_VALUE, 0.0f, 0.0f);
 			    		
 			    		if (param.isImagePreprojectionUseEnabled())
 				    	{
@@ -2405,7 +2421,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		
 			    		context.finish();
 			    		
-			    		if (i % 32 == 0)
+			    		if (saveDebugTextures)
 				    	{
 					    	backFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-test1.png"));
 				    		backFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-test1.png"));
@@ -2450,7 +2466,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		
 			    		context.finish();
 			    		
-			    		if (i % 32 == 0)
+			    		if (saveDebugTextures)
 				    	{
 					    	backErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "error-mask-test.png"));
 				    	}
@@ -2459,16 +2475,44 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		frontErrorFramebuffer = backErrorFramebuffer;
 			    		backErrorFramebuffer = tmp;
 			    		
-			    		finalizeProgram.setTexture("input0", backFramebuffer.getColorAttachmentTexture(0));
-			    		finalizeProgram.setTexture("input1", backFramebuffer.getColorAttachmentTexture(1));
-			    		finalizeProgram.setTexture("input2", backFramebuffer.getColorAttachmentTexture(2));
-			    		finalizeProgram.setTexture("input3", backFramebuffer.getColorAttachmentTexture(3));
-			    		finalizeProgram.setTexture("alphaMask", frontErrorFramebuffer.getColorAttachmentTexture(1));
+			    		double sumSqError = 0.0;
+			    		errorData = frontErrorFramebuffer.readFloatingPointColorBufferRGBA(0);
+			    		for (int j = 0; j * 4 + 3 < errorData.length; j++)
+			    		{
+			    			sumSqError += errorData[j * 4 + 1]; // Green channel holds squared error
+			    		}
 			    		
-			    		finalizeRenderable.draw(PrimitiveMode.TRIANGLE_FAN, frontFramebuffer);
-			    		context.finish();
+			    		System.out.println("Sum squared error: " + sumSqError);
+			    		
+			    		//if (sumSqError < lastSumSqError)
+			    		{
+//			    			dampingFactor /= 2;
+//			    			lastSumSqError = sumSqError;
+//			    			
+//			    			System.out.println("Saving iteration.");
+//			    			System.out.println("Next damping factor: " + dampingFactor);
+			    			
+			    			// Set the mask framebuffer to all 1 (hack - TODO make this more elegant)
+			    			//frontErrorFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
+			    		
+				    		finalizeProgram.setTexture("input0", backFramebuffer.getColorAttachmentTexture(0));
+				    		finalizeProgram.setTexture("input1", backFramebuffer.getColorAttachmentTexture(1));
+				    		finalizeProgram.setTexture("input2", backFramebuffer.getColorAttachmentTexture(2));
+				    		finalizeProgram.setTexture("input3", backFramebuffer.getColorAttachmentTexture(3));
+				    		finalizeProgram.setTexture("alphaMask", frontErrorFramebuffer.getColorAttachmentTexture(1));
+				    		
+				    		finalizeRenderable.draw(PrimitiveMode.TRIANGLE_FAN, frontFramebuffer);
+				    		context.finish();
+			    		}
+//			    		else
+//			    		{
+//			    			dampingFactor *= 2;
+//			    			
+//			    			System.out.println("Discarding iteration.");
+//			    			System.out.println("Next damping factor: " + dampingFactor);
+//			    		}
 
-			    		if (i % 32 == 0)
+			    		if (saveDebugTextures)
 				    	{
 				    		frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-test2.png"));
 				    		frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-test2.png"));
@@ -2477,6 +2521,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				    	}
 			    		
 			    		System.out.println("Iteration " + (i+1) + " complete.");
+		    			System.out.println();
 					}
 					
 		    		frontErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "error-mask-final.png"));

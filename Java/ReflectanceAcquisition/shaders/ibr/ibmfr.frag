@@ -565,9 +565,9 @@ void main()
             - dot(tangent, fBitangent) * tangent);
         mat3 tangentToObject = mat3(tangent, bitangent, gNormal);
 		
-		//normalDir = tangentToObject * normalDirTS;
+		normalDir = tangentToObject * normalDirTS;
 		//normalDir = gNormal;
-		normalDir = normalDirTS;
+		//normalDir = normalDirTS;
     }
     else
     {
