@@ -14,6 +14,14 @@ public class DoubleVector3
 	public final double z;
 	
 	/**
+	 * Construct the zero vector.
+	 */
+	public DoubleVector3()
+	{
+		this(0.0);
+	}
+	
+	/**
 	 * Construct a vector in three dimensions with the given values.
 	 * @param value Value of all three dimensions.
 	 */

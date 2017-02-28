@@ -300,7 +300,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			p.setUniform("useEnvironmentTexture", true);
 			p.setTexture("environmentMap", ulfRenderer.getEnvironmentTexture());
 			p.setUniform("environmentMipMapLevel", Math.max(0, Math.min(ulfRenderer.getEnvironmentTexture().getMipmapLevelCount() - 2, 
-					(int)Math.round(0.5 * 
+					(int)Math.ceil(0.5 * 
 						Math.log((double)ulfRenderer.getEnvironmentTexture().getWidth() * 
 								(double)ulfRenderer.getEnvironmentTexture().getHeight() / (double)microfacetField.ulf.viewSet.getCameraPoseCount() ) 
 							/ Math.log(2.0)))));
