@@ -15,8 +15,6 @@ in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
 
-in vec3 fViewPos;
-
 uniform int viewIndex;
 
 uniform sampler2DArray viewImages;
@@ -49,7 +47,7 @@ float computeSampleWeight(vec3 cameraPos, vec3 samplePos, vec3 fragmentPos)
 
 float getSampleWeight(int index)
 {
-    return computeSampleWeight((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz, vec3(0.0), 
+    return computeSampleWeight((cameraPoses[index] * vec4(transpose(mat3(model_view)) * -model_view[3].xyz, 1.0)).xyz, vec3(0.0), 
         (cameraPoses[index] * vec4(fPosition, 1.0)).xyz);
 }
 
@@ -93,8 +91,12 @@ float computeFidelity()
 			sum += getSampleWeight(i) * getLightFieldSample(i);
 		}
 	}
-	vec3 diff = sum.rgb / sum.a - getLightFieldSample(viewIndex).rgb;
-	return dot(diff, diff);
+	
+	vec4 lfSample = getLightFieldSample(viewIndex);
+	
+	vec3 diff = sum.rgb / sum.a - lfSample.rgb;
+	return clamp(normalize(mat3(model_view) * fNormal).z, 0.0, 1.0) // n dot v
+		* lfSample.a * dot(diff, diff);
 }
 
 void main()

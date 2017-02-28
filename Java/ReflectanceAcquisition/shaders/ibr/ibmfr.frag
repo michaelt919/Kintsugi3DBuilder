@@ -703,9 +703,9 @@ void main()
 				
 				vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
             
-                reflectance += (fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
-                    mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV))
-                    * (useTSOverrides ? vec3(1.0) : 
+                reflectance += (/*nDotL * */diffuseColor + //fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
+                    mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV) / nDotL)
+                    * (useTSOverrides ? lightIntensityVirtual[i] : 
 						lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed));
             }
         }
