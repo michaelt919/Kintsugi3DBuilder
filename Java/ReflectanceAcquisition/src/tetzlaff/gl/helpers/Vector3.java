@@ -22,6 +22,14 @@ public class Vector3
 	public final float z;
 	
 	/**
+	 * Construct the zero vector.
+	 */
+	public Vector3()
+	{
+		this(0.0f);
+	}
+	
+	/**
 	 * Construct a vector in three dimensions with the given values.
 	 * @param value Value of all three dimensions.
 	 */

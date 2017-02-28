@@ -28,11 +28,13 @@ import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.DoubleVector3;
+import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
+import tetzlaff.helpers.EnvironmentMap;
 
 public class ULFRenderer<ContextType extends Context<ContextType>> implements ULFDrawable<ContextType>
 {
@@ -282,16 +284,32 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 			try
 			{
 				System.out.println("Loading new environment texture.");
-				ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> textureBuilder 
-						= context.get2DColorTextureBuilder(environmentFile, true);
-				if (environmentFile.getName().endsWith(".hdr"))
+				
+				ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> textureBuilder;
+				
+				if(environmentFile.getName().endsWith("_zvc.hdr"))
 				{
+					// Use Michael Ludwig's code to convert the cross to a cube map to a panorama
+					EnvironmentMap envMap = EnvironmentMap.createFromHDRFile(environmentFile);
+					float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
+					FloatVertexList pixelList = new FloatVertexList(3, pixels.length / 3, pixels);
+					textureBuilder = context.get2DColorTextureBuilder(envMap.getSide() * 4, envMap.getSide() * 2, pixelList);
 					textureBuilder.setInternalFormat(ColorFormat.RGB32F);
 				}
 				else
 				{
-					textureBuilder.setInternalFormat(ColorFormat.RGB8);
+					// Load the panorama directly
+					textureBuilder = context.get2DColorTextureBuilder(environmentFile, true);
+					if (environmentFile.getName().endsWith(".hdr"))
+					{
+						textureBuilder.setInternalFormat(ColorFormat.RGB32F);
+					}
+					else
+					{
+						textureBuilder.setInternalFormat(ColorFormat.RGB8);
+					}
 				}
+				
 				Texture2D<ContextType> newEnvironmentTexture = 
 					textureBuilder
 						.setMipmapsEnabled(true)

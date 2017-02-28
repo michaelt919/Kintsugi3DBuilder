@@ -201,68 +201,80 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
 vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir, 
     vec3 specularColor, float roughness, float maxLuminance)
 {
-    vec4 sampleColor = getLinearColor(index);
-    if (sampleColor.a > 0.0)
-    {
-        vec4 result = vec4(0.0);
-        
-        // All in camera space
-        vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
-        vec3 sampleViewDir = normalize(-fragmentPos);
-        vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(index)].xyz - fragmentPos;
-        float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
-        vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
-        vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
-        vec3 normalDirCameraSpace = normalize((cameraPoses[index] * vec4(normalDir, 0.0)).xyz);
-        vec3 lightIntensity = getLightIntensity(index);
-        
-        float nDotL_sample = max(0, dot(normalDirCameraSpace, sampleLightDir));
-        float nDotV_sample = max(0, dot(normalDirCameraSpace, sampleViewDir));
-        float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
-        float hDotV_sample = max(0, dot(sampleHalfDir, sampleViewDir));
-        float hDotL_sample = max(0, dot(sampleHalfDir, sampleLightDir));
-    
-        vec3 diffuseContrib = diffuseColor * nDotL_sample * lightIntensity / lightDistSquared;
-        
-        float geomAttenSample = geom(roughness, nDotH, nDotV_sample, nDotL_sample, 
-			hDotV_sample, hDotL_sample);
-		
-        if (nDotV_sample > 0.0 && geomAttenSample > 0.0)
-        {
-			vec3 virtualViewDir = normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
-            vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
-		
-			float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
-			float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
-			float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
-			float hDotL_virtual = max(0, dot(sampleHalfDir, virtualLightDir));
-		
-			float geomAttenVirtual = geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, 
-				hDotV_virtual, hDotL_virtual);
-		
-            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL_sample, maxLuminance);
+	vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
+	vec3 normalDirCameraSpace = normalize((cameraPoses[index] * vec4(normalDir, 0.0)).xyz);
+	vec3 sampleViewDir = normalize(-fragmentPos);
+	float nDotV_sample = max(0, dot(normalDirCameraSpace, sampleViewDir));
+	
+	if (nDotV_sample <= 0.0)
+	{
+		return vec4(0.0, 0.0, 0.0, 1.0);
+	}
+	else
+	{
+		vec4 sampleColor = getLinearColor(index);
+		if (sampleColor.a > 0.0)
+		{
+			vec4 result = vec4(0.0, 0.0, 0.0, 1.0);
 			
-			// vec3 mfd = specularResid.rgb * 4 * nDotV_sample * lightDistSquared / lightIntensity;
-			// float mfd_mono = getLuminance(mfd / specularColor);
-            
-            // result = vec4(fresnel(mfd, vec3(mfd_mono), hDotV_virtual)
-					// * geomAttenVirtual / (4 * nDotV_virtual) * lightIntensityVirtual[0]
-					// * getEnvironment((envMapMatrix * vec4(virtualLightDir, 0)).xyz), mfd_mono);
-					
-			vec3 mfd = specularResid.rgb * lightDistSquared / lightIntensity;
-            
-            result = vec4(mfd * nDotL_virtual
-				* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
-									* virtualLightDir),
-				getLuminance(mfd / specularColor));
-        }
-        
-        return result;
-    }
-    else
-    {
-       return vec4(0.0);
-    }
+			// All in camera space
+			vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(index)].xyz - fragmentPos;
+			float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
+			vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
+			vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
+			vec3 lightIntensity = getLightIntensity(index);
+			
+			float nDotL_sample = max(0, dot(normalDirCameraSpace, sampleLightDir));
+			float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
+			float hDotV_sample = max(0, dot(sampleHalfDir, sampleViewDir));
+			float hDotL_sample = max(0, dot(sampleHalfDir, sampleLightDir));
+		
+			vec3 diffuseContrib = diffuseColor * nDotL_sample * lightIntensity / lightDistSquared;
+			
+			float geomAttenSample = geom(roughness, nDotH, nDotV_sample, nDotL_sample, 
+				hDotV_sample, hDotL_sample);
+			
+			if (nDotV_sample > 0.0 && geomAttenSample > 0.0)
+			{
+				vec3 virtualViewDir = 
+					normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
+				vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
+				float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
+				float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
+				float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
+				float hDotL_virtual = max(0, dot(sampleHalfDir, virtualLightDir));
+			
+				float geomAttenVirtual = geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, 
+					hDotV_virtual, hDotL_virtual);
+			
+				vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL_sample, maxLuminance);
+				
+				vec3 mfd = specularResid.rgb * 4 * nDotV_sample * lightDistSquared / lightIntensity;
+				// vec3 mfd = specularResid.rgb * lightDistSquared / lightIntensity;
+				
+				
+				// float mfd_mono = getLuminance(mfd / specularColor);
+				
+				// return vec4(fresnel(mfd, vec3(mfd_mono), hDotV_virtual)
+						// * geomAttenVirtual / (4 * nDotV_virtual) * lightIntensityVirtual[0]
+						// * getEnvironment((envMapMatrix * vec4(virtualLightDir, 0)).xyz), mfd_mono);
+						
+				
+				return vec4(mfd * geomAttenVirtual / (4 * nDotV_virtual) //* nDotL_virtual
+					* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
+										* virtualLightDir),
+					/*getLuminance(mfd / specularColor) * geomAttenSample*/1.0);
+			}
+			else
+			{
+				return vec4(0.0, 0.0, 0.0, 1.0);
+			}
+		}
+		else
+		{
+		   return vec4(0.0, 0.0, 0.0, 1.0);
+		}
+	}
 }
 
 vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness)
