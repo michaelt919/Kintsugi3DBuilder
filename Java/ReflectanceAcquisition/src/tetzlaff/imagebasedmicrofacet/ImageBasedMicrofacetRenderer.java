@@ -160,12 +160,27 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		
 		try
 		{
+			String diffuseTextureName;
+			String normalTextureName;
+			String specularTextureName;
+			String roughnessTextureName;
+			
 			// TODO read texture names from MTL file
-			String prefix = ulfRenderer.getLightField().viewSet.getGeometryFileName().split("\\.")[0];
-			String diffuseTextureName = prefix + "_Kd.png";
-			String normalTextureName = prefix + "_norm.png";
-			String specularTextureName = prefix + "_Ks.png";
-			String roughnessTextureName = prefix + "_Pr.png";
+			if (ulfRenderer.getLightField().viewSet.getGeometryFileName() != null)
+			{
+				String prefix = ulfRenderer.getLightField().viewSet.getGeometryFileName().split("\\.")[0];
+				diffuseTextureName = prefix + "_Kd.png";
+				normalTextureName = prefix + "_norm.png";
+				specularTextureName = prefix + "_Ks.png";
+				roughnessTextureName = prefix + "_Pr.png";
+			}
+			else
+			{
+				diffuseTextureName = "diffuse.png";
+				normalTextureName = "normal.png";
+				specularTextureName = "specular.png";
+				roughnessTextureName = "roughness.png";
+			}
 			
 			microfacetField = new SampledMicrofacetField<ContextType>(
 					ulfRenderer.getLightField(), 
