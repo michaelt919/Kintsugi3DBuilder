@@ -894,16 +894,27 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			imageOptions.setFilePath(vsetFile.getParentFile());
 		}
 		
-		double[] linearLuminance = new double[linearLuminanceList.size()];
-		for (int i = 0; i < linearLuminance.length; i++)
-		{
-			linearLuminance[i] = linearLuminanceList.get(i);
-		}
+		double[] linearLuminance;
+		byte[] encodedLuminance;
 		
-		byte[] encodedLuminance = new byte[encodedLuminanceList.size()];
-		for (int i = 0; i < encodedLuminance.length; i++)
+		if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length == encodedLuminanceValues.length)
 		{
-			encodedLuminance[i] = encodedLuminanceList.get(i);
+			linearLuminance = linearLuminanceValues;
+			encodedLuminance = encodedLuminanceValues;
+		}
+		else
+		{
+			linearLuminance = new double[linearLuminanceList.size()];
+			for (int i = 0; i < linearLuminance.length; i++)
+			{
+				linearLuminance[i] = linearLuminanceList.get(i);
+			}
+			
+			encodedLuminance = new byte[encodedLuminanceList.size()];
+			for (int i = 0; i < encodedLuminance.length; i++)
+			{
+				encodedLuminance[i] = encodedLuminanceList.get(i);
+			}
 		}
 
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");

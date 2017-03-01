@@ -136,7 +136,8 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light,
     vec3 diffuseContrib = diffuseColor * max(0, dot(light, normal)) * attenuatedLightIntensity;
     float cap = 1.0 - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
     vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
-    return vec4(remainder, originalColor.a * pow(remainder.r * remainder.g * remainder.b, 1.0 / 3.0));
+    return vec4(remainder, 
+		originalColor.a * pow(remainder.r * remainder.g * remainder.b, 1.0 / (3 * gamma)));
 }
 
 ParameterizedFit fitSpecular()
@@ -200,12 +201,13 @@ ParameterizedFit fitSpecular()
 				
 				float hDotV = max(0, dot(half, view));
 					
-				float specularWeight = colorRemainder.a * mfdEval / (4 * nDotV) 
-					* min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
+				float specularWeight = pow(colorRemainder.a * mfdEval / (4 * nDotV) 
+					* min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV), 1.0 / gamma);
 				
 				if (!isnan(specularWeight) && !isinf(specularWeight) && specularWeight != 0)
 				{
-					vec3 colorScaled = colorRemainder.rgb / attenuatedLightIntensity;
+					vec3 colorScaled = pow(colorRemainder.rgb / attenuatedLightIntensity, 
+						vec3(1.0 / gamma));
 					weightSum += specularWeight * colorRemainder.a;
 					specularWeightedSum += specularWeight * colorRemainder.a * colorScaled;
 				}
@@ -215,7 +217,8 @@ ParameterizedFit fitSpecular()
 	
 	vec3 solution = specularWeightedSum / weightSum;
 	
-	vec3 specularColor = clamp(solution, vec3(0.0), 16.0 * roughnessSquared * specularWeightedSum.rgb);
+	vec3 specularColor = clamp(pow(solution, vec3(gamma)), vec3(0.0), 
+		16.0 * roughnessSquared * pow(specularWeightedSum.rgb, vec3(gamma)));
 	
     // Dividing by the sum of weights to get the weighted average.
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
