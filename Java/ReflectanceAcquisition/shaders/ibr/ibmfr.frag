@@ -208,15 +208,13 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 	
 	if (nDotV_sample <= 0.0)
 	{
-		return vec4(0.0, 0.0, 0.0, 1.0);
+		return vec4(0.0, 0.0, 0.0, 0.0);
 	}
 	else
 	{
 		vec4 sampleColor = getLinearColor(index);
 		if (sampleColor.a > 0.0)
 		{
-			vec4 result = vec4(0.0, 0.0, 0.0, 1.0);
-			
 			// All in camera space
 			vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(index)].xyz - fragmentPos;
 			float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
@@ -253,26 +251,24 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 				// vec3 mfd = specularResid.rgb * lightDistSquared / lightIntensity;
 				
 				
-				// float mfd_mono = getLuminance(mfd / specularColor);
+				float mfd_mono = getLuminance(mfd / specularColor);
 				
-				// return vec4(fresnel(mfd, vec3(mfd_mono), hDotV_virtual)
-						// * geomAttenVirtual / (4 * nDotV_virtual) * lightIntensityVirtual[0]
-						// * getEnvironment((envMapMatrix * vec4(virtualLightDir, 0)).xyz), mfd_mono);
-						
-				
-				return vec4(mfd * geomAttenVirtual / (4 * nDotV_virtual) //* nDotL_virtual
+				return vec4(
+					mfd 
+					//fresnel(mfd, vec3(mfd_mono), hDotV_virtual)
+					* geomAttenVirtual / (4 * nDotV_virtual)
 					* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
 										* virtualLightDir),
-					/*getLuminance(mfd / specularColor) * geomAttenSample*/1.0);
+					mfd_mono * geomAttenSample / (4 * nDotV_virtual));
 			}
 			else
 			{
-				return vec4(0.0, 0.0, 0.0, 1.0);
+				return vec4(0.0, 0.0, 0.0, 0.0);
 			}
 		}
 		else
 		{
-		   return vec4(0.0, 0.0, 0.0, 1.0);
+		   return vec4(0.0, 0.0, 0.0, 0.0);
 		}
 	}
 }
@@ -624,8 +620,9 @@ void main()
 	if (useEnvironmentTexture)
 	{
 		reflectance = 
-			 fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
-				 getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz), nDotV)
+			 //fresnel(
+				getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness)
+			//	, getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz), nDotV)
 			+ diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 	
 		// For debugging environment mapping:
