@@ -205,7 +205,7 @@ ParameterizedFit adjustFit()
 				float nDotH = dot(half, shadingNormal);
 				vec3 halfTS = objectToTangent * half;
 				
-				if (nDotL > 0.0 && nDotH > 0.0)
+				if (nDotL > 0.0 && nDotH > sqrt(0.5))
 				{
 					float nDotHSquared = nDotH * nDotH;
 						
