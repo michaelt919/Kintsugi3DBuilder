@@ -2378,7 +2378,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		
 			    		// hack to override damping factor and never discard the result - TODO make this more elegant
-			    		//frontErrorFramebuffer.clearColorBuffer(0, dampingFactor, Float.MAX_VALUE, 0.0f, 0.0f);
+			    		frontErrorFramebuffer.clearColorBuffer(0, dampingFactor, Float.MAX_VALUE, 0.0f, 0.0f);
 			    		
 			    		if (param.isImagePreprojectionUseEnabled())
 				    	{
@@ -2484,16 +2484,16 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		
 			    		System.out.println("Sum squared error: " + sumSqError);
 			    		
-			    		//if (sumSqError < lastSumSqError)
+			    		if (sumSqError < lastSumSqError)
 			    		{
-//			    			dampingFactor /= 2;
-//			    			lastSumSqError = sumSqError;
-//			    			
-//			    			System.out.println("Saving iteration.");
-//			    			System.out.println("Next damping factor: " + dampingFactor);
+			    			dampingFactor /= 2;
+			    			lastSumSqError = sumSqError;
+			    			
+			    			System.out.println("Saving iteration.");
+			    			System.out.println("Next damping factor: " + dampingFactor);
 			    			
 			    			// Set the mask framebuffer to all 1 (hack - TODO make this more elegant)
-			    			//frontErrorFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
+			    			frontErrorFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
 			    		
 				    		finalizeProgram.setTexture("input0", backFramebuffer.getColorAttachmentTexture(0));
 				    		finalizeProgram.setTexture("input1", backFramebuffer.getColorAttachmentTexture(1));
@@ -2504,13 +2504,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				    		finalizeRenderable.draw(PrimitiveMode.TRIANGLE_FAN, frontFramebuffer);
 				    		context.finish();
 			    		}
-//			    		else
-//			    		{
-//			    			dampingFactor *= 2;
-//			    			
-//			    			System.out.println("Discarding iteration.");
-//			    			System.out.println("Next damping factor: " + dampingFactor);
-//			    		}
+			    		else
+			    		{
+			    			dampingFactor *= 2;
+			    			
+			    			System.out.println("Discarding iteration.");
+			    			System.out.println("Next damping factor: " + dampingFactor);
+			    		}
 
 			    		if (saveDebugTextures)
 				    	{

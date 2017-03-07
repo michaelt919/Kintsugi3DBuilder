@@ -295,6 +295,22 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 					FloatVertexList pixelList = new FloatVertexList(3, pixels.length / 3, pixels);
 					textureBuilder = context.get2DColorTextureBuilder(envMap.getSide() * 4, envMap.getSide() * 2, pixelList);
 					textureBuilder.setInternalFormat(ColorFormat.RGB32F);
+					
+					// Uncomment to save the panorama as an image (i.e. for a figure in a paper)
+//					BufferedImage img = new BufferedImage(envMap.getSide() * 4, envMap.getSide() * 2, BufferedImage.TYPE_3BYTE_BGR);
+//					int k = 0;
+//					
+//					for (int j = 0; j < envMap.getSide() * 2; j++)
+//					{
+//						for (int i = 0; i < envMap.getSide() * 4; i++)
+//						{
+//							img.setRGB(i,  j, ((int)(Math.pow(pixels[3 * k + 0], 1.0 / 2.2) * 255) << 16)
+//									| ((int)(Math.pow(pixels[3 * k + 1], 1.0 / 2.2) * 255) << 8) 
+//									| (int)(Math.pow(pixels[3 * k + 2], 1.0 / 2.2) * 255));
+//							k++;
+//						}
+//					}
+//					ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_pan.hdr")));
 				}
 				else
 				{
@@ -716,6 +732,27 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements UL
 	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
 	    	framebuffer.clearDepthBuffer();
 	    	
+	    	if (environmentTexture != null && environmentTextureEnabled)
+			{
+				environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
+				environmentBackgroundProgram.setTexture("env", environmentTexture);
+				environmentBackgroundProgram.setUniform("model_view", targetViewSet.getCameraPose(i));
+				environmentBackgroundProgram.setUniform("projection", 
+					targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
+	    				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
+				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
+
+				environmentBackgroundProgram.setUniform("gamma", 
+						environmentTexture.isInternalFormatCompressed() || 
+						environmentTexture.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
+						? 1.0f : 2.2f);
+				
+				context.disableDepthTest();
+				this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+				context.enableDepthTest();
+			}
+    		
+    		framebuffer.clearDepthBuffer();
 	    	mainRenderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 	    	
 	    	File exportFile = new File(resampleExportPath, targetViewSet.getImageFileName(i));

@@ -388,13 +388,18 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	{
 		Matrix4 lightMatrix = getLightMatrix(lightIndex);
 		
+		// lightMatrix can be hardcoded here
+			//Matrix4.rotateY(-12 * Math.PI / 16).times(Matrix4.rotateX(0 * Math.PI / 16));
+			//Matrix4.rotateY(3 * Math.PI / 4).times(Matrix4.rotateX(-Math.PI / 4))
+			//	.times(new Matrix4(new Matrix3(microfacetField.ulf.viewSet.getCameraPose(0))));
+		
 		if (lightIndex == 0)
 		{
 			program.setUniform("envMapMatrix", lightMatrix);
 		}
 		
 		float lightDist = new Vector3(lightMatrix.times(new Vector4(this.microfacetField.ulf.proxy.getCentroid(), 1.0f))).length();
-		
+	
 		float radius = (float)
 			(new Matrix3(microfacetField.ulf.viewSet.getCameraPose(0))
 				.times(new Vector3(this.microfacetField.ulf.proxy.getBoundingRadius()))

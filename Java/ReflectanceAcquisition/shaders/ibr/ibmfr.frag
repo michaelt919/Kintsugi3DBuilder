@@ -55,24 +55,28 @@ uniform bool useTSOverrides;
 uniform vec3 lightDirTSOverride;
 uniform vec3 viewDirTSOverride;
 
+vec3 getEnvironmentFresnel(vec3 lightDirection, float fresnelFactor)
+{
+	vec2 texCoords = vec2(atan(lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
+						/ PI + vec2(0.5);
+	
+	// // To prevent seams when the texture wraps around
+	// vec4 color1 = texture(environmentMap, texCoords);
+	// vec4 color2 = texture(environmentMap, 
+		// mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0));
+	// return pow(mix(color1, color2, 2.0 * abs(texCoords.x - 0.5)).rgb, vec3(environmentMapGamma));
+	
+	return pow(textureLod(environmentMap, texCoords, mix(environmentMipMapLevel, 0, fresnelFactor)).rgb, 
+		vec3(environmentMapGamma));
+}
+
 vec3 getEnvironment(vec3 lightDirection)
 {
 	vec2 texCoords = vec2(atan(lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
 						/ PI + vec2(0.5);
 	
-	// To prevent seams when the texture wraps around
-	
-	// OpenGL 4.0 version
-	// float lod1 = textureQueryLod(environmentMap, texCoords).y;
-	// float lod2 = textureQueryLod(environmentMap, mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0)).y;
-	
-	// return pow(textureLod(environmentMap, texCoords, min(lod1, lod2)).rgb, vec3(2.2));
-	
-	// Alternative that doesn't require OpenGL 4:
-	vec4 color1 = textureLod(environmentMap, texCoords, environmentMipMapLevel);
-	vec4 color2 = textureLod(environmentMap, 
-		mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0), environmentMipMapLevel);
-	return pow(mix(color1, color2, 2.0 * abs(texCoords.x - 0.5)).rgb, vec3(environmentMapGamma));
+	return pow(textureLod(environmentMap, texCoords, environmentMipMapLevel).rgb, 
+		vec3(environmentMapGamma));
 }
 
 vec3 getEnvironmentDiffuse(vec3 normalDirection)
@@ -254,12 +258,12 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 				float mfd_mono = getLuminance(mfd / specularColor);
 				
 				return vec4(
-					mfd 
+					mfd
 					//fresnel(mfd, vec3(mfd_mono), hDotV_virtual)
-					* geomAttenVirtual / (4 * nDotV_virtual)
+				/*	* geomAttenVirtual */
 					* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
 										* virtualLightDir),
-					mfd_mono * geomAttenSample / (4 * nDotV_virtual));
+					mfd_mono /* * geomAttenSample */);
 			}
 			else
 			{
@@ -612,17 +616,18 @@ void main()
         roughness = 0.25; // TODO pass in a default?
     }
     
-    vec4[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
-	
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
     vec3 reflectance;
 
-	if (useEnvironmentTexture)
+	vec4[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
+	
+    if (useEnvironmentTexture)
 	{
 		reflectance = 
 			 //fresnel(
 				getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness)
-			//	, getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz), nDotV)
+				//, getEnvironmentFresnel((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz, 
+					//pow(1 - nDotV, 5)), nDotV)
 			+ diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 	
 		// For debugging environment mapping:
@@ -712,8 +717,8 @@ void main()
 				
 				vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
             
-                reflectance += (/*nDotL * */diffuseColor + //fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
-                    mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV) / nDotL)
+                reflectance += (nDotL * diffuseColor + //fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
+                    mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV))
                     * (useTSOverrides ? lightIntensityVirtual[i] : 
 						lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed));
             }
