@@ -43,11 +43,12 @@ import tetzlaff.ulf.ViewSet;
 
 public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
-	private final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
-	private final int ROUGHNESS_TEXTURE_SIZE = 1; // TODO decide where this should be defined
+	private static final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
+	private static final int ROUGHNESS_TEXTURE_SIZE = 1; // TODO decide where this should be defined
 	
-	private static final double GAMMA = 2.2;
-	private static final double GAMMA_INV = 1.0 / GAMMA;
+	private static final double FITTING_GAMMA = 2.2; // TODO make this configurable from the interface
+	private static final double FITTING_GAMMA_INV = 1.0 / FITTING_GAMMA;
+	
 
 	private ContextType context;
 	private File vsetFile;
@@ -456,7 +457,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 //					double error = colorSumLookup.apply(j).y - specularAlpha * (remainder + reflectivity * mfdEst);
 //					sumSqError += error * error;
 					
-					double fit = Math.pow((diffuseAlphaLookup.applyAsDouble(j) * remainder + specularAlpha * reflectivity * mfdEst) / contributionSum, GAMMA_INV);
+					double fit = Math.pow((diffuseAlphaLookup.applyAsDouble(j) * remainder + specularAlpha * reflectivity * mfdEst) / contributionSum, FITTING_GAMMA_INV);
 					double luminanceSum = colorSumLookup.apply(j).y;
 					double sqError = colorSquareSumLookup.apply(j).y - 2 * luminanceSum * fit + contributionSum * fit * fit;
 					sumSqError += sqError;
@@ -669,9 +670,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 								double diffuseWeightSum = diffuseWeightSumLookup.applyAsDouble(j);
 								double currentFit = (diffuseWeightSum * remainder + reflectivity * mfdEst * specularWeightSum) / contributionSum;
 								double residualWeighted = colorSumLookup.apply(j).y // already gamma corrected
-										- contributionSum * Math.pow(currentFit, GAMMA_INV);
+										- contributionSum * Math.pow(currentFit, FITTING_GAMMA_INV);
 								
-								double dw = GAMMA_INV * Math.pow(currentFit, GAMMA_INV - 1);
+								double dw = FITTING_GAMMA_INV * Math.pow(currentFit, FITTING_GAMMA_INV - 1);
 								DoubleVector3 derivsWeighted = new DoubleVector3(
 										dw * specularWeightSum * reflectivity * mfdDeriv, 
 										dw * specularWeightSum * mfdEst, 
@@ -795,9 +796,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					{
 						for (int x = 0; x < partitionSize; x++)
 						{
-							float colorX = (float)Math.pow(Math.max(0.0, colorData[((y*partitionSize) + x) * 4 + 0]), GAMMA_INV);
-							float colorY = (float)Math.pow(Math.max(0.0, colorData[((y*partitionSize) + x) * 4 + 1]), GAMMA_INV);
-							float colorZ = (float)Math.pow(Math.max(0.0, colorData[((y*partitionSize) + x) * 4 + 2]), GAMMA_INV);
+							float colorX = (float)Math.pow(Math.max(0.0, colorData[((y*partitionSize) + x) * 4 + 0]), FITTING_GAMMA_INV);
+							float colorY = (float)Math.pow(Math.max(0.0, colorData[((y*partitionSize) + x) * 4 + 1]), FITTING_GAMMA_INV);
+							float colorZ = (float)Math.pow(Math.max(0.0, colorData[((y*partitionSize) + x) * 4 + 2]), FITTING_GAMMA_INV);
 							float xSquared = colorX * colorX;
 							float ySquared = colorY * colorY;
 							float zSquared = colorZ * colorZ;
@@ -1130,6 +1131,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	renderable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
     	renderable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
     	renderable.program().setUniform("gamma", param.getGamma());
+    	renderable.program().setUniform("fittingGamma", (float)FITTING_GAMMA);
     	renderable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
 
     	if (viewSet.getLuminanceMap() == null)
@@ -2370,7 +2372,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    		
 		    		boolean saveDebugTextures = false;
 					
-					for (int i = 0; i < 64; i++)
+					for (int i = 0; dampingFactor <= (1 << 20); i++)
 					{
 			    		backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);

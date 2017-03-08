@@ -16,6 +16,8 @@ uniform sampler2D specularEstimate;
 uniform sampler2D roughnessEstimate;
 uniform sampler2D errorTexture;
 
+uniform float fittingGamma;
+
 vec3 getDiffuseColor()
 {
     return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
@@ -68,7 +70,7 @@ ErrorResult calculateError()
 		float roughness = getRoughness();
 		float roughnessSquared = roughness * roughness;
 		float maxLuminance = getMaxLuminance();
-		float gammaInv = 1.0 / gamma;
+		float fittingGammaInv = 1.0 / fittingGamma;
 		
 		float sumSqError = 0.0;
 		
@@ -100,11 +102,14 @@ ErrorResult calculateError()
 					float hDotV = max(0, dot(half, view));
 					float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
 					
-					vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity), vec3(gammaInv));
-					vec3 currentFit = diffuseColor * nDotL + specularColor * mfdEval * geomRatio;
-					vec3 colorResidual = colorScaled - pow(currentFit, vec3(gammaInv));
+					vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity), 
+						vec3(fittingGammaInv));
+					vec3 currentFit = 
+						diffuseColor
+						* nDotL + specularColor * mfdEval * geomRatio;
+					vec3 colorResidual = colorScaled - pow(currentFit, vec3(fittingGammaInv));
 					
-					float weight = 1.0;//clamp(1 / nDotH, 0, 1000000);
+					float weight = 1.0;//clamp(1 / (1 - nDotHSquared), 0, 1000000);
 					sumSqError += weight * dot(colorResidual, colorResidual);
 				}
 			}
