@@ -9,6 +9,8 @@ uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
 uniform sampler2D roughnessEstimate;
 
+uniform float fittingGamma;
+
 vec3 getDiffuseColor()
 {
     return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
@@ -137,7 +139,7 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light,
     float cap = 1.0 - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
     vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
     return vec4(remainder, 
-		originalColor.a * pow(remainder.r * remainder.g * remainder.b, 1.0 / (3 * gamma)));
+		originalColor.a * pow(remainder.r * remainder.g * remainder.b, 1.0 / (3 * fittingGamma)));
 }
 
 ParameterizedFit fitSpecular()
@@ -191,7 +193,7 @@ ParameterizedFit fitSpecular()
 			vec4 colorRemainder = 
 				removeDiffuse(color, diffuseColor, light, attenuatedLightIntensity, normal);
             
-            if (nDotV > 0 && nDotHSquared > 0.0)
+            if (nDotV > 0 && nDotHSquared > 0.5)
             {
                 // float mfdEval = exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
                     // / (roughnessSquared * nDotHSquared * nDotHSquared);
@@ -202,12 +204,12 @@ ParameterizedFit fitSpecular()
 				float hDotV = max(0, dot(half, view));
 					
 				float specularWeight = pow(colorRemainder.a * mfdEval / (4 * nDotV) 
-					* min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV), 1.0 / gamma);
+					* min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV), 1.0 / fittingGamma);
 				
 				if (!isnan(specularWeight) && !isinf(specularWeight) && specularWeight != 0)
 				{
 					vec3 colorScaled = pow(colorRemainder.rgb / attenuatedLightIntensity, 
-						vec3(1.0 / gamma));
+						vec3(1.0 / fittingGamma));
 					weightSum += specularWeight * colorRemainder.a;
 					specularWeightedSum += specularWeight * colorRemainder.a * colorScaled;
 				}
@@ -215,15 +217,18 @@ ParameterizedFit fitSpecular()
         }
     }
 	
+	
 	vec3 solution = specularWeightedSum / weightSum;
 	
-	vec3 specularColor = clamp(pow(solution, vec3(gamma)), vec3(0.0), 
-		16.0 * roughnessSquared * pow(specularWeightedSum.rgb, vec3(gamma)));
+	vec3 specularColor = clamp(pow(solution, vec3(fittingGamma)), vec3(0.0), 
+		16.0 * roughnessSquared * pow(specularWeightedSum.rgb, vec3(fittingGamma)));
+		
+	vec3 adjustedDiffuseColor = diffuseColor ;//- specularColor * roughnessSquared / 2;
 	
     // Dividing by the sum of weights to get the weighted average.
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
     // for texels where there isn't enough information at the specular peak.
-    return ParameterizedFit(diffuseColor, shadingNormalTS, specularColor, roughness);
+    return ParameterizedFit(adjustedDiffuseColor, shadingNormalTS, specularColor, roughness);
 }
 
 #endif // SPECULARFIT_GLSL
