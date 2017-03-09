@@ -7,7 +7,7 @@
 
 #define MAX_ERROR 3.402822E38 // Max 32-bit floating-point is 3.4028235E38
 #define MIN_DAMPING_FACTOR 0.0078125 // 1/256
-#define MAX_DAMPING_FACTOR 1000000
+#define MAX_DAMPING_FACTOR 1048576 // 2^20
 //#define MIN_SHIFT_FRACTION 0.01171875 // 3/256
 
 uniform sampler2D diffuseEstimate;

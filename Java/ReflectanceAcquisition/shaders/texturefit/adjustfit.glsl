@@ -305,7 +305,8 @@ ParameterizedFit adjustFit()
 		mI += mat2( vec2(dampingFactor * max(mI[0][0], MIN_DIAGONAL), 0),
 					vec2(0, dampingFactor * max(mI[1][1], MIN_DIAGONAL)) );
 		
-		mat3 mAInverse = mat3(0);//inverse(mA);
+		mat3 mAInverse = mat3(0); // Setting this to the zero matrix disables diffuse fitting
+			//inverse(mA);
 		mat4 schurComplementE_ABD = mE - mD * mAInverse * mB;
 		mat4 schurInverseE_ABD = inverse(schurComplementE_ABD);
 		
@@ -315,20 +316,29 @@ ParameterizedFit adjustFit()
 		mat2 schurComplementI = mI - mG * mY - mH * mZ;
 		mat2 schurInverseI = inverse(schurComplementI);
 		
-		// if (determinant(mA) > 0.0 && determinant(schurComplementE_ABD) > 0.0 
-			// && determinant(schurComplementI) > 0.0)
-	//	{
+		vec2 normalAdj;
+		vec4 specularAdj;
+		vec3 diffuseAdj;
+		
+		if 
+		(
+			//determinant(mA) > 0.0 && 
+			determinant(schurComplementE_ABD) > 0.0 && 
+			determinant(schurComplementI) > 0.0
+		)
+		{
 			vec4 specularAdjInit = schurInverseE_ABD * (v2 - mD * mAInverse * v1);
 			vec3 diffuseAdjInit = mAInverse * (v1 - mB * specularAdjInit);
 			
-			// vec2 normalAdj = schurInverseI * (v3 - mG * diffuseAdjInit - mH * specularAdjInit);
-			// vec4 specularAdj = specularAdjInit - mZ * normalAdj;
-			// vec3 diffuseAdj = diffuseAdjInit - mY * normalAdj;
+			normalAdj = schurInverseI * (v3 - mG * diffuseAdjInit - mH * specularAdjInit);
+			specularAdj = specularAdjInit - mZ * normalAdj;
+			diffuseAdj = diffuseAdjInit - mY * normalAdj;
 			
-			vec2 normalAdj = vec2(0.0);
-			vec4 specularAdj = specularAdjInit;
-			vec3 diffuseAdj = diffuseAdjInit;
-	//	}
+			// Using the following three lines instead of the preceding three disables normal fitting
+			// normalAdj = vec2(0.0);
+			// specularAdj = specularAdjInit;
+			// diffuseAdj = diffuseAdjInit;
+		}
 		
 		// mat3 testIdentity1 = (mAInverse + mAInverse * mB * schurInverse * mC * mAInverse) * mA 
 			// - mAInverse * mB * schurInverse * mC;
