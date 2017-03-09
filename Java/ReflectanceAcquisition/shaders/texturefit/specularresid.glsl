@@ -83,6 +83,8 @@ SpecularResidualInfo computeSpecularResidualInfo()
         
 		
         info.halfAngleVector = objectToTangent * normalize(view + light);
+        	// Uncomment the following line for debugging purposes ONLY :
+			// acos(objectToTangent * normalize(view + light)) / PI;
 		info.geomRatio = 
 			max(0.0, min(1.0, 2.0 * max(0, info.halfAngleVector.z) * min(nDotV, info.nDotL)) / max(0, dot(view, halfAngle)))
 			/ (4 * nDotV * info.nDotL);

@@ -2364,23 +2364,27 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    			lastSumSqError += errorData[j * 4 + 1]; // Green channel holds squared error
 		    		}
 		    		
-		    		float dampingFactor = 128.0f;
 		    		
 		    		System.out.println("Sum squared error: " + lastSumSqError);
 		    		
 		    		System.out.println("Adjusting fit...");
 		    		
 		    		boolean saveDebugTextures = false;
+		    		boolean useGlobalDampingFactor = true;
+		    		float globalDampingFactor = 128.0f;
 					
-					for (int i = 0; dampingFactor <= (1 << 20); i++)
+					for (int i = 0; globalDampingFactor <= 1048576; i++)
 					{
 			    		backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
 			    		
-			    		// hack to override damping factor and never discard the result - TODO make this more elegant
-			    		frontErrorFramebuffer.clearColorBuffer(0, dampingFactor, Float.MAX_VALUE, 0.0f, 0.0f);
+			    		if(useGlobalDampingFactor)
+			    		{
+			    			// hack to override damping factor and never discard the result - TODO make this more elegant
+			    			frontErrorFramebuffer.clearColorBuffer(0, globalDampingFactor, Float.MAX_VALUE, 0.0f, 0.0f);
+			    		}
 			    		
 			    		if (param.isImagePreprojectionUseEnabled())
 				    	{
@@ -2488,14 +2492,24 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		
 			    		if (sumSqError < lastSumSqError)
 			    		{
-			    			dampingFactor /= 2;
 			    			lastSumSqError = sumSqError;
 			    			
 			    			System.out.println("Saving iteration.");
-			    			System.out.println("Next damping factor: " + dampingFactor);
 			    			
-			    			// Set the mask framebuffer to all 1 (hack - TODO make this more elegant)
-			    			frontErrorFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
+			    			if (useGlobalDampingFactor)
+			    			{
+			    				globalDampingFactor /= 2;
+				    			
+				    			System.out.println("Next damping factor: " + globalDampingFactor);
+				    			
+				    			// Set the mask framebuffer to all 1 (hack - TODO make this more elegant)
+				    			frontErrorFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
+			    			}
+			    			else
+			    			{
+			    				// If the damping factor isn't being used, set to the minimum, which will function as a countdown if an iteration is unproductive.
+			    				globalDampingFactor = 0.0078125f;
+			    			}
 			    		
 				    		finalizeProgram.setTexture("input0", backFramebuffer.getColorAttachmentTexture(0));
 				    		finalizeProgram.setTexture("input1", backFramebuffer.getColorAttachmentTexture(1));
@@ -2508,10 +2522,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    		}
 			    		else
 			    		{
-			    			dampingFactor *= 2;
+			    			// If useGlobalDampingFactor == false, then this effectively serves as a countdown in the case of an unproductive iteration.
+			    			// If enough unproductive iterations occur, then this variable will keep doubling until it exceeds the maximum value.
+			    			globalDampingFactor *= 2;
 			    			
 			    			System.out.println("Discarding iteration.");
-			    			System.out.println("Next damping factor: " + dampingFactor);
+			    			System.out.println("Next damping factor: " + globalDampingFactor);
 			    		}
 
 			    		if (saveDebugTextures)
