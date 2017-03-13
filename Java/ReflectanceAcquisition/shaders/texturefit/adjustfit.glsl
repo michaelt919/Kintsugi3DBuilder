@@ -162,22 +162,25 @@ ParameterizedFit adjustFit()
 		float roughnessSquared = roughness * roughness;
 		float fittingGammaInv = 1.0 / fittingGamma;
 		
-		// Partitioned matrix:  [ A B C ]
-		//						[ D E F ]
-		//						[ G H I ]
-		mat3   mA = mat3(0);
-		mat4x3 mB = mat4x3(0);
-		mat2x3 mC = mat2x3(0);
-		mat3x4 mD = mat3x4(0);
-		mat4   mE = mat4(0);
-		mat2x4 mF = mat2x4(0);
-		mat3x2 mG = mat3x2(0);
-		mat4x2 mH = mat4x2(0);
-		mat2   mI = mat2(0);
+		// // Partitioned matrix:  [ A B C ]
+		// //						[ D E F ]
+		// //						[ G H I ]
+		// mat3   mA = mat3(0);
+		// mat4x3 mB = mat4x3(0);
+		// mat2x3 mC = mat2x3(0);
+		// mat3x4 mD = mat3x4(0);
+		// mat4   mE = mat4(0);
+		// mat2x4 mF = mat2x4(0);
+		// mat3x2 mG = mat3x2(0);
+		// mat4x2 mH = mat4x2(0);
+		// mat2   mI = mat2(0);
 		
-		vec3 v1 = vec3(0);
-		vec4 v2 = vec4(0);
-		vec2 v3 = vec2(0);
+		// vec3 v1 = vec3(0);
+		// vec4 v2 = vec4(0);
+		// vec2 v3 = vec2(0);
+		
+		mat3 m = mat3(0.0);
+		vec3 v = vec3(0.0);
 		
 		for (int i = 0; i < viewCount; i++)
 		{
@@ -230,7 +233,7 @@ ParameterizedFit adjustFit()
 					float mfdDerivOverRoughnessSquared = 2 * (1 - nDotHSquared) / (q2 * q2 * q2);
 					
 					float hDotV = max(0, dot(half, view));
-					float geom = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
+					float geom = 1.0; //min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
 					float geomRatio = geom / (4 * nDotV);
 					
 					vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity), 
@@ -239,106 +242,115 @@ ParameterizedFit adjustFit()
 					vec3 colorResidual = colorScaled - pow(currentFit, vec3(fittingGammaInv));
 					
 					vec3 outerDeriv = fittingGammaInv * pow(currentFit, vec3(fittingGammaInv - 1));
-					mat3 outerDerivMatrix = 
-						mat3(vec3(outerDeriv.r, 0, 0),
-							vec3(0, outerDeriv.g, 0),
-							vec3(0, 0, outerDeriv.b));
-					mat3 diffuseDerivs = nDotL * outerDerivMatrix;
-					mat3 diffuseDerivsTranspose = transpose(mat3(1) * diffuseDerivs); // Workaround for driver bug
+					// mat3 outerDerivMatrix = 
+						// mat3(vec3(outerDeriv.r, 0, 0),
+							// vec3(0, outerDeriv.g, 0),
+							// vec3(0, 0, outerDeriv.b));
+					// mat3 diffuseDerivs = nDotL * outerDerivMatrix;
+					// mat3 diffuseDerivsTranspose = transpose(mat3(1) * diffuseDerivs); // Workaround for driver bug
 					
 					vec3 diffuseCompensation = vec3(0);//max(vec3(0), sign(prevDiffuseColor));
-					mat3 diffuseCompensationMatrix = 
-						mat3(vec3(diffuseCompensation.r, 0, 0),
-							vec3(0, diffuseCompensation.g, 0),
-							vec3(0, 0, diffuseCompensation.b));
+					// mat3 diffuseCompensationMatrix = 
+						// mat3(vec3(diffuseCompensation.r, 0, 0),
+							// vec3(0, diffuseCompensation.g, 0),
+							// vec3(0, 0, diffuseCompensation.b));
 					
-					mat3 specularReflectivityDerivs = 
-						roughnessSquared 
-							* (mfdEval * geomRatio 
-								- diffuseCompensationMatrix * roughnessSquared / 2 * nDotL) 
-							* outerDerivMatrix;
+					// mat3 specularReflectivityDerivs = 
+						// roughnessSquared 
+							// * (mfdEval * geomRatio 
+								// - diffuseCompensationMatrix * roughnessSquared / 2 * nDotL) 
+							// * outerDerivMatrix;
 						
-					mat4x3 specularDerivs = mat4x3(
-						specularReflectivityDerivs[0],
-						specularReflectivityDerivs[1],
-						specularReflectivityDerivs[2],
-						(geomRatio * mfdDerivOverRoughnessSquared - diffuseCompensation * nDotL) 
-							* prevSpecularColor * outerDeriv);
-					mat3x4 specularDerivsTranspose = transpose(mat3(1) * specularDerivs); // Workaround for driver bug
+					// mat4x3 specularDerivs = mat4x3(
+						// specularReflectivityDerivs[0],
+						// specularReflectivityDerivs[1],
+						// specularReflectivityDerivs[2],
+						// (geomRatio * mfdDerivOverRoughnessSquared - diffuseCompensation * nDotL) 
+							// * prevSpecularColor * outerDeriv);
+					// mat3x4 specularDerivsTranspose = transpose(mat3(1) * specularDerivs); // Workaround for driver bug
 					
 					mat2x3 normalDerivs = 
-						outerProduct(prevDiffuseColor * outerDeriv, 
-							lightTS.xy - lightTS.z * shadingNormalTS.xy / shadingNormalTS.z)
-						+ outerProduct(prevSpecularColor * outerDeriv,
+						// outerProduct(prevDiffuseColor * outerDeriv, 
+							// lightTS.xy - lightTS.z * shadingNormalTS.xy / shadingNormalTS.z) +
+						outerProduct(prevSpecularColor * outerDeriv,
 							computeSpecularNormalDerivs(shadingNormalTS, lightTS, viewTS, halfTS, 
 								hDotV, nDotL, nDotV, nDotH, nDotHSquared, roughnessSquared, geom));
-					mat3x2 normalDerivsTranspose = transpose(mat3(1) * normalDerivs);
+					// mat3x2 normalDerivsTranspose = transpose(mat3(1) * normalDerivs);
 						
 					float weight = 1.0;//clamp(1 / (1 - nDotHSquared), 0, 1000000);
 						
-					mA += weight * diffuseDerivsTranspose * diffuseDerivs;
-					mB += weight * diffuseDerivsTranspose * specularDerivs;
-					mC += weight * diffuseDerivsTranspose * normalDerivs;
-					mD += weight * specularDerivsTranspose * diffuseDerivs;
-					mE += weight * specularDerivsTranspose * specularDerivs;
-					mF += weight * specularDerivsTranspose * normalDerivs;
-					mG += weight * normalDerivsTranspose * diffuseDerivs;
-					mH += weight * normalDerivsTranspose * specularDerivs;
-					mI += weight * normalDerivsTranspose * normalDerivs;
+					// mA += weight * diffuseDerivsTranspose * diffuseDerivs;
+					// mB += weight * diffuseDerivsTranspose * specularDerivs;
+					// mC += weight * diffuseDerivsTranspose * normalDerivs;
+					// mD += weight * specularDerivsTranspose * diffuseDerivs;
+					// mE += weight * specularDerivsTranspose * specularDerivs;
+					// mF += weight * specularDerivsTranspose * normalDerivs;
+					// mG += weight * normalDerivsTranspose * diffuseDerivs;
+					// mH += weight * normalDerivsTranspose * specularDerivs;
+					// mI += weight * normalDerivsTranspose * normalDerivs;
 					
-					v1 += weight * diffuseDerivsTranspose * colorResidual;
-					v2 += weight * specularDerivsTranspose * colorResidual;
-					v3 += weight * normalDerivsTranspose * colorResidual;
+					// v1 += weight * diffuseDerivsTranspose * colorResidual;
+					// v2 += weight * specularDerivsTranspose * colorResidual;
+					// v3 += weight * normalDerivsTranspose * colorResidual;
+					
+					
+					mat3 derivs = mat3(
+						(geomRatio * mfdDerivOverRoughnessSquared - diffuseCompensation * nDotL) 
+							* prevSpecularColor * outerDeriv,
+						normalDerivs[0], normalDerivs[1]);
+					mat3 derivsTranspose = transpose(mat3(1) * derivs); // Workaround for driver bug
+					
+					m += weight * derivsTranspose * derivs;
+					v += weight * derivsTranspose * colorResidual;
 				}
 			}
 		}
 		
-		mA += mat3(	vec3(dampingFactor * max(mA[0][0], MIN_DIAGONAL), 0, 0), 
-					vec3(0, dampingFactor * max(mA[1][1], MIN_DIAGONAL), 0), 
-					vec3(0, 0, dampingFactor * max(mA[2][2], MIN_DIAGONAL)) );
+		// mA += mat3(	vec3(dampingFactor * max(mA[0][0], MIN_DIAGONAL), 0, 0), 
+					// vec3(0, dampingFactor * max(mA[1][1], MIN_DIAGONAL), 0), 
+					// vec3(0, 0, dampingFactor * max(mA[2][2], MIN_DIAGONAL)) );
 			
-		mE += mat4(	vec4(dampingFactor * max(mE[0][0], MIN_DIAGONAL), 0, 0, 0), 
-					vec4(0, dampingFactor * max(mE[1][1], MIN_DIAGONAL), 0, 0), 
-					vec4(0, 0, dampingFactor * max(mE[2][2], MIN_DIAGONAL), 0),
-					vec4(0, 0, 0, dampingFactor * max(mE[3][3], MIN_DIAGONAL)) );
+		// mE += mat4(	vec4(dampingFactor * max(mE[0][0], MIN_DIAGONAL), 0, 0, 0), 
+					// vec4(0, dampingFactor * max(mE[1][1], MIN_DIAGONAL), 0, 0), 
+					// vec4(0, 0, dampingFactor * max(mE[2][2], MIN_DIAGONAL), 0),
+					// vec4(0, 0, 0, dampingFactor * max(mE[3][3], MIN_DIAGONAL)) );
 					
-		mI += mat2( vec2(dampingFactor * max(mI[0][0], MIN_DIAGONAL), 0),
-					vec2(0, dampingFactor * max(mI[1][1], MIN_DIAGONAL)) );
+		// mI += mat2( vec2(dampingFactor * max(mI[0][0], MIN_DIAGONAL), 0),
+					// vec2(0, dampingFactor * max(mI[1][1], MIN_DIAGONAL)) );
 		
-		mat3 mAInverse = mat3(0); // Setting this to the zero matrix disables diffuse fitting
-			//inverse(mA);
-		mat4 schurComplementE_ABD = mE - mD * mAInverse * mB;
-		mat4 schurInverseE_ABD = inverse(schurComplementE_ABD);
+		// mat3 mAInverse = mat3(0); // Setting this to the zero matrix disables diffuse fitting
+			// //inverse(mA);
+		// mat4 schurComplementE_ABD = mE - mD * mAInverse * mB;
+		// mat4 schurInverseE_ABD = inverse(schurComplementE_ABD);
 		
-		mat2x4 mZ = schurInverseE_ABD * (mF - mD * mAInverse * mC);
-		mat2x3 mY = mAInverse * (mC - mB * mZ);
+		// mat2x4 mZ = schurInverseE_ABD * (mF - mD * mAInverse * mC);
+		// mat2x3 mY = mAInverse * (mC - mB * mZ);
 		
-		mat2 schurComplementI = mI - mG * mY - mH * mZ;
-		mat2 schurInverseI = inverse(schurComplementI);
+		// mat2 schurComplementI = mI - mG * mY - mH * mZ;
+		// mat2 schurInverseI = inverse(schurComplementI);
 		
-		vec2 normalAdj;
-		vec4 specularAdj;
-		vec3 diffuseAdj;
+		// vec2 normalAdj = vec2(0);
+		// vec4 specularAdj = vec4(0);
+		// vec3 diffuseAdj = vec3(0);
 		
-		if 
-		(
-			//determinant(mA) > 0.0 && 
-			determinant(schurComplementE_ABD) > 0.0 && 
-			determinant(schurComplementI) > 0.0
-		)
-		{
-			vec4 specularAdjInit = schurInverseE_ABD * (v2 - mD * mAInverse * v1);
-			vec3 diffuseAdjInit = mAInverse * (v1 - mB * specularAdjInit);
+		// if 
+		// (
+			// //determinant(mA) > 0.0 && 
+				// // ^ diffuse determinant -- comment out if diffuse fitting is disabled
+			// determinant(schurComplementE_ABD) > 0.0 // specular determinant
+			// // && determinant(schurComplementI) > 0.0 
+				// // ^ normal determinant - comment out if normal fitting is disabled
+		// )
+		// {
+			// vec4 specularAdjInit = schurInverseE_ABD * (v2 - mD * mAInverse * v1);
+			// vec3 diffuseAdjInit = mAInverse * (v1 - mB * specularAdjInit);
 			
-			normalAdj = schurInverseI * (v3 - mG * diffuseAdjInit - mH * specularAdjInit);
-			specularAdj = specularAdjInit - mZ * normalAdj;
-			diffuseAdj = diffuseAdjInit - mY * normalAdj;
+			// // Commenting out the following line disables normal fitting:
+			// //normalAdj = schurInverseI * (v3 - mG * diffuseAdjInit - mH * specularAdjInit);
 			
-			// Using the following three lines instead of the preceding three disables normal fitting
-			// normalAdj = vec2(0.0);
-			// specularAdj = specularAdjInit;
-			// diffuseAdj = diffuseAdjInit;
-		}
+			// specularAdj = specularAdjInit - mZ * normalAdj;
+			// diffuseAdj = diffuseAdjInit - mY * normalAdj;
+		// }
 		
 		// mat3 testIdentity1 = (mAInverse + mAInverse * mB * schurInverse * mC * mAInverse) * mA 
 			// - mAInverse * mB * schurInverse * mC;
@@ -371,6 +383,27 @@ ParameterizedFit adjustFit()
 		// float shiftFraction = min(SHIFT_FRACTION, SHIFT_FRACTION / 
 			// sqrt((dot(diffuseAdjLinearized, diffuseAdjLinearized)
 				// + dot(specularAdjLinearized, specularAdjLinearized))));
+		
+
+		mat3 mDamped = m + mat3(	vec3(dampingFactor * max(m[0][0], MIN_DIAGONAL), 0, 0), 
+							vec3(0, dampingFactor * max(m[1][1], MIN_DIAGONAL), 0), 
+							vec3(0, 0, dampingFactor * max(m[2][2], MIN_DIAGONAL)) );
+		
+		vec3 adjustment;
+		if (abs(determinant(mDamped)) < 0.001)
+		{
+			adjustment = vec3(0.0);
+		}
+		else
+		{
+			adjustment = inverse(mDamped) * v 
+				/ length(dot(v, vec3(1.0 / m[0][0], 1.0 / m[1][1], 1.0 / m[2][2])));
+		}
+		
+		vec3 diffuseAdj = vec3(0);
+		vec4 specularAdj = vec4(0.0, 0.0, 0.0, adjustment[0]);
+		vec2 normalAdj = vec2(adjustment[1], adjustment[2]);
+
 		
 		if (isinf(normalAdj.x) || isnan(normalAdj.x) || isinf(normalAdj.y) || isnan(normalAdj.y)
 			|| isinf(diffuseAdj.x) || isnan(diffuseAdj.x) || isinf(diffuseAdj.y) || isnan(diffuseAdj.y)

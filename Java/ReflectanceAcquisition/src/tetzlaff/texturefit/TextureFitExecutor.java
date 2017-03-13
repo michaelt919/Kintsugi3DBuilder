@@ -2070,7 +2070,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         
 	    	if (!param.isDiffuseTextureEnabled())
 	    	{
-	    		System.out.println("Skipping diffuse fit and loading previous result!");
+	    		System.out.println("Skipping diffuse fit.");
 	    	}
 	    	else
 	    	{
@@ -2370,7 +2370,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    		System.out.println("Adjusting fit...");
 		    		
 		    		boolean saveDebugTextures = false;
-		    		boolean useGlobalDampingFactor = true;
+		    		boolean useGlobalDampingFactor = false;
 		    		float globalDampingFactor = 128.0f;
 					
 					for (int i = 0; globalDampingFactor <= 1048576; i++)
@@ -2587,7 +2587,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				
 				frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(outputDir, materialName + "_Ks.png"));
 				
-				if (param.isRoughnessTextureEnabled())
+				//if (param.isRoughnessTextureEnabled())
 				{
 					frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(outputDir, materialName + "_Pr.png"));
 				}
