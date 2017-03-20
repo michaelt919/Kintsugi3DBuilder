@@ -7,6 +7,7 @@ out vec4 fragColor;
 uniform mat4 model_view;
 uniform mat4 projection;
 uniform mat4 envMapMatrix;
+uniform vec3 envMapIntensity;
 uniform float gamma;
 
 #define PI 3.1415926535897932384626433832795
@@ -31,8 +32,9 @@ void main()
 	// Alternative that doesn't require OpenGL 4:
 	vec4 color1 = texture(env, texCoords);
 	vec4 color2 = texture(env, mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0));
-	fragColor = vec4(pow(mix(color1.rgb, color2.rgb, 2.0 * abs(texCoords.x - 0.5)), vec3(1.0 / gamma)), 1.0);
+	fragColor = vec4(envMapIntensity * 
+		pow(mix(color1.rgb, color2.rgb, 2.0 * abs(texCoords.x - 0.5)), vec3(1.0 / gamma)), 1.0);
 	
 	// Use this version for a blurred background
-	//fragColor = vec4(pow(textureLod(env, texCoords, 3).rgb, vec3(1.0 / gamma)), 1.0);
+	//fragColor = vec4(envMapIntensity * pow(textureLod(env, texCoords, 3).rgb, vec3(1.0 / gamma)), 1.0);
 }

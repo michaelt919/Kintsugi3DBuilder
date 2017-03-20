@@ -34,8 +34,8 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.NullContext;
-import tetzlaff.ulf.SampledLuminanceEncoding;
-import tetzlaff.ulf.ViewSet;
+import tetzlaff.ibr.SampledLuminanceEncoding;
+import tetzlaff.ibr.ViewSet;
 
 public class TextureFitUserInterface extends JFrame
 {

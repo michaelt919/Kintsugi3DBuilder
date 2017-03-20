@@ -22,7 +22,7 @@ import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.VertexMesh;
-import tetzlaff.ulf.ViewSet;
+import tetzlaff.ibr.ViewSet;
 
 public class PhongRenderer<ContextType extends Context<ContextType>> implements Drawable 
 {

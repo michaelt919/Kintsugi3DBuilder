@@ -35,7 +35,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import javax.swing.*;
+import javax.swing.JFileChooser;
 
 import tetzlaff.gl.helpers.DoubleVector3;
 

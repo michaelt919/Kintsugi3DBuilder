@@ -39,7 +39,7 @@ import tetzlaff.gl.helpers.Vector2;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
-import tetzlaff.ulf.ViewSet;
+import tetzlaff.ibr.ViewSet;
 
 public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
