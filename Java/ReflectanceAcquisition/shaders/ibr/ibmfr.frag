@@ -55,6 +55,10 @@ uniform bool useTSOverrides;
 uniform vec3 lightDirTSOverride;
 uniform vec3 viewDirTSOverride;
 
+uniform bool imageBasedRenderingEnabled;
+uniform bool pbrGeometricAttenuationEnabled;
+uniform bool fresnelEnabled;
+
 vec3 getEnvironmentFresnel(vec3 lightDirection, float fresnelFactor)
 {
 	vec2 texCoords = vec2(atan(lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
@@ -328,9 +332,19 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
         if (geomAtten > 0.0)
         {
             vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-            vec4 precomputedSample = vec4(specularResid.rgb 
-                * 4 * nDotV * lightDistSquared / lightIntensity, 
-                sampleColor.a * geomAtten);
+            vec4 precomputedSample;
+
+			if (pbrGeometricAttenuationEnabled)
+			{
+				precomputedSample = vec4(specularResid.rgb 
+					* 4 * nDotV * lightDistSquared / lightIntensity, 
+					sampleColor.a * geomAtten);
+			}
+			else
+			{
+				precomputedSample = 
+					vec4(specularResid.rgb * lightDistSquared / lightIntensity, sampleColor.a);
+			}
             
 			mat3 tangentToObject = mat3(0.0);
 			
@@ -619,16 +633,32 @@ void main()
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
     vec3 reflectance;
 
-	vec4[] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
+	vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
+
+	if (imageBasedRenderingEnabled)
+	{
+		weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
+	}
 	
     if (useEnvironmentTexture)
 	{
-		reflectance = 
-			 //fresnel(
-				getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness)
-				//, getEnvironmentFresnel((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz, 
-					//pow(1 - nDotV, 5)), nDotV)
-			+ diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+		reflectance = diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+		
+		if (imageBasedRenderingEnabled)
+		{
+			if (fresnelEnabled)
+			{
+				reflectance += ambientColor * 
+					 fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
+						getEnvironmentFresnel((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz, 
+							pow(1 - nDotV, 5)), nDotV);
+			}
+			else
+			{
+				reflectance += ambientColor * 
+					getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
+			}
+		}
 	
 		// For debugging environment mapping:
 		//reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
@@ -636,7 +666,14 @@ void main()
 	}
 	else
 	{
-		reflectance = fresnel(ambientColor * (diffuseColor + specularColor), ambientColor, nDotV);
+		if (fresnelEnabled)
+		{
+			reflectance = fresnel(ambientColor * (diffuseColor + specularColor), ambientColor, nDotV);
+		}
+		else
+		{
+			reflectance = ambientColor;
+		}
 	}
     
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < virtualLightCount; i++)
@@ -678,47 +715,72 @@ void main()
                 float nDotH = useTSOverrides ? halfDir.z : dot(normalDir, halfDir);
                 
                 vec3 mfdFresnel;
-                float grazingIntensity = getLuminance(weightedAverages[i].rgb 
-					/ max(vec3(1 / weightedAverages[i].a), specularColor));
-                if (grazingIntensity <= 0.0)
-                {
-                    mfdFresnel = vec3(0,0,0);
-                }
-                else
-                {
-                    mfdFresnel =
-						max(vec3(0.0), fresnel(weightedAverages[i].rgb, vec3(grazingIntensity), hDotV));
-					//mfdFresnel = max(vec3(0.0), 
-						// fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
-                    //mfdFresnel = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
-					
-					
-					// mfdFresnel = max(vec3(0.0), 
-							// fresnel(vec3(getLuminance(weightedAverages[i].rgb)), 
-								// vec3(grazingIntensity), hDotV))
-						// * specularColor / getLuminance(specularColor);
-					
-					// The following debug code for visualizing differences between reference and fitted in perceptually linear color space
-					
-					// vec3 reference = max(vec3(0.0), fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
-					// vec3 fitted = fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
-					
-					// vec3 referenceXYZ = rgbToXYZ(reference);
-					// vec3 fittedXYZ = rgbToXYZ(fitted);
 				
-					// // Pseudo-LAB color space
-					// vec3 referenceLAB = vec3(referenceXYZ.y, 5 * (referenceXYZ.x - referenceXYZ.y), 2 * (referenceXYZ.y - referenceXYZ.z));
-					// vec3 fittedLAB = vec3(fittedXYZ.y, 5 * (fittedXYZ.x - fittedXYZ.y), 2 * (fittedXYZ.y - fittedXYZ.z));
+				if (fresnelEnabled)
+				{
+					if (imageBasedRenderingEnabled)
+					{
+						float grazingIntensity = getLuminance(weightedAverages[i].rgb 
+							/ max(vec3(1 / weightedAverages[i].a), specularColor));
+						
+						if (grazingIntensity <= 0.0)
+						{
+							mfdFresnel = vec3(0,0,0);
+						}
+						else
+						{
+							mfdFresnel = max(vec3(0.0), 
+								fresnel(weightedAverages[i].rgb, vec3(grazingIntensity), hDotV));
+								// fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
+						}
+						
+						// The following debug code is for visualizing differences between reference 
+						// and fitted in perceptually linear color space
+						
+						// vec3 reference = max(vec3(0.0), 
+							// fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
+						// vec3 fitted = fresnel(specularColor, vec3(1.0), hDotV) 
+							// * vec3(dist(nDotH, roughness));
+						
+						// vec3 referenceXYZ = rgbToXYZ(reference);
+						// vec3 fittedXYZ = rgbToXYZ(fitted);
 					
-					// vec3 resultLAB = ???
-					// vec3 resultXYZ = vec3(resultLAB.x + 0.2 * resultLAB.y, resultLAB.x, resultLAB.x - 0.5 * resultLAB.z);
-					// vec3 resultRGB = xyzToRGB(resultXYZ);
-                }
+						// // Pseudo-LAB color space
+						// vec3 referenceLAB = vec3(referenceXYZ.y, 
+							// 5 * (referenceXYZ.x - referenceXYZ.y), 
+							// 2 * (referenceXYZ.y - referenceXYZ.z));
+						// vec3 fittedLAB = vec3(fittedXYZ.y, 
+							// 5 * (fittedXYZ.x - fittedXYZ.y), 2 * (fittedXYZ.y - fittedXYZ.z));
+						
+						// vec3 resultLAB = ???
+						// vec3 resultXYZ = vec3(resultLAB.x + 0.2 * resultLAB.y, 
+							/// resultLAB.x, resultLAB.x - 0.5 * resultLAB.z);
+						// vec3 resultRGB = xyzToRGB(resultXYZ);
+					}
+					else
+					{
+						mfdFresnel = 
+							fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
+					}
+				}
+				else
+				{
+					if (imageBasedRenderingEnabled)
+					{
+						mfdFresnel = max(vec3(0.0), weightedAverages[i].rgb);
+					}
+					else
+					{
+						mfdFresnel = specularColor * vec3(dist(nDotH, roughness));
+					}
+				}
 				
 				vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
             
                 reflectance += (nDotL * diffuseColor + //fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
-                    mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV))
+                    mfdFresnel 
+					* (pbrGeometricAttenuationEnabled ? 
+						geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV) : 1.0))
                     * (useTSOverrides ? lightIntensityVirtual[i] : 
 						lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed));
             }
