@@ -305,6 +305,12 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	}
 
 	@Override
+	public boolean isRelightingEnabled() 
+	{
+		return this.stages.get(this.currentStage).isRelightingEnabled();
+	}
+
+	@Override
 	public boolean isPBRGeometricAttenuationEnabled() 
 	{
 		return this.stages.get(this.currentStage).isPBRGeometricAttenuationEnabled();
@@ -322,6 +328,15 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 		for (ULFRenderer<ContextType> stage : stages)
 		{
 			stage.getLightField().settings.setIBREnabled(ibrEnabled);
+		}
+	}
+
+	@Override
+	public void setRelightingEnabled(boolean relightingEnabled) 
+	{
+		for (ULFRenderer<ContextType> stage : stages)
+		{
+			stage.getLightField().settings.setRelightingEnabled(relightingEnabled);
 		}
 	}
 

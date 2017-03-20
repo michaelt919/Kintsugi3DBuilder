@@ -7,6 +7,7 @@ public class IBRSettings
     private boolean occlusionEnabled = true;
     private float occlusionBias = 0.0025f;
 	private boolean ibrEnabled = true;
+	private boolean relightingEnabled = false;
 	private boolean fresnelEnabled = false;
 	private boolean pbrGeometricAttenuationEnabled = false;
 
@@ -82,5 +83,15 @@ public class IBRSettings
 	public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled) 
 	{
 		this.pbrGeometricAttenuationEnabled = pbrGeometricAttenuationEnabled;
+	}
+
+	public boolean isRelightingEnabled() 
+	{
+		return relightingEnabled;
+	}
+
+	public void setRelightingEnabled(boolean relightingEnabled) 
+	{
+		this.relightingEnabled = relightingEnabled;
 	}
 }

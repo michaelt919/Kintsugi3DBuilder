@@ -410,6 +410,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     	program.setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
     	program.setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
     	program.setUniform("imageBasedRenderingEnabled", this.lightField.settings.isIBREnabled());
+    	program.setUniform("relightingEnabled", this.lightField.settings.isRelightingEnabled());
     	program.setUniform("pbrGeometricAttenuationEnabled", this.lightField.settings.isPBRGeometricAttenuationEnabled());
     	program.setUniform("fresnelEnabled", this.lightField.settings.isFresnelEnabled());
     	
@@ -701,6 +702,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 	}
 
 	@Override
+	public boolean isRelightingEnabled() 
+	{
+		return this.lightField.settings.isRelightingEnabled();
+	}
+
+	@Override
 	public boolean isPBRGeometricAttenuationEnabled() 
 	{
 		return this.lightField.settings.isPBRGeometricAttenuationEnabled();
@@ -716,6 +723,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 	public void setIBREnabled(boolean ibrEnabled) 
 	{
 		this.lightField.settings.setIBREnabled(ibrEnabled);
+	}
+
+	@Override
+	public void setRelightingEnabled(boolean relightingEnabled) 
+	{
+		this.lightField.settings.setRelightingEnabled(relightingEnabled);
 	}
 
 	@Override
