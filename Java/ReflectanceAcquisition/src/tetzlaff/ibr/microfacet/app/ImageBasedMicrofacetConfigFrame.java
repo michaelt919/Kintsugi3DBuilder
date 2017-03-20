@@ -72,7 +72,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		setResizable(false);
 		setTitle("Image-Based Rendering Settings");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(10, 10, 960, 550);
+		setBounds(10, 10, 960, 600);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -249,9 +249,9 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		renderingOptionsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Rendering Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		GridBagLayout gbl_renderingOptionsPanel = new GridBagLayout();
 		gbl_renderingOptionsPanel.columnWidths = new int[]{0, 0, 0, 0, 0};
-		gbl_renderingOptionsPanel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0};
+		gbl_renderingOptionsPanel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 30};
 		gbl_renderingOptionsPanel.columnWeights = new double[]{0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
-		gbl_renderingOptionsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+		gbl_renderingOptionsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 		renderingOptionsPanel.setLayout(gbl_renderingOptionsPanel);
 		
 		JLabel lblGamma = new JLabel("Gamma:");
@@ -355,12 +355,12 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		gbc_chckbxImagebasedRendering.gridy = 5;
 		renderingOptionsPanel.add(chckbxImagebasedRendering, gbc_chckbxImagebasedRendering);
 		
-		JCheckBox chckbxFresnelEffect = new JCheckBox("Fresnel effect");
-		GridBagConstraints gbc_chckbxFresnelEffect = new GridBagConstraints();
-		gbc_chckbxFresnelEffect.insets = new Insets(0, 0, 5, 0);
-		gbc_chckbxFresnelEffect.gridx = 3;
-		gbc_chckbxFresnelEffect.gridy = 5;
-		renderingOptionsPanel.add(chckbxFresnelEffect, gbc_chckbxFresnelEffect);
+		JCheckBox chckbxRelighting = new JCheckBox("Relighting");
+		GridBagConstraints gbc_chckbxRelighting = new GridBagConstraints();
+		gbc_chckbxRelighting.insets = new Insets(0, 0, 5, 0);
+		gbc_chckbxRelighting.gridx = 3;
+		gbc_chckbxRelighting.gridy = 5;
+		renderingOptionsPanel.add(chckbxRelighting, gbc_chckbxRelighting);
 		
 		JCheckBox chckbxPhysicallybasedGeometricAttenuation = new JCheckBox("Physically-based geometric attenuation");
 		GridBagConstraints gbc_chckbxPhysicallybasedGeometricAttenuation = new GridBagConstraints();
@@ -369,6 +369,14 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		gbc_chckbxPhysicallybasedGeometricAttenuation.gridx = 0;
 		gbc_chckbxPhysicallybasedGeometricAttenuation.gridy = 6;
 		renderingOptionsPanel.add(chckbxPhysicallybasedGeometricAttenuation, gbc_chckbxPhysicallybasedGeometricAttenuation);
+		
+		JCheckBox chckbxFresnelEffect = new JCheckBox("Fresnel effect");
+		GridBagConstraints gbc_chckbxFresnelEffect = new GridBagConstraints();
+		gbc_chckbxFresnelEffect.gridwidth = 4;
+		gbc_chckbxFresnelEffect.insets = new Insets(0, 0, 5, 0);
+		gbc_chckbxFresnelEffect.gridx = 0;
+		gbc_chckbxFresnelEffect.gridy = 7;
+		renderingOptionsPanel.add(chckbxFresnelEffect, gbc_chckbxFresnelEffect);
 		
 		JPanel qualitySettings = new JPanel();
 		panel_2.add(qualitySettings);
@@ -483,6 +491,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 			lblBias.setEnabled(false);
 			spinnerOccBias.setEnabled(false);
 			chckbxImagebasedRendering.setEnabled(false);
+			chckbxRelighting.setEnabled(false);
 			chckbxPhysicallybasedGeometricAttenuation.setEnabled(false);
 			chckbxFresnelEffect.setEnabled(false);
 			
@@ -511,6 +520,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 			lblBias.setEnabled(true);
 			spinnerOccBias.setEnabled(true);
 			chckbxImagebasedRendering.setEnabled(true);
+			chckbxRelighting.setEnabled(true);
 			chckbxPhysicallybasedGeometricAttenuation.setEnabled(true);
 			chckbxFresnelEffect.setEnabled(true);
 
@@ -531,6 +541,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 			spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
 			chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
 			chckbxImagebasedRendering.setSelected(model.getSelectedItem().isIBREnabled());
+			chckbxRelighting.setSelected(model.getSelectedItem().isRelightingEnabled());
 			chckbxPhysicallybasedGeometricAttenuation.setSelected(model.getSelectedItem().isPBRGeometricAttenuationEnabled());
 			chckbxFresnelEffect.setSelected(model.getSelectedItem().isFresnelEnabled());
 
@@ -703,19 +714,25 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 			model.getSelectedItem().setOcclusionBias((float)(double)(Double)spinnerOccBias.getModel().getValue());
 		});
 		
-		// Add listener for changes to occlusion checkbox.
+		// Add listener for changes to IBR checkbox.
 		chckbxImagebasedRendering.addChangeListener(e ->
 		{			
 			model.getSelectedItem().setIBREnabled(chckbxImagebasedRendering.isSelected());
 		});
 		
-		// Add listener for changes to occlusion checkbox.
+		// Add listener for changes to relighting checkbox.
+		chckbxRelighting.addChangeListener(e ->
+		{			
+			model.getSelectedItem().setRelightingEnabled(chckbxRelighting.isSelected());
+		});
+		
+		// Add listener for changes to geometric attenuation checkbox.
 		chckbxPhysicallybasedGeometricAttenuation.addChangeListener(e ->
 		{			
 			model.getSelectedItem().setPBRGeometricAttenuationEnabled(chckbxPhysicallybasedGeometricAttenuation.isSelected());
 		});
 		
-		// Add listener for changes to occlusion checkbox.
+		// Add listener for changes to fresnel checkbox.
 		chckbxFresnelEffect.addChangeListener(e ->
 		{			
 			model.getSelectedItem().setFresnelEnabled(chckbxFresnelEffect.isSelected());
@@ -743,6 +760,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 				lblBias.setEnabled(false);
 				spinnerOccBias.setEnabled(false);
 				chckbxImagebasedRendering.setEnabled(false);
+				chckbxRelighting.setEnabled(false);
 				chckbxPhysicallybasedGeometricAttenuation.setEnabled(false);
 				chckbxFresnelEffect.setEnabled(false);
 
@@ -767,6 +785,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 				lblBias.setEnabled(true);
 				spinnerOccBias.setEnabled(true);
 				chckbxImagebasedRendering.setEnabled(true);
+				chckbxRelighting.setEnabled(true);
 				chckbxPhysicallybasedGeometricAttenuation.setEnabled(true);
 				chckbxFresnelEffect.setEnabled(true);
 
@@ -788,6 +807,7 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 				chckbxHalfRes.setSelected(model.getSelectedItem().getHalfResolution());
 				chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
 				chckbxImagebasedRendering.setSelected(model.getSelectedItem().isIBREnabled());
+				chckbxRelighting.setSelected(model.getSelectedItem().isRelightingEnabled());
 				chckbxPhysicallybasedGeometricAttenuation.setSelected(model.getSelectedItem().isPBRGeometricAttenuationEnabled());
 				chckbxFresnelEffect.setSelected(model.getSelectedItem().isFresnelEnabled());
 				

@@ -22,6 +22,7 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	float getOcclusionBias();
 	
 	boolean isIBREnabled();
+	boolean isRelightingEnabled();
 	boolean isPBRGeometricAttenuationEnabled();
 	boolean isFresnelEnabled();
 	
@@ -35,6 +36,7 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	void setOcclusionBias(float occlusionBias);
 	
 	void setIBREnabled(boolean ibrEnabled);
+	void setRelightingEnabled(boolean relightingEnabled);
 	void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled);
 	void setFresnelEnabled(boolean fresnelEnabled);
 

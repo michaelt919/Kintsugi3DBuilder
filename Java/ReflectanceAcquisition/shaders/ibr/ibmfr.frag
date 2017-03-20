@@ -56,6 +56,7 @@ uniform vec3 lightDirTSOverride;
 uniform vec3 viewDirTSOverride;
 
 uniform bool imageBasedRenderingEnabled;
+uniform bool relightingEnabled;
 uniform bool pbrGeometricAttenuationEnabled;
 uniform bool fresnelEnabled;
 
@@ -329,21 +330,29 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
         vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity / lightDistSquared;
         
         float geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
-        if (geomAtten > 0.0)
+        if (!relightingEnabled || geomAtten > 0.0)
         {
             vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
             vec4 precomputedSample;
 
-			if (pbrGeometricAttenuationEnabled)
+			if (relightingEnabled)
 			{
-				precomputedSample = vec4(specularResid.rgb 
-					* 4 * nDotV * lightDistSquared / lightIntensity, 
-					sampleColor.a * geomAtten);
+				if(pbrGeometricAttenuationEnabled)
+				{
+					precomputedSample = vec4(specularResid.rgb 
+						* 4 * nDotV * lightDistSquared / lightIntensity, 
+						sampleColor.a * geomAtten);
+				}
+				else
+				{
+					precomputedSample = 
+						vec4(specularResid.rgb * lightDistSquared / lightIntensity, sampleColor.a * nDotL);
+				}
 			}
 			else
 			{
 				precomputedSample = 
-					vec4(specularResid.rgb * lightDistSquared / lightIntensity, sampleColor.a);
+					vec4(specularResid.rgb, sampleColor.a);
 			}
             
 			mat3 tangentToObject = mat3(0.0);
@@ -373,10 +382,14 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
 					virtualLightDir = 
 						normalize(mat3(cameraPoses[index]) * tangentToObject * lightDirTSOverride);
 				}
-				else
+				else if (relightingEnabled)
 				{
 					virtualLightDir = normalize((cameraPoses[index] * 
 						vec4(lightPosVirtual[lightPass], 1.0)).xyz - fragmentPos);
+				}
+				else
+				{
+					virtualLightDir = virtualViewDir;
 				}
 				
                 vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
@@ -640,43 +653,47 @@ void main()
 		weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
 	}
 	
-    if (useEnvironmentTexture)
+	if (relightingEnabled)
 	{
-		reflectance = diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+		if (useEnvironmentTexture)
+		{
+			reflectance = diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+			
+			if (imageBasedRenderingEnabled)
+			{
+				if (fresnelEnabled)
+				{
+					reflectance += ambientColor * 
+						fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
+							getEnvironmentFresnel(
+								(envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz, 
+									pow(1 - nDotV, 5)), nDotV);
+				}
+				else
+				{
+					reflectance += ambientColor * 
+						getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
+				}
+			}
 		
-		if (imageBasedRenderingEnabled)
-		{
-			if (fresnelEnabled)
-			{
-				reflectance += ambientColor * 
-					 fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
-						getEnvironmentFresnel((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz, 
-							pow(1 - nDotV, 5)), nDotV);
-			}
-			else
-			{
-				reflectance += ambientColor * 
-					getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
-			}
-		}
-	
-		// For debugging environment mapping:
-		//reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
-		//reflectance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
-	}
-	else
-	{
-		if (fresnelEnabled)
-		{
-			reflectance = fresnel(ambientColor * (diffuseColor + specularColor), ambientColor, nDotV);
+			// For debugging environment mapping:
+			//reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
+			//reflectance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 		}
 		else
 		{
-			reflectance = ambientColor;
+			if (fresnelEnabled)
+			{
+				reflectance = fresnel(ambientColor * (diffuseColor + specularColor), ambientColor, nDotV);
+			}
+			else
+			{
+				reflectance = ambientColor;
+			}
 		}
 	}
     
-    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < virtualLightCount; i++)
+    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < (relightingEnabled ? virtualLightCount : 1); i++)
     {
         vec3 lightDirUnNorm;
         vec3 lightDir;
@@ -686,17 +703,22 @@ void main()
 			lightDirUnNorm = lightDir = lightDirTSOverride;
 			nDotL = max(0.0, lightDir.z);
 		}
-		else
+		else if (relightingEnabled)
 		{
 			lightDirUnNorm = lightPosVirtual[i] - fPosition;
 			lightDir = normalize(lightDirUnNorm);
 			nDotL = max(0.0, dot(normalDir, lightDir));
 		}
+		else
+		{
+			lightDirUnNorm = lightDir = viewDir;
+			nDotL = max(0.0, dot(normalDir, viewDir));
+		}
         
         if (nDotL > 0.0)
         {
 			bool shadow = false;
-			if (!useTSOverrides)
+			if (!useTSOverrides && relightingEnabled)
 			{
 				vec4 projTexCoord = lightMatrixVirtual[i] * vec4(fPosition, 1.0);
 				projTexCoord /= projTexCoord.w;
@@ -716,7 +738,7 @@ void main()
                 
                 vec3 mfdFresnel;
 				
-				if (fresnelEnabled)
+				if (relightingEnabled && fresnelEnabled)
 				{
 					if (imageBasedRenderingEnabled)
 					{
@@ -779,9 +801,10 @@ void main()
             
                 reflectance += (nDotL * diffuseColor + //fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
                     mfdFresnel 
-					* (pbrGeometricAttenuationEnabled ? 
-						geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV) : 1.0))
-                    * (useTSOverrides ? lightIntensityVirtual[i] : 
+					* (relightingEnabled && pbrGeometricAttenuationEnabled ? 
+						geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV) : 
+							(relightingEnabled ? nDotL : 1.0)))
+                    * (useTSOverrides || !relightingEnabled ? lightIntensityVirtual[i] : 
 						lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed));
             }
         }

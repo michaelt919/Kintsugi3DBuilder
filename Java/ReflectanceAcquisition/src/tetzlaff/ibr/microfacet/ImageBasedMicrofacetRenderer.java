@@ -661,6 +661,12 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	{
 		return ulfRenderer.isIBREnabled();
 	}
+	
+	@Override
+	public boolean isRelightingEnabled()
+	{
+		return ulfRenderer.isRelightingEnabled();
+	}
 
 	@Override
 	public boolean isPBRGeometricAttenuationEnabled() 
@@ -678,6 +684,12 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	public void setIBREnabled(boolean ibrEnabled) 
 	{
 		ulfRenderer.setIBREnabled(ibrEnabled);
+	}
+
+	@Override
+	public void setRelightingEnabled(boolean relightingEnabled) 
+	{
+		ulfRenderer.setRelightingEnabled(relightingEnabled);
 	}
 
 	@Override
