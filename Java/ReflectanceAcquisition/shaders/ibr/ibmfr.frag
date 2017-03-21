@@ -804,8 +804,9 @@ void main()
 					* (relightingEnabled && pbrGeometricAttenuationEnabled ? 
 						geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV) : 
 							(relightingEnabled ? nDotL : 1.0)))
-                    * (useTSOverrides || !relightingEnabled ? lightIntensityVirtual[i] : 
-						lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed));
+                    * (relightingEnabled ? (useTSOverrides ? lightIntensityVirtual[i] : 
+							lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed))
+						: vec3(1.0));
             }
         }
     }
