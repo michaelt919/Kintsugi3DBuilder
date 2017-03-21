@@ -267,7 +267,7 @@ public class ImageBasedRenderingProgram
         	}
         	else if (c == 'l')
         	{
-        		metaLightController.hardcodedMode = !metaLightController.hardcodedMode;
+        		//metaLightController.hardcodedMode = !metaLightController.hardcodedMode;
         	}
         	else if (c == ' ')
         	{
