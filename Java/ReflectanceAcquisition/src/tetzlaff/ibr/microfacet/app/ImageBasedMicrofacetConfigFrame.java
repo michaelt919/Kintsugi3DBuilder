@@ -1159,90 +1159,90 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 		light0ColorChooser.getSelectionModel().addChangeListener(e ->
 		{
 			lightController.setLightColor(0, new Vector3(
-				(float)light0ColorChooser.getColor().getRed() / 255.0f,
-				(float)light0ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light0ColorChooser.getColor().getBlue() / 255.0f)
+				(float)Math.pow(light0ColorChooser.getColor().getRed() / 255.0, 2.2),
+				(float)Math.pow(light0ColorChooser.getColor().getGreen() / 255.0, 2.2),
+				(float)Math.pow(light0ColorChooser.getColor().getBlue() / 255.0, 2.2))
 				.times((float)((double)((Double)light0IntensitySpinner.getValue()))));
 		});
 		
 		light0IntensitySpinner.addChangeListener(e ->
 		{
 			lightController.setLightColor(0, new Vector3(
-				(float)light0ColorChooser.getColor().getRed() / 255.0f,
-				(float)light0ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light0ColorChooser.getColor().getBlue() / 255.0f)
+				(float)Math.pow(light0ColorChooser.getColor().getRed() / 255.0, 2.2),
+				(float)Math.pow(light0ColorChooser.getColor().getGreen() / 255.0, 2.2),
+				(float)Math.pow(light0ColorChooser.getColor().getBlue() / 255.0, 2.2))
 				.times((float)((double)((Double)light0IntensitySpinner.getValue()))));
 		});
 		
 		light1ColorChooser.getSelectionModel().addChangeListener(e ->
 		{
 			lightController.setLightColor(1, new Vector3(
-				(float)light1ColorChooser.getColor().getRed() / 255.0f,
-				(float)light1ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light1ColorChooser.getColor().getBlue() / 255.0f)
+				(float)Math.pow(light1ColorChooser.getColor().getRed() / 255.0, 2.2),
+				(float)Math.pow(light1ColorChooser.getColor().getGreen() / 255.0, 2.2),
+				(float)Math.pow(light1ColorChooser.getColor().getBlue() / 255.0, 2.2))
 				.times((float)((double)((Double)light1IntensitySpinner.getValue()))));
 		});
 		
 		light1IntensitySpinner.addChangeListener(e ->
 		{
 			lightController.setLightColor(1, new Vector3(
-				(float)light1ColorChooser.getColor().getRed() / 255.0f,
-				(float)light1ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light1ColorChooser.getColor().getBlue() / 255.0f)
+				(float)Math.pow(light1ColorChooser.getColor().getRed() / 255.0, 2.2),
+				(float)Math.pow(light1ColorChooser.getColor().getGreen() / 255.0, 2.2),
+				(float)Math.pow(light1ColorChooser.getColor().getBlue() / 255.0, 2.2))
 				.times((float)((double)((Double)light1IntensitySpinner.getValue()))));
 		});
 		
 		light2ColorChooser.getSelectionModel().addChangeListener(e ->
 		{
 			lightController.setLightColor(2, new Vector3(
-				(float)light2ColorChooser.getColor().getRed() / 255.0f,
-				(float)light2ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light2ColorChooser.getColor().getBlue() / 255.0f)
+				(float)Math.pow(light2ColorChooser.getColor().getRed() / 255.0, 2.2),
+				(float)Math.pow(light2ColorChooser.getColor().getGreen() / 255.0, 2.2),
+				(float)Math.pow(light2ColorChooser.getColor().getBlue() / 255.0, 2.2))
 				.times((float)((double)((Double)light2IntensitySpinner.getValue()))));
 		});
 		
 		light2IntensitySpinner.addChangeListener(e ->
 		{
 			lightController.setLightColor(2, new Vector3(
-				(float)light2ColorChooser.getColor().getRed() / 255.0f,
-				(float)light2ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light2ColorChooser.getColor().getBlue() / 255.0f)
+				(float)Math.pow(light2ColorChooser.getColor().getRed() / 255.0, 2.2),
+				(float)Math.pow(light2ColorChooser.getColor().getGreen() / 255.0, 2.2),
+				(float)Math.pow(light2ColorChooser.getColor().getBlue() / 255.0, 2.2))
 				.times((float)((double)((Double)light2IntensitySpinner.getValue()))));
 		});
 		
 		light3ColorChooser.getSelectionModel().addChangeListener(e ->
 		{
 			lightController.setLightColor(3, new Vector3(
-				(float)light3ColorChooser.getColor().getRed() / 255.0f,
-				(float)light3ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light3ColorChooser.getColor().getBlue() / 255.0f)
+				(float)Math.pow(light3ColorChooser.getColor().getRed() / 255.0, 2.2),
+				(float)Math.pow(light3ColorChooser.getColor().getGreen() / 255.0, 2.2),
+				(float)Math.pow(light3ColorChooser.getColor().getBlue() / 255.0, 2.2))
 				.times((float)((double)((Double)light3IntensitySpinner.getValue()))));
 		});
 		
 		light3IntensitySpinner.addChangeListener(e ->
 		{
 			lightController.setLightColor(3, new Vector3(
-				(float)light3ColorChooser.getColor().getRed() / 255.0f,
-				(float)light3ColorChooser.getColor().getGreen() / 255.0f,
-				(float)light3ColorChooser.getColor().getBlue() / 255.0f)
+				(float)Math.pow(light3ColorChooser.getColor().getRed() / 255.0, 2.2),
+				(float)Math.pow(light3ColorChooser.getColor().getGreen() / 255.0, 2.2),
+				(float)Math.pow(light3ColorChooser.getColor().getBlue() / 255.0, 2.2))
 				.times((float)((double)((Double)light3IntensitySpinner.getValue()))));
 		});
 		
 		ambientColorChooser.getSelectionModel().addChangeListener(e ->
 		{
 			lightController.setAmbientLightColor(new Vector3(
-				(float)ambientColorChooser.getColor().getRed() / 255.0f,
-				(float)ambientColorChooser.getColor().getGreen() / 255.0f,
-				(float)ambientColorChooser.getColor().getBlue() / 255.0f)
+				(float)Math.pow(ambientColorChooser.getColor().getRed() / 255.0, 2.2),
+				(float)Math.pow(ambientColorChooser.getColor().getGreen() / 255.0, 2.2),
+				(float)Math.pow(ambientColorChooser.getColor().getBlue() / 255.0, 2.2))
 				.times((float)((double)((Double)ambientIntensitySpinner.getValue()))));
 		});
 		
 		ambientIntensitySpinner.addChangeListener(e ->
 		{
 			lightController.setAmbientLightColor(new Vector3(
-				(float)ambientColorChooser.getColor().getRed() / 255.0f,
-				(float)ambientColorChooser.getColor().getGreen() / 255.0f,
-				(float)ambientColorChooser.getColor().getBlue() / 255.0f)
+				(float)Math.pow(ambientColorChooser.getColor().getRed() / 255.0, 2.2),
+				(float)Math.pow(ambientColorChooser.getColor().getGreen() / 255.0, 2.2),
+				(float)Math.pow(ambientColorChooser.getColor().getBlue() / 255.0, 2.2))
 				.times((float)((double)((Double)ambientIntensitySpinner.getValue()))));
 		});
 	}

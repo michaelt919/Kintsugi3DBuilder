@@ -177,7 +177,7 @@ float computeMicrofacetDistributionPhong(float nDotH, float roughness)
     float roughnessSquared = roughness * roughness;
     
 	// Assume scaling by pi
-    return max(0.0, pow(nDotH, 2 / 2/roughnessSquared - 2) / (roughnessSquared));
+    return max(0.0, pow(nDotH, 2 / roughnessSquared - 2) / (roughnessSquared));
 }
 
 float dist(float nDotH, float roughness)
@@ -618,7 +618,11 @@ void main()
     {
         diffuseColor = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
     }
-    else
+    else if (!imageBasedRenderingEnabled)
+	{
+        diffuseColor = vec3(0.5);
+	}
+	else
     {
         diffuseColor = vec3(0.0);
     }
@@ -684,11 +688,12 @@ void main()
 		{
 			if (fresnelEnabled)
 			{
-				reflectance = fresnel(ambientColor * (diffuseColor + specularColor), ambientColor, nDotV);
+				reflectance = fresnel(ambientColor * min(vec3(1.0), diffuseColor + specularColor),
+					ambientColor, nDotV);
 			}
 			else
 			{
-				reflectance = ambientColor;
+				reflectance = ambientColor * min(vec3(1.0), diffuseColor + specularColor);
 			}
 		}
 	}
@@ -703,7 +708,7 @@ void main()
 			lightDirUnNorm = lightDir = lightDirTSOverride;
 			nDotL = max(0.0, lightDir.z);
 		}
-		else if (relightingEnabled)
+		else if (!imageBasedRenderingEnabled || relightingEnabled)
 		{
 			lightDirUnNorm = lightPosVirtual[i] - fPosition;
 			lightDir = normalize(lightDirUnNorm);
@@ -738,7 +743,7 @@ void main()
                 
                 vec3 mfdFresnel;
 				
-				if (relightingEnabled && fresnelEnabled)
+				if ((!imageBasedRenderingEnabled || relightingEnabled) && fresnelEnabled)
 				{
 					if (imageBasedRenderingEnabled)
 					{
@@ -801,10 +806,11 @@ void main()
             
                 reflectance += (nDotL * diffuseColor + //fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
                     mfdFresnel 
-					* (relightingEnabled && pbrGeometricAttenuationEnabled ? 
-						geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV) : 
-							(relightingEnabled ? nDotL : 1.0)))
-                    * (relightingEnabled ? (useTSOverrides ? lightIntensityVirtual[i] : 
+					* ((!imageBasedRenderingEnabled || relightingEnabled) && pbrGeometricAttenuationEnabled
+						? geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV) : 
+							(!imageBasedRenderingEnabled || relightingEnabled ? nDotL : 1.0)))
+                    * ((!imageBasedRenderingEnabled || relightingEnabled) ? 
+						(useTSOverrides ? lightIntensityVirtual[i] : 
 							lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed))
 						: vec3(1.0));
             }
