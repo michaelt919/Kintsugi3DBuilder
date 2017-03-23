@@ -47,7 +47,7 @@ import tetzlaff.ibr.ulf.ULFMorphRenderer;
  * 
  * @author Seth Berrier
  */
-public class ImageBasedMicrofacetConfigFrame extends JFrame 
+public class IBRelightConfigFrame extends JFrame 
 {
 
 	private static final long serialVersionUID = 3234328215460573228L;
@@ -67,10 +67,10 @@ public class ImageBasedMicrofacetConfigFrame extends JFrame
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public <ContextType extends Context<ContextType>> ImageBasedMicrofacetConfigFrame(IBRListModel<ContextType> model, LightController lightController, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRListModel<ContextType> model, LightController lightController, boolean isHighDPI)
 	{		
 		setResizable(false);
-		setTitle("Image-Based Rendering Settings");
+		setTitle("IBRelight: Settings");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(10, 10, 960, 600);
 		contentPane = new JPanel();
