@@ -732,6 +732,18 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 	}
 
 	@Override
+	public boolean areTexturesEnabled() 
+	{
+		return this.lightField.settings.areTexturesEnabled();
+	}
+
+	@Override
+	public void setTexturesEnabled(boolean texturesEnabled) 
+	{
+		this.lightField.settings.setTexturesEnabled(texturesEnabled);
+	}
+
+	@Override
 	public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled) 
 	{
 		this.lightField.settings.setPBRGeometricAttenuationEnabled(pbrGeometricAttenuationEnabled);

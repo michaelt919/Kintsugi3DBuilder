@@ -20,6 +20,7 @@ import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.LightController;
+import tetzlaff.gl.helpers.Material;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.OverrideableLightController;
@@ -161,26 +162,50 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		
 		try
 		{
-			String diffuseTextureName;
-			String normalTextureName;
-			String specularTextureName;
-			String roughnessTextureName;
+			String diffuseTextureName = null;
+			String normalTextureName = null;
+			String specularTextureName = null;
+			String roughnessTextureName = null;
 			
-			// TODO read texture names from MTL file
+			// TODO Use more information from the material.  Currently just pulling texture names.
+			Material material = ulfRenderer.getLightField().proxy.getMaterial();
+			if (material != null)
+			{
+				if (material.getDiffuseMap() != null)
+				{
+					diffuseTextureName = material.getDiffuseMap().getMapName();
+				}
+
+				if (material.getNormalMap() != null)
+				{
+					normalTextureName = material.getNormalMap().getMapName();
+				}
+
+				if (material.getSpecularMap() != null)
+				{
+					specularTextureName = material.getSpecularMap().getMapName();
+				}
+
+				if (material.getRoughnessMap() != null)
+				{
+					roughnessTextureName = material.getRoughnessMap().getMapName();
+				}
+			}
+			
 			if (ulfRenderer.getLightField().viewSet.getGeometryFileName() != null)
 			{
 				String prefix = ulfRenderer.getLightField().viewSet.getGeometryFileName().split("\\.")[0];
-				diffuseTextureName = prefix + "_Kd.png";
-				normalTextureName = prefix + "_norm.png";
-				specularTextureName = prefix + "_Ks.png";
-				roughnessTextureName = prefix + "_Pr.png";
+				diffuseTextureName = diffuseTextureName != null ? diffuseTextureName : prefix + "_Kd.png";
+				normalTextureName = normalTextureName != null ? normalTextureName : prefix + "_norm.png";
+				specularTextureName = specularTextureName != null ? specularTextureName : prefix + "_Ks.png";
+				roughnessTextureName = roughnessTextureName != null ? roughnessTextureName : prefix + "_Pr.png";
 			}
 			else
 			{
-				diffuseTextureName = "diffuse.png";
-				normalTextureName = "normal.png";
-				specularTextureName = "specular.png";
-				roughnessTextureName = "roughness.png";
+				diffuseTextureName = diffuseTextureName != null ? diffuseTextureName : "diffuse.png";
+				normalTextureName = normalTextureName != null ? normalTextureName : "normal.png";
+				specularTextureName = specularTextureName != null ? specularTextureName : "specular.png";
+				roughnessTextureName = roughnessTextureName != null ? roughnessTextureName : "roughness.png";
 			}
 			
 			microfacetDistribution = new ImageBasedMicrofacetDistribution<ContextType>(
@@ -253,7 +278,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		}
 		else
 		{
-			p.setUniform("useNormalTexture", true);
+			p.setUniform("useNormalTexture", this.areTexturesEnabled());
 			p.setTexture("normalMap", microfacetDistribution.normalTexture);
 		}
 		
@@ -264,7 +289,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		}
 		else
 		{
-			p.setUniform("useDiffuseTexture", true);
+			p.setUniform("useDiffuseTexture", this.areTexturesEnabled());
 			p.setTexture("diffuseMap", microfacetDistribution.diffuseTexture);
 		}
 		
@@ -275,7 +300,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		}
 		else
 		{
-			p.setUniform("useSpecularTexture", true);
+			p.setUniform("useSpecularTexture", this.areTexturesEnabled());
 			p.setTexture("specularMap", microfacetDistribution.specularTexture);
 		}
 		
@@ -286,7 +311,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		}
 		else
 		{
-			p.setUniform("useRoughnessTexture", true);
+			p.setUniform("useRoughnessTexture", this.areTexturesEnabled());
 			p.setTexture("roughnessMap", microfacetDistribution.roughnessTexture);
 		}
 		
@@ -702,6 +727,18 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	public void setFresnelEnabled(boolean fresnelEnabled)
 	{
 		ulfRenderer.setFresnelEnabled(fresnelEnabled);
+	}
+	
+	@Override
+	public boolean areTexturesEnabled() 
+	{
+		return ulfRenderer.areTexturesEnabled();
+	}
+
+	@Override
+	public void setTexturesEnabled(boolean texturesEnabled) 
+	{
+		ulfRenderer.setTexturesEnabled(texturesEnabled);
 	}
 
 	@Override

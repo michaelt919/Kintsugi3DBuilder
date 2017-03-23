@@ -332,11 +332,12 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
         float geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
         if (!relightingEnabled || geomAtten > 0.0)
         {
-            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
             vec4 precomputedSample;
 
 			if (relightingEnabled)
 			{
+				vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
+				
 				if(pbrGeometricAttenuationEnabled)
 				{
 					precomputedSample = vec4(specularResid.rgb 
@@ -346,13 +347,13 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
 				else
 				{
 					precomputedSample = 
-						vec4(specularResid.rgb * lightDistSquared / lightIntensity, sampleColor.a * nDotL);
+						vec4(specularResid.rgb * 4 * lightDistSquared / lightIntensity, 
+							sampleColor.a * nDotL);
 				}
 			}
 			else
 			{
-				precomputedSample = 
-					vec4(specularResid.rgb, sampleColor.a);
+				precomputedSample = sampleColor;
 			}
             
 			mat3 tangentToObject = mat3(0.0);
@@ -632,6 +633,10 @@ void main()
     {
         specularColor = pow(texture(specularMap, fTexCoord).rgb, vec3(gamma));
     }
+	else if (!imageBasedRenderingEnabled && useDiffuseTexture)
+	{
+		specularColor = vec3(0.0);
+	}
     else
     {
 		specularColor = vec3(0.5); // TODO pass in a default?
@@ -648,7 +653,7 @@ void main()
     }
     
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
-    vec3 reflectance;
+    vec3 reflectance = vec3(0.0);
 
 	vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
 
@@ -657,11 +662,11 @@ void main()
 		weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
 	}
 	
-	if (relightingEnabled)
+	if (relightingEnabled || !imageBasedRenderingEnabled)
 	{
 		if (useEnvironmentTexture)
 		{
-			reflectance = diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+			reflectance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 			
 			if (imageBasedRenderingEnabled)
 			{
@@ -688,17 +693,18 @@ void main()
 		{
 			if (fresnelEnabled)
 			{
-				reflectance = fresnel(ambientColor * min(vec3(1.0), diffuseColor + specularColor),
+				reflectance += fresnel(ambientColor * min(vec3(1.0), diffuseColor + specularColor),
 					ambientColor, nDotV);
 			}
 			else
 			{
-				reflectance = ambientColor * min(vec3(1.0), diffuseColor + specularColor);
+				reflectance += ambientColor * min(vec3(1.0), diffuseColor + specularColor);
 			}
 		}
 	}
     
-    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < (relightingEnabled ? virtualLightCount : 1); i++)
+    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && 
+		i < (relightingEnabled && imageBasedRenderingEnabled ? virtualLightCount : 1); i++)
     {
         vec3 lightDirUnNorm;
         vec3 lightDir;
@@ -804,12 +810,13 @@ void main()
 				
 				vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
             
-                reflectance += (nDotL * diffuseColor + //fresnel(nDotL * diffuseColor, vec3(0.0), nDotL) + 
+                reflectance += (
+					(relightingEnabled || !imageBasedRenderingEnabled ? nDotL * diffuseColor : vec3(0.0)) + 
                     mfdFresnel 
-					* ((!imageBasedRenderingEnabled || relightingEnabled) && pbrGeometricAttenuationEnabled
+					 * ((!imageBasedRenderingEnabled || relightingEnabled) && pbrGeometricAttenuationEnabled
 						? geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV) : 
-							(!imageBasedRenderingEnabled || relightingEnabled ? nDotL : 1.0)))
-                    * ((!imageBasedRenderingEnabled || relightingEnabled) ? 
+							(!imageBasedRenderingEnabled || relightingEnabled ? nDotL / 4 : 1.0)))
+                     * ((imageBasedRenderingEnabled && relightingEnabled) ? 
 						(useTSOverrides ? lightIntensityVirtual[i] : 
 							lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed))
 						: vec3(1.0));
@@ -817,5 +824,5 @@ void main()
         }
     }
 		
-	fragColor = tonemap(vec3(reflectance), 1.0);
+	fragColor = tonemap(reflectance, 1.0);
 }

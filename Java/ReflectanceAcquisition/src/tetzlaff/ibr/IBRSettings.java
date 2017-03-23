@@ -8,6 +8,7 @@ public class IBRSettings
     private float occlusionBias = 0.0025f;
 	private boolean ibrEnabled = true;
 	private boolean relightingEnabled = false;
+	private boolean texturesEnabled = false;
 	private boolean fresnelEnabled = false;
 	private boolean pbrGeometricAttenuationEnabled = false;
 
@@ -93,5 +94,15 @@ public class IBRSettings
 	public void setRelightingEnabled(boolean relightingEnabled) 
 	{
 		this.relightingEnabled = relightingEnabled;
+	}
+
+	public boolean areTexturesEnabled() 
+	{
+		return texturesEnabled;
+	}
+
+	public void setTexturesEnabled(boolean texturesEnabled) 
+	{
+		this.texturesEnabled = texturesEnabled;
 	}
 }

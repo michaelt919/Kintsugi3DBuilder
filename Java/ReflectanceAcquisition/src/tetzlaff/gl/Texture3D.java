@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import tetzlaff.helpers.ZipWrapper;
-
 /**
  * An interface for a three-dimensional texture.
  * @author Michael Tetzlaff
@@ -21,10 +19,8 @@ public interface Texture3D<ContextType extends Context<ContextType>> extends Tex
 	void setTextureWrap(TextureWrapMode wrapS, TextureWrapMode wrapT, TextureWrapMode wrapR);
 	
 	void loadLayer(int layerIndex, InputStream fileStream, boolean flipVertical) throws IOException;
-	void loadLayer(int layerIndex, ZipWrapper zipFile, boolean flipVertical) throws IOException;
 	void loadLayer(int layerIndex, File file, boolean flipVertical) throws IOException;
 	void loadLayer(int layerIndex, InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
-	void loadLayer(int layerIndex, ZipWrapper imageZip, ZipWrapper maskZip, boolean flipVertical) throws IOException;
 	void loadLayer(int layerIndex, File imageFile, File maskFile, boolean flipVertical) throws IOException;
 	void generateMipmaps();
 	

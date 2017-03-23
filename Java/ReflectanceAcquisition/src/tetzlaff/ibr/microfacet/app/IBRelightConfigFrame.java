@@ -362,21 +362,27 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_chckbxRelighting.gridy = 5;
 		renderingOptionsPanel.add(chckbxRelighting, gbc_chckbxRelighting);
 		
-		JCheckBox chckbxPhysicallybasedGeometricAttenuation = new JCheckBox("Physically-based geometric attenuation");
-		GridBagConstraints gbc_chckbxPhysicallybasedGeometricAttenuation = new GridBagConstraints();
-		gbc_chckbxPhysicallybasedGeometricAttenuation.insets = new Insets(0, 0, 5, 0);
-		gbc_chckbxPhysicallybasedGeometricAttenuation.gridwidth = 4;
-		gbc_chckbxPhysicallybasedGeometricAttenuation.gridx = 0;
-		gbc_chckbxPhysicallybasedGeometricAttenuation.gridy = 6;
-		renderingOptionsPanel.add(chckbxPhysicallybasedGeometricAttenuation, gbc_chckbxPhysicallybasedGeometricAttenuation);
+		JCheckBox chckbxUseTextures = new JCheckBox("Use textures");
+		GridBagConstraints gbc_chckbxUseTextures = new GridBagConstraints();
+		gbc_chckbxUseTextures.gridwidth = 3;
+		gbc_chckbxUseTextures.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxUseTextures.gridx = 0;
+		gbc_chckbxUseTextures.gridy = 6;
+		renderingOptionsPanel.add(chckbxUseTextures, gbc_chckbxUseTextures);
 		
 		JCheckBox chckbxFresnelEffect = new JCheckBox("Fresnel effect");
 		GridBagConstraints gbc_chckbxFresnelEffect = new GridBagConstraints();
-		gbc_chckbxFresnelEffect.gridwidth = 4;
 		gbc_chckbxFresnelEffect.insets = new Insets(0, 0, 5, 0);
-		gbc_chckbxFresnelEffect.gridx = 0;
-		gbc_chckbxFresnelEffect.gridy = 7;
+		gbc_chckbxFresnelEffect.gridx = 3;
+		gbc_chckbxFresnelEffect.gridy = 6;
 		renderingOptionsPanel.add(chckbxFresnelEffect, gbc_chckbxFresnelEffect);
+		
+		JCheckBox chckbxPhysicallybasedGeometricAttenuation = new JCheckBox("Physically-based geometric attenuation");
+		GridBagConstraints gbc_chckbxPhysicallybasedGeometricAttenuation = new GridBagConstraints();
+		gbc_chckbxPhysicallybasedGeometricAttenuation.gridwidth = 4;
+		gbc_chckbxPhysicallybasedGeometricAttenuation.gridx = 0;
+		gbc_chckbxPhysicallybasedGeometricAttenuation.gridy = 7;
+		renderingOptionsPanel.add(chckbxPhysicallybasedGeometricAttenuation, gbc_chckbxPhysicallybasedGeometricAttenuation);
 		
 		JPanel qualitySettings = new JPanel();
 		panel_2.add(qualitySettings);
@@ -492,6 +498,7 @@ public class IBRelightConfigFrame extends JFrame
 			spinnerOccBias.setEnabled(false);
 			chckbxImagebasedRendering.setEnabled(false);
 			chckbxRelighting.setEnabled(false);
+			chckbxUseTextures.setEnabled(false);
 			chckbxPhysicallybasedGeometricAttenuation.setEnabled(false);
 			chckbxFresnelEffect.setEnabled(false);
 			
@@ -521,6 +528,7 @@ public class IBRelightConfigFrame extends JFrame
 			spinnerOccBias.setEnabled(true);
 			chckbxImagebasedRendering.setEnabled(true);
 			chckbxRelighting.setEnabled(true);
+			chckbxUseTextures.setEnabled(true);
 			chckbxPhysicallybasedGeometricAttenuation.setEnabled(true);
 			chckbxFresnelEffect.setEnabled(true);
 
@@ -542,6 +550,7 @@ public class IBRelightConfigFrame extends JFrame
 			chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
 			chckbxImagebasedRendering.setSelected(model.getSelectedItem().isIBREnabled());
 			chckbxRelighting.setSelected(model.getSelectedItem().isRelightingEnabled());
+			chckbxUseTextures.setSelected(model.getSelectedItem().areTexturesEnabled());
 			chckbxPhysicallybasedGeometricAttenuation.setSelected(model.getSelectedItem().isPBRGeometricAttenuationEnabled());
 			chckbxFresnelEffect.setSelected(model.getSelectedItem().isFresnelEnabled());
 
@@ -726,6 +735,12 @@ public class IBRelightConfigFrame extends JFrame
 			model.getSelectedItem().setRelightingEnabled(chckbxRelighting.isSelected());
 		});
 		
+		// Add listener for changes to relighting checkbox.
+		chckbxUseTextures.addChangeListener(e ->
+		{			
+			model.getSelectedItem().setTexturesEnabled(chckbxUseTextures.isSelected());
+		});
+		
 		// Add listener for changes to geometric attenuation checkbox.
 		chckbxPhysicallybasedGeometricAttenuation.addChangeListener(e ->
 		{			
@@ -761,6 +776,7 @@ public class IBRelightConfigFrame extends JFrame
 				spinnerOccBias.setEnabled(false);
 				chckbxImagebasedRendering.setEnabled(false);
 				chckbxRelighting.setEnabled(false);
+				chckbxUseTextures.setEnabled(false);
 				chckbxPhysicallybasedGeometricAttenuation.setEnabled(false);
 				chckbxFresnelEffect.setEnabled(false);
 
@@ -786,6 +802,7 @@ public class IBRelightConfigFrame extends JFrame
 				spinnerOccBias.setEnabled(true);
 				chckbxImagebasedRendering.setEnabled(true);
 				chckbxRelighting.setEnabled(true);
+				chckbxUseTextures.setEnabled(true);
 				chckbxPhysicallybasedGeometricAttenuation.setEnabled(true);
 				chckbxFresnelEffect.setEnabled(true);
 
@@ -808,6 +825,7 @@ public class IBRelightConfigFrame extends JFrame
 				chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
 				chckbxImagebasedRendering.setSelected(model.getSelectedItem().isIBREnabled());
 				chckbxRelighting.setSelected(model.getSelectedItem().isRelightingEnabled());
+				chckbxUseTextures.setSelected(model.getSelectedItem().isRelightingEnabled());
 				chckbxPhysicallybasedGeometricAttenuation.setSelected(model.getSelectedItem().isPBRGeometricAttenuationEnabled());
 				chckbxFresnelEffect.setSelected(model.getSelectedItem().isFresnelEnabled());
 				
@@ -836,17 +854,9 @@ public class IBRelightConfigFrame extends JFrame
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
 			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Agisoft Photoscan XML files", "xml"));
 			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("View Set files", "vset"));
-			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Zip files", "zip"));
 			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 			{
 				File file = fileChooser.getSelectedFile();
-				if(file.getName().toUpperCase().endsWith(".ZIP"))
-				{
-					String vsetName = file.getPath();
-					vsetName = vsetName.replace(".zip", "/default.vset");
-					file = new File(vsetName);
-					System.out.printf("Zip file name converted to '%s'\n", vsetName);
-				}
 				
 				try 
 				{

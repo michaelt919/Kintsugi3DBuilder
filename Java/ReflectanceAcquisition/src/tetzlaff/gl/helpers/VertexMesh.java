@@ -2,13 +2,11 @@ package tetzlaff.gl.helpers;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Dictionary;
 import java.util.List;
 import java.util.Scanner;
-
-import tetzlaff.helpers.ZipWrapper;
 
 public class VertexMesh 
 {
@@ -25,15 +23,13 @@ public class VertexMesh
 	private float boundingRadius;
 	
 	private String materialFileName = null;
-	private String materialName = null;
+	private Material material = null; // TODO support multiple materials
 
 	public VertexMesh(String fileFormat, File file) throws IOException
 	{
-		ZipWrapper myZip = new ZipWrapper(file);
-		InputStream inputStream = myZip.getInputStream();
 		if (fileFormat.equals("OBJ"))
 		{
-			initFromOBJStream(inputStream);
+			initFromOBJStream(file);
 		}
 		else
 		{
@@ -45,7 +41,7 @@ public class VertexMesh
 	 * Initializes the mesh from a text stream containing the mesh in Wavefront OBJ format.
 	 * @param objStream The stream containing the mesh in Wavefront OBJ format.
 	 */
-	private void initFromOBJStream(InputStream objStream)
+	private void initFromOBJStream(File file) throws IOException
 	{
 		Date timestamp = new Date();
 		
@@ -65,7 +61,9 @@ public class VertexMesh
 		
 		Vector3 sum = new Vector3(0.0f, 0.0f, 0.0f);
 		
-		try(Scanner scanner = new Scanner(objStream))
+		String materialName = null;
+		
+		try(Scanner scanner = new Scanner(file))
 		{
 			while(scanner.hasNext())
 			{
@@ -305,6 +303,9 @@ public class VertexMesh
 			}
 		}
 		
+		Dictionary<String, Material> materialLibrary = Material.loadFromMTLFile(new File(file.getParentFile(), materialFileName));
+		this.material = materialLibrary.get(materialName);
+		
 		System.out.println("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	}
 	
@@ -397,8 +398,8 @@ public class VertexMesh
 		return this.materialFileName;
 	}
 
-	public String getMaterialName() 
+	public Material getMaterial() 
 	{
-		return this.materialName;
+		return this.material;
 	}
 }
