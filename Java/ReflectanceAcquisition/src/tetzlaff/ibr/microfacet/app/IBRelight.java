@@ -33,7 +33,7 @@ import tetzlaff.window.glfw.GLFWWindow;
  * 
  * @author Michael Tetzlaff
  */
-public class ImageBasedRenderingProgram
+public class IBRelight
 {
 	private static final boolean DEBUG = true;
 	
@@ -138,7 +138,7 @@ public class ImageBasedRenderingProgram
     	checkSupportedImageFormats();
 
     	// Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
-    	GLFWWindow window = new GLFWWindow(800, 800, "Image-Based Rendering Program", true, 4);
+    	GLFWWindow window = new GLFWWindow(800, 800, "IBRelight", true, 4);
     	window.enableDepthTest();
     	
 //    	org.lwjgl.opengl.GL11.glEnable(GL_DEBUG_OUTPUT);
@@ -310,7 +310,7 @@ public class ImageBasedRenderingProgram
         
         // Create a user interface that examines the ULFRendererList for renderer settings and
         // selecting between different loaded models.
-        ImageBasedMicrofacetConfigFrame gui = new ImageBasedMicrofacetConfigFrame(model, lightController, window.isHighDPI());
+        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController, window.isHighDPI());
         gui.showGUI();        
         //app.addPollable(gui); // Needed for Qt UI
         
