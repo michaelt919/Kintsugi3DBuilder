@@ -36,7 +36,6 @@ import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
-import tetzlaff.helpers.ZipWrapper;
 
 /**
  * A class for organizing the GL resources that are necessary for view-dependent rendering.
@@ -659,16 +658,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			ContextType context, IBRLoadingMonitor loadingCallback) throws IOException
 	{
 		Date timestamp = new Date();
-
-		ZipWrapper myZip = new ZipWrapper(vsetFile);		
-		InputStream input = myZip.getInputStream();
-		if(input == null)
-		{
-			myZip.close();
-			throw new IOException();
-		}
-		
-		Scanner scanner = new Scanner(input);
 		
 		float recommendedGamma = 2.2f;
 		float recommendedNearPlane = 0.0f;
@@ -696,199 +685,199 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		
 		String meshFileName = "manifold.obj";
 		String relativeImageFilePath = null;
-		
-		while (scanner.hasNext())
+	
+		try(Scanner scanner = new Scanner(vsetFile))
 		{
-			String id = scanner.next();
-			switch(id)
+			while (scanner.hasNext())
 			{
-				case "c":
+				String id = scanner.next();
+				switch(id)
 				{
-					recommendedNearPlane = scanner.nextFloat();
-					recommendedFarPlane = scanner.nextFloat();
-					scanner.nextLine();
-					break;
-				}
-				case "m":
-				{
-					meshFileName = scanner.nextLine().trim();
-					break;
-				}
-				case "i":
-				{
-					relativeImageFilePath = scanner.nextLine().trim();
-					break;
-				}
-				case "p":
-				{
-					// Pose from quaternion				
-					float x = scanner.nextFloat();
-					float y = scanner.nextFloat();
-					float z = scanner.nextFloat();
-					float i = scanner.nextFloat();
-					float j = scanner.nextFloat();
-					float k = scanner.nextFloat();
-					float qr = scanner.nextFloat();
-					
-					cameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
-						.times(Matrix4.translate(-x, -y, -z)));
-					
-					cameraPoseInvList.add(Matrix4.translate(x, y, z)
-						.times(new Matrix4(Matrix3.fromQuaternion(i, j, k, qr).transpose())));
-					
-					scanner.nextLine();
-					break;
-				}
-				case "P":
-				{
-					// Pose from matrix
-					Matrix4 newPose = new Matrix4(
-						scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
-						scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
-						scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), 
-						scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat());
-					
-					cameraPoseList.add(newPose);
-					cameraPoseInvList.add(newPose.quickInverse(0.002f));
-					break;
-				}
-				case "d":
-				case "D":
-				{
-					// Skip "center/offset" parameters which are not consistent across all VSET files
-					scanner.nextFloat();
-					scanner.nextFloat();
-					
-					float aspect = scanner.nextFloat();
-					float focalLength = scanner.nextFloat();
-					
-					float sensorWidth, k1;
-					float k2, k3;
-					if (id.equals("D"))
+					case "c":
 					{
-						sensorWidth = scanner.nextFloat();
-						k1 = scanner.nextFloat();
-						k2 = scanner.nextFloat();
-						k3 = scanner.nextFloat();
+						recommendedNearPlane = scanner.nextFloat();
+						recommendedFarPlane = scanner.nextFloat();
+						scanner.nextLine();
+						break;
 					}
-					else
+					case "m":
 					{
-						sensorWidth = 32.0f; // Default sensor width
-						k1 = scanner.nextFloat();
-						k2 = k3 = 0.0f;
+						meshFileName = scanner.nextLine().trim();
+						break;
 					}
-					
-					float sensorHeight = sensorWidth / aspect;
-					
-					cameraProjectionList.add(new DistortionProjection(
-						sensorWidth, sensorHeight, 
-						focalLength, focalLength,
-						sensorWidth / 2, sensorHeight / 2, k1, k2, k3
-					));
-					
-					scanner.nextLine();
-					break;
+					case "i":
+					{
+						relativeImageFilePath = scanner.nextLine().trim();
+						break;
+					}
+					case "p":
+					{
+						// Pose from quaternion				
+						float x = scanner.nextFloat();
+						float y = scanner.nextFloat();
+						float z = scanner.nextFloat();
+						float i = scanner.nextFloat();
+						float j = scanner.nextFloat();
+						float k = scanner.nextFloat();
+						float qr = scanner.nextFloat();
+						
+						cameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
+							.times(Matrix4.translate(-x, -y, -z)));
+						
+						cameraPoseInvList.add(Matrix4.translate(x, y, z)
+							.times(new Matrix4(Matrix3.fromQuaternion(i, j, k, qr).transpose())));
+						
+						scanner.nextLine();
+						break;
+					}
+					case "P":
+					{
+						// Pose from matrix
+						Matrix4 newPose = new Matrix4(
+							scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
+							scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
+							scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), 
+							scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat());
+						
+						cameraPoseList.add(newPose);
+						cameraPoseInvList.add(newPose.quickInverse(0.002f));
+						break;
+					}
+					case "d":
+					case "D":
+					{
+						// Skip "center/offset" parameters which are not consistent across all VSET files
+						scanner.nextFloat();
+						scanner.nextFloat();
+						
+						float aspect = scanner.nextFloat();
+						float focalLength = scanner.nextFloat();
+						
+						float sensorWidth, k1;
+						float k2, k3;
+						if (id.equals("D"))
+						{
+							sensorWidth = scanner.nextFloat();
+							k1 = scanner.nextFloat();
+							k2 = scanner.nextFloat();
+							k3 = scanner.nextFloat();
+						}
+						else
+						{
+							sensorWidth = 32.0f; // Default sensor width
+							k1 = scanner.nextFloat();
+							k2 = k3 = 0.0f;
+						}
+						
+						float sensorHeight = sensorWidth / aspect;
+						
+						cameraProjectionList.add(new DistortionProjection(
+							sensorWidth, sensorHeight, 
+							focalLength, focalLength,
+							sensorWidth / 2, sensorHeight / 2, k1, k2, k3
+						));
+						
+						scanner.nextLine();
+						break;
+					}
+					case "e":
+					{
+						// Non-linear encoding
+						linearLuminanceList.add(scanner.nextDouble());
+						encodedLuminanceList.add((Byte)((byte)scanner.nextShort()));
+						scanner.nextLine();
+						break;
+					}
+					case "g":
+					{
+						// Gamma
+						recommendedGamma = scanner.nextFloat();
+						scanner.nextLine();
+						break;
+					}
+					case "f":
+					{
+						// Skip "center/offset" parameters which are not consistent across all VSET files
+						scanner.next();
+						scanner.next();
+						
+						float aspect = scanner.nextFloat();
+						float fovy = (float)(scanner.nextFloat() * Math.PI / 180.0);
+						
+						cameraProjectionList.add(new SimpleProjection(aspect, fovy));
+						
+						scanner.nextLine();
+						break;
+					}
+					case "l":
+					{
+						float x = scanner.nextFloat();
+						float y = scanner.nextFloat();
+						float z = scanner.nextFloat();
+						lightPositionList.add(new Vector3(x, y, z));
+						
+						float r = scanner.nextFloat();
+						float g = scanner.nextFloat();
+						float b = scanner.nextFloat();
+						lightIntensityList.add(new Vector3(r, g, b));
+		
+						// Skip the rest of the line
+						scanner.nextLine();
+						break;
+					}
+					case "L":
+					{
+						float x = scanner.nextFloat();
+						float y = scanner.nextFloat();
+						float z = scanner.nextFloat();
+						absoluteLightPositionList.add(new Vector3(x, y, z));
+						
+						float r = scanner.nextFloat();
+						float g = scanner.nextFloat();
+						float b = scanner.nextFloat();
+						absoluteLightIntensityList.add(new Vector3(r, g, b));
+		
+						// Skip the rest of the line
+						scanner.nextLine();
+						break;
+					}
+					case "v":
+					{
+						int poseId = scanner.nextInt();
+						int projectionId = scanner.nextInt();
+						int lightId = scanner.nextInt();
+						
+						String imgFilename = scanner.nextLine().trim();
+						
+						orderedCameraPoseList.add(cameraPoseList.get(poseId));
+						orderedCameraPoseInvList.add(cameraPoseInvList.get(poseId));
+						cameraProjectionIndexList.add(projectionId);
+						lightIndexList.add(lightId);
+						imageFileNames.add(imgFilename);
+						break;
+					}
+					case "V":
+					{
+						int poseId = scanner.nextInt();
+						int projectionId = scanner.nextInt();
+						int lightId = scanner.nextInt();
+						
+						String imgFilename = scanner.nextLine().trim();
+						
+						secondaryCameraPoseList.add(cameraPoseList.get(poseId));
+						secondaryCameraPoseInvList.add(cameraPoseInvList.get(poseId));
+						secondaryCameraProjectionIndexList.add(projectionId);
+						secondaryLightIndexList.add(lightId);
+						secondaryImageFileNames.add(imgFilename);
+						break;
+					}
+					default:
+						// Skip unrecognized line
+						scanner.nextLine();
 				}
-				case "e":
-				{
-					// Non-linear encoding
-					linearLuminanceList.add(scanner.nextDouble());
-					encodedLuminanceList.add((Byte)((byte)scanner.nextShort()));
-					scanner.nextLine();
-					break;
-				}
-				case "g":
-				{
-					// Gamma
-					recommendedGamma = scanner.nextFloat();
-					scanner.nextLine();
-					break;
-				}
-				case "f":
-				{
-					// Skip "center/offset" parameters which are not consistent across all VSET files
-					scanner.next();
-					scanner.next();
-					
-					float aspect = scanner.nextFloat();
-					float fovy = (float)(scanner.nextFloat() * Math.PI / 180.0);
-					
-					cameraProjectionList.add(new SimpleProjection(aspect, fovy));
-					
-					scanner.nextLine();
-					break;
-				}
-				case "l":
-				{
-					float x = scanner.nextFloat();
-					float y = scanner.nextFloat();
-					float z = scanner.nextFloat();
-					lightPositionList.add(new Vector3(x, y, z));
-					
-					float r = scanner.nextFloat();
-					float g = scanner.nextFloat();
-					float b = scanner.nextFloat();
-					lightIntensityList.add(new Vector3(r, g, b));
-	
-					// Skip the rest of the line
-					scanner.nextLine();
-					break;
-				}
-				case "L":
-				{
-					float x = scanner.nextFloat();
-					float y = scanner.nextFloat();
-					float z = scanner.nextFloat();
-					absoluteLightPositionList.add(new Vector3(x, y, z));
-					
-					float r = scanner.nextFloat();
-					float g = scanner.nextFloat();
-					float b = scanner.nextFloat();
-					absoluteLightIntensityList.add(new Vector3(r, g, b));
-	
-					// Skip the rest of the line
-					scanner.nextLine();
-					break;
-				}
-				case "v":
-				{
-					int poseId = scanner.nextInt();
-					int projectionId = scanner.nextInt();
-					int lightId = scanner.nextInt();
-					
-					String imgFilename = scanner.nextLine().trim();
-					
-					orderedCameraPoseList.add(cameraPoseList.get(poseId));
-					orderedCameraPoseInvList.add(cameraPoseInvList.get(poseId));
-					cameraProjectionIndexList.add(projectionId);
-					lightIndexList.add(lightId);
-					imageFileNames.add(imgFilename);
-					break;
-				}
-				case "V":
-				{
-					int poseId = scanner.nextInt();
-					int projectionId = scanner.nextInt();
-					int lightId = scanner.nextInt();
-					
-					String imgFilename = scanner.nextLine().trim();
-					
-					secondaryCameraPoseList.add(cameraPoseList.get(poseId));
-					secondaryCameraPoseInvList.add(cameraPoseInvList.get(poseId));
-					secondaryCameraProjectionIndexList.add(projectionId);
-					secondaryLightIndexList.add(lightId);
-					secondaryImageFileNames.add(imgFilename);
-					break;
-				}
-				default:
-					// Skip unrecognized line
-					scanner.nextLine();
 			}
 		}
-		
-		scanner.close();
-		myZip.close();
-		
+			
 		if (imageOptions != null && imageOptions.getFilePath() == null)
 		{
 			imageOptions.setFilePath(vsetFile.getParentFile());
@@ -918,6 +907,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		}
 
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		
 		
 		return new ViewSet<ContextType>(
 			orderedCameraPoseList, orderedCameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, 

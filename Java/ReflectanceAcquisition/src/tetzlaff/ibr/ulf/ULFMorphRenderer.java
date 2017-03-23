@@ -357,4 +357,19 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 			stage.getLightField().settings.setFresnelEnabled(fresnelEnabled);
 		}
 	}
+
+	@Override
+	public boolean areTexturesEnabled() 
+	{
+		return this.stages.get(this.currentStage).areTexturesEnabled();
+	}
+
+	@Override
+	public void setTexturesEnabled(boolean texturesEnabled) 
+	{
+		for (ULFRenderer<ContextType> stage : stages)
+		{
+			stage.getLightField().settings.setTexturesEnabled(texturesEnabled);
+		}
+	}
 }

@@ -23,6 +23,7 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	
 	boolean isIBREnabled();
 	boolean isRelightingEnabled();
+	boolean areTexturesEnabled();
 	boolean isPBRGeometricAttenuationEnabled();
 	boolean isFresnelEnabled();
 	
@@ -37,6 +38,7 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	
 	void setIBREnabled(boolean ibrEnabled);
 	void setRelightingEnabled(boolean relightingEnabled);
+	void setTexturesEnabled(boolean texturesEnabled);
 	void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled);
 	void setFresnelEnabled(boolean fresnelEnabled);
 

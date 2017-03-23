@@ -2,12 +2,18 @@ package tetzlaff.gl.helpers;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class Material 
 {
+	private String name;
+	
 	private Vector3 ambient;
 	private Vector3 diffuse;
 	private Vector3 specular;
@@ -38,24 +44,27 @@ public class Material
 	private MaterialTextureMap normalMap;
 	private MaterialScalarMap displacementMap;
 	
-	public Material() 
+	public Material(String name) 
 	{
-		ambient = new Vector3(0.0f);
-		diffuse = new Vector3(0.0f);
-		specular = new Vector3(0.0f);
-		exponent = 0.0f;
-		roughness = 1.0f;
-		opacity = 1.0f;
-		emission = new Vector3(0.0f);
-		metallic = 0.0f;
-		sheen = new Vector3(0.0f);
-		clearcoat = new Vector3(0.0f);
-		clearcoatRoughness = 0.0f;
+		this.name = name;
+		
+		this.ambient = new Vector3(0.0f);
+		this.diffuse = new Vector3(0.0f);
+		this.specular = new Vector3(0.0f);
+		this.exponent = 0.0f;
+		this.roughness = 1.0f;
+		this.opacity = 1.0f;
+		this.emission = new Vector3(0.0f);
+		this.metallic = 0.0f;
+		this.sheen = new Vector3(0.0f);
+		this.clearcoat = new Vector3(0.0f);
+		this.clearcoatRoughness = 0.0f;
 	}
 	
-	public static Material loadFromMTLFile(File mtlFile) throws IOException
+	public static Dictionary<String, Material> loadFromMTLFile(File mtlFile) throws IOException
 	{
-		Material material = new Material();
+		Dictionary<String, Material> materials = new Hashtable<String, Material>();
+		Material currentMaterial = null;
 		boolean ambientSet = false;
 		
 		try(Scanner scanner = new Scanner(mtlFile))
@@ -64,169 +73,177 @@ public class Material
 			{
 				String id = scanner.next();
 				
-				try
+				if (id.equals("newmtl") && scanner.hasNext())
 				{
-					switch(id.toLowerCase())
+					currentMaterial = new Material(scanner.next());
+					materials.put(currentMaterial.getName(), currentMaterial);
+				}
+				else if (currentMaterial != null)
+				{
+					try
 					{
-						case "Ka": 
-							material.setAmbient(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
-							ambientSet = true;
-							break;
-						case "Kd": 
-							material.setDiffuse(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
-							break;
-						case "Ks":
-							material.setSpecular(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
-							break;
-						case "Ke":
-							material.setEmission(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
-							break;
-						case "d":
-							material.setOpacity(scanner.nextFloat());
-							break;
-						case "Tr":
-							material.setOpacity(1.0f - scanner.nextFloat());
-							break;
-						case "Tf":
-							material.setTranslucency(scanner.nextFloat());
-							break;
-						case "Ns":
-							material.setExponent(scanner.nextFloat());
-							break;
-						case "Pr":
-							material.setRoughness(scanner.nextFloat());
-							break;
-						case "Pm":
-							material.setMetallic(scanner.nextFloat());
-							break;
-						case "Ps":
-							material.setSheen(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
-							break;
-						case "Pc":
-							material.setClearcoat(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
-							break;
-						case "Pcr":
-							material.setClearcoatRoughness(scanner.nextFloat());
-							break;
-						case "map_Ka":
-							MaterialColorMap ambientMap = parseColorMapStatement(scanner);
-							material.setAmbientMap(ambientMap);
-							break;
-						case "map_Kd":
-							MaterialColorMap diffuseMap = parseColorMapStatement(scanner);
-							material.setDiffuseMap(diffuseMap);
-							break;
-						case "map_Ks":
-							MaterialColorMap specularMap = parseColorMapStatement(scanner);
-							material.setSpecularMap(specularMap);
-							break;
-						case "map_Ke":
-							MaterialColorMap emissionMap = parseColorMapStatement(scanner);
-							material.setEmissionMap(emissionMap);
-							break;
-						case "map_d":
-							MaterialScalarMap opacityMap = parseScalarMapStatement(scanner);
-							if (opacityMap.getChannel() == MaterialTextureChannel.Unspecified)
-							{
-								opacityMap.setChannel(MaterialTextureChannel.Luminance);
-							}
-							material.setOpacityMap(opacityMap);
-							material.setTransparencyMap(null);
-							break;
-						case "map_Tr":
-							MaterialScalarMap transparencyMap = parseScalarMapStatement(scanner);
-							if (transparencyMap.getChannel() == MaterialTextureChannel.Unspecified)
-							{
-								transparencyMap.setChannel(MaterialTextureChannel.Luminance);
-							}
-							material.setTransparencyMap(transparencyMap);
-							material.setOpacityMap(null);
-							break;
-						case "map_Tf":
-							MaterialScalarMap translucencyMap = parseScalarMapStatement(scanner);
-							if (translucencyMap.getChannel() == MaterialTextureChannel.Unspecified)
-							{
-								translucencyMap.setChannel(MaterialTextureChannel.Luminance);
-							}
-							material.setTransparencyMap(translucencyMap);
-							material.setOpacityMap(null);
-							break;
-						case "map_Ns":
-							MaterialScalarMap exponentMap = parseScalarMapStatement(scanner);
-							if (exponentMap.getChannel() == MaterialTextureChannel.Unspecified)
-							{
-								exponentMap.setChannel(MaterialTextureChannel.Luminance);
-							}
-							material.setExponentMap(exponentMap);
-							material.setRoughnessMap(null);
-							break;
-						case "map_Pr":
-							MaterialScalarMap roughnessMap = parseScalarMapStatement(scanner);
-							if (roughnessMap.getChannel() == MaterialTextureChannel.Unspecified)
-							{
-								roughnessMap.setChannel(MaterialTextureChannel.Luminance);
-							}
-							material.setRoughnessMap(roughnessMap);
-							material.setExponentMap(null);
-							break;
-						case "map_Pm":
-							MaterialScalarMap metallicMap = parseScalarMapStatement(scanner);
-							if (metallicMap.getChannel() == MaterialTextureChannel.Unspecified)
-							{
-								metallicMap.setChannel(MaterialTextureChannel.Luminance);
-							}
-							material.setMetallicMap(metallicMap);
-							break;
-						case "map_Ps":
-							MaterialColorMap sheenMap = parseColorMapStatement(scanner);
-							material.setSheenMap(sheenMap);
-							break;
-						case "aniso":
-							MaterialScalarMap anisotropyMap = parseScalarMapStatement(scanner);
-							if (anisotropyMap.getChannel() == MaterialTextureChannel.Unspecified)
-							{
-								anisotropyMap.setChannel(MaterialTextureChannel.Luminance);
-							}
-							material.setAnisotropyMap(anisotropyMap);
-							break;
-						case "anisor":
-							MaterialScalarMap anisotropyRotationMap = parseScalarMapStatement(scanner);
-							if (anisotropyRotationMap.getChannel() == MaterialTextureChannel.Unspecified)
-							{
-								anisotropyRotationMap.setChannel(MaterialTextureChannel.Luminance);
-							}
-							material.setAnisotropyRotationMap(anisotropyRotationMap);
-							break;
-						case "bump":
-							MaterialBumpMap bumpMap = parseBumpMapStatement(scanner);
-							if (bumpMap.getChannel() == MaterialTextureChannel.Unspecified)
-							{
-								bumpMap.setChannel(MaterialTextureChannel.Luminance);
-							}
-							material.setBumpMap(bumpMap);
-							break;
-						case "disp":
-							MaterialScalarMap displacementMap = parseScalarMapStatement(scanner);
-							if (displacementMap.getChannel() == MaterialTextureChannel.Unspecified)
-							{
-								displacementMap.setChannel(MaterialTextureChannel.Luminance);
-							}
-							material.setDisplacementMap(displacementMap);
-							break;
-						case "normal":
-							MaterialTextureMap normalMap = parseTextureStatement(scanner);
-							material.setNormalMap(normalMap);
-							break;
+						switch(id.toLowerCase())
+						{
+							case "ka": 
+								currentMaterial.setAmbient(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
+								ambientSet = true;
+								break;
+							case "kd": 
+								currentMaterial.setDiffuse(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
+								break;
+							case "ks":
+								currentMaterial.setSpecular(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
+								break;
+							case "ke":
+								currentMaterial.setEmission(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
+								break;
+							case "d":
+								currentMaterial.setOpacity(scanner.nextFloat());
+								break;
+							case "tr":
+								currentMaterial.setOpacity(1.0f - scanner.nextFloat());
+								break;
+							case "tf":
+								currentMaterial.setTranslucency(scanner.nextFloat());
+								break;
+							case "ns":
+								currentMaterial.setExponent(scanner.nextFloat());
+								break;
+							case "pr":
+								currentMaterial.setRoughness(scanner.nextFloat());
+								break;
+							case "pm":
+								currentMaterial.setMetallic(scanner.nextFloat());
+								break;
+							case "ps":
+								currentMaterial.setSheen(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
+								break;
+							case "pc":
+								currentMaterial.setClearcoat(new Vector3(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
+								break;
+							case "pcr":
+								currentMaterial.setClearcoatRoughness(scanner.nextFloat());
+								break;
+							case "map_ka":
+								MaterialColorMap ambientMap = parseColorMapStatement(scanner);
+								currentMaterial.setAmbientMap(ambientMap);
+								break;
+							case "map_kd":
+								MaterialColorMap diffuseMap = parseColorMapStatement(scanner);
+								currentMaterial.setDiffuseMap(diffuseMap);
+								break;
+							case "map_ks":
+								MaterialColorMap specularMap = parseColorMapStatement(scanner);
+								currentMaterial.setSpecularMap(specularMap);
+								break;
+							case "map_ke":
+								MaterialColorMap emissionMap = parseColorMapStatement(scanner);
+								currentMaterial.setEmissionMap(emissionMap);
+								break;
+							case "map_d":
+								MaterialScalarMap opacityMap = parseScalarMapStatement(scanner);
+								if (opacityMap.getChannel() == MaterialTextureChannel.Unspecified)
+								{
+									opacityMap.setChannel(MaterialTextureChannel.Luminance);
+								}
+								currentMaterial.setOpacityMap(opacityMap);
+								currentMaterial.setTransparencyMap(null);
+								break;
+							case "map_tr":
+								MaterialScalarMap transparencyMap = parseScalarMapStatement(scanner);
+								if (transparencyMap.getChannel() == MaterialTextureChannel.Unspecified)
+								{
+									transparencyMap.setChannel(MaterialTextureChannel.Luminance);
+								}
+								currentMaterial.setTransparencyMap(transparencyMap);
+								currentMaterial.setOpacityMap(null);
+								break;
+							case "map_tf":
+								MaterialScalarMap translucencyMap = parseScalarMapStatement(scanner);
+								if (translucencyMap.getChannel() == MaterialTextureChannel.Unspecified)
+								{
+									translucencyMap.setChannel(MaterialTextureChannel.Luminance);
+								}
+								currentMaterial.setTransparencyMap(translucencyMap);
+								currentMaterial.setOpacityMap(null);
+								break;
+							case "map_ns":
+								MaterialScalarMap exponentMap = parseScalarMapStatement(scanner);
+								if (exponentMap.getChannel() == MaterialTextureChannel.Unspecified)
+								{
+									exponentMap.setChannel(MaterialTextureChannel.Luminance);
+								}
+								currentMaterial.setExponentMap(exponentMap);
+								currentMaterial.setRoughnessMap(null);
+								break;
+							case "map_pr":
+								MaterialScalarMap roughnessMap = parseScalarMapStatement(scanner);
+								if (roughnessMap.getChannel() == MaterialTextureChannel.Unspecified)
+								{
+									roughnessMap.setChannel(MaterialTextureChannel.Luminance);
+								}
+								currentMaterial.setRoughnessMap(roughnessMap);
+								currentMaterial.setExponentMap(null);
+								break;
+							case "map_pm":
+								MaterialScalarMap metallicMap = parseScalarMapStatement(scanner);
+								if (metallicMap.getChannel() == MaterialTextureChannel.Unspecified)
+								{
+									metallicMap.setChannel(MaterialTextureChannel.Luminance);
+								}
+								currentMaterial.setMetallicMap(metallicMap);
+								break;
+							case "map_ps":
+								MaterialColorMap sheenMap = parseColorMapStatement(scanner);
+								currentMaterial.setSheenMap(sheenMap);
+								break;
+							case "aniso":
+								MaterialScalarMap anisotropyMap = parseScalarMapStatement(scanner);
+								if (anisotropyMap.getChannel() == MaterialTextureChannel.Unspecified)
+								{
+									anisotropyMap.setChannel(MaterialTextureChannel.Luminance);
+								}
+								currentMaterial.setAnisotropyMap(anisotropyMap);
+								break;
+							case "anisor":
+								MaterialScalarMap anisotropyRotationMap = parseScalarMapStatement(scanner);
+								if (anisotropyRotationMap.getChannel() == MaterialTextureChannel.Unspecified)
+								{
+									anisotropyRotationMap.setChannel(MaterialTextureChannel.Luminance);
+								}
+								currentMaterial.setAnisotropyRotationMap(anisotropyRotationMap);
+								break;
+							case "bump":
+								MaterialBumpMap bumpMap = parseBumpMapStatement(scanner);
+								if (bumpMap.getChannel() == MaterialTextureChannel.Unspecified)
+								{
+									bumpMap.setChannel(MaterialTextureChannel.Luminance);
+								}
+								currentMaterial.setBumpMap(bumpMap);
+								break;
+							case "disp":
+								MaterialScalarMap displacementMap = parseScalarMapStatement(scanner);
+								if (displacementMap.getChannel() == MaterialTextureChannel.Unspecified)
+								{
+									displacementMap.setChannel(MaterialTextureChannel.Luminance);
+								}
+								currentMaterial.setDisplacementMap(displacementMap);
+								break;
+							case "normal":
+								MaterialTextureMap normalMap = parseTextureStatement(scanner);
+								currentMaterial.setNormalMap(normalMap);
+								break;
+						}
 					}
-				}
-				catch(InputMismatchException e)
-				{
-					e.printStackTrace();
-					scanner.nextLine();
-				}
-				catch(NoSuchElementException e)
-				{
-					e.printStackTrace();
+					catch(InputMismatchException e)
+					{
+						e.printStackTrace();
+						scanner.nextLine();
+					}
+					catch(NoSuchElementException e)
+					{
+						e.printStackTrace();
+					}
 				}
 				
 				if (scanner.hasNextLine())
@@ -239,23 +256,23 @@ public class Material
 		
 		if (!ambientSet)
 		{
-			material.setAmbient(material.getDiffuse());
+			currentMaterial.setAmbient(currentMaterial.getDiffuse());
 		}
 		
-		if (material.getAmbientMap() == null)
+		if (currentMaterial.getAmbientMap() == null)
 		{
-			material.setAmbientMap(material.getDiffuseMap());
+			currentMaterial.setAmbientMap(currentMaterial.getDiffuseMap());
 		}
 		
-		return material;
+		return materials;
 	}
 	
-	private static void processTextureOption(Scanner scanner, MaterialTextureMap texture, String nextPart)
+	private static void processTextureOption(Scanner scanner, MaterialTextureMap texture, String option)
 	{
 		try
 		{
 			// Option statement
-			switch(nextPart.toLowerCase())
+			switch(option.toLowerCase())
 			{
 				case "-mm":
 					texture.setBase(scanner.nextFloat());
@@ -347,7 +364,7 @@ public class Material
 			else
 			{
 				// The filename
-				texture.setMapName(scanner.next());
+				texture.setMapName(nextPart);
 			}
 		}
 		
@@ -384,7 +401,7 @@ public class Material
 			else
 			{
 				// The filename
-				texture.setMapName(scanner.next());
+				texture.setMapName(nextPart);
 			}
 		}
 		
@@ -441,7 +458,7 @@ public class Material
 			else
 			{
 				// The filename
-				texture.setMapName(scanner.next());
+				texture.setMapName(nextPart);
 			}
 		}
 		
@@ -509,11 +526,21 @@ public class Material
 			else
 			{
 				// The filename
-				texture.setMapName(scanner.next());
+				texture.setMapName(nextPart);
 			}
 		}
 		
 		return texture;
+	}
+
+	public String getName()
+	{
+		return this.name;
+	}
+
+	public void setName(String name) 
+	{
+		this.name = name;
 	}
 
 	public Vector3 getAmbient() 

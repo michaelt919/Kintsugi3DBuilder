@@ -30,7 +30,6 @@ import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
-import tetzlaff.helpers.ZipWrapper;
 
 class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 {
@@ -402,12 +401,6 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 	}
 
 	@Override
-	public void loadLayer(int layerIndex, ZipWrapper zipFile, boolean flipVertical) throws IOException
-	{
-		this.loadLayer(layerIndex, zipFile.getInputStream(), flipVertical);
-	}
-
-	@Override
 	public void loadLayer(int layerIndex, File file, boolean flipVertical) throws IOException
 	{
 		this.loadLayer(layerIndex, new FileInputStream(file), flipVertical);
@@ -477,12 +470,6 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 		{
 			this.staleMipmaps = true;
 		}
-	}
-
-	@Override
-	public void loadLayer(int layerIndex, ZipWrapper imageZip, ZipWrapper maskZip, boolean flipVertical) throws IOException
-	{
-		this.loadLayer(layerIndex, imageZip.getInputStream(), maskZip.getInputStream(), flipVertical);
 	}
 
 	@Override

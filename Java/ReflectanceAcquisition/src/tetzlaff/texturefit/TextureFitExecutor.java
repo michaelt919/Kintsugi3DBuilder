@@ -888,7 +888,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	{
     		materialFileName = objFile.getName().split("\\.")[0] + ".mtl";
     	}
-    	materialName = mesh.getMaterialName();
+    	materialName = mesh.getMaterial().getName();
     	if (materialName == null)
     	{
     		materialName = materialFileName.split("\\.")[0];
