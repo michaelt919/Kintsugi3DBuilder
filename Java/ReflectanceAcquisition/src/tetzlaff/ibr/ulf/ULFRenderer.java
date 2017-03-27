@@ -34,6 +34,7 @@ import tetzlaff.helpers.EnvironmentMap;
 import tetzlaff.ibr.IBRDrawable;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
+import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.ViewSetImageOptions;
 
@@ -407,12 +408,14 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     	
     	program.setUniform("gamma", this.lightField.settings.getGamma());
     	program.setUniform("weightExponent", this.lightField.settings.getWeightExponent());
+    	program.setUniform("isotropyFactor", this.lightField.settings.getIsotropyFactor());
     	program.setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
     	program.setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
     	program.setUniform("imageBasedRenderingEnabled", this.lightField.settings.isIBREnabled());
     	program.setUniform("relightingEnabled", this.lightField.settings.isRelightingEnabled());
     	program.setUniform("pbrGeometricAttenuationEnabled", this.lightField.settings.isPBRGeometricAttenuationEnabled());
     	program.setUniform("fresnelEnabled", this.lightField.settings.isFresnelEnabled());
+    	program.setUniform("shadowsEnabled", this.lightField.settings.areShadowsEnabled());
     	
     	program.setTexture("luminanceMap", this.lightField.viewSet.getLuminanceMap());
 
@@ -648,111 +651,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     }
 
 	@Override
-	public float getGamma() 
+	public IBRSettings settings()
 	{
-		return this.lightField.settings.getGamma();
-	}
-
-	@Override
-	public float getWeightExponent() 
-	{
-		return this.lightField.settings.getWeightExponent();
-	}
-	
-	@Override
-	public boolean isOcclusionEnabled() 
-	{
-		return this.lightField.settings.isOcclusionEnabled();
-	}
-
-	@Override
-	public float getOcclusionBias() 
-	{
-		return this.lightField.settings.getOcclusionBias();
-	}
-
-	@Override
-	public void setGamma(float gamma) 
-	{
-		this.lightField.settings.setGamma(gamma);
-	}
-
-	@Override
-	public void setWeightExponent(float weightExponent) 
-	{
-		this.lightField.settings.setWeightExponent(weightExponent);
-	}
-
-	@Override
-	public void setOcclusionEnabled(boolean occlusionEnabled) 
-	{
-		this.lightField.settings.setOcclusionEnabled(occlusionEnabled);
-	}
-
-	@Override
-	public void setOcclusionBias(float occlusionBias) 
-	{
-		this.lightField.settings.setOcclusionBias(occlusionBias);
-	}
-
-	@Override
-	public boolean isIBREnabled() 
-	{
-		return this.lightField.settings.isIBREnabled();
-	}
-
-	@Override
-	public boolean isRelightingEnabled() 
-	{
-		return this.lightField.settings.isRelightingEnabled();
-	}
-
-	@Override
-	public boolean isPBRGeometricAttenuationEnabled() 
-	{
-		return this.lightField.settings.isPBRGeometricAttenuationEnabled();
-	}
-
-	@Override
-	public boolean isFresnelEnabled()
-	{
-		return this.lightField.settings.isFresnelEnabled();
-	}
-
-	@Override
-	public void setIBREnabled(boolean ibrEnabled) 
-	{
-		this.lightField.settings.setIBREnabled(ibrEnabled);
-	}
-
-	@Override
-	public void setRelightingEnabled(boolean relightingEnabled) 
-	{
-		this.lightField.settings.setRelightingEnabled(relightingEnabled);
-	}
-
-	@Override
-	public boolean areTexturesEnabled() 
-	{
-		return this.lightField.settings.areTexturesEnabled();
-	}
-
-	@Override
-	public void setTexturesEnabled(boolean texturesEnabled) 
-	{
-		this.lightField.settings.setTexturesEnabled(texturesEnabled);
-	}
-
-	@Override
-	public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled) 
-	{
-		this.lightField.settings.setPBRGeometricAttenuationEnabled(pbrGeometricAttenuationEnabled);
-	}
-
-	@Override
-	public void setFresnelEnabled(boolean fresnelEnabled) 
-	{
-		this.lightField.settings.setFresnelEnabled(fresnelEnabled);
+		return this.lightField.settings;
 	}
 	
 	@Override

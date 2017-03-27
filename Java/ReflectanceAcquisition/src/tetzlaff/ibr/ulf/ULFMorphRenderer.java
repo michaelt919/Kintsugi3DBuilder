@@ -15,6 +15,7 @@ import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ibr.IBRDrawable;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
+import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
 
 public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements IBRDrawable<ContextType>
@@ -138,63 +139,9 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	}
 
 	@Override
-	public float getGamma() 
+	public IBRSettings settings() 
 	{
-		return this.getLightField().settings.getGamma();
-	}
-
-	@Override
-	public float getWeightExponent() 
-	{
-		return this.getLightField().settings.getWeightExponent();
-	}
-
-	@Override
-	public boolean isOcclusionEnabled() 
-	{
-		return this.getLightField().settings.isOcclusionEnabled();
-	}
-
-	@Override
-	public float getOcclusionBias() 
-	{
-		return this.getLightField().settings.getOcclusionBias();
-	}
-
-	@Override
-	public void setGamma(float gamma)
-	{
-		for (ULFRenderer<ContextType> stage : stages)
-		{
-			stage.getLightField().settings.setGamma(gamma);
-		}
-	}
-
-	@Override
-	public void setWeightExponent(float weightExponent) 
-	{
-		for (ULFRenderer<ContextType> stage : stages)
-		{
-			stage.getLightField().settings.setWeightExponent(weightExponent);
-		}
-	}
-
-	@Override
-	public void setOcclusionEnabled(boolean occlusionEnabled) 
-	{
-		for (ULFRenderer<ContextType> stage : stages)
-		{
-			stage.getLightField().settings.setOcclusionEnabled(occlusionEnabled);
-		}
-	}
-
-	@Override
-	public void setOcclusionBias(float occlusionBias) 
-	{
-		for (ULFRenderer<ContextType> stage : stages)
-		{
-			stage.getLightField().settings.setOcclusionBias(occlusionBias);
-		}
+		return this.stages.get(this.currentStage).settings();
 	}
 	
 	@Override
@@ -296,80 +243,5 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	public void setEnvironment(File environmentFile) throws IOException 
 	{
 		this.stages.get(this.currentStage).setEnvironment(environmentFile);
-	}
-
-	@Override
-	public boolean isIBREnabled() 
-	{
-		return this.stages.get(this.currentStage).isIBREnabled();
-	}
-
-	@Override
-	public boolean isRelightingEnabled() 
-	{
-		return this.stages.get(this.currentStage).isRelightingEnabled();
-	}
-
-	@Override
-	public boolean isPBRGeometricAttenuationEnabled() 
-	{
-		return this.stages.get(this.currentStage).isPBRGeometricAttenuationEnabled();
-	}
-
-	@Override
-	public boolean isFresnelEnabled() 
-	{
-		return this.stages.get(this.currentStage).isFresnelEnabled();
-	}
-
-	@Override
-	public void setIBREnabled(boolean ibrEnabled) 
-	{
-		for (ULFRenderer<ContextType> stage : stages)
-		{
-			stage.getLightField().settings.setIBREnabled(ibrEnabled);
-		}
-	}
-
-	@Override
-	public void setRelightingEnabled(boolean relightingEnabled) 
-	{
-		for (ULFRenderer<ContextType> stage : stages)
-		{
-			stage.getLightField().settings.setRelightingEnabled(relightingEnabled);
-		}
-	}
-
-	@Override
-	public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled) 
-	{
-		for (ULFRenderer<ContextType> stage : stages)
-		{
-			stage.getLightField().settings.setPBRGeometricAttenuationEnabled(pbrGeometricAttenuationEnabled);
-		}
-	}
-
-	@Override
-	public void setFresnelEnabled(boolean fresnelEnabled) 
-	{
-		for (ULFRenderer<ContextType> stage : stages)
-		{
-			stage.getLightField().settings.setFresnelEnabled(fresnelEnabled);
-		}
-	}
-
-	@Override
-	public boolean areTexturesEnabled() 
-	{
-		return this.stages.get(this.currentStage).areTexturesEnabled();
-	}
-
-	@Override
-	public void setTexturesEnabled(boolean texturesEnabled) 
-	{
-		for (ULFRenderer<ContextType> stage : stages)
-		{
-			stage.getLightField().settings.setTexturesEnabled(texturesEnabled);
-		}
 	}
 }

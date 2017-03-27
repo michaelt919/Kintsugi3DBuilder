@@ -28,6 +28,7 @@ uniform int virtualLightCount;
 uniform vec3 ambientColor;
 
 uniform float weightExponent;
+uniform float isotropyFactor;
 
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
@@ -50,6 +51,7 @@ uniform bool useInverseLuminanceMap;
 uniform sampler1D inverseLuminanceMap;
 
 uniform sampler2DArray shadowMaps;
+uniform bool shadowsEnabled;
 
 uniform bool useTSOverrides;
 uniform vec3 lightDirTSOverride;
@@ -118,7 +120,7 @@ vec3 fresnel(vec3 specularColor, vec3 grazingColor, float hDotV)
 }
 
 float computeGeometricAttenuationVCavity(
-    float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
+    float roughness, float nDotH, float nDotV, float nDotL, float hDotV)
 {
     return min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
 }
@@ -143,10 +145,10 @@ float computeGeometricAttenuationSmithGGX(float roughness, float nDotV, float nD
 			 / (1 + sqrt(1 + roughnessSq * (1 / (nDotL * nDotL) - 1.0)));
 }
 
-float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV, float hDotL)
+float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV)
 {
     //return nDotV * nDotL;
-    return computeGeometricAttenuationVCavity(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+    return computeGeometricAttenuationVCavity(roughness, nDotH, nDotV, nDotL, hDotV);
     //return computeGeometricAttenuationSmithBeckmann(roughness, nDotV, nDotL);
 	//return computeGeometricAttenuationSmithGGX(roughness, nDotV, nDotL);
 }
@@ -188,9 +190,9 @@ float dist(float nDotH, float roughness)
     //return computeMicrofacetDistributionPhong(nDotH, roughness);
 }
 
-float computeSampleWeight(vec3 targetDir, vec3 sampleDir)
+float computeSampleWeight(float correlation)
 {
-	return 1.0 / max(0.000001, 1.0 - pow(max(0.0, dot(targetDir, sampleDir)), weightExponent)) - 1.0;
+	return 1.0 / max(0.000001, 1.0 - pow(max(0.0, correlation), weightExponent)) - 1.0;
 }
 
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float maxLuminance)
@@ -234,12 +236,10 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 			float nDotL_sample = max(0, dot(normalDirCameraSpace, sampleLightDir));
 			float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
 			float hDotV_sample = max(0, dot(sampleHalfDir, sampleViewDir));
-			float hDotL_sample = max(0, dot(sampleHalfDir, sampleLightDir));
 		
 			vec3 diffuseContrib = diffuseColor * nDotL_sample * lightIntensity / lightDistSquared;
 			
-			float geomAttenSample = geom(roughness, nDotH, nDotV_sample, nDotL_sample, 
-				hDotV_sample, hDotL_sample);
+			float geomAttenSample = geom(roughness, nDotH, nDotV_sample, nDotL_sample, hDotV_sample);
 			
 			if (nDotV_sample > 0.0 && geomAttenSample > 0.0)
 			{
@@ -249,10 +249,9 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 				float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
 				float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
 				float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
-				float hDotL_virtual = max(0, dot(sampleHalfDir, virtualLightDir));
 			
-				float geomAttenVirtual = geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, 
-					hDotV_virtual, hDotL_virtual);
+				float geomAttenVirtual = 
+					geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
 			
 				vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL_sample, maxLuminance);
 				
@@ -325,11 +324,10 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
         float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
         float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
         float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
-        float hDotL = max(0, dot(sampleHalfDir, sampleLightDir));
     
         vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity / lightDistSquared;
         
-        float geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL);
+        float geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
         if (!relightingEnabled || geomAtten > 0.0)
         {
             vec4 precomputedSample;
@@ -396,8 +394,12 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
                 vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
 
                 // Compute sample weight
-                float weight = computeSampleWeight(virtualHalfDir, sampleHalfDir);
+                //float weight = computeSampleWeight(dot(virtualHalfDir, sampleHalfDir));
 				
+				float virtualNdotH = max(0, dot(normalDirCameraSpace, virtualHalfDir));
+				float weight = computeSampleWeight(
+					isotropyFactor * (1.0 - (nDotH - virtualNdotH) * (nDotH - virtualNdotH)) + 
+					(1 - isotropyFactor) * dot(virtualHalfDir, sampleHalfDir));
 				
                 // float weight = computeSampleWeight(
 					// normalize(vec3(1,1,10) * (transpose(tangentToObject) * virtualHalfDir)), 
@@ -729,7 +731,7 @@ void main()
         if (nDotL > 0.0)
         {
 			bool shadow = false;
-			if (!useTSOverrides && relightingEnabled)
+			if (!useTSOverrides && relightingEnabled && shadowsEnabled)
 			{
 				vec4 projTexCoord = lightMatrixVirtual[i] * vec4(fPosition, 1.0);
 				projTexCoord /= projTexCoord.w;
@@ -744,7 +746,6 @@ void main()
             {
                 vec3 halfDir = normalize(viewDir + lightDir);
                 float hDotV = dot(halfDir, viewDir);
-                float hDotL = dot(halfDir, lightDir);
                 float nDotH = useTSOverrides ? halfDir.z : dot(normalDir, halfDir);
                 
                 vec3 mfdFresnel;
@@ -814,7 +815,7 @@ void main()
 					(relightingEnabled || !imageBasedRenderingEnabled ? nDotL * diffuseColor : vec3(0.0)) + 
                     mfdFresnel 
 					 * ((!imageBasedRenderingEnabled || relightingEnabled) && pbrGeometricAttenuationEnabled
-						? geom(roughness, nDotH, nDotV, nDotL, hDotV, hDotL) / (4 * nDotV) : 
+						? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV) : 
 							(!imageBasedRenderingEnabled || relightingEnabled ? nDotL / 4 : 1.0)))
                      * ((imageBasedRenderingEnabled && relightingEnabled) ? 
 						(useTSOverrides ? lightIntensityVirtual[i] : 

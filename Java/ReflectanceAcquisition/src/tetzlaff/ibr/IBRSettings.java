@@ -4,11 +4,13 @@ public class IBRSettings
 {
     private float gamma = 2.2f;
     private float weightExponent = 16.0f;
+    private float isotropyFactor = 0.875f;
     private boolean occlusionEnabled = true;
     private float occlusionBias = 0.0025f;
 	private boolean ibrEnabled = true;
 	private boolean relightingEnabled = false;
 	private boolean texturesEnabled = false;
+	private boolean shadowsEnabled = false;
 	private boolean fresnelEnabled = false;
 	private boolean pbrGeometricAttenuationEnabled = false;
 
@@ -34,6 +36,16 @@ public class IBRSettings
 	public void setWeightExponent(float weightExponent) 
 	{
 		this.weightExponent = weightExponent;
+	}
+
+	public float getIsotropyFactor()
+	{
+		return isotropyFactor;
+	}
+
+	public void setIsotropyFactor(float isotropyFactor) 
+	{
+		this.isotropyFactor = isotropyFactor;
 	}
 
 	public boolean isOcclusionEnabled() 
@@ -104,5 +116,15 @@ public class IBRSettings
 	public void setTexturesEnabled(boolean texturesEnabled) 
 	{
 		this.texturesEnabled = texturesEnabled;
+	}
+
+	public boolean areShadowsEnabled() 
+	{
+		return shadowsEnabled;
+	}
+
+	public void setShadowsEnabled(boolean shadowsEnabled) 
+	{
+		this.shadowsEnabled = shadowsEnabled;
 	}
 }

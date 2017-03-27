@@ -6,12 +6,15 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -56,6 +59,8 @@ public class IBRelightConfigFrame extends JFrame
 	 * The central panel of this frame where all widgets are laid out.
 	 */
 	private JPanel contentPane;
+	
+	private List<JComponent> modelDependentComponents;
 
 	/**
 	 * Build and layout the GUI in the central content pane.  Also sets all appropriate listeners to update
@@ -72,7 +77,7 @@ public class IBRelightConfigFrame extends JFrame
 		setResizable(false);
 		setTitle("IBRelight: Settings");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(10, 10, 960, 600);
+		setBounds(10, 10, 960, 640);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -249,13 +254,14 @@ public class IBRelightConfigFrame extends JFrame
 		renderingOptionsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Rendering Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		GridBagLayout gbl_renderingOptionsPanel = new GridBagLayout();
 		gbl_renderingOptionsPanel.columnWidths = new int[]{0, 0, 0, 0, 0};
-		gbl_renderingOptionsPanel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 30};
+		gbl_renderingOptionsPanel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 30};
 		gbl_renderingOptionsPanel.columnWeights = new double[]{0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
-		gbl_renderingOptionsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+		gbl_renderingOptionsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 		renderingOptionsPanel.setLayout(gbl_renderingOptionsPanel);
 		
 		JLabel lblGamma = new JLabel("Gamma:");
 		GridBagConstraints gbc_lblGamma = new GridBagConstraints();
+		gbc_lblGamma.gridwidth = 3;
 		gbc_lblGamma.anchor = GridBagConstraints.EAST;
 		gbc_lblGamma.insets = new Insets(0, 0, 5, 5);
 		gbc_lblGamma.gridx = 0;
@@ -266,15 +272,15 @@ public class IBRelightConfigFrame extends JFrame
 		lblGamma.setLabelFor(spinnerGamma);
 		spinnerGamma.setToolTipText("Gamma color correction applied to the final rendered image");
 		GridBagConstraints gbc_spinnerGamma = new GridBagConstraints();
-		gbc_spinnerGamma.gridwidth = 2;
 		gbc_spinnerGamma.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerGamma.insets = new Insets(0, 0, 5, 0);
-		gbc_spinnerGamma.gridx = 2;
+		gbc_spinnerGamma.gridx = 3;
 		gbc_spinnerGamma.gridy = 0;
 		renderingOptionsPanel.add(spinnerGamma, gbc_spinnerGamma);
 		
 		JLabel lblWeightExponent = new JLabel("Weight Exponent:");
 		GridBagConstraints gbc_lblWeightExponent = new GridBagConstraints();
+		gbc_lblWeightExponent.gridwidth = 3;
 		gbc_lblWeightExponent.insets = new Insets(0, 0, 5, 5);
 		gbc_lblWeightExponent.anchor = GridBagConstraints.EAST;
 		gbc_lblWeightExponent.gridx = 0;
@@ -286,11 +292,28 @@ public class IBRelightConfigFrame extends JFrame
 		spinnerExponent.setToolTipText("Exponent controlling the number of views used per pixel (too low causes blank/black areas, too high causes blurry results)");
 		GridBagConstraints gbc_spinnerExponent = new GridBagConstraints();
 		gbc_spinnerExponent.fill = GridBagConstraints.HORIZONTAL;
-		gbc_spinnerExponent.gridwidth = 2;
 		gbc_spinnerExponent.insets = new Insets(0, 0, 5, 0);
-		gbc_spinnerExponent.gridx = 2;
+		gbc_spinnerExponent.gridx = 3;
 		gbc_spinnerExponent.gridy = 1;
 		renderingOptionsPanel.add(spinnerExponent, gbc_spinnerExponent);
+		
+		JLabel lblIsotropyFactor = new JLabel("Isotropy factor:");
+		GridBagConstraints gbc_lblIsotropyFactor = new GridBagConstraints();
+		gbc_lblIsotropyFactor.anchor = GridBagConstraints.EAST;
+		gbc_lblIsotropyFactor.gridwidth = 3;
+		gbc_lblIsotropyFactor.insets = new Insets(0, 0, 5, 5);
+		gbc_lblIsotropyFactor.gridx = 0;
+		gbc_lblIsotropyFactor.gridy = 2;
+		renderingOptionsPanel.add(lblIsotropyFactor, gbc_lblIsotropyFactor);
+		
+		JSpinner isotropySpinner = new JSpinner();
+		isotropySpinner.setModel(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.1));
+		GridBagConstraints gbc_isotropySpinner = new GridBagConstraints();
+		gbc_isotropySpinner.fill = GridBagConstraints.HORIZONTAL;
+		gbc_isotropySpinner.insets = new Insets(0, 0, 5, 0);
+		gbc_isotropySpinner.gridx = 3;
+		gbc_isotropySpinner.gridy = 2;
+		renderingOptionsPanel.add(isotropySpinner, gbc_isotropySpinner);
 		
 		JSeparator separator = new JSeparator();
 		separator.setForeground(UIManager.getColor("Separator.foreground"));
@@ -299,7 +322,7 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_separator.gridwidth = 4;
 		gbc_separator.insets = new Insets(0, 0, 5, 0);
 		gbc_separator.gridx = 0;
-		gbc_separator.gridy = 2;
+		gbc_separator.gridy = 3;
 		renderingOptionsPanel.add(separator, gbc_separator);
 		
 		JCheckBox chckbxOcclusion = new JCheckBox("Visibility Testing");
@@ -309,21 +332,21 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_chckbxOcclusion.anchor = GridBagConstraints.WEST;
 		gbc_chckbxOcclusion.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxOcclusion.gridx = 0;
-		gbc_chckbxOcclusion.gridy = 3;
+		gbc_chckbxOcclusion.gridy = 4;
 		renderingOptionsPanel.add(chckbxOcclusion, gbc_chckbxOcclusion);
 		
 		JLabel label = new JLabel("-");
 		GridBagConstraints gbc_label = new GridBagConstraints();
 		gbc_label.insets = new Insets(0, 0, 5, 5);
 		gbc_label.gridx = 1;
-		gbc_label.gridy = 3;
+		gbc_label.gridy = 4;
 		renderingOptionsPanel.add(label, gbc_label);
 		
 		JLabel lblBias = new JLabel("Bias:");
 		GridBagConstraints gbc_lblBias = new GridBagConstraints();
 		gbc_lblBias.insets = new Insets(0, 0, 5, 5);
 		gbc_lblBias.gridx = 2;
-		gbc_lblBias.gridy = 3;
+		gbc_lblBias.gridy = 4;
 		renderingOptionsPanel.add(lblBias, gbc_lblBias);
 		
 		JSpinner spinnerOccBias = new JSpinner(new SpinnerNumberModel(0.0025, 0.0, 1.0, 0.0001));
@@ -333,7 +356,7 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_spinnerOccBias.insets = new Insets(0, 0, 5, 0);
 		gbc_spinnerOccBias.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerOccBias.gridx = 3;
-		gbc_spinnerOccBias.gridy = 3;
+		gbc_spinnerOccBias.gridy = 4;
 		renderingOptionsPanel.add(spinnerOccBias, gbc_spinnerOccBias);
 		
 		JSeparator separator_1 = new JSeparator();
@@ -343,7 +366,7 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_separator_1.gridwidth = 4;
 		gbc_separator_1.insets = new Insets(0, 0, 5, 0);
 		gbc_separator_1.gridx = 0;
-		gbc_separator_1.gridy = 4;
+		gbc_separator_1.gridy = 5;
 		renderingOptionsPanel.add(separator_1, gbc_separator_1);
 		
 		JCheckBox chckbxImagebasedRendering = new JCheckBox("Image-based rendering");
@@ -352,36 +375,88 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_chckbxImagebasedRendering.gridwidth = 3;
 		gbc_chckbxImagebasedRendering.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxImagebasedRendering.gridx = 0;
-		gbc_chckbxImagebasedRendering.gridy = 5;
+		gbc_chckbxImagebasedRendering.gridy = 6;
 		renderingOptionsPanel.add(chckbxImagebasedRendering, gbc_chckbxImagebasedRendering);
 		
-		JCheckBox chckbxRelighting = new JCheckBox("Relighting");
-		GridBagConstraints gbc_chckbxRelighting = new GridBagConstraints();
-		gbc_chckbxRelighting.insets = new Insets(0, 0, 5, 0);
-		gbc_chckbxRelighting.gridx = 3;
-		gbc_chckbxRelighting.gridy = 5;
-		renderingOptionsPanel.add(chckbxRelighting, gbc_chckbxRelighting);
+		// Add listener for changes to IBR checkbox.
+		chckbxImagebasedRendering.addChangeListener(e ->
+		{			
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().settings().setIBREnabled(chckbxImagebasedRendering.isSelected());
+			}
+		});
 		
 		JCheckBox chckbxUseTextures = new JCheckBox("Use textures");
 		GridBagConstraints gbc_chckbxUseTextures = new GridBagConstraints();
-		gbc_chckbxUseTextures.gridwidth = 3;
-		gbc_chckbxUseTextures.insets = new Insets(0, 0, 5, 5);
-		gbc_chckbxUseTextures.gridx = 0;
+		gbc_chckbxUseTextures.insets = new Insets(0, 0, 5, 0);
+		gbc_chckbxUseTextures.gridx = 3;
 		gbc_chckbxUseTextures.gridy = 6;
 		renderingOptionsPanel.add(chckbxUseTextures, gbc_chckbxUseTextures);
 		
+		// Add listener for changes to relighting checkbox.
+		chckbxUseTextures.addChangeListener(e ->
+		{			
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().settings().setTexturesEnabled(chckbxUseTextures.isSelected());
+			}
+		});
+		
+		JCheckBox chckbxRelighting = new JCheckBox("Relighting");
+		GridBagConstraints gbc_chckbxRelighting = new GridBagConstraints();
+		gbc_chckbxRelighting.gridwidth = 3;
+		gbc_chckbxRelighting.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxRelighting.gridx = 0;
+		gbc_chckbxRelighting.gridy = 7;
+		renderingOptionsPanel.add(chckbxRelighting, gbc_chckbxRelighting);
+		
+		// Add listener for changes to relighting checkbox.
+		chckbxRelighting.addChangeListener(e ->
+		{			
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().settings().setRelightingEnabled(chckbxRelighting.isSelected());
+			}
+		});
+		
+		JCheckBox chckbxShadows = new JCheckBox("Shadows");
+		GridBagConstraints gbc_chckbxShadows = new GridBagConstraints();
+		gbc_chckbxShadows.insets = new Insets(0, 0, 5, 0);
+		gbc_chckbxShadows.gridx = 3;
+		gbc_chckbxShadows.gridy = 7;
+		renderingOptionsPanel.add(chckbxShadows, gbc_chckbxShadows);
+		
+		// Add listener for changes to relighting checkbox.
+		chckbxShadows.addChangeListener(e ->
+		{			
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().settings().setShadowsEnabled(chckbxShadows.isSelected());
+			}
+		});
+		
 		JCheckBox chckbxFresnelEffect = new JCheckBox("Fresnel effect");
 		GridBagConstraints gbc_chckbxFresnelEffect = new GridBagConstraints();
-		gbc_chckbxFresnelEffect.insets = new Insets(0, 0, 5, 0);
-		gbc_chckbxFresnelEffect.gridx = 3;
-		gbc_chckbxFresnelEffect.gridy = 6;
+		gbc_chckbxFresnelEffect.gridwidth = 3;
+		gbc_chckbxFresnelEffect.insets = new Insets(0, 0, 0, 5);
+		gbc_chckbxFresnelEffect.gridx = 0;
+		gbc_chckbxFresnelEffect.gridy = 8;
 		renderingOptionsPanel.add(chckbxFresnelEffect, gbc_chckbxFresnelEffect);
 		
-		JCheckBox chckbxPhysicallybasedGeometricAttenuation = new JCheckBox("Physically-based geometric attenuation");
+		// Add listener for changes to fresnel checkbox.
+		chckbxFresnelEffect.addChangeListener(e ->
+		{			
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().settings().setFresnelEnabled(chckbxFresnelEffect.isSelected());
+			}
+		});
+		
+		JCheckBox chckbxPhysicallybasedGeometricAttenuation = new JCheckBox("PBR geom. atten.");
 		GridBagConstraints gbc_chckbxPhysicallybasedGeometricAttenuation = new GridBagConstraints();
-		gbc_chckbxPhysicallybasedGeometricAttenuation.gridwidth = 4;
-		gbc_chckbxPhysicallybasedGeometricAttenuation.gridx = 0;
-		gbc_chckbxPhysicallybasedGeometricAttenuation.gridy = 7;
+		gbc_chckbxPhysicallybasedGeometricAttenuation.gridx = 3;
+		gbc_chckbxPhysicallybasedGeometricAttenuation.gridy = 8;
 		renderingOptionsPanel.add(chckbxPhysicallybasedGeometricAttenuation, gbc_chckbxPhysicallybasedGeometricAttenuation);
 		
 		JPanel qualitySettings = new JPanel();
@@ -483,77 +558,71 @@ public class IBRelightConfigFrame extends JFrame
 		// Set the combo box model to the parameter
 		if(model != null) { comboBoxObjects.setModel(model); }
 		
+		modelDependentComponents = new ArrayList<JComponent>();
+		modelDependentComponents.add(lblGamma);
+		modelDependentComponents.add(spinnerGamma);
+		modelDependentComponents.add(lblWeightExponent);
+		modelDependentComponents.add(spinnerExponent);
+		modelDependentComponents.add(chckbxOcclusion);
+		modelDependentComponents.add(lblIsotropyFactor);
+		modelDependentComponents.add(isotropySpinner);
+		modelDependentComponents.add(lblBias);
+		modelDependentComponents.add(spinnerOccBias);
+		modelDependentComponents.add(chckbxImagebasedRendering);
+		modelDependentComponents.add(chckbxRelighting);
+		modelDependentComponents.add(chckbxShadows);
+		modelDependentComponents.add(chckbxUseTextures);
+		modelDependentComponents.add(chckbxPhysicallybasedGeometricAttenuation);
+		modelDependentComponents.add(chckbxFresnelEffect);
+		modelDependentComponents.add(chckbxHalfRes);
+		modelDependentComponents.add(chckbxMultisampling);
+		modelDependentComponents.add(lblNewDimensions);
+		modelDependentComponents.add(spinnerWidth);
+		modelDependentComponents.add(lblX);
+		modelDependentComponents.add(spinnerHeight);
+		modelDependentComponents.add(btnResample);
+		modelDependentComponents.add(btnFidelity);
+		modelDependentComponents.add(btnBTFExport);
+		
+		Runnable updateWidgetsFromSettings = () ->
+		{
+			spinnerGamma.setValue((double)model.getSelectedItem().settings().getGamma());
+			spinnerExponent.setValue((double)model.getSelectedItem().settings().getWeightExponent());
+			isotropySpinner.setValue((double)model.getSelectedItem().settings().getIsotropyFactor());
+			chckbxOcclusion.setSelected(model.getSelectedItem().settings().isOcclusionEnabled());
+			spinnerOccBias.setValue((double)model.getSelectedItem().settings().getOcclusionBias());
+			chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
+			chckbxImagebasedRendering.setSelected(model.getSelectedItem().settings().isIBREnabled());
+			chckbxRelighting.setSelected(model.getSelectedItem().settings().isRelightingEnabled());
+			chckbxShadows.setSelected(model.getSelectedItem().settings().areShadowsEnabled());
+			chckbxUseTextures.setSelected(model.getSelectedItem().settings().areTexturesEnabled());
+			chckbxPhysicallybasedGeometricAttenuation.setSelected(model.getSelectedItem().settings().isPBRGeometricAttenuationEnabled());
+			chckbxFresnelEffect.setSelected(model.getSelectedItem().settings().isFresnelEnabled());
+		};
+		
 		// Set initial values from the 'model' parameter
 		if (model == null || model.getSelectedItem() == null)
 		{
 			comboBoxObjects.setEnabled(false);
 			sliderObjects.setEnabled(false);
 
-			lblGamma.setEnabled(false);
-			spinnerGamma.setEnabled(false);
-			lblWeightExponent.setEnabled(false);
-			spinnerExponent.setEnabled(false);
-			chckbxOcclusion.setEnabled(false);
-			lblBias.setEnabled(false);
-			spinnerOccBias.setEnabled(false);
-			chckbxImagebasedRendering.setEnabled(false);
-			chckbxRelighting.setEnabled(false);
-			chckbxUseTextures.setEnabled(false);
-			chckbxPhysicallybasedGeometricAttenuation.setEnabled(false);
-			chckbxFresnelEffect.setEnabled(false);
-			
-			chckbxHalfRes.setSelected(isHighDPI);
-			chckbxHalfRes.setEnabled(false);
-			chckbxMultisampling.setEnabled(false);
-
-			lblNewDimensions.setEnabled(false);
-			spinnerWidth.setEnabled(false);
-			lblX.setEnabled(false);
-			spinnerHeight.setEnabled(false);
-			btnResample.setEnabled(false);
-			btnFidelity.setEnabled(false);
-			btnBTFExport.setEnabled(false);
+			for (JComponent c : modelDependentComponents)
+			{
+				c.setEnabled(false);
+			}
 		}
 		else
 		{
 			comboBoxObjects.setEnabled(model.getSize()>1?true:false);
 			sliderObjects.setEnabled(model.getSize()>1?true:false);
 
-			lblGamma.setEnabled(true);
-			spinnerGamma.setEnabled(true);
-			lblWeightExponent.setEnabled(true);
-			spinnerExponent.setEnabled(true);
-			chckbxOcclusion.setEnabled(true);
-			lblBias.setEnabled(true);
-			spinnerOccBias.setEnabled(true);
-			chckbxImagebasedRendering.setEnabled(true);
-			chckbxRelighting.setEnabled(true);
-			chckbxUseTextures.setEnabled(true);
-			chckbxPhysicallybasedGeometricAttenuation.setEnabled(true);
-			chckbxFresnelEffect.setEnabled(true);
-
-			chckbxHalfRes.setEnabled(true);
-			chckbxMultisampling.setEnabled(true);
+			for (JComponent c : modelDependentComponents)
+			{
+				c.setEnabled(true);
+			}
 			
-			lblNewDimensions.setEnabled(true);
-			spinnerWidth.setEnabled(true);
-			lblX.setEnabled(true);
-			spinnerHeight.setEnabled(true);
-			btnResample.setEnabled(true);
-			btnFidelity.setEnabled(true);
-			btnBTFExport.setEnabled(true);
+			updateWidgetsFromSettings.run();
 			
-			spinnerGamma.setValue(model.getSelectedItem().getGamma());
-			spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
-			chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
-			spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
-			chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
-			chckbxImagebasedRendering.setSelected(model.getSelectedItem().isIBREnabled());
-			chckbxRelighting.setSelected(model.getSelectedItem().isRelightingEnabled());
-			chckbxUseTextures.setSelected(model.getSelectedItem().areTexturesEnabled());
-			chckbxPhysicallybasedGeometricAttenuation.setSelected(model.getSelectedItem().isPBRGeometricAttenuationEnabled());
-			chckbxFresnelEffect.setSelected(model.getSelectedItem().isFresnelEnabled());
-
 			model.getSelectedItem().setHalfResolution(isHighDPI);
 			chckbxHalfRes.setSelected(isHighDPI);
 		}
@@ -687,78 +756,87 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to half resolution checkbox.
 		chckbxHalfRes.addChangeListener(e ->
 		{
-			model.getSelectedItem().setHalfResolution(chckbxHalfRes.isSelected());
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().setHalfResolution(chckbxHalfRes.isSelected());
+			}
 		});
 		
 		// Add listener for changes to multisampling checkbox.
 		chckbxMultisampling.addChangeListener(e ->
 		{
-			model.getSelectedItem().setMultisampling(chckbxMultisampling.isSelected());
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().setMultisampling(chckbxMultisampling.isSelected());
+			}
 		});
 		
 		// Add listener for changes to the gamma spinner.
 		spinnerGamma.addChangeListener(e ->
 		{
-			model.getSelectedItem().setGamma((float)(double)(Double)spinnerGamma.getModel().getValue());
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().settings().setGamma((float)(double)(Double)spinnerGamma.getModel().getValue());
+			}
 		});
 		
 		// Add listener for changes to the alpha weight spinner.
 		spinnerExponent.addChangeListener(e ->
 		{
-			model.getSelectedItem().setWeightExponent((float)(double)(Double)spinnerExponent.getModel().getValue());
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().settings().setWeightExponent((float)(double)(Double)spinnerExponent.getModel().getValue());
+			}
+		});
+		
+		// Add listener for changes to the alpha weight spinner.
+		isotropySpinner.addChangeListener(e ->
+		{
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().settings().setIsotropyFactor((float)(double)(Double)isotropySpinner.getModel().getValue());
+			}
 		});
 		
 		// Add listener for changes to occlusion checkbox.
 		chckbxOcclusion.addChangeListener(e ->
 		{			
-			boolean selected = chckbxOcclusion.isSelected();
-			model.getSelectedItem().setOcclusionEnabled(selected);
-			lblBias.setEnabled(selected);
-			spinnerOccBias.setEnabled(selected);
+			if (model.getSelectedItem() != null)
+			{
+				boolean selected = chckbxOcclusion.isSelected();
+				model.getSelectedItem().settings().setOcclusionEnabled(selected);
+				lblBias.setEnabled(selected);
+				spinnerOccBias.setEnabled(selected);
+			}
 		});
 		
 		// Add listener for changes to the occlusion bias spinner.
 		spinnerOccBias.addChangeListener(e ->
 		{
-			model.getSelectedItem().setOcclusionBias((float)(double)(Double)spinnerOccBias.getModel().getValue());
-		});
-		
-		// Add listener for changes to IBR checkbox.
-		chckbxImagebasedRendering.addChangeListener(e ->
-		{			
-			model.getSelectedItem().setIBREnabled(chckbxImagebasedRendering.isSelected());
-		});
-		
-		// Add listener for changes to relighting checkbox.
-		chckbxRelighting.addChangeListener(e ->
-		{			
-			model.getSelectedItem().setRelightingEnabled(chckbxRelighting.isSelected());
-		});
-		
-		// Add listener for changes to relighting checkbox.
-		chckbxUseTextures.addChangeListener(e ->
-		{			
-			model.getSelectedItem().setTexturesEnabled(chckbxUseTextures.isSelected());
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().settings().setOcclusionBias((float)(double)(Double)spinnerOccBias.getModel().getValue());
+			}
 		});
 		
 		// Add listener for changes to geometric attenuation checkbox.
 		chckbxPhysicallybasedGeometricAttenuation.addChangeListener(e ->
 		{			
-			model.getSelectedItem().setPBRGeometricAttenuationEnabled(chckbxPhysicallybasedGeometricAttenuation.isSelected());
-		});
-		
-		// Add listener for changes to fresnel checkbox.
-		chckbxFresnelEffect.addChangeListener(e ->
-		{			
-			model.getSelectedItem().setFresnelEnabled(chckbxFresnelEffect.isSelected());
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().settings().setPBRGeometricAttenuationEnabled(chckbxPhysicallybasedGeometricAttenuation.isSelected());
+			}
 		});
 		
 		// Add listener for changes to the morph slider.
 		sliderObjects.addChangeListener(e ->
 		{
-			if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
+			if (model.getSelectedItem() != null)
 			{
-				((ULFMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(sliderObjects.getValue());
+				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
+				{
+					((ULFMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(sliderObjects.getValue());
+				}
 			}
 		});
 		
@@ -767,67 +845,19 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model == null || model.getSelectedItem() == null)
 			{
-				lblGamma.setEnabled(false);
-				spinnerGamma.setEnabled(false);
-				lblWeightExponent.setEnabled(false);
-				spinnerExponent.setEnabled(false);
-				chckbxOcclusion.setEnabled(false);
-				lblBias.setEnabled(false);
-				spinnerOccBias.setEnabled(false);
-				chckbxImagebasedRendering.setEnabled(false);
-				chckbxRelighting.setEnabled(false);
-				chckbxUseTextures.setEnabled(false);
-				chckbxPhysicallybasedGeometricAttenuation.setEnabled(false);
-				chckbxFresnelEffect.setEnabled(false);
-
-				chckbxHalfRes.setEnabled(false);
-				chckbxMultisampling.setEnabled(false);
-
-				lblNewDimensions.setEnabled(false);
-				spinnerWidth.setEnabled(false);
-				lblX.setEnabled(false);
-				spinnerHeight.setEnabled(false);
-				btnResample.setEnabled(false);
-				btnFidelity.setEnabled(false);
-				btnBTFExport.setEnabled(false);
+				for (JComponent c : modelDependentComponents)
+				{
+					c.setEnabled(false);
+				}
 			}
 			else
 			{
-				lblGamma.setEnabled(true);
-				spinnerGamma.setEnabled(true);
-				lblWeightExponent.setEnabled(true);
-				spinnerExponent.setEnabled(true);
-				chckbxOcclusion.setEnabled(true);
-				lblBias.setEnabled(true);
-				spinnerOccBias.setEnabled(true);
-				chckbxImagebasedRendering.setEnabled(true);
-				chckbxRelighting.setEnabled(true);
-				chckbxUseTextures.setEnabled(true);
-				chckbxPhysicallybasedGeometricAttenuation.setEnabled(true);
-				chckbxFresnelEffect.setEnabled(true);
-
-				chckbxHalfRes.setEnabled(true);
-				chckbxMultisampling.setEnabled(true);
+				for (JComponent c : modelDependentComponents)
+				{
+					c.setEnabled(true);
+				}
 				
-				lblNewDimensions.setEnabled(true);
-				spinnerWidth.setEnabled(true);
-				lblX.setEnabled(true);
-				spinnerHeight.setEnabled(true);
-				btnResample.setEnabled(true);
-				btnFidelity.setEnabled(true);
-				btnBTFExport.setEnabled(true);
-				
-				spinnerGamma.setValue((double)model.getSelectedItem().getGamma());
-				spinnerExponent.setValue((double)model.getSelectedItem().getWeightExponent());
-				chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
-				spinnerOccBias.setValue((double)model.getSelectedItem().getOcclusionBias());
-				chckbxHalfRes.setSelected(model.getSelectedItem().getHalfResolution());
-				chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
-				chckbxImagebasedRendering.setSelected(model.getSelectedItem().isIBREnabled());
-				chckbxRelighting.setSelected(model.getSelectedItem().isRelightingEnabled());
-				chckbxUseTextures.setSelected(model.getSelectedItem().isRelightingEnabled());
-				chckbxPhysicallybasedGeometricAttenuation.setSelected(model.getSelectedItem().isPBRGeometricAttenuationEnabled());
-				chckbxFresnelEffect.setSelected(model.getSelectedItem().isFresnelEnabled());
+				updateWidgetsFromSettings.run();
 				
 				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
 				{
