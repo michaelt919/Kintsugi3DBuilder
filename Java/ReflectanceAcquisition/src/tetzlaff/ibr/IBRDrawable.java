@@ -16,31 +16,11 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	ViewSet<ContextType> getActiveViewSet();
 	VertexMesh getActiveProxy();
 	
-	float getGamma();
-	float getWeightExponent();
-	boolean isOcclusionEnabled();
-	float getOcclusionBias();
-	
-	boolean isIBREnabled();
-	boolean isRelightingEnabled();
-	boolean areTexturesEnabled();
-	boolean isPBRGeometricAttenuationEnabled();
-	boolean isFresnelEnabled();
+	IBRSettings settings();
 	
 	boolean isViewIndexCacheEnabled();
 	boolean getHalfResolution();
 	boolean getMultisampling();
-	
-	void setGamma(float gamma);
-	void setWeightExponent(float weightExponent);
-	void setOcclusionEnabled(boolean occlusionEnabled);
-	void setOcclusionBias(float occlusionBias);
-	
-	void setIBREnabled(boolean ibrEnabled);
-	void setRelightingEnabled(boolean relightingEnabled);
-	void setTexturesEnabled(boolean texturesEnabled);
-	void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled);
-	void setFresnelEnabled(boolean fresnelEnabled);
 
 	void setViewIndexCacheEnabled(boolean viewIndexCacheEnabled);
 	void setHalfResolution(boolean halfResEnabled);

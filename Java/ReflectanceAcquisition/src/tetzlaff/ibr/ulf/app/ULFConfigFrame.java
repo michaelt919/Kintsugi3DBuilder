@@ -448,10 +448,10 @@ public class ULFConfigFrame extends JFrame {
 			spinnerHeight.setEnabled(true);
 			btnResample.setEnabled(true);
 			
-			spinnerGamma.setValue(model.getSelectedItem().getGamma());
-			spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
-			chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
-			spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
+			spinnerGamma.setValue(model.getSelectedItem().settings().getGamma());
+			spinnerExponent.setValue(model.getSelectedItem().settings().getWeightExponent());
+			chckbxOcclusion.setSelected(model.getSelectedItem().settings().isOcclusionEnabled());
+			spinnerOccBias.setValue(model.getSelectedItem().settings().getOcclusionBias());
 
 			model.getSelectedItem().setHalfResolution(isHighDPI);
 			chckbxHalfRes.setSelected(isHighDPI);
@@ -589,10 +589,10 @@ public class ULFConfigFrame extends JFrame {
 				spinnerHeight.setEnabled(true);
 				btnResample.setEnabled(true);
 				
-				spinnerGamma.setValue(model.getSelectedItem().getGamma());
-				spinnerExponent.setValue(model.getSelectedItem().getWeightExponent());
-				chckbxOcclusion.setSelected(model.getSelectedItem().isOcclusionEnabled());
-				spinnerOccBias.setValue(model.getSelectedItem().getOcclusionBias());
+				spinnerGamma.setValue(model.getSelectedItem().settings().getGamma());
+				spinnerExponent.setValue(model.getSelectedItem().settings().getWeightExponent());
+				chckbxOcclusion.setSelected(model.getSelectedItem().settings().isOcclusionEnabled());
+				spinnerOccBias.setValue(model.getSelectedItem().settings().getOcclusionBias());
 				chckbxHalfRes.setSelected(model.getSelectedItem().getHalfResolution());
 				chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
 				
@@ -659,13 +659,13 @@ public class ULFConfigFrame extends JFrame {
 		// Add listener for changes to the gamma spinner.
 		spinnerGamma.addChangeListener(e ->
 		{
-			model.getSelectedItem().setGamma((Float)spinnerGamma.getModel().getValue());
+			model.getSelectedItem().settings().setGamma((Float)spinnerGamma.getModel().getValue());
 		});
 		
 		// Add listener for changes to the alpha weight spinner.
 		spinnerExponent.addChangeListener(e ->
 		{
-			model.getSelectedItem().setWeightExponent((Float)spinnerExponent.getModel().getValue());
+			model.getSelectedItem().settings().setWeightExponent((Float)spinnerExponent.getModel().getValue());
 		});
 		
 		// Add listener for changes to half resolution checkbox.
@@ -678,7 +678,7 @@ public class ULFConfigFrame extends JFrame {
 		chckbxOcclusion.addChangeListener(e ->
 		{			
 			boolean selected = chckbxOcclusion.isSelected();
-			model.getSelectedItem().setOcclusionEnabled(selected);
+			model.getSelectedItem().settings().setOcclusionEnabled(selected);
 			lblBias.setEnabled(selected);
 			spinnerOccBias.setEnabled(selected);
 		});
@@ -686,7 +686,7 @@ public class ULFConfigFrame extends JFrame {
 		// Add listener for changes to the occlusion bias spinner.
 		spinnerOccBias.addChangeListener(e ->
 		{
-			model.getSelectedItem().setOcclusionBias((Float)spinnerOccBias.getModel().getValue());
+			model.getSelectedItem().settings().setOcclusionBias((Float)spinnerOccBias.getModel().getValue());
 		});
 		
 		// Create callback monitor to show the loading window when the model is being read

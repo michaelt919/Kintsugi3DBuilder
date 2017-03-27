@@ -30,6 +30,7 @@ import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ibr.IBRDrawable;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
+import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.ulf.ULFRenderer;
 
@@ -278,7 +279,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		}
 		else
 		{
-			p.setUniform("useNormalTexture", this.areTexturesEnabled());
+			p.setUniform("useNormalTexture", this.settings().areTexturesEnabled());
 			p.setTexture("normalMap", microfacetDistribution.normalTexture);
 		}
 		
@@ -289,7 +290,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		}
 		else
 		{
-			p.setUniform("useDiffuseTexture", this.areTexturesEnabled());
+			p.setUniform("useDiffuseTexture", this.settings().areTexturesEnabled());
 			p.setTexture("diffuseMap", microfacetDistribution.diffuseTexture);
 		}
 		
@@ -300,7 +301,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		}
 		else
 		{
-			p.setUniform("useSpecularTexture", this.areTexturesEnabled());
+			p.setUniform("useSpecularTexture", this.settings().areTexturesEnabled());
 			p.setTexture("specularMap", microfacetDistribution.specularTexture);
 		}
 		
@@ -311,7 +312,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		}
 		else
 		{
-			p.setUniform("useRoughnessTexture", this.areTexturesEnabled());
+			p.setUniform("useRoughnessTexture", this.settings().areTexturesEnabled());
 			p.setTexture("roughnessMap", microfacetDistribution.roughnessTexture);
 		}
 		
@@ -628,27 +629,9 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	}
 
 	@Override
-	public float getGamma() 
+	public IBRSettings settings()
 	{
-		return ulfRenderer.getGamma();
-	}
-
-	@Override
-	public float getWeightExponent() 
-	{
-		return ulfRenderer.getWeightExponent();
-	}
-
-	@Override
-	public boolean isOcclusionEnabled() 
-	{
-		return ulfRenderer.isOcclusionEnabled();
-	}
-
-	@Override
-	public float getOcclusionBias() 
-	{
-		return ulfRenderer.getOcclusionBias();
+		return ulfRenderer.settings();
 	}
 
 	@Override
@@ -656,91 +639,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	{
 		return ulfRenderer.getHalfResolution();
 	}
-
-	@Override
-	public void setGamma(float gamma) 
-	{
-		ulfRenderer.setGamma(gamma);
-	}
-
-	@Override
-	public void setWeightExponent(float weightExponent)
-	{
-		ulfRenderer.setWeightExponent(weightExponent);
-	}
-
-	@Override
-	public void setOcclusionEnabled(boolean occlusionEnabled) 
-	{
-		ulfRenderer.setOcclusionEnabled(occlusionEnabled);
-	}
-
-	@Override
-	public void setOcclusionBias(float occlusionBias) 
-	{
-		ulfRenderer.setOcclusionBias(occlusionBias);
-	}
 	
-	@Override
-	public boolean isIBREnabled() 
-	{
-		return ulfRenderer.isIBREnabled();
-	}
-	
-	@Override
-	public boolean isRelightingEnabled()
-	{
-		return ulfRenderer.isRelightingEnabled();
-	}
-
-	@Override
-	public boolean isPBRGeometricAttenuationEnabled() 
-	{
-		return ulfRenderer.isPBRGeometricAttenuationEnabled();
-	}
-
-	@Override
-	public boolean isFresnelEnabled() 
-	{
-		return ulfRenderer.isFresnelEnabled();
-	}
-
-	@Override
-	public void setIBREnabled(boolean ibrEnabled) 
-	{
-		ulfRenderer.setIBREnabled(ibrEnabled);
-	}
-
-	@Override
-	public void setRelightingEnabled(boolean relightingEnabled) 
-	{
-		ulfRenderer.setRelightingEnabled(relightingEnabled);
-	}
-
-	@Override
-	public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled) 
-	{
-		ulfRenderer.setPBRGeometricAttenuationEnabled(pbrGeometricAttenuationEnabled);
-	}
-
-	@Override
-	public void setFresnelEnabled(boolean fresnelEnabled)
-	{
-		ulfRenderer.setFresnelEnabled(fresnelEnabled);
-	}
-	
-	@Override
-	public boolean areTexturesEnabled() 
-	{
-		return ulfRenderer.areTexturesEnabled();
-	}
-
-	@Override
-	public void setTexturesEnabled(boolean texturesEnabled) 
-	{
-		ulfRenderer.setTexturesEnabled(texturesEnabled);
-	}
-
 	@Override
 	public void setHalfResolution(boolean halfResEnabled) 
 	{
