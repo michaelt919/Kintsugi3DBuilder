@@ -750,7 +750,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		        
 		        if (this.callback != null)
 		        {
-		        	this.callback.setProgress((double) i / (double) 90);
+		        	this.callback.setProgress((double) i / (double) /*90*/180);
 		        }
 			}
         }

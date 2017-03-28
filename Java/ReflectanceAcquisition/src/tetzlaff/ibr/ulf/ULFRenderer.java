@@ -441,7 +441,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 		
 		return Matrix4.perspective(
     			//(float)(1.0),
-    			lightField.viewSet.getCameraProjection(0).getVerticalFieldOfView(), 
+    			lightField.viewSet.getCameraProjection(
+    					lightField.viewSet.getCameraProjectionIndex(lightField.viewSet.getPrimaryViewIndex()))
+					.getVerticalFieldOfView(), 
     			(float)size.width / (float)size.height, 
     			0.01f * scale, 100.0f * scale);
 	}
