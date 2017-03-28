@@ -303,8 +303,16 @@ public class VertexMesh
 			}
 		}
 		
-		Dictionary<String, Material> materialLibrary = Material.loadFromMTLFile(new File(file.getParentFile(), materialFileName));
-		this.material = materialLibrary.get(materialName);
+		try
+		{
+			Dictionary<String, Material> materialLibrary = Material.loadFromMTLFile(new File(file.getParentFile(), materialFileName));
+			this.material = materialLibrary.get(materialName);
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+			this.material = null;
+		}
 		
 		System.out.println("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	}

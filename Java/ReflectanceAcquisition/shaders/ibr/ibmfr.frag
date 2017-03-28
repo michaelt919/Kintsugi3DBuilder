@@ -390,12 +390,9 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
 				{
 					virtualLightDir = virtualViewDir;
 				}
-				
-                vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
 
                 // Compute sample weight
-                //float weight = computeSampleWeight(dot(virtualHalfDir, sampleHalfDir));
-				
+                vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
 				float virtualNdotH = max(0, dot(normalDirCameraSpace, virtualHalfDir));
 				float weight = computeSampleWeight(
 					isotropyFactor * (1.0 - (nDotH - virtualNdotH) * (nDotH - virtualNdotH)) + 
