@@ -13,6 +13,7 @@ public class IBRSettings
 	private boolean shadowsEnabled = false;
 	private boolean fresnelEnabled = false;
 	private boolean pbrGeometricAttenuationEnabled = false;
+	private boolean visibleLightsEnabled = true;
 
 	public IBRSettings() 
 	{
@@ -126,5 +127,15 @@ public class IBRSettings
 	public void setShadowsEnabled(boolean shadowsEnabled) 
 	{
 		this.shadowsEnabled = shadowsEnabled;
+	}
+	
+	public boolean areVisibleLightsEnabled()
+	{
+		return this.visibleLightsEnabled;
+	}
+
+	public void setVisibleLightsEnabled(boolean visibleLightsEnabled) 
+	{
+		this.visibleLightsEnabled = visibleLightsEnabled;
 	}
 }

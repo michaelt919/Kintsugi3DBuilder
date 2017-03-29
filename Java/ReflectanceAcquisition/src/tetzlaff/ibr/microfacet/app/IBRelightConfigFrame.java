@@ -77,7 +77,7 @@ public class IBRelightConfigFrame extends JFrame
 		setResizable(false);
 		setTitle("IBRelight: Settings");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(10, 10, 960, 640);
+		setBounds(10, 10, 960, 660);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -254,9 +254,9 @@ public class IBRelightConfigFrame extends JFrame
 		renderingOptionsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Rendering Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		GridBagLayout gbl_renderingOptionsPanel = new GridBagLayout();
 		gbl_renderingOptionsPanel.columnWidths = new int[]{0, 0, 0, 0, 0};
-		gbl_renderingOptionsPanel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 30};
+		gbl_renderingOptionsPanel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 30, 0};
 		gbl_renderingOptionsPanel.columnWeights = new double[]{0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
-		gbl_renderingOptionsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+		gbl_renderingOptionsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 		renderingOptionsPanel.setLayout(gbl_renderingOptionsPanel);
 		
 		JLabel lblGamma = new JLabel("Gamma:");
@@ -439,7 +439,7 @@ public class IBRelightConfigFrame extends JFrame
 		JCheckBox chckbxFresnelEffect = new JCheckBox("Fresnel effect");
 		GridBagConstraints gbc_chckbxFresnelEffect = new GridBagConstraints();
 		gbc_chckbxFresnelEffect.gridwidth = 3;
-		gbc_chckbxFresnelEffect.insets = new Insets(0, 0, 0, 5);
+		gbc_chckbxFresnelEffect.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxFresnelEffect.gridx = 0;
 		gbc_chckbxFresnelEffect.gridy = 8;
 		renderingOptionsPanel.add(chckbxFresnelEffect, gbc_chckbxFresnelEffect);
@@ -453,8 +453,27 @@ public class IBRelightConfigFrame extends JFrame
 			}
 		});
 		
+		JCheckBox chckbxVisualizeLights = new JCheckBox("Visualize lights");
+		chckbxVisualizeLights.setSelected(true);
+		GridBagConstraints gbc_chckbxVisualizeLights = new GridBagConstraints();
+		gbc_chckbxVisualizeLights.gridwidth = 3;
+		gbc_chckbxVisualizeLights.insets = new Insets(0, 0, 0, 5);
+		gbc_chckbxVisualizeLights.gridx = 0;
+		gbc_chckbxVisualizeLights.gridy = 9;
+		renderingOptionsPanel.add(chckbxVisualizeLights, gbc_chckbxVisualizeLights);
+		
+		// Add listener for changes to fresnel checkbox.
+		chckbxVisualizeLights.addChangeListener(e ->
+		{			
+			if (model.getSelectedItem() != null)
+			{
+				model.getSelectedItem().settings().setVisibleLightsEnabled(chckbxVisualizeLights.isSelected());
+			}
+		});
+		
 		JCheckBox chckbxPhysicallybasedGeometricAttenuation = new JCheckBox("PBR geom. atten.");
 		GridBagConstraints gbc_chckbxPhysicallybasedGeometricAttenuation = new GridBagConstraints();
+		gbc_chckbxPhysicallybasedGeometricAttenuation.insets = new Insets(0, 0, 5, 0);
 		gbc_chckbxPhysicallybasedGeometricAttenuation.gridx = 3;
 		gbc_chckbxPhysicallybasedGeometricAttenuation.gridy = 8;
 		renderingOptionsPanel.add(chckbxPhysicallybasedGeometricAttenuation, gbc_chckbxPhysicallybasedGeometricAttenuation);
@@ -572,6 +591,7 @@ public class IBRelightConfigFrame extends JFrame
 		modelDependentComponents.add(chckbxUseTextures);
 		modelDependentComponents.add(chckbxPhysicallybasedGeometricAttenuation);
 		modelDependentComponents.add(chckbxFresnelEffect);
+		modelDependentComponents.add(chckbxVisualizeLights);
 		modelDependentComponents.add(chckbxHalfRes);
 		modelDependentComponents.add(chckbxMultisampling);
 		modelDependentComponents.add(lblNewDimensions);
@@ -596,6 +616,7 @@ public class IBRelightConfigFrame extends JFrame
 			chckbxUseTextures.setSelected(model.getSelectedItem().settings().areTexturesEnabled());
 			chckbxPhysicallybasedGeometricAttenuation.setSelected(model.getSelectedItem().settings().isPBRGeometricAttenuationEnabled());
 			chckbxFresnelEffect.setSelected(model.getSelectedItem().settings().isFresnelEnabled());
+			chckbxVisualizeLights.setSelected(model.getSelectedItem().settings().areVisibleLightsEnabled());
 		};
 		
 		// Set initial values from the 'model' parameter
