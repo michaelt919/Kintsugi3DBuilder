@@ -618,7 +618,7 @@ void main()
     {
         diffuseColor = pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
     }
-    else if (!imageBasedRenderingEnabled)
+    else if (!imageBasedRenderingEnabled && !useSpecularTexture)
 	{
         diffuseColor = vec3(0.5);
 	}

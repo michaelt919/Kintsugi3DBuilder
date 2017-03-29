@@ -540,22 +540,25 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			
 			Matrix4 modelView = ulfRenderer.getModelViewMatrix();
 			
-			for (int i = 0; i < lightController.getLightCount(); i++)
+			if (this.ulfRenderer.settings().isRelightingEnabled() && this.ulfRenderer.settings().areVisibleLightsEnabled())
 			{
-				if (lightController.getSelectedLightIndex() != i)
+				for (int i = 0; i < lightController.getLightCount(); i++)
 				{
-					this.lightProgram.setUniform("color", lightController.getLightColor(i));
-					
-					Vector3 lightPosition = new Vector3(modelView.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3));
-					
-					this.lightProgram.setUniform("model_view",
-
-//							modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
-						Matrix4.translate(lightPosition)
-							.times(Matrix4.scale((float)windowSize.height * -lightPosition.z / (16.0f * windowSize.width), -lightPosition.z / 16.0f, 1.0f)));
-					this.lightProgram.setUniform("projection", ulfRenderer.getProjectionMatrix());
-		    		this.lightProgram.setTexture("lightTexture", this.lightTexture);
-					this.lightRenderable.draw(PrimitiveMode.TRIANGLE_FAN, context);
+					if (lightController.getSelectedLightIndex() != i)
+					{
+						this.lightProgram.setUniform("color", lightController.getLightColor(i));
+						
+						Vector3 lightPosition = new Vector3(modelView.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3));
+						
+						this.lightProgram.setUniform("model_view",
+	
+	//							modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
+							Matrix4.translate(lightPosition)
+								.times(Matrix4.scale((float)windowSize.height * -lightPosition.z / (16.0f * windowSize.width), -lightPosition.z / 16.0f, 1.0f)));
+						this.lightProgram.setUniform("projection", ulfRenderer.getProjectionMatrix());
+			    		this.lightProgram.setTexture("lightTexture", this.lightTexture);
+						this.lightRenderable.draw(PrimitiveMode.TRIANGLE_FAN, context);
+					}
 				}
 			}
 			
