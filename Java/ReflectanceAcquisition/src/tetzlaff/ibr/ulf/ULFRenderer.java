@@ -189,11 +189,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     	{
     		if (this.cameraFile.getName().toUpperCase().endsWith(".XML"))
     		{
-    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.geometryFile, this.loadOptions, this.context);
+    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.geometryFile, this.loadOptions, this.callback, this.context);
     		}
     		else
     		{
-    			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.context);
+    			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.callback, this.context);
     			if (this.geometryFile == null)
 				{
     				this.geometryFile = lightField.viewSet.getGeometryFile();
@@ -263,10 +263,10 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 			indexFBO.clearIntegerColorBuffer(0, -1, -1, -1, -1);
 			indexFBO.clearIntegerColorBuffer(1, -1, -1, -1, -1);
 			context.flush();
-    		
+
 			if (this.callback != null)
 			{
-				this.callback.loadingComplete();
+				this.callback.setMaximum(0.0); // make indeterminate
 			}
 		} 
     	catch (IOException e) 

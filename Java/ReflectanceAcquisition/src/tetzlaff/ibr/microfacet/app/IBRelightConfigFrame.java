@@ -77,7 +77,7 @@ public class IBRelightConfigFrame extends JFrame
 		setResizable(false);
 		setTitle("IBRelight: Settings");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(10, 10, 960, 660);
+		setBounds(10, 10, 960, 680);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -86,13 +86,12 @@ public class IBRelightConfigFrame extends JFrame
 		
 		// Create a separate loading window positioned over the GLFW window with
 		// nothing but an infinite progress bar.  Make it undecorated.
-		JFrame loadingFrame = new JFrame("Loading...");
-		loadingFrame.setUndecorated(true);
-		JProgressBar loadingBar = new JProgressBar();
-		loadingBar.setIndeterminate(true);
-		loadingFrame.getContentPane().add(loadingBar);
-		loadingFrame.pack();
-		loadingFrame.setLocationRelativeTo(null);
+//		JFrame loadingFrame = new JFrame("Loading...");
+//		loadingFrame.setUndecorated(true);
+//		loadingFrame.getContentPane().add(loadingBar);
+//		loadingFrame.pack();
+//		loadingFrame.setLocationRelativeTo(null);
+		
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[] {300, 630};
 		gbl_contentPane.rowHeights = new int[] {0};
@@ -115,9 +114,9 @@ public class IBRelightConfigFrame extends JFrame
 		loadingPanel.setBorder(new TitledBorder(null, "Load Options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		GridBagLayout gbl_loadingPanel = new GridBagLayout();
 		gbl_loadingPanel.columnWidths = new int[] {140, 140};
-		gbl_loadingPanel.rowHeights = new int[] {0, 0, 0, 0};
+		gbl_loadingPanel.rowHeights = new int[] {0, 0, 0, 0, 14};
 		gbl_loadingPanel.columnWeights = new double[]{1.0, 0.0};
-		gbl_loadingPanel.rowWeights = new double[]{0.0, 1.0, 1.0, 0.0};
+		gbl_loadingPanel.rowWeights = new double[]{0.0, 1.0, 1.0, 0.0, 0.0};
 		loadingPanel.setLayout(gbl_loadingPanel);
 		
 		JCheckBox chckbxCompressImages = new JCheckBox("Compress Images");
@@ -204,7 +203,7 @@ public class IBRelightConfigFrame extends JFrame
 		JButton btnLoadSingle = new JButton("Load Single...");
 		GridBagConstraints gbc_btnLoadSingle = new GridBagConstraints();
 		gbc_btnLoadSingle.anchor = GridBagConstraints.NORTH;
-		gbc_btnLoadSingle.insets = new Insets(0, 0, 0, 5);
+		gbc_btnLoadSingle.insets = new Insets(0, 0, 5, 5);
 		gbc_btnLoadSingle.gridx = 0;
 		gbc_btnLoadSingle.gridy = 3;
 		loadingPanel.add(btnLoadSingle, gbc_btnLoadSingle);
@@ -212,11 +211,22 @@ public class IBRelightConfigFrame extends JFrame
 		
 		JButton btnLoadMultiple = new JButton("Load Multiple...");
 		GridBagConstraints gbc_btnLoadMultiple = new GridBagConstraints();
+		gbc_btnLoadMultiple.insets = new Insets(0, 0, 5, 0);
 		gbc_btnLoadMultiple.anchor = GridBagConstraints.NORTH;
 		gbc_btnLoadMultiple.gridx = 1;
 		gbc_btnLoadMultiple.gridy = 3;
 		loadingPanel.add(btnLoadMultiple, gbc_btnLoadMultiple);
 		btnLoadMultiple.setToolTipText("Load multiple objects");
+		
+		JProgressBar progressBar = new JProgressBar();
+		progressBar.setIndeterminate(true);
+		GridBagConstraints gbc_progressBar = new GridBagConstraints();
+		gbc_progressBar.fill = GridBagConstraints.BOTH;
+		gbc_progressBar.gridwidth = 2;
+		gbc_progressBar.insets = new Insets(0, 0, 0, 5);
+		gbc_progressBar.gridx = 0;
+		gbc_progressBar.gridy = 4;
+		loadingPanel.add(progressBar, gbc_progressBar);
 		
 		JPanel selectionPanel = new JPanel();
 		panel_2.add(selectionPanel);
@@ -569,6 +579,8 @@ public class IBRelightConfigFrame extends JFrame
 		btnFidelity.setToolTipText("Evaluate the fidelity of the image-based sampling.");
 		
 		JButton btnBTFExport = new JButton("Export BTF");
+		btnBTFExport.setEnabled(false);
+		btnBTFExport.setVisible(false);
 		panel_1.add(btnBTFExport);
 		btnBTFExport.setToolTipText("Evaluate the fidelity of the image-based sampling.");
 		
@@ -651,18 +663,26 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			model.setLoadingMonitor(new IBRLoadingMonitor()
 			{
+				private double progress = 0;
+				private double maximum = 0;
+				
 				@Override
 				public void setProgress(double progress)
 				{
-					SwingUtilities.invokeLater(new Runnable()
+					this.progress = progress;
+					
+					if (maximum > 0)
 					{
-						@Override
-						public void run() 
+						SwingUtilities.invokeLater(new Runnable()
 						{
-							loadingBar.setIndeterminate(false);
-							loadingBar.setValue((int)Math.round(progress * 100));
-						}						
-					});
+							@Override
+							public void run() 
+							{
+								progressBar.setIndeterminate(false);
+								progressBar.setValue((int)Math.round(progress / maximum * 100));
+							}						
+						});
+					}
 				}
 	
 				@Override
@@ -673,7 +693,8 @@ public class IBRelightConfigFrame extends JFrame
 						@Override
 						public void run()
 						{
-							loadingFrame.setVisible(false);
+							progressBar.setVisible(false);
+							pack();
 						}
 					});
 				}
@@ -686,6 +707,31 @@ public class IBRelightConfigFrame extends JFrame
 				@Override
 				public void setMaximum(double maximum) 
 				{
+					this.maximum = maximum;
+					
+					if (maximum > 0)
+					{
+						SwingUtilities.invokeLater(new Runnable()
+						{
+							@Override
+							public void run() 
+							{
+								progressBar.setIndeterminate(false);
+								progressBar.setValue((int)Math.round(progress / maximum * 100));
+							}						
+						});
+					}
+					else
+					{
+						SwingUtilities.invokeLater(new Runnable()
+						{
+							@Override
+							public void run() 
+							{
+								progressBar.setIndeterminate(true);
+							}						
+						});
+					}
 				}
 			});
 		}
@@ -701,8 +747,9 @@ public class IBRelightConfigFrame extends JFrame
 			{
 				try 
 				{
-					loadingBar.setIndeterminate(true);
-					loadingFrame.setVisible(true);
+					progressBar.setIndeterminate(true);
+					progressBar.setVisible(true);
+					this.pack();
 					model.getSelectedItem().requestBTF(
 						(Integer)spinnerWidth.getValue(),
 						(Integer)spinnerHeight.getValue(),
@@ -727,8 +774,9 @@ public class IBRelightConfigFrame extends JFrame
 			{
 				try 
 				{
-					loadingBar.setIndeterminate(true);
-					loadingFrame.setVisible(true);
+					progressBar.setIndeterminate(true);
+					progressBar.setVisible(true);
+					this.pack();
 					model.getSelectedItem().requestFidelity(fileChooser.getSelectedFile());
 				} 
 				catch (IOException ex)
@@ -756,8 +804,9 @@ public class IBRelightConfigFrame extends JFrame
 				{
 					try 
 					{
-						loadingBar.setIndeterminate(true);
-						loadingFrame.setVisible(true);
+						progressBar.setIndeterminate(true);
+						progressBar.setVisible(true);
+						this.pack();
 						model.getSelectedItem().requestResample(
 							(Integer)spinnerWidth.getValue(),
 							(Integer)spinnerHeight.getValue(), 
@@ -930,17 +979,31 @@ public class IBRelightConfigFrame extends JFrame
 							{
 								loadOptions.getImageOptions().setFilePath(imageChooser.getSelectedFile());
 								model.addFromAgisoftXMLFile(file, fileChooser.getSelectedFile(), loadOptions);
+								
+								SwingUtilities.invokeLater(new Runnable()
+								{
+									@Override
+									public void run() 
+									{
+										progressBar.setIndeterminate(true);
+										progressBar.setVisible(true);
+										pack();
+									}
+								});
 							}
 						}
 					}
 					else
 					{
 						model.addFromVSETFile(file, loadOptions);
-						SwingUtilities.invokeLater(new Runnable(){
+						SwingUtilities.invokeLater(new Runnable()
+						{
 							@Override
-							public void run() {
-								loadingBar.setIndeterminate(true);
-								loadingFrame.setVisible(true);
+							public void run() 
+							{
+								progressBar.setIndeterminate(true);
+								progressBar.setVisible(true);
+								pack();
 							}
 						});
 					}
@@ -968,8 +1031,9 @@ public class IBRelightConfigFrame extends JFrame
 				try 
 				{
 					model.addMorphFromLFMFile(fileChooser.getSelectedFile(), loadOptions);
-					loadingBar.setIndeterminate(true);
-					loadingFrame.setVisible(true);
+					progressBar.setIndeterminate(true);
+					progressBar.setVisible(true);
+					pack();
 				} 
 				catch (IOException ex) 
 				{
@@ -1304,6 +1368,12 @@ public class IBRelightConfigFrame extends JFrame
 				(float)Math.pow(ambientColorChooser.getColor().getBlue() / 255.0, 2.2))
 				.times((float)((double)((Double)ambientIntensitySpinner.getValue()))));
 		});
+		
+		this.pack(); // Pack initially without progress bar
+		
+		progressBar.setVisible(false);
+		
+		this.pack(); // Pack again without progress bar
 	}
 	
 	/**
