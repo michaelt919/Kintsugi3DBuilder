@@ -232,9 +232,12 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			e.printStackTrace();
 		}
 		
-		if (callback != null)
+		// Make sure that everything is loaded onto the graphics card before announcing that loading is complete.
+		this.draw();
+		
+		if (this.callback != null)
 		{
-			callback.loadingComplete();
+			this.callback.loadingComplete();
 		}
 	}
 

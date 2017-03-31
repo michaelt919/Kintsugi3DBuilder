@@ -455,7 +455,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 				textureArrayBuilder.setMaxAnisotropy(16.0f);
 				textureArray = textureArrayBuilder.createTexture();
 				
-				if(loadingCallback != null) {
+				if(loadingCallback != null) 
+				{
 					loadingCallback.setMaximum(imageFileNames.size());
 				}
 	
@@ -490,7 +491,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 					
 					this.textureArray.loadLayer(i, imageFile, true);
 	
-					if(loadingCallback != null) {
+					if(loadingCallback != null) 
+					{
 						loadingCallback.setProgress(i+1);
 					}
 				}

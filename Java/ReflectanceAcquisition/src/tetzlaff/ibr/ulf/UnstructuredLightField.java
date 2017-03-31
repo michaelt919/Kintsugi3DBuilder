@@ -13,6 +13,7 @@ import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ibr.IBRLoadOptions;
+import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.ViewSetImageOptions;
@@ -69,11 +70,11 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	public static <ContextType extends Context<ContextType>> 
 		UnstructuredLightField<ContextType> loadFromAgisoftXMLFile(File xmlFile, File meshFile, ContextType context) throws IOException
 	{
-		return UnstructuredLightField.loadFromAgisoftXMLFile(xmlFile, meshFile, null);
+		return UnstructuredLightField.loadFromAgisoftXMLFile(xmlFile, meshFile, new IBRLoadOptions(new ViewSetImageOptions(null, false, false, false), false, 0, 0), null, context);
 	}
 
 	public static <ContextType extends Context<ContextType>>
-		UnstructuredLightField<ContextType> loadFromAgisoftXMLFile(File xmlFile, File meshFile, IBRLoadOptions loadOptions, ContextType context) throws IOException
+		UnstructuredLightField<ContextType> loadFromAgisoftXMLFile(File xmlFile, File meshFile, IBRLoadOptions loadOptions, IBRLoadingMonitor loadingCallback, ContextType context) throws IOException
 	{
 		ViewSet<ContextType> viewSet;
 		VertexMesh proxy;
@@ -81,7 +82,7 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 		
 		File directoryPath = xmlFile.getParentFile();
         proxy = new VertexMesh("OBJ", meshFile);
-        viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, loadOptions.getImageOptions(), context);
+        viewSet = ViewSet.loadFromAgisoftXMLFile(xmlFile, loadOptions.getImageOptions(), context, loadingCallback);
         VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(proxy.getVertices());
         
         if (loadOptions.getImageOptions().getFilePath() != null)
@@ -149,18 +150,18 @@ public class UnstructuredLightField<ContextType extends Context<ContextType>>
 	public static <ContextType extends Context<ContextType>>
 		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, ContextType context) throws IOException
 	{
-		return UnstructuredLightField.loadFromVSETFile(vsetFile, new IBRLoadOptions(new ViewSetImageOptions(null, false, false, false), false, 0, 0), context);
+		return UnstructuredLightField.loadFromVSETFile(vsetFile, new IBRLoadOptions(new ViewSetImageOptions(null, false, false, false), false, 0, 0), null, context);
 	}
 
 	public static <ContextType extends Context<ContextType>>
-		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, IBRLoadOptions loadOptions, ContextType context) throws IOException
+		UnstructuredLightField<ContextType> loadFromVSETFile(File vsetFile, IBRLoadOptions loadOptions, IBRLoadingMonitor loadingCallback, ContextType context) throws IOException
 	{
 		ViewSet<ContextType> viewSet;
 		VertexMesh proxy;
 		Texture3D<ContextType> depthTextures = null;
 		
 		File directoryPath = vsetFile.getParentFile();
-        viewSet = ViewSet.loadFromVSETFile(vsetFile, loadOptions.getImageOptions(), context);
+        viewSet = ViewSet.loadFromVSETFile(vsetFile, loadOptions.getImageOptions(), context, loadingCallback);
         proxy = new VertexMesh("OBJ", viewSet.getGeometryFile());
         VertexBuffer<ContextType> positionBuffer = context.createVertexBuffer().setData(proxy.getVertices());
         
