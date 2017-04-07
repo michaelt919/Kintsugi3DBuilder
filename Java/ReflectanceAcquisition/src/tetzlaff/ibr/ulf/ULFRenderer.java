@@ -4,7 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.function.Consumer;
 
 import tetzlaff.gl.ColorFormat;
@@ -41,7 +46,6 @@ import tetzlaff.ibr.ViewSetImageOptions;
 public class ULFRenderer<ContextType extends Context<ContextType>> implements IBRDrawable<ContextType>
 {
     private Program<ContextType> program;
-    private Program<ContextType> viewIndexProgram;
     
     private File cameraFile;
     private File geometryFile;
@@ -49,18 +53,14 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     private UnstructuredLightField<ContextType> lightField;
 	private ContextType context;
     private Renderable<ContextType> mainRenderable;
-    private Renderable<ContextType> indexRenderable;
     private CameraController cameraController;
     private IBRLoadingMonitor callback;
 
     private Vector3 clearColor;
-    private boolean viewIndexCacheEnabled;
     private boolean halfResEnabled;
-    FramebufferObject<ContextType> indexFBO;
-    private Texture3D<ContextType> viewIndexCacheTexturesFront;
-    private Texture3D<ContextType> viewIndexCacheTexturesBack;
     private Program<ContextType> simpleTexProgram;
     private Renderable<ContextType> simpleTexRenderable;
+	private FramebufferObject<ContextType> offscreenFBO = null;
     
     private File newEnvironmentFile = null;
     private boolean environmentTextureEnabled;
@@ -69,10 +69,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 
     private Program<ContextType> environmentBackgroundProgram;
     private Renderable<ContextType> environmentBackgroundRenderable;
-    
-    private float targetFPS;
-    private long lastFrame = 0;
-    private int offset=0, stride=0;
 
     private boolean resampleRequested;
     private int resampleWidth, resampleHeight;
@@ -89,19 +85,23 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 	private Runnable fidelityCompleteCallback;
     
     private boolean multisamplingEnabled = false;
+    
+    private List<Matrix4> transformationMatrices;
+    private Vector3 centroid;
+    private float boundingRadius;
 
-    public ULFRenderer(ContextType context, Program<ContextType> program, Program<ContextType> viewIndexProgram, File cameraFile, File meshFile, IBRLoadOptions loadOptions, CameraController cameraController)
+    public ULFRenderer(ContextType context, Program<ContextType> program, File cameraFile, File meshFile, IBRLoadOptions loadOptions, CameraController cameraController)
     {
     	this.context = context;
     	this.program = program;
-    	this.viewIndexProgram = program;
     	this.cameraFile = cameraFile;
     	this.geometryFile = meshFile;
     	this.loadOptions = loadOptions;
     	this.cameraController = cameraController;
-    	this.viewIndexCacheEnabled = false;
-    	this.targetFPS = 30.0f;
     	this.clearColor = new Vector3(0.0f);
+    	
+    	this.transformationMatrices = new ArrayList<Matrix4>();
+    	this.transformationMatrices.add(Matrix4.identity());
     }
 	
 	public void setCameraController(CameraController cameraController)
@@ -217,22 +217,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 	    	{
 	    		this.mainRenderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
 	    	}
-	    	
-	    	if(viewIndexProgram != null)
-	    	{
-		    	this.indexRenderable = context.createRenderable(viewIndexProgram);
-		    	this.indexRenderable.addVertexBuffer("position", this.lightField.positionBuffer);
-		    	
-		    	if (this.lightField.normalBuffer != null)
-		    	{
-		    		this.indexRenderable.addVertexBuffer("normal", this.lightField.normalBuffer);
-		    	}
-		    	
-		    	if (this.lightField.texCoordBuffer != null)
-		    	{
-		    		this.indexRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
-		    	}
-	    	}
 	    				
 	    	this.simpleTexRenderable = context.createRenderable(simpleTexProgram);
 	    	this.simpleTexRenderable.addVertexBuffer("position", context.createRectangle());
@@ -240,28 +224,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 	    	this.environmentBackgroundRenderable = context.createRenderable(environmentBackgroundProgram);
 	    	this.environmentBackgroundRenderable.addVertexBuffer("position", context.createRectangle());
 	    	
-        	indexFBO = context.getFramebufferObjectBuilder(this.lightField.depthTextures.getWidth(), this.lightField.depthTextures.getHeight())
-					.addEmptyColorAttachments(2)
-					.createFramebufferObject();
-			
-			viewIndexCacheTexturesFront = context.get2DColorTextureArrayBuilder(this.lightField.depthTextures.getWidth(), this.lightField.depthTextures.getHeight(), 2)
-					.setInternalFormat(ColorFormat.RGBA16I)
-					.setMipmapsEnabled(false)
-					.setLinearFilteringEnabled(false)
-					.setMultisamples(1, true)
-					.createTexture();
-			
-			viewIndexCacheTexturesBack = context.get2DColorTextureArrayBuilder(this.lightField.depthTextures.getWidth(), this.lightField.depthTextures.getHeight(), 2)
-					.setInternalFormat(ColorFormat.RGBA16I)
-					.setMipmapsEnabled(false)
-					.setLinearFilteringEnabled(false)
-					.setMultisamples(1, true)
-					.createTexture();
-			
-			indexFBO.setColorAttachment(0, viewIndexCacheTexturesFront.getLayerAsFramebufferAttachment(0));
-			indexFBO.setColorAttachment(1, viewIndexCacheTexturesFront.getLayerAsFramebufferAttachment(1));
-			indexFBO.clearIntegerColorBuffer(0, -1, -1, -1, -1);
-			indexFBO.clearIntegerColorBuffer(1, -1, -1, -1, -1);
 			context.flush();
 
 			if (this.callback != null)
@@ -278,6 +240,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 	@Override
 	public void update()
 	{
+		this.updateCentroidAndRadius();
+		
 		if (this.newEnvironmentFile != null)
 		{
 			File environmentFile = this.newEnvironmentFile;
@@ -423,21 +387,73 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     	program.setUniform("skipView", -1);
 	}
 	
-	public Matrix4 getModelViewMatrix()
+	private void updateCentroidAndRadius()
 	{
-    	float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length();
+		Vector4 sumPositions = new Vector4(0.0f);
+    	this.boundingRadius = lightField.proxy.getBoundingRadius();
+    	
+    	
+    	this.centroid = lightField.proxy.getCentroid();
+    	
+    	if (transformationMatrices != null)
+    	{
+    		for (Matrix4 m : transformationMatrices)
+    		{
+    			Vector4 position = m.times(new Vector4(lightField.proxy.getCentroid(), 1.0f));
+    			sumPositions = sumPositions.plus(position);
+    		}
+    		
+    		this.centroid = new Vector3(sumPositions).dividedBy(sumPositions.w);
+    		
+    		for(Matrix4 m : transformationMatrices)
+    		{
+    			float distance = new Vector3(m.times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).distance(this.centroid);
+    			this.boundingRadius = Math.max(this.boundingRadius, distance + lightField.proxy.getBoundingRadius());
+    		}
+    	}
+	}
+	
+	public Matrix4 getViewMatrix()
+	{
+    	float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length() 
+    			* this.boundingRadius / lightField.proxy.getBoundingRadius();
 		
 		return Matrix4.scale(scale)
     			.times(cameraController.getViewMatrix())
     			.times(Matrix4.scale(1.0f / scale))
     			.times(new Matrix4(new Matrix3(lightField.viewSet.getCameraPose(0))))
-    			.times(Matrix4.translate(lightField.proxy.getCentroid().negated()));
+    			.times(Matrix4.translate(this.centroid.negated()));
+	}
+	
+	public Matrix4 getModelViewMatrix(int modelInstance)
+	{
+		return getViewMatrix().times(transformationMatrices.get(modelInstance));
+	}
+	
+	public int getModelInstanceCount()
+	{
+		return transformationMatrices.size();
+	}
+	
+	public List<Matrix4> getTransformationMatrices()
+	{
+		return transformationMatrices;
+	}
+	
+	@Override
+	public void setTransformationMatrices(List<Matrix4> transformationMatrices)
+	{
+		if (transformationMatrices != null)
+		{
+			this.transformationMatrices = transformationMatrices;
+		}
 	}
 	
 	public Matrix4 getProjectionMatrix()
 	{
     	FramebufferSize size = context.getDefaultFramebuffer().getSize();
-		float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length();
+		float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length()
+			* this.boundingRadius / lightField.proxy.getBoundingRadius();
 		
 		return Matrix4.perspective(
     			//(float)(1.0),
@@ -447,32 +463,20 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     			(float)size.width / (float)size.height, 
     			0.01f * scale, 100.0f * scale);
 	}
-    
-    @Override
-    public void draw()
-    {
-    	if (offset == stride)
-    	{
-    		offset = 0;
-    		long now = new Date().getTime();
-    		
-    		if (lastFrame > 0)
-    		{
-	    		long elapsedTime = now-lastFrame;
-	    		float fps = (float)stride/(float)elapsedTime*1000;
-	    		stride = Math.max(1, Math.min((int)Math.ceil(stride*targetFPS/fps), lightField.viewSet.getCameraPoseCount()));
-	    		//System.out.println("fps="+fps);
-	    		//System.out.println("new stride="+stride);
-    		}
-    		else
-    		{
-    			stride = lightField.viewSet.getCameraPoseCount();
-    		}
-    		
-    		lastFrame = now;
-    	}
-    	
-    	if(multisamplingEnabled)
+	
+	public Vector3 getCentroid()
+	{
+		return this.centroid;
+	}
+	
+	public float getBoundingRadius()
+	{
+		return this.boundingRadius;
+	}
+	
+	public void prepareForDefaultFBODraw()
+	{
+		if(multisamplingEnabled)
 		{
 			context.enableMultisampling();
 		}
@@ -488,68 +492,33 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     	
     	this.setupForDraw();
     	
-
-    	Matrix4 modelView, projection;
+    	Matrix4 projection;
     	
-    	mainRenderable.program().setUniform("model_view", modelView = getModelViewMatrix());
     	mainRenderable.program().setUniform("projection", projection = getProjectionMatrix());
     	
-        FramebufferObject<ContextType> offscreenFBO;
+    	if (environmentTexture != null && environmentTextureEnabled)
+		{
+			environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
+			environmentBackgroundProgram.setTexture("env", environmentTexture);
+			environmentBackgroundProgram.setUniform("model_view", this.getViewMatrix());
+			environmentBackgroundProgram.setUniform("projection", projection);
+			environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
+			environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
+
+			environmentBackgroundProgram.setUniform("gamma", 
+					environmentTexture.isInternalFormatCompressed() || 
+					environmentTexture.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
+					? 1.0f : 2.2f);
+		}
+    	
+        FramebufferObject<ContextType> offscreenFBO = null;
         
         int fboWidth, fboHeight;
 		if (halfResEnabled)
 		{
 			fboWidth = size.width / 2;
 			fboHeight = size.height / 2;
-		}
-		else
-		{
-			fboWidth = size.width;
-			fboHeight = size.height;
-		}
-		
-        if (viewIndexCacheEnabled && viewIndexProgram != null)
-		{
-        	// Update view indices
 			
-        	this.indexRenderable.program().setUniform("offset", offset);
-        	this.indexRenderable.program().setUniform("stride", stride);
-        	
-        	this.indexRenderable.program().setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
-        	this.indexRenderable.program().setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-        	this.indexRenderable.program().setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
-        	this.indexRenderable.program().setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
-        	this.indexRenderable.program().setUniformBuffer("LightIntensities", lightField.viewSet.getLightIntensityBuffer());
-        	this.indexRenderable.program().setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
-        	this.indexRenderable.program().setUniform("cameraPoseCount", lightField.viewSet.getCameraPoseCount());
-        	
-        	indexRenderable.program().setUniform("model_view", 
-    			 cameraController.getViewMatrix() // View
- 					.times(Matrix4.scale(1.0f / lightField.proxy.getBoundingRadius()))
-    			 	.times(Matrix4.translate(lightField.proxy.getCentroid().negated())) // Model
-    		);
-        	indexRenderable.program().setUniform("weightExponent", this.lightField.settings.getWeightExponent());
-        	
-        	indexFBO.setColorAttachment(0, viewIndexCacheTexturesBack.getLayerAsFramebufferAttachment(0));
-			indexFBO.setColorAttachment(1, viewIndexCacheTexturesBack.getLayerAsFramebufferAttachment(1));
-
-			viewIndexProgram.setTexture("viewIndexTextures", viewIndexCacheTexturesFront);
-			
-			indexFBO.clearIntegerColorBuffer(0, -1, -1, -1, -1);
-			indexFBO.clearIntegerColorBuffer(1, -1, -1, -1, -1);
-			indexRenderable.draw(PrimitiveMode.TRIANGLES, indexFBO);
-			context.flush();
-				
-    		Texture3D<ContextType> tmp = viewIndexCacheTexturesFront;
-        	viewIndexCacheTexturesFront = viewIndexCacheTexturesBack;
-        	viewIndexCacheTexturesBack = tmp;
-        	
-			program.setTexture("viewIndexTextures", viewIndexCacheTexturesFront);
-		}
-    	
-    	if(halfResEnabled) 
-    	{
-			// Do first pass at half resolution to off-screen buffer
 			offscreenFBO = context.getFramebufferObjectBuilder(fboWidth, fboHeight)
 					.addColorAttachment(new ColorAttachmentSpec(ColorFormat.RGB8)
 						.setLinearFilteringEnabled(true))
@@ -558,71 +527,85 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 			
 			offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
 	    	offscreenFBO.clearDepthBuffer();
+    		
+    		if (environmentTexture != null && environmentTextureEnabled)
+    		{
+    			context.disableDepthTest();
+    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+    			context.enableDepthTest();
+    		}
+		}
+		else
+		{
+			fboWidth = size.width;
+			fboHeight = size.height;
+			
+			framebuffer.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
+    		framebuffer.clearDepthBuffer();
+    		
+    		if (environmentTexture != null && environmentTextureEnabled)
+    		{
+    			context.disableDepthTest();
+    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+    			context.enableDepthTest();
+    		}
+		}
+	}
+	
+	public void drawInstance(int instance)
+	{
+    	mainRenderable.program().setUniform("model_view", getModelViewMatrix(instance));
+    	
+    	if(halfResEnabled) 
+    	{
+			// Do first pass at half resolution to off-screen buffer
 	        mainRenderable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
-	        context.flush();
+    	} 
+    	else 
+    	{
+	        mainRenderable.draw(PrimitiveMode.TRIANGLES, context.getDefaultFramebuffer());  
+    	}
+	}
+	
+	public void finishDefaultFBODraw()
+	{
+    	if (halfResEnabled)
+		{
+    		context.flush();
 	        
 	        // Second pass at full resolution to default framebuffer
 	    	simpleTexRenderable.program().setTexture("tex", offscreenFBO.getColorAttachmentTexture(0));    	
 
-			framebuffer.clearDepthBuffer();
-	    	simpleTexRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-
-	    	context.flush();
-	    	offscreenFBO.delete();
-    	} 
-    	else 
-    	{
-    		framebuffer.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
-    		
-    		if (environmentTexture != null && environmentTextureEnabled)
-			{
-				environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
-				environmentBackgroundProgram.setTexture("env", environmentTexture);
-				environmentBackgroundProgram.setUniform("model_view", modelView);
-				environmentBackgroundProgram.setUniform("projection", projection);
-				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
-				environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
-
-				environmentBackgroundProgram.setUniform("gamma", 
-						environmentTexture.isInternalFormatCompressed() || 
-						environmentTexture.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
-						? 1.0f : 2.2f);
-				
-				context.disableDepthTest();
-				this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-				context.enableDepthTest();
-			}
-    		
+	    	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
     		framebuffer.clearDepthBuffer();
-	        mainRenderable.draw(PrimitiveMode.TRIANGLES, framebuffer);  
-	        context.flush();
-    	}
+	    	simpleTexRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+	    	
+	    	context.flush();
+    		offscreenFBO.delete();
+		}
+		else
+		{
+	    	context.flush();
+		}
+	}
+    
+    @Override
+    public void draw()
+    {
+    	prepareForDefaultFBODraw();
     	
-    	offset++;
+		for (int i = 0; i < this.getModelInstanceCount(); i++)
+		{
+	    	drawInstance(i);
+		}
+		
+		finishDefaultFBODraw();
     }
     
     @Override
     public void cleanup()
     {
     	lightField.deleteOpenGLResources();
-    	
-		if (indexFBO != null)
-		{
-			indexFBO.delete();
-			indexFBO = null;
-		}
-		
-    	if (viewIndexCacheTexturesFront != null)
-    	{
-    		viewIndexCacheTexturesFront.delete();
-    		viewIndexCacheTexturesFront = null;
-    	}
-		
-		if (viewIndexCacheTexturesBack != null)
-    	{
-			viewIndexCacheTexturesBack.delete();
-			viewIndexCacheTexturesBack = null;
-    	}
     }
 	
 	@Override
@@ -847,18 +830,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 	}
 
 	@Override
-	public void setViewIndexCacheEnabled(boolean viewIndexCacheEnabled)
-	{
-		this.viewIndexCacheEnabled = viewIndexCacheEnabled;
-	}
-
-	@Override
-	public boolean isViewIndexCacheEnabled()
-	{
-		return this.viewIndexCacheEnabled;
-	}
-
-	@Override
 	public boolean getMultisampling()
 	{
 		return this.multisamplingEnabled;
@@ -896,25 +867,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     	if (this.lightField.texCoordBuffer != null)
     	{
     		this.mainRenderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
-    	}
-	}
-	
-	@Override
-	public void setIndexProgram(Program<ContextType> program)
-	{
-		this.viewIndexProgram = program;
-		
-		this.indexRenderable = context.createRenderable(program);
-    	this.indexRenderable.addVertexBuffer("position", this.lightField.positionBuffer);
-    	
-    	if (this.lightField.normalBuffer != null)
-    	{
-    		this.indexRenderable.addVertexBuffer("normal", this.lightField.normalBuffer);
-    	}
-    	
-    	if (this.lightField.texCoordBuffer != null)
-    	{
-    		this.indexRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
     	}
 	}
 

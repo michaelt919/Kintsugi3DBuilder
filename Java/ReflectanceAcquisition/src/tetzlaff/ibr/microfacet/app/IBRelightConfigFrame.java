@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -35,6 +36,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.helpers.LightController;
 import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.ibr.IBRDrawable;
 import tetzlaff.ibr.IBRListModel;
 import tetzlaff.ibr.IBRLoadOptions;
@@ -1058,9 +1060,20 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_panel_3.gridx = 1;
 		gbc_panel_3.gridy = 0;
 		contentPane.add(panel_3, gbc_panel_3);
+		GridBagLayout gbl_panel_3 = new GridBagLayout();
+		gbl_panel_3.columnWidths = new int[] {625};
+		gbl_panel_3.rowHeights = new int[] {0, 0, 0};
+		gbl_panel_3.columnWeights = new double[]{0.0};
+		gbl_panel_3.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		panel_3.setLayout(gbl_panel_3);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		panel_3.add(tabbedPane);
+		GridBagConstraints gbc_tabbedPane = new GridBagConstraints();
+		gbc_tabbedPane.insets = new Insets(0, 0, 5, 0);
+		gbc_tabbedPane.anchor = GridBagConstraints.NORTHWEST;
+		gbc_tabbedPane.gridx = 0;
+		gbc_tabbedPane.gridy = 0;
+		panel_3.add(tabbedPane, gbc_tabbedPane);
 		
 		JPanel panel_4 = new JPanel();
 		tabbedPane.addTab("Light 1", null, panel_4, null);
@@ -1274,6 +1287,54 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_btnLoadEnvironmentTexture.gridx = 0;
 		gbc_btnLoadEnvironmentTexture.gridy = 3;
 		panel_8.add(btnLoadEnvironmentTexture, gbc_btnLoadEnvironmentTexture);
+		
+		JButton btnLoadTransformationMatrices = new JButton("Load Transformation Matrices...");
+		GridBagConstraints gbc_btnLoadTransformationMatrices = new GridBagConstraints();
+		gbc_btnLoadTransformationMatrices.gridx = 0;
+		gbc_btnLoadTransformationMatrices.gridy = 2;
+		panel_3.add(btnLoadTransformationMatrices, gbc_btnLoadTransformationMatrices);
+		btnLoadTransformationMatrices.addActionListener(e ->
+		{
+			JFileChooser matrixFileChooser = new JFileChooser();
+			matrixFileChooser.setDialogTitle("Select an text file containing transformation matrices");
+			if (matrixFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				File file = matrixFileChooser.getSelectedFile();
+				
+				List<Matrix4> matrices = new ArrayList<Matrix4>();
+				
+				try(Scanner scanner = new Scanner(file))
+				{
+					while(scanner.hasNext())
+					{
+						float[] values = new float[16];
+						for (int i = 0; i < 16 && scanner.hasNextFloat(); i++)
+						{
+							values[i] = scanner.nextFloat();
+						}
+						
+						matrices.add(new Matrix4(
+								values[0], values[1], values[2], values[3],
+								values[4], values[5], values[6], values[7],
+								values[8], values[9], values[10], values[11],
+								values[12], values[13], values[14], values[15]));
+						
+						if (scanner.hasNextLine())
+						{
+							scanner.nextLine();
+						}
+					}
+					
+					model.getSelectedItem().setTransformationMatrices(matrices);
+				} 
+				catch (Exception ex) 
+				{
+					ex.printStackTrace();
+				}
+			}
+		});
+		
+		
 		chckbxEnvironmentMapping.addChangeListener((e) ->
 		{
 			lightController.setEnvironmentMappingEnabled(chckbxEnvironmentMapping.isSelected());

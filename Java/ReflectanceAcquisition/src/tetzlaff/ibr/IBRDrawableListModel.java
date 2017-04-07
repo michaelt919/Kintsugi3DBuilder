@@ -18,7 +18,6 @@ public abstract class IBRDrawableListModel<ContextType extends Context<ContextTy
 	protected final ContextType context;
 	protected final CameraController cameraController;
 	private Program<ContextType> program;
-	private Program<ContextType> indexProgram;
 	private MultiDrawable<IBRDrawable<ContextType>> ulfs;
 	private int effectiveSize;
 	private IBRLoadingMonitor loadingMonitor;
@@ -31,7 +30,6 @@ public abstract class IBRDrawableListModel<ContextType extends Context<ContextTy
 		this.effectiveSize = 0;
 		
 		this.program = program;
-		this.indexProgram = indexProgram;
 	}
 	
 	protected abstract IBRDrawable<ContextType> createFromVSETFile(File vsetFilee, IBRLoadOptions loadOptions) throws IOException;
@@ -49,20 +47,6 @@ public abstract class IBRDrawableListModel<ContextType extends Context<ContextTy
 		for (IBRDrawable<ContextType> ulf : ulfs)
 		{
 			ulf.setProgram(program);
-		}
-	}
-
-	public Program<ContextType> getIndexProgram()
-	{
-		return this.indexProgram;
-	}
-	
-	public void setIndexProgram(Program<ContextType> program)
-	{
-		this.indexProgram = program;
-		for (IBRDrawable<ContextType> ulf : ulfs)
-		{
-			ulf.setIndexProgram(program);
 		}
 	}
 	

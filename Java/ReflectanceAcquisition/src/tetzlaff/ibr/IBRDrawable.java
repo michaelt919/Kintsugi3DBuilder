@@ -2,11 +2,13 @@ package tetzlaff.ibr;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.helpers.Drawable;
+import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.VertexMesh;
 
 public interface IBRDrawable<ContextType extends Context<ContextType>> extends Drawable
@@ -18,16 +20,13 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	
 	IBRSettings settings();
 	
-	boolean isViewIndexCacheEnabled();
 	boolean getHalfResolution();
 	boolean getMultisampling();
 
-	void setViewIndexCacheEnabled(boolean viewIndexCacheEnabled);
 	void setHalfResolution(boolean halfResEnabled);
 	void setMultisampling(boolean multisamplingEnabled);
 	
 	void setProgram(Program<ContextType> program);
-	void setIndexProgram(Program<ContextType> program);
 	void reloadHelperShaders();
 
 	Texture2D<ContextType> getEnvironmentTexture();
@@ -37,4 +36,5 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	void requestFidelity(File exportPath) throws IOException;
 	void requestBTF(int width, int height, File exportPath) throws IOException;
 
+	void setTransformationMatrices(List<Matrix4> matrices);
 }

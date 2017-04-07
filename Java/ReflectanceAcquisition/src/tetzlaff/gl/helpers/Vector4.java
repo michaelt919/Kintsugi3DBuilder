@@ -64,6 +64,16 @@ public class Vector4
 		this(v3.x, v3.y, v3.z, w);
 	}
 	
+
+	/**
+	 * Construct a vector in four dimensions with the given value in all the dimensions.
+	 * @param value Value of all four dimensions.
+	 */
+	public Vector4(float value)
+	{
+		this(value, value, value, value);
+	}
+	
 	@Override
 	public boolean equals(Object o)
 	{

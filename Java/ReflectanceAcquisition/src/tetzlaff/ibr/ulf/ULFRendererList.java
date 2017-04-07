@@ -21,13 +21,13 @@ public class ULFRendererList<ContextType extends Context<ContextType>> extends I
 	@Override
 	protected ULFRenderer<ContextType> createFromVSETFile(File vsetFile, IBRLoadOptions loadOptions) throws IOException
 	{
-		return new ULFRenderer<ContextType>(context, this.getProgram(), null, vsetFile, null, loadOptions, cameraController);
+		return new ULFRenderer<ContextType>(context, this.getProgram(), vsetFile, null, loadOptions, cameraController);
 	}
 	
 	@Override
 	protected ULFRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, IBRLoadOptions loadOptions) throws IOException
 	{
-		return new ULFRenderer<ContextType>(context, this.getProgram(), null, xmlFile, meshFile, loadOptions, cameraController);
+		return new ULFRenderer<ContextType>(context, this.getProgram(), xmlFile, meshFile, loadOptions, cameraController);
 	}
 	
 	@Override
