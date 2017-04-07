@@ -387,7 +387,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     	program.setUniform("skipView", -1);
 	}
 	
-	private void updateCentroidAndRadius()
+	public void updateCentroidAndRadius()
 	{
 		Vector4 sumPositions = new Vector4(0.0f);
     	this.boundingRadius = lightField.proxy.getBoundingRadius();

@@ -232,6 +232,8 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			e.printStackTrace();
 		}
 		
+		ulfRenderer.updateCentroidAndRadius();
+		
 		// Make sure that everything is loaded onto the graphics card before announcing that loading is complete.
 		this.draw();
 		
@@ -516,6 +518,11 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		{
 			setupForDraw();
 			ulfRenderer.prepareForDefaultFBODraw();
+			
+			for (int lightIndex = 0; lightIndex < lightController.getLightCount(); lightIndex++)
+			{
+				generateShadowMaps(lightIndex);
+			}
 			
 			for (int modelInstance = 0; modelInstance < ulfRenderer.getModelInstanceCount(); modelInstance++)
 			{
