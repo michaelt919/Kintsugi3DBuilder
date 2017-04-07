@@ -27,13 +27,13 @@ public class ImageBasedMicrofacetRendererList<ContextType extends Context<Contex
 	@Override
 	protected ImageBasedMicrofacetRenderer<ContextType> createFromVSETFile(File vsetFile, IBRLoadOptions loadOptions) throws IOException
 	{
-		return new ImageBasedMicrofacetRenderer<ContextType>(context, this.getProgram(), this.getIndexProgram(), this.shadowProgram, vsetFile, null, loadOptions, this.getCameraController(), lightController);
+		return new ImageBasedMicrofacetRenderer<ContextType>(context, this.getProgram(), this.shadowProgram, vsetFile, null, loadOptions, this.getCameraController(), lightController);
 	}
 	
 	@Override
 	protected ImageBasedMicrofacetRenderer<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, IBRLoadOptions loadOptions) throws IOException
 	{
-		return new ImageBasedMicrofacetRenderer<ContextType>(context, this.getProgram(), this.getIndexProgram(), this.shadowProgram, xmlFile, meshFile, loadOptions, this.getCameraController(), lightController);
+		return new ImageBasedMicrofacetRenderer<ContextType>(context, this.getProgram(), this.shadowProgram, xmlFile, meshFile, loadOptions, this.getCameraController(), lightController);
 	}
 	
 	@Override

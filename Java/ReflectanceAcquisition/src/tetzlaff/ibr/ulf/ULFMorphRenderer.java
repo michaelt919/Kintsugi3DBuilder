@@ -11,6 +11,7 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.helpers.CameraController;
+import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ibr.IBRDrawable;
 import tetzlaff.ibr.IBRLoadOptions;
@@ -70,7 +71,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 			while (scanner.hasNextLine())
 			{
 				String vsetFileName = scanner.nextLine();
-				stages.add(new ULFRenderer<ContextType>(context, program, null, new File(directory, vsetFileName), null, loadOptions, cameraController));
+				stages.add(new ULFRenderer<ContextType>(context, program, new File(directory, vsetFileName), null, loadOptions, cameraController));
 			}
 			scanner.close();
 			
@@ -195,28 +196,6 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 			stage.setProgram(program);
 		}
 	}
-
-	@Override
-	public void setIndexProgram(Program<ContextType> program) 
-	{
-		for(ULFRenderer<ContextType> stage : stages)
-		{
-			stage.setIndexProgram(program);
-		}
-	}
-
-	@Override
-	public boolean isViewIndexCacheEnabled() 
-	{
-		return this.stages.get(this.currentStage).isViewIndexCacheEnabled();
-	}
-
-	@Override
-	public void setViewIndexCacheEnabled(boolean viewIndexCacheEnabled) 
-	{
-		this.stages.get(this.currentStage).setViewIndexCacheEnabled(viewIndexCacheEnabled);
-	}
-
 	@Override
 	public void requestBTF(int width, int height, File exportPath)
 			throws IOException 
@@ -243,5 +222,11 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	public void setEnvironment(File environmentFile) throws IOException 
 	{
 		this.stages.get(this.currentStage).setEnvironment(environmentFile);
+	}
+
+	@Override
+	public void setTransformationMatrices(List<Matrix4> matrices) 
+	{
+		this.stages.get(this.currentStage).setTransformationMatrices(matrices);
 	}
 }

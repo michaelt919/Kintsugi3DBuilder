@@ -30,7 +30,7 @@ public class Vector3
 	}
 	
 	/**
-	 * Construct a vector in three dimensions with the given values.
+	 * Construct a vector in three dimensions with the given value in all the dimensions.
 	 * @param value Value of all three dimensions.
 	 */
 	public Vector3(float value)
