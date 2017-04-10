@@ -254,14 +254,17 @@ public class Material
 			}
 		}
 		
-		if (!ambientSet)
+		if (currentMaterial != null)
 		{
-			currentMaterial.setAmbient(currentMaterial.getDiffuse());
-		}
-		
-		if (currentMaterial.getAmbientMap() == null)
-		{
-			currentMaterial.setAmbientMap(currentMaterial.getDiffuseMap());
+			if(!ambientSet)
+			{
+				currentMaterial.setAmbient(currentMaterial.getDiffuse());
+			}
+			
+			if (currentMaterial.getAmbientMap() == null)
+			{
+				currentMaterial.setAmbientMap(currentMaterial.getDiffuseMap());
+			}
 		}
 		
 		return materials;
