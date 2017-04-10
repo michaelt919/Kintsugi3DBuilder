@@ -760,7 +760,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
 		{
 			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(1024, 1024)
-					.addColorAttachment(ColorFormat.R32F)
+					.addColorAttachment(ColorFormat.RG32F)
 					.createFramebufferObject();
 	    	
 	    	this.setupForDraw();
@@ -786,22 +786,27 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 	        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
 	        
 	        double sumSqError = 0.0;
+	        double sumWeights = 0.0;
+	        double sumMask = 0.0;
 
 	    	float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
 	    	for (int k = 0; 4 * k + 3 < fidelityArray.length; k++)
 	    	{
-    			if (fidelityArray[4 * k] >= 0.0f)
+    			if (fidelityArray[4 * k + 1] >= 0.0f)
     			{
 					sumSqError += fidelityArray[4 * k];
+					sumWeights += fidelityArray[4 * k + 1];
+					sumMask += 1.0;
     			}
 	    	}
-
 	        
 	        Vector3 cameraDisplacement = new Vector3(this.lightField.viewSet.getCameraPose(i)
 					.times(new Vector4(this.lightField.proxy.getCentroid(), 1.0f)));
 	        
-	    	System.out.println(this.lightField.viewSet.getImageFileName(i) + " " + cameraDisplacement.dot(cameraDisplacement) + " " 
-	    			+ sumSqError * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared);
+	    	System.out.println(this.lightField.viewSet.getImageFileName(i) + " " 
+	    			+ sumSqError + " " + cameraDisplacement.dot(cameraDisplacement) + " " + sumWeights + " " + sumMask + " "
+	    			+ Math.sqrt(sumSqError / sumWeights * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared) + " "
+	    			+ Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
 	        
 	        if (this.callback != null)
 	        {
