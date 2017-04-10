@@ -37,7 +37,7 @@ uniform CameraProjectionIndices
 	int cameraProjectionIndices[MAX_CAMERA_POSE_COUNT];
 };
 
-layout(location = 0) out float fidelity;
+layout(location = 0) out vec2 fidelity;
 
 float computeSampleWeight(vec3 cameraPos, vec3 samplePos, vec3 fragmentPos)
 {
@@ -47,7 +47,8 @@ float computeSampleWeight(vec3 cameraPos, vec3 samplePos, vec3 fragmentPos)
 
 float getSampleWeight(int index)
 {
-    return computeSampleWeight((cameraPoses[index] * vec4(transpose(mat3(model_view)) * -model_view[3].xyz, 1.0)).xyz, vec3(0.0), 
+    return computeSampleWeight((cameraPoses[index] * vec4(transpose(mat3(model_view)) 
+			* -model_view[3].xyz, 1.0)).xyz, vec3(0.0), 
         (cameraPoses[index] * vec4(fPosition, 1.0)).xyz);
 }
 
@@ -81,7 +82,7 @@ vec4 getLightFieldSample(int index)
 	}
 }
 
-float computeFidelity()
+vec2 computeFidelity()
 {
 	vec4 sum = vec4(0.0);
 	for (int i = 0; i < viewCount; i++)
@@ -94,9 +95,16 @@ float computeFidelity()
 	
 	vec4 lfSample = getLightFieldSample(viewIndex);
 	
-	vec3 diff = sum.rgb / sum.a - lfSample.rgb;
-	return clamp(normalize(mat3(model_view) * fNormal).z, 0.0, 1.0) // n dot v
-		* lfSample.a * dot(diff, diff);
+	if (sum.a <= 0.0)
+	{
+		return vec2(0.0);
+	}
+	else
+	{
+		vec3 diff = sum.rgb / sum.a - lfSample.rgb;
+		return clamp(normalize(mat3(model_view) * fNormal).z, 0.0, 1.0) // n dot v
+			* lfSample.a * vec2(dot(diff, diff), 1);
+		}
 }
 
 void main()
