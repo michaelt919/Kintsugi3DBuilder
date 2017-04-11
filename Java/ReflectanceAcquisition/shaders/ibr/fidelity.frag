@@ -15,7 +15,6 @@ in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
 
-uniform int viewIndex;
 
 uniform sampler2DArray viewImages;
 uniform sampler2DArray depthImages;
@@ -24,8 +23,6 @@ uniform CameraPoses
 {
 	mat4 cameraPoses[MAX_CAMERA_POSE_COUNT];
 };
-
-uniform int viewCount;
 
 uniform CameraProjections
 {
@@ -36,6 +33,14 @@ uniform CameraProjectionIndices
 {
 	int cameraProjectionIndices[MAX_CAMERA_POSE_COUNT];
 };
+
+uniform ViewIndices
+{
+	int viewIndices[MAX_CAMERA_POSE_COUNT];
+};
+
+uniform int targetViewIndex;
+uniform int viewCount;
 
 layout(location = 0) out vec2 fidelity;
 
@@ -87,13 +92,11 @@ vec2 computeFidelity()
 	vec4 sum = vec4(0.0);
 	for (int i = 0; i < viewCount; i++)
 	{
-		if (i != viewIndex)
-		{
-			sum += getSampleWeight(i) * getLightFieldSample(i);
-		}
+		int currentViewIndex = viewIndices[i];
+		sum += getSampleWeight(currentViewIndex) * getLightFieldSample(currentViewIndex);
 	}
 	
-	vec4 lfSample = getLightFieldSample(viewIndex);
+	vec4 lfSample = getLightFieldSample(targetViewIndex);
 	
 	if (sum.a <= 0.0)
 	{
