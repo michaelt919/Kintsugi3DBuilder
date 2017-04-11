@@ -2,6 +2,7 @@ package tetzlaff.ibr.ulf;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -25,11 +26,13 @@ import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.TextureWrapMode;
+import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.FloatVertexList;
+import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
@@ -511,7 +514,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 					? 1.0f : 2.2f);
 		}
     	
-        FramebufferObject<ContextType> offscreenFBO = null;
+        this.offscreenFBO = null;
         
         int fboWidth, fboHeight;
 		if (halfResEnabled)
@@ -756,63 +759,115 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     	renderable.addVertexBuffer("normal", this.getLightField().normalBuffer);
     	renderable.addVertexBuffer("tangent", this.getLightField().tangentBuffer);
     	setupForDraw(fidelityProgram);
-		
-		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
-		{
-			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(1024, 1024)
-					.addColorAttachment(ColorFormat.RG32F)
-					.createFramebufferObject();
-	    	
-	    	this.setupForDraw();
-	    	
-	    	renderable.program().setUniform("model_view", this.lightField.viewSet.getCameraPose(i));
-	    	renderable.program().setUniform("projection", 
-	    			this.lightField.viewSet.getCameraProjection(this.lightField.viewSet.getCameraProjectionIndex(i))
-    				.getProjectionMatrix(this.lightField.viewSet.getRecommendedNearPlane(), this.lightField.viewSet.getRecommendedFarPlane()));
-
-	    	renderable.program().setUniform("viewIndex", i);
-	    	
-	    	if (this.fidelitySetupCallback != null)
-    		{
-	    		this.fidelitySetupCallback.accept(i);
-    		}
-	    	
-	    	framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
-	    	framebuffer.clearDepthBuffer();
-	    	
-	    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-	    	
-	    	File fidelityImage = new File(fidelityExportPath, this.lightField.viewSet.getImageFileName(i));
-	        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
-	        
-	        double sumSqError = 0.0;
-	        double sumWeights = 0.0;
-	        double sumMask = 0.0;
-
-	    	float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
-	    	for (int k = 0; 4 * k + 3 < fidelityArray.length; k++)
-	    	{
-    			if (fidelityArray[4 * k + 1] >= 0.0f)
-    			{
-					sumSqError += fidelityArray[4 * k];
-					sumWeights += fidelityArray[4 * k + 1];
-					sumMask += 1.0;
-    			}
-	    	}
-	        
-	        Vector3 cameraDisplacement = new Vector3(this.lightField.viewSet.getCameraPose(i)
-					.times(new Vector4(this.lightField.proxy.getCentroid(), 1.0f)));
-	        
-	    	System.out.println(this.lightField.viewSet.getImageFileName(i) + " " 
-	    			+ sumSqError + " " + cameraDisplacement.dot(cameraDisplacement) + " " + sumWeights + " " + sumMask + " "
-	    			+ Math.sqrt(sumSqError / sumWeights * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared) + " "
-	    			+ Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
-	        
-	        if (this.callback != null)
-	        {
-	        	this.callback.setProgress((double) i / (double) this.lightField.viewSet.getCameraPoseCount());
-	        }
+    	
+    	Vector3[] viewDirections = new Vector3[this.lightField.viewSet.getCameraPoseCount()];
+    	
+    	for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
+    	{
+    		viewDirections[i] = new Vector3(this.lightField.viewSet.getCameraPoseInverse(i).getColumn(3))
+    				.minus(this.lightField.proxy.getCentroid()).normalized();
 		}
+    	
+    	double[][] viewDistances = new double[this.lightField.viewSet.getCameraPoseCount()][this.lightField.viewSet.getCameraPoseCount()];
+    	double maxMinDistance = 0.0;
+    	
+    	for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
+    	{
+    		double minDistance = Double.MAX_VALUE;
+    		
+    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+    		{
+    			viewDistances[i][j] = Math.acos(Math.max(-1.0, Math.min(1.0f, viewDirections[i].dot(viewDirections[j]))));
+    			
+    			if (i != j)
+    			{
+    				minDistance = Math.min(minDistance, viewDistances[i][j]);
+    			}
+    		}
+    		
+    		maxMinDistance = Math.max(maxMinDistance, minDistance);
+    	}
+    	
+    	try(PrintStream out = new PrintStream(fidelityExportPath))
+    	{
+    		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
+			{
+				FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(1024, 1024)
+						.addColorAttachment(ColorFormat.RG32F)
+						.createFramebufferObject();
+		    	
+		    	this.setupForDraw();
+		    	
+		    	renderable.program().setUniform("model_view", this.lightField.viewSet.getCameraPose(i));
+		    	renderable.program().setUniform("projection", 
+		    			this.lightField.viewSet.getCameraProjection(this.lightField.viewSet.getCameraProjectionIndex(i))
+	    				.getProjectionMatrix(this.lightField.viewSet.getRecommendedNearPlane(), this.lightField.viewSet.getRecommendedFarPlane()));
+	
+		    	renderable.program().setUniform("targetViewIndex", i);
+		    	
+		    	IntVertexList viewIndices = new IntVertexList(1, this.lightField.viewSet.getCameraPoseCount() - 1);
+		    	
+		    	int k = 0;
+		    	for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+		    	{
+		    		if (i != j)
+		    		{
+			    		viewIndices.set(k, 0, j);
+			    		k++;
+		    		}
+		    	}
+		    	
+		    	UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer().setData(viewIndices);
+		    	renderable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
+		    	renderable.program().setUniform("viewCount", this.lightField.viewSet.getCameraPoseCount() - 1);
+		    	
+		    	if (this.fidelitySetupCallback != null)
+	    		{
+		    		this.fidelitySetupCallback.accept(i);
+	    		}
+		    	
+		    	framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
+		    	framebuffer.clearDepthBuffer();
+		    	
+		    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+		    	
+		    	viewIndexBuffer.delete();
+		    	
+		    	//File fidelityImage = new File(fidelityExportPath, this.lightField.viewSet.getImageFileName(i));
+		        //framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
+		        
+		        double sumSqError = 0.0;
+		        double sumWeights = 0.0;
+		        double sumMask = 0.0;
+	
+		    	float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
+		    	for (k = 0; 4 * k + 3 < fidelityArray.length; k++)
+		    	{
+	    			if (fidelityArray[4 * k + 1] >= 0.0f)
+	    			{
+						sumSqError += fidelityArray[4 * k];
+						sumWeights += fidelityArray[4 * k + 1];
+						sumMask += 1.0;
+	    			}
+		    	}
+		        
+		        Vector3 cameraDisplacement = new Vector3(this.lightField.viewSet.getCameraPose(i)
+						.times(new Vector4(this.lightField.proxy.getCentroid(), 1.0f)));
+		        
+		    	System.out.println(this.lightField.viewSet.getImageFileName(i) + " " 
+		    			+ sumSqError + " " + cameraDisplacement.dot(cameraDisplacement) + " " + sumWeights + " " + sumMask + " "
+		    			+ Math.sqrt(sumSqError / sumWeights * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared) + " "
+		    			+ Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
+		    	
+		    	out.println(this.lightField.viewSet.getImageFileName(i) + "\t" 
+		    			+ Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
+		        
+		        if (this.callback != null)
+		        {
+		        	this.callback.setProgress((double) i / (double) this.lightField.viewSet.getCameraPoseCount());
+		        }
+			}
+    	}
 		
 		if (this.fidelityCompleteCallback != null)
 		{

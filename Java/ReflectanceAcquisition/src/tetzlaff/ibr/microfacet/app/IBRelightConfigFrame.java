@@ -767,10 +767,9 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for the 'resample' button to generate new vies for the current light field.
 		btnFidelity.addActionListener(e -> 
 		{
-			fileChooser.setDialogTitle("Choose an Export Directory");
+			fileChooser.setDialogTitle("Choose an Export Filename");
 			fileChooser.resetChoosableFileFilters();
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			
 			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 			{
@@ -794,6 +793,7 @@ public class IBRelightConfigFrame extends JFrame
 			fileChooser.setDialogTitle("Choose a Target VSET File");
 			fileChooser.resetChoosableFileFilters();
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			fileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
 			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 			{
@@ -954,6 +954,7 @@ public class IBRelightConfigFrame extends JFrame
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
 			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Agisoft Photoscan XML files", "xml"));
 			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("View Set files", "vset"));
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 			{
 				File file = fileChooser.getSelectedFile();
@@ -1026,6 +1027,7 @@ public class IBRelightConfigFrame extends JFrame
 			
 			fileChooser.setDialogTitle("Select a light field morph");
 			fileChooser.resetChoosableFileFilters();
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
 			fileChooser.setFileFilter(new FileNameExtensionFilter("Light Field Morph files (.lfm)", "lfm"));
 			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
