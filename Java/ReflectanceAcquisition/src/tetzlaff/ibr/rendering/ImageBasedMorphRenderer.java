@@ -164,7 +164,10 @@ public class ImageBasedMorphRenderer<ContextType extends Context<ContextType>> i
 	@Override
 	public void setHalfResolution(boolean halfResEnabled)
 	{	
-		this.stages.get(this.currentStage).setHalfResolution(halfResEnabled);
+		for(IBRDrawable<ContextType> stage : stages)
+		{
+			stage.setHalfResolution(halfResEnabled);
+		}
 	}
 
 	@Override
@@ -183,7 +186,10 @@ public class ImageBasedMorphRenderer<ContextType extends Context<ContextType>> i
 	@Override
 	public void setMultisampling(boolean multisamplingEnabled)
 	{
-		this.stages.get(this.currentStage).setMultisampling(multisamplingEnabled);	
+		for(IBRDrawable<ContextType> stage : stages)
+		{
+			stage.setMultisampling(multisamplingEnabled);	
+		}
 	}
 
 	@Override
@@ -194,6 +200,7 @@ public class ImageBasedMorphRenderer<ContextType extends Context<ContextType>> i
 			stage.setProgram(program);
 		}
 	}
+	
 	@Override
 	public void requestBTF(int width, int height, File exportPath)
 			throws IOException 
@@ -219,12 +226,36 @@ public class ImageBasedMorphRenderer<ContextType extends Context<ContextType>> i
 	@Override
 	public void setEnvironment(File environmentFile) throws IOException 
 	{
-		this.stages.get(this.currentStage).setEnvironment(environmentFile);
+		// TODO untested and probably incredibly inefficient
+		for(IBRDrawable<ContextType> stage : stages)
+		{
+			stage.setEnvironment(environmentFile);
+		}
 	}
 
 	@Override
 	public void setTransformationMatrices(List<Matrix4> matrices) 
 	{
-		this.stages.get(this.currentStage).setTransformationMatrices(matrices);
+		// TODO untested and probably incredibly inefficient
+		for(IBRDrawable<ContextType> stage : stages)
+		{
+			stage.setTransformationMatrices(matrices);
+		}
+	}
+
+	@Override
+	public VertexMesh getReferenceScene() 
+	{
+		return this.stages.get(this.currentStage).getReferenceScene();
+	}
+
+	@Override
+	public void setReferenceScene(VertexMesh scene) 
+	{
+		// TODO untested and probably incredibly inefficient
+		for(IBRDrawable<ContextType> stage : stages)
+		{
+			stage.setReferenceScene(scene);
+		}
 	}
 }

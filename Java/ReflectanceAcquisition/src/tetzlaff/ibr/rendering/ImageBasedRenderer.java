@@ -542,6 +542,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			this.program.setUniform("imageBasedRenderingEnabled", false);
 			ulfRenderer.drawReferenceScene(this.program);
 			this.program.setUniform("imageBasedRenderingEnabled", true);
+			setupForDraw(); // changed anything changed when drawing the reference scene.
 			
 			for (int modelInstance = 0; modelInstance < ulfRenderer.getModelInstanceCount(); modelInstance++)
 			{
@@ -836,5 +837,17 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	public void setTransformationMatrices(List<Matrix4> matrices) 
 	{
 		this.ulfRenderer.setTransformationMatrices(matrices);
+	}
+	
+	@Override
+	public VertexMesh getReferenceScene()
+	{
+		return this.ulfRenderer.getReferenceScene();
+	}
+	
+	@Override
+	public void setReferenceScene(VertexMesh scene)
+	{
+		this.ulfRenderer.setReferenceScene(scene);
 	}
 }

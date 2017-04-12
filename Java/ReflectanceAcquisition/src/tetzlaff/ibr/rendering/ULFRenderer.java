@@ -315,6 +315,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 		
 		if (this.referenceSceneChanged && this.referenceScene != null)
 		{
+			this.referenceSceneChanged = false;
+			
 			try
 			{
 				System.out.println("Using new reference scene.");
@@ -348,6 +350,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 				this.refSceneNormals = context.createVertexBuffer().setData(referenceScene.getNormals());
 				this.refSceneTexture = context.get2DColorTextureBuilder(
 						new File(referenceScene.getFilename().getParentFile(), referenceScene.getMaterial().getDiffuseMap().getMapName()), true)
+					.setMipmapsEnabled(true)
+					.setLinearFilteringEnabled(true)
 					.createTexture();
 			}
 			catch (Exception e)
@@ -634,12 +638,22 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 	
 	public void drawReferenceScene(Program<ContextType> program)
 	{
-    	if (referenceScene != null)
+    	if (referenceScene != null && refScenePositions != null && refSceneNormals != null)
     	{
 			Renderable<ContextType> renderable = context.createRenderable(program);
 			renderable.addVertexBuffer("position", refScenePositions);
-			renderable.addVertexBuffer("texCoord", refSceneTexCoords);
 			renderable.addVertexBuffer("normal", refSceneNormals);
+			
+			if (refSceneTexture != null && refSceneTexCoords != null)
+			{
+				renderable.addVertexBuffer("texCoord", refSceneTexCoords);
+				program.setTexture("diffuseMap", refSceneTexture);
+				program.setUniform("useDiffuseTexture", true);
+			}
+			else
+			{
+				program.setUniform("useDiffuseTexture", false);
+			}
 			
     		program.setUniform("model_view", getViewMatrix());
         	
@@ -1062,5 +1076,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 	public void setReferenceScene(VertexMesh scene)
 	{
 		this.referenceScene = scene;
+		this.referenceSceneChanged = true;
 	}
 }

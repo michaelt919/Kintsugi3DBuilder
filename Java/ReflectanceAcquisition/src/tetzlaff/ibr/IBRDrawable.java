@@ -37,4 +37,7 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	void requestBTF(int width, int height, File exportPath) throws IOException;
 
 	void setTransformationMatrices(List<Matrix4> matrices);
+
+	VertexMesh getReferenceScene();
+	void setReferenceScene(VertexMesh scene);
 }
