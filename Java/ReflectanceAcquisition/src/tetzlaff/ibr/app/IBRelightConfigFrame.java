@@ -1,4 +1,4 @@
-package tetzlaff.ibr.microfacet.app;
+package tetzlaff.ibr.app;
 
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -42,7 +42,7 @@ import tetzlaff.ibr.IBRListModel;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.ViewSetImageOptions;
-import tetzlaff.ibr.ulf.ULFMorphRenderer;
+import tetzlaff.ibr.rendering.ImageBasedMorphRenderer;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
@@ -903,9 +903,9 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model.getSelectedItem() != null)
 			{
-				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
+				if (model.getSelectedItem() instanceof ImageBasedMorphRenderer<?>)
 				{
-					((ULFMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(sliderObjects.getValue());
+					((ImageBasedMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(sliderObjects.getValue());
 				}
 			}
 		});
@@ -929,9 +929,9 @@ public class IBRelightConfigFrame extends JFrame
 				
 				updateWidgetsFromSettings.run();
 				
-				if (model.getSelectedItem() instanceof ULFMorphRenderer<?>)
+				if (model.getSelectedItem() instanceof ImageBasedMorphRenderer<?>)
 				{
-					ULFMorphRenderer<?> morph = (ULFMorphRenderer<?>)(model.getSelectedItem());
+					ImageBasedMorphRenderer<?> morph = (ImageBasedMorphRenderer<?>)(model.getSelectedItem());
 					int currentStage = morph.getCurrentStage();
 					sliderObjects.setEnabled(true);
 					sliderObjects.setMaximum(morph.getStageCount() - 1);

@@ -1,4 +1,4 @@
-package tetzlaff.ibr.ulf;
+package tetzlaff.ibr.rendering;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -11,6 +11,7 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.helpers.CameraController;
+import tetzlaff.gl.helpers.LightController;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ibr.IBRDrawable;
@@ -19,30 +20,32 @@ import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
 
-public class ULFMorphRenderer<ContextType extends Context<ContextType>> implements IBRDrawable<ContextType>
+public class ImageBasedMorphRenderer<ContextType extends Context<ContextType>> implements IBRDrawable<ContextType>
 {
 	private ContextType context;
 	private Program<ContextType> program;
     private File lfmFile;
     private IBRLoadOptions loadOptions;
     private CameraController cameraController;
+    private LightController lightController;
     private String id;
 
     private IBRLoadingMonitor callback;
-	private List<ULFRenderer<ContextType>> stages;
+	private List<IBRDrawable<ContextType>> stages;
 	private int currentStage;
 
-	public ULFMorphRenderer(ContextType context, Program<ContextType> program, File lfmFile, IBRLoadOptions loadOptions, CameraController cameraController) throws FileNotFoundException 
+	public ImageBasedMorphRenderer(ContextType context, Program<ContextType> program, File lfmFile, IBRLoadOptions loadOptions, CameraController cameraController, LightController lightController) throws FileNotFoundException 
 	{
 		this.context = context;
 		this.program = program;
 		this.lfmFile = lfmFile;
 		this.loadOptions = loadOptions;
 		this.cameraController = cameraController;
+		this.lightController = lightController;
 		
 		this.id = lfmFile.getParentFile().getName();
 		
-		this.stages = new ArrayList<ULFRenderer<ContextType>>();
+		this.stages = new ArrayList<IBRDrawable<ContextType>>();
 		this.currentStage = 0;
 	}
 	
@@ -71,14 +74,14 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 			while (scanner.hasNextLine())
 			{
 				String vsetFileName = scanner.nextLine();
-				stages.add(new ULFRenderer<ContextType>(context, program, new File(directory, vsetFileName), null, loadOptions, cameraController));
+				stages.add(new ImageBasedRenderer<ContextType>(context, program, new File(directory, vsetFileName), null, loadOptions, cameraController, lightController));
 			}
 			scanner.close();
 			
 			int stagesLoaded = 0;
-			for(ULFRenderer<ContextType> stage : stages)
+			for(IBRDrawable<ContextType> stage : stages)
 			{
-				System.out.println(stage.getVSETFile());
+				System.out.println(stage);
 				callback.setProgress((double)stagesLoaded / (double)stages.size());
 				stage.initialize();
 				stagesLoaded++;
@@ -95,7 +98,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void update() 
 	{
-		for(ULFRenderer<ContextType> stage : stages)
+		for(IBRDrawable<ContextType> stage : stages)
 		{
 			stage.update();
 		}
@@ -110,7 +113,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void cleanup() 
 	{
-		for(ULFRenderer<ContextType> stage : stages)
+		for(IBRDrawable<ContextType> stage : stages)
 		{
 			stage.cleanup();
 		}
@@ -122,21 +125,16 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 		this.callback = callback;
 	}
 	
-	public UnstructuredLightField<ContextType> getLightField()
-	{
-		return stages.get(currentStage).getLightField();
-	}
-	
 	@Override
 	public ViewSet<ContextType> getActiveViewSet()
 	{
-		return this.getLightField().viewSet;
+		return stages.get(currentStage).getActiveViewSet();
 	}
 	
 	@Override
 	public VertexMesh getActiveProxy()
 	{
-		return this.getLightField().proxy;
+		return stages.get(currentStage).getActiveProxy();
 	}
 
 	@Override
@@ -191,7 +189,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void setProgram(Program<ContextType> program) 
 	{
-		for(ULFRenderer<ContextType> stage : stages)
+		for(IBRDrawable<ContextType> stage : stages)
 		{
 			stage.setProgram(program);
 		}
@@ -206,7 +204,7 @@ public class ULFMorphRenderer<ContextType extends Context<ContextType>> implemen
 	@Override
 	public void reloadHelperShaders() 
 	{
-		for(ULFRenderer<ContextType> stage : stages)
+		for(IBRDrawable<ContextType> stage : stages)
 		{
 			stage.reloadHelperShaders();
 		}

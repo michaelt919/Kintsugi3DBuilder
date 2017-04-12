@@ -1,4 +1,4 @@
-package tetzlaff.ibr.microfacet.app;
+package tetzlaff.ibr.app;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -19,8 +19,8 @@ import tetzlaff.gl.helpers.OverrideableLightController;
 import tetzlaff.gl.helpers.TrackballLightController;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.ibr.microfacet.HardcodedLightController;
-import tetzlaff.ibr.microfacet.ImageBasedMicrofacetRendererList;
+import tetzlaff.ibr.rendering.HardcodedLightController;
+import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.window.glfw.GLFWWindow;
@@ -183,20 +183,6 @@ public class IBRelight
 //        	e.printStackTrace();
 //        	throw new IllegalStateException("The shader program could not be initialized.", e);
 //        }
-
-    	Program<OpenGLContext> shadowProgram;
-        try
-        {
-    		shadowProgram = window.getShaderProgramBuilder()
-	    			.addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
-	    			.addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
-    				.createProgram();
-        }
-        catch (IOException e)
-        {
-        	e.printStackTrace();
-        	throw new IllegalStateException("The shader program could not be initialized.", e);
-        }
         
         MetaLightController metaLightController = new MetaLightController();
         
@@ -219,7 +205,7 @@ public class IBRelight
         // This is the object that loads the ULF models and handles drawing them.  This object abstracts
         // the underlying data and provides ways of triggering events via the trackball and the user
         // interface later when it is passed to the ULFUserInterface object.
-        ImageBasedMicrofacetRendererList<OpenGLContext> model = new ImageBasedMicrofacetRendererList<OpenGLContext>(window, program, null/*indexProgram*/, shadowProgram, cameraController, metaLightController);
+        ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(window, program, cameraController, metaLightController);
     	
     	HardcodedLightController hardcodedLightController = 
     			new HardcodedLightController(

@@ -22,7 +22,7 @@ public abstract class IBRDrawableListModel<ContextType extends Context<ContextTy
 	private int effectiveSize;
 	private IBRLoadingMonitor loadingMonitor;
 	
-	protected IBRDrawableListModel(ContextType context, Program<ContextType> program, Program<ContextType> indexProgram, CameraController cameraController) 
+	protected IBRDrawableListModel(ContextType context, Program<ContextType> program, CameraController cameraController) 
 	{
 		this.context = context;
 		this.cameraController = cameraController;

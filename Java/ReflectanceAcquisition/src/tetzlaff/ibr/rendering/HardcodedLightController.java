@@ -1,4 +1,4 @@
-package tetzlaff.ibr.microfacet;
+package tetzlaff.ibr.rendering;
 
 import java.util.function.Supplier;
 
