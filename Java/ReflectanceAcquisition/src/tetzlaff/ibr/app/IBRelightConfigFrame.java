@@ -37,6 +37,7 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.helpers.LightController;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Matrix4;
+import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ibr.IBRDrawable;
 import tetzlaff.ibr.IBRListModel;
 import tetzlaff.ibr.IBRLoadOptions;
@@ -575,8 +576,8 @@ public class IBRelightConfigFrame extends JFrame
 		btnResample.setToolTipText("Resample all images of the currently active object to the above dimensions");
 		
 		JButton btnFidelity = new JButton("Fidelity Metric");
-//		btnFidelity.setEnabled(false);
-//		btnFidelity.setVisible(false);
+		btnFidelity.setEnabled(false);
+		btnFidelity.setVisible(false);
 		panel_1.add(btnFidelity);
 		btnFidelity.setToolTipText("Evaluate the fidelity of the image-based sampling.");
 		
@@ -1063,14 +1064,15 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_panel_3.gridy = 0;
 		contentPane.add(panel_3, gbc_panel_3);
 		GridBagLayout gbl_panel_3 = new GridBagLayout();
-		gbl_panel_3.columnWidths = new int[] {625};
+		gbl_panel_3.columnWidths = new int[] {315, 0};
 		gbl_panel_3.rowHeights = new int[] {0, 0, 0};
-		gbl_panel_3.columnWeights = new double[]{0.0};
+		gbl_panel_3.columnWeights = new double[]{0.0, 0.0};
 		gbl_panel_3.rowWeights = new double[]{0.0, Double.MIN_VALUE};
 		panel_3.setLayout(gbl_panel_3);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		GridBagConstraints gbc_tabbedPane = new GridBagConstraints();
+		gbc_tabbedPane.gridwidth = 2;
 		gbc_tabbedPane.insets = new Insets(0, 0, 5, 0);
 		gbc_tabbedPane.anchor = GridBagConstraints.NORTHWEST;
 		gbc_tabbedPane.gridx = 0;
@@ -1290,9 +1292,38 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_btnLoadEnvironmentTexture.gridy = 3;
 		panel_8.add(btnLoadEnvironmentTexture, gbc_btnLoadEnvironmentTexture);
 		
+		JButton btnLoadReferenceScene = new JButton("Load Reference Scene Model...");
+		GridBagConstraints gbc_btnLoadReferenceScene = new GridBagConstraints();
+		gbc_btnLoadReferenceScene.insets = new Insets(0, 0, 0, 5);
+		gbc_btnLoadReferenceScene.gridx = 0;
+		gbc_btnLoadReferenceScene.gridy = 2;
+		panel_3.add(btnLoadReferenceScene, gbc_btnLoadReferenceScene);
+		btnLoadReferenceScene.addActionListener(e ->
+		{
+			fileChooser.setDialogTitle("Select the Wavefront OBJ model containing your scene");
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			fileChooser.resetChoosableFileFilters();
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Wavefront OBJ files", "obj"));
+			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				try
+				{
+					model.getSelectedItem().setReferenceScene(new VertexMesh("OBJ", fileChooser.getSelectedFile()));
+				} 
+				catch (IOException ex) 
+				{
+					// TODO Auto-generated catch block
+					ex.printStackTrace();
+				}
+			}
+		});
+		
+		
 		JButton btnLoadTransformationMatrices = new JButton("Load Transformation Matrices...");
 		GridBagConstraints gbc_btnLoadTransformationMatrices = new GridBagConstraints();
-		gbc_btnLoadTransformationMatrices.gridx = 0;
+		gbc_btnLoadTransformationMatrices.gridx = 1;
 		gbc_btnLoadTransformationMatrices.gridy = 2;
 		panel_3.add(btnLoadTransformationMatrices, gbc_btnLoadTransformationMatrices);
 		btnLoadTransformationMatrices.addActionListener(e ->

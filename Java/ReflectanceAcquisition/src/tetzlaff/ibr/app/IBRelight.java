@@ -35,7 +35,7 @@ import tetzlaff.window.glfw.GLFWWindow;
  */
 public class IBRelight
 {
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 	
 	private static class MetaLightController implements OverrideableLightController
 	{
