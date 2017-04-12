@@ -1,4 +1,4 @@
-package tetzlaff.ibr.microfacet;
+package tetzlaff.ibr.rendering;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,20 +28,20 @@ import tetzlaff.gl.helpers.OverrideableLightController;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
+import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.ibr.IBRDrawable;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
-import tetzlaff.ibr.ulf.ULFRenderer;
 
-public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextType>> implements IBRDrawable<ContextType>
+public class ImageBasedRenderer<ContextType extends Context<ContextType>> implements IBRDrawable<ContextType>
 {
 	private ContextType context;
 	private Program<ContextType> program;
 	private Program<ContextType> shadowProgram;
 	private ULFRenderer<ContextType> ulfRenderer;
-	private ImageBasedMicrofacetDistribution<ContextType> microfacetDistribution;
+	private ImageBasedAssets<ContextType> assets;
 	private LightController lightController;
 	private IBRLoadingMonitor callback;
 	private boolean suppressErrors = false;
@@ -59,13 +59,12 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
     private int btfWidth, btfHeight;
     private File btfExportPath;
 	
-	public ImageBasedMicrofacetRenderer(ContextType context, Program<ContextType> program, Program<ContextType> shadowProgram, 
+	public ImageBasedRenderer(ContextType context, Program<ContextType> program,
 			File xmlFile, File meshFile, IBRLoadOptions loadOptions, CameraController cameraController, LightController lightController)
     {
 		this.context = context;
 		
 		this.program = program;
-		this.shadowProgram = shadowProgram;
 
     	this.lightController = lightController;
     	
@@ -76,6 +75,24 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	public void initialize() 
 	{
 		ulfRenderer.initialize();
+		
+		if (this.shadowProgram == null)
+		{
+	        try
+	        {
+	    		shadowProgram = context.getShaderProgramBuilder()
+		    			.addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
+		    			.addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
+	    				.createProgram();
+	    		
+	    		shadowRenderable = context.createRenderable(shadowProgram);
+	        }
+	        catch (IOException e)
+	        {
+	        	e.printStackTrace();
+	        	throw new IllegalStateException("The shader program could not be initialized.", e);
+	        }
+		}
 		
 		if (this.lightProgram == null)
     	{
@@ -124,14 +141,14 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			
 			if (lightController instanceof OverrideableLightController)
 			{
-		    	float scale = new Vector3(microfacetDistribution.ulf.viewSet.getCameraPose(0)
-		    			.times(new Vector4(microfacetDistribution.ulf.proxy.getCentroid(), 1.0f))).length();
+		    	float scale = new Vector3(assets.ulf.viewSet.getCameraPose(0)
+		    			.times(new Vector4(assets.ulf.proxy.getCentroid(), 1.0f))).length();
 				
 				((OverrideableLightController)lightController).overrideCameraPose(
 						Matrix4.scale(1.0f / scale)
 							.times(modelView)
-							.times(Matrix4.translate(microfacetDistribution.ulf.proxy.getCentroid()))
-			    			.times(new Matrix4(new Matrix3(microfacetDistribution.ulf.viewSet.getCameraPose(0).transpose())))
+							.times(Matrix4.translate(assets.ulf.proxy.getCentroid()))
+			    			.times(new Matrix4(new Matrix3(assets.ulf.viewSet.getCameraPose(0).transpose())))
 							.times(Matrix4.scale(scale)));
 			}
 			
@@ -154,7 +171,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		{
 			setupForDraw();
 			
-			ViewSet<ContextType> vset = microfacetDistribution.ulf.viewSet;
+			ViewSet<ContextType> vset = assets.ulf.viewSet;
 			Vector3 lightIntensity = vset.getLightIntensity(vset.getLightIndex(index));
 			Vector4 lightPos = vset.getCameraPose(index).quickInverse(0.002f).times(new Vector4(vset.getLightPosition(vset.getLightIndex(index)), 1.0f));
 			
@@ -209,7 +226,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 				roughnessTextureName = roughnessTextureName != null ? roughnessTextureName : "roughness.png";
 			}
 			
-			microfacetDistribution = new ImageBasedMicrofacetDistribution<ContextType>(
+			assets = new ImageBasedAssets<ContextType>(
 					ulfRenderer.getLightField(), 
 					new File(ulfRenderer.getGeometryFile().getParentFile(), diffuseTextureName),
 					new File(ulfRenderer.getGeometryFile().getParentFile(), normalTextureName),
@@ -218,14 +235,12 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 					new File(ulfRenderer.getGeometryFile().getParentFile(), "mfd.csv"), 
 					context);
 			
-			shadowMaps = context.get2DDepthTextureArrayBuilder(2048, 2048, lightController.getLightCount()).createTexture();
+			shadowRenderable.addVertexBuffer("position", assets.ulf.positionBuffer);
 
+			shadowMaps = context.get2DDepthTextureArrayBuilder(2048, 2048, lightController.getLightCount()).createTexture();
 			shadowFramebuffer = context.getFramebufferObjectBuilder(2048, 2048)
 				.addDepthAttachment()
 				.createFramebufferObject();
-			
-			shadowRenderable = context.createRenderable(shadowProgram);
-			shadowRenderable.addVertexBuffer("position", microfacetDistribution.ulf.positionBuffer);
 		}
 		catch(IOException e)
 		{
@@ -277,7 +292,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	
 	public void setupForDraw(Program<ContextType> p)
 	{
-		if (microfacetDistribution.normalTexture == null)
+		if (assets.normalTexture == null)
 		{
 			p.setUniform("useNormalTexture", false);
 			p.setTexture("normalMap", null);
@@ -285,10 +300,10 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		else
 		{
 			p.setUniform("useNormalTexture", this.settings().areTexturesEnabled());
-			p.setTexture("normalMap", microfacetDistribution.normalTexture);
+			p.setTexture("normalMap", assets.normalTexture);
 		}
 		
-		if (microfacetDistribution.diffuseTexture == null)
+		if (assets.diffuseTexture == null)
 		{
 			p.setUniform("useDiffuseTexture", false);
 			p.setTexture("diffuseMap", null);
@@ -296,10 +311,10 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		else
 		{
 			p.setUniform("useDiffuseTexture", this.settings().areTexturesEnabled());
-			p.setTexture("diffuseMap", microfacetDistribution.diffuseTexture);
+			p.setTexture("diffuseMap", assets.diffuseTexture);
 		}
 		
-		if (microfacetDistribution.specularTexture == null)
+		if (assets.specularTexture == null)
 		{
 			p.setUniform("useSpecularTexture", false);
 			p.setTexture("specularMap", null);
@@ -307,10 +322,10 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		else
 		{
 			p.setUniform("useSpecularTexture", this.settings().areTexturesEnabled());
-			p.setTexture("specularMap", microfacetDistribution.specularTexture);
+			p.setTexture("specularMap", assets.specularTexture);
 		}
 		
-		if (microfacetDistribution.roughnessTexture == null)
+		if (assets.roughnessTexture == null)
 		{
 			p.setUniform("useRoughnessTexture", false);
 			p.setTexture("roughnessMap", null);
@@ -318,7 +333,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		else
 		{
 			p.setUniform("useRoughnessTexture", this.settings().areTexturesEnabled());
-			p.setTexture("roughnessMap", microfacetDistribution.roughnessTexture);
+			p.setTexture("roughnessMap", assets.roughnessTexture);
 		}
 		
 		if (ulfRenderer.getEnvironmentTexture() == null || !lightController.getEnvironmentMappingEnabled())
@@ -334,7 +349,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			p.setUniform("environmentMipMapLevel", Math.max(0, Math.min(ulfRenderer.getEnvironmentTexture().getMipmapLevelCount() - 2, 
 					(int)Math.ceil(0.5 * 
 						Math.log((double)ulfRenderer.getEnvironmentTexture().getWidth() * 
-								(double)ulfRenderer.getEnvironmentTexture().getHeight() / (double)microfacetDistribution.ulf.viewSet.getCameraPoseCount() ) 
+								(double)ulfRenderer.getEnvironmentTexture().getHeight() / (double)assets.ulf.viewSet.getCameraPoseCount() ) 
 							/ Math.log(2.0)))));
 			p.setUniform("diffuseEnvironmentMipMapLevel", ulfRenderer.getEnvironmentTexture().getMipmapLevelCount() - 2);
 			p.setUniform("environmentMapGamma", 
@@ -344,7 +359,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			ulfRenderer.setEnvironmentTextureEnabled(true);
 		}
 		
-		if (microfacetDistribution.mfdTexture == null)
+		if (assets.mfdTexture == null)
 		{
 			p.setUniform("useMFDTexture", false);
 			p.setTexture("mfdMap", null);
@@ -352,10 +367,10 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		else
 		{
 			p.setUniform("useMFDTexture", true);
-			p.setTexture("mfdMap", microfacetDistribution.mfdTexture);
+			p.setTexture("mfdMap", assets.mfdTexture);
 		}
 		
-		if (microfacetDistribution.ulf.viewSet.getLuminanceMap() == null)
+		if (assets.ulf.viewSet.getLuminanceMap() == null)
 		{
 			p.setUniform("useLuminanceMap", false);
 			p.setTexture("luminanceMap", null);
@@ -363,10 +378,10 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		else
 		{
 			p.setUniform("useLuminanceMap", true);
-			p.setTexture("luminanceMap", microfacetDistribution.ulf.viewSet.getLuminanceMap());
+			p.setTexture("luminanceMap", assets.ulf.viewSet.getLuminanceMap());
 		}
 		
-		if (microfacetDistribution.ulf.viewSet.getInverseLuminanceMap() == null)
+		if (assets.ulf.viewSet.getInverseLuminanceMap() == null)
 		{
 			p.setUniform("useInverseLuminanceMap", false);
 			p.setTexture("inverseLuminanceMap", null);
@@ -374,7 +389,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		else
 		{
 			p.setUniform("useInverseLuminanceMap", true);
-			p.setTexture("inverseLuminanceMap", microfacetDistribution.ulf.viewSet.getInverseLuminanceMap());
+			p.setTexture("inverseLuminanceMap", assets.ulf.viewSet.getInverseLuminanceMap());
 		}
 		
 		float gamma = 2.2f;
@@ -389,22 +404,22 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		p.setUniform("infiniteLightSources", false);
 		p.setTexture("shadowMaps", shadowMaps);
 		
-		if (microfacetDistribution.shadowMatrixBuffer == null || microfacetDistribution.shadowTextures == null)
+		if (assets.shadowMatrixBuffer == null || assets.shadowTextures == null)
 		{
 			p.setUniform("shadowTestingEnabled", false);
 		}
 		else
 		{
 			p.setUniform("shadowTestingEnabled", true);
-			p.setUniformBuffer("ShadowMatrices", microfacetDistribution.shadowMatrixBuffer);
-			p.setTexture("shadowImages", microfacetDistribution.shadowTextures);
+			p.setUniformBuffer("ShadowMatrices", assets.shadowMatrixBuffer);
+			p.setTexture("shadowImages", assets.shadowTextures);
 		}
 	}
 	
 	private float getScale()
 	{
-		 return new Vector3(microfacetDistribution.ulf.viewSet.getCameraPose(0)
-				 .times(new Vector4(microfacetDistribution.ulf.proxy.getCentroid(), 1.0f))).length()
+		 return new Vector3(assets.ulf.viewSet.getCameraPose(0)
+				 .times(new Vector4(assets.ulf.proxy.getCentroid(), 1.0f))).length()
 			 * this.ulfRenderer.getBoundingRadius() / this.ulfRenderer.getLightField().proxy.getBoundingRadius();
 	}
 	
@@ -414,7 +429,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		return Matrix4.scale(scale)
 			.times(lightController.getLightMatrix(lightIndex))
 			.times(Matrix4.scale(1.0f / scale))
-			.times(new Matrix4(new Matrix3(microfacetDistribution.ulf.viewSet.getCameraPose(0))))
+			.times(new Matrix4(new Matrix3(assets.ulf.viewSet.getCameraPose(0))))
 			.times(Matrix4.translate(ulfRenderer.getCentroid().negated()));
 	}
 	
@@ -425,7 +440,7 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		float lightDist = new Vector3(lightMatrix.times(new Vector4(ulfRenderer.getCentroid(), 1.0f))).length();
 		
 		float radius = (float)
-			(new Matrix3(microfacetDistribution.ulf.viewSet.getCameraPose(0))
+			(new Matrix3(assets.ulf.viewSet.getCameraPose(0))
 				.times(new Vector3(this.ulfRenderer.getBoundingRadius()))
 				.length() / Math.sqrt(3));
 		
@@ -468,11 +483,11 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 		Vector3 controllerLightIntensity = lightController.getLightColor(lightIndex);
 		float lightDistance = new Vector3(getLightMatrix(lightIndex).times(new Vector4(ulfRenderer.getCentroid(), 1.0f))).length();
 
-		float scale = new Vector3(microfacetDistribution.ulf.viewSet.getCameraPose(0)
-				 .times(new Vector4(microfacetDistribution.ulf.proxy.getCentroid(), 1.0f))).length();
+		float scale = new Vector3(assets.ulf.viewSet.getCameraPose(0)
+				 .times(new Vector4(assets.ulf.proxy.getCentroid(), 1.0f))).length();
 		
 		program.setUniform("lightIntensityVirtual[" + lightIndex + "]", 
-				controllerLightIntensity.times(lightDistance * lightDistance * microfacetDistribution.ulf.viewSet.getLightIntensity(0).y / (scale * scale)));
+				controllerLightIntensity.times(lightDistance * lightDistance * assets.ulf.viewSet.getLightIntensity(0).y / (scale * scale)));
 		program.setUniform("lightMatrixVirtual[" + lightIndex + "]", getLightProjection(lightIndex).times(lightMatrix));
 		program.setUniform("virtualLightCount", Math.min(4, lightController.getLightCount()));
 		
@@ -481,18 +496,18 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	
 	private Matrix4 setupLightForFidelity(Vector3 lightIntensity, Vector3 lightPos)
 	{
-		float lightDist = lightPos.distance(this.microfacetDistribution.ulf.proxy.getCentroid());
+		float lightDist = lightPos.distance(this.assets.ulf.proxy.getCentroid());
 		
 		float radius = (float)
-			(new Matrix3(microfacetDistribution.ulf.viewSet.getCameraPose(0))
-				.times(new Vector3(this.microfacetDistribution.ulf.proxy.getBoundingRadius()))
+			(new Matrix3(assets.ulf.viewSet.getCameraPose(0))
+				.times(new Vector3(this.assets.ulf.proxy.getBoundingRadius()))
 				.length() / Math.sqrt(3));
 		
 		Matrix4 lightProjection = Matrix4.perspective(2.0f * (float)Math.atan(radius / lightDist) /*1.5f*/, 1.0f, 
 				lightDist - radius,
 				lightDist + radius);
 		
-		Matrix4 lightMatrix = Matrix4.lookAt(lightPos, this.microfacetDistribution.ulf.proxy.getCentroid(), new Vector3(0.0f, 1.0f, 0.0f));
+		Matrix4 lightMatrix = Matrix4.lookAt(lightPos, this.assets.ulf.proxy.getCentroid(), new Vector3(0.0f, 1.0f, 0.0f));
 		
     	shadowProgram.setUniform("model_view", lightMatrix);
 		shadowProgram.setUniform("projection", lightProjection);
@@ -523,6 +538,10 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 			{
 				generateShadowMaps(lightIndex);
 			}
+
+			this.program.setUniform("imageBasedRenderingEnabled", false);
+			ulfRenderer.drawReferenceScene(this.program);
+			this.program.setUniform("imageBasedRenderingEnabled", true);
 			
 			for (int modelInstance = 0; modelInstance < ulfRenderer.getModelInstanceCount(); modelInstance++)
 			{
@@ -588,10 +607,10 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	public void cleanup() 
 	{
 		ulfRenderer.cleanup();
-		if (microfacetDistribution != null)
+		if (assets != null)
 		{
-			microfacetDistribution.deleteOpenGLResources();
-			microfacetDistribution = null;
+			assets.deleteOpenGLResources();
+			assets = null;
 		}
 		
 		if (shadowMaps != null)
@@ -632,13 +651,13 @@ public class ImageBasedMicrofacetRenderer<ContextType extends Context<ContextTyp
 	@Override
 	public VertexMesh getActiveProxy()
 	{
-		return this.microfacetDistribution.ulf.proxy;
+		return this.assets.ulf.proxy;
 	}
 	
 	@Override
 	public ViewSet<ContextType> getActiveViewSet()
 	{
-		return this.microfacetDistribution.ulf.viewSet;
+		return this.assets.ulf.viewSet;
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package tetzlaff.ibr.ulf;
+package tetzlaff.ibr.rendering;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,11 +6,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.function.Consumer;
 
 import tetzlaff.gl.ColorFormat;
@@ -24,9 +20,9 @@ import tetzlaff.gl.Program;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
-import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.UniformBuffer;
+import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
@@ -39,14 +35,13 @@ import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.helpers.EnvironmentMap;
-import tetzlaff.ibr.IBRDrawable;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.ViewSetImageOptions;
 
-public class ULFRenderer<ContextType extends Context<ContextType>> implements IBRDrawable<ContextType>
+public class ULFRenderer<ContextType extends Context<ContextType>>
 {
     private Program<ContextType> program;
     
@@ -92,6 +87,13 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     private List<Matrix4> transformationMatrices;
     private Vector3 centroid;
     private float boundingRadius;
+    
+    private VertexMesh referenceScene = null;
+    private boolean referenceSceneChanged = false;
+    private VertexBuffer<ContextType> refScenePositions = null;
+    private VertexBuffer<ContextType> refSceneTexCoords = null;
+    private VertexBuffer<ContextType> refSceneNormals = null;
+    private Texture2D<ContextType> refSceneTexture = null;
 
     public ULFRenderer(ContextType context, Program<ContextType> program, File cameraFile, File meshFile, IBRLoadOptions loadOptions, CameraController cameraController)
     {
@@ -112,13 +114,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 		this.cameraController = cameraController;
 	}
     
-    @Override
     public void setOnLoadCallback(IBRLoadingMonitor callback)
     {
     	this.callback = callback;
     }
     
-    @Override
     public void reloadHelperShaders()
     {
     	try
@@ -140,7 +140,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
         }
     }
  
-    @Override
     public void initialize() 
     {
     	if (this.program == null)
@@ -240,7 +239,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 		}
     }
 
-	@Override
 	public void update()
 	{
 		this.updateCentroidAndRadius();
@@ -311,6 +309,49 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 			}
 			catch (Exception e) 
     		{
+				e.printStackTrace();
+			}
+		}
+		
+		if (this.referenceSceneChanged && this.referenceScene != null)
+		{
+			try
+			{
+				System.out.println("Using new reference scene.");
+				
+				if (this.refScenePositions != null)
+				{
+					this.refScenePositions.delete();
+					this.refScenePositions = null;
+				}
+				
+				if (this.refSceneTexCoords != null)
+				{
+					this.refSceneTexCoords.delete();
+					this.refSceneTexCoords = null;
+				}
+				
+				if (this.refSceneNormals != null)
+				{
+					this.refSceneNormals.delete();
+					this.refSceneNormals = null;
+				}
+				
+				if (this.refSceneTexture != null)
+				{
+					this.refSceneTexture.delete();
+					this.refSceneTexture = null;
+				}
+				
+				this.refScenePositions = context.createVertexBuffer().setData(referenceScene.getVertices());
+				this.refSceneTexCoords = context.createVertexBuffer().setData(referenceScene.getTexCoords());
+				this.refSceneNormals = context.createVertexBuffer().setData(referenceScene.getNormals());
+				this.refSceneTexture = context.get2DColorTextureBuilder(
+						new File(referenceScene.getFilename().getParentFile(), referenceScene.getMaterial().getDiffuseMap().getMapName()), true)
+					.createTexture();
+			}
+			catch (Exception e)
+			{
 				e.printStackTrace();
 			}
 		}
@@ -443,7 +484,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 		return transformationMatrices;
 	}
 	
-	@Override
 	public void setTransformationMatrices(List<Matrix4> transformationMatrices)
 	{
 		if (transformationMatrices != null)
@@ -591,37 +631,70 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 	    	context.flush();
 		}
 	}
+	
+	public void drawReferenceScene(Program<ContextType> program)
+	{
+    	if (referenceScene != null)
+    	{
+			Renderable<ContextType> renderable = context.createRenderable(program);
+			renderable.addVertexBuffer("position", refScenePositions);
+			renderable.addVertexBuffer("texCoord", refSceneTexCoords);
+			renderable.addVertexBuffer("normal", refSceneNormals);
+			
+    		program.setUniform("model_view", getViewMatrix());
+        	
+        	if(halfResEnabled) 
+        	{
+    			// Do first pass at half resolution to off-screen buffer
+        		renderable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
+        	} 
+        	else 
+        	{
+        		renderable.draw(PrimitiveMode.TRIANGLES, context.getDefaultFramebuffer());  
+        	}
+    	}
+	}
     
-    @Override
-    public void draw()
-    {
-    	prepareForDefaultFBODraw();
-    	
-		for (int i = 0; i < this.getModelInstanceCount(); i++)
-		{
-	    	drawInstance(i);
-		}
-		
-		finishDefaultFBODraw();
-    }
-    
-    @Override
     public void cleanup()
     {
     	lightField.deleteOpenGLResources();
+    	
+		if (this.refScenePositions != null)
+		{
+			this.refScenePositions.delete();
+			this.refScenePositions = null;
+		}
+		
+		if (this.refSceneTexCoords != null)
+		{
+			this.refSceneTexCoords.delete();
+			this.refSceneTexCoords = null;
+		}
+		
+		if (this.refSceneNormals != null)
+		{
+			this.refSceneNormals.delete();
+			this.refSceneNormals = null;
+		}
+		
+		if (this.refSceneTexture != null)
+		{
+			this.refSceneTexture.delete();
+			this.refSceneTexture = null;
+		}
+		
+		if (this.environmentBackgroundProgram != null)
+		{
+			this.environmentBackgroundProgram.delete();
+			this.environmentBackgroundProgram = null;
+		}
+		
+		if (this.environmentTexture != null)
+		{
+			this.environmentTexture.delete();
+			this.environmentTexture = null;
+		}
     }
-	
-	@Override
-	public VertexMesh getActiveProxy()
-	{
-		return this.lightField.proxy;
-	}
-	
-	@Override
-	public ViewSet<ContextType> getActiveViewSet()
-	{
-		return this.lightField.viewSet;
-	}
     
     public File getVSETFile()
     {
@@ -638,7 +711,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
     	return this.lightField;
     }
 
-	@Override
 	public IBRSettings settings()
 	{
 		return this.lightField.settings;
@@ -650,7 +722,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 		return this.lightField.toString();
 	}
 	
-	@Override
 	public void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException
 	{
 		this.resampleRequested = true;
@@ -731,7 +802,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 			StandardCopyOption.REPLACE_EXISTING);
 	}
 
-	@Override
 	public void requestFidelity(File exportPath) throws IOException
 	{
 		this.fidelityRequested = true;
@@ -877,25 +947,21 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 		fidelityProgram.delete();
 	}
 
-	@Override
 	public void setHalfResolution(boolean halfResEnabled)
 	{
 		this.halfResEnabled = halfResEnabled;
 	}
 
-	@Override
 	public boolean getHalfResolution()
 	{
 		return this.halfResEnabled;
 	}
 
-	@Override
 	public boolean getMultisampling()
 	{
 		return this.multisamplingEnabled;
 	}
 
-	@Override
 	public void setMultisampling(boolean multisamplingEnabled)
 	{
 		this.multisamplingEnabled = multisamplingEnabled;
@@ -906,7 +972,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 		this.clearColor = clearColor;
 	}
 
-	@Override
 	public void setProgram(Program<ContextType> program) 
 	{
 		this.program = program;
@@ -950,20 +1015,17 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 		this.fidelityCompleteCallback = fidelityCompleteCallback;
 	}
 
-	@Override
 	public void requestBTF(int width, int height, File exportPath)
 			throws IOException 
 	{
 		throw new UnsupportedOperationException();
 	}
 	
-	@Override
 	public Texture2D<ContextType> getEnvironmentTexture()
 	{
 		return this.environmentTexture;
 	}
 
-	@Override
 	public void setEnvironment(File environmentFile) throws IOException
 	{
 		if (environmentFile != null && environmentFile.exists())
@@ -990,5 +1052,15 @@ public class ULFRenderer<ContextType extends Context<ContextType>> implements IB
 	public void setEnvironmentMatrix(Matrix4 matrix)
 	{
 		this.envMapMatrix = matrix;
+	}
+	
+	public VertexMesh getReferenceScene()
+	{
+		return this.referenceScene;
+	}
+	
+	public void setReferenceScene(VertexMesh scene)
+	{
+		this.referenceScene = scene;
 	}
 }

@@ -1,4 +1,4 @@
-package tetzlaff.ibr.microfacet;
+package tetzlaff.ibr.rendering;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,9 +21,8 @@ import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
-import tetzlaff.ibr.ulf.UnstructuredLightField;
 
-public class ImageBasedMicrofacetDistribution<ContextType extends Context<ContextType>>
+public class ImageBasedAssets<ContextType extends Context<ContextType>>
 {
 	public final UnstructuredLightField<ContextType> ulf;
 	public final Texture2D<ContextType> diffuseTexture;
@@ -34,7 +33,7 @@ public class ImageBasedMicrofacetDistribution<ContextType extends Context<Contex
 	public final Texture1D<ContextType> mfdTexture;
 	public final UniformBuffer<ContextType> shadowMatrixBuffer;
 	
-	public ImageBasedMicrofacetDistribution(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, File specularFile, File roughnessFile, 
+	public ImageBasedAssets(UnstructuredLightField<ContextType> ulf, File diffuseFile, File normalFile, File specularFile, File roughnessFile, 
 			File mfdFile, ContextType context) throws IOException
 	{
 		this.ulf = ulf;

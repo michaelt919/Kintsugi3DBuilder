@@ -10,6 +10,8 @@ import java.util.Scanner;
 
 public class VertexMesh 
 {
+	private File filename;
+	
 	private boolean hasNormals;
 	private boolean hasTexCoords;
 	
@@ -27,6 +29,8 @@ public class VertexMesh
 
 	public VertexMesh(String fileFormat, File file) throws IOException
 	{
+		this.setFilename(file);
+		
 		if (fileFormat.equals("OBJ"))
 		{
 			initFromOBJStream(file);
@@ -409,5 +413,15 @@ public class VertexMesh
 	public Material getMaterial() 
 	{
 		return this.material;
+	}
+
+	public File getFilename() 
+	{
+		return filename;
+	}
+
+	public void setFilename(File filename) 
+	{
+		this.filename = filename;
 	}
 }

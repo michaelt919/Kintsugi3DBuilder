@@ -1,4 +1,4 @@
-package tetzlaff.ibr.ulf;
+package tetzlaff.ibr.rendering;
 
 import java.io.File;
 import java.io.IOException;
