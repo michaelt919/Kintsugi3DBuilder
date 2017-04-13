@@ -100,14 +100,14 @@ vec2 computeFidelity()
 	
 	if (sum.a <= 0.0)
 	{
-		return vec2(0.0);
+		return vec2(-1.0, -1.0);
 	}
 	else
 	{
 		vec3 diff = sum.rgb / sum.a - lfSample.rgb;
 		return clamp(normalize(mat3(model_view) * fNormal).z, 0.0, 1.0) // n dot v
 			* lfSample.a * vec2(dot(diff, diff), 1);
-		}
+	}
 }
 
 void main()

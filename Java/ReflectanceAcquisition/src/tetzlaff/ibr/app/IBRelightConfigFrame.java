@@ -576,8 +576,8 @@ public class IBRelightConfigFrame extends JFrame
 		btnResample.setToolTipText("Resample all images of the currently active object to the above dimensions");
 		
 		JButton btnFidelity = new JButton("Fidelity Metric");
-		btnFidelity.setEnabled(false);
-		btnFidelity.setVisible(false);
+//		btnFidelity.setEnabled(false);
+//		btnFidelity.setVisible(false);
 		panel_1.add(btnFidelity);
 		btnFidelity.setToolTipText("Evaluate the fidelity of the image-based sampling.");
 		
