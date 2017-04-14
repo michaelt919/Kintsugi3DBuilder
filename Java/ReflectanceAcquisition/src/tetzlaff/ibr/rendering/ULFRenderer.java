@@ -378,6 +378,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     	}
     	else if (this.fidelityRequested)
     	{
+    		if (this.callback != null)
+			{
+				this.callback.startLoading();
+			}
+    		
     		try
     		{
 				this.generateFidelityDiffs();
@@ -386,7 +391,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     		{
 				e.printStackTrace();
 			}
+    		
     		this.fidelityRequested = false;
+    		
     		if (this.callback != null)
 			{
 				this.callback.loadingComplete();
@@ -868,6 +875,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     	
     	try(PrintStream out = new PrintStream(fidelityExportPath))
     	{
+			this.callback.setMaximum(this.lightField.viewSet.getCameraPoseCount());
+    		
     		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
 			{
     			System.out.println(this.lightField.viewSet.getImageFileName(i));
@@ -876,6 +885,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     			double lastMinDistance = 0.0;
     			double minDistance;
     			int activeViewCount;
+    			double sumMask = 0.0;
     			
     			List<Double> distances = new ArrayList<Double>();
     			List<Double> errors = new ArrayList<Double>();
@@ -931,7 +941,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 				        
 				        double sumSqError = 0.0;
 				        double sumWeights = 0.0;
-				        double sumMask = 0.0;
+				        sumMask = 0.0;
 			
 				    	float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
 				    	for (int k = 0; 4 * k + 3 < fidelityArray.length; k++)
@@ -943,24 +953,27 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 								sumMask += 1.0;
 			    			}
 				    	}
-				        
-				        Vector3 cameraDisplacement = new Vector3(this.lightField.viewSet.getCameraPose(i)
-								.times(new Vector4(this.lightField.proxy.getCentroid(), 1.0f)));
-				        
-//				    	System.out.println(this.lightField.viewSet.getImageFileName(i) + " " 
-//				    			+ sumSqError + " " + cameraDisplacement.dot(cameraDisplacement) + " " + sumWeights + " " + sumMask + " "
-//				    			+ Math.sqrt(sumSqError / sumWeights * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared) + " "
-//				    			+ Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
-
-//				    	out.print(Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
-				        
-				        distances.add(minDistance);
-				        errors.add(Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
 				    	
-				    	lastMinDistance = minDistance;
+				    	if (sumMask >= 0.0)
+				    	{
+					        Vector3 cameraDisplacement = new Vector3(this.lightField.viewSet.getCameraPose(i)
+									.times(new Vector4(this.lightField.proxy.getCentroid(), 1.0f)));
+					        
+	//				    	System.out.println(this.lightField.viewSet.getImageFileName(i) + " " 
+	//				    			+ sumSqError + " " + cameraDisplacement.dot(cameraDisplacement) + " " + sumWeights + " " + sumMask + " "
+	//				    			+ Math.sqrt(sumSqError / sumWeights * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared) + " "
+	//				    			+ Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
+	
+	//				    	out.print(Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
+					        
+					        distances.add(minDistance);
+					        errors.add(Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
+					    	
+					    	lastMinDistance = minDistance;
+				    	}
 			    	}
     			}
-    			while(activeViewCount > 0 && minDistance < Math.PI / 2);
+    			while(sumMask >= 0.0 && activeViewCount > 0 && minDistance < Math.PI / 4);
     			
     			for (Double distance : distances)
     			{
@@ -978,7 +991,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 		        
 		        if (this.callback != null)
 		        {
-		        	this.callback.setProgress((double) i / (double) this.lightField.viewSet.getCameraPoseCount());
+		        	this.callback.setProgress(i);
 		        }
 			}
     	}
