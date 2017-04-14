@@ -975,6 +975,118 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     			}
     			while(sumMask >= 0.0 && activeViewCount > 0 && minDistance < Math.PI / 4);
     			
+    			// Fit the error v. distance data to a quadratic with a few constraints.
+    			// First, the quadratic must pass through the origin.
+    			// Second, the slope at the origin must be positive.
+    			// Finally, the "downward" slope of the quadratic will be clamped to the quadratic's maximum value 
+    			// to ensure that the function is monotonically increasing or constant.
+    			// (So only half of the quadratic will actually be used.)
+    			double peak = -1.0, slope = -1.0;
+    			double maxDistance = distances.get(distances.size() - 1);
+    			double prevPeak, prevSlope, prevMaxDistance;
+    			
+    			// Every time we fit a quadratic, the data that would have been clamped on the downward slope messes up the fit.
+    			// So we should keep redoing the fit without that data affecting the initial slope and only affecting the peak value.
+    			// This continues until convergence (no new data points are excluded from the quadratic).
+    			do
+    			{
+    				double sumErrors = 0.0;
+	    			double sumSquareDistances = 0.0;
+	    			double sumCubeDistances = 0.0;
+	    			double sumFourthDistances = 0.0;
+	    			double sumErrorDistanceProducts = 0.0;
+	    			double sumErrorSquareDistanceProducts = 0.0;
+	    			
+	    			double sumHighErrors = 0.0;
+	    			int countHighErrors = 0;
+	    			
+	    			for (int k = 0; k < distances.size(); k++)
+	    			{
+	    				double distance = distances.get(k);
+	    				double error = errors.get(k);
+	    				
+	    				if (distance < maxDistance)
+	    				{
+	    					double distanceSq = distance * distance;
+	    				
+		    				sumSquareDistances += distanceSq;
+		    				sumCubeDistances += distance * distanceSq;
+		    				sumFourthDistances += distanceSq * distanceSq;
+		    				sumErrors += error;
+		    				sumErrorDistanceProducts += error * distance;
+		    				sumErrorSquareDistanceProducts += error * distanceSq;
+	    				}
+	    				else
+	    				{
+	    					sumHighErrors += error;
+	    					countHighErrors++;
+	    				}
+	    			}
+	    			
+	    			prevPeak = peak;
+    				prevSlope = slope;
+    				
+    				// Fit error vs. distance to a quadratic using least squares: a*x^2 + slope * x = error
+	    			double d = (sumCubeDistances * sumCubeDistances - sumFourthDistances * sumSquareDistances);
+	    			double a = (sumCubeDistances * sumErrorDistanceProducts - sumSquareDistances * sumErrorSquareDistanceProducts) / d;
+	    			
+	    			slope = (sumCubeDistances * sumErrorSquareDistanceProducts - sumFourthDistances * sumErrorDistanceProducts) / d;
+	    			
+	    			if (slope <= 0.0 || !Double.isFinite(slope))
+	    			{
+	    				if (prevSlope < 0.0)
+	    				{
+		    				// Set peak to zero if its the first iteration
+		    				peak = 0.0;
+		    				slope = sumErrorDistanceProducts / sumSquareDistances;
+	    				}
+	    				else
+	    				{
+		    				// Revert to the previous peak and slope
+		    				slope = prevSlope;
+		    				peak = prevPeak;
+	    				}
+	    			}
+	    			else
+	    			{
+		    			// Peak can be determined from a and the slope.
+		    			double leastSquaresPeak = slope * slope / (-4 * a);
+
+		    			// Do a weighted average between the least-squares peak and the average of all the errors that would be on the downward slope of the quadratic,
+		    			// but are instead clamped to the maximum of the quadratic.
+		    			peak = (leastSquaresPeak * (errors.size() - countHighErrors) + sumHighErrors) / errors.size();
+		    			 
+		    			if (peak <= 0.0 || !Double.isFinite(peak))
+		    			{
+		    				if (prevPeak < 0.0)
+		    				{
+			    				// Set peak to zero if its the first iteration
+			    				peak = 0.0;
+			    				slope = sumErrorDistanceProducts / sumSquareDistances;
+		    				}
+		    				else
+		    				{
+			    				// Revert to the previous peak and slope
+			    				slope = prevSlope;
+			    				peak = prevPeak;
+		    				}
+		    			}
+	    			}
+	    			
+	    			// Update the max distance and previous max distance.
+	    			prevMaxDistance = maxDistance;
+	    			maxDistance = 2 * peak / slope;
+    			}
+    			while(maxDistance < prevMaxDistance && peak > 0.0);
+    			// TODO what to do if maxDistance keeps decreasing until we run out of data points?
+    			// Should there be some minimum number of data points (5?)
+    			
+    			out.println(slope + "\t" + peak);
+    			
+    			System.out.println("Slope: " + slope);
+    			System.out.println("Peak: " + peak);
+    			System.out.println();
+    			
     			for (Double distance : distances)
     			{
     				out.print(distance + "\t");
