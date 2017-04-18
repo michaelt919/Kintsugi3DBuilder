@@ -880,7 +880,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
 			{
     			System.out.println(this.lightField.viewSet.getImageFileName(i));
-    			out.println(this.lightField.viewSet.getImageFileName(i) + "\t");
+    			out.print(this.lightField.viewSet.getImageFileName(i) + "\t");
     			
     			double lastMinDistance = 0.0;
     			double minDistance;
@@ -1032,11 +1032,12 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 	    			
 	    			slope = (sumCubeDistances * sumErrorSquareDistanceProducts - sumFourthDistances * sumErrorDistanceProducts) / d;
 	    			
-	    			if (slope <= 0.0 || !Double.isFinite(slope))
+	    			if (slope <= 0.0 || !Double.isFinite(slope) || countHighErrors > errors.size() - 5)
 	    			{
 	    				if (prevSlope < 0.0)
 	    				{
-		    				// Set peak to zero if its the first iteration
+	    					// If its the first iteration, use a linear function
+		    				// peak=0 is a special case for designating a linear function
 		    				peak = 0.0;
 		    				slope = sumErrorDistanceProducts / sumSquareDistances;
 	    				}
@@ -1054,13 +1055,15 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 
 		    			// Do a weighted average between the least-squares peak and the average of all the errors that would be on the downward slope of the quadratic,
 		    			// but are instead clamped to the maximum of the quadratic.
-		    			peak = (leastSquaresPeak * (errors.size() - countHighErrors) + sumHighErrors) / errors.size();
+		    			// Clamp the contribution of the least-squares peak to be no greater than twice the average of the other values.
+		    			peak = (Math.min(2 * sumHighErrors / countHighErrors, leastSquaresPeak) * (errors.size() - countHighErrors) + sumHighErrors) / errors.size();
 		    			 
 		    			if (peak <= 0.0 || !Double.isFinite(peak))
 		    			{
 		    				if (prevPeak < 0.0)
 		    				{
-			    				// Set peak to zero if its the first iteration
+		    					// If its the first iteration, use a linear function
+			    				// peak=0 is a special case for designating a linear function
 			    				peak = 0.0;
 			    				slope = sumErrorDistanceProducts / sumSquareDistances;
 		    				}
