@@ -15,6 +15,7 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
+import tetzlaff.gl.NullContext;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.Renderable;
@@ -78,6 +79,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 
 	private boolean fidelityRequested;
     private File fidelityExportPath;
+    private File fidelityVSETFile;
     
 	private Consumer<Integer> fidelitySetupCallback;
 	private Runnable fidelityCompleteCallback;
@@ -823,10 +825,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 			StandardCopyOption.REPLACE_EXISTING);
 	}
 
-	public void requestFidelity(File exportPath) throws IOException
+	public void requestFidelity(File exportPath, File targetVSETFile) throws IOException
 	{
 		this.fidelityRequested = true;
 		this.fidelityExportPath = exportPath;
+		this.fidelityVSETFile = targetVSETFile;
 	}
 	
 	private void generateFidelityDiffs() throws IOException
@@ -875,6 +878,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     	
     	try(PrintStream out = new PrintStream(fidelityExportPath))
     	{
+    		double[] slopes = new double[this.lightField.viewSet.getCameraPoseCount()];
+    		double[] peaks = new double[this.lightField.viewSet.getCameraPoseCount()];
+    		
 			this.callback.setMaximum(this.lightField.viewSet.getCameraPoseCount());
     		
     		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
@@ -1057,7 +1063,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 		    			// but are instead clamped to the maximum of the quadratic.
 		    			// Clamp the contribution of the least-squares peak to be no greater than twice the average of the other values.
 		    			peak = (Math.min(2 * sumHighErrors / countHighErrors, leastSquaresPeak) * (errors.size() - countHighErrors) + sumHighErrors) / errors.size();
-		    			 
+		    			
 		    			if (peak <= 0.0 || !Double.isFinite(peak))
 		    			{
 		    				if (prevPeak < 0.0)
@@ -1090,6 +1096,9 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     			System.out.println("Peak: " + peak);
     			System.out.println();
     			
+    			slopes[i] = slope;
+    			peaks[i] = peak;
+    			
     			for (Double distance : distances)
     			{
     				out.print(distance + "\t");
@@ -1109,6 +1118,61 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 		        	this.callback.setProgress(i);
 		        }
 			}
+    		
+    		if (fidelityVSETFile != null && fidelityVSETFile.exists())
+    		{
+	    		out.println();
+	    		out.println("Expected error for views in target view set:");
+	    		out.println();
+	    		
+	    		ViewSet<NullContext> targetViewSet = ViewSet.loadFromVSETFile(fidelityVSETFile);
+	    		
+	    		Vector3[] targetDirections = new Vector3[targetViewSet.getCameraPoseCount()];
+	    		
+	    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+	        	{
+	    			targetDirections[i] = new Vector3(targetViewSet.getCameraPoseInverse(i).getColumn(3))
+	        				.minus(this.lightField.proxy.getCentroid()).normalized();
+	    		}
+	    		
+	    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+	    		{
+	    			double minDistance = Double.MAX_VALUE;
+	    			for (int j = 0; j < targetViewSet.getCameraPoseCount(); j++)
+	    			{
+	    				if (i != j)
+	    				{
+	    					minDistance = Math.min(minDistance, Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[j])))));
+	    				}
+	    			}
+	    			
+	    			double weightedEstimateSum = 0.0;
+	    			double weightSum = 0.0;
+	    			
+	    			for (int k = 0; k < slopes.length; k++)
+	    			{
+	    				double estimate;
+	    				if (peaks[k] > 0)
+    					{
+	    					estimate = slopes[k] * minDistance - slopes[k] * slopes[k] * minDistance * minDistance / (4 * peaks[k]);
+    					}
+	    				else
+	    				{
+	    					estimate = slopes[k] * minDistance;
+	    				}
+	    				
+	    				double weight = 1 / Math.max(0.000001, 1.0 - 
+	    						Math.pow(Math.max(0.0, targetDirections[i].dot(viewDirections[k])), this.settings().getWeightExponent())) 
+							- 1.0;
+	    				
+	    				weightedEstimateSum += weight * estimate;
+	    				weightSum += weight;
+	    			}
+	    			
+	    			double projectedError = weightedEstimateSum / weightSum;
+	    			out.println(targetViewSet.getImageFileName(i) + "\t" + projectedError);
+	    		}
+    		}
     	}
 		
 		framebuffer.delete();
