@@ -156,9 +156,9 @@ public class ImageBasedMorphRenderer<ContextType extends Context<ContextType>> i
 	}
 
 	@Override
-	public void requestFidelity(File exportPath) throws IOException 
+	public void requestFidelity(File exportPath, File targetVSETFile) throws IOException 
 	{
-		this.stages.get(this.currentStage).requestFidelity(exportPath);
+		this.stages.get(this.currentStage).requestFidelity(exportPath, targetVSETFile);
 	}
 
 	@Override

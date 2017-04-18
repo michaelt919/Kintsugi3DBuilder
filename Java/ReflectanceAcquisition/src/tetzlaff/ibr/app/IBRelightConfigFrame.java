@@ -774,16 +774,29 @@ public class IBRelightConfigFrame extends JFrame
 			
 			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 			{
-				try 
+				File fidelityOutputFile = fileChooser.getSelectedFile();
+				
+				fileChooser.setDialogTitle("Choose a Target VSET File");
+				fileChooser.resetChoosableFileFilters();
+				fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
+				
+				if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 				{
-					progressBar.setIndeterminate(true);
-					progressBar.setVisible(true);
-					this.pack();
-					model.getSelectedItem().requestFidelity(fileChooser.getSelectedFile());
-				} 
-				catch (IOException ex)
-				{
-					ex.printStackTrace();
+					File targetVSETFile = fileChooser.getSelectedFile();
+					
+					try
+					{
+						progressBar.setIndeterminate(true);
+						progressBar.setVisible(true);
+						this.pack();
+						model.getSelectedItem().requestFidelity(fidelityOutputFile, targetVSETFile);
+					} 
+					catch (IOException ex)
+					{
+						ex.printStackTrace();
+					}
 				}
 			}
 		});

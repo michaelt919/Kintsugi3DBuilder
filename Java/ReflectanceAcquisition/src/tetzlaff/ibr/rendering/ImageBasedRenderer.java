@@ -698,9 +698,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	}
 
 	@Override
-	public void requestFidelity(File exportPath) throws IOException 
+	public void requestFidelity(File exportPath, File targetVSETFile) throws IOException 
 	{
-		ulfRenderer.requestFidelity(exportPath);
+		ulfRenderer.requestFidelity(exportPath, targetVSETFile);
 	}
 
 	@Override

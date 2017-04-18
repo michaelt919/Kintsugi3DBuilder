@@ -33,7 +33,7 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	void setEnvironment(File environmentFile) throws IOException;
 	
 	void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException;
-	void requestFidelity(File exportPath) throws IOException;
+	void requestFidelity(File exportPath, File targetVSETFile) throws IOException;
 	void requestBTF(int width, int height, File exportPath) throws IOException;
 
 	void setTransformationMatrices(List<Matrix4> matrices);
