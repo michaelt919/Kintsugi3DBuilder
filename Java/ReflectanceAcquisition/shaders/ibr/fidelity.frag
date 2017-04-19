@@ -106,7 +106,9 @@ vec2 computeFidelity()
 	{
 		vec3 diff = sum.rgb / sum.a - lfSample.rgb;
 		return clamp(normalize(mat3(model_view) * fNormal).z, 0.0, 1.0) // n dot v
-			* lfSample.a * vec2(dot(diff, diff), 1);
+			* lfSample.a
+			* vec2(dot(diff, diff), 1);
+			//* 2 * vec2(sum.g / sum.a, lfSample.g);
 	}
 }
 
