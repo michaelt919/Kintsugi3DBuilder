@@ -872,7 +872,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     		}
     	}
 		
-    	FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(1024, 1024)
+    	FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(256, 256/*1024, 1024*/)
 				.addColorAttachment(ColorFormat.RG32F)
 				.createFramebufferObject();
     	
@@ -882,6 +882,8 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     		double[] peaks = new double[this.lightField.viewSet.getCameraPoseCount()];
     		
 			this.callback.setMaximum(this.lightField.viewSet.getCameraPoseCount());
+			
+			new File(fidelityExportPath.getParentFile(), "debug").mkdir();
     		
     		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
 			{
@@ -941,10 +943,13 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 				    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 				    	
 				    	viewIndexBuffer.delete();
-				    	
-				    	//File fidelityImage = new File(fidelityExportPath, this.lightField.viewSet.getImageFileName(i));
-				        //framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
-				        
+
+//				        if (activeViewCount == lightField.viewSet.getCameraPoseCount() - 1 /*&& this.lightField.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
+//				        {
+//					    	File fidelityImage = new File(new File(fidelityExportPath.getParentFile(), "debug"), this.lightField.viewSet.getImageFileName(i));
+//					        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
+//				        }
+				        	
 				        double sumSqError = 0.0;
 				        double sumWeights = 0.0;
 				        sumMask = 0.0;
@@ -979,7 +984,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 				    	}
 			    	}
     			}
-    			while(sumMask >= 0.0 && activeViewCount > 0 && minDistance < Math.PI / 4);
+    			while(sumMask >= 0.0 && activeViewCount > 0 && minDistance < /*0*/ Math.PI / 4);
     			
     			// Fit the error v. distance data to a quadratic with a few constraints.
     			// First, the quadratic must pass through the origin.
@@ -1090,7 +1095,10 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     			// TODO what to do if maxDistance keeps decreasing until we run out of data points?
     			// Should there be some minimum number of data points (5?)
     			
-    			out.println(slope + "\t" + peak);
+    			if (errors.size() >= 2)
+    			{
+    				out.println(slope + "\t" + peak + "\t" + errors.get(1));
+    			}
     			
     			System.out.println("Slope: " + slope);
     			System.out.println("Peak: " + peak);
