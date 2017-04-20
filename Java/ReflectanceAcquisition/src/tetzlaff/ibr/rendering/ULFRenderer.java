@@ -978,7 +978,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 	//				    	out.print(Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
 					        
 					        distances.add(minDistance);
-					        errors.add(Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
+					        errors.add(Math.sqrt(sumSqError / sumMask /* * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared*/));
 					    	
 					    	lastMinDistance = minDistance;
 				    	}
@@ -1162,7 +1162,15 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 	    				double estimate;
 	    				if (peaks[k] > 0)
     					{
-	    					estimate = slopes[k] * minDistance - slopes[k] * slopes[k] * minDistance * minDistance / (4 * peaks[k]);
+	    					double peakDistance = 2 * peaks[k] / slopes[k];
+	    					if (minDistance > peakDistance)
+	    					{
+	    						estimate = peaks[k];
+	    					}
+	    					else
+	    					{
+	    						estimate = slopes[k] * minDistance - slopes[k] * slopes[k] * minDistance * minDistance / (4 * peaks[k]);
+	    					}
     					}
 	    				else
 	    				{
