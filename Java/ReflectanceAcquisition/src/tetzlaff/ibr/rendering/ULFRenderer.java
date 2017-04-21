@@ -1097,7 +1097,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     			
     			if (errors.size() >= 2)
     			{
-    				out.println(slope + "\t" + peak + "\t" + errors.get(1));
+    				out.println(slope + "\t" + peak + "\t" + minDistance + "\t" + errors.get(1));
     			}
     			
     			System.out.println("Slope: " + slope);
@@ -1143,51 +1143,120 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 	        				.minus(this.lightField.proxy.getCentroid()).normalized();
 	    		}
 	    		
+	    		double[] targetSlopes = new double[targetViewSet.getCameraPoseCount()];
+	    		double[] targetPeaks = new double[targetViewSet.getCameraPoseCount()];
+	    		
 	    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 	    		{
-	    			double minDistance = Double.MAX_VALUE;
-	    			for (int j = 0; j < targetViewSet.getCameraPoseCount(); j++)
-	    			{
-	    				if (i != j)
-	    				{
-	    					minDistance = Math.min(minDistance, Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[j])))));
-	    				}
-	    			}
-	    			
-	    			double weightedEstimateSum = 0.0;
+	    			double weightedSlopeSum = 0.0;
 	    			double weightSum = 0.0;
+	    			double weightedPeakSum = 0.0;
+	    			double peakWeightSum = 0.0;
 	    			
 	    			for (int k = 0; k < slopes.length; k++)
 	    			{
-	    				double estimate;
-	    				if (peaks[k] > 0)
-    					{
-	    					double peakDistance = 2 * peaks[k] / slopes[k];
-	    					if (minDistance > peakDistance)
-	    					{
-	    						estimate = peaks[k];
-	    					}
-	    					else
-	    					{
-	    						estimate = slopes[k] * minDistance - slopes[k] * slopes[k] * minDistance * minDistance / (4 * peaks[k]);
-	    					}
-    					}
-	    				else
-	    				{
-	    					estimate = slopes[k] * minDistance;
-	    				}
-	    				
 	    				double weight = 1 / Math.max(0.000001, 1.0 - 
 	    						Math.pow(Math.max(0.0, targetDirections[i].dot(viewDirections[k])), this.settings().getWeightExponent())) 
 							- 1.0;
 	    				
-	    				weightedEstimateSum += weight * estimate;
+	    				if (peaks[k] > 0)
+    					{
+	    					weightedPeakSum += weight * peaks[k];
+	    					peakWeightSum += weight;
+    					}
+	    				
+						weightedSlopeSum += weight * slopes[k];
 	    				weightSum += weight;
 	    			}
 	    			
-	    			double projectedError = weightedEstimateSum / weightSum;
-	    			out.println(targetViewSet.getImageFileName(i) + "\t" + projectedError);
+	    			targetSlopes[i] = weightedSlopeSum / weightSum;
+	    			targetPeaks[i] = peakWeightSum == 0.0 ? 0.0 : weightedPeakSum / peakWeightSum;
 	    		}
+	    		
+	    		double[] targetDistances = new double[targetViewSet.getCameraPoseCount()];
+	    		double[] targetErrors = new double[targetViewSet.getCameraPoseCount()];
+	    		
+	    		boolean[] targetUsed = new boolean[targetErrors.length];
+	    		
+
+    			for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+	    		{
+    				targetDistances[i] = Double.MAX_VALUE;
+    				// TODO go through these views in order of importance so that when loaded viewset = target viewset, it generates a ground truth ranking.
+    	    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++) 
+	    			{
+	    				if (targetViewSet.getImageFileName(i).contains(this.lightField.viewSet.getImageFileName(j).split("\\.")[0]))
+	    				{
+	    	    			out.println(targetViewSet.getImageFileName(i) + "\t" + targetSlopes[i] + "\t" + targetPeaks[i] + "\t" + 
+	    	    					targetDistances[i] + "\t" + targetErrors[i]);
+	    					
+	    					targetUsed[i] = true;
+	    				}
+	    				else
+	    				{
+	    					targetDistances[i] = Math.min(targetDistances[i], Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[j])))));
+	    				}
+	    			}
+    	    		
+    				if (Double.isFinite(targetPeaks[i]))
+					{
+    					double peakDistance = 2 * targetPeaks[i] / targetSlopes[i];
+    					if (targetDistances[i] > peakDistance)
+    					{
+    						targetErrors[i] = targetPeaks[i];
+    					}
+    					else
+    					{
+    						targetErrors[i] = targetSlopes[i] * targetDistances[i] - targetSlopes[i] * targetSlopes[i] * targetDistances[i] * targetDistances[i] / (4 * targetPeaks[i]);
+    					}
+					}
+    				else
+    				{
+    					targetErrors[i] = targetSlopes[i] * targetDistances[i];
+    				}
+	    		}
+	    		
+    			int unused;
+	    		do
+	    		{
+	    			unused = 0;
+	    			double maxError = 0.0;
+	    			int maxErrorIndex = -1;
+	    			
+		    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+		    		{
+		    			if (!targetUsed[i])
+		    			{
+		    				unused++;
+		    				
+		    				if (targetErrors[i] > maxError)
+		    				{
+		    					maxError = targetErrors[i];
+		    					maxErrorIndex = i;
+		    				}
+		    			}
+		    		}
+		    		
+		    		if (maxErrorIndex >= 0)
+		    		{
+		    			out.println(targetViewSet.getImageFileName(maxErrorIndex) + "\t" + targetSlopes[maxErrorIndex] + "\t" + targetPeaks[maxErrorIndex] + "\t" + 
+    	    					targetDistances[maxErrorIndex] + "\t" + targetErrors[maxErrorIndex]); // TODO Also should write current accumulated error.
+		    			
+		    			// TODO not done yet
+		    			for (int j = 0; j < targetViewSet.getCameraPoseCount(); j++)
+			    		{
+		    				if (targetUsed[j])
+		    				{
+		    					targetDistances[maxErrorIndex] = Math.min(targetDistances[maxErrorIndex], 
+		    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[maxErrorIndex].dot(targetDirections[j])))));
+		    				}
+			    		}
+		    			
+		    			targetUsed[maxErrorIndex] = true;
+			    		unused--;
+		    		}
+	    		}
+	    		while(unused > 0);
     		}
     	}
 		
