@@ -770,7 +770,9 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			fileChooser.setDialogTitle("Choose an Export Filename");
 			fileChooser.resetChoosableFileFilters();
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			fileChooser.setFileFilter(new FileNameExtensionFilter("Text files (.txt)", "txt"));
 			
 			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 			{
