@@ -832,13 +832,55 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 		this.fidelityVSETFile = targetVSETFile;
 	}
 	
+	private double calculateError(Renderable<ContextType> renderable, Framebuffer<ContextType> framebuffer, IntVertexList viewIndexList, int targetViewIndex, int activeViewCount)
+	{
+		this.setupForDraw(renderable.program());
+    	
+    	renderable.program().setUniform("model_view", this.lightField.viewSet.getCameraPose(targetViewIndex));
+    	renderable.program().setUniform("projection", 
+    			this.lightField.viewSet.getCameraProjection(this.lightField.viewSet.getCameraProjectionIndex(targetViewIndex))
+				.getProjectionMatrix(this.lightField.viewSet.getRecommendedNearPlane(), this.lightField.viewSet.getRecommendedFarPlane()));
+
+    	renderable.program().setUniform("targetViewIndex", targetViewIndex);
+		
+    	UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer().setData(viewIndexList);
+    	renderable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
+    	renderable.program().setUniform("viewCount", activeViewCount);
+    	
+    	framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
+    	framebuffer.clearDepthBuffer();
+    	
+    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+    	
+    	viewIndexBuffer.delete();
+
+//	        if (activeViewCount == lightField.viewSet.getCameraPoseCount() - 1 /*&& this.lightField.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
+//	        {
+//		    	File fidelityImage = new File(new File(fidelityExportPath.getParentFile(), "debug"), this.lightField.viewSet.getImageFileName(i));
+//		        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
+//	        }
+        	
+        double sumSqError = 0.0;
+        double sumWeights = 0.0;
+        double sumMask = 0.0;
+
+    	float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
+    	for (int k = 0; 4 * k + 3 < fidelityArray.length; k++)
+    	{
+			if (fidelityArray[4 * k + 1] >= 0.0f)
+			{
+				sumSqError += fidelityArray[4 * k];
+				sumWeights += fidelityArray[4 * k + 1];
+				sumMask += 1.0;
+			}
+    	}
+    	
+    	return Math.sqrt(sumSqError / sumMask);
+	}
+	
 	private void generateFidelityDiffs() throws IOException
 	{
 		System.out.println("\nView Importance:");
-		
-		Vector3 baseDisplacement = new Vector3(this.lightField.viewSet.getCameraPose(this.lightField.viewSet.getPrimaryViewIndex()).quickInverse(0.001f)
-										.times(new Vector4(this.lightField.proxy.getCentroid(), 1.0f)));
-		double baseDistanceSquared = baseDisplacement.dot(baseDisplacement);
 		
 		Program<ContextType> fidelityProgram = context.getShaderProgramBuilder()
 				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
@@ -887,6 +929,11 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     		
     		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
 			{
+		    	if (this.fidelitySetupCallback != null)
+	    		{
+		    		this.fidelitySetupCallback.accept(i);
+	    		}
+    			
     			System.out.println(this.lightField.viewSet.getImageFileName(i));
     			out.print(this.lightField.viewSet.getImageFileName(i) + "\t");
     			
@@ -903,15 +950,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     			
     			do 
     			{
-			    	this.setupForDraw();
-			    	
-			    	renderable.program().setUniform("model_view", this.lightField.viewSet.getCameraPose(i));
-			    	renderable.program().setUniform("projection", 
-			    			this.lightField.viewSet.getCameraProjection(this.lightField.viewSet.getCameraProjectionIndex(i))
-		    				.getProjectionMatrix(this.lightField.viewSet.getRecommendedNearPlane(), this.lightField.viewSet.getRecommendedFarPlane()));
-		
-			    	renderable.program().setUniform("targetViewIndex", i);
-			    	
 			    	IntVertexList viewIndexList = new IntVertexList(1, this.lightField.viewSet.getCameraPoseCount());
 			    	
 			    	activeViewCount = 0;
@@ -928,58 +966,10 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 			    	
 			    	if (activeViewCount > 0)
 			    	{
-				    	UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer().setData(viewIndexList);
-				    	renderable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
-				    	renderable.program().setUniform("viewCount", activeViewCount);
-				    	
-				    	if (this.fidelitySetupCallback != null)
-			    		{
-				    		this.fidelitySetupCallback.accept(i);
-			    		}
-				    	
-				    	framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
-				    	framebuffer.clearDepthBuffer();
-				    	
-				    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-				    	
-				    	viewIndexBuffer.delete();
-
-//				        if (activeViewCount == lightField.viewSet.getCameraPoseCount() - 1 /*&& this.lightField.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
-//				        {
-//					    	File fidelityImage = new File(new File(fidelityExportPath.getParentFile(), "debug"), this.lightField.viewSet.getImageFileName(i));
-//					        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
-//				        }
-				        	
-				        double sumSqError = 0.0;
-				        double sumWeights = 0.0;
-				        sumMask = 0.0;
-			
-				    	float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
-				    	for (int k = 0; 4 * k + 3 < fidelityArray.length; k++)
-				    	{
-			    			if (fidelityArray[4 * k + 1] >= 0.0f)
-			    			{
-								sumSqError += fidelityArray[4 * k];
-								sumWeights += fidelityArray[4 * k + 1];
-								sumMask += 1.0;
-			    			}
-				    	}
-				    	
 				    	if (sumMask >= 0.0)
 				    	{
-					        Vector3 cameraDisplacement = new Vector3(this.lightField.viewSet.getCameraPose(i)
-									.times(new Vector4(this.lightField.proxy.getCentroid(), 1.0f)));
-					        
-	//				    	System.out.println(this.lightField.viewSet.getImageFileName(i) + " " 
-	//				    			+ sumSqError + " " + cameraDisplacement.dot(cameraDisplacement) + " " + sumWeights + " " + sumMask + " "
-	//				    			+ Math.sqrt(sumSqError / sumWeights * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared) + " "
-	//				    			+ Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
-	
-	//				    	out.print(Math.sqrt(sumSqError / sumMask * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared));
-					        
 					        distances.add(minDistance);
-					        errors.add(Math.sqrt(sumSqError / sumMask /* * cameraDisplacement.dot(cameraDisplacement) / baseDistanceSquared*/));
-					    	
+					        errors.add(calculateError(renderable, framebuffer, viewIndexList, i, activeViewCount));
 					    	lastMinDistance = minDistance;
 				    	}
 			    	}
@@ -1001,7 +991,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     			// This continues until convergence (no new data points are excluded from the quadratic).
     			do
     			{
-    				double sumErrors = 0.0;
 	    			double sumSquareDistances = 0.0;
 	    			double sumCubeDistances = 0.0;
 	    			double sumFourthDistances = 0.0;
@@ -1023,7 +1012,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 		    				sumSquareDistances += distanceSq;
 		    				sumCubeDistances += distance * distanceSq;
 		    				sumFourthDistances += distanceSq * distanceSq;
-		    				sumErrors += error;
 		    				sumErrorDistanceProducts += error * distance;
 		    				sumErrorSquareDistanceProducts += error * distanceSq;
 	    				}
@@ -1092,8 +1080,6 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 	    			maxDistance = 2 * peak / slope;
     			}
     			while(maxDistance < prevMaxDistance && peak > 0.0);
-    			// TODO what to do if maxDistance keeps decreasing until we run out of data points?
-    			// Should there be some minimum number of data points (5?)
     			
     			if (errors.size() >= 2)
     			{
@@ -1143,6 +1129,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 	        				.minus(this.lightField.proxy.getCentroid()).normalized();
 	    		}
 	    		
+	    		// Determine a function describing the error of each quadratic view by blending the slope and peak parameters from the known views.
 	    		double[] targetSlopes = new double[targetViewSet.getCameraPoseCount()];
 	    		double[] targetPeaks = new double[targetViewSet.getCameraPoseCount()];
 	    		
@@ -1176,28 +1163,63 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 	    		double[] targetDistances = new double[targetViewSet.getCameraPoseCount()];
 	    		double[] targetErrors = new double[targetViewSet.getCameraPoseCount()];
 	    		
-	    		boolean[] targetUsed = new boolean[targetErrors.length];
-	    		
-
-    			for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+	    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 	    		{
     				targetDistances[i] = Double.MAX_VALUE;
-    				// TODO go through these views in order of importance so that when loaded viewset = target viewset, it generates a ground truth ranking.
-    	    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++) 
+	    		}
+	    		
+	    		boolean[] originalUsed = new boolean[this.lightField.viewSet.getCameraPoseCount()];
+				
+				IntVertexList viewIndexList = new IntVertexList(1, targetViewSet.getCameraPoseCount());
+	    		int activeViewCount = 0;
+	    		
+	    		// Print views that are only in the original view set and NOT in the target view set
+	    		// This also initializes the distances for the target views.
+	    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+	    		{
+	    			// First determine if the view is in the target view set
+	    			boolean found = false;
+	    			for (int i = 0; !found && i < targetViewSet.getCameraPoseCount(); i++)
 	    			{
 	    				if (targetViewSet.getImageFileName(i).contains(this.lightField.viewSet.getImageFileName(j).split("\\.")[0]))
 	    				{
-	    	    			out.println(targetViewSet.getImageFileName(i) + "\t" + targetSlopes[i] + "\t" + targetPeaks[i] + "\t" + 
-	    	    					targetDistances[i] + "\t" + targetErrors[i]);
-	    					
-	    					targetUsed[i] = true;
-	    				}
-	    				else
-	    				{
-	    					targetDistances[i] = Math.min(targetDistances[i], Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[j])))));
+	    					found = true;
 	    				}
 	    			}
-    	    		
+	    			
+	    			if (!found)
+	    			{
+	    				// If it isn't, then print it to the file
+	    				originalUsed[j] = true;
+	    				out.print(this.lightField.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t" + 
+	    						calculateError(renderable, framebuffer, viewIndexList, j, activeViewCount) + "\t");
+
+	    				viewIndexList.set(activeViewCount, 0, j);
+	    				activeViewCount++;
+
+			    		double cumError = 0.0;
+			    		
+			    		for (int k = 0; k < this.lightField.viewSet.getCameraPoseCount(); k++)
+			    		{
+			    			if (!originalUsed[k])
+			    			{
+			    				cumError += calculateError(renderable, framebuffer, viewIndexList, k, activeViewCount);
+			    			}
+			    		}
+			    		
+			    		out.println(cumError);
+	    				
+	    				// Then update the distances for all of the target views
+	    				for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+		    			{
+		    				targetDistances[i] = Math.min(targetDistances[i], Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(viewDirections[j])))));
+		    			}
+	    			}
+	    		}
+	    		
+				// Now update the errors for all of the target views
+				for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+    			{
     				if (Double.isFinite(targetPeaks[i]))
 					{
     					double peakDistance = 2 * targetPeaks[i] / targetSlopes[i];
@@ -1214,19 +1236,115 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
     				{
     					targetErrors[i] = targetSlopes[i] * targetDistances[i];
     				}
+    			}
+	    		
+	    		boolean[] targetUsed = new boolean[targetErrors.length];
+
+	    		int unusedOriginalViews = 0;
+	    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+	    		{
+	    			if (!originalUsed[j])
+	    			{
+	    				unusedOriginalViews++;
+	    			}
 	    		}
 	    		
+	    		// Views that are in both the target view set and the original view set
+	    		// Go through these views in order of importance so that when loaded viewset = target viewset, it generates a ground truth ranking.
+	    		while(unusedOriginalViews > 0)
+	    		{
+	    			double maxError = -1.0;
+	    			int maxErrorTargetIndex = -1;
+	    			int maxErrorOriginalIndex = -1;
+	    			
+	    			// Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
+		    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+		    		{
+	    	    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++) 
+		    			{
+		    				if (targetViewSet.getImageFileName(i).contains(this.lightField.viewSet.getImageFileName(j).split("\\.")[0]))
+		    				{
+		    					// Can't be previously used and must have more error than any other view
+				    			if (!originalUsed[j] && targetErrors[i] > maxError)
+			    				{
+			    					maxError = targetErrors[i];
+			    					maxErrorTargetIndex = i;
+			    					maxErrorOriginalIndex = j;
+			    				}
+		    				}
+		    			}
+		    		}
+		    		
+		    		// Print the view to the file
+		    		out.print(targetViewSet.getImageFileName(maxErrorTargetIndex).split("\\.")[0] + "\t" + targetSlopes[maxErrorTargetIndex] + "\t" + targetPeaks[maxErrorTargetIndex] + "\t" + 
+	    					targetDistances[maxErrorTargetIndex] + "\t" + targetErrors[maxErrorTargetIndex] + "\t");
+					
+		    		// Flag that its been used
+					targetUsed[maxErrorTargetIndex] = true;
+					originalUsed[maxErrorOriginalIndex] = true;
+					
+					double expectedCumError = 0.0;
+	    			
+					// Update all of the other target distances and errors that haven't been used yet
+	    			for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++) 
+	    			{
+    					// Don't update previously used views
+	    				if (!targetUsed[i])
+	    				{
+	    					// distance
+	    					targetDistances[i] = Math.min(targetDistances[i], 
+	    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[maxErrorTargetIndex])))));
+
+	    					// error
+	        				if (Double.isFinite(targetPeaks[i]))
+	    					{
+	        					double peakDistance = 2 * targetPeaks[i] / targetSlopes[i];
+	        					if (targetDistances[i] > peakDistance)
+	        					{
+	        						targetErrors[i] = targetPeaks[i];
+	        					}
+	        					else
+	        					{
+	        						targetErrors[i] = targetSlopes[i] * targetDistances[i] - targetSlopes[i] * targetSlopes[i] * targetDistances[i] * targetDistances[i] / (4 * targetPeaks[i]);
+	        					}
+	    					}
+	        				else
+	        				{
+	        					targetErrors[i] = targetSlopes[i] * targetDistances[i];
+	        				}
+	        				
+	        				expectedCumError += targetErrors[i];
+	    				}
+	    			}
+
+		    		out.println(expectedCumError);
+	    			
+	    			// Count how many views from the original view set haven't been used.
+	    			unusedOriginalViews = 0;
+		    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+		    		{
+		    			if (!originalUsed[j])
+		    			{
+		    				unusedOriginalViews++;
+		    			}
+		    		}
+	    		}
+
+	    		// Views that are in the target view set and NOT in the original view set
     			int unused;
 	    		do
 	    		{
 	    			unused = 0;
-	    			double maxError = 0.0;
+	    			double maxError = -1.0;
 	    			int maxErrorIndex = -1;
-	    			
+
+	    			// Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
 		    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 		    		{
+    					// Can't be previously used and must have more error than any other view
 		    			if (!targetUsed[i])
 		    			{
+		    				// Keep track of number of unused views at the same time
 		    				unused++;
 		    				
 		    				if (targetErrors[i] > maxError)
@@ -1239,21 +1357,49 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 		    		
 		    		if (maxErrorIndex >= 0)
 		    		{
-		    			out.println(targetViewSet.getImageFileName(maxErrorIndex) + "\t" + targetSlopes[maxErrorIndex] + "\t" + targetPeaks[maxErrorIndex] + "\t" + 
-    	    					targetDistances[maxErrorIndex] + "\t" + targetErrors[maxErrorIndex]); // TODO Also should write current accumulated error.
+			    		// Print the view to the file
+		    			out.print(targetViewSet.getImageFileName(maxErrorIndex).split("\\.")[0] + "\t" + targetSlopes[maxErrorIndex] + "\t" + targetPeaks[maxErrorIndex] + "\t" + 
+    	    					targetDistances[maxErrorIndex] + "\t" + targetErrors[maxErrorIndex] + "\t"); 
 		    			
-		    			// TODO not done yet
-		    			for (int j = 0; j < targetViewSet.getCameraPoseCount(); j++)
-			    		{
-		    				if (targetUsed[j])
-		    				{
-		    					targetDistances[maxErrorIndex] = Math.min(targetDistances[maxErrorIndex], 
-		    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[maxErrorIndex].dot(targetDirections[j])))));
-		    				}
-			    		}
-		    			
+		    			// Flag that its been used
 		    			targetUsed[maxErrorIndex] = true;
 			    		unused--;
+			    		
+			    		double cumError = 0.0;
+		    			
+						// Update all of the other target distances and errors
+			    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++) 
+		    			{
+	    					// Don't update previously used views
+		    				if (!targetUsed[i])
+		    				{
+		    					// distance
+		    					targetDistances[i] = Math.min(targetDistances[i], 
+		    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[maxErrorIndex])))));
+	
+		    					// error
+		        				if (Double.isFinite(targetPeaks[i]))
+		    					{
+		        					double peakDistance = 2 * targetPeaks[i] / targetSlopes[i];
+		        					if (targetDistances[i] > peakDistance)
+		        					{
+		        						targetErrors[i] = targetPeaks[i];
+		        					}
+		        					else
+		        					{
+		        						targetErrors[i] = targetSlopes[i] * targetDistances[i] - targetSlopes[i] * targetSlopes[i] * targetDistances[i] * targetDistances[i] / (4 * targetPeaks[i]);
+		        					}
+		    					}
+		        				else
+		        				{
+		        					targetErrors[i] = targetSlopes[i] * targetDistances[i];
+		        				}
+		        				
+		        				cumError += targetErrors[i];
+		    				}
+		    			}
+			    		
+			    		out.println(cumError);
 		    		}
 	    		}
 	    		while(unused > 0);
