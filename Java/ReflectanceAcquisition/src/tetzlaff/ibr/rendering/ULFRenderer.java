@@ -1052,27 +1052,33 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 		    			// Peak can be determined from a and the slope.
 		    			double leastSquaresPeak = slope * slope / (-4 * a);
 
-		    			// Do a weighted average between the least-squares peak and the average of all the errors that would be on the downward slope of the quadratic,
-		    			// but are instead clamped to the maximum of the quadratic.
-		    			// Clamp the contribution of the least-squares peak to be no greater than twice the average of the other values.
-		    			peak = (Math.min(2 * sumHighErrors / countHighErrors, leastSquaresPeak) * (errors.size() - countHighErrors) + sumHighErrors) / errors.size();
-		    			
-		    			if (peak <= 0.0 || !Double.isFinite(peak))
+		    			if (Double.isFinite(leastSquaresPeak) && leastSquaresPeak > 0.0)
 		    			{
-		    				if (prevPeak < 0.0)
+		    				if (countHighErrors == 0)
 		    				{
-		    					// If its the first iteration, use a linear function
-			    				// peak=0 is a special case for designating a linear function
-			    				peak = 0.0;
-			    				slope = sumErrorDistanceProducts / sumSquareDistances;
+		    					peak = leastSquaresPeak;
 		    				}
 		    				else
 		    				{
-			    				// Revert to the previous peak and slope
-			    				slope = prevSlope;
-			    				peak = prevPeak;
+				    			// Do a weighted average between the least-squares peak and the average of all the errors that would be on the downward slope of the quadratic,
+				    			// but are instead clamped to the maximum of the quadratic.
+				    			// Clamp the contribution of the least-squares peak to be no greater than twice the average of the other values.
+				    			peak = (Math.min(2 * sumHighErrors / countHighErrors, leastSquaresPeak) * (errors.size() - countHighErrors) + sumHighErrors) / errors.size();
 		    				}
 		    			}
+		    			else if (prevPeak < 0.0)
+	    				{
+	    					// If its the first iteration, use a linear function
+		    				// peak=0 is a special case for designating a linear function
+		    				peak = 0.0;
+		    				slope = sumErrorDistanceProducts / sumSquareDistances;
+	    				}
+	    				else
+	    				{
+		    				// Revert to the previous peak and slope
+		    				slope = prevSlope;
+		    				peak = prevPeak;
+	    				}
 	    			}
 	    			
 	    			// Update the max distance and previous max distance.
@@ -1170,7 +1176,7 @@ public class ULFRenderer<ContextType extends Context<ContextType>>
 	    		
 	    		boolean[] originalUsed = new boolean[this.lightField.viewSet.getCameraPoseCount()];
 				
-				IntVertexList viewIndexList = new IntVertexList(1, targetViewSet.getCameraPoseCount());
+				IntVertexList viewIndexList = new IntVertexList(1, this.lightField.viewSet.getCameraPoseCount());
 	    		int activeViewCount = 0;
 	    		
 	    		// Print views that are only in the original view set and NOT in the target view set

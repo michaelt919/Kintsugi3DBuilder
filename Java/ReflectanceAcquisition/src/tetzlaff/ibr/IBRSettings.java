@@ -4,7 +4,7 @@ public class IBRSettings
 {
     private float gamma = 2.2f;
     private float weightExponent = 16.0f;
-    private float isotropyFactor = 0.875f;
+    private float isotropyFactor = 0.5f;
     private boolean occlusionEnabled = true;
     private float occlusionBias = 0.0025f;
 	private boolean ibrEnabled = true;
