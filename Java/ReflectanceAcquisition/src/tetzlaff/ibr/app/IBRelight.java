@@ -160,8 +160,8 @@ public class IBRelight
         try
         {
     		program = window.getShaderProgramBuilder()
-    				.addShader(ShaderType.VERTEX, new File("shaders/ibr/ulr.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr.frag"))
+    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibr.frag"))
     				.createProgram();
         }
         catch (IOException e)
@@ -169,20 +169,6 @@ public class IBRelight
         	e.printStackTrace();
         	throw new IllegalStateException("The shader program could not be initialized.", e);
         }
-
-//    	Program<OpenGLContext> indexProgram;
-//        try
-//        {
-//        	indexProgram = window.getShaderProgramBuilder()
-//    				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-//    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr_index.frag"))
-//    				.createProgram();
-//        }
-//        catch (IOException e)
-//        {
-//        	e.printStackTrace();
-//        	throw new IllegalStateException("The shader program could not be initialized.", e);
-//        }
         
         MetaLightController metaLightController = new MetaLightController();
         
@@ -223,14 +209,9 @@ public class IBRelight
 	        	{
 	        		// reload program
 	        		Program<OpenGLContext> newProgram = window.getShaderProgramBuilder()
-	        				.addShader(ShaderType.VERTEX, new File("shaders/ibr/ulr.vert"))
-	        				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr.frag"))
+		    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+	        				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibr.frag"))
 							.createProgram();
-		        	
-//		        	Program<OpenGLContext> newIndexProgram = window.getShaderProgramBuilder()
-//		    				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-//		    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr_index.frag"))
-//							.createProgram();
 		        	
 		        	if (model.getProgram() != null)
 	        		{
@@ -239,12 +220,6 @@ public class IBRelight
 		        	model.setProgram(newProgram);
 		        	
 		        	model.getSelectedItem().reloadHelperShaders();
-		        	
-//		        	if (model.getIndexProgram() != null)
-//	        		{
-//	        			model.getIndexProgram().delete();
-//	        		}
-//		        	model.setIndexProgram(newIndexProgram);
 				} 
 	        	catch (Exception e) 
 	        	{

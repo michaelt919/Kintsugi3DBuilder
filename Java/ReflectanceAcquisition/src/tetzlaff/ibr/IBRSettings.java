@@ -13,7 +13,7 @@ public class IBRSettings
 	private boolean shadowsEnabled = false;
 	private boolean fresnelEnabled = false;
 	private boolean pbrGeometricAttenuationEnabled = false;
-	private boolean visibleLightsEnabled = true;
+	private boolean visibleLightsEnabled = false;
 
 	public IBRSettings() 
 	{

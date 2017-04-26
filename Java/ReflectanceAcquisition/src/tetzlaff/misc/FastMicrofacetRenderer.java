@@ -1,4 +1,4 @@
-package tetzlaff.fastmicrofacet;
+package tetzlaff.misc;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -66,7 +66,7 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
         {
     		this.program = context.getShaderProgramBuilder()
 					.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-					.addShader(ShaderType.FRAGMENT, new File("shaders/fastmicrofacet/fastmicrofacet.frag"))
+					.addShader(ShaderType.FRAGMENT, new File("shaders/misc/fastmicrofacet.frag"))
 					.createProgram();
     		
     		this.shadowProgram = context.getShaderProgramBuilder()
@@ -219,7 +219,7 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 			
     		this.program = context.getShaderProgramBuilder()
 					.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-					.addShader(ShaderType.FRAGMENT, new File("shaders/fastmicrofacet/fastmicrofacet.frag"))
+					.addShader(ShaderType.FRAGMENT, new File("shaders/misc/fastmicrofacet.frag"))
 					.createProgram();
     		
     		this.shadowProgram = context.getShaderProgramBuilder()

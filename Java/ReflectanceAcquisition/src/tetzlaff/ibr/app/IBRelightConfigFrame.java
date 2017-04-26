@@ -35,8 +35,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.helpers.LightController;
-import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Matrix4;
+import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ibr.IBRDrawable;
 import tetzlaff.ibr.IBRListModel;
@@ -467,7 +467,6 @@ public class IBRelightConfigFrame extends JFrame
 		});
 		
 		JCheckBox chckbxVisualizeLights = new JCheckBox("Visualize lights");
-		chckbxVisualizeLights.setSelected(true);
 		GridBagConstraints gbc_chckbxVisualizeLights = new GridBagConstraints();
 		gbc_chckbxVisualizeLights.gridwidth = 3;
 		gbc_chckbxVisualizeLights.insets = new Insets(0, 0, 0, 5);
@@ -748,20 +747,13 @@ public class IBRelightConfigFrame extends JFrame
 			
 			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 			{
-				try 
-				{
-					progressBar.setIndeterminate(true);
-					progressBar.setVisible(true);
-					this.pack();
-					model.getSelectedItem().requestBTF(
-						(Integer)spinnerWidth.getValue(),
-						(Integer)spinnerHeight.getValue(),
-						fileChooser.getSelectedFile());
-				} 
-				catch (IOException ex)
-				{
-					ex.printStackTrace();
-				}
+				progressBar.setIndeterminate(true);
+				progressBar.setVisible(true);
+				this.pack();
+				model.getSelectedItem().requestBTF(
+					(Integer)spinnerWidth.getValue(),
+					(Integer)spinnerHeight.getValue(),
+					fileChooser.getSelectedFile());
 			}
 		});
 		
@@ -788,17 +780,10 @@ public class IBRelightConfigFrame extends JFrame
 				{
 					File targetVSETFile = fileChooser.getSelectedFile();
 					
-					try
-					{
-						progressBar.setIndeterminate(true);
-						progressBar.setVisible(true);
-						this.pack();
-						model.getSelectedItem().requestFidelity(fidelityOutputFile, targetVSETFile);
-					} 
-					catch (IOException ex)
-					{
-						ex.printStackTrace();
-					}
+					progressBar.setIndeterminate(true);
+					progressBar.setVisible(true);
+					this.pack();
+					model.getSelectedItem().requestFidelity(fidelityOutputFile, targetVSETFile);
 				}
 			}
 		});
@@ -820,21 +805,14 @@ public class IBRelightConfigFrame extends JFrame
 				
 				if (exportFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 				{
-					try 
-					{
-						progressBar.setIndeterminate(true);
-						progressBar.setVisible(true);
-						this.pack();
-						model.getSelectedItem().requestResample(
-							(Integer)spinnerWidth.getValue(),
-							(Integer)spinnerHeight.getValue(), 
-							fileChooser.getSelectedFile(), 
-							exportFileChooser.getSelectedFile());
-					} 
-					catch (IOException ex)
-					{
-						ex.printStackTrace();
-					}
+					progressBar.setIndeterminate(true);
+					progressBar.setVisible(true);
+					this.pack();
+					model.getSelectedItem().requestResample(
+						(Integer)spinnerWidth.getValue(),
+						(Integer)spinnerHeight.getValue(), 
+						fileChooser.getSelectedFile(), 
+						exportFileChooser.getSelectedFile());
 				}
 			}
 		});

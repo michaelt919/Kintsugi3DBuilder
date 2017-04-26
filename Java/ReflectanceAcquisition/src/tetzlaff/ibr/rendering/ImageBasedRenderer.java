@@ -2,24 +2,37 @@ package tetzlaff.ibr.rendering;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.AlphaBlendingFunction.Weight;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.ColorFormat.DataType;
 import tetzlaff.gl.Context;
+import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
+import tetzlaff.gl.NullContext;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.Renderable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
+import tetzlaff.gl.TextureWrapMode;
+import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
+import tetzlaff.gl.builders.ColorTextureBuilder;
+import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
+import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.FloatVertexList;
+import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.LightController;
 import tetzlaff.gl.helpers.Material;
 import tetzlaff.gl.helpers.Matrix3;
@@ -28,19 +41,19 @@ import tetzlaff.gl.helpers.OverrideableLightController;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
-import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.helpers.EnvironmentMap;
 import tetzlaff.ibr.IBRDrawable;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
+import tetzlaff.ibr.ViewSetImageOptions;
 
 public class ImageBasedRenderer<ContextType extends Context<ContextType>> implements IBRDrawable<ContextType>
 {
 	private ContextType context;
 	private Program<ContextType> program;
 	private Program<ContextType> shadowProgram;
-	private ULFRenderer<ContextType> ulfRenderer;
 	private ImageBasedAssets<ContextType> assets;
 	private LightController lightController;
 	private IBRLoadingMonitor callback;
@@ -58,24 +71,178 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     private boolean btfRequested;
     private int btfWidth, btfHeight;
     private File btfExportPath;
+    
+    // From old ULFRenderer:
+    private File cameraFile;
+    private File geometryFile;
+    private IBRLoadOptions loadOptions;
+    private UnstructuredLightField<ContextType> lightField;
+    private Renderable<ContextType> mainRenderable;
+    private CameraController cameraController;
+
+    private Vector3 clearColor;
+    private boolean halfResEnabled;
+    private Program<ContextType> simpleTexProgram;
+    private Renderable<ContextType> simpleTexRenderable;
+	private FramebufferObject<ContextType> offscreenFBO = null;
+    
+    private File newEnvironmentFile = null;
+    private boolean environmentTextureEnabled;
+    private Texture2D<ContextType> environmentTexture;
+    private Matrix4 envMapMatrix = null;
+
+    private Program<ContextType> environmentBackgroundProgram;
+    private Renderable<ContextType> environmentBackgroundRenderable;
+
+    private boolean resampleRequested;
+    private int resampleWidth, resampleHeight;
+    private File resampleVSETFile;
+    private File resampleExportPath;
+    
+	private Consumer<Matrix4> resampleSetupCallback;
+	private Runnable resampleCompleteCallback;
+
+	private boolean fidelityRequested;
+    private File fidelityExportPath;
+    private File fidelityVSETFile;
+    
+	private Consumer<Integer> fidelitySetupCallback;
+	private Runnable fidelityCompleteCallback;
+    
+    private boolean multisamplingEnabled = false;
+    
+    private List<Matrix4> transformationMatrices;
+    private Vector3 centroid;
+    private float boundingRadius;
+    
+    private VertexMesh referenceScene = null;
+    private boolean referenceSceneChanged = false;
+    private VertexBuffer<ContextType> refScenePositions = null;
+    private VertexBuffer<ContextType> refSceneTexCoords = null;
+    private VertexBuffer<ContextType> refSceneNormals = null;
+    private Texture2D<ContextType> refSceneTexture = null;
 	
 	public ImageBasedRenderer(ContextType context, Program<ContextType> program,
-			File xmlFile, File meshFile, IBRLoadOptions loadOptions, CameraController cameraController, LightController lightController)
+			File cameraFile, File meshFile, IBRLoadOptions loadOptions, CameraController cameraController, LightController lightController)
     {
 		this.context = context;
-		
 		this.program = program;
 
     	this.lightController = lightController;
     	
-    	this.ulfRenderer = new ULFRenderer<ContextType>(context, program, xmlFile, meshFile, loadOptions, cameraController);
+    	// From old ULFRenderer constructor:
+    	this.cameraFile = cameraFile;
+    	this.geometryFile = meshFile;
+    	this.loadOptions = loadOptions;
+    	this.cameraController = cameraController;
+    	this.clearColor = new Vector3(0.0f);
+    	
+    	this.transformationMatrices = new ArrayList<Matrix4>();
+    	this.transformationMatrices.add(Matrix4.identity());
     }
 
 	@Override
 	public void initialize() 
 	{
-		ulfRenderer.initialize();
+		// From old ULFRenderer's initialize();
+		if (this.program == null)
+    	{
+	    	try
+	        {
+	    		this.program = context.getShaderProgramBuilder()
+	    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibr.frag"))
+	    				.createProgram();
+	        }
+	        catch (IOException e)
+	        {
+	        	e.printStackTrace();
+	        }
+    	}
+
+    	if (this.simpleTexProgram == null)
+    	{
+	    	try
+	        {
+	    		this.simpleTexProgram = context.getShaderProgramBuilder()
+	    				.addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("shaders/common/texture.frag"))
+	    				.createProgram();
+	        }
+	        catch (IOException e)
+	        {
+	        	e.printStackTrace();
+	        }
+    	}
 		
+    	if (this.environmentBackgroundProgram == null)
+    	{
+	    	try
+	        {
+	    		this.environmentBackgroundProgram = context.getShaderProgramBuilder()
+	    				.addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("shaders/common/envbackgroundtexture.frag"))
+	    				.createProgram();
+	        }
+	        catch (IOException e)
+	        {
+	        	e.printStackTrace();
+	        }
+    	}
+    	
+    	try 
+    	{
+    		if (this.cameraFile.getName().toUpperCase().endsWith(".XML"))
+    		{
+    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.geometryFile, this.loadOptions, this.callback, this.context);
+    		}
+    		else
+    		{
+    			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.callback, this.context);
+    			if (this.geometryFile == null)
+				{
+    				this.geometryFile = lightField.viewSet.getGeometryFile();
+				}
+    		}
+	    	
+	    	this.mainRenderable = context.createRenderable(program);
+	    	this.mainRenderable.addVertexBuffer("position", this.lightField.positionBuffer);
+	    	
+	    	if (this.lightField.normalBuffer != null)
+	    	{
+	    		this.mainRenderable.addVertexBuffer("normal", this.lightField.normalBuffer);
+	    	}
+	    	
+	    	if (this.lightField.texCoordBuffer != null)
+	    	{
+	    		this.mainRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+	    	}
+	    	
+	    	if (this.lightField.tangentBuffer != null)
+	    	{
+	    		this.mainRenderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
+	    	}
+	    				
+	    	this.simpleTexRenderable = context.createRenderable(simpleTexProgram);
+	    	this.simpleTexRenderable.addVertexBuffer("position", context.createRectangle());
+			
+	    	this.environmentBackgroundRenderable = context.createRenderable(environmentBackgroundProgram);
+	    	this.environmentBackgroundRenderable.addVertexBuffer("position", context.createRectangle());
+	    	
+			context.flush();
+
+			if (this.callback != null)
+			{
+				this.callback.setMaximum(0.0); // make indeterminate
+			}
+		} 
+    	catch (IOException e) 
+    	{
+			e.printStackTrace();
+		}
+    	
+    	// New code begins:
+	
 		if (this.shadowProgram == null)
 		{
 	        try
@@ -135,9 +302,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	        }
     	}
 		
-		ulfRenderer.setResampleSetupCallback((modelView) ->
+		// TODO do these callbacks even need to be variables or could they be private methods?
+		this.resampleSetupCallback = (modelView) ->
 		{
-			setupForDraw();
+			setupForRelighting();
 			
 			if (lightController instanceof OverrideableLightController)
 			{
@@ -157,26 +325,26 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 				generateShadowMaps(i);
 				setupLight(i, 0);
 			}
-		});
+		};
 		
-		ulfRenderer.setResampleCompleteCallback(() -> 
+		this.resampleCompleteCallback = () -> 
 		{
 			if (lightController instanceof OverrideableLightController)
 			{
 				((OverrideableLightController)lightController).removeCameraPoseOverride();
 			}
-		});
+		};
 		
-		ulfRenderer.setFidelitySetupCallback((index) ->
+		this.fidelitySetupCallback = (index) ->
 		{
-			setupForDraw();
+			setupForRelighting();
 			
 			ViewSet<ContextType> vset = assets.ulf.viewSet;
 			Vector3 lightIntensity = vset.getLightIntensity(vset.getLightIndex(index));
 			Vector4 lightPos = vset.getCameraPose(index).quickInverse(0.002f).times(new Vector4(vset.getLightPosition(vset.getLightIndex(index)), 1.0f));
 			
 			setupLightForFidelity(lightIntensity, new Vector3(lightPos));
-		});
+		};
 		
 		try
 		{
@@ -186,7 +354,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			String roughnessTextureName = null;
 			
 			// TODO Use more information from the material.  Currently just pulling texture names.
-			Material material = ulfRenderer.getLightField().proxy.getMaterial();
+			Material material = this.lightField.proxy.getMaterial();
 			if (material != null)
 			{
 				if (material.getDiffuseMap() != null)
@@ -210,9 +378,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 				}
 			}
 			
-			if (ulfRenderer.getLightField().viewSet.getGeometryFileName() != null)
+			if (this.lightField.viewSet.getGeometryFileName() != null)
 			{
-				String prefix = ulfRenderer.getLightField().viewSet.getGeometryFileName().split("\\.")[0];
+				String prefix = this.lightField.viewSet.getGeometryFileName().split("\\.")[0];
 				diffuseTextureName = diffuseTextureName != null ? diffuseTextureName : prefix + "_Kd.png";
 				normalTextureName = normalTextureName != null ? normalTextureName : prefix + "_norm.png";
 				specularTextureName = specularTextureName != null ? specularTextureName : prefix + "_Ks.png";
@@ -227,12 +395,12 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			}
 			
 			assets = new ImageBasedAssets<ContextType>(
-					ulfRenderer.getLightField(), 
-					new File(ulfRenderer.getGeometryFile().getParentFile(), diffuseTextureName),
-					new File(ulfRenderer.getGeometryFile().getParentFile(), normalTextureName),
-					new File(ulfRenderer.getGeometryFile().getParentFile(), specularTextureName),
-					new File(ulfRenderer.getGeometryFile().getParentFile(), roughnessTextureName),
-					new File(ulfRenderer.getGeometryFile().getParentFile(), "mfd.csv"), 
+					this.lightField, 
+					new File(this.geometryFile.getParentFile(), diffuseTextureName),
+					new File(this.geometryFile.getParentFile(), normalTextureName),
+					new File(this.geometryFile.getParentFile(), specularTextureName),
+					new File(this.geometryFile.getParentFile(), roughnessTextureName),
+					new File(this.geometryFile.getParentFile(), "mfd.csv"), 
 					context);
 			
 			shadowRenderable.addVertexBuffer("position", assets.ulf.positionBuffer);
@@ -247,7 +415,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			e.printStackTrace();
 		}
 		
-		ulfRenderer.updateCentroidAndRadius();
+		this.updateCentroidAndRadius();
 		
 		// Make sure that everything is loaded onto the graphics card before announcing that loading is complete.
 		this.draw();
@@ -280,17 +448,216 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	}
     	else
     	{
-    		ulfRenderer.update(); // Resample requests handled here
+    		// From old ULFRenderer update()
+    		this.updateCentroidAndRadius();
+    		
+    		if (this.newEnvironmentFile != null)
+    		{
+    			File environmentFile = this.newEnvironmentFile;
+    			this.newEnvironmentFile = null;
+    			
+    			try
+    			{
+    				System.out.println("Loading new environment texture.");
+    				
+    				ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> textureBuilder;
+    				
+    				if(environmentFile.getName().endsWith("_zvc.hdr"))
+    				{
+    					// Use Michael Ludwig's code to convert the cross to a cube map to a panorama
+    					EnvironmentMap envMap = EnvironmentMap.createFromHDRFile(environmentFile);
+    					float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
+    					FloatVertexList pixelList = new FloatVertexList(3, pixels.length / 3, pixels);
+    					textureBuilder = context.get2DColorTextureBuilder(envMap.getSide() * 4, envMap.getSide() * 2, pixelList);
+    					textureBuilder.setInternalFormat(ColorFormat.RGB32F);
+    					
+    					// Uncomment to save the panorama as an image (i.e. for a figure in a paper)
+//    					BufferedImage img = new BufferedImage(envMap.getSide() * 4, envMap.getSide() * 2, BufferedImage.TYPE_3BYTE_BGR);
+//    					int k = 0;
+//    					
+//    					for (int j = 0; j < envMap.getSide() * 2; j++)
+//    					{
+//    						for (int i = 0; i < envMap.getSide() * 4; i++)
+//    						{
+//    							img.setRGB(i,  j, ((int)(Math.pow(pixels[3 * k + 0], 1.0 / 2.2) * 255) << 16)
+//    									| ((int)(Math.pow(pixels[3 * k + 1], 1.0 / 2.2) * 255) << 8) 
+//    									| (int)(Math.pow(pixels[3 * k + 2], 1.0 / 2.2) * 255));
+//    							k++;
+//    						}
+//    					}
+//    					ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_pan.hdr")));
+    				}
+    				else
+    				{
+    					// Load the panorama directly
+    					textureBuilder = context.get2DColorTextureBuilder(environmentFile, true);
+    					if (environmentFile.getName().endsWith(".hdr"))
+    					{
+    						textureBuilder.setInternalFormat(ColorFormat.RGB32F);
+    					}
+    					else
+    					{
+    						textureBuilder.setInternalFormat(ColorFormat.RGB8);
+    					}
+    				}
+    				
+    				Texture2D<ContextType> newEnvironmentTexture = 
+    					textureBuilder
+    						.setMipmapsEnabled(true)
+    						.setLinearFilteringEnabled(true)
+    						.createTexture();
+    				newEnvironmentTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
+    	
+    				if (this.environmentTexture != null)
+    				{
+    					this.environmentTexture.delete();
+    				}
+    				
+    				this.environmentTexture = newEnvironmentTexture;
+    			}
+    			catch (Exception e) 
+        		{
+    				e.printStackTrace();
+    			}
+    		}
+    		
+    		if (this.referenceSceneChanged && this.referenceScene != null)
+    		{
+    			this.referenceSceneChanged = false;
+    			
+    			try
+    			{
+    				System.out.println("Using new reference scene.");
+    				
+    				if (this.refScenePositions != null)
+    				{
+    					this.refScenePositions.delete();
+    					this.refScenePositions = null;
+    				}
+    				
+    				if (this.refSceneTexCoords != null)
+    				{
+    					this.refSceneTexCoords.delete();
+    					this.refSceneTexCoords = null;
+    				}
+    				
+    				if (this.refSceneNormals != null)
+    				{
+    					this.refSceneNormals.delete();
+    					this.refSceneNormals = null;
+    				}
+    				
+    				if (this.refSceneTexture != null)
+    				{
+    					this.refSceneTexture.delete();
+    					this.refSceneTexture = null;
+    				}
+    				
+    				this.refScenePositions = context.createVertexBuffer().setData(referenceScene.getVertices());
+    				this.refSceneTexCoords = context.createVertexBuffer().setData(referenceScene.getTexCoords());
+    				this.refSceneNormals = context.createVertexBuffer().setData(referenceScene.getNormals());
+    				this.refSceneTexture = context.get2DColorTextureBuilder(
+    						new File(referenceScene.getFilename().getParentFile(), referenceScene.getMaterial().getDiffuseMap().getMapName()), true)
+    					.setMipmapsEnabled(true)
+    					.setLinearFilteringEnabled(true)
+    					.createTexture();
+    			}
+    			catch (Exception e)
+    			{
+    				e.printStackTrace();
+    			}
+    		}
+    		
+        	if (this.resampleRequested)
+        	{
+        		try
+        		{
+    				this.resample();
+    			} 
+        		catch (Exception e) 
+        		{
+    				e.printStackTrace();
+    			}
+        		this.resampleRequested = false;
+        		if (this.callback != null)
+    			{
+    				this.callback.loadingComplete();
+    			}
+        	}
+        	else if (this.fidelityRequested)
+        	{
+        		if (this.callback != null)
+    			{
+    				this.callback.startLoading();
+    			}
+        		
+        		try
+        		{
+    				this.generateFidelityDiffs();
+    			} 
+        		catch (Exception e) 
+        		{
+    				e.printStackTrace();
+    			}
+        		
+        		this.fidelityRequested = false;
+        		
+        		if (this.callback != null)
+    			{
+    				this.callback.loadingComplete();
+    			}
+        	}
     	}
 	}
 	
-	
 	private void setupForDraw()
 	{
-		this.setupForDraw(this.program);
+		this.setupForDraw(this.mainRenderable.program());
 	}
 	
-	public void setupForDraw(Program<ContextType> p)
+	private void setupForDraw(Program<ContextType> program)
+	{
+		program.setTexture("viewImages", lightField.viewSet.getTextures());
+		program.setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
+		program.setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
+		program.setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
+    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIntensityBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
+    	{
+    		program.setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
+    		program.setUniformBuffer("LightIntensities", lightField.viewSet.getLightIntensityBuffer());
+    		program.setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+    	}
+    	program.setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
+    	program.setUniform("infiniteLightSources", true /* TODO */);
+    	if (lightField.depthTextures != null)
+		{
+    		program.setTexture("depthImages", lightField.depthTextures);
+		}
+    	
+    	program.setUniform("gamma", this.lightField.settings.getGamma());
+    	program.setUniform("weightExponent", this.lightField.settings.getWeightExponent());
+    	program.setUniform("isotropyFactor", this.lightField.settings.getIsotropyFactor());
+    	program.setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
+    	program.setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
+    	program.setUniform("imageBasedRenderingEnabled", this.lightField.settings.isIBREnabled());
+    	program.setUniform("relightingEnabled", this.lightField.settings.isRelightingEnabled());
+    	program.setUniform("pbrGeometricAttenuationEnabled", this.lightField.settings.isPBRGeometricAttenuationEnabled());
+    	program.setUniform("fresnelEnabled", this.lightField.settings.isFresnelEnabled());
+    	program.setUniform("shadowsEnabled", this.lightField.settings.areShadowsEnabled());
+    	
+    	program.setTexture("luminanceMap", this.lightField.viewSet.getLuminanceMap());
+
+    	program.setUniform("skipViewEnabled", false);
+    	program.setUniform("skipView", -1);
+	}
+	
+	
+	private void setupForRelighting()
+	{
+		this.setupForRelighting(this.program);
+	}
+	
+	private void setupForRelighting(Program<ContextType> p)
 	{
 		if (assets.normalTexture == null)
 		{
@@ -336,27 +703,27 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			p.setTexture("roughnessMap", assets.roughnessTexture);
 		}
 		
-		if (ulfRenderer.getEnvironmentTexture() == null || !lightController.getEnvironmentMappingEnabled())
+		if (this.getEnvironmentTexture() == null || !lightController.getEnvironmentMappingEnabled())
 		{
 			p.setUniform("useEnvironmentTexture", false);
 			p.setTexture("environmentMap", null);
-			ulfRenderer.setEnvironmentTextureEnabled(false);
+			this.environmentTextureEnabled = false;
 		}
 		else
 		{
 			p.setUniform("useEnvironmentTexture", true);
-			p.setTexture("environmentMap", ulfRenderer.getEnvironmentTexture());
-			p.setUniform("environmentMipMapLevel", Math.max(0, Math.min(ulfRenderer.getEnvironmentTexture().getMipmapLevelCount() - 2, 
+			p.setTexture("environmentMap", this.getEnvironmentTexture());
+			p.setUniform("environmentMipMapLevel", Math.max(0, Math.min(this.getEnvironmentTexture().getMipmapLevelCount() - 2, 
 					(int)Math.ceil(0.5 * 
-						Math.log((double)ulfRenderer.getEnvironmentTexture().getWidth() * 
-								(double)ulfRenderer.getEnvironmentTexture().getHeight() / (double)assets.ulf.viewSet.getCameraPoseCount() ) 
+						Math.log((double)this.getEnvironmentTexture().getWidth() * 
+								(double)this.getEnvironmentTexture().getHeight() / (double)assets.ulf.viewSet.getCameraPoseCount() ) 
 							/ Math.log(2.0)))));
-			p.setUniform("diffuseEnvironmentMipMapLevel", ulfRenderer.getEnvironmentTexture().getMipmapLevelCount() - 2);
+			p.setUniform("diffuseEnvironmentMipMapLevel", this.getEnvironmentTexture().getMipmapLevelCount() - 2);
 			p.setUniform("environmentMapGamma", 
-					ulfRenderer.getEnvironmentTexture().isInternalFormatCompressed() || 
-					ulfRenderer.getEnvironmentTexture().getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
+					this.getEnvironmentTexture().isInternalFormatCompressed() || 
+					this.getEnvironmentTexture().getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
 					? 2.2f : 1.0f);
-			ulfRenderer.setEnvironmentTextureEnabled(true);
+			this.environmentTextureEnabled = true;
 		}
 		
 		if (assets.mfdTexture == null)
@@ -395,11 +762,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		float gamma = 2.2f;
 		p.setUniform("ambientColor", lightController.getAmbientLightColor());
     	
-    	Vector3 clearColor = new Vector3(
+    	this.clearColor = new Vector3(
     			(float)Math.pow(lightController.getAmbientLightColor().x, 1.0 / gamma),
     			(float)Math.pow(lightController.getAmbientLightColor().y, 1.0 / gamma),
     			(float)Math.pow(lightController.getAmbientLightColor().z, 1.0 / gamma));
-    	ulfRenderer.setClearColor(clearColor);
     	
 		p.setUniform("infiniteLightSources", false);
 		p.setTexture("shadowMaps", shadowMaps);
@@ -416,11 +782,37 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		}
 	}
 	
+	private void updateCentroidAndRadius()
+	{
+		Vector4 sumPositions = new Vector4(0.0f);
+    	this.boundingRadius = lightField.proxy.getBoundingRadius();
+    	
+    	
+    	this.centroid = lightField.proxy.getCentroid();
+    	
+    	if (transformationMatrices != null)
+    	{
+    		for (Matrix4 m : transformationMatrices)
+    		{
+    			Vector4 position = m.times(new Vector4(lightField.proxy.getCentroid(), 1.0f));
+    			sumPositions = sumPositions.plus(position);
+    		}
+    		
+    		this.centroid = new Vector3(sumPositions).dividedBy(sumPositions.w);
+    		
+    		for(Matrix4 m : transformationMatrices)
+    		{
+    			float distance = new Vector3(m.times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).distance(this.centroid);
+    			this.boundingRadius = Math.max(this.boundingRadius, distance + lightField.proxy.getBoundingRadius());
+    		}
+    	}
+	}
+	
 	private float getScale()
 	{
 		 return new Vector3(assets.ulf.viewSet.getCameraPose(0)
 				 .times(new Vector4(assets.ulf.proxy.getCentroid(), 1.0f))).length()
-			 * this.ulfRenderer.getBoundingRadius() / this.ulfRenderer.getLightField().proxy.getBoundingRadius();
+			 * this.boundingRadius / this.lightField.proxy.getBoundingRadius();
 	}
 	
 	private Matrix4 getLightMatrix(int lightIndex)
@@ -430,18 +822,18 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			.times(lightController.getLightMatrix(lightIndex))
 			.times(Matrix4.scale(1.0f / scale))
 			.times(new Matrix4(new Matrix3(assets.ulf.viewSet.getCameraPose(0))))
-			.times(Matrix4.translate(ulfRenderer.getCentroid().negated()));
+			.times(Matrix4.translate(this.centroid.negated()));
 	}
 	
 	private Matrix4 getLightProjection(int lightIndex)
 	{
 		Matrix4 lightMatrix = getLightMatrix(lightIndex);
 		
-		float lightDist = new Vector3(lightMatrix.times(new Vector4(ulfRenderer.getCentroid(), 1.0f))).length();
+		float lightDist = new Vector3(lightMatrix.times(new Vector4(this.centroid, 1.0f))).length();
 		
 		float radius = (float)
 			(new Matrix3(assets.ulf.viewSet.getCameraPose(0))
-				.times(new Vector3(this.ulfRenderer.getBoundingRadius()))
+				.times(new Vector3(this.boundingRadius))
 				.length() / Math.sqrt(3));
 		
 		return Matrix4.perspective(2.0f * (float)Math.atan(radius / lightDist) /*1.5f*/, 1.0f, 
@@ -456,7 +848,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		shadowFramebuffer.setDepthAttachment(shadowMaps.getLayerAsFramebufferAttachment(lightIndex));
 		shadowFramebuffer.clearDepthBuffer();
 		
-		for (Matrix4 m : this.ulfRenderer.getTransformationMatrices())
+		for (Matrix4 m : this.transformationMatrices)
 		{
 			shadowProgram.setUniform("model_view", getLightMatrix(lightIndex).times(m));
 			shadowRenderable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
@@ -465,7 +857,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private Matrix4 setupLight(int lightIndex, int modelInstance)
 	{
-		Matrix4 lightMatrix = getLightMatrix(lightIndex).times(ulfRenderer.getTransformationMatrices().get(modelInstance));
+		Matrix4 lightMatrix = getLightMatrix(lightIndex).times(this.transformationMatrices.get(modelInstance));
 		
 		// lightMatrix can be hardcoded here
 			//Matrix4.rotateY(-12 * Math.PI / 16).times(Matrix4.rotateX(0 * Math.PI / 16));
@@ -481,7 +873,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		program.setUniform("lightPosVirtual[" + lightIndex + "]", lightPos);
 		
 		Vector3 controllerLightIntensity = lightController.getLightColor(lightIndex);
-		float lightDistance = new Vector3(getLightMatrix(lightIndex).times(new Vector4(ulfRenderer.getCentroid(), 1.0f))).length();
+		float lightDistance = new Vector3(getLightMatrix(lightIndex).times(new Vector4(this.centroid, 1.0f))).length();
 
 		float scale = new Vector3(assets.ulf.viewSet.getCameraPose(0)
 				 .times(new Vector4(assets.ulf.proxy.getCentroid(), 1.0f))).length();
@@ -525,14 +917,159 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		
 		return lightMatrix;
 	}
+	
+	private Matrix4 getViewMatrix()
+	{
+    	float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length() 
+    			* this.boundingRadius / lightField.proxy.getBoundingRadius();
+		
+		return Matrix4.scale(scale)
+    			.times(cameraController.getViewMatrix())
+    			.times(Matrix4.scale(1.0f / scale))
+    			.times(new Matrix4(new Matrix3(lightField.viewSet.getCameraPose(0))))
+    			.times(Matrix4.translate(this.centroid.negated()));
+	}
+	
+	private Matrix4 getModelViewMatrix(int modelInstance)
+	{
+		return getViewMatrix().times(transformationMatrices.get(modelInstance));
+	}
+	
+	private Matrix4 getProjectionMatrix()
+	{
+    	FramebufferSize size = context.getDefaultFramebuffer().getSize();
+		float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length()
+			* this.boundingRadius / lightField.proxy.getBoundingRadius();
+		
+		return Matrix4.perspective(
+    			//(float)(1.0),
+    			lightField.viewSet.getCameraProjection(
+    					lightField.viewSet.getCameraProjectionIndex(lightField.viewSet.getPrimaryViewIndex()))
+					.getVerticalFieldOfView(), 
+    			(float)size.width / (float)size.height, 
+    			0.01f * scale, 100.0f * scale);
+	}
+	
+	private void prepareForDefaultFBODraw()
+	{
+		if(multisamplingEnabled)
+		{
+			context.enableMultisampling();
+		}
+		else
+		{
+			context.disableMultisampling();			
+		}
+    	
+    	context.enableBackFaceCulling();
+    	
+    	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
+    	FramebufferSize size = framebuffer.getSize();
+    	
+    	this.setupForDraw();
+    	
+    	Matrix4 projection;
+    	
+    	mainRenderable.program().setUniform("projection", projection = getProjectionMatrix());
+    	
+    	if (environmentTexture != null && environmentTextureEnabled)
+		{
+			environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
+			environmentBackgroundProgram.setTexture("env", environmentTexture);
+			environmentBackgroundProgram.setUniform("model_view", this.getViewMatrix());
+			environmentBackgroundProgram.setUniform("projection", projection);
+			environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
+			environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
 
+			environmentBackgroundProgram.setUniform("gamma", 
+					environmentTexture.isInternalFormatCompressed() || 
+					environmentTexture.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
+					? 1.0f : 2.2f);
+		}
+    	
+        this.offscreenFBO = null;
+        
+        int fboWidth, fboHeight;
+		if (halfResEnabled)
+		{
+			fboWidth = size.width / 2;
+			fboHeight = size.height / 2;
+			
+			offscreenFBO = context.getFramebufferObjectBuilder(fboWidth, fboHeight)
+					.addColorAttachment(new ColorAttachmentSpec(ColorFormat.RGB8)
+						.setLinearFilteringEnabled(true))
+					.addDepthAttachment(new DepthAttachmentSpec(32, false))
+					.createFramebufferObject();
+			
+			offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
+	    	offscreenFBO.clearDepthBuffer();
+    		
+    		if (environmentTexture != null && environmentTextureEnabled)
+    		{
+    			context.disableDepthTest();
+    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+    			context.enableDepthTest();
+    		}
+		}
+		else
+		{
+			fboWidth = size.width;
+			fboHeight = size.height;
+			
+			framebuffer.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
+    		framebuffer.clearDepthBuffer();
+    		
+    		if (environmentTexture != null && environmentTextureEnabled)
+    		{
+    			context.disableDepthTest();
+    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+    			context.enableDepthTest();
+    		}
+		}
+	}
+
+	private void drawReferenceScene(Program<ContextType> program)
+	{
+    	if (referenceScene != null && refScenePositions != null && refSceneNormals != null)
+    	{
+			Renderable<ContextType> renderable = context.createRenderable(program);
+			renderable.addVertexBuffer("position", refScenePositions);
+			renderable.addVertexBuffer("normal", refSceneNormals);
+			
+			if (refSceneTexture != null && refSceneTexCoords != null)
+			{
+				renderable.addVertexBuffer("texCoord", refSceneTexCoords);
+				program.setTexture("diffuseMap", refSceneTexture);
+				program.setUniform("useDiffuseTexture", true);
+			}
+			else
+			{
+				program.setUniform("useDiffuseTexture", false);
+			}
+			
+			Matrix4 view = getViewMatrix();
+    		program.setUniform("model_view", view);
+			program.setUniform("viewPos", new Vector3(view.quickInverse(0.01f).getColumn(3)));
+        	
+        	if(halfResEnabled) 
+        	{
+    			// Do first pass at half resolution to off-screen buffer
+        		renderable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
+        	} 
+        	else 
+        	{
+        		renderable.draw(PrimitiveMode.TRIANGLES, context.getDefaultFramebuffer());  
+        	}
+    	}
+	}
+	
 	@Override
 	public void draw() 
 	{
 		try
 		{
-			setupForDraw();
-			ulfRenderer.prepareForDefaultFBODraw();
+			setupForRelighting();
+			this.prepareForDefaultFBODraw();
 			
 			for (int lightIndex = 0; lightIndex < lightController.getLightCount(); lightIndex++)
 			{
@@ -540,13 +1077,13 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			}
 
 			this.program.setUniform("imageBasedRenderingEnabled", false);
-			ulfRenderer.drawReferenceScene(this.program);
-			this.program.setUniform("imageBasedRenderingEnabled", true);
-			setupForDraw(); // changed anything changed when drawing the reference scene.
+			this.drawReferenceScene(this.program);
+			this.program.setUniform("imageBasedRenderingEnabled", this.lightField.settings.isIBREnabled());
+			setupForRelighting(); // changed anything changed when drawing the reference scene.
 			
-			for (int modelInstance = 0; modelInstance < ulfRenderer.getModelInstanceCount(); modelInstance++)
+			for (int modelInstance = 0; modelInstance < transformationMatrices.size(); modelInstance++)
 			{
-				Matrix4 envMapMatrix = null;
+				this.envMapMatrix = null;
 				
 				for (int lightIndex = 0; lightIndex < lightController.getLightCount(); lightIndex++)
 				{
@@ -554,23 +1091,53 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 					
 					if (lightIndex == 0)
 					{
-						envMapMatrix = matrix;
+						this.envMapMatrix = matrix;
 					}
 				}
 				
-				ulfRenderer.setEnvironmentMatrix(envMapMatrix);
-				ulfRenderer.drawInstance(modelInstance);
+				// Draw instance
+				Matrix4 modelView = getModelViewMatrix(modelInstance);
+				this.program.setUniform("model_view", modelView);
+				this.program.setUniform("viewPos", new Vector3(modelView.quickInverse(0.01f).getColumn(3)));
+		    	
+		    	if(halfResEnabled) 
+		    	{
+					// Do first pass at half resolution to off-screen buffer
+			        mainRenderable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
+		    	} 
+		    	else 
+		    	{
+			        mainRenderable.draw(PrimitiveMode.TRIANGLES, context.getDefaultFramebuffer());  
+		    	}
 			}
 			
-			ulfRenderer.finishDefaultFBODraw();
+			// Finish drawing
+			if (halfResEnabled)
+			{
+	    		context.flush();
+		        
+		        // Second pass at full resolution to default framebuffer
+		    	simpleTexRenderable.program().setTexture("tex", offscreenFBO.getColorAttachmentTexture(0));    	
+
+		    	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
+	    		framebuffer.clearDepthBuffer();
+		    	simpleTexRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+		    	
+		    	context.flush();
+	    		offscreenFBO.delete();
+			}
+			else
+			{
+		    	context.flush();
+			}
 			
 			FramebufferSize windowSize = context.getDefaultFramebuffer().getSize();
 			
 			context.setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
 			
-			Matrix4 viewMatrix = ulfRenderer.getViewMatrix();
+			Matrix4 viewMatrix = this.getViewMatrix();
 			
-			if (this.ulfRenderer.settings().isRelightingEnabled() && this.ulfRenderer.settings().areVisibleLightsEnabled())
+			if (this.settings().isRelightingEnabled() && this.settings().areVisibleLightsEnabled())
 			{
 				for (int i = 0; i < lightController.getLightCount(); i++)
 				{
@@ -585,7 +1152,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	//							modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
 							Matrix4.translate(lightPosition)
 								.times(Matrix4.scale((float)windowSize.height * -lightPosition.z / (16.0f * windowSize.width), -lightPosition.z / 16.0f, 1.0f)));
-						this.lightProgram.setUniform("projection", ulfRenderer.getProjectionMatrix());
+						this.lightProgram.setUniform("projection", this.getProjectionMatrix());
 			    		this.lightProgram.setTexture("lightTexture", this.lightTexture);
 						this.lightRenderable.draw(PrimitiveMode.TRIANGLE_FAN, context);
 					}
@@ -607,7 +1174,46 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	@Override
 	public void cleanup() 
 	{
-		ulfRenderer.cleanup();
+		// From old ULFRenderer
+		lightField.deleteOpenGLResources();
+    	
+		if (this.refScenePositions != null)
+		{
+			this.refScenePositions.delete();
+			this.refScenePositions = null;
+		}
+		
+		if (this.refSceneTexCoords != null)
+		{
+			this.refSceneTexCoords.delete();
+			this.refSceneTexCoords = null;
+		}
+		
+		if (this.refSceneNormals != null)
+		{
+			this.refSceneNormals.delete();
+			this.refSceneNormals = null;
+		}
+		
+		if (this.refSceneTexture != null)
+		{
+			this.refSceneTexture.delete();
+			this.refSceneTexture = null;
+		}
+		
+		if (this.environmentBackgroundProgram != null)
+		{
+			this.environmentBackgroundProgram.delete();
+			this.environmentBackgroundProgram = null;
+		}
+		
+		if (this.environmentTexture != null)
+		{
+			this.environmentTexture.delete();
+			this.environmentTexture = null;
+		}
+		
+		// New code
 		if (assets != null)
 		{
 			assets.deleteOpenGLResources();
@@ -641,75 +1247,662 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			lightTexture.delete();
 		}
 	}
-
-	@Override
-	public void setOnLoadCallback(IBRLoadingMonitor callback) 
+	
+	private void resample() throws IOException
 	{
-		this.callback = callback;
-		ulfRenderer.setOnLoadCallback(callback);
+		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, new ViewSetImageOptions(null, false, false, false), context);
+		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleWidth, resampleHeight)
+				.addColorAttachment()
+				.addDepthAttachment()
+				.createFramebufferObject();
+    	
+    	this.setupForDraw();
+    	
+		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+		{
+	    	mainRenderable.program().setUniform("model_view", targetViewSet.getCameraPose(i));
+	    	mainRenderable.program().setUniform("viewPos", new Vector3(targetViewSet.getCameraPose(i).quickInverse(0.01f).getColumn(3)));
+	    	mainRenderable.program().setUniform("projection", 
+    			targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
+    				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
+	    	
+	    	this.resampleSetupCallback.accept(targetViewSet.getCameraPose(i));
+	    	
+	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
+	    	framebuffer.clearDepthBuffer();
+	    	
+	    	if (environmentTexture != null && environmentTextureEnabled)
+			{
+				environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
+				environmentBackgroundProgram.setTexture("env", environmentTexture);
+				environmentBackgroundProgram.setUniform("model_view", targetViewSet.getCameraPose(i));
+				environmentBackgroundProgram.setUniform("projection", 
+					targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
+	    				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
+				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
+				environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
+
+				environmentBackgroundProgram.setUniform("gamma", 
+						environmentTexture.isInternalFormatCompressed() || 
+						environmentTexture.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
+						? 1.0f : 2.2f);
+				
+				context.disableDepthTest();
+				this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+				context.enableDepthTest();
+			}
+    		
+    		framebuffer.clearDepthBuffer();
+	    	mainRenderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+	    	
+	    	File exportFile = new File(resampleExportPath, targetViewSet.getImageFileName(i));
+	    	exportFile.getParentFile().mkdirs();
+	        framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
+	        
+	        if (this.callback != null)
+	        {
+	        	this.callback.setProgress((double) i / (double) targetViewSet.getCameraPoseCount());
+	        }
+		}
+		
+		this.resampleCompleteCallback.run();
+		
+		Files.copy(resampleVSETFile.toPath(), 
+			new File(resampleExportPath, resampleVSETFile.getName()).toPath(),
+			StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(lightField.viewSet.getGeometryFile().toPath(), 
+			new File(resampleExportPath, lightField.viewSet.getGeometryFile().getName()).toPath(),
+			StandardCopyOption.REPLACE_EXISTING);
 	}
 	
-	@Override
-	public VertexMesh getActiveProxy()
+	private double calculateError(Renderable<ContextType> renderable, Framebuffer<ContextType> framebuffer, IntVertexList viewIndexList, int targetViewIndex, int activeViewCount)
 	{
-		return this.assets.ulf.proxy;
+		this.setupForDraw(renderable.program());
+    	
+    	renderable.program().setUniform("model_view", this.lightField.viewSet.getCameraPose(targetViewIndex));
+    	renderable.program().setUniform("viewPos", new Vector3(this.lightField.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3)));
+    	renderable.program().setUniform("projection", 
+    			this.lightField.viewSet.getCameraProjection(this.lightField.viewSet.getCameraProjectionIndex(targetViewIndex))
+				.getProjectionMatrix(this.lightField.viewSet.getRecommendedNearPlane(), this.lightField.viewSet.getRecommendedFarPlane()));
+
+    	renderable.program().setUniform("targetViewIndex", targetViewIndex);
+		
+    	UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer().setData(viewIndexList);
+    	renderable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
+    	renderable.program().setUniform("viewCount", activeViewCount);
+    	
+    	framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
+    	framebuffer.clearDepthBuffer();
+    	
+    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+    	
+    	viewIndexBuffer.delete();
+
+//	        if (activeViewCount == lightField.viewSet.getCameraPoseCount() - 1 /*&& this.lightField.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
+//	        {
+//		    	File fidelityImage = new File(new File(fidelityExportPath.getParentFile(), "debug"), this.lightField.viewSet.getImageFileName(i));
+//		        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
+//	        }
+        	
+        double sumSqError = 0.0;
+        double sumWeights = 0.0;
+        double sumMask = 0.0;
+
+    	float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
+    	for (int k = 0; 4 * k + 3 < fidelityArray.length; k++)
+    	{
+			if (fidelityArray[4 * k + 1] >= 0.0f)
+			{
+				sumSqError += fidelityArray[4 * k];
+				sumWeights += fidelityArray[4 * k + 1];
+				sumMask += 1.0;
+			}
+    	}
+    	
+    	return Math.sqrt(sumSqError / sumMask);
 	}
 	
-	@Override
-	public ViewSet<ContextType> getActiveViewSet()
+	private void generateFidelityDiffs() throws IOException
 	{
-		return this.assets.ulf.viewSet;
-	}
+		System.out.println("\nView Importance:");
+		
+		Program<ContextType> fidelityProgram = context.getShaderProgramBuilder()
+				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/fidelity.frag"))
+				.createProgram();
+		
+		context.disableBackFaceCulling();
+    	
+    	Renderable<ContextType> renderable = context.createRenderable(fidelityProgram);
+    	renderable.addVertexBuffer("position", this.lightField.positionBuffer);
+    	renderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+    	renderable.addVertexBuffer("normal", this.lightField.normalBuffer);
+    	renderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
+    	setupForDraw(fidelityProgram);
+    	
+    	Vector3[] viewDirections = new Vector3[this.lightField.viewSet.getCameraPoseCount()];
+    	
+    	for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
+    	{
+    		viewDirections[i] = new Vector3(this.lightField.viewSet.getCameraPoseInverse(i).getColumn(3))
+    				.minus(this.lightField.proxy.getCentroid()).normalized();
+		}
+    	
+    	double[][] viewDistances = new double[this.lightField.viewSet.getCameraPoseCount()][this.lightField.viewSet.getCameraPoseCount()];
+    	
+    	for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
+    	{
+    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+    		{
+    			viewDistances[i][j] = Math.acos(Math.max(-1.0, Math.min(1.0f, viewDirections[i].dot(viewDirections[j]))));
+    		}
+    	}
+		
+    	FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(256, 256/*1024, 1024*/)
+				.addColorAttachment(ColorFormat.RG32F)
+				.createFramebufferObject();
+    	
+    	try(PrintStream out = new PrintStream(fidelityExportPath))
+    	{
+    		double[] slopes = new double[this.lightField.viewSet.getCameraPoseCount()];
+    		double[] peaks = new double[this.lightField.viewSet.getCameraPoseCount()];
+    		
+			this.callback.setMaximum(this.lightField.viewSet.getCameraPoseCount());
+			
+			new File(fidelityExportPath.getParentFile(), "debug").mkdir();
+    		
+    		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
+			{
+		    	if (this.fidelitySetupCallback != null)
+	    		{
+		    		this.fidelitySetupCallback.accept(i);
+	    		}
+    			
+    			System.out.println(this.lightField.viewSet.getImageFileName(i));
+    			out.print(this.lightField.viewSet.getImageFileName(i) + "\t");
+    			
+    			double lastMinDistance = 0.0;
+    			double minDistance;
+    			int activeViewCount;
+    			double sumMask = 0.0;
+    			
+    			List<Double> distances = new ArrayList<Double>();
+    			List<Double> errors = new ArrayList<Double>();
+    			
+    			distances.add(0.0);
+    			errors.add(0.0);
+    			
+    			do 
+    			{
+			    	IntVertexList viewIndexList = new IntVertexList(1, this.lightField.viewSet.getCameraPoseCount());
+			    	
+			    	activeViewCount = 0;
+			    	minDistance = Float.MAX_VALUE;
+			    	for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+			    	{
+			    		if (i != j && viewDistances[i][j] > lastMinDistance)
+			    		{
+			    			minDistance = Math.min(minDistance, viewDistances[i][j]);
+			    			viewIndexList.set(activeViewCount, 0, j);
+			    			activeViewCount++;
+			    		}
+			    	}
+			    	
+			    	if (activeViewCount > 0)
+			    	{
+				    	if (sumMask >= 0.0)
+				    	{
+					        distances.add(minDistance);
+					        errors.add(calculateError(renderable, framebuffer, viewIndexList, i, activeViewCount));
+					    	lastMinDistance = minDistance;
+				    	}
+			    	}
+    			}
+    			while(sumMask >= 0.0 && activeViewCount > 0 && minDistance < /*0*/ Math.PI / 4);
+    			
+    			// Fit the error v. distance data to a quadratic with a few constraints.
+    			// First, the quadratic must pass through the origin.
+    			// Second, the slope at the origin must be positive.
+    			// Finally, the "downward" slope of the quadratic will be clamped to the quadratic's maximum value 
+    			// to ensure that the function is monotonically increasing or constant.
+    			// (So only half of the quadratic will actually be used.)
+    			double peak = -1.0, slope = -1.0;
+    			double maxDistance = distances.get(distances.size() - 1);
+    			double prevPeak, prevSlope, prevMaxDistance;
+    			
+    			// Every time we fit a quadratic, the data that would have been clamped on the downward slope messes up the fit.
+    			// So we should keep redoing the fit without that data affecting the initial slope and only affecting the peak value.
+    			// This continues until convergence (no new data points are excluded from the quadratic).
+    			do
+    			{
+	    			double sumSquareDistances = 0.0;
+	    			double sumCubeDistances = 0.0;
+	    			double sumFourthDistances = 0.0;
+	    			double sumErrorDistanceProducts = 0.0;
+	    			double sumErrorSquareDistanceProducts = 0.0;
+	    			
+	    			double sumHighErrors = 0.0;
+	    			int countHighErrors = 0;
+	    			
+	    			for (int k = 0; k < distances.size(); k++)
+	    			{
+	    				double distance = distances.get(k);
+	    				double error = errors.get(k);
+	    				
+	    				if (distance < maxDistance)
+	    				{
+	    					double distanceSq = distance * distance;
+	    				
+		    				sumSquareDistances += distanceSq;
+		    				sumCubeDistances += distance * distanceSq;
+		    				sumFourthDistances += distanceSq * distanceSq;
+		    				sumErrorDistanceProducts += error * distance;
+		    				sumErrorSquareDistanceProducts += error * distanceSq;
+	    				}
+	    				else
+	    				{
+	    					sumHighErrors += error;
+	    					countHighErrors++;
+	    				}
+	    			}
+	    			
+	    			prevPeak = peak;
+    				prevSlope = slope;
+    				
+    				// Fit error vs. distance to a quadratic using least squares: a*x^2 + slope * x = error
+	    			double d = (sumCubeDistances * sumCubeDistances - sumFourthDistances * sumSquareDistances);
+	    			double a = (sumCubeDistances * sumErrorDistanceProducts - sumSquareDistances * sumErrorSquareDistanceProducts) / d;
+	    			
+	    			slope = (sumCubeDistances * sumErrorSquareDistanceProducts - sumFourthDistances * sumErrorDistanceProducts) / d;
+	    			
+	    			if (slope <= 0.0 || !Double.isFinite(slope) || countHighErrors > errors.size() - 5)
+	    			{
+	    				if (prevSlope < 0.0)
+	    				{
+	    					// If its the first iteration, use a linear function
+		    				// peak=0 is a special case for designating a linear function
+		    				peak = 0.0;
+		    				slope = sumErrorDistanceProducts / sumSquareDistances;
+	    				}
+	    				else
+	    				{
+		    				// Revert to the previous peak and slope
+		    				slope = prevSlope;
+		    				peak = prevPeak;
+	    				}
+	    			}
+	    			else
+	    			{
+		    			// Peak can be determined from a and the slope.
+		    			double leastSquaresPeak = slope * slope / (-4 * a);
 
-	@Override
-	public IBRSettings settings()
-	{
-		return ulfRenderer.settings();
-	}
+		    			if (Double.isFinite(leastSquaresPeak) && leastSquaresPeak > 0.0)
+		    			{
+		    				if (countHighErrors == 0)
+		    				{
+		    					peak = leastSquaresPeak;
+		    				}
+		    				else
+		    				{
+				    			// Do a weighted average between the least-squares peak and the average of all the errors that would be on the downward slope of the quadratic,
+				    			// but are instead clamped to the maximum of the quadratic.
+				    			// Clamp the contribution of the least-squares peak to be no greater than twice the average of the other values.
+				    			peak = (Math.min(2 * sumHighErrors / countHighErrors, leastSquaresPeak) * (errors.size() - countHighErrors) + sumHighErrors) / errors.size();
+		    				}
+		    			}
+		    			else if (prevPeak < 0.0)
+	    				{
+	    					// If its the first iteration, use a linear function
+		    				// peak=0 is a special case for designating a linear function
+		    				peak = 0.0;
+		    				slope = sumErrorDistanceProducts / sumSquareDistances;
+	    				}
+	    				else
+	    				{
+		    				// Revert to the previous peak and slope
+		    				slope = prevSlope;
+		    				peak = prevPeak;
+	    				}
+	    			}
+	    			
+	    			// Update the max distance and previous max distance.
+	    			prevMaxDistance = maxDistance;
+	    			maxDistance = 2 * peak / slope;
+    			}
+    			while(maxDistance < prevMaxDistance && peak > 0.0);
+    			
+    			if (errors.size() >= 2)
+    			{
+    				out.println(slope + "\t" + peak + "\t" + minDistance + "\t" + errors.get(1));
+    			}
+    			
+    			System.out.println("Slope: " + slope);
+    			System.out.println("Peak: " + peak);
+    			System.out.println();
+    			
+    			slopes[i] = slope;
+    			peaks[i] = peak;
+    			
+    			for (Double distance : distances)
+    			{
+    				out.print(distance + "\t");
+    			}
+    			out.println();
 
-	@Override
-	public boolean getHalfResolution() 
-	{
-		return ulfRenderer.getHalfResolution();
-	}
+    			for (Double error : errors)
+    			{
+    				out.print(error + "\t");
+    			}
+    			out.println();
+    			
+    			out.println();
+		        
+		        if (this.callback != null)
+		        {
+		        	this.callback.setProgress(i);
+		        }
+			}
+    		
+    		if (fidelityVSETFile != null && fidelityVSETFile.exists())
+    		{
+	    		out.println();
+	    		out.println("Expected error for views in target view set:");
+	    		out.println();
+	    		
+	    		ViewSet<NullContext> targetViewSet = ViewSet.loadFromVSETFile(fidelityVSETFile);
+	    		
+	    		Vector3[] targetDirections = new Vector3[targetViewSet.getCameraPoseCount()];
+	    		
+	    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+	        	{
+	    			targetDirections[i] = new Vector3(targetViewSet.getCameraPoseInverse(i).getColumn(3))
+	        				.minus(this.lightField.proxy.getCentroid()).normalized();
+	    		}
+	    		
+	    		// Determine a function describing the error of each quadratic view by blending the slope and peak parameters from the known views.
+	    		double[] targetSlopes = new double[targetViewSet.getCameraPoseCount()];
+	    		double[] targetPeaks = new double[targetViewSet.getCameraPoseCount()];
+	    		
+	    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+	    		{
+	    			double weightedSlopeSum = 0.0;
+	    			double weightSum = 0.0;
+	    			double weightedPeakSum = 0.0;
+	    			double peakWeightSum = 0.0;
+	    			
+	    			for (int k = 0; k < slopes.length; k++)
+	    			{
+	    				double weight = 1 / Math.max(0.000001, 1.0 - 
+	    						Math.pow(Math.max(0.0, targetDirections[i].dot(viewDirections[k])), this.settings().getWeightExponent())) 
+							- 1.0;
+	    				
+	    				if (peaks[k] > 0)
+    					{
+	    					weightedPeakSum += weight * peaks[k];
+	    					peakWeightSum += weight;
+    					}
+	    				
+						weightedSlopeSum += weight * slopes[k];
+	    				weightSum += weight;
+	    			}
+	    			
+	    			targetSlopes[i] = weightedSlopeSum / weightSum;
+	    			targetPeaks[i] = peakWeightSum == 0.0 ? 0.0 : weightedPeakSum / peakWeightSum;
+	    		}
+	    		
+	    		double[] targetDistances = new double[targetViewSet.getCameraPoseCount()];
+	    		double[] targetErrors = new double[targetViewSet.getCameraPoseCount()];
+	    		
+	    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+	    		{
+    				targetDistances[i] = Double.MAX_VALUE;
+	    		}
+	    		
+	    		boolean[] originalUsed = new boolean[this.lightField.viewSet.getCameraPoseCount()];
+				
+				IntVertexList viewIndexList = new IntVertexList(1, this.lightField.viewSet.getCameraPoseCount());
+	    		int activeViewCount = 0;
+	    		
+	    		// Print views that are only in the original view set and NOT in the target view set
+	    		// This also initializes the distances for the target views.
+	    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+	    		{
+	    			// First determine if the view is in the target view set
+	    			boolean found = false;
+	    			for (int i = 0; !found && i < targetViewSet.getCameraPoseCount(); i++)
+	    			{
+	    				if (targetViewSet.getImageFileName(i).contains(this.lightField.viewSet.getImageFileName(j).split("\\.")[0]))
+	    				{
+	    					found = true;
+	    				}
+	    			}
+	    			
+	    			if (!found)
+	    			{
+	    				// If it isn't, then print it to the file
+	    				originalUsed[j] = true;
+	    				out.print(this.lightField.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t" + 
+	    						calculateError(renderable, framebuffer, viewIndexList, j, activeViewCount) + "\t");
+
+	    				viewIndexList.set(activeViewCount, 0, j);
+	    				activeViewCount++;
+
+			    		double cumError = 0.0;
+			    		
+			    		for (int k = 0; k < this.lightField.viewSet.getCameraPoseCount(); k++)
+			    		{
+			    			if (!originalUsed[k])
+			    			{
+			    				cumError += calculateError(renderable, framebuffer, viewIndexList, k, activeViewCount);
+			    			}
+			    		}
+			    		
+			    		out.println(cumError);
+	    				
+	    				// Then update the distances for all of the target views
+	    				for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+		    			{
+		    				targetDistances[i] = Math.min(targetDistances[i], Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(viewDirections[j])))));
+		    			}
+	    			}
+	    		}
+	    		
+				// Now update the errors for all of the target views
+				for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+    			{
+    				if (Double.isFinite(targetPeaks[i]))
+					{
+    					double peakDistance = 2 * targetPeaks[i] / targetSlopes[i];
+    					if (targetDistances[i] > peakDistance)
+    					{
+    						targetErrors[i] = targetPeaks[i];
+    					}
+    					else
+    					{
+    						targetErrors[i] = targetSlopes[i] * targetDistances[i] - targetSlopes[i] * targetSlopes[i] * targetDistances[i] * targetDistances[i] / (4 * targetPeaks[i]);
+    					}
+					}
+    				else
+    				{
+    					targetErrors[i] = targetSlopes[i] * targetDistances[i];
+    				}
+    			}
+	    		
+	    		boolean[] targetUsed = new boolean[targetErrors.length];
+
+	    		int unusedOriginalViews = 0;
+	    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+	    		{
+	    			if (!originalUsed[j])
+	    			{
+	    				unusedOriginalViews++;
+	    			}
+	    		}
+	    		
+	    		// Views that are in both the target view set and the original view set
+	    		// Go through these views in order of importance so that when loaded viewset = target viewset, it generates a ground truth ranking.
+	    		while(unusedOriginalViews > 0)
+	    		{
+	    			double maxError = -1.0;
+	    			int maxErrorTargetIndex = -1;
+	    			int maxErrorOriginalIndex = -1;
+	    			
+	    			// Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
+		    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+		    		{
+	    	    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++) 
+		    			{
+		    				if (targetViewSet.getImageFileName(i).contains(this.lightField.viewSet.getImageFileName(j).split("\\.")[0]))
+		    				{
+		    					// Can't be previously used and must have more error than any other view
+				    			if (!originalUsed[j] && targetErrors[i] > maxError)
+			    				{
+			    					maxError = targetErrors[i];
+			    					maxErrorTargetIndex = i;
+			    					maxErrorOriginalIndex = j;
+			    				}
+		    				}
+		    			}
+		    		}
+		    		
+		    		// Print the view to the file
+		    		out.print(targetViewSet.getImageFileName(maxErrorTargetIndex).split("\\.")[0] + "\t" + targetSlopes[maxErrorTargetIndex] + "\t" + targetPeaks[maxErrorTargetIndex] + "\t" + 
+	    					targetDistances[maxErrorTargetIndex] + "\t" + targetErrors[maxErrorTargetIndex] + "\t");
+					
+		    		// Flag that its been used
+					targetUsed[maxErrorTargetIndex] = true;
+					originalUsed[maxErrorOriginalIndex] = true;
+					
+					double expectedCumError = 0.0;
+	    			
+					// Update all of the other target distances and errors that haven't been used yet
+	    			for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++) 
+	    			{
+    					// Don't update previously used views
+	    				if (!targetUsed[i])
+	    				{
+	    					// distance
+	    					targetDistances[i] = Math.min(targetDistances[i], 
+	    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[maxErrorTargetIndex])))));
+
+	    					// error
+	        				if (Double.isFinite(targetPeaks[i]))
+	    					{
+	        					double peakDistance = 2 * targetPeaks[i] / targetSlopes[i];
+	        					if (targetDistances[i] > peakDistance)
+	        					{
+	        						targetErrors[i] = targetPeaks[i];
+	        					}
+	        					else
+	        					{
+	        						targetErrors[i] = targetSlopes[i] * targetDistances[i] - targetSlopes[i] * targetSlopes[i] * targetDistances[i] * targetDistances[i] / (4 * targetPeaks[i]);
+	        					}
+	    					}
+	        				else
+	        				{
+	        					targetErrors[i] = targetSlopes[i] * targetDistances[i];
+	        				}
+	        				
+	        				expectedCumError += targetErrors[i];
+	    				}
+	    			}
+
+		    		out.println(expectedCumError);
+	    			
+	    			// Count how many views from the original view set haven't been used.
+	    			unusedOriginalViews = 0;
+		    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+		    		{
+		    			if (!originalUsed[j])
+		    			{
+		    				unusedOriginalViews++;
+		    			}
+		    		}
+	    		}
+
+	    		// Views that are in the target view set and NOT in the original view set
+    			int unused;
+	    		do
+	    		{
+	    			unused = 0;
+	    			double maxError = -1.0;
+	    			int maxErrorIndex = -1;
+
+	    			// Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
+		    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+		    		{
+    					// Can't be previously used and must have more error than any other view
+		    			if (!targetUsed[i])
+		    			{
+		    				// Keep track of number of unused views at the same time
+		    				unused++;
+		    				
+		    				if (targetErrors[i] > maxError)
+		    				{
+		    					maxError = targetErrors[i];
+		    					maxErrorIndex = i;
+		    				}
+		    			}
+		    		}
+		    		
+		    		if (maxErrorIndex >= 0)
+		    		{
+			    		// Print the view to the file
+		    			out.print(targetViewSet.getImageFileName(maxErrorIndex).split("\\.")[0] + "\t" + targetSlopes[maxErrorIndex] + "\t" + targetPeaks[maxErrorIndex] + "\t" + 
+    	    					targetDistances[maxErrorIndex] + "\t" + targetErrors[maxErrorIndex] + "\t"); 
+		    			
+		    			// Flag that its been used
+		    			targetUsed[maxErrorIndex] = true;
+			    		unused--;
+			    		
+			    		double cumError = 0.0;
+		    			
+						// Update all of the other target distances and errors
+			    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++) 
+		    			{
+	    					// Don't update previously used views
+		    				if (!targetUsed[i])
+		    				{
+		    					// distance
+		    					targetDistances[i] = Math.min(targetDistances[i], 
+		    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[maxErrorIndex])))));
 	
-	@Override
-	public void setHalfResolution(boolean halfResEnabled) 
-	{
-		ulfRenderer.setHalfResolution(halfResEnabled);
-	}
-
-	@Override
-	public boolean getMultisampling() 
-	{
-		return ulfRenderer.getMultisampling();
-	}
-
-	@Override
-	public void setMultisampling(boolean multisamplingEnabled) 
-	{
-		ulfRenderer.setMultisampling(multisamplingEnabled);
-	}
-
-	@Override
-	public void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException 
-	{
-		ulfRenderer.requestResample(width, height, targetVSETFile, exportPath);
-	}
-
-	@Override
-	public void requestFidelity(File exportPath, File targetVSETFile) throws IOException 
-	{
-		ulfRenderer.requestFidelity(exportPath, targetVSETFile);
-	}
-
-	@Override
-	public void requestBTF(int width, int height, File exportPath) throws IOException 
-	{
-		this.btfRequested = true;
-		this.btfWidth = width;
-		this.btfHeight = height;
-		this.btfExportPath = exportPath;
+		    					// error
+		        				if (Double.isFinite(targetPeaks[i]))
+		    					{
+		        					double peakDistance = 2 * targetPeaks[i] / targetSlopes[i];
+		        					if (targetDistances[i] > peakDistance)
+		        					{
+		        						targetErrors[i] = targetPeaks[i];
+		        					}
+		        					else
+		        					{
+		        						targetErrors[i] = targetSlopes[i] * targetDistances[i] - targetSlopes[i] * targetSlopes[i] * targetDistances[i] * targetDistances[i] / (4 * targetPeaks[i]);
+		        					}
+		    					}
+		        				else
+		        				{
+		        					targetErrors[i] = targetSlopes[i] * targetDistances[i];
+		        				}
+		        				
+		        				cumError += targetErrors[i];
+		    				}
+		    			}
+			    		
+			    		out.println(cumError);
+		    		}
+	    		}
+	    		while(unused > 0);
+    		}
+    	}
+		
+		framebuffer.delete();
+		fidelityProgram.delete();
+		
+		if (this.fidelityCompleteCallback != null)
+		{
+    		this.fidelityCompleteCallback.run();
+		}
 	}
 	
 	private void exportBTF()
@@ -718,7 +1911,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
         {
 			Program<ContextType> btfProgram = context.getShaderProgramBuilder()
     				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibmfr.frag"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibr.frag"))
     				.createProgram();
 			
 			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(btfWidth, btfHeight)
@@ -726,13 +1919,13 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 					.createFramebufferObject();
 	    	
 	    	Renderable<ContextType> renderable = context.createRenderable(btfProgram);
-	    	renderable.addVertexBuffer("position", ulfRenderer.getLightField().positionBuffer);
-	    	renderable.addVertexBuffer("texCoord", ulfRenderer.getLightField().texCoordBuffer);
-	    	renderable.addVertexBuffer("normal", ulfRenderer.getLightField().normalBuffer);
-	    	renderable.addVertexBuffer("tangent", ulfRenderer.getLightField().tangentBuffer);
+	    	renderable.addVertexBuffer("position", this.lightField.positionBuffer);
+	    	renderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+	    	renderable.addVertexBuffer("normal", this.lightField.normalBuffer);
+	    	renderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
 	    	
-	    	ulfRenderer.setupForDraw(btfProgram);
 	    	this.setupForDraw(btfProgram);
+	    	this.setupForRelighting(btfProgram);
 	    	
 	    	btfProgram.setUniform("useTSOverrides", true);
 	    	
@@ -782,48 +1975,158 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	}
 
 	@Override
+	public void setOnLoadCallback(IBRLoadingMonitor callback) 
+	{
+		this.callback = callback;
+	}
+	
+	@Override
+	public VertexMesh getActiveProxy()
+	{
+		return this.assets.ulf.proxy;
+	}
+	
+	@Override
+	public ViewSet<ContextType> getActiveViewSet()
+	{
+		return this.assets.ulf.viewSet;
+	}
+
+	@Override
+	public IBRSettings settings()
+	{
+		return this.lightField.settings;
+	}
+
+	@Override
+	public boolean getHalfResolution()
+	{
+		return this.halfResEnabled;
+	}
+	
+	@Override
+	public void setHalfResolution(boolean halfResEnabled) 
+	{
+		this.halfResEnabled = halfResEnabled;
+	}
+
+	@Override
+	public boolean getMultisampling() 
+	{
+		return this.multisamplingEnabled;
+	}
+
+	@Override
+	public void setMultisampling(boolean multisamplingEnabled) 
+	{
+		this.multisamplingEnabled = multisamplingEnabled;
+	}
+
+	@Override
+	public void requestResample(int width, int height, File targetVSETFile, File exportPath)
+	{
+		this.resampleRequested = true;
+		this.resampleWidth = width;
+		this.resampleHeight = height;
+		this.resampleVSETFile = targetVSETFile;
+		this.resampleExportPath = exportPath;
+	}
+
+	@Override
+	public void requestFidelity(File exportPath, File targetVSETFile)
+	{
+		this.fidelityRequested = true;
+		this.fidelityExportPath = exportPath;
+		this.fidelityVSETFile = targetVSETFile;
+	}
+
+	@Override
+	public void requestBTF(int width, int height, File exportPath)
+	{
+		this.btfRequested = true;
+		this.btfWidth = width;
+		this.btfHeight = height;
+		this.btfExportPath = exportPath;
+	}
+
+	@Override
 	public void setProgram(Program<ContextType> program) 
 	{
 		this.program = program;
-		ulfRenderer.setProgram(program);
+		
+		this.mainRenderable = context.createRenderable(program);
+    	this.mainRenderable.addVertexBuffer("position", this.lightField.positionBuffer);
+    	
+    	if (this.lightField.normalBuffer != null)
+    	{
+    		this.mainRenderable.addVertexBuffer("normal", this.lightField.normalBuffer);
+    	}
+    	
+    	if (this.lightField.texCoordBuffer != null)
+    	{
+    		this.mainRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+    	}
+    	
+    	if (this.lightField.texCoordBuffer != null)
+    	{
+    		this.mainRenderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
+    	}
+    	
 		suppressErrors = false;
 	}
 	
 	@Override
 	public Texture2D<ContextType> getEnvironmentTexture()
 	{
-		return this.ulfRenderer.getEnvironmentTexture();
+		return this.environmentTexture;
 	}
 	
 	@Override
-	public void setEnvironment(File environmentFile) throws IOException
+	public void setEnvironment(File environmentFile)
 	{
-		this.ulfRenderer.setEnvironment(environmentFile);
+		if (environmentFile != null && environmentFile.exists())
+		{
+			this.newEnvironmentFile = environmentFile;
+		}
 	}
 	
 	@Override
 	public String toString()
 	{
-		return this.ulfRenderer.toString();
+		return this.lightField.toString();
 	}
 
 	@Override
 	public void reloadHelperShaders() 
 	{
-		this.ulfRenderer.reloadHelperShaders();
-		
-		if (this.lightProgram != null)
-    	{
-			this.lightProgram.delete();
-			this.lightProgram = null;
-    	}
-		
-    	try
+		try
         {
-    		this.lightProgram = context.getShaderProgramBuilder()
+    		Program<ContextType> newProgram = context.getShaderProgramBuilder()
+    				.addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/common/envbackgroundtexture.frag"))
+    				.createProgram();
+
+    		if (this.environmentBackgroundProgram != null)
+    		{
+    			this.environmentBackgroundProgram.delete();
+    		}
+    		
+    		this.environmentBackgroundProgram = newProgram;
+	    	this.environmentBackgroundRenderable = context.createRenderable(environmentBackgroundProgram);
+	    	this.environmentBackgroundRenderable.addVertexBuffer("position", context.createRectangle());
+
+	    	
+	    	newProgram = context.getShaderProgramBuilder()
     				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
     				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/light.frag"))
     				.createProgram();
+	    	
+			if (this.lightProgram != null)
+	    	{
+				this.lightProgram.delete();
+	    	}
+    		
+    		this.lightProgram = newProgram;
     		this.lightRenderable = context.createRenderable(this.lightProgram);
     		this.lightRenderable.addVertexBuffer("position", lightVertices);
         }
@@ -836,18 +2139,22 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	@Override
 	public void setTransformationMatrices(List<Matrix4> matrices) 
 	{
-		this.ulfRenderer.setTransformationMatrices(matrices);
+		if (matrices != null)
+		{
+			this.transformationMatrices = matrices;
+		}
 	}
 	
 	@Override
 	public VertexMesh getReferenceScene()
 	{
-		return this.ulfRenderer.getReferenceScene();
+		return this.referenceScene;
 	}
 	
 	@Override
 	public void setReferenceScene(VertexMesh scene)
 	{
-		this.ulfRenderer.setReferenceScene(scene);
+		this.referenceScene = scene;
+		this.referenceSceneChanged = true;
 	}
 }

@@ -1,7 +1,6 @@
 package tetzlaff.ibr;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import tetzlaff.gl.Context;
@@ -30,11 +29,11 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	void reloadHelperShaders();
 
 	Texture2D<ContextType> getEnvironmentTexture();
-	void setEnvironment(File environmentFile) throws IOException;
+	void setEnvironment(File environmentFile);
 	
-	void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException;
-	void requestFidelity(File exportPath, File targetVSETFile) throws IOException;
-	void requestBTF(int width, int height, File exportPath) throws IOException;
+	void requestResample(int width, int height, File targetVSETFile, File exportPath);
+	void requestFidelity(File exportPath, File targetVSETFile);
+	void requestBTF(int width, int height, File exportPath);
 
 	void setTransformationMatrices(List<Matrix4> matrices);
 

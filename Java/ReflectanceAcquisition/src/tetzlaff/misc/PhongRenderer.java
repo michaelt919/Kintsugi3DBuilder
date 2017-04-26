@@ -1,4 +1,4 @@
-package tetzlaff.phong;
+package tetzlaff.misc;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -90,7 +90,7 @@ public class PhongRenderer<ContextType extends Context<ContextType>> implements 
         {
     		this.program = context.getShaderProgramBuilder()
 					.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-					.addShader(ShaderType.FRAGMENT, new File("shaders/phong/phong.frag"))
+					.addShader(ShaderType.FRAGMENT, new File("shaders/misc/phong.frag"))
 					.createProgram();
     		
     		this.shadowProgram = context.getShaderProgramBuilder()
