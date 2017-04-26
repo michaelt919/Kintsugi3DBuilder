@@ -1,4 +1,4 @@
-package tetzlaff.phong.app;
+package tetzlaff.misc;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,7 +10,6 @@ import tetzlaff.gl.helpers.InteractiveGraphics;
 import tetzlaff.gl.helpers.Trackball;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.interactive.InteractiveApplication;
-import tetzlaff.phong.PhongRenderer;
 import tetzlaff.window.KeyCodes;
 import tetzlaff.window.glfw.GLFWWindow;
 

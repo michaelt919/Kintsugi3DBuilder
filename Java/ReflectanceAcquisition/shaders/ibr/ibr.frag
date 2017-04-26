@@ -15,7 +15,7 @@ layout(location = 0) out vec4 fragColor;
 
 uniform mat4 model_view;
 uniform mat4 envMapMatrix;
-in vec3 fViewPos;
+uniform vec3 viewPos;
 
 uniform bool skipViewEnabled;
 uniform int skipView;
@@ -244,7 +244,7 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 			if (nDotV_sample > 0.0 && geomAttenSample > 0.0)
 			{
 				vec3 virtualViewDir = 
-					normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
+					normalize((cameraPoses[index] * vec4(viewPos, 1.0)).xyz - fragmentPos);
 				vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
 				float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
 				float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
@@ -370,7 +370,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
 			}
 			else
 			{
-				virtualViewDir = normalize((cameraPoses[index] * vec4(fViewPos, 1.0)).xyz - fragmentPos);
+				virtualViewDir = normalize((cameraPoses[index] * vec4(viewPos, 1.0)).xyz - fragmentPos);
 			}
             
             for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
@@ -589,7 +589,7 @@ void main()
 	}
 	else
 	{
-		viewDir = normalize(fViewPos - fPosition);
+		viewDir = normalize(viewPos - fPosition);
 	}
     
     vec3 normalDir;

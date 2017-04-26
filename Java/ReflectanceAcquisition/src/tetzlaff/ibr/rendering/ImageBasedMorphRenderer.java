@@ -2,7 +2,6 @@ package tetzlaff.ibr.rendering;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -150,13 +149,13 @@ public class ImageBasedMorphRenderer<ContextType extends Context<ContextType>> i
 	}
 
 	@Override
-	public void requestResample(int width, int height, File targetVSETFile, File exportPath) throws IOException 
+	public void requestResample(int width, int height, File targetVSETFile, File exportPath)
 	{
 		this.stages.get(this.currentStage).requestResample(width, height, targetVSETFile, exportPath);
 	}
 
 	@Override
-	public void requestFidelity(File exportPath, File targetVSETFile) throws IOException 
+	public void requestFidelity(File exportPath, File targetVSETFile)
 	{
 		this.stages.get(this.currentStage).requestFidelity(exportPath, targetVSETFile);
 	}
@@ -203,7 +202,6 @@ public class ImageBasedMorphRenderer<ContextType extends Context<ContextType>> i
 	
 	@Override
 	public void requestBTF(int width, int height, File exportPath)
-			throws IOException 
 	{
 		throw new UnsupportedOperationException();
 	}
@@ -224,7 +222,7 @@ public class ImageBasedMorphRenderer<ContextType extends Context<ContextType>> i
 	}
 	
 	@Override
-	public void setEnvironment(File environmentFile) throws IOException 
+	public void setEnvironment(File environmentFile)
 	{
 		// TODO untested and probably incredibly inefficient
 		for(IBRDrawable<ContextType> stage : stages)

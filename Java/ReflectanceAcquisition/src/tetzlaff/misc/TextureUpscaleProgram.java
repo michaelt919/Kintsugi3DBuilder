@@ -1,4 +1,4 @@
-package tetzlaff.textureupscale;
+package tetzlaff.misc;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +36,7 @@ public class TextureUpscaleProgram
         {
 	    	Program<OpenGLContext> perlinNoiseProgram = context.getShaderProgramBuilder()
     				.addShader(ShaderType.VERTEX, new File("shaders", "common/texture.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders", "textureupscale/perlintex.frag"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders", "misc/perlintex.frag"))
     				.createProgram();
 	    	Texture2D<OpenGLContext> permTexture = context.getPerlinNoiseTextureBuilder().createTexture();
 	    	perlinNoiseProgram.setTexture("permTexture", permTexture);

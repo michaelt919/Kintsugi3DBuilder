@@ -1,4 +1,4 @@
-package tetzlaff.fastmicrofacet.app;
+package tetzlaff.misc;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,7 +6,6 @@ import java.io.IOException;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import tetzlaff.fastmicrofacet.FastMicrofacetRenderer;
 import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.FirstPersonController;
 import tetzlaff.gl.helpers.InteractiveGraphics;
