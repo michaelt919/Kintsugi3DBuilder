@@ -43,7 +43,6 @@ import tetzlaff.ibr.IBRListModel;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.ViewSetImageOptions;
-import tetzlaff.ibr.rendering.ImageBasedMorphRenderer;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
@@ -203,23 +202,15 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_spinnerDepthHeight.gridy = 1;
 		panel.add(spinnerDepthHeight, gbc_spinnerDepthHeight);
 		
-		JButton btnLoadSingle = new JButton("Load Single...");
+		JButton btnLoadSingle = new JButton("Load Object...");
 		GridBagConstraints gbc_btnLoadSingle = new GridBagConstraints();
+		gbc_btnLoadSingle.gridwidth = 2;
 		gbc_btnLoadSingle.anchor = GridBagConstraints.NORTH;
 		gbc_btnLoadSingle.insets = new Insets(0, 0, 5, 5);
 		gbc_btnLoadSingle.gridx = 0;
 		gbc_btnLoadSingle.gridy = 3;
 		loadingPanel.add(btnLoadSingle, gbc_btnLoadSingle);
-		btnLoadSingle.setToolTipText("Load a single object");
-		
-		JButton btnLoadMultiple = new JButton("Load Multiple...");
-		GridBagConstraints gbc_btnLoadMultiple = new GridBagConstraints();
-		gbc_btnLoadMultiple.insets = new Insets(0, 0, 5, 0);
-		gbc_btnLoadMultiple.anchor = GridBagConstraints.NORTH;
-		gbc_btnLoadMultiple.gridx = 1;
-		gbc_btnLoadMultiple.gridy = 3;
-		loadingPanel.add(btnLoadMultiple, gbc_btnLoadMultiple);
-		btnLoadMultiple.setToolTipText("Load multiple objects");
+		btnLoadSingle.setToolTipText("Load an object for image-based rendering.");
 		
 		JProgressBar progressBar = new JProgressBar();
 		progressBar.setIndeterminate(true);
@@ -237,9 +228,9 @@ public class IBRelightConfigFrame extends JFrame
 		selectionPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Model Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		GridBagLayout gbl_selectionPanel = new GridBagLayout();
 		gbl_selectionPanel.columnWidths = new int[] {0, 0, 0};
-		gbl_selectionPanel.rowHeights = new int[] {0, 0};
+		gbl_selectionPanel.rowHeights = new int[] {0};
 		gbl_selectionPanel.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		gbl_selectionPanel.rowWeights = new double[]{0.0, 0.0};
+		gbl_selectionPanel.rowWeights = new double[]{0.0};
 		selectionPanel.setLayout(gbl_selectionPanel);
 		
 		JComboBox<IBRDrawable<ContextType>> comboBoxObjects = new JComboBox<IBRDrawable<ContextType>>();
@@ -250,16 +241,6 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_comboBoxObjects.gridx = 0;
 		gbc_comboBoxObjects.gridy = 0;
 		selectionPanel.add(comboBoxObjects, gbc_comboBoxObjects);
-		
-		JSlider sliderObjects = new JSlider();
-		sliderObjects.setValue(0);
-		GridBagConstraints gbc_sliderObjects = new GridBagConstraints();
-		gbc_sliderObjects.insets = new Insets(0, 0, 5, 0);
-		gbc_sliderObjects.fill = GridBagConstraints.HORIZONTAL;
-		gbc_sliderObjects.gridwidth = 2;
-		gbc_sliderObjects.gridx = 0;
-		gbc_sliderObjects.gridy = 1;
-		selectionPanel.add(sliderObjects, gbc_sliderObjects);
 		
 		JPanel renderingOptionsPanel = new JPanel();
 		panel_2.add(renderingOptionsPanel);
@@ -637,7 +618,6 @@ public class IBRelightConfigFrame extends JFrame
 		if (model == null || model.getSelectedItem() == null)
 		{
 			comboBoxObjects.setEnabled(false);
-			sliderObjects.setEnabled(false);
 
 			for (JComponent c : modelDependentComponents)
 			{
@@ -647,7 +627,6 @@ public class IBRelightConfigFrame extends JFrame
 		else
 		{
 			comboBoxObjects.setEnabled(model.getSize()>1?true:false);
-			sliderObjects.setEnabled(model.getSize()>1?true:false);
 
 			for (JComponent c : modelDependentComponents)
 			{
@@ -892,18 +871,6 @@ public class IBRelightConfigFrame extends JFrame
 			}
 		});
 		
-		// Add listener for changes to the morph slider.
-		sliderObjects.addChangeListener(e ->
-		{
-			if (model.getSelectedItem() != null)
-			{
-				if (model.getSelectedItem() instanceof ImageBasedMorphRenderer<?>)
-				{
-					((ImageBasedMorphRenderer<?>)(model.getSelectedItem())).setCurrentStage(sliderObjects.getValue());
-				}
-			}
-		});
-		
 		// Respond to combo box item changed event
 		comboBoxObjects.addItemListener(e ->
 		{
@@ -922,21 +889,6 @@ public class IBRelightConfigFrame extends JFrame
 				}
 				
 				updateWidgetsFromSettings.run();
-				
-				if (model.getSelectedItem() instanceof ImageBasedMorphRenderer<?>)
-				{
-					ImageBasedMorphRenderer<?> morph = (ImageBasedMorphRenderer<?>)(model.getSelectedItem());
-					int currentStage = morph.getCurrentStage();
-					sliderObjects.setEnabled(true);
-					sliderObjects.setMaximum(morph.getStageCount() - 1);
-					sliderObjects.setValue(currentStage);
-				}
-				else
-				{
-					sliderObjects.setMaximum(0);
-					sliderObjects.setValue(0);
-					sliderObjects.setEnabled(false);
-				}
 			}
 		});
 		
@@ -974,7 +926,7 @@ public class IBRelightConfigFrame extends JFrame
 							
 							if (imageChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 							{
-								loadOptions.getImageOptions().setFilePath(imageChooser.getSelectedFile());
+								loadOptions.getImageOptions().setFilePathOverride(imageChooser.getSelectedFile());
 								model.addFromAgisoftXMLFile(file, fileChooser.getSelectedFile(), loadOptions);
 								
 								SwingUtilities.invokeLater(new Runnable()
@@ -1004,34 +956,6 @@ public class IBRelightConfigFrame extends JFrame
 							}
 						});
 					}
-				} 
-				catch (IOException ex) 
-				{
-					ex.printStackTrace();
-				}
-			}
-		});
-		
-		// Add listener for the 'morph' load button to read many light field objects.
-		btnLoadMultiple.addActionListener(e -> 
-		{
-			IBRLoadOptions loadOptions = new IBRLoadOptions(
-					new ViewSetImageOptions(null, true, chckbxUseMipmaps.isSelected(), chckbxCompressImages.isSelected()),
-					chckbxGenerateDepthImages.isSelected(), (Integer)spinnerDepthWidth.getValue(), (Integer)spinnerDepthHeight.getValue());
-			
-			fileChooser.setDialogTitle("Select a light field morph");
-			fileChooser.resetChoosableFileFilters();
-			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.setFileFilter(new FileNameExtensionFilter("Light Field Morph files (.lfm)", "lfm"));
-			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-			{
-				try 
-				{
-					model.addMorphFromLFMFile(fileChooser.getSelectedFile(), loadOptions);
-					progressBar.setIndeterminate(true);
-					progressBar.setVisible(true);
-					pack();
 				} 
 				catch (IOException ex) 
 				{

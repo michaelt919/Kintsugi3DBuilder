@@ -54,10 +54,11 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	private ContextType context;
 	private Program<ContextType> program;
 	private Program<ContextType> shadowProgram;
-	private ImageBasedAssets<ContextType> assets;
+	private IBRResources<ContextType> resources;
 	private LightController lightController;
 	private IBRLoadingMonitor callback;
 	private boolean suppressErrors = false;
+	private IBRSettings settings;
 	
 	private Texture3D<ContextType> shadowMaps;
 	private FramebufferObject<ContextType> shadowFramebuffer;
@@ -76,7 +77,6 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     private File cameraFile;
     private File geometryFile;
     private IBRLoadOptions loadOptions;
-    private UnstructuredLightField<ContextType> lightField;
     private Renderable<ContextType> mainRenderable;
     private CameraController cameraController;
 
@@ -139,6 +139,8 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	
     	this.transformationMatrices = new ArrayList<Matrix4>();
     	this.transformationMatrices.add(Matrix4.identity());
+    	
+    	this.settings = new IBRSettings();
     }
 
 	@Override
@@ -194,33 +196,33 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	{
     		if (this.cameraFile.getName().toUpperCase().endsWith(".XML"))
     		{
-    			this.lightField = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.geometryFile, this.loadOptions, this.callback, this.context);
+    			this.resources = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.geometryFile, this.loadOptions, this.callback, this.context);
     		}
     		else
     		{
-    			this.lightField = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.callback, this.context);
+    			this.resources = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.callback, this.context);
     			if (this.geometryFile == null)
 				{
-    				this.geometryFile = lightField.viewSet.getGeometryFile();
+    				this.geometryFile = resources.viewSet.getGeometryFile();
 				}
     		}
 	    	
 	    	this.mainRenderable = context.createRenderable(program);
-	    	this.mainRenderable.addVertexBuffer("position", this.lightField.positionBuffer);
+	    	this.mainRenderable.addVertexBuffer("position", this.resources.positionBuffer);
 	    	
-	    	if (this.lightField.normalBuffer != null)
+	    	if (this.resources.normalBuffer != null)
 	    	{
-	    		this.mainRenderable.addVertexBuffer("normal", this.lightField.normalBuffer);
+	    		this.mainRenderable.addVertexBuffer("normal", this.resources.normalBuffer);
 	    	}
 	    	
-	    	if (this.lightField.texCoordBuffer != null)
+	    	if (this.resources.texCoordBuffer != null)
 	    	{
-	    		this.mainRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+	    		this.mainRenderable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
 	    	}
 	    	
-	    	if (this.lightField.tangentBuffer != null)
+	    	if (this.resources.tangentBuffer != null)
 	    	{
-	    		this.mainRenderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
+	    		this.mainRenderable.addVertexBuffer("tangent", this.resources.tangentBuffer);
 	    	}
 	    				
 	    	this.simpleTexRenderable = context.createRenderable(simpleTexProgram);
@@ -309,14 +311,14 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			
 			if (lightController instanceof OverrideableLightController)
 			{
-		    	float scale = new Vector3(assets.ulf.viewSet.getCameraPose(0)
-		    			.times(new Vector4(assets.ulf.proxy.getCentroid(), 1.0f))).length();
+		    	float scale = new Vector3(resources.viewSet.getCameraPose(0)
+		    			.times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length();
 				
 				((OverrideableLightController)lightController).overrideCameraPose(
 						Matrix4.scale(1.0f / scale)
 							.times(modelView)
-							.times(Matrix4.translate(assets.ulf.proxy.getCentroid()))
-			    			.times(new Matrix4(new Matrix3(assets.ulf.viewSet.getCameraPose(0).transpose())))
+							.times(Matrix4.translate(resources.geometry.getCentroid()))
+			    			.times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0).transpose())))
 							.times(Matrix4.scale(scale)));
 			}
 			
@@ -339,7 +341,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		{
 			setupForRelighting();
 			
-			ViewSet<ContextType> vset = assets.ulf.viewSet;
+			ViewSet<ContextType> vset = resources.viewSet;
 			Vector3 lightIntensity = vset.getLightIntensity(vset.getLightIndex(index));
 			Vector4 lightPos = vset.getCameraPose(index).quickInverse(0.002f).times(new Vector4(vset.getLightPosition(vset.getLightIndex(index)), 1.0f));
 			
@@ -348,54 +350,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		
 		try
 		{
-			String diffuseTextureName = null;
-			String normalTextureName = null;
-			String specularTextureName = null;
-			String roughnessTextureName = null;
 			
-			// TODO Use more information from the material.  Currently just pulling texture names.
-			Material material = this.lightField.proxy.getMaterial();
-			if (material != null)
-			{
-				if (material.getDiffuseMap() != null)
-				{
-					diffuseTextureName = material.getDiffuseMap().getMapName();
-				}
-
-				if (material.getNormalMap() != null)
-				{
-					normalTextureName = material.getNormalMap().getMapName();
-				}
-
-				if (material.getSpecularMap() != null)
-				{
-					specularTextureName = material.getSpecularMap().getMapName();
-				}
-
-				if (material.getRoughnessMap() != null)
-				{
-					roughnessTextureName = material.getRoughnessMap().getMapName();
-				}
-			}
 			
-			if (this.lightField.viewSet.getGeometryFileName() != null)
-			{
-				String prefix = this.lightField.viewSet.getGeometryFileName().split("\\.")[0];
-				diffuseTextureName = diffuseTextureName != null ? diffuseTextureName : prefix + "_Kd.png";
-				normalTextureName = normalTextureName != null ? normalTextureName : prefix + "_norm.png";
-				specularTextureName = specularTextureName != null ? specularTextureName : prefix + "_Ks.png";
-				roughnessTextureName = roughnessTextureName != null ? roughnessTextureName : prefix + "_Pr.png";
-			}
-			else
-			{
-				diffuseTextureName = diffuseTextureName != null ? diffuseTextureName : "diffuse.png";
-				normalTextureName = normalTextureName != null ? normalTextureName : "normal.png";
-				specularTextureName = specularTextureName != null ? specularTextureName : "specular.png";
-				roughnessTextureName = roughnessTextureName != null ? roughnessTextureName : "roughness.png";
-			}
-			
-			assets = new ImageBasedAssets<ContextType>(
-					this.lightField, 
+			resources = new IBRResources<ContextType>(
+					this.resources, 
 					new File(this.geometryFile.getParentFile(), diffuseTextureName),
 					new File(this.geometryFile.getParentFile(), normalTextureName),
 					new File(this.geometryFile.getParentFile(), specularTextureName),
@@ -403,7 +361,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 					new File(this.geometryFile.getParentFile(), "mfd.csv"), 
 					context);
 			
-			shadowRenderable.addVertexBuffer("position", assets.ulf.positionBuffer);
+			shadowRenderable.addVertexBuffer("position", resources.positionBuffer);
 
 			shadowMaps = context.get2DDepthTextureArrayBuilder(2048, 2048, lightController.getLightCount()).createTexture();
 			shadowFramebuffer = context.getFramebufferObjectBuilder(2048, 2048)
@@ -617,38 +575,35 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private void setupForDraw(Program<ContextType> program)
 	{
-		program.setTexture("viewImages", lightField.viewSet.getTextures());
-		program.setUniformBuffer("CameraPoses", lightField.viewSet.getCameraPoseBuffer());
-		program.setUniformBuffer("CameraProjections", lightField.viewSet.getCameraProjectionBuffer());
-		program.setUniformBuffer("CameraProjectionIndices", lightField.viewSet.getCameraProjectionIndexBuffer());
-    	if (lightField.viewSet.getLightPositionBuffer() != null && lightField.viewSet.getLightIntensityBuffer() != null && lightField.viewSet.getLightIndexBuffer() != null)
+		program.setTexture("viewImages", resources.viewSet.getTextures());
+		program.setUniformBuffer("CameraPoses", resources.viewSet.getCameraPoseBuffer());
+		program.setUniformBuffer("CameraProjections", resources.viewSet.getCameraProjectionBuffer());
+		program.setUniformBuffer("CameraProjectionIndices", resources.viewSet.getCameraProjectionIndexBuffer());
+    	if (resources.viewSet.getLightPositionBuffer() != null && resources.viewSet.getLightIntensityBuffer() != null && resources.viewSet.getLightIndexBuffer() != null)
     	{
-    		program.setUniformBuffer("LightPositions", lightField.viewSet.getLightPositionBuffer());
-    		program.setUniformBuffer("LightIntensities", lightField.viewSet.getLightIntensityBuffer());
-    		program.setUniformBuffer("LightIndices", lightField.viewSet.getLightIndexBuffer());
+    		program.setUniformBuffer("LightPositions", resources.viewSet.getLightPositionBuffer());
+    		program.setUniformBuffer("LightIntensities", resources.viewSet.getLightIntensityBuffer());
+    		program.setUniformBuffer("LightIndices", resources.viewSet.getLightIndexBuffer());
     	}
-    	program.setUniform("viewCount", lightField.viewSet.getCameraPoseCount());
+    	program.setUniform("viewCount", resources.viewSet.getCameraPoseCount());
     	program.setUniform("infiniteLightSources", true /* TODO */);
-    	if (lightField.depthTextures != null)
+    	if (resources.depthTextures != null)
 		{
-    		program.setTexture("depthImages", lightField.depthTextures);
+    		program.setTexture("depthImages", resources.depthTextures);
 		}
     	
-    	program.setUniform("gamma", this.lightField.settings.getGamma());
-    	program.setUniform("weightExponent", this.lightField.settings.getWeightExponent());
-    	program.setUniform("isotropyFactor", this.lightField.settings.getIsotropyFactor());
-    	program.setUniform("occlusionEnabled", this.lightField.depthTextures != null && this.lightField.settings.isOcclusionEnabled());
-    	program.setUniform("occlusionBias", this.lightField.settings.getOcclusionBias());
-    	program.setUniform("imageBasedRenderingEnabled", this.lightField.settings.isIBREnabled());
-    	program.setUniform("relightingEnabled", this.lightField.settings.isRelightingEnabled());
-    	program.setUniform("pbrGeometricAttenuationEnabled", this.lightField.settings.isPBRGeometricAttenuationEnabled());
-    	program.setUniform("fresnelEnabled", this.lightField.settings.isFresnelEnabled());
-    	program.setUniform("shadowsEnabled", this.lightField.settings.areShadowsEnabled());
+    	program.setUniform("gamma", this.settings.getGamma());
+    	program.setUniform("weightExponent", this.settings.getWeightExponent());
+    	program.setUniform("isotropyFactor", this.settings.getIsotropyFactor());
+    	program.setUniform("occlusionEnabled", this.resources.depthTextures != null && this.settings.isOcclusionEnabled());
+    	program.setUniform("occlusionBias", this.settings.getOcclusionBias());
+    	program.setUniform("imageBasedRenderingEnabled", this.settings.isIBREnabled());
+    	program.setUniform("relightingEnabled", this.settings.isRelightingEnabled());
+    	program.setUniform("pbrGeometricAttenuationEnabled", this.settings.isPBRGeometricAttenuationEnabled());
+    	program.setUniform("fresnelEnabled", this.settings.isFresnelEnabled());
+    	program.setUniform("shadowsEnabled", this.settings.areShadowsEnabled());
     	
-    	program.setTexture("luminanceMap", this.lightField.viewSet.getLuminanceMap());
-
-    	program.setUniform("skipViewEnabled", false);
-    	program.setUniform("skipView", -1);
+    	program.setTexture("luminanceMap", this.resources.viewSet.getLuminanceMap());
 	}
 	
 	
@@ -659,7 +614,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private void setupForRelighting(Program<ContextType> p)
 	{
-		if (assets.normalTexture == null)
+		if (resources.normalTexture == null)
 		{
 			p.setUniform("useNormalTexture", false);
 			p.setTexture("normalMap", null);
@@ -667,10 +622,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		else
 		{
 			p.setUniform("useNormalTexture", this.settings().areTexturesEnabled());
-			p.setTexture("normalMap", assets.normalTexture);
+			p.setTexture("normalMap", resources.normalTexture);
 		}
 		
-		if (assets.diffuseTexture == null)
+		if (resources.diffuseTexture == null)
 		{
 			p.setUniform("useDiffuseTexture", false);
 			p.setTexture("diffuseMap", null);
@@ -678,10 +633,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		else
 		{
 			p.setUniform("useDiffuseTexture", this.settings().areTexturesEnabled());
-			p.setTexture("diffuseMap", assets.diffuseTexture);
+			p.setTexture("diffuseMap", resources.diffuseTexture);
 		}
 		
-		if (assets.specularTexture == null)
+		if (resources.specularTexture == null)
 		{
 			p.setUniform("useSpecularTexture", false);
 			p.setTexture("specularMap", null);
@@ -689,10 +644,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		else
 		{
 			p.setUniform("useSpecularTexture", this.settings().areTexturesEnabled());
-			p.setTexture("specularMap", assets.specularTexture);
+			p.setTexture("specularMap", resources.specularTexture);
 		}
 		
-		if (assets.roughnessTexture == null)
+		if (resources.roughnessTexture == null)
 		{
 			p.setUniform("useRoughnessTexture", false);
 			p.setTexture("roughnessMap", null);
@@ -700,7 +655,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		else
 		{
 			p.setUniform("useRoughnessTexture", this.settings().areTexturesEnabled());
-			p.setTexture("roughnessMap", assets.roughnessTexture);
+			p.setTexture("roughnessMap", resources.roughnessTexture);
 		}
 		
 		if (this.getEnvironmentTexture() == null || !lightController.getEnvironmentMappingEnabled())
@@ -716,7 +671,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			p.setUniform("environmentMipMapLevel", Math.max(0, Math.min(this.getEnvironmentTexture().getMipmapLevelCount() - 2, 
 					(int)Math.ceil(0.5 * 
 						Math.log((double)this.getEnvironmentTexture().getWidth() * 
-								(double)this.getEnvironmentTexture().getHeight() / (double)assets.ulf.viewSet.getCameraPoseCount() ) 
+								(double)this.getEnvironmentTexture().getHeight() / (double)resources.viewSet.getCameraPoseCount() ) 
 							/ Math.log(2.0)))));
 			p.setUniform("diffuseEnvironmentMipMapLevel", this.getEnvironmentTexture().getMipmapLevelCount() - 2);
 			p.setUniform("environmentMapGamma", 
@@ -726,18 +681,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			this.environmentTextureEnabled = true;
 		}
 		
-		if (assets.mfdTexture == null)
-		{
-			p.setUniform("useMFDTexture", false);
-			p.setTexture("mfdMap", null);
-		}
-		else
-		{
-			p.setUniform("useMFDTexture", true);
-			p.setTexture("mfdMap", assets.mfdTexture);
-		}
-		
-		if (assets.ulf.viewSet.getLuminanceMap() == null)
+		if (resources.viewSet.getLuminanceMap() == null)
 		{
 			p.setUniform("useLuminanceMap", false);
 			p.setTexture("luminanceMap", null);
@@ -745,10 +689,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		else
 		{
 			p.setUniform("useLuminanceMap", true);
-			p.setTexture("luminanceMap", assets.ulf.viewSet.getLuminanceMap());
+			p.setTexture("luminanceMap", resources.viewSet.getLuminanceMap());
 		}
 		
-		if (assets.ulf.viewSet.getInverseLuminanceMap() == null)
+		if (resources.viewSet.getInverseLuminanceMap() == null)
 		{
 			p.setUniform("useInverseLuminanceMap", false);
 			p.setTexture("inverseLuminanceMap", null);
@@ -756,7 +700,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		else
 		{
 			p.setUniform("useInverseLuminanceMap", true);
-			p.setTexture("inverseLuminanceMap", assets.ulf.viewSet.getInverseLuminanceMap());
+			p.setTexture("inverseLuminanceMap", resources.viewSet.getInverseLuminanceMap());
 		}
 		
 		float gamma = 2.2f;
@@ -770,31 +714,31 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		p.setUniform("infiniteLightSources", false);
 		p.setTexture("shadowMaps", shadowMaps);
 		
-		if (assets.shadowMatrixBuffer == null || assets.shadowTextures == null)
+		if (resources.shadowMatrixBuffer == null || resources.shadowTextures == null)
 		{
 			p.setUniform("shadowTestingEnabled", false);
 		}
 		else
 		{
 			p.setUniform("shadowTestingEnabled", true);
-			p.setUniformBuffer("ShadowMatrices", assets.shadowMatrixBuffer);
-			p.setTexture("shadowImages", assets.shadowTextures);
+			p.setUniformBuffer("ShadowMatrices", resources.shadowMatrixBuffer);
+			p.setTexture("shadowImages", resources.shadowTextures);
 		}
 	}
 	
 	private void updateCentroidAndRadius()
 	{
 		Vector4 sumPositions = new Vector4(0.0f);
-    	this.boundingRadius = lightField.proxy.getBoundingRadius();
+    	this.boundingRadius = resources.geometry.getBoundingRadius();
     	
     	
-    	this.centroid = lightField.proxy.getCentroid();
+    	this.centroid = resources.geometry.getCentroid();
     	
     	if (transformationMatrices != null)
     	{
     		for (Matrix4 m : transformationMatrices)
     		{
-    			Vector4 position = m.times(new Vector4(lightField.proxy.getCentroid(), 1.0f));
+    			Vector4 position = m.times(new Vector4(resources.geometry.getCentroid(), 1.0f));
     			sumPositions = sumPositions.plus(position);
     		}
     		
@@ -802,17 +746,17 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     		
     		for(Matrix4 m : transformationMatrices)
     		{
-    			float distance = new Vector3(m.times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).distance(this.centroid);
-    			this.boundingRadius = Math.max(this.boundingRadius, distance + lightField.proxy.getBoundingRadius());
+    			float distance = new Vector3(m.times(new Vector4(resources.geometry.getCentroid(), 1.0f))).distance(this.centroid);
+    			this.boundingRadius = Math.max(this.boundingRadius, distance + resources.geometry.getBoundingRadius());
     		}
     	}
 	}
 	
 	private float getScale()
 	{
-		 return new Vector3(assets.ulf.viewSet.getCameraPose(0)
-				 .times(new Vector4(assets.ulf.proxy.getCentroid(), 1.0f))).length()
-			 * this.boundingRadius / this.lightField.proxy.getBoundingRadius();
+		 return new Vector3(resources.viewSet.getCameraPose(0)
+				 .times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length()
+			 * this.boundingRadius / this.resources.geometry.getBoundingRadius();
 	}
 	
 	private Matrix4 getLightMatrix(int lightIndex)
@@ -821,7 +765,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		return Matrix4.scale(scale)
 			.times(lightController.getLightMatrix(lightIndex))
 			.times(Matrix4.scale(1.0f / scale))
-			.times(new Matrix4(new Matrix3(assets.ulf.viewSet.getCameraPose(0))))
+			.times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0))))
 			.times(Matrix4.translate(this.centroid.negated()));
 	}
 	
@@ -832,7 +776,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		float lightDist = new Vector3(lightMatrix.times(new Vector4(this.centroid, 1.0f))).length();
 		
 		float radius = (float)
-			(new Matrix3(assets.ulf.viewSet.getCameraPose(0))
+			(new Matrix3(resources.viewSet.getCameraPose(0))
 				.times(new Vector3(this.boundingRadius))
 				.length() / Math.sqrt(3));
 		
@@ -875,11 +819,11 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		Vector3 controllerLightIntensity = lightController.getLightColor(lightIndex);
 		float lightDistance = new Vector3(getLightMatrix(lightIndex).times(new Vector4(this.centroid, 1.0f))).length();
 
-		float scale = new Vector3(assets.ulf.viewSet.getCameraPose(0)
-				 .times(new Vector4(assets.ulf.proxy.getCentroid(), 1.0f))).length();
+		float scale = new Vector3(resources.viewSet.getCameraPose(0)
+				 .times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length();
 		
 		program.setUniform("lightIntensityVirtual[" + lightIndex + "]", 
-				controllerLightIntensity.times(lightDistance * lightDistance * assets.ulf.viewSet.getLightIntensity(0).y / (scale * scale)));
+				controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (scale * scale)));
 		program.setUniform("lightMatrixVirtual[" + lightIndex + "]", getLightProjection(lightIndex).times(lightMatrix));
 		program.setUniform("virtualLightCount", Math.min(4, lightController.getLightCount()));
 		
@@ -888,18 +832,18 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private Matrix4 setupLightForFidelity(Vector3 lightIntensity, Vector3 lightPos)
 	{
-		float lightDist = lightPos.distance(this.assets.ulf.proxy.getCentroid());
+		float lightDist = lightPos.distance(this.resources.geometry.getCentroid());
 		
 		float radius = (float)
-			(new Matrix3(assets.ulf.viewSet.getCameraPose(0))
-				.times(new Vector3(this.assets.ulf.proxy.getBoundingRadius()))
+			(new Matrix3(resources.viewSet.getCameraPose(0))
+				.times(new Vector3(this.resources.geometry.getBoundingRadius()))
 				.length() / Math.sqrt(3));
 		
 		Matrix4 lightProjection = Matrix4.perspective(2.0f * (float)Math.atan(radius / lightDist) /*1.5f*/, 1.0f, 
 				lightDist - radius,
 				lightDist + radius);
 		
-		Matrix4 lightMatrix = Matrix4.lookAt(lightPos, this.assets.ulf.proxy.getCentroid(), new Vector3(0.0f, 1.0f, 0.0f));
+		Matrix4 lightMatrix = Matrix4.lookAt(lightPos, this.resources.geometry.getCentroid(), new Vector3(0.0f, 1.0f, 0.0f));
 		
     	shadowProgram.setUniform("model_view", lightMatrix);
 		shadowProgram.setUniform("projection", lightProjection);
@@ -920,13 +864,13 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private Matrix4 getViewMatrix()
 	{
-    	float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length() 
-    			* this.boundingRadius / lightField.proxy.getBoundingRadius();
+    	float scale = new Vector3(resources.viewSet.getCameraPose(0).times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length() 
+    			* this.boundingRadius / resources.geometry.getBoundingRadius();
 		
 		return Matrix4.scale(scale)
     			.times(cameraController.getViewMatrix())
     			.times(Matrix4.scale(1.0f / scale))
-    			.times(new Matrix4(new Matrix3(lightField.viewSet.getCameraPose(0))))
+    			.times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0))))
     			.times(Matrix4.translate(this.centroid.negated()));
 	}
 	
@@ -938,13 +882,13 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	private Matrix4 getProjectionMatrix()
 	{
     	FramebufferSize size = context.getDefaultFramebuffer().getSize();
-		float scale = new Vector3(lightField.viewSet.getCameraPose(0).times(new Vector4(lightField.proxy.getCentroid(), 1.0f))).length()
-			* this.boundingRadius / lightField.proxy.getBoundingRadius();
+		float scale = new Vector3(resources.viewSet.getCameraPose(0).times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length()
+			* this.boundingRadius / resources.geometry.getBoundingRadius();
 		
 		return Matrix4.perspective(
     			//(float)(1.0),
-    			lightField.viewSet.getCameraProjection(
-    					lightField.viewSet.getCameraProjectionIndex(lightField.viewSet.getPrimaryViewIndex()))
+    			resources.viewSet.getCameraProjection(
+    					resources.viewSet.getCameraProjectionIndex(resources.viewSet.getPrimaryViewIndex()))
 					.getVerticalFieldOfView(), 
     			(float)size.width / (float)size.height, 
     			0.01f * scale, 100.0f * scale);
@@ -1078,7 +1022,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 
 			this.program.setUniform("imageBasedRenderingEnabled", false);
 			this.drawReferenceScene(this.program);
-			this.program.setUniform("imageBasedRenderingEnabled", this.lightField.settings.isIBREnabled());
+			this.program.setUniform("imageBasedRenderingEnabled", this.settings.isIBREnabled());
 			setupForRelighting(); // changed anything changed when drawing the reference scene.
 			
 			for (int modelInstance = 0; modelInstance < transformationMatrices.size(); modelInstance++)
@@ -1175,7 +1119,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	public void cleanup() 
 	{
 		// From old ULFRenderer
-		lightField.deleteOpenGLResources();
+		resources.deleteOpenGLResources();
     	
 		if (this.refScenePositions != null)
 		{
@@ -1214,10 +1158,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		}
 		
 		// New code
-		if (assets != null)
+		if (resources != null)
 		{
-			assets.deleteOpenGLResources();
-			assets = null;
+			resources.deleteOpenGLResources();
+			resources = null;
 		}
 		
 		if (shadowMaps != null)
@@ -1310,8 +1254,8 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		Files.copy(resampleVSETFile.toPath(), 
 			new File(resampleExportPath, resampleVSETFile.getName()).toPath(),
 			StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(lightField.viewSet.getGeometryFile().toPath(), 
-			new File(resampleExportPath, lightField.viewSet.getGeometryFile().getName()).toPath(),
+		Files.copy(resources.viewSet.getGeometryFile().toPath(), 
+			new File(resampleExportPath, resources.viewSet.getGeometryFile().getName()).toPath(),
 			StandardCopyOption.REPLACE_EXISTING);
 	}
 	
@@ -1319,11 +1263,11 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	{
 		this.setupForDraw(renderable.program());
     	
-    	renderable.program().setUniform("model_view", this.lightField.viewSet.getCameraPose(targetViewIndex));
-    	renderable.program().setUniform("viewPos", new Vector3(this.lightField.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3)));
+    	renderable.program().setUniform("model_view", this.resources.viewSet.getCameraPose(targetViewIndex));
+    	renderable.program().setUniform("viewPos", new Vector3(this.resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3)));
     	renderable.program().setUniform("projection", 
-    			this.lightField.viewSet.getCameraProjection(this.lightField.viewSet.getCameraProjectionIndex(targetViewIndex))
-				.getProjectionMatrix(this.lightField.viewSet.getRecommendedNearPlane(), this.lightField.viewSet.getRecommendedFarPlane()));
+    			this.resources.viewSet.getCameraProjection(this.resources.viewSet.getCameraProjectionIndex(targetViewIndex))
+				.getProjectionMatrix(this.resources.viewSet.getRecommendedNearPlane(), this.resources.viewSet.getRecommendedFarPlane()));
 
     	renderable.program().setUniform("targetViewIndex", targetViewIndex);
 		
@@ -1338,9 +1282,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	
     	viewIndexBuffer.delete();
 
-//	        if (activeViewCount == lightField.viewSet.getCameraPoseCount() - 1 /*&& this.lightField.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
+//	        if (activeViewCount == assets.viewSet.getCameraPoseCount() - 1 /*&& this.assets.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
 //	        {
-//		    	File fidelityImage = new File(new File(fidelityExportPath.getParentFile(), "debug"), this.lightField.viewSet.getImageFileName(i));
+//		    	File fidelityImage = new File(new File(fidelityExportPath.getParentFile(), "debug"), this.assets.viewSet.getImageFileName(i));
 //		        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
 //	        }
         	
@@ -1374,25 +1318,25 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		context.disableBackFaceCulling();
     	
     	Renderable<ContextType> renderable = context.createRenderable(fidelityProgram);
-    	renderable.addVertexBuffer("position", this.lightField.positionBuffer);
-    	renderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
-    	renderable.addVertexBuffer("normal", this.lightField.normalBuffer);
-    	renderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
+    	renderable.addVertexBuffer("position", this.resources.positionBuffer);
+    	renderable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+    	renderable.addVertexBuffer("normal", this.resources.normalBuffer);
+    	renderable.addVertexBuffer("tangent", this.resources.tangentBuffer);
     	setupForDraw(fidelityProgram);
     	
-    	Vector3[] viewDirections = new Vector3[this.lightField.viewSet.getCameraPoseCount()];
+    	Vector3[] viewDirections = new Vector3[this.resources.viewSet.getCameraPoseCount()];
     	
-    	for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
+    	for (int i = 0; i < this.resources.viewSet.getCameraPoseCount(); i++)
     	{
-    		viewDirections[i] = new Vector3(this.lightField.viewSet.getCameraPoseInverse(i).getColumn(3))
-    				.minus(this.lightField.proxy.getCentroid()).normalized();
+    		viewDirections[i] = new Vector3(this.resources.viewSet.getCameraPoseInverse(i).getColumn(3))
+    				.minus(this.resources.geometry.getCentroid()).normalized();
 		}
     	
-    	double[][] viewDistances = new double[this.lightField.viewSet.getCameraPoseCount()][this.lightField.viewSet.getCameraPoseCount()];
+    	double[][] viewDistances = new double[this.resources.viewSet.getCameraPoseCount()][this.resources.viewSet.getCameraPoseCount()];
     	
-    	for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
+    	for (int i = 0; i < this.resources.viewSet.getCameraPoseCount(); i++)
     	{
-    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+    		for (int j = 0; j < this.resources.viewSet.getCameraPoseCount(); j++)
     		{
     			viewDistances[i][j] = Math.acos(Math.max(-1.0, Math.min(1.0f, viewDirections[i].dot(viewDirections[j]))));
     		}
@@ -1404,22 +1348,22 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	
     	try(PrintStream out = new PrintStream(fidelityExportPath))
     	{
-    		double[] slopes = new double[this.lightField.viewSet.getCameraPoseCount()];
-    		double[] peaks = new double[this.lightField.viewSet.getCameraPoseCount()];
+    		double[] slopes = new double[this.resources.viewSet.getCameraPoseCount()];
+    		double[] peaks = new double[this.resources.viewSet.getCameraPoseCount()];
     		
-			this.callback.setMaximum(this.lightField.viewSet.getCameraPoseCount());
+			this.callback.setMaximum(this.resources.viewSet.getCameraPoseCount());
 			
 			new File(fidelityExportPath.getParentFile(), "debug").mkdir();
     		
-    		for (int i = 0; i < this.lightField.viewSet.getCameraPoseCount(); i++)
+    		for (int i = 0; i < this.resources.viewSet.getCameraPoseCount(); i++)
 			{
 		    	if (this.fidelitySetupCallback != null)
 	    		{
 		    		this.fidelitySetupCallback.accept(i);
 	    		}
     			
-    			System.out.println(this.lightField.viewSet.getImageFileName(i));
-    			out.print(this.lightField.viewSet.getImageFileName(i) + "\t");
+    			System.out.println(this.resources.viewSet.getImageFileName(i));
+    			out.print(this.resources.viewSet.getImageFileName(i) + "\t");
     			
     			double lastMinDistance = 0.0;
     			double minDistance;
@@ -1434,11 +1378,11 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     			
     			do 
     			{
-			    	IntVertexList viewIndexList = new IntVertexList(1, this.lightField.viewSet.getCameraPoseCount());
+			    	IntVertexList viewIndexList = new IntVertexList(1, this.resources.viewSet.getCameraPoseCount());
 			    	
 			    	activeViewCount = 0;
 			    	minDistance = Float.MAX_VALUE;
-			    	for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+			    	for (int j = 0; j < this.resources.viewSet.getCameraPoseCount(); j++)
 			    	{
 			    		if (i != j && viewDistances[i][j] > lastMinDistance)
 			    		{
@@ -1616,7 +1560,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 	        	{
 	    			targetDirections[i] = new Vector3(targetViewSet.getCameraPoseInverse(i).getColumn(3))
-	        				.minus(this.lightField.proxy.getCentroid()).normalized();
+	        				.minus(this.resources.geometry.getCentroid()).normalized();
 	    		}
 	    		
 	    		// Determine a function describing the error of each quadratic view by blending the slope and peak parameters from the known views.
@@ -1658,20 +1602,20 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     				targetDistances[i] = Double.MAX_VALUE;
 	    		}
 	    		
-	    		boolean[] originalUsed = new boolean[this.lightField.viewSet.getCameraPoseCount()];
+	    		boolean[] originalUsed = new boolean[this.resources.viewSet.getCameraPoseCount()];
 				
-				IntVertexList viewIndexList = new IntVertexList(1, this.lightField.viewSet.getCameraPoseCount());
+				IntVertexList viewIndexList = new IntVertexList(1, this.resources.viewSet.getCameraPoseCount());
 	    		int activeViewCount = 0;
 	    		
 	    		// Print views that are only in the original view set and NOT in the target view set
 	    		// This also initializes the distances for the target views.
-	    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+	    		for (int j = 0; j < this.resources.viewSet.getCameraPoseCount(); j++)
 	    		{
 	    			// First determine if the view is in the target view set
 	    			boolean found = false;
 	    			for (int i = 0; !found && i < targetViewSet.getCameraPoseCount(); i++)
 	    			{
-	    				if (targetViewSet.getImageFileName(i).contains(this.lightField.viewSet.getImageFileName(j).split("\\.")[0]))
+	    				if (targetViewSet.getImageFileName(i).contains(this.resources.viewSet.getImageFileName(j).split("\\.")[0]))
 	    				{
 	    					found = true;
 	    				}
@@ -1681,7 +1625,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    			{
 	    				// If it isn't, then print it to the file
 	    				originalUsed[j] = true;
-	    				out.print(this.lightField.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t" + 
+	    				out.print(this.resources.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t" + 
 	    						calculateError(renderable, framebuffer, viewIndexList, j, activeViewCount) + "\t");
 
 	    				viewIndexList.set(activeViewCount, 0, j);
@@ -1689,7 +1633,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 
 			    		double cumError = 0.0;
 			    		
-			    		for (int k = 0; k < this.lightField.viewSet.getCameraPoseCount(); k++)
+			    		for (int k = 0; k < this.resources.viewSet.getCameraPoseCount(); k++)
 			    		{
 			    			if (!originalUsed[k])
 			    			{
@@ -1731,7 +1675,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    		boolean[] targetUsed = new boolean[targetErrors.length];
 
 	    		int unusedOriginalViews = 0;
-	    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+	    		for (int j = 0; j < this.resources.viewSet.getCameraPoseCount(); j++)
 	    		{
 	    			if (!originalUsed[j])
 	    			{
@@ -1750,9 +1694,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    			// Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
 		    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 		    		{
-	    	    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++) 
+	    	    		for (int j = 0; j < this.resources.viewSet.getCameraPoseCount(); j++) 
 		    			{
-		    				if (targetViewSet.getImageFileName(i).contains(this.lightField.viewSet.getImageFileName(j).split("\\.")[0]))
+		    				if (targetViewSet.getImageFileName(i).contains(this.resources.viewSet.getImageFileName(j).split("\\.")[0]))
 		    				{
 		    					// Can't be previously used and must have more error than any other view
 				    			if (!originalUsed[j] && targetErrors[i] > maxError)
@@ -1811,7 +1755,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    			
 	    			// Count how many views from the original view set haven't been used.
 	    			unusedOriginalViews = 0;
-		    		for (int j = 0; j < this.lightField.viewSet.getCameraPoseCount(); j++)
+		    		for (int j = 0; j < this.resources.viewSet.getCameraPoseCount(); j++)
 		    		{
 		    			if (!originalUsed[j])
 		    			{
@@ -1919,10 +1863,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 					.createFramebufferObject();
 	    	
 	    	Renderable<ContextType> renderable = context.createRenderable(btfProgram);
-	    	renderable.addVertexBuffer("position", this.lightField.positionBuffer);
-	    	renderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
-	    	renderable.addVertexBuffer("normal", this.lightField.normalBuffer);
-	    	renderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
+	    	renderable.addVertexBuffer("position", this.resources.positionBuffer);
+	    	renderable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+	    	renderable.addVertexBuffer("normal", this.resources.normalBuffer);
+	    	renderable.addVertexBuffer("tangent", this.resources.tangentBuffer);
 	    	
 	    	this.setupForDraw(btfProgram);
 	    	this.setupForRelighting(btfProgram);
@@ -1983,19 +1927,19 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	@Override
 	public VertexMesh getActiveProxy()
 	{
-		return this.assets.ulf.proxy;
+		return this.resources.geometry;
 	}
 	
 	@Override
 	public ViewSet<ContextType> getActiveViewSet()
 	{
-		return this.assets.ulf.viewSet;
+		return this.resources.viewSet;
 	}
 
 	@Override
 	public IBRSettings settings()
 	{
-		return this.lightField.settings;
+		return this.settings;
 	}
 
 	@Override
@@ -2055,21 +1999,21 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		this.program = program;
 		
 		this.mainRenderable = context.createRenderable(program);
-    	this.mainRenderable.addVertexBuffer("position", this.lightField.positionBuffer);
+    	this.mainRenderable.addVertexBuffer("position", this.resources.positionBuffer);
     	
-    	if (this.lightField.normalBuffer != null)
+    	if (this.resources.normalBuffer != null)
     	{
-    		this.mainRenderable.addVertexBuffer("normal", this.lightField.normalBuffer);
+    		this.mainRenderable.addVertexBuffer("normal", this.resources.normalBuffer);
     	}
     	
-    	if (this.lightField.texCoordBuffer != null)
+    	if (this.resources.texCoordBuffer != null)
     	{
-    		this.mainRenderable.addVertexBuffer("texCoord", this.lightField.texCoordBuffer);
+    		this.mainRenderable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
     	}
     	
-    	if (this.lightField.texCoordBuffer != null)
+    	if (this.resources.texCoordBuffer != null)
     	{
-    		this.mainRenderable.addVertexBuffer("tangent", this.lightField.tangentBuffer);
+    		this.mainRenderable.addVertexBuffer("tangent", this.resources.tangentBuffer);
     	}
     	
 		suppressErrors = false;
@@ -2093,7 +2037,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	@Override
 	public String toString()
 	{
-		return this.lightField.toString();
+		return this.cameraFile.getPath().length() > 32 
+				? "..." + this.cameraFile.getPath().substring(this.cameraFile.getPath().length()-31, this.cameraFile.getPath().length()) 
+				: this.cameraFile.getPath();
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -38,12 +39,10 @@ import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.Vector4;
 
 /**
- * A class for organizing the GL resources that are necessary for view-dependent rendering.
+ * A class representing a collection of photographs, or views.
  * @author Michael Tetzlaff
- *
- * @param <ContextType> The type of the context that the GL resources for this view set are to be used with.
  */
-public class ViewSet<ContextType extends Context<ContextType>>
+public class ViewSet
 {
 	/**
 	 * A list of camera poses defining the transformation from object space to camera space for each view.
@@ -91,14 +90,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 */
 	private List<String> imageFileNames;
 	
-	private List<Vector3> absoluteLightPositionList;
-	private List<Vector3> absoluteLightIntensityList;
-	private List<Matrix4> secondaryCameraPoseList;
-	private List<Matrix4> secondaryCameraPoseInvList;
-	private List<Integer> secondaryCameraProjectionIndexList;
-	private List<Integer> secondaryLightIndexList;
-	private List<String> secondaryImageFileNames;
-	
 	/**
 	 * The absolute file path to be used for loading all resources.
 	 */
@@ -130,53 +121,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	private float gamma;
 	
 	/**
-	 * A GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
-	 * These are necessary to perform projective texture mapping.
-	 */
-	private UniformBuffer<ContextType> cameraPoseBuffer;
-	
-	/**
-	 * A GPU buffer containing projection transformations defining the intrinsic properties of each camera.
-	 */
-	private UniformBuffer<ContextType> cameraProjectionBuffer;
-	
-	/**
-	 * A GPU buffer containing for every view an index designating the projection transformation that should be used for each view.
-	 */
-	private UniformBuffer<ContextType> cameraProjectionIndexBuffer;
-	
-	/**
-	 * A GPU buffer containing light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-	 * Assumed by convention to be in camera space.
-	 */
-	private UniformBuffer<ContextType> lightPositionBuffer;
-	
-	/**
-	 * A GPU buffer containing light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-	 */
-	private UniformBuffer<ContextType> lightIntensityBuffer;
-	
-	/**
-	 * A GPU buffer containing for every view an index designating the light source position and intensity that should be used for each view.
-	 */
-	private UniformBuffer<ContextType> lightIndexBuffer;
-	
-	/**
-	 * A texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
-	 */
-	private Texture3D<ContextType> textureArray;
-	
-	/**
-	 * A 1D texture defining how encoded RGB values should be converted to linear luminance.
-	 */
-	private Texture1D<ContextType> luminanceMap;
-	
-	/**
-	 * A 1D texture defining how encoded RGB values should be converted to linear luminance.
-	 */
-	private Texture1D<ContextType> inverseLuminanceMap;
-	
-	/**
 	 * The recommended near plane to use when rendering this view set.
 	 */
 	private float recommendedNearPlane;
@@ -190,6 +134,14 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	 * The index of the view that sets the initial orientation when viewing, is used for color calibration, etc.
 	 */
 	private int primaryViewIndex = 0;
+	
+	private FloatVertexList cameraPoseData;
+	private FloatVertexList cameraProjectionData;
+	private IntVertexList cameraProjectionIndexData;
+	private FloatVertexList lightPositionData;
+	private FloatVertexList lightIntensityData;
+	private IntVertexList lightIndexData;
+	private SampledLuminanceEncoding luminanceEncoding;
 	
 	/**
 	 * Creates a new view set object, allocating and initializing GPU resources as appropriate.
@@ -223,23 +175,13 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<Vector3> lightIntensityList,
 		List<Integer> lightIndexList,
 		List<String> imageFileNames, 
-		List<Vector3> absoluteLightPositionList,
-		List<Vector3> absoluteLightIntensityList,
-		List<Matrix4> secondaryCameraPoseList,
-		List<Matrix4> secondaryCameraPoseInvList,
-		List<Integer> secondaryCameraProjectionIndexList,
-		List<Integer> secondaryLightIndexList,
-		List<String> secondaryImageFileNames, 
-		ViewSetImageOptions imageOptions,
 		String imagePathName,
 		String geometryFileName,
 		float gamma,
 		double[] linearLuminanceValues,
 		byte[] encodedLuminanceValues,
 		float recommendedNearPlane,
-		float recommendedFarPlane,
-		ContextType context,
-		IBRLoadingMonitor loadingCallback) throws IOException
+		float recommendedFarPlane) throws IOException
 	{
 		this.cameraPoseList = cameraPoseList;
 		this.cameraPoseInvList = cameraPoseInvList;
@@ -248,384 +190,171 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		this.lightPositionList = lightPositionList;
 		this.lightIntensityList = lightIntensityList;
 		this.lightIndexList = lightIndexList;
-		this.absoluteLightPositionList = absoluteLightPositionList;
-		this.absoluteLightIntensityList = absoluteLightIntensityList;
-		this.secondaryCameraPoseList = secondaryCameraPoseList;
-		this.secondaryCameraPoseInvList = secondaryCameraPoseInvList;
-		this.secondaryCameraProjectionIndexList = secondaryCameraProjectionIndexList;
-		this.secondaryLightIndexList = secondaryLightIndexList;
-		this.secondaryImageFileNames = secondaryImageFileNames;
 		this.imageFileNames = imageFileNames;
 		this.geometryFileName = geometryFileName;
 		this.recommendedNearPlane = recommendedNearPlane;
 		this.recommendedFarPlane = recommendedFarPlane;
 		this.gamma = gamma;
-
+		
+		// Store the poses in a uniform buffer
+		if (cameraPoseList != null && cameraPoseList.size() > 0)
+		{
+			// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
+			this.cameraPoseData = new FloatVertexList(16, cameraPoseList.size());
+			
+			for (int k = 0; k < cameraPoseList.size(); k++)
+			{
+				int d = 0;
+				for (int col = 0; col < 4; col++) // column
+				{
+					for (int row = 0; row < 4; row++) // row
+					{
+						cameraPoseData.set(k, d, cameraPoseList.get(k).get(row, col));
+						d++;
+					}
+				}
+			}
+		}
+		
+		// Store the camera projections in a uniform buffer
+		if (cameraProjectionList != null && cameraProjectionList.size() > 0)
+		{
+			// Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
+			this.cameraProjectionData = new FloatVertexList(16, cameraProjectionList.size());
+			
+			for (int k = 0; k < cameraProjectionList.size(); k++)
+			{
+				int d = 0;
+				for (int col = 0; col < 4; col++) // column
+				{
+					for (int row = 0; row < 4; row++) // row
+					{
+						Matrix4 projection = cameraProjectionList.get(k).getProjectionMatrix(recommendedNearPlane, recommendedFarPlane);
+						cameraProjectionData.set(k, d, projection.get(row, col));
+						d++;
+					}
+				}
+			}
+		}
+		
+		// Store the camera projection indices in a uniform buffer
+		if (cameraProjectionIndexList != null && cameraProjectionIndexList.size() > 0)
+		{
+			int[] indexArray = new int[cameraProjectionIndexList.size()];
+			for (int i = 0; i < indexArray.length; i++)
+			{
+				indexArray[i] = cameraProjectionIndexList.get(i);
+			}
+			this.cameraProjectionIndexData = new IntVertexList(1, cameraProjectionIndexList.size(), indexArray);
+		}
+		
+		// Store the light positions in a uniform buffer
+		if (lightPositionList != null && lightPositionList.size() > 0)
+		{
+			this.lightPositionData = new FloatVertexList(4, lightPositionList.size());
+			for (int k = 0; k < lightPositionList.size(); k++)
+			{
+				lightIntensityData.set(k, 0, lightPositionList.get(k).x);
+				lightIntensityData.set(k, 1, lightPositionList.get(k).y);
+				lightIntensityData.set(k, 2, lightPositionList.get(k).z);
+				lightIntensityData.set(k, 3, 1.0f);
+			}
+		}
+		
+		// Store the light positions in a uniform buffer
+		if (lightIntensityList != null && lightIntensityList.size() > 0)
+		{
+			this.lightIntensityData = new FloatVertexList(4, lightIntensityList.size());
+			for (int k = 0; k < lightPositionList.size(); k++)
+			{
+				lightIntensityData.set(k, 0, lightIntensityList.get(k).x);
+				lightIntensityData.set(k, 1, lightIntensityList.get(k).y);
+				lightIntensityData.set(k, 2, lightIntensityList.get(k).z);
+				lightIntensityData.set(k, 3, 1.0f);
+			}
+		}
+		
+		// Store the light indices indices in a uniform buffer
+		if (lightIndexList != null && lightIndexList.size() > 0)
+		{
+			int[] indexArray = new int[lightIndexList.size()];
+			for (int i = 0; i < indexArray.length; i++)
+			{
+				indexArray[i] = lightIndexList.get(i);
+			}
+			this.lightIndexData = new IntVertexList(1, lightIndexList.size(), indexArray);
+		}
+		
 		if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
 		{
 			this.linearLuminanceValues = linearLuminanceValues;
 			this.encodedLuminanceValues = encodedLuminanceValues;
+			this.luminanceEncoding = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
 		}
 		
 		if (imageOptions != null)
 		{
-			this.filePath = imageOptions.getFilePath();
+			this.filePath = imageOptions.getFilePathOverride();
 		}
 		
 		this.relativeImagePath = imagePathName;
-		
-		if (context != null)
-		{
-			// Store the poses in a uniform buffer
-			if (cameraPoseList != null && cameraPoseList.size() > 0)
-			{
-				// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-				FloatVertexList flattenedPoseMatrices = new FloatVertexList(16, cameraPoseList.size());
-				
-				for (int k = 0; k < cameraPoseList.size(); k++)
-				{
-					int d = 0;
-					for (int col = 0; col < 4; col++) // column
-					{
-						for (int row = 0; row < 4; row++) // row
-						{
-							flattenedPoseMatrices.set(k, d, cameraPoseList.get(k).get(row, col));
-							d++;
-						}
-					}
-				}
-				
-				// Create the uniform buffer
-				cameraPoseBuffer = context.createUniformBuffer().setData(flattenedPoseMatrices);
-			}
-			
-			// Store the camera projections in a uniform buffer
-			if (cameraProjectionList != null && cameraProjectionList.size() > 0)
-			{
-				// Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
-				FloatVertexList flattenedProjectionMatrices = new FloatVertexList(16, cameraProjectionList.size());
-				
-				for (int k = 0; k < cameraProjectionList.size(); k++)
-				{
-					int d = 0;
-					for (int col = 0; col < 4; col++) // column
-					{
-						for (int row = 0; row < 4; row++) // row
-						{
-							Matrix4 projection = cameraProjectionList.get(k).getProjectionMatrix(recommendedNearPlane, recommendedFarPlane);
-							flattenedProjectionMatrices.set(k, d, projection.get(row, col));
-							d++;
-						}
-					}
-				}
-				
-				// Create the uniform buffer
-				cameraProjectionBuffer = context.createUniformBuffer().setData(flattenedProjectionMatrices);
-			}
-			
-			// Store the camera projection indices in a uniform buffer
-			if (cameraProjectionIndexList != null && cameraProjectionIndexList.size() > 0)
-			{
-				int[] indexArray = new int[cameraProjectionIndexList.size()];
-				for (int i = 0; i < indexArray.length; i++)
-				{
-					indexArray[i] = cameraProjectionIndexList.get(i);
-				}
-				IntVertexList indexVertexList = new IntVertexList(1, cameraProjectionIndexList.size(), indexArray);
-				cameraProjectionIndexBuffer = context.createUniformBuffer().setData(indexVertexList);
-			}
-			
-			// Store the light positions in a uniform buffer
-			if (lightPositionList != null && lightPositionList.size() > 0)
-			{
-				FloatVertexList lightPositions = new FloatVertexList(4, lightPositionList.size());
-				for (int k = 0; k < lightPositionList.size(); k++)
-				{
-					lightPositions.set(k, 0, lightPositionList.get(k).x);
-					lightPositions.set(k, 1, lightPositionList.get(k).y);
-					lightPositions.set(k, 2, lightPositionList.get(k).z);
-					lightPositions.set(k, 3, 1.0f);
-				}
-				
-				// Create the uniform buffer
-				lightPositionBuffer = context.createUniformBuffer().setData(lightPositions);
-			}
-			
-			// Store the light positions in a uniform buffer
-			if (lightIntensityList != null && lightIntensityList.size() > 0)
-			{
-				FloatVertexList lightIntensities = new FloatVertexList(4, lightIntensityList.size());
-				for (int k = 0; k < lightPositionList.size(); k++)
-				{
-					lightIntensities.set(k, 0, lightIntensityList.get(k).x);
-					lightIntensities.set(k, 1, lightIntensityList.get(k).y);
-					lightIntensities.set(k, 2, lightIntensityList.get(k).z);
-					lightIntensities.set(k, 3, 1.0f);
-				}
-				
-				// Create the uniform buffer
-				lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensities);
-			}
-			
-			// Store the light indices indices in a uniform buffer
-			if (lightIndexList != null && lightIndexList.size() > 0)
-			{
-				int[] indexArray = new int[lightIndexList.size()];
-				for (int i = 0; i < indexArray.length; i++)
-				{
-					indexArray[i] = lightIndexList.get(i);
-				}
-				IntVertexList indexVertexList = new IntVertexList(1, lightIndexList.size(), indexArray);
-				lightIndexBuffer = context.createUniformBuffer().setData(indexVertexList);
-			}
-			
-			// Luminance map texture
-			if (this.linearLuminanceValues != null && this.encodedLuminanceValues != null)
-			{
-				luminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues).createLuminanceMap(context);
-				inverseLuminanceMap = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues).createInverseLuminanceMap(context);
-			}
-			
-			// Read the images from a file
-			if (imageOptions != null && imageOptions.isLoadingRequested() && imageOptions.getFilePath() != null && imageFileNames != null && imageFileNames.size() > 0)
-			{
-				Date timestamp = new Date();
-				File imageFile = this.getImageFile(0);
-	
-				if (!imageFile.exists())
-				{
-					// Try some alternate file formats/extensions
-					String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
-					for(final String extension : altFormats)
-					{
-						String[] filenameParts = imageFileNames.get(0).split("\\.");
-				    	filenameParts[filenameParts.length - 1] = extension;
-				    	String altFileName = String.join(".", filenameParts);
-				    	File imageFileGuess = new File(imageFile.getParentFile(), altFileName);					
-				    	
-				    	System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
-				    	if (imageFileGuess.exists())
-				    	{
-					    	System.out.printf("Found!!\n");
-				    		imageFile = imageFileGuess;
-				    		break;
-				    	}
-					}
-	
-					// Is it still not there?
-					if (!imageFile.exists())
-			    	{
-			    		throw new FileNotFoundException(
-			    				String.format("'%s' not found.", imageFileNames.get(0)));
-			    	}
-				}
-				
-				// Read a single image to get the dimensions for the texture array
-				InputStream input = new FileInputStream(imageFile); // myZip.retrieveFile(imageFile);
-				BufferedImage img = ImageIO.read(input);
-				if(img == null)
-				{
-					throw new IOException(String.format("Error: Unsupported image format '%s'.",
-							imageFileNames.get(0)));				
-				}
-				input.close();
-	
-				ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder = 
-						context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), imageFileNames.size());
-				
-				if (imageOptions.isCompressionRequested())
-				{
-					textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
-				}
-				else
-				{
-					textureArrayBuilder.setInternalFormat(ColorFormat.RGBA8);
-				}
-				
-				if (imageOptions.areMipmapsRequested())
-				{
-					textureArrayBuilder.setMipmapsEnabled(true);
-				}
-				else
-				{
-					textureArrayBuilder.setMipmapsEnabled(false);
-				}
-				
-				textureArrayBuilder.setLinearFilteringEnabled(true);
-				textureArrayBuilder.setMaxAnisotropy(16.0f);
-				textureArray = textureArrayBuilder.createTexture();
-				
-				if(loadingCallback != null) 
-				{
-					loadingCallback.setMaximum(imageFileNames.size());
-				}
-	
-				for (int i = 0; i < imageFileNames.size(); i++)
-				{
-					imageFile = getImageFile(i);
-					if (!imageFile.exists())
-					{
-						// Try some alternate file formats/extensions
-						String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
-						for(final String extension : altFormats)
-						{
-							String[] filenameParts = imageFileNames.get(i).split("\\.");
-					    	filenameParts[filenameParts.length - 1] = extension;
-					    	String altFileName = String.join(".", filenameParts);
-					    	File imageFileGuess = new File(imageFile.getParentFile(), altFileName);
-	
-					    	if (imageFileGuess.exists())
-					    	{
-					    		imageFile = imageFileGuess;
-					    		break;
-					    	}
-						}
-	
-						// Is it still not there?
-						if (!imageFile.exists())
-				    	{
-				    		throw new FileNotFoundException(
-				    				String.format("'%s' not found.", imageFileNames.get(i)));
-				    	}
-					}
-					
-					this.textureArray.loadLayer(i, imageFile, true);
-	
-					if(loadingCallback != null) 
-					{
-						loadingCallback.setProgress(i+1);
-					}
-				}
-	
-				System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-			}
-		}
 	}
 	
-	/**
-	 * Deletes all the GL resources associated with this view set.
-	 * Attempting to use these resources after calling this method will have undefined results.
-	 */
-	public void deleteOpenGLResources()
+	public FloatVertexList getCameraPoseData() 
 	{
-		if (cameraPoseBuffer != null)
-		{
-			cameraPoseBuffer.delete();
-		}
-		
-		if (cameraProjectionBuffer != null)
-		{
-			cameraProjectionBuffer.delete();
-		}
-		
-		if (cameraProjectionIndexBuffer != null)
-		{
-			cameraProjectionIndexBuffer.delete();
-		}
-		
-		if (lightPositionBuffer != null)
-		{
-			lightPositionBuffer.delete();
-		}
-		
-		if (lightIntensityBuffer != null)
-		{
-			lightIntensityBuffer.delete();
-		}
-		
-		if (lightIndexBuffer != null)
-		{
-			lightIndexBuffer.delete();
-		}
-		
-		if (textureArray != null)
-		{
-			textureArray.delete();
-		}
-	}
-	
-	/**
-	 * Loads a VSET file but does not create any GPU resources.
-	 * @param vsetFile The VSET file to load.
-	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown due to a File I/O error occurring.
-	 */
-	public static ViewSet<NullContext> loadFromVSETFile(File vsetFile) throws IOException
-	{
-		return ViewSet.loadFromVSETFile(vsetFile, null);
-	}
-	
-	/**
-	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
-	 * @param vsetFile The VSET file to load.
-	 * @param context The GL context in which to create the resources.
-	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown due to a File I/O error occurring.
-	 */
-	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(
-			File vsetFile, ContextType context) throws IOException
-	{
-		return ViewSet.loadFromVSETFile(vsetFile, context, null);
+		return this.cameraPoseData;
 	}
 
-	/**
-	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
-	 * @param vsetFile The VSET file to load.
-	 * @param context The GL context in which to create the resources.
-	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
-	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown due to a File I/O error occurring.
-	 */
-	public static <ContextType extends Context<ContextType>>  ViewSet<ContextType> loadFromVSETFile(
-			File vsetFile, ContextType context, IBRLoadingMonitor loadingCallback) throws IOException
+	public FloatVertexList getCameraProjectionData() 
 	{
-		return ViewSet.loadFromVSETFile(vsetFile, new ViewSetImageOptions(null, false, false, false), context, loadingCallback);
-	}
-	
-	/**
-	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
-	 * @param vsetFile The VSET file to load.
-	 * @param imageOptions The requested options for loading the images in this dataset. 
-	 * @param context The GL context in which to create the resources.
-	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown due to a File I/O error occurring.
-	 */
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
-			File vsetFile, ViewSetImageOptions imageOptions, ContextType context) throws IOException
-	{
-		return ViewSet.loadFromVSETFile(vsetFile, imageOptions, context, null);
+		return this.cameraProjectionData;
 	}
 
+	public IntVertexList getCameraProjectionIndexData() 
+	{
+		return this.cameraProjectionIndexData;
+	}
+
+	public FloatVertexList getLightPositionData() 
+	{
+		return this.lightPositionData;
+	}
+
+	public FloatVertexList getLightIntensityData() 
+	{
+		return this.lightIntensityData;
+	}
+
+	public IntVertexList getLightIndexData() 
+	{
+		return this.lightIndexData;
+	}
+
+	public SampledLuminanceEncoding getLuminanceEncoding() 
+	{
+		return luminanceEncoding;
+	}
 	/**
-	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * Loads a VSET file and creates a corresponding ViewSet object.
 	 * @param vsetFile The VSET file to load.
-	 * @param imageOptions The requested options for loading the images in this dataset. 
-	 * @param context The GL context in which to create the resources.
-	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
 	 * @return The newly created ViewSet object.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
-			File vsetFile, ViewSetImageOptions imageOptions, ContextType context, IBRLoadingMonitor loadingCallback) throws IOException
+	public static ViewSet loadFromVSETFile(File vsetFile) throws IOException
 	{
-		return loadFromVSETFile(vsetFile, imageOptions, 2.2f, null, null, context, loadingCallback);
+		return loadFromVSETFile(vsetFile, 2.2f, null, null);
 	}
 	
 	/**
-	 * Loads a VSET file and creates and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * Loads a VSET file and creates a corresponding ViewSet object.
 	 * @param vsetFile The VSET file to load.
-	 * @param imageOptions The requested options for loading the images in this dataset. 
 	 * @param gamma The exponential parameter of the gamma curve used for tonemapping.
 	 * @param linearLuminanceValues Calibrated luminance levels in a linear space between 0.0 and 1.0
 	 * @param encodedLuminanceValues The 8-bit values that the calibrated luminance levels are mapped to, between 0 and 255 - values are treated as unsigned bytes.
-	 * @param context The GL context in which to create the resources.
-	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
 	 * @return The newly created ViewSet object.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromVSETFile(
-			File vsetFile, ViewSetImageOptions imageOptions, float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues,
-			ContextType context, IBRLoadingMonitor loadingCallback) throws IOException
+	public static ViewSet loadFromVSETFile(File vsetFile, float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues) throws IOException
 	{
 		Date timestamp = new Date();
 		
@@ -644,14 +373,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		List<String> imageFileNames = new ArrayList<String>();
 		List<Double> linearLuminanceList = new ArrayList<Double>();
 		List<Byte> encodedLuminanceList = new ArrayList<Byte>();
-
-		List<Vector3> absoluteLightPositionList = new ArrayList<Vector3>();
-		List<Vector3> absoluteLightIntensityList = new ArrayList<Vector3>();
-		List<Matrix4> secondaryCameraPoseList = new ArrayList<Matrix4>();
-		List<Matrix4> secondaryCameraPoseInvList = new ArrayList<Matrix4>();
-		List<Integer> secondaryCameraProjectionIndexList = new ArrayList<Integer>();
-		List<Integer> secondaryLightIndexList = new ArrayList<Integer>();
-		List<String> secondaryImageFileNames = new ArrayList<String>();
 		
 		String meshFileName = "manifold.obj";
 		String relativeImageFilePath = null;
@@ -795,22 +516,7 @@ public class ViewSet<ContextType extends Context<ContextType>>
 						scanner.nextLine();
 						break;
 					}
-					case "L":
-					{
-						float x = scanner.nextFloat();
-						float y = scanner.nextFloat();
-						float z = scanner.nextFloat();
-						absoluteLightPositionList.add(new Vector3(x, y, z));
-						
-						float r = scanner.nextFloat();
-						float g = scanner.nextFloat();
-						float b = scanner.nextFloat();
-						absoluteLightIntensityList.add(new Vector3(r, g, b));
-		
-						// Skip the rest of the line
-						scanner.nextLine();
-						break;
-					}
+					
 					case "v":
 					{
 						int poseId = scanner.nextInt();
@@ -826,21 +532,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 						imageFileNames.add(imgFilename);
 						break;
 					}
-					case "V":
-					{
-						int poseId = scanner.nextInt();
-						int projectionId = scanner.nextInt();
-						int lightId = scanner.nextInt();
-						
-						String imgFilename = scanner.nextLine().trim();
-						
-						secondaryCameraPoseList.add(cameraPoseList.get(poseId));
-						secondaryCameraPoseInvList.add(cameraPoseInvList.get(poseId));
-						secondaryCameraProjectionIndexList.add(projectionId);
-						secondaryLightIndexList.add(lightId);
-						secondaryImageFileNames.add(imgFilename);
-						break;
-					}
 					default:
 						// Skip unrecognized line
 						scanner.nextLine();
@@ -848,9 +539,9 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			}
 		}
 			
-		if (imageOptions != null && imageOptions.getFilePath() == null)
+		if (imageOptions != null && imageOptions.getFilePathOverride() == null)
 		{
-			imageOptions.setFilePath(vsetFile.getParentFile());
+			imageOptions.setFilePathOverride(vsetFile.getParentFile());
 		}
 		
 		double[] linearLuminance;
@@ -879,13 +570,11 @@ public class ViewSet<ContextType extends Context<ContextType>>
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
 		
-		return new ViewSet<ContextType>(
+		return new ViewSet(
 			orderedCameraPoseList, orderedCameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, 
 			lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
-			absoluteLightPositionList, absoluteLightIntensityList, secondaryCameraPoseList, secondaryCameraPoseInvList, 
-			secondaryCameraProjectionIndexList, secondaryLightIndexList, secondaryImageFileNames,
-			imageOptions, relativeImageFilePath, meshFileName, recommendedGamma, linearLuminance, encodedLuminance,
-			recommendedNearPlane, recommendedFarPlane, context, loadingCallback);
+			relativeImageFilePath, meshFileName, recommendedGamma, linearLuminance, encodedLuminance,
+			recommendedNearPlane, recommendedFarPlane);
 	}
 	
 	/**
@@ -956,60 +645,26 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	}
 
 	/**
-	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan but does not create any GPU resources.
+	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan.
 	 * @param file The Agisoft PhotoScan XML camera file to load.
 	 * @return The newly created ViewSet object.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	public static ViewSet<NullContext> loadFromAgisoftXMLFile(File file) throws IOException
+	public static ViewSet loadFromAgisoftXMLFile(File file) throws IOException
 	{
-		return loadFromAgisoftXMLFile(file, null, null);
-	}
-
-	/**
-	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan and initializes a corresponding ViewSet object with all associated GPU resources.
-	 * @param file The Agisoft PhotoScan XML camera file to load.
-	 * @param imageOptions The requested options for loading the images in this dataset. 
-	 * @param context The GL context in which to create the resources.
-	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown due to a File I/O error occurring.
-	 */
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
-			File file, ViewSetImageOptions imageOptions, ContextType context) throws IOException
-	{
-		return loadFromAgisoftXMLFile(file, imageOptions, context, null);
-	}
-
-	/**
-	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan and initializes a corresponding ViewSet object with all associated GPU resources.
-	 * @param file The Agisoft PhotoScan XML camera file to load.
-	 * @param imageOptions The requested options for loading the images in this dataset. 
-	 * @param context The GL context in which to create the resources.
-	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
-	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown due to a File I/O error occurring.
-	 */
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
-			File file, ViewSetImageOptions imageOptions, ContextType context, IBRLoadingMonitor loadingCallback) throws IOException
-	{
-		return loadFromAgisoftXMLFile(file, imageOptions, 2.2f, null, null, context, loadingCallback);
+		return loadFromAgisoftXMLFile(file, 2.2f, null, null);
 	}
 	
 	/**
-	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan and initializes a corresponding ViewSet object with all associated GPU resources.
+	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan.
 	 * @param file The Agisoft PhotoScan XML camera file to load.
-	 * @param imageOptions The requested options for loading the images in this dataset. 
 	 * @param gamma The exponential parameter of the gamma curve used for tonemapping.
 	 * @param linearLuminanceValues Calibrated luminance levels in a linear space between 0.0 and 1.0
 	 * @param encodedLuminanceValues The 8-bit values that the calibrated luminance levels are mapped to, between 0 and 255 - values are treated as unsigned bytes.
-	 * @param context The GL context in which to create the resources.
-	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
 	 * @return The newly created ViewSet object.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	public static <ContextType extends Context<ContextType>> ViewSet<ContextType> loadFromAgisoftXMLFile(
-		File file, ViewSetImageOptions imageOptions, float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues,
-		ContextType context, IBRLoadingMonitor loadingCallback) throws IOException
+	public static ViewSet loadFromAgisoftXMLFile(File file, float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues) throws IOException
 	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
@@ -1459,21 +1114,10 @@ public class ViewSet<ContextType extends Context<ContextType>>
         float farPlane = findFarPlane(cameraPoseInvList);
         System.out.println("Near and far planes: " + (farPlane/32.0f) + ", " + (farPlane));
         
-        // Not used
-		List<Vector3> absoluteLightPositionList = new ArrayList<Vector3>();
-		List<Vector3> absoluteLightIntensityList = new ArrayList<Vector3>();
-		List<Matrix4> secondaryCameraPoseList = new ArrayList<Matrix4>();
-		List<Matrix4> secondaryCameraPoseInvList = new ArrayList<Matrix4>();
-		List<Integer> secondaryCameraProjectionIndexList = new ArrayList<Integer>();
-		List<Integer> secondaryLightIndexList = new ArrayList<Integer>();
-		List<String> secondaryImageFileNames = new ArrayList<String>();
-        
-        return new ViewSet<ContextType>(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, 
+        return new ViewSet(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, 
     		lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
-    		absoluteLightPositionList, absoluteLightIntensityList, secondaryCameraPoseList, secondaryCameraPoseInvList, 
-    		secondaryCameraProjectionIndexList, secondaryLightIndexList, secondaryImageFileNames,
-    		imageOptions, null, null, gamma, linearLuminanceValues, encodedLuminanceValues, 
-    		farPlane / 32.0f, farPlane, context, loadingCallback);
+    		null, null, gamma, linearLuminanceValues, encodedLuminanceValues, 
+    		farPlane / 32.0f, farPlane);
     }
 	
 	/**
@@ -1584,6 +1228,8 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	    
 	    out.close();
     }
+    
+    
 
 	/**
 	 * Gets the camera pose defining the transformation from object space to camera space for a particular view.
@@ -1603,6 +1249,24 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	public Matrix4 getCameraPoseInverse(int poseIndex) 
 	{
 		return this.cameraPoseInvList.get(poseIndex);
+	}
+	
+	/**
+	 * Gets the root file path for this view set.
+	 * @return The file path.
+	 */
+	public File getFilePath()
+	{
+		return this.filePath;
+	}
+	
+	/**
+	 * Sets the root file path for this view set.
+	 * @param filePath The file path.
+	 */
+	public void setFilePath(File filePath)
+	{
+		this.filePath = filePath;
 	}
 	
 	/**
@@ -1793,89 +1457,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	{
 		return this.lightPositionList.size();
 	}
-	
-	/**
-	 * Gets a GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
-	 * These are necessary to perform projective texture mapping.
-	 * @return The requested uniform buffer.
-	 */
-	public UniformBuffer<ContextType> getCameraPoseBuffer()
-	{
-		return this.cameraPoseBuffer;
-	}
-	
-	/**
-	 * Gets a GPU buffer containing projection transformations defining the intrinsic properties of each camera.
-	 * @return The requested uniform buffer.
-	 */
-	public UniformBuffer<ContextType> getCameraProjectionBuffer()
-	{
-		return this.cameraProjectionBuffer;
-	}
-	
-	/**
-	 * Gets a GPU buffer containing for every view an index designating the projection transformation that should be used for each view.
-	 * @return The requested uniform buffer.
-	 */
-	public UniformBuffer<ContextType> getCameraProjectionIndexBuffer()
-	{
-		return this.cameraProjectionIndexBuffer;
-	}
-	
-	/**
-	 * Gets a GPU buffer containing light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-	 * Assumed by convention to be in camera space.
-	 * @return The requested uniform buffer.
-	 */
-	public UniformBuffer<ContextType> getLightPositionBuffer()
-	{
-		return this.lightPositionBuffer;
-	}
-	
-	/**
-	 * Gets a GPU buffer containing light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-	 * @return The requested uniform buffer.
-	 */
-	public UniformBuffer<ContextType> getLightIntensityBuffer()
-	{
-		return this.lightIntensityBuffer;
-	}
-	
-	/**
-	 * Gets a GPU buffer containing for every view an index designating the light source position and intensity that should be used for each view.
-	 * @return The requested uniform buffer.
-	 */
-	public UniformBuffer<ContextType> getLightIndexBuffer()
-	{
-		return this.lightIndexBuffer;
-	}
-
-	/**
-	 * Gets a texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
-	 * @return The requested texture array.
-	 */
-	public Texture3D<ContextType> getTextures() 
-	{
-		return this.textureArray;
-	}
-	
-	/**
-	 * Gets a 1D texture instantiated on the GPU containing the luminance map for this dataset.
-	 * @return The requested luminance texture.
-	 */
-	public Texture1D<ContextType> getLuminanceMap()
-	{
-		return this.luminanceMap;
-	}
-	
-	/**
-	 * Gets a 1D texture instantiated on the GPU containing the inverse luminance map for this dataset.
-	 * @return The requested inverse luminance texture.
-	 */
-	public Texture1D<ContextType> getInverseLuminanceMap()
-	{
-		return this.inverseLuminanceMap;
-	}
 
 	/**
 	 * Gets the recommended near plane to use when rendering this view set.
@@ -1894,52 +1475,6 @@ public class ViewSet<ContextType extends Context<ContextType>>
 	{
 		return this.recommendedFarPlane;
 	}
-	
-	public Vector3 getAbsoluteLightPosition(int absoluteLightIndex) 
-	{
-		return this.absoluteLightPositionList.get(absoluteLightIndex);
-	}
-	
-	public Vector3 getAbsoluteLightIntensity(int absoluteLightIndex) 
-	{
-		return this.absoluteLightIntensityList.get(absoluteLightIndex);
-	}
-	
-	public int getSecondaryCameraPoseCount()
-	{
-		return this.secondaryCameraPoseList.size();
-	}
-	
-	public Matrix4 getSecondaryCameraPose(int poseIndex) 
-	{
-		return this.secondaryCameraPoseList.get(poseIndex);
-	}
-	
-	public Matrix4 getSecondaryCameraPoseInverse(int poseIndex) 
-	{
-		return this.secondaryCameraPoseInvList.get(poseIndex);
-	}
-	
-	public Integer getSecondaryCameraProjectionIndex(int poseIndex) 
-	{
-		return this.secondaryCameraProjectionIndexList.get(poseIndex);
-	}
-	
-	public Integer getSecondaryLightIndex(int poseIndex) 
-	{
-		return this.secondaryLightIndexList.get(poseIndex);
-	}
-	
-	public String getSecondaryImageFileName(int poseIndex)
-	{
-		return this.secondaryImageFileNames.get(poseIndex);
-	}
-
-	public File getSecondaryImageFile(int poseIndex) 
-	{
-		return new File(this.getImageFilePath(), this.secondaryImageFileNames.get(poseIndex));
-	}
-	
 	public SampledLuminanceEncoding getLuminanceEncodingFunction()
 	{
 		if (linearLuminanceValues == null || encodedLuminanceValues == null)
@@ -1951,50 +1486,4 @@ public class ViewSet<ContextType extends Context<ContextType>>
 			return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
 		}
 	}
-	
-//	public static class LuminanceEncoding
-//	{
-//		public final double linearValue;
-//		public final byte encodedValue;
-//		
-//		public LuminanceEncoding(double linearValue, byte encodedValue)
-//		{
-//			this.linearValue = linearValue;
-//			this.encodedValue = encodedValue;
-//		}
-//		
-//		public LuminanceEncoding(double linearValue, short encodedValue)
-//		{
-//			this(linearValue, (byte)(0xFF & encodedValue));
-//		}
-//	}
-//	
-//	public Iterator<LuminanceEncoding> getLuminanceEncodingIterator()
-//	{
-//		if (this.linearLuminanceValues == null || this.encodedLuminanceValues == null)
-//		{
-//			return null;
-//		}
-//		else
-//		{
-//			return new Iterator<LuminanceEncoding>()
-//			{
-//				private int index = 0;
-//	
-//				@Override
-//				public boolean hasNext() 
-//				{
-//					return index < linearLuminanceValues.length && index < encodedLuminanceValues.length;
-//				}
-//	
-//				@Override
-//				public LuminanceEncoding next() 
-//				{
-//					LuminanceEncoding next = new LuminanceEncoding(linearLuminanceValues[index], encodedLuminanceValues[index]);
-//					index++;
-//					return next;
-//				}
-//			};
-//		}
-//	}
 }

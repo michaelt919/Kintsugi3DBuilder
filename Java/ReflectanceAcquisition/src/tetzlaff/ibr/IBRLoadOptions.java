@@ -1,31 +1,61 @@
 package tetzlaff.ibr;
 
+import java.io.File;
+
 
 public class IBRLoadOptions 
 {
-	private ViewSetImageOptions imageOptions;
+	private File filePathOverride;
+	private boolean colorImagesRequested;
+	private boolean mipmapsRequested;
+	private boolean compressionRequested;
 	private boolean depthImagesRequested;
 	private int depthImageWidth;
 	private int depthImageHeight;
 	
-	public IBRLoadOptions(ViewSetImageOptions imageOptions, boolean depthImagesRequested, int depthImageWidth, int depthImageHeight) 
+	public IBRLoadOptions() 
 	{
-		this.imageOptions = imageOptions;
-		this.depthImagesRequested = depthImagesRequested;
-		this.depthImageWidth = depthImageWidth;
-		this.depthImageHeight = depthImageHeight;
 	}
 	
-	public ViewSetImageOptions getImageOptions() 
+	public File getFilePathOverride() 
 	{
-		return this.imageOptions;
+		return this.filePathOverride;
 	}
 
-	public void setImageOptions(ViewSetImageOptions imageOptions) 
+	public void setFilePathOverride(File filePathOverride) 
 	{
-		this.imageOptions = imageOptions;
+		this.filePathOverride = filePathOverride;
 	}
-	
+
+	public boolean areColorImagesRequested() 
+	{
+		return this.colorImagesRequested;
+	}
+
+	public void setColorImagesRequested(boolean colorImagesRequested) 
+	{
+		this.colorImagesRequested = colorImagesRequested;
+	}
+
+	public boolean areMipmapsRequested() 
+	{
+		return this.mipmapsRequested;
+	}
+
+	public void setMipmapsRequested(boolean mipmapsRequested) 
+	{
+		this.mipmapsRequested = mipmapsRequested;
+	}
+
+	public boolean isCompressionRequested() 
+	{
+		return this.compressionRequested;
+	}
+
+	public void setCompressionRequested(boolean compressionRequested) 
+	{
+		this.compressionRequested = compressionRequested;
+	}
 
 	public boolean areDepthImagesRequested()
 	{
