@@ -11,7 +11,6 @@ public interface IBRListModel<ContextType extends Context<ContextType>> extends 
 {
 	IBRDrawable<ContextType> addFromVSETFile(File vsetFile, IBRLoadOptions loadOptions) throws IOException;
 	IBRDrawable<ContextType> addFromAgisoftXMLFile(File xmlFile, File meshFile, IBRLoadOptions loadOptions) throws IOException;
-	IBRDrawable<ContextType> addMorphFromLFMFile(File lfmFile, IBRLoadOptions loadOptions) throws IOException;
 	@Override
 	IBRDrawable<ContextType> getSelectedItem();
 	void setLoadingMonitor(IBRLoadingMonitor loadingMonitor);

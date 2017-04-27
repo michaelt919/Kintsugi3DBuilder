@@ -42,7 +42,6 @@ import tetzlaff.ibr.IBRDrawable;
 import tetzlaff.ibr.IBRListModel;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
-import tetzlaff.ibr.ViewSetImageOptions;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
@@ -926,7 +925,7 @@ public class IBRelightConfigFrame extends JFrame
 							
 							if (imageChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 							{
-								loadOptions.getImageOptions().setFilePathOverride(imageChooser.getSelectedFile());
+								loadOptions.getImageOptions().setImagePathOverride(imageChooser.getSelectedFile());
 								model.addFromAgisoftXMLFile(file, fileChooser.getSelectedFile(), loadOptions);
 								
 								SwingUtilities.invokeLater(new Runnable()

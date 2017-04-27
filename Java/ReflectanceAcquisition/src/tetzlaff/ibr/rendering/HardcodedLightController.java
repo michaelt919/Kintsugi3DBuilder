@@ -19,14 +19,14 @@ public class HardcodedLightController implements LightController, OverrideableLi
 	private static float OBJECT_SCALE = 11.1f; // 11.1cm radius
 	
 	private Trackball cameraTrackball;
-	Supplier<ViewSet<?>> viewSetSupplier;
+	Supplier<ViewSet> viewSetSupplier;
 	Supplier<VertexMesh> proxySupplier;
 	private Vector3[] lightColors;
 	private Vector3[] lightPositions;
 
 	private Matrix4 cameraPoseOverride;
 	
-	public HardcodedLightController(Supplier<ViewSet<?>> viewSetSupplier, Supplier<VertexMesh> proxySupplier)
+	public HardcodedLightController(Supplier<ViewSet> viewSetSupplier, Supplier<VertexMesh> proxySupplier)
 	{		
 		this.viewSetSupplier = viewSetSupplier;
 		this.proxySupplier = proxySupplier;

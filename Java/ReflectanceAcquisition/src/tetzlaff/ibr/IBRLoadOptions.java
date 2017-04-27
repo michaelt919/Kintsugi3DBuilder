@@ -5,7 +5,7 @@ import java.io.File;
 
 public class IBRLoadOptions 
 {
-	private File filePathOverride;
+	private File imagePathOverride;
 	private boolean colorImagesRequested;
 	private boolean mipmapsRequested;
 	private boolean compressionRequested;
@@ -17,14 +17,14 @@ public class IBRLoadOptions
 	{
 	}
 	
-	public File getFilePathOverride() 
+	public File getImagePathOverride() 
 	{
-		return this.filePathOverride;
+		return this.imagePathOverride;
 	}
 
-	public void setFilePathOverride(File filePathOverride) 
+	public void setImagePathOverride(File imagePathOverride) 
 	{
-		this.filePathOverride = filePathOverride;
+		this.imagePathOverride = imagePathOverride;
 	}
 
 	public boolean areColorImagesRequested() 

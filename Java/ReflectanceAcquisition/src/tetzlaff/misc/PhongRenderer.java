@@ -258,7 +258,7 @@ public class PhongRenderer<ContextType extends Context<ContextType>> implements 
 
 	public void resample(File targetVSETFile, File exportPath) throws IOException
 	{
-		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(targetVSETFile, context);
+		ViewSet targetViewSet = ViewSet.loadFromVSETFile(targetVSETFile).createViewSet();
 		
 		BufferedImage img = ImageIO.read(targetViewSet.getImageFile(0));
 		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(img.getWidth(), img.getHeight()).createFramebufferObject();

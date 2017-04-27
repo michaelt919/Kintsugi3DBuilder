@@ -14,7 +14,7 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 {
 	void setOnLoadCallback(IBRLoadingMonitor callback);
 
-	ViewSet<ContextType> getActiveViewSet();
+	ViewSet getActiveViewSet();
 	VertexMesh getActiveProxy();
 	
 	IBRSettings settings();

@@ -34,7 +34,6 @@ public abstract class IBRDrawableListModel<ContextType extends Context<ContextTy
 	
 	protected abstract IBRDrawable<ContextType> createFromVSETFile(File vsetFilee, IBRLoadOptions loadOptions) throws IOException;
 	protected abstract IBRDrawable<ContextType> createFromAgisoftXMLFile(File xmlFile, File meshFile, IBRLoadOptions loadOptions) throws IOException;
-	protected abstract IBRDrawable<ContextType> createMorphFromLFMFile(File lfmFilee, IBRLoadOptions loadOptions) throws IOException;
 	
 	public Program<ContextType> getProgram()
 	{
@@ -119,55 +118,6 @@ public abstract class IBRDrawableListModel<ContextType extends Context<ContextTy
 				}
 			}
 			
-			@Override
-			public void setMaximum(double maximum)
-			{
-				if (loadingMonitor != null)
-				{
-					loadingMonitor.setMaximum(maximum);
-				}
-			}
-
-			@Override
-			public void setProgress(double progress) 
-			{
-				if (loadingMonitor != null)
-				{
-					loadingMonitor.setProgress(progress);
-				}
-			}
-			
-			@Override
-			public void loadingComplete()
-			{
-				ulfs.setSelectedItem(newItem);
-				effectiveSize = ulfs.size();
-				if (loadingMonitor != null)
-				{
-					loadingMonitor.loadingComplete();
-				}
-				fireIntervalAdded(this, ulfs.size() - 1, ulfs.size() - 1);
-			}
-		});
-		ulfs.add(newItem);
-		return newItem;
-	}
-
-	@Override
-	public IBRDrawable<ContextType> addMorphFromLFMFile(File lfmFile, IBRLoadOptions loadOptions) throws IOException 
-	{
-		IBRDrawable<ContextType> newItem = this.createMorphFromLFMFile(lfmFile, loadOptions);
-		newItem.setOnLoadCallback(new IBRLoadingMonitor()
-		{
-			@Override
-			public void startLoading()
-			{
-				if (loadingMonitor != null)
-				{
-					loadingMonitor.startLoading();
-				}
-			}
-
 			@Override
 			public void setMaximum(double maximum)
 			{

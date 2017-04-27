@@ -27,6 +27,7 @@ public class VertexMesh
 	private String materialFileName = null;
 	private Material material = null; // TODO support multiple materials
 
+	// TODO should this be refactored to avoid passing in the file format as a string?
 	public VertexMesh(String fileFormat, File file) throws IOException
 	{
 		this.setFilename(file);

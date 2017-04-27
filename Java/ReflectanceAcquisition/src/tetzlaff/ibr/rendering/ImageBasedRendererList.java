@@ -33,11 +33,4 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	{
 		return new ImageBasedRenderer<ContextType>(context, this.getProgram(), xmlFile, meshFile, loadOptions, this.getCameraController(), lightController);
 	}
-	
-	@Override
-	protected ImageBasedRenderer<ContextType> createMorphFromLFMFile(File lfmFile, IBRLoadOptions loadOptions) throws IOException
-	{
-		throw new IllegalStateException("Morphs not supported for halfway field rendering.");
-		//return new ULFMorphRenderer<ContextType>(context, this.getProgram(), lfmFile, loadOptions, trackballs);
-	}
 }

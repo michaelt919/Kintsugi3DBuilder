@@ -48,52 +48,62 @@ public class ViewSet
 	 * A list of camera poses defining the transformation from object space to camera space for each view.
 	 * These are necessary to perform projective texture mapping.
 	 */
-	private List<Matrix4> cameraPoseList;
+	private final List<Matrix4> cameraPoseList;
 	
 	/**
 	 * A list of inverted camera poses defining the transformation from camera space to object space for each view.
 	 * (Useful for visualizing the cameras on screen).
 	 */
-	private List<Matrix4> cameraPoseInvList;
+	private final List<Matrix4> cameraPoseInvList;
 
 	/**
 	 * A list of projection transformations defining the intrinsic properties of each camera.
 	 * This list can be much smaller than the number of views if the same intrinsic properties apply for multiple views.
 	 */
-	private List<Projection> cameraProjectionList;
+	private final List<Projection> cameraProjectionList;
 	
 	/**
 	 * A list containing an entry for every view which designates the index of the projection transformation that should be used for each view.
 	 */
-	private List<Integer> cameraProjectionIndexList;
+	private final List<Integer> cameraProjectionIndexList;
 	
 	/**
 	 * A list of light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
 	 * Assumed by convention to be in camera space.
 	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
 	 */
-	private List<Vector3> lightPositionList;
+	private final List<Vector3> lightPositionList;
 	
 	/**
 	 * A list of light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
 	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
 	 */
-	private List<Vector3> lightIntensityList;
+	private final List<Vector3> lightIntensityList;
 	
 	/**
 	 * A list containing an entry for every view which designates the index of the light source position and intensity that should be used for each view.
 	 */
-	private List<Integer> lightIndexList;
+	private final List<Integer> lightIndexList;
+	
+	/**
+	 * The reference linear luminance values used for decoding pixel colors.
+	 */
+	private final double[] linearLuminanceValues;
+	
+	/**
+	 * The reference encoded luminance values used for decoding pixel colors.
+	 */
+	private final byte[] encodedLuminanceValues;
 	
 	/**
 	 * A list containing the relative name of the image file corresponding to each view.
 	 */
-	private List<String> imageFileNames;
+	private final List<String> imageFileNames;
 	
 	/**
 	 * The absolute file path to be used for loading all resources.
 	 */
-	private File filePath;
+	private File directory;
 	
 	/**
 	 * The relative file path to be used for loading images.
@@ -104,16 +114,6 @@ public class ViewSet
 	 * The relative name of the mesh file.
 	 */
 	private String geometryFileName;
-	
-	/**
-	 * The reference linear luminance values used for decoding pixel colors.
-	 */
-	private double[] linearLuminanceValues;
-	
-	/**
-	 * The reference encoded luminance values used for decoding pixel colors.
-	 */
-	private byte[] encodedLuminanceValues;
 	
 	/**
 	 * Used to decode pixel colors according to a gamma curve if reference values are unavailable, otherwise, affects the absolute brightness of the decoded colors.
@@ -135,72 +135,99 @@ public class ViewSet
 	 */
 	private int primaryViewIndex = 0;
 	
-	private FloatVertexList cameraPoseData;
-	private FloatVertexList cameraProjectionData;
-	private IntVertexList cameraProjectionIndexData;
-	private FloatVertexList lightPositionData;
-	private FloatVertexList lightIntensityData;
-	private IntVertexList lightIndexData;
-	private SampledLuminanceEncoding luminanceEncoding;
+	private static class Parameters
+	{
+		List<Matrix4> cameraPoseList;
+		List<Matrix4> cameraPoseInvList;
+		List<Projection> cameraProjectionList;
+		List<Integer> cameraProjectionIndexList;
+		List<Vector3> lightPositionList;
+		List<Vector3> lightIntensityList;
+		List<Integer> lightIndexList;
+		List<String> imageFileNames;
+		String relativeImagePath;
+		String geometryFileName;
+		File directory;
+		float gamma;
+		double[] linearLuminanceValues;
+		byte[] encodedLuminanceValues;
+		float recommendedNearPlane;
+		float recommendedFarPlane;
+	}
+	
+	public static class Builder
+	{
+		private final ViewSet.Parameters params;
+		
+		private Builder(ViewSet.Parameters params)
+		{
+			this.params = params;
+		}
+		
+		/**
+		 * Overrides the tonemapping parameters to be used with the view set.
+		 * @param gamma The exponential parameter of the gamma curve used for tonemapping.
+		 * @param linearLuminanceValues Calibrated luminance levels in a linear space between 0.0 and 1.0
+		 * @param encodedLuminanceValues The 8-bit values that the calibrated luminance levels are mapped to, between 0 and 255 - values are treated as unsigned bytes.
+		 * @return The same Builder object.
+		 */
+		public Builder overrideTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+		{
+			if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length == encodedLuminanceValues.length)
+			{
+				params.gamma = gamma;
+				params.linearLuminanceValues = linearLuminanceValues;
+				params.encodedLuminanceValues = encodedLuminanceValues;
+
+				return this;
+			}
+			else
+			{
+				throw new IllegalArgumentException("The arrays of linear and encoded luminance values must not be null and must have the same length.");
+			}
+		}
+		
+		/**
+		 * Creates the view set.
+		 * @return The new view set object.
+		 */
+		public ViewSet createViewSet()
+		{
+			return new ViewSet(params);
+		}
+	}
 	
 	/**
-	 * Creates a new view set object, allocating and initializing GPU resources as appropriate.
-	 * @param cameraPoseList A list of camera poses defining the transformation from object space to camera space for each view.
-	 * These are necessary to perform projective texture mapping.
-	 * @param cameraPoseInvList A list of inverted camera poses defining the transformation from camera space to object space for each view.
-	 * (Useful for visualizing the cameras on screen).
-	 * @param cameraProjectionList A list of projection transformations defining the intrinsic properties of each camera.
-	 * This list can be much smaller than the number of views if the same intrinsic properties apply for multiple views.
-	 * @param cameraProjectionIndexList  A list containing an entry for every view which designates the index of the projection transformation that should be used for each view.
-	 * @param lightPositionList A list of light source positions, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-	 * Assumed by convention to be in camera space.
-	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
-	 * @param lightIntensityList A list of light source intensities, used only for reflectance fields and illumination-dependent rendering (ignored for light fields).
-	 * This list can be much smaller than the number of views if the same illumination conditions apply for multiple views.
-	 * @param lightIndexList A list containing an entry for every view which designates the index of the light source position and intensity that should be used for each view.
-	 * @param imageFileNames A list containing the relative name of the image file corresponding to each view.
-	 * @param imageOptions The requested options for loading the images in this dataset. 
-	 * @param recommendedNearPlane A recommendation for the near plane to use when rendering this view set.
-	 * @param recommendedFarPlane A recommendation for the far plane to use when rendering this view set.
-	 * @param context The GL context in which to instantiate GPU resources.
-	 * @param loadingCallback A callback for monitoring loading progress, particularly for images.
-	 * @throws IOException Thrown if any File I/O errors occur while loading images.
+	 * Creates a new view set object.
+	 * @param params The parameters defining the new view set.
 	 */
-	public ViewSet(
-		List<Matrix4> cameraPoseList,
-		List<Matrix4> cameraPoseInvList,
-		List<Projection> cameraProjectionList,
-		List<Integer> cameraProjectionIndexList,
-		List<Vector3> lightPositionList,
-		List<Vector3> lightIntensityList,
-		List<Integer> lightIndexList,
-		List<String> imageFileNames, 
-		String imagePathName,
-		String geometryFileName,
-		float gamma,
-		double[] linearLuminanceValues,
-		byte[] encodedLuminanceValues,
-		float recommendedNearPlane,
-		float recommendedFarPlane) throws IOException
+	private ViewSet(ViewSet.Parameters params)
 	{
-		this.cameraPoseList = cameraPoseList;
-		this.cameraPoseInvList = cameraPoseInvList;
-		this.cameraProjectionList = cameraProjectionList;
-		this.cameraProjectionIndexList = cameraProjectionIndexList;
-		this.lightPositionList = lightPositionList;
-		this.lightIntensityList = lightIntensityList;
-		this.lightIndexList = lightIndexList;
-		this.imageFileNames = imageFileNames;
-		this.geometryFileName = geometryFileName;
-		this.recommendedNearPlane = recommendedNearPlane;
-		this.recommendedFarPlane = recommendedFarPlane;
-		this.gamma = gamma;
-		
+		this.cameraPoseList = params.cameraPoseList;
+		this.cameraPoseInvList = params.cameraPoseInvList;
+		this.cameraProjectionList = params.cameraProjectionList;
+		this.cameraProjectionIndexList = params.cameraProjectionIndexList;
+		this.lightPositionList = params.lightPositionList;
+		this.lightIntensityList = params.lightIntensityList;
+		this.lightIndexList = params.lightIndexList;
+		this.imageFileNames = params.imageFileNames;
+		this.geometryFileName = params.geometryFileName;
+		this.recommendedNearPlane = params.recommendedNearPlane;
+		this.recommendedFarPlane = params.recommendedFarPlane;
+		this.gamma = params.gamma;
+		this.linearLuminanceValues = params.linearLuminanceValues;
+		this.encodedLuminanceValues = params.encodedLuminanceValues;
+		this.directory = params.directory;
+		this.relativeImagePath = params.relativeImagePath;
+	}
+	
+	public FloatVertexList getCameraPoseData() 
+	{
 		// Store the poses in a uniform buffer
 		if (cameraPoseList != null && cameraPoseList.size() > 0)
-		{
+		{	
 			// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-			this.cameraPoseData = new FloatVertexList(16, cameraPoseList.size());
+			FloatVertexList cameraPoseData = new FloatVertexList(16, cameraPoseList.size());
 			
 			for (int k = 0; k < cameraPoseList.size(); k++)
 			{
@@ -214,13 +241,22 @@ public class ViewSet
 					}
 				}
 			}
+			
+			return cameraPoseData;
 		}
-		
+		else
+		{
+			return null;
+		}
+	}
+
+	public FloatVertexList getCameraProjectionData() 
+	{
 		// Store the camera projections in a uniform buffer
 		if (cameraProjectionList != null && cameraProjectionList.size() > 0)
 		{
 			// Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
-			this.cameraProjectionData = new FloatVertexList(16, cameraProjectionList.size());
+			FloatVertexList cameraProjectionData = new FloatVertexList(16, cameraProjectionList.size());
 			
 			for (int k = 0; k < cameraProjectionList.size(); k++)
 			{
@@ -235,8 +271,16 @@ public class ViewSet
 					}
 				}
 			}
+			return cameraProjectionData;
 		}
-		
+		else
+		{
+			return null;
+		}
+	}
+
+	public IntVertexList getCameraProjectionIndexData() 
+	{
 		// Store the camera projection indices in a uniform buffer
 		if (cameraProjectionIndexList != null && cameraProjectionIndexList.size() > 0)
 		{
@@ -245,26 +289,42 @@ public class ViewSet
 			{
 				indexArray[i] = cameraProjectionIndexList.get(i);
 			}
-			this.cameraProjectionIndexData = new IntVertexList(1, cameraProjectionIndexList.size(), indexArray);
+			return new IntVertexList(1, cameraProjectionIndexList.size(), indexArray);
 		}
-		
+		else
+		{
+			return null;
+		}
+	}
+
+	public FloatVertexList getLightPositionData() 
+	{
 		// Store the light positions in a uniform buffer
 		if (lightPositionList != null && lightPositionList.size() > 0)
 		{
-			this.lightPositionData = new FloatVertexList(4, lightPositionList.size());
+			FloatVertexList lightPositionData = new FloatVertexList(4, lightPositionList.size());
 			for (int k = 0; k < lightPositionList.size(); k++)
 			{
-				lightIntensityData.set(k, 0, lightPositionList.get(k).x);
-				lightIntensityData.set(k, 1, lightPositionList.get(k).y);
-				lightIntensityData.set(k, 2, lightPositionList.get(k).z);
-				lightIntensityData.set(k, 3, 1.0f);
+				lightPositionData.set(k, 0, lightPositionList.get(k).x);
+				lightPositionData.set(k, 1, lightPositionList.get(k).y);
+				lightPositionData.set(k, 2, lightPositionList.get(k).z);
+				lightPositionData.set(k, 3, 1.0f);
 			}
+			
+			return lightPositionData;
 		}
-		
+		else
+		{
+			return null;
+		}
+	}
+
+	public FloatVertexList getLightIntensityData() 
+	{
 		// Store the light positions in a uniform buffer
 		if (lightIntensityList != null && lightIntensityList.size() > 0)
 		{
-			this.lightIntensityData = new FloatVertexList(4, lightIntensityList.size());
+			FloatVertexList lightIntensityData = new FloatVertexList(4, lightIntensityList.size());
 			for (int k = 0; k < lightPositionList.size(); k++)
 			{
 				lightIntensityData.set(k, 0, lightIntensityList.get(k).x);
@@ -272,8 +332,16 @@ public class ViewSet
 				lightIntensityData.set(k, 2, lightIntensityList.get(k).z);
 				lightIntensityData.set(k, 3, 1.0f);
 			}
+			return lightIntensityData;
 		}
-		
+		else
+		{
+			return null;
+		}
+	}
+
+	public IntVertexList getLightIndexData() 
+	{
 		// Store the light indices indices in a uniform buffer
 		if (lightIndexList != null && lightIndexList.size() > 0)
 		{
@@ -282,100 +350,59 @@ public class ViewSet
 			{
 				indexArray[i] = lightIndexList.get(i);
 			}
-			this.lightIndexData = new IntVertexList(1, lightIndexList.size(), indexArray);
+			return new IntVertexList(1, lightIndexList.size(), indexArray);
 		}
-		
-		if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
+		else
 		{
-			this.linearLuminanceValues = linearLuminanceValues;
-			this.encodedLuminanceValues = encodedLuminanceValues;
-			this.luminanceEncoding = new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
+			return null;
 		}
-		
-		if (imageOptions != null)
-		{
-			this.filePath = imageOptions.getFilePathOverride();
-		}
-		
-		this.relativeImagePath = imagePathName;
-	}
-	
-	public FloatVertexList getCameraPoseData() 
-	{
-		return this.cameraPoseData;
-	}
-
-	public FloatVertexList getCameraProjectionData() 
-	{
-		return this.cameraProjectionData;
-	}
-
-	public IntVertexList getCameraProjectionIndexData() 
-	{
-		return this.cameraProjectionIndexData;
-	}
-
-	public FloatVertexList getLightPositionData() 
-	{
-		return this.lightPositionData;
-	}
-
-	public FloatVertexList getLightIntensityData() 
-	{
-		return this.lightIntensityData;
-	}
-
-	public IntVertexList getLightIndexData() 
-	{
-		return this.lightIndexData;
 	}
 
 	public SampledLuminanceEncoding getLuminanceEncoding() 
 	{
-		return luminanceEncoding;
-	}
-	/**
-	 * Loads a VSET file and creates a corresponding ViewSet object.
-	 * @param vsetFile The VSET file to load.
-	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown due to a File I/O error occurring.
-	 */
-	public static ViewSet loadFromVSETFile(File vsetFile) throws IOException
-	{
-		return loadFromVSETFile(vsetFile, 2.2f, null, null);
+		if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
+		{
+			return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
+		}
+		else
+		{
+			return null;
+		}
 	}
 	
 	/**
 	 * Loads a VSET file and creates a corresponding ViewSet object.
 	 * @param vsetFile The VSET file to load.
-	 * @param gamma The exponential parameter of the gamma curve used for tonemapping.
-	 * @param linearLuminanceValues Calibrated luminance levels in a linear space between 0.0 and 1.0
-	 * @param encodedLuminanceValues The 8-bit values that the calibrated luminance levels are mapped to, between 0 and 255 - values are treated as unsigned bytes.
 	 * @return The newly created ViewSet object.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	public static ViewSet loadFromVSETFile(File vsetFile, float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues) throws IOException
+	public static ViewSet.Builder loadFromVSETFile(File vsetFile) throws IOException
 	{
 		Date timestamp = new Date();
 		
-		float recommendedGamma = 2.2f;
-		float recommendedNearPlane = 0.0f;
-		float recommendedFarPlane = Float.MAX_VALUE;
-		List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
-		List<Matrix4> cameraPoseInvList = new ArrayList<Matrix4>();
-		List<Matrix4> orderedCameraPoseList = new ArrayList<Matrix4>();
-		List<Matrix4> orderedCameraPoseInvList = new ArrayList<Matrix4>();
-		List<Projection> cameraProjectionList = new ArrayList<Projection>();
-		List<Vector3> lightPositionList = new ArrayList<Vector3>();
-		List<Vector3> lightIntensityList = new ArrayList<Vector3>();
-		List<Integer> cameraProjectionIndexList = new ArrayList<Integer>();
-		List<Integer> lightIndexList = new ArrayList<Integer>();
-		List<String> imageFileNames = new ArrayList<String>();
+		ViewSet.Parameters params = new ViewSet.Parameters();
+		
+		params.gamma = 2.2f;
+		params.recommendedNearPlane = 0.0f;
+		params.recommendedFarPlane = Float.MAX_VALUE;
+		
+		List<Matrix4> unorderedCameraPoseList = new ArrayList<Matrix4>();
+		List<Matrix4> unorderedCameraPoseInvList = new ArrayList<Matrix4>();
+		
+		params.cameraPoseList = new ArrayList<Matrix4>();
+		params.cameraPoseInvList = new ArrayList<Matrix4>();
+		params.cameraProjectionList = new ArrayList<Projection>();
+		params.lightPositionList = new ArrayList<Vector3>();
+		params.lightIntensityList = new ArrayList<Vector3>();
+		params.cameraProjectionIndexList = new ArrayList<Integer>();
+		params.lightIndexList = new ArrayList<Integer>();
+		params.imageFileNames = new ArrayList<String>();
+		
 		List<Double> linearLuminanceList = new ArrayList<Double>();
 		List<Byte> encodedLuminanceList = new ArrayList<Byte>();
 		
-		String meshFileName = "manifold.obj";
-		String relativeImageFilePath = null;
+		params.geometryFileName = "manifold.obj";
+		params.relativeImagePath = null;
 	
 		try(Scanner scanner = new Scanner(vsetFile))
 		{
@@ -386,19 +413,19 @@ public class ViewSet
 				{
 					case "c":
 					{
-						recommendedNearPlane = scanner.nextFloat();
-						recommendedFarPlane = scanner.nextFloat();
+						params.recommendedNearPlane = scanner.nextFloat();
+						params.recommendedFarPlane = scanner.nextFloat();
 						scanner.nextLine();
 						break;
 					}
 					case "m":
 					{
-						meshFileName = scanner.nextLine().trim();
+						params.geometryFileName = scanner.nextLine().trim();
 						break;
 					}
 					case "i":
 					{
-						relativeImageFilePath = scanner.nextLine().trim();
+						params.relativeImagePath = scanner.nextLine().trim();
 						break;
 					}
 					case "p":
@@ -412,10 +439,10 @@ public class ViewSet
 						float k = scanner.nextFloat();
 						float qr = scanner.nextFloat();
 						
-						cameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
+						unorderedCameraPoseList.add(Matrix4.fromQuaternion(i, j, k, qr)
 							.times(Matrix4.translate(-x, -y, -z)));
 						
-						cameraPoseInvList.add(Matrix4.translate(x, y, z)
+						unorderedCameraPoseInvList.add(Matrix4.translate(x, y, z)
 							.times(new Matrix4(Matrix3.fromQuaternion(i, j, k, qr).transpose())));
 						
 						scanner.nextLine();
@@ -430,8 +457,8 @@ public class ViewSet
 							scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), 
 							scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat());
 						
-						cameraPoseList.add(newPose);
-						cameraPoseInvList.add(newPose.quickInverse(0.002f));
+						unorderedCameraPoseList.add(newPose);
+						unorderedCameraPoseInvList.add(newPose.quickInverse(0.002f));
 						break;
 					}
 					case "d":
@@ -462,7 +489,7 @@ public class ViewSet
 						
 						float sensorHeight = sensorWidth / aspect;
 						
-						cameraProjectionList.add(new DistortionProjection(
+						params.cameraProjectionList.add(new DistortionProjection(
 							sensorWidth, sensorHeight, 
 							focalLength, focalLength,
 							sensorWidth / 2, sensorHeight / 2, k1, k2, k3
@@ -482,7 +509,7 @@ public class ViewSet
 					case "g":
 					{
 						// Gamma
-						recommendedGamma = scanner.nextFloat();
+						params.gamma = scanner.nextFloat();
 						scanner.nextLine();
 						break;
 					}
@@ -495,7 +522,7 @@ public class ViewSet
 						float aspect = scanner.nextFloat();
 						float fovy = (float)(scanner.nextFloat() * Math.PI / 180.0);
 						
-						cameraProjectionList.add(new SimpleProjection(aspect, fovy));
+						params.cameraProjectionList.add(new SimpleProjection(aspect, fovy));
 						
 						scanner.nextLine();
 						break;
@@ -505,12 +532,12 @@ public class ViewSet
 						float x = scanner.nextFloat();
 						float y = scanner.nextFloat();
 						float z = scanner.nextFloat();
-						lightPositionList.add(new Vector3(x, y, z));
+						params.lightPositionList.add(new Vector3(x, y, z));
 						
 						float r = scanner.nextFloat();
 						float g = scanner.nextFloat();
 						float b = scanner.nextFloat();
-						lightIntensityList.add(new Vector3(r, g, b));
+						params.lightIntensityList.add(new Vector3(r, g, b));
 		
 						// Skip the rest of the line
 						scanner.nextLine();
@@ -525,11 +552,11 @@ public class ViewSet
 						
 						String imgFilename = scanner.nextLine().trim();
 						
-						orderedCameraPoseList.add(cameraPoseList.get(poseId));
-						orderedCameraPoseInvList.add(cameraPoseInvList.get(poseId));
-						cameraProjectionIndexList.add(projectionId);
-						lightIndexList.add(lightId);
-						imageFileNames.add(imgFilename);
+						params.cameraPoseList.add(unorderedCameraPoseList.get(poseId));
+						params.cameraPoseInvList.add(unorderedCameraPoseInvList.get(poseId));
+						params.cameraProjectionIndexList.add(projectionId);
+						params.lightIndexList.add(lightId);
+						params.imageFileNames.add(imgFilename);
 						break;
 					}
 					default:
@@ -538,43 +565,23 @@ public class ViewSet
 				}
 			}
 		}
-			
-		if (imageOptions != null && imageOptions.getFilePathOverride() == null)
+		
+		params.linearLuminanceValues = new double[linearLuminanceList.size()];
+		for (int i = 0; i < params.linearLuminanceValues.length; i++)
 		{
-			imageOptions.setFilePathOverride(vsetFile.getParentFile());
+			params.linearLuminanceValues[i] = linearLuminanceList.get(i);
 		}
 		
-		double[] linearLuminance;
-		byte[] encodedLuminance;
-		
-		if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length == encodedLuminanceValues.length)
+		params.encodedLuminanceValues = new byte[encodedLuminanceList.size()];
+		for (int i = 0; i < params.encodedLuminanceValues.length; i++)
 		{
-			linearLuminance = linearLuminanceValues;
-			encodedLuminance = encodedLuminanceValues;
-		}
-		else
-		{
-			linearLuminance = new double[linearLuminanceList.size()];
-			for (int i = 0; i < linearLuminance.length; i++)
-			{
-				linearLuminance[i] = linearLuminanceList.get(i);
-			}
-			
-			encodedLuminance = new byte[encodedLuminanceList.size()];
-			for (int i = 0; i < encodedLuminance.length; i++)
-			{
-				encodedLuminance[i] = encodedLuminanceList.get(i);
-			}
+			params.encodedLuminanceValues[i] = encodedLuminanceList.get(i);
 		}
 
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
-		
-		return new ViewSet(
-			orderedCameraPoseList, orderedCameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, 
-			lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
-			relativeImageFilePath, meshFileName, recommendedGamma, linearLuminance, encodedLuminance,
-			recommendedNearPlane, recommendedFarPlane);
+		params.directory = vsetFile.getParentFile();
+		return new ViewSet.Builder(params);
 	}
 	
 	/**
@@ -643,28 +650,14 @@ public class ViewSet
 	      return (this.id.equals(otherCam.id));
 	    }
 	}
-
-	/**
-	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan.
-	 * @param file The Agisoft PhotoScan XML camera file to load.
-	 * @return The newly created ViewSet object.
-	 * @throws IOException Thrown due to a File I/O error occurring.
-	 */
-	public static ViewSet loadFromAgisoftXMLFile(File file) throws IOException
-	{
-		return loadFromAgisoftXMLFile(file, 2.2f, null, null);
-	}
 	
 	/**
 	 * Loads a camera definition file exported in XML format from Agisoft PhotoScan.
 	 * @param file The Agisoft PhotoScan XML camera file to load.
-	 * @param gamma The exponential parameter of the gamma curve used for tonemapping.
-	 * @param linearLuminanceValues Calibrated luminance levels in a linear space between 0.0 and 1.0
-	 * @param encodedLuminanceValues The 8-bit values that the calibrated luminance levels are mapped to, between 0 and 255 - values are treated as unsigned bytes.
 	 * @return The newly created ViewSet object.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	public static ViewSet loadFromAgisoftXMLFile(File file, float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues) throws IOException
+	public static ViewSet.Builder loadFromAgisoftXMLFile(File file) throws IOException
 	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
@@ -999,16 +992,18 @@ public class ViewSet
         {
             e.printStackTrace();
         }
+        
+        ViewSet.Parameters params = new ViewSet.Parameters();
 
         // Initialize internal lists
-        List<Matrix4> cameraPoseList = new ArrayList<Matrix4>();
-        List<Matrix4> cameraPoseInvList = new ArrayList<Matrix4>();
-		List<Projection> cameraProjectionList = new ArrayList<Projection>();
-		List<Vector3> lightPositionList = new ArrayList<Vector3>();
-		List<Vector3> lightIntensityList = new ArrayList<Vector3>();
-		List<Integer> cameraProjectionIndexList = new ArrayList<Integer>();
-		List<Integer> lightIndexList = new ArrayList<Integer>();
-		List<String> imageFileNames = new ArrayList<String>();
+        params.cameraPoseList = new ArrayList<Matrix4>();
+        params.cameraPoseInvList = new ArrayList<Matrix4>();
+        params.cameraProjectionList = new ArrayList<Projection>();
+        params.lightPositionList = new ArrayList<Vector3>();
+        params.lightIntensityList = new ArrayList<Vector3>();
+        params.cameraProjectionIndexList = new ArrayList<Integer>();
+        params.lightIndexList = new ArrayList<Integer>();
+        params.imageFileNames = new ArrayList<String>();
         
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
         
@@ -1017,7 +1012,7 @@ public class ViewSet
         for (int i = 0; i < sensors.length; i++)
         {
             sensors[i].index = i;
-            cameraProjectionList.add(new DistortionProjection(
+            params.cameraProjectionList.add(new DistortionProjection(
         		sensors[i].width,
         		sensors[i].height,
         		sensors[i].fx,
@@ -1048,7 +1043,7 @@ public class ViewSet
             						 .times(Matrix4.translate(globalTranslate))
             					;//	 .times(Matrix4.scale(globalScale));
         	            
-            cameraPoseList.add(cameras[i].transform);
+            params.cameraPoseList.add(cameras[i].transform);
             
             // Compute inverse by just reversing steps to build transformation
             Matrix4 cameraPoseInv = //Matrix4.scale(1.0f / globalScale)
@@ -1056,7 +1051,7 @@ public class ViewSet
 						        		   .times(globalRotation.transpose())
 						        		   .times(new Matrix4(new Matrix3(m1).transpose()))
 						            	   .times(Matrix4.translate(new Vector3(m1.getColumn(3).negated())));
-            cameraPoseInvList.add(cameraPoseInv);
+            params.cameraPoseInvList.add(cameraPoseInv);
             
             Matrix4 expectedIdentity = cameraPoseInv.times(cameras[i].transform);
             boolean error = false;
@@ -1100,24 +1095,23 @@ public class ViewSet
             }
             
             
-            cameraProjectionIndexList.add(cameras[i].sensor.index);
-            lightIndexList.add(cameras[i].lightIndex);
-            imageFileNames.add(cameras[i].filename);
+            params.cameraProjectionIndexList.add(cameras[i].sensor.index);
+            params.lightIndexList.add(cameras[i].lightIndex);
+            params.imageFileNames.add(cameras[i].filename);
         }
         
         for (int i = 0; i < nextLightIndex; i++)
         {
-	        lightPositionList.add(new Vector3(0.0f));
-	        lightIntensityList.add(new Vector3(1.0f));
+        	params.lightPositionList.add(new Vector3(0.0f));
+        	params.lightIntensityList.add(new Vector3(1.0f));
         }
 
-        float farPlane = findFarPlane(cameraPoseInvList);
-        System.out.println("Near and far planes: " + (farPlane/32.0f) + ", " + (farPlane));
+        params.recommendedFarPlane = findFarPlane(params.cameraPoseInvList);
+        params.recommendedNearPlane = params.recommendedFarPlane / 32.0f;
+        System.out.println("Near and far planes: " + params.recommendedNearPlane + ", " + params.recommendedFarPlane);
         
-        return new ViewSet(cameraPoseList, cameraPoseInvList, cameraProjectionList, cameraProjectionIndexList, 
-    		lightPositionList, lightIntensityList, lightIndexList, imageFileNames, 
-    		null, null, gamma, linearLuminanceValues, encodedLuminanceValues, 
-    		farPlane / 32.0f, farPlane);
+        params.directory = file.getParentFile();
+        return new ViewSet.Builder(params);
     }
 	
 	/**
@@ -1257,7 +1251,7 @@ public class ViewSet
 	 */
 	public File getFilePath()
 	{
-		return this.filePath;
+		return this.directory;
 	}
 	
 	/**
@@ -1266,7 +1260,7 @@ public class ViewSet
 	 */
 	public void setFilePath(File filePath)
 	{
-		this.filePath = filePath;
+		this.directory = filePath;
 	}
 	
 	/**
@@ -1293,7 +1287,7 @@ public class ViewSet
 	 */
 	public File getGeometryFile()
 	{
-		return new File(this.filePath, geometryFileName);
+		return new File(this.directory, geometryFileName);
 	}
 	
 	/**
@@ -1302,7 +1296,7 @@ public class ViewSet
 	 */
 	public File getImageFilePath()
 	{
-		return this.relativeImagePath == null ? this.filePath : new File(this.filePath, relativeImagePath);
+		return this.relativeImagePath == null ? this.directory : new File(this.directory, relativeImagePath);
 	}
 	
 	/**
@@ -1475,6 +1469,7 @@ public class ViewSet
 	{
 		return this.recommendedFarPlane;
 	}
+	
 	public SampledLuminanceEncoding getLuminanceEncodingFunction()
 	{
 		if (linearLuminanceValues == null || encodedLuminanceValues == null)
