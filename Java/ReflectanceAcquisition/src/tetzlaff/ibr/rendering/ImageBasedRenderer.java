@@ -17,7 +17,6 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
-import tetzlaff.gl.NullContext;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.Renderable;
@@ -34,7 +33,6 @@ import tetzlaff.gl.helpers.CameraController;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.LightController;
-import tetzlaff.gl.helpers.Material;
 import tetzlaff.gl.helpers.Matrix3;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.OverrideableLightController;
@@ -47,7 +45,6 @@ import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
-import tetzlaff.ibr.ViewSetImageOptions;
 
 public class ImageBasedRenderer<ContextType extends Context<ContextType>> implements IBRDrawable<ContextType>
 {
@@ -196,11 +193,20 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	{
     		if (this.cameraFile.getName().toUpperCase().endsWith(".XML"))
     		{
-    			this.resources = UnstructuredLightField.loadFromAgisoftXMLFile(this.cameraFile, this.geometryFile, this.loadOptions, this.callback, this.context);
+    			this.resources = IBRResources.getBuilderForContext(this.context)
+    					.setLoadingMonitor(this.callback)
+    					.setLoadOptions(this.loadOptions)
+    					.loadAgisoftFiles(this.cameraFile, this.geometryFile)
+    					.create();
     		}
     		else
     		{
-    			this.resources = UnstructuredLightField.loadFromVSETFile(this.cameraFile, this.loadOptions, this.callback, this.context);
+    			this.resources = IBRResources.getBuilderForContext(this.context)
+    					.setLoadingMonitor(this.callback)
+    					.setLoadOptions(this.loadOptions)
+    					.loadVSETFile(this.cameraFile)
+    					.create();
+    			
     			if (this.geometryFile == null)
 				{
     				this.geometryFile = resources.viewSet.getGeometryFile();
@@ -341,37 +347,19 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		{
 			setupForRelighting();
 			
-			ViewSet<ContextType> vset = resources.viewSet;
+			ViewSet vset = resources.viewSet;
 			Vector3 lightIntensity = vset.getLightIntensity(vset.getLightIndex(index));
 			Vector4 lightPos = vset.getCameraPose(index).quickInverse(0.002f).times(new Vector4(vset.getLightPosition(vset.getLightIndex(index)), 1.0f));
 			
 			setupLightForFidelity(lightIntensity, new Vector3(lightPos));
 		};
 		
-		try
-		{
-			
-			
-			resources = new IBRResources<ContextType>(
-					this.resources, 
-					new File(this.geometryFile.getParentFile(), diffuseTextureName),
-					new File(this.geometryFile.getParentFile(), normalTextureName),
-					new File(this.geometryFile.getParentFile(), specularTextureName),
-					new File(this.geometryFile.getParentFile(), roughnessTextureName),
-					new File(this.geometryFile.getParentFile(), "mfd.csv"), 
-					context);
-			
-			shadowRenderable.addVertexBuffer("position", resources.positionBuffer);
+		shadowRenderable.addVertexBuffer("position", resources.positionBuffer);
 
-			shadowMaps = context.get2DDepthTextureArrayBuilder(2048, 2048, lightController.getLightCount()).createTexture();
-			shadowFramebuffer = context.getFramebufferObjectBuilder(2048, 2048)
-				.addDepthAttachment()
-				.createFramebufferObject();
-		}
-		catch(IOException e)
-		{
-			e.printStackTrace();
-		}
+		shadowMaps = context.get2DDepthTextureArrayBuilder(2048, 2048, lightController.getLightCount()).createTexture();
+		shadowFramebuffer = context.getFramebufferObjectBuilder(2048, 2048)
+			.addDepthAttachment()
+			.createFramebufferObject();
 		
 		this.updateCentroidAndRadius();
 		
@@ -551,7 +539,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
         		
         		try
         		{
-    				this.generateFidelityDiffs();
+    				this.executeFidelityComputation();
     			} 
         		catch (Exception e) 
         		{
@@ -575,15 +563,15 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private void setupForDraw(Program<ContextType> program)
 	{
-		program.setTexture("viewImages", resources.viewSet.getTextures());
-		program.setUniformBuffer("CameraPoses", resources.viewSet.getCameraPoseBuffer());
-		program.setUniformBuffer("CameraProjections", resources.viewSet.getCameraProjectionBuffer());
-		program.setUniformBuffer("CameraProjectionIndices", resources.viewSet.getCameraProjectionIndexBuffer());
-    	if (resources.viewSet.getLightPositionBuffer() != null && resources.viewSet.getLightIntensityBuffer() != null && resources.viewSet.getLightIndexBuffer() != null)
+		program.setTexture("viewImages", resources.colorTextures);
+		program.setUniformBuffer("CameraPoses", resources.cameraPoseBuffer);
+		program.setUniformBuffer("CameraProjections", resources.cameraProjectionBuffer);
+		program.setUniformBuffer("CameraProjectionIndices", resources.cameraProjectionIndexBuffer);
+    	if (resources.lightPositionBuffer != null && resources.lightIntensityBuffer != null && resources.lightIndexBuffer != null)
     	{
-    		program.setUniformBuffer("LightPositions", resources.viewSet.getLightPositionBuffer());
-    		program.setUniformBuffer("LightIntensities", resources.viewSet.getLightIntensityBuffer());
-    		program.setUniformBuffer("LightIndices", resources.viewSet.getLightIndexBuffer());
+    		program.setUniformBuffer("LightPositions", resources.lightPositionBuffer);
+    		program.setUniformBuffer("LightIntensities", resources.lightIntensityBuffer);
+    		program.setUniformBuffer("LightIndices", resources.lightIndexBuffer);
     	}
     	program.setUniform("viewCount", resources.viewSet.getCameraPoseCount());
     	program.setUniform("infiniteLightSources", true /* TODO */);
@@ -603,7 +591,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	program.setUniform("fresnelEnabled", this.settings.isFresnelEnabled());
     	program.setUniform("shadowsEnabled", this.settings.areShadowsEnabled());
     	
-    	program.setTexture("luminanceMap", this.resources.viewSet.getLuminanceMap());
+    	program.setTexture("luminanceMap", this.resources.luminanceMap);
 	}
 	
 	
@@ -681,7 +669,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			this.environmentTextureEnabled = true;
 		}
 		
-		if (resources.viewSet.getLuminanceMap() == null)
+		if (resources.luminanceMap == null)
 		{
 			p.setUniform("useLuminanceMap", false);
 			p.setTexture("luminanceMap", null);
@@ -689,10 +677,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		else
 		{
 			p.setUniform("useLuminanceMap", true);
-			p.setTexture("luminanceMap", resources.viewSet.getLuminanceMap());
+			p.setTexture("luminanceMap", resources.luminanceMap);
 		}
 		
-		if (resources.viewSet.getInverseLuminanceMap() == null)
+		if (resources.inverseLuminanceMap == null)
 		{
 			p.setUniform("useInverseLuminanceMap", false);
 			p.setTexture("inverseLuminanceMap", null);
@@ -700,7 +688,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		else
 		{
 			p.setUniform("useInverseLuminanceMap", true);
-			p.setTexture("inverseLuminanceMap", resources.viewSet.getInverseLuminanceMap());
+			p.setTexture("inverseLuminanceMap", resources.inverseLuminanceMap);
 		}
 		
 		float gamma = 2.2f;
@@ -1194,7 +1182,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private void resample() throws IOException
 	{
-		ViewSet<ContextType> targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile, new ViewSetImageOptions(null, false, false, false), context);
+		ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile).createViewSet();
 		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleWidth, resampleHeight)
 				.addColorAttachment()
 				.addDepthAttachment()
@@ -1306,7 +1294,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	return Math.sqrt(sumSqError / sumMask);
 	}
 	
-	private void generateFidelityDiffs() throws IOException
+	private void executeFidelityComputation() throws IOException
 	{
 		System.out.println("\nView Importance:");
 		
@@ -1553,7 +1541,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    		out.println("Expected error for views in target view set:");
 	    		out.println();
 	    		
-	    		ViewSet<NullContext> targetViewSet = ViewSet.loadFromVSETFile(fidelityVSETFile);
+	    		ViewSet targetViewSet = ViewSet.loadFromVSETFile(fidelityVSETFile).createViewSet();
 	    		
 	    		Vector3[] targetDirections = new Vector3[targetViewSet.getCameraPoseCount()];
 	    		
@@ -1931,7 +1919,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	}
 	
 	@Override
-	public ViewSet<ContextType> getActiveViewSet()
+	public ViewSet getActiveViewSet()
 	{
 		return this.resources.viewSet;
 	}

@@ -6,11 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
-import java.util.function.Supplier;
 
 import javax.imageio.ImageIO;
 
@@ -103,71 +99,77 @@ public class IBRResources<ContextType extends Context<ContextType>>
 	public final Texture3D<ContextType> shadowTextures;
 	public final UniformBuffer<ContextType> shadowMatrixBuffer;
 	
-//	private static class IBRResourcesBuilder<ContextType extends Context<ContextType>>
-//	{
-//		final ContextType context;
-//		private Supplier<ViewSet> viewSetLoader;
-//		private Supplier<VertexMesh> geometryLoader;
-//		private IBRLoadOptions loadOptions;
-//		private IBRLoadingMonitor callback;
-//		
-//		IBRResourcesBuilder(ContextType context)
-//		{
-//			this.context = context;
-//		}
-//		
-//		private IBRLoadOptions getLoadOptions()
-//		{
-//			return loadOptions;
-//		}
-//		
-//		private IBRLoadingMonitor getCallback()
-//		{
-//			return callback;
-//		}
-//		
-//		void loadFromVSETFile(File vsetFile) throws IOException
-//		{
-//			// TODO defer loading the VSET file.
-//			
-//			class LocalVSETLoader
-//			{
-//				ViewSet<ContextType> viewSet;
-//				boolean loaded;
-//				
-//				ViewSet<ContextType> loadViewSet()
-//				{
-//					if (!loaded)
-//					{
-//						try 
-//						{ 
-//							return viewSet = ViewSet.loadFromVSETFile(vsetFile, getLoadOptions().getImageOptions(), context, getCallback()); 
-//						} 
-//						catch (IOException e) 
-//						{ 
-//							return viewSet = null; 
-//						} 
-//
-//						loaded = true;
-//					}
-//				}
-//			}
-//			
-//			LocalVSETLoader loader = new LocalVSETLoader();
-//			
-//			viewSetLoader = () -> loader.loadViewSet();
-//	        geometryLoader = () -> new VertexMesh("OBJ", loader.getGeometryFile());
-//		}
-//		
-//		void loadFromAgisoftXMLFile()
-//	}
-//	
-//	public static getBuilder(ContextType context)
-//	{
-//		
-//	}
+	public static class Builder<ContextType extends Context<ContextType>>
+	{
+		private final ContextType context;
+		private ViewSet.Builder viewSetBuilder;
+		private VertexMesh geometry;
+		private IBRLoadOptions loadOptions;
+		private IBRLoadingMonitor loadingMonitor;
+		
+		private float gamma;
+		private double[] linearLuminanceValues;
+		private byte[] encodedLuminanceValues;
+		
+		private Builder(ContextType context)
+		{
+			this.context = context;
+		}
+		
+		public Builder<ContextType> setLoadOptions(IBRLoadOptions loadOptions)
+		{
+			this.loadOptions = loadOptions;
+			return this;
+		}
+		
+		public Builder<ContextType> setLoadingMonitor(IBRLoadingMonitor loadingMonitor)
+		{
+			this.loadingMonitor = loadingMonitor;
+			return this;
+		}
+		
+		public Builder<ContextType> setTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+		{
+			this.gamma = gamma;
+			this.linearLuminanceValues = linearLuminanceValues;
+			this.encodedLuminanceValues = encodedLuminanceValues;
+			return this;
+		}
+		
+		public Builder<ContextType> loadVSETFile(File vsetFile) throws IOException
+		{
+			this.viewSetBuilder = ViewSet.loadFromVSETFile(vsetFile);
+			this.geometry = new VertexMesh("OBJ", this.viewSetBuilder.createViewSet().getGeometryFile());
+			return this;
+		}
+		
+		// undistorted images are defined in the load options
+		public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile) throws IOException
+		{
+			this.viewSetBuilder = ViewSet.loadFromAgisoftXMLFile(cameraFile);
+			this.geometry = new VertexMesh("OBJ", geometryFile);
+			return this;
+		}
+		
+		public IBRResources<ContextType> create() throws IOException
+		{
+			if (linearLuminanceValues != null && encodedLuminanceValues != null)
+			{
+				viewSetBuilder.overrideTonemapping(gamma, linearLuminanceValues, encodedLuminanceValues);
+			}
+			
+			ViewSet viewSet = viewSetBuilder.createViewSet();
+			
+			return new IBRResources<ContextType>(context, viewSet, geometry, loadOptions, loadingMonitor);
+		}
+	}
 	
-	private IBRResources(ContextType context, ViewSet viewSet, VertexMesh geometry, IBRLoadOptions loadOptions, IBRLoadingMonitor callback) throws IOException
+	public static <ContextType extends Context<ContextType>> Builder<ContextType> getBuilderForContext(ContextType context)
+	{
+		return new IBRResources.Builder<ContextType>(context);
+	}
+	
+	private IBRResources(ContextType context, ViewSet viewSet, VertexMesh geometry, IBRLoadOptions loadOptions, IBRLoadingMonitor loadingMonitor) throws IOException
 	{
 		this.context = context;
 		this.viewSet = viewSet;
@@ -249,13 +251,14 @@ public class IBRResources<ContextType extends Context<ContextType>>
 			inverseLuminanceMap = null;
 		}
 		
-		if (loadOptions != null && loadOptions.getFilePathOverride() != null)
+		if (loadOptions != null && loadOptions.getImagePathOverride() != null)
 		{
-			viewSet.setFilePath(loadOptions.getFilePathOverride());
+			viewSet.setFilePath(loadOptions.getImagePathOverride());
+			viewSet.setRelativeImagePathName("");
 		}
 		
 		// Read the images from a file
-		if (loadOptions != null && loadOptions.areColorImagesRequested() && (viewSet.getImageFilePath() != null || loadOptions.getFilePathOverride() != null) && viewSet.getCameraPoseCount() > 0)
+		if (loadOptions != null && loadOptions.areColorImagesRequested() && viewSet.getImageFilePath() != null && viewSet.getCameraPoseCount() > 0)
 		{
 			Date timestamp = new Date();
 			File imageFile = viewSet.getImageFile(0);
@@ -323,9 +326,9 @@ public class IBRResources<ContextType extends Context<ContextType>>
 			textureArrayBuilder.setMaxAnisotropy(16.0f);
 			colorTextures = textureArrayBuilder.createTexture();
 			
-			if(callback != null) 
+			if(loadingMonitor != null) 
 			{
-				callback.setMaximum(viewSet.getCameraPoseCount());
+				loadingMonitor.setMaximum(viewSet.getCameraPoseCount());
 			}
 
 			for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
@@ -359,9 +362,9 @@ public class IBRResources<ContextType extends Context<ContextType>>
 				
 				this.colorTextures.loadLayer(i, imageFile, true);
 
-				if(callback != null) 
+				if(loadingMonitor != null) 
 				{
-					callback.setProgress(i+1);
+					loadingMonitor.setProgress(i+1);
 				}
 			}
 

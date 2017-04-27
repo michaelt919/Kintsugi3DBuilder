@@ -70,7 +70,7 @@ public class TextureFitUserInterface extends JFrame
 	
 	private JComboBox<String> primaryViewComboBox;
 	
-	private ViewSet<NullContext> currentViewSet;
+	private ViewSet currentViewSet;
 
 	private JSpinner spinnerXRiteWhite;
 	private JSpinner spinnerXRiteNeutral80;
@@ -291,11 +291,11 @@ public class TextureFitUserInterface extends JFrame
 				{
 					if (fileString.endsWith(".vset"))
 					{
-						currentViewSet = ViewSet.loadFromVSETFile(new File(fileString));
+						currentViewSet = ViewSet.loadFromVSETFile(new File(fileString)).createViewSet();
 					}
 					else if (fileString.endsWith(".xml"))
 					{
-						currentViewSet = ViewSet.loadFromAgisoftXMLFile(new File(fileString));
+						currentViewSet = ViewSet.loadFromAgisoftXMLFile(new File(fileString)).createViewSet();
 					}
 					
 					List<String> cameraPoseNames = new ArrayList<String>();

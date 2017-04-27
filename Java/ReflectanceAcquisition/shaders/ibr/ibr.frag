@@ -14,11 +14,8 @@ layout(location = 0) out vec4 fragColor;
 #line 15 0
 
 uniform mat4 model_view;
-uniform mat4 envMapMatrix;
 uniform vec3 viewPos;
-
-uniform bool skipViewEnabled;
-uniform int skipView;
+uniform mat4 envMapMatrix;
 
 #define MAX_VIRTUAL_LIGHT_COUNT 4
 uniform vec3 lightIntensityVirtual[MAX_VIRTUAL_LIGHT_COUNT];
@@ -38,14 +35,12 @@ uniform sampler2D environmentMap;
 uniform int environmentMipMapLevel;
 uniform int diffuseEnvironmentMipMapLevel;
 uniform float environmentMapGamma;
-uniform sampler1D mfdMap;
 
 uniform bool useDiffuseTexture;
 uniform bool useNormalTexture;
 uniform bool useSpecularTexture;
 uniform bool useRoughnessTexture;
 uniform bool useEnvironmentTexture;
-uniform bool useMFDTexture;
 
 uniform bool useInverseLuminanceMap;
 uniform sampler1D inverseLuminanceMap;
@@ -184,7 +179,6 @@ float computeMicrofacetDistributionPhong(float nDotH, float roughness)
 
 float dist(float nDotH, float roughness)
 {
-	//return texture(mfdMap, nDotH).r / 0.1822322092566941;
 	return computeMicrofacetDistributionGGX(nDotH, roughness);
     //return computeMicrofacetDistributionBeckmann(nDotH, roughness);
     //return computeMicrofacetDistributionPhong(nDotH, roughness);
@@ -438,15 +432,12 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
     
 	for (int i = 0; i < viewCount; i++)
 	{
-		if (!skipViewEnabled || i != skipView)
+		vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample = 
+			computeSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
+		
+		for (int j = 0; j < MAX_VIRTUAL_LIGHT_COUNT; j++)
 		{
-			vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample = 
-				computeSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
-			
-			for (int j = 0; j < MAX_VIRTUAL_LIGHT_COUNT; j++)
-			{
-				sums[j] += microfacetSample[j];
-			}
+			sums[j] += microfacetSample[j];
 		}
 	}
     
