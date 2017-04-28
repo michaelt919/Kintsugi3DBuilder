@@ -183,21 +183,21 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
 	}
 
 	@Override
-	public void cleanup() 
+	public void close() 
 	{
-		this.program.delete();
-		this.shadowProgram.delete();
+		this.program.close();
+		this.shadowProgram.close();
 		
-		this.positionBuffer.delete();
-		this.texCoordBuffer.delete();
-		this.normalBuffer.delete();
+		this.positionBuffer.close();
+		this.texCoordBuffer.close();
+		this.normalBuffer.close();
 		
-		this.diffuse.delete();
-		this.normal.delete();
-		this.specular.delete();
-		this.roughness.delete();
+		this.diffuse.close();
+		this.normal.close();
+		this.specular.close();
+		this.roughness.close();
 		
-		this.shadowBuffer.delete();
+		this.shadowBuffer.close();
 	}
 	
 	public void reloadShaders()
@@ -206,12 +206,12 @@ public class FastMicrofacetRenderer<ContextType extends Context<ContextType>> im
         {
 			if (this.program != null)
 			{
-				this.program.delete();
+				this.program.close();
 			}
 			
 			if (this.shadowProgram != null)
 			{
-				this.shadowProgram.delete();
+				this.shadowProgram.close();
 			}
 			
 			this.program = null;

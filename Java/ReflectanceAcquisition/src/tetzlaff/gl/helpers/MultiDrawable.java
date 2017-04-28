@@ -53,7 +53,7 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 	{
 		for (Drawable d : removedDrawables)
 		{
-			d.cleanup();
+			d.close();
 		}
 		
 		for (Drawable d : addedDrawables)
@@ -81,11 +81,11 @@ public class MultiDrawable<T extends Drawable> implements Drawable, SelectableLi
 	}
 
 	@Override
-	public void cleanup() 
+	public void close() 
 	{
 		for (Drawable d : drawables)
 		{
-			d.cleanup();
+			d.close();
 		}
 	}
 	

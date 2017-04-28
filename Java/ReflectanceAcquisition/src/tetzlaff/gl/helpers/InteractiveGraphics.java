@@ -53,7 +53,7 @@ public class InteractiveGraphics
 			public void terminate() 
 			{
 				context.makeContextCurrent();
-				drawable.cleanup();
+				drawable.close();
 				context.destroy();
 			}
 		});

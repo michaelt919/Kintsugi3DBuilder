@@ -208,18 +208,18 @@ public class PhongRenderer<ContextType extends Context<ContextType>> implements 
 	}
 
 	@Override
-	public void cleanup() 
+	public void close() 
 	{
-		this.positionBuffer.delete();
-		this.texCoordBuffer.delete();
-		this.normalBuffer.delete();
+		this.positionBuffer.close();
+		this.texCoordBuffer.close();
+		this.normalBuffer.close();
 		
-		this.diffuse.delete();
-		this.normal.delete();
-		this.specular.delete();
-		this.roughness.delete();
+		this.diffuse.close();
+		this.normal.close();
+		this.specular.close();
+		this.roughness.close();
 		
-		this.shadowBuffer.delete();
+		this.shadowBuffer.close();
 	}
 	
 	public float getSpecularRoughness() {

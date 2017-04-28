@@ -429,7 +429,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	
     				if (this.environmentTexture != null)
     				{
-    					this.environmentTexture.delete();
+    					this.environmentTexture.close();
     				}
     				
     				this.environmentTexture = newEnvironmentTexture;
@@ -450,25 +450,25 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     				
     				if (this.refScenePositions != null)
     				{
-    					this.refScenePositions.delete();
+    					this.refScenePositions.close();
     					this.refScenePositions = null;
     				}
     				
     				if (this.refSceneTexCoords != null)
     				{
-    					this.refSceneTexCoords.delete();
+    					this.refSceneTexCoords.close();
     					this.refSceneTexCoords = null;
     				}
     				
     				if (this.refSceneNormals != null)
     				{
-    					this.refSceneNormals.delete();
+    					this.refSceneNormals.close();
     					this.refSceneNormals = null;
     				}
     				
     				if (this.refSceneTexture != null)
     				{
-    					this.refSceneTexture.delete();
+    					this.refSceneTexture.close();
     					this.refSceneTexture = null;
     				}
     				
@@ -854,84 +854,6 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     			(float)size.width / (float)size.height, 
     			0.01f * scale, 100.0f * scale);
 	}
-	
-	private void prepareForDefaultFBODraw()
-	{
-		if(multisamplingEnabled)
-		{
-			context.enableMultisampling();
-		}
-		else
-		{
-			context.disableMultisampling();			
-		}
-    	
-    	context.enableBackFaceCulling();
-    	
-    	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
-    	FramebufferSize size = framebuffer.getSize();
-    	
-    	this.setupForDraw();
-    	
-    	Matrix4 projection;
-    	
-    	mainRenderable.program().setUniform("projection", projection = getProjectionMatrix());
-    	
-    	if (environmentTexture != null && environmentTextureEnabled)
-		{
-			environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
-			environmentBackgroundProgram.setTexture("env", environmentTexture);
-			environmentBackgroundProgram.setUniform("model_view", this.getViewMatrix());
-			environmentBackgroundProgram.setUniform("projection", projection);
-			environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
-			environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
-
-			environmentBackgroundProgram.setUniform("gamma", 
-					environmentTexture.isInternalFormatCompressed() || 
-					environmentTexture.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
-					? 1.0f : 2.2f);
-		}
-    	
-        this.offscreenFBO = null;
-        
-        int fboWidth, fboHeight;
-		if (halfResEnabled)
-		{
-			fboWidth = size.width / 2;
-			fboHeight = size.height / 2;
-			
-			offscreenFBO = context.getFramebufferObjectBuilder(fboWidth, fboHeight)
-					.addColorAttachment(new ColorAttachmentSpec(ColorFormat.RGB8)
-						.setLinearFilteringEnabled(true))
-					.addDepthAttachment(new DepthAttachmentSpec(32, false))
-					.createFramebufferObject();
-			
-			offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
-	    	offscreenFBO.clearDepthBuffer();
-    		
-    		if (environmentTexture != null && environmentTextureEnabled)
-    		{
-    			context.disableDepthTest();
-    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-    			context.enableDepthTest();
-    		}
-		}
-		else
-		{
-			fboWidth = size.width;
-			fboHeight = size.height;
-			
-			framebuffer.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
-    		framebuffer.clearDepthBuffer();
-    		
-    		if (environmentTexture != null && environmentTextureEnabled)
-    		{
-    			context.disableDepthTest();
-    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-    			context.enableDepthTest();
-    		}
-		}
-	}
 
 	private void drawReferenceScene(Program<ContextType> program)
 	{
@@ -974,67 +896,151 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		try
 		{
 			setupForRelighting();
-			this.prepareForDefaultFBODraw();
 			
-			for (int lightIndex = 0; lightIndex < lightController.getLightCount(); lightIndex++)
+			if(multisamplingEnabled)
 			{
-				generateShadowMaps(lightIndex);
-			}
-
-			this.program.setUniform("imageBasedRenderingEnabled", false);
-			this.drawReferenceScene(this.program);
-			this.program.setUniform("imageBasedRenderingEnabled", this.settings.isIBREnabled());
-			setupForRelighting(); // changed anything changed when drawing the reference scene.
-			
-			for (int modelInstance = 0; modelInstance < transformationMatrices.size(); modelInstance++)
-			{
-				this.envMapMatrix = null;
-				
-				for (int lightIndex = 0; lightIndex < lightController.getLightCount(); lightIndex++)
-				{
-					Matrix4 matrix = setupLight(lightIndex, modelInstance);
-					
-					if (lightIndex == 0)
-					{
-						this.envMapMatrix = matrix;
-					}
-				}
-				
-				// Draw instance
-				Matrix4 modelView = getModelViewMatrix(modelInstance);
-				this.program.setUniform("model_view", modelView);
-				this.program.setUniform("viewPos", new Vector3(modelView.quickInverse(0.01f).getColumn(3)));
-		    	
-		    	if(halfResEnabled) 
-		    	{
-					// Do first pass at half resolution to off-screen buffer
-			        mainRenderable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
-		    	} 
-		    	else 
-		    	{
-			        mainRenderable.draw(PrimitiveMode.TRIANGLES, context.getDefaultFramebuffer());  
-		    	}
-			}
-			
-			// Finish drawing
-			if (halfResEnabled)
-			{
-	    		context.flush();
-		        
-		        // Second pass at full resolution to default framebuffer
-		    	simpleTexRenderable.program().setTexture("tex", offscreenFBO.getColorAttachmentTexture(0));    	
-
-		    	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
-	    		framebuffer.clearDepthBuffer();
-		    	simpleTexRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-		    	
-		    	context.flush();
-	    		offscreenFBO.delete();
+				context.enableMultisampling();
 			}
 			else
 			{
-		    	context.flush();
+				context.disableMultisampling();			
 			}
+	    	
+	    	context.enableBackFaceCulling();
+	    	
+	    	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
+	    	FramebufferSize size = framebuffer.getSize();
+	    	
+	    	this.setupForDraw();
+	    	
+	    	Matrix4 projection;
+	    	
+	    	mainRenderable.program().setUniform("projection", projection = getProjectionMatrix());
+	    	
+	    	if (environmentTexture != null && environmentTextureEnabled)
+			{
+				environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
+				environmentBackgroundProgram.setTexture("env", environmentTexture);
+				environmentBackgroundProgram.setUniform("model_view", this.getViewMatrix());
+				environmentBackgroundProgram.setUniform("projection", projection);
+				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
+				environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
+
+				environmentBackgroundProgram.setUniform("gamma", 
+						environmentTexture.isInternalFormatCompressed() || 
+						environmentTexture.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
+						? 1.0f : 2.2f);
+			}
+	    	
+	        this.offscreenFBO = null;
+	        
+	        try
+	        {
+		        int fboWidth, fboHeight;
+				if (halfResEnabled)
+				{
+					fboWidth = size.width / 2;
+					fboHeight = size.height / 2;
+					
+					offscreenFBO = context.getFramebufferObjectBuilder(fboWidth, fboHeight)
+							.addColorAttachment(new ColorAttachmentSpec(ColorFormat.RGB8)
+								.setLinearFilteringEnabled(true))
+							.addDepthAttachment(new DepthAttachmentSpec(32, false))
+							.createFramebufferObject();
+					
+					offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
+			    	offscreenFBO.clearDepthBuffer();
+		    		
+		    		if (environmentTexture != null && environmentTextureEnabled)
+		    		{
+		    			context.disableDepthTest();
+		    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+		    			context.enableDepthTest();
+		    		}
+				}
+				else
+				{
+					fboWidth = size.width;
+					fboHeight = size.height;
+					
+					framebuffer.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
+		    		framebuffer.clearDepthBuffer();
+		    		
+		    		if (environmentTexture != null && environmentTextureEnabled)
+		    		{
+		    			context.disableDepthTest();
+		    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+		    			context.enableDepthTest();
+		    		}
+				}
+				
+				for (int lightIndex = 0; lightIndex < lightController.getLightCount(); lightIndex++)
+				{
+					generateShadowMaps(lightIndex);
+				}
+	
+				this.program.setUniform("imageBasedRenderingEnabled", false);
+				this.drawReferenceScene(this.program);
+				this.program.setUniform("imageBasedRenderingEnabled", this.settings.isIBREnabled());
+				setupForRelighting(); // changed anything changed when drawing the reference scene.
+				
+				for (int modelInstance = 0; modelInstance < transformationMatrices.size(); modelInstance++)
+				{
+					this.envMapMatrix = null;
+					
+					for (int lightIndex = 0; lightIndex < lightController.getLightCount(); lightIndex++)
+					{
+						Matrix4 matrix = setupLight(lightIndex, modelInstance);
+						
+						if (lightIndex == 0)
+						{
+							this.envMapMatrix = matrix;
+						}
+					}
+					
+					// Draw instance
+					Matrix4 modelView = getModelViewMatrix(modelInstance);
+					this.program.setUniform("model_view", modelView);
+					this.program.setUniform("viewPos", new Vector3(modelView.quickInverse(0.01f).getColumn(3)));
+			    	
+			    	if(halfResEnabled) 
+			    	{
+						// Do first pass at half resolution to off-screen buffer
+				        mainRenderable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
+			    	} 
+			    	else 
+			    	{
+				        mainRenderable.draw(PrimitiveMode.TRIANGLES, context.getDefaultFramebuffer());  
+			    	}
+				}
+				
+				// Finish drawing
+				if (halfResEnabled)
+				{
+		    		context.flush();
+			        
+			        // Second pass at full resolution to default framebuffer
+			    	simpleTexRenderable.program().setTexture("tex", offscreenFBO.getColorAttachmentTexture(0));    	
+	
+		    		framebuffer.clearDepthBuffer();
+			    	simpleTexRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+			    	
+			    	context.flush();
+		    		offscreenFBO.close();
+				}
+				else
+				{
+			    	context.flush();
+				}
+			}
+	        finally
+	        {
+	        	if (this.offscreenFBO != null)
+	        	{
+	        		this.offscreenFBO.close();
+	        		this.offscreenFBO = null;
+	        	}
+	        }
 			
 			FramebufferSize windowSize = context.getDefaultFramebuffer().getSize();
 			
@@ -1077,78 +1083,78 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	}
 
 	@Override
-	public void cleanup() 
+	public void close() 
 	{
-		resources.deleteOpenGLResources();
+		resources.close();
     	
 		if (this.refScenePositions != null)
 		{
-			this.refScenePositions.delete();
+			this.refScenePositions.close();
 			this.refScenePositions = null;
 		}
 		
 		if (this.refSceneTexCoords != null)
 		{
-			this.refSceneTexCoords.delete();
+			this.refSceneTexCoords.close();
 			this.refSceneTexCoords = null;
 		}
 		
 		if (this.refSceneNormals != null)
 		{
-			this.refSceneNormals.delete();
+			this.refSceneNormals.close();
 			this.refSceneNormals = null;
 		}
 		
 		if (this.refSceneTexture != null)
 		{
-			this.refSceneTexture.delete();
+			this.refSceneTexture.close();
 			this.refSceneTexture = null;
 		}
 		
 		if (this.environmentBackgroundProgram != null)
 		{
-			this.environmentBackgroundProgram.delete();
+			this.environmentBackgroundProgram.close();
 			this.environmentBackgroundProgram = null;
 		}
 		
 		if (this.environmentTexture != null)
 		{
-			this.environmentTexture.delete();
+			this.environmentTexture.close();
 			this.environmentTexture = null;
 		}
 		
 		// New code
 		if (resources != null)
 		{
-			resources.deleteOpenGLResources();
+			resources.close();
 			resources = null;
 		}
 		
 		if (shadowMaps != null)
 		{
-			shadowMaps.delete();
+			shadowMaps.close();
 			shadowMaps = null;
 		}
 		
 		if (shadowFramebuffer != null)
 		{
-			shadowFramebuffer.delete();
+			shadowFramebuffer.close();
 			shadowFramebuffer = null;
 		}
 		
 		if (lightProgram != null)
 		{
-			lightProgram.delete();
+			lightProgram.close();
 		}
 		
 		if (lightVertices != null)
 		{
-			lightVertices.delete();
+			lightVertices.close();
 		}
 		
 		if (lightTexture != null)
 		{
-			lightTexture.delete();
+			lightTexture.close();
 		}
 	}
 	
@@ -1231,16 +1237,16 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 
     	renderable.program().setUniform("targetViewIndex", targetViewIndex);
 		
-    	UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer().setData(viewIndexList);
-    	renderable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
-    	renderable.program().setUniform("viewCount", activeViewCount);
-    	
-    	framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
-    	framebuffer.clearDepthBuffer();
-    	
-    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-    	
-    	viewIndexBuffer.delete();
+    	try (UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer().setData(viewIndexList))
+    	{
+	    	renderable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
+	    	renderable.program().setUniform("viewCount", activeViewCount);
+	    	
+	    	framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
+	    	framebuffer.clearDepthBuffer();
+	    	
+	    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+    	}
 
 //	        if (activeViewCount == assets.viewSet.getCameraPoseCount() - 1 /*&& this.assets.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
 //	        {
@@ -1270,20 +1276,6 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	{
 		System.out.println("\nView Importance:");
 		
-		Program<ContextType> fidelityProgram = context.getShaderProgramBuilder()
-				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/fidelity.frag"))
-				.createProgram();
-		
-		context.disableBackFaceCulling();
-    	
-    	Renderable<ContextType> renderable = context.createRenderable(fidelityProgram);
-    	renderable.addVertexBuffer("position", this.resources.positionBuffer);
-    	renderable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-    	renderable.addVertexBuffer("normal", this.resources.normalBuffer);
-    	renderable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-    	setupForDraw(fidelityProgram);
-    	
     	Vector3[] viewDirections = new Vector3[this.resources.viewSet.getCameraPoseCount()];
     	
     	for (int i = 0; i < this.resources.viewSet.getCameraPoseCount(); i++)
@@ -1301,13 +1293,30 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     			viewDistances[i][j] = Math.acos(Math.max(-1.0, Math.min(1.0f, viewDirections[i].dot(viewDirections[j]))));
     		}
     	}
-		
-    	FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(256, 256/*1024, 1024*/)
+    	
+    	try
+    	(
+			Program<ContextType> fidelityProgram = context.getShaderProgramBuilder()
+				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/fidelity.frag"))
+				.createProgram();
+    			
+			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(256, 256/*1024, 1024*/)
 				.addColorAttachment(ColorFormat.RG32F)
 				.createFramebufferObject();
-    	
-    	try(PrintStream out = new PrintStream(fidelityExportPath))
+    			
+			PrintStream out = new PrintStream(fidelityExportPath);
+		)
     	{
+    		context.disableBackFaceCulling();
+    		
+    		Renderable<ContextType> renderable = context.createRenderable(fidelityProgram);
+        	renderable.addVertexBuffer("position", this.resources.positionBuffer);
+        	renderable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+        	renderable.addVertexBuffer("normal", this.resources.normalBuffer);
+        	renderable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+        	setupForDraw(fidelityProgram);
+    		
     		double[] slopes = new double[this.resources.viewSet.getCameraPoseCount()];
     		double[] peaks = new double[this.resources.viewSet.getCameraPoseCount()];
     		
@@ -1800,9 +1809,6 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     		}
     	}
 		
-		framebuffer.delete();
-		fidelityProgram.delete();
-		
 		if (this.fidelityCompleteCallback != null)
 		{
     		this.fidelityCompleteCallback.run();
@@ -2014,7 +2020,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 
     		if (this.environmentBackgroundProgram != null)
     		{
-    			this.environmentBackgroundProgram.delete();
+    			this.environmentBackgroundProgram.close();
     		}
     		
     		this.environmentBackgroundProgram = newProgram;
@@ -2029,7 +2035,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    	
 			if (this.lightProgram != null)
 	    	{
-				this.lightProgram.delete();
+				this.lightProgram.close();
 	    	}
     		
     		this.lightProgram = newProgram;
