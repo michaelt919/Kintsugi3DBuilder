@@ -120,7 +120,7 @@ class OpenGLShader implements Shader<OpenGLContext>
 	}
 	
 	@Override
-	public void delete()
+	public void close()
 	{
 		glDeleteShader(shaderId);
 		this.context.openGLErrorCheck();

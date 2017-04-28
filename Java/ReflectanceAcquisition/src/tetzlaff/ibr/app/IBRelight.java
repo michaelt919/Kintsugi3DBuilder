@@ -215,7 +215,7 @@ public class IBRelight
 		        	
 		        	if (model.getProgram() != null)
 	        		{
-	        			model.getProgram().delete();
+	        			model.getProgram().close();
 	        		}
 		        	model.setProgram(newProgram);
 		        	

@@ -230,13 +230,13 @@ class OpenGLProgram implements Resource, Program<OpenGLContext>
 	}
 	
 	@Override
-	public void delete()
+	public void close()
 	{
 		glDeleteProgram(programId);
 		this.context.openGLErrorCheck();
 		for (OpenGLShader shader : ownedShaders)
 		{
-			shader.delete();
+			shader.close();
 		}
 	}
 	

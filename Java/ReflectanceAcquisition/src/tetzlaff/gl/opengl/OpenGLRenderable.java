@@ -53,7 +53,7 @@ class OpenGLRenderable implements Renderable<OpenGLContext>
 	@Override
 	public void finalize()
 	{
-		vao.delete();
+		vao.close();
 	}
 	
 	@Override

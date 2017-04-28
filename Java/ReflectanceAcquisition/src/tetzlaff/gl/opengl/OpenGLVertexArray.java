@@ -76,7 +76,7 @@ class OpenGLVertexArray implements Resource
 	}
 
 	@Override
-	public void delete()
+	public void close()
 	{
 		glDeleteVertexArrays(this.vaoId);
 		this.context.openGLErrorCheck();

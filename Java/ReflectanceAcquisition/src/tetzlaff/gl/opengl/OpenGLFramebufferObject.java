@@ -190,7 +190,7 @@ class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferOb
 				if (this.ownedAttachments.remove(this.colorAttachments[index]))
 				{
 					// Delete it
-					((Resource)this.colorAttachments[index]).delete();
+					((Resource)this.colorAttachments[index]).close();
 				}
 			}
 			
@@ -228,7 +228,7 @@ class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferOb
 				if (this.ownedAttachments.remove(this.depthAttachment))
 				{
 					// Delete it
-					((Resource)this.depthAttachment).delete();
+					((Resource)this.depthAttachment).close();
 				}
 			}
 			
@@ -245,13 +245,13 @@ class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferOb
 	}
 	
 	@Override
-	public void delete()
+	public void close()
 	{
 		glDeleteFramebuffers(this.fboId);
 		this.context.openGLErrorCheck();
 		for (Resource attachment : ownedAttachments)
 		{
-			attachment.delete();
+			attachment.close();
 		}
 	}
 }

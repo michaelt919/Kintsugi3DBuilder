@@ -79,13 +79,13 @@ public class TextureUpscaleProgram
 		    	renderable.draw(PrimitiveMode.TRIANGLE_FAN, fbo);
 		    	new File(imageFile.getParentFile(), "output").mkdirs();
 		        fbo.saveColorBufferToFile(0, "PNG", new File(new File(imageFile.getParentFile(), "output"), imageFile.getName()));
-		    	fbo.delete();
-		    	imageTexture.delete();
-		    	rectangle.delete();
+		    	fbo.close();
+		    	imageTexture.close();
+		    	rectangle.close();
     		}
     		
-    		perlinNoiseProgram.delete();
-    		permTexture.delete();
+    		perlinNoiseProgram.close();
+    		permTexture.close();
         }
         catch (IOException e)
         {

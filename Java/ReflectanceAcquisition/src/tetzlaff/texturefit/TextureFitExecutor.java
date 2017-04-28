@@ -400,16 +400,16 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	}
 		}
     	
-    	mainFBO.delete();
+    	mainFBO.close();
     	
     	if (viewTexture != null)
     	{
-    		viewTexture.delete();
+    		viewTexture.close();
     	}
     	
     	if (shadowFBO != null)
 		{
-    		shadowFBO.delete();
+    		shadowFBO.close();
 		}
     	
     	return depthFBO;
@@ -864,7 +864,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				});
 			
 
-	    	depthFBO.delete();
+	    	depthFBO.close();
 			
 	    	System.out.println("Completed " + (k+1) + "/" + viewSet.getCameraPoseCount() + " views...");
 		}
@@ -988,7 +988,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	float[] rawLightPositions = framebuffer.readFloatingPointColorBufferRGBA(0);
 	        float[] rawLightIntensities = framebuffer.readFloatingPointColorBufferRGBA(1);
 	        
-	        framebuffer.delete(); // No need for this anymore
+	        framebuffer.close(); // No need for this anymore
 	        
 	        Vector4 lightPositionSum = new Vector4(0, 0, 0, 0);
 	        Vector4 lightIntensitySum = new Vector4(0, 0, 0, 0);
@@ -1253,7 +1253,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	
 		    	this.fitSubdiv(framebuffer, 0, 0, preprojectedViews, null, null);
 		        	
-	        	preprojectedViews.delete();
+	        	preprojectedViews.close();
         	}
         	else
         	{
@@ -1272,7 +1272,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	        		this.fitSubdiv(framebuffer, row, col, preprojectedViews, null, null);
     	        		callback.execute(row, col);
 
-			    		preprojectedViews.delete();
+			    		preprojectedViews.close();
     	    		}
     	    	}
         	}
@@ -1571,7 +1571,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		        	}
     			}
 
-	        	depthFBO.delete();
+	        	depthFBO.close();
 		    	
 		    	System.out.println("Completed " + (i+1) + "/" + viewSet.getCameraPoseCount());
 	    	}
@@ -1649,13 +1649,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		        		downsamplingFBO.saveColorBufferToFile(0, "PNG", new File(rescaleDir, pngFileName));
 		        	}
 		        	
-		        	fullSizeImage.delete();
+		        	fullSizeImage.close();
 		        	
 					System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " images rescaled.");
 		    	}
 	
-		    	rectBuffer.delete();
-		    	downsamplingFBO.delete();
+		    	rectBuffer.close();
+		    	downsamplingFBO.close();
 		    	
 	    		System.out.println("Rescaling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	    		
@@ -1764,7 +1764,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				//System.out.println((i+1) + "/" + viewSet.getCameraPoseCount() + " depth maps created.");
 	    	}
 
-	    	depthRenderingFBO.delete();
+	    	depthRenderingFBO.close();
 	    	
     		System.out.println("Depth maps created in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 	    	
@@ -2557,8 +2557,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					
 		    		frontErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "error-mask-final.png"));
 			    	
-			    	frontErrorFramebuffer.delete();
-			    	backErrorFramebuffer.delete();
+		    		// TODO refactor all references to close() in this class to use try-with-resources.
+			    	frontErrorFramebuffer.close();
+			    	backErrorFramebuffer.close();
 		    	}
 			
 				// Fill holes
@@ -2605,62 +2606,62 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(outputDir, materialName + "_Pr.png"));
 				}
     	        
-    	    	frontFramebuffer.delete();
+    	    	frontFramebuffer.close();
 			}
 
-	    	backFramebuffer.delete();
+	    	backFramebuffer.close();
 	    	
 	    	writeMTLFile(specularParams);
 			
 			if (viewTextures != null)
 	        {
-	        	viewTextures.delete();
+	        	viewTextures.close();
 	        }
 	        
 	        if (depthTextures != null)
 	        {
-	        	depthTextures.delete();
+	        	depthTextures.close();
 	        }
 	        
 	        if (shadowTextures != null)
 	        {
-	        	shadowTextures.delete();
+	        	shadowTextures.close();
 	        }
 	        
-	        lightPositionBuffer.delete();
-	        lightIntensityBuffer.delete();
+	        lightPositionBuffer.close();
+	        lightIntensityBuffer.close();
 	        
 	        if (shadowMatrixBuffer != null)
 	        {
-	        	shadowMatrixBuffer.delete();
+	        	shadowMatrixBuffer.close();
 	        }
 	        
 	        if (rectBuffer != null)
 	        {
-	        	rectBuffer.delete();
+	        	rectBuffer.close();
 	        }
 	    	
 	        if (param.isDiffuseTextureEnabled())
 	        {
-	        	diffuseFitFramebuffer.delete();
+	        	diffuseFitFramebuffer.close();
 	        }
 	
 	    	//System.out.println("Resampling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     	}
     	finally
     	{
-			if (projTexProgram != null) projTexProgram.delete();
-			if (diffuseFitProgram != null) diffuseFitProgram.delete();
-			if (specularFitProgram != null) specularFitProgram.delete();
-			if (diffuseDebugProgram != null) diffuseDebugProgram.delete();
-			if (specularDebugProgram != null) specularDebugProgram.delete();
-			if (depthRenderingProgram != null) depthRenderingProgram.delete();
+			if (projTexProgram != null) projTexProgram.close();
+			if (diffuseFitProgram != null) diffuseFitProgram.close();
+			if (specularFitProgram != null) specularFitProgram.close();
+			if (diffuseDebugProgram != null) diffuseDebugProgram.close();
+			if (specularDebugProgram != null) specularDebugProgram.close();
+			if (depthRenderingProgram != null) depthRenderingProgram.close();
 			
-			if (viewSet != null) viewSetResources.deleteOpenGLResources();
-			if (positionBuffer != null) positionBuffer.delete();
-			if (normalBuffer != null) normalBuffer.delete();
-			if (texCoordBuffer != null) texCoordBuffer.delete();
-			if (tangentBuffer != null) tangentBuffer.delete();
+			if (viewSet != null) viewSetResources.close();
+			if (positionBuffer != null) positionBuffer.close();
+			if (normalBuffer != null) normalBuffer.close();
+			if (texCoordBuffer != null) texCoordBuffer.close();
+			if (tangentBuffer != null) tangentBuffer.close();
     	}
 	}
 }

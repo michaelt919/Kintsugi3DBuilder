@@ -98,7 +98,7 @@ abstract class OpenGLBuffer implements Contextual<OpenGLContext>, Resource
 	}
 
 	@Override
-	public void delete()
+	public void close()
 	{
 		glDeleteBuffers(this.bufferId);
 		this.context.openGLErrorCheck();

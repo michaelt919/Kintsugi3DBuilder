@@ -7,7 +7,7 @@ package tetzlaff.gl.helpers;
  * @author Michael Tetzlaff
  * @see InteractiveGraphics
  */
-public interface Drawable 
+public interface Drawable extends AutoCloseable
 {
 	/**
 	 * Execute any initialization needed prior to updating and drawing this object.  You
@@ -39,5 +39,5 @@ public interface Drawable
 	 * once by the associated InteractiveApplication created by InteractiveGraphics when the
 	 * application is terminating.  The associated context will be made current first.
 	 */
-	void cleanup();
+	void close();
 }
