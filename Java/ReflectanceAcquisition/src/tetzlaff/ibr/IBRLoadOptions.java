@@ -1,11 +1,7 @@
 package tetzlaff.ibr;
 
-import java.io.File;
-
-
 public class IBRLoadOptions 
 {
-	private File imagePathOverride;
 	private boolean colorImagesRequested;
 	private boolean mipmapsRequested;
 	private boolean compressionRequested;
@@ -16,25 +12,16 @@ public class IBRLoadOptions
 	public IBRLoadOptions() 
 	{
 	}
-	
-	public File getImagePathOverride() 
-	{
-		return this.imagePathOverride;
-	}
-
-	public void setImagePathOverride(File imagePathOverride) 
-	{
-		this.imagePathOverride = imagePathOverride;
-	}
 
 	public boolean areColorImagesRequested() 
 	{
 		return this.colorImagesRequested;
 	}
 
-	public void setColorImagesRequested(boolean colorImagesRequested) 
+	public IBRLoadOptions setColorImagesRequested(boolean colorImagesRequested) 
 	{
 		this.colorImagesRequested = colorImagesRequested;
+		return this;
 	}
 
 	public boolean areMipmapsRequested() 
@@ -42,9 +29,10 @@ public class IBRLoadOptions
 		return this.mipmapsRequested;
 	}
 
-	public void setMipmapsRequested(boolean mipmapsRequested) 
+	public IBRLoadOptions setMipmapsRequested(boolean mipmapsRequested) 
 	{
 		this.mipmapsRequested = mipmapsRequested;
+		return this;
 	}
 
 	public boolean isCompressionRequested() 
@@ -52,9 +40,10 @@ public class IBRLoadOptions
 		return this.compressionRequested;
 	}
 
-	public void setCompressionRequested(boolean compressionRequested) 
+	public IBRLoadOptions setCompressionRequested(boolean compressionRequested) 
 	{
 		this.compressionRequested = compressionRequested;
+		return this;
 	}
 
 	public boolean areDepthImagesRequested()
@@ -62,9 +51,10 @@ public class IBRLoadOptions
 		return this.depthImagesRequested;
 	}
 
-	public void setDepthImagesRequested(boolean depthImagesRequested) 
+	public IBRLoadOptions setDepthImagesRequested(boolean depthImagesRequested) 
 	{
 		this.depthImagesRequested = depthImagesRequested;
+		return this;
 	}
 
 	public int getDepthImageWidth() 
@@ -72,9 +62,10 @@ public class IBRLoadOptions
 		return this.depthImageWidth;
 	}
 
-	public void setDepthImageWidth(int depthImageWidth) 
+	public IBRLoadOptions setDepthImageWidth(int depthImageWidth) 
 	{
 		this.depthImageWidth = depthImageWidth;
+		return this;
 	}
 
 	public int getDepthImageHeight() 
@@ -82,8 +73,9 @@ public class IBRLoadOptions
 		return this.depthImageHeight;
 	}
 
-	public void setDepthImageHeight(int depthImageHeight) 
+	public IBRLoadOptions setDepthImageHeight(int depthImageHeight) 
 	{
 		this.depthImageHeight = depthImageHeight;
+		return this;
 	}
 }

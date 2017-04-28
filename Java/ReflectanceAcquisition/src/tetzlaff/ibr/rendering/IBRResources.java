@@ -102,8 +102,9 @@ public class IBRResources<ContextType extends Context<ContextType>>
 	public static class Builder<ContextType extends Context<ContextType>>
 	{
 		private final ContextType context;
-		private ViewSet.Builder viewSetBuilder;
+		private ViewSet viewSet;
 		private VertexMesh geometry;
+		private File imageDirectoryOverride;
 		private IBRLoadOptions loadOptions;
 		private IBRLoadingMonitor loadingMonitor;
 		
@@ -138,16 +139,38 @@ public class IBRResources<ContextType extends Context<ContextType>>
 		
 		public Builder<ContextType> loadVSETFile(File vsetFile) throws IOException
 		{
-			this.viewSetBuilder = ViewSet.loadFromVSETFile(vsetFile);
-			this.geometry = new VertexMesh("OBJ", this.viewSetBuilder.createViewSet().getGeometryFile());
+			this.viewSet = ViewSet.loadFromVSETFile(vsetFile);
+			this.geometry = new VertexMesh("OBJ", this.viewSet.getGeometryFile());
 			return this;
 		}
 		
 		// undistorted images are defined in the load options
-		public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile) throws IOException
+		public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws IOException
 		{
-			this.viewSetBuilder = ViewSet.loadFromAgisoftXMLFile(cameraFile);
+			this.viewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
 			this.geometry = new VertexMesh("OBJ", geometryFile);
+			if (undistortedImageDirectory != null)
+			{
+				this.imageDirectoryOverride = undistortedImageDirectory;
+			}
+			return this;
+		}
+		
+		public Builder<ContextType> useExistingViewSet(ViewSet viewSet)
+		{
+			this.viewSet = viewSet;
+			return this;
+		}
+		
+		public Builder<ContextType> useExistingGeometry(VertexMesh geometry)
+		{
+			this.geometry = geometry;
+			return this;
+		}
+		
+		public Builder<ContextType> overrideImageDirectory(File imageDirectoryOverride)
+		{
+			this.imageDirectoryOverride = imageDirectoryOverride;
 			return this;
 		}
 		
@@ -155,10 +178,14 @@ public class IBRResources<ContextType extends Context<ContextType>>
 		{
 			if (linearLuminanceValues != null && encodedLuminanceValues != null)
 			{
-				viewSetBuilder.overrideTonemapping(gamma, linearLuminanceValues, encodedLuminanceValues);
+				viewSet.setTonemapping(gamma, linearLuminanceValues, encodedLuminanceValues);
 			}
-			
-			ViewSet viewSet = viewSetBuilder.createViewSet();
+
+			if (imageDirectoryOverride != null)
+			{
+				viewSet.setRootDirectory(imageDirectoryOverride);
+				viewSet.setRelativeImagePathName("");
+			}
 			
 			return new IBRResources<ContextType>(context, viewSet, geometry, loadOptions, loadingMonitor);
 		}
@@ -249,12 +276,6 @@ public class IBRResources<ContextType extends Context<ContextType>>
 		{
 			luminanceMap = null;
 			inverseLuminanceMap = null;
-		}
-		
-		if (loadOptions != null && loadOptions.getImagePathOverride() != null)
-		{
-			viewSet.setFilePath(loadOptions.getImagePathOverride());
-			viewSet.setRelativeImagePathName("");
 		}
 		
 		// Read the images from a file

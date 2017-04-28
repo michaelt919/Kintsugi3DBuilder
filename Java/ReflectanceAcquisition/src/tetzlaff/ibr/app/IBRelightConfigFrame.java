@@ -39,7 +39,7 @@ import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector3;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.ibr.IBRDrawable;
-import tetzlaff.ibr.IBRListModel;
+import tetzlaff.ibr.IBRDrawableListModel;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 
@@ -73,7 +73,7 @@ public class IBRelightConfigFrame extends JFrame
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRListModel<ContextType> model, LightController lightController, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRDrawableListModel<ContextType> model, LightController lightController, boolean isHighDPI)
 	{		
 		setResizable(false);
 		setTitle("IBRelight: Settings");
@@ -902,15 +902,19 @@ public class IBRelightConfigFrame extends JFrame
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 			{
-				File file = fileChooser.getSelectedFile();
+				File cameraFile = fileChooser.getSelectedFile();
 				
 				try 
 				{
-					IBRLoadOptions loadOptions = new IBRLoadOptions(
-							new ViewSetImageOptions(null, true, chckbxUseMipmaps.isSelected(), chckbxCompressImages.isSelected()),
-							chckbxGenerateDepthImages.isSelected(), (Integer)spinnerDepthWidth.getValue(), (Integer)spinnerDepthHeight.getValue());
+					IBRLoadOptions loadOptions = new IBRLoadOptions()
+						.setColorImagesRequested(true)
+						.setMipmapsRequested(chckbxUseMipmaps.isSelected())
+						.setCompressionRequested(chckbxCompressImages.isSelected())
+						.setDepthImagesRequested(chckbxGenerateDepthImages.isSelected())
+						.setDepthImageWidth((Integer)spinnerDepthWidth.getValue())
+						.setDepthImageHeight((Integer)spinnerDepthHeight.getValue());
 					
-					if (file.getName().toUpperCase().endsWith(".XML"))
+					if (cameraFile.getName().toUpperCase().endsWith(".XML"))
 					{
 						fileChooser.resetChoosableFileFilters();
 						fileChooser.setDialogTitle("Select the corresponding mesh");
@@ -919,14 +923,13 @@ public class IBRelightConfigFrame extends JFrame
 						
 						if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 						{
-							JFileChooser imageChooser = new JFileChooser(file.getParentFile());
+							JFileChooser imageChooser = new JFileChooser(cameraFile.getParentFile());
 							imageChooser.setDialogTitle("Select the undistorted image directory");
 							imageChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 							
 							if (imageChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 							{
-								loadOptions.getImageOptions().setImagePathOverride(imageChooser.getSelectedFile());
-								model.addFromAgisoftXMLFile(file, fileChooser.getSelectedFile(), loadOptions);
+								model.addFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, fileChooser.getSelectedFile(), imageChooser.getSelectedFile(), loadOptions);
 								
 								SwingUtilities.invokeLater(new Runnable()
 								{
@@ -943,7 +946,7 @@ public class IBRelightConfigFrame extends JFrame
 					}
 					else
 					{
-						model.addFromVSETFile(file, loadOptions);
+						model.addFromVSETFile(cameraFile.getPath(), cameraFile, loadOptions);
 						SwingUtilities.invokeLater(new Runnable()
 						{
 							@Override

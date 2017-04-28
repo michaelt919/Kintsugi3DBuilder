@@ -1,15 +1,12 @@
 package tetzlaff.ibr;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -17,20 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import javax.imageio.ImageIO;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.NullContext;
-import tetzlaff.gl.Texture1D;
-import tetzlaff.gl.Texture3D;
-import tetzlaff.gl.UniformBuffer;
-import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.IntVertexList;
 import tetzlaff.gl.helpers.Matrix3;
@@ -88,12 +76,12 @@ public class ViewSet
 	/**
 	 * The reference linear luminance values used for decoding pixel colors.
 	 */
-	private final double[] linearLuminanceValues;
+	private double[] linearLuminanceValues;
 	
 	/**
 	 * The reference encoded luminance values used for decoding pixel colors.
 	 */
-	private final byte[] encodedLuminanceValues;
+	private byte[] encodedLuminanceValues;
 	
 	/**
 	 * A list containing the relative name of the image file corresponding to each view.
@@ -103,7 +91,7 @@ public class ViewSet
 	/**
 	 * The absolute file path to be used for loading all resources.
 	 */
-	private File directory;
+	private File rootDirectory;
 	
 	/**
 	 * The relative file path to be used for loading images.
@@ -155,48 +143,6 @@ public class ViewSet
 		float recommendedFarPlane;
 	}
 	
-	public static class Builder
-	{
-		private final ViewSet.Parameters params;
-		
-		private Builder(ViewSet.Parameters params)
-		{
-			this.params = params;
-		}
-		
-		/**
-		 * Overrides the tonemapping parameters to be used with the view set.
-		 * @param gamma The exponential parameter of the gamma curve used for tonemapping.
-		 * @param linearLuminanceValues Calibrated luminance levels in a linear space between 0.0 and 1.0
-		 * @param encodedLuminanceValues The 8-bit values that the calibrated luminance levels are mapped to, between 0 and 255 - values are treated as unsigned bytes.
-		 * @return The same Builder object.
-		 */
-		public Builder overrideTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
-		{
-			if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length == encodedLuminanceValues.length)
-			{
-				params.gamma = gamma;
-				params.linearLuminanceValues = linearLuminanceValues;
-				params.encodedLuminanceValues = encodedLuminanceValues;
-
-				return this;
-			}
-			else
-			{
-				throw new IllegalArgumentException("The arrays of linear and encoded luminance values must not be null and must have the same length.");
-			}
-		}
-		
-		/**
-		 * Creates the view set.
-		 * @return The new view set object.
-		 */
-		public ViewSet createViewSet()
-		{
-			return new ViewSet(params);
-		}
-	}
-	
 	/**
 	 * Creates a new view set object.
 	 * @param params The parameters defining the new view set.
@@ -217,7 +163,7 @@ public class ViewSet
 		this.gamma = params.gamma;
 		this.linearLuminanceValues = params.linearLuminanceValues;
 		this.encodedLuminanceValues = params.encodedLuminanceValues;
-		this.directory = params.directory;
+		this.rootDirectory = params.directory;
 		this.relativeImagePath = params.relativeImagePath;
 	}
 	
@@ -376,7 +322,7 @@ public class ViewSet
 	 * @return The newly created ViewSet object.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	public static ViewSet.Builder loadFromVSETFile(File vsetFile) throws IOException
+	public static ViewSet loadFromVSETFile(File vsetFile) throws IOException
 	{
 		Date timestamp = new Date();
 		
@@ -581,7 +527,7 @@ public class ViewSet
 		System.out.println("View Set file loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 		
 		params.directory = vsetFile.getParentFile();
-		return new ViewSet.Builder(params);
+		return new ViewSet(params);
 	}
 	
 	/**
@@ -657,7 +603,7 @@ public class ViewSet
 	 * @return The newly created ViewSet object.
 	 * @throws IOException Thrown due to a File I/O error occurring.
 	 */
-	public static ViewSet.Builder loadFromAgisoftXMLFile(File file) throws IOException
+	public static ViewSet loadFromAgisoftXMLFile(File file) throws IOException
 	{
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();
@@ -1111,7 +1057,7 @@ public class ViewSet
         System.out.println("Near and far planes: " + params.recommendedNearPlane + ", " + params.recommendedFarPlane);
         
         params.directory = file.getParentFile();
-        return new ViewSet.Builder(params);
+        return new ViewSet(params);
     }
 	
 	/**
@@ -1246,21 +1192,21 @@ public class ViewSet
 	}
 	
 	/**
-	 * Gets the root file path for this view set.
-	 * @return The file path.
+	 * Gets the root directory for this view set.
+	 * @return The root directory.
 	 */
-	public File getFilePath()
+	public File getRootDirectory()
 	{
-		return this.directory;
+		return this.rootDirectory;
 	}
 	
 	/**
-	 * Sets the root file path for this view set.
-	 * @param filePath The file path.
+	 * Sets the root directory for this view set.
+	 * @param rootDirectory The root directory.
 	 */
-	public void setFilePath(File filePath)
+	public void setRootDirectory(File rootDirectory)
 	{
-		this.directory = filePath;
+		this.rootDirectory = rootDirectory;
 	}
 	
 	/**
@@ -1287,7 +1233,7 @@ public class ViewSet
 	 */
 	public File getGeometryFile()
 	{
-		return new File(this.directory, geometryFileName);
+		return new File(this.rootDirectory, geometryFileName);
 	}
 	
 	/**
@@ -1296,7 +1242,7 @@ public class ViewSet
 	 */
 	public File getImageFilePath()
 	{
-		return this.relativeImagePath == null ? this.directory : new File(this.directory, relativeImagePath);
+		return this.relativeImagePath == null ? this.rootDirectory : new File(this.rootDirectory, relativeImagePath);
 	}
 	
 	/**
@@ -1480,5 +1426,12 @@ public class ViewSet
 		{
 			return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
 		}
+	}
+	
+	public void setTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+	{
+		this.gamma = gamma;
+		this.linearLuminanceValues = linearLuminanceValues;
+		this.encodedLuminanceValues = encodedLuminanceValues;
 	}
 }

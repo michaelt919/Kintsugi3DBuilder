@@ -291,11 +291,11 @@ public class TextureFitUserInterface extends JFrame
 				{
 					if (fileString.endsWith(".vset"))
 					{
-						currentViewSet = ViewSet.loadFromVSETFile(new File(fileString)).createViewSet();
+						currentViewSet = ViewSet.loadFromVSETFile(new File(fileString));
 					}
 					else if (fileString.endsWith(".xml"))
 					{
-						currentViewSet = ViewSet.loadFromAgisoftXMLFile(new File(fileString)).createViewSet();
+						currentViewSet = ViewSet.loadFromAgisoftXMLFile(new File(fileString));
 					}
 					
 					List<String> cameraPoseNames = new ArrayList<String>();
