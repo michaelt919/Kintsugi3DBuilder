@@ -51,11 +51,13 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	private ContextType context;
 	private Program<ContextType> program;
 	private Program<ContextType> shadowProgram;
-	private IBRResources<ContextType> resources;
 	private LightController lightController;
 	private IBRLoadingMonitor callback;
 	private boolean suppressErrors = false;
 	private IBRSettings settings;
+
+	private IBRResources.Builder<ContextType> resourceBuilder;
+	private IBRResources<ContextType> resources;
 	
 	private Texture3D<ContextType> shadowMaps;
 	private FramebufferObject<ContextType> shadowFramebuffer;
@@ -70,10 +72,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     private int btfWidth, btfHeight;
     private File btfExportPath;
     
-    // From old ULFRenderer:
-    private File cameraFile;
-    private File geometryFile;
-    private IBRLoadOptions loadOptions;
+    private String id;
     private Renderable<ContextType> mainRenderable;
     private CameraController cameraController;
 
@@ -119,31 +118,26 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     private VertexBuffer<ContextType> refSceneNormals = null;
     private Texture2D<ContextType> refSceneTexture = null;
 	
-	public ImageBasedRenderer(ContextType context, Program<ContextType> program,
-			File cameraFile, File meshFile, IBRLoadOptions loadOptions, CameraController cameraController, LightController lightController)
+	ImageBasedRenderer(String id, ContextType context, Program<ContextType> program, 
+			CameraController cameraController, LightController lightController,
+			IBRResources.Builder<ContextType> resourceBuilder)
     {
+    	this.id = id;
 		this.context = context;
 		this.program = program;
-
+    	this.resourceBuilder = resourceBuilder;
+    	this.cameraController = cameraController;
     	this.lightController = lightController;
     	
-    	// From old ULFRenderer constructor:
-    	this.cameraFile = cameraFile;
-    	this.geometryFile = meshFile;
-    	this.loadOptions = loadOptions;
-    	this.cameraController = cameraController;
     	this.clearColor = new Vector3(0.0f);
-    	
     	this.transformationMatrices = new ArrayList<Matrix4>();
     	this.transformationMatrices.add(Matrix4.identity());
-    	
     	this.settings = new IBRSettings();
     }
 
 	@Override
 	public void initialize() 
 	{
-		// From old ULFRenderer's initialize();
 		if (this.program == null)
     	{
 	    	try
@@ -191,28 +185,8 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	
     	try 
     	{
-    		if (this.cameraFile.getName().toUpperCase().endsWith(".XML"))
-    		{
-    			this.resources = IBRResources.getBuilderForContext(this.context)
-    					.setLoadingMonitor(this.callback)
-    					.setLoadOptions(this.loadOptions)
-    					.loadAgisoftFiles(this.cameraFile, this.geometryFile)
-    					.create();
-    		}
-    		else
-    		{
-    			this.resources = IBRResources.getBuilderForContext(this.context)
-    					.setLoadingMonitor(this.callback)
-    					.setLoadOptions(this.loadOptions)
-    					.loadVSETFile(this.cameraFile)
-    					.create();
-    			
-    			if (this.geometryFile == null)
-				{
-    				this.geometryFile = resources.viewSet.getGeometryFile();
-				}
-    		}
-	    	
+    		this.resources = resourceBuilder.create();
+    		
 	    	this.mainRenderable = context.createRenderable(program);
 	    	this.mainRenderable.addVertexBuffer("position", this.resources.positionBuffer);
 	    	
@@ -394,7 +368,6 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	}
     	else
     	{
-    		// From old ULFRenderer update()
     		this.updateCentroidAndRadius();
     		
     		if (this.newEnvironmentFile != null)
@@ -1106,7 +1079,6 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	@Override
 	public void cleanup() 
 	{
-		// From old ULFRenderer
 		resources.deleteOpenGLResources();
     	
 		if (this.refScenePositions != null)
@@ -1182,7 +1154,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private void resample() throws IOException
 	{
-		ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile).createViewSet();
+		ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile);
 		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleWidth, resampleHeight)
 				.addColorAttachment()
 				.addDepthAttachment()
@@ -1541,7 +1513,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    		out.println("Expected error for views in target view set:");
 	    		out.println();
 	    		
-	    		ViewSet targetViewSet = ViewSet.loadFromVSETFile(fidelityVSETFile).createViewSet();
+	    		ViewSet targetViewSet = ViewSet.loadFromVSETFile(fidelityVSETFile);
 	    		
 	    		Vector3[] targetDirections = new Vector3[targetViewSet.getCameraPoseCount()];
 	    		
@@ -2025,9 +1997,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	@Override
 	public String toString()
 	{
-		return this.cameraFile.getPath().length() > 32 
-				? "..." + this.cameraFile.getPath().substring(this.cameraFile.getPath().length()-31, this.cameraFile.getPath().length()) 
-				: this.cameraFile.getPath();
+		return this.id.length() > 32 
+				? "..." + this.id.substring(this.id.length()-31, this.id.length()) 
+				: this.id;
 	}
 
 	@Override
