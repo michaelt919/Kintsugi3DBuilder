@@ -30,7 +30,6 @@ public class TextureFitParameters
 	private boolean normalTextureEnabled = false;
 	private boolean specularTextureEnabled = true;
 	private boolean levenbergMarquardtOptimizationEnabled = false;
-	private boolean roughnessTextureEnabled = false;
 	
 	private double[] linearLuminanceValues;
 	private byte[] encodedLuminanceValues;
@@ -245,16 +244,6 @@ public class TextureFitParameters
 	public void setLevenbergMarquardtOptimizationEnabled(boolean levenbergMarquardtOptimizationEnabled)
 	{
 		this.levenbergMarquardtOptimizationEnabled = levenbergMarquardtOptimizationEnabled;
-	}
-
-	public boolean isRoughnessTextureEnabled() 
-	{
-		return this.roughnessTextureEnabled;
-	}
-
-	public void setRoughnessTextureEnabled(boolean roughnessTextureEnabled) 
-	{
-		this.roughnessTextureEnabled = roughnessTextureEnabled;
 	}
 
 	public double[] getLinearLuminanceValues() 

@@ -248,20 +248,17 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 					geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
 			
 				vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL_sample, maxLuminance);
-				
-				vec3 mfd = specularResid.rgb * 4 * nDotV_sample * lightDistSquared / lightIntensity;
-				// vec3 mfd = specularResid.rgb * lightDistSquared / lightIntensity;
-				
-				
-				float mfd_mono = getLuminance(mfd / specularColor);
+				vec3 mfdFresnel = specularResid.rgb * 4 * nDotV_sample * lightDistSquared / lightIntensity;
+				float mfdMono = getLuminance(mfdFresnel / specularColor);
 				
 				return vec4(
-					mfd
-					//fresnel(mfd, vec3(mfd_mono), hDotV_virtual)
-				/*	* geomAttenVirtual */
+					mfdFresnel
+					//fresnel(mfdFresnel, vec3(mfdMono), hDotV_virtual)
+					* (pbrGeometricAttenuationEnabled ? geomAttenVirtual : 1.0)
 					* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
 										* virtualLightDir),
-					mfd_mono /* * geomAttenSample */);
+					(useSpecularTexture ? mfdMono : 1.0) 
+						* (pbrGeometricAttenuationEnabled ? geomAttenSample : 1.0) );
 			}
 			else
 			{

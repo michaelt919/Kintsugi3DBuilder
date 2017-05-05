@@ -41,7 +41,6 @@ import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.helpers.VertexMesh;
 import tetzlaff.helpers.EnvironmentMap;
 import tetzlaff.ibr.IBRDrawable;
-import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
@@ -762,12 +761,22 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private Matrix4 setupLight(int lightIndex, int modelInstance)
 	{
-		Matrix4 lightMatrix = getLightMatrix(lightIndex).times(this.transformationMatrices.get(modelInstance));
+		Matrix4 lightMatrix = 
+			getLightMatrix(lightIndex).times(this.transformationMatrices.get(modelInstance));
 		
-		// lightMatrix can be hardcoded here
-			//Matrix4.rotateY(-12 * Math.PI / 16).times(Matrix4.rotateX(0 * Math.PI / 16));
+		// lightMatrix can be hardcoded here (comment out previous line)
+			
+			// Contemporary gallery and stonewall
+			//Matrix4.rotateY(8 * Math.PI / 16).times(Matrix4.rotateX(0 * Math.PI / 16))
+				
+			// Color studio 2:
+			//Matrix4.rotateY(-2 * Math.PI / 16).times(Matrix4.rotateX(0 * Math.PI / 16))
+			
+			// For the synthetic falcon example?
 			//Matrix4.rotateY(3 * Math.PI / 4).times(Matrix4.rotateX(-Math.PI / 4))
-			//	.times(new Matrix4(new Matrix3(microfacetField.ulf.viewSet.getCameraPose(0))));
+				
+			// Always end with this when hardcoding:
+			//	.times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0))));
 		
 		if (lightIndex == 0)
 		{

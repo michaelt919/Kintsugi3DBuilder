@@ -140,7 +140,14 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		public Builder<ContextType> loadVSETFile(File vsetFile) throws IOException
 		{
 			this.viewSet = ViewSet.loadFromVSETFile(vsetFile);
-			this.geometry = new VertexMesh("OBJ", this.viewSet.getGeometryFile());
+			try
+			{
+				this.geometry = new VertexMesh("OBJ", this.viewSet.getGeometryFile());
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
 			return this;
 		}
 		
@@ -148,7 +155,10 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws IOException
 		{
 			this.viewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
-			this.geometry = new VertexMesh("OBJ", geometryFile);
+			if (geometryFile != null)
+			{
+				this.geometry = new VertexMesh("OBJ", geometryFile);
+			}
 			if (undistortedImageDirectory != null)
 			{
 				this.imageDirectoryOverride = undistortedImageDirectory;
@@ -486,104 +496,114 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		String roughnessTextureName = null;
 		
 		// TODO Use more information from the material.  Currently just pulling texture names.
-		Material material = this.geometry.getMaterial();
-		if (material != null)
+		if (this.geometry != null)
 		{
-			if (material.getDiffuseMap() != null)
+			Material material = this.geometry.getMaterial();
+			if (material != null)
 			{
-				diffuseTextureName = material.getDiffuseMap().getMapName();
+				if (material.getDiffuseMap() != null)
+				{
+					diffuseTextureName = material.getDiffuseMap().getMapName();
+				}
+	
+				if (material.getNormalMap() != null)
+				{
+					normalTextureName = material.getNormalMap().getMapName();
+				}
+	
+				if (material.getSpecularMap() != null)
+				{
+					specularTextureName = material.getSpecularMap().getMapName();
+				}
+	
+				if (material.getRoughnessMap() != null)
+				{
+					roughnessTextureName = material.getRoughnessMap().getMapName();
+				}
 			}
-
-			if (material.getNormalMap() != null)
-			{
-				normalTextureName = material.getNormalMap().getMapName();
-			}
-
-			if (material.getSpecularMap() != null)
-			{
-				specularTextureName = material.getSpecularMap().getMapName();
-			}
-
-			if (material.getRoughnessMap() != null)
-			{
-				roughnessTextureName = material.getRoughnessMap().getMapName();
-			}
-		}
 		
-		if (this.viewSet.getGeometryFileName() != null)
-		{
-			String prefix = this.viewSet.getGeometryFileName().split("\\.")[0];
-			diffuseTextureName = diffuseTextureName != null ? diffuseTextureName : prefix + "_Kd.png";
-			normalTextureName = normalTextureName != null ? normalTextureName : prefix + "_norm.png";
-			specularTextureName = specularTextureName != null ? specularTextureName : prefix + "_Ks.png";
-			roughnessTextureName = roughnessTextureName != null ? roughnessTextureName : prefix + "_Pr.png";
-		}
-		else
-		{
-			diffuseTextureName = diffuseTextureName != null ? diffuseTextureName : "diffuse.png";
-			normalTextureName = normalTextureName != null ? normalTextureName : "normal.png";
-			specularTextureName = specularTextureName != null ? specularTextureName : "specular.png";
-			roughnessTextureName = roughnessTextureName != null ? roughnessTextureName : "roughness.png";
-		}
-		
-		File diffuseFile = new File(this.geometry.getFilename().getParentFile(), diffuseTextureName);
-		File normalFile = new File(this.geometry.getFilename().getParentFile(), normalTextureName);
-		File specularFile = new File(this.geometry.getFilename().getParentFile(), specularTextureName);
-		File roughnessFile = new File(this.geometry.getFilename().getParentFile(), roughnessTextureName);
-		
-		if (diffuseFile != null && diffuseFile.exists())
-		{
-			System.out.println("Diffuse texture found.");
-			diffuseTexture = context.get2DColorTextureBuilder(diffuseFile, true)
-					.setInternalFormat(ColorFormat.RGB8)
-					.setMipmapsEnabled(true)
-					.setLinearFilteringEnabled(true)
-					.createTexture();
+			if (this.viewSet.getGeometryFileName() != null)
+			{
+				String prefix = this.viewSet.getGeometryFileName().split("\\.")[0];
+				diffuseTextureName = diffuseTextureName != null ? diffuseTextureName : prefix + "_Kd.png";
+				normalTextureName = normalTextureName != null ? normalTextureName : prefix + "_norm.png";
+				specularTextureName = specularTextureName != null ? specularTextureName : prefix + "_Ks.png";
+				roughnessTextureName = roughnessTextureName != null ? roughnessTextureName : prefix + "_Pr.png";
+			}
+			else
+			{
+				diffuseTextureName = diffuseTextureName != null ? diffuseTextureName : "diffuse.png";
+				normalTextureName = normalTextureName != null ? normalTextureName : "normal.png";
+				specularTextureName = specularTextureName != null ? specularTextureName : "specular.png";
+				roughnessTextureName = roughnessTextureName != null ? roughnessTextureName : "roughness.png";
+			}
+			
+			File diffuseFile = new File(this.geometry.getFilename().getParentFile(), diffuseTextureName);
+			File normalFile = new File(this.geometry.getFilename().getParentFile(), normalTextureName);
+			File specularFile = new File(this.geometry.getFilename().getParentFile(), specularTextureName);
+			File roughnessFile = new File(this.geometry.getFilename().getParentFile(), roughnessTextureName);
+			
+			if (diffuseFile != null && diffuseFile.exists())
+			{
+				System.out.println("Diffuse texture found.");
+				diffuseTexture = context.get2DColorTextureBuilder(diffuseFile, true)
+						.setInternalFormat(ColorFormat.RGB8)
+						.setMipmapsEnabled(true)
+						.setLinearFilteringEnabled(true)
+						.createTexture();
+			}
+			else
+			{
+				diffuseTexture = null;
+			}
+			
+			if (normalFile != null && normalFile.exists())
+			{
+				System.out.println("Normal texture found.");
+				normalTexture = context.get2DColorTextureBuilder(normalFile, true)
+						.setInternalFormat(ColorFormat.RGB8)
+						.setMipmapsEnabled(true)
+						.setLinearFilteringEnabled(true)
+						.createTexture();
+			}
+			else
+			{
+				normalTexture = null;
+			}
+			
+			if (specularFile != null && specularFile.exists())
+			{
+				System.out.println("Specular texture found.");
+				specularTexture = context.get2DColorTextureBuilder(specularFile, true)
+						.setInternalFormat(ColorFormat.RGB8)
+						.setMipmapsEnabled(true)
+						.setLinearFilteringEnabled(true)
+						.createTexture();
+			}
+			else
+			{
+				specularTexture = null;
+			}
+			
+			if (roughnessFile != null && roughnessFile.exists())
+			{
+				System.out.println("Roughness texture found.");
+				roughnessTexture = context.get2DColorTextureBuilder(roughnessFile, true)
+						.setInternalFormat(ColorFormat.R8)
+						.setMipmapsEnabled(true)
+						.setLinearFilteringEnabled(true)
+						.createTexture();
+			}
+			else
+			{
+				roughnessTexture = null;
+			}
 		}
 		else
 		{
 			diffuseTexture = null;
-		}
-		
-		if (normalFile != null && normalFile.exists())
-		{
-			System.out.println("Normal texture found.");
-			normalTexture = context.get2DColorTextureBuilder(normalFile, true)
-					.setInternalFormat(ColorFormat.RGB8)
-					.setMipmapsEnabled(true)
-					.setLinearFilteringEnabled(true)
-					.createTexture();
-		}
-		else
-		{
 			normalTexture = null;
-		}
-		
-		if (specularFile != null && specularFile.exists())
-		{
-			System.out.println("Specular texture found.");
-			specularTexture = context.get2DColorTextureBuilder(specularFile, true)
-					.setInternalFormat(ColorFormat.RGB8)
-					.setMipmapsEnabled(true)
-					.setLinearFilteringEnabled(true)
-					.createTexture();
-		}
-		else
-		{
 			specularTexture = null;
-		}
-		
-		if (roughnessFile != null && roughnessFile.exists())
-		{
-			System.out.println("Roughness texture found.");
-			roughnessTexture = context.get2DColorTextureBuilder(roughnessFile, true)
-					.setInternalFormat(ColorFormat.R8)
-					.setMipmapsEnabled(true)
-					.setLinearFilteringEnabled(true)
-					.createTexture();
-		}
-		else
-		{
 			roughnessTexture = null;
 		}
 		

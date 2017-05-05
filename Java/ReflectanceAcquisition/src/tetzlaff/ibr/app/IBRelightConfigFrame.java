@@ -22,7 +22,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
-import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.SpinnerNumberModel;
@@ -114,10 +113,10 @@ public class IBRelightConfigFrame extends JFrame
 		panel_2.add(loadingPanel);
 		loadingPanel.setBorder(new TitledBorder(null, "Load Options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		GridBagLayout gbl_loadingPanel = new GridBagLayout();
-		gbl_loadingPanel.columnWidths = new int[] {140, 140};
-		gbl_loadingPanel.rowHeights = new int[] {0, 0, 0, 0, 14};
+		gbl_loadingPanel.columnWidths = new int[] {0, 0};
+		gbl_loadingPanel.rowHeights = new int[] {0, 0, 0, 0};
 		gbl_loadingPanel.columnWeights = new double[]{1.0, 0.0};
-		gbl_loadingPanel.rowWeights = new double[]{0.0, 1.0, 1.0, 0.0, 0.0};
+		gbl_loadingPanel.rowWeights = new double[]{0.0, 1.0, 1.0, 0.0};
 		loadingPanel.setLayout(gbl_loadingPanel);
 		
 		JCheckBox chckbxCompressImages = new JCheckBox("Compress Images");
@@ -203,7 +202,6 @@ public class IBRelightConfigFrame extends JFrame
 		
 		JButton btnLoadSingle = new JButton("Load Object...");
 		GridBagConstraints gbc_btnLoadSingle = new GridBagConstraints();
-		gbc_btnLoadSingle.gridwidth = 2;
 		gbc_btnLoadSingle.anchor = GridBagConstraints.NORTH;
 		gbc_btnLoadSingle.insets = new Insets(0, 0, 5, 5);
 		gbc_btnLoadSingle.gridx = 0;
@@ -214,17 +212,18 @@ public class IBRelightConfigFrame extends JFrame
 		JProgressBar progressBar = new JProgressBar();
 		progressBar.setIndeterminate(true);
 		GridBagConstraints gbc_progressBar = new GridBagConstraints();
+		gbc_progressBar.insets = new Insets(0, 0, 5, 0);
 		gbc_progressBar.fill = GridBagConstraints.BOTH;
-		gbc_progressBar.gridwidth = 2;
-		gbc_progressBar.insets = new Insets(0, 0, 0, 5);
-		gbc_progressBar.gridx = 0;
-		gbc_progressBar.gridy = 4;
+		gbc_progressBar.gridx = 1;
+		gbc_progressBar.gridy = 3;
 		loadingPanel.add(progressBar, gbc_progressBar);
+		
+		progressBar.setVisible(false);
 		
 		JPanel selectionPanel = new JPanel();
 		panel_2.add(selectionPanel);
-		selectionPanel.setToolTipText("Options for loading and changing the current object");
-		selectionPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Model Options", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		selectionPanel.setToolTipText("");
+		selectionPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Model Selection", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		GridBagLayout gbl_selectionPanel = new GridBagLayout();
 		gbl_selectionPanel.columnWidths = new int[] {0, 0, 0};
 		gbl_selectionPanel.rowHeights = new int[] {0};
@@ -495,77 +494,6 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_chckbxMultisampling.gridy = 0;
 		qualitySettings.add(chckbxMultisampling, gbc_chckbxMultisampling);
 		
-		JPanel resamplePanel = new JPanel();
-		panel_2.add(resamplePanel);
-		resamplePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Resample Light Field", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		GridBagLayout gbl_resamplePanel = new GridBagLayout();
-		gbl_resamplePanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0};
-		gbl_resamplePanel.rowHeights = new int[] {0, 0};
-		gbl_resamplePanel.columnWeights = new double[]{1.0, 1.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
-		gbl_resamplePanel.rowWeights = new double[]{0.0, 1.0};
-		resamplePanel.setLayout(gbl_resamplePanel);
-		
-		JLabel lblNewDimensions = new JLabel("New Dimensions:");
-		GridBagConstraints gbc_lblNewDimensions = new GridBagConstraints();
-		gbc_lblNewDimensions.insets = new Insets(0, 5, 5, 5);
-		gbc_lblNewDimensions.gridx = 0;
-		gbc_lblNewDimensions.gridy = 0;
-		resamplePanel.add(lblNewDimensions, gbc_lblNewDimensions);
-		
-		JSpinner spinnerWidth = new JSpinner(new SpinnerNumberModel(1024, 1, 8192, 1));
-		lblNewDimensions.setLabelFor(spinnerWidth);
-		spinnerWidth.setToolTipText("New view width");
-		GridBagConstraints gbc_spinnerWidth = new GridBagConstraints();
-		gbc_spinnerWidth.fill = GridBagConstraints.HORIZONTAL;
-		gbc_spinnerWidth.insets = new Insets(0, 0, 5, 5);
-		gbc_spinnerWidth.gridx = 1;
-		gbc_spinnerWidth.gridy = 0;
-		resamplePanel.add(spinnerWidth, gbc_spinnerWidth);
-		
-		JLabel lblX = new JLabel("X");
-		GridBagConstraints gbc_lblX = new GridBagConstraints();
-		gbc_lblX.insets = new Insets(0, 0, 5, 5);
-		gbc_lblX.gridx = 2;
-		gbc_lblX.gridy = 0;
-		resamplePanel.add(lblX, gbc_lblX);
-		
-		JSpinner spinnerHeight = new JSpinner(new SpinnerNumberModel(1024, 1, 8192, 1));
-		spinnerHeight.setToolTipText("New view height");
-		GridBagConstraints gbc_spinnerHeight = new GridBagConstraints();
-		gbc_spinnerHeight.gridwidth = 2;
-		gbc_spinnerHeight.insets = new Insets(0, 0, 5, 5);
-		gbc_spinnerHeight.fill = GridBagConstraints.HORIZONTAL;
-		gbc_spinnerHeight.gridx = 3;
-		gbc_spinnerHeight.gridy = 0;
-		resamplePanel.add(spinnerHeight, gbc_spinnerHeight);
-		
-		JPanel panel_1 = new JPanel();
-		panel_1.setBorder(null);
-		GridBagConstraints gbc_panel_1 = new GridBagConstraints();
-		gbc_panel_1.gridwidth = 5;
-		gbc_panel_1.insets = new Insets(0, 0, 5, 5);
-		gbc_panel_1.fill = GridBagConstraints.VERTICAL;
-		gbc_panel_1.gridx = 0;
-		gbc_panel_1.gridy = 1;
-		resamplePanel.add(panel_1, gbc_panel_1);
-		panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.X_AXIS));
-		
-		JButton btnResample = new JButton("Resample");
-		panel_1.add(btnResample);
-		btnResample.setToolTipText("Resample all images of the currently active object to the above dimensions");
-		
-		JButton btnFidelity = new JButton("Fidelity Metric");
-//		btnFidelity.setEnabled(false);
-//		btnFidelity.setVisible(false);
-		panel_1.add(btnFidelity);
-		btnFidelity.setToolTipText("Evaluate the fidelity of the image-based sampling.");
-		
-		JButton btnBTFExport = new JButton("Export BTF");
-		btnBTFExport.setEnabled(false);
-		btnBTFExport.setVisible(false);
-		panel_1.add(btnBTFExport);
-		btnBTFExport.setToolTipText("Evaluate the fidelity of the image-based sampling.");
-		
 		// Set the combo box model to the parameter
 		if(model != null) { comboBoxObjects.setModel(model); }
 		
@@ -588,13 +516,6 @@ public class IBRelightConfigFrame extends JFrame
 		modelDependentComponents.add(chckbxVisualizeLights);
 		modelDependentComponents.add(chckbxHalfRes);
 		modelDependentComponents.add(chckbxMultisampling);
-		modelDependentComponents.add(lblNewDimensions);
-		modelDependentComponents.add(spinnerWidth);
-		modelDependentComponents.add(lblX);
-		modelDependentComponents.add(spinnerHeight);
-		modelDependentComponents.add(btnResample);
-		modelDependentComponents.add(btnFidelity);
-		modelDependentComponents.add(btnBTFExport);
 		
 		Runnable updateWidgetsFromSettings = () ->
 		{
@@ -715,85 +636,6 @@ public class IBRelightConfigFrame extends JFrame
 				}
 			});
 		}
-		
-		btnBTFExport.addActionListener(e ->
-		{
-			fileChooser.setDialogTitle("Choose an Export Directory");
-			fileChooser.resetChoosableFileFilters();
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			
-			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-			{
-				progressBar.setIndeterminate(true);
-				progressBar.setVisible(true);
-				this.pack();
-				model.getSelectedItem().requestBTF(
-					(Integer)spinnerWidth.getValue(),
-					(Integer)spinnerHeight.getValue(),
-					fileChooser.getSelectedFile());
-			}
-		});
-		
-		// Add listener for the 'resample' button to generate new vies for the current light field.
-		btnFidelity.addActionListener(e -> 
-		{
-			fileChooser.setDialogTitle("Choose an Export Filename");
-			fileChooser.resetChoosableFileFilters();
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			fileChooser.setFileFilter(new FileNameExtensionFilter("Text files (.txt)", "txt"));
-			
-			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-			{
-				File fidelityOutputFile = fileChooser.getSelectedFile();
-				
-				fileChooser.setDialogTitle("Choose a Target VSET File");
-				fileChooser.resetChoosableFileFilters();
-				fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				fileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
-				
-				if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-				{
-					File targetVSETFile = fileChooser.getSelectedFile();
-					
-					progressBar.setIndeterminate(true);
-					progressBar.setVisible(true);
-					this.pack();
-					model.getSelectedItem().requestFidelity(fidelityOutputFile, targetVSETFile);
-				}
-			}
-		});
-		
-		// Add listener for the 'resample' button to generate new views for the current light field.
-		btnResample.addActionListener(e -> 
-		{
-			fileChooser.setDialogTitle("Choose a Target VSET File");
-			fileChooser.resetChoosableFileFilters();
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			fileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
-			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-			{
-				JFileChooser exportFileChooser = new JFileChooser(fileChooser.getSelectedFile().getParentFile());
-				exportFileChooser.setDialogTitle("Choose an Export Directory");
-				exportFileChooser.removeChoosableFileFilter(exportFileChooser.getAcceptAllFileFilter());
-				exportFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				
-				if (exportFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-				{
-					progressBar.setIndeterminate(true);
-					progressBar.setVisible(true);
-					this.pack();
-					model.getSelectedItem().requestResample(
-						(Integer)spinnerWidth.getValue(),
-						(Integer)spinnerHeight.getValue(), 
-						fileChooser.getSelectedFile(), 
-						exportFileChooser.getSelectedFile());
-				}
-			}
-		});
 		
 		// Add listener for changes to half resolution checkbox.
 		chckbxHalfRes.addChangeListener(e ->
@@ -984,9 +826,9 @@ public class IBRelightConfigFrame extends JFrame
 		contentPane.add(panel_3, gbc_panel_3);
 		GridBagLayout gbl_panel_3 = new GridBagLayout();
 		gbl_panel_3.columnWidths = new int[] {315, 0};
-		gbl_panel_3.rowHeights = new int[] {0, 0, 0};
+		gbl_panel_3.rowHeights = new int[] {0, 30, 0, 0, 30};
 		gbl_panel_3.columnWeights = new double[]{0.0, 0.0};
-		gbl_panel_3.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		gbl_panel_3.rowWeights = new double[]{0.0, Double.MIN_VALUE, 0.0, 0.0, 0.0};
 		panel_3.setLayout(gbl_panel_3);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -1002,9 +844,9 @@ public class IBRelightConfigFrame extends JFrame
 		tabbedPane.addTab("Light 1", null, panel_4, null);
 		GridBagLayout gbl_panel_4 = new GridBagLayout();
 		gbl_panel_4.columnWidths = new int[] {100, 100, 0, 0};
-		gbl_panel_4.rowHeights = new int[] {20, 20, 20};
+		gbl_panel_4.rowHeights = new int[] {0, 30};
 		gbl_panel_4.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel_4.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_4.rowWeights = new double[]{0.0, 0.0};
 		panel_4.setLayout(gbl_panel_4);
 		
 		JColorChooser light0ColorChooser = new JColorChooser();
@@ -1037,9 +879,9 @@ public class IBRelightConfigFrame extends JFrame
 		tabbedPane.addTab("Light 2", null, panel_5, null);
 		GridBagLayout gbl_panel_5 = new GridBagLayout();
 		gbl_panel_5.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_5.rowHeights = new int[] {0, 0, 0};
+		gbl_panel_5.rowHeights = new int[] {0, 30};
 		gbl_panel_5.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel_5.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_5.rowWeights = new double[]{0.0, 0.0};
 		panel_5.setLayout(gbl_panel_5);
 		
 		JColorChooser light1ColorChooser = new JColorChooser();
@@ -1072,9 +914,9 @@ public class IBRelightConfigFrame extends JFrame
 		tabbedPane.addTab("Light 3", null, panel_6, null);
 		GridBagLayout gbl_panel_6 = new GridBagLayout();
 		gbl_panel_6.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_6.rowHeights = new int[] {0, 0, 0};
+		gbl_panel_6.rowHeights = new int[] {0, 30};
 		gbl_panel_6.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel_6.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_6.rowWeights = new double[]{0.0, 0.0};
 		panel_6.setLayout(gbl_panel_6);
 		
 		JColorChooser light2ColorChooser = new JColorChooser();
@@ -1107,17 +949,17 @@ public class IBRelightConfigFrame extends JFrame
 		tabbedPane.addTab("Light 4", null, panel_7, null);
 		GridBagLayout gbl_panel_7 = new GridBagLayout();
 		gbl_panel_7.columnWidths = new int[]{100, 100, 0, 0};
-		gbl_panel_7.rowHeights = new int[] {0, 0, 0};
+		gbl_panel_7.rowHeights = new int[] {0, 30};
 		gbl_panel_7.columnWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel_7.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_7.rowWeights = new double[]{0.0, 0.0};
 		panel_7.setLayout(gbl_panel_7);
 		
 		JColorChooser light3ColorChooser = new JColorChooser();
 		light3ColorChooser.setPreviewPanel(new JPanel());
 		GridBagConstraints gbc_light3ColorChooser = new GridBagConstraints();
+		gbc_light3ColorChooser.insets = new Insets(0, 0, 5, 0);
 		gbc_light3ColorChooser.anchor = GridBagConstraints.NORTHWEST;
 		gbc_light3ColorChooser.gridwidth = 3;
-		gbc_light3ColorChooser.insets = new Insets(0, 0, 5, 0);
 		gbc_light3ColorChooser.gridx = 0;
 		gbc_light3ColorChooser.gridy = 0;
 		panel_7.add(light3ColorChooser, gbc_light3ColorChooser);
@@ -1141,17 +983,17 @@ public class IBRelightConfigFrame extends JFrame
 		JPanel panel_8 = new JPanel();
 		tabbedPane.addTab("Ambient/Environment Light", null, panel_8, null);
 		GridBagLayout gbl_panel_8 = new GridBagLayout();
-		gbl_panel_8.columnWidths = new int[]{100, 100, 0, 0, 0};
-		gbl_panel_8.rowHeights = new int[] {20, 20, 20, 0, 20};
-		gbl_panel_8.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel_8.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_8.columnWidths = new int[]{100, 100, 0, 0, 0, 0, 0, 0};
+		gbl_panel_8.rowHeights = new int[] {0, 30};
+		gbl_panel_8.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_8.rowWeights = new double[]{0.0, 0.0};
 		panel_8.setLayout(gbl_panel_8);
 		
 		JColorChooser ambientColorChooser = new JColorChooser();
 		ambientColorChooser.setPreviewPanel(new JPanel());
 		GridBagConstraints gbc_ambientColorChooser = new GridBagConstraints();
 		gbc_ambientColorChooser.anchor = GridBagConstraints.NORTHWEST;
-		gbc_ambientColorChooser.gridwidth = 4;
+		gbc_ambientColorChooser.gridwidth = 7;
 		gbc_ambientColorChooser.insets = new Insets(0, 0, 5, 0);
 		gbc_ambientColorChooser.gridx = 0;
 		gbc_ambientColorChooser.gridy = 0;
@@ -1175,11 +1017,16 @@ public class IBRelightConfigFrame extends JFrame
 		
 		JCheckBox chckbxEnvironmentMapping = new JCheckBox("Environment mapping");
 		GridBagConstraints gbc_chckbxEnvironmentMapping = new GridBagConstraints();
-		gbc_chckbxEnvironmentMapping.gridwidth = 2;
 		gbc_chckbxEnvironmentMapping.insets = new Insets(0, 0, 5, 5);
-		gbc_chckbxEnvironmentMapping.gridx = 0;
-		gbc_chckbxEnvironmentMapping.gridy = 2;
+		gbc_chckbxEnvironmentMapping.gridx = 3;
+		gbc_chckbxEnvironmentMapping.gridy = 1;
 		panel_8.add(chckbxEnvironmentMapping, gbc_chckbxEnvironmentMapping);
+		
+		
+		chckbxEnvironmentMapping.addChangeListener((e) ->
+		{
+			lightController.setEnvironmentMappingEnabled(chckbxEnvironmentMapping.isSelected());
+		});
 		
 		JButton btnLoadEnvironmentTexture = new JButton("Load environment texture file...");
 		btnLoadEnvironmentTexture.addActionListener(e -> 
@@ -1205,15 +1052,14 @@ public class IBRelightConfigFrame extends JFrame
 			}
 		});
 		GridBagConstraints gbc_btnLoadEnvironmentTexture = new GridBagConstraints();
-		gbc_btnLoadEnvironmentTexture.gridwidth = 2;
-		gbc_btnLoadEnvironmentTexture.insets = new Insets(0, 0, 0, 5);
-		gbc_btnLoadEnvironmentTexture.gridx = 0;
-		gbc_btnLoadEnvironmentTexture.gridy = 3;
+		gbc_btnLoadEnvironmentTexture.insets = new Insets(0, 0, 5, 5);
+		gbc_btnLoadEnvironmentTexture.gridx = 5;
+		gbc_btnLoadEnvironmentTexture.gridy = 1;
 		panel_8.add(btnLoadEnvironmentTexture, gbc_btnLoadEnvironmentTexture);
 		
 		JButton btnLoadReferenceScene = new JButton("Load Reference Scene Model...");
 		GridBagConstraints gbc_btnLoadReferenceScene = new GridBagConstraints();
-		gbc_btnLoadReferenceScene.insets = new Insets(0, 0, 0, 5);
+		gbc_btnLoadReferenceScene.insets = new Insets(0, 0, 5, 5);
 		gbc_btnLoadReferenceScene.gridx = 0;
 		gbc_btnLoadReferenceScene.gridy = 2;
 		panel_3.add(btnLoadReferenceScene, gbc_btnLoadReferenceScene);
@@ -1239,11 +1085,174 @@ public class IBRelightConfigFrame extends JFrame
 			}
 		});
 		
+		JPanel resamplePanel = new JPanel();
+		GridBagConstraints gbc_resamplePanel = new GridBagConstraints();
+		gbc_resamplePanel.gridheight = 4;
+		gbc_resamplePanel.gridx = 1;
+		gbc_resamplePanel.gridy = 1;
+		panel_3.add(resamplePanel, gbc_resamplePanel);
+		resamplePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Resample Light Field", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		GridBagLayout gbl_resamplePanel = new GridBagLayout();
+		gbl_resamplePanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0};
+		gbl_resamplePanel.rowHeights = new int[] {0, 0};
+		gbl_resamplePanel.columnWeights = new double[]{1.0, 1.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+		gbl_resamplePanel.rowWeights = new double[]{0.0, 1.0};
+		resamplePanel.setLayout(gbl_resamplePanel);
+		
+		JLabel lblNewDimensions = new JLabel("New Dimensions:");
+		GridBagConstraints gbc_lblNewDimensions = new GridBagConstraints();
+		gbc_lblNewDimensions.insets = new Insets(0, 5, 5, 5);
+		gbc_lblNewDimensions.gridx = 0;
+		gbc_lblNewDimensions.gridy = 0;
+		resamplePanel.add(lblNewDimensions, gbc_lblNewDimensions);
+		
+		JSpinner spinnerWidth = new JSpinner(new SpinnerNumberModel(1024, 1, 8192, 1));
+		lblNewDimensions.setLabelFor(spinnerWidth);
+		spinnerWidth.setToolTipText("New view width");
+		GridBagConstraints gbc_spinnerWidth = new GridBagConstraints();
+		gbc_spinnerWidth.fill = GridBagConstraints.HORIZONTAL;
+		gbc_spinnerWidth.insets = new Insets(0, 0, 5, 5);
+		gbc_spinnerWidth.gridx = 1;
+		gbc_spinnerWidth.gridy = 0;
+		resamplePanel.add(spinnerWidth, gbc_spinnerWidth);
+		
+		JLabel lblX = new JLabel("X");
+		GridBagConstraints gbc_lblX = new GridBagConstraints();
+		gbc_lblX.insets = new Insets(0, 0, 5, 5);
+		gbc_lblX.gridx = 2;
+		gbc_lblX.gridy = 0;
+		resamplePanel.add(lblX, gbc_lblX);
+		
+		JSpinner spinnerHeight = new JSpinner(new SpinnerNumberModel(1024, 1, 8192, 1));
+		spinnerHeight.setToolTipText("New view height");
+		GridBagConstraints gbc_spinnerHeight = new GridBagConstraints();
+		gbc_spinnerHeight.gridwidth = 2;
+		gbc_spinnerHeight.insets = new Insets(0, 0, 5, 5);
+		gbc_spinnerHeight.fill = GridBagConstraints.HORIZONTAL;
+		gbc_spinnerHeight.gridx = 3;
+		gbc_spinnerHeight.gridy = 0;
+		resamplePanel.add(spinnerHeight, gbc_spinnerHeight);
+		
+		JPanel panel_1 = new JPanel();
+		panel_1.setBorder(null);
+		GridBagConstraints gbc_panel_1 = new GridBagConstraints();
+		gbc_panel_1.gridwidth = 5;
+		gbc_panel_1.insets = new Insets(0, 0, 5, 5);
+		gbc_panel_1.fill = GridBagConstraints.VERTICAL;
+		gbc_panel_1.gridx = 0;
+		gbc_panel_1.gridy = 1;
+		resamplePanel.add(panel_1, gbc_panel_1);
+		panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.X_AXIS));
+		
+		JButton btnResample = new JButton("Resample");
+		panel_1.add(btnResample);
+		btnResample.setToolTipText("Resample all images of the currently active object to the above dimensions");
+		
+		JButton btnFidelity = new JButton("Fidelity Metric");
+		btnFidelity.setEnabled(false);
+		btnFidelity.setVisible(false);
+		panel_1.add(btnFidelity);
+		btnFidelity.setToolTipText("Evaluate the fidelity of the image-based sampling.");
+		
+		JButton btnBTFExport = new JButton("Export BTF");
+		btnBTFExport.setEnabled(false);
+		btnBTFExport.setVisible(false);
+		panel_1.add(btnBTFExport);
+		btnBTFExport.setToolTipText("Evaluate the fidelity of the image-based sampling.");
+		modelDependentComponents.add(lblNewDimensions);
+		modelDependentComponents.add(spinnerWidth);
+		modelDependentComponents.add(lblX);
+		modelDependentComponents.add(spinnerHeight);
+		modelDependentComponents.add(btnResample);
+		modelDependentComponents.add(btnFidelity);
+		modelDependentComponents.add(btnBTFExport);
+		
+		btnBTFExport.addActionListener(e ->
+		{
+			fileChooser.setDialogTitle("Choose an Export Directory");
+			fileChooser.resetChoosableFileFilters();
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			
+			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				progressBar.setIndeterminate(true);
+				progressBar.setVisible(true);
+				this.pack();
+				model.getSelectedItem().requestBTF(
+					(Integer)spinnerWidth.getValue(),
+					(Integer)spinnerHeight.getValue(),
+					fileChooser.getSelectedFile());
+			}
+		});
+		
+		// Add listener for the 'resample' button to generate new vies for the current light field.
+		btnFidelity.addActionListener(e -> 
+		{
+			fileChooser.setDialogTitle("Choose an Export Filename");
+			fileChooser.resetChoosableFileFilters();
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			fileChooser.setFileFilter(new FileNameExtensionFilter("Text files (.txt)", "txt"));
+			
+			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				File fidelityOutputFile = fileChooser.getSelectedFile();
+				
+				fileChooser.setDialogTitle("Choose a Target VSET File");
+				fileChooser.resetChoosableFileFilters();
+				fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
+				
+				if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+				{
+					File targetVSETFile = fileChooser.getSelectedFile();
+					
+					progressBar.setIndeterminate(true);
+					progressBar.setVisible(true);
+					this.pack();
+					model.getSelectedItem().requestFidelity(fidelityOutputFile, targetVSETFile);
+				}
+			}
+		});
+		
+		// Add listener for the 'resample' button to generate new views for the current light field.
+		btnResample.addActionListener(e -> 
+		{
+			fileChooser.setDialogTitle("Choose a Target VSET File");
+			fileChooser.resetChoosableFileFilters();
+			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			fileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
+			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			{
+				JFileChooser exportFileChooser = new JFileChooser(fileChooser.getSelectedFile().getParentFile());
+				exportFileChooser.setDialogTitle("Choose an Export Directory");
+				exportFileChooser.removeChoosableFileFilter(exportFileChooser.getAcceptAllFileFilter());
+				exportFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				
+				if (exportFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+				{
+					progressBar.setIndeterminate(true);
+					progressBar.setVisible(true);
+					this.pack();
+					model.getSelectedItem().requestResample(
+						(Integer)spinnerWidth.getValue(),
+						(Integer)spinnerHeight.getValue(), 
+						fileChooser.getSelectedFile(), 
+						exportFileChooser.getSelectedFile());
+				}
+			}
+		});
+		
 		
 		JButton btnLoadTransformationMatrices = new JButton("Load Transformation Matrices...");
 		GridBagConstraints gbc_btnLoadTransformationMatrices = new GridBagConstraints();
-		gbc_btnLoadTransformationMatrices.gridx = 1;
-		gbc_btnLoadTransformationMatrices.gridy = 2;
+		gbc_btnLoadTransformationMatrices.anchor = GridBagConstraints.NORTH;
+		gbc_btnLoadTransformationMatrices.insets = new Insets(0, 0, 5, 5);
+		gbc_btnLoadTransformationMatrices.gridx = 0;
+		gbc_btnLoadTransformationMatrices.gridy = 3;
 		panel_3.add(btnLoadTransformationMatrices, gbc_btnLoadTransformationMatrices);
 		btnLoadTransformationMatrices.addActionListener(e ->
 		{
@@ -1284,12 +1293,6 @@ public class IBRelightConfigFrame extends JFrame
 					ex.printStackTrace();
 				}
 			}
-		});
-		
-		
-		chckbxEnvironmentMapping.addChangeListener((e) ->
-		{
-			lightController.setEnvironmentMappingEnabled(chckbxEnvironmentMapping.isSelected());
 		});
 		
 		light0ColorChooser.getSelectionModel().addChangeListener(e ->
@@ -1383,8 +1386,6 @@ public class IBRelightConfigFrame extends JFrame
 		});
 		
 		this.pack(); // Pack initially without progress bar
-		
-		progressBar.setVisible(false);
 		
 		this.pack(); // Pack again without progress bar
 	}
