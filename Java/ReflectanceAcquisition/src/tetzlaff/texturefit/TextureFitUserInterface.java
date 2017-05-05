@@ -33,7 +33,6 @@ import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import tetzlaff.gl.NullContext;
 import tetzlaff.ibr.SampledLuminanceEncoding;
 import tetzlaff.ibr.ViewSet;
 
@@ -83,7 +82,6 @@ public class TextureFitUserInterface extends JFrame
 	private JCheckBox chckbxComputeSpecularTexture;
 	private JCheckBox chckbxEstimateLightOffset;
 	private JCheckBox chckbxComputeNormalMap;
-	private JCheckBox chckbxSpatiallyvaryingRoughnessMap;
 	private JCheckBox checkBoxEstimateGlobalLightIntensity;
 	private JCheckBox chckbxDebugMode;
 	private JCheckBox chckbxLevenbergMarquardtSpecularOptimization;
@@ -815,13 +813,6 @@ public class TextureFitUserInterface extends JFrame
 		gbc_chckbxLevenbergMarquardtSpecularOptimization.gridy = 3;
 		experimentalSettingsPanel.add(chckbxLevenbergMarquardtSpecularOptimization, gbc_chckbxLevenbergMarquardtSpecularOptimization);
 		
-		chckbxSpatiallyvaryingRoughnessMap = new JCheckBox("Spatially-varying roughness map");
-		GridBagConstraints gbc_chckbxSpatiallyvaryingRoughnessMap = new GridBagConstraints();
-		gbc_chckbxSpatiallyvaryingRoughnessMap.insets = new Insets(0, 0, 0, 5);
-		gbc_chckbxSpatiallyvaryingRoughnessMap.gridx = 0;
-		gbc_chckbxSpatiallyvaryingRoughnessMap.gridy = 4;
-		experimentalSettingsPanel.add(chckbxSpatiallyvaryingRoughnessMap, gbc_chckbxSpatiallyvaryingRoughnessMap);
-		
 		Box executeBox = new Box(BoxLayout.X_AXIS);
 		JPanel executeWrapper = new JPanel();
 		executeButton = new JButton("Execute...");
@@ -904,7 +895,6 @@ public class TextureFitUserInterface extends JFrame
 		param.setDiffuseTextureEnabled(this.chckbxComputeDiffuseTexture.isSelected());
 		param.setNormalTextureEnabled(this.chckbxComputeNormalMap.isSelected());
 		param.setSpecularTextureEnabled(this.chckbxComputeSpecularTexture.isSelected());
-		param.setRoughnessTextureEnabled(this.chckbxSpatiallyvaryingRoughnessMap.isSelected());
 		param.setLightIntensityEstimationEnabled(this.checkBoxEstimateGlobalLightIntensity.isSelected());
 		param.setLightOffsetEstimationEnabled(this.chckbxEstimateLightOffset.isSelected());
 		param.setLevenbergMarquardtOptimizationEnabled(this.chckbxLevenbergMarquardtSpecularOptimization.isSelected());

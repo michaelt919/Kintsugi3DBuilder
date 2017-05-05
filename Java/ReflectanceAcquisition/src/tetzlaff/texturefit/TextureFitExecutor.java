@@ -31,8 +31,6 @@ import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
-import tetzlaff.gl.helpers.DoubleMatrix3;
-import tetzlaff.gl.helpers.DoubleVector3;
 import tetzlaff.gl.helpers.FloatVertexList;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.Vector2;
@@ -615,130 +613,130 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				reflectivity = 1.0;
 			}
 			
-			if (!param.isLevenbergMarquardtOptimizationEnabled())
+			//if (!param.isLevenbergMarquardtOptimizationEnabled())
 			{
 				return new SpecularParams(reflectivity, Math.sqrt(roughnessSq), 0.0);
 			}
-			else
-			{
-				double remainder = 0.0;
-				
-				double sumSqError;
-				double nextSumSqError = computeSumSqError(roughnessSq, reflectivity, remainder, directionalRes, nDotHStart, 
-						colorSumLookup, colorSquareSumLookup, diffuseWeightSumLookup, specularWeightSumLookup, contributionSumLookup);
-				
-				int i = 0;
-				double deltaRoughnessSq;
-				double deltaReflectivity;
-				double deltaRemainder;
-				double shiftFraction = 1.0;
-				
-				do
-				{
-					// Solving for parameter vector: [ roughness^2, reflectivity, diffuse ]
-					DoubleMatrix3 jacobianSquared = new DoubleMatrix3(0.0f);
-					DoubleVector3 jacobianTimesResiduals = new DoubleVector3(0.0f);
-					
-					sumSqError = nextSumSqError;
-					
-					for (j = 0; j < directionalRes; j++)
-					{
-						specularWeightSum = specularWeightSumLookup.applyAsDouble(j);
-						if (specularWeightSum > 0.0)
-						{
-							coord = (double)j / (double)(directionalRes - 1);
-							nDotH = coord + (1 - coord) * nDotHStart;
-							contributionSum = contributionSumLookup.applyAsDouble(j);
-							
-							if (nDotH > 0.0 && contributionSum > 0.0 )
-							{
-								double nDotHSquared = nDotH * nDotH;
-								
-								// Scaled by pi
-	//							double mfdEst = Math.exp((nDotHSquared - 1) / (nDotHSquared * roughnessSq))
-	//									/ (roughnessSq * nDotHSquared * nDotHSquared);
-	//							
-	//							double mfdDeriv = -mfdEst * (nDotHSquared * (roughnessSq + 1) - 1) 
-	//									/ (roughnessSq * roughnessSq * nDotHSquared);
-								
-								// Optimize for GGX distribution
-								double q1 = roughnessSq + (1.0 - nDotHSquared) / nDotHSquared;
-								double mfdEst = roughnessSq / (nDotHSquared * nDotHSquared * q1 * q1);
-								double q2 = 1.0 + (roughnessSq - 1.0) * nDotHSquared;
-								double mfdDeriv = (1.0 - (roughnessSq + 1.0) * nDotHSquared) / (q2 * q2 * q2);
-										
-	//							double residualWeighted = (colorSumLookup.apply(j).y - specularWeightSum * (remainder + reflectivity * mfdEst));
-	//							DoubleVector3 derivsWeighted = new DoubleVector3(specularWeightSum * reflectivity * mfdDeriv, specularWeightSum * mfdEst, specularWeightSum);
-	
-								double diffuseWeightSum = diffuseWeightSumLookup.applyAsDouble(j);
-								double currentFit = (diffuseWeightSum * remainder + reflectivity * mfdEst * specularWeightSum) / contributionSum;
-								double residualWeighted = colorSumLookup.apply(j).y // already gamma corrected
-										- contributionSum * Math.pow(currentFit, FITTING_GAMMA_INV);
-								
-								double dw = FITTING_GAMMA_INV * Math.pow(currentFit, FITTING_GAMMA_INV - 1);
-								DoubleVector3 derivsWeighted = new DoubleVector3(
-										dw * specularWeightSum * reflectivity * mfdDeriv, 
-										dw * specularWeightSum * mfdEst, 
-										dw * diffuseWeightSum);
-								
-								DoubleVector3 derivsUnweighted = derivsWeighted.times(1.0 / contributionSum);
-								
-								jacobianSquared = jacobianSquared.plus(derivsUnweighted.outerProduct(derivsWeighted));
-								jacobianTimesResiduals = jacobianTimesResiduals.plus(derivsUnweighted.times(residualWeighted));
-							}
-						}
-					}
-					
-					DoubleMatrix3 jacobianSquaredInverse = jacobianSquared.inverse();
-					DoubleMatrix3 identityTest = jacobianSquaredInverse.times(jacobianSquared);
-					
-					DoubleVector3 paramDelta = jacobianSquared.inverse().times(jacobianTimesResiduals);
-					deltaRoughnessSq = shiftFraction * paramDelta.x;
-					deltaReflectivity = shiftFraction * paramDelta.y;
-					deltaRemainder = shiftFraction * paramDelta.z;
-					double nextRoughnessSq = roughnessSq + deltaRoughnessSq;
-					double nextReflectivity = reflectivity + deltaReflectivity;
-					double nextRemainder = remainder + deltaRemainder; // TODO is "remainder" even necessary?
-					
-					while(nextRoughnessSq < 0.0 || nextReflectivity < 0.0)
-					{
-						shiftFraction /= 2;
-						deltaRoughnessSq /= 2;
-						deltaReflectivity /= 2;
-						deltaRemainder /= 2;
-	
-						nextRoughnessSq = roughnessSq + deltaRoughnessSq;
-						nextReflectivity = reflectivity + deltaReflectivity;
-						nextRemainder = remainder + deltaRemainder;
-					}
-					
-					nextSumSqError = computeSumSqError(nextRoughnessSq, nextReflectivity, nextRemainder, directionalRes, nDotHStart, 
-							colorSumLookup, colorSquareSumLookup, diffuseWeightSumLookup, specularWeightSumLookup, contributionSumLookup);
-					
-					while(nextSumSqError > sumSqError)
-					{
-						shiftFraction /= 2;
-						deltaRoughnessSq /= 2;
-						deltaReflectivity /= 2;
-						deltaRemainder /= 2;
-	
-						nextRoughnessSq = roughnessSq + deltaRoughnessSq;
-						nextReflectivity = reflectivity + deltaReflectivity;
-						nextRemainder = remainder + deltaRemainder;
-						
-						nextSumSqError = computeSumSqError(nextRoughnessSq, nextReflectivity, nextRemainder, directionalRes, nDotHStart, 
-								colorSumLookup, colorSquareSumLookup, diffuseWeightSumLookup, specularWeightSumLookup, contributionSumLookup);
-					}
-					
-					roughnessSq = nextRoughnessSq;
-					reflectivity = nextReflectivity;
-					remainder = nextRemainder;
-				}
-				while(++i < 100 && (sumSqError - nextSumSqError) / sumSqError > 0.001);
-	
-				double roughness = Math.sqrt(roughnessSq);
-				return new SpecularParams(reflectivity, roughness, remainder);
-			}
+//			else
+//			{
+//				double remainder = 0.0;
+//				
+//				double sumSqError;
+//				double nextSumSqError = computeSumSqError(roughnessSq, reflectivity, remainder, directionalRes, nDotHStart, 
+//						colorSumLookup, colorSquareSumLookup, diffuseWeightSumLookup, specularWeightSumLookup, contributionSumLookup);
+//				
+//				int i = 0;
+//				double deltaRoughnessSq;
+//				double deltaReflectivity;
+//				double deltaRemainder;
+//				double shiftFraction = 1.0;
+//				
+//				do
+//				{
+//					// Solving for parameter vector: [ roughness^2, reflectivity, diffuse ]
+//					DoubleMatrix3 jacobianSquared = new DoubleMatrix3(0.0f);
+//					DoubleVector3 jacobianTimesResiduals = new DoubleVector3(0.0f);
+//					
+//					sumSqError = nextSumSqError;
+//					
+//					for (j = 0; j < directionalRes; j++)
+//					{
+//						specularWeightSum = specularWeightSumLookup.applyAsDouble(j);
+//						if (specularWeightSum > 0.0)
+//						{
+//							coord = (double)j / (double)(directionalRes - 1);
+//							nDotH = coord + (1 - coord) * nDotHStart;
+//							contributionSum = contributionSumLookup.applyAsDouble(j);
+//							
+//							if (nDotH > 0.0 && contributionSum > 0.0 )
+//							{
+//								double nDotHSquared = nDotH * nDotH;
+//								
+//								// Scaled by pi
+//	//							double mfdEst = Math.exp((nDotHSquared - 1) / (nDotHSquared * roughnessSq))
+//	//									/ (roughnessSq * nDotHSquared * nDotHSquared);
+//	//							
+//	//							double mfdDeriv = -mfdEst * (nDotHSquared * (roughnessSq + 1) - 1) 
+//	//									/ (roughnessSq * roughnessSq * nDotHSquared);
+//								
+//								// Optimize for GGX distribution
+//								double q1 = roughnessSq + (1.0 - nDotHSquared) / nDotHSquared;
+//								double mfdEst = roughnessSq / (nDotHSquared * nDotHSquared * q1 * q1);
+//								double q2 = 1.0 + (roughnessSq - 1.0) * nDotHSquared;
+//								double mfdDeriv = (1.0 - (roughnessSq + 1.0) * nDotHSquared) / (q2 * q2 * q2);
+//										
+//	//							double residualWeighted = (colorSumLookup.apply(j).y - specularWeightSum * (remainder + reflectivity * mfdEst));
+//	//							DoubleVector3 derivsWeighted = new DoubleVector3(specularWeightSum * reflectivity * mfdDeriv, specularWeightSum * mfdEst, specularWeightSum);
+//	
+//								double diffuseWeightSum = diffuseWeightSumLookup.applyAsDouble(j);
+//								double currentFit = (diffuseWeightSum * remainder + reflectivity * mfdEst * specularWeightSum) / contributionSum;
+//								double residualWeighted = colorSumLookup.apply(j).y // already gamma corrected
+//										- contributionSum * Math.pow(currentFit, FITTING_GAMMA_INV);
+//								
+//								double dw = FITTING_GAMMA_INV * Math.pow(currentFit, FITTING_GAMMA_INV - 1);
+//								DoubleVector3 derivsWeighted = new DoubleVector3(
+//										dw * specularWeightSum * reflectivity * mfdDeriv, 
+//										dw * specularWeightSum * mfdEst, 
+//										dw * diffuseWeightSum);
+//								
+//								DoubleVector3 derivsUnweighted = derivsWeighted.times(1.0 / contributionSum);
+//								
+//								jacobianSquared = jacobianSquared.plus(derivsUnweighted.outerProduct(derivsWeighted));
+//								jacobianTimesResiduals = jacobianTimesResiduals.plus(derivsUnweighted.times(residualWeighted));
+//							}
+//						}
+//					}
+//					
+//					DoubleMatrix3 jacobianSquaredInverse = jacobianSquared.inverse();
+//					DoubleMatrix3 identityTest = jacobianSquaredInverse.times(jacobianSquared);
+//					
+//					DoubleVector3 paramDelta = jacobianSquared.inverse().times(jacobianTimesResiduals);
+//					deltaRoughnessSq = shiftFraction * paramDelta.x;
+//					deltaReflectivity = shiftFraction * paramDelta.y;
+//					deltaRemainder = shiftFraction * paramDelta.z;
+//					double nextRoughnessSq = roughnessSq + deltaRoughnessSq;
+//					double nextReflectivity = reflectivity + deltaReflectivity;
+//					double nextRemainder = remainder + deltaRemainder; // TODO is "remainder" even necessary?
+//					
+//					while(nextRoughnessSq < 0.0 || nextReflectivity < 0.0)
+//					{
+//						shiftFraction /= 2;
+//						deltaRoughnessSq /= 2;
+//						deltaReflectivity /= 2;
+//						deltaRemainder /= 2;
+//	
+//						nextRoughnessSq = roughnessSq + deltaRoughnessSq;
+//						nextReflectivity = reflectivity + deltaReflectivity;
+//						nextRemainder = remainder + deltaRemainder;
+//					}
+//					
+//					nextSumSqError = computeSumSqError(nextRoughnessSq, nextReflectivity, nextRemainder, directionalRes, nDotHStart, 
+//							colorSumLookup, colorSquareSumLookup, diffuseWeightSumLookup, specularWeightSumLookup, contributionSumLookup);
+//					
+//					while(nextSumSqError > sumSqError)
+//					{
+//						shiftFraction /= 2;
+//						deltaRoughnessSq /= 2;
+//						deltaReflectivity /= 2;
+//						deltaRemainder /= 2;
+//	
+//						nextRoughnessSq = roughnessSq + deltaRoughnessSq;
+//						nextReflectivity = reflectivity + deltaReflectivity;
+//						nextRemainder = remainder + deltaRemainder;
+//						
+//						nextSumSqError = computeSumSqError(nextRoughnessSq, nextReflectivity, nextRemainder, directionalRes, nDotHStart, 
+//								colorSumLookup, colorSquareSumLookup, diffuseWeightSumLookup, specularWeightSumLookup, contributionSumLookup);
+//					}
+//					
+//					roughnessSq = nextRoughnessSq;
+//					reflectivity = nextReflectivity;
+//					remainder = nextRemainder;
+//				}
+//				while(++i < 100 && (sumSqError - nextSumSqError) / sumSqError > 0.001);
+//	
+//				double roughness = Math.sqrt(roughnessSq);
+//				return new SpecularParams(reflectivity, roughness, remainder);
+//			}
 		}
 		else
 		{
@@ -774,7 +772,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		{
 			final int K = k;
 			
-			FramebufferObject<ContextType> depthFBO = projectIntoTextureSpace(specularResidProgram, k, param.getTextureSize(), 1, !param.isImagePreprojectionUseEnabled(),
+			FramebufferObject<ContextType> depthFBO = projectIntoTextureSpace(specularResidProgram, k, /*param.getTextureSize()*/1024, 1, !param.isImagePreprojectionUseEnabled(),
 				(framebuffer, row, col) -> 
 				{
 					if (param.isDebugModeEnabled())
@@ -790,7 +788,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    				}
 			    	}
 					
-					int partitionSize = param.getTextureSize();
+					int partitionSize = 1024;//param.getTextureSize();
 					
 					float[] colorData = framebuffer.readFloatingPointColorBufferRGBA(0);
 					float[] geomData = framebuffer.readFloatingPointColorBufferRGBA(1);
@@ -1953,15 +1951,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	materialStream.println("map_Ks " + materialName + "_Ks.png");
 	    	materialStream.println("Ns " + (2.0 / (specularParams.roughness * specularParams.roughness) - 2.0)); // Fallback for non-PBR
 	    	
-	    	if (param.isRoughnessTextureEnabled())
+	    	//if (param.isRoughnessTextureEnabled())
 	    	{
 		    	materialStream.println("Pr 1.0");
 		    	materialStream.println("map_Pr " + materialName + "_Pr.png");
 	    	}
-	    	else
-	    	{
-		    	materialStream.println("Pr " + specularParams.roughness);
-	    	}
+//	    	else
+//	    	{
+//		    	materialStream.println("Pr " + specularParams.roughness);
+//	    	}
     	}
     	else
     	{
@@ -2020,7 +2018,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	// Only generate view set uniform buffers
 		viewSetResources = IBRResources.getBuilderForContext(context)
 				.useExistingViewSet(viewSet)
-    			.loadVSETFile(vsetFile)
     			.setLoadOptions(new IBRLoadOptions().setColorImagesRequested(false))
     			.create();
     	
@@ -2306,7 +2303,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(auxDir, "specular-raw.png"));
 		    	frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "roughness-raw.png"));
 		    	
-		    	if (param.isRoughnessTextureEnabled())
+		    	if (param.isLevenbergMarquardtOptimizationEnabled())
 		    	{
 					// Non-linear adjustment
 					AdjustFit<ContextType> adjustFit = createAdjustFit(viewSet.getCameraPoseCount(), param.getTextureSubdivision());
@@ -2600,11 +2597,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				}
 				
 				frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(outputDir, materialName + "_Ks.png"));
-				
-				//if (param.isRoughnessTextureEnabled())
-				{
-					frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(outputDir, materialName + "_Pr.png"));
-				}
+				frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(outputDir, materialName + "_Pr.png"));
     	        
     	    	frontFramebuffer.close();
 			}
