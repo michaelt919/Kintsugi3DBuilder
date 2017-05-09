@@ -885,15 +885,25 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	tangentBuffer = context.createVertexBuffer().setData(mesh.getTangents());
     	center = mesh.getCentroid();
     	materialFileName = mesh.getMaterialFileName();
+    	
     	if (materialFileName == null)
     	{
     		materialFileName = objFile.getName().split("\\.")[0] + ".mtl";
     	}
-    	materialName = mesh.getMaterial().getName();
-    	if (materialName == null)
+    	
+    	if (mesh.getMaterial() == null)
     	{
     		materialName = materialFileName.split("\\.")[0];
     	}
+    	else
+    	{
+	    	materialName = mesh.getMaterial().getName();
+	    	if (materialName == null)
+	    	{
+	    		materialName = materialFileName.split("\\.")[0];
+	    	}
+    	}
+    	
     	mesh = null;
     	System.gc(); // Garbage collect the mesh object (hopefully)
 	}
