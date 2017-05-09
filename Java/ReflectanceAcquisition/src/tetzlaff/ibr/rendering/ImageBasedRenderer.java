@@ -382,7 +382,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     				
     				if(environmentFile.getName().endsWith("_zvc.hdr"))
     				{
-    					// Use Michael Ludwig's code to convert the cross to a cube map to a panorama
+    					// Use Michael Ludwig's code to convert the cross from a cube map to a panorama
     					EnvironmentMap envMap = EnvironmentMap.createFromHDRFile(environmentFile);
     					float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
     					FloatVertexList pixelList = new FloatVertexList(3, pixels.length / 3, pixels);
@@ -546,7 +546,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     		program.setUniformBuffer("LightIndices", resources.lightIndexBuffer);
     	}
     	program.setUniform("viewCount", resources.viewSet.getCameraPoseCount());
-    	program.setUniform("infiniteLightSources", true /* TODO */);
+    	program.setUniform("infiniteLightSources", true);  /* TODO figure out why I did this.  It should get overwritten in setupForRelighting */
     	if (resources.depthTextures != null)
 		{
     		program.setTexture("depthImages", resources.depthTextures);
@@ -671,7 +671,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     			(float)Math.pow(lightController.getAmbientLightColor().y, 1.0 / gamma),
     			(float)Math.pow(lightController.getAmbientLightColor().z, 1.0 / gamma));
     	
-		p.setUniform("infiniteLightSources", false);
+		p.setUniform("infiniteLightSources", resources.viewSet.areLightSourcesInfinite());
 		p.setTexture("shadowMaps", shadowMaps);
 		
 		if (resources.shadowMatrixBuffer == null || resources.shadowTextures == null)
@@ -789,8 +789,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		Vector3 controllerLightIntensity = lightController.getLightColor(lightIndex);
 		float lightDistance = new Vector3(getLightMatrix(lightIndex).times(new Vector4(this.centroid, 1.0f))).length();
 
-		float scale = new Vector3(resources.viewSet.getCameraPose(0)
-				 .times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length();
+		float scale = resources.viewSet.areLightSourcesInfinite() ? 1.0f :
+				new Vector3(resources.viewSet.getCameraPose(0)
+						.times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length();
 		
 		program.setUniform("lightIntensityVirtual[" + lightIndex + "]", 
 				controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (scale * scale)));

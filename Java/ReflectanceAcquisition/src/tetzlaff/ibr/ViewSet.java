@@ -109,6 +109,11 @@ public class ViewSet
 	private float gamma;
 	
 	/**
+	 * If false, inverse-square light attenuation should be applied.
+	 */
+	private boolean infiniteLightSources;
+	
+	/**
 	 * The recommended near plane to use when rendering this view set.
 	 */
 	private float recommendedNearPlane;
@@ -137,6 +142,7 @@ public class ViewSet
 		String geometryFileName;
 		File directory;
 		float gamma;
+		boolean infiniteLightSources;
 		double[] linearLuminanceValues;
 		byte[] encodedLuminanceValues;
 		float recommendedNearPlane;
@@ -161,6 +167,7 @@ public class ViewSet
 		this.recommendedNearPlane = params.recommendedNearPlane;
 		this.recommendedFarPlane = params.recommendedFarPlane;
 		this.gamma = params.gamma;
+		this.infiniteLightSources = params.infiniteLightSources;
 		this.linearLuminanceValues = params.linearLuminanceValues;
 		this.encodedLuminanceValues = params.encodedLuminanceValues;
 		this.rootDirectory = params.directory;
@@ -1051,6 +1058,7 @@ public class ViewSet
         	params.lightPositionList.add(new Vector3(0.0f));
         	params.lightIntensityList.add(new Vector3(1.0f));
         }
+        params.infiniteLightSources = true; // TODO Could be set to false if support for automatically computing light intensities based on camera distance is added.
 
         params.recommendedFarPlane = findFarPlane(params.cameraPoseInvList);
         params.recommendedNearPlane = params.recommendedFarPlane / 32.0f;
@@ -1433,5 +1441,10 @@ public class ViewSet
 		this.gamma = gamma;
 		this.linearLuminanceValues = linearLuminanceValues;
 		this.encodedLuminanceValues = encodedLuminanceValues;
+	}
+
+	public boolean areLightSourcesInfinite() 
+	{
+		return infiniteLightSources;
 	}
 }

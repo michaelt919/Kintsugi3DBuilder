@@ -59,34 +59,56 @@ uniform bool fresnelEnabled;
 
 vec3 getEnvironmentFresnel(vec3 lightDirection, float fresnelFactor)
 {
-	vec2 texCoords = vec2(atan(lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
-						/ PI + vec2(0.5);
-	
-	// // To prevent seams when the texture wraps around
-	// vec4 color1 = texture(environmentMap, texCoords);
-	// vec4 color2 = texture(environmentMap, 
-		// mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0));
-	// return pow(mix(color1, color2, 2.0 * abs(texCoords.x - 0.5)).rgb, vec3(environmentMapGamma));
-	
-	return pow(textureLod(environmentMap, texCoords, mix(environmentMipMapLevel, 0, fresnelFactor)).rgb, 
-		vec3(environmentMapGamma));
+	if (useEnvironmentTexture)
+	{
+		vec2 texCoords = vec2(atan(lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
+							/ PI + vec2(0.5);
+		
+		// // To prevent seams when the texture wraps around
+		// vec4 color1 = texture(environmentMap, texCoords);
+		// vec4 color2 = texture(environmentMap, 
+			// mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0));
+		// return pow(mix(color1, color2, 2.0 * abs(texCoords.x - 0.5)).rgb, vec3(environmentMapGamma));
+		
+		return pow(textureLod(environmentMap, texCoords, 
+				mix(environmentMipMapLevel, 0, fresnelFactor)).rgb, 
+			vec3(environmentMapGamma));
+	}
+	else
+	{
+		return ambientColor;
+	}
 }
 
 vec3 getEnvironment(vec3 lightDirection)
 {
-	vec2 texCoords = vec2(atan(lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
-						/ PI + vec2(0.5);
-	
-	return pow(textureLod(environmentMap, texCoords, environmentMipMapLevel).rgb, 
-		vec3(environmentMapGamma));
+	if (useEnvironmentTexture)
+	{
+		vec2 texCoords = vec2(atan(lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
+							/ PI + vec2(0.5);
+		
+		return pow(textureLod(environmentMap, texCoords, environmentMipMapLevel).rgb, 
+			vec3(environmentMapGamma));
+	}
+	else
+	{
+		return ambientColor;
+	}
 }
 
 vec3 getEnvironmentDiffuse(vec3 normalDirection)
 {
-	vec2 texCoords = vec2(atan(normalDirection.x, -normalDirection.z) / 2, asin(normalDirection.y))
-						/ PI + vec2(0.5);
-	return pow(textureLod(environmentMap, texCoords, diffuseEnvironmentMipMapLevel).rgb, 
-		vec3(environmentMapGamma));
+	if (useEnvironmentTexture)
+	{
+		vec2 texCoords = vec2(atan(normalDirection.x, -normalDirection.z) / 2, asin(normalDirection.y))
+							/ PI + vec2(0.5);
+		return pow(textureLod(environmentMap, texCoords, diffuseEnvironmentMipMapLevel).rgb, 
+			vec3(environmentMapGamma));
+	}
+	else
+	{
+		return ambientColor;
+	}
 }
 
 vec3 computeFresnelReflectivityActual(vec3 specularColor, vec3 grazingColor, float hDotV)
@@ -104,7 +126,8 @@ vec3 computeFresnelReflectivityActual(vec3 specularColor, vec3 grazingColor, flo
 
 vec3 computeFresnelReflectivitySchlick(vec3 specularColor, vec3 grazingColor, float hDotV)
 {
-    return specularColor + (grazingColor - specularColor) * pow(max(0.0, 1.0 - hDotV), 5.0);
+    return max(specularColor, 
+		specularColor + (grazingColor - specularColor) * pow(max(0.0, 1.0 - hDotV), 5.0));
 }
 
 vec3 fresnel(vec3 specularColor, vec3 grazingColor, float hDotV)
@@ -231,7 +254,8 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 			float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
 			float hDotV_sample = max(0, dot(sampleHalfDir, sampleViewDir));
 		
-			vec3 diffuseContrib = diffuseColor * nDotL_sample * lightIntensity / lightDistSquared;
+			vec3 diffuseContrib = diffuseColor * nDotL_sample * lightIntensity 
+				/ (infiniteLightSources ? 1.0 : lightDistSquared);
 			
 			float geomAttenSample = geom(roughness, nDotH, nDotV_sample, nDotL_sample, hDotV_sample);
 			
@@ -248,7 +272,8 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 					geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
 			
 				vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL_sample, maxLuminance);
-				vec3 mfdFresnel = specularResid.rgb * 4 * nDotV_sample * lightDistSquared / lightIntensity;
+				vec3 mfdFresnel = specularResid.rgb * 4 * nDotV_sample / lightIntensity
+					 * (infiniteLightSources ? 1.0 : lightDistSquared);
 				float mfdMono = getLuminance(mfdFresnel / specularColor);
 				
 				return vec4(
@@ -316,7 +341,8 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
         float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
         float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
     
-        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity / lightDistSquared;
+        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity 
+			/ (infiniteLightSources ? 1.0 : lightDistSquared);
         
         float geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
         if (!relightingEnabled || geomAtten > 0.0)
@@ -330,13 +356,14 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
 				if(pbrGeometricAttenuationEnabled)
 				{
 					precomputedSample = vec4(specularResid.rgb 
-						* 4 * nDotV * lightDistSquared / lightIntensity, 
+						* 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), 
 						sampleColor.a * geomAtten);
 				}
 				else
 				{
 					precomputedSample = 
-						vec4(specularResid.rgb * 4 * lightDistSquared / lightIntensity, 
+						vec4(specularResid.rgb * 4 / lightIntensity 
+							* (infiniteLightSources ? 1.0 : lightDistSquared), 
 							sampleColor.a * nDotL);
 				}
 			}
@@ -658,7 +685,7 @@ void main()
 	
 	if (relightingEnabled || !imageBasedRenderingEnabled)
 	{
-		if (useEnvironmentTexture)
+		if (useEnvironmentTexture || (!useDiffuseTexture && !useSpecularTexture))
 		{
 			reflectance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 			
@@ -685,14 +712,23 @@ void main()
 		}
 		else
 		{
-			if (fresnelEnabled)
+			vec3 reflectivity;
+			if (useSpecularTexture)
 			{
-				reflectance += fresnel(ambientColor * min(vec3(1.0), diffuseColor + specularColor),
-					ambientColor, nDotV);
+				reflectivity = min(vec3(1.0), diffuseColor + specularColor);
 			}
 			else
 			{
-				reflectance += ambientColor * min(vec3(1.0), diffuseColor + specularColor);
+				reflectivity = diffuseColor;
+			}
+		
+			if (fresnelEnabled)
+			{
+				reflectance += fresnel(ambientColor * reflectivity, ambientColor, nDotV);
+			}
+			else
+			{
+				reflectance += ambientColor * reflectivity;
 			}
 		}
 	}
