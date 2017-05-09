@@ -402,6 +402,13 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
                 result[lightPass] = weight * precomputedSample;
             }
         }
+		else
+		{
+			for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
+            {
+				result[lightPass] = vec4(0.0);
+			}
+		}
         
         return result;
     }
