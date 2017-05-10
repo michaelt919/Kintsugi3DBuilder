@@ -9,4 +9,9 @@ public interface ColorTextureBuilder<ContextType extends Context<ContextType>, T
 {
 	ColorTextureBuilder<ContextType, TextureType> setInternalFormat(ColorFormat format);
 	ColorTextureBuilder<ContextType, TextureType> setInternalFormat(CompressionFormat format);
+
+	ColorTextureBuilder<ContextType, TextureType> setMultisamples(int samples, boolean fixedSampleLocations);
+	ColorTextureBuilder<ContextType, TextureType> setMipmapsEnabled(boolean enabled);
+	ColorTextureBuilder<ContextType, TextureType> setLinearFilteringEnabled(boolean enabled);
+	ColorTextureBuilder<ContextType, TextureType> setMaxAnisotropy(float maxAnisotropy);
 }

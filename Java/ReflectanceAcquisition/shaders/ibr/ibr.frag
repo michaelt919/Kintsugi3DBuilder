@@ -845,7 +845,7 @@ void main()
 					 * ((!imageBasedRenderingEnabled || relightingEnabled) && pbrGeometricAttenuationEnabled
 						? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV) : 
 							(!imageBasedRenderingEnabled || relightingEnabled ? nDotL / 4 : 1.0)))
-                     * ((imageBasedRenderingEnabled && relightingEnabled) ? 
+                     * ((relightingEnabled || !imageBasedRenderingEnabled) ? 
 						(useTSOverrides ? lightIntensityVirtual[i] : 
 							lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed))
 						: vec3(1.0));
