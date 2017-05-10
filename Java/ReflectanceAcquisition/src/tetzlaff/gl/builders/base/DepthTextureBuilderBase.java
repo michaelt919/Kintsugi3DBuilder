@@ -38,4 +38,32 @@ public abstract class DepthTextureBuilderBase<ContextType extends Context<Contex
 		this.floatingPoint = enabled;
 		return this;
 	}
+	
+	@Override
+	public DepthTextureBuilderBase<ContextType, TextureType> setMultisamples(int samples, boolean fixedSampleLocations)
+	{
+		super.setMultisamples(samples, fixedSampleLocations);
+		return this;
+	}
+	
+	@Override
+	public DepthTextureBuilderBase<ContextType, TextureType> setMipmapsEnabled(boolean enabled)
+	{
+		super.setMipmapsEnabled(enabled);
+		return this;
+	}
+	
+	@Override
+	public DepthTextureBuilderBase<ContextType, TextureType> setLinearFilteringEnabled(boolean enabled)
+	{
+		super.setLinearFilteringEnabled(enabled);
+		return this;
+	}
+	
+	@Override
+	public DepthTextureBuilderBase<ContextType, TextureType> setMaxAnisotropy(float maxAnisotropy)
+	{
+		super.setMaxAnisotropy(maxAnisotropy);
+		return this;
+	}
 }

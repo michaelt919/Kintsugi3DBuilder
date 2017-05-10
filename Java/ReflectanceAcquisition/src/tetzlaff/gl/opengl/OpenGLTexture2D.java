@@ -3,23 +3,17 @@ package tetzlaff.gl.opengl;
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL30.*;
 // mipmaps
 import static org.lwjgl.opengl.GL32.*;
-import static org.lwjgl.opengl.GL44.*;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 
 import javax.imageio.ImageIO;
-
-import org.lwjgl.BufferUtils;
 
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.ColorFormat.DataType;
@@ -69,57 +63,7 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		{
 			int width = colorImg.getWidth();
 			int height = colorImg.getHeight();
-			ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.getWidth() * colorImg.getHeight() * 4);
-			IntBuffer intBuffer = buffer.asIntBuffer();
-			
-			if (maskImg == null)
-			{
-				if (flipVertical)
-				{
-					for (int y = colorImg.getHeight() - 1; y >= 0; y--)
-					{
-						for (int x = 0; x < colorImg.getWidth(); x++)
-						{
-							intBuffer.put(colorImg.getRGB(x, y));
-						}
-					}
-				}
-				else
-				{
-					for (int y = 0; y < colorImg.getHeight(); y++)
-					{
-						for (int x = 0; x < colorImg.getWidth(); x++)
-						{
-							intBuffer.put(colorImg.getRGB(x, y));
-						}
-					}
-				}
-			}
-			else
-			{
-				if (flipVertical)
-				{
-					for (int y = colorImg.getHeight() - 1; y >= 0; y--)
-					{
-						for (int x = 0; x < colorImg.getWidth(); x++)
-						{
-							// Use green channel of the mask image for alpha
-							intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
-						}
-					}
-				}
-				else
-				{
-					for (int y = 0; y < colorImg.getHeight(); y++)
-					{
-						for (int x = 0; x < colorImg.getWidth(); x++)
-						{
-							// Use green channel of the mask image for alpha
-							intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
-						}
-					}
-				}
-			}
+			ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(colorImg, maskImg, flipVertical);
 			
 			if (this.isInternalFormatCompressed())
 			{
@@ -180,37 +124,8 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		{
 			int width = colorImg.width;
 			int height = colorImg.height;
-			ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.width * colorImg.height * (maskImg == null ? 12 : 16));
-			FloatBuffer floatBuffer = buffer.asFloatBuffer();
-
-			int k = 0;
-			if (maskImg == null)
-			{
-				for (int y = 0; y < colorImg.height; y++)
-				{
-					for (int x = 0; x < colorImg.width; x++)
-					{
-						floatBuffer.put(colorImg.data[k++]);
-						floatBuffer.put(colorImg.data[k++]);
-						floatBuffer.put(colorImg.data[k++]);
-					}
-				}
-			}
-			else
-			{
-				for (int y = 0; y < colorImg.height; y++)
-				{
-					for (int x = 0; x < colorImg.width; x++)
-					{
-						floatBuffer.put(colorImg.data[k++]);
-						floatBuffer.put(colorImg.data[k++]);
-						floatBuffer.put(colorImg.data[k++]);
-						
-						// Use green channel of the mask image for alpha
-						floatBuffer.put((float)((maskImg.getRGB(x, y) & 0x0000ff00) >>> 8) / 255.0f);
-					}
-				}
-			}
+			
+			ByteBuffer buffer = OpenGLTexture.hdrImageToNativeBuffer(colorImg, maskImg);
 			
 			if (this.isInternalFormatCompressed())
 			{
@@ -495,30 +410,7 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
 		super(context, textureType);
-		
-		int internalFormat;
-		switch(textureType)
-		{
-		case DEPTH: 
-			internalFormat = context.getOpenGLInternalDepthFormat(precision);
-			break;
-		case STENCIL:
-			internalFormat = context.getOpenGLInternalStencilFormat(precision);
-			break;
-		case DEPTH_STENCIL:
-			internalFormat = GL_DEPTH24_STENCIL8;
-			break;
-		case FLOATING_POINT_DEPTH_STENCIL:
-			internalFormat = GL_DEPTH32F_STENCIL8;
-			break;
-		case COLOR:
-		default:
-			internalFormat = context.getOpenGLInternalColorFormat(
-				new ColorFormat(precision, precision, precision, precision, ColorFormat.DataType.NORMALIZED_FIXED_POINT));
-			break;
-		}
-		
-		init(context, textureTarget, multisamples, internalFormat, width, height, format, 
+		init(context, textureTarget, multisamples, getSpecialInternalFormat(context, textureType, precision), width, height, format, 
 				fixedMultisampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
 	}
 	
@@ -563,28 +455,8 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		this.width = width;
 		this.height = height;
 		
-		if (type == GL_UNSIGNED_SHORT_5_6_5 || type == GL_UNSIGNED_SHORT_5_6_5_REV || type == GL_UNSIGNED_SHORT_4_4_4_4 ||
-				 type == GL_UNSIGNED_SHORT_4_4_4_4_REV || type == GL_UNSIGNED_SHORT_5_5_5_1 || type == GL_UNSIGNED_SHORT_1_5_5_5_REV)
-		{
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-			this.context.openGLErrorCheck();
-		}
-		else if (format == GL_RGBA || format == GL_BGRA || format == GL_RGBA_INTEGER || format == GL_RGBA_INTEGER || type == GL_UNSIGNED_INT || type == GL_INT || type == GL_FLOAT ||
-				type == GL_UNSIGNED_INT_8_8_8_8 || type == GL_UNSIGNED_INT_8_8_8_8_REV || type == GL_UNSIGNED_INT_10_10_10_2 || type == GL_UNSIGNED_INT_2_10_10_10_REV)
-		{
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-			this.context.openGLErrorCheck();
-		}
-		else if (type == GL_UNSIGNED_SHORT || type == GL_SHORT)
-		{
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-			this.context.openGLErrorCheck();
-		}
-		else
-		{
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-			this.context.openGLErrorCheck();
-		}
+		glPixelStorei(GL_UNPACK_ALIGNMENT, OpenGLTexture.getUnpackAlignment(format, type));
+		this.context.openGLErrorCheck();
 		
 		glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, type, buffer);
 		this.context.openGLErrorCheck();
@@ -597,15 +469,13 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 		}
 	}
 	
-	private void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps)
+	void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps)
 	{
+		super.initFilteringAndMipmaps(useLinearFiltering, useMipmaps);
+		
 		if (useMipmaps)
 		{
-			// Create mipmaps
-			glGenerateMipmap(this.textureTarget);
-	        this.context.openGLErrorCheck();
-	        
-	        // Calculate the number of mipmap levels
+			// Calculate the number of mipmap levels
 			this.levelCount = 0;
 			int dim = Math.max(width, height);
 			while (dim > 1)
@@ -613,41 +483,11 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 				this.levelCount++;
 				dim /= 2;
 			}
-			
-			if (useLinearFiltering)
-			{
-				glTexParameteri(this.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		        this.context.openGLErrorCheck();
-				glTexParameteri(this.textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		        this.context.openGLErrorCheck();
-			}
-			else
-			{
-				glTexParameteri(this.textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		        this.context.openGLErrorCheck();
-				glTexParameteri(this.textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		        this.context.openGLErrorCheck();
-			}
 		}
 		else
 		{
 			// No mipmaps
 			this.levelCount = 1;
-			
-			if (useLinearFiltering)
-			{
-				glTexParameteri(this.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		        this.context.openGLErrorCheck();
-				glTexParameteri(this.textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		        this.context.openGLErrorCheck();
-			}
-			else
-			{
-				glTexParameteri(this.textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		        this.context.openGLErrorCheck();
-				glTexParameteri(this.textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		        this.context.openGLErrorCheck();
-			}
 		}
 		
 		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -690,43 +530,19 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 	public void setTextureWrap(TextureWrapMode wrapS, TextureWrapMode wrapT)
 	{
 		this.bind();
-		switch(wrapS)
+		int numericWrapS = translateWrapMode(wrapS);
+		int numericWrapT = translateWrapMode(wrapT);
+		
+		if (numericWrapS != 0)
 		{
-		case None: 
-			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, numericWrapS);
 			this.context.openGLErrorCheck();
-			break;
-		case MirrorOnce:
-			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_MIRROR_CLAMP_TO_EDGE);
-			this.context.openGLErrorCheck();
-			break;
-		case Repeat:
-			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			this.context.openGLErrorCheck();
-			break;
-		case MirroredRepeat:
-			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-			this.context.openGLErrorCheck();
-			break;
 		}
-		switch(wrapT)
+		
+		if (numericWrapT != 0)
 		{
-		case None: 
-			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, numericWrapT);
 			this.context.openGLErrorCheck();
-			break;
-		case MirrorOnce:
-			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_MIRROR_CLAMP_TO_EDGE);
-			this.context.openGLErrorCheck();
-			break;
-		case Repeat:
-			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			this.context.openGLErrorCheck();
-			break;
-		case MirroredRepeat:
-			glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-			this.context.openGLErrorCheck();
-			break;
 		}
 	}
 }

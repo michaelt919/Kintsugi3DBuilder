@@ -5,6 +5,7 @@ import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture;
 import tetzlaff.gl.builders.ColorTextureBuilder;
+import tetzlaff.gl.builders.TextureBuilder;
 
 public abstract class ColorTextureBuilderBase<ContextType extends Context<ContextType>, TextureType extends Texture<ContextType>> 
 	extends TextureBuilderBase<ContextType, TextureType> implements ColorTextureBuilder<ContextType, TextureType>
@@ -45,6 +46,34 @@ public abstract class ColorTextureBuilderBase<ContextType extends Context<Contex
 	{
 		internalColorFormat = null;
 		internalCompressionFormat = format;
+		return this;
+	}
+	
+	@Override
+	public ColorTextureBuilderBase<ContextType, TextureType> setMultisamples(int samples, boolean fixedSampleLocations)
+	{
+		super.setMultisamples(samples, fixedSampleLocations);
+		return this;
+	}
+	
+	@Override
+	public ColorTextureBuilderBase<ContextType, TextureType> setMipmapsEnabled(boolean enabled)
+	{
+		super.setMipmapsEnabled(enabled);
+		return this;
+	}
+	
+	@Override
+	public ColorTextureBuilderBase<ContextType, TextureType> setLinearFilteringEnabled(boolean enabled)
+	{
+		super.setLinearFilteringEnabled(enabled);
+		return this;
+	}
+	
+	@Override
+	public ColorTextureBuilderBase<ContextType, TextureType> setMaxAnisotropy(float maxAnisotropy)
+	{
+		super.setMaxAnisotropy(maxAnisotropy);
 		return this;
 	}
 }

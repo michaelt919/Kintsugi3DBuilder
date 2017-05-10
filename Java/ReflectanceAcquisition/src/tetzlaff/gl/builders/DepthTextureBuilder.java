@@ -7,4 +7,9 @@ public interface DepthTextureBuilder<ContextType extends Context<ContextType>, T
 {
 	DepthTextureBuilder<ContextType, TextureType> setInternalPrecision(int precision);
 	DepthTextureBuilder<ContextType, TextureType> setFloatingPointEnabled(boolean enabled);
+
+	DepthTextureBuilder<ContextType, TextureType> setMultisamples(int samples, boolean fixedSampleLocations);
+	DepthTextureBuilder<ContextType, TextureType> setMipmapsEnabled(boolean enabled);
+	DepthTextureBuilder<ContextType, TextureType> setLinearFilteringEnabled(boolean enabled);
+	DepthTextureBuilder<ContextType, TextureType> setMaxAnisotropy(float maxAnisotropy);
 }
