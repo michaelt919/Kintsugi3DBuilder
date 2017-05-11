@@ -32,6 +32,7 @@ import tetzlaff.gl.BufferAccessType;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Context;
+import tetzlaff.gl.Cubemap;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.IndexBuffer;
 import tetzlaff.gl.Program;
@@ -43,6 +44,7 @@ import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
+import tetzlaff.gl.builders.ColorCubemapBuilder;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.DepthStencilTextureBuilder;
 import tetzlaff.gl.builders.DepthTextureBuilder;
@@ -285,7 +287,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 		return new OpenGLFramebufferObjectBuilder(this, width, height);
 	}
 	
-	private int getPixelDataFormatFromDimensions(int dimensions)
+	int getPixelDataFormatFromDimensions(int dimensions)
 	{
 		switch(dimensions)
 		{
@@ -480,7 +482,28 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	{
 		return new OpenGLTexture3DDepthStencilBuilder(this, GL_TEXTURE_2D_ARRAY, width, height, length);
 	}
-
+	
+	@Override
+	public ColorCubemapBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> getColorCubemapBuilder(int faceSize) throws IOException
+	{
+		return new OpenGLCubemap.ColorBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
+	}
+	
+	public DepthTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> getDepthCubemapBuilder(int faceSize) throws IOException
+	{
+		return new OpenGLCubemap.DepthBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
+	}
+	
+	public StencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> getStencilCubemapBuilder(int faceSize) throws IOException
+	{
+		return new OpenGLCubemap.StencilBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
+	}
+	
+	public DepthStencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> getDepthStencilCubemapBuilder(int faceSize) throws IOException
+	{
+		return new OpenGLCubemap.DepthStencilBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
+	}
+	
 	protected void unbindBuffer(int bufferTarget, int index)
 	{
 		glBindBufferBase(bufferTarget, index, 0);

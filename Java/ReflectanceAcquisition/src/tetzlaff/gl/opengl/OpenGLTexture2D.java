@@ -242,9 +242,7 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 						this.getInternalCompressionFormat(), 
 						this.width,
 						this.height,
-						(!this.isInternalFormatCompressed() && 
-							(this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER || 
-								this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER)) ? GL_RGBA_INTEGER : GL_RGBA,
+						GL_RGBA,
 						this.areMultisampleLocationsFixed(),
 						this.isLinearFilteringEnabled(),
 						this.areMipmapsEnabled(),
@@ -259,9 +257,9 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 						this.getInternalColorFormat(), 
 						this.width,
 						this.height,
-						(!this.isInternalFormatCompressed() && 
-							(this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER || 
-								this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER)) ? GL_RGBA_INTEGER : GL_RGBA,
+						(this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER 
+							|| this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER) 
+								? GL_RGBA_INTEGER : GL_RGBA,
 						this.areMultisampleLocationsFixed(),
 						this.isLinearFilteringEnabled(),
 						this.areMipmapsEnabled(),

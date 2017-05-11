@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import tetzlaff.gl.builders.ColorCubemapBuilder;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.DepthStencilTextureBuilder;
 import tetzlaff.gl.builders.DepthTextureBuilder;
@@ -154,4 +155,8 @@ public interface Context<ContextType extends Context<ContextType>>
 	StencilTextureBuilder<ContextType, ? extends Texture3D<ContextType>> get2DStencilTextureArrayBuilder(int width, int height, int length);
 	DepthStencilTextureBuilder<ContextType, ? extends Texture3D<ContextType>> get2DDepthStencilTextureArrayBuilder(int width, int height, int length);
 
+	ColorCubemapBuilder<ContextType, ? extends Cubemap<ContextType>> getColorCubemapBuilder(int faceSize) throws IOException;
+	DepthTextureBuilder<ContextType, ? extends Cubemap<ContextType>> getDepthCubemapBuilder(int faceSize) throws IOException;
+	StencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> getStencilCubemapBuilder(int faceSize) throws IOException;
+	DepthStencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> getDepthStencilCubemapBuilder(int faceSize) throws IOException;
 }
