@@ -31,16 +31,15 @@ uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 uniform sampler2D roughnessMap;
-uniform sampler2D environmentMap;
+uniform samplerCube environmentMap;
 uniform int environmentMipMapLevel;
 uniform int diffuseEnvironmentMipMapLevel;
-uniform float environmentMapGamma;
 
 uniform bool useDiffuseTexture;
 uniform bool useNormalTexture;
 uniform bool useSpecularTexture;
 uniform bool useRoughnessTexture;
-uniform bool useEnvironmentTexture;
+uniform bool useEnvironmentMap;
 
 uniform bool useInverseLuminanceMap;
 uniform sampler1D inverseLuminanceMap;
@@ -59,20 +58,10 @@ uniform bool fresnelEnabled;
 
 vec3 getEnvironmentFresnel(vec3 lightDirection, float fresnelFactor)
 {
-	if (useEnvironmentTexture)
+	if (useEnvironmentMap)
 	{
-		vec2 texCoords = vec2(atan(lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
-							/ PI + vec2(0.5);
-		
-		// // To prevent seams when the texture wraps around
-		// vec4 color1 = texture(environmentMap, texCoords);
-		// vec4 color2 = texture(environmentMap, 
-			// mod(texCoords + vec2(0.5, 0.0), 1.0) - vec2(0.5, 0.0));
-		// return pow(mix(color1, color2, 2.0 * abs(texCoords.x - 0.5)).rgb, vec3(environmentMapGamma));
-		
-		return pow(textureLod(environmentMap, texCoords, 
-				mix(environmentMipMapLevel, 0, fresnelFactor)).rgb, 
-			vec3(environmentMapGamma));
+		return textureLod(environmentMap, lightDirection, 
+			mix(environmentMipMapLevel, 0, fresnelFactor)).rgb;
 	}
 	else
 	{
@@ -82,13 +71,9 @@ vec3 getEnvironmentFresnel(vec3 lightDirection, float fresnelFactor)
 
 vec3 getEnvironment(vec3 lightDirection)
 {
-	if (useEnvironmentTexture)
+	if (useEnvironmentMap)
 	{
-		vec2 texCoords = vec2(atan(lightDirection.x, -lightDirection.z) / 2, asin(lightDirection.y))
-							/ PI + vec2(0.5);
-		
-		return pow(textureLod(environmentMap, texCoords, environmentMipMapLevel).rgb, 
-			vec3(environmentMapGamma));
+		return textureLod(environmentMap, lightDirection, environmentMipMapLevel).rgb;
 	}
 	else
 	{
@@ -98,12 +83,9 @@ vec3 getEnvironment(vec3 lightDirection)
 
 vec3 getEnvironmentDiffuse(vec3 normalDirection)
 {
-	if (useEnvironmentTexture)
+	if (useEnvironmentMap)
 	{
-		vec2 texCoords = vec2(atan(normalDirection.x, -normalDirection.z) / 2, asin(normalDirection.y))
-							/ PI + vec2(0.5);
-		return pow(textureLod(environmentMap, texCoords, diffuseEnvironmentMipMapLevel).rgb, 
-			vec3(environmentMapGamma));
+		return textureLod(environmentMap, normalDirection, diffuseEnvironmentMipMapLevel).rgb;
 	}
 	else
 	{
@@ -685,7 +667,7 @@ void main()
 	
 	if (relightingEnabled || !imageBasedRenderingEnabled)
 	{
-		if (useEnvironmentTexture || (!useDiffuseTexture && !useSpecularTexture))
+		if (useEnvironmentMap || (!useDiffuseTexture && !useSpecularTexture))
 		{
 			reflectance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 			

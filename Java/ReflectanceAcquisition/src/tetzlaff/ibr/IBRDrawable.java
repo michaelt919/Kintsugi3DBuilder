@@ -5,7 +5,6 @@ import java.util.List;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
-import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.helpers.Drawable;
 import tetzlaff.gl.helpers.Matrix4;
 import tetzlaff.gl.helpers.VertexMesh;
@@ -28,7 +27,6 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	void setProgram(Program<ContextType> program);
 	void reloadHelperShaders();
 
-	Texture2D<ContextType> getEnvironmentTexture();
 	void setEnvironment(File environmentFile);
 	
 	void requestResample(int width, int height, File targetVSETFile, File exportPath);
@@ -36,7 +34,5 @@ public interface IBRDrawable<ContextType extends Context<ContextType>> extends D
 	void requestBTF(int width, int height, File exportPath);
 
 	void setTransformationMatrices(List<Matrix4> matrices);
-
-	VertexMesh getReferenceScene();
 	void setReferenceScene(VertexMesh scene);
 }

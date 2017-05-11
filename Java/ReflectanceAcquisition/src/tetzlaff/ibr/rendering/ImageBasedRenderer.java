@@ -14,6 +14,8 @@ import tetzlaff.gl.AlphaBlendingFunction.Weight;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.ColorFormat.DataType;
 import tetzlaff.gl.Context;
+import tetzlaff.gl.Cubemap;
+import tetzlaff.gl.CubemapFace;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
@@ -82,8 +84,8 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	private FramebufferObject<ContextType> offscreenFBO = null;
     
     private File newEnvironmentFile = null;
-    private boolean environmentTextureEnabled;
-    private Texture2D<ContextType> environmentTexture;
+    private boolean environmentMapEnabled;
+    private Cubemap<ContextType> environmentMap;
     private Matrix4 envMapMatrix = null;
 
     private Program<ContextType> environmentBackgroundProgram;
@@ -378,60 +380,95 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     			{
     				System.out.println("Loading new environment texture.");
     				
-    				ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> textureBuilder;
-    				
-    				if(environmentFile.getName().endsWith("_zvc.hdr"))
-    				{
-    					// Use Michael Ludwig's code to convert the cross from a cube map to a panorama
-    					EnvironmentMap envMap = EnvironmentMap.createFromHDRFile(environmentFile);
-    					float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
-    					FloatVertexList pixelList = new FloatVertexList(3, pixels.length / 3, pixels);
-    					textureBuilder = context.get2DColorTextureBuilder(envMap.getSide() * 4, envMap.getSide() * 2, pixelList);
-    					textureBuilder.setInternalFormat(ColorFormat.RGB32F);
-    					
-    					// Uncomment to save the panorama as an image (i.e. for a figure in a paper)
-//    					BufferedImage img = new BufferedImage(envMap.getSide() * 4, envMap.getSide() * 2, BufferedImage.TYPE_3BYTE_BGR);
-//    					int k = 0;
+//    				ColorCubemapBuilderFromHDRFile<ContextType, ? extends Cubemap<ContextType>> cubemapBuilder;
+//    				
+//    				if(environmentFile.getName().endsWith("_zvc.hdr"))
+//    				{
+//    					// Use Michael Ludwig's code to convert the cross from a cube map to a panorama
+//    					EnvironmentMap envMap = EnvironmentMap.createFromHDRFile(environmentFile);
+//    					float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
+//    					FloatVertexList pixelList = new FloatVertexList(3, pixels.length / 3, pixels);
+//    					textureBuilder = context.get2DColorTextureBuilder(envMap.getSide() * 4, envMap.getSide() * 2, pixelList);
+//    					textureBuilder.setInternalFormat(ColorFormat.RGB32F);
 //    					
-//    					for (int j = 0; j < envMap.getSide() * 2; j++)
+//    					// Uncomment to save the panorama as an image (i.e. for a figure in a paper)
+////    					BufferedImage img = new BufferedImage(envMap.getSide() * 4, envMap.getSide() * 2, BufferedImage.TYPE_3BYTE_BGR);
+////    					int k = 0;
+////    					
+////    					for (int j = 0; j < envMap.getSide() * 2; j++)
+////    					{
+////    						for (int i = 0; i < envMap.getSide() * 4; i++)
+////    						{
+////    							img.setRGB(i,  j, ((int)(Math.pow(pixels[3 * k + 0], 1.0 / 2.2) * 255) << 16)
+////    									| ((int)(Math.pow(pixels[3 * k + 1], 1.0 / 2.2) * 255) << 8) 
+////    									| (int)(Math.pow(pixels[3 * k + 2], 1.0 / 2.2) * 255));
+////    							k++;
+////    						}
+////    					}
+////    					ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_pan.hdr")));
+//    				}
+//    				else
+//    				{
+//    					// Load the panorama directly
+//    					textureBuilder = context.get2DColorTextureBuilder(environmentFile, true);
+//    					if (environmentFile.getName().endsWith(".hdr"))
 //    					{
-//    						for (int i = 0; i < envMap.getSide() * 4; i++)
-//    						{
-//    							img.setRGB(i,  j, ((int)(Math.pow(pixels[3 * k + 0], 1.0 / 2.2) * 255) << 16)
-//    									| ((int)(Math.pow(pixels[3 * k + 1], 1.0 / 2.2) * 255) << 8) 
-//    									| (int)(Math.pow(pixels[3 * k + 2], 1.0 / 2.2) * 255));
-//    							k++;
-//    						}
+//    						textureBuilder.setInternalFormat(ColorFormat.RGB32F);
 //    					}
-//    					ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_pan.hdr")));
-    				}
-    				else
-    				{
-    					// Load the panorama directly
-    					textureBuilder = context.get2DColorTextureBuilder(environmentFile, true);
-    					if (environmentFile.getName().endsWith(".hdr"))
-    					{
-    						textureBuilder.setInternalFormat(ColorFormat.RGB32F);
-    					}
-    					else
-    					{
-    						textureBuilder.setInternalFormat(ColorFormat.RGB8);
-    					}
-    				}
+//    					else
+//    					{
+//    						textureBuilder.setInternalFormat(ColorFormat.RGB8);
+//    					}
+//    				}
+//    				
+//    				Texture2D<ContextType> newEnvironmentTexture = 
+//    					textureBuilder
+//    						.setMipmapsEnabled(true)
+//    						.setLinearFilteringEnabled(true)
+//    						.createTexture();
     				
-    				Texture2D<ContextType> newEnvironmentTexture = 
-    					textureBuilder
-    						.setMipmapsEnabled(true)
-    						.setLinearFilteringEnabled(true)
-    						.createTexture();
+    				// Use Michael Ludwig's code to convert to a cube map (supports either cross or panorama input)
+					EnvironmentMap envMap = EnvironmentMap.createFromHDRFile(environmentFile);
+					float[][] sides = envMap.getData();
+					
+//					// Uncomment to save the panorama as an image (i.e. for a figure in a paper)
+//					float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
+//					BufferedImage img = new BufferedImage(envMap.getSide() * 4, envMap.getSide() * 2, BufferedImage.TYPE_3BYTE_BGR);
+//					int k = 0;
+//					
+//					for (int j = 0; j < envMap.getSide() * 2; j++)
+//					{
+//						for (int i = 0; i < envMap.getSide() * 4; i++)
+//						{
+//							img.setRGB(i,  j, ((int)(Math.pow(pixels[3 * k + 0], 1.0 / 2.2) * 255) << 16)
+//									| ((int)(Math.pow(pixels[3 * k + 1], 1.0 / 2.2) * 255) << 8) 
+//									| (int)(Math.pow(pixels[3 * k + 2], 1.0 / 2.2) * 255));
+//							k++;
+//						}
+//					}
+//					ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_IBRelight_pan.hdr")));
+    				
+    				Cubemap<ContextType> newEnvironmentTexture = 
+    						context.getColorCubemapBuilder(envMap.getSide())
+    							.setInternalFormat(ColorFormat.RGB32F)
+    							.loadFace(CubemapFace.PositiveX, new FloatVertexList(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
+    							.loadFace(CubemapFace.NegativeX, new FloatVertexList(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
+    							.loadFace(CubemapFace.PositiveY, new FloatVertexList(3, sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
+    							.loadFace(CubemapFace.NegativeY, new FloatVertexList(3, sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
+    							.loadFace(CubemapFace.PositiveZ, new FloatVertexList(3, sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
+    							.loadFace(CubemapFace.NegativeZ, new FloatVertexList(3, sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
+								.setMipmapsEnabled(true)
+								.setLinearFilteringEnabled(true)
+								.createTexture();
+					
     				newEnvironmentTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
     	
-    				if (this.environmentTexture != null)
+    				if (this.environmentMap != null)
     				{
-    					this.environmentTexture.close();
+    					this.environmentMap.close();
     				}
     				
-    				this.environmentTexture = newEnvironmentTexture;
+    				this.environmentMap = newEnvironmentTexture;
     			}
     			catch (Exception e) 
         		{
@@ -618,27 +655,23 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			p.setTexture("roughnessMap", resources.roughnessTexture);
 		}
 		
-		if (this.getEnvironmentTexture() == null || !lightController.getEnvironmentMappingEnabled())
+		if (this.environmentMap == null || !lightController.getEnvironmentMappingEnabled())
 		{
 			p.setUniform("useEnvironmentTexture", false);
 			p.setTexture("environmentMap", null);
-			this.environmentTextureEnabled = false;
+			this.environmentMapEnabled = false;
 		}
 		else
 		{
-			p.setUniform("useEnvironmentTexture", true);
-			p.setTexture("environmentMap", this.getEnvironmentTexture());
-			p.setUniform("environmentMipMapLevel", Math.max(0, Math.min(this.getEnvironmentTexture().getMipmapLevelCount() - 2, 
+			p.setUniform("useEnvironmentMap", true);
+			p.setTexture("environmentMap", this.environmentMap);
+			p.setUniform("environmentMipMapLevel", Math.max(0, Math.min(this.environmentMap.getMipmapLevelCount() - 2, 
 					(int)Math.ceil(0.5 * 
-						Math.log((double)this.getEnvironmentTexture().getWidth() * 
-								(double)this.getEnvironmentTexture().getHeight() / (double)resources.viewSet.getCameraPoseCount() ) 
+						Math.log(6 * (double)this.environmentMap.getFaceSize() * 
+								(double)this.environmentMap.getFaceSize() / (double)resources.viewSet.getCameraPoseCount() ) 
 							/ Math.log(2.0)))));
-			p.setUniform("diffuseEnvironmentMipMapLevel", this.getEnvironmentTexture().getMipmapLevelCount() - 2);
-			p.setUniform("environmentMapGamma", 
-					this.getEnvironmentTexture().isInternalFormatCompressed() || 
-					this.getEnvironmentTexture().getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
-					? 2.2f : 1.0f);
-			this.environmentTextureEnabled = true;
+			p.setUniform("diffuseEnvironmentMipMapLevel", this.environmentMap.getMipmapLevelCount() - 1);
+			this.environmentMapEnabled = true;
 		}
 		
 		if (resources.luminanceMap == null)
@@ -927,18 +960,18 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    	
 	    	mainRenderable.program().setUniform("projection", projection = getProjectionMatrix());
 	    	
-	    	if (environmentTexture != null && environmentTextureEnabled)
+	    	if (environmentMap != null && environmentMapEnabled)
 			{
 				environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
-				environmentBackgroundProgram.setTexture("env", environmentTexture);
+				environmentBackgroundProgram.setTexture("env", environmentMap);
 				environmentBackgroundProgram.setUniform("model_view", this.getViewMatrix());
 				environmentBackgroundProgram.setUniform("projection", projection);
 				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
 				environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
 
 				environmentBackgroundProgram.setUniform("gamma", 
-						environmentTexture.isInternalFormatCompressed() || 
-						environmentTexture.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
+						environmentMap.isInternalFormatCompressed() || 
+						environmentMap.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
 						? 1.0f : 2.2f);
 			}
 	    	
@@ -961,7 +994,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 					offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
 			    	offscreenFBO.clearDepthBuffer();
 		    		
-		    		if (environmentTexture != null && environmentTextureEnabled)
+		    		if (environmentMap != null && environmentMapEnabled)
 		    		{
 		    			context.disableDepthTest();
 		    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
@@ -976,7 +1009,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 					framebuffer.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
 		    		framebuffer.clearDepthBuffer();
 		    		
-		    		if (environmentTexture != null && environmentTextureEnabled)
+		    		if (environmentMap != null && environmentMapEnabled)
 		    		{
 		    			context.disableDepthTest();
 		    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
@@ -1127,10 +1160,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			this.environmentBackgroundProgram = null;
 		}
 		
-		if (this.environmentTexture != null)
+		if (this.environmentMap != null)
 		{
-			this.environmentTexture.close();
-			this.environmentTexture = null;
+			this.environmentMap.close();
+			this.environmentMap = null;
 		}
 		
 		// New code
@@ -1191,10 +1224,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
 	    	framebuffer.clearDepthBuffer();
 	    	
-	    	if (environmentTexture != null && environmentTextureEnabled)
+	    	if (environmentMap != null && environmentMapEnabled)
 			{
 				environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
-				environmentBackgroundProgram.setTexture("env", environmentTexture);
+				environmentBackgroundProgram.setTexture("env", environmentMap);
 				environmentBackgroundProgram.setUniform("model_view", targetViewSet.getCameraPose(i));
 				environmentBackgroundProgram.setUniform("projection", 
 					targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
@@ -1203,8 +1236,8 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 				environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
 
 				environmentBackgroundProgram.setUniform("gamma", 
-						environmentTexture.isInternalFormatCompressed() || 
-						environmentTexture.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
+						environmentMap.isInternalFormatCompressed() || 
+						environmentMap.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
 						? 1.0f : 2.2f);
 				
 				context.disableDepthTest();
@@ -1996,12 +2029,6 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	}
 	
 	@Override
-	public Texture2D<ContextType> getEnvironmentTexture()
-	{
-		return this.environmentTexture;
-	}
-	
-	@Override
 	public void setEnvironment(File environmentFile)
 	{
 		if (environmentFile != null && environmentFile.exists())
@@ -2065,12 +2092,6 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		{
 			this.transformationMatrices = matrices;
 		}
-	}
-	
-	@Override
-	public VertexMesh getReferenceScene()
-	{
-		return this.referenceScene;
 	}
 	
 	@Override
