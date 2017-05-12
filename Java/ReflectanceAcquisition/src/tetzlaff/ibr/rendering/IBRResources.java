@@ -684,6 +684,43 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		}
 	}
 	
+	private void computeViewWeights()
+	{
+		Vector3[] viewDirections = new Vector3[this.viewSet.getCameraPoseCount()];
+		
+		for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
+		{
+			viewDirections[i] = new Vector3(this.viewSet.getCameraPoseInverse(i).getColumn(3))
+					.minus(this.geometry.getCentroid()).normalized();
+		}
+		
+		int[] totals = new int[this.viewSet.getCameraPoseCount()];
+		int sampleCount = this.viewSet.getCameraPoseCount() * 256;
+		double densityFactor = Math.sqrt(Math.PI * sampleCount);
+		int sampleRows = (int)Math.ceil(densityFactor / 2) + 1;
+		
+		for (int i = 0; i < sampleRows; i++)
+		{
+			double r = Math.sin(Math.PI * (double)i / (double)(sampleRows-1));
+			int sampleColumns = Math.max(1, (int)Math.ceil(densityFactor * r));
+			
+			for (int j = 0; j < sampleColumns; j++)
+			{
+				// TODO double check this math
+				Vector3 sampleDirection = new Vector3(
+						(float)(r * Math.cos(2 * Math.PI * (double)j / (double)(sampleColumns-1))),
+						(float)(Math.sqrt(1 - r * r)),
+						(float)(r * Math.sin(2 * Math.PI * (double)j / (double)(sampleColumns-1))));
+				
+				double minDistance = Double.MAX_VALUE;
+				for (int k = 0; k < this.viewSet.getCameraPoseCount(); k++)
+				{
+					double distance = Math.min(minDistance, Math.acos(Math.max(-1.0, Math.min(1.0f, sampleDirection.dot(viewDirections[k])))));
+				}
+			}
+		}
+	}
+	
 	public void close()
 	{
 		if (this.cameraPoseBuffer != null)
