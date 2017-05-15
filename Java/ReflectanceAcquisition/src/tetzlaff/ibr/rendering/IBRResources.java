@@ -98,6 +98,9 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 	public final Texture2D<ContextType> roughnessTexture;
 	public final Texture3D<ContextType> shadowTextures;
 	public final UniformBuffer<ContextType> shadowMatrixBuffer;
+	public final UniformBuffer<ContextType> cameraWeightBuffer;
+	
+	private final float[] cameraWeights;
 	
 	public static class Builder<ContextType extends Context<ContextType>>
 	{
@@ -211,6 +214,12 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		this.context = context;
 		this.viewSet = viewSet;
 		this.geometry = geometry;
+		
+		this.cameraWeights = new float[viewSet.getCameraPoseCount()];
+		
+		computeCameraWeights();
+		
+		cameraWeightBuffer = context.createUniformBuffer().setData(new FloatVertexList(1, viewSet.getCameraPoseCount(), cameraWeights));
 		
 		// Store the poses in a uniform buffer
 		if (viewSet.getCameraPoseData() != null)
@@ -684,7 +693,12 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		}
 	}
 	
-	private void computeViewWeights()
+	public float getCameraWeight(int index)
+	{
+		return this.cameraWeights[index];
+	}
+	
+	private void computeCameraWeights()
 	{
 		Vector3[] viewDirections = new Vector3[this.viewSet.getCameraPoseCount()];
 		
@@ -695,9 +709,27 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		}
 		
 		int[] totals = new int[this.viewSet.getCameraPoseCount()];
-		int sampleCount = this.viewSet.getCameraPoseCount() * 256;
-		double densityFactor = Math.sqrt(Math.PI * sampleCount);
+		int targetSampleCount = this.viewSet.getCameraPoseCount() * 256;
+		double densityFactor = Math.sqrt(Math.PI * targetSampleCount);
 		int sampleRows = (int)Math.ceil(densityFactor / 2) + 1;
+		
+		// Find the view with the greatest distance from any other view.
+		// Directions that are further from any view than this distance will be ignored in the view weight calculation.
+		double maxMinDistance = 0.0;
+		for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
+    	{
+			double minDistance = Double.MAX_VALUE;
+    		for (int j = 0; j < this.viewSet.getCameraPoseCount(); j++)
+    		{
+    			if (i != j)
+    			{
+    				minDistance = Math.min(minDistance, Math.acos(Math.max(-1.0, Math.min(1.0f, viewDirections[i].dot(viewDirections[j])))));
+    			}
+    		}
+    		maxMinDistance = Math.max(maxMinDistance, minDistance);
+    	}
+		
+		int actualSampleCount = 0;
 		
 		for (int i = 0; i < sampleRows; i++)
 		{
@@ -706,19 +738,42 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			
 			for (int j = 0; j < sampleColumns; j++)
 			{
-				// TODO double check this math
 				Vector3 sampleDirection = new Vector3(
-						(float)(r * Math.cos(2 * Math.PI * (double)j / (double)(sampleColumns-1))),
-						(float)(Math.sqrt(1 - r * r)),
-						(float)(r * Math.sin(2 * Math.PI * (double)j / (double)(sampleColumns-1))));
+						(float)(r * Math.cos(2 * Math.PI * (double)j / (double)sampleColumns)),
+						(float) Math.cos(Math.PI * (double)i / (double)(sampleRows-1)),
+						(float)(r * Math.sin(2 * Math.PI * (double)j / (double)sampleColumns)));
 				
-				double minDistance = Double.MAX_VALUE;
+				double minDistance = maxMinDistance;
+				int minIndex = -1;
 				for (int k = 0; k < this.viewSet.getCameraPoseCount(); k++)
 				{
-					double distance = Math.min(minDistance, Math.acos(Math.max(-1.0, Math.min(1.0f, sampleDirection.dot(viewDirections[k])))));
+					double distance = Math.acos(Math.max(-1.0, Math.min(1.0f, sampleDirection.dot(viewDirections[k]))));
+					if (distance < minDistance)
+					{
+						minDistance = distance;
+						minIndex = k;
+					}
 				}
+				
+				if (minIndex >= 0)
+				{
+					totals[minIndex]++;
+				}
+				
+				actualSampleCount++;
 			}
 		}
+		
+		System.out.println("---");
+		System.out.println("View weights:");
+		
+		for (int k = 0; k < this.viewSet.getCameraPoseCount(); k++)
+		{
+			cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
+			System.out.println(this.viewSet.getImageFileName(k) + "\t" + cameraWeights[k]);
+		}
+		
+		System.out.println("---");
 	}
 	
 	public void close()

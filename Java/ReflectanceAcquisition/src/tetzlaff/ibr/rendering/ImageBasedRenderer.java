@@ -573,6 +573,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	private void setupForDraw(Program<ContextType> program)
 	{
 		program.setTexture("viewImages", resources.colorTextures);
+		program.setUniformBuffer("CameraWeights", resources.cameraWeightBuffer);
 		program.setUniformBuffer("CameraPoses", resources.cameraPoseBuffer);
 		program.setUniformBuffer("CameraProjections", resources.cameraProjectionBuffer);
 		program.setUniformBuffer("CameraProjectionIndices", resources.cameraProjectionIndexBuffer);
