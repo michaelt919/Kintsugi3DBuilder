@@ -269,6 +269,7 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 					* (pbrGeometricAttenuationEnabled ? geomAttenVirtual / nDotV_virtual : nDotL_virtual)
 					// ^ in theory we should need to divide by (4 * nDotV_virtual)
 					// Somehow we need an extra factor of 4 for it to look right though.
+					// TODO investigate this some more - maybe its supposed to be 2pi instead of 4?
 					* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
 										* virtualLightDir),
 					(useSpecularTexture ? mfdMono : 1.0) * viewCount * weight);
@@ -676,8 +677,10 @@ void main()
 		if (useEnvironmentMap || (!useDiffuseTexture && !useSpecularTexture))
 		{
 			// Not 100% sure why multiplication by 2 is necessary.
-			// Maybe related to the fact that the surface area of a unit hemisphere is 2pi?
+			// Maybe because the surface area of a unit hemisphere is 2pi,
+			// but the diffuse BRDF is albedo / pi - not albedo / (2pi)?
 			// The factor of 2 looks right with the double-owl Chinese bronze "you".
+			// TODO investigate this further
 			reflectance += diffuseColor * 2 * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 			
 			if (imageBasedRenderingEnabled)
