@@ -1037,7 +1037,7 @@ public class IBRelightConfigFrame extends JFrame
 			fileChooser.resetChoosableFileFilters();
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
 			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Radiance HDR image", "hdr"));
-			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Low dynamic range image", "jpg", "jpeg", "png", "bmp", "wbmp", "gif"));
+			//fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Low dynamic range image", "jpg", "jpeg", "png", "bmp", "wbmp", "gif"));
 			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 			{
 				File file = fileChooser.getSelectedFile();

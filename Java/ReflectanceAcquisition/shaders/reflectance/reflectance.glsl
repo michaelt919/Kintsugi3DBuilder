@@ -14,6 +14,11 @@
 uniform int viewCount;
 uniform bool infiniteLightSources;
 
+layout(std140) uniform CameraWeights
+{
+	vec4 cameraWeights[MAX_CAMERA_POSE_COUNT_DIV_4];
+};
+
 layout(std140) uniform CameraPoses
 {
 	mat4 cameraPoses[MAX_CAMERA_POSE_COUNT];
@@ -37,6 +42,11 @@ layout(std140) uniform LightIndices
 int getLightIndex(int poseIndex)
 {
 	return lightIndices[poseIndex/4][poseIndex%4];
+}
+
+float getCameraWeight(int index)
+{
+	return cameraWeights[index/4][index%4];
 }
 
 vec3 getViewVector(int index)

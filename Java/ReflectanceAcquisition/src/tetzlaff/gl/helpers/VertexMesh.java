@@ -308,14 +308,21 @@ public class VertexMesh
 			}
 		}
 		
-		try
+		if (materialFileName != null)
 		{
-			Dictionary<String, Material> materialLibrary = Material.loadFromMTLFile(new File(file.getParentFile(), materialFileName));
-			this.material = materialLibrary.get(materialName);
+			try
+			{
+				Dictionary<String, Material> materialLibrary = Material.loadFromMTLFile(new File(file.getParentFile(), materialFileName));
+				this.material = materialLibrary.get(materialName);
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+				this.material = null;
+			}
 		}
-		catch(IOException e)
+		else
 		{
-			e.printStackTrace();
 			this.material = null;
 		}
 		
