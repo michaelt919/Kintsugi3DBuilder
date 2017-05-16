@@ -253,26 +253,34 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 					geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
 			
 				vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL_sample, maxLuminance);
-				vec3 mfdFresnel = specularResid.rgb * 4 * nDotV_sample / lightIntensity
+				
+				vec3 mfdFresnel = specularResid.rgb / lightIntensity
 					 * (infiniteLightSources ? 1.0 : lightDistSquared) 
-					 / (pbrGeometricAttenuationEnabled ? geomAttenSample : 1.0);
+					 * (pbrGeometricAttenuationEnabled ? 
+						4 * nDotV_sample / geomAttenSample : 4 / nDotL_sample);
+						
 				float mfdMono = getLuminance(mfdFresnel / specularColor);
 				
 				float weight = getCameraWeight(index);
 				
 				return vec4(
-					// viewCount * weight -> brings weights back to being on the order of 1
-					// This is helpful for maintaining numerical stability
-					// Everything gets normalized at the end again anyways.
 					(fresnelEnabled ? fresnel(mfdFresnel, vec3(mfdMono), hDotV_virtual) : mfdFresnel)
-					* viewCount * weight 
-					* (pbrGeometricAttenuationEnabled ? geomAttenVirtual / nDotV_virtual : nDotL_virtual)
-					// ^ in theory we should need to divide by (4 * nDotV_virtual)
-					// Somehow we need an extra factor of 4 for it to look right though.
-					// TODO investigate this some more - maybe its supposed to be 2pi instead of 4?
-					* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
-										* virtualLightDir),
-					(useSpecularTexture ? mfdMono : 1.0) * viewCount * weight);
+						* (pbrGeometricAttenuationEnabled ? 
+							geomAttenVirtual / (4 * nDotV_virtual) : nDotL_virtual / 4)
+						* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
+											* virtualLightDir)
+						 * 4 * hDotV_virtual * (weight * 4 * PI * viewCount),
+					(useSpecularTexture ?  
+					// TODO normalization to a specular texture isn't quite the same - figure out why
+							4 * mfdMono * (pbrGeometricAttenuationEnabled ? 
+									geomAttenVirtual / (4 * nDotV_virtual) : nDotL_virtual / 4)
+							: 2.0 / PI)
+						 * hDotV_virtual * (weight * 4 * PI * viewCount)
+				);
+				// // dl = 4 * h dot v * dh
+				// // weight * viewCount -> brings weights back to being on the order of 1
+				// // This is helpful for consistency with numerical limits (i.e. clamping)
+				// // Everything gets normalized at the end again anyways.
 			}
 			else
 			{
@@ -299,7 +307,9 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
     
     if (sum.y > 0.0)
 	{
-		return sum.rgb / clamp(sum.a, 1.0, 1000000.0);
+		return sum.rgb 
+		//	/ viewCount;
+			/ clamp(sum.a, 1, 1000000.0);
 	}
 	else
 	{
