@@ -250,11 +250,14 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 				float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
 			
 				float geomAttenVirtual = 
-					geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
+					(pbrGeometricAttenuationEnabled ? 
+						geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual) :
+							nDotL_virtual * nDotV_virtual);
 			
 				vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL_sample, maxLuminance);
 				
-				vec3 mfdFresnel = specularResid.rgb / lightIntensity
+				// Light intensities in view set files are assumed to be pre-divided by pi.
+				vec3 mfdFresnel = specularResid.rgb / (lightIntensity * PI)
 					 * (infiniteLightSources ? 1.0 : lightDistSquared) 
 					 * (pbrGeometricAttenuationEnabled ? 
 						4 * nDotV_sample / geomAttenSample : 4 / nDotL_sample);
@@ -265,22 +268,19 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 				
 				return vec4(
 					(fresnelEnabled ? fresnel(mfdFresnel, vec3(mfdMono), hDotV_virtual) : mfdFresnel)
-						* (pbrGeometricAttenuationEnabled ? 
-							geomAttenVirtual / (4 * nDotV_virtual) : nDotL_virtual / 4)
+						* geomAttenVirtual / (4 * nDotV_virtual)
 						* getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPoses[index]))
-											* virtualLightDir)
-						 * 4 * hDotV_virtual * (weight * 4 * PI * viewCount),
-					(useSpecularTexture ?  
-					// TODO normalization to a specular texture isn't quite the same - figure out why
-							4 * mfdMono * (pbrGeometricAttenuationEnabled ? 
-									geomAttenVirtual / (4 * nDotV_virtual) : nDotL_virtual / 4)
-							: 2.0 / PI)
-						 * hDotV_virtual * (weight * 4 * PI * viewCount)
-				);
-				// // dl = 4 * h dot v * dh
-				// // weight * viewCount -> brings weights back to being on the order of 1
-				// // This is helpful for consistency with numerical limits (i.e. clamping)
-				// // Everything gets normalized at the end again anyways.
+											* virtualLightDir),
+					// // Disabled code: normalizes with respect to specular texture when available
+					// // as described in our Archiving 2017 paper.
+					// (useSpecularTexture ? 
+							// mfdMono * geomAttenVirtual / (4 * nDotV_virtual) : 1.0 / (2.0 * PI))
+					1.0 / (2.0 * PI)
+				) * 4 * hDotV_virtual * (weight * 4 * PI * viewCount);
+				// dl = 4 * h dot v * dh
+				// weight * viewCount -> brings weights back to being on the order of 1
+				// This is helpful for consistency with numerical limits (i.e. clamping)
+				// Everything gets normalized at the end again anyways.
 			}
 			else
 			{
@@ -308,8 +308,8 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
     if (sum.y > 0.0)
 	{
 		return sum.rgb 
-		//	/ viewCount;
-			/ clamp(sum.a, 1, 1000000.0);
+			/ viewCount;
+		//	/ clamp(sum.a, 0, 1000000.0);
 	}
 	else
 	{
@@ -684,36 +684,30 @@ void main()
 	
 	if (relightingEnabled || !imageBasedRenderingEnabled)
 	{
-		if (useEnvironmentMap || (!useDiffuseTexture && !useSpecularTexture))
-		{
-			// Not 100% sure why multiplication by 2 is necessary.
-			// Maybe because the surface area of a unit hemisphere is 2pi,
-			// but the diffuse BRDF is albedo / pi - not albedo / (2pi)?
-			// The factor of 2 looks right with the double-owl Chinese bronze "you".
-			// TODO investigate this further
-			reflectance += diffuseColor * 2 * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
-			
-			if (imageBasedRenderingEnabled)
-			{
-				// Old fresnel implementation
-				// if (fresnelEnabled)
-				// {
-					// reflectance += ambientColor * 
-						// fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
-							// getEnvironmentFresnel(
-								// (envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz, 
-									// pow(1 - nDotV, 5)), nDotV);
-				// }
-				// else
-				{
-					reflectance += ambientColor * 
-						getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
-				}
-			}
 		
-			// For debugging environment mapping:
-			//reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
-			//reflectance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+		// Not 100% sure why multiplication by 2 is necessary.
+		// Maybe because the surface area of a unit hemisphere is 2pi,
+		// but the diffuse BRDF is albedo / pi - not albedo / (2pi)?
+		// The factor of 2 looks right with the double-owl Chinese bronze "you".
+		// TODO investigate this further
+		reflectance += diffuseColor * 2 * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+		
+		if (imageBasedRenderingEnabled)
+		{
+			// Old fresnel implementation
+			// if (fresnelEnabled)
+			// {
+				// reflectance += ambientColor * 
+					// fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
+						// getEnvironmentFresnel(
+							// (envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz, 
+								// pow(1 - nDotV, 5)), nDotV);
+			// }
+			// else
+			{
+				reflectance += ambientColor * 
+					getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
+			}
 		}
 		else
 		{
@@ -736,6 +730,10 @@ void main()
 				reflectance += ambientColor * reflectivity;
 			}
 		}
+	
+		// For debugging environment mapping:
+		//reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
+		//reflectance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 	}
     
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && 
