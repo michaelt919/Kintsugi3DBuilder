@@ -60,7 +60,7 @@ vec3 getEnvironmentFresnel(vec3 lightDirection, float fresnelFactor)
 {
 	if (useEnvironmentMap)
 	{
-		return textureLod(environmentMap, lightDirection, 
+		return ambientColor * textureLod(environmentMap, lightDirection, 
 			mix(environmentMipMapLevel, 0, fresnelFactor)).rgb;
 	}
 	else
@@ -73,7 +73,7 @@ vec3 getEnvironment(vec3 lightDirection)
 {
 	if (useEnvironmentMap)
 	{
-		return textureLod(environmentMap, lightDirection, environmentMipMapLevel).rgb;
+		return ambientColor * textureLod(environmentMap, lightDirection, environmentMipMapLevel).rgb;
 	}
 	else
 	{
@@ -85,7 +85,7 @@ vec3 getEnvironmentDiffuse(vec3 normalDirection)
 {
 	if (useEnvironmentMap)
 	{
-		return textureLod(environmentMap, normalDirection, diffuseEnvironmentMipMapLevel).rgb;
+		return ambientColor * textureLod(environmentMap, normalDirection, diffuseEnvironmentMipMapLevel).rgb / 2;
 	}
 	else
 	{
@@ -257,6 +257,9 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
 				vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL_sample, maxLuminance);
 				
 				// Light intensities in view set files are assumed to be pre-divided by pi.
+				// Or alternatively, the result of getLinearColor gives a result 
+				// where a diffuse reflectivity of 1 is represented by a value of pi.
+				// See diffusefit.glsl
 				vec3 mfdFresnel = specularResid.rgb / (lightIntensity * PI)
 					 * (infiniteLightSources ? 1.0 : lightDistSquared) 
 					 * (pbrGeometricAttenuationEnabled ? 
@@ -308,8 +311,8 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
     if (sum.y > 0.0)
 	{
 		return sum.rgb 
-			/ viewCount;
-		//	/ clamp(sum.a, 0, 1000000.0);
+			/ viewCount;					// better spatial consistency, worse directional consistency?
+		//	/ clamp(sum.a, 0, 1000000.0);	// Better directional consistency, worse spatial consistency?
 	}
 	else
 	{
@@ -684,20 +687,14 @@ void main()
 	
 	if (relightingEnabled || !imageBasedRenderingEnabled)
 	{
-		
-		// Not 100% sure why multiplication by 2 is necessary.
-		// Maybe because the surface area of a unit hemisphere is 2pi,
-		// but the diffuse BRDF is albedo / pi - not albedo / (2pi)?
-		// The factor of 2 looks right with the double-owl Chinese bronze "you".
-		// TODO investigate this further
-		reflectance += diffuseColor * 2 * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+		reflectance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 		
 		if (imageBasedRenderingEnabled)
 		{
 			// Old fresnel implementation
 			// if (fresnelEnabled)
 			// {
-				// reflectance += ambientColor * 
+				// reflectance += 
 					// fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
 						// getEnvironmentFresnel(
 							// (envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz, 
@@ -705,8 +702,7 @@ void main()
 			// }
 			// else
 			{
-				reflectance += ambientColor * 
-					getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
+				reflectance += getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
 			}
 		}
 		else
