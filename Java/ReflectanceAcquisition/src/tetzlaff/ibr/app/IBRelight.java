@@ -11,18 +11,18 @@ import javax.imageio.ImageIO;
 
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
-import tetzlaff.gl.helpers.CameraController;
-import tetzlaff.gl.helpers.FirstPersonController;
-import tetzlaff.gl.helpers.InteractiveGraphics;
-import tetzlaff.gl.helpers.Matrix4;
-import tetzlaff.gl.helpers.OverrideableLightController;
-import tetzlaff.gl.helpers.TrackballLightController;
-import tetzlaff.gl.helpers.Vector3;
+import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.rendering.HardcodedLightController;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
+import tetzlaff.mvc.controllers.FirstPersonController;
+import tetzlaff.mvc.controllers.TrackballLightController;
+import tetzlaff.mvc.models.BasicCameraModel;
+import tetzlaff.mvc.models.OverrideableLightModel;
 import tetzlaff.window.glfw.GLFWWindow;
 //import org.lwjgl.opengl.GLDebugMessageCallback;
 //import static org.lwjgl.opengl.KHRDebug.*;
@@ -37,7 +37,7 @@ public class IBRelight
 {
 	private static final boolean DEBUG = true;
 	
-	private static class MetaLightController implements OverrideableLightController
+	private static class MetaLightController implements OverrideableLightModel
 	{
 		public boolean hardcodedMode = false;
 		public TrackballLightController normalController;
@@ -67,7 +67,7 @@ public class IBRelight
 			return hardcodedMode ? hardcodedController.getLightMatrix(i) : normalController.getLightMatrix(i);
 		}
 		
-		public CameraController asCameraController()
+		public BasicCameraModel asCameraController()
 		{
 			return hardcodedMode ? hardcodedController.asCameraController() : normalController.asCameraController();
 		}
@@ -185,7 +185,7 @@ public class IBRelight
     	});
         
         // Hybrid FP + Trackball controls
-        CameraController cameraController = () -> fpController.getViewMatrix().times(metaLightController.asCameraController().getViewMatrix());
+        BasicCameraModel cameraController = () -> fpController.getLookMatrix().times(metaLightController.asCameraController().getLookMatrix());
 
         // Create a new 'renderer' to be attached to the window and the GUI.
         // This is the object that loads the ULF models and handles drawing them.  This object abstracts
@@ -237,8 +237,8 @@ public class IBRelight
         });
 
     	// Create a new application to run our event loop and give it the GLFWWindow for polling
-    	// of events and the OpenGL context.  The ULFRendererList provides the drawable.
-        InteractiveApplication app = InteractiveGraphics.createApplication(window, window, model.getDrawable());
+    	// of events and the OpenGL context.  The ULFRendererList provides the renderable.
+        InteractiveApplication app = InteractiveGraphics.createApplication(window, window, model.getRenderable());
         app.addRefreshable(new Refreshable() 
         {
 			@Override

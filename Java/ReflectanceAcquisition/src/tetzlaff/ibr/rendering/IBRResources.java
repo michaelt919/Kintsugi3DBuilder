@@ -16,7 +16,7 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
-import tetzlaff.gl.Renderable;
+import tetzlaff.gl.Drawable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture1D;
 import tetzlaff.gl.Texture2D;
@@ -24,21 +24,21 @@ import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.ColorTextureBuilder;
-import tetzlaff.gl.helpers.FloatVertexList;
-import tetzlaff.gl.helpers.Material;
-import tetzlaff.gl.helpers.Matrix4;
-import tetzlaff.gl.helpers.Vector3;
-import tetzlaff.gl.helpers.Vector4;
-import tetzlaff.gl.helpers.VertexMesh;
+import tetzlaff.gl.material.Material;
+import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.ViewSet;
+import tetzlaff.util.VertexGeometry;
 
 public class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
 	public final Context<ContextType> context;
 	public final ViewSet viewSet;
-	public final VertexMesh geometry;
+	public final VertexGeometry geometry;
 	
 	/**
 	 * A GPU buffer containing the camera poses defining the transformation from object space to camera space for each view.
@@ -106,7 +106,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 	{
 		private final ContextType context;
 		private ViewSet viewSet;
-		private VertexMesh geometry;
+		private VertexGeometry geometry;
 		private File imageDirectoryOverride;
 		private IBRLoadOptions loadOptions;
 		private IBRLoadingMonitor loadingMonitor;
@@ -145,7 +145,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			this.viewSet = ViewSet.loadFromVSETFile(vsetFile);
 			try
 			{
-				this.geometry = new VertexMesh("OBJ", this.viewSet.getGeometryFile());
+				this.geometry = new VertexGeometry("OBJ", this.viewSet.getGeometryFile());
 			}
 			catch(Exception e)
 			{
@@ -160,7 +160,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			this.viewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
 			if (geometryFile != null)
 			{
-				this.geometry = new VertexMesh("OBJ", geometryFile);
+				this.geometry = new VertexGeometry("OBJ", geometryFile);
 			}
 			if (undistortedImageDirectory != null)
 			{
@@ -175,7 +175,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			return this;
 		}
 		
-		public Builder<ContextType> useExistingGeometry(VertexMesh geometry)
+		public Builder<ContextType> useExistingGeometry(VertexGeometry geometry)
 		{
 			this.geometry = geometry;
 			return this;
@@ -209,7 +209,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		return new IBRResources.Builder<ContextType>(context);
 	}
 	
-	private IBRResources(ContextType context, ViewSet viewSet, VertexMesh geometry, IBRLoadOptions loadOptions, IBRLoadingMonitor loadingMonitor) throws IOException
+	private IBRResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, IBRLoadOptions loadOptions, IBRLoadingMonitor loadingMonitor) throws IOException
 	{
 		this.context = context;
 		this.viewSet = viewSet;
@@ -219,7 +219,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		
 		computeCameraWeights();
 		
-		cameraWeightBuffer = context.createUniformBuffer().setData(new FloatVertexList(1, viewSet.getCameraPoseCount(), cameraWeights));
+		cameraWeightBuffer = context.createUniformBuffer().setData(new NativeFloatVectorList(1, viewSet.getCameraPoseCount(), cameraWeights));
 		
 		// Store the poses in a uniform buffer
 		if (viewSet.getCameraPoseData() != null)
@@ -445,8 +445,8 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 	    			.createProgram();
 			)
 	    	{
-		    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
-		    	depthRenderable.addVertexBuffer("position", positionBuffer);
+		    	Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
+		    	depthDrawable.addVertexBuffer("position", positionBuffer);
 		    	
 		    	// Render each depth texture
 		    	for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
@@ -463,7 +463,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 							)
 					);
 		        	
-		        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+		        	depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
 		    	}
 	    	}
         }
@@ -636,11 +636,11 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		    			.createProgram();
 			)
 			{
-		    	Renderable<ContextType> depthRenderable = context.createRenderable(depthRenderingProgram);
-		    	depthRenderable.addVertexBuffer("position", this.positionBuffer);
+		    	Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
+		    	depthDrawable.addVertexBuffer("position", this.positionBuffer);
 	
 		    	// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-		    	FloatVertexList flattenedShadowMatrices = new FloatVertexList(16, this.viewSet.getCameraPoseCount());
+		    	NativeFloatVectorList flattenedShadowMatrices = new NativeFloatVectorList(16, this.viewSet.getCameraPoseCount());
 		    	
 		    	// Render each depth texture
 		    	for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
@@ -667,7 +667,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 							);
 		    		depthRenderingProgram.setUniform("projection", projection);
 		        	
-		        	depthRenderable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+		        	depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
 		        	
 		        	Matrix4 fullTransform = projection.times(modelView);
 		    		

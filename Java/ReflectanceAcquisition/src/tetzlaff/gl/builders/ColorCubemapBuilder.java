@@ -7,12 +7,12 @@ import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Cubemap;
 import tetzlaff.gl.CubemapFace;
-import tetzlaff.gl.helpers.FloatVertexList;
+import tetzlaff.gl.nativelist.NativeFloatVectorList;
 
 public interface ColorCubemapBuilder <ContextType extends Context<ContextType>, TextureType extends Cubemap<ContextType>> 
 extends ColorTextureBuilder<ContextType, TextureType>
 {
-	ColorCubemapBuilder<ContextType, TextureType> loadFace(CubemapFace face, FloatVertexList data) throws IOException;
+	ColorCubemapBuilder<ContextType, TextureType> loadFace(CubemapFace face, NativeFloatVectorList data) throws IOException;
 	
 	ColorCubemapBuilder<ContextType, TextureType> setInternalFormat(ColorFormat format);
 	ColorCubemapBuilder<ContextType, TextureType> setInternalFormat(CompressionFormat format);

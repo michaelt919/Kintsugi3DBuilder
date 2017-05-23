@@ -23,7 +23,7 @@ import tetzlaff.gl.builders.base.ColorCubemapBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
-import tetzlaff.gl.helpers.FloatVertexList;
+import tetzlaff.gl.nativelist.NativeFloatVectorList;
 
 public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContext>
 {
@@ -62,7 +62,7 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 		}
 
 		@Override
-		public ColorBuilder loadFace(CubemapFace face, FloatVertexList data)
+		public ColorBuilder loadFace(CubemapFace face, NativeFloatVectorList data)
 				throws IOException 
 		{
 			if (data.dimensions != 3)

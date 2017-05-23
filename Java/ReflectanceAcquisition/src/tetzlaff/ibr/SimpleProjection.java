@@ -1,6 +1,6 @@
 package tetzlaff.ibr;
 
-import tetzlaff.gl.helpers.Matrix4;
+import tetzlaff.gl.vecmath.Matrix4;
 
 /**
  * A simple perspective projection defined simply by aspect ratio and field of view.

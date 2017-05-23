@@ -33,14 +33,14 @@ import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.Context;
-import tetzlaff.gl.helpers.LightController;
-import tetzlaff.gl.helpers.Matrix4;
-import tetzlaff.gl.helpers.Vector3;
-import tetzlaff.gl.helpers.VertexMesh;
-import tetzlaff.ibr.IBRDrawable;
-import tetzlaff.ibr.IBRDrawableListModel;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibr.IBRRenderable;
+import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
+import tetzlaff.mvc.controllers.LightController;
+import tetzlaff.util.VertexGeometry;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the
@@ -72,7 +72,7 @@ public class IBRelightConfigFrame extends JFrame
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRDrawableListModel<ContextType> model, LightController lightController, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRRenderableListModel<ContextType> model, LightController lightController, boolean isHighDPI)
 	{		
 		setResizable(false);
 		setTitle("IBRelight: Settings");
@@ -231,7 +231,7 @@ public class IBRelightConfigFrame extends JFrame
 		gbl_selectionPanel.rowWeights = new double[]{0.0};
 		selectionPanel.setLayout(gbl_selectionPanel);
 		
-		JComboBox<IBRDrawable<ContextType>> comboBoxObjects = new JComboBox<IBRDrawable<ContextType>>();
+		JComboBox<IBRRenderable<ContextType>> comboBoxObjects = new JComboBox<IBRRenderable<ContextType>>();
 		GridBagConstraints gbc_comboBoxObjects = new GridBagConstraints();
 		gbc_comboBoxObjects.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboBoxObjects.gridwidth = 2;
@@ -1075,7 +1075,7 @@ public class IBRelightConfigFrame extends JFrame
 			{
 				try
 				{
-					model.getSelectedItem().setReferenceScene(new VertexMesh("OBJ", fileChooser.getSelectedFile()));
+					model.getSelectedItem().setReferenceScene(new VertexGeometry("OBJ", fileChooser.getSelectedFile()));
 				} 
 				catch (IOException ex) 
 				{

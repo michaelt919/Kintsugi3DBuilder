@@ -19,12 +19,12 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import tetzlaff.gl.helpers.FloatVertexList;
-import tetzlaff.gl.helpers.IntVertexList;
-import tetzlaff.gl.helpers.Matrix3;
-import tetzlaff.gl.helpers.Matrix4;
-import tetzlaff.gl.helpers.Vector3;
-import tetzlaff.gl.helpers.Vector4;
+import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.nativelist.NativeIntVectorList;
+import tetzlaff.gl.vecmath.Matrix3;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -174,13 +174,13 @@ public class ViewSet
 		this.relativeImagePath = params.relativeImagePath;
 	}
 	
-	public FloatVertexList getCameraPoseData() 
+	public NativeFloatVectorList getCameraPoseData() 
 	{
 		// Store the poses in a uniform buffer
 		if (cameraPoseList != null && cameraPoseList.size() > 0)
 		{	
 			// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-			FloatVertexList cameraPoseData = new FloatVertexList(16, cameraPoseList.size());
+			NativeFloatVectorList cameraPoseData = new NativeFloatVectorList(16, cameraPoseList.size());
 			
 			for (int k = 0; k < cameraPoseList.size(); k++)
 			{
@@ -203,13 +203,13 @@ public class ViewSet
 		}
 	}
 
-	public FloatVertexList getCameraProjectionData() 
+	public NativeFloatVectorList getCameraProjectionData() 
 	{
 		// Store the camera projections in a uniform buffer
 		if (cameraProjectionList != null && cameraProjectionList.size() > 0)
 		{
 			// Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
-			FloatVertexList cameraProjectionData = new FloatVertexList(16, cameraProjectionList.size());
+			NativeFloatVectorList cameraProjectionData = new NativeFloatVectorList(16, cameraProjectionList.size());
 			
 			for (int k = 0; k < cameraProjectionList.size(); k++)
 			{
@@ -232,7 +232,7 @@ public class ViewSet
 		}
 	}
 
-	public IntVertexList getCameraProjectionIndexData() 
+	public NativeIntVectorList getCameraProjectionIndexData() 
 	{
 		// Store the camera projection indices in a uniform buffer
 		if (cameraProjectionIndexList != null && cameraProjectionIndexList.size() > 0)
@@ -242,7 +242,7 @@ public class ViewSet
 			{
 				indexArray[i] = cameraProjectionIndexList.get(i);
 			}
-			return new IntVertexList(1, cameraProjectionIndexList.size(), indexArray);
+			return new NativeIntVectorList(1, cameraProjectionIndexList.size(), indexArray);
 		}
 		else
 		{
@@ -250,12 +250,12 @@ public class ViewSet
 		}
 	}
 
-	public FloatVertexList getLightPositionData() 
+	public NativeFloatVectorList getLightPositionData() 
 	{
 		// Store the light positions in a uniform buffer
 		if (lightPositionList != null && lightPositionList.size() > 0)
 		{
-			FloatVertexList lightPositionData = new FloatVertexList(4, lightPositionList.size());
+			NativeFloatVectorList lightPositionData = new NativeFloatVectorList(4, lightPositionList.size());
 			for (int k = 0; k < lightPositionList.size(); k++)
 			{
 				lightPositionData.set(k, 0, lightPositionList.get(k).x);
@@ -272,12 +272,12 @@ public class ViewSet
 		}
 	}
 
-	public FloatVertexList getLightIntensityData() 
+	public NativeFloatVectorList getLightIntensityData() 
 	{
 		// Store the light positions in a uniform buffer
 		if (lightIntensityList != null && lightIntensityList.size() > 0)
 		{
-			FloatVertexList lightIntensityData = new FloatVertexList(4, lightIntensityList.size());
+			NativeFloatVectorList lightIntensityData = new NativeFloatVectorList(4, lightIntensityList.size());
 			for (int k = 0; k < lightPositionList.size(); k++)
 			{
 				lightIntensityData.set(k, 0, lightIntensityList.get(k).x);
@@ -293,7 +293,7 @@ public class ViewSet
 		}
 	}
 
-	public IntVertexList getLightIndexData() 
+	public NativeIntVectorList getLightIndexData() 
 	{
 		// Store the light indices indices in a uniform buffer
 		if (lightIndexList != null && lightIndexList.size() > 0)
@@ -303,7 +303,7 @@ public class ViewSet
 			{
 				indexArray[i] = lightIndexList.get(i);
 			}
-			return new IntVertexList(1, lightIndexList.size(), indexArray);
+			return new NativeIntVectorList(1, lightIndexList.size(), indexArray);
 		}
 		else
 		{

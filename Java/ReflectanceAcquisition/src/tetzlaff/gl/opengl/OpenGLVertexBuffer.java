@@ -5,11 +5,11 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import tetzlaff.gl.VertexBuffer;
-import tetzlaff.gl.helpers.ByteVertexList;
-import tetzlaff.gl.helpers.DoubleVertexList;
-import tetzlaff.gl.helpers.FloatVertexList;
-import tetzlaff.gl.helpers.IntVertexList;
-import tetzlaff.gl.helpers.ShortVertexList;
+import tetzlaff.gl.nativelist.NativeByteVectorList;
+import tetzlaff.gl.nativelist.NativeDoubleVectorList;
+import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.nativelist.NativeIntVectorList;
+import tetzlaff.gl.nativelist.NativeShortVectorList;
 
 class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLContext>
 {
@@ -42,7 +42,7 @@ class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLCont
 	}
 	
 	@Override
-	public OpenGLVertexBuffer setData(ByteVertexList data, boolean unsigned)
+	public OpenGLVertexBuffer setData(NativeByteVectorList data, boolean unsigned)
 	{
 		super.setData(data.getBuffer());
 		this.count = data.count;
@@ -52,7 +52,7 @@ class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLCont
 	}
 
 	@Override
-	public OpenGLVertexBuffer setData(ShortVertexList data, boolean unsigned)
+	public OpenGLVertexBuffer setData(NativeShortVectorList data, boolean unsigned)
 	{
 		super.setData(data.getBuffer());
 		this.count = data.count;
@@ -62,7 +62,7 @@ class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLCont
 	}
 
 	@Override
-	public OpenGLVertexBuffer setData(IntVertexList data, boolean unsigned)
+	public OpenGLVertexBuffer setData(NativeIntVectorList data, boolean unsigned)
 	{
 		super.setData(data.getBuffer());
 		this.count = data.count;
@@ -72,7 +72,7 @@ class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLCont
 	}
 
 	@Override
-	public OpenGLVertexBuffer setData(FloatVertexList data, boolean normalize)
+	public OpenGLVertexBuffer setData(NativeFloatVectorList data, boolean normalize)
 	{
 		super.setData(data.getBuffer());
 		this.count = data.count;
@@ -83,7 +83,7 @@ class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLCont
 	}
 
 	@Override
-	public OpenGLVertexBuffer setData(DoubleVertexList data, boolean normalize)
+	public OpenGLVertexBuffer setData(NativeDoubleVectorList data, boolean normalize)
 	{
 		super.setData(data.getBuffer());
 		this.count = data.count;

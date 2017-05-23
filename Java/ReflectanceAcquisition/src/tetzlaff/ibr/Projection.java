@@ -1,6 +1,6 @@
 package tetzlaff.ibr;
 
-import tetzlaff.gl.helpers.Matrix4;
+import tetzlaff.gl.vecmath.Matrix4;
 
 /**
  * An interface for a definition of 3D to 2D projection that can be expressed as a projective transformation matrix.

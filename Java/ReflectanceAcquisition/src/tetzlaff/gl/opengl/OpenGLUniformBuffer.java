@@ -6,11 +6,11 @@ import static org.lwjgl.opengl.GL31.*;
 import java.nio.ByteBuffer;
 
 import tetzlaff.gl.UniformBuffer;
-import tetzlaff.gl.helpers.ByteVertexList;
-import tetzlaff.gl.helpers.DoubleVertexList;
-import tetzlaff.gl.helpers.FloatVertexList;
-import tetzlaff.gl.helpers.IntVertexList;
-import tetzlaff.gl.helpers.ShortVertexList;
+import tetzlaff.gl.nativelist.NativeByteVectorList;
+import tetzlaff.gl.nativelist.NativeDoubleVectorList;
+import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.nativelist.NativeIntVectorList;
+import tetzlaff.gl.nativelist.NativeShortVectorList;
 
 class OpenGLUniformBuffer extends OpenGLBuffer implements UniformBuffer<OpenGLContext>
 {
@@ -38,35 +38,35 @@ class OpenGLUniformBuffer extends OpenGLBuffer implements UniformBuffer<OpenGLCo
 	}
 	
 	@Override
-	public OpenGLUniformBuffer setData(ByteVertexList data)
+	public OpenGLUniformBuffer setData(NativeByteVectorList data)
 	{
 		super.setData(data.getBuffer());
 		return this;
 	}
 
 	@Override
-	public OpenGLUniformBuffer setData(ShortVertexList data)
+	public OpenGLUniformBuffer setData(NativeShortVectorList data)
 	{
 		super.setData(data.getBuffer());
 		return this;
 	}
 
 	@Override
-	public OpenGLUniformBuffer setData(IntVertexList data)
+	public OpenGLUniformBuffer setData(NativeIntVectorList data)
 	{
 		super.setData(data.getBuffer());
 		return this;
 	}
 
 	@Override
-	public OpenGLUniformBuffer setData(FloatVertexList data)
+	public OpenGLUniformBuffer setData(NativeFloatVectorList data)
 	{
 		super.setData(data.getBuffer());
 		return this;
 	}
 
 	@Override
-	public OpenGLUniformBuffer setData(DoubleVertexList data)
+	public OpenGLUniformBuffer setData(NativeDoubleVectorList data)
 	{
 		super.setData(data.getBuffer());
 		return this;

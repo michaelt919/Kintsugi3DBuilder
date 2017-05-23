@@ -7,33 +7,33 @@ import javax.swing.AbstractListModel;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
-import tetzlaff.gl.helpers.CameraController;
-import tetzlaff.gl.helpers.Drawable;
-import tetzlaff.gl.helpers.LightController;
-import tetzlaff.gl.helpers.MultiDrawable;
-import tetzlaff.ibr.IBRDrawable;
-import tetzlaff.ibr.IBRDrawableListModel;
+import tetzlaff.gl.interactive.InteractiveRenderable;
+import tetzlaff.gl.interactive.MultiRenderable;
+import tetzlaff.ibr.IBRRenderable;
+import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
+import tetzlaff.mvc.controllers.LightController;
+import tetzlaff.mvc.models.BasicCameraModel;
 
-public class ImageBasedRendererList<ContextType extends Context<ContextType>> extends AbstractListModel<IBRDrawable<ContextType>> implements IBRDrawableListModel<ContextType>
+public class ImageBasedRendererList<ContextType extends Context<ContextType>> extends AbstractListModel<IBRRenderable<ContextType>> implements IBRRenderableListModel<ContextType>
 {
 	private static final long serialVersionUID = 4167467314632694946L;
 	
 	protected final ContextType context;
-	protected final CameraController cameraController;
+	protected final BasicCameraModel cameraController;
 	protected final LightController lightController;
 	private Program<ContextType> program;
-	private MultiDrawable<IBRDrawable<ContextType>> ulfs;
+	private MultiRenderable<IBRRenderable<ContextType>> ulfs;
 	private int effectiveSize;
 	private IBRLoadingMonitor loadingMonitor;
 	
-	public ImageBasedRendererList(ContextType context, Program<ContextType> program, CameraController cameraController, LightController lightController) 
+	public ImageBasedRendererList(ContextType context, Program<ContextType> program, BasicCameraModel cameraController, LightController lightController) 
 	{
 		this.context = context;
 		this.cameraController = cameraController;
 		this.lightController = lightController;
-		this.ulfs = new MultiDrawable<IBRDrawable<ContextType>>();
+		this.ulfs = new MultiRenderable<IBRRenderable<ContextType>>();
 		this.effectiveSize = 0;
 		
 		this.program = program;
@@ -47,23 +47,23 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	public void setProgram(Program<ContextType> program)
 	{
 		this.program = program;
-		for (IBRDrawable<ContextType> ulf : ulfs)
+		for (IBRRenderable<ContextType> ulf : ulfs)
 		{
 			ulf.setProgram(program);
 		}
 	}
 	
-	protected CameraController getCameraController()
+	protected BasicCameraModel getCameraController()
 	{
 		return this.cameraController;
 	}
 
 	@Override
-	public IBRDrawable<ContextType> addFromVSETFile(String id, File vsetFile, IBRLoadOptions loadOptions) throws IOException
+	public IBRRenderable<ContextType> addFromVSETFile(String id, File vsetFile, IBRLoadOptions loadOptions) throws IOException
 	{
 		// id = vsetFile.getPath()
 		
-		IBRDrawable<ContextType> newItem = 
+		IBRRenderable<ContextType> newItem = 
 			new ImageBasedRenderer<ContextType>(id, context, this.getProgram(), this.getCameraController(), lightController,
 				IBRResources.getBuilderForContext(this.context)
 					.setLoadingMonitor(this.loadingMonitor)
@@ -116,9 +116,9 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	}
 	
 	@Override
-	public IBRDrawable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, IBRLoadOptions loadOptions) throws IOException
+	public IBRRenderable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, IBRLoadOptions loadOptions) throws IOException
 	{
-		IBRDrawable<ContextType> newItem = 
+		IBRRenderable<ContextType> newItem = 
 			new ImageBasedRenderer<ContextType>(id, context, this.getProgram(), this.getCameraController(), lightController,
 				IBRResources.getBuilderForContext(this.context)
 					.setLoadingMonitor(this.loadingMonitor)
@@ -176,13 +176,13 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	}
 
 	@Override
-	public IBRDrawable<ContextType> getElementAt(int index) 
+	public IBRRenderable<ContextType> getElementAt(int index) 
 	{
 		return ulfs.get(index);
 	}
 
 	@Override
-	public IBRDrawable<ContextType> getSelectedItem() 
+	public IBRRenderable<ContextType> getSelectedItem() 
 	{
 		return ulfs.getSelectedItem();
 	}
@@ -213,7 +213,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 		this.loadingMonitor = loadingMonitor;
 	}
 	
-	public Drawable getDrawable()
+	public InteractiveRenderable getRenderable()
 	{
 		return ulfs;
 	}
