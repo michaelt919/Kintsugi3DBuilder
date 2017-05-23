@@ -21,7 +21,7 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture;
 import tetzlaff.gl.TextureType;
 import tetzlaff.gl.TextureWrapMode;
-import tetzlaff.helpers.RadianceImageLoader;
+import tetzlaff.util.RadianceImageLoader;
 
 abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment
 {

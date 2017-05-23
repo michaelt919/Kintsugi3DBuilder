@@ -21,7 +21,7 @@ import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
-import tetzlaff.gl.Renderable;
+import tetzlaff.gl.Drawable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
@@ -31,23 +31,23 @@ import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
-import tetzlaff.gl.helpers.CameraController;
-import tetzlaff.gl.helpers.FloatVertexList;
-import tetzlaff.gl.helpers.IntVertexList;
-import tetzlaff.gl.helpers.LightController;
-import tetzlaff.gl.helpers.Matrix3;
-import tetzlaff.gl.helpers.Matrix4;
-import tetzlaff.gl.helpers.OverrideableLightController;
-import tetzlaff.gl.helpers.Vector3;
-import tetzlaff.gl.helpers.Vector4;
-import tetzlaff.gl.helpers.VertexMesh;
-import tetzlaff.helpers.EnvironmentMap;
-import tetzlaff.ibr.IBRDrawable;
+import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.nativelist.NativeIntVectorList;
+import tetzlaff.gl.vecmath.Matrix3;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
+import tetzlaff.mvc.controllers.LightController;
+import tetzlaff.mvc.models.BasicCameraModel;
+import tetzlaff.mvc.models.OverrideableLightModel;
+import tetzlaff.util.EnvironmentMap;
+import tetzlaff.util.VertexGeometry;
 
-public class ImageBasedRenderer<ContextType extends Context<ContextType>> implements IBRDrawable<ContextType>
+public class ImageBasedRenderer<ContextType extends Context<ContextType>> implements IBRRenderable<ContextType>
 {
 	private ContextType context;
 	private Program<ContextType> program;
@@ -62,25 +62,25 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private Texture3D<ContextType> shadowMaps;
 	private FramebufferObject<ContextType> shadowFramebuffer;
-	private Renderable<ContextType> shadowRenderable;
+	private Drawable<ContextType> shadowDrawable;
 
 	private Program<ContextType> lightProgram;
 	private VertexBuffer<ContextType> lightVertices;
 	private Texture2D<ContextType> lightTexture;
-	private Renderable<ContextType> lightRenderable;
+	private Drawable<ContextType> lightDrawable;
 	
     private boolean btfRequested;
     private int btfWidth, btfHeight;
     private File btfExportPath;
     
     private String id;
-    private Renderable<ContextType> mainRenderable;
-    private CameraController cameraController;
+    private Drawable<ContextType> mainDrawable;
+    private BasicCameraModel cameraController;
 
     private Vector3 clearColor;
     private boolean halfResEnabled;
     private Program<ContextType> simpleTexProgram;
-    private Renderable<ContextType> simpleTexRenderable;
+    private Drawable<ContextType> simpleTexDrawable;
 	private FramebufferObject<ContextType> offscreenFBO = null;
     
     private File newEnvironmentFile = null;
@@ -89,7 +89,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     private Matrix4 envMapMatrix = null;
 
     private Program<ContextType> environmentBackgroundProgram;
-    private Renderable<ContextType> environmentBackgroundRenderable;
+    private Drawable<ContextType> environmentBackgroundDrawable;
 
     private boolean resampleRequested;
     private int resampleWidth, resampleHeight;
@@ -112,7 +112,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     private Vector3 centroid;
     private float boundingRadius;
     
-    private VertexMesh referenceScene = null;
+    private VertexGeometry referenceScene = null;
     private boolean referenceSceneChanged = false;
     private VertexBuffer<ContextType> refScenePositions = null;
     private VertexBuffer<ContextType> refSceneTexCoords = null;
@@ -120,7 +120,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     private Texture2D<ContextType> refSceneTexture = null;
 	
 	ImageBasedRenderer(String id, ContextType context, Program<ContextType> program, 
-			CameraController cameraController, LightController lightController,
+			BasicCameraModel cameraController, LightController lightController,
 			IBRResources.Builder<ContextType> resourceBuilder)
     {
     	this.id = id;
@@ -188,29 +188,29 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	{
     		this.resources = resourceBuilder.create();
     		
-	    	this.mainRenderable = context.createRenderable(program);
-	    	this.mainRenderable.addVertexBuffer("position", this.resources.positionBuffer);
+	    	this.mainDrawable = context.createDrawable(program);
+	    	this.mainDrawable.addVertexBuffer("position", this.resources.positionBuffer);
 	    	
 	    	if (this.resources.normalBuffer != null)
 	    	{
-	    		this.mainRenderable.addVertexBuffer("normal", this.resources.normalBuffer);
+	    		this.mainDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
 	    	}
 	    	
 	    	if (this.resources.texCoordBuffer != null)
 	    	{
-	    		this.mainRenderable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+	    		this.mainDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
 	    	}
 	    	
 	    	if (this.resources.tangentBuffer != null)
 	    	{
-	    		this.mainRenderable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+	    		this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
 	    	}
 	    				
-	    	this.simpleTexRenderable = context.createRenderable(simpleTexProgram);
-	    	this.simpleTexRenderable.addVertexBuffer("position", context.createRectangle());
+	    	this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
+	    	this.simpleTexDrawable.addVertexBuffer("position", context.createRectangle());
 			
-	    	this.environmentBackgroundRenderable = context.createRenderable(environmentBackgroundProgram);
-	    	this.environmentBackgroundRenderable.addVertexBuffer("position", context.createRectangle());
+	    	this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
+	    	this.environmentBackgroundDrawable.addVertexBuffer("position", context.createRectangle());
 	    	
 			context.flush();
 
@@ -235,7 +235,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		    			.addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
 	    				.createProgram();
 	    		
-	    		shadowRenderable = context.createRenderable(shadowProgram);
+	    		shadowDrawable = context.createDrawable(shadowProgram);
 	        }
 	        catch (IOException e)
 	        {
@@ -253,10 +253,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/light.frag"))
 	    				.createProgram();
 	    		this.lightVertices = context.createRectangle();
-	    		this.lightRenderable = context.createRenderable(this.lightProgram);
-	    		this.lightRenderable.addVertexBuffer("position", lightVertices);
+	    		this.lightDrawable = context.createDrawable(this.lightProgram);
+	    		this.lightDrawable.addVertexBuffer("position", lightVertices);
 	    		
-	    		FloatVertexList lightTextureData = new FloatVertexList(1, 4096);
+	    		NativeFloatVectorList lightTextureData = new NativeFloatVectorList(1, 4096);
 	    		
 	    		int k = 0;
 	    		for (int i = 0; i < 64; i++)
@@ -290,12 +290,12 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		{
 			setupForRelighting();
 			
-			if (lightController instanceof OverrideableLightController)
+			if (lightController instanceof OverrideableLightModel)
 			{
 		    	float scale = new Vector3(resources.viewSet.getCameraPose(0)
 		    			.times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length();
 				
-				((OverrideableLightController)lightController).overrideCameraPose(
+				((OverrideableLightModel)lightController).overrideCameraPose(
 						Matrix4.scale(1.0f / scale)
 							.times(modelView)
 							.times(Matrix4.translate(resources.geometry.getCentroid()))
@@ -312,9 +312,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		
 		this.resampleCompleteCallback = () -> 
 		{
-			if (lightController instanceof OverrideableLightController)
+			if (lightController instanceof OverrideableLightModel)
 			{
-				((OverrideableLightController)lightController).removeCameraPoseOverride();
+				((OverrideableLightModel)lightController).removeCameraPoseOverride();
 			}
 		};
 		
@@ -329,7 +329,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			setupLightForFidelity(lightIntensity, new Vector3(lightPos));
 		};
 		
-		shadowRenderable.addVertexBuffer("position", resources.positionBuffer);
+		shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
 
 		shadowMaps = context.get2DDepthTextureArrayBuilder(2048, 2048, lightController.getLightCount()).createTexture();
 		shadowFramebuffer = context.getFramebufferObjectBuilder(2048, 2048)
@@ -451,12 +451,12 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     				Cubemap<ContextType> newEnvironmentTexture = 
     						context.getColorCubemapBuilder(envMap.getSide())
     							.setInternalFormat(ColorFormat.RGB32F)
-    							.loadFace(CubemapFace.PositiveX, new FloatVertexList(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
-    							.loadFace(CubemapFace.NegativeX, new FloatVertexList(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
-    							.loadFace(CubemapFace.PositiveY, new FloatVertexList(3, sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
-    							.loadFace(CubemapFace.NegativeY, new FloatVertexList(3, sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
-    							.loadFace(CubemapFace.PositiveZ, new FloatVertexList(3, sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
-    							.loadFace(CubemapFace.NegativeZ, new FloatVertexList(3, sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
+    							.loadFace(CubemapFace.PositiveX, new NativeFloatVectorList(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
+    							.loadFace(CubemapFace.NegativeX, new NativeFloatVectorList(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
+    							.loadFace(CubemapFace.PositiveY, new NativeFloatVectorList(3, sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
+    							.loadFace(CubemapFace.NegativeY, new NativeFloatVectorList(3, sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
+    							.loadFace(CubemapFace.PositiveZ, new NativeFloatVectorList(3, sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
+    							.loadFace(CubemapFace.NegativeZ, new NativeFloatVectorList(3, sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
 								.setMipmapsEnabled(true)
 								.setLinearFilteringEnabled(true)
 								.createTexture();
@@ -567,7 +567,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private void setupForDraw()
 	{
-		this.setupForDraw(this.mainRenderable.program());
+		this.setupForDraw(this.mainDrawable.program());
 	}
 	
 	private void setupForDraw(Program<ContextType> program)
@@ -789,7 +789,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		for (Matrix4 m : this.transformationMatrices)
 		{
 			shadowProgram.setUniform("model_view", getLightMatrix(lightIndex).times(m));
-			shadowRenderable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
+			shadowDrawable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
 		}
 	}
 	
@@ -855,7 +855,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		
 		shadowFramebuffer.setDepthAttachment(shadowMaps.getLayerAsFramebufferAttachment(0));
 		shadowFramebuffer.clearDepthBuffer();
-		shadowRenderable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
+		shadowDrawable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
 		
 		program.setUniform("lightPosVirtual[0]", lightPos);
 		
@@ -873,7 +873,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     			* this.boundingRadius / resources.geometry.getBoundingRadius();
 		
 		return Matrix4.scale(scale)
-    			.times(cameraController.getViewMatrix())
+    			.times(cameraController.getLookMatrix())
     			.times(Matrix4.scale(1.0f / scale))
     			.times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0))))
     			.times(Matrix4.translate(this.centroid.negated()));
@@ -903,13 +903,13 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	{
     	if (referenceScene != null && refScenePositions != null && refSceneNormals != null)
     	{
-			Renderable<ContextType> renderable = context.createRenderable(program);
-			renderable.addVertexBuffer("position", refScenePositions);
-			renderable.addVertexBuffer("normal", refSceneNormals);
+			Drawable<ContextType> drawable = context.createDrawable(program);
+			drawable.addVertexBuffer("position", refScenePositions);
+			drawable.addVertexBuffer("normal", refSceneNormals);
 			
 			if (refSceneTexture != null && refSceneTexCoords != null)
 			{
-				renderable.addVertexBuffer("texCoord", refSceneTexCoords);
+				drawable.addVertexBuffer("texCoord", refSceneTexCoords);
 				program.setTexture("diffuseMap", refSceneTexture);
 				program.setUniform("useDiffuseTexture", true);
 			}
@@ -925,11 +925,11 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
         	if(halfResEnabled) 
         	{
     			// Do first pass at half resolution to off-screen buffer
-        		renderable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
+        		drawable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
         	} 
         	else 
         	{
-        		renderable.draw(PrimitiveMode.TRIANGLES, context.getDefaultFramebuffer());  
+        		drawable.draw(PrimitiveMode.TRIANGLES, context.getDefaultFramebuffer());  
         	}
     	}
 	}
@@ -959,7 +959,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    	
 	    	Matrix4 projection;
 	    	
-	    	mainRenderable.program().setUniform("projection", projection = getProjectionMatrix());
+	    	mainDrawable.program().setUniform("projection", projection = getProjectionMatrix());
 	    	
 	    	if (environmentMap != null && environmentMapEnabled)
 			{
@@ -998,7 +998,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		    		if (environmentMap != null && environmentMapEnabled)
 		    		{
 		    			context.disableDepthTest();
-		    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+		    			this.environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
 		    			context.enableDepthTest();
 		    		}
 				}
@@ -1013,7 +1013,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		    		if (environmentMap != null && environmentMapEnabled)
 		    		{
 		    			context.disableDepthTest();
-		    			this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+		    			this.environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
 		    			context.enableDepthTest();
 		    		}
 				}
@@ -1050,11 +1050,11 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			    	if(halfResEnabled) 
 			    	{
 						// Do first pass at half resolution to off-screen buffer
-				        mainRenderable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
+				        mainDrawable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
 			    	} 
 			    	else 
 			    	{
-				        mainRenderable.draw(PrimitiveMode.TRIANGLES, context.getDefaultFramebuffer());  
+				        mainDrawable.draw(PrimitiveMode.TRIANGLES, context.getDefaultFramebuffer());  
 			    	}
 				}
 				
@@ -1064,10 +1064,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		    		context.flush();
 			        
 			        // Second pass at full resolution to default framebuffer
-			    	simpleTexRenderable.program().setTexture("tex", offscreenFBO.getColorAttachmentTexture(0));    	
+			    	simpleTexDrawable.program().setTexture("tex", offscreenFBO.getColorAttachmentTexture(0));    	
 	
 		    		framebuffer.clearDepthBuffer();
-			    	simpleTexRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+			    	simpleTexDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
 			    	
 			    	context.flush();
 		    		offscreenFBO.close();
@@ -1109,7 +1109,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 								.times(Matrix4.scale((float)windowSize.height * -lightPosition.z / (16.0f * windowSize.width), -lightPosition.z / 16.0f, 1.0f)));
 						this.lightProgram.setUniform("projection", this.getProjectionMatrix());
 			    		this.lightProgram.setTexture("lightTexture", this.lightTexture);
-						this.lightRenderable.draw(PrimitiveMode.TRIANGLE_FAN, context);
+						this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, context);
 					}
 				}
 			}
@@ -1214,9 +1214,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	
 		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 		{
-	    	mainRenderable.program().setUniform("model_view", targetViewSet.getCameraPose(i));
-	    	mainRenderable.program().setUniform("viewPos", new Vector3(targetViewSet.getCameraPose(i).quickInverse(0.01f).getColumn(3)));
-	    	mainRenderable.program().setUniform("projection", 
+	    	mainDrawable.program().setUniform("model_view", targetViewSet.getCameraPose(i));
+	    	mainDrawable.program().setUniform("viewPos", new Vector3(targetViewSet.getCameraPose(i).quickInverse(0.01f).getColumn(3)));
+	    	mainDrawable.program().setUniform("projection", 
     			targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
     				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
 	    	
@@ -1242,12 +1242,12 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 						? 1.0f : 2.2f);
 				
 				context.disableDepthTest();
-				this.environmentBackgroundRenderable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+				this.environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
 				context.enableDepthTest();
 			}
     		
     		framebuffer.clearDepthBuffer();
-	    	mainRenderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+	    	mainDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 	    	
 	    	File exportFile = new File(resampleExportPath, targetViewSet.getImageFileName(i));
 	    	exportFile.getParentFile().mkdirs();
@@ -1269,27 +1269,27 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			StandardCopyOption.REPLACE_EXISTING);
 	}
 	
-	private double calculateError(Renderable<ContextType> renderable, Framebuffer<ContextType> framebuffer, IntVertexList viewIndexList, int targetViewIndex, int activeViewCount)
+	private double calculateError(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, NativeIntVectorList viewIndexList, int targetViewIndex, int activeViewCount)
 	{
-		this.setupForDraw(renderable.program());
+		this.setupForDraw(drawable.program());
     	
-    	renderable.program().setUniform("model_view", this.resources.viewSet.getCameraPose(targetViewIndex));
-    	renderable.program().setUniform("viewPos", new Vector3(this.resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3)));
-    	renderable.program().setUniform("projection", 
+    	drawable.program().setUniform("model_view", this.resources.viewSet.getCameraPose(targetViewIndex));
+    	drawable.program().setUniform("viewPos", new Vector3(this.resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3)));
+    	drawable.program().setUniform("projection", 
     			this.resources.viewSet.getCameraProjection(this.resources.viewSet.getCameraProjectionIndex(targetViewIndex))
 				.getProjectionMatrix(this.resources.viewSet.getRecommendedNearPlane(), this.resources.viewSet.getRecommendedFarPlane()));
 
-    	renderable.program().setUniform("targetViewIndex", targetViewIndex);
+    	drawable.program().setUniform("targetViewIndex", targetViewIndex);
 		
     	try (UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer().setData(viewIndexList))
     	{
-	    	renderable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
-	    	renderable.program().setUniform("viewCount", activeViewCount);
+	    	drawable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
+	    	drawable.program().setUniform("viewCount", activeViewCount);
 	    	
 	    	framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
 	    	framebuffer.clearDepthBuffer();
 	    	
-	    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+	    	drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
     	}
 
 //	        if (activeViewCount == assets.viewSet.getCameraPoseCount() - 1 /*&& this.assets.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
@@ -1354,11 +1354,11 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	{
     		context.disableBackFaceCulling();
     		
-    		Renderable<ContextType> renderable = context.createRenderable(fidelityProgram);
-        	renderable.addVertexBuffer("position", this.resources.positionBuffer);
-        	renderable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-        	renderable.addVertexBuffer("normal", this.resources.normalBuffer);
-        	renderable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+    		Drawable<ContextType> drawable = context.createDrawable(fidelityProgram);
+        	drawable.addVertexBuffer("position", this.resources.positionBuffer);
+        	drawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+        	drawable.addVertexBuffer("normal", this.resources.normalBuffer);
+        	drawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
         	setupForDraw(fidelityProgram);
     		
     		double[] slopes = new double[this.resources.viewSet.getCameraPoseCount()];
@@ -1391,7 +1391,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     			
     			do 
     			{
-			    	IntVertexList viewIndexList = new IntVertexList(1, this.resources.viewSet.getCameraPoseCount());
+			    	NativeIntVectorList viewIndexList = new NativeIntVectorList(1, this.resources.viewSet.getCameraPoseCount());
 			    	
 			    	activeViewCount = 0;
 			    	minDistance = Float.MAX_VALUE;
@@ -1410,7 +1410,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 				    	if (sumMask >= 0.0)
 				    	{
 					        distances.add(minDistance);
-					        errors.add(calculateError(renderable, framebuffer, viewIndexList, i, activeViewCount));
+					        errors.add(calculateError(drawable, framebuffer, viewIndexList, i, activeViewCount));
 					    	lastMinDistance = minDistance;
 				    	}
 			    	}
@@ -1617,7 +1617,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    		
 	    		boolean[] originalUsed = new boolean[this.resources.viewSet.getCameraPoseCount()];
 				
-				IntVertexList viewIndexList = new IntVertexList(1, this.resources.viewSet.getCameraPoseCount());
+				NativeIntVectorList viewIndexList = new NativeIntVectorList(1, this.resources.viewSet.getCameraPoseCount());
 	    		int activeViewCount = 0;
 	    		
 	    		// Print views that are only in the original view set and NOT in the target view set
@@ -1639,7 +1639,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    				// If it isn't, then print it to the file
 	    				originalUsed[j] = true;
 	    				out.print(this.resources.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t" + 
-	    						calculateError(renderable, framebuffer, viewIndexList, j, activeViewCount) + "\t");
+	    						calculateError(drawable, framebuffer, viewIndexList, j, activeViewCount) + "\t");
 
 	    				viewIndexList.set(activeViewCount, 0, j);
 	    				activeViewCount++;
@@ -1650,7 +1650,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			    		{
 			    			if (!originalUsed[k])
 			    			{
-			    				cumError += calculateError(renderable, framebuffer, viewIndexList, k, activeViewCount);
+			    				cumError += calculateError(drawable, framebuffer, viewIndexList, k, activeViewCount);
 			    			}
 			    		}
 			    		
@@ -1872,11 +1872,11 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 					.addColorAttachment()
 					.createFramebufferObject();
 	    	
-	    	Renderable<ContextType> renderable = context.createRenderable(btfProgram);
-	    	renderable.addVertexBuffer("position", this.resources.positionBuffer);
-	    	renderable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-	    	renderable.addVertexBuffer("normal", this.resources.normalBuffer);
-	    	renderable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+	    	Drawable<ContextType> drawable = context.createDrawable(btfProgram);
+	    	drawable.addVertexBuffer("position", this.resources.positionBuffer);
+	    	drawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+	    	drawable.addVertexBuffer("normal", this.resources.normalBuffer);
+	    	drawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
 	    	
 	    	this.setupForDraw(btfProgram);
 	    	this.setupForRelighting(btfProgram);
@@ -1910,7 +1910,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		    	context.disableBackFaceCulling();
 		    	
 		    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-		    	renderable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+		    	drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
 		    	
 		    	File exportFile = new File(btfExportPath, String.format("%02d.png", i));
 		    	exportFile.getParentFile().mkdirs();
@@ -1935,7 +1935,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	}
 	
 	@Override
-	public VertexMesh getActiveProxy()
+	public VertexGeometry getActiveProxy()
 	{
 		return this.resources.geometry;
 	}
@@ -2008,22 +2008,22 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	{
 		this.program = program;
 		
-		this.mainRenderable = context.createRenderable(program);
-    	this.mainRenderable.addVertexBuffer("position", this.resources.positionBuffer);
+		this.mainDrawable = context.createDrawable(program);
+    	this.mainDrawable.addVertexBuffer("position", this.resources.positionBuffer);
     	
     	if (this.resources.normalBuffer != null)
     	{
-    		this.mainRenderable.addVertexBuffer("normal", this.resources.normalBuffer);
+    		this.mainDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
     	}
     	
     	if (this.resources.texCoordBuffer != null)
     	{
-    		this.mainRenderable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+    		this.mainDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
     	}
     	
     	if (this.resources.texCoordBuffer != null)
     	{
-    		this.mainRenderable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+    		this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
     	}
     	
 		suppressErrors = false;
@@ -2062,8 +2062,8 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     		}
     		
     		this.environmentBackgroundProgram = newProgram;
-	    	this.environmentBackgroundRenderable = context.createRenderable(environmentBackgroundProgram);
-	    	this.environmentBackgroundRenderable.addVertexBuffer("position", context.createRectangle());
+	    	this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
+	    	this.environmentBackgroundDrawable.addVertexBuffer("position", context.createRectangle());
 
 	    	
 	    	newProgram = context.getShaderProgramBuilder()
@@ -2077,8 +2077,8 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    	}
     		
     		this.lightProgram = newProgram;
-    		this.lightRenderable = context.createRenderable(this.lightProgram);
-    		this.lightRenderable.addVertexBuffer("position", lightVertices);
+    		this.lightDrawable = context.createDrawable(this.lightProgram);
+    		this.lightDrawable.addVertexBuffer("position", lightVertices);
         }
         catch (IOException e)
         {
@@ -2096,7 +2096,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	}
 	
 	@Override
-	public void setReferenceScene(VertexMesh scene)
+	public void setReferenceScene(VertexGeometry scene)
 	{
 		this.referenceScene = scene;
 		this.referenceSceneChanged = true;

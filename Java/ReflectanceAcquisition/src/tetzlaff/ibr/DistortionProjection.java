@@ -1,6 +1,6 @@
 package tetzlaff.ibr;
 
-import tetzlaff.gl.helpers.Matrix4;
+import tetzlaff.gl.vecmath.Matrix4;
 
 /**
  * Creates a perspective projection that also maintains camera distortion parameters (for Brown's distortion model).

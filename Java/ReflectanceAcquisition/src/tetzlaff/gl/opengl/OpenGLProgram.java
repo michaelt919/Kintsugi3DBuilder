@@ -15,14 +15,14 @@ import tetzlaff.gl.builders.base.ProgramBuilderBase;
 import tetzlaff.gl.exceptions.InvalidProgramException;
 import tetzlaff.gl.exceptions.ProgramLinkFailureException;
 import tetzlaff.gl.exceptions.UnlinkedProgramException;
-import tetzlaff.gl.helpers.IntVector2;
-import tetzlaff.gl.helpers.IntVector3;
-import tetzlaff.gl.helpers.IntVector4;
-import tetzlaff.gl.helpers.Matrix4;
-import tetzlaff.gl.helpers.Vector2;
-import tetzlaff.gl.helpers.Vector3;
-import tetzlaff.gl.helpers.Vector4;
-import tetzlaff.helpers.ResourceManager;
+import tetzlaff.gl.vecmath.IntVector2;
+import tetzlaff.gl.vecmath.IntVector3;
+import tetzlaff.gl.vecmath.IntVector4;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector2;
+import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.util.ResourceManager;
 
 class OpenGLProgram implements Resource, Program<OpenGLContext>
 {

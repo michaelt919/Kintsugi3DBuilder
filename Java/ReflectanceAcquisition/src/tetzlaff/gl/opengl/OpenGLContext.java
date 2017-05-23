@@ -36,7 +36,7 @@ import tetzlaff.gl.Cubemap;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.IndexBuffer;
 import tetzlaff.gl.Program;
-import tetzlaff.gl.Renderable;
+import tetzlaff.gl.Drawable;
 import tetzlaff.gl.Shader;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture1D;
@@ -59,11 +59,11 @@ import tetzlaff.gl.exceptions.GLInvalidValueException;
 import tetzlaff.gl.exceptions.GLOutOfMemoryException;
 import tetzlaff.gl.exceptions.GLStackOverflowException;
 import tetzlaff.gl.exceptions.GLStackUnderflowException;
-import tetzlaff.gl.helpers.ByteVertexList;
-import tetzlaff.gl.helpers.DoubleVertexList;
-import tetzlaff.gl.helpers.FloatVertexList;
-import tetzlaff.gl.helpers.IntVertexList;
-import tetzlaff.gl.helpers.ShortVertexList;
+import tetzlaff.gl.nativelist.NativeByteVectorList;
+import tetzlaff.gl.nativelist.NativeDoubleVectorList;
+import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.nativelist.NativeIntVectorList;
+import tetzlaff.gl.nativelist.NativeShortVectorList;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
 import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture1D.OpenGLTexture1DFromBufferBuilder;
@@ -269,11 +269,11 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	}
 	
 	@Override
-	public Renderable<OpenGLContext> createRenderable(Program<OpenGLContext> program)
+	public Drawable<OpenGLContext> createDrawable(Program<OpenGLContext> program)
 	{
 		if (program instanceof OpenGLProgram)
 		{
-			return new OpenGLRenderable(this, (OpenGLProgram)program);
+			return new OpenGLDrawable(this, (OpenGLProgram)program);
 		}
 		else
 		{
@@ -300,13 +300,13 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(ByteVertexList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeByteVectorList data)
 	{
 		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.count, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_BYTE, data.getBuffer());
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(ShortVertexList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeShortVectorList data)
 	{
 		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 2);
 		bb.asShortBuffer().put(data.getBuffer());
@@ -314,7 +314,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	}
 
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(IntVertexList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeIntVectorList data)
 	{
 		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
 		bb.asIntBuffer().put(data.getBuffer());
@@ -322,7 +322,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(FloatVertexList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeFloatVectorList data)
 	{
 		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
 		bb.asFloatBuffer().put(data.getBuffer());
@@ -330,7 +330,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(DoubleVertexList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeDoubleVectorList data)
 	{
 		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 8);
 		bb.asDoubleBuffer().put(data.getBuffer());
@@ -338,13 +338,13 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, ByteVertexList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeByteVectorList data)
 	{
 		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_BYTE, data.getBuffer());
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, ShortVertexList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeShortVectorList data)
 	{
 		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 2);
 		bb.asShortBuffer().put(data.getBuffer());
@@ -352,7 +352,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	}
 
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, IntVertexList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeIntVectorList data)
 	{
 		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
 		bb.asIntBuffer().put(data.getBuffer());
@@ -360,7 +360,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, FloatVertexList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeFloatVectorList data)
 	{
 		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
 		bb.asFloatBuffer().put(data.getBuffer());
@@ -368,7 +368,7 @@ public abstract class OpenGLContext implements Context<OpenGLContext>
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, DoubleVertexList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeDoubleVectorList data)
 	{
 		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 8);
 		bb.asDoubleBuffer().put(data.getBuffer());

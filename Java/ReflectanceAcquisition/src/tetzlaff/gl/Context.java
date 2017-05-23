@@ -15,11 +15,11 @@ import tetzlaff.gl.builders.FramebufferObjectBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.StencilTextureBuilder;
 import tetzlaff.gl.builders.TextureBuilder;
-import tetzlaff.gl.helpers.ByteVertexList;
-import tetzlaff.gl.helpers.DoubleVertexList;
-import tetzlaff.gl.helpers.FloatVertexList;
-import tetzlaff.gl.helpers.IntVertexList;
-import tetzlaff.gl.helpers.ShortVertexList;
+import tetzlaff.gl.nativelist.NativeByteVectorList;
+import tetzlaff.gl.nativelist.NativeDoubleVectorList;
+import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.nativelist.NativeIntVectorList;
+import tetzlaff.gl.nativelist.NativeShortVectorList;
 
 /**
  * An interface for any OpenGL-like graphics context.
@@ -80,13 +80,13 @@ public interface Context<ContextType extends Context<ContextType>>
 	
 	default VertexBuffer<ContextType> createRectangle()
 	{
-		return this.createVertexBuffer().setData(new FloatVertexList(2, 4, new float[] { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f }), false);
+		return this.createVertexBuffer().setData(new NativeFloatVectorList(2, 4, new float[] { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f }), false);
 	}
 	
 	IndexBuffer<ContextType> createIndexBuffer();
 	UniformBuffer<ContextType> createUniformBuffer();
 	
-	Renderable<ContextType> createRenderable(Program<ContextType> program);
+	Drawable<ContextType> createDrawable(Program<ContextType> program);
 	
 	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> 
 		get2DColorTextureBuilder(InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
@@ -131,17 +131,17 @@ public interface Context<ContextType extends Context<ContextType>>
 		}
 	}
 
-	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(ByteVertexList data);
-	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(ShortVertexList data);
-	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(IntVertexList data);
-	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(FloatVertexList data);
-	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(DoubleVertexList data);
+	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(NativeByteVectorList data);
+	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(NativeShortVectorList data);
+	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(NativeIntVectorList data);
+	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(NativeFloatVectorList data);
+	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> get1DColorTextureBuilder(NativeDoubleVectorList data);
 	
-	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height, ByteVertexList data);
-	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height, ShortVertexList data);
-	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height, IntVertexList data);
-	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height, FloatVertexList data);
-	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height, DoubleVertexList data);
+	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height, NativeByteVectorList data);
+	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height, NativeShortVectorList data);
+	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height, NativeIntVectorList data);
+	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height, NativeFloatVectorList data);
+	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height, NativeDoubleVectorList data);
 	
 	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DColorTextureBuilder(int width, int height);
 	DepthTextureBuilder<ContextType, ? extends Texture2D<ContextType>> get2DDepthTextureBuilder(int width, int height);

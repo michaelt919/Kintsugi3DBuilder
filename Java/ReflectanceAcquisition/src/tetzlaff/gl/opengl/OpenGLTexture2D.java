@@ -25,7 +25,7 @@ import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
-import tetzlaff.helpers.RadianceImageLoader;
+import tetzlaff.util.RadianceImageLoader;
 
 class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 {

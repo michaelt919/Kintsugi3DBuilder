@@ -9,12 +9,12 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
-import tetzlaff.gl.Renderable;
+import tetzlaff.gl.Drawable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.VertexBuffer;
-import tetzlaff.gl.helpers.Vector4;
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.window.glfw.GLFWWindow;
 
 public class TextureUpscaleProgram
@@ -72,11 +72,11 @@ public class TextureUpscaleProgram
     	    	perlinNoiseProgram.setUniform("blackPoint", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
     	    	perlinNoiseProgram.setUniform("whitePoint", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		    	FramebufferObject<OpenGLContext> fbo = context.getFramebufferObjectBuilder(targetWidth, targetHeight).addColorAttachment().createFramebufferObject();
-		    	Renderable<OpenGLContext> renderable = context.createRenderable(perlinNoiseProgram);
+		    	Drawable<OpenGLContext> drawable = context.createDrawable(perlinNoiseProgram);
 		    	VertexBuffer<OpenGLContext> rectangle = context.createRectangle();
-		    	renderable.addVertexBuffer("position", rectangle);
+		    	drawable.addVertexBuffer("position", rectangle);
 		    	fbo.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-		    	renderable.draw(PrimitiveMode.TRIANGLE_FAN, fbo);
+		    	drawable.draw(PrimitiveMode.TRIANGLE_FAN, fbo);
 		    	new File(imageFile.getParentFile(), "output").mkdirs();
 		        fbo.saveColorBufferToFile(0, "PNG", new File(new File(imageFile.getParentFile(), "output"), imageFile.getName()));
 		    	fbo.close();

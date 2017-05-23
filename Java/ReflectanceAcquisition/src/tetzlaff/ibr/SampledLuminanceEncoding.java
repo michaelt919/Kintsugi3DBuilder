@@ -5,8 +5,8 @@ import java.util.function.DoubleUnaryOperator;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture1D;
-import tetzlaff.gl.helpers.FloatVertexList;
-import tetzlaff.helpers.CubicHermiteSpline;
+import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.util.CubicHermiteSpline;
 
 public class SampledLuminanceEncoding 
 {
@@ -52,9 +52,9 @@ public class SampledLuminanceEncoding
 		this.encodeFunction = encodeFunction;
 	}
 	
-	public FloatVertexList sampleDecodeFunction()
+	public NativeFloatVectorList sampleDecodeFunction()
 	{
-		FloatVertexList sampledDecodeFunction = new FloatVertexList(1, 256);
+		NativeFloatVectorList sampledDecodeFunction = new NativeFloatVectorList(1, 256);
 		for (int i = 0; i < 256; i++)
 		{
 			sampledDecodeFunction.set(i, 0, (float)decodeFunction.applyAsDouble(i));
@@ -63,9 +63,9 @@ public class SampledLuminanceEncoding
 		return sampledDecodeFunction;
 	}
 	
-	public FloatVertexList sampleEncodeFunction()
+	public NativeFloatVectorList sampleEncodeFunction()
 	{
-		FloatVertexList sampledEncodeFunction = new FloatVertexList(1, 256);
+		NativeFloatVectorList sampledEncodeFunction = new NativeFloatVectorList(1, 256);
 		for (int i = 0; i < 256; i++)
 		{
 			sampledEncodeFunction.set(i, 0, (float)encodeFunction.applyAsDouble((double)i / 255.0 * decodeFunction.applyAsDouble(255.0)) / 255.0f);
