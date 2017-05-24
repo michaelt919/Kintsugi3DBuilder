@@ -1,9 +1,8 @@
-package tetzlaff.mvc.controllers;
+package tetzlaff.mvc.controllers.impl;
 
-import java.util.List;
-
-import tetzlaff.mvc.models.ReadonlyLightModel;
-import tetzlaff.mvc.models.TrackballLightModel;
+import tetzlaff.mvc.controllers.LightController;
+import tetzlaff.mvc.models.ReadonlyCameraModel;
+import tetzlaff.mvc.models.impl.TrackballLightModel;
 import tetzlaff.window.KeyCodes;
 import tetzlaff.window.ModifierKeys;
 import tetzlaff.window.Window;
@@ -14,7 +13,7 @@ public class TrackballLightController implements LightController, KeyPressListen
 {
 	private TrackballLightModel model;
 	private TrackballController lightControlTrackball;
-	private List<TrackballController> trackballs;
+	private TrackballController[] trackballs;
 	
 	public TrackballLightController()
 	{
@@ -23,6 +22,8 @@ public class TrackballLightController implements LightController, KeyPressListen
 	
 	public TrackballLightController(int lightCount)
 	{
+    	this.model = new TrackballLightModel(lightCount);
+    	
     	this.lightControlTrackball = TrackballController.getBuilder()
     			.setSensitivity(1.0f)
     			.setPrimaryButtonIndex(0)
@@ -32,7 +33,7 @@ public class TrackballLightController implements LightController, KeyPressListen
     	this.lightControlTrackball.setEnabled(false);
     	this.lightControlTrackball.setInverted(true);
     	
-    	this.model = new TrackballLightModel(lightCount);
+    	this.trackballs = new TrackballController[lightCount];
     	
     	for (int i = 0; i < lightCount; i++)
     	{
@@ -42,12 +43,8 @@ public class TrackballLightController implements LightController, KeyPressListen
 					.setSecondaryButtonIndex(1)
 					.setModel(this.model.getTrackballModel(i))
 					.create();
-    		trackballs.add(newTrackball);
-    		
-    		if (i != 0)
-    		{
-    			newTrackball.setEnabled(false);
-    		}
+    		trackballs[i] = newTrackball;
+    		newTrackball.setEnabled(i == 0);
     	}
 	}
 	
@@ -66,9 +63,14 @@ public class TrackballLightController implements LightController, KeyPressListen
 	}
 	
 	@Override
-	public ReadonlyLightModel getModel()
+	public TrackballLightModel getModel()
 	{
 		return this.model;
+	}
+	
+	public ReadonlyCameraModel getCurrentCameraModel()
+	{
+		return this.model.asCameraModel();
 	}
 
 	@Override
@@ -80,18 +82,18 @@ public class TrackballLightController implements LightController, KeyPressListen
 
 			if (mods.getAltModifier())
 			{
-				if (selection < trackballs.size() && window.getModifierKeys().getAltModifier())
+				if (selection < trackballs.length && window.getModifierKeys().getAltModifier())
 				{
-					this.trackballs.get(this.model.getSelectedLightIndex()).setEnabled(false);
+					this.trackballs[this.model.getSelectedLightIndex()].setEnabled(false);
 					this.model.setSelectedLightIndex(selection);
-					this.trackballs.get(this.model.getSelectedLightIndex()).setEnabled(true);
+					this.trackballs[this.model.getSelectedLightIndex()].setEnabled(true);
 				}
 			}
 			else if (selection < model.getLightCount() && selection != model.getSelectedLightIndex())
 			{
 				model.enableLightTrackball(selection);
 				lightControlTrackball.setEnabled(true);
-				trackballs.get(model.getSelectedLightIndex()).setEnabled(false);
+				trackballs[model.getSelectedLightIndex()].setEnabled(false);
 			}
 		}
 	}
@@ -103,13 +105,13 @@ public class TrackballLightController implements LightController, KeyPressListen
 		{
 			int selection = keycode - KeyCodes.ONE;
 			
-			if (selection < trackballs.size())
+			if (selection < trackballs.length)
 			{
 				model.disableLightTrackball(selection);
 				
 				if (model.getTrackballLightCount() == 0)
 				{
-					trackballs.get(this.model.getSelectedLightIndex()).setEnabled(true);
+					trackballs[this.model.getSelectedLightIndex()].setEnabled(true);
 					lightControlTrackball.setEnabled(false);
 				}
 			}

@@ -35,11 +35,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
-import tetzlaff.mvc.controllers.LightController;
+import tetzlaff.ibr.IBRRenderable;
+import tetzlaff.ibr.IBRRenderableListModel;
+import tetzlaff.mvc.models.LightModel;
 import tetzlaff.util.VertexGeometry;
 
 /**
@@ -72,7 +72,7 @@ public class IBRelightConfigFrame extends JFrame
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRRenderableListModel<ContextType> model, LightController lightController, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRRenderableListModel<ContextType> model, LightModel lightModel, boolean isHighDPI)
 	{		
 		setResizable(false);
 		setTitle("IBRelight: Settings");
@@ -1025,7 +1025,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		chckbxEnvironmentMapping.addChangeListener((e) ->
 		{
-			lightController.setEnvironmentMappingEnabled(chckbxEnvironmentMapping.isSelected());
+			lightModel.setEnvironmentMappingEnabled(chckbxEnvironmentMapping.isSelected());
 		});
 		
 		JButton btnLoadEnvironmentTexture = new JButton("Load environment texture file...");
@@ -1297,7 +1297,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		light0ColorChooser.getSelectionModel().addChangeListener(e ->
 		{
-			lightController.setLightColor(0, new Vector3(
+			lightModel.setLightColor(0, new Vector3(
 				(float)Math.pow(light0ColorChooser.getColor().getRed() / 255.0, 2.2),
 				(float)Math.pow(light0ColorChooser.getColor().getGreen() / 255.0, 2.2),
 				(float)Math.pow(light0ColorChooser.getColor().getBlue() / 255.0, 2.2))
@@ -1306,7 +1306,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		light0IntensitySpinner.addChangeListener(e ->
 		{
-			lightController.setLightColor(0, new Vector3(
+			lightModel.setLightColor(0, new Vector3(
 				(float)Math.pow(light0ColorChooser.getColor().getRed() / 255.0, 2.2),
 				(float)Math.pow(light0ColorChooser.getColor().getGreen() / 255.0, 2.2),
 				(float)Math.pow(light0ColorChooser.getColor().getBlue() / 255.0, 2.2))
@@ -1315,7 +1315,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		light1ColorChooser.getSelectionModel().addChangeListener(e ->
 		{
-			lightController.setLightColor(1, new Vector3(
+			lightModel.setLightColor(1, new Vector3(
 				(float)Math.pow(light1ColorChooser.getColor().getRed() / 255.0, 2.2),
 				(float)Math.pow(light1ColorChooser.getColor().getGreen() / 255.0, 2.2),
 				(float)Math.pow(light1ColorChooser.getColor().getBlue() / 255.0, 2.2))
@@ -1324,7 +1324,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		light1IntensitySpinner.addChangeListener(e ->
 		{
-			lightController.setLightColor(1, new Vector3(
+			lightModel.setLightColor(1, new Vector3(
 				(float)Math.pow(light1ColorChooser.getColor().getRed() / 255.0, 2.2),
 				(float)Math.pow(light1ColorChooser.getColor().getGreen() / 255.0, 2.2),
 				(float)Math.pow(light1ColorChooser.getColor().getBlue() / 255.0, 2.2))
@@ -1333,7 +1333,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		light2ColorChooser.getSelectionModel().addChangeListener(e ->
 		{
-			lightController.setLightColor(2, new Vector3(
+			lightModel.setLightColor(2, new Vector3(
 				(float)Math.pow(light2ColorChooser.getColor().getRed() / 255.0, 2.2),
 				(float)Math.pow(light2ColorChooser.getColor().getGreen() / 255.0, 2.2),
 				(float)Math.pow(light2ColorChooser.getColor().getBlue() / 255.0, 2.2))
@@ -1342,7 +1342,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		light2IntensitySpinner.addChangeListener(e ->
 		{
-			lightController.setLightColor(2, new Vector3(
+			lightModel.setLightColor(2, new Vector3(
 				(float)Math.pow(light2ColorChooser.getColor().getRed() / 255.0, 2.2),
 				(float)Math.pow(light2ColorChooser.getColor().getGreen() / 255.0, 2.2),
 				(float)Math.pow(light2ColorChooser.getColor().getBlue() / 255.0, 2.2))
@@ -1351,7 +1351,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		light3ColorChooser.getSelectionModel().addChangeListener(e ->
 		{
-			lightController.setLightColor(3, new Vector3(
+			lightModel.setLightColor(3, new Vector3(
 				(float)Math.pow(light3ColorChooser.getColor().getRed() / 255.0, 2.2),
 				(float)Math.pow(light3ColorChooser.getColor().getGreen() / 255.0, 2.2),
 				(float)Math.pow(light3ColorChooser.getColor().getBlue() / 255.0, 2.2))
@@ -1360,7 +1360,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		light3IntensitySpinner.addChangeListener(e ->
 		{
-			lightController.setLightColor(3, new Vector3(
+			lightModel.setLightColor(3, new Vector3(
 				(float)Math.pow(light3ColorChooser.getColor().getRed() / 255.0, 2.2),
 				(float)Math.pow(light3ColorChooser.getColor().getGreen() / 255.0, 2.2),
 				(float)Math.pow(light3ColorChooser.getColor().getBlue() / 255.0, 2.2))
@@ -1369,7 +1369,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		ambientColorChooser.getSelectionModel().addChangeListener(e ->
 		{
-			lightController.setAmbientLightColor(new Vector3(
+			lightModel.setAmbientLightColor(new Vector3(
 				(float)Math.pow(ambientColorChooser.getColor().getRed() / 255.0, 2.2),
 				(float)Math.pow(ambientColorChooser.getColor().getGreen() / 255.0, 2.2),
 				(float)Math.pow(ambientColorChooser.getColor().getBlue() / 255.0, 2.2))
@@ -1378,7 +1378,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		ambientIntensitySpinner.addChangeListener(e ->
 		{
-			lightController.setAmbientLightColor(new Vector3(
+			lightModel.setAmbientLightColor(new Vector3(
 				(float)Math.pow(ambientColorChooser.getColor().getRed() / 255.0, 2.2),
 				(float)Math.pow(ambientColorChooser.getColor().getGreen() / 255.0, 2.2),
 				(float)Math.pow(ambientColorChooser.getColor().getBlue() / 255.0, 2.2))

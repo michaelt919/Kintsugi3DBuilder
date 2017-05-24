@@ -5,7 +5,6 @@ import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture;
 import tetzlaff.gl.builders.ColorTextureBuilder;
-import tetzlaff.gl.builders.TextureBuilder;
 
 public abstract class ColorTextureBuilderBase<ContextType extends Context<ContextType>, TextureType extends Texture<ContextType>> 
 	extends TextureBuilderBase<ContextType, TextureType> implements ColorTextureBuilder<ContextType, TextureType>

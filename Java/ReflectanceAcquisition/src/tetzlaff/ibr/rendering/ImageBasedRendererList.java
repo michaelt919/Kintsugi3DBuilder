@@ -9,30 +9,30 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.interactive.MultiRenderable;
-import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
-import tetzlaff.mvc.controllers.LightController;
-import tetzlaff.mvc.models.BasicCameraModel;
+import tetzlaff.ibr.IBRRenderable;
+import tetzlaff.ibr.IBRRenderableListModel;
+import tetzlaff.mvc.models.ReadonlyCameraModel;
+import tetzlaff.mvc.models.ReadonlyLightModel;
 
 public class ImageBasedRendererList<ContextType extends Context<ContextType>> extends AbstractListModel<IBRRenderable<ContextType>> implements IBRRenderableListModel<ContextType>
 {
 	private static final long serialVersionUID = 4167467314632694946L;
 	
 	protected final ContextType context;
-	protected final BasicCameraModel cameraController;
-	protected final LightController lightController;
+	protected final ReadonlyCameraModel cameraModel;
+	protected final ReadonlyLightModel lightModel;
 	private Program<ContextType> program;
 	private MultiRenderable<IBRRenderable<ContextType>> ulfs;
 	private int effectiveSize;
 	private IBRLoadingMonitor loadingMonitor;
 	
-	public ImageBasedRendererList(ContextType context, Program<ContextType> program, BasicCameraModel cameraController, LightController lightController) 
+	public ImageBasedRendererList(ContextType context, Program<ContextType> program, ReadonlyCameraModel cameraModel, ReadonlyLightModel lightModel) 
 	{
 		this.context = context;
-		this.cameraController = cameraController;
-		this.lightController = lightController;
+		this.cameraModel = cameraModel;
+		this.lightModel = lightModel;
 		this.ulfs = new MultiRenderable<IBRRenderable<ContextType>>();
 		this.effectiveSize = 0;
 		
@@ -52,11 +52,6 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 			ulf.setProgram(program);
 		}
 	}
-	
-	protected BasicCameraModel getCameraController()
-	{
-		return this.cameraController;
-	}
 
 	@Override
 	public IBRRenderable<ContextType> addFromVSETFile(String id, File vsetFile, IBRLoadOptions loadOptions) throws IOException
@@ -64,7 +59,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 		// id = vsetFile.getPath()
 		
 		IBRRenderable<ContextType> newItem = 
-			new ImageBasedRenderer<ContextType>(id, context, this.getProgram(), this.getCameraController(), lightController,
+			new ImageBasedRenderer<ContextType>(id, context, this.getProgram(), this.cameraModel, lightModel,
 				IBRResources.getBuilderForContext(this.context)
 					.setLoadingMonitor(this.loadingMonitor)
 					.setLoadOptions(loadOptions)
@@ -119,7 +114,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	public IBRRenderable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, IBRLoadOptions loadOptions) throws IOException
 	{
 		IBRRenderable<ContextType> newItem = 
-			new ImageBasedRenderer<ContextType>(id, context, this.getProgram(), this.getCameraController(), lightController,
+			new ImageBasedRenderer<ContextType>(id, context, this.getProgram(), this.cameraModel, lightModel,
 				IBRResources.getBuilderForContext(this.context)
 					.setLoadingMonitor(this.loadingMonitor)
 					.setLoadOptions(loadOptions)
