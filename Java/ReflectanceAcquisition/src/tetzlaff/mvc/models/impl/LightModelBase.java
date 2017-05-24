@@ -1,6 +1,7 @@
-package tetzlaff.mvc.models;
+package tetzlaff.mvc.models.impl;
 
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.mvc.models.LightModel;
 
 public abstract class LightModelBase implements LightModel
 {

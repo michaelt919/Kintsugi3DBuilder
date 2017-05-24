@@ -1,11 +1,11 @@
-package tetzlaff.mvc.controllers;
+package tetzlaff.mvc.controllers.impl;
 
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.mvc.models.BasicCameraModel;
 import tetzlaff.mvc.models.CameraModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
+import tetzlaff.mvc.models.impl.BasicCameraModel;
 import tetzlaff.window.KeyCodes;
 import tetzlaff.window.ModifierKeys;
 import tetzlaff.window.Window;
@@ -35,7 +35,12 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
 	
 	public FirstPersonController()
 	{
-		this.model = new BasicCameraModel(Matrix4.identity());
+		this(new BasicCameraModel());
+	}
+	
+	public FirstPersonController(CameraModel cameraModel)
+	{
+		this.model = cameraModel;
 		
 		this.velocity = new Vector3(0.0f, 0.0f, 0.0f);
 		this.position = new Vector3(0.0f, 0.0f, 0.0f);

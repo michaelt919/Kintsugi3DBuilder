@@ -6,10 +6,10 @@ import java.io.IOException;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import tetzlaff.gl.Drawable;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
-import tetzlaff.gl.Drawable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.VertexBuffer;

@@ -7,25 +7,24 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.ViewSet;
-import tetzlaff.mvc.models.OverrideableLightModel;
-import tetzlaff.mvc.models.ReadonlyLightModel;
+import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.util.VertexGeometry;
 
-public class HardcodedLightModel implements OverrideableLightModel
+public class HardcodedLightModel implements CameraBasedLightModel
 {
-	private static float OBJECT_SCALE = 11.1f; // 11.1cm radius
-	
 	Supplier<ViewSet> viewSetSupplier;
 	Supplier<VertexGeometry> proxySupplier;
+	private ReadonlyCameraModel cameraModel;
 	
 	private Matrix4 cameraPoseOverride;
 	
-	public HardcodedLightModel(Supplier<ViewSet> viewSetSupplier, Supplier<VertexGeometry> proxySupplier) 
+	public HardcodedLightModel(Supplier<ViewSet> viewSetSupplier, Supplier<VertexGeometry> proxySupplier, ReadonlyCameraModel cameraModel) 
 	{
 		this.viewSetSupplier = viewSetSupplier;
 		this.proxySupplier = proxySupplier;
+		this.cameraModel = cameraModel;
 	}
-
+	
 	@Override
 	public int getLightCount()
 	{
@@ -82,7 +81,7 @@ public class HardcodedLightModel implements OverrideableLightModel
 		
 		if (cameraPoseOverride == null)
 		{
-			cameraPose = cameraTrackball.getLookMatrix();
+			cameraPose = cameraModel.getLookMatrix();
 		}
 		else
 		{

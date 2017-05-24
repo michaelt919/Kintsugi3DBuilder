@@ -8,9 +8,9 @@ import static org.lwjgl.opengl.GL32.*;
 import java.util.Map;
 import java.util.TreeMap;
 
+import tetzlaff.gl.Drawable;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.Drawable;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.exceptions.UnrecognizedPrimitiveModeException;
 import tetzlaff.gl.vecmath.DoubleVector2;

@@ -15,14 +15,18 @@ import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.rendering.HardcodedLightController;
+import tetzlaff.ibr.rendering.HardcodedLightModel;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
-import tetzlaff.mvc.controllers.FirstPersonController;
-import tetzlaff.mvc.controllers.TrackballLightController;
-import tetzlaff.mvc.models.BasicCameraModel;
-import tetzlaff.mvc.models.OverrideableLightModel;
+import tetzlaff.mvc.controllers.impl.FirstPersonController;
+import tetzlaff.mvc.controllers.impl.TrackballController;
+import tetzlaff.mvc.controllers.impl.TrackballLightController;
+import tetzlaff.mvc.models.CameraModel;
+import tetzlaff.mvc.models.LightModel;
+import tetzlaff.mvc.models.ReadonlyCameraModel;
+import tetzlaff.mvc.models.impl.BasicCameraModel;
+import tetzlaff.mvc.models.impl.TrackballModel;
 import tetzlaff.window.glfw.GLFWWindow;
 //import org.lwjgl.opengl.GLDebugMessageCallback;
 //import static org.lwjgl.opengl.KHRDebug.*;
@@ -37,95 +41,86 @@ public class IBRelight
 {
 	private static final boolean DEBUG = true;
 	
-	private static class MetaLightController implements OverrideableLightModel
+	private static class MetaLightModel implements LightModel
 	{
-		public boolean hardcodedMode = false;
-		public TrackballLightController normalController;
-		public HardcodedLightController hardcodedController;
+		boolean hardcodedMode = false;
+		LightModel normalLightModel;
+		HardcodedLightModel hardcodedLightModel;
 
 		@Override
 		public int getLightCount() 
 		{
-			return hardcodedMode ? hardcodedController.getLightCount() : normalController.getLightCount();
+			return hardcodedMode ? hardcodedLightModel.getLightCount() : normalLightModel.getLightCount();
 		}
 
 		@Override
 		public Vector3 getLightColor(int i) 
 		{
-			return hardcodedMode ? hardcodedController.getLightColor(i) : normalController.getLightColor(i);
+			return hardcodedMode ? hardcodedLightModel.getLightColor(i) : normalLightModel.getLightColor(i);
 		}
 		
 		@Override
 		public void setLightColor(int i, Vector3 lightColor)
 		{
-			normalController.setLightColor(i, lightColor);
+			normalLightModel.setLightColor(i, lightColor);
 		}
 		
 		@Override
 		public Matrix4 getLightMatrix(int i) 
 		{
-			return hardcodedMode ? hardcodedController.getLightMatrix(i) : normalController.getLightMatrix(i);
-		}
-		
-		public BasicCameraModel asCameraController()
-		{
-			return hardcodedMode ? hardcodedController.asCameraController() : normalController.asCameraController();
+			return hardcodedMode ? hardcodedLightModel.getLightMatrix(i) : normalLightModel.getLightMatrix(i);
 		}
 
 		@Override
+		public void setLightMatrix(int i, Matrix4 lightMatrix) 
+		{
+			throw new UnsupportedOperationException();
+		}
+
 		public void overrideCameraPose(Matrix4 cameraPoseOverride) 
 		{
 			if (hardcodedMode)
 			{
-				hardcodedController.overrideCameraPose(cameraPoseOverride);
-			}
-			else
-			{
-				normalController.overrideCameraPose(cameraPoseOverride);
+				hardcodedLightModel.overrideCameraPose(cameraPoseOverride);
 			}
 		}
 
-		@Override
 		public void removeCameraPoseOverride() 
 		{
 			if (hardcodedMode)
 			{
-				hardcodedController.removeCameraPoseOverride();
-			}
-			else
-			{
-				normalController.removeCameraPoseOverride();
+				hardcodedLightModel.removeCameraPoseOverride();
 			}
 		}
 
 		@Override
 		public Vector3 getAmbientLightColor() 
 		{
-			return hardcodedMode ? hardcodedController.getAmbientLightColor() : normalController.getAmbientLightColor();
+			return hardcodedMode ? hardcodedLightModel.getAmbientLightColor() : normalLightModel.getAmbientLightColor();
 		}
 
 		@Override
 		public void setAmbientLightColor(Vector3 ambientLightColor) 
 		{
-			normalController.setAmbientLightColor(ambientLightColor);
+			normalLightModel.setAmbientLightColor(ambientLightColor);
 		}
 
 		@Override
 		public boolean getEnvironmentMappingEnabled() 
 		{
-			return hardcodedMode ? hardcodedController.getEnvironmentMappingEnabled() : normalController.getEnvironmentMappingEnabled();
+			return hardcodedMode ? hardcodedLightModel.getEnvironmentMappingEnabled() : normalLightModel.getEnvironmentMappingEnabled();
 		}
 
 		@Override
 		public void setEnvironmentMappingEnabled(boolean enabled) 
 		{
-			normalController.setEnvironmentMappingEnabled(enabled);
+			normalLightModel.setEnvironmentMappingEnabled(enabled);
 		}
 
 		@Override
-		public int getSelectedLightIndex() 
+		public boolean isLightVisualizationEnabled(int index) 
 		{
-			return hardcodedMode ? hardcodedController.getSelectedLightIndex() : normalController.getSelectedLightIndex();
+			return hardcodedMode ? hardcodedLightModel.isLightVisualizationEnabled(index) : normalLightModel.isLightVisualizationEnabled(index);
 		}
 	}
 	
@@ -170,13 +165,15 @@ public class IBRelight
         	throw new IllegalStateException("The shader program could not be initialized.", e);
         }
         
-        MetaLightController metaLightController = new MetaLightController();
+        MetaLightModel metaLightModel = new MetaLightModel();
         
         TrackballLightController lightController = new TrackballLightController();
         lightController.addAsWindowListener(window);
-    	metaLightController.normalController = lightController;
+    	metaLightModel.normalLightModel = lightController.getModel();
         
-        FirstPersonController fpController = new FirstPersonController();
+    	CameraModel fpCameraModel = new BasicCameraModel();
+    	
+        FirstPersonController fpController = new FirstPersonController(fpCameraModel);
         fpController.addAsWindowListener(window);
         
         window.addMouseButtonPressListener((win, buttonIndex, mods) -> 
@@ -184,21 +181,31 @@ public class IBRelight
         	fpController.setEnabled(false);
     	});
         
+        TrackballModel hardcodedLightTrackballModel = new TrackballModel();
+    	TrackballController hardcodedLightTrackballController = TrackballController.getBuilder()
+    			.setSensitivity(1.0f)
+    			.setPrimaryButtonIndex(0)
+    			.setSecondaryButtonIndex(1)
+    			.setModel(hardcodedLightTrackballModel)
+    			.create();
+    	hardcodedLightTrackballController.addAsWindowListener(window);
+        
         // Hybrid FP + Trackball controls
-        BasicCameraModel cameraController = () -> fpController.getLookMatrix().times(metaLightController.asCameraController().getLookMatrix());
+        ReadonlyCameraModel cameraModel = () -> fpCameraModel.getLookMatrix().times(
+        		(metaLightModel.hardcodedMode ? hardcodedLightTrackballModel : lightController.getCurrentCameraModel()).getLookMatrix());
 
         // Create a new 'renderer' to be attached to the window and the GUI.
         // This is the object that loads the ULF models and handles drawing them.  This object abstracts
         // the underlying data and provides ways of triggering events via the trackball and the user
         // interface later when it is passed to the ULFUserInterface object.
-        ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(window, program, cameraController, metaLightController);
+        ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(window, program, cameraModel, metaLightModel);
     	
-    	HardcodedLightController hardcodedLightController = 
-    			new HardcodedLightController(
+        HardcodedLightModel hardcodedLightController = 
+    			new HardcodedLightModel(
 					() -> model.getSelectedItem().getActiveViewSet(),
-					() -> model.getSelectedItem().getActiveProxy());
-    	hardcodedLightController.addAsWindowListener(window);
-    	metaLightController.hardcodedController = hardcodedLightController;
+					() -> model.getSelectedItem().getActiveProxy(),
+					hardcodedLightTrackballModel);
+    	metaLightModel.hardcodedLightModel = hardcodedLightController;
         
         window.addCharacterListener((win, c) -> {
         	if (c == 'p')
@@ -228,7 +235,7 @@ public class IBRelight
         	}
         	else if (c == 'l')
         	{
-        		//metaLightController.hardcodedMode = !metaLightController.hardcodedMode;
+        		//metaLightModel.hardcodedMode = !metaLightModel.hardcodedMode;
         	}
         	else if (c == ' ')
         	{
@@ -271,7 +278,7 @@ public class IBRelight
         
         // Create a user interface that examines the ULFRendererList for renderer settings and
         // selecting between different loaded models.
-        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController, window.isHighDPI());
+        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getModel(), window.isHighDPI());
         gui.showGUI();        
         //app.addPollable(gui); // Needed for Qt UI
         

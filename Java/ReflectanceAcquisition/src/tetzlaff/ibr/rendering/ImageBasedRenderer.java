@@ -16,19 +16,18 @@ import tetzlaff.gl.ColorFormat.DataType;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Cubemap;
 import tetzlaff.gl.CubemapFace;
+import tetzlaff.gl.Drawable;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
-import tetzlaff.gl.Drawable;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
-import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.nativelist.NativeFloatVectorList;
@@ -37,13 +36,12 @@ import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRLoadingMonitor;
+import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.ViewSet;
-import tetzlaff.mvc.controllers.LightController;
-import tetzlaff.mvc.models.BasicCameraModel;
-import tetzlaff.mvc.models.OverrideableLightModel;
+import tetzlaff.mvc.models.ReadonlyCameraModel;
+import tetzlaff.mvc.models.ReadonlyLightModel;
 import tetzlaff.util.EnvironmentMap;
 import tetzlaff.util.VertexGeometry;
 
@@ -52,7 +50,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	private ContextType context;
 	private Program<ContextType> program;
 	private Program<ContextType> shadowProgram;
-	private LightController lightController;
+	private ReadonlyLightModel lightModel;
 	private IBRLoadingMonitor callback;
 	private boolean suppressErrors = false;
 	private IBRSettings settings;
@@ -75,7 +73,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     
     private String id;
     private Drawable<ContextType> mainDrawable;
-    private BasicCameraModel cameraController;
+    private ReadonlyCameraModel cameraModel;
 
     private Vector3 clearColor;
     private boolean halfResEnabled;
@@ -120,15 +118,15 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     private Texture2D<ContextType> refSceneTexture = null;
 	
 	ImageBasedRenderer(String id, ContextType context, Program<ContextType> program, 
-			BasicCameraModel cameraController, LightController lightController,
+			ReadonlyCameraModel cameraModel, ReadonlyLightModel lightModel,
 			IBRResources.Builder<ContextType> resourceBuilder)
     {
     	this.id = id;
 		this.context = context;
 		this.program = program;
     	this.resourceBuilder = resourceBuilder;
-    	this.cameraController = cameraController;
-    	this.lightController = lightController;
+    	this.cameraModel = cameraModel;
+    	this.lightModel = lightModel;
     	
     	this.clearColor = new Vector3(0.0f);
     	this.transformationMatrices = new ArrayList<Matrix4>();
@@ -290,12 +288,12 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		{
 			setupForRelighting();
 			
-			if (lightController instanceof OverrideableLightModel)
+			if (lightModel instanceof CameraBasedLightModel)
 			{
 		    	float scale = new Vector3(resources.viewSet.getCameraPose(0)
 		    			.times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length();
 				
-				((OverrideableLightModel)lightController).overrideCameraPose(
+				((CameraBasedLightModel)lightModel).overrideCameraPose(
 						Matrix4.scale(1.0f / scale)
 							.times(modelView)
 							.times(Matrix4.translate(resources.geometry.getCentroid()))
@@ -303,7 +301,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 							.times(Matrix4.scale(scale)));
 			}
 			
-			for (int i = 0; i < lightController.getLightCount(); i++)
+			for (int i = 0; i < lightModel.getLightCount(); i++)
 			{
 				generateShadowMaps(i);
 				setupLight(i, 0);
@@ -312,9 +310,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		
 		this.resampleCompleteCallback = () -> 
 		{
-			if (lightController instanceof OverrideableLightModel)
+			if (lightModel instanceof CameraBasedLightModel)
 			{
-				((OverrideableLightModel)lightController).removeCameraPoseOverride();
+				((CameraBasedLightModel)lightModel).removeCameraPoseOverride();
 			}
 		};
 		
@@ -331,7 +329,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		
 		shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
 
-		shadowMaps = context.get2DDepthTextureArrayBuilder(2048, 2048, lightController.getLightCount()).createTexture();
+		shadowMaps = context.get2DDepthTextureArrayBuilder(2048, 2048, lightModel.getLightCount()).createTexture();
 		shadowFramebuffer = context.getFramebufferObjectBuilder(2048, 2048)
 			.addDepthAttachment()
 			.createFramebufferObject();
@@ -656,7 +654,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			p.setTexture("roughnessMap", resources.roughnessTexture);
 		}
 		
-		if (this.environmentMap == null || !lightController.getEnvironmentMappingEnabled())
+		if (this.environmentMap == null || !lightModel.getEnvironmentMappingEnabled())
 		{
 			p.setUniform("useEnvironmentTexture", false);
 			p.setTexture("environmentMap", null);
@@ -698,12 +696,12 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		}
 		
 		float gamma = 2.2f;
-		p.setUniform("ambientColor", lightController.getAmbientLightColor());
+		p.setUniform("ambientColor", lightModel.getAmbientLightColor());
     	
     	this.clearColor = new Vector3(
-    			(float)Math.pow(lightController.getAmbientLightColor().x, 1.0 / gamma),
-    			(float)Math.pow(lightController.getAmbientLightColor().y, 1.0 / gamma),
-    			(float)Math.pow(lightController.getAmbientLightColor().z, 1.0 / gamma));
+    			(float)Math.pow(lightModel.getAmbientLightColor().x, 1.0 / gamma),
+    			(float)Math.pow(lightModel.getAmbientLightColor().y, 1.0 / gamma),
+    			(float)Math.pow(lightModel.getAmbientLightColor().z, 1.0 / gamma));
     	
 		p.setUniform("infiniteLightSources", resources.viewSet.areLightSourcesInfinite());
 		p.setTexture("shadowMaps", shadowMaps);
@@ -757,7 +755,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	{
 		float scale = getScale();
 		return Matrix4.scale(scale)
-			.times(lightController.getLightMatrix(lightIndex))
+			.times(lightModel.getLightMatrix(lightIndex))
 			.times(Matrix4.scale(1.0f / scale))
 			.times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0))))
 			.times(Matrix4.translate(this.centroid.negated()));
@@ -820,7 +818,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		
 		program.setUniform("lightPosVirtual[" + lightIndex + "]", lightPos);
 		
-		Vector3 controllerLightIntensity = lightController.getLightColor(lightIndex);
+		Vector3 controllerLightIntensity = lightModel.getLightColor(lightIndex);
 		float lightDistance = new Vector3(getLightMatrix(lightIndex).times(new Vector4(this.centroid, 1.0f))).length();
 
 		float scale = resources.viewSet.areLightSourcesInfinite() ? 1.0f :
@@ -830,7 +828,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		program.setUniform("lightIntensityVirtual[" + lightIndex + "]", 
 				controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (scale * scale)));
 		program.setUniform("lightMatrixVirtual[" + lightIndex + "]", getLightProjection(lightIndex).times(lightMatrix));
-		program.setUniform("virtualLightCount", Math.min(4, lightController.getLightCount()));
+		program.setUniform("virtualLightCount", Math.min(4, lightModel.getLightCount()));
 		
 		return lightMatrix;
 	}
@@ -873,7 +871,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     			* this.boundingRadius / resources.geometry.getBoundingRadius();
 		
 		return Matrix4.scale(scale)
-    			.times(cameraController.getLookMatrix())
+    			.times(cameraModel.getLookMatrix())
     			.times(Matrix4.scale(1.0f / scale))
     			.times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0))))
     			.times(Matrix4.translate(this.centroid.negated()));
@@ -1018,7 +1016,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		    		}
 				}
 				
-				for (int lightIndex = 0; lightIndex < lightController.getLightCount(); lightIndex++)
+				for (int lightIndex = 0; lightIndex < lightModel.getLightCount(); lightIndex++)
 				{
 					generateShadowMaps(lightIndex);
 				}
@@ -1032,7 +1030,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 				{
 					this.envMapMatrix = null;
 					
-					for (int lightIndex = 0; lightIndex < lightController.getLightCount(); lightIndex++)
+					for (int lightIndex = 0; lightIndex < lightModel.getLightCount(); lightIndex++)
 					{
 						Matrix4 matrix = setupLight(lightIndex, modelInstance);
 						
@@ -1094,11 +1092,11 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			
 			if (this.settings().isRelightingEnabled() && this.settings().areVisibleLightsEnabled())
 			{
-				for (int i = 0; i < lightController.getLightCount(); i++)
+				for (int i = 0; i < lightModel.getLightCount(); i++)
 				{
-					if (lightController.getSelectedLightIndex() != i)
+					if (lightModel.isLightVisualizationEnabled(i))
 					{
-						this.lightProgram.setUniform("color", lightController.getLightColor(i));
+						this.lightProgram.setUniform("color", lightModel.getLightColor(i));
 						
 						Vector3 lightPosition = new Vector3(viewMatrix.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3));
 						
@@ -1890,7 +1888,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			{
 				double theta = i / 180.0f * Math.PI;
 		    	btfProgram.setUniform("virtualLightCount", 1);
-		    	btfProgram.setUniform("lightIntensityVirtual[0]", lightController.getLightColor(0));
+		    	btfProgram.setUniform("lightIntensityVirtual[0]", lightModel.getLightColor(0));
 		    	btfProgram.setUniform("lightDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
 		    	btfProgram.setUniform("viewDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
 	    	

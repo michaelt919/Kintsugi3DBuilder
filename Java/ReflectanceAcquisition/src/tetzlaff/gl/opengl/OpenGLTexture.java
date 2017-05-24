@@ -17,7 +17,6 @@ import org.lwjgl.BufferUtils;
 
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture;
 import tetzlaff.gl.TextureType;
 import tetzlaff.gl.TextureWrapMode;

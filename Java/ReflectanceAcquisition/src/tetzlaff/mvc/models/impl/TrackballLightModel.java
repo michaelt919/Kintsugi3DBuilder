@@ -1,7 +1,9 @@
-package tetzlaff.mvc.models;
+package tetzlaff.mvc.models.impl;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.mvc.models.LightModel;
+import tetzlaff.mvc.models.ReadonlyCameraModel;
 
 public class TrackballLightModel extends LightModelBase implements LightModel
 {
@@ -20,6 +22,7 @@ public class TrackballLightModel extends LightModelBase implements LightModel
 		
 		this.lightTrackballEnabled = new boolean[lightCount];
     	this.trackballModels = new TrackballModel[lightCount];
+    	this.lightTrackballModel = new TrackballModel();
     	
     	this.setLightColor(0, new Vector3(1.0f, 1.0f, 1.0f));
     	
