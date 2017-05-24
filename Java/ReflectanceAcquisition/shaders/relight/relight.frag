@@ -8,8 +8,8 @@ in vec3 fBitangent;
 
 layout(location = 0) out vec4 fragColor;
 
-#include "../reflectance/reflectance.glsl"
-#include "../reflectance/imgspace.glsl"
+#include "../colorappearance/colorappearance.glsl"
+#include "../colorappearance/imgspace.glsl"
 
 #line 15 0
 

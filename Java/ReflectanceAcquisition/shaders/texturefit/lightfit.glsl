@@ -1,7 +1,7 @@
 #ifndef LIGHTFIT_GLSL
 #define LIGHTFIT_GLSL
 
-#include "../reflectance/reflectance.glsl"
+#include "../colorappearance/colorappearance.glsl"
 
 #line 7 2001
 

@@ -1,7 +1,7 @@
 #ifndef SPECULARFIT_GLSL
 #define SPECULARFIT_GLSL
 
-#include "../reflectance/reflectance.glsl"
+#include "../colorappearance/colorappearance.glsl"
 
 #line 7 2004
 

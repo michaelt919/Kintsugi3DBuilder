@@ -1,5 +1,5 @@
-#ifndef REFLECTANCE_GLSL
-#define REFLECTANCE_GLSL
+#ifndef COLOR_APPEARANCE_GLSL
+#define COLOR_APPEARANCE_GLSL
 
 #include "linearize.glsl"
 
@@ -72,4 +72,4 @@ vec4 getLinearColor(int index)
     return linearizeColor(getColor(index));
 }
 
-#endif // REFLECTANCE_GLSL
+#endif // COLOR_APPEARANCE_GLSL

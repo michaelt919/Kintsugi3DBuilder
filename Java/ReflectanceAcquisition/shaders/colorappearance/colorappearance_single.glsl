@@ -1,5 +1,5 @@
-#ifndef REFLECTANCE_SINGLE_GLSL
-#define REFLECTANCE_SINGLE_GLSL
+#ifndef COLOR_APPEARANCE_SINGLE_GLSL
+#define COLOR_APPEARANCE_SINGLE_GLSL
 
 #include "linearize.glsl"
 
@@ -30,4 +30,4 @@ vec4 getLinearColor()
     return linearizeColor(getColor());
 }
 
-#endif // REFLECTANCE_SINGLE_GLSL
+#endif // COLOR_APPEARANCE_SINGLE_GLSL
