@@ -11,8 +11,8 @@ layout(location = 1) out vec4 normal;
 layout(location = 2) out vec4 specularColor;
 layout(location = 3) out vec4 roughness;
 
-#include "../reflectance/reflectance.glsl"
-#include "../reflectance/imgspace.glsl"
+#include "../colorappearance/colorappearance.glsl"
+#include "../colorappearance/imgspace.glsl"
 #include "adjustfit.glsl"
 
 #line 17 0

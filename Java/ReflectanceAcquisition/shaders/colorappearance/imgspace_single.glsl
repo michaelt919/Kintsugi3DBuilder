@@ -1,7 +1,7 @@
 #ifndef IMGSPACE_SINGLE_GLSL
 #define IMGSPACE_SINGLE_GLSL
 
-#include "reflectance_single.glsl"
+#include "colorappearance_single.glsl"
 
 #line 7 1111
 

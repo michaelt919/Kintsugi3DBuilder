@@ -9,8 +9,8 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 residualXYZ_nDotL;
 layout(location = 1) out vec4 geomInfoPacked;
 
-#include "../reflectance/reflectance_multi_as_single.glsl"
-#include "../reflectance/imgspace.glsl"
+#include "../colorappearance/colorappearance_multi_as_single.glsl"
+#include "../colorappearance/imgspace.glsl"
 #include "specularresid.glsl"
 
 #line 17 0

@@ -1,9 +1,9 @@
-#ifndef REFLECTANCE_MULTI_AS_SINGLE_GLSL
-#define REFLECTANCE_MULTI_AS_SINGLE_GLSL
+#ifndef COLOR_APPEARANCE_MULTI_AS_SINGLE_GLSL
+#define COLOR_APPEARANCE_MULTI_AS_SINGLE_GLSL
 
 uniform int viewIndex;
 
-#include "reflectance.glsl"
+#include "colorappearance.glsl"
 
 #line 9 1002
 
@@ -32,4 +32,4 @@ vec4 getLinearColor()
     return linearizeColor(getColor());
 }
 
-#endif // REFLECTANCE_MULTI_AS_SINGLE_GLSL
+#endif // COLOR_APPEARANCE_MULTI_AS_SINGLE_GLSL

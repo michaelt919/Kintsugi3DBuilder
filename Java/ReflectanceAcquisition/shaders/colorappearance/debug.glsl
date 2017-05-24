@@ -1,7 +1,7 @@
-#ifndef REFLECTANCE_DEBUG_GLSL
-#define REFLECTANCE_DEBUG_GLSL
+#ifndef COLOR_APPEARANCE_DEBUG_GLSL
+#define COLOR_APPEARANCE_DEBUG_GLSL
 
-#include "reflectance.glsl"
+#include "colorappearance.glsl"
 
 #line 7 1109
 
@@ -64,4 +64,4 @@ vec4 getColor(int index)
 	}
 }
 
-#endif // REFLECTANCE_DEBUG_GLSL
+#endif // COLOR_APPEARANCE_DEBUG_GLSL

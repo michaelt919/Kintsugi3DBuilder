@@ -9,8 +9,8 @@ in vec3 fBitangent;
 layout(location = 0) out vec2 errorResultOut;
 layout(location = 1) out float mask;
 
-#include "../reflectance/reflectance.glsl"
-#include "../reflectance/imgspace.glsl"
+#include "../colorappearance/colorappearance.glsl"
+#include "../colorappearance/imgspace.glsl"
 #include "errorcalc.glsl"
 
 #line 15 0

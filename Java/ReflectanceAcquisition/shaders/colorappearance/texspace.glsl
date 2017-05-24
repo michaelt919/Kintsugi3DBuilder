@@ -1,7 +1,7 @@
 #ifndef TEXSPACE_GLSL
 #define TEXSPACE_GLSL
 
-#include "reflectance.glsl"
+#include "colorappearance.glsl"
 
 #line 7 1100
 

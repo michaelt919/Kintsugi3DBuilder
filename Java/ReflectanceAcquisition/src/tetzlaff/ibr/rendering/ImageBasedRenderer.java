@@ -143,7 +143,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	        {
 	    		this.program = context.getShaderProgramBuilder()
 	    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibr.frag"))
+	    				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
 	    				.createProgram();
 	        }
 	        catch (IOException e)
@@ -248,7 +248,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	        {
 	    		this.lightProgram = context.getShaderProgramBuilder()
 	    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-	    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/light.frag"))
+	    				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/light.frag"))
 	    				.createProgram();
 	    		this.lightVertices = context.createRectangle();
 	    		this.lightDrawable = context.createDrawable(this.lightProgram);
@@ -1340,7 +1340,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	(
 			Program<ContextType> fidelityProgram = context.getShaderProgramBuilder()
 				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/fidelity.frag"))
+				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/fidelity.frag"))
 				.createProgram();
     			
 			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(256, 256/*1024, 1024*/)
@@ -1863,7 +1863,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
         {
 			Program<ContextType> btfProgram = context.getShaderProgramBuilder()
     				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibr.frag"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
     				.createProgram();
 			
 			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(btfWidth, btfHeight)
@@ -2066,7 +2066,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    	
 	    	newProgram = context.getShaderProgramBuilder()
     				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/light.frag"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/light.frag"))
     				.createProgram();
 	    	
 			if (this.lightProgram != null)

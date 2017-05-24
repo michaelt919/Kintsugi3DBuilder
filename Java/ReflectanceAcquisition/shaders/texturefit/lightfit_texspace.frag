@@ -7,7 +7,7 @@ in vec3 fNormal;
 layout(location = 0) out vec4 lightPosition;
 layout(location = 1) out vec4 lightIntensity;
 
-#include "../reflectance/texspace.glsl"
+#include "../colorappearance/texspace.glsl"
 #include "lightfit.glsl"
 
 #line 14 0

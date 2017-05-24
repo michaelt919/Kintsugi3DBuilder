@@ -10,7 +10,7 @@ layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec4 shadingInfo;
 layout(location = 2) out vec4 projTexCoord;
 
-#include "reflectance_single.glsl"
+#include "colorappearance_single.glsl"
 #include "imgspace_single.glsl"
 
 #line 16 1010

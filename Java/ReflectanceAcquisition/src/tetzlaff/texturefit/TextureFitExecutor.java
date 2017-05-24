@@ -120,7 +120,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	
     	projTexProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", "reflectance/projtex_single.frag"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", "colorappearance/projtex_single.frag"))
     			.createProgram();
     	
     	lightFitProgram = context.getShaderProgramBuilder()
@@ -163,7 +163,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		
     	diffuseDebugProgram = context.getShaderProgramBuilder()
     			.addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-    			.addShader(ShaderType.FRAGMENT, new File("shaders", "reflectance/projtex_multi.frag"))
+    			.addShader(ShaderType.FRAGMENT, new File("shaders", "colorappearance/projtex_multi.frag"))
     			.createProgram();
 		
     	specularDebugProgram = context.getShaderProgramBuilder()

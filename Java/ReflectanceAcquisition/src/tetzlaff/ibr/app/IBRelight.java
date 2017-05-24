@@ -156,7 +156,7 @@ public class IBRelight
         {
     		program = window.getShaderProgramBuilder()
     				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibr.frag"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
     				.createProgram();
         }
         catch (IOException e)
@@ -217,7 +217,7 @@ public class IBRelight
 	        		// reload program
 	        		Program<OpenGLContext> newProgram = window.getShaderProgramBuilder()
 		    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-	        				.addShader(ShaderType.FRAGMENT, new File("shaders/ibr/ibr.frag"))
+	        				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
 							.createProgram();
 		        	
 		        	if (model.getProgram() != null)
