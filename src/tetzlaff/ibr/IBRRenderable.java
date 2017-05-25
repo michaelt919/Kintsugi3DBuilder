@@ -6,8 +6,8 @@ import java.util.List;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
+import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.util.VertexGeometry;
 
 public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable
 {

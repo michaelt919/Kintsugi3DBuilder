@@ -54,7 +54,6 @@ public class InteractiveGraphics
 			{
 				context.makeContextCurrent();
 				renderable.close();
-				context.destroy();
 			}
 		});
 	}

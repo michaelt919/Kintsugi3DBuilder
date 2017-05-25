@@ -2,17 +2,17 @@ package tetzlaff.mvc.controllers.impl;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.window.CursorPosition;
+import tetzlaff.gl.window.ModifierKeys;
+import tetzlaff.gl.window.MouseButtonState;
+import tetzlaff.gl.window.Window;
+import tetzlaff.gl.window.WindowSize;
+import tetzlaff.gl.window.listeners.CursorPositionListener;
+import tetzlaff.gl.window.listeners.MouseButtonPressListener;
+import tetzlaff.gl.window.listeners.ScrollListener;
 import tetzlaff.mvc.controllers.CameraController;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.impl.TrackballModel;
-import tetzlaff.window.CursorPosition;
-import tetzlaff.window.ModifierKeys;
-import tetzlaff.window.MouseButtonState;
-import tetzlaff.window.Window;
-import tetzlaff.window.WindowSize;
-import tetzlaff.window.listeners.CursorPositionListener;
-import tetzlaff.window.listeners.MouseButtonPressListener;
-import tetzlaff.window.listeners.ScrollListener;
 
 public class TrackballController implements CameraController, CursorPositionListener, MouseButtonPressListener, ScrollListener
 {
@@ -96,7 +96,7 @@ public class TrackballController implements CameraController, CursorPositionList
 	}
 	
 	@Override
-	public void addAsWindowListener(Window window)
+	public void addAsWindowListener(Window<?> window)
 	{
 		window.addCursorPositionListener(this);
 		window.addMouseButtonPressListener(this);
@@ -110,7 +110,7 @@ public class TrackballController implements CameraController, CursorPositionList
 	}
 
 	@Override
-	public void mouseButtonPressed(Window window, int buttonIndex, ModifierKeys mods) 
+	public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods) 
 	{
 		if (enabled && (buttonIndex == this.primaryButtonIndex || buttonIndex == this.secondaryButtonIndex))
 		{
@@ -125,7 +125,7 @@ public class TrackballController implements CameraController, CursorPositionList
 	}	
 
 	@Override
-	public void cursorMoved(Window window, double xpos, double ypos) 
+	public void cursorMoved(Window<?> window, double xpos, double ypos) 
 	{
 		if (enabled)
 		{
@@ -163,7 +163,7 @@ public class TrackballController implements CameraController, CursorPositionList
 	}
 
 	@Override
-	public void scroll(Window window, double xoffset, double yoffset) 
+	public void scroll(Window<?> window, double xoffset, double yoffset) 
 	{
 		if (enabled)
 		{

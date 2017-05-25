@@ -1,13 +1,13 @@
 package tetzlaff.mvc.controllers.impl;
 
+import tetzlaff.gl.window.KeyCodes;
+import tetzlaff.gl.window.ModifierKeys;
+import tetzlaff.gl.window.Window;
+import tetzlaff.gl.window.listeners.KeyPressListener;
+import tetzlaff.gl.window.listeners.KeyReleaseListener;
 import tetzlaff.mvc.controllers.LightController;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.impl.TrackballLightModel;
-import tetzlaff.window.KeyCodes;
-import tetzlaff.window.ModifierKeys;
-import tetzlaff.window.Window;
-import tetzlaff.window.listeners.KeyPressListener;
-import tetzlaff.window.listeners.KeyReleaseListener;
 
 public class TrackballLightController implements LightController, KeyPressListener, KeyReleaseListener
 {
@@ -49,7 +49,7 @@ public class TrackballLightController implements LightController, KeyPressListen
 	}
 	
 	@Override
-	public void addAsWindowListener(Window window)
+	public void addAsWindowListener(Window<?> window)
 	{
 		window.addKeyPressListener(this);
 		window.addKeyReleaseListener(this);
@@ -74,7 +74,7 @@ public class TrackballLightController implements LightController, KeyPressListen
 	}
 
 	@Override
-	public void keyPressed(Window window, int keycode, ModifierKeys mods) 
+	public void keyPressed(Window<?> window, int keycode, ModifierKeys mods) 
 	{
 		if (keycode >= KeyCodes.ONE && keycode <= KeyCodes.FOUR)
 		{
@@ -99,7 +99,7 @@ public class TrackballLightController implements LightController, KeyPressListen
 	}
 
 	@Override
-	public void keyReleased(Window window, int keycode, ModifierKeys mods) 
+	public void keyReleased(Window<?> window, int keycode, ModifierKeys mods) 
 	{
 		if (keycode >= KeyCodes.ONE && keycode <= KeyCodes.FOUR)
 		{

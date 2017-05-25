@@ -59,6 +59,7 @@ import tetzlaff.gl.exceptions.GLInvalidValueException;
 import tetzlaff.gl.exceptions.GLOutOfMemoryException;
 import tetzlaff.gl.exceptions.GLStackOverflowException;
 import tetzlaff.gl.exceptions.GLStackUnderflowException;
+import tetzlaff.gl.glfw.GLFWWindowContextBase;
 import tetzlaff.gl.nativelist.NativeByteVectorList;
 import tetzlaff.gl.nativelist.NativeDoubleVectorList;
 import tetzlaff.gl.nativelist.NativeFloatVectorList;
@@ -79,8 +80,13 @@ import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthStencilBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DStencilBuilder;
 
-public abstract class OpenGLContext implements Context<OpenGLContext>
+public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implements Context<OpenGLContext>
 {
+	OpenGLContext(long handle)
+	{
+		super(handle);
+	}
+	
 	@Override
 	public void flush()
 	{

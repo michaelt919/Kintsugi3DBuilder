@@ -3,16 +3,16 @@ package tetzlaff.mvc.controllers.impl;
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.window.KeyCodes;
+import tetzlaff.gl.window.ModifierKeys;
+import tetzlaff.gl.window.Window;
+import tetzlaff.gl.window.WindowSize;
+import tetzlaff.gl.window.listeners.CursorPositionListener;
+import tetzlaff.gl.window.listeners.KeyPressListener;
+import tetzlaff.gl.window.listeners.KeyReleaseListener;
 import tetzlaff.mvc.models.CameraModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.impl.BasicCameraModel;
-import tetzlaff.window.KeyCodes;
-import tetzlaff.window.ModifierKeys;
-import tetzlaff.window.Window;
-import tetzlaff.window.WindowSize;
-import tetzlaff.window.listeners.CursorPositionListener;
-import tetzlaff.window.listeners.KeyPressListener;
-import tetzlaff.window.listeners.KeyReleaseListener;
 
 public class FirstPersonController implements KeyPressListener, KeyReleaseListener, CursorPositionListener
 {
@@ -52,7 +52,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
 		this.phi = 0.0f;
 	}
 
-	public void addAsWindowListener(Window window)
+	public void addAsWindowListener(Window<?> window)
 	{
 		window.addKeyPressListener(this);
 		window.addKeyReleaseListener(this);
@@ -81,7 +81,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
 	}
 
 	@Override
-	public void keyPressed(Window window, int keycode, ModifierKeys mods)
+	public void keyPressed(Window<?> window, int keycode, ModifierKeys mods)
 	{
 		if (enabled)
 		{
@@ -129,7 +129,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
 	}
 
 	@Override
-	public void keyReleased(Window window, int keycode, ModifierKeys mods)
+	public void keyReleased(Window<?> window, int keycode, ModifierKeys mods)
 	{
 		if (enabled)
 		{
@@ -168,7 +168,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
 	}
 
 	@Override
-	public void cursorMoved(Window window, double xpos, double ypos) 
+	public void cursorMoved(Window<?> window, double xpos, double ypos) 
 	{
 		if (enabled)
 		{

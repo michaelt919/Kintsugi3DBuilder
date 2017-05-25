@@ -32,6 +32,7 @@ import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.nativelist.NativeFloatVectorList;
 import tetzlaff.gl.nativelist.NativeIntVectorList;
+import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -43,7 +44,6 @@ import tetzlaff.ibr.ViewSet;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
 import tetzlaff.util.EnvironmentMap;
-import tetzlaff.util.VertexGeometry;
 
 public class ImageBasedRenderer<ContextType extends Context<ContextType>> implements IBRRenderable<ContextType>
 {
