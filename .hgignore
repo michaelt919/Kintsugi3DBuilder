@@ -5,19 +5,7 @@ syntax: glob
 *.jui-e
 hs_err*.log
 .metadata
-.classpath
 .recommenders
-.project
 .DS_Store
 doc/*
-syntax: regexp
-^Java/ReflectanceAcquisition/modelTesting\.nb$
-syntax: regexp
-^Java/ReflectanceAcquisition/datasets$
-syntax: regexp
-^Java/ReflectanceAcquisition/textures$
-
-syntax: regexp
-^Java/ReflectanceAcquisition/errors\.txt$
-syntax: regexp
-^Java/ReflectanceAcquisition/output\.txt$
+bin/*
