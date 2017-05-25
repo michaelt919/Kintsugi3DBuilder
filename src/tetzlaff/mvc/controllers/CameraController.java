@@ -1,10 +1,10 @@
 package tetzlaff.mvc.controllers;
 
+import tetzlaff.gl.window.Window;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.window.Window;
 
 public interface CameraController 
 {
-	void addAsWindowListener(Window window);
+	void addAsWindowListener(Window<?> window);
 	ReadonlyCameraModel getModel();
 }

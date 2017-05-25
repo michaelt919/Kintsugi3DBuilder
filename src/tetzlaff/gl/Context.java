@@ -36,15 +36,11 @@ import tetzlaff.gl.nativelist.NativeShortVectorList;
  */
 public interface Context<ContextType extends Context<ContextType>>
 {
-	boolean isDestroyed();
-	
 	void makeContextCurrent();
 
 	void flush();
 	void finish();
 	void swapBuffers();
-	
-	void destroy();
 
 	FramebufferSize getFramebufferSize();
 	

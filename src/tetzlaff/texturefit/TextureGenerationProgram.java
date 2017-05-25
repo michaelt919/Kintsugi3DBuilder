@@ -8,8 +8,9 @@ import java.io.PrintStream;
 import javax.swing.JOptionPane;
 
 import tetzlaff.gl.exceptions.GLOutOfMemoryException;
+import tetzlaff.gl.glfw.GLFWWindow;
+import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.window.glfw.GLFWWindow;
 
 public class TextureGenerationProgram
 {
@@ -45,11 +46,15 @@ public class TextureGenerationProgram
 	        	}
 	        	else
 	        	{
-	        		OpenGLContext context = new GLFWWindow(800, 800, "Texture Generation");
-		        	
-		        	new TextureFitExecutor<OpenGLContext>(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(), 
-		    				gui.getRescaleDirectory(), gui.getOutputDirectory(), gui.getParameters())
-		    				.execute();
+	        		try(GLFWWindow<OpenGLContext> window = GLFWWindowFactory.buildOpenGLWindow("Texture Generation", 800, 800).create())
+	        		{
+		        		OpenGLContext context = window.getContext();
+		        		
+			        	new TextureFitExecutor<OpenGLContext>(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(), 
+			    				gui.getRescaleDirectory(), gui.getOutputDirectory(), gui.getParameters())
+			    				.execute();
+	        		}
+	        		
 			        GLFWWindow.closeAllWindows();
 			        System.out.println("Process terminated with no errors.");
 	        	}

@@ -33,6 +33,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.Context;
+import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRLoadOptions;
@@ -40,7 +41,6 @@ import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.mvc.models.LightModel;
-import tetzlaff.util.VertexGeometry;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the

@@ -11,10 +11,13 @@ import javax.imageio.ImageIO;
 
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.glfw.GLFWWindow;
+import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibr.rendering.CameraBasedLightModel;
 import tetzlaff.ibr.rendering.HardcodedLightModel;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.interactive.InteractiveApplication;
@@ -27,9 +30,6 @@ import tetzlaff.mvc.models.LightModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.impl.BasicCameraModel;
 import tetzlaff.mvc.models.impl.TrackballModel;
-import tetzlaff.window.glfw.GLFWWindow;
-//import org.lwjgl.opengl.GLDebugMessageCallback;
-//import static org.lwjgl.opengl.KHRDebug.*;
 
 /**
  * ULFProgram is a container for the main entry point of the Unstructured Light Field
@@ -41,7 +41,7 @@ public class IBRelight
 {
 	private static final boolean DEBUG = true;
 	
-	private static class MetaLightModel implements LightModel
+	private static class MetaLightModel implements CameraBasedLightModel
 	{
 		boolean hardcodedMode = false;
 		LightModel normalLightModel;
@@ -77,6 +77,7 @@ public class IBRelight
 			throw new UnsupportedOperationException();
 		}
 
+		@Override
 		public void overrideCameraPose(Matrix4 cameraPoseOverride) 
 		{
 			if (hardcodedMode)
@@ -85,6 +86,7 @@ public class IBRelight
 			}
 		}
 
+		@Override
 		public void removeCameraPoseOverride() 
 		{
 			if (hardcodedMode)
@@ -133,158 +135,166 @@ public class IBRelight
     	checkSupportedImageFormats();
 
     	// Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
-    	GLFWWindow window = new GLFWWindow(800, 800, "IBRelight", true, 4);
-    	window.enableDepthTest();
-    	
-//    	org.lwjgl.opengl.GL11.glEnable(GL_DEBUG_OUTPUT);
-//    	GLDebugMessageCallback debugCallback = new GLDebugMessageCallback() 
-//    	{
-//			@Override
-//			public void invoke(int source, int type, int id, int severity, int length, long message, long userParam) 
-//			{
-//		    	if (severity == GL_DEBUG_SEVERITY_HIGH)
-//		    	{
-//		    		System.err.println(org.lwjgl.system.MemoryUtil.memDecodeASCII(message));
-//		    	}
-//			}
-//    		
-//    	};
-//    	glDebugMessageCallback(debugCallback, 0L);
-
-    	Program<OpenGLContext> program;
-        try
-        {
-    		program = window.getShaderProgramBuilder()
-    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
-    				.createProgram();
-        }
-        catch (IOException e)
-        {
-        	e.printStackTrace();
-        	throw new IllegalStateException("The shader program could not be initialized.", e);
-        }
-        
-        MetaLightModel metaLightModel = new MetaLightModel();
-        
-        TrackballLightController lightController = new TrackballLightController();
-        lightController.addAsWindowListener(window);
-    	metaLightModel.normalLightModel = lightController.getModel();
-        
-    	CameraModel fpCameraModel = new BasicCameraModel();
-    	
-        FirstPersonController fpController = new FirstPersonController(fpCameraModel);
-        fpController.addAsWindowListener(window);
-        
-        window.addMouseButtonPressListener((win, buttonIndex, mods) -> 
-        {
-        	fpController.setEnabled(false);
-    	});
-        
-        TrackballModel hardcodedLightTrackballModel = new TrackballModel();
-    	TrackballController hardcodedLightTrackballController = TrackballController.getBuilder()
-    			.setSensitivity(1.0f)
-    			.setPrimaryButtonIndex(0)
-    			.setSecondaryButtonIndex(1)
-    			.setModel(hardcodedLightTrackballModel)
-    			.create();
-    	hardcodedLightTrackballController.addAsWindowListener(window);
-        
-        // Hybrid FP + Trackball controls
-        ReadonlyCameraModel cameraModel = () -> fpCameraModel.getLookMatrix().times(
-        		(metaLightModel.hardcodedMode ? hardcodedLightTrackballModel : lightController.getCurrentCameraModel()).getLookMatrix());
-
-        // Create a new 'renderer' to be attached to the window and the GUI.
-        // This is the object that loads the ULF models and handles drawing them.  This object abstracts
-        // the underlying data and provides ways of triggering events via the trackball and the user
-        // interface later when it is passed to the ULFUserInterface object.
-        ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(window, program, cameraModel, metaLightModel);
-    	
-        HardcodedLightModel hardcodedLightController = 
-    			new HardcodedLightModel(
-					() -> model.getSelectedItem().getActiveViewSet(),
-					() -> model.getSelectedItem().getActiveProxy(),
-					hardcodedLightTrackballModel);
-    	metaLightModel.hardcodedLightModel = hardcodedLightController;
-        
-        window.addCharacterListener((win, c) -> {
-        	if (c == 'p')
-        	{
-        		System.out.println("reloading program...");
-        		
-	        	try
+    	try(GLFWWindow<OpenGLContext> window = 
+    			GLFWWindowFactory.buildOpenGLWindow("IBRelight", 800, 800)
+		    		.setResizable(true)
+		    		.setMultisamples(4)
+		    		.create())
+		{
+	    	OpenGLContext context = window.getContext();
+	    	
+	    	context.enableDepthTest();
+	    	
+	//    	org.lwjgl.opengl.GL11.glEnable(GL_DEBUG_OUTPUT);
+	//    	GLDebugMessageCallback debugCallback = new GLDebugMessageCallback() 
+	//    	{
+	//			@Override
+	//			public void invoke(int source, int type, int id, int severity, int length, long message, long userParam) 
+	//			{
+	//		    	if (severity == GL_DEBUG_SEVERITY_HIGH)
+	//		    	{
+	//		    		System.err.println(org.lwjgl.system.MemoryUtil.memDecodeASCII(message));
+	//		    	}
+	//			}
+	//    		
+	//    	};
+	//    	glDebugMessageCallback(debugCallback, 0L);
+	
+	    	Program<OpenGLContext> program;
+	        try
+	        {
+	    		program = context.getShaderProgramBuilder()
+	    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
+	    				.createProgram();
+	        }
+	        catch (IOException e)
+	        {
+	        	e.printStackTrace();
+	        	throw new IllegalStateException("The shader program could not be initialized.", e);
+	        }
+	        
+	        MetaLightModel metaLightModel = new MetaLightModel();
+	        
+	        TrackballLightController lightController = new TrackballLightController();
+	        lightController.addAsWindowListener(window);
+	    	metaLightModel.normalLightModel = lightController.getModel();
+	        
+	    	CameraModel fpCameraModel = new BasicCameraModel();
+	    	
+	        FirstPersonController fpController = new FirstPersonController(fpCameraModel);
+	        fpController.addAsWindowListener(window);
+	        
+	        window.addMouseButtonPressListener((win, buttonIndex, mods) -> 
+	        {
+	        	fpController.setEnabled(false);
+	    	});
+	        
+	        TrackballModel hardcodedLightTrackballModel = new TrackballModel();
+	    	TrackballController hardcodedLightTrackballController = TrackballController.getBuilder()
+	    			.setSensitivity(1.0f)
+	    			.setPrimaryButtonIndex(0)
+	    			.setSecondaryButtonIndex(1)
+	    			.setModel(hardcodedLightTrackballModel)
+	    			.create();
+	    	hardcodedLightTrackballController.addAsWindowListener(window);
+	        
+	        // Hybrid FP + Trackball controls
+	        ReadonlyCameraModel cameraModel = () -> fpCameraModel.getLookMatrix().times(
+	        		(metaLightModel.hardcodedMode ? hardcodedLightTrackballModel : lightController.getCurrentCameraModel()).getLookMatrix());
+	
+	        // Create a new 'renderer' to be attached to the window and the GUI.
+	        // This is the object that loads the ULF models and handles drawing them.  This object abstracts
+	        // the underlying data and provides ways of triggering events via the trackball and the user
+	        // interface later when it is passed to the ULFUserInterface object.
+	        ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(context, program, cameraModel, metaLightModel);
+	    	
+	        HardcodedLightModel hardcodedLightController = 
+	    			new HardcodedLightModel(
+						() -> model.getSelectedItem().getActiveViewSet(),
+						() -> model.getSelectedItem().getActiveProxy(),
+						hardcodedLightTrackballModel);
+	    	metaLightModel.hardcodedLightModel = hardcodedLightController;
+	        
+	        window.addCharacterListener((win, c) -> {
+	        	if (c == 'p')
 	        	{
-	        		// reload program
-	        		Program<OpenGLContext> newProgram = window.getShaderProgramBuilder()
-		    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-	        				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
-							.createProgram();
-		        	
-		        	if (model.getProgram() != null)
-	        		{
-	        			model.getProgram().close();
-	        		}
-		        	model.setProgram(newProgram);
-		        	
-		        	model.getSelectedItem().reloadHelperShaders();
-				} 
-	        	catch (Exception e) 
+	        		System.out.println("reloading program...");
+	        		
+		        	try
+		        	{
+		        		// reload program
+		        		Program<OpenGLContext> newProgram = context.getShaderProgramBuilder()
+			    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+		        				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
+								.createProgram();
+			        	
+			        	if (model.getProgram() != null)
+		        		{
+		        			model.getProgram().close();
+		        		}
+			        	model.setProgram(newProgram);
+			        	
+			        	model.getSelectedItem().reloadHelperShaders();
+					} 
+		        	catch (Exception e) 
+		        	{
+						e.printStackTrace();
+					}
+	        	}
+	        	else if (c == 'l')
 	        	{
-					e.printStackTrace();
+	        		//metaLightModel.hardcodedMode = !metaLightModel.hardcodedMode;
+	        	}
+	        	else if (c == ' ')
+	        	{
+	        		fpController.setEnabled(!fpController.getEnabled());
+	        	}
+	        });
+	
+	    	// Create a new application to run our event loop and give it the GLFWWindow for polling
+	    	// of events and the OpenGL context.  The ULFRendererList provides the renderable.
+	        InteractiveApplication app = InteractiveGraphics.createApplication(window, context, model.getRenderable());
+	        app.addRefreshable(new Refreshable() 
+	        {
+				@Override
+				public void initialize() 
+				{
 				}
-        	}
-        	else if (c == 'l')
-        	{
-        		//metaLightModel.hardcodedMode = !metaLightModel.hardcodedMode;
-        	}
-        	else if (c == ' ')
-        	{
-        		fpController.setEnabled(!fpController.getEnabled());
-        	}
-        });
-
-    	// Create a new application to run our event loop and give it the GLFWWindow for polling
-    	// of events and the OpenGL context.  The ULFRendererList provides the renderable.
-        InteractiveApplication app = InteractiveGraphics.createApplication(window, window, model.getRenderable());
-        app.addRefreshable(new Refreshable() 
-        {
-			@Override
-			public void initialize() 
-			{
-			}
-
-			@Override
-			public void refresh() 
-			{
-				fpController.update();
-			}
-
-			@Override
-			public void terminate() 
-			{
-			}
-        });
-
-//        // Fire up the Qt Interface
-//		// Prepare the Qt GUI system
-//        QApplication.initialize(args);
-//        QCoreApplication.setOrganizationName("UW Stout");
-//        QCoreApplication.setOrganizationDomain("uwstout.edu");
-//        QCoreApplication.setApplicationName("PhotoScan Helper");
-//        
-//        // As far as I can tell, the OS X native menu bar doesn't work in Qt Jambi
-//        // The Java process owns the native menu bar and won't relinquish it to Qt
-//        QApplication.setAttribute(ApplicationAttribute.AA_DontUseNativeMenuBar);
-        
-        // Create a user interface that examines the ULFRendererList for renderer settings and
-        // selecting between different loaded models.
-        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getModel(), window.isHighDPI());
-        gui.showGUI();        
-        //app.addPollable(gui); // Needed for Qt UI
-        
-    	// Make everything visible and start the event loop
-    	window.show();
-		app.run();
+	
+				@Override
+				public void refresh() 
+				{
+					fpController.update();
+				}
+	
+				@Override
+				public void terminate() 
+				{
+				}
+	        });
+	
+	//        // Fire up the Qt Interface
+	//		// Prepare the Qt GUI system
+	//        QApplication.initialize(args);
+	//        QCoreApplication.setOrganizationName("UW Stout");
+	//        QCoreApplication.setOrganizationDomain("uwstout.edu");
+	//        QCoreApplication.setApplicationName("PhotoScan Helper");
+	//        
+	//        // As far as I can tell, the OS X native menu bar doesn't work in Qt Jambi
+	//        // The Java process owns the native menu bar and won't relinquish it to Qt
+	//        QApplication.setAttribute(ApplicationAttribute.AA_DontUseNativeMenuBar);
+	        
+	        // Create a user interface that examines the ULFRendererList for renderer settings and
+	        // selecting between different loaded models.
+	        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getModel(), window.isHighDPI());
+	        gui.showGUI();        
+	        //app.addPollable(gui); // Needed for Qt UI
+	        
+	    	// Make everything visible and start the event loop
+	    	window.show();
+			app.run();
+		}
 
 		// The event loop has terminated so cleanup the windows and exit with a successful return code.
         GLFWWindow.closeAllWindows();

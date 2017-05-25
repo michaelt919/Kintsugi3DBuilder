@@ -26,13 +26,13 @@ import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.material.Material;
 import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.ViewSet;
-import tetzlaff.util.VertexGeometry;
 
 public class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
