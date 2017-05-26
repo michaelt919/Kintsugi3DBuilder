@@ -21,24 +21,7 @@ public class Vector3
 	 */
 	public final float z;
 	
-	/**
-	 * Construct the zero vector.
-	 */
-	public Vector3()
-	{
-		this(0.0f);
-	}
-	
-	/**
-	 * Construct a vector in three dimensions with the given value in all the dimensions.
-	 * @param value Value of all three dimensions.
-	 */
-	public Vector3(float value)
-	{
-		this.x = value;
-		this.y = value;
-		this.z = value;
-	}
+	public static final Vector3 ZERO = fromScalar(0.0f);
 
 	/**
 	 * Construct a vector in three dimensions with the given values.
@@ -46,32 +29,35 @@ public class Vector3
 	 * @param y Value of the second dimension.
 	 * @param z Value of the third dimension.
 	 */
-	public Vector3(float x, float y, float z)
+	private Vector3(float x, float y, float z)
 	{
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 	
-	/**
-	 * Construct a vector in three dimensions from the given 2D vector and a scaler
-	 * value for the missing dimension.
-	 * @param v2 The 2D vector from which the x and y values are copied.
-	 * @param z Value of the third dimension.
-	 */
-	public Vector3(Vector2 v2, float z)
+	public static Vector3 fromScalars(float x, float y, float z)
 	{
-		this(v2.x, v2.y, z);
+		return new Vector3(x, y, z);
 	}
 	
 	/**
-	 * Construct a vector in three dimensions from the given 4D vector. The
-	 * fourth dimension is discarded.
-	 * @param v4 The 4D vector from which the x, y and z values are copied.
+	 * Construct a vector in three dimensions with the given values.
+	 * @param value Value of all three dimensions.
 	 */
-	public Vector3(Vector4 v4)
+	public static Vector3 fromScalar(float value)
 	{
-		this(v4.x, v4.y, v4.z);
+		return new Vector3(value, value, value);
+	}
+	
+	public static Vector3 fromVector2(Vector2 v2, float z)
+	{
+		return new Vector3(v2.x, v2.y, z);
+	}
+	
+	public static Vector3 takeXYZ(Vector4 v4)
+	{
+		return new Vector3(v4.x, v4.y, v4.z);
 	}
 	
 	@Override
@@ -162,10 +148,10 @@ public class Vector3
 	 */
 	public Matrix3 outerProduct(Vector3 other)
 	{
-		return new Matrix3(
-			this.x * other.x, this.y * other.x, this.z * other.x,
-			this.x * other.y, this.y * other.y, this.z * other.y,
-			this.x * other.z, this.y * other.z, this.z * other.z
+		return Matrix3.fromColumns(
+			Vector3.fromScalars(this.x * other.x, this.y * other.x, this.z * other.x),
+			Vector3.fromScalars(this.x * other.y, this.y * other.y, this.z * other.y),
+			Vector3.fromScalars(this.x * other.z, this.y * other.z, this.z * other.z)
 		);
 	}
 	

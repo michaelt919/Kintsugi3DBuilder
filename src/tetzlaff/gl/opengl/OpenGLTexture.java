@@ -101,10 +101,10 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 		{
 			throw new IllegalArgumentException("Texture unit index cannot be negative.");
 		}
-		else if (textureUnitIndex > this.context.getMaxCombinedTextureImageUnits())
+		else if (textureUnitIndex > this.context.getState().getMaxCombinedTextureImageUnits())
 		{
 			throw new IllegalArgumentException("Texture unit index (" + textureUnitIndex + ") is greater than the maximum allowed index (" + 
-					(this.context.getMaxCombinedTextureImageUnits()-1) + ").");
+					(this.context.getState().getMaxCombinedTextureImageUnits()-1) + ").");
 		}
 		glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
 		this.context.openGLErrorCheck();
@@ -190,7 +190,7 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 		case COLOR:
 		default:
 			return context.getOpenGLInternalColorFormat(
-				new ColorFormat(precision, precision, precision, precision, ColorFormat.DataType.NORMALIZED_FIXED_POINT));
+				ColorFormat.createCustom(precision, precision, precision, precision, ColorFormat.DataType.NORMALIZED_FIXED_POINT));
 		}
 	}
 	

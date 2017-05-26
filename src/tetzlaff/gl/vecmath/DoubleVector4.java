@@ -15,8 +15,11 @@ public class DoubleVector4
 	public final double y;
 	public final double z;
 	public final double w;
+	
+	public static final DoubleVector4 ZERO_DIRECTION = fromVector3AsDirection(DoubleVector3.ZERO);
+	public static final DoubleVector4 ZERO_POSITION = fromVector3AsPosition(DoubleVector3.ZERO);
 
-	public DoubleVector4(double x, double y, double z, double w)
+	private DoubleVector4(double x, double y, double z, double w)
 	{
 		this.x = x;
 		this.y = y;
@@ -24,14 +27,34 @@ public class DoubleVector4
 		this.w = w;
 	}
 	
-	public DoubleVector4(DoubleVector2 v2, double z, double w)
+	public static DoubleVector4 fromScalar(double value)
 	{
-		this(v2.x, v2.y, z, w);
+		return new DoubleVector4(value, value, value, value);
 	}
 	
-	public DoubleVector4(DoubleVector3 v3, double w)
+	public static DoubleVector4 fromScalars(double x, double y, double z, double w)
 	{
-		this(v3.x, v3.y, v3.z, w);
+		return new DoubleVector4(x, y, z, w);
+	}
+	
+	public static DoubleVector4 fromVector2(DoubleVector2 v2, double z, double w)
+	{
+		return new DoubleVector4(v2.x, v2.y, z, w);
+	}
+	
+	public static DoubleVector4 fromVector3(DoubleVector3 v3, double w)
+	{
+		return new DoubleVector4(v3.x, v3.y, v3.z, w);
+	}
+	
+	public static DoubleVector4 fromVector3AsDirection(DoubleVector3 v3)
+	{
+		return new DoubleVector4(v3.x, v3.y, v3.z, 0.0);
+	}
+	
+	public static DoubleVector4 fromVector3AsPosition(DoubleVector3 v3)
+	{
+		return new DoubleVector4(v3.x, v3.y, v3.z, 1.0);
 	}
 	
 	public DoubleVector4 plus(DoubleVector4 other)
@@ -72,6 +95,21 @@ public class DoubleVector4
 	public double dot(DoubleVector4 other)
 	{
 		return this.x * other.x + this.y * other.y + this.z * other.z + this.w * other.w;
+	}
+	
+	/**
+	 * Compute the outer product of this vector and another given vector.
+	 * @param other The vector to use when computing the outer product.
+	 * @return The matrix that is the outer product of the vectors.
+	 */
+	public DoubleMatrix4 outerProduct(DoubleVector4 other)
+	{
+		return DoubleMatrix4.fromColumns(
+			DoubleVector4.fromScalars(this.x * other.x, this.y * other.x, this.z * other.x, this.w * other.x),
+			DoubleVector4.fromScalars(this.x * other.y, this.y * other.y, this.z * other.y, this.w * other.y),
+			DoubleVector4.fromScalars(this.x * other.z, this.y * other.z, this.z * other.z, this.w * other.z),
+			DoubleVector4.fromScalars(this.x * other.w, this.y * other.w, this.z * other.w, this.w * other.w)
+		);
 	}
 	
 	public double length()

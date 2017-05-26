@@ -41,7 +41,7 @@ public class TextureUpscaleProgram
 	    				.addShader(ShaderType.VERTEX, new File("shaders", "common/texture.vert"))
 	    				.addShader(ShaderType.FRAGMENT, new File("shaders", "misc/perlintex.frag"))
 	    				.createProgram();
-		    	Texture2D<OpenGLContext> permTexture = context.getPerlinNoiseTextureBuilder().createTexture();
+		    	Texture2D<OpenGLContext> permTexture = context.buildPerlinNoiseTexture().createTexture();
 		    	perlinNoiseProgram.setTexture("permTexture", permTexture);
 	    		
 	    		JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
@@ -51,11 +51,11 @@ public class TextureUpscaleProgram
 	    		if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
 	    		{
 	    	    	File imageFile = fileChooser.getSelectedFile();
-	    	    	Texture2D<OpenGLContext> imageTexture = context.get2DColorTextureBuilder(imageFile, true)
+	    	    	Texture2D<OpenGLContext> imageTexture = context.build2DColorTextureFromFile(imageFile, true)
 		    										.setLinearFilteringEnabled(true)
 		    										.setMipmapsEnabled(true)
 		    										.createTexture();
-	    	    	Texture2D<OpenGLContext> segmentTexture = context.get2DColorTextureBuilder(new File(new File(imageFile.getParent(), "segment"), imageFile.getName()), true).createTexture();
+	    	    	Texture2D<OpenGLContext> segmentTexture = context.build2DColorTextureFromFile(new File(new File(imageFile.getParent(), "segment"), imageFile.getName()), true).createTexture();
 	    	    	perlinNoiseProgram.setTexture("imageTexture", imageTexture);
 	    	    	perlinNoiseProgram.setTexture("segmentTexture", segmentTexture);
 	    	    	int targetWidth = imageTexture.getWidth() * SCALE_FACTOR;
@@ -74,7 +74,7 @@ public class TextureUpscaleProgram
 	    	    	perlinNoiseProgram.setUniform("maxSamples", MAX_SAMPLES);
 	    	    	perlinNoiseProgram.setUniform("blackPoint", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
 	    	    	perlinNoiseProgram.setUniform("whitePoint", new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-			    	FramebufferObject<OpenGLContext> fbo = context.getFramebufferObjectBuilder(targetWidth, targetHeight).addColorAttachment().createFramebufferObject();
+			    	FramebufferObject<OpenGLContext> fbo = context.buildFramebufferObject(targetWidth, targetHeight).addColorAttachment().createFramebufferObject();
 			    	Drawable<OpenGLContext> drawable = context.createDrawable(perlinNoiseProgram);
 			    	VertexBuffer<OpenGLContext> rectangle = context.createRectangle();
 			    	drawable.addVertexBuffer("position", rectangle);

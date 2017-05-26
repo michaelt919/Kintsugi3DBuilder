@@ -25,7 +25,10 @@ public class Vector4
 	 * The fourth dimension (or heterogeneous coordinate)
 	 */
 	public final float w;
-
+	
+	public static final Vector4 ZERO_DIRECTION = fromVector3AsDirection(Vector3.ZERO);
+	public static final Vector4 ZERO_POSITION = fromVector3AsPosition(Vector3.ZERO);
+	
 	/**
 	 * Construct a vector in four dimensions with the given values.
 	 * @param x Value of the first dimension.
@@ -33,7 +36,7 @@ public class Vector4
 	 * @param z Value of the third dimension.
 	 * @param w Value of the fourth dimension (or heterogeneous coordinate).
 	 */
-	public Vector4(float x, float y, float z, float w)
+	private Vector4(float x, float y, float z, float w)
 	{
 		this.x = x;
 		this.y = y;
@@ -41,37 +44,34 @@ public class Vector4
 		this.w = w;
 	}
 	
-	/**
-	 * Construct a vector in four dimensions from the given 2D vector and two scaler
-	 * values for the missing dimensions.
-	 * @param v2 The 2D vector from which the x and y values are copied.
-	 * @param z Value of the third dimension.
-	 * @param w Value of the fourth dimension (or heterogeneous coordinate).
-	 */
-	public Vector4(Vector2 v2, float z, float w)
+	public static Vector4 fromScalar(float value)
 	{
-		this(v2.x, v2.y, z, w);
+		return new Vector4(value, value, value, value);
 	}
 	
-	/**
-	 * Construct a vector in four dimensions from the given 3D vector and a scaler
-	 * value for the missing dimension.
-	 * @param v3 The 3D vector from which the x, y and z values are copied.
-	 * @param w Value of the fourth dimension (or heterogeneous coordinate).
-	 */
-	public Vector4(Vector3 v3, float w)
+	public static Vector4 fromScalars(float x, float y, float z, float w)
 	{
-		this(v3.x, v3.y, v3.z, w);
+		return new Vector4(x, y, z, w);
 	}
 	
-
-	/**
-	 * Construct a vector in four dimensions with the given value in all the dimensions.
-	 * @param value Value of all four dimensions.
-	 */
-	public Vector4(float value)
+	public static Vector4 fromVector2(Vector3 v2, float z, float w)
 	{
-		this(value, value, value, value);
+		return new Vector4(v2.x, v2.y, z, w);
+	}
+	
+	public static Vector4 fromVector3(Vector3 v3, float w)
+	{
+		return new Vector4(v3.x, v3.y, v3.z, w);
+	}
+	
+	public static Vector4 fromVector3AsDirection(Vector3 v3)
+	{
+		return new Vector4(v3.x, v3.y, v3.z, 0.0f);
+	}
+	
+	public static Vector4 fromVector3AsPosition(Vector3 v3)
+	{
+		return new Vector4(v3.x, v3.y, v3.z, 1.0f);
 	}
 	
 	@Override
@@ -155,6 +155,21 @@ public class Vector4
 	public float dot(Vector4 other)
 	{
 		return this.x * other.x + this.y * other.y + this.z * other.z + this.w * other.w;
+	}
+	
+	/**
+	 * Compute the outer product of this vector and another given vector.
+	 * @param other The vector to use when computing the outer product.
+	 * @return The matrix that is the outer product of the vectors.
+	 */
+	public Matrix4 outerProduct(Vector4 other)
+	{
+		return Matrix4.fromColumns(
+			Vector4.fromScalars(this.x * other.x, this.y * other.x, this.z * other.x, this.w * other.x),
+			Vector4.fromScalars(this.x * other.y, this.y * other.y, this.z * other.y, this.w * other.y),
+			Vector4.fromScalars(this.x * other.z, this.y * other.z, this.z * other.z, this.w * other.z),
+			Vector4.fromScalars(this.x * other.w, this.y * other.w, this.z * other.w, this.w * other.w)
+		);
 	}
 	
 	/**

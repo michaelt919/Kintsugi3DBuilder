@@ -11,31 +11,35 @@ public class DoubleVector2
 {
 	public final double x;
 	public final double y;
-	
-	/**
-	 * Construct a vector in two dimensions with the given values.
-	 * @param value Value of both dimensions.
-	 */
-	public DoubleVector2(double value)
-	{
-		this.x = value;
-		this.y = value;
-	}
 
-	public DoubleVector2(double x, double y)
+	private DoubleVector2(double x, double y)
 	{
 		this.x = x;
 		this.y = y;
 	}
 	
-	public DoubleVector2(DoubleVector3 v3)
+	public static DoubleVector2 fromScalars(double x, double y)
 	{
-		this(v3.x, v3.y);
+		return new DoubleVector2(x, y);
 	}
 	
-	public DoubleVector2(DoubleVector4 v4)
+	/**
+	 * Construct a vector in two dimensions with the given values.
+	 * @param value Value of both dimensions.
+	 */
+	public static DoubleVector2 fromScalar(double value)
 	{
-		this(v4.x, v4.y);
+		return new DoubleVector2(value, value);
+	}
+	
+	public static DoubleVector2 takeXY(DoubleVector3 v3)
+	{
+		return new DoubleVector2(v3.x, v3.y);
+	}
+	
+	public static DoubleVector2 takeXY(DoubleVector4 v4)
+	{
+		return new DoubleVector2(v4.x, v4.y);
 	}
 	
 	public DoubleVector2 plus(DoubleVector2 other)

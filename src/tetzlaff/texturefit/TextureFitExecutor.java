@@ -201,7 +201,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			TextureSpaceCallback<ContextType> callback) throws IOException
 	{
 		FramebufferObject<ContextType> mainFBO = 
-			context.getFramebufferObjectBuilder(textureSize / textureSubdiv, textureSize / textureSubdiv)
+			context.buildFramebufferObject(textureSize / textureSubdiv, textureSize / textureSubdiv)
 				.addColorAttachments(ColorFormat.RGBA32F, 3)
 				.createFramebufferObject();
     	Drawable<ContextType> drawable = context.createDrawable(program);
@@ -295,7 +295,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			
 			if (maskDir == null)
 	    	{
-	    		viewTexture = context.get2DColorTextureBuilder(imageFile, true)
+	    		viewTexture = context.build2DColorTextureFromFile(imageFile, true)
 	    						.setLinearFilteringEnabled(true)
 	    						.setMipmapsEnabled(true)
 	    						.createTexture();
@@ -311,7 +311,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			    	maskFile = new File(maskDir, pngFileName);
 				}
 				
-	    		viewTexture = context.get2DColorTextureBuilder(imageFile, maskFile, true)
+	    		viewTexture = context.build2DColorTextureFromFileWithMask(imageFile, maskFile, true)
 	    						.setLinearFilteringEnabled(true)
 	    						.setMipmapsEnabled(true)
 	    						.createTexture();
@@ -332,7 +332,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    					viewSet.getRecommendedFarPlane() * SHADOW_MAP_FAR_PLANE_CUSHION // double it for good measure
 	    				);
 	    		
-	    		shadowFBO = context.getFramebufferObjectBuilder(width, height)
+	    		shadowFBO = context.buildFramebufferObject(width, height)
 		    					.addDepthAttachment()
 		    					.createFramebufferObject();
 	    		
@@ -356,7 +356,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		}
     	
     	FramebufferObject<ContextType> depthFBO = 
-			context.getFramebufferObjectBuilder(width, height)
+			context.buildFramebufferObject(width, height)
 				.addDepthAttachment()
 				.createFramebufferObject();
     	
@@ -880,7 +880,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	
 	private void loadMesh() throws IOException
 	{
-		VertexGeometry mesh = new VertexGeometry("OBJ", objFile);
+		VertexGeometry mesh = VertexGeometry.createFromOBJFile(objFile);
     	positionBuffer = context.createVertexBuffer().setData(mesh.getVertices());
     	texCoordBuffer = context.createVertexBuffer().setData(mesh.getTexCoords());
     	normalBuffer = context.createVertexBuffer().setData(mesh.getNormals());
@@ -981,8 +981,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	void fit(int lightIndex) throws IOException
     	{
     		FramebufferObject<ContextType> framebuffer = 
-				drawable.getContext().getFramebufferObjectBuilder(framebufferSize, framebufferSize)
-					.addColorAttachments(new ColorAttachmentSpec(ColorFormat.RGBA32F), 2)
+				drawable.getContext().buildFramebufferObject(framebufferSize, framebufferSize)
+					.addColorAttachments(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGBA32F), 2)
 					.createFramebufferObject();
 
     		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -1045,7 +1045,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    		{
 		    		Texture3D<ContextType> preprojectedViews = null;
 			    	
-			    	preprojectedViews = drawable.getContext().get2DColorTextureArrayBuilder(subdivSize, subdivSize, preprojCount).createTexture();
+			    	preprojectedViews = drawable.getContext().build2DColorTextureArray(subdivSize, subdivSize, preprojCount).createTexture();
 				    	
 					for (int i = 0; i < preprojCount; i++)
 					{
@@ -1254,7 +1254,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 			if (this.subdiv == 1)
         	{
         		Texture3D<ContextType> preprojectedViews = 
-    				drawable.getContext().get2DColorTextureArrayBuilder(subdivWidth, subdivHeight, viewCount).createTexture();
+    				drawable.getContext().build2DColorTextureArray(subdivWidth, subdivHeight, viewCount).createTexture();
 			    	
 				for (int i = 0; i < this.viewCount; i++)
 				{
@@ -1272,7 +1272,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     		    	for (int col = 0; col < this.subdiv; col++)
     	    		{
     	        		Texture3D<ContextType> preprojectedViews = 
-	        				drawable.getContext().get2DColorTextureArrayBuilder(subdivWidth, subdivHeight, viewCount).createTexture();
+	        				drawable.getContext().build2DColorTextureArray(subdivWidth, subdivHeight, viewCount).createTexture();
     				    	
 						for (int i = 0; i < this.viewCount; i++)
 						{
@@ -1599,7 +1599,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     			
 				// Create an FBO for downsampling
 		    	FramebufferObject<ContextType> downsamplingFBO = 
-	    			context.getFramebufferObjectBuilder(param.getImageWidth(), param.getImageHeight())
+	    			context.buildFramebufferObject(param.getImageWidth(), param.getImageHeight())
 	    				.addColorAttachment()
 	    				.createFramebufferObject();
 		    	
@@ -1622,7 +1622,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    		Texture2D<ContextType> fullSizeImage;
 		    		if (maskDir == null)
 	    			{
-		    			fullSizeImage = context.get2DColorTextureBuilder(imageFile, true)
+		    			fullSizeImage = context.build2DColorTextureFromFile(imageFile, true)
 		    								.setLinearFilteringEnabled(true)
 		    								.setMipmapsEnabled(true)
 		    								.createTexture();
@@ -1638,7 +1638,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					    	maskFile = new File(maskDir, pngFileName);
 						}
 						
-		    			fullSizeImage = context.get2DColorTextureBuilder(imageFile, maskFile, true)
+		    			fullSizeImage = context.build2DColorTextureFromFileWithMask(imageFile, maskFile, true)
 											.setLinearFilteringEnabled(true)
 											.setMipmapsEnabled(true)
 											.createTexture();
@@ -1688,7 +1688,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	imageFile = new File(imageDir, pngFileName);
 			}
 			BufferedImage img = ImageIO.read(new FileInputStream(imageFile));
-			viewTextures = context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount())
+			viewTextures = context.build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount())
 							.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
 							.setLinearFilteringEnabled(true)
 							.setMipmapsEnabled(true)
@@ -1734,10 +1734,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	// Build depth textures for each view
 	    	int width = viewTextures.getWidth() / 2;
 	    	int height = viewTextures.getHeight() / 2;
-	    	depthTextures = context.get2DDepthTextureArrayBuilder(width, height, viewSet.getCameraPoseCount()).createTexture();
+	    	depthTextures = context.build2DDepthTextureArray(width, height, viewSet.getCameraPoseCount()).createTexture();
 	    	
 	    	// Don't automatically generate any texture attachments for this framebuffer object
-	    	FramebufferObject<ContextType> depthRenderingFBO = context.getFramebufferObjectBuilder(width, height).createFramebufferObject();
+	    	FramebufferObject<ContextType> depthRenderingFBO = context.buildFramebufferObject(width, height).createFramebufferObject();
 	    	
 	    	Drawable<ContextType> depthRenderable = context.createDrawable(depthRenderingProgram);
 	    	depthRenderable.addVertexBuffer("position", positionBuffer);
@@ -1998,10 +1998,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 //		final int DEBUG_PIXEL_X = 322;
 //		final int DEBUG_PIXEL_Y = param.getTextureSize() - 365;
 
-    	System.out.println("Max vertex uniform components across all blocks:" + context.getMaxCombinedVertexUniformComponents());
-    	System.out.println("Max fragment uniform components across all blocks:" + context.getMaxCombinedFragmentUniformComponents());
-    	System.out.println("Max size of a uniform block in bytes:" + context.getMaxUniformBlockSize());
-    	System.out.println("Max texture array layers:" + context.getMaxArrayTextureLayers());
+    	System.out.println("Max vertex uniform components across all blocks:" + context.getState().getMaxCombinedVertexUniformComponents());
+    	System.out.println("Max fragment uniform components across all blocks:" + context.getState().getMaxCombinedFragmentUniformComponents());
+    	System.out.println("Max size of a uniform block in bytes:" + context.getState().getMaxUniformBlockSize());
+    	System.out.println("Max texture array layers:" + context.getState().getMaxArrayTextureLayers());
 		
 		System.out.println("Loading view set...");
     	Date timestamp = new Date();
@@ -2049,7 +2049,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     		System.out.println("WARNING: no luminance mapping found.  Reflectance values are not physically grounded.");
     	}
 		
-		context.enableDepthTest();
+		context.getState().enableDepthTest();
     	//context.enableBackFaceCulling();
     	
     	try
@@ -2100,7 +2100,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		    	timestamp = new Date();
 	    		
 	    		diffuseFitFramebuffer = 
-        			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
+        			context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
     					.addColorAttachments(4)
     					.createFramebufferObject();
 	        	
@@ -2155,7 +2155,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	}
 	    	
 	    	FramebufferObject<ContextType> backFramebuffer = 
-				context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
+				context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
 					.addColorAttachments(4)
 					.createFramebufferObject();
 	    	
@@ -2244,7 +2244,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 				}
 				
 				Texture2D<ContextType> roughnessTexture = 
-						context.get2DColorTextureBuilder(ROUGHNESS_TEXTURE_SIZE, ROUGHNESS_TEXTURE_SIZE, roughnessList)
+						context.build2DColorTextureFromBuffer(ROUGHNESS_TEXTURE_SIZE, ROUGHNESS_TEXTURE_SIZE, roughnessList)
 							.setInternalFormat(ColorFormat.R32F)
 							.setLinearFilteringEnabled(true)
 							.setMipmapsEnabled(false)
@@ -2252,7 +2252,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
 
 		    	FramebufferObject<ContextType> frontFramebuffer = 
-	    			context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
+	    			context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
 						.addColorAttachments(4)
 						.createFramebufferObject();
 
@@ -2324,13 +2324,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 					finalizeRenderable.addVertexBuffer("position", rectBuffer);
 					
 					FramebufferObject<ContextType> frontErrorFramebuffer = 
-						context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
+						context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
 							.addColorAttachments(ColorFormat.RG32F, 1)
 							.addColorAttachments(ColorFormat.R8, 1)
 							.createFramebufferObject();
 
 					FramebufferObject<ContextType> backErrorFramebuffer = 
-						context.getFramebufferObjectBuilder(param.getTextureSize(), param.getTextureSize())
+						context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
 							.addColorAttachments(ColorFormat.RG32F, 1)
 							.addColorAttachments(ColorFormat.R8, 1)
 							.createFramebufferObject();

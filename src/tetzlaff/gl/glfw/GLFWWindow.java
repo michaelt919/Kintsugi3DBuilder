@@ -113,7 +113,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
         
         if (multisamples > 0)
         {
-        	context.enableMultisampling();
+        	context.getState().enableMultisampling();
         }
 	}
 	

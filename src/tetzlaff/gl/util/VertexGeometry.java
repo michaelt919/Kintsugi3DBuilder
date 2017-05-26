@@ -34,33 +34,24 @@ public class VertexGeometry
 	
 	private String materialFileName = null;
 	private Material material = null; // TODO support multiple materials
-
-	// TODO should this be refactored to avoid passing in the file format as a string?
-	public VertexGeometry(String fileFormat, File file) throws IOException
+	
+	private VertexGeometry(File filename)
 	{
-		this.setFilename(file);
-		
-		if (fileFormat.equals("OBJ"))
-		{
-			initFromOBJStream(file);
-		}
-		else
-		{
-			throw new IllegalArgumentException("Invalid file format.");
-		}
+		this.filename = filename;
 	}
 
 	/**
-	 * Initializes the mesh from a text stream containing the mesh in Wavefront OBJ format.
-	 * @param objStream The stream containing the mesh in Wavefront OBJ format.
+	 * Initializes the mesh from a file containing the mesh in Wavefront OBJ format.
 	 */
-	private void initFromOBJStream(File file) throws IOException
+	public static VertexGeometry createFromOBJFile(File file) throws IOException
 	{
+		VertexGeometry inst = new VertexGeometry(file);
+		
 		Date timestamp = new Date();
 		
 		// Assume initially that normals and texture coordinates are present
-		this.hasNormals = true;
-		this.hasTexCoords = true;
+		inst.hasNormals = true;
+		inst.hasTexCoords = true;
 		
 		// Initialize dynamic tables to store the data from the file
 		List<Vector3> vertexList = new ArrayList<Vector3>();
@@ -72,7 +63,7 @@ public class VertexGeometry
 		List<Integer> normalIndexList = new ArrayList<Integer>();
 		List<Integer> texCoordIndexList = new ArrayList<Integer>();
 		
-		Vector3 sum = new Vector3(0.0f, 0.0f, 0.0f);
+		Vector3 sum = Vector3.ZERO;
 		
 		String materialName = null;
 		
@@ -83,10 +74,10 @@ public class VertexGeometry
 				String id = scanner.next();
 				if (id.equals("mtllib"))
 				{
-					if (materialFileName == null)
+					if (inst.materialFileName == null)
 					{
 						// Use first material filename found
-						materialFileName = scanner.next();
+						inst.materialFileName = scanner.next();
 					}
 				}
 				else if (id.equals("usemtl"))
@@ -104,21 +95,21 @@ public class VertexGeometry
 					float y = scanner.nextFloat();
 					float z = scanner.nextFloat();
 					
-					sum = sum.plus(new Vector3(x,y,z));
+					sum = sum.plus(Vector3.fromScalars(x,y,z));
 					
-					vertexList.add(new Vector3(x,y,z));
+					vertexList.add(Vector3.fromScalars(x,y,z));
 				}
 				else if (id.equals("vt"))
 				{
 					// Texture coordinate
-					if (this.hasTexCoords)
+					if (inst.hasTexCoords)
 					{
-						texCoordList.add(new Vector2(scanner.nextFloat(), scanner.nextFloat()));
+						texCoordList.add(Vector2.fromScalars(scanner.nextFloat(), scanner.nextFloat()));
 					}
 				}
 				else if (id.equals("vn"))
 				{
-					if (this.hasNormals)
+					if (inst.hasNormals)
 					{
 						// Vertex normal
 						float nx = scanner.nextFloat();
@@ -126,10 +117,10 @@ public class VertexGeometry
 						float nz = scanner.nextFloat();
 						
 						// Normalize to unit length
-						normalList.add(new Vector3(nx, ny, nz).normalized());
+						normalList.add(Vector3.fromScalars(nx, ny, nz).normalized());
 						
-						tangentList.add(new Vector3(0.0f, 0.0f, 0.0f));
-						bitangentList.add(new Vector3(0.0f, 0.0f, 0.0f));
+						tangentList.add(Vector3.fromScalars(0.0f, 0.0f, 0.0f));
+						bitangentList.add(Vector3.fromScalars(0.0f, 0.0f, 0.0f));
 					}
 				}
 				else if (id.equals("f"))
@@ -155,9 +146,9 @@ public class VertexGeometry
 						if (parts.length < 2 || parts[1].isEmpty())
 						{
 							// No texture coordinate
-							this.hasTexCoords = false;
+							inst.hasTexCoords = false;
 						}
-						else if (this.hasTexCoords)
+						else if (inst.hasTexCoords)
 						{
 							// Process texture coordinate
 							int texCoordIndex = Integer.parseInt(parts[1]);
@@ -177,9 +168,9 @@ public class VertexGeometry
 						if (parts.length < 3 || parts[2].isEmpty())
 						{
 							// No vertex normal
-							this.hasNormals = false;
+							inst.hasNormals = false;
 						}
-						else if (this.hasNormals)
+						else if (inst.hasNormals)
 						{
 							// Process vertex normal
 							int normalIndex = Integer.parseInt(parts[2]);
@@ -197,9 +188,9 @@ public class VertexGeometry
 						}
 					}
 					
-					if (this.hasTexCoords)
+					if (inst.hasTexCoords)
 					{
-						if (this.hasNormals)
+						if (inst.hasNormals)
 						{
 							Vector3 position0 = vertexList.get(vertexIndexList.get(vertexIndexList.size() - 3));
 							Vector3 position1 = vertexList.get(vertexIndexList.get(vertexIndexList.size() - 2));
@@ -235,7 +226,7 @@ public class VertexGeometry
 			}
 		}
 		
-		centroid = sum.dividedBy(vertexList.size());
+		inst.centroid = sum.dividedBy(vertexList.size());
 		
 		ArrayList<Vector4> orthoTangentsList = new ArrayList<Vector4>();
 		
@@ -247,11 +238,11 @@ public class VertexGeometry
 		
 		float boundingBoxMinX = 0.0f, boundingBoxMinY = 0.0f, boundingBoxMinZ = 0.0f,
 				boundingBoxMaxX = 0.0f, boundingBoxMaxY = 0.0f, boundingBoxMaxZ = 0.0f;
-		this.boundingRadius = 0.0f;
+		inst.boundingRadius = 0.0f;
 		
 		// Copy the data from the dynamic tables into a data structure that OpenGL can use.
 		int vertexCount = vertexIndexList.size();
-		vertices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount * 3);
+		inst.vertices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount * 3);
 		int i = 0;
 		for (int k : vertexIndexList)
 		{
@@ -265,79 +256,81 @@ public class VertexGeometry
 			boundingBoxMaxY = Math.max(boundingBoxMaxY, vertex.y);
 			boundingBoxMaxZ = Math.max(boundingBoxMaxZ, vertex.z);
 			
-			this.boundingRadius = Math.max(this.boundingRadius, vertex.minus(centroid).length());
+			inst.boundingRadius = Math.max(inst.boundingRadius, vertex.minus(inst.centroid).length());
 		
-			vertices.set(i, 0, vertex.x);
-			vertices.set(i, 1, vertex.y);
-			vertices.set(i, 2, vertex.z);
+			inst.vertices.set(i, 0, vertex.x);
+			inst.vertices.set(i, 1, vertex.y);
+			inst.vertices.set(i, 2, vertex.z);
 			
 			i++;
 		}
 		
-		this.boundingBoxCenter = new Vector3((boundingBoxMinX + boundingBoxMaxX) / 2, (boundingBoxMinY + boundingBoxMaxY) / 2, (boundingBoxMinZ + boundingBoxMaxZ) / 2);
-		this.boundingBoxSize = new Vector3(boundingBoxMaxX - boundingBoxMinX, boundingBoxMaxY - boundingBoxMinY, boundingBoxMaxZ - boundingBoxMinZ);
+		inst.boundingBoxCenter = Vector3.fromScalars((boundingBoxMinX + boundingBoxMaxX) / 2, (boundingBoxMinY + boundingBoxMaxY) / 2, (boundingBoxMinZ + boundingBoxMaxZ) / 2);
+		inst.boundingBoxSize = Vector3.fromScalars(boundingBoxMaxX - boundingBoxMinX, boundingBoxMaxY - boundingBoxMinY, boundingBoxMaxZ - boundingBoxMinZ);
 		
-		if (hasNormals)
+		if (inst.hasNormals)
 		{
-			normals = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount * 3);
+			inst.normals = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount * 3);
 			i = 0;
 			for (int k : normalIndexList)
 			{
-				normals.set(i, 0, normalList.get(k).x);
-				normals.set(i, 1, normalList.get(k).y);
-				normals.set(i, 2, normalList.get(k).z);
+				inst.normals.set(i, 0, normalList.get(k).x);
+				inst.normals.set(i, 1, normalList.get(k).y);
+				inst.normals.set(i, 2, normalList.get(k).z);
 				i++;
 			}
 		}
 		
-		if (hasTexCoords)
+		if (inst.hasTexCoords)
 		{
-			texCoords = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 2, vertexCount * 3);
+			inst.texCoords = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 2, vertexCount * 3);
 			i = 0;
 			for (int k : texCoordIndexList)
 			{
-				texCoords.set(i, 0, texCoordList.get(k).x);
-				texCoords.set(i, 1, texCoordList.get(k).y);
+				inst.texCoords.set(i, 0, texCoordList.get(k).x);
+				inst.texCoords.set(i, 1, texCoordList.get(k).y);
 				i++;
 			}
 		}
 		
-		if (hasTexCoords && hasNormals)
+		if (inst.hasTexCoords && inst.hasNormals)
 		{
-			tangents = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, vertexCount * 3);
+			inst.tangents = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, vertexCount * 3);
 			i = 0;
 			for (int k : normalIndexList)
 			{
-				tangents.set(i, 0, orthoTangentsList.get(k).x);
-				tangents.set(i, 1, orthoTangentsList.get(k).y);
-				tangents.set(i, 2, orthoTangentsList.get(k).z);
-				tangents.set(i, 3, orthoTangentsList.get(k).w);
+				inst.tangents.set(i, 0, orthoTangentsList.get(k).x);
+				inst.tangents.set(i, 1, orthoTangentsList.get(k).y);
+				inst.tangents.set(i, 2, orthoTangentsList.get(k).z);
+				inst.tangents.set(i, 3, orthoTangentsList.get(k).w);
 				i++;
 			}
 		}
 		
-		if (materialFileName != null)
+		if (inst.materialFileName != null)
 		{
 			try
 			{
-				Dictionary<String, Material> materialLibrary = Material.loadFromMTLFile(new File(file.getParentFile(), materialFileName));
-				this.material = materialLibrary.get(materialName);
+				Dictionary<String, Material> materialLibrary = Material.loadFromMTLFile(new File(file.getParentFile(), inst.materialFileName));
+				inst.material = materialLibrary.get(materialName);
 			}
 			catch(IOException e)
 			{
 				e.printStackTrace();
-				this.material = null;
+				inst.material = null;
 			}
 		}
 		else
 		{
-			this.material = null;
+			inst.material = null;
 		}
 		
 		System.out.println("Mesh loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+		
+		return inst;
 	}
 	
-	private Vector3[] computeTangents(
+	private static Vector3[] computeTangents(
 			Vector3 position0, Vector3 position1, Vector3 position2,
 			Vector2 texCoords0, Vector2 texCoords1, Vector2 texCoords2)
 	{
@@ -359,7 +352,7 @@ public class VertexGeometry
 		return tangents;
 	}
 	
-	private Vector4 orthogonalizeTangent(Vector3 normal, Vector3 tangent, Vector3 bitangent)
+	private static Vector4 orthogonalizeTangent(Vector3 normal, Vector3 tangent, Vector3 bitangent)
 	{
 		Vector3 orthoTangent;
 		Vector3 orthoBitangent;
@@ -368,7 +361,7 @@ public class VertexGeometry
 		orthoTangent = tangent.minus(normal.times(normal.dot(tangent))).normalized();
 		orthoBitangent = bitangent.minus(normal.times(normal.dot(bitangent)).minus(orthoTangent.times(orthoTangent.dot(bitangent)))).normalized();
 		
-		return new Vector4(orthoTangent, orthoBitangent.dot(normal.cross(orthoTangent)));
+		return Vector4.fromVector3(orthoTangent, orthoBitangent.dot(normal.cross(orthoTangent)));
 	}
 	
 	public boolean hasNormals() 

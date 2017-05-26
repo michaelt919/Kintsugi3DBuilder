@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.BufferAccessFrequency;
 import tetzlaff.gl.BufferAccessType;
 import tetzlaff.gl.ColorFormat;
@@ -46,9 +45,9 @@ import tetzlaff.gl.builders.ColorCubemapBuilder;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.DepthStencilTextureBuilder;
 import tetzlaff.gl.builders.DepthTextureBuilder;
-import tetzlaff.gl.builders.FramebufferObjectBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.StencilTextureBuilder;
+import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.exceptions.GLException;
 import tetzlaff.gl.exceptions.GLInvalidEnumException;
 import tetzlaff.gl.exceptions.GLInvalidFramebufferOperationException;
@@ -77,9 +76,12 @@ import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DStencilBuilder;
 
 public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implements Context<OpenGLContext>
 {
+	private OpenGLContextState state;
+	
 	OpenGLContext(long handle)
 	{
 		super(handle);
+		this.state = new OpenGLContextState(this);
 	}
 	
 	@Override
@@ -97,134 +99,9 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implemen
 	}
 	
 	@Override
-	public void enableDepthTest()
+	public OpenGLContextState getState()
 	{
-		glEnable(GL_DEPTH_TEST);
-		this.openGLErrorCheck();
-	}
-	
-	@Override
-	public void disableDepthTest()
-	{
-		glDisable(GL_DEPTH_TEST);
-		this.openGLErrorCheck();
-	}
-	
-	@Override
-	public void enableMultisampling()
-	{
-		glEnable(GL_MULTISAMPLE);
-		this.openGLErrorCheck();
-	}
-	
-	@Override
-	public void disableMultisampling()
-	{
-		glDisable(GL_MULTISAMPLE);
-		this.openGLErrorCheck();
-	}
-	
-	@Override
-	public void enableBackFaceCulling()
-	{
-		glEnable(GL_CULL_FACE);
-		this.openGLErrorCheck();
-	}
-	
-	@Override
-	public void disableBackFaceCulling()
-	{
-		glDisable(GL_CULL_FACE);
-		this.openGLErrorCheck();
-	}
-	
-	private int blendFuncEnumToInt(AlphaBlendingFunction.Weight func)
-	{
-		switch(func)
-		{
-		case DST_ALPHA: return GL_DST_ALPHA;
-		case DST_COLOR: return GL_DST_COLOR;
-		case ONE: return GL_ONE;
-		case ONE_MINUS_DST_ALPHA: return GL_ONE_MINUS_DST_ALPHA;
-		case ONE_MINUS_DST_COLOR: return GL_ONE_MINUS_DST_COLOR;
-		case ONE_MINUS_SRC_ALPHA: return GL_ONE_MINUS_SRC_ALPHA;
-		case ONE_MINUS_SRC_COLOR: return GL_ONE_MINUS_SRC_COLOR;
-		case SRC_ALPHA: return GL_ONE_MINUS_SRC_ALPHA;
-		case SRC_COLOR: return GL_ONE_MINUS_SRC_COLOR;
-		case ZERO: return GL_ZERO;
-		default: throw new IllegalArgumentException();
-		}
-	}
-	
-	@Override
-	public void setAlphaBlendingFunction(AlphaBlendingFunction func)
-	{
-		glEnable(GL_BLEND);
-		this.openGLErrorCheck();
-		glBlendFunc(blendFuncEnumToInt(func.sourceWeightFunction), blendFuncEnumToInt(func.destinationWeightFunction));
-		this.openGLErrorCheck();
-	}
-	
-	@Override
-	public void disableAlphaBlending()
-	{
-		glDisable(GL_BLEND);
-		this.openGLErrorCheck();
-	}
-	
-	private int getInteger(int queryId)
-	{
-		int queryResult = glGetInteger(queryId);
-		this.openGLErrorCheck();
-		return queryResult;
-	}
-	
-	@Override
-	public int getMaxCombinedVertexUniformComponents()
-	{
-		return getInteger(GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS);
-	}
-	
-	@Override
-	public int getMaxCombinedFragmentUniformComponents()
-	{
-		return getInteger(GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS);
-	}
-	
-	@Override
-	public int getMaxUniformBlockSize()
-	{
-		return getInteger(GL_MAX_UNIFORM_BLOCK_SIZE);
-	}
-	
-	@Override
-	public int getMaxVertexUniformComponents()
-	{
-		return getInteger(GL_MAX_VERTEX_UNIFORM_COMPONENTS);
-	}
-	
-	@Override
-	public int getMaxFragmentUniformComponents()
-	{
-		return getInteger(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS);
-	}
-	
-	@Override
-	public int getMaxArrayTextureLayers()
-	{
-		return getInteger(GL_MAX_ARRAY_TEXTURE_LAYERS);
-	}
-	
-	@Override
-	public int getMaxCombinedTextureImageUnits()
-	{
-		return getInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
-	}
-	
-	@Override
-	public int getMaxCombinedUniformBlocks()
-	{
-		return getInteger(GL_MAX_COMBINED_UNIFORM_BLOCKS);
+		return this.state;
 	}
 	
 	@Override
@@ -283,7 +160,7 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implemen
 	}
 	
 	@Override
-	public FramebufferObjectBuilder<OpenGLContext> getFramebufferObjectBuilder(int width, int height)
+	public FramebufferObjectBuilder<OpenGLContext> buildFramebufferObject(int width, int height)
 	{
 		return new OpenGLFramebufferObjectBuilder(this, width, height);
 	}
@@ -317,49 +194,49 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implemen
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeVectorBuffer data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> build1DColorTexture(NativeVectorBuffer data)
 	{
 		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.getCount(), getPixelDataFormatFromDimensions(data.getDimensions()), getDataTypeConstant(data.getDataType()), data.getBuffer());
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeVectorBuffer data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTextureFromBuffer(int width, int height, NativeVectorBuffer data)
 	{
 		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.getDimensions()), getDataTypeConstant(data.getDataType()), data.getBuffer());
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTextureFromStreamWithMask(InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
 	{
 		return new OpenGLTexture2DFromFileBuilder(this, GL_TEXTURE_2D, imageStream, maskStream, flipVertical);
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureFromHDRBuilder(BufferedInputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorHDRTextureFromStreamWithMask(BufferedInputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
 	{
 		return new OpenGLTexture2DFromHDRFileBuilder(this, GL_TEXTURE_2D, imageStream, maskStream, flipVertical);
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTexture(int width, int height)
 	{
 		return new OpenGLTexture2DColorBuilder(this, GL_TEXTURE_2D, width, height);
 	}
 	
 	@Override
-	public DepthTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DDepthTextureBuilder(int width, int height)
+	public DepthTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DDepthTexture(int width, int height)
 	{
 		return new OpenGLTexture2DDepthBuilder(this, GL_TEXTURE_2D, width, height);
 	}
 	
 	@Override
-	public StencilTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DStencilTextureBuilder(int width, int height)
+	public StencilTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DStencilTexture(int width, int height)
 	{
 		return new OpenGLTexture2DStencilBuilder(this, GL_TEXTURE_2D, width, height);
 	}
 	
 	@Override
-	public DepthStencilTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DDepthStencilTextureBuilder(int width, int height)
+	public DepthStencilTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DDepthStencilTexture(int width, int height)
 	{
 		return new OpenGLTexture2DDepthStencilBuilder(this, GL_TEXTURE_2D, width, height);
 	}
@@ -391,7 +268,7 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implemen
                    {1,0,-1},{-1,0,-1},{0,-1,1},{0,1,1}}; // 4 more to make 16
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> getPerlinNoiseTextureBuilder()
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> buildPerlinNoiseTexture()
 	{
 		ByteBuffer pixels = ByteBuffer.allocateDirect(256*256*4);
 		for(int i = 0; i<256; i++)
@@ -413,46 +290,46 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implemen
 
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> get2DColorTextureArrayBuilder(int width, int height, int length)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> build2DColorTextureArray(int width, int height, int length)
 	{
 		return new OpenGLTexture3DColorBuilder(this, GL_TEXTURE_2D_ARRAY, width, height, length);
 	}
 	
 	@Override
-	public DepthTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> get2DDepthTextureArrayBuilder(int width, int height, int length)
+	public DepthTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> build2DDepthTextureArray(int width, int height, int length)
 	{
 		return new OpenGLTexture3DDepthBuilder(this, GL_TEXTURE_2D_ARRAY, width, height, length);
 	}
 	
 	@Override
-	public StencilTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> get2DStencilTextureArrayBuilder(int width, int height, int length)
+	public StencilTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> build2DStencilTextureArray(int width, int height, int length)
 	{
 		return new OpenGLTexture3DStencilBuilder(this, GL_TEXTURE_2D_ARRAY, width, height, length);
 	}
 	
 	@Override
-	public DepthStencilTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> get2DDepthStencilTextureArrayBuilder(int width, int height, int length)
+	public DepthStencilTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> build2DDepthStencilTextureArray(int width, int height, int length)
 	{
 		return new OpenGLTexture3DDepthStencilBuilder(this, GL_TEXTURE_2D_ARRAY, width, height, length);
 	}
 	
 	@Override
-	public ColorCubemapBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> getColorCubemapBuilder(int faceSize) throws IOException
+	public ColorCubemapBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildColorCubemap(int faceSize) throws IOException
 	{
 		return new OpenGLCubemap.ColorBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
 	}
 	
-	public DepthTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> getDepthCubemapBuilder(int faceSize) throws IOException
+	public DepthTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildDepthCubemap(int faceSize) throws IOException
 	{
 		return new OpenGLCubemap.DepthBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
 	}
 	
-	public StencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> getStencilCubemapBuilder(int faceSize) throws IOException
+	public StencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildStencilCubemap(int faceSize) throws IOException
 	{
 		return new OpenGLCubemap.StencilBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
 	}
 	
-	public DepthStencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> getDepthStencilCubemapBuilder(int faceSize) throws IOException
+	public DepthStencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildDepthStencilCubemap(int faceSize) throws IOException
 	{
 		return new OpenGLCubemap.DepthStencilBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
 	}
@@ -469,10 +346,10 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implemen
 		{
 			throw new IllegalArgumentException("Texture unit index cannot be negative.");
 		}
-		else if (textureUnitIndex > this.getMaxCombinedTextureImageUnits())
+		else if (textureUnitIndex > state.getMaxCombinedTextureImageUnits())
 		{
 			throw new IllegalArgumentException("Texture unit index (" + textureUnitIndex + ") is greater than the maximum allowed index (" + 
-					(this.getMaxCombinedTextureImageUnits()-1) + ").");
+					(state.getMaxCombinedTextureImageUnits()-1) + ").");
 		}
 		glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
 		this.openGLErrorCheck();

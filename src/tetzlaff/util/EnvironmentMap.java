@@ -272,7 +272,7 @@ public class EnvironmentMap {
     int o3 = (y + 1) * side * 3 + x * 3;
     int o4 = (y + 1) * side * 3 + (x + 1) * 3;
 
-    return new DoubleVector3((1 - t) * ((1 - s) * env[face][o1] + s * env[face][o2]) + t * ((1 - s) * env[face][o3]
+    return DoubleVector3.fromScalars((1 - t) * ((1 - s) * env[face][o1] + s * env[face][o2]) + t * ((1 - s) * env[face][o3]
             + s * env[face][o4]),
         (1 - t) * ((1 - s) * env[face][o1 + 1] + s * env[face][o2 + 1]) + t * (
             (1 - s) * env[face][o3 + 1] + s * env[face][o4 + 1]),
@@ -318,8 +318,8 @@ public class EnvironmentMap {
 
   public static float[] toPanorama(float[][] env, int side, int newWidth, int newHeight) {
     float[] pano = new float[newWidth * newHeight * 3];
-    DoubleVector3 dir = new DoubleVector3();
-    DoubleVector3 color = new DoubleVector3();
+    DoubleVector3 dir = DoubleVector3.ZERO;
+    DoubleVector3 color = DoubleVector3.ZERO;
     for (int y = 0; y < newHeight; y++) {
       for (int x = 0; x < newWidth; x++) {
         dir = toVectorFromPanorama(x, y, newWidth, newHeight);
@@ -357,25 +357,25 @@ public class EnvironmentMap {
     // that |ma| = 1
     float sc = 2f * (tx + 0.5f) / (float) side - 1f;
     float tc = 2f * (ty + 0.5f) / (float) side - 1f;
-    DoubleVector3 v = new DoubleVector3();
+    DoubleVector3 v = DoubleVector3.ZERO;
     switch (face) {
     case PX: // px
-      v = new DoubleVector3(1.0, -tc, -sc);
+      v = DoubleVector3.fromScalars(1.0, -tc, -sc);
       break;
     case PY: // py
-      v = new DoubleVector3(sc, 1.0, tc);
+      v = DoubleVector3.fromScalars(sc, 1.0, tc);
       break;
     case PZ: // pz
-      v = new DoubleVector3(sc, -tc, 1.0);
+      v = DoubleVector3.fromScalars(sc, -tc, 1.0);
       break;
     case NX: // nx
-      v = new DoubleVector3(-1.0, -tc, sc);
+      v = DoubleVector3.fromScalars(-1.0, -tc, sc);
       break;
     case NY: // ny
-      v = new DoubleVector3(sc, -1.0, -tc);
+      v = DoubleVector3.fromScalars(sc, -1.0, -tc);
       break;
     case NZ: // nz
-      v = new DoubleVector3(-sc, -tc, -1.0);
+      v = DoubleVector3.fromScalars(-sc, -tc, -1.0);
       break;
     }
     return v.normalized();
@@ -384,7 +384,7 @@ public class EnvironmentMap {
   public static DoubleVector3 toVectorFromPanorama(int lx, int ly, int w, int h) {
     double lat = Math.PI * (ly / (h - 1.0)) - Math.PI / 2.0;
     double lon = 2.0 * Math.PI * (lx / (w - 1.0));
-    return new DoubleVector3(Math.cos(lon) * Math.cos(lat), Math.sin(lat), Math.sin(lon) * Math.cos(lat));
+    return DoubleVector3.fromScalars(Math.cos(lon) * Math.cos(lat), Math.sin(lat), Math.sin(lon) * Math.cos(lat));
   }
 
 //  public void computeDiffuseIrradiance() {
@@ -740,7 +740,7 @@ public class EnvironmentMap {
 
   private static void convertPanorama(int side, float[][] env, RadianceImageLoader.Image pano) {
     // assumes equirectangular projection
-    DoubleVector3 dir = new DoubleVector3();
+    DoubleVector3 dir = DoubleVector3.ZERO;
     double[] p = new double[2];
     for (int i = 0; i < 6; i++) {
       for (int y = 0; y < side; y++) {

@@ -82,13 +82,18 @@ public class ColorFormat
 	 * @param alphaBits The number of bits to be allocated for the alpha component of the color.
 	 * @param dataType The data type of each color component.
 	 */
-	public ColorFormat(int redBits, int greenBits, int blueBits, int alphaBits, DataType dataType) 
+	private ColorFormat(int redBits, int greenBits, int blueBits, int alphaBits, DataType dataType) 
 	{
 		this.redBits = redBits;
 		this.greenBits = greenBits;
 		this.blueBits = blueBits;
 		this.alphaBits = alphaBits;
 		this.dataType = dataType;
+	}
+	
+	public static ColorFormat createCustom(int redBits, int greenBits, int blueBits, int alphaBits, DataType dataType)
+	{
+		return new ColorFormat(redBits, greenBits, blueBits, alphaBits, dataType);
 	}
 	
 	/**
