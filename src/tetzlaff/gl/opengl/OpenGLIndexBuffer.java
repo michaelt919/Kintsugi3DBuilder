@@ -2,7 +2,7 @@ package tetzlaff.gl.opengl;
 
 import static org.lwjgl.opengl.GL15.*;
 
-import java.nio.IntBuffer;
+import java.nio.ByteBuffer;
 
 import org.lwjgl.BufferUtils;
 
@@ -23,10 +23,10 @@ class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer<OpenGLContex
 		this(context, GL_STATIC_DRAW);
 	}
 	
-	private static IntBuffer convertToIntBuffer(int[] data)
+	private static ByteBuffer convertToByteBuffer(int[] data)
 	{
-		IntBuffer buffer = BufferUtils.createIntBuffer(data.length);
-		buffer.put(data);
+		ByteBuffer buffer = BufferUtils.createByteBuffer(data.length * 4);
+		buffer.asIntBuffer().put(data);
 		buffer.flip();
 		return buffer;
 	}
@@ -46,7 +46,7 @@ class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer<OpenGLContex
 	@Override
 	public OpenGLIndexBuffer setData(int[] data)
 	{
-		super.setData(convertToIntBuffer(data));
+		super.setData(convertToByteBuffer(data));
 		this.count = data.length;
 		return this;
 	}

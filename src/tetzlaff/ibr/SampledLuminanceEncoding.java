@@ -5,7 +5,9 @@ import java.util.function.DoubleUnaryOperator;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture1D;
-import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.nativebuffer.NativeDataType;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.util.CubicHermiteSpline;
 
 public class SampledLuminanceEncoding 
@@ -52,9 +54,9 @@ public class SampledLuminanceEncoding
 		this.encodeFunction = encodeFunction;
 	}
 	
-	public NativeFloatVectorList sampleDecodeFunction()
+	public NativeVectorBuffer sampleDecodeFunction()
 	{
-		NativeFloatVectorList sampledDecodeFunction = new NativeFloatVectorList(1, 256);
+		NativeVectorBuffer sampledDecodeFunction = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 256);
 		for (int i = 0; i < 256; i++)
 		{
 			sampledDecodeFunction.set(i, 0, (float)decodeFunction.applyAsDouble(i));
@@ -63,9 +65,9 @@ public class SampledLuminanceEncoding
 		return sampledDecodeFunction;
 	}
 	
-	public NativeFloatVectorList sampleEncodeFunction()
+	public NativeVectorBuffer sampleEncodeFunction()
 	{
-		NativeFloatVectorList sampledEncodeFunction = new NativeFloatVectorList(1, 256);
+		NativeVectorBuffer sampledEncodeFunction = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 256);
 		for (int i = 0; i < 256; i++)
 		{
 			sampledEncodeFunction.set(i, 0, (float)encodeFunction.applyAsDouble((double)i / 255.0 * decodeFunction.applyAsDouble(255.0)) / 255.0f);

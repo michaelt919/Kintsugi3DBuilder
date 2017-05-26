@@ -1,10 +1,6 @@
 package tetzlaff.gl;
 
-import tetzlaff.gl.nativelist.NativeByteVectorList;
-import tetzlaff.gl.nativelist.NativeDoubleVectorList;
-import tetzlaff.gl.nativelist.NativeFloatVectorList;
-import tetzlaff.gl.nativelist.NativeIntVectorList;
-import tetzlaff.gl.nativelist.NativeShortVectorList;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 
 /**
  * An interface for a vertex buffer object that can provide data to be used for rendering.
@@ -16,33 +12,9 @@ import tetzlaff.gl.nativelist.NativeShortVectorList;
 public interface VertexBuffer<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
 	int count();
-	VertexBuffer<ContextType> setData(NativeByteVectorList data, boolean unsigned);
-	VertexBuffer<ContextType> setData(NativeShortVectorList data, boolean unsigned);
-	VertexBuffer<ContextType> setData(NativeIntVectorList data, boolean unsigned);
-	VertexBuffer<ContextType> setData(NativeFloatVectorList data, boolean normalize);
-	VertexBuffer<ContextType> setData(NativeDoubleVectorList data, boolean normalize);
+	VertexBuffer<ContextType> setData(NativeVectorBuffer data, boolean normalize);
 	
-	default VertexBuffer<ContextType> setData(NativeByteVectorList data)
-	{
-		return this.setData(data, false);
-	}
-	
-	default VertexBuffer<ContextType> setData(NativeShortVectorList data)
-	{
-		return this.setData(data, false);
-	}
-	
-	default VertexBuffer<ContextType> setData(NativeIntVectorList data)
-	{
-		return this.setData(data, false);
-	}
-	
-	default VertexBuffer<ContextType> setData(NativeFloatVectorList data)
-	{
-		return this.setData(data, false);
-	}
-	
-	default VertexBuffer<ContextType> setData(NativeDoubleVectorList data)
+	default VertexBuffer<ContextType> setData(NativeVectorBuffer  data)
 	{
 		return this.setData(data, false);
 	}

@@ -31,7 +31,9 @@ import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
-import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.nativebuffer.NativeDataType;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector2;
@@ -1797,8 +1799,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 		        
 		    	Date timestamp = new Date();
 				
-		    	NativeFloatVectorList lightPositionList = new NativeFloatVectorList(4, viewSet.getLightCount());
-		        NativeFloatVectorList lightIntensityList = new NativeFloatVectorList(3, viewSet.getLightCount());
+		    	NativeVectorBuffer lightPositionList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, viewSet.getLightCount());
+		        NativeVectorBuffer lightIntensityList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, viewSet.getLightCount());
 		        
 	    		LightFit<ContextType> lightFit;
 		    	
@@ -1843,7 +1845,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	}
 	    	else if (param.isLightIntensityEstimationEnabled())
 	    	{
-		        NativeFloatVectorList lightIntensityList = new NativeFloatVectorList(3, viewSet.getLightCount());
+		        NativeVectorBuffer lightIntensityList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, viewSet.getLightCount());
 	    		
 	    		Vector3 lightIntensity = new Vector3((float)(avgDistance * avgDistance));
 		        System.out.println("Using light intensity: " + lightIntensity.x + " " + lightIntensity.y + " " + lightIntensity.z);
@@ -2234,7 +2236,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	{
 				System.out.println("Creating specular reflectivity texture...");
 				
-				NativeFloatVectorList roughnessList = new NativeFloatVectorList(1, roughnessValues.length);
+				NativeVectorBuffer roughnessList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, roughnessValues.length);
 				
 				for (int i = 0; i < roughnessValues.length; i++)
 				{

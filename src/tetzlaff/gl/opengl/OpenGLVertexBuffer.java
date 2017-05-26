@@ -5,11 +5,7 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import tetzlaff.gl.VertexBuffer;
-import tetzlaff.gl.nativelist.NativeByteVectorList;
-import tetzlaff.gl.nativelist.NativeDoubleVectorList;
-import tetzlaff.gl.nativelist.NativeFloatVectorList;
-import tetzlaff.gl.nativelist.NativeIntVectorList;
-import tetzlaff.gl.nativelist.NativeShortVectorList;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 
 class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLContext>
 {
@@ -40,55 +36,14 @@ class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLCont
 	{
 		return this.count;
 	}
-	
-	@Override
-	public OpenGLVertexBuffer setData(NativeByteVectorList data, boolean unsigned)
-	{
-		super.setData(data.getBuffer());
-		this.count = data.count;
-		this.vertexSize = data.dimensions;
-		this.vertexType = unsigned ? GL_UNSIGNED_BYTE : GL_BYTE;
-		return this;
-	}
 
 	@Override
-	public OpenGLVertexBuffer setData(NativeShortVectorList data, boolean unsigned)
+	public OpenGLVertexBuffer setData(NativeVectorBuffer data, boolean normalize)
 	{
 		super.setData(data.getBuffer());
-		this.count = data.count;
-		this.vertexSize = data.dimensions;
-		this.vertexType = unsigned ? GL_UNSIGNED_SHORT : GL_SHORT;
-		return this;
-	}
-
-	@Override
-	public OpenGLVertexBuffer setData(NativeIntVectorList data, boolean unsigned)
-	{
-		super.setData(data.getBuffer());
-		this.count = data.count;
-		this.vertexSize = data.dimensions;
-		this.vertexType = unsigned ? GL_UNSIGNED_INT : GL_INT;
-		return this;
-	}
-
-	@Override
-	public OpenGLVertexBuffer setData(NativeFloatVectorList data, boolean normalize)
-	{
-		super.setData(data.getBuffer());
-		this.count = data.count;
-		this.vertexSize = data.dimensions;
-		this.vertexType = GL_FLOAT;
-		this.normalize = normalize;
-		return this;
-	}
-
-	@Override
-	public OpenGLVertexBuffer setData(NativeDoubleVectorList data, boolean normalize)
-	{
-		super.setData(data.getBuffer());
-		this.count = data.count;
-		this.vertexSize = data.dimensions;
-		this.vertexType = GL_DOUBLE;
+		this.count = data.getCount();
+		this.vertexSize = data.getDimensions();
+		this.vertexType = context.getDataTypeConstant(data.getDataType());
 		this.normalize = normalize;
 		return this;
 	}

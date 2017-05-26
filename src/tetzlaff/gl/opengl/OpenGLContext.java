@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import org.lwjgl.BufferUtils;
-
 import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.BufferAccessFrequency;
 import tetzlaff.gl.BufferAccessType;
@@ -60,11 +58,8 @@ import tetzlaff.gl.exceptions.GLOutOfMemoryException;
 import tetzlaff.gl.exceptions.GLStackOverflowException;
 import tetzlaff.gl.exceptions.GLStackUnderflowException;
 import tetzlaff.gl.glfw.GLFWWindowContextBase;
-import tetzlaff.gl.nativelist.NativeByteVectorList;
-import tetzlaff.gl.nativelist.NativeDoubleVectorList;
-import tetzlaff.gl.nativelist.NativeFloatVectorList;
-import tetzlaff.gl.nativelist.NativeIntVectorList;
-import tetzlaff.gl.nativelist.NativeShortVectorList;
+import tetzlaff.gl.nativebuffer.NativeDataType;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
 import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture1D.OpenGLTexture1DFromBufferBuilder;
@@ -305,80 +300,32 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implemen
 		}
 	}
 	
-	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeByteVectorList data)
+	int getDataTypeConstant(NativeDataType dataType)
 	{
-		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.count, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_BYTE, data.getBuffer());
+		switch(dataType)
+		{
+		case UNSIGNED_BYTE: return GL_UNSIGNED_BYTE;
+		case BYTE: return GL_BYTE;
+		case UNSIGNED_SHORT: return GL_UNSIGNED_SHORT;
+		case SHORT: return GL_SHORT;
+		case UNSIGNED_INT: return GL_UNSIGNED_INT;
+		case INT: return GL_INT;
+		case FLOAT: return GL_FLOAT;
+		case DOUBLE: return GL_DOUBLE;
+		default: throw new IllegalArgumentException("Unrecognized data type."); // Shouldn't ever happen
+		}
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeShortVectorList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeVectorBuffer data)
 	{
-		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 2);
-		bb.asShortBuffer().put(data.getBuffer());
-		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.count, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_SHORT, bb);
-	}
-
-	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeIntVectorList data)
-	{
-		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
-		bb.asIntBuffer().put(data.getBuffer());
-		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.count, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_INT, bb);
+		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.getCount(), getPixelDataFormatFromDimensions(data.getDimensions()), getDataTypeConstant(data.getDataType()), data.getBuffer());
 	}
 	
 	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeFloatVectorList data)
+	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeVectorBuffer data)
 	{
-		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
-		bb.asFloatBuffer().put(data.getBuffer());
-		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.count, getPixelDataFormatFromDimensions(data.dimensions), GL_FLOAT, bb);
-	}
-	
-	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> get1DColorTextureBuilder(NativeDoubleVectorList data)
-	{
-		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 8);
-		bb.asDoubleBuffer().put(data.getBuffer());
-		return new OpenGLTexture1DFromBufferBuilder(this, GL_TEXTURE_1D, data.count, getPixelDataFormatFromDimensions(data.dimensions), GL_DOUBLE, bb);
-	}
-	
-	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeByteVectorList data)
-	{
-		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_BYTE, data.getBuffer());
-	}
-	
-	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeShortVectorList data)
-	{
-		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 2);
-		bb.asShortBuffer().put(data.getBuffer());
-		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_SHORT, bb);
-	}
-
-	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeIntVectorList data)
-	{
-		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
-		bb.asIntBuffer().put(data.getBuffer());
-		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.dimensions), GL_UNSIGNED_INT, bb);
-	}
-	
-	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeFloatVectorList data)
-	{
-		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
-		bb.asFloatBuffer().put(data.getBuffer());
-		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.dimensions), GL_FLOAT, bb);
-	}
-	
-	@Override
-	public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> get2DColorTextureBuilder(int width, int height, NativeDoubleVectorList data)
-	{
-		ByteBuffer bb = BufferUtils.createByteBuffer(data.count * data.dimensions * 8);
-		bb.asDoubleBuffer().put(data.getBuffer());
-		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.dimensions), GL_DOUBLE, bb);
+		return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.getDimensions()), getDataTypeConstant(data.getDataType()), data.getBuffer());
 	}
 	
 	@Override

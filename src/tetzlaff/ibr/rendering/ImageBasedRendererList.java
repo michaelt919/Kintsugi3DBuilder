@@ -8,7 +8,7 @@ import javax.swing.AbstractListModel;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
-import tetzlaff.gl.interactive.MultiRenderable;
+import tetzlaff.gl.interactive.InteractiveRenderableList;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRRenderable;
@@ -24,7 +24,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	protected final ReadonlyCameraModel cameraModel;
 	protected final ReadonlyLightModel lightModel;
 	private Program<ContextType> program;
-	private MultiRenderable<IBRRenderable<ContextType>> ulfs;
+	private InteractiveRenderableList<IBRRenderable<ContextType>> ulfs;
 	private int effectiveSize;
 	private IBRLoadingMonitor loadingMonitor;
 	
@@ -33,7 +33,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 		this.context = context;
 		this.cameraModel = cameraModel;
 		this.lightModel = lightModel;
-		this.ulfs = new MultiRenderable<IBRRenderable<ContextType>>();
+		this.ulfs = new InteractiveRenderableList<IBRRenderable<ContextType>>();
 		this.effectiveSize = 0;
 		
 		this.program = program;

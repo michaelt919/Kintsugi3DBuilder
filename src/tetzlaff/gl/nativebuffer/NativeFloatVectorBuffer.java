@@ -1,18 +1,18 @@
-package tetzlaff.gl.nativelist;
+package tetzlaff.gl.nativebuffer;
 
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 
 import org.lwjgl.BufferUtils;
 
-public class NativeFloatVectorList
+class NativeFloatVectorBuffer implements NativeVectorBuffer
 {
-	private FloatBuffer buffer;
+	private ByteBuffer buffer;
 	
-	public final int dimensions;
-	public final int count;
+	final int dimensions;
+	final int count;
 	
-	public NativeFloatVectorList(int dimensions, int count)
+	NativeFloatVectorBuffer(int dimensions, int count)
 	{
 		if (dimensions < 0)
 		{
@@ -25,10 +25,10 @@ public class NativeFloatVectorList
 		
 		this.dimensions = dimensions;
 		this.count = count;
-		this.buffer = BufferUtils.createFloatBuffer(dimensions * count);
+		this.buffer = BufferUtils.createByteBuffer(dimensions * count * 4);
 	}
 	
-	public NativeFloatVectorList(int dimensions, int count, FloatBuffer buffer)
+	NativeFloatVectorBuffer(int dimensions, int count, ByteBuffer buffer)
 	{
 		if (dimensions < 0)
 		{
@@ -41,7 +41,7 @@ public class NativeFloatVectorList
 		if (buffer.capacity() < dimensions * count * 4)
 		{
 			throw new IllegalArgumentException("Insufficient buffer size - a list of " + count + dimensions +
-					"D vertices requires a buffer with a capacity of at least " + dimensions * count + ".");
+					"D 32-bit vertices requires a buffer with a capacity of at least " + dimensions * count * 4 + ".");
 		}
 		if (buffer.order() != ByteOrder.nativeOrder())
 		{
@@ -53,14 +53,33 @@ public class NativeFloatVectorList
 		this.buffer = buffer;
 	}
 	
-	public NativeFloatVectorList(int dimensions, int count, float[] buffer)
+	NativeFloatVectorBuffer(int dimensions, int count, byte[] buffer)
 	{
 		this(dimensions, count);
 		this.buffer.put(buffer);
 		this.buffer.flip();
 	}
 	
-	public float get(int index, int dimension)
+	NativeFloatVectorBuffer(int dimensions, int count, float[] buffer)
+	{
+		this(dimensions, count);
+		this.buffer.asFloatBuffer().put(buffer);
+	}
+	
+	@Override
+	public int getDimensions() 
+	{
+		return dimensions;
+	}
+
+	@Override
+	public int getCount() 
+	{
+		return count;
+	}
+	
+	@Override
+	public Float get(int index, int dimension)
 	{
 		if (index < 0)
 		{
@@ -78,7 +97,7 @@ public class NativeFloatVectorList
 		{
 			throw new IndexOutOfBoundsException("Dimension (" + dimension + ") is greater than the dimensions of the vertex list (" + this.dimensions + ").");
 		}
-		return this.buffer.get(index * this.dimensions + dimension);
+		return this.buffer.asFloatBuffer().get(index * this.dimensions + dimension);
 	}
 	
 	public void set(int index, int dimension, float value)
@@ -99,11 +118,30 @@ public class NativeFloatVectorList
 		{
 			throw new IndexOutOfBoundsException("Dimension (" + dimension + ") is greater than the dimensions of the vertex list (" + this.dimensions + ").");
 		}
-		this.buffer.put(index * this.dimensions + dimension, value);
+		this.buffer.asFloatBuffer().put(index * this.dimensions + dimension, value);
+	}
+
+	@Override
+	public void set(int index, int dimension, Number value) 
+	{
+		this.set(index, dimension, value.floatValue());
 	}
 	
-	public FloatBuffer getBuffer()
+	@Override
+	public ByteBuffer getBuffer()
 	{
 		return buffer;
+	}
+
+	@Override
+	public NativeDataType getDataType() 
+	{
+		return NativeDataType.FLOAT;
+	}
+
+	@Override
+	public int getElementSizeInBytes() 
+	{
+		return 4;
 	}
 }

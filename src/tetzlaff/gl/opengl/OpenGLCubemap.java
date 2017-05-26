@@ -10,9 +10,8 @@ import static org.lwjgl.opengl.GL32.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.lwjgl.BufferUtils;
-
 import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.ColorFormat.DataType;
 import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Cubemap;
 import tetzlaff.gl.CubemapFace;
@@ -23,7 +22,8 @@ import tetzlaff.gl.builders.base.ColorCubemapBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
-import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.nativebuffer.NativeDataType;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 
 public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContext>
 {
@@ -32,24 +32,30 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 	private int multisamples;
 	private int levelCount;
 	
-	// TODO expand this to support more formats than just RGB floats
+	private static class FaceData
+	{
+		ByteBuffer buffer = null;
+		NativeDataType dataType = NativeDataType.UNSIGNED_BYTE;
+		int format;
+	}
+	
 	static class ColorBuilder extends ColorCubemapBuilderBase<OpenGLContext, OpenGLCubemap>
 	{	
 		private int textureTarget;
 		private int faceSize;
 		
-		private final ByteBuffer[] faces = new ByteBuffer[6];
+		private final FaceData[] faces = new FaceData[6];
 		
 		private int cubemapFaceToIndex(CubemapFace face)
 		{
 			switch(face)
 			{
-			case PositiveX: return 0;
-			case NegativeX: return 1;
-			case PositiveY: return 2;
-			case NegativeY: return 3;
-			case PositiveZ: return 4;
-			case NegativeZ: return 5;
+			case POSITIVE_X: return 0;
+			case NEGATIVE_X: return 1;
+			case POSITIVE_Y: return 2;
+			case NEGATIVE_Y: return 3;
+			case POSITIVE_Z: return 4;
+			case NEGATIVE_Z: return 5;
 			default: return -1; // Should never happen
 			}
 		}
@@ -59,20 +65,26 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 			super(context);
 			this.textureTarget = textureTarget;
 			this.faceSize = faceSize;
+			
+			for (int i = 0; i < 6; i++)
+			{
+				faces[i] = new FaceData();
+			}
 		}
 
 		@Override
-		public ColorBuilder loadFace(CubemapFace face, NativeFloatVectorList data)
-				throws IOException 
+		public ColorBuilder loadFace(CubemapFace face, NativeVectorBuffer data) throws IOException 
 		{
-			if (data.dimensions != 3)
+			if (data.getDimensions() != 3)
 			{
 				throw new UnsupportedOperationException("Only RGB data is currently supported for cubemaps.");
 			}
 			else
 			{
-				faces[cubemapFaceToIndex(face)] = BufferUtils.createByteBuffer(data.count * data.dimensions * 4);
-				faces[cubemapFaceToIndex(face)].asFloatBuffer().put(data.getBuffer());
+				int index = cubemapFaceToIndex(face);
+				faces[index].buffer = data.getBuffer();
+				faces[index].dataType = data.getDataType();
+				faces[index].format = context.getPixelDataFormatFromDimensions(data.getDimensions());
 				return this;
 			}
 		}
@@ -80,11 +92,27 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 		@Override
 		public OpenGLCubemap createTexture()
 		{
+			for (int i = 0; i < 6; i++)
+			{
+				if (faces[i].format == 0)
+				{
+					if(!this.isInternalFormatCompressed() && 
+							(this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER 
+								|| this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER))
+					{
+						faces[i].format = GL_RGBA_INTEGER;
+					}
+					else
+					{
+						faces[i].format = GL_RGBA;
+					}
+				}
+			}
+			
 			OptionalParameters opt = new OptionalParameters();
 			opt.useLinearFiltering = this.isLinearFilteringEnabled();
 			opt.useMipmaps = this.areMipmapsEnabled();
 			opt.maxAnisotropy = this.getMaxAnisotropy();
-			opt.dataType = GL_FLOAT;
 			opt.positiveX = faces[0];
 			opt.negativeX = faces[1];
 			opt.positiveY = faces[2];
@@ -99,7 +127,6 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 						this.textureTarget, 
 						this.getInternalCompressionFormat(), 
 						this.faceSize,
-						GL_RGB,
 						opt);
 			}
 			else
@@ -109,7 +136,6 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 						this.textureTarget, 
 						this.getInternalColorFormat(), 
 						this.faceSize,
-						GL_RGB,
 						opt);
 			}
 		}
@@ -130,7 +156,7 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 		@Override
 		public OpenGLCubemap createTexture() 
 		{
-			OptionalParameters opt = new OptionalParameters();
+			OptionalParameters opt = new OptionalParameters(GL_DEPTH_COMPONENT);
 			opt.useLinearFiltering = this.isLinearFilteringEnabled();
 			opt.useMipmaps = this.areMipmapsEnabled();
 			opt.maxAnisotropy = this.getMaxAnisotropy();
@@ -141,7 +167,6 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 					TextureType.DEPTH,
 					this.getInternalPrecision(),
 					this.faceSize,
-					GL_DEPTH_COMPONENT,
 					opt);
 		}
 	}
@@ -161,7 +186,7 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 		@Override
 		public OpenGLCubemap createTexture() 
 		{
-			OptionalParameters opt = new OptionalParameters();
+			OptionalParameters opt = new OptionalParameters(GL_STENCIL_INDEX);
 			opt.useLinearFiltering = this.isLinearFilteringEnabled();
 			opt.useMipmaps = this.areMipmapsEnabled();
 			opt.maxAnisotropy = this.getMaxAnisotropy();
@@ -172,7 +197,6 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 					TextureType.STENCIL,
 					this.getInternalPrecision(), 
 					this.faceSize,
-					GL_STENCIL_INDEX,
 					opt);
 		}
 	}
@@ -192,7 +216,7 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 		@Override
 		public OpenGLCubemap createTexture() 
 		{
-			OptionalParameters opt = new OptionalParameters();
+			OptionalParameters opt = new OptionalParameters(GL_DEPTH_STENCIL);
 			opt.useLinearFiltering = this.isLinearFilteringEnabled();
 			opt.useMipmaps = this.areMipmapsEnabled();
 			opt.maxAnisotropy = this.getMaxAnisotropy();
@@ -203,121 +227,159 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 					this.isFloatingPointEnabled() ? TextureType.FLOATING_POINT_DEPTH_STENCIL : TextureType.DEPTH_STENCIL,
 					this.isFloatingPointEnabled() ? 40 : 32,
 					this.faceSize,
-					GL_DEPTH_STENCIL,
 					opt);
 		}
 	}
 	
 	private static class OptionalParameters
 	{
-		int dataType = GL_UNSIGNED_BYTE;
-		
-		ByteBuffer positiveX;
-		ByteBuffer negativeX;
-		ByteBuffer positiveY;
-		ByteBuffer negativeY;
-		ByteBuffer positiveZ;
-		ByteBuffer negativeZ;
+		FaceData positiveX = new FaceData();
+		FaceData negativeX = new FaceData();
+		FaceData positiveY = new FaceData();
+		FaceData negativeY = new FaceData();
+		FaceData positiveZ = new FaceData();
+		FaceData negativeZ = new FaceData();
 		
 		boolean useLinearFiltering = false;
 		boolean useMipmaps = false;
 		float maxAnisotropy = 1.0f;
+		
+		public OptionalParameters()
+		{
+		}
+		
+		public OptionalParameters(int format)
+		{
+			positiveX.format = format;
+			negativeX.format = format;
+			positiveY.format = format;
+			negativeY.format = format;
+			positiveZ.format = format;
+			negativeZ.format = format;
+		}
 	}
 
-	private OpenGLCubemap(OpenGLContext context, int textureTarget, ColorFormat colorFormat, int faceSize, int format, OptionalParameters opt) 
+	private OpenGLCubemap(OpenGLContext context, int textureTarget, ColorFormat colorFormat, int faceSize, OptionalParameters opt) 
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
 		super(context, colorFormat);
-		init(textureTarget, context.getOpenGLInternalColorFormat(colorFormat), faceSize, format, opt);
+		init(textureTarget, context.getOpenGLInternalColorFormat(colorFormat), faceSize, opt);
 	}
 	
-	private OpenGLCubemap(OpenGLContext context, int textureTarget, CompressionFormat compressionFormat, int faceSize, int format, OptionalParameters opt) 
+	private OpenGLCubemap(OpenGLContext context, int textureTarget, CompressionFormat compressionFormat, int faceSize, OptionalParameters opt) 
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
 		super(context, compressionFormat);
-		init(textureTarget, context.getOpenGLCompressionFormat(compressionFormat), faceSize, format, opt);
+		init(textureTarget, context.getOpenGLCompressionFormat(compressionFormat), faceSize, opt);
 	}
 	
-	private OpenGLCubemap(OpenGLContext context, int textureTarget, TextureType textureType, int precision, int faceSize, int format, OptionalParameters opt)
+	private OpenGLCubemap(OpenGLContext context, int textureTarget, TextureType textureType, int precision, int faceSize, OptionalParameters opt)
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
 		super(context, textureType);
-		init(textureTarget, getSpecialInternalFormat(context, textureType, precision), faceSize, format, opt);
+		init(textureTarget, getSpecialInternalFormat(context, textureType, precision), faceSize, opt);
 	}
 	
-	private void init(int textureTarget, int internalFormat, int faceSize, int format, OptionalParameters opt)
+	private void init(int textureTarget, int internalFormat, int faceSize, OptionalParameters opt)
 	{
 		// Create an empty texture to be used as a render target for a framebuffer.
 		this.textureTarget = textureTarget;
 		this.bind();
 		this.faceSize = faceSize;
 		
-		glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(format, opt.dataType));
-		this.context.openGLErrorCheck();
-		
-		if (opt.positiveX == null)
+		if (opt.positiveX.buffer == null)
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, 0);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, faceSize, faceSize, 0, opt.positiveX.format, GL_UNSIGNED_BYTE, 0);
 			this.context.openGLErrorCheck();
 		}
 		else
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, opt.positiveX);
+			int dataTypeConstant = context.getDataTypeConstant(opt.positiveX.dataType);
+			
+			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.positiveX.format, dataTypeConstant));
+			this.context.openGLErrorCheck();
+			
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, faceSize, faceSize, 0, opt.positiveX.format, dataTypeConstant, opt.positiveX.buffer);
 			this.context.openGLErrorCheck();
 		}
 		
-		if (opt.negativeX == null)
+		if (opt.negativeX.buffer == null)
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, 0);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, faceSize, faceSize, 0, opt.negativeX.format, GL_UNSIGNED_BYTE, 0);
 			this.context.openGLErrorCheck();
 		}
 		else
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, opt.negativeX);
+			int dataTypeConstant = context.getDataTypeConstant(opt.negativeX.dataType);
+			
+//			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.negativeX.format, dataTypeConstant));
+//			this.context.openGLErrorCheck();
+			
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, faceSize, faceSize, 0, opt.negativeX.format, dataTypeConstant, opt.negativeX.buffer);
 			this.context.openGLErrorCheck();
 		}
 		
-		if (opt.positiveY == null)
+		if (opt.positiveY.buffer == null)
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, 0);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, faceSize, faceSize, 0, opt.positiveY.format, GL_UNSIGNED_BYTE, 0);
 			this.context.openGLErrorCheck();
 		}
 		else
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, opt.positiveY);
+			int dataTypeConstant = context.getDataTypeConstant(opt.positiveY.dataType);
+			
+//			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.positiveY.format, dataTypeConstant));
+//			this.context.openGLErrorCheck();
+			
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, faceSize, faceSize, 0, opt.positiveY.format, dataTypeConstant, opt.positiveY.buffer);
 			this.context.openGLErrorCheck();
 		}
 		
-		if (opt.negativeY == null)
+		if (opt.negativeY.buffer == null)
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, 0);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, faceSize, faceSize, 0, opt.negativeY.format, GL_UNSIGNED_BYTE, 0);
 			this.context.openGLErrorCheck();
 		}
 		else
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, opt.negativeY);
+			int dataTypeConstant = context.getDataTypeConstant(opt.negativeY.dataType);
+			
+//			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.negativeY.format, dataTypeConstant));
+//			this.context.openGLErrorCheck();
+			
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, faceSize, faceSize, 0, opt.negativeY.format, dataTypeConstant, opt.negativeY.buffer);
 			this.context.openGLErrorCheck();
 		}
 
-		if (opt.positiveZ == null)
+		if (opt.positiveZ.buffer == null)
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, 0);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, faceSize, faceSize, 0, opt.positiveZ.format, GL_UNSIGNED_BYTE, 0);
 			this.context.openGLErrorCheck();
 		}
 		else
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, opt.positiveZ);
+			int dataTypeConstant = context.getDataTypeConstant(opt.positiveZ.dataType);
+			
+//			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.positiveZ.format, dataTypeConstant));
+//			this.context.openGLErrorCheck();
+			
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, faceSize, faceSize, 0, opt.positiveZ.format, dataTypeConstant, opt.positiveZ.buffer);
 			this.context.openGLErrorCheck();
 		}
 		
-		if (opt.negativeZ == null)
+		if (opt.negativeZ.buffer == null)
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, 0);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, faceSize, faceSize, 0, opt.negativeZ.format, GL_UNSIGNED_BYTE, 0);
 			this.context.openGLErrorCheck();
 		}
 		else
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, faceSize, faceSize, 0, format, opt.dataType, opt.negativeZ);
+			int dataTypeConstant = context.getDataTypeConstant(opt.negativeZ.dataType);
+			
+//			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.negativeZ.format, dataTypeConstant));
+//			this.context.openGLErrorCheck();
+			
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, faceSize, faceSize, 0, opt.negativeZ.format, dataTypeConstant, opt.negativeZ.buffer);
 			this.context.openGLErrorCheck();
 		}
 		
@@ -414,12 +476,12 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 		
 		switch(face)
 		{
-		case PositiveX: layerIndex = 0; break;
-		case NegativeX: layerIndex = 1; break;
-		case PositiveY: layerIndex = 2; break;
-		case NegativeY: layerIndex = 3; break;
-		case PositiveZ: layerIndex = 4; break;
-		case NegativeZ: layerIndex = 5; break;
+		case POSITIVE_X: layerIndex = 0; break;
+		case NEGATIVE_X: layerIndex = 1; break;
+		case POSITIVE_Y: layerIndex = 2; break;
+		case NEGATIVE_Y: layerIndex = 3; break;
+		case POSITIVE_Z: layerIndex = 4; break;
+		case NEGATIVE_Z: layerIndex = 5; break;
 		default: layerIndex = -1; break; // Should never happen
 		}
 		

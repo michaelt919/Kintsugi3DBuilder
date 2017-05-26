@@ -17,7 +17,7 @@ import tetzlaff.util.SelectableList;
  * @see InteractiveRenderable
  * @author Michael Tetzlaff
  */
-public class MultiRenderable<T extends InteractiveRenderable> implements InteractiveRenderable, SelectableList<T>
+public class InteractiveRenderableList<T extends InteractiveRenderable> implements InteractiveRenderable, SelectableList<T>
 {
 	private List<T> renderables;
 	private int selectedIndex = -1;
@@ -25,14 +25,14 @@ public class MultiRenderable<T extends InteractiveRenderable> implements Interac
 	private List<T> removedRenderables;
 	private List<T> addedRenderables;
 
-	public MultiRenderable() 
+	public InteractiveRenderableList() 
 	{
 		renderables = new ArrayList<T>();
 		removedRenderables = new ArrayList<T>();
 		addedRenderables = new ArrayList<T>();
 	}
 	
-	public MultiRenderable(List<T> renderables)
+	public InteractiveRenderableList(List<T> renderables)
 	{
 		this.renderables = renderables;
 		removedRenderables = new ArrayList<T>();
@@ -324,8 +324,8 @@ public class MultiRenderable<T extends InteractiveRenderable> implements Interac
 	}
 
 	@Override
-	public MultiRenderable<T> subList(int fromIndex, int toIndex)
+	public InteractiveRenderableList<T> subList(int fromIndex, int toIndex)
 	{
-		return new MultiRenderable<T>(renderables.subList(fromIndex, toIndex));
+		return new InteractiveRenderableList<T>(renderables.subList(fromIndex, toIndex));
 	}
 }

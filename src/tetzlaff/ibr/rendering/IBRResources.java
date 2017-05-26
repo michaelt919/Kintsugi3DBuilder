@@ -25,7 +25,9 @@ import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.material.Material;
-import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.nativebuffer.NativeDataType;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -219,7 +221,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		
 		computeCameraWeights();
 		
-		cameraWeightBuffer = context.createUniformBuffer().setData(new NativeFloatVectorList(1, viewSet.getCameraPoseCount(), cameraWeights));
+		cameraWeightBuffer = context.createUniformBuffer().setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewSet.getCameraPoseCount(), cameraWeights));
 		
 		// Store the poses in a uniform buffer
 		if (viewSet.getCameraPoseData() != null)
@@ -640,7 +642,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		    	depthDrawable.addVertexBuffer("position", this.positionBuffer);
 	
 		    	// Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-		    	NativeFloatVectorList flattenedShadowMatrices = new NativeFloatVectorList(16, this.viewSet.getCameraPoseCount());
+		    	NativeVectorBuffer flattenedShadowMatrices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, this.viewSet.getCameraPoseCount());
 		    	
 		    	// Render each depth texture
 		    	for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)

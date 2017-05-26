@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Scanner;
 
 import tetzlaff.gl.material.Material;
-import tetzlaff.gl.nativelist.NativeFloatVectorList;
+import tetzlaff.gl.nativebuffer.NativeDataType;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
@@ -21,10 +23,10 @@ public class VertexGeometry
 	private boolean hasNormals;
 	private boolean hasTexCoords;
 	
-	private NativeFloatVectorList vertices;
-	private NativeFloatVectorList normals;
-	private NativeFloatVectorList texCoords;
-	private NativeFloatVectorList tangents;
+	private NativeVectorBuffer vertices;
+	private NativeVectorBuffer normals;
+	private NativeVectorBuffer texCoords;
+	private NativeVectorBuffer tangents;
 	private Vector3 centroid;
 	private Vector3 boundingBoxCenter;
 	private Vector3 boundingBoxSize;
@@ -249,7 +251,7 @@ public class VertexGeometry
 		
 		// Copy the data from the dynamic tables into a data structure that OpenGL can use.
 		int vertexCount = vertexIndexList.size();
-		vertices = new NativeFloatVectorList(3, vertexCount * 3);
+		vertices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount * 3);
 		int i = 0;
 		for (int k : vertexIndexList)
 		{
@@ -277,7 +279,7 @@ public class VertexGeometry
 		
 		if (hasNormals)
 		{
-			normals = new NativeFloatVectorList(3, vertexCount * 3);
+			normals = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount * 3);
 			i = 0;
 			for (int k : normalIndexList)
 			{
@@ -290,7 +292,7 @@ public class VertexGeometry
 		
 		if (hasTexCoords)
 		{
-			texCoords = new NativeFloatVectorList(2, vertexCount * 3);
+			texCoords = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 2, vertexCount * 3);
 			i = 0;
 			for (int k : texCoordIndexList)
 			{
@@ -302,7 +304,7 @@ public class VertexGeometry
 		
 		if (hasTexCoords && hasNormals)
 		{
-			tangents = new NativeFloatVectorList(4, vertexCount * 3);
+			tangents = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, vertexCount * 3);
 			i = 0;
 			for (int k : normalIndexList)
 			{
@@ -379,17 +381,17 @@ public class VertexGeometry
 		return hasTexCoords;
 	}
 
-	public NativeFloatVectorList getVertices() 
+	public NativeVectorBuffer getVertices() 
 	{
 		return vertices;
 	}
 
-	public NativeFloatVectorList getNormals() 
+	public NativeVectorBuffer getNormals() 
 	{
 		return normals;
 	}
 
-	public NativeFloatVectorList getTexCoords() 
+	public NativeVectorBuffer getTexCoords() 
 	{
 		return texCoords;
 	}
@@ -414,7 +416,7 @@ public class VertexGeometry
 		return boundingBoxSize;
 	}
 	
-	public NativeFloatVectorList getTangents()
+	public NativeVectorBuffer getTangents()
 	{
 		return tangents;
 	}
