@@ -249,7 +249,7 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 		case COLOR:
 		default:
 			internalFormat = context.getOpenGLInternalColorFormat(
-				new ColorFormat(precision, precision, precision, precision, ColorFormat.DataType.NORMALIZED_FIXED_POINT));
+				ColorFormat.createCustom(precision, precision, precision, precision, ColorFormat.DataType.NORMALIZED_FIXED_POINT));
 			break;
 		}
 		

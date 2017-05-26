@@ -1075,7 +1075,7 @@ public class IBRelightConfigFrame extends JFrame
 			{
 				try
 				{
-					model.getSelectedItem().setReferenceScene(new VertexGeometry("OBJ", fileChooser.getSelectedFile()));
+					model.getSelectedItem().setReferenceScene(VertexGeometry.createFromOBJFile(fileChooser.getSelectedFile()));
 				} 
 				catch (IOException ex) 
 				{

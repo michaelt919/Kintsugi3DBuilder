@@ -16,46 +16,40 @@ public class Vector2
 	 * The second dimension
 	 */
 	public final float y;
-	
-	/**
-	 * Construct a vector in two dimensions with the given values.
-	 * @param value Value of both dimensions.
-	 */
-	public Vector2(float value)
-	{
-		this.x = value;
-		this.y = value;
-	}
 
 	/**
 	 * Construct a vector in two dimensions with the given values.
 	 * @param x Value of the first dimension.
 	 * @param y Value of the second dimension.
 	 */
-	public Vector2(float x, float y)
+	private Vector2(float x, float y)
 	{
 		this.x = x;
 		this.y = y;
 	}
 	
-	/**
-	 * Construct a vector in two dimensions from the given 3D vector. The
-	 * third dimension is discarded.
-	 * @param v3 The 3D vector from which the x and y values are copied.
-	 */
-	public Vector2(Vector3 v3)
+	public static Vector2 fromScalars(float x, float y)
 	{
-		this(v3.x, v3.y);
+		return new Vector2(x, y);
 	}
 	
 	/**
-	 * Construct a vector in two dimensions from the given 4D vector. The
-	 * third and fourth dimensions are discarded.
-	 * @param v4 The 4D vector from which the x and y values are copied.
+	 * Construct a vector in two dimensions with the given values.
+	 * @param value Value of both dimensions.
 	 */
-	public Vector2(Vector4 v4)
+	public static Vector2 fromScalar(float value)
 	{
-		this(v4.x, v4.y);
+		return new Vector2(value, value);
+	}
+	
+	public static Vector2 takeXY(Vector3 v3)
+	{
+		return new Vector2(v3.x, v3.y);
+	}
+	
+	public static Vector2 takeXY(Vector4 v4)
+	{
+		return new Vector2(v4.x, v4.y);
 	}
 	
 	@Override

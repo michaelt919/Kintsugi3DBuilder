@@ -1,12 +1,8 @@
-package tetzlaff.gl.builders;
+package tetzlaff.gl.builders.framebuffer;
 
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.FramebufferObject;
-import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
-import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
-import tetzlaff.gl.builders.framebuffer.DepthStencilAttachmentSpec;
-import tetzlaff.gl.builders.framebuffer.StencilAttachmentSpec;
 
 public interface FramebufferObjectBuilder<ContextType extends Context<ContextType>> 
 {

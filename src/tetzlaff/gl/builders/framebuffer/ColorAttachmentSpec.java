@@ -6,9 +6,14 @@ public class ColorAttachmentSpec extends AttachmentSpec
 {
 	public final ColorFormat internalFormat;
 	
-	public ColorAttachmentSpec(ColorFormat internalFormat)
+	private ColorAttachmentSpec(ColorFormat internalFormat)
 	{
 		this.internalFormat = internalFormat;
+	}
+	
+	public static ColorAttachmentSpec createWithInternalFormat(ColorFormat internalFormat)
+	{
+		return new ColorAttachmentSpec(internalFormat);
 	}
 	
 	@Override

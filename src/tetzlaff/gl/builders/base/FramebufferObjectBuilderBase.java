@@ -6,11 +6,11 @@ import java.util.List;
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture2D;
-import tetzlaff.gl.builders.FramebufferObjectBuilder;
 import tetzlaff.gl.builders.TextureBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthStencilAttachmentSpec;
+import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.builders.framebuffer.StencilAttachmentSpec;
 
 public abstract class FramebufferObjectBuilderBase<ContextType extends Context<ContextType>> implements FramebufferObjectBuilder<ContextType>
@@ -95,7 +95,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
 		}
 		else
 		{
-			this.colorAttachmentFormats.add(context.get2DColorTextureBuilder(this.width, this.height).setInternalFormat(format));
+			this.colorAttachmentFormats.add(context.build2DColorTexture(this.width, this.height).setInternalFormat(format));
 		}
 		return this;
 	}
@@ -103,7 +103,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
 	@Override
 	public FramebufferObjectBuilder<ContextType> addColorAttachment(ColorAttachmentSpec builder)
 	{
-		this.colorAttachmentFormats.add(context.get2DColorTextureBuilder(width, height)
+		this.colorAttachmentFormats.add(context.build2DColorTexture(width, height)
 				.setInternalFormat(builder.internalFormat)
 				.setMultisamples(builder.getMultisamples(), builder.areMultisampleLocationsFixed())
 				.setMipmapsEnabled(builder.areMipmapsEnabled())
@@ -158,7 +158,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
 	{
 		if (!this.hasDepthAttachment())
 		{
-			this.depthAttachmentBuilder = context.get2DDepthTextureBuilder(this.width, this.height)
+			this.depthAttachmentBuilder = context.build2DDepthTexture(this.width, this.height)
 											.setInternalPrecision(precision)
 											.setFloatingPointEnabled(floatingPoint);
 			return this;
@@ -174,7 +174,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
 	{
 		if (!this.hasDepthAttachment() && !this.hasCombinedDepthStencilAttachment())
 		{
-			this.depthAttachmentBuilder = context.get2DDepthTextureBuilder(this.width, this.height)
+			this.depthAttachmentBuilder = context.build2DDepthTexture(this.width, this.height)
 											.setInternalPrecision(builder.precision)
 											.setFloatingPointEnabled(builder.floatingPoint)
 											.setMultisamples(builder.getMultisamples(), builder.areMultisampleLocationsFixed())
@@ -199,7 +199,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
 	{
 		if (!this.hasStencilAttachment() && !this.hasCombinedDepthStencilAttachment())
 		{
-			this.stencilAttachmentBuilder = context.get2DStencilTextureBuilder(this.width, this.height).setInternalPrecision(precision);
+			this.stencilAttachmentBuilder = context.build2DStencilTexture(this.width, this.height).setInternalPrecision(precision);
 			return this;
 		}
 		else
@@ -213,7 +213,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
 	{
 		if (!this.hasStencilAttachment() && !this.hasCombinedDepthStencilAttachment())
 		{
-			this.stencilAttachmentBuilder = context.get2DStencilTextureBuilder(this.width, this.height)
+			this.stencilAttachmentBuilder = context.build2DStencilTexture(this.width, this.height)
 												.setInternalPrecision(builder.precision)
 												.setMultisamples(builder.getMultisamples(), builder.areMultisampleLocationsFixed())
 												.setMipmapsEnabled(builder.areMipmapsEnabled())
@@ -231,7 +231,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
 	{
 		if (!this.hasDepthAttachment() && !this.hasStencilAttachment() && !this.hasCombinedDepthStencilAttachment())
 		{
-			this.depthStencilAttachmentBuilder = context.get2DDepthStencilTextureBuilder(this.width, this.height);
+			this.depthStencilAttachmentBuilder = context.build2DDepthStencilTexture(this.width, this.height);
 			return this;
 		}
 		else
@@ -245,7 +245,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
 	{
 		if (!this.hasDepthAttachment() && !this.hasStencilAttachment() && !this.hasCombinedDepthStencilAttachment())
 		{
-			this.depthStencilAttachmentBuilder = context.get2DDepthStencilTextureBuilder(this.width, this.height).setFloatingPointDepthEnabled(floatingPoint);
+			this.depthStencilAttachmentBuilder = context.build2DDepthStencilTexture(this.width, this.height).setFloatingPointDepthEnabled(floatingPoint);
 			return this;
 		}
 		else
@@ -259,7 +259,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
 	{
 		if (!this.hasDepthAttachment() && !this.hasStencilAttachment() && !this.hasCombinedDepthStencilAttachment())
 		{
-			this.depthStencilAttachmentBuilder = context.get2DDepthStencilTextureBuilder(this.width, this.height)
+			this.depthStencilAttachmentBuilder = context.build2DDepthStencilTexture(this.width, this.height)
 													.setFloatingPointDepthEnabled(builder.floatingPointDepth)
 													.setMultisamples(builder.getMultisamples(), builder.areMultisampleLocationsFixed())
 													.setMipmapsEnabled(builder.areMipmapsEnabled())

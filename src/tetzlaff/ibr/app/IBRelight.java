@@ -143,7 +143,7 @@ public class IBRelight
 		{
 	    	OpenGLContext context = window.getContext();
 	    	
-	    	context.enableDepthTest();
+	    	context.getState().enableDepthTest();
 	    	
 	//    	org.lwjgl.opengl.GL11.glEnable(GL_DEBUG_OUTPUT);
 	//    	GLDebugMessageCallback debugCallback = new GLDebugMessageCallback() 

@@ -5,10 +5,20 @@ public class DepthAttachmentSpec extends AttachmentSpec
 	public final int precision;
 	public final boolean floatingPoint;
 	
-	public DepthAttachmentSpec(int precision, boolean floatingPoint)
+	private DepthAttachmentSpec(int precision, boolean floatingPoint)
 	{
 		this.precision = precision;
 		this.floatingPoint = floatingPoint;
+	}
+	
+	public static DepthAttachmentSpec createFixedPointWithPrecision(int precision)
+	{
+		return new DepthAttachmentSpec(precision, false);
+	}
+	
+	public static DepthAttachmentSpec createFloatingPointWithPrecision(int precision)
+	{
+		return new DepthAttachmentSpec(precision, true);
 	}
 	
 	@Override

@@ -14,33 +14,36 @@ public class IntVector3
 	public final int x;
 	public final int y;
 	public final int z;
-	
-	/**
-	 * Construct a vector in three dimensions with the given values.
-	 * @param value Value of all three dimensions.
-	 */
-	public IntVector3(int value)
-	{
-		this.x = value;
-		this.y = value;
-		this.z = value;
-	}
 
-	public IntVector3(int x, int y, int z)
+	IntVector3(int x, int y, int z)
 	{
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 	
-	public IntVector3(IntVector2 v2, int z)
+	/**
+	 * Construct a vector in three dimensions with the given values.
+	 * @param value Value of all three dimensions.
+	 */
+	public static IntVector3 fromScalar(int value)
 	{
-		this(v2.x, v2.y, z);
+		return new IntVector3(value, value, value);
+	}
+
+	public static IntVector3 fromScalars(int x, int y, int z)
+	{
+		return new IntVector3(x, y, z);
 	}
 	
-	public IntVector3(IntVector4 v4)
+	public static IntVector3 fromVector2(IntVector2 v2, int z)
 	{
-		this(v4.x, v4.y, v4.z);
+		return new IntVector3(v2.x, v2.y, z);
+	}
+	
+	public static IntVector3 takeXYZ(IntVector4 v4)
+	{
+		return new IntVector3(v4.x, v4.y, v4.z);
 	}
 	
 	public IntVector3 plus(IntVector3 other)

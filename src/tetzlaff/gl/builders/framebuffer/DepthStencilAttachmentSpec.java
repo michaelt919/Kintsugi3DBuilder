@@ -4,9 +4,19 @@ public class DepthStencilAttachmentSpec extends AttachmentSpec
 {
 	public final boolean floatingPointDepth;
 	
-	public DepthStencilAttachmentSpec(boolean floatingPointDepth)
+	private DepthStencilAttachmentSpec(boolean floatingPointDepth)
 	{
 		this.floatingPointDepth = floatingPointDepth;
+	}
+	
+	public static DepthStencilAttachmentSpec createWithFixedPointDepth()
+	{
+		return new DepthStencilAttachmentSpec(true);
+	}
+	
+	public static DepthStencilAttachmentSpec createWithFloatingPointDepth()
+	{
+		return new DepthStencilAttachmentSpec(false);
 	}
 	
 	@Override

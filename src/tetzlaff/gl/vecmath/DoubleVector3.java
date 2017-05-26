@@ -13,40 +13,37 @@ public class DoubleVector3
 	public final double y;
 	public final double z;
 	
-	/**
-	 * Construct the zero vector.
-	 */
-	public DoubleVector3()
-	{
-		this(0.0);
-	}
-	
-	/**
-	 * Construct a vector in three dimensions with the given values.
-	 * @param value Value of all three dimensions.
-	 */
-	public DoubleVector3(double value)
-	{
-		this.x = value;
-		this.y = value;
-		this.z = value;
-	}
+	public static final DoubleVector3 ZERO = fromScalar(0.0);
 
-	public DoubleVector3(double x, double y, double z)
+	private DoubleVector3(double x, double y, double z)
 	{
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 	
-	public DoubleVector3(DoubleVector2 v2, double z)
+	public static DoubleVector3 fromScalars(double x, double y, double z)
 	{
-		this(v2.x, v2.y, z);
+		return new DoubleVector3(x, y, z);
 	}
 	
-	public DoubleVector3(DoubleVector4 v4)
+	/**
+	 * Construct a vector in three dimensions with the given values.
+	 * @param value Value of all three dimensions.
+	 */
+	public static DoubleVector3 fromScalar(double value)
 	{
-		this(v4.x, v4.y, v4.z);
+		return new DoubleVector3(value, value, value);
+	}
+	
+	public static DoubleVector3 fromVector2(DoubleVector2 v2, double z)
+	{
+		return new DoubleVector3(v2.x, v2.y, z);
+	}
+	
+	public static DoubleVector3 takeXYZ(DoubleVector4 v4)
+	{
+		return new DoubleVector3(v4.x, v4.y, v4.z);
 	}
 	
 	public DoubleVector3 plus(DoubleVector3 other)
@@ -97,10 +94,10 @@ public class DoubleVector3
 	}
 	public DoubleMatrix3 outerProduct(DoubleVector3 other)
 	{
-		return new DoubleMatrix3(
-			this.x * other.x, this.y * other.x, this.z * other.x,
-			this.x * other.y, this.y * other.y, this.z * other.y,
-			this.x * other.z, this.y * other.z, this.z * other.z
+		return DoubleMatrix3.fromColumns(
+			DoubleVector3.fromScalars(this.x * other.x, this.y * other.x, this.z * other.x),
+			DoubleVector3.fromScalars(this.x * other.y, this.y * other.y, this.z * other.y),
+			DoubleVector3.fromScalars(this.x * other.z, this.y * other.z, this.z * other.z)
 		);
 	}
 	

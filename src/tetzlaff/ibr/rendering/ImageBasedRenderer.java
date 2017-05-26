@@ -272,7 +272,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    			}
 	    		}
 	    		
-	    		this.lightTexture = context.get2DColorTextureBuilder(64, 64, lightTextureData)
+	    		this.lightTexture = context.build2DColorTextureFromBuffer(64, 64, lightTextureData)
     					.setInternalFormat(ColorFormat.R8)
     					.setLinearFilteringEnabled(true)
     					.setMipmapsEnabled(true)
@@ -330,8 +330,8 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		
 		shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
 
-		shadowMaps = context.get2DDepthTextureArrayBuilder(2048, 2048, lightModel.getLightCount()).createTexture();
-		shadowFramebuffer = context.getFramebufferObjectBuilder(2048, 2048)
+		shadowMaps = context.build2DDepthTextureArray(2048, 2048, lightModel.getLightCount()).createTexture();
+		shadowFramebuffer = context.buildFramebufferObject(2048, 2048)
 			.addDepthAttachment()
 			.createFramebufferObject();
 		
@@ -448,7 +448,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 //					ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_IBRelight_pan.hdr")));
     				
     				Cubemap<ContextType> newEnvironmentTexture = 
-    						context.getColorCubemapBuilder(envMap.getSide())
+    						context.buildColorCubemap(envMap.getSide())
     							.setInternalFormat(ColorFormat.RGB32F)
     							.loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
     							.loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
@@ -510,7 +510,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     				this.refScenePositions = context.createVertexBuffer().setData(referenceScene.getVertices());
     				this.refSceneTexCoords = context.createVertexBuffer().setData(referenceScene.getTexCoords());
     				this.refSceneNormals = context.createVertexBuffer().setData(referenceScene.getNormals());
-    				this.refSceneTexture = context.get2DColorTextureBuilder(
+    				this.refSceneTexture = context.build2DColorTextureFromFile(
     						new File(referenceScene.getFilename().getParentFile(), referenceScene.getMaterial().getDiffuseMap().getMapName()), true)
     					.setMipmapsEnabled(true)
     					.setLinearFilteringEnabled(true)
@@ -942,14 +942,14 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			
 			if(multisamplingEnabled)
 			{
-				context.enableMultisampling();
+				context.getState().enableMultisampling();
 			}
 			else
 			{
-				context.disableMultisampling();			
+				context.getState().disableMultisampling();			
 			}
 	    	
-	    	context.enableBackFaceCulling();
+	    	context.getState().enableBackFaceCulling();
 	    	
 	    	Framebuffer<ContextType> framebuffer = context.getDefaultFramebuffer();
 	    	FramebufferSize size = framebuffer.getSize();
@@ -985,10 +985,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 					fboWidth = size.width / 2;
 					fboHeight = size.height / 2;
 					
-					offscreenFBO = context.getFramebufferObjectBuilder(fboWidth, fboHeight)
-							.addColorAttachment(new ColorAttachmentSpec(ColorFormat.RGB8)
+					offscreenFBO = context.buildFramebufferObject(fboWidth, fboHeight)
+							.addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB8)
 								.setLinearFilteringEnabled(true))
-							.addDepthAttachment(new DepthAttachmentSpec(32, false))
+							.addDepthAttachment(DepthAttachmentSpec.createFixedPointWithPrecision(32))
 							.createFramebufferObject();
 					
 					offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
@@ -996,9 +996,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		    		
 		    		if (environmentMap != null && environmentMapEnabled)
 		    		{
-		    			context.disableDepthTest();
+		    			context.getState().disableDepthTest();
 		    			this.environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-		    			context.enableDepthTest();
+		    			context.getState().enableDepthTest();
 		    		}
 				}
 				else
@@ -1011,9 +1011,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		    		
 		    		if (environmentMap != null && environmentMapEnabled)
 		    		{
-		    			context.disableDepthTest();
+		    			context.getState().disableDepthTest();
 		    			this.environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-		    			context.enableDepthTest();
+		    			context.getState().enableDepthTest();
 		    		}
 				}
 				
@@ -1087,7 +1087,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			
 			FramebufferSize windowSize = context.getDefaultFramebuffer().getSize();
 			
-			context.setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+			context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
 			
 			Matrix4 viewMatrix = this.getViewMatrix();
 			
@@ -1113,7 +1113,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 				}
 			}
 			
-			context.disableAlphaBlending();
+			context.getState().disableAlphaBlending();
 		}
 		catch(Exception e)
 		{
@@ -1204,7 +1204,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	private void resample() throws IOException
 	{
 		ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile);
-		FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(resampleWidth, resampleHeight)
+		FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(resampleWidth, resampleHeight)
 				.addColorAttachment()
 				.addDepthAttachment()
 				.createFramebufferObject();
@@ -1240,9 +1240,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 						environmentMap.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
 						? 1.0f : 2.2f);
 				
-				context.disableDepthTest();
+				context.getState().disableDepthTest();
 				this.environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-				context.enableDepthTest();
+				context.getState().enableDepthTest();
 			}
     		
     		framebuffer.clearDepthBuffer();
@@ -1344,14 +1344,14 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/fidelity.frag"))
 				.createProgram();
     			
-			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(256, 256/*1024, 1024*/)
+			FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(256, 256/*1024, 1024*/)
 				.addColorAttachment(ColorFormat.RG32F)
 				.createFramebufferObject();
     			
 			PrintStream out = new PrintStream(fidelityExportPath);
 		)
     	{
-    		context.disableBackFaceCulling();
+    		context.getState().disableBackFaceCulling();
     		
     		Drawable<ContextType> drawable = context.createDrawable(fidelityProgram);
         	drawable.addVertexBuffer("position", this.resources.positionBuffer);
@@ -1867,7 +1867,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
     				.createProgram();
 			
-			FramebufferObject<ContextType> framebuffer = context.getFramebufferObjectBuilder(btfWidth, btfHeight)
+			FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(btfWidth, btfHeight)
 					.addColorAttachment()
 					.createFramebufferObject();
 	    	
@@ -1906,7 +1906,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 //		    	
 	    	////////////////////////////////
 				
-		    	context.disableBackFaceCulling();
+		    	context.getState().disableBackFaceCulling();
 		    	
 		    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 		    	drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);

@@ -147,7 +147,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			this.viewSet = ViewSet.loadFromVSETFile(vsetFile);
 			try
 			{
-				this.geometry = new VertexGeometry("OBJ", this.viewSet.getGeometryFile());
+				this.geometry = VertexGeometry.createFromOBJFile(this.viewSet.getGeometryFile());
 			}
 			catch(Exception e)
 			{
@@ -162,7 +162,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			this.viewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
 			if (geometryFile != null)
 			{
-				this.geometry = new VertexGeometry("OBJ", geometryFile);
+				this.geometry = VertexGeometry.createFromOBJFile(geometryFile);
 			}
 			if (undistortedImageDirectory != null)
 			{
@@ -344,7 +344,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			input.close();
 
 			ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder = 
-					context.get2DColorTextureArrayBuilder(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount());
+					context.build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount());
 			
 			if (loadOptions.isCompressionRequested())
 			{
@@ -430,14 +430,14 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
         {
 	        // Build depth textures for each view
 	    	this.depthTextures = 
-    			context.get2DDepthTextureArrayBuilder(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCameraPoseCount())
+    			context.build2DDepthTextureArray(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCameraPoseCount())
 	    			.createTexture();
 	    	
 	    	try
 	    	(
     			// Don't automatically generate any texture attachments for this framebuffer object
     			FramebufferObject<ContextType> depthRenderingFBO = 
-    			context.getFramebufferObjectBuilder(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
+    			context.buildFramebufferObject(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
 	    			.createFramebufferObject(); 
 
     	    	// Load the program
@@ -557,7 +557,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			if (diffuseFile != null && diffuseFile.exists())
 			{
 				System.out.println("Diffuse texture found.");
-				diffuseTexture = context.get2DColorTextureBuilder(diffuseFile, true)
+				diffuseTexture = context.build2DColorTextureFromFile(diffuseFile, true)
 						.setInternalFormat(ColorFormat.RGB8)
 						.setMipmapsEnabled(true)
 						.setLinearFilteringEnabled(true)
@@ -571,7 +571,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			if (normalFile != null && normalFile.exists())
 			{
 				System.out.println("Normal texture found.");
-				normalTexture = context.get2DColorTextureBuilder(normalFile, true)
+				normalTexture = context.build2DColorTextureFromFile(normalFile, true)
 						.setInternalFormat(ColorFormat.RGB8)
 						.setMipmapsEnabled(true)
 						.setLinearFilteringEnabled(true)
@@ -585,7 +585,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			if (specularFile != null && specularFile.exists())
 			{
 				System.out.println("Specular texture found.");
-				specularTexture = context.get2DColorTextureBuilder(specularFile, true)
+				specularTexture = context.build2DColorTextureFromFile(specularFile, true)
 						.setInternalFormat(ColorFormat.RGB8)
 						.setMipmapsEnabled(true)
 						.setLinearFilteringEnabled(true)
@@ -599,7 +599,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			if (roughnessFile != null && roughnessFile.exists())
 			{
 				System.out.println("Roughness texture found.");
-				roughnessTexture = context.get2DColorTextureBuilder(roughnessFile, true)
+				roughnessTexture = context.build2DColorTextureFromFile(roughnessFile, true)
 						.setInternalFormat(ColorFormat.R8)
 						.setMipmapsEnabled(true)
 						.setLinearFilteringEnabled(true)
@@ -621,14 +621,14 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		if (this.depthTextures != null)
         {
 	    	shadowTextures = 
-    			context.get2DDepthTextureArrayBuilder(this.depthTextures.getWidth(), this.depthTextures.getHeight(), this.viewSet.getCameraPoseCount())
+    			context.build2DDepthTextureArray(this.depthTextures.getWidth(), this.depthTextures.getHeight(), this.viewSet.getCameraPoseCount())
 	    			.createTexture();
 	    	
 	    	try
 	    	(
     	    	// Don't automatically generate any texture attachments for this framebuffer object
 		    	FramebufferObject<ContextType> depthRenderingFBO = 
-	    			context.getFramebufferObjectBuilder(this.depthTextures.getWidth(), this.depthTextures.getHeight())
+	    			context.buildFramebufferObject(this.depthTextures.getWidth(), this.depthTextures.getHeight())
 		    			.createFramebufferObject();
 		    	
 		    	// Load the program

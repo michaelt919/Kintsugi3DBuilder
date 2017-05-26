@@ -16,7 +16,7 @@ public class IntVector4
 	public final int z;
 	public final int w;
 
-	public IntVector4(int x, int y, int z, int w)
+	IntVector4(int x, int y, int z, int w)
 	{
 		this.x = x;
 		this.y = y;
@@ -24,14 +24,24 @@ public class IntVector4
 		this.w = w;
 	}
 	
-	public IntVector4(IntVector2 v2, int z, int w)
+	public static IntVector4 fromScalars(int x, int y, int z, int w)
 	{
-		this(v2.x, v2.y, z, w);
+		return new IntVector4(x, y, z, w);
 	}
 	
-	public IntVector4(IntVector3 v3, int w)
+	public static IntVector4 fromScalar(int value)
 	{
-		this(v3.x, v3.y, v3.z, w);
+		return new IntVector4(value, value, value, value);
+	}
+	
+	public static IntVector4 fromVector2(IntVector2 v2, int z, int w)
+	{
+		return new IntVector4(v2.x, v2.y, z, w);
+	}
+	
+	public static IntVector4 fromVector3(IntVector3 v3, int w)
+	{
+		return new IntVector4(v3.x, v3.y, v3.z, w);
 	}
 	
 	public IntVector4 plus(IntVector4 other)

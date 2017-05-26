@@ -7,10 +7,12 @@ package tetzlaff.gl.vecmath;
  */
 public class DoubleMatrix3 
 {
+	public static final DoubleMatrix3 IDENTITY = scale(1.0f);
+	
 	/**
 	 * The matrix data.
 	 */
-	private double[][] m;
+	private final double[][] m;
 	
 	/**
 	 * Creates a new matrix by specifying each entry.
@@ -24,7 +26,7 @@ public class DoubleMatrix3
 	 * @param m32 The entry at row 3, column 2.
 	 * @param m33 The entry at row 3, column 3.
 	 */
-	public DoubleMatrix3(
+	private DoubleMatrix3(
 		double m11, double m12, double m13,
 		double m21, double m22, double m23,
 		double m31, double m32, double m33)
@@ -41,61 +43,30 @@ public class DoubleMatrix3
         m[2][2] = m33;
     }
 	
-	public DoubleMatrix3(Vector3 col1, Vector3 col2, Vector3 col3)
+	public static DoubleMatrix3 fromColumns(DoubleVector3 col1, DoubleVector3 col2, DoubleVector3 col3)
 	{
-		this (col1.x, col2.x, col3.x,
-			  col1.y, col2.y, col3.y,
-		      col1.z, col2.z, col3.z );
+		return new DoubleMatrix3( col1.x, col2.x, col3.x,
+								  col1.y, col2.y, col3.y,
+							      col1.z, col2.z, col3.z );
 	}
 	
 	/**
 	 * Creates a 4x4 matrix from a 3x3 matrix by dropping the fourth row and column.
 	 * @param m4 The 4x4 matrix.
 	 */
-	public DoubleMatrix3(/*Double*/Matrix4 m4) // TODO make a DoubleMatrix4 class
+	public static DoubleMatrix3 takeUpperLeftFrom4x4(DoubleMatrix4 m4) 
 	{
-		this(	m4.get(0,0),	m4.get(0,1),	m4.get(0,2),
-				m4.get(1,0),	m4.get(1,1),	m4.get(1,2),
-				m4.get(2,0),	m4.get(2,1),	m4.get(2,2)		);
+		return new DoubleMatrix3(	m4.get(0,0),	m4.get(0,1),	m4.get(0,2),
+									m4.get(1,0),	m4.get(1,1),	m4.get(1,2),
+									m4.get(2,0),	m4.get(2,1),	m4.get(2,2)		);
 	}
 	
-	public DoubleMatrix3(Matrix3 m3)
+	public static DoubleMatrix3 fromSinglePrecision(Matrix3 m3)
 	{
-		this(	m3.get(0,0),	m3.get(0,1),	m3.get(0,2),
-				m3.get(1,0),	m3.get(1,1),	m3.get(1,2),
-				m3.get(2,0),	m3.get(2,1),	m3.get(2,2)		);
+		return new DoubleMatrix3(	m3.get(0,0),	m3.get(0,1),	m3.get(0,2),
+									m3.get(1,0),	m3.get(1,1),	m3.get(1,2),
+									m3.get(2,0),	m3.get(2,1),	m3.get(2,2)		);
 	}
-
-	/**
-	 * Creates a scale matrix.
-	 * @param sx The scale along the x-axis.
-	 * @param sy The scale along the y-axis.
-	 * @param sz The scale along the z-axis.
-	 */
-	public DoubleMatrix3(double sx, double sy, double sz) 
-	{
-		this(	sx, 	0.0, 	0.0,
-				0.0,	sy,		0.0,
-				0.0,	0.0, 	sz		);
-	}
-	
-	/**
-	 * Creates a uniform scale matrix that preserves proportions.
-	 * @param s The scale along all axes.
-	 */
-	public DoubleMatrix3(double s)
-	{
-		this(s, s, s);
-	}
-
-	/**
-	 * Creates an identity matrix.
-	 */
-	public DoubleMatrix3() 
-	{
-		this(1.0);
-	}
-	
 	/**
 	 * Gets a scale matrix.
 	 * @param sx The scale along the x-axis.
@@ -105,7 +76,9 @@ public class DoubleMatrix3
 	 */
 	public static DoubleMatrix3 scale(double sx, double sy, double sz)
 	{
-		return new DoubleMatrix3(sx, sy, sz);
+		return new DoubleMatrix3(	sx, 	0.0, 	0.0,
+									0.0,	sy,		0.0,
+									0.0,	0.0, 	sz		);
 	}
 	
 	/**
@@ -115,16 +88,7 @@ public class DoubleMatrix3
 	 */
 	public static DoubleMatrix3 scale(double s)
 	{
-		return new DoubleMatrix3(s);
-	}
-	
-	/**
-	 * Gets an identity matrix.
-	 * @return An identity matrix.
-	 */
-	public static DoubleMatrix3 identity()
-	{
-		return new DoubleMatrix3();
+		return scale(s, s, s);
 	}
 	
 	/**
@@ -181,7 +145,7 @@ public class DoubleMatrix3
 	 * @param radians The amount of rotation, in radians.
 	 * @return The specified transformation matrix.
 	 */
-	public static DoubleMatrix3 rotateAxis(Vector3 axis, double radians)
+	public static DoubleMatrix3 rotateAxis(DoubleVector3 axis, double radians)
 	{
 		double sinTheta = Math.sin(radians);
 		double cosTheta = Math.cos(radians);
@@ -264,7 +228,7 @@ public class DoubleMatrix3
             }
         }
         
-        return new DoubleVector4(q[0], q[1], q[2], q[3]);
+        return DoubleVector4.fromScalars(q[0], q[1], q[2], q[3]);
 	}
 
 	/**
@@ -322,7 +286,7 @@ public class DoubleMatrix3
 	 */
 	public DoubleVector3 times(DoubleVector3 vector)
 	{
-		return new DoubleVector3(
+		return DoubleVector3.fromScalars(
 			this.m[0][0] * vector.x + this.m[0][1] * vector.y + this.m[0][2] * vector.z,
 			this.m[1][0] * vector.x + this.m[1][1] * vector.y + this.m[1][2] * vector.z,
 			this.m[2][0] * vector.x + this.m[2][1] * vector.y + this.m[2][2] * vector.z
@@ -412,7 +376,7 @@ public class DoubleMatrix3
 	 */
 	public DoubleVector3 getRow(int row)
 	{
-		return new DoubleVector3(this.m[row][0], this.m[row][1], this.m[row][2]);
+		return DoubleVector3.fromScalars(this.m[row][0], this.m[row][1], this.m[row][2]);
 	}
 	
 	/**
@@ -422,6 +386,6 @@ public class DoubleMatrix3
 	 */
 	public DoubleVector3 getColumn(int col)
 	{
-		return new DoubleVector3(this.m[0][col], this.m[1][col], this.m[2][col]);
+		return DoubleVector3.fromScalars(this.m[0][col], this.m[1][col], this.m[2][col]);
 	}
 }

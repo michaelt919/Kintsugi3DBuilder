@@ -4,9 +4,14 @@ public class StencilAttachmentSpec extends AttachmentSpec
 {
 	public final int precision;
 	
-	public StencilAttachmentSpec(int precision)
+	private StencilAttachmentSpec(int precision)
 	{
 		this.precision = precision;
+	}
+	
+	public static StencilAttachmentSpec createWithPrecision(int precision)
+	{
+		return new StencilAttachmentSpec(precision);
 	}
 	
 	@Override
