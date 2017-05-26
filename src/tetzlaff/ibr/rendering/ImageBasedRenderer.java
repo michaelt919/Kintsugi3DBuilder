@@ -30,8 +30,9 @@ import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
-import tetzlaff.gl.nativelist.NativeFloatVectorList;
-import tetzlaff.gl.nativelist.NativeIntVectorList;
+import tetzlaff.gl.nativebuffer.NativeDataType;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
@@ -254,7 +255,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    		this.lightDrawable = context.createDrawable(this.lightProgram);
 	    		this.lightDrawable.addVertexBuffer("position", lightVertices);
 	    		
-	    		NativeFloatVectorList lightTextureData = new NativeFloatVectorList(1, 4096);
+	    		NativeVectorBuffer lightTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
 	    		
 	    		int k = 0;
 	    		for (int i = 0; i < 64; i++)
@@ -449,12 +450,12 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     				Cubemap<ContextType> newEnvironmentTexture = 
     						context.getColorCubemapBuilder(envMap.getSide())
     							.setInternalFormat(ColorFormat.RGB32F)
-    							.loadFace(CubemapFace.PositiveX, new NativeFloatVectorList(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
-    							.loadFace(CubemapFace.NegativeX, new NativeFloatVectorList(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
-    							.loadFace(CubemapFace.PositiveY, new NativeFloatVectorList(3, sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
-    							.loadFace(CubemapFace.NegativeY, new NativeFloatVectorList(3, sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
-    							.loadFace(CubemapFace.PositiveZ, new NativeFloatVectorList(3, sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
-    							.loadFace(CubemapFace.NegativeZ, new NativeFloatVectorList(3, sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
+    							.loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
+    							.loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
+    							.loadFace(CubemapFace.POSITIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
+    							.loadFace(CubemapFace.NEGATIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
+    							.loadFace(CubemapFace.POSITIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
+    							.loadFace(CubemapFace.NEGATIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
 								.setMipmapsEnabled(true)
 								.setLinearFilteringEnabled(true)
 								.createTexture();
@@ -1267,7 +1268,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			StandardCopyOption.REPLACE_EXISTING);
 	}
 	
-	private double calculateError(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, NativeIntVectorList viewIndexList, int targetViewIndex, int activeViewCount)
+	private double calculateError(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, NativeVectorBuffer viewIndexList, int targetViewIndex, int activeViewCount)
 	{
 		this.setupForDraw(drawable.program());
     	
@@ -1389,7 +1390,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     			
     			do 
     			{
-			    	NativeIntVectorList viewIndexList = new NativeIntVectorList(1, this.resources.viewSet.getCameraPoseCount());
+			    	NativeVectorBuffer viewIndexList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, this.resources.viewSet.getCameraPoseCount());
 			    	
 			    	activeViewCount = 0;
 			    	minDistance = Float.MAX_VALUE;
@@ -1615,7 +1616,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    		
 	    		boolean[] originalUsed = new boolean[this.resources.viewSet.getCameraPoseCount()];
 				
-				NativeIntVectorList viewIndexList = new NativeIntVectorList(1, this.resources.viewSet.getCameraPoseCount());
+				NativeVectorBuffer viewIndexList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, this.resources.viewSet.getCameraPoseCount());
 	    		int activeViewCount = 0;
 	    		
 	    		// Print views that are only in the original view set and NOT in the target view set

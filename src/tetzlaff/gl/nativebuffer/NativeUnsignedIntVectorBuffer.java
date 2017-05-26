@@ -1,18 +1,18 @@
-package tetzlaff.gl.nativelist;
+package tetzlaff.gl.nativebuffer;
 
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.DoubleBuffer;
 
 import org.lwjgl.BufferUtils;
 
-public class NativeDoubleVectorList
+class NativeUnsignedIntVectorBuffer implements NativeVectorBuffer
 {
-	private DoubleBuffer buffer;
+	private ByteBuffer buffer;
 	
-	public final int dimensions;
-	public final int count;
+	final int dimensions;
+	final int count;
 	
-	public NativeDoubleVectorList(int dimensions, int count)
+	NativeUnsignedIntVectorBuffer(int dimensions, int count)
 	{
 		if (dimensions < 0)
 		{
@@ -25,10 +25,10 @@ public class NativeDoubleVectorList
 		
 		this.dimensions = dimensions;
 		this.count = count;
-		this.buffer = BufferUtils.createDoubleBuffer(dimensions * count);
+		this.buffer = BufferUtils.createByteBuffer(dimensions * count * 4);
 	}
 	
-	public NativeDoubleVectorList(int dimensions, int count, DoubleBuffer buffer)
+	NativeUnsignedIntVectorBuffer(int dimensions, int count, ByteBuffer buffer)
 	{
 		if (dimensions < 0)
 		{
@@ -38,10 +38,10 @@ public class NativeDoubleVectorList
 		{
 			throw new IllegalArgumentException("The number of vertices cannot be negative.");
 		}
-		if (buffer.capacity() < dimensions * count * 8)
+		if (buffer.capacity() < dimensions * count * 4)
 		{
 			throw new IllegalArgumentException("Insufficient buffer size - a list of " + count + dimensions +
-					"D vertices requires a buffer with a capacity of at least " + dimensions * count + ".");
+					"D vertices with 32-bit elements requires a buffer with a capacity of at least " + dimensions * count * 4 + ".");
 		}
 		if (buffer.order() != ByteOrder.nativeOrder())
 		{
@@ -53,14 +53,33 @@ public class NativeDoubleVectorList
 		this.buffer = buffer;
 	}
 	
-	public NativeDoubleVectorList(int dimensions, int count, double[] buffer)
+	NativeUnsignedIntVectorBuffer(int dimensions, int count, byte[] buffer)
 	{
 		this(dimensions, count);
 		this.buffer.put(buffer);
 		this.buffer.flip();
 	}
 	
-	public double get(int index, int dimension)
+	public NativeUnsignedIntVectorBuffer(int dimensions, int count, int[] buffer)
+	{
+		this(dimensions, count);
+		this.buffer.asIntBuffer().put(buffer);
+	}
+	
+	@Override
+	public int getDimensions() 
+	{
+		return dimensions;
+	}
+
+	@Override
+	public int getCount() 
+	{
+		return count;
+	}
+	
+	@Override
+	public Long get(int index, int dimension)
 	{
 		if (index < 0)
 		{
@@ -78,10 +97,10 @@ public class NativeDoubleVectorList
 		{
 			throw new IndexOutOfBoundsException("Dimension (" + dimension + ") is greater than the dimensions of the vertex list (" + this.dimensions + ").");
 		}
-		return this.buffer.get(index * this.dimensions + dimension);
+		return 0x00000000FFFFFFFFL & this.buffer.asIntBuffer().get(index * this.dimensions + dimension);
 	}
 	
-	public void set(int index, int dimension, double value)
+	public void set(int index, int dimension, long value)
 	{
 		if (index < 0)
 		{
@@ -99,11 +118,30 @@ public class NativeDoubleVectorList
 		{
 			throw new IndexOutOfBoundsException("Dimension (" + dimension + ") is greater than the dimensions of the vertex list (" + this.dimensions + ").");
 		}
-		this.buffer.put(index * this.dimensions + dimension, value);
+		this.buffer.asIntBuffer().put(index * this.dimensions + dimension, (int)value);
 	}
 	
-	public DoubleBuffer getBuffer()
+	@Override
+	public void set(int index, int dimension, Number value)
+	{
+		this.set(index, dimension, value.longValue());
+	}
+	
+	@Override
+	public ByteBuffer getBuffer()
 	{
 		return buffer;
+	}
+
+	@Override
+	public NativeDataType getDataType() 
+	{
+		return NativeDataType.UNSIGNED_INT;
+	}
+
+	@Override
+	public int getElementSizeInBytes() 
+	{
+		return 4;
 	}
 }
