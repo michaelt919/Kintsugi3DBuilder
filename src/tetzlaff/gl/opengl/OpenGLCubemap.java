@@ -75,18 +75,11 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 		@Override
 		public ColorBuilder loadFace(CubemapFace face, NativeVectorBuffer data) throws IOException 
 		{
-			if (data.getDimensions() != 3)
-			{
-				throw new UnsupportedOperationException("Only RGB data is currently supported for cubemaps.");
-			}
-			else
-			{
-				int index = cubemapFaceToIndex(face);
-				faces[index].buffer = data.getBuffer();
-				faces[index].dataType = data.getDataType();
-				faces[index].format = context.getPixelDataFormatFromDimensions(data.getDimensions());
-				return this;
-			}
+			int index = cubemapFaceToIndex(face);
+			faces[index].buffer = data.getBuffer();
+			faces[index].dataType = data.getDataType();
+			faces[index].format = context.getPixelDataFormatFromDimensions(data.getDimensions());
+			return this;
 		}
 		
 		@Override
