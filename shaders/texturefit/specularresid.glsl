@@ -88,12 +88,6 @@ SpecularResidualInfo computeSpecularResidualInfo()
 		info.geomRatio = 
 			max(0.0, min(1.0, 2.0 * max(0, info.halfAngleVector.z) * min(nDotV, info.nDotL)) / max(0, dot(view, halfAngle)))
 			/ (4 * nDotV * info.nDotL);
-        
-        // // TODO debug code, remove this
-        // float roughnessSquared = 0.03846153846153846153846153846154; //0.25 * 0.25;
-        // float nDotHSquared = info.halfAngleVector.z * info.halfAngleVector.z;
-        // info.residualLuminance = exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared))
-            // / (nDotHSquared * nDotHSquared);
     }
     else
     {

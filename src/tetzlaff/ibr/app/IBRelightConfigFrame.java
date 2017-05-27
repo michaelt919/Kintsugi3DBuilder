@@ -1080,7 +1080,6 @@ public class IBRelightConfigFrame extends JFrame
 				} 
 				catch (IOException ex) 
 				{
-					// TODO Auto-generated catch block
 					ex.printStackTrace();
 				}
 			}
