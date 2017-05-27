@@ -8,13 +8,15 @@ import tetzlaff.gl.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.ibr.rendering.IBRResources;
 
-public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable
+public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
 	void setOnLoadCallback(IBRLoadingMonitor callback);
 
 	ViewSet getActiveViewSet();
 	VertexGeometry getActiveProxy();
+	IBRResources<ContextType> getResources();
 	
 	IBRSettings settings();
 	
@@ -28,10 +30,6 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
 	void reloadHelperShaders();
 
 	void setEnvironment(File environmentFile);
-	
-	void requestResample(int width, int height, File targetVSETFile, File exportPath);
-	void requestFidelity(File exportPath, File targetVSETFile);
-	void requestBTF(int width, int height, File exportPath);
 
 	void setTransformationMatrices(List<Matrix4> matrices);
 	void setReferenceScene(VertexGeometry scene);

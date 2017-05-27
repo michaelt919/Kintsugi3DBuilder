@@ -28,7 +28,7 @@ public class InteractiveGraphics
 	 * @return A new  InteractiveApplication with the given InteractiveRenderable and ContextType bound together
 	 * 		   as its Refreshable.
 	 */
-	public static <ContextType extends Context<ContextType>> InteractiveApplication createApplication(EventPollable pollable, ContextType context, InteractiveRenderable renderable)
+	public static <ContextType extends Context<ContextType>> InteractiveApplication createApplication(EventPollable pollable, ContextType context, InteractiveRenderable<ContextType> renderable)
 	{
 		return new InteractiveApplication(pollable, new Refreshable()
 		{
@@ -44,7 +44,7 @@ public class InteractiveGraphics
 			{
 				context.makeContextCurrent();
 				renderable.update();
-				renderable.draw();
+				renderable.draw(context.getDefaultFramebuffer());
 				context.flush();
 				context.swapBuffers();
 			}

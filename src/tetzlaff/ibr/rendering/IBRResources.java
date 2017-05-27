@@ -707,6 +707,108 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		}
 	}
 	
+	public void setupShaderProgram(Program<ContextType> program, boolean enableTextures)
+	{
+		program.setTexture("viewImages", this.colorTextures);
+		program.setUniformBuffer("CameraWeights", this.cameraWeightBuffer);
+		program.setUniformBuffer("CameraPoses", this.cameraPoseBuffer);
+		program.setUniformBuffer("CameraProjections", this.cameraProjectionBuffer);
+		program.setUniformBuffer("CameraProjectionIndices", this.cameraProjectionIndexBuffer);
+    	if (this.lightPositionBuffer != null && this.lightIntensityBuffer != null && this.lightIndexBuffer != null)
+    	{
+    		program.setUniformBuffer("LightPositions", this.lightPositionBuffer);
+    		program.setUniformBuffer("LightIntensities", this.lightIntensityBuffer);
+    		program.setUniformBuffer("LightIndices", this.lightIndexBuffer);
+    	}
+    	program.setUniform("viewCount", this.viewSet.getCameraPoseCount());
+    	
+    	if (this.depthTextures != null)
+		{
+    		program.setTexture("depthImages", this.depthTextures);
+		}
+    	
+    	program.setUniform("gamma", this.viewSet.getGamma());
+    	
+    	if (this.normalTexture == null)
+		{
+			program.setUniform("useNormalTexture", false);
+			program.setTexture("normalMap", null);
+		}
+		else
+		{
+			program.setUniform("useNormalTexture", enableTextures);
+			program.setTexture("normalMap", this.normalTexture);
+		}
+		
+		if (this.diffuseTexture == null)
+		{
+			program.setUniform("useDiffuseTexture", false);
+			program.setTexture("diffuseMap", null);
+		}
+		else
+		{
+			program.setUniform("useDiffuseTexture", enableTextures);
+			program.setTexture("diffuseMap", this.diffuseTexture);
+		}
+		
+		if (this.specularTexture == null)
+		{
+			program.setUniform("useSpecularTexture", false);
+			program.setTexture("specularMap", null);
+		}
+		else
+		{
+			program.setUniform("useSpecularTexture", enableTextures);
+			program.setTexture("specularMap", this.specularTexture);
+		}
+		
+		if (this.roughnessTexture == null)
+		{
+			program.setUniform("useRoughnessTexture", false);
+			program.setTexture("roughnessMap", null);
+		}
+		else
+		{
+			program.setUniform("useRoughnessTexture", enableTextures);
+			program.setTexture("roughnessMap", this.roughnessTexture);
+		}
+		
+		if (this.luminanceMap == null)
+		{
+			program.setUniform("useLuminanceMap", false);
+			program.setTexture("luminanceMap", null);
+		}
+		else
+		{
+			program.setUniform("useLuminanceMap", true);
+			program.setTexture("luminanceMap", this.luminanceMap);
+		}
+		
+		if (this.inverseLuminanceMap == null)
+		{
+			program.setUniform("useInverseLuminanceMap", false);
+			program.setTexture("inverseLuminanceMap", null);
+		}
+		else
+		{
+			program.setUniform("useInverseLuminanceMap", true);
+			program.setTexture("inverseLuminanceMap", this.inverseLuminanceMap);
+		}
+
+		program.setUniform("infiniteLightSources", this.viewSet.areLightSourcesInfinite());
+		
+		if (this.shadowMatrixBuffer == null || this.shadowTextures == null)
+		{
+			program.setUniform("shadowTestingEnabled", false);
+		}
+		else
+		{
+			program.setUniform("shadowTestingEnabled", true);
+			program.setUniformBuffer("ShadowMatrices", this.shadowMatrixBuffer);
+			program.setTexture("shadowImages", this.shadowTextures);
+		}
+	}
+	
 	public float getCameraWeight(int index)
 	{
 		if (this.cameraWeights != null)

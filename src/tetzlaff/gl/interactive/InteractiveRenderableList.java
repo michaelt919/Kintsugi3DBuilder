@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Framebuffer;
 import tetzlaff.util.SelectableList;
 
 /**
@@ -13,36 +15,37 @@ import tetzlaff.util.SelectableList;
  * is also itself a InteractiveRenderable and will keep all its members updated and will draw the currently
  * 'active' InteractiveRenderable in the collection.
  *
- * @param <T> The type of the objects stored in the container (must implement InteractiveRenderable)
+ * @param <RenderableType> The type of the objects stored in the container (must implement InteractiveRenderable)
  * @see InteractiveRenderable
  * @author Michael Tetzlaff
  */
-public class InteractiveRenderableList<T extends InteractiveRenderable> implements InteractiveRenderable, SelectableList<T>
+public class InteractiveRenderableList<ContextType extends Context<ContextType>, RenderableType extends InteractiveRenderable<ContextType>> 
+	implements InteractiveRenderable<ContextType>, SelectableList<RenderableType>
 {
-	private List<T> renderables;
+	private List<RenderableType> renderables;
 	private int selectedIndex = -1;
 	
-	private List<T> removedRenderables;
-	private List<T> addedRenderables;
+	private List<RenderableType> removedRenderables;
+	private List<RenderableType> addedRenderables;
 
 	public InteractiveRenderableList() 
 	{
-		renderables = new ArrayList<T>();
-		removedRenderables = new ArrayList<T>();
-		addedRenderables = new ArrayList<T>();
+		renderables = new ArrayList<RenderableType>();
+		removedRenderables = new ArrayList<RenderableType>();
+		addedRenderables = new ArrayList<RenderableType>();
 	}
 	
-	public InteractiveRenderableList(List<T> renderables)
+	public InteractiveRenderableList(List<RenderableType> renderables)
 	{
 		this.renderables = renderables;
-		removedRenderables = new ArrayList<T>();
-		addedRenderables = new ArrayList<T>(renderables);
+		removedRenderables = new ArrayList<RenderableType>();
+		addedRenderables = new ArrayList<RenderableType>(renderables);
 	}
 	
 	@Override
 	public void initialize() 
 	{
-		for (InteractiveRenderable d : renderables)
+		for (InteractiveRenderable<ContextType> d : renderables)
 		{
 			d.initialize();
 		}
@@ -51,39 +54,39 @@ public class InteractiveRenderableList<T extends InteractiveRenderable> implemen
 	@Override
 	public void update() 
 	{
-		for (InteractiveRenderable d : removedRenderables)
+		for (InteractiveRenderable<ContextType> d : removedRenderables)
 		{
 			d.close();
 		}
 		
-		for (InteractiveRenderable d : addedRenderables)
+		for (InteractiveRenderable<ContextType> d : addedRenderables)
 		{
 			d.initialize();
 		}
 		
-		removedRenderables = new ArrayList<T>();
-		addedRenderables = new ArrayList<T>();
+		removedRenderables = new ArrayList<RenderableType>();
+		addedRenderables = new ArrayList<RenderableType>();
 		
-		for (InteractiveRenderable d : renderables)
+		for (InteractiveRenderable<ContextType> d : renderables)
 		{
 			d.update();
 		}
 	}
 
 	@Override
-	public void draw() 
+	public void draw(Framebuffer<ContextType> framebuffer) 
 	{
-		InteractiveRenderable selected = this.getSelectedItem();
+		InteractiveRenderable<ContextType> selected = this.getSelectedItem();
 		if (selected != null)
 		{
-			selected.draw();
+			selected.draw(framebuffer);
 		}
 	}
 
 	@Override
 	public void close() 
 	{
-		for (InteractiveRenderable d : renderables)
+		for (InteractiveRenderable<ContextType> d : renderables)
 		{
 			d.close();
 		}
@@ -96,7 +99,7 @@ public class InteractiveRenderableList<T extends InteractiveRenderable> implemen
 	}
 	
 	@Override
-	public T getSelectedItem()
+	public RenderableType getSelectedItem()
 	{
 		if (this.getSelectedIndex() < 0)
 		{
@@ -146,7 +149,7 @@ public class InteractiveRenderableList<T extends InteractiveRenderable> implemen
 	}
 
 	@Override
-	public Iterator<T> iterator() 
+	public Iterator<RenderableType> iterator() 
 	{
 		return renderables.iterator();
 	}
@@ -164,7 +167,7 @@ public class InteractiveRenderableList<T extends InteractiveRenderable> implemen
 	}
 
 	@Override
-	public boolean add(T e) 
+	public boolean add(RenderableType e) 
 	{
 		if (renderables.add(e))
 		{
@@ -183,7 +186,7 @@ public class InteractiveRenderableList<T extends InteractiveRenderable> implemen
 	{
 		if (renderables.remove(o))
 		{
-			removedRenderables.add((T)o);
+			removedRenderables.add((RenderableType)o);
 			return true;
 		}
 		else
@@ -199,7 +202,7 @@ public class InteractiveRenderableList<T extends InteractiveRenderable> implemen
 	}
 
 	@Override
-	public boolean addAll(Collection<? extends T> c) 
+	public boolean addAll(Collection<? extends RenderableType> c) 
 	{
 		if (renderables.addAll(c))
 		{
@@ -213,7 +216,7 @@ public class InteractiveRenderableList<T extends InteractiveRenderable> implemen
 	}
 
 	@Override
-	public boolean addAll(int index, Collection<? extends T> c) 
+	public boolean addAll(int index, Collection<? extends RenderableType> c) 
 	{
 		if (renderables.addAll(index, c))
 		{
@@ -246,19 +249,19 @@ public class InteractiveRenderableList<T extends InteractiveRenderable> implemen
 	public void clear() 
 	{
 		this.removedRenderables = this.renderables;
-		this.renderables = new ArrayList<T>();
+		this.renderables = new ArrayList<RenderableType>();
 	}
 
 	@Override
-	public T get(int index) 
+	public RenderableType get(int index) 
 	{
 		return renderables.get(index);
 	}
 
 	@Override
-	public T set(int index, T element) 
+	public RenderableType set(int index, RenderableType element) 
 	{
-		T removed = renderables.set(index, element);
+		RenderableType removed = renderables.set(index, element);
 		if (removed != null)
 		{
 			removedRenderables.add(removed);
@@ -271,7 +274,7 @@ public class InteractiveRenderableList<T extends InteractiveRenderable> implemen
 	}
 
 	@Override
-	public void add(int index, T element) 
+	public void add(int index, RenderableType element) 
 	{
 		renderables.add(index, element);
 		if (element != null)
@@ -285,9 +288,9 @@ public class InteractiveRenderableList<T extends InteractiveRenderable> implemen
 	}
 
 	@Override
-	public T remove(int index) 
+	public RenderableType remove(int index) 
 	{
-		T removed = renderables.remove(index);
+		RenderableType removed = renderables.remove(index);
 		if (removed != null)
 		{
 			removedRenderables.add(removed);
@@ -312,20 +315,20 @@ public class InteractiveRenderableList<T extends InteractiveRenderable> implemen
 	}
 
 	@Override
-	public ListIterator<T> listIterator() 
+	public ListIterator<RenderableType> listIterator() 
 	{
 		return renderables.listIterator();
 	}
 
 	@Override
-	public ListIterator<T> listIterator(int index) 
+	public ListIterator<RenderableType> listIterator(int index) 
 	{
 		return renderables.listIterator(index);
 	}
 
 	@Override
-	public InteractiveRenderableList<T> subList(int fromIndex, int toIndex)
+	public InteractiveRenderableList<ContextType, RenderableType> subList(int fromIndex, int toIndex)
 	{
-		return new InteractiveRenderableList<T>(renderables.subList(fromIndex, toIndex));
+		return new InteractiveRenderableList<ContextType, RenderableType>(renderables.subList(fromIndex, toIndex));
 	}
 }
