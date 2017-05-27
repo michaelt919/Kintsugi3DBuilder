@@ -1303,7 +1303,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 //	        }
         	
         double sumSqError = 0.0;
-        double sumWeights = 0.0;
+        //double sumWeights = 0.0;
         double sumMask = 0.0;
 
     	float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
@@ -1312,7 +1312,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			if (fidelityArray[4 * k + 1] >= 0.0f)
 			{
 				sumSqError += fidelityArray[4 * k];
-				sumWeights += fidelityArray[4 * k + 1];
+				//sumWeights += fidelityArray[4 * k + 1];
 				sumMask += 1.0;
 			}
     	}

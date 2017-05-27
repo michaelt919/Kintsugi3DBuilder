@@ -243,6 +243,86 @@ class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferOb
 			throw new IllegalArgumentException("Attachment must be of type OpenGLFramebufferAttachment.");
 		}
 	}
+
+	@Override
+	public OpenGLTexture2D getStencilAttachmentTexture()
+	{
+		if (this.stencilAttachment == null || !(this.stencilAttachment instanceof OpenGLTexture2D))
+		{
+			throw new UnsupportedOperationException("The stencil attachment for the framebuffer is not a 2D texture.");
+		}
+		else return (OpenGLTexture2D)this.stencilAttachment;
+	}
+
+	
+	@Override
+	public void setStencilAttachment(FramebufferAttachment<OpenGLContext> attachment)
+	{
+		if (attachment instanceof OpenGLFramebufferAttachment)
+		{
+			OpenGLFramebufferAttachment attachmentCast = (OpenGLFramebufferAttachment)attachment;
+			
+			if (this.stencilAttachment != null)
+			{
+				// Remove the attachment from the list of owned attachments if it existed
+				if (this.ownedAttachments.remove(this.stencilAttachment))
+				{
+					// Delete it
+					((Resource)this.stencilAttachment).close();
+				}
+			}
+			
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
+			this.context.openGLErrorCheck();
+			attachmentCast.attachToDrawFramebuffer(GL_STENCIL_ATTACHMENT, 0);
+			
+			this.stencilAttachment = attachmentCast;
+		}
+		else
+		{
+			throw new IllegalArgumentException("Attachment must be of type OpenGLFramebufferAttachment.");
+		}
+	}
+	
+	@Override
+	public OpenGLTexture2D getDepthStencilAttachmentTexture()
+	{
+		if (this.depthStencilAttachment == null || !(this.depthStencilAttachment instanceof OpenGLTexture2D))
+		{
+			throw new UnsupportedOperationException("The depth/stencil attachment for the framebuffer is not a 2D texture.");
+		}
+		else return (OpenGLTexture2D)this.depthStencilAttachment;
+	}
+
+	
+	@Override
+	public void setDepthStencilAttachment(FramebufferAttachment<OpenGLContext> attachment)
+	{
+		if (attachment instanceof OpenGLFramebufferAttachment)
+		{
+			OpenGLFramebufferAttachment attachmentCast = (OpenGLFramebufferAttachment)attachment;
+			
+			if (this.depthStencilAttachment != null)
+			{
+				// Remove the attachment from the list of owned attachments if it existed
+				if (this.ownedAttachments.remove(this.depthStencilAttachment))
+				{
+					// Delete it
+					((Resource)this.depthStencilAttachment).close();
+				}
+			}
+			
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.fboId);
+			this.context.openGLErrorCheck();
+			attachmentCast.attachToDrawFramebuffer(GL_DEPTH_STENCIL_ATTACHMENT, 0);
+			
+			this.depthStencilAttachment = attachmentCast;
+		}
+		else
+		{
+			throw new IllegalArgumentException("Attachment must be of type OpenGLFramebufferAttachment.");
+		}
+	}
 	
 	@Override
 	public void close()
