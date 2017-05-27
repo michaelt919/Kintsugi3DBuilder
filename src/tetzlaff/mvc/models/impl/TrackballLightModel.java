@@ -74,7 +74,7 @@ public class TrackballLightModel extends LightModelBase implements LightModel
 			if (trackballLightCount == 1)
 			{
 				// no lights controlled -> one light controlled
-				lightTrackballModel.setTrackballMatrix(Matrix4.identity());
+				lightTrackballModel.setTrackballMatrix(Matrix4.IDENTITY);
 				lightTrackballModel.setScale(1.0f);
 			}
 		}

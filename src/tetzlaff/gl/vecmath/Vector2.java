@@ -8,6 +8,8 @@ package tetzlaff.gl.vecmath;
  */
 public class Vector2 
 {
+	public static final Vector2 ZERO = new Vector2(0.0f);
+	
 	/**
 	 * The first dimension
 	 */
@@ -22,34 +24,44 @@ public class Vector2
 	 * @param x Value of the first dimension.
 	 * @param y Value of the second dimension.
 	 */
-	private Vector2(float x, float y)
+	public Vector2(float x, float y)
 	{
 		this.x = x;
 		this.y = y;
-	}
-	
-	public static Vector2 fromScalars(float x, float y)
-	{
-		return new Vector2(x, y);
 	}
 	
 	/**
 	 * Construct a vector in two dimensions with the given values.
 	 * @param value Value of both dimensions.
 	 */
-	public static Vector2 fromScalar(float value)
+	public Vector2(float value)
 	{
-		return new Vector2(value, value);
+		this(value, value);
 	}
 	
-	public static Vector2 takeXY(Vector3 v3)
+	public Vector3 asVector3()
 	{
-		return new Vector2(v3.x, v3.y);
+		return asVector3(0.0f);
 	}
 	
-	public static Vector2 takeXY(Vector4 v4)
+	public Vector3 asVector3(float z)
 	{
-		return new Vector2(v4.x, v4.y);
+		return new Vector3(this.x, this.y, z);
+	}
+	
+	public Vector4 asPosition()
+	{
+		return asVector4(0.0f, 1.0f);
+	}
+	
+	public Vector4 asDirection()
+	{
+		return asVector4(0.0f, 0.0f);
+	}
+	
+	public Vector4 asVector4(float z, float w)
+	{
+		return new Vector4(this.x, this.y, z, w);
 	}
 	
 	@Override

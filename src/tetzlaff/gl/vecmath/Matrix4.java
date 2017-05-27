@@ -63,6 +63,14 @@ public class Matrix4
 			        		column1.w, column2.w, column3.w, column4.w	);
     }
 	
+	public static Matrix4 fromRows(Vector4 row1, Vector4 row2, Vector4 row3, Vector4 row4)
+	{
+		return new Matrix4( row1.x, row1.y, row1.z, row1.w,
+							row2.x, row2.y, row2.z, row2.w,
+							row3.x, row3.y, row3.z, row3.w,
+							row4.x, row4.y, row4.z, row4.w );
+	}
+	
 	public static Matrix4 affine(Matrix3 linear, float tx, float ty, float tz)
 	{
 		return new Matrix4(	linear.get(0,0),	linear.get(0,1),	linear.get(0,2),	tx,
@@ -71,9 +79,16 @@ public class Matrix4
 							0.0f,				0.0f,				0.0f,				1.0f	);
 	}
 	
-	public static Matrix4 linearFrom3x3(Matrix3 m3)
+	/**
+	 * Creates a 4x4 matrix from a 3x3 matrix by dropping the fourth row and column.
+	 * @param m4 The 4x4 matrix.
+	 */
+	public Matrix3 getUpperLeft3x3() 
 	{
-		return affine(m3, 0.0f, 0.0f, 0.0f);
+		return Matrix3.fromRows(
+				new Vector3(this.get(0,0), this.get(0,1), this.get(0,2)),
+				new Vector3(this.get(1,0), this.get(1,1), this.get(1,2)),
+				new Vector3(this.get(2,0), this.get(2,1), this.get(2,2)) );
 	}
 	
 	public static Matrix4 fromDoublePrecision(DoubleMatrix4 m4)
@@ -172,35 +187,35 @@ public class Matrix4
 		float upX, float upY, float upZ)
 	{
 		return Matrix4.lookAt(
-			Vector3.fromScalars(eyeX, eyeY, eyeZ),
-			Vector3.fromScalars(centerX, centerY, centerZ),
-			Vector3.fromScalars(upX, upY, upZ)
+			new Vector3(eyeX, eyeY, eyeZ),
+			new Vector3(centerX, centerY, centerZ),
+			new Vector3(upX, upY, upZ)
 		);
 	}
 	
 	public static Matrix4 rotateX(double radians)
 	{
-		return linearFrom3x3(Matrix3.rotateX(radians));
+		return Matrix3.rotateX(radians).asMatrix4();
 	}
 	
 	public static Matrix4 rotateY(double radians)
 	{
-		return linearFrom3x3(Matrix3.rotateY(radians));
+		return Matrix3.rotateY(radians).asMatrix4();
 	}
 	
 	public static Matrix4 rotateZ(double radians)
 	{
-		return linearFrom3x3(Matrix3.rotateZ(radians));
+		return Matrix3.rotateZ(radians).asMatrix4();
 	}
 	
 	public static Matrix4 rotateAxis(Vector3 axis, double radians)
 	{
-		return linearFrom3x3(Matrix3.rotateAxis(axis, radians));
+		return Matrix3.rotateAxis(axis, radians).asMatrix4();
 	}
 	
 	public static Matrix4 fromQuaternion(float x, float y, float z, float w)
 	{
-		return linearFrom3x3(Matrix3.fromQuaternion(x, y, z, w));
+		return Matrix3.fromQuaternion(x, y, z, w).asMatrix4();
 	}
 	
 	public Matrix4 plus(Matrix4 other)
@@ -247,7 +262,7 @@ public class Matrix4
 	
 	public Vector4 times(Vector4 vector)
 	{
-		return Vector4.fromScalars(
+		return new Vector4(
 			this.m[0][0] * vector.x + this.m[0][1] * vector.y + this.m[0][2] * vector.z + this.m[0][3] * vector.w,
 			this.m[1][0] * vector.x + this.m[1][1] * vector.y + this.m[1][2] * vector.z + this.m[1][3] * vector.w,
 			this.m[2][0] * vector.x + this.m[2][1] * vector.y + this.m[2][2] * vector.z + this.m[2][3] * vector.w,
@@ -283,10 +298,11 @@ public class Matrix4
 	 */
 	public Matrix4 quickInverse(float tolerance)
 	{
-		Matrix3 rotationScale = Matrix3.takeUpperLeftFrom4x4(this);
+		Matrix3 rotationScale = this.getUpperLeft3x3();
 		float scaleSquared = (float)Math.pow(rotationScale.determinant(), 2.0 / 3.0);
 		
-		Matrix4 invCandidate = linearFrom3x3(rotationScale.transpose().times(1.0f / scaleSquared)).times(Matrix4.translate(Vector3.takeXYZ(this.getColumn(3)).negated()));
+		Matrix4 invCandidate = rotationScale.transpose().times(1.0f / scaleSquared).asMatrix4()
+				.times(Matrix4.translate(this.getColumn(3).getXYZ().negated()));
 		
 		Matrix4 identityCandidate = this.times(invCandidate);
 		
@@ -320,12 +336,12 @@ public class Matrix4
 	
 	public Vector4 getRow(int row)
 	{
-		return Vector4.fromScalars(this.m[row][0], this.m[row][1], this.m[row][2], this.m[row][3]);
+		return new Vector4(this.m[row][0], this.m[row][1], this.m[row][2], this.m[row][3]);
 	}
 	
 	public Vector4 getColumn(int col)
 	{
-		return Vector4.fromScalars(this.m[0][col], this.m[1][col], this.m[2][col], this.m[3][col]);
+		return new Vector4(this.m[0][col], this.m[1][col], this.m[2][col], this.m[3][col]);
 	}
 
 	public FloatBuffer asFloatBuffer() 

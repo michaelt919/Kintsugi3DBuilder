@@ -397,7 +397,7 @@ public class ViewSet
 							.times(Matrix4.translate(-x, -y, -z)));
 						
 						unorderedCameraPoseInvList.add(Matrix4.translate(x, y, z)
-							.times(Matrix4.linearFrom3x3(Matrix3.fromQuaternion(i, j, k, qr).transpose())));
+							.times(Matrix3.fromQuaternion(i, j, k, qr).transpose().asMatrix4()));
 						
 						scanner.nextLine();
 						break;
@@ -405,11 +405,11 @@ public class ViewSet
 					case "P":
 					{
 						// Pose from matrix
-						Matrix4 newPose = new Matrix4(
-							scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
-							scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(),
-							scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), 
-							scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat());
+						Matrix4 newPose = Matrix4.fromRows(
+							new Vector4(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()),
+							new Vector4(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()),
+							new Vector4(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()), 
+							new Vector4(scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat(), scanner.nextFloat()));
 						
 						unorderedCameraPoseList.add(newPose);
 						unorderedCameraPoseInvList.add(newPose.quickInverse(0.002f));
@@ -486,12 +486,12 @@ public class ViewSet
 						float x = scanner.nextFloat();
 						float y = scanner.nextFloat();
 						float z = scanner.nextFloat();
-						params.lightPositionList.add(Vector3.fromScalars(x, y, z));
+						params.lightPositionList.add(new Vector3(x, y, z));
 						
 						float r = scanner.nextFloat();
 						float g = scanner.nextFloat();
 						float b = scanner.nextFloat();
-						params.lightIntensityList.add(Vector3.fromScalars(r, g, b));
+						params.lightIntensityList.add(new Vector3(r, g, b));
 		
 						// Skip the rest of the line
 						scanner.nextLine();
@@ -624,7 +624,7 @@ public class ViewSet
 
         float globalScale = 1.0f;
         Matrix4 globalRotation = Matrix4.IDENTITY;
-        Vector3 globalTranslate = Vector3.fromScalars(0.0f, 0.0f, 0.0f);
+        Vector3 globalTranslate = new Vector3(0.0f, 0.0f, 0.0f);
         
         String version = "", chunkLabel = "", groupLabel = "";
         String sensorID = "", cameraID = "", imageFile = "";
@@ -822,17 +822,19 @@ public class ViewSet
 		                                    Matrix4 trans;
 		                                    if(expectedSize == 9)
 		                                    {
-		                                        trans = Matrix4.linearFrom3x3(new Matrix3(
-		                                            m[0],  m[3],  m[6],
-		                                           -m[1], -m[4], -m[7],
-		                                           -m[2], -m[5], -m[8]));
+		                                        trans = Matrix3.fromRows(
+			                                            new Vector3( m[0],  m[3],  m[6]),
+			                                            new Vector3(-m[1], -m[4], -m[7]),
+	                                            		new Vector3(-m[2], -m[5], -m[8]))
+                                            		.asMatrix4();
 		                                    }
 		                                    else
 		                                    {
-		                                        trans = Matrix4.linearFrom3x3(new Matrix3(
-			                                             m[0], 	m[4],  m[8],
-			                                            -m[1], -m[5], -m[9],
-			                                            -m[2], -m[6], -m[10]))
+		                                        trans = Matrix3.fromRows(
+			                                            new Vector3( m[0], 	m[4],  m[8]),
+			                                            new Vector3(-m[1], -m[5], -m[9]),
+			                                            new Vector3(-m[2], -m[6], -m[10]))
+                                            		.asMatrix4()
 			                                    	.times(Matrix4.translate(-m[3], -m[7], -m[11]));
 		                                    }
 		                                    
@@ -843,18 +845,20 @@ public class ViewSet
 		                                    if(expectedSize == 9)
 		                                    {
 		                                        System.out.println("\tSetting global rotation.");
-		                                    	globalRotation = Matrix4.linearFrom3x3(new Matrix3(
-		                                            m[0], m[3], m[6],
-		                                            m[1], m[4], m[7],
-		                                            m[2], m[5], m[8]));
+		                                    	globalRotation = Matrix3.fromRows(
+                                    					new Vector3(m[0], m[3], m[6]),
+                                    					new Vector3(m[1], m[4], m[7]),
+                                    					new Vector3(m[2], m[5], m[8]))
+                                					.asMatrix4();
 		                                    }
 		                                    else
 		                                    {
 		                                        System.out.println("\tSetting global transformation.");
-		                                    	globalRotation = Matrix4.linearFrom3x3(new Matrix3(
-			                                             m[0], 	m[4],  m[8],
-			                                             m[1],  m[5],  m[9],
-			                                             m[2],  m[6],  m[10]))
+		                                    	globalRotation = Matrix3.fromRows(
+                                    					new Vector3(m[0], m[4], m[8]),
+                                    					new Vector3(m[1], m[5], m[9]),
+                                    					new Vector3(m[2], m[6], m[10]))
+                                					.asMatrix4()
 		                                        	.times(Matrix4.translate(m[3], m[7], m[11]));
 		                                    }
 		                                }
@@ -867,7 +871,7 @@ public class ViewSet
 	                        	{
 	                                System.out.println("\tSetting global translate.");
 	                                String[] components = reader.getElementText().split("\\s");
-	                                globalTranslate = Vector3.fromScalars(
+	                                globalTranslate = new Vector3(
 	                                		-Float.parseFloat(components[0]),
 	                                		-Float.parseFloat(components[1]),
 	                                		-Float.parseFloat(components[2]));
@@ -989,7 +993,7 @@ public class ViewSet
         {
         	// Apply the global transform to each camera
         	Matrix4 m1 = cameras[i].transform;
-        	Vector3 displacement = Vector3.takeXYZ(m1.getColumn(3));
+        	Vector3 displacement = m1.getColumn(3).getXYZ();
         	m1 = Matrix4.translate(displacement.times(1.0f / globalScale).minus(displacement)).times(m1);
         	
         	// TODO: Figure out the right way to integrate the global transforms
@@ -1003,8 +1007,8 @@ public class ViewSet
             Matrix4 cameraPoseInv = //Matrix4.scale(1.0f / globalScale)
             						/*	   .times*/(Matrix4.translate(globalTranslate.negated()))
 						        		   .times(globalRotation.transpose())
-						        		   .times(Matrix4.linearFrom3x3(Matrix3.takeUpperLeftFrom4x4(m1).transpose()))
-						            	   .times(Matrix4.translate(Vector3.takeXYZ(m1.getColumn(3).negated())));
+						        		   .times(m1.getUpperLeft3x3().transpose().asMatrix4())
+						            	   .times(Matrix4.translate(m1.getColumn(3).getXYZ().negated()));
             params.cameraPoseInvList.add(cameraPoseInv);
             
             Matrix4 expectedIdentity = cameraPoseInv.times(cameras[i].transform);
@@ -1057,7 +1061,7 @@ public class ViewSet
         for (int i = 0; i < nextLightIndex; i++)
         {
         	params.lightPositionList.add(Vector3.ZERO);
-        	params.lightIntensityList.add(Vector3.fromScalar(1.0f));
+        	params.lightIntensityList.add(new Vector3(1.0f));
         }
         params.infiniteLightSources = true; // TODO Could be set to false if support for automatically computing light intensities based on camera distance is added.
 

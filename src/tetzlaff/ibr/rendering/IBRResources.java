@@ -31,7 +31,6 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.ViewSet;
@@ -659,7 +658,10 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 							)
 					);
 		    		
-		    		Matrix4 modelView = Matrix4.lookAt(new Vector3(this.viewSet.getCameraPoseInverse(i).times(new Vector4(this.viewSet.getLightPosition(0), 1.0f))), this.geometry.getCentroid(), new Vector3(0, 1, 0));
+		    		Matrix4 modelView = Matrix4.lookAt(
+		    				this.viewSet.getCameraPoseInverse(i).times(this.viewSet.getLightPosition(0).asPosition()).getXYZ(), 
+		    				this.geometry.getCentroid(), 
+		    				new Vector3(0, 1, 0));
 		        	depthRenderingProgram.setUniform("model_view", modelView);
 		        	
 		    		Matrix4 projection = this.viewSet.getCameraProjection(this.viewSet.getCameraProjectionIndex(i))
@@ -706,7 +708,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		
 		for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
 		{
-			viewDirections[i] = new Vector3(this.viewSet.getCameraPoseInverse(i).getColumn(3))
+			viewDirections[i] = this.viewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
 					.minus(this.geometry.getCentroid()).normalized();
 		}
 		

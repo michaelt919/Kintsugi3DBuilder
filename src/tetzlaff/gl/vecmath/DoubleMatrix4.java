@@ -63,17 +63,20 @@ public class DoubleMatrix4
 					        		column1.w, column2.w, column3.w, column4.w	);
     }
 	
+	public static DoubleMatrix4 fromRows(DoubleVector4 row1, DoubleVector4 row2, DoubleVector4 row3, DoubleVector4 row4)
+	{
+		return new DoubleMatrix4( 	row1.x, row1.y, row1.z, row1.w,
+									row2.x, row2.y, row2.z, row2.w,
+									row3.x, row3.y, row3.z, row3.w,
+									row4.x, row4.y, row4.z, row4.w	);
+	}
+	
 	public static DoubleMatrix4 affine(DoubleMatrix3 linear, double tx, double ty, double tz)
 	{
 		return new DoubleMatrix4(	linear.get(0,0),	linear.get(0,1),	linear.get(0,2),	tx,
 									linear.get(1,0),	linear.get(1,1),	linear.get(1,2),	ty,
 									linear.get(2,0),	linear.get(2,1),	linear.get(2,2),	tz,
 									0.0,				0.0,				0.0,				1.0	);
-	}
-	
-	public static DoubleMatrix4 linearFrom3x3(DoubleMatrix3 m3)
-	{
-		return affine(m3, 0.0, 0.0, 0.0);
 	}
 	
 	public static DoubleMatrix4 fromSinglePrecision(Matrix4 m4)
@@ -172,35 +175,47 @@ public class DoubleMatrix4
 		double upX, double upY, double upZ)
 	{
 		return DoubleMatrix4.lookAt(
-			DoubleVector3.fromScalars(eyeX, eyeY, eyeZ),
-			DoubleVector3.fromScalars(centerX, centerY, centerZ),
-			DoubleVector3.fromScalars(upX, upY, upZ)
+			new DoubleVector3(eyeX, eyeY, eyeZ),
+			new DoubleVector3(centerX, centerY, centerZ),
+			new DoubleVector3(upX, upY, upZ)
 		);
 	}
 	
 	public static DoubleMatrix4 rotateX(double radians)
 	{
-		return linearFrom3x3(DoubleMatrix3.rotateX(radians));
+		return DoubleMatrix3.rotateX(radians).asMatrix4();
 	}
 	
 	public static DoubleMatrix4 rotateY(double radians)
 	{
-		return linearFrom3x3(DoubleMatrix3.rotateY(radians));
+		return DoubleMatrix3.rotateY(radians).asMatrix4();
 	}
 	
 	public static DoubleMatrix4 rotateZ(double radians)
 	{
-		return linearFrom3x3(DoubleMatrix3.rotateZ(radians));
+		return DoubleMatrix3.rotateZ(radians).asMatrix4();
 	}
 	
 	public static DoubleMatrix4 rotateAxis(DoubleVector3 axis, double radians)
 	{
-		return linearFrom3x3(DoubleMatrix3.rotateAxis(axis, radians));
+		return DoubleMatrix3.rotateAxis(axis, radians).asMatrix4();
 	}
 	
 	public static DoubleMatrix4 fromQuaternion(double x, double y, double z, double w)
 	{
-		return linearFrom3x3(DoubleMatrix3.fromQuaternion(x, y, z, w));
+		return DoubleMatrix3.fromQuaternion(x, y, z, w).asMatrix4();
+	}
+	
+	/**
+	 * Creates a 4x4 matrix from a 3x3 matrix by dropping the fourth row and column.
+	 * @param m4 The 4x4 matrix.
+	 */
+	public DoubleMatrix3 getUpperLeft3x3() 
+	{
+		return DoubleMatrix3.fromRows(
+				new DoubleVector3(this.get(0,0), this.get(0,1),	this.get(0,2)),
+				new DoubleVector3(this.get(1,0), this.get(1,1),	this.get(1,2)),
+				new DoubleVector3(this.get(2,0), this.get(2,1),	this.get(2,2)) );
 	}
 	
 	public DoubleMatrix4 plus(DoubleMatrix4 other)
@@ -247,7 +262,7 @@ public class DoubleMatrix4
 	
 	public DoubleVector4 times(DoubleVector4 vector)
 	{
-		return DoubleVector4.fromScalars(
+		return new DoubleVector4(
 			this.m[0][0] * vector.x + this.m[0][1] * vector.y + this.m[0][2] * vector.z + this.m[0][3] * vector.w,
 			this.m[1][0] * vector.x + this.m[1][1] * vector.y + this.m[1][2] * vector.z + this.m[1][3] * vector.w,
 			this.m[2][0] * vector.x + this.m[2][1] * vector.y + this.m[2][2] * vector.z + this.m[2][3] * vector.w,
@@ -283,10 +298,11 @@ public class DoubleMatrix4
 	 */
 	public DoubleMatrix4 quickInverse(double tolerance)
 	{
-		DoubleMatrix3 rotationScale = DoubleMatrix3.takeUpperLeftFrom4x4(this);
+		DoubleMatrix3 rotationScale = this.getUpperLeft3x3();
 		double scaleSquared = (double)Math.pow(rotationScale.determinant(), 2.0 / 3.0);
 		
-		DoubleMatrix4 invCandidate = linearFrom3x3(rotationScale.transpose().times(1.0 / scaleSquared)).times(DoubleMatrix4.translate(DoubleVector3.takeXYZ(this.getColumn(3)).negated()));
+		DoubleMatrix4 invCandidate = rotationScale.transpose().times(1.0 / scaleSquared).asMatrix4()
+				.times(DoubleMatrix4.translate(this.getColumn(3).getXYZ().negated()));
 		
 		DoubleMatrix4 identityCandidate = this.times(invCandidate);
 		
@@ -320,12 +336,12 @@ public class DoubleMatrix4
 	
 	public DoubleVector4 getRow(int row)
 	{
-		return DoubleVector4.fromScalars(this.m[row][0], this.m[row][1], this.m[row][2], this.m[row][3]);
+		return new DoubleVector4(this.m[row][0], this.m[row][1], this.m[row][2], this.m[row][3]);
 	}
 	
 	public DoubleVector4 getColumn(int col)
 	{
-		return DoubleVector4.fromScalars(this.m[0][col], this.m[1][col], this.m[2][col], this.m[3][col]);
+		return new DoubleVector4(this.m[0][col], this.m[1][col], this.m[2][col], this.m[3][col]);
 	}
 
 	public DoubleBuffer asFloatBuffer() 

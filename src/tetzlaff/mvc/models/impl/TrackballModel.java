@@ -13,7 +13,7 @@ public class TrackballModel implements ReadonlyCameraModel
 	
 	public TrackballModel() 
 	{
-		this.trackballMatrix = Matrix4.identity();
+		this.trackballMatrix = Matrix4.IDENTITY;
 		this.scale = 1.0f;
 		this.setLogScale(0.0f);
 		this.cameraPosition = new Vector3(0.0f, 0.0f, 1.0f);

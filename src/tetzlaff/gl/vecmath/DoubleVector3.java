@@ -9,41 +9,63 @@ package tetzlaff.gl.vecmath;
  */
 public class DoubleVector3 
 {
+	/**
+	 * The first dimension
+	 */
 	public final double x;
+	
+	/**
+	 * The second dimension
+	 */
 	public final double y;
+	
+	/**
+	 * The third dimension
+	 */
 	public final double z;
 	
-	public static final DoubleVector3 ZERO = fromScalar(0.0);
+	public static final DoubleVector3 ZERO = new DoubleVector3(0.0);
 
-	private DoubleVector3(double x, double y, double z)
+	/**
+	 * Construct a vector in three dimensions with the given values.
+	 * @param x Value of the first dimension.
+	 * @param y Value of the second dimension.
+	 * @param z Value of the third dimension.
+	 */
+	public DoubleVector3(double x, double y, double z)
 	{
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 	
-	public static DoubleVector3 fromScalars(double x, double y, double z)
-	{
-		return new DoubleVector3(x, y, z);
-	}
-	
 	/**
 	 * Construct a vector in three dimensions with the given values.
 	 * @param value Value of all three dimensions.
 	 */
-	public static DoubleVector3 fromScalar(double value)
+	public DoubleVector3(double value)
 	{
-		return new DoubleVector3(value, value, value);
+		this(value, value, value);
 	}
 	
-	public static DoubleVector3 fromVector2(DoubleVector2 v2, double z)
+	public DoubleVector4 asVector4(double w)
 	{
-		return new DoubleVector3(v2.x, v2.y, z);
+		return new DoubleVector4(this.x, this.y, this.z, w);
 	}
 	
-	public static DoubleVector3 takeXYZ(DoubleVector4 v4)
+	public DoubleVector4 asDirection()
 	{
-		return new DoubleVector3(v4.x, v4.y, v4.z);
+		return new DoubleVector4(this.x, this.y, this.z, 0.0);
+	}
+	
+	public DoubleVector4 asPosition()
+	{
+		return new DoubleVector4(this.x, this.y, this.z, 1.0);
+	}
+	
+	public DoubleVector2 getXY()
+	{
+		return new DoubleVector2(this.x, this.y);
 	}
 	
 	public DoubleVector3 plus(DoubleVector3 other)
@@ -95,9 +117,9 @@ public class DoubleVector3
 	public DoubleMatrix3 outerProduct(DoubleVector3 other)
 	{
 		return DoubleMatrix3.fromColumns(
-			DoubleVector3.fromScalars(this.x * other.x, this.y * other.x, this.z * other.x),
-			DoubleVector3.fromScalars(this.x * other.y, this.y * other.y, this.z * other.y),
-			DoubleVector3.fromScalars(this.x * other.z, this.y * other.z, this.z * other.z)
+			new DoubleVector3(this.x * other.x, this.y * other.x, this.z * other.x),
+			new DoubleVector3(this.x * other.y, this.y * other.y, this.z * other.y),
+			new DoubleVector3(this.x * other.z, this.y * other.z, this.z * other.z)
 		);
 	}
 	

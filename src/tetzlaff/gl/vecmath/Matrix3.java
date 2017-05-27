@@ -46,19 +46,15 @@ public class Matrix3
 	public static Matrix3 fromColumns(Vector3 col1, Vector3 col2, Vector3 col3)
 	{
 		return new Matrix3( col1.x, col2.x, col3.x,
-								  col1.y, col2.y, col3.y,
-							      col1.z, col2.z, col3.z );
+							col1.y, col2.y, col3.y,
+							col1.z, col2.z, col3.z );
 	}
 	
-	/**
-	 * Creates a 4x4 matrix from a 3x3 matrix by dropping the fourth row and column.
-	 * @param m4 The 4x4 matrix.
-	 */
-	public static Matrix3 takeUpperLeftFrom4x4(Matrix4 m4) 
+	public static Matrix3 fromRows(Vector3 row1, Vector3 row2, Vector3 row3)
 	{
-		return new Matrix3(	m4.get(0,0),	m4.get(0,1),	m4.get(0,2),
-									m4.get(1,0),	m4.get(1,1),	m4.get(1,2),
-									m4.get(2,0),	m4.get(2,1),	m4.get(2,2)		);
+		return new Matrix3( row1.x, row1.y, row1.z,
+							row2.x, row2.y, row2.z,
+							row3.x, row3.y, row3.z );
 	}
 	
 	public static Matrix3 fromDoublePrecision(DoubleMatrix3 m3)
@@ -229,7 +225,12 @@ public class Matrix3
             }
         }
         
-        return Vector4.fromScalars((float)q[0], (float)q[1], (float)q[2], (float)q[3]);
+        return new Vector4((float)q[0], (float)q[1], (float)q[2], (float)q[3]);
+	}
+	
+	public Matrix4 asMatrix4()
+	{
+		return Matrix4.affine(this, 0.0f, 0.0f, 0.0f);
 	}
 
 	/**
@@ -287,7 +288,7 @@ public class Matrix3
 	 */
 	public Vector3 times(Vector3 vector)
 	{
-		return Vector3.fromScalars(
+		return new Vector3(
 			this.m[0][0] * vector.x + this.m[0][1] * vector.y + this.m[0][2] * vector.z,
 			this.m[1][0] * vector.x + this.m[1][1] * vector.y + this.m[1][2] * vector.z,
 			this.m[2][0] * vector.x + this.m[2][1] * vector.y + this.m[2][2] * vector.z
@@ -377,7 +378,7 @@ public class Matrix3
 	 */
 	public Vector3 getRow(int row)
 	{
-		return Vector3.fromScalars(this.m[row][0], this.m[row][1], this.m[row][2]);
+		return new Vector3(this.m[row][0], this.m[row][1], this.m[row][2]);
 	}
 	
 	/**
@@ -387,6 +388,6 @@ public class Matrix3
 	 */
 	public Vector3 getColumn(int col)
 	{
-		return Vector3.fromScalars(this.m[0][col], this.m[1][col], this.m[2][col]);
+		return new Vector3(this.m[0][col], this.m[1][col], this.m[2][col]);
 	}
 }

@@ -21,7 +21,7 @@ public class Vector3
 	 */
 	public final float z;
 	
-	public static final Vector3 ZERO = fromScalar(0.0f);
+	public static final Vector3 ZERO = new Vector3(0.0f);
 
 	/**
 	 * Construct a vector in three dimensions with the given values.
@@ -29,35 +29,40 @@ public class Vector3
 	 * @param y Value of the second dimension.
 	 * @param z Value of the third dimension.
 	 */
-	private Vector3(float x, float y, float z)
+	public Vector3(float x, float y, float z)
 	{
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 	
-	public static Vector3 fromScalars(float x, float y, float z)
-	{
-		return new Vector3(x, y, z);
-	}
-	
 	/**
 	 * Construct a vector in three dimensions with the given values.
 	 * @param value Value of all three dimensions.
 	 */
-	public static Vector3 fromScalar(float value)
+	public Vector3(float value)
 	{
-		return new Vector3(value, value, value);
+		this(value, value, value);
 	}
 	
-	public static Vector3 fromVector2(Vector2 v2, float z)
+	public Vector4 asVector4(float w)
 	{
-		return new Vector3(v2.x, v2.y, z);
+		return new Vector4(this.x, this.y, this.z, w);
 	}
 	
-	public static Vector3 takeXYZ(Vector4 v4)
+	public Vector4 asDirection()
 	{
-		return new Vector3(v4.x, v4.y, v4.z);
+		return new Vector4(this.x, this.y, this.z, 0.0f);
+	}
+	
+	public Vector4 asPosition()
+	{
+		return new Vector4(this.x, this.y, this.z, 1.0f);
+	}
+	
+	public Vector2 getXY()
+	{
+		return new Vector2(this.x, this.y);
 	}
 	
 	@Override
@@ -149,9 +154,9 @@ public class Vector3
 	public Matrix3 outerProduct(Vector3 other)
 	{
 		return Matrix3.fromColumns(
-			Vector3.fromScalars(this.x * other.x, this.y * other.x, this.z * other.x),
-			Vector3.fromScalars(this.x * other.y, this.y * other.y, this.z * other.y),
-			Vector3.fromScalars(this.x * other.z, this.y * other.z, this.z * other.z)
+			new Vector3(this.x * other.x, this.y * other.x, this.z * other.x),
+			new Vector3(this.x * other.y, this.y * other.y, this.z * other.y),
+			new Vector3(this.x * other.z, this.y * other.z, this.z * other.z)
 		);
 	}
 	

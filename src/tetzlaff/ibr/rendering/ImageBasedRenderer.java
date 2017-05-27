@@ -34,7 +34,6 @@ import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.util.VertexGeometry;
-import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
@@ -131,7 +130,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	
     	this.clearColor = new Vector3(0.0f);
     	this.transformationMatrices = new ArrayList<Matrix4>();
-    	this.transformationMatrices.add(Matrix4.identity());
+    	this.transformationMatrices.add(Matrix4.IDENTITY);
     	this.settings = new IBRSettings();
     }
 
@@ -291,14 +290,15 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			
 			if (lightModel instanceof CameraBasedLightModel)
 			{
-		    	float scale = new Vector3(resources.viewSet.getCameraPose(0)
-		    			.times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length();
+		    	float scale = resources.viewSet.getCameraPose(0)
+		    			.times(resources.geometry.getCentroid().asPosition())
+	    			.getXYZ().length();
 				
 				((CameraBasedLightModel)lightModel).overrideCameraPose(
 						Matrix4.scale(1.0f / scale)
 							.times(modelView)
 							.times(Matrix4.translate(resources.geometry.getCentroid()))
-			    			.times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0).transpose())))
+			    			.times(resources.viewSet.getCameraPose(0).transpose().getUpperLeft3x3().asMatrix4())
 							.times(Matrix4.scale(scale)));
 			}
 			
@@ -323,9 +323,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			
 			ViewSet vset = resources.viewSet;
 			Vector3 lightIntensity = vset.getLightIntensity(vset.getLightIndex(index));
-			Vector4 lightPos = vset.getCameraPose(index).quickInverse(0.002f).times(new Vector4(vset.getLightPosition(vset.getLightIndex(index)), 1.0f));
+			Vector4 lightPos = vset.getCameraPose(index).quickInverse(0.002f).times(vset.getLightPosition(vset.getLightIndex(index)).asPosition());
 			
-			setupLightForFidelity(lightIntensity, new Vector3(lightPos));
+			setupLightForFidelity(lightIntensity, lightPos.getXYZ());
 		};
 		
 		shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
@@ -731,15 +731,15 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	{
     		for (Matrix4 m : transformationMatrices)
     		{
-    			Vector4 position = m.times(new Vector4(resources.geometry.getCentroid(), 1.0f));
+    			Vector4 position = m.times(resources.geometry.getCentroid().asPosition());
     			sumPositions = sumPositions.plus(position);
     		}
     		
-    		this.centroid = new Vector3(sumPositions).dividedBy(sumPositions.w);
+    		this.centroid = sumPositions.getXYZ().dividedBy(sumPositions.w);
     		
     		for(Matrix4 m : transformationMatrices)
     		{
-    			float distance = new Vector3(m.times(new Vector4(resources.geometry.getCentroid(), 1.0f))).distance(this.centroid);
+    			float distance = m.times(resources.geometry.getCentroid().asPosition()).getXYZ().distance(this.centroid);
     			this.boundingRadius = Math.max(this.boundingRadius, distance + resources.geometry.getBoundingRadius());
     		}
     	}
@@ -747,8 +747,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private float getScale()
 	{
-		 return new Vector3(resources.viewSet.getCameraPose(0)
-				 .times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length()
+		 return resources.viewSet.getCameraPose(0)
+				 .times(resources.geometry.getCentroid().asPosition())
+			 .getXYZ().length()
 			 * this.boundingRadius / this.resources.geometry.getBoundingRadius();
 	}
 	
@@ -758,7 +759,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		return Matrix4.scale(scale)
 			.times(lightModel.getLightMatrix(lightIndex))
 			.times(Matrix4.scale(1.0f / scale))
-			.times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0))))
+			.times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
 			.times(Matrix4.translate(this.centroid.negated()));
 	}
 	
@@ -766,10 +767,10 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	{
 		Matrix4 lightMatrix = getLightMatrix(lightIndex);
 		
-		float lightDist = new Vector3(lightMatrix.times(new Vector4(this.centroid, 1.0f))).length();
+		float lightDist = lightMatrix.times(this.centroid.asPosition()).getXYZ().length();
 		
 		float radius = (float)
-			(new Matrix3(resources.viewSet.getCameraPose(0))
+			(resources.viewSet.getCameraPose(0).getUpperLeft3x3()
 				.times(new Vector3(this.boundingRadius))
 				.length() / Math.sqrt(3));
 		
@@ -815,16 +816,17 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		{
 			program.setUniform("envMapMatrix", lightMatrix);
 		}
-		Vector3 lightPos = new Vector3(lightMatrix.quickInverse(0.001f).times(new Vector4(0.0f, 0.0f, 0.0f, 1.0f)));
+		Vector3 lightPos = lightMatrix.quickInverse(0.001f).times(Vector4.ORIGIN).getXYZ();
 		
 		program.setUniform("lightPosVirtual[" + lightIndex + "]", lightPos);
 		
 		Vector3 controllerLightIntensity = lightModel.getLightColor(lightIndex);
-		float lightDistance = new Vector3(getLightMatrix(lightIndex).times(new Vector4(this.centroid, 1.0f))).length();
+		float lightDistance = getLightMatrix(lightIndex).times(this.centroid.asPosition()).getXYZ().length();
 
 		float scale = resources.viewSet.areLightSourcesInfinite() ? 1.0f :
-				new Vector3(resources.viewSet.getCameraPose(0)
-						.times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length();
+				resources.viewSet.getCameraPose(0)
+						.times(resources.geometry.getCentroid().asPosition())
+					.getXYZ().length();
 		
 		program.setUniform("lightIntensityVirtual[" + lightIndex + "]", 
 				controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (scale * scale)));
@@ -839,7 +841,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		float lightDist = lightPos.distance(this.resources.geometry.getCentroid());
 		
 		float radius = (float)
-			(new Matrix3(resources.viewSet.getCameraPose(0))
+			(resources.viewSet.getCameraPose(0).getUpperLeft3x3()
 				.times(new Vector3(this.resources.geometry.getBoundingRadius()))
 				.length() / Math.sqrt(3));
 		
@@ -868,13 +870,14 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	
 	private Matrix4 getViewMatrix()
 	{
-    	float scale = new Vector3(resources.viewSet.getCameraPose(0).times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length() 
+    	float scale = resources.viewSet.getCameraPose(0).times(resources.geometry.getCentroid().asPosition())
+    			.getXYZ().length() 
     			* this.boundingRadius / resources.geometry.getBoundingRadius();
 		
 		return Matrix4.scale(scale)
     			.times(cameraModel.getLookMatrix())
     			.times(Matrix4.scale(1.0f / scale))
-    			.times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0))))
+    			.times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
     			.times(Matrix4.translate(this.centroid.negated()));
 	}
 	
@@ -886,7 +889,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	private Matrix4 getProjectionMatrix()
 	{
     	FramebufferSize size = context.getDefaultFramebuffer().getSize();
-		float scale = new Vector3(resources.viewSet.getCameraPose(0).times(new Vector4(resources.geometry.getCentroid(), 1.0f))).length()
+		float scale = resources.viewSet.getCameraPose(0)
+				.times(resources.geometry.getCentroid().asPosition())
+			.getXYZ().length()
 			* this.boundingRadius / resources.geometry.getBoundingRadius();
 		
 		return Matrix4.perspective(
@@ -919,7 +924,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 			
 			Matrix4 view = getViewMatrix();
     		program.setUniform("model_view", view);
-			program.setUniform("viewPos", new Vector3(view.quickInverse(0.01f).getColumn(3)));
+			program.setUniform("viewPos", view.quickInverse(0.01f).getColumn(3).getXYZ());
         	
         	if(halfResEnabled) 
         	{
@@ -966,7 +971,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 				environmentBackgroundProgram.setTexture("env", environmentMap);
 				environmentBackgroundProgram.setUniform("model_view", this.getViewMatrix());
 				environmentBackgroundProgram.setUniform("projection", projection);
-				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
+				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.IDENTITY : envMapMatrix);
 				environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
 
 				environmentBackgroundProgram.setUniform("gamma", 
@@ -1044,7 +1049,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 					// Draw instance
 					Matrix4 modelView = getModelViewMatrix(modelInstance);
 					this.program.setUniform("model_view", modelView);
-					this.program.setUniform("viewPos", new Vector3(modelView.quickInverse(0.01f).getColumn(3)));
+					this.program.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
 			    	
 			    	if(halfResEnabled) 
 			    	{
@@ -1099,7 +1104,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 					{
 						this.lightProgram.setUniform("color", lightModel.getLightColor(i));
 						
-						Vector3 lightPosition = new Vector3(viewMatrix.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3));
+						Vector3 lightPosition = viewMatrix.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3).getXYZ();
 						
 						this.lightProgram.setUniform("model_view",
 	
@@ -1214,7 +1219,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 		{
 	    	mainDrawable.program().setUniform("model_view", targetViewSet.getCameraPose(i));
-	    	mainDrawable.program().setUniform("viewPos", new Vector3(targetViewSet.getCameraPose(i).quickInverse(0.01f).getColumn(3)));
+	    	mainDrawable.program().setUniform("viewPos", targetViewSet.getCameraPose(i).quickInverse(0.01f).getColumn(3).getXYZ());
 	    	mainDrawable.program().setUniform("projection", 
     			targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
     				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
@@ -1232,7 +1237,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 				environmentBackgroundProgram.setUniform("projection", 
 					targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
 	    				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
-				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.identity() : envMapMatrix);
+				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.IDENTITY : envMapMatrix);
 				environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
 
 				environmentBackgroundProgram.setUniform("gamma", 
@@ -1273,7 +1278,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 		this.setupForDraw(drawable.program());
     	
     	drawable.program().setUniform("model_view", this.resources.viewSet.getCameraPose(targetViewIndex));
-    	drawable.program().setUniform("viewPos", new Vector3(this.resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3)));
+    	drawable.program().setUniform("viewPos", this.resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3).getXYZ());
     	drawable.program().setUniform("projection", 
     			this.resources.viewSet.getCameraProjection(this.resources.viewSet.getCameraProjectionIndex(targetViewIndex))
 				.getProjectionMatrix(this.resources.viewSet.getRecommendedNearPlane(), this.resources.viewSet.getRecommendedFarPlane()));
@@ -1323,7 +1328,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     	
     	for (int i = 0; i < this.resources.viewSet.getCameraPoseCount(); i++)
     	{
-    		viewDirections[i] = new Vector3(this.resources.viewSet.getCameraPoseInverse(i).getColumn(3))
+    		viewDirections[i] = this.resources.viewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
     				.minus(this.resources.geometry.getCentroid()).normalized();
 		}
     	
@@ -1571,7 +1576,7 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
 	    		
 	    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 	        	{
-	    			targetDirections[i] = new Vector3(targetViewSet.getCameraPoseInverse(i).getColumn(3))
+	    			targetDirections[i] = targetViewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
 	        				.minus(this.resources.geometry.getCentroid()).normalized();
 	    		}
 	    		
