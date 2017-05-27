@@ -24,6 +24,7 @@ uniform mat4 lightMatrixVirtual[MAX_VIRTUAL_LIGHT_COUNT];
 uniform int virtualLightCount;
 uniform vec3 ambientColor;
 
+uniform float renderGamma;
 uniform float weightExponent;
 uniform float isotropyFactor;
 
@@ -491,8 +492,6 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
 
 vec3 linearToSRGB(vec3 color)
 {
-	//return pow(color, vec3(1.0/2.2));
-
 	vec3 sRGBColor;
 
 	if(color.r <= 0.0031308)
@@ -525,41 +524,41 @@ vec3 linearToSRGB(vec3 color)
 	return sRGBColor;
 }
 
-vec3 sRGBToLinear(vec3 sRGBColor)
-{
-	//return pow(sRGBColor, vec3(2.2));
+// vec3 sRGBToLinear(vec3 sRGBColor)
+// {
+	// //return pow(sRGBColor, vec3(2.2));
 
-	vec3 linearColor;
+	// vec3 linearColor;
 	
-	if(sRGBColor.r <= 0.04045)
-	{
-		linearColor.r = sRGBColor.r / 12.92;
-	}
-	else
-	{
-		linearColor.r = pow((sRGBColor.r + 0.055) / 1.055, 2.4);
-	}
+	// if(sRGBColor.r <= 0.04045)
+	// {
+		// linearColor.r = sRGBColor.r / 12.92;
+	// }
+	// else
+	// {
+		// linearColor.r = pow((sRGBColor.r + 0.055) / 1.055, 2.4);
+	// }
 	
-	if(sRGBColor.g <= 0.04045)
-	{
-		linearColor.g = sRGBColor.g / 12.92;
-	}
-	else
-	{
-		linearColor.g = pow((sRGBColor.g + 0.055) / 1.055, 2.4);
-	}
+	// if(sRGBColor.g <= 0.04045)
+	// {
+		// linearColor.g = sRGBColor.g / 12.92;
+	// }
+	// else
+	// {
+		// linearColor.g = pow((sRGBColor.g + 0.055) / 1.055, 2.4);
+	// }
 	
-	if(sRGBColor.b <= 0.04045)
-	{
-		linearColor.b = sRGBColor.b / 12.92;
-	}
-	else
-	{
-		linearColor.b = pow((sRGBColor.b + 0.055) / 1.055, 2.4);
-	}
+	// if(sRGBColor.b <= 0.04045)
+	// {
+		// linearColor.b = sRGBColor.b / 12.92;
+	// }
+	// else
+	// {
+		// linearColor.b = pow((sRGBColor.b + 0.055) / 1.055, 2.4);
+	// }
 	
-	return linearColor;
-}
+	// return linearColor;
+// }
 
 vec4 tonemap(vec3 color, float alpha)
 {
@@ -600,7 +599,8 @@ vec4 tonemap(vec3 color, float alpha)
     // }
     // else
     {
-        return vec4(linearToSRGB(color), alpha);
+        //return vec4(linearToSRGB(color), alpha);
+		return vec4(pow(color, vec3(1.0 / renderGamma)), alpha);
     }
 }
 
