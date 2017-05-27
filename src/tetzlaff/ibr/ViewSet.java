@@ -142,7 +142,7 @@ public class ViewSet
 		String relativeImagePath;
 		String geometryFileName;
 		File directory;
-		float gamma;
+		float gamma = 2.2f;
 		boolean infiniteLightSources;
 		double[] linearLuminanceValues;
 		byte[] encodedLuminanceValues;
@@ -1427,6 +1427,11 @@ public class ViewSet
 	public float getRecommendedFarPlane() 
 	{
 		return this.recommendedFarPlane;
+	}
+
+	public float getGamma() 
+	{
+		return gamma;
 	}
 	
 	public SampledLuminanceEncoding getLuminanceEncodingFunction()

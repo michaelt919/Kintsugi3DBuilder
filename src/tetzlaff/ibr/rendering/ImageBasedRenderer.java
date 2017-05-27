@@ -589,7 +589,9 @@ public class ImageBasedRenderer<ContextType extends Context<ContextType>> implem
     		program.setTexture("depthImages", resources.depthTextures);
 		}
     	
-    	program.setUniform("gamma", this.settings.getGamma());
+    	program.setUniform("gamma", this.resources.viewSet.getGamma());
+    	
+    	program.setUniform("renderGamma", this.settings.getGamma());
     	program.setUniform("weightExponent", this.settings.getWeightExponent());
     	program.setUniform("isotropyFactor", this.settings.getIsotropyFactor());
     	program.setUniform("occlusionEnabled", this.resources.depthTextures != null && this.settings.isOcclusionEnabled());
