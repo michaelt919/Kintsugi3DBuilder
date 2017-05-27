@@ -559,8 +559,6 @@ public class ViewSet
 	    float k4;
 		float p1;
 		float p2;
-	    // TODO: Incorporate this value into the distortion object
-	    @SuppressWarnings("unused")
 	    float skew;
 	    
 	    Sensor(String id)
@@ -982,7 +980,8 @@ public class ViewSet
         		sensors[i].k3,
         		sensors[i].k4,
         		sensors[i].p1,
-        		sensors[i].p2
+        		sensors[i].p2,
+        		sensors[i].skew
     		));
         }
                 
@@ -1365,12 +1364,12 @@ public class ViewSet
 	
 	public void setLightPosition(int lightIndex, Vector3 lightPosition)
 	{
-		this.lightPositionList.set(lightIndex, lightPosition); // TODO decide if this should result in a uniform buffer refresh
+		this.lightPositionList.set(lightIndex, lightPosition);
 	}
 	
 	public void setLightIntensity(int lightIndex, Vector3 lightIntensity)
 	{
-		this.lightIntensityList.set(lightIndex, lightIntensity); // TODO decide if this should result in a uniform buffer refresh
+		this.lightIntensityList.set(lightIndex, lightIntensity);
 	}
 	
 	/**
