@@ -122,7 +122,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
 			theta = 0.0f;
 			phi = 0.0f;
 			position = new Vector3(0.0f, 0.0f, 0.0f);
-			this.model.setLookMatrix(Matrix4.identity());
+			this.model.setLookMatrix(Matrix4.IDENTITY);
 		}
 		
 		ignoreSensitivity = mods.getControlModifier();
@@ -216,7 +216,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
 				position = position.plus(rotation.transpose().times(velocity.normalized().times(speed)));
 			}
 			
-			this.model.setLookMatrix(new Matrix4(rotation).times(Matrix4.translate(position.negated())));
+			this.model.setLookMatrix(rotation.asMatrix4().times(Matrix4.translate(position.negated())));
 		}
 	}
 }

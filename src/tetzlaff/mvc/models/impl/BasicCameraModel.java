@@ -9,7 +9,7 @@ public class BasicCameraModel implements CameraModel
 	
 	public BasicCameraModel()
 	{
-		this(Matrix4.identity());
+		this(Matrix4.IDENTITY);
 	}
 	
 	public BasicCameraModel(Matrix4 lookMatrix)

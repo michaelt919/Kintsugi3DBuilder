@@ -9,37 +9,61 @@ package tetzlaff.gl.vecmath;
  */
 public class DoubleVector2 
 {
+	public static final DoubleVector2 ZERO = new DoubleVector2(0.0f);
+	
+	/**
+	 * The first dimension
+	 */
 	public final double x;
+	
+	/**
+	 * The second dimension
+	 */
 	public final double y;
 
-	private DoubleVector2(double x, double y)
+	/**
+	 * Construct a vector in two dimensions with the given values.
+	 * @param x Value of the first dimension.
+	 * @param y Value of the second dimension.
+	 */
+	public DoubleVector2(double x, double y)
 	{
 		this.x = x;
 		this.y = y;
-	}
-	
-	public static DoubleVector2 fromScalars(double x, double y)
-	{
-		return new DoubleVector2(x, y);
 	}
 	
 	/**
 	 * Construct a vector in two dimensions with the given values.
 	 * @param value Value of both dimensions.
 	 */
-	public static DoubleVector2 fromScalar(double value)
+	public DoubleVector2(double value)
 	{
-		return new DoubleVector2(value, value);
+		this(value, value);
 	}
 	
-	public static DoubleVector2 takeXY(DoubleVector3 v3)
+	public DoubleVector3 asVector3()
 	{
-		return new DoubleVector2(v3.x, v3.y);
+		return asVector3(0.0f);
 	}
 	
-	public static DoubleVector2 takeXY(DoubleVector4 v4)
+	public DoubleVector3 asVector3(double z)
 	{
-		return new DoubleVector2(v4.x, v4.y);
+		return new DoubleVector3(this.x, this.y, z);
+	}
+	
+	public DoubleVector4 asPosition()
+	{
+		return asVector4(0.0f, 1.0f);
+	}
+	
+	public DoubleVector4 asDirection()
+	{
+		return asVector4(0.0f, 0.0f);
+	}
+	
+	public DoubleVector4 asVector4(double z, double w)
+	{
+		return new DoubleVector4(this.x, this.y, z, w);
 	}
 	
 	public DoubleVector2 plus(DoubleVector2 other)

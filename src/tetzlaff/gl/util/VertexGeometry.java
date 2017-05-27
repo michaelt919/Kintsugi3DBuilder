@@ -95,16 +95,16 @@ public class VertexGeometry
 					float y = scanner.nextFloat();
 					float z = scanner.nextFloat();
 					
-					sum = sum.plus(Vector3.fromScalars(x,y,z));
+					sum = sum.plus(new Vector3(x,y,z));
 					
-					vertexList.add(Vector3.fromScalars(x,y,z));
+					vertexList.add(new Vector3(x,y,z));
 				}
 				else if (id.equals("vt"))
 				{
 					// Texture coordinate
 					if (inst.hasTexCoords)
 					{
-						texCoordList.add(Vector2.fromScalars(scanner.nextFloat(), scanner.nextFloat()));
+						texCoordList.add(new Vector2(scanner.nextFloat(), scanner.nextFloat()));
 					}
 				}
 				else if (id.equals("vn"))
@@ -117,10 +117,10 @@ public class VertexGeometry
 						float nz = scanner.nextFloat();
 						
 						// Normalize to unit length
-						normalList.add(Vector3.fromScalars(nx, ny, nz).normalized());
+						normalList.add(new Vector3(nx, ny, nz).normalized());
 						
-						tangentList.add(Vector3.fromScalars(0.0f, 0.0f, 0.0f));
-						bitangentList.add(Vector3.fromScalars(0.0f, 0.0f, 0.0f));
+						tangentList.add(new Vector3(0.0f, 0.0f, 0.0f));
+						bitangentList.add(new Vector3(0.0f, 0.0f, 0.0f));
 					}
 				}
 				else if (id.equals("f"))
@@ -265,8 +265,8 @@ public class VertexGeometry
 			i++;
 		}
 		
-		inst.boundingBoxCenter = Vector3.fromScalars((boundingBoxMinX + boundingBoxMaxX) / 2, (boundingBoxMinY + boundingBoxMaxY) / 2, (boundingBoxMinZ + boundingBoxMaxZ) / 2);
-		inst.boundingBoxSize = Vector3.fromScalars(boundingBoxMaxX - boundingBoxMinX, boundingBoxMaxY - boundingBoxMinY, boundingBoxMaxZ - boundingBoxMinZ);
+		inst.boundingBoxCenter = new Vector3((boundingBoxMinX + boundingBoxMaxX) / 2, (boundingBoxMinY + boundingBoxMaxY) / 2, (boundingBoxMinZ + boundingBoxMaxZ) / 2);
+		inst.boundingBoxSize = new Vector3(boundingBoxMaxX - boundingBoxMinX, boundingBoxMaxY - boundingBoxMinY, boundingBoxMaxZ - boundingBoxMinZ);
 		
 		if (inst.hasNormals)
 		{
@@ -361,7 +361,7 @@ public class VertexGeometry
 		orthoTangent = tangent.minus(normal.times(normal.dot(tangent))).normalized();
 		orthoBitangent = bitangent.minus(normal.times(normal.dot(bitangent)).minus(orthoTangent.times(orthoTangent.dot(bitangent)))).normalized();
 		
-		return Vector4.fromVector3(orthoTangent, orthoBitangent.dot(normal.cross(orthoTangent)));
+		return orthoTangent.asVector4(orthoBitangent.dot(normal.cross(orthoTangent)));
 	}
 	
 	public boolean hasNormals() 

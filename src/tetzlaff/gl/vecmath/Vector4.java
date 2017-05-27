@@ -26,8 +26,8 @@ public class Vector4
 	 */
 	public final float w;
 	
-	public static final Vector4 ZERO_DIRECTION = fromVector3AsDirection(Vector3.ZERO);
-	public static final Vector4 ZERO_POSITION = fromVector3AsPosition(Vector3.ZERO);
+	public static final Vector4 ZERO = Vector3.ZERO.asDirection();
+	public static final Vector4 ORIGIN = Vector3.ZERO.asPosition();
 	
 	/**
 	 * Construct a vector in four dimensions with the given values.
@@ -36,7 +36,7 @@ public class Vector4
 	 * @param z Value of the third dimension.
 	 * @param w Value of the fourth dimension (or heterogeneous coordinate).
 	 */
-	private Vector4(float x, float y, float z, float w)
+	public Vector4(float x, float y, float z, float w)
 	{
 		this.x = x;
 		this.y = y;
@@ -44,34 +44,19 @@ public class Vector4
 		this.w = w;
 	}
 	
-	public static Vector4 fromScalar(float value)
+	public Vector4 (float value)
 	{
-		return new Vector4(value, value, value, value);
+		this(value, value, value, value);
+	}
+
+	public Vector2 getXY()
+	{
+		return new Vector2(this.x, this.y);
 	}
 	
-	public static Vector4 fromScalars(float x, float y, float z, float w)
+	public Vector3 getXYZ()
 	{
-		return new Vector4(x, y, z, w);
-	}
-	
-	public static Vector4 fromVector2(Vector3 v2, float z, float w)
-	{
-		return new Vector4(v2.x, v2.y, z, w);
-	}
-	
-	public static Vector4 fromVector3(Vector3 v3, float w)
-	{
-		return new Vector4(v3.x, v3.y, v3.z, w);
-	}
-	
-	public static Vector4 fromVector3AsDirection(Vector3 v3)
-	{
-		return new Vector4(v3.x, v3.y, v3.z, 0.0f);
-	}
-	
-	public static Vector4 fromVector3AsPosition(Vector3 v3)
-	{
-		return new Vector4(v3.x, v3.y, v3.z, 1.0f);
+		return new Vector3(this.x, this.y, this.z);
 	}
 	
 	@Override
@@ -165,10 +150,10 @@ public class Vector4
 	public Matrix4 outerProduct(Vector4 other)
 	{
 		return Matrix4.fromColumns(
-			Vector4.fromScalars(this.x * other.x, this.y * other.x, this.z * other.x, this.w * other.x),
-			Vector4.fromScalars(this.x * other.y, this.y * other.y, this.z * other.y, this.w * other.y),
-			Vector4.fromScalars(this.x * other.z, this.y * other.z, this.z * other.z, this.w * other.z),
-			Vector4.fromScalars(this.x * other.w, this.y * other.w, this.z * other.w, this.w * other.w)
+			new Vector4(this.x * other.x, this.y * other.x, this.z * other.x, this.w * other.x),
+			new Vector4(this.x * other.y, this.y * other.y, this.z * other.y, this.w * other.y),
+			new Vector4(this.x * other.z, this.y * other.z, this.z * other.z, this.w * other.z),
+			new Vector4(this.x * other.w, this.y * other.w, this.z * other.w, this.w * other.w)
 		);
 	}
 	

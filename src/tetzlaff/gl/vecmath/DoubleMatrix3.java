@@ -50,15 +50,16 @@ public class DoubleMatrix3
 							      col1.z, col2.z, col3.z );
 	}
 	
-	/**
-	 * Creates a 4x4 matrix from a 3x3 matrix by dropping the fourth row and column.
-	 * @param m4 The 4x4 matrix.
-	 */
-	public static DoubleMatrix3 takeUpperLeftFrom4x4(DoubleMatrix4 m4) 
+	public static DoubleMatrix3 fromRows(DoubleVector3 row1, DoubleVector3 row2, DoubleVector3 row3)
 	{
-		return new DoubleMatrix3(	m4.get(0,0),	m4.get(0,1),	m4.get(0,2),
-									m4.get(1,0),	m4.get(1,1),	m4.get(1,2),
-									m4.get(2,0),	m4.get(2,1),	m4.get(2,2)		);
+		return new DoubleMatrix3( row1.x, row1.y, row1.z,
+							row2.x, row2.y, row2.z,
+							row3.x, row3.y, row3.z );
+	}
+	
+	public DoubleMatrix4 asMatrix4()
+	{
+		return DoubleMatrix4.affine(this, 0.0, 0.0, 0.0);
 	}
 	
 	public static DoubleMatrix3 fromSinglePrecision(Matrix3 m3)
@@ -228,7 +229,7 @@ public class DoubleMatrix3
             }
         }
         
-        return DoubleVector4.fromScalars(q[0], q[1], q[2], q[3]);
+        return new DoubleVector4(q[0], q[1], q[2], q[3]);
 	}
 
 	/**
@@ -286,7 +287,7 @@ public class DoubleMatrix3
 	 */
 	public DoubleVector3 times(DoubleVector3 vector)
 	{
-		return DoubleVector3.fromScalars(
+		return new DoubleVector3(
 			this.m[0][0] * vector.x + this.m[0][1] * vector.y + this.m[0][2] * vector.z,
 			this.m[1][0] * vector.x + this.m[1][1] * vector.y + this.m[1][2] * vector.z,
 			this.m[2][0] * vector.x + this.m[2][1] * vector.y + this.m[2][2] * vector.z
@@ -376,7 +377,7 @@ public class DoubleMatrix3
 	 */
 	public DoubleVector3 getRow(int row)
 	{
-		return DoubleVector3.fromScalars(this.m[row][0], this.m[row][1], this.m[row][2]);
+		return new DoubleVector3(this.m[row][0], this.m[row][1], this.m[row][2]);
 	}
 	
 	/**
@@ -386,6 +387,6 @@ public class DoubleMatrix3
 	 */
 	public DoubleVector3 getColumn(int col)
 	{
-		return DoubleVector3.fromScalars(this.m[0][col], this.m[1][col], this.m[2][col]);
+		return new DoubleVector3(this.m[0][col], this.m[1][col], this.m[2][col]);
 	}
 }

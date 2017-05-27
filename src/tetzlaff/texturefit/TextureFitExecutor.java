@@ -324,7 +324,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	    	
 	    	if (enableShadowTest)
 	    	{
-	        	Matrix4 shadowModelView = Matrix4.lookAt(new Vector3(viewSet.getCameraPoseInverse(viewIndex).times(new Vector4(lightPosition, 1.0f))), center, new Vector3(0, 1, 0));
+	        	Matrix4 shadowModelView = Matrix4.lookAt(viewSet.getCameraPoseInverse(viewIndex).times(lightPosition.asPosition()).getXYZ(), center, new Vector3(0, 1, 0));
 	        	
 	    		Matrix4 shadowProjection = viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewIndex))
 	    				.getProjectionMatrix(
@@ -1017,8 +1017,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 	        	}
 	        }
 	        
-	        position = new Vector3(lightPositionSum.dividedBy(lightPositionSum.w));
-	        intensity = new Vector3(lightIntensitySum.dividedBy(lightIntensitySum.w));
+	        position = lightPositionSum.dividedBy(lightPositionSum.w).getXYZ();
+	        intensity = lightIntensitySum.dividedBy(lightIntensitySum.w).getXYZ();
     	}
 	}
 	

@@ -14,7 +14,7 @@ public class IntVector2
 	public final int x;
 	public final int y;
 
-	IntVector2(int x, int y)
+	public IntVector2(int x, int y)
 	{
 		this.x = x;
 		this.y = y;
@@ -24,24 +24,19 @@ public class IntVector2
 	 * Construct a vector in two dimensions with the given values.
 	 * @param value Value of both dimensions.
 	 */
-	public static IntVector2 fromScalar(int value)
+	public IntVector2(int value)
 	{
-		return new IntVector2(value, value);
+		this(value, value);
 	}
 	
-	public static IntVector2 fromScalars(int x, int y)
+	public IntVector3 asVector3(int z)
 	{
-		return new IntVector2(x, y);
+		return new IntVector3(this.x, this.y, z);
 	}
 	
-	public static IntVector2 takeXY(IntVector3 v3)
+	public IntVector4 asVector4(int z, int w)
 	{
-		return new IntVector2(v3.x, v3.y);
-	}
-	
-	public static IntVector2 takeXY(IntVector4 v4)
-	{
-		return new IntVector2(v4.x, v4.y);
+		return new IntVector4(this.x, this.y, z, w);
 	}
 	
 	public IntVector2 plus(IntVector2 other)

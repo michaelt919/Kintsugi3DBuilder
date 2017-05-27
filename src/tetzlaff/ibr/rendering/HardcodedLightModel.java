@@ -98,14 +98,17 @@ public class HardcodedLightModel implements CameraBasedLightModel
 		
 		if (i == 0)
 		{
-			Vector4 lightOffset = new Vector4(viewSetSupplier.get().getLightPosition(0)
-				.times(1.0f / new Vector3(viewSetSupplier.get().getCameraPose(0)
-								.times(new Vector4(proxySupplier.get().getCentroid(), 1.0f))).length()), 
-				1.0f);
+			Vector4 lightOffset = 
+				viewSetSupplier.get().getLightPosition(0)
+					.times(1.0f / 
+						(viewSetSupplier.get().getCameraPose(0)
+							.times(proxySupplier.get().getCentroid().asPosition()))
+						.getXYZ().length())
+					.asPosition();
 			
 			// Only take the rotation of the default camera pose.
 			return Matrix4.lookAt(
-					new Vector3(cameraPose.quickInverse(0.001f).times(lightOffset)).normalized(), 
+					cameraPose.quickInverse(0.001f).times(lightOffset).getXYZ().normalized(), 
 					new Vector3(0, 0, 0), 
 					new Vector3(0, 1, 0));
 			
@@ -124,18 +127,18 @@ public class HardcodedLightModel implements CameraBasedLightModel
 				lightPosition = new Vector3(81.0f, 36.0f, 12.0f).times(1.0f / 77.0f);
 			}
 			
-			Matrix3 projectedCameraRotation = Matrix3.scale(1.0f, 0.0f, 1.0f).times(new Matrix3(cameraPose));
+			Matrix3 projectedCameraRotation = Matrix3.scale(1.0f, 0.0f, 1.0f).times(cameraPose.getUpperLeft3x3());
 			Vector3 projectedRotatedXAxis = projectedCameraRotation.times(new Vector3(1.0f, 0.0f, 0.0f)).normalized();
 			Vector3 projectedRotatedZAxis = projectedCameraRotation.times(new Vector3(0.0f, 0.0f, 1.0f)).normalized();
 			projectedRotatedZAxis = projectedRotatedZAxis.minus(projectedRotatedXAxis.times(projectedRotatedXAxis.dot(projectedRotatedZAxis))).normalized();
 			
-			Matrix3 turntableRotation = new Matrix3(
+			Matrix3 turntableRotation = Matrix3.fromColumns(
 					projectedRotatedXAxis,
 					projectedRotatedXAxis.cross(projectedRotatedZAxis).normalized().negated(), 
 					projectedRotatedZAxis);
 			
 			return Matrix4.lookAt(lightPosition, new Vector3(0.0f), new Vector3(0.0f, 1.0f, 0.0f))
-					.times(new Matrix4(turntableRotation));
+					.times(turntableRotation.asMatrix4());
 		}
 	}
 

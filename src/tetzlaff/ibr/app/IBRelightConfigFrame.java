@@ -36,6 +36,7 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRRenderable;
@@ -1274,11 +1275,11 @@ public class IBRelightConfigFrame extends JFrame
 							values[i] = scanner.nextFloat();
 						}
 						
-						matrices.add(new Matrix4(
-								values[0], values[1], values[2], values[3],
-								values[4], values[5], values[6], values[7],
-								values[8], values[9], values[10], values[11],
-								values[12], values[13], values[14], values[15]));
+						matrices.add(Matrix4.fromRows(
+							new Vector4(values[0], values[1], values[2], values[3]),
+							new Vector4(values[4], values[5], values[6], values[7]),
+							new Vector4(values[8], values[9], values[10], values[11]),
+							new Vector4(values[12], values[13], values[14], values[15])));
 						
 						if (scanner.hasNextLine())
 						{
