@@ -216,11 +216,17 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		this.viewSet = viewSet;
 		this.geometry = geometry;
 		
-		this.cameraWeights = new float[viewSet.getCameraPoseCount()];
-		
-		computeCameraWeights();
-		
-		cameraWeightBuffer = context.createUniformBuffer().setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewSet.getCameraPoseCount(), cameraWeights));
+		if (this.geometry != null)
+		{
+			this.cameraWeights = new float[viewSet.getCameraPoseCount()];
+			computeCameraWeights();
+			cameraWeightBuffer = context.createUniformBuffer().setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewSet.getCameraPoseCount(), cameraWeights));
+		}
+		else
+		{
+			this.cameraWeights = null;
+			this.cameraWeightBuffer = null;
+		}
 		
 		// Store the poses in a uniform buffer
 		if (viewSet.getCameraPoseData() != null)
@@ -332,15 +338,19 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		    	}
 			}
 			
+			BufferedImage img;
+			
 			// Read a single image to get the dimensions for the texture array
-			InputStream input = new FileInputStream(imageFile); // myZip.retrieveFile(imageFile);
-			BufferedImage img = ImageIO.read(input);
+			try(InputStream input = new FileInputStream(imageFile)) // myZip.retrieveFile(imageFile);
+			{
+				img = ImageIO.read(input);
+			}
+
 			if(img == null)
 			{
 				throw new IOException(String.format("Error: Unsupported image format '%s'.",
 						viewSet.getImageFileName(0)));				
 			}
-			input.close();
 
 			ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder = 
 					context.build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount());
@@ -699,7 +709,14 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 	
 	public float getCameraWeight(int index)
 	{
-		return this.cameraWeights[index];
+		if (this.cameraWeights != null)
+		{
+			return this.cameraWeights[index];
+		}
+		else
+		{
+			throw new IllegalStateException("Camera weights are unvailable.");
+		}
 	}
 	
 	private void computeCameraWeights()
@@ -782,6 +799,11 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 	
 	public void close()
 	{
+		if (this.cameraWeightBuffer != null)
+		{
+			this.cameraWeightBuffer.close();
+		}
+		
 		if (this.cameraPoseBuffer != null)
 		{
 			this.cameraPoseBuffer.close();
