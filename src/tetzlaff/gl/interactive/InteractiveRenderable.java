@@ -1,5 +1,8 @@
 package tetzlaff.gl.interactive;
 
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Framebuffer;
+
 /**
  * An interface used with the InteractiveGraphics object to coordinate the initialization,
  * updating, drawing and deleting of an OpenGL-like renderable view.
@@ -7,7 +10,7 @@ package tetzlaff.gl.interactive;
  * @author Michael Tetzlaff
  * @see InteractiveGraphics
  */
-public interface InteractiveRenderable extends AutoCloseable
+public interface InteractiveRenderable<ContextType extends Context<ContextType>> extends AutoCloseable
 {
 	/**
 	 * Execute any initialization needed prior to updating and drawing this object.  You
@@ -31,7 +34,7 @@ public interface InteractiveRenderable extends AutoCloseable
 	 * The associated context will be made current first.  Generally, the object should be
 	 * immutable (no internal state should change) while executing this method.
 	 */
-	void draw();
+	void draw(Framebuffer<ContextType> framebuffer);
 	
 	/**
 	 * Execute any cleanup and bring the internal state out of being prepared to draw. Update

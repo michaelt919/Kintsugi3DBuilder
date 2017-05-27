@@ -24,7 +24,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	protected final ReadonlyCameraModel cameraModel;
 	protected final ReadonlyLightModel lightModel;
 	private Program<ContextType> program;
-	private InteractiveRenderableList<IBRRenderable<ContextType>> ulfs;
+	private InteractiveRenderableList<ContextType, IBRRenderable<ContextType>> ulfs;
 	private int effectiveSize;
 	private IBRLoadingMonitor loadingMonitor;
 	
@@ -33,7 +33,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 		this.context = context;
 		this.cameraModel = cameraModel;
 		this.lightModel = lightModel;
-		this.ulfs = new InteractiveRenderableList<IBRRenderable<ContextType>>();
+		this.ulfs = new InteractiveRenderableList<ContextType, IBRRenderable<ContextType>>();
 		this.effectiveSize = 0;
 		
 		this.program = program;
@@ -59,7 +59,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 		// id = vsetFile.getPath()
 		
 		IBRRenderable<ContextType> newItem = 
-			new ImageBasedRenderer<ContextType>(id, context, this.getProgram(), this.cameraModel, lightModel,
+			new IBRImplementation<ContextType>(id, context, this.getProgram(), this.cameraModel, lightModel,
 				IBRResources.getBuilderForContext(this.context)
 					.setLoadingMonitor(this.loadingMonitor)
 					.setLoadOptions(loadOptions)
@@ -114,7 +114,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	public IBRRenderable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, IBRLoadOptions loadOptions) throws IOException
 	{
 		IBRRenderable<ContextType> newItem = 
-			new ImageBasedRenderer<ContextType>(id, context, this.getProgram(), this.cameraModel, lightModel,
+			new IBRImplementation<ContextType>(id, context, this.getProgram(), this.cameraModel, lightModel,
 				IBRResources.getBuilderForContext(this.context)
 					.setLoadingMonitor(this.loadingMonitor)
 					.setLoadOptions(loadOptions)
@@ -208,7 +208,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 		this.loadingMonitor = loadingMonitor;
 	}
 	
-	public InteractiveRenderable getRenderable()
+	public InteractiveRenderable<ContextType> getRenderable()
 	{
 		return ulfs;
 	}
