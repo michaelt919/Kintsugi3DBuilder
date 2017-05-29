@@ -67,11 +67,18 @@ public class FidelityMetricRequest implements IBRRequest
 	    	drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
     	}
 
-//	        if (activeViewCount == assets.viewSet.getCameraPoseCount() - 1 /*&& this.assets.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
-//	        {
-//		    	File fidelityImage = new File(new File(fidelityExportPath.getParentFile(), "debug"), this.assets.viewSet.getImageFileName(i));
-//		        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
-//	        }
+    	try
+    	{
+	        if (activeViewCount == resources.viewSet.getCameraPoseCount() - 1 /*&& this.assets.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
+	        {
+		    	File fidelityImage = new File(new File(fidelityExportPath.getParentFile(), "debug"), resources.viewSet.getImageFileName(targetViewIndex));
+		        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
+	        }
+    	}
+    	catch(IOException e)
+    	{
+    		e.printStackTrace();
+    	}
         	
         double sumSqError = 0.0;
         //double sumWeights = 0.0;
