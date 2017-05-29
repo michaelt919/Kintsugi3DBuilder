@@ -18,29 +18,20 @@ import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
-import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibr.IBRLoadingMonitor;
+import tetzlaff.ibr.IBRRenderable;
+import tetzlaff.ibr.IBRSettings;
+import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
-import tetzlaff.ibr.rendering.IBRImplementation;
 import tetzlaff.ibr.rendering.IBRResources;
 
 public class FidelityMetricRequest implements IBRRequest
 {
     private File fidelityExportPath;
     private File fidelityVSETFile;
-    private Settings settings;
+    private IBRSettings settings;
     
-    private static class Settings
-    {
-	    int weightExponent;
-	    int isotropyFactor;
-	    boolean visibilityTestEnabled;
-	    float visibilityBias;
-    }
-	
-	public FidelityMetricRequest(File exportPath, File targetVSETFile, Settings settings)
+	public FidelityMetricRequest(File exportPath, File targetVSETFile, IBRSettings settings)
 	{
 		this.fidelityExportPath = exportPath;
 		this.fidelityVSETFile = targetVSETFile;
@@ -52,10 +43,10 @@ public class FidelityMetricRequest implements IBRRequest
 				NativeVectorBuffer viewIndexList, int targetViewIndex, int activeViewCount)
 	{
 		resources.setupShaderProgram(drawable.program(), false);
-		drawable.program().setUniform("weightExponent", this.settings.weightExponent);
-		drawable.program().setUniform("isotropyFactor", this.settings.isotropyFactor);
-		drawable.program().setUniform("occlusionEnabled", resources.depthTextures != null && this.settings.visibilityTestEnabled);
-		drawable.program().setUniform("occlusionBias", this.settings.visibilityBias);
+		drawable.program().setUniform("weightExponent", this.settings.getWeightExponent());
+		drawable.program().setUniform("isotropyFactor", this.settings.getIsotropyFactor());
+		drawable.program().setUniform("occlusionEnabled", resources.depthTextures != null && this.settings.isOcclusionEnabled());
+		drawable.program().setUniform("occlusionBias", this.settings.getOcclusionBias());
     	
     	drawable.program().setUniform("model_view", resources.viewSet.getCameraPose(targetViewIndex));
     	drawable.program().setUniform("viewPos", resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3).getXYZ());
@@ -101,9 +92,9 @@ public class FidelityMetricRequest implements IBRRequest
 	}
 
 	@Override
-	public <ContextType extends Context<ContextType>> void executeRequest(ContextType context, /*IBRImplementation<ContextType> renderer, */IBRLoadingMonitor callback) throws IOException
+	public <ContextType extends Context<ContextType>> void executeRequest(ContextType context, IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
 	{
-		IBRResources<ContextType> resources;
+		IBRResources<ContextType> resources = renderable.getResources();
 		
 		System.out.println("\nView Importance:");
 		
@@ -150,14 +141,15 @@ public class FidelityMetricRequest implements IBRRequest
     		double[] slopes = new double[resources.viewSet.getCameraPoseCount()];
     		double[] peaks = new double[resources.viewSet.getCameraPoseCount()];
     		
-			callback.setMaximum(resources.viewSet.getCameraPoseCount());
+			if (callback != null)
+			{
+				callback.setMaximum(resources.viewSet.getCameraPoseCount());
+			}
 			
 			new File(fidelityExportPath.getParentFile(), "debug").mkdir();
     		
     		for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
 			{
-    			ViewSet vset = resources.viewSet;
-    			
     			System.out.println(resources.viewSet.getImageFileName(i));
     			out.print(resources.viewSet.getImageFileName(i) + "\t");
     			
@@ -193,7 +185,7 @@ public class FidelityMetricRequest implements IBRRequest
 				    	if (sumMask >= 0.0)
 				    	{
 					        distances.add(minDistance);
-					        errors.add(calculateError(context, renderer, drawable, framebuffer, viewIndexList, i, activeViewCount));
+					        errors.add(calculateError(context, resources, drawable, framebuffer, viewIndexList, i, activeViewCount));
 					    	lastMinDistance = minDistance;
 				    	}
 			    	}
@@ -373,7 +365,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    			for (int k = 0; k < slopes.length; k++)
 	    			{
 	    				double weight = 1 / Math.max(0.000001, 1.0 - 
-	    						Math.pow(Math.max(0.0, targetDirections[i].dot(viewDirections[k])), this.weightExponent)) 
+	    						Math.pow(Math.max(0.0, targetDirections[i].dot(viewDirections[k])), this.settings.getWeightExponent())) 
 							- 1.0;
 	    				
 	    				if (peaks[k] > 0)
@@ -422,7 +414,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    				// If it isn't, then print it to the file
 	    				originalUsed[j] = true;
 	    				out.print(resources.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t" + 
-	    						calculateError(context, renderer, drawable, framebuffer, viewIndexList, j, activeViewCount) + "\t");
+	    						calculateError(context, resources, drawable, framebuffer, viewIndexList, j, activeViewCount) + "\t");
 
 	    				viewIndexList.set(activeViewCount, 0, j);
 	    				activeViewCount++;
@@ -433,7 +425,7 @@ public class FidelityMetricRequest implements IBRRequest
 			    		{
 			    			if (!originalUsed[k])
 			    			{
-			    				cumError += calculateError(context, renderer, drawable, framebuffer, viewIndexList, k, activeViewCount);
+			    				cumError += calculateError(context, resources, drawable, framebuffer, viewIndexList, k, activeViewCount);
 			    			}
 			    		}
 			    		

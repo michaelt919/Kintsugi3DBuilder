@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -38,9 +39,13 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.IBRLoadOptions;
-import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
+import tetzlaff.ibr.LoadingMonitor;
+import tetzlaff.ibr.util.BTFRequestUI;
+import tetzlaff.ibr.util.FidelityMetricRequestUI;
+import tetzlaff.ibr.util.IBRRequest;
+import tetzlaff.ibr.util.ResampleRequestUI;
 import tetzlaff.mvc.models.LightModel;
 
 /**
@@ -62,6 +67,13 @@ public class IBRelightConfigFrame extends JFrame
 	private JPanel contentPane;
 	
 	private List<JComponent> modelDependentComponents;
+	
+	private LoadingMonitor loadingMonitor;
+	
+	public LoadingMonitor getLoadingMonitor()
+	{
+		return this.loadingMonitor;
+	}
 
 	/**
 	 * Build and layout the GUI in the central content pane.  Also sets all appropriate listeners to update
@@ -73,7 +85,7 @@ public class IBRelightConfigFrame extends JFrame
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRRenderableListModel<ContextType> model, LightModel lightModel, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRRenderableListModel<ContextType> model, LightModel lightModel, Consumer<IBRRequest> ibrRequestProcessor, boolean isHighDPI)
 	{		
 		setResizable(false);
 		setTitle("IBRelight: Settings");
@@ -218,8 +230,6 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_progressBar.gridx = 1;
 		gbc_progressBar.gridy = 3;
 		loadingPanel.add(progressBar, gbc_progressBar);
-		
-		progressBar.setVisible(false);
 		
 		JPanel selectionPanel = new JPanel();
 		panel_2.add(selectionPanel);
@@ -560,82 +570,84 @@ public class IBRelightConfigFrame extends JFrame
 			chckbxHalfRes.setSelected(isHighDPI);
 		}
 		
+		loadingMonitor = new LoadingMonitor()
+		{
+			private double progress = 0;
+			private double maximum = 0;
+			
+			@Override
+			public void setProgress(double progress)
+			{
+				this.progress = progress;
+				
+				if (maximum > 0)
+				{
+					SwingUtilities.invokeLater(new Runnable()
+					{
+						@Override
+						public void run() 
+						{
+							progressBar.setIndeterminate(false);
+							progressBar.setValue((int)Math.round(progress / maximum * 100));
+						}						
+					});
+				}
+			}
+
+			@Override
+			public void loadingComplete()
+			{
+				SwingUtilities.invokeLater(new Runnable() 
+				{
+					@Override
+					public void run()
+					{
+						progressBar.setVisible(false);
+						pack();
+					}
+				});
+			}
+
+			@Override
+			public void startLoading() 
+			{
+			}
+
+			@Override
+			public void setMaximum(double maximum) 
+			{
+				this.maximum = maximum;
+				
+				if (maximum > 0)
+				{
+					SwingUtilities.invokeLater(new Runnable()
+					{
+						@Override
+						public void run() 
+						{
+							progressBar.setIndeterminate(false);
+							progressBar.setValue((int)Math.round(progress / maximum * 100));
+						}						
+					});
+				}
+				else
+				{
+					SwingUtilities.invokeLater(new Runnable()
+					{
+						@Override
+						public void run() 
+						{
+							progressBar.setIndeterminate(true);
+						}						
+					});
+				}
+			}
+		};
+		
 		// Create callback monitor to show the loading window when the model is being read
 		if(model != null)
 		{
-			model.setLoadingMonitor(new IBRLoadingMonitor()
-			{
-				private double progress = 0;
-				private double maximum = 0;
-				
-				@Override
-				public void setProgress(double progress)
-				{
-					this.progress = progress;
-					
-					if (maximum > 0)
-					{
-						SwingUtilities.invokeLater(new Runnable()
-						{
-							@Override
-							public void run() 
-							{
-								progressBar.setIndeterminate(false);
-								progressBar.setValue((int)Math.round(progress / maximum * 100));
-							}						
-						});
-					}
-				}
-	
-				@Override
-				public void loadingComplete()
-				{
-					SwingUtilities.invokeLater(new Runnable() 
-					{
-						@Override
-						public void run()
-						{
-							progressBar.setVisible(false);
-							pack();
-						}
-					});
-				}
-
-				@Override
-				public void startLoading() 
-				{
-				}
-
-				@Override
-				public void setMaximum(double maximum) 
-				{
-					this.maximum = maximum;
-					
-					if (maximum > 0)
-					{
-						SwingUtilities.invokeLater(new Runnable()
-						{
-							@Override
-							public void run() 
-							{
-								progressBar.setIndeterminate(false);
-								progressBar.setValue((int)Math.round(progress / maximum * 100));
-							}						
-						});
-					}
-					else
-					{
-						SwingUtilities.invokeLater(new Runnable()
-						{
-							@Override
-							public void run() 
-							{
-								progressBar.setIndeterminate(true);
-							}						
-						});
-					}
-				}
-			});
+			model.setLoadingMonitor(loadingMonitor);
 		}
 		
 		// Add listener for changes to half resolution checkbox.
@@ -1149,8 +1161,8 @@ public class IBRelightConfigFrame extends JFrame
 		btnResample.setToolTipText("Resample all images of the currently active object to the above dimensions");
 		
 		JButton btnFidelity = new JButton("Fidelity Metric");
-		btnFidelity.setEnabled(false);
-		btnFidelity.setVisible(false);
+//		btnFidelity.setEnabled(false);
+//		btnFidelity.setVisible(false);
 		panel_1.add(btnFidelity);
 		btnFidelity.setToolTipText("Evaluate the fidelity of the image-based sampling.");
 		
@@ -1169,80 +1181,45 @@ public class IBRelightConfigFrame extends JFrame
 		
 		btnBTFExport.addActionListener(e ->
 		{
-			fileChooser.setDialogTitle("Choose an Export Directory");
-			fileChooser.resetChoosableFileFilters();
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			IBRRequest request = new BTFRequestUI(this, fileChooser, spinnerWidth, spinnerHeight, model.getSelectedItem().settings(), lightModel.getLightColor(0)).prompt();
 			
-			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			if (request != null)
 			{
+				ibrRequestProcessor.accept(request);
+				
 				progressBar.setIndeterminate(true);
 				progressBar.setVisible(true);
 				this.pack();
-				model.getSelectedItem().requestBTF(
-					(Integer)spinnerWidth.getValue(),
-					(Integer)spinnerHeight.getValue(),
-					fileChooser.getSelectedFile());
 			}
 		});
 		
 		// Add listener for the 'resample' button to generate new vies for the current light field.
 		btnFidelity.addActionListener(e -> 
 		{
-			fileChooser.setDialogTitle("Choose an Export Filename");
-			fileChooser.resetChoosableFileFilters();
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			fileChooser.setFileFilter(new FileNameExtensionFilter("Text files (.txt)", "txt"));
+			IBRRequest request = new FidelityMetricRequestUI(this, fileChooser, model.getSelectedItem().settings()).prompt();
 			
-			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			if (request != null)
 			{
-				File fidelityOutputFile = fileChooser.getSelectedFile();
+				ibrRequestProcessor.accept(request);
 				
-				fileChooser.setDialogTitle("Choose a Target VSET File");
-				fileChooser.resetChoosableFileFilters();
-				fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				fileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
-				
-				if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-				{
-					File targetVSETFile = fileChooser.getSelectedFile();
-					
-					progressBar.setIndeterminate(true);
-					progressBar.setVisible(true);
-					this.pack();
-					model.getSelectedItem().requestFidelity(fidelityOutputFile, targetVSETFile);
-				}
+				progressBar.setIndeterminate(true);
+				progressBar.setVisible(true);
+				this.pack();
 			}
 		});
 		
 		// Add listener for the 'resample' button to generate new views for the current light field.
 		btnResample.addActionListener(e -> 
 		{
-			fileChooser.setDialogTitle("Choose a Target VSET File");
-			fileChooser.resetChoosableFileFilters();
-			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
-			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			fileChooser.setFileFilter(new FileNameExtensionFilter("View Set files (.vset)", "vset"));
-			if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+			IBRRequest request = new ResampleRequestUI(this, fileChooser, spinnerWidth, spinnerHeight).prompt();
+			
+			if (request != null)
 			{
-				JFileChooser exportFileChooser = new JFileChooser(fileChooser.getSelectedFile().getParentFile());
-				exportFileChooser.setDialogTitle("Choose an Export Directory");
-				exportFileChooser.removeChoosableFileFilter(exportFileChooser.getAcceptAllFileFilter());
-				exportFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				ibrRequestProcessor.accept(request);
 				
-				if (exportFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-				{
-					progressBar.setIndeterminate(true);
-					progressBar.setVisible(true);
-					this.pack();
-					model.getSelectedItem().requestResample(
-						(Integer)spinnerWidth.getValue(),
-						(Integer)spinnerHeight.getValue(), 
-						fileChooser.getSelectedFile(), 
-						exportFileChooser.getSelectedFile());
-				}
+				progressBar.setIndeterminate(true);
+				progressBar.setVisible(true);
+				this.pack();
 			}
 		});
 		
@@ -1385,7 +1362,9 @@ public class IBRelightConfigFrame extends JFrame
 				.times((float)((double)((Double)ambientIntensitySpinner.getValue()))));
 		});
 		
-		this.pack(); // Pack initially without progress bar
+		this.pack(); // Pack initially with progress bar
+
+		progressBar.setVisible(false);
 		
 		this.pack(); // Pack again without progress bar
 	}

@@ -5,7 +5,7 @@ package tetzlaff.ibr;
  * @author Michael Tetzlaff
  *
  */
-public interface IBRLoadingMonitor 
+public interface LoadingMonitor 
 {
 	/**
 	 * A callback fired when the unstructured light field starts to load.

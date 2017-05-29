@@ -2,12 +2,8 @@ package tetzlaff.ibr.rendering;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import tetzlaff.gl.AlphaBlendingFunction;
 import tetzlaff.gl.AlphaBlendingFunction.Weight;
@@ -26,7 +22,6 @@ import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.TextureWrapMode;
-import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
@@ -37,9 +32,9 @@ import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRSettings;
+import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
@@ -51,7 +46,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private Program<ContextType> program;
 	private Program<ContextType> shadowProgram;
 	private ReadonlyLightModel lightModel;
-	private IBRLoadingMonitor callback;
+	private LoadingMonitor callback;
 	private boolean suppressErrors = false;
 	private IBRSettings settings;
 
@@ -66,10 +61,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private VertexBuffer<ContextType> lightVertices;
 	private Texture2D<ContextType> lightTexture;
 	private Drawable<ContextType> lightDrawable;
-	
-    private boolean btfRequested;
-    private int btfWidth, btfHeight;
-    private File btfExportPath;
     
     private String id;
     private Drawable<ContextType> mainDrawable;
@@ -88,14 +79,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private Program<ContextType> environmentBackgroundProgram;
     private Drawable<ContextType> environmentBackgroundDrawable;
-
-    private boolean resampleRequested;
-    private int resampleWidth, resampleHeight;
-    private File resampleVSETFile;
-    private File resampleExportPath;
-    
-	private Consumer<Matrix4> resampleSetupCallback;
-	private Runnable resampleCompleteCallback;
     
     private boolean multisamplingEnabled = false;
     
@@ -126,6 +109,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     	this.transformationMatrices.add(Matrix4.IDENTITY);
     	this.settings = new IBRSettings();
     }
+	
+	@Override
+	public IBRResources<ContextType> getResources()
+	{
+		return this.resources;
+	}
 
 	@Override
 	public void initialize() 
@@ -274,40 +263,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	        }
     	}
 		
-		// TODO do these callbacks even need to be variables or could they be private methods?
-		this.resampleSetupCallback = (modelView) ->
-		{
-			setupForDraw();
-			
-			if (lightModel instanceof CameraBasedLightModel)
-			{
-		    	float scale = resources.viewSet.getCameraPose(0)
-		    			.times(resources.geometry.getCentroid().asPosition())
-	    			.getXYZ().length();
-				
-				((CameraBasedLightModel)lightModel).overrideCameraPose(
-						Matrix4.scale(1.0f / scale)
-							.times(modelView)
-							.times(Matrix4.translate(resources.geometry.getCentroid()))
-			    			.times(resources.viewSet.getCameraPose(0).transpose().getUpperLeft3x3().asMatrix4())
-							.times(Matrix4.scale(scale)));
-			}
-			
-			for (int i = 0; i < lightModel.getLightCount(); i++)
-			{
-				generateShadowMaps(i);
-				setupLight(i, 0);
-			}
-		};
-		
-		this.resampleCompleteCallback = () -> 
-		{
-			if (lightModel instanceof CameraBasedLightModel)
-			{
-				((CameraBasedLightModel)lightModel).removeCameraPoseOverride();
-			}
-		};
-		
 		shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
 
 		shadowMaps = context.build2DDepthTextureArray(2048, 2048, lightModel.getLightCount()).createTexture();
@@ -329,40 +284,21 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	@Override
 	public void update() 
 	{
-    	if (this.btfRequested)
-    	{
-    		try
-    		{
-				this.exportBTF();
-			} 
-    		catch (Exception e) 
-    		{
-				e.printStackTrace();
-			}
-    		this.btfRequested = false;
-    		
-    		if (callback != null)
-    		{
-    			callback.loadingComplete();
-    		}
-    	}
-    	else
-    	{
-    		this.updateCentroidAndRadius();
-    		
-    		if (this.newEnvironmentFile != null)
-    		{
-    			File environmentFile = this.newEnvironmentFile;
-    			this.newEnvironmentFile = null;
-    			
-    			try
-    			{
-    				System.out.println("Loading new environment texture.");
-    				
-    				// Use Michael Ludwig's code to convert to a cube map (supports either cross or panorama input)
-					EnvironmentMap envMap = EnvironmentMap.createFromHDRFile(environmentFile);
-					float[][] sides = envMap.getData();
-					
+		this.updateCentroidAndRadius();
+		
+		if (this.newEnvironmentFile != null)
+		{
+			File environmentFile = this.newEnvironmentFile;
+			this.newEnvironmentFile = null;
+			
+			try
+			{
+				System.out.println("Loading new environment texture.");
+				
+				// Use Michael Ludwig's code to convert to a cube map (supports either cross or panorama input)
+				EnvironmentMap envMap = EnvironmentMap.createFromHDRFile(environmentFile);
+				float[][] sides = envMap.getData();
+				
 //					// Uncomment to save the panorama as an image (i.e. for a figure in a paper)
 //					float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
 //					BufferedImage img = new BufferedImage(envMap.getSide() * 4, envMap.getSide() * 2, BufferedImage.TYPE_3BYTE_BGR);
@@ -379,122 +315,81 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 //						}
 //					}
 //					ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_IBRelight_pan.hdr")));
-    				
-    				Cubemap<ContextType> newEnvironmentTexture = 
-    						context.buildColorCubemap(envMap.getSide())
-    							.setInternalFormat(ColorFormat.RGB32F)
-    							.loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
-    							.loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
-    							.loadFace(CubemapFace.POSITIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
-    							.loadFace(CubemapFace.NEGATIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
-    							.loadFace(CubemapFace.POSITIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
-    							.loadFace(CubemapFace.NEGATIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
-								.setMipmapsEnabled(true)
-								.setLinearFilteringEnabled(true)
-								.createTexture();
-					
-    				newEnvironmentTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
-    	
-    				if (this.environmentMap != null)
-    				{
-    					this.environmentMap.close();
-    				}
-    				
-    				this.environmentMap = newEnvironmentTexture;
-    			}
-    			catch (Exception e) 
-        		{
-    				e.printStackTrace();
-    			}
-    		}
-    		
-    		if (this.referenceSceneChanged && this.referenceScene != null)
+				
+				Cubemap<ContextType> newEnvironmentTexture = 
+						context.buildColorCubemap(envMap.getSide())
+							.setInternalFormat(ColorFormat.RGB32F)
+							.loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
+							.loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
+							.loadFace(CubemapFace.POSITIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
+							.loadFace(CubemapFace.NEGATIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
+							.loadFace(CubemapFace.POSITIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
+							.loadFace(CubemapFace.NEGATIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
+							.setMipmapsEnabled(true)
+							.setLinearFilteringEnabled(true)
+							.createTexture();
+				
+				newEnvironmentTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
+	
+				if (this.environmentMap != null)
+				{
+					this.environmentMap.close();
+				}
+				
+				this.environmentMap = newEnvironmentTexture;
+			}
+			catch (Exception e) 
     		{
-    			this.referenceSceneChanged = false;
-    			
-    			try
-    			{
-    				System.out.println("Using new reference scene.");
-    				
-    				if (this.refScenePositions != null)
-    				{
-    					this.refScenePositions.close();
-    					this.refScenePositions = null;
-    				}
-    				
-    				if (this.refSceneTexCoords != null)
-    				{
-    					this.refSceneTexCoords.close();
-    					this.refSceneTexCoords = null;
-    				}
-    				
-    				if (this.refSceneNormals != null)
-    				{
-    					this.refSceneNormals.close();
-    					this.refSceneNormals = null;
-    				}
-    				
-    				if (this.refSceneTexture != null)
-    				{
-    					this.refSceneTexture.close();
-    					this.refSceneTexture = null;
-    				}
-    				
-    				this.refScenePositions = context.createVertexBuffer().setData(referenceScene.getVertices());
-    				this.refSceneTexCoords = context.createVertexBuffer().setData(referenceScene.getTexCoords());
-    				this.refSceneNormals = context.createVertexBuffer().setData(referenceScene.getNormals());
-    				this.refSceneTexture = context.build2DColorTextureFromFile(
-    						new File(referenceScene.getFilename().getParentFile(), referenceScene.getMaterial().getDiffuseMap().getMapName()), true)
-    					.setMipmapsEnabled(true)
-    					.setLinearFilteringEnabled(true)
-    					.createTexture();
-    			}
-    			catch (Exception e)
-    			{
-    				e.printStackTrace();
-    			}
-    		}
-    		
-        	if (this.resampleRequested)
-        	{
-        		try
-        		{
-    				this.resample();
-    			} 
-        		catch (Exception e) 
-        		{
-    				e.printStackTrace();
-    			}
-        		this.resampleRequested = false;
-        		if (this.callback != null)
-    			{
-    				this.callback.loadingComplete();
-    			}
-        	}
-        	else if (this.fidelityRequested)
-        	{
-        		if (this.callback != null)
-    			{
-    				this.callback.startLoading();
-    			}
-        		
-        		try
-        		{
-    				this.executeFidelityComputation();
-    			} 
-        		catch (Exception e) 
-        		{
-    				e.printStackTrace();
-    			}
-        		
-        		this.fidelityRequested = false;
-        		
-        		if (this.callback != null)
-    			{
-    				this.callback.loadingComplete();
-    			}
-        	}
-    	}
+				e.printStackTrace();
+			}
+		}
+		
+		if (this.referenceSceneChanged && this.referenceScene != null)
+		{
+			this.referenceSceneChanged = false;
+			
+			try
+			{
+				System.out.println("Using new reference scene.");
+				
+				if (this.refScenePositions != null)
+				{
+					this.refScenePositions.close();
+					this.refScenePositions = null;
+				}
+				
+				if (this.refSceneTexCoords != null)
+				{
+					this.refSceneTexCoords.close();
+					this.refSceneTexCoords = null;
+				}
+				
+				if (this.refSceneNormals != null)
+				{
+					this.refSceneNormals.close();
+					this.refSceneNormals = null;
+				}
+				
+				if (this.refSceneTexture != null)
+				{
+					this.refSceneTexture.close();
+					this.refSceneTexture = null;
+				}
+				
+				this.refScenePositions = context.createVertexBuffer().setData(referenceScene.getVertices());
+				this.refSceneTexCoords = context.createVertexBuffer().setData(referenceScene.getTexCoords());
+				this.refSceneNormals = context.createVertexBuffer().setData(referenceScene.getNormals());
+				this.refSceneTexture = context.build2DColorTextureFromFile(
+						new File(referenceScene.getFilename().getParentFile(), referenceScene.getMaterial().getDiffuseMap().getMapName()), true)
+					.setMipmapsEnabled(true)
+					.setLinearFilteringEnabled(true)
+					.createTexture();
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	private void setupForDraw()
@@ -676,9 +571,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     			.times(Matrix4.translate(this.centroid.negated()));
 	}
 	
-	private Matrix4 getModelViewMatrix(int modelInstance)
+	private Matrix4 getModelViewMatrix(Matrix4 viewMatrix, int modelInstance)
 	{
-		return getViewMatrix().times(transformationMatrices.get(modelInstance));
+		return viewMatrix.times(transformationMatrices.get(modelInstance));
 	}
 	
 	private Matrix4 getProjectionMatrix()
@@ -734,8 +629,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	}
 	
 	@Override
-	public void draw(Framebuffer<ContextType> framebuffer) 
+	public void draw(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 projection) 
 	{
+		boolean customViewMatrix = (view != null);
+    	
 		try
 		{
 			if(multisamplingEnabled)
@@ -749,13 +646,37 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    	
 	    	context.getState().enableBackFaceCulling();
 	    	
+	    	if (!customViewMatrix)
+	    	{
+	    		view = this.getViewMatrix();
+	    	}
+	    	else
+	    	{
+	    		if (lightModel instanceof CameraBasedLightModel)
+				{
+			    	float scale = resources.viewSet.getCameraPose(0)
+			    			.times(resources.geometry.getCentroid().asPosition())
+		    			.getXYZ().length();
+					
+					((CameraBasedLightModel)lightModel).overrideCameraPose(
+							Matrix4.scale(1.0f / scale)
+								.times(view)
+								.times(Matrix4.translate(resources.geometry.getCentroid()))
+				    			.times(resources.viewSet.getCameraPose(0).transpose().getUpperLeft3x3().asMatrix4())
+								.times(Matrix4.scale(scale)));
+				}
+	    	}
+	    	
+	    	if (projection == null)
+	    	{
+	    		projection = this.getProjectionMatrix();
+	    	}
+	    	
 	    	FramebufferSize size = framebuffer.getSize();
 	    	
 	    	this.setupForDraw();
 	    	
-	    	Matrix4 projection;
-	    	
-	    	mainDrawable.program().setUniform("projection", projection = getProjectionMatrix());
+	    	mainDrawable.program().setUniform("projection", projection);
 	    	
 	    	if (environmentMap != null && environmentMapEnabled)
 			{
@@ -839,7 +760,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 					}
 					
 					// Draw instance
-					Matrix4 modelView = getModelViewMatrix(modelInstance);
+					Matrix4 modelView = getModelViewMatrix(view, modelInstance);
 					this.program.setUniform("model_view", modelView);
 					this.program.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
 			    	
@@ -920,6 +841,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 				suppressErrors = true; // Prevent excessive errors
 			}
 		}
+		finally
+		{
+			if (customViewMatrix && lightModel instanceof CameraBasedLightModel)
+			{
+				((CameraBasedLightModel)lightModel).removeCameraPoseOverride();
+			}
+		}
 	}
 
 	@Override
@@ -998,143 +926,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		}
 	}
 	
-	private void resample() throws IOException
-	{
-		ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile);
-		FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(resampleWidth, resampleHeight)
-				.addColorAttachment()
-				.addDepthAttachment()
-				.createFramebufferObject();
-    	
-    	this.setupForDraw();
-    	
-		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
-		{
-	    	mainDrawable.program().setUniform("model_view", targetViewSet.getCameraPose(i));
-	    	mainDrawable.program().setUniform("viewPos", targetViewSet.getCameraPose(i).quickInverse(0.01f).getColumn(3).getXYZ());
-	    	mainDrawable.program().setUniform("projection", 
-    			targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
-    				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
-	    	
-	    	this.resampleSetupCallback.accept(targetViewSet.getCameraPose(i));
-	    	
-	    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, /*1.0f*/0.0f);
-	    	framebuffer.clearDepthBuffer();
-	    	
-	    	if (environmentMap != null && environmentMapEnabled)
-			{
-				environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
-				environmentBackgroundProgram.setTexture("env", environmentMap);
-				environmentBackgroundProgram.setUniform("model_view", targetViewSet.getCameraPose(i));
-				environmentBackgroundProgram.setUniform("projection", 
-					targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
-	    				.getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
-				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.IDENTITY : envMapMatrix);
-				environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
-
-				environmentBackgroundProgram.setUniform("gamma", 
-						environmentMap.isInternalFormatCompressed() || 
-						environmentMap.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT 
-						? 1.0f : 2.2f);
-				
-				context.getState().disableDepthTest();
-				this.environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
-				context.getState().enableDepthTest();
-			}
-    		
-    		framebuffer.clearDepthBuffer();
-	    	mainDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-	    	
-	    	File exportFile = new File(resampleExportPath, targetViewSet.getImageFileName(i));
-	    	exportFile.getParentFile().mkdirs();
-	        framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
-	        
-	        if (this.callback != null)
-	        {
-	        	this.callback.setProgress((double) i / (double) targetViewSet.getCameraPoseCount());
-	        }
-		}
-		
-		this.resampleCompleteCallback.run();
-		
-		Files.copy(resampleVSETFile.toPath(), 
-			new File(resampleExportPath, resampleVSETFile.getName()).toPath(),
-			StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(resources.viewSet.getGeometryFile().toPath(), 
-			new File(resampleExportPath, resources.viewSet.getGeometryFile().getName()).toPath(),
-			StandardCopyOption.REPLACE_EXISTING);
-	}
-	
-	private void exportBTF()
-	{	
-		try
-        {
-			Program<ContextType> btfProgram = context.getShaderProgramBuilder()
-    				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-    				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
-    				.createProgram();
-			
-			FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(btfWidth, btfHeight)
-					.addColorAttachment()
-					.createFramebufferObject();
-	    	
-	    	Drawable<ContextType> drawable = context.createDrawable(btfProgram);
-	    	drawable.addVertexBuffer("position", this.resources.positionBuffer);
-	    	drawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-	    	drawable.addVertexBuffer("normal", this.resources.normalBuffer);
-	    	drawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-	    	
-	    	this.setupForDraw(btfProgram);
-	    	
-	    	btfProgram.setUniform("useTSOverrides", true);
-	    	
-	    	////////////////////////////////
-	    	
-	    	// Backscattering
-			for (int i = 1; i <= 179; i++)
-			{
-				double theta = i / 180.0f * Math.PI;
-		    	btfProgram.setUniform("virtualLightCount", 1);
-		    	btfProgram.setUniform("lightIntensityVirtual[0]", lightModel.getLightColor(0));
-		    	btfProgram.setUniform("lightDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
-		    	btfProgram.setUniform("viewDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
-	    	
-//	    	// Joey's lab
-//	    	for (int i = 1; i <= 90; i++)
-//			{
-//				double theta = i / 180.0f * Math.PI;
-//		    	btfProgram.setUniform("virtualLightCount", 1);
-//		    	btfProgram.setUniform("lightIntensityVirtual[0]", lightController.getLightColor(0));
-////		    	btfProgram.setUniform("lightDirTSOverride", new Vector3(-(float)(Math.sin(theta)*Math.sqrt(0.5)), -(float)(Math.sin(theta)*Math.sqrt(0.5)), (float)Math.cos(theta)));
-////		    	btfProgram.setUniform("viewDirTSOverride", new Vector3((float)(Math.cos(theta)*Math.sqrt(0.5)), (float)(Math.cos(theta)*Math.sqrt(0.5)), (float)Math.sin(theta)));
-//		    	btfProgram.setUniform("lightDirTSOverride", new Vector3(-(float)Math.sin(theta), 0.0f, (float)Math.cos(theta)));
-//		    	btfProgram.setUniform("viewDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
-//		    	
-	    	////////////////////////////////
-				
-		    	context.getState().disableBackFaceCulling();
-		    	
-		    	framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-		    	drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-		    	
-		    	File exportFile = new File(btfExportPath, String.format("%02d.png", i));
-		    	exportFile.getParentFile().mkdirs();
-		        framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
-		        
-		        if (this.callback != null)
-		        {
-		        	this.callback.setProgress((double) i / (double) /*90*/180);
-		        }
-			}
-        }
-        catch (IOException e)
-        {
-        	e.printStackTrace();
-        }
-	}
-
 	@Override
-	public void setOnLoadCallback(IBRLoadingMonitor callback) 
+	public void setOnLoadCallback(LoadingMonitor callback) 
 	{
 		this.callback = callback;
 	}
@@ -1181,25 +974,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		this.multisamplingEnabled = multisamplingEnabled;
 	}
 
-	@Override
-	public void requestResample(int width, int height, File targetVSETFile, File exportPath)
-	{
-		this.resampleRequested = true;
-		this.resampleWidth = width;
-		this.resampleHeight = height;
-		this.resampleVSETFile = targetVSETFile;
-		this.resampleExportPath = exportPath;
-	}
 	
-	@Override
-	public void requestBTF(int width, int height, File exportPath)
-	{
-		this.btfRequested = true;
-		this.btfWidth = width;
-		this.btfHeight = height;
-		this.btfExportPath = exportPath;
-	}
-
+	
 	@Override
 	public void setProgram(Program<ContextType> program) 
 	{
@@ -1297,11 +1073,5 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	{
 		this.referenceScene = scene;
 		this.referenceSceneChanged = true;
-	}
-
-	@Override
-	public IBRResources<ContextType> getResources() 
-	{
-		return resources;
 	}
 }

@@ -13,5 +13,5 @@ public interface IBRRenderableListModel<ContextType extends Context<ContextType>
 	IBRRenderable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, IBRLoadOptions loadOptions) throws IOException;
 	@Override
 	IBRRenderable<ContextType> getSelectedItem();
-	void setLoadingMonitor(IBRLoadingMonitor loadingMonitor);
+	void setLoadingMonitor(LoadingMonitor loadingMonitor);
 }
