@@ -483,36 +483,79 @@ public class FidelityMetricRequest implements IBRRequest
 	    		while(unusedOriginalViews > 0)
 	    		{
 	    			double maxError = -1.0;
-	    			int maxErrorTargetIndex = -1;
-	    			int maxErrorOriginalIndex = -1;
+	    			int nextViewTargetIndex = -1;
+	    			int nextViewOriginalIndex = -1;
 	    			
 	    			// Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
+//		    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+//		    		{
+//	    	    		for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++) 
+//		    			{
+//		    				if (targetViewSet.getImageFileName(i).contains(resources.viewSet.getImageFileName(j).split("\\.")[0]))
+//		    				{
+//		    					// Can't be previously used and must have more error than any other view
+//				    			if (!originalUsed[j] && targetErrors[i] > maxError)
+//			    				{
+//			    					maxError = targetErrors[i];
+//			    					nextViewTargetIndex = i;
+//			    					nextViewOriginalIndex = j;
+//			    				}
+//		    				}
+//		    			}
+//		    		}
+		    		
+	    			double minTotalError = Double.MAX_VALUE;
+	    			
 		    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 		    		{
-	    	    		for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++) 
+		    			if (!targetUsed[i])
 		    			{
-		    				if (targetViewSet.getImageFileName(i).contains(resources.viewSet.getImageFileName(j).split("\\.")[0]))
-		    				{
-		    					// Can't be previously used and must have more error than any other view
-				    			if (!originalUsed[j] && targetErrors[i] > maxError)
-			    				{
-			    					maxError = targetErrors[i];
-			    					maxErrorTargetIndex = i;
-			    					maxErrorOriginalIndex = j;
-			    				}
-		    				}
+			    			for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++) 
+			    			{
+		    	    			if (targetViewSet.getImageFileName(i).contains(resources.viewSet.getImageFileName(j).split("\\.")[0]))
+		    	    			{
+		    	    				viewIndexList.set(activeViewCount, 0, j);
+		    	    				
+		    	    				double totalError = 0.0;
+			    	    			for (int k = 0; k < targetViewSet.getCameraPoseCount(); k++)
+			    	    			{
+			    	    				if (k != i && !targetUsed[k])
+			    	    				{
+				    	    				for (int l = 0; l < resources.viewSet.getCameraPoseCount(); l++)
+				    	    				{
+				    	    					if (targetViewSet.getImageFileName(k).contains(resources.viewSet.getImageFileName(l).split("\\.")[0]))
+				    		    				{
+				    	    	    				totalError += calculateError(context, resources, drawable, framebuffer, viewIndexList, l, activeViewCount + 1);
+				    	    	    				break;
+				    		    				}
+				    	    				}
+			    	    				}
+			    	    			}
+			    	    			
+			    	    			if (totalError < minTotalError)
+			    	    			{
+			    	    				nextViewTargetIndex = i;
+			    	    				nextViewOriginalIndex = j;
+			    	    				minTotalError = totalError;
+			    	    			}
+			    	    			
+			    	    			break;
+		    	    			}
+			    			}
 		    			}
 		    		}
 		    		
 		    		// Print the view to the file
-		    		out.print(targetViewSet.getImageFileName(maxErrorTargetIndex).split("\\.")[0] + "\t" + targetSlopes[maxErrorTargetIndex] + "\t" + targetPeaks[maxErrorTargetIndex] + "\t" + 
-	    					targetDistances[maxErrorTargetIndex] + "\t" + targetErrors[maxErrorTargetIndex] + "\t");
+		    		out.print(targetViewSet.getImageFileName(nextViewTargetIndex).split("\\.")[0] + "\t" + targetSlopes[nextViewTargetIndex] + "\t" + targetPeaks[nextViewTargetIndex] + "\t" + 
+	    					targetDistances[nextViewTargetIndex] + "\t" + targetErrors[nextViewTargetIndex] + "\t");
 					
 		    		// Flag that its been used
-					targetUsed[maxErrorTargetIndex] = true;
-					originalUsed[maxErrorOriginalIndex] = true;
+					targetUsed[nextViewTargetIndex] = true;
+					originalUsed[nextViewOriginalIndex] = true;
+					viewIndexList.set(activeViewCount, 0, nextViewOriginalIndex);
+					activeViewCount++;
 					
-					double expectedCumError = 0.0;
+					double expectedTotalError = 0.0;
 	    			
 					// Update all of the other target distances and errors that haven't been used yet
 	    			for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++) 
@@ -522,7 +565,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    				{
 	    					// distance
 	    					targetDistances[i] = Math.min(targetDistances[i], 
-	    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[maxErrorTargetIndex])))));
+	    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[nextViewTargetIndex])))));
 
 	    					// error
 	        				if (Double.isFinite(targetPeaks[i]))
@@ -542,11 +585,11 @@ public class FidelityMetricRequest implements IBRRequest
 	        					targetErrors[i] = targetSlopes[i] * targetDistances[i];
 	        				}
 	        				
-	        				expectedCumError += targetErrors[i];
+	        				expectedTotalError += targetErrors[i];
 	    				}
 	    			}
 
-		    		out.println(expectedCumError);
+		    		out.println(expectedTotalError + "\t" + minTotalError);
 	    			
 	    			// Count how many views from the original view set haven't been used.
 	    			unusedOriginalViews = 0;

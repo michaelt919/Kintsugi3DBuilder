@@ -9,13 +9,11 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
-import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
