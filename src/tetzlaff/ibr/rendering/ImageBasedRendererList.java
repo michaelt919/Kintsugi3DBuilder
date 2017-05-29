@@ -10,9 +10,9 @@ import tetzlaff.gl.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.interactive.InteractiveRenderableList;
 import tetzlaff.ibr.IBRLoadOptions;
-import tetzlaff.ibr.IBRLoadingMonitor;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
+import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
 
@@ -26,7 +26,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	private Program<ContextType> program;
 	private InteractiveRenderableList<ContextType, IBRRenderable<ContextType>> ulfs;
 	private int effectiveSize;
-	private IBRLoadingMonitor loadingMonitor;
+	private LoadingMonitor loadingMonitor;
 	
 	public ImageBasedRendererList(ContextType context, Program<ContextType> program, ReadonlyCameraModel cameraModel, ReadonlyLightModel lightModel) 
 	{
@@ -65,7 +65,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 					.setLoadOptions(loadOptions)
 					.loadVSETFile(vsetFile));
 		
-		newItem.setOnLoadCallback(new IBRLoadingMonitor()
+		newItem.setOnLoadCallback(new LoadingMonitor()
 		{
 			@Override
 			public void startLoading()
@@ -119,7 +119,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 					.setLoadingMonitor(this.loadingMonitor)
 					.setLoadOptions(loadOptions)
 					.loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory));
-		newItem.setOnLoadCallback(new IBRLoadingMonitor()
+		newItem.setOnLoadCallback(new LoadingMonitor()
 		{
 			@Override
 			public void startLoading()
@@ -203,7 +203,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	}
 	
 	@Override
-	public void setLoadingMonitor(IBRLoadingMonitor loadingMonitor)
+	public void setLoadingMonitor(LoadingMonitor loadingMonitor)
 	{
 		this.loadingMonitor = loadingMonitor;
 	}

@@ -9,17 +9,20 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
+import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
+import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.rendering.CameraBasedLightModel;
 import tetzlaff.ibr.rendering.HardcodedLightModel;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
+import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.mvc.controllers.impl.FirstPersonController;
@@ -285,11 +288,34 @@ public class IBRelight
 	//        // The Java process owns the native menu bar and won't relinquish it to Qt
 	//        QApplication.setAttribute(ApplicationAttribute.AA_DontUseNativeMenuBar);
 	        
+	        IBRRequestQueue<OpenGLContext> requestQueue = new IBRRequestQueue<OpenGLContext>(context, model);
+	        
+	        app.addRefreshable(new Refreshable()
+	        {
+				@Override
+				public void initialize() 
+				{
+				}
+
+				@Override
+				public void refresh() 
+				{
+					requestQueue.executeQueue();
+				}
+
+				@Override
+				public void terminate() 
+				{
+				}
+	        });
+	        
 	        // Create a user interface that examines the ULFRendererList for renderer settings and
 	        // selecting between different loaded models.
-	        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getModel(), window.isHighDPI());
+	        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getModel(), (request) -> requestQueue.addRequest(request), window.isHighDPI());
 	        gui.showGUI();        
 	        //app.addPollable(gui); // Needed for Qt UI
+	        
+	        requestQueue.setLoadingMonitor(gui.getLoadingMonitor());
 	        
 	    	// Make everything visible and start the event loop
 	    	window.show();

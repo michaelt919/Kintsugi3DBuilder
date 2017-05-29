@@ -4,17 +4,26 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import tetzlaff.gl.Context;
-import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.rendering.IBRImplementation;
+import tetzlaff.ibr.IBRRenderableListModel;
+import tetzlaff.ibr.LoadingMonitor;
 
 public class IBRRequestQueue<ContextType extends Context<ContextType>> 
 {
 	private Queue<IBRRequest> requestList;
-	private IBRRenderable<ContextType> renderable;
+	private ContextType context;
+	private IBRRenderableListModel<ContextType> model;
+	private LoadingMonitor loadingMonitor;
 	
-	public IBRRequestQueue(IBRRenderable<ContextType> renderable, )
+	public IBRRequestQueue(ContextType context, IBRRenderableListModel<ContextType> model)
 	{
-		requestList = new LinkedList<IBRRequest>();
+		this.requestList = new LinkedList<IBRRequest>();
+		this.context = context;
+		this.model = model;
+	}
+	
+	public void setLoadingMonitor(LoadingMonitor loadingMonitor)
+	{
+		this.loadingMonitor = loadingMonitor;
 	}
 	
 	public void addRequest(IBRRequest request)
@@ -24,15 +33,27 @@ public class IBRRequestQueue<ContextType extends Context<ContextType>>
 	
 	public void executeQueue()
 	{
+		context.makeContextCurrent();
+		
 		while(!requestList.isEmpty())
 		{
+			if (loadingMonitor != null)
+			{
+				loadingMonitor.startLoading();
+			}
+			
 			try
 			{
-				requestList.poll().executeRequest(renderable.getContext(), renderable);
+				requestList.poll().executeRequest(context, model.getSelectedItem(), loadingMonitor);
 			}
 			catch(Exception e)
 			{
 				e.printStackTrace();
+			}
+			
+			if (loadingMonitor != null)
+			{
+				loadingMonitor.loadingComplete();
 			}
 		}
 	}
