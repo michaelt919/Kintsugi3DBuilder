@@ -797,15 +797,26 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 
 		program.setUniform("infiniteLightSources", this.viewSet.areLightSourcesInfinite());
 		
-		if (this.shadowMatrixBuffer == null || this.shadowTextures == null)
+		if (this.depthTextures == null)
 		{
-			program.setUniform("shadowTestingEnabled", false);
+			program.setUniform("occlusionEnabled", false);
 		}
 		else
 		{
-			program.setUniform("shadowTestingEnabled", true);
+			program.setUniform("occlusionEnabled", true);
+			program.setUniform("occlusionBias", 0.002f);
+		}
+		
+		if (this.shadowMatrixBuffer == null || this.shadowTextures == null)
+		{
+			program.setUniform("shadowTestEnabled", false);
+		}
+		else
+		{
+			program.setUniform("shadowTestEnabled", true);
 			program.setUniformBuffer("ShadowMatrices", this.shadowMatrixBuffer);
 			program.setTexture("shadowImages", this.shadowTextures);
+			program.setUniform("occlusionBias", 0.002f);
 		}
 	}
 	

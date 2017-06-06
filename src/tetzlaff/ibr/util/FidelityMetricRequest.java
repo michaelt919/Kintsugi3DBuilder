@@ -1,16 +1,24 @@
 package tetzlaff.ibr.util;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.imageio.ImageIO;
+
+import org.ejml.simple.SimpleMatrix;
 
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Drawable;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferObject;
+import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
@@ -24,6 +32,7 @@ import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources;
+import tetzlaff.util.NonNegativeLeastSquares;
 
 public class FidelityMetricRequest implements IBRRequest
 {
@@ -97,6 +106,94 @@ public class FidelityMetricRequest implements IBRRequest
     	
     	return Math.sqrt(sumSqError / sumMask);
 	}
+	
+	private <ContextType extends Context<ContextType>> 
+	double calculateErrorNNLS(NonNegativeLeastSquares solver, byte[][] images, byte[][] weights, int targetViewIndex, List<Integer> viewIndexList)
+	{
+		return this.calculateErrorNNLS(solver, images, weights, targetViewIndex, viewIndexList, null, 0, 0);
+	}
+	
+	private <ContextType extends Context<ContextType>> 
+		double calculateErrorNNLS(NonNegativeLeastSquares solver, byte[][] images, byte[][] weights, int targetViewIndex, List<Integer> viewIndexList, 
+				File debugFile, int imgWidth, int imgHeight)
+	{
+		List<Integer> activePixels = new ArrayList<Integer>();
+        for (int i = 0; i < weights[0].length; i++)
+        {
+        	if ((0x000000FF & weights[targetViewIndex][i]) > 0)
+        	{
+        		activePixels.add(i);
+        	}
+        }
+        
+        SimpleMatrix mA = new SimpleMatrix(activePixels.size() * 3, viewIndexList.size());
+        SimpleMatrix b = new SimpleMatrix(activePixels.size() * 3, 1);
+        
+        for (int i = 0; i < activePixels.size(); i++)
+        {
+        	double weight = (0x000000FF & weights[targetViewIndex][activePixels.get(i)]) / 255.0;
+    		b.set(3 * i, weight * (0x000000FF & images[targetViewIndex][3 * activePixels.get(i)]) / 255.0);
+    		b.set(3 * i + 1, weight * (0x000000FF & images[targetViewIndex][3 * activePixels.get(i) + 1]) / 255.0);
+    		b.set(3 * i + 2, weight * (0x000000FF & images[targetViewIndex][3 * activePixels.get(i) + 2]) / 255.0);
+    		
+        	for (int j = 0; j < viewIndexList.size(); j++)
+        	{
+        		mA.set(3 * i, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i)]) / 255.0);
+        		mA.set(3 * i + 1, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i) + 1]) / 255.0);
+        		mA.set(3 * i + 2, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i) + 2]) / 255.0);
+        	}
+        }
+	
+		SimpleMatrix solution = solver.solve(mA, b, 0.001);
+        SimpleMatrix recon = mA.mult(solution);
+		
+		if (debugFile != null)
+		{
+	        BufferedImage outImg = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_ARGB);
+	        
+	        int[] pixels = new int[imgWidth * imgHeight];
+	        for (int i = 0; i < imgWidth * imgHeight; i++)
+	        {
+	        	pixels[i] = new Color(0,0,0).getRGB();
+	        }
+	        
+	        for (int i = 0; i < activePixels.size(); i++)
+	        {
+	        	int pixelIndex = activePixels.get(i);
+	        	double weight = (0x000000FF & weights[targetViewIndex][pixelIndex]) / 255.0;
+	        	
+	        	pixels[pixelIndex] = new Color(Math.max(0, Math.min(255, (int)(recon.get(3 * i) / weight * 255))), 
+	        			Math.max(0, Math.min(255, (int)(recon.get(3 * i + 1) / weight * 255))), 
+    					Math.max(0, Math.min(255, (int)(recon.get(3 * i + 2) / weight * 255)))).getRGB();
+	        }
+
+	        // Flip the array vertically
+	        for (int y = 0; y < imgHeight / 2; y++)
+	        {
+	        	int limit = (y + 1) * imgWidth;
+	        	for (int i1 = y * imgWidth, i2 = (imgHeight - y - 1) * imgWidth; i1 < limit; i1++, i2++)
+	        	{
+	            	int tmp = pixels[i1];
+	            	pixels[i1] = pixels[i2];
+	            	pixels[i2] = tmp;
+	        	}
+	        }
+	        
+	        outImg.setRGB(0, 0, imgWidth, imgHeight, pixels, 0, imgWidth);
+	        
+	        try
+	        {
+	        	ImageIO.write(outImg, "PNG", debugFile);
+	        }
+	        catch (IOException e)
+	        {
+	        	e.printStackTrace();
+	        }
+		}
+		
+		SimpleMatrix error = recon.minus(b);
+		return error.normF(); // TODO This includes the weights.  Is this what we want?
+	}
 
 	@Override
 	public <ContextType extends Context<ContextType>> void executeRequest(ContextType context, IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
@@ -122,6 +219,84 @@ public class FidelityMetricRequest implements IBRRequest
     			viewDistances[i][j] = Math.acos(Math.max(-1.0, Math.min(1.0f, viewDirections[i].dot(viewDirections[j]))));
     		}
     	}
+		
+		new File(fidelityExportPath.getParentFile(), "debug").mkdir();
+    	
+    	int size = 256; // 1024;
+    	
+    	byte[][] projectedImages = new byte[renderable.getActiveViewSet().getCameraPoseCount()][size * size * 3];
+    	byte[][] weights = new byte[renderable.getActiveViewSet().getCameraPoseCount()][size * size];
+    	
+    	try
+    	(
+			Program<ContextType> projTexProgram = context.getShaderProgramBuilder()
+				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+				.addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_multi.frag"))
+				.createProgram();
+    			
+			FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(size, size)
+				.addColorAttachment(ColorFormat.RGB8)
+				.addColorAttachment(ColorFormat.RGBA8)
+				.createFramebufferObject();
+		)
+		{
+    		Drawable<ContextType> drawable = context.createDrawable(projTexProgram);
+        	drawable.addVertexBuffer("position", resources.positionBuffer);
+        	drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
+        	drawable.addVertexBuffer("normal", resources.normalBuffer);
+        	drawable.addVertexBuffer("tangent", resources.tangentBuffer);
+        	
+        	renderable.getResources().setupShaderProgram(projTexProgram, false);
+        	if (!this.settings.isOcclusionEnabled())
+        	{
+        		projTexProgram.setUniform("occlusionEnabled", false);
+        	}
+        	else
+        	{
+        		projTexProgram.setUniform("occlusionBias", this.settings.getOcclusionBias());
+        	}
+        	
+        	context.getState().disableBackFaceCulling();
+        	
+        	for (int i = 0; i < renderable.getActiveViewSet().getCameraPoseCount(); i++)
+        	{
+        		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+        		framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+        		
+        		projTexProgram.setUniform("viewIndex", i);
+        		
+        		drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+        		int[] colors = framebuffer.readColorBufferARGB(0);
+        		for (int j = 0; j < colors.length; j++)
+        		{
+        			Color color = new Color(colors[j], true);
+        			projectedImages[i][3 * j] = (byte)color.getRed();
+        			projectedImages[i][3 * j + 1] = (byte)color.getGreen();
+        			projectedImages[i][3 * j + 2] = (byte)color.getBlue();
+        		}
+        		
+        		try
+        		{
+	        		framebuffer.saveColorBufferToFile(0, "PNG", 
+	        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + ".png"));
+	        		
+	        		framebuffer.saveColorBufferToFile(1, "PNG", 
+	        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_geometry.png"));
+        		}
+        		catch (IOException e)
+        		{
+        			e.printStackTrace();
+        		}
+
+        		int[] geometry = framebuffer.readColorBufferARGB(1);
+        		for (int j = 0; j < geometry.length; j++)
+        		{
+        			weights[i][j] = (byte)(new Color(geometry[j], true)).getGreen(); // n dot v
+        		}
+        	}
+		}
+    	
+    	NonNegativeLeastSquares solver = new NonNegativeLeastSquares();
     	
     	try
     	(
@@ -130,7 +305,7 @@ public class FidelityMetricRequest implements IBRRequest
 				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/fidelity.frag"))
 				.createProgram();
     			
-			FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(256, 256/*1024, 1024*/)
+			FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(size, size)
 				.addColorAttachment(ColorFormat.RG32F)
 				.createFramebufferObject();
     			
@@ -152,8 +327,6 @@ public class FidelityMetricRequest implements IBRRequest
 			{
 				callback.setMaximum(resources.viewSet.getCameraPoseCount());
 			}
-			
-			new File(fidelityExportPath.getParentFile(), "debug").mkdir();
     		
     		for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
 			{
@@ -173,16 +346,17 @@ public class FidelityMetricRequest implements IBRRequest
     			
     			do 
     			{
-			    	NativeVectorBuffer viewIndexList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
+			    	NativeVectorBuffer viewIndexBuffer = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
 			    	
 			    	activeViewCount = 0;
+			    	
 			    	minDistance = Float.MAX_VALUE;
 			    	for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
 			    	{
 			    		if (i != j && viewDistances[i][j] > lastMinDistance)
 			    		{
 			    			minDistance = Math.min(minDistance, viewDistances[i][j]);
-			    			viewIndexList.set(activeViewCount, 0, j);
+			    			viewIndexBuffer.set(activeViewCount, 0, j);
 			    			activeViewCount++;
 			    		}
 			    	}
@@ -192,7 +366,29 @@ public class FidelityMetricRequest implements IBRRequest
 				    	if (sumMask >= 0.0)
 				    	{
 					        distances.add(minDistance);
-					        errors.add(calculateError(context, resources, drawable, framebuffer, viewIndexList, i, activeViewCount));
+					        
+					        //errors.add(calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, i, activeViewCount));
+					        
+					        final int copyActiveViewCount = activeViewCount;
+					        errors.add(calculateErrorNNLS(solver, projectedImages, weights, i, 
+					        		new AbstractList<Integer>()
+					    			{
+										@Override
+										public Integer get(int index) 
+										{
+											return viewIndexBuffer.get(index, 0).intValue();
+										}
+
+										@Override
+										public int size()
+										{
+											return copyActiveViewCount;
+										}
+					    			},
+					    			new File(new File(fidelityExportPath.getParentFile(), "debug"), 
+					    					renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_" + errors.size() + ".png"), 
+			    					size, size));
+					        
 					    	lastMinDistance = minDistance;
 				    	}
 			    	}
@@ -399,7 +595,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    		
 	    		boolean[] originalUsed = new boolean[resources.viewSet.getCameraPoseCount()];
 				
-				NativeVectorBuffer viewIndexList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
+				NativeVectorBuffer viewIndexBuffer = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
 	    		int activeViewCount = 0;
 	    		
 	    		// Print views that are only in the original view set and NOT in the target view set
@@ -420,10 +616,28 @@ public class FidelityMetricRequest implements IBRRequest
 	    			{
 	    				// If it isn't, then print it to the file
 	    				originalUsed[j] = true;
-	    				out.print(resources.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t" + 
-	    						calculateError(context, resources, drawable, framebuffer, viewIndexList, j, activeViewCount) + "\t");
+	    				out.print(resources.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t");
+	    				
+	    				//out.print(calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, j, activeViewCount) + "\t");
+	    				
+	    				final int copyActiveViewCount = activeViewCount;
+				        out.print(calculateErrorNNLS(solver, projectedImages, weights, j, 
+				        		new AbstractList<Integer>()
+				    			{
+									@Override
+									public Integer get(int index) 
+									{
+										return viewIndexBuffer.get(index, 0).intValue();
+									}
 
-	    				viewIndexList.set(activeViewCount, 0, j);
+									@Override
+									public int size()
+									{
+										return copyActiveViewCount;
+									}
+				    			}) + "\t");
+
+	    				viewIndexBuffer.set(activeViewCount, 0, j);
 	    				activeViewCount++;
 
 			    		double cumError = 0.0;
@@ -432,7 +646,24 @@ public class FidelityMetricRequest implements IBRRequest
 			    		{
 			    			if (!originalUsed[k])
 			    			{
-			    				cumError += calculateError(context, resources, drawable, framebuffer, viewIndexList, k, activeViewCount);
+			    				//cumError += calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, k, activeViewCount);
+			    				
+			    				final int copyActiveViewCount2 = activeViewCount;
+						        cumError += calculateErrorNNLS(solver, projectedImages, weights, k, 
+						        		new AbstractList<Integer>()
+						    			{
+											@Override
+											public Integer get(int index) 
+											{
+												return viewIndexBuffer.get(index, 0).intValue();
+											}
+
+											@Override
+											public int size()
+											{
+												return copyActiveViewCount2;
+											}
+						    			});
 			    			}
 			    		}
 			    		
@@ -482,7 +713,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    		// Go through these views in order of importance so that when loaded viewset = target viewset, it generates a ground truth ranking.
 	    		while(unusedOriginalViews > 0)
 	    		{
-	    			double maxError = -1.0;
+//	    			double maxError = -1.0;
 	    			int nextViewTargetIndex = -1;
 	    			int nextViewOriginalIndex = -1;
 	    			
@@ -514,7 +745,7 @@ public class FidelityMetricRequest implements IBRRequest
 			    			{
 		    	    			if (targetViewSet.getImageFileName(i).contains(resources.viewSet.getImageFileName(j).split("\\.")[0]))
 		    	    			{
-		    	    				viewIndexList.set(activeViewCount, 0, j);
+		    	    				viewIndexBuffer.set(activeViewCount, 0, j);
 		    	    				
 		    	    				double totalError = 0.0;
 			    	    			for (int k = 0; k < targetViewSet.getCameraPoseCount(); k++)
@@ -525,7 +756,25 @@ public class FidelityMetricRequest implements IBRRequest
 				    	    				{
 				    	    					if (targetViewSet.getImageFileName(k).contains(resources.viewSet.getImageFileName(l).split("\\.")[0]))
 				    		    				{
-				    	    	    				totalError += calculateError(context, resources, drawable, framebuffer, viewIndexList, l, activeViewCount + 1);
+				    	    	    				//totalError += calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, l, activeViewCount + 1);
+				    	    						
+				    	    						final int copyActiveViewCount = activeViewCount;
+				    	    				        totalError += calculateErrorNNLS(solver, projectedImages, weights, l, 
+				    	    				        		new AbstractList<Integer>()
+				    	    				    			{
+				    	    									@Override
+				    	    									public Integer get(int index) 
+				    	    									{
+				    	    										return viewIndexBuffer.get(index, 0).intValue();
+				    	    									}
+
+				    	    									@Override
+				    	    									public int size()
+				    	    									{
+				    	    										return copyActiveViewCount;
+				    	    									}
+				    	    				    			});
+				    	    						
 				    	    	    				break;
 				    		    				}
 				    	    				}
@@ -552,7 +801,7 @@ public class FidelityMetricRequest implements IBRRequest
 		    		// Flag that its been used
 					targetUsed[nextViewTargetIndex] = true;
 					originalUsed[nextViewOriginalIndex] = true;
-					viewIndexList.set(activeViewCount, 0, nextViewOriginalIndex);
+					viewIndexBuffer.set(activeViewCount, 0, nextViewOriginalIndex);
 					activeViewCount++;
 					
 					double expectedTotalError = 0.0;
