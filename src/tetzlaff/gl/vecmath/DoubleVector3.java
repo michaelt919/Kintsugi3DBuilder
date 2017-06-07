@@ -1,5 +1,7 @@
 package tetzlaff.gl.vecmath;
 
+import java.util.function.DoubleUnaryOperator;
+
 /**
  * A vector of three dimensions (for linear algebra calculations) backed by 
  * 64-bit floats.  This is an immutable object.
@@ -136,5 +138,10 @@ public class DoubleVector3
 	public DoubleVector3 normalized()
 	{
 		return this.times(1.0 / this.length());
+	}
+	
+	public DoubleVector3 applyOperator(DoubleUnaryOperator operator)
+	{
+		return new DoubleVector3(operator.applyAsDouble(x), operator.applyAsDouble(y), operator.applyAsDouble(z));
 	}
 }

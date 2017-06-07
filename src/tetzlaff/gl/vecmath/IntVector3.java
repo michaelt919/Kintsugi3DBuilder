@@ -36,6 +36,16 @@ public class IntVector3
 		return new IntVector4(this.x, this.y, this.z, w);
 	}
 	
+	public Vector3 asFloatingPoint()
+	{
+		return new Vector3(x, y, z);
+	}
+	
+	public Vector3 asFloatingPointNormalized()
+	{
+		return new Vector3(x / 255.0f, y / 255.0f, z / 255.0f);
+	}
+	
 	public IntVector2 getXY()
 	{
 		return new IntVector2(this.x, this.y);

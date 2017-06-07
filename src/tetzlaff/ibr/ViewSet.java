@@ -311,18 +311,6 @@ public class ViewSet
 			return null;
 		}
 	}
-
-	public SampledLuminanceEncoding getLuminanceEncoding() 
-	{
-		if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
-		{
-			return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
-		}
-		else
-		{
-			return null;
-		}
-	}
 	
 	/**
 	 * Loads a VSET file and creates a corresponding ViewSet object.
@@ -1432,16 +1420,16 @@ public class ViewSet
 	{
 		return gamma;
 	}
-	
-	public SampledLuminanceEncoding getLuminanceEncodingFunction()
+
+	public SampledLuminanceEncoding getLuminanceEncoding() 
 	{
-		if (linearLuminanceValues == null || encodedLuminanceValues == null)
+		if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
 		{
-			return null;
+			return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
 		}
 		else
 		{
-			return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
+			return null;
 		}
 	}
 	

@@ -1,5 +1,7 @@
 package tetzlaff.gl.vecmath;
 
+import java.util.function.DoubleUnaryOperator;
+
 /**
  * @author Michael Tetzlaff
  * 
@@ -132,5 +134,10 @@ public class DoubleVector4
 	public DoubleVector4 normalized()
 	{
 		return this.times(1.0 / this.length());
+	}
+	
+	public DoubleVector4 applyOperator(DoubleUnaryOperator operator)
+	{
+		return new DoubleVector4(operator.applyAsDouble(x), operator.applyAsDouble(y), operator.applyAsDouble(z), operator.applyAsDouble(w));
 	}
 }

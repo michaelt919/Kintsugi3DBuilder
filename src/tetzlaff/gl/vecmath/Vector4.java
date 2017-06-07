@@ -1,5 +1,7 @@
 package tetzlaff.gl.vecmath;
 
+import java.util.function.DoubleUnaryOperator;
+
 /**
  * A vector of four dimensions (for linear algebra calculations) backed by 
  * 32-bit floats.  Useful for homogeneous coordinates in three dimensional
@@ -185,5 +187,10 @@ public class Vector4
 	public Vector4 normalized()
 	{
 		return this.times(1.0f / this.length());
+	}
+	
+	public Vector4 applyOperator(DoubleUnaryOperator operator)
+	{
+		return new Vector4((float)operator.applyAsDouble(x), (float)operator.applyAsDouble(y), (float)operator.applyAsDouble(z), (float)operator.applyAsDouble(w));
 	}
 }
