@@ -312,7 +312,7 @@ public class TextureFitUserInterface extends JFrame
 					primaryViewComboBox.setModel(new DefaultComboBoxModel<String>(cameraPoseNameArray));
 					primaryViewComboBox.setSelectedItem(primaryViewName);
 					
-					SampledLuminanceEncoding luminanceEncoding = currentViewSet.getLuminanceEncodingFunction();
+					SampledLuminanceEncoding luminanceEncoding = currentViewSet.getLuminanceEncoding();
 					
 					if (luminanceEncoding != null)
 					{

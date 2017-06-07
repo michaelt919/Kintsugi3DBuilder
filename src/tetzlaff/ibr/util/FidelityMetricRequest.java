@@ -6,8 +6,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.AbstractList;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.function.DoubleFunction;
+import java.util.function.DoubleUnaryOperator;
+import java.util.function.Function;
+import java.util.function.IntToDoubleFunction;
 
 import javax.imageio.ImageIO;
 
@@ -26,12 +36,14 @@ import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources;
+import tetzlaff.util.CubicHermiteSpline;
 import tetzlaff.util.NonNegativeLeastSquares;
 
 public class FidelityMetricRequest implements IBRRequest
@@ -108,14 +120,15 @@ public class FidelityMetricRequest implements IBRRequest
 	}
 	
 	private <ContextType extends Context<ContextType>> 
-	double calculateErrorNNLS(NonNegativeLeastSquares solver, byte[][] images, byte[][] weights, int targetViewIndex, List<Integer> viewIndexList)
+		double calculateErrorNNLS(NonNegativeLeastSquares solver, Function<IntVector3, Vector3> decodeFunction, byte[][] images, byte[][] weights,
+				int targetViewIndex, List<Integer> viewIndexList)
 	{
-		return this.calculateErrorNNLS(solver, images, weights, targetViewIndex, viewIndexList, null, 0, 0);
+		return this.calculateErrorNNLS(solver, decodeFunction, images, weights, targetViewIndex, viewIndexList, null, null, 0, 0);
 	}
 	
 	private <ContextType extends Context<ContextType>> 
-		double calculateErrorNNLS(NonNegativeLeastSquares solver, byte[][] images, byte[][] weights, int targetViewIndex, List<Integer> viewIndexList, 
-				File debugFile, int imgWidth, int imgHeight)
+		double calculateErrorNNLS(NonNegativeLeastSquares solver, Function<IntVector3, Vector3> decodeFunction, byte[][] images, byte[][] weights, 
+				int targetViewIndex, List<Integer> viewIndexList, File debugFile, Function<Vector3, IntVector3> encodeFunction, int imgWidth, int imgHeight)
 	{
 		List<Integer> activePixels = new ArrayList<Integer>();
         for (int i = 0; i < weights[0].length; i++)
@@ -132,15 +145,25 @@ public class FidelityMetricRequest implements IBRRequest
         for (int i = 0; i < activePixels.size(); i++)
         {
         	double weight = (0x000000FF & weights[targetViewIndex][activePixels.get(i)]) / 255.0;
-    		b.set(3 * i, weight * (0x000000FF & images[targetViewIndex][3 * activePixels.get(i)]) / 255.0);
-    		b.set(3 * i + 1, weight * (0x000000FF & images[targetViewIndex][3 * activePixels.get(i) + 1]) / 255.0);
-    		b.set(3 * i + 2, weight * (0x000000FF & images[targetViewIndex][3 * activePixels.get(i) + 2]) / 255.0);
+        	Vector3 color = decodeFunction.apply(new IntVector3(
+        			0x000000FF & images[targetViewIndex][3 * activePixels.get(i)],
+        			0x000000FF & images[targetViewIndex][3 * activePixels.get(i) + 1],
+        			0x000000FF & images[targetViewIndex][3 * activePixels.get(i) + 2]));
+        	
+    		b.set(3 * i, weight * color.x);
+    		b.set(3 * i + 1, weight * color.y);
+    		b.set(3 * i + 2, weight * color.z);
     		
         	for (int j = 0; j < viewIndexList.size(); j++)
         	{
-        		mA.set(3 * i, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i)]) / 255.0);
-        		mA.set(3 * i + 1, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i) + 1]) / 255.0);
-        		mA.set(3 * i + 2, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i) + 2]) / 255.0);
+            	Vector3 color2 = decodeFunction.apply(new IntVector3(
+            			0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i)],
+            			0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i) + 1],
+            			0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i) + 2]));
+        		
+        		mA.set(3 * i, j, weight * color2.x / 255.0);
+        		mA.set(3 * i + 1, j, weight * color2.y / 255.0);
+        		mA.set(3 * i + 2, j, weight * color2.z / 255.0);
         	}
         }
 	
@@ -162,9 +185,15 @@ public class FidelityMetricRequest implements IBRRequest
 	        	int pixelIndex = activePixels.get(i);
 	        	double weight = (0x000000FF & weights[targetViewIndex][pixelIndex]) / 255.0;
 	        	
-	        	pixels[pixelIndex] = new Color(Math.max(0, Math.min(255, (int)(recon.get(3 * i) / weight * 255))), 
-	        			Math.max(0, Math.min(255, (int)(recon.get(3 * i + 1) / weight * 255))), 
-    					Math.max(0, Math.min(255, (int)(recon.get(3 * i + 2) / weight * 255)))).getRGB();
+	        	IntVector3 encodedColor = encodeFunction.apply(
+	        			new Vector3((float)(recon.get(3 * i) / weight), 
+	        						(float)(recon.get(3 * i + 1) / weight), 
+	        						(float)(recon.get(3 * i + 2) / weight)));
+	        	
+	        	pixels[pixelIndex] = new Color(
+	        			Math.max(0, Math.min(255, encodedColor.x)), 
+	        			Math.max(0, Math.min(255, encodedColor.y)), 
+    					Math.max(0, Math.min(255, encodedColor.z))).getRGB();
 	        }
 
 	        // Flip the array vertically
@@ -192,13 +221,135 @@ public class FidelityMetricRequest implements IBRRequest
 		}
 		
 		SimpleMatrix error = recon.minus(b);
-		return error.normF(); // TODO This includes the weights.  Is this what we want?
+		return error.normF() / Math.sqrt(activePixels.size()); // TODO This includes the weights.  Is this what we want?
+	}
+	
+	private double estimateErrorQuadratic(double slope, double peak, double distance)
+	{
+		if (Double.isFinite(peak))
+		{
+			double peakDistance = 2 * peak / slope;
+			if (distance > peakDistance)
+			{
+				return peak;
+			}
+			else
+			{
+				return slope * distance - slope * slope * distance * distance / (4 * peak);
+			}
+		}
+		else
+		{
+			return slope * distance;
+		}
+	}
+	
+	private double estimateErrorFromSplines(List<Vector3> directions, List<CubicHermiteSpline> splines, Vector3 targetDirection, double targetDistance)
+	{
+		PriorityQueue<AbstractMap.SimpleEntry<Double, CubicHermiteSpline>> splineQueue 
+			= new PriorityQueue<>(Comparator.<AbstractMap.SimpleEntry<Double, CubicHermiteSpline>>comparingDouble(entry -> entry.getKey())
+					.reversed());
+		
+		for (int i = 0; i < directions.size(); i++)
+		{
+			double distance = Math.acos(Math.max(-1.0, Math.min(1.0f, directions.get(i).dot(targetDirection))));
+			splineQueue.add(new AbstractMap.SimpleEntry<Double, CubicHermiteSpline>(distance, splines.get(i)));
+			if (splineQueue.size() > 5)
+			{
+				splineQueue.remove();
+			}
+		}
+		
+		double thresholdInv = Math.min(500000.0, 1.0 / splineQueue.remove().getKey());
+		
+		double sum = 0.0;
+		double sumWeights = 0.0;
+		while (!splineQueue.isEmpty())
+		{
+			AbstractMap.SimpleEntry<Double, CubicHermiteSpline> next = splineQueue.remove();
+			double weight = Math.min(1000000.0, 1.0 / next.getKey()) - thresholdInv;
+			sum += weight * next.getValue().applyAsDouble(targetDistance);
+			sumWeights += weight;
+		}
+		
+		return sum / sumWeights;
 	}
 
 	@Override
 	public <ContextType extends Context<ContextType>> void executeRequest(ContextType context, IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
 	{
 		IBRResources<ContextType> resources = renderable.getResources();
+		
+		Function<IntVector3, Vector3> decodeFunction = (color) -> 
+		{
+			if (color.x <= 0 || color.y <= 0 || color.z <= 0)
+			{
+				return Vector3.ZERO;
+			}
+			else
+			{
+				// Step 1: remove gamma correction
+	            Vector3 colorGamma = color.asFloatingPointNormalized().applyOperator(x -> Math.pow(x, 2.2));
+				
+	            // Step 2: convert to CIE luminance
+	            // Clamp to 1 so that the ratio computed in step 3 is well defined
+	            // if the luminance value somehow exceeds 1.0
+	            double luminanceNonlinear = colorGamma.dot(new Vector3(0.2126729f, 0.7151522f, 0.0721750f));
+				
+	            double maxLuminance = resources.viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
+				
+				if (luminanceNonlinear > 1.0)
+				{
+					return colorGamma.times((float)maxLuminance);
+				}
+				else
+				{
+					// Step 3: determine the ratio between the linear and nonlinear luminance
+					// Reapply gamma correction to the single luminance value
+					float scale = (float)Math.min(5.0 * maxLuminance, 
+							resources.viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(
+									255.0 * Math.pow(luminanceNonlinear, 1.0 / 2.2)) / luminanceNonlinear);
+					
+					// Step 4: return the color, scaled to have the correct luminance,
+					// but the original saturation and hue.
+					return colorGamma.times(scale);
+				}
+			}
+		};
+		
+		Function<Vector3, IntVector3> encodeFunction = (color) ->
+		{
+			if (color.x <= 0 || color.y <= 0 || color.z <= 0)
+			{
+				return new IntVector3(0);
+			}
+			else
+			{
+				float luminance = color.dot(new Vector3(0.2126729f, 0.7151522f, 0.0721750f));
+				double maxLuminance = resources.viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
+				if (luminance >= maxLuminance)
+				{
+					Vector3 result = color.dividedBy((float)maxLuminance).applyOperator(x -> Math.pow(x, 1.0 / 2.2));
+					return new IntVector3(Math.round(255 * result.x), Math.round(255 * result.y), Math.round(255 * result.z));
+				}
+				else
+				{
+					// Step 2: determine the ratio between the tonemapped and linear luminance
+					// Remove implicit gamma correction from the lookup table
+					double tonemappedGammaCorrected = 
+							resources.viewSet.getLuminanceEncoding().encodeFunction.applyAsDouble(luminance) / 255.0;
+					double tonemappedNoGamma = Math.pow(tonemappedGammaCorrected, 2.2);
+					double scale = tonemappedNoGamma / luminance;
+						
+					// Step 3: return the color, scaled to have the correct luminance,
+					// but the original saturation and hue.
+					// Step 4: apply gamma correction
+					Vector3 colorScaled = color.times((float)scale);
+					Vector3 result = colorScaled.applyOperator(x -> Math.pow(x, 1.0 / 2.2));
+					return new IntVector3(Math.round(255 * result.x), Math.round(255 * result.y), Math.round(255 * result.z));
+				}
+			}
+		};
 		
 		System.out.println("\nView Importance:");
 		
@@ -275,18 +426,18 @@ public class FidelityMetricRequest implements IBRRequest
         			projectedImages[i][3 * j + 2] = (byte)color.getBlue();
         		}
         		
-        		try
-        		{
-	        		framebuffer.saveColorBufferToFile(0, "PNG", 
-	        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + ".png"));
-	        		
-	        		framebuffer.saveColorBufferToFile(1, "PNG", 
-	        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_geometry.png"));
-        		}
-        		catch (IOException e)
-        		{
-        			e.printStackTrace();
-        		}
+//        		try
+//        		{
+//	        		framebuffer.saveColorBufferToFile(0, "PNG", 
+//	        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + ".png"));
+//	        		
+//	        		framebuffer.saveColorBufferToFile(1, "PNG", 
+//	        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_geometry.png"));
+//        		}
+//        		catch (IOException e)
+//        		{
+//        			e.printStackTrace();
+//        		}
 
         		int[] geometry = framebuffer.readColorBufferARGB(1);
         		for (int j = 0; j < geometry.length; j++)
@@ -327,6 +478,8 @@ public class FidelityMetricRequest implements IBRRequest
 			{
 				callback.setMaximum(resources.viewSet.getCameraPoseCount());
 			}
+			
+			CubicHermiteSpline[] errorFunctions = new CubicHermiteSpline[resources.viewSet.getCameraPoseCount()];
     		
     		for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
 			{
@@ -370,7 +523,7 @@ public class FidelityMetricRequest implements IBRRequest
 					        //errors.add(calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, i, activeViewCount));
 					        
 					        final int copyActiveViewCount = activeViewCount;
-					        errors.add(calculateErrorNNLS(solver, projectedImages, weights, i, 
+					        errors.add(calculateErrorNNLS(solver, decodeFunction, projectedImages, weights, i, 
 					        		new AbstractList<Integer>()
 					    			{
 										@Override
@@ -384,16 +537,31 @@ public class FidelityMetricRequest implements IBRRequest
 										{
 											return copyActiveViewCount;
 										}
-					    			},
+					    			}/*,
 					    			new File(new File(fidelityExportPath.getParentFile(), "debug"), 
 					    					renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_" + errors.size() + ".png"), 
-			    					size, size));
+			    					encodeFunction, size, size*/));
 					        
 					    	lastMinDistance = minDistance;
 				    	}
 			    	}
     			}
     			while(sumMask >= 0.0 && activeViewCount > 0 && minDistance < /*0*/ Math.PI / 4);
+    			
+    			double[] errorArray = new double[errors.size()];
+    			double[] distanceArray = new double[distances.size()];
+    			
+    			for (int k = 0; k < errors.size(); k++)
+    			{
+    				errorArray[k] = errors.get(k);
+    			}
+    			
+    			for (int k = 0; k < distances.size(); k++)
+    			{
+    				distanceArray[k] = distances.get(k);
+    			}
+    			
+    			errorFunctions[i] = new CubicHermiteSpline(distanceArray, errorArray, true);
     			
     			// Fit the error v. distance data to a quadratic with a few constraints.
     			// First, the quadratic must pass through the origin.
@@ -621,7 +789,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    				//out.print(calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, j, activeViewCount) + "\t");
 	    				
 	    				final int copyActiveViewCount = activeViewCount;
-				        out.print(calculateErrorNNLS(solver, projectedImages, weights, j, 
+				        out.print(calculateErrorNNLS(solver, decodeFunction, projectedImages, weights, j, 
 				        		new AbstractList<Integer>()
 				    			{
 									@Override
@@ -649,7 +817,7 @@ public class FidelityMetricRequest implements IBRRequest
 			    				//cumError += calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, k, activeViewCount);
 			    				
 			    				final int copyActiveViewCount2 = activeViewCount;
-						        cumError += calculateErrorNNLS(solver, projectedImages, weights, k, 
+						        cumError += calculateErrorNNLS(solver, decodeFunction, projectedImages, weights, k, 
 						        		new AbstractList<Integer>()
 						    			{
 											@Override
@@ -680,22 +848,8 @@ public class FidelityMetricRequest implements IBRRequest
 				// Now update the errors for all of the target views
 				for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
     			{
-    				if (Double.isFinite(targetPeaks[i]))
-					{
-    					double peakDistance = 2 * targetPeaks[i] / targetSlopes[i];
-    					if (targetDistances[i] > peakDistance)
-    					{
-    						targetErrors[i] = targetPeaks[i];
-    					}
-    					else
-    					{
-    						targetErrors[i] = targetSlopes[i] * targetDistances[i] - targetSlopes[i] * targetSlopes[i] * targetDistances[i] * targetDistances[i] / (4 * targetPeaks[i]);
-    					}
-					}
-    				else
-    				{
-    					targetErrors[i] = targetSlopes[i] * targetDistances[i];
-    				}
+					//targetErrors[i] = estimateErrorQuadratic(targetSlopes[i], targetPeaks[i], targetDistances[i]);
+					targetErrors[i] = estimateErrorFromSplines(Arrays.asList(viewDirections), Arrays.asList(errorFunctions), targetDirections[i], targetDistances[i]);
     			}
 	    		
 	    		boolean[] targetUsed = new boolean[targetErrors.length];
@@ -759,7 +913,7 @@ public class FidelityMetricRequest implements IBRRequest
 				    	    	    				//totalError += calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, l, activeViewCount + 1);
 				    	    						
 				    	    						final int copyActiveViewCount = activeViewCount;
-				    	    				        totalError += calculateErrorNNLS(solver, projectedImages, weights, l, 
+				    	    				        totalError += calculateErrorNNLS(solver, decodeFunction, projectedImages, weights, l, 
 				    	    				        		new AbstractList<Integer>()
 				    	    				    			{
 				    	    									@Override
@@ -817,23 +971,8 @@ public class FidelityMetricRequest implements IBRRequest
 	    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[nextViewTargetIndex])))));
 
 	    					// error
-	        				if (Double.isFinite(targetPeaks[i]))
-	    					{
-	        					double peakDistance = 2 * targetPeaks[i] / targetSlopes[i];
-	        					if (targetDistances[i] > peakDistance)
-	        					{
-	        						targetErrors[i] = targetPeaks[i];
-	        					}
-	        					else
-	        					{
-	        						targetErrors[i] = targetSlopes[i] * targetDistances[i] - targetSlopes[i] * targetSlopes[i] * targetDistances[i] * targetDistances[i] / (4 * targetPeaks[i]);
-	        					}
-	    					}
-	        				else
-	        				{
-	        					targetErrors[i] = targetSlopes[i] * targetDistances[i];
-	        				}
-	        				
+	    					//targetErrors[i] = estimateErrorQuadratic(targetSlopes[i], targetPeaks[i], targetDistances[i]);
+	    					targetErrors[i] = estimateErrorFromSplines(Arrays.asList(viewDirections), Arrays.asList(errorFunctions), targetDirections[i], targetDistances[i]);
 	        				expectedTotalError += targetErrors[i];
 	    				}
 	    			}
@@ -853,10 +992,11 @@ public class FidelityMetricRequest implements IBRRequest
 
 	    		// Views that are in the target view set and NOT in the original view set
     			int unused;
+    			double maxError;
 	    		do
 	    		{
 	    			unused = 0;
-	    			double maxError = -1.0;
+	    			maxError = -1.0;
 	    			int maxErrorIndex = -1;
 
 	    			// Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
@@ -899,23 +1039,8 @@ public class FidelityMetricRequest implements IBRRequest
 		    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[maxErrorIndex])))));
 	
 		    					// error
-		        				if (Double.isFinite(targetPeaks[i]))
-		    					{
-		        					double peakDistance = 2 * targetPeaks[i] / targetSlopes[i];
-		        					if (targetDistances[i] > peakDistance)
-		        					{
-		        						targetErrors[i] = targetPeaks[i];
-		        					}
-		        					else
-		        					{
-		        						targetErrors[i] = targetSlopes[i] * targetDistances[i] - targetSlopes[i] * targetSlopes[i] * targetDistances[i] * targetDistances[i] / (4 * targetPeaks[i]);
-		        					}
-		    					}
-		        				else
-		        				{
-		        					targetErrors[i] = targetSlopes[i] * targetDistances[i];
-		        				}
-		        				
+		        				//targetErrors[i] = estimateErrorQuadratic(targetSlopes[i], targetPeaks[i], targetDistances[i]);
+		    					targetErrors[i] = estimateErrorFromSplines(Arrays.asList(viewDirections), Arrays.asList(errorFunctions), targetDirections[i], targetDistances[i]);
 		        				cumError += targetErrors[i];
 		    				}
 		    			}
@@ -923,7 +1048,7 @@ public class FidelityMetricRequest implements IBRRequest
 			    		out.println(cumError);
 		    		}
 	    		}
-	    		while(unused > 0);
+	    		while(maxError > 0.0 && unused > 0);
     		}
     	}
 	}

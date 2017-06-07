@@ -1,5 +1,7 @@
 package tetzlaff.gl.vecmath;
 
+import java.util.function.DoubleUnaryOperator;
+
 /**
  * A vector of two dimensions (for linear algebra calculations) backed by 
  * 32-bit floats.  This is an immutable object.
@@ -171,5 +173,10 @@ public class Vector2
 	public Vector2 normalized()
 	{
 		return this.times(1.0f / this.length());
+	}
+	
+	public Vector2 applyOperator(DoubleUnaryOperator operator)
+	{
+		return new Vector2((float)operator.applyAsDouble(x), (float)operator.applyAsDouble(y));
 	}
 }
