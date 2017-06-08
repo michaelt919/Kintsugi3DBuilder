@@ -1,5 +1,7 @@
 package tetzlaff.ibr.util;
 
+import static org.ejml.dense.row.CommonOps_DDRM.*;
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -12,12 +14,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.function.DoubleFunction;
-import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
-import java.util.function.IntToDoubleFunction;
 
 import javax.imageio.ImageIO;
 
@@ -28,7 +25,6 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Drawable;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.FramebufferObject;
-import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
@@ -48,6 +44,8 @@ import tetzlaff.util.NonNegativeLeastSquares;
 
 public class FidelityMetricRequest implements IBRRequest
 {
+	private final static boolean DEBUG = true;
+	
     private File fidelityExportPath;
     private File fidelityVSETFile;
     private IBRSettings settings;
@@ -119,56 +117,118 @@ public class FidelityMetricRequest implements IBRRequest
     	return Math.sqrt(sumSqError / sumMask);
 	}
 	
-	private <ContextType extends Context<ContextType>> 
-		double calculateErrorNNLS(NonNegativeLeastSquares solver, Function<IntVector3, Vector3> decodeFunction, byte[][] images, byte[][] weights,
-				int targetViewIndex, List<Integer> viewIndexList)
+	private NonNegativeLeastSquares solver;
+	private List<SimpleMatrix> listATA;
+	private List<SimpleMatrix> listATb;
+	private byte[][] images;
+	private byte[][] weights;
+	
+	private static class MatrixSystem
 	{
-		return this.calculateErrorNNLS(solver, decodeFunction, images, weights, targetViewIndex, viewIndexList, null, null, 0, 0);
+		SimpleMatrix mA;
+		SimpleMatrix b;
+		List<Integer> activePixels;
 	}
 	
-	private <ContextType extends Context<ContextType>> 
-		double calculateErrorNNLS(NonNegativeLeastSquares solver, Function<IntVector3, Vector3> decodeFunction, byte[][] images, byte[][] weights, 
-				int targetViewIndex, List<Integer> viewIndexList, File debugFile, Function<Vector3, IntVector3> encodeFunction, int imgWidth, int imgHeight)
+	private MatrixSystem getMatrixSystem(int targetViewIndex)
 	{
-		List<Integer> activePixels = new ArrayList<Integer>();
-        for (int i = 0; i < weights[0].length; i++)
+		return getMatrixSystem(targetViewIndex, null);
+	}
+	
+	private MatrixSystem getMatrixSystem(int targetViewIndex, List<Integer> viewIndexList)
+	{
+		MatrixSystem result = new MatrixSystem();
+		
+		result.activePixels = new ArrayList<Integer>();
+        for (int i = 0; i < weights[targetViewIndex].length; i++)
         {
         	if ((0x000000FF & weights[targetViewIndex][i]) > 0)
         	{
-        		activePixels.add(i);
+        		result.activePixels.add(i);
         	}
         }
-        
-        SimpleMatrix mA = new SimpleMatrix(activePixels.size() * 3, viewIndexList.size());
-        SimpleMatrix b = new SimpleMatrix(activePixels.size() * 3, 1);
-        
-        for (int i = 0; i < activePixels.size(); i++)
+		
+        result.mA = new SimpleMatrix(result.activePixels.size() * 3, viewIndexList == null ? images.length : viewIndexList.size());
+        result.b = new SimpleMatrix(result.activePixels.size() * 3, 1);
+		
+		for (int i = 0; i < result.activePixels.size(); i++)
         {
-        	double weight = (0x000000FF & weights[targetViewIndex][activePixels.get(i)]) / 255.0;
-        	Vector3 color = decodeFunction.apply(new IntVector3(
-        			0x000000FF & images[targetViewIndex][3 * activePixels.get(i)],
-        			0x000000FF & images[targetViewIndex][3 * activePixels.get(i) + 1],
-        			0x000000FF & images[targetViewIndex][3 * activePixels.get(i) + 2]));
-        	
-    		b.set(3 * i, weight * color.x);
-    		b.set(3 * i + 1, weight * color.y);
-    		b.set(3 * i + 2, weight * color.z);
+			// TODO: If pixel values are greater than 255, somehow re-retrieve them from the original images.
+			
+        	double weight = (0x000000FF & weights[targetViewIndex][result.activePixels.get(i)]) / 255.0;
+        	result.b.set(3 * i, weight * (0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i)]) / 255.0);
+        	result.b.set(3 * i + 1, weight * (0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i) + 1]) / 255.0);
+        	result.b.set(3 * i + 2, weight * (0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i) + 2]) / 255.0);
     		
-        	for (int j = 0; j < viewIndexList.size(); j++)
+        	if (viewIndexList == null)
         	{
-            	Vector3 color2 = decodeFunction.apply(new IntVector3(
-            			0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i)],
-            			0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i) + 1],
-            			0x000000FF & images[viewIndexList.get(j)][3 * activePixels.get(i) + 2]));
-        		
-        		mA.set(3 * i, j, weight * color2.x / 255.0);
-        		mA.set(3 * i + 1, j, weight * color2.y / 255.0);
-        		mA.set(3 * i + 2, j, weight * color2.z / 255.0);
+	        	for (int j = 0; j < images.length; j++)
+	        	{
+	            	result.mA.set(3 * i, j, weight * (0x000000FF & images[j][3 * result.activePixels.get(i)]) / 255.0);
+	            	result.mA.set(3 * i + 1, j, weight * (0x000000FF & images[j][3 * result.activePixels.get(i) + 1]) / 255.0);
+	            	result.mA.set(3 * i + 2, j, weight * (0x000000FF & images[j][3 * result.activePixels.get(i) + 2]) / 255.0);
+	        	}
+        	}
+        	else
+        	{
+        		for (int j = 0; j < viewIndexList.size(); j++)
+	        	{
+	            	result.mA.set(3 * i, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i)]) / 255.0);
+	            	result.mA.set(3 * i + 1, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i) + 1]) / 255.0);
+	            	result.mA.set(3 * i + 2, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i) + 2]) / 255.0);
+	        	}
         	}
         }
+		
+		return result;
+	}
 	
-		SimpleMatrix solution = solver.solve(mA, b, 0.001);
-        SimpleMatrix recon = mA.mult(solution);
+	private void initializeMatrices()
+	{
+		for (int k = 0; k < images.length; k++)
+		{
+			MatrixSystem system = getMatrixSystem(k);
+			
+			SimpleMatrix mATA = new SimpleMatrix(system.mA.numCols(), system.mA.numCols());
+			SimpleMatrix vATb = new SimpleMatrix(system.mA.numCols(), 1);
+			
+			// Low level operations to avoid using unnecessary memory.
+			multTransA(system.mA.getMatrix(), system.mA.getMatrix(), mATA.getMatrix());
+			multTransA(system.mA.getMatrix(), system.b.getMatrix(), vATb.getMatrix());
+			
+			listATA.add(mATA);
+			listATb.add(vATb);
+		}
+	}
+	
+	private <ContextType extends Context<ContextType>> double calculateErrorNNLS(int targetViewIndex, List<Integer> viewIndexList)
+	{
+		return this.calculateErrorNNLS(targetViewIndex, viewIndexList, null, null, 0, 0);
+	}
+	
+	private <ContextType extends Context<ContextType>> 
+		double calculateErrorNNLS(int targetViewIndex, List<Integer> viewIndexList, File debugFile, Function<Vector3, IntVector3> encodeFunction, int imgWidth, int imgHeight)
+	{
+		MatrixSystem system = getMatrixSystem(targetViewIndex, viewIndexList);
+		
+		SimpleMatrix mATA = new SimpleMatrix(viewIndexList.size(), viewIndexList.size());
+		SimpleMatrix vATb = new SimpleMatrix(viewIndexList.size(), 1);
+		
+		SimpleMatrix mATA_full = listATA.get(targetViewIndex);
+		SimpleMatrix vATb_full = listATb.get(targetViewIndex);
+		
+		for (int i = 0; i < viewIndexList.size(); i++)
+		{
+			vATb.set(i, vATb_full.get(viewIndexList.get(i)));
+			
+			for (int j = 0; j < viewIndexList.size(); j++)
+			{
+				mATA.set(i, j, mATA_full.get(viewIndexList.get(i), viewIndexList.get(j)));
+			}
+		}
+	
+		SimpleMatrix solution = solver.solvePremultiplied(mATA, vATb, 0.001);
+        SimpleMatrix recon = system.mA.mult(solution);
 		
 		if (debugFile != null)
 		{
@@ -180,9 +240,9 @@ public class FidelityMetricRequest implements IBRRequest
 	        	pixels[i] = new Color(0,0,0).getRGB();
 	        }
 	        
-	        for (int i = 0; i < activePixels.size(); i++)
+	        for (int i = 0; i < system.activePixels.size(); i++)
 	        {
-	        	int pixelIndex = activePixels.get(i);
+	        	int pixelIndex = system.activePixels.get(i);
 	        	double weight = (0x000000FF & weights[targetViewIndex][pixelIndex]) / 255.0;
 	        	
 	        	IntVector3 encodedColor = encodeFunction.apply(
@@ -220,8 +280,8 @@ public class FidelityMetricRequest implements IBRRequest
 	        }
 		}
 		
-		SimpleMatrix error = recon.minus(b);
-		return error.normF() / Math.sqrt(activePixels.size()); // TODO This includes the weights.  Is this what we want?
+		SimpleMatrix error = recon.minus(system.b);
+		return error.normF() / Math.sqrt(system.b.numRows() / 3);
 	}
 	
 	private double estimateErrorQuadratic(double slope, double peak, double distance)
@@ -375,8 +435,8 @@ public class FidelityMetricRequest implements IBRRequest
     	
     	int size = 256; // 1024;
     	
-    	byte[][] projectedImages = new byte[renderable.getActiveViewSet().getCameraPoseCount()][size * size * 3];
-    	byte[][] weights = new byte[renderable.getActiveViewSet().getCameraPoseCount()][size * size];
+    	images = new byte[renderable.getActiveViewSet().getCameraPoseCount()][size * size * 3];
+    	weights = new byte[renderable.getActiveViewSet().getCameraPoseCount()][size * size];
     	
     	try
     	(
@@ -421,23 +481,28 @@ public class FidelityMetricRequest implements IBRRequest
         		for (int j = 0; j < colors.length; j++)
         		{
         			Color color = new Color(colors[j], true);
-        			projectedImages[i][3 * j] = (byte)color.getRed();
-        			projectedImages[i][3 * j + 1] = (byte)color.getGreen();
-        			projectedImages[i][3 * j + 2] = (byte)color.getBlue();
+        			IntVector3 colorVector = new IntVector3(color.getRed(), color.getGreen(), color.getBlue());
+        			Vector3 decodedColor = decodeFunction.apply(colorVector);
+        			images[i][3 * j] = (byte)Math.round(decodedColor.x * 255.0f);
+        			images[i][3 * j + 1] = (byte)Math.round(decodedColor.y * 255.0f);
+        			images[i][3 * j + 2] = (byte)Math.round(decodedColor.z * 255.0f);
         		}
         		
-//        		try
-//        		{
-//	        		framebuffer.saveColorBufferToFile(0, "PNG", 
-//	        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + ".png"));
-//	        		
-//	        		framebuffer.saveColorBufferToFile(1, "PNG", 
-//	        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_geometry.png"));
-//        		}
-//        		catch (IOException e)
-//        		{
-//        			e.printStackTrace();
-//        		}
+        		if (DEBUG)
+        		{
+	        		try
+	        		{
+		        		framebuffer.saveColorBufferToFile(0, "PNG", 
+		        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + ".png"));
+		        		
+		        		framebuffer.saveColorBufferToFile(1, "PNG", 
+		        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_geometry.png"));
+	        		}
+	        		catch (IOException e)
+	        		{
+	        			e.printStackTrace();
+	        		}
+        		}
 
         		int[] geometry = framebuffer.readColorBufferARGB(1);
         		for (int j = 0; j < geometry.length; j++)
@@ -447,7 +512,10 @@ public class FidelityMetricRequest implements IBRRequest
         	}
 		}
     	
-    	NonNegativeLeastSquares solver = new NonNegativeLeastSquares();
+    	solver = new NonNegativeLeastSquares();
+    	listATA = new ArrayList<>();
+    	listATb = new ArrayList<>();
+    	initializeMatrices();
     	
     	try
     	(
@@ -523,7 +591,10 @@ public class FidelityMetricRequest implements IBRRequest
 					        //errors.add(calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, i, activeViewCount));
 					        
 					        final int copyActiveViewCount = activeViewCount;
-					        errors.add(calculateErrorNNLS(solver, decodeFunction, projectedImages, weights, i, 
+					       
+					        if (DEBUG)
+					        {
+					        	 errors.add(calculateErrorNNLS(i, 
 					        		new AbstractList<Integer>()
 					    			{
 										@Override
@@ -537,10 +608,29 @@ public class FidelityMetricRequest implements IBRRequest
 										{
 											return copyActiveViewCount;
 										}
-					    			}/*,
+					    			},
 					    			new File(new File(fidelityExportPath.getParentFile(), "debug"), 
 					    					renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_" + errors.size() + ".png"), 
-			    					encodeFunction, size, size*/));
+			    					encodeFunction, size, size));
+					        }
+					        else
+					        {
+					        	 errors.add(calculateErrorNNLS(i, 
+					        		new AbstractList<Integer>()
+					    			{
+										@Override
+										public Integer get(int index) 
+										{
+											return viewIndexBuffer.get(index, 0).intValue();
+										}
+
+										@Override
+										public int size()
+										{
+											return copyActiveViewCount;
+										}
+					    			}));
+					        }
 					        
 					    	lastMinDistance = minDistance;
 				    	}
@@ -789,7 +879,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    				//out.print(calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, j, activeViewCount) + "\t");
 	    				
 	    				final int copyActiveViewCount = activeViewCount;
-				        out.print(calculateErrorNNLS(solver, decodeFunction, projectedImages, weights, j, 
+				        out.print(calculateErrorNNLS(j, 
 				        		new AbstractList<Integer>()
 				    			{
 									@Override
@@ -817,7 +907,7 @@ public class FidelityMetricRequest implements IBRRequest
 			    				//cumError += calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, k, activeViewCount);
 			    				
 			    				final int copyActiveViewCount2 = activeViewCount;
-						        cumError += calculateErrorNNLS(solver, decodeFunction, projectedImages, weights, k, 
+						        cumError += calculateErrorNNLS(k, 
 						        		new AbstractList<Integer>()
 						    			{
 											@Override
@@ -913,7 +1003,7 @@ public class FidelityMetricRequest implements IBRRequest
 				    	    	    				//totalError += calculateError(context, resources, drawable, framebuffer, viewIndexBuffer, l, activeViewCount + 1);
 				    	    						
 				    	    						final int copyActiveViewCount = activeViewCount;
-				    	    				        totalError += calculateErrorNNLS(solver, decodeFunction, projectedImages, weights, l, 
+				    	    				        totalError += calculateErrorNNLS(l, 
 				    	    				        		new AbstractList<Integer>()
 				    	    				    			{
 				    	    									@Override
