@@ -44,7 +44,7 @@ import tetzlaff.util.NonNegativeLeastSquares;
 
 public class FidelityMetricRequest implements IBRRequest
 {
-	private final static boolean DEBUG = true;
+	private final static boolean DEBUG = false;
 	
     private File fidelityExportPath;
     private File fidelityVSETFile;
@@ -122,6 +122,7 @@ public class FidelityMetricRequest implements IBRRequest
 	private List<SimpleMatrix> listATb;
 	private byte[][] images;
 	private byte[][] weights;
+	private float unitReflectanceEncoding;
 	
 	private static class MatrixSystem
 	{
@@ -153,29 +154,27 @@ public class FidelityMetricRequest implements IBRRequest
 		
 		for (int i = 0; i < result.activePixels.size(); i++)
         {
-			// TODO: If pixel values are greater than 255, somehow re-retrieve them from the original images.
-			
         	double weight = (0x000000FF & weights[targetViewIndex][result.activePixels.get(i)]) / 255.0;
-        	result.b.set(3 * i, weight * (0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i)]) / 255.0);
-        	result.b.set(3 * i + 1, weight * (0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i) + 1]) / 255.0);
-        	result.b.set(3 * i + 2, weight * (0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i) + 2]) / 255.0);
+        	result.b.set(3 * i, weight * (0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i)]) / unitReflectanceEncoding);
+        	result.b.set(3 * i + 1, weight * (0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i) + 1]) / unitReflectanceEncoding);
+        	result.b.set(3 * i + 2, weight * (0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i) + 2]) / unitReflectanceEncoding);
     		
         	if (viewIndexList == null)
         	{
 	        	for (int j = 0; j < images.length; j++)
 	        	{
-	            	result.mA.set(3 * i, j, weight * (0x000000FF & images[j][3 * result.activePixels.get(i)]) / 255.0);
-	            	result.mA.set(3 * i + 1, j, weight * (0x000000FF & images[j][3 * result.activePixels.get(i) + 1]) / 255.0);
-	            	result.mA.set(3 * i + 2, j, weight * (0x000000FF & images[j][3 * result.activePixels.get(i) + 2]) / 255.0);
+	            	result.mA.set(3 * i, j, weight * (0x000000FF & images[j][3 * result.activePixels.get(i)]) / unitReflectanceEncoding);
+	            	result.mA.set(3 * i + 1, j, weight * (0x000000FF & images[j][3 * result.activePixels.get(i) + 1]) / unitReflectanceEncoding);
+	            	result.mA.set(3 * i + 2, j, weight * (0x000000FF & images[j][3 * result.activePixels.get(i) + 2]) / unitReflectanceEncoding);
 	        	}
         	}
         	else
         	{
         		for (int j = 0; j < viewIndexList.size(); j++)
 	        	{
-	            	result.mA.set(3 * i, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i)]) / 255.0);
-	            	result.mA.set(3 * i + 1, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i) + 1]) / 255.0);
-	            	result.mA.set(3 * i + 2, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i) + 2]) / 255.0);
+	            	result.mA.set(3 * i, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i)]) / unitReflectanceEncoding);
+	            	result.mA.set(3 * i + 1, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i) + 1]) / unitReflectanceEncoding);
+	            	result.mA.set(3 * i + 2, j, weight * (0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i) + 2]) / unitReflectanceEncoding);
 	        	}
         	}
         }
@@ -435,6 +434,8 @@ public class FidelityMetricRequest implements IBRRequest
     	
     	int size = 256; // 1024;
     	
+    	unitReflectanceEncoding = encodeFunction.apply(new Vector3(1.0f)).y;
+    	
     	images = new byte[renderable.getActiveViewSet().getCameraPoseCount()][size * size * 3];
     	weights = new byte[renderable.getActiveViewSet().getCameraPoseCount()][size * size];
     	
@@ -483,9 +484,9 @@ public class FidelityMetricRequest implements IBRRequest
         			Color color = new Color(colors[j], true);
         			IntVector3 colorVector = new IntVector3(color.getRed(), color.getGreen(), color.getBlue());
         			Vector3 decodedColor = decodeFunction.apply(colorVector);
-        			images[i][3 * j] = (byte)Math.round(decodedColor.x * 255.0f);
-        			images[i][3 * j + 1] = (byte)Math.round(decodedColor.y * 255.0f);
-        			images[i][3 * j + 2] = (byte)Math.round(decodedColor.z * 255.0f);
+        			images[i][3 * j] = (byte)Math.round(decodedColor.x * unitReflectanceEncoding);
+        			images[i][3 * j + 1] = (byte)Math.round(decodedColor.y * unitReflectanceEncoding);
+        			images[i][3 * j + 2] = (byte)Math.round(decodedColor.z * unitReflectanceEncoding);
         		}
         		
         		if (DEBUG)
@@ -545,6 +546,7 @@ public class FidelityMetricRequest implements IBRRequest
 			if (callback != null)
 			{
 				callback.setMaximum(resources.viewSet.getCameraPoseCount());
+				callback.setProgress(0.0);
 			}
 			
 			CubicHermiteSpline[] errorFunctions = new CubicHermiteSpline[resources.viewSet.getCameraPoseCount()];
@@ -804,6 +806,12 @@ public class FidelityMetricRequest implements IBRRequest
 	    		
 	    		ViewSet targetViewSet = ViewSet.loadFromVSETFile(fidelityVSETFile);
 	    		
+    			if (callback != null)
+    			{
+    				callback.setMaximum(resources.viewSet.getCameraPoseCount());
+		        	callback.setProgress(0);
+    			}
+	    		
 	    		Vector3[] targetDirections = new Vector3[targetViewSet.getCameraPoseCount()];
 	    		
 	    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
@@ -933,6 +941,11 @@ public class FidelityMetricRequest implements IBRRequest
 		    				targetDistances[i] = Math.min(targetDistances[i], Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(viewDirections[j])))));
 		    			}
 	    			}
+	    			
+			        if (callback != null)
+			        {
+			        	callback.setProgress(activeViewCount);
+			        }
 	    		}
 	    		
 				// Now update the errors for all of the target views
@@ -1078,6 +1091,11 @@ public class FidelityMetricRequest implements IBRRequest
 		    				unusedOriginalViews++;
 		    			}
 		    		}
+		    		
+			        if (callback != null)
+			        {
+			        	callback.setProgress(activeViewCount);
+			        }
 	    		}
 
 	    		// Views that are in the target view set and NOT in the original view set
