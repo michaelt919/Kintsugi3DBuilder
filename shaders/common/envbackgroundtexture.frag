@@ -1,9 +1,11 @@
 #version 330
 
-uniform samplerCube env;
 in vec2 fTexCoord;
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
+layout(location = 1) out int fragObjectID;
 
+uniform int objectID;
+uniform samplerCube env;
 uniform mat4 model_view;
 uniform mat4 projection;
 uniform mat4 envMapMatrix;
@@ -23,4 +25,6 @@ void main()
 	
 	// Use this version for a blurred background
 	//fragColor = vec4(envMapIntensity * pow(textureLod(env, viewDir, 3).rgb, vec3(1.0 / gamma)), 1.0);
+	
+	fragObjectID = objectID;
 }
