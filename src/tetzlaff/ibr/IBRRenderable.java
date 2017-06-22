@@ -10,6 +10,7 @@ import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibr.rendering.IBRResources;
+import tetzlaff.mvc.models.SceneViewportModel;
 
 public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
@@ -17,6 +18,8 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
 
 	ViewSet getActiveViewSet();
 	VertexGeometry getActiveProxy();
+	
+	SceneViewportModel getSceneViewportModel();
 	
 	IBRSettings settings();
 	

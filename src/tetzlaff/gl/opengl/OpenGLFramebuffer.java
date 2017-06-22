@@ -121,6 +121,30 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
 	}
 	
 	@Override
+	public int[] readIntegerColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height)
+	{
+		this.bindForRead(attachmentIndex);
+		IntBuffer pixelBuffer = BufferUtils.createIntBuffer(width * height * 4);
+
+		glPixelStorei(GL_PACK_ALIGNMENT, 4);
+		this.context.openGLErrorCheck();
+		
+		glReadPixels(x, y, width, height, GL_RGBA_INTEGER, GL_INT, pixelBuffer);
+		this.context.openGLErrorCheck();
+		
+		int[] pixelArray = new int[width * height * 4];
+		pixelBuffer.get(pixelArray);
+		return pixelArray;
+	}
+
+	@Override
+	public int[] readIntegerColorBufferRGBA(int attachmentIndex)
+	{
+		FramebufferSize size = this.getSize();
+		return this.readIntegerColorBufferRGBA(attachmentIndex, 0, 0, size.width, size.height);
+	}
+	
+	@Override
 	public void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException
 	{
         int[] pixels = this.readColorBufferARGB(attachmentIndex);

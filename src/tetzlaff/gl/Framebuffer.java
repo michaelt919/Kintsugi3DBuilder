@@ -20,6 +20,9 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
 	float[] readFloatingPointColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height);
 	float[] readFloatingPointColorBufferRGBA(int attachmentIndex);
 
+	int[] readIntegerColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height);
+	int[] readIntegerColorBufferRGBA(int attachmentIndex);
+
 	short[] readDepthBuffer(int x, int y, int width, int height);
 	short[] readDepthBuffer();
 

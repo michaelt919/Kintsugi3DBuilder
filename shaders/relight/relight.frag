@@ -7,11 +7,14 @@ in vec3 fTangent;
 in vec3 fBitangent;
 
 layout(location = 0) out vec4 fragColor;
+layout(location = 1) out int fragObjectID;
 
 #include "../colorappearance/colorappearance.glsl"
 #include "../colorappearance/imgspace.glsl"
 
-#line 15 0
+#line 16 0
+
+uniform int objectID;
 
 uniform mat4 model_view;
 uniform vec3 viewPos;
@@ -853,4 +856,6 @@ void main()
     }
 		
 	fragColor = tonemap(reflectance, 1.0);
+	
+	fragObjectID = objectID;
 }
