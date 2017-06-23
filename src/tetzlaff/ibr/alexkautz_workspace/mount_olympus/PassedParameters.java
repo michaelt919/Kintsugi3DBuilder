@@ -1,11 +1,32 @@
 package tetzlaff.ibr.alexkautz_workspace.mount_olympus;
 
+import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.ibr.util.IBRRequestQueue;
+
 public class PassedParameters {
     //local passedParameters
 
     private String name;
 
     private String filepath;
+
+    private IBRRequestQueue<OpenGLContext> requestQueue;
+
+    public IBRRequestQueue<OpenGLContext> getRequestQueue() {
+        return requestQueue;
+    }
+
+    public void setRequestQueue(IBRRequestQueue<OpenGLContext> requestQueue) {
+        this.requestQueue = requestQueue;
+    }
+
+    public static PassedParameters getPassedParameters() {
+        return passedParameters;
+    }
+
+    public static void setPassedParameters(PassedParameters passedParameters) {
+        PassedParameters.passedParameters = passedParameters;
+    }
 
     public String getName() {
         return name;

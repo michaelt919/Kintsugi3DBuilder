@@ -1,5 +1,6 @@
 package tetzlaff.ibr.alexkautz_workspace.mount_olympus;
 
+import tetzlaff.ibr.alexkautz_workspace.IBRelight2;
 import tetzlaff.ibr.alexkautz_workspace.user_interface.GuiApp;
 
 public class RunMe {
@@ -26,8 +27,7 @@ public class RunMe {
 
     private static void startRenderWindow(){
 
-
-
+        IBRelight2.runProgram();
     }
 
 }

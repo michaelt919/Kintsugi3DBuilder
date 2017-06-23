@@ -86,7 +86,7 @@ public class IBRelightConfigFrame extends JFrame
 	 * defaults to being on.
 	 */
 	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRRenderableListModel<ContextType> model, LightModel lightModel, Consumer<IBRRequest> ibrRequestProcessor, boolean isHighDPI)
-	{		
+	{		//TODO youll need this too
 		setResizable(false);
 		setTitle("IBRelight: Settings");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -213,7 +213,7 @@ public class IBRelightConfigFrame extends JFrame
 		gbc_spinnerDepthHeight.gridy = 1;
 		panel.add(spinnerDepthHeight, gbc_spinnerDepthHeight);
 		
-		JButton btnLoadSingle = new JButton("Load Object...");
+		JButton btnLoadSingle = new JButton("Load Object..."); //TODO here is the loading button -Alex Kautz
 		GridBagConstraints gbc_btnLoadSingle = new GridBagConstraints();
 		gbc_btnLoadSingle.anchor = GridBagConstraints.NORTH;
 		gbc_btnLoadSingle.insets = new Insets(0, 0, 5, 5);
@@ -748,7 +748,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		// Add listener for the 'single' load button to read a single light field object.
 		btnLoadSingle.addActionListener(e -> 
-		{
+		{//TODO here is the loading
 			fileChooser.setDialogTitle("Select a camera definition file");
 			fileChooser.resetChoosableFileFilters();
 			fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
