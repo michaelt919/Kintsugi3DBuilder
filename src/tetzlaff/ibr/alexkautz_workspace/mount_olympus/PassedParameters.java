@@ -1,7 +1,7 @@
 package tetzlaff.ibr.alexkautz_workspace.mount_olympus;
 
-public class Parameters {
-    //local parameters
+public class PassedParameters {
+    //local passedParameters
 
     private String name;
 
@@ -23,20 +23,20 @@ public class Parameters {
         this.filepath = filepath;
     }
 
-    private Parameters(String filepath, String name) {
+    private PassedParameters(String filepath, String name) {
         this.filepath = filepath;
         this.name = name;
     }
 
     //static bridge
 
-    private static Parameters parameters;
+    private static PassedParameters passedParameters;
 
     public static void init(String filepath, String name){
-        parameters = new Parameters(filepath, name);
+        passedParameters = new PassedParameters(filepath, name);
     }
 
-    public static Parameters get() {
-        return parameters;
+    public static PassedParameters get() {
+        return passedParameters;
     }
 }
