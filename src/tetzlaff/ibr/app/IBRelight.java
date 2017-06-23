@@ -17,6 +17,8 @@ import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.window.CursorPosition;
+import tetzlaff.gl.window.WindowSize;
 import tetzlaff.ibr.rendering.CameraBasedLightModel;
 import tetzlaff.ibr.rendering.HardcodedLightModel;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
@@ -217,7 +219,8 @@ public class IBRelight
 						hardcodedLightTrackballModel);
 	    	metaLightModel.hardcodedLightModel = hardcodedLightController;
 	        
-	        window.addCharacterListener((win, c) -> {
+	        window.addCharacterListener((win, c) -> 
+	        {
 	        	if (c == 'p')
 	        	{
 	        		System.out.println("reloading program...");
@@ -250,6 +253,26 @@ public class IBRelight
 	        	else if (c == ' ')
 	        	{
 	        		fpController.setEnabled(!fpController.getEnabled());
+	        	}
+	        });
+	        
+	        window.addMouseButtonPressListener((win, buttonIndex, mods) ->
+	        {
+	        	try
+	        	{
+		        	if (win == window && model.getSelectedItem() != null)
+		        	{
+		        		CursorPosition pos = window.getCursorPosition();
+		        		WindowSize size = window.getWindowSize();
+		        		double x = pos.x / size.width;
+		        		double y = pos.y / size.height;
+		        		
+		        		System.out.println(model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y));
+		        	}
+	        	}
+	        	catch (Exception e)
+	        	{
+	        		e.printStackTrace();
 	        	}
 	        });
 	

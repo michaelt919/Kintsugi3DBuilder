@@ -794,6 +794,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 					{
 						if (lightModel.isLightVisualizationEnabled(i))
 						{
+							this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1)));
 							this.lightProgram.setUniform("color", lightModel.getLightColor(i));
 							
 							Vector3 lightPosition = viewMatrix.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3).getXYZ();
@@ -824,7 +825,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		    	context.flush();
 
 		    	pixelObjectIDs = offscreenFBO.readIntegerColorBufferRGBA(1);
-		    	fboSize = size;
+		    	fboSize = offscreenFBO.getSize();
 			}
 		}
 		catch(Exception e)
@@ -1075,9 +1076,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		return (x, y) ->
 		{
 			x = Math.min(Math.max(x, 0), 1);
-			y = Math.min(Math.max(y, 0), 1);
+			y = 1.0 - Math.min(Math.max(y, 0), 1);
 			
-			int index = 4 * Math.round(fboSize.height * y) * fboSize.width + Math.round(fboSize.width * x);
+			int index = 4 * (int)(Math.round(fboSize.height * y) * fboSize.width + Math.round(fboSize.width * x));
 			return this.sceneObjectNameList.get(this.pixelObjectIDs[index]);
 		};
 	}
