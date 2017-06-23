@@ -8,6 +8,8 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
+import tetzlaff.ibr.util.IBRRequestQueue;
 
 import java.io.File;
 import java.net.URL;
@@ -91,6 +93,8 @@ public class Loader implements Initializable{
 
             //ok!
 
+            loadIt();
+
             //TODO pass the files
 
             close();
@@ -99,6 +103,10 @@ public class Loader implements Initializable{
             //TODO play sound or popup
         }
 
+    }
+
+    private void loadIt(){
+        //PassedParameters.getPassedParameters().getRequestQueue().addRequest();
     }
 
     @FXML private void cancleButtonPress(){
