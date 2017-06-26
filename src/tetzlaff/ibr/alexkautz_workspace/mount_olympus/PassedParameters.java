@@ -63,7 +63,7 @@ public class  PassedParameters {
     private RenderPerams renderPerams;
 
     public RenderPerams getRenderPerams() {
-        if(renderPerams == null) throw new Error("RenderPerams got befor set!"); //KILLME
+        if(renderPerams == null) throw new IllegalStateException("RenderPerams got befor set!"); //KILLME
         return renderPerams;
     }
 

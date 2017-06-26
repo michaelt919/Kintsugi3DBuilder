@@ -9,6 +9,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import tetzlaff.ibr.IBRLoadOptions;
+import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
 import tetzlaff.ibr.util.IBRRequestQueue;
@@ -134,7 +135,10 @@ public class Loader implements Initializable{
 //                .setDepthImageWidth((Integer)spinnerDepthWidth.getValue())
 //                .setDepthImageHeight((Integer)spinnerDepthHeight.getValue());
 
-        model.addFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, objFile, photoDir, loadOptions);
+        IBRRenderable ibrRenderable = model.addFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, objFile, photoDir, loadOptions);
+        ibrRenderable.settings().setRelightingEnabled(true);
+        ibrRenderable.settings().setVisibleLightsEnabled(true);
+        ibrRenderable.setHalfResolution(true);
     }
 
 
