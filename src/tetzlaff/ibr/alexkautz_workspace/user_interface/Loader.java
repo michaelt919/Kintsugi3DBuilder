@@ -127,6 +127,7 @@ public class Loader implements Initializable{
                 .setMipmapsRequested(true)
                 .setDepthImagesRequested(false);
 //                .setColorImagesRequested(true) //TODO set these settings to there current values and move this loading to diffrent class
+
 //                .setMipmapsRequested(chckbxUseMipmaps.isSelected())
 //                .setCompressionRequested(chckbxCompressImages.isSelected())
 //                .setDepthImagesRequested(chckbxGenerateDepthImages.isSelected())
