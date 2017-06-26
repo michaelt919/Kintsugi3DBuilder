@@ -17,6 +17,8 @@ import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.window.CursorPosition;
+import tetzlaff.gl.window.WindowSize;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.RenderPerams;
 import tetzlaff.ibr.app.IBRelightConfigFrame;
@@ -321,6 +323,27 @@ public class IBRelight2
 			//requestQueue.setLoadingMonitor(gui.getLoadingMonitor());
 
 			// Make everything visible and start the event loop
+
+			window.addMouseButtonPressListener((win, buttonIndex, mods) ->
+			{
+				try
+				{
+					if (win == window && model.getSelectedItem() != null)
+					{
+						CursorPosition pos = window.getCursorPosition();
+						WindowSize size = window.getWindowSize();
+						double x = pos.x / size.width;
+						double y = pos.y / size.height;
+
+						System.out.println(model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y));
+					}
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+			});
+
 			window.show();
 			app.run();
 
@@ -329,6 +352,8 @@ public class IBRelight2
 		// The event loop has terminated so cleanup the windows and exit with a successful return code.
 		GLFWWindow.closeAllWindows();
 	}
+
+
 
 	/**
 	 * The main entry point for the Unstructured Light Field (ULF) renderer application.
