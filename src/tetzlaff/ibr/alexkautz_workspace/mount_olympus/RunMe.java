@@ -1,12 +1,15 @@
 package tetzlaff.ibr.alexkautz_workspace.mount_olympus;
 
+import tetzlaff.ibr.alexkautz_workspace.IBRelight2;
+import tetzlaff.ibr.alexkautz_workspace.user_interface.GuiApp;
+
 public class RunMe {
     public static void main(String[] args) {
         System.out.println("Alex Kautz");
         System.out.println("Start Main");
 
         System.out.println("Initlising Paramiters");
-        Parameters.init(null, "Hello World");
+        PassedParameters.init(null, "Hello World");
 
         System.out.println("Starting JavaFX UI");
         startJavaFXUI();
@@ -18,11 +21,14 @@ public class RunMe {
     }
 
     private static void startJavaFXUI(){
+        Thread guiThread = new Thread(new GuiApp());
 
+        guiThread.start();
     }
 
     private static void startRenderWindow(){
 
+        IBRelight2.runProgram();
     }
 
 }

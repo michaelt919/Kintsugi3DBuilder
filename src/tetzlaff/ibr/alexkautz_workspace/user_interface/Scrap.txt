@@ -1,0 +1,26 @@
+
+
+
+Camera Positions
+(Agisoft Photoscan XML file)
+
+Mesh
+(Wavefront OBJ file)
+
+Undistorted Images
+(Directory containing images (.png, .jpg))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
