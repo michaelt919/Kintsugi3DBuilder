@@ -18,6 +18,7 @@ import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
+import tetzlaff.ibr.alexkautz_workspace.mount_olympus.RenderPerams;
 import tetzlaff.ibr.app.IBRelightConfigFrame;
 import tetzlaff.ibr.rendering.CameraBasedLightModel;
 import tetzlaff.ibr.rendering.HardcodedLightModel;
@@ -312,14 +313,12 @@ public class IBRelight2
 			// Create a user interface that examines the ULFRendererList for renderer settings and
 			// selecting between different loaded models.
 
-			IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getModel(), (request) -> requestQueue.addRequest(request), window.isHighDPI());
+			//IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getModel(), (request) -> requestQueue.addRequest(request), window.isHighDPI());
+			PassedParameters.get().setRenderPerams(new RenderPerams(model));
 			//gui.showGUI();
 			//app.addPollable(gui); // Needed for Qt UI
 
-			requestQueue.setLoadingMonitor(gui.getLoadingMonitor());
-
-
-            PassedParameters.getPassedParameters().setRequestQueue(requestQueue);
+			//requestQueue.setLoadingMonitor(gui.getLoadingMonitor());
 
 			// Make everything visible and start the event loop
 			window.show();

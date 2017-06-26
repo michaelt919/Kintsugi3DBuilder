@@ -22,6 +22,7 @@ public class RunMe {
 
     private static void startJavaFXUI(){
         Thread guiThread = new Thread(new GuiApp());
+
         guiThread.start();
     }
 

@@ -8,14 +8,22 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import tetzlaff.ibr.IBRLoadOptions;
+import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
 import tetzlaff.ibr.util.IBRRequestQueue;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class Loader implements Initializable{
+
+
+    private IBRRenderableListModel model;
+
+
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
@@ -47,6 +55,8 @@ public class Loader implements Initializable{
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");
         photoDirectoryChooser.setTitle("Select undistorted photo directory");
+
+        model = PassedParameters.get().getRenderPerams().getModel();
     }
 
     @FXML private void camFileSelect(){
@@ -93,7 +103,11 @@ public class Loader implements Initializable{
 
             //ok!
 
-            loadIt();
+            try {
+                loadIt();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             //TODO pass the files
 
@@ -105,9 +119,23 @@ public class Loader implements Initializable{
 
     }
 
-    private void loadIt(){
-        //PassedParameters.getPassedParameters().getRequestQueue().addRequest();
+    private void loadIt() throws IOException {
+
+        IBRLoadOptions loadOptions = new IBRLoadOptions()
+                .setColorImagesRequested(true)
+                .setCompressionRequested(true)
+                .setMipmapsRequested(true)
+                .setDepthImagesRequested(false);
+//                .setColorImagesRequested(true) //TODO set these settings to there current values and move this loading to diffrent class
+//                .setMipmapsRequested(chckbxUseMipmaps.isSelected())
+//                .setCompressionRequested(chckbxCompressImages.isSelected())
+//                .setDepthImagesRequested(chckbxGenerateDepthImages.isSelected())
+//                .setDepthImageWidth((Integer)spinnerDepthWidth.getValue())
+//                .setDepthImageHeight((Integer)spinnerDepthHeight.getValue());
+
+        model.addFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, objFile, photoDir, loadOptions);
     }
+
 
     @FXML private void cancleButtonPress(){
         close();
@@ -119,12 +147,11 @@ public class Loader implements Initializable{
 
 
     private void setHomeDir(File home){
-        File thing;
-        if(home.isDirectory()) thing = home;
-        else thing = home.getParentFile();
-        camFileChooser.setInitialDirectory(thing);
-        objFileChooser.setInitialDirectory(thing);
-        photoDirectoryChooser.setInitialDirectory(thing);
+        File parentDir;
+        parentDir = home.getParentFile();
+        camFileChooser.setInitialDirectory(parentDir);
+        objFileChooser.setInitialDirectory(parentDir);
+        photoDirectoryChooser.setInitialDirectory(parentDir);
     }
 
     private Stage getStage(){

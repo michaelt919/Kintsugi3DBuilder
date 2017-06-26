@@ -382,8 +382,10 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 				loadingMonitor.setMaximum(viewSet.getCameraPoseCount());
 			}
 
+			int m = viewSet.getCameraPoseCount();
 			for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
 			{
+				System.out.printf("%d/%d\n", i, m);
 				imageFile = viewSet.getImageFile(i);
 				if (!imageFile.exists())
 				{

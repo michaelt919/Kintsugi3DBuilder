@@ -24,6 +24,7 @@ public class GuiApp extends Application implements Runnable{
      */
     @Override
     public void run() {
+
         launch();
     }
 
@@ -62,6 +63,9 @@ public class GuiApp extends Application implements Runnable{
         primaryStage.setScene(new Scene( root,
                 1200, 800
         ));
+
+        //TODO stop the gui opening before the render window
+
         primaryStage.show();
 
 
