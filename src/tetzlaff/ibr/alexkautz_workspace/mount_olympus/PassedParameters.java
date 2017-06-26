@@ -1,31 +1,74 @@
 package tetzlaff.ibr.alexkautz_workspace.mount_olympus;
 
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.util.IBRRequestQueue;
+import tetzlaff.gl.Context;
 
-public class PassedParameters {
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.function.Consumer;
+
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JSeparator;
+import javax.swing.JSpinner;
+import javax.swing.JTabbedPane;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import tetzlaff.gl.Context;
+import tetzlaff.gl.util.VertexGeometry;
+import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.ibr.IBRLoadOptions;
+import tetzlaff.ibr.IBRRenderable;
+import tetzlaff.ibr.IBRRenderableListModel;
+import tetzlaff.ibr.LoadingMonitor;
+import tetzlaff.ibr.util.BTFRequestUI;
+import tetzlaff.ibr.util.FidelityMetricRequestUI;
+import tetzlaff.ibr.util.IBRRequest;
+import tetzlaff.ibr.util.ResampleRequestUI;
+import tetzlaff.mvc.models.LightModel;
+
+public class  PassedParameters {
     //local passedParameters
 
     private String name;
 
     private String filepath;
 
-    private IBRRequestQueue<OpenGLContext> requestQueue;
+    private RenderPerams renderPerams;
 
-    public IBRRequestQueue<OpenGLContext> getRequestQueue() {
-        return requestQueue;
+    public RenderPerams getRenderPerams() {
+        if(renderPerams == null) throw new Error("RenderPerams got befor set!"); //KILLME
+        return renderPerams;
     }
 
-    public void setRequestQueue(IBRRequestQueue<OpenGLContext> requestQueue) {
-        this.requestQueue = requestQueue;
-    }
-
-    public static PassedParameters getPassedParameters() {
-        return passedParameters;
-    }
-
-    public static void setPassedParameters(PassedParameters passedParameters) {
-        PassedParameters.passedParameters = passedParameters;
+    public void setRenderPerams(RenderPerams renderPerams) {
+        this.renderPerams = renderPerams;
     }
 
     public String getName() {
