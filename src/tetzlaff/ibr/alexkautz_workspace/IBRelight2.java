@@ -15,27 +15,24 @@ import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.WindowSize;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.RenderPerams;
-import tetzlaff.ibr.app.IBRelightConfigFrame;
-import tetzlaff.ibr.rendering.CameraBasedLightModel;
-import tetzlaff.ibr.rendering.HardcodedLightModel;
+import tetzlaff.ibr.alexkautz_workspace.render.TrackballLightController2;
+import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.CameraModelX;
+import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.DragToolControler;
+import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.GlobalController;
+import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.LightModelX;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.mvc.controllers.impl.FirstPersonController;
 import tetzlaff.mvc.controllers.impl.TrackballController;
-import tetzlaff.mvc.controllers.impl.TrackballLightController;
 import tetzlaff.mvc.models.CameraModel;
-import tetzlaff.mvc.models.LightModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.impl.BasicCameraModel;
-import tetzlaff.mvc.models.impl.TrackballModel;
 
 /**
  * ULFProgram is a container for the main entry point of the Unstructured Light Field
@@ -46,91 +43,6 @@ import tetzlaff.mvc.models.impl.TrackballModel;
 public class IBRelight2
 {
 	private static final boolean DEBUG = true;
-
-	private static class MetaLightModel implements CameraBasedLightModel
-	{
-		boolean hardcodedMode = false;
-		LightModel normalLightModel;
-		HardcodedLightModel hardcodedLightModel;
-
-		@Override
-		public int getLightCount()
-		{
-			return hardcodedMode ? hardcodedLightModel.getLightCount() : normalLightModel.getLightCount();
-		}
-
-		@Override
-		public Vector3 getLightColor(int i)
-		{
-			return hardcodedMode ? hardcodedLightModel.getLightColor(i) : normalLightModel.getLightColor(i);
-		}
-
-		@Override
-		public void setLightColor(int i, Vector3 lightColor)
-		{
-			normalLightModel.setLightColor(i, lightColor);
-		}
-
-		@Override
-		public Matrix4 getLightMatrix(int i)
-		{
-			return hardcodedMode ? hardcodedLightModel.getLightMatrix(i) : normalLightModel.getLightMatrix(i);
-		}
-
-		@Override
-		public void setLightMatrix(int i, Matrix4 lightMatrix)
-		{
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void overrideCameraPose(Matrix4 cameraPoseOverride)
-		{
-			if (hardcodedMode)
-			{
-				hardcodedLightModel.overrideCameraPose(cameraPoseOverride);
-			}
-		}
-
-		@Override
-		public void removeCameraPoseOverride()
-		{
-			if (hardcodedMode)
-			{
-				hardcodedLightModel.removeCameraPoseOverride();
-			}
-		}
-
-		@Override
-		public Vector3 getAmbientLightColor()
-		{
-			return hardcodedMode ? hardcodedLightModel.getAmbientLightColor() : normalLightModel.getAmbientLightColor();
-		}
-
-		@Override
-		public void setAmbientLightColor(Vector3 ambientLightColor)
-		{
-			normalLightModel.setAmbientLightColor(ambientLightColor);
-		}
-
-		@Override
-		public boolean getEnvironmentMappingEnabled()
-		{
-			return hardcodedMode ? hardcodedLightModel.getEnvironmentMappingEnabled() : normalLightModel.getEnvironmentMappingEnabled();
-		}
-
-		@Override
-		public void setEnvironmentMappingEnabled(boolean enabled)
-		{
-			normalLightModel.setEnvironmentMappingEnabled(enabled);
-		}
-
-		@Override
-		public boolean isLightVisualizationEnabled(int index)
-		{
-			return hardcodedMode ? hardcodedLightModel.isLightVisualizationEnabled(index) : normalLightModel.isLightVisualizationEnabled(index);
-		}
-	}
 
 	public static void runProgram()
 	{
@@ -180,11 +92,9 @@ public class IBRelight2
 				throw new IllegalStateException("The shader program could not be initialized.", e);
 			}
 
-			MetaLightModel metaLightModel = new MetaLightModel();
 
-			TrackballLightController lightController = new TrackballLightController();
+			TrackballLightController2 lightController = new TrackballLightController2();
 			lightController.addAsWindowListener(window);
-			metaLightModel.normalLightModel = lightController.getModel();
 
 			CameraModel fpCameraModel = new BasicCameraModel();
 
@@ -196,33 +106,43 @@ public class IBRelight2
 				fpController.setEnabled(false);
 			});
 
-			TrackballModel hardcodedLightTrackballModel = new TrackballModel();
-			TrackballController hardcodedLightTrackballController = TrackballController.getBuilder()
-					.setSensitivity(1.0f)
-					.setPrimaryButtonIndex(0)
-					.setSecondaryButtonIndex(1)
-					.setModel(hardcodedLightTrackballModel)
-					.create();
-			hardcodedLightTrackballController.addAsWindowListener(window);
+			TrackballController trackballController = TrackballController.getBuilder().create();
+
+			trackballController.addAsWindowListener(window);
 
 			// Hybrid FP + Trackball controls
-			ReadonlyCameraModel cameraModel = () -> fpCameraModel.getLookMatrix().times(
-					(metaLightModel.hardcodedMode ? hardcodedLightTrackballModel : lightController.getCurrentCameraModel()).getLookMatrix());
+			ReadonlyCameraModel cameraModel = () -> fpCameraModel.getLookMatrix()
+					.times((
+							trackballController.getCameraModel().getLookMatrix()
+					)) //TOASK does the fpCameraModel just return the Identity matrix?
+					;
+
+
+			//Here i create my own brand of camera and light models;
+
+            LightModelX lightModelX = new LightModelX();
+            CameraModelX cameraModelX = new CameraModelX();
+            GlobalController globalController = new GlobalController();
+
+            DragToolControler dragToolControler = new DragToolControler(globalController, lightModelX, cameraModelX,
+                    0, 1);
+
+            dragToolControler.addAsWindowListener(window);
 
 			// Create a new 'renderer' to be attached to the window and the GUI.
 			// This is the object that loads the ULF models and handles drawing them.  This object abstracts
 			// the underlying data and provides ways of triggering events via the trackball and the user
 			// interface later when it is passed to the ULFUserInterface object.
-			ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(context, program, cameraModel, metaLightModel);
+			//ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(context, program, cameraModel, lightController.getLightModel());
 
-			HardcodedLightModel hardcodedLightController =
-					new HardcodedLightModel(
-							() -> model.getSelectedItem().getActiveViewSet(),
-							() -> model.getSelectedItem().getActiveProxy(),
-							hardcodedLightTrackballModel);
-			metaLightModel.hardcodedLightModel = hardcodedLightController;
+            ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(
+                    context,
+                    program,
+                    cameraModelX,
+                    lightController.getLightModel());
 
-			window.addCharacterListener((win, c) -> {
+
+            window.addCharacterListener((win, c) -> {
 				if (c == 'p')
 				{
 					System.out.println("reloading program...");
@@ -315,8 +235,13 @@ public class IBRelight2
 			// Create a user interface that examines the ULFRendererList for renderer settings and
 			// selecting between different loaded models.
 
-			//IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getModel(), (request) -> requestQueue.addRequest(request), window.isHighDPI());
-			PassedParameters.get().setRenderPerams(new RenderPerams(model));
+
+			//IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getCameraModel(), (request) -> requestQueue.addRequest(request), window.isHighDPI());
+			PassedParameters.get().setRenderPerams(new RenderPerams(model,
+					globalController
+					));
+
+
 			//gui.showGUI();
 			//app.addPollable(gui); // Needed for Qt UI
 
