@@ -1,4 +1,4 @@
-package tetzlaff.mvc.controllers.impl;
+package tetzlaff.ibr.alexkautz_workspace.render;
 
 import tetzlaff.gl.window.KeyCodes;
 import tetzlaff.gl.window.ModifierKeys;
@@ -6,42 +6,43 @@ import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.KeyReleaseListener;
 import tetzlaff.mvc.controllers.LightController;
+import tetzlaff.ibr.alexkautz_workspace.render.*;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.impl.TrackballLightModel;
 
-public class TrackballLightController implements LightController, KeyPressListener, KeyReleaseListener
+public class TrackballLightController2 implements LightController, KeyPressListener, KeyReleaseListener
 {
-	private TrackballLightModel model;
-	private TrackballController lightControlTrackball;
-	private TrackballController[] trackballs;
-	
-	public TrackballLightController()
+	private TrackballLightModel2 model;
+	private TrackballController2 lightControlTrackball;
+	private TrackballController2[] trackballs;
+
+	public TrackballLightController2()
 	{
 		this(4);
 	}
-	
-	public TrackballLightController(int lightCount)
+
+	public TrackballLightController2(int lightCount)
 	{
-    	this.model = new TrackballLightModel(lightCount);
+    	this.model = new TrackballLightModel2(lightCount);
     	
-    	this.lightControlTrackball = TrackballController.getBuilder()
+    	this.lightControlTrackball = TrackballController2.getBuilder()
     			.setSensitivity(1.0f)
     			.setPrimaryButtonIndex(0)
     			.setSecondaryButtonIndex(1)
-    			.setModel(this.model.getLightTrackballModel())
+    			.setModel(this.model.getLightTrackballModel2())
     			.create();
     	this.lightControlTrackball.setEnabled(false);
     	this.lightControlTrackball.setInverted(true);
     	
-    	this.trackballs = new TrackballController[lightCount];
+    	this.trackballs = new TrackballController2[lightCount];
     	
     	for (int i = 0; i < lightCount; i++)
     	{
-    		TrackballController newTrackball = TrackballController.getBuilder()
+    		TrackballController2 newTrackball = TrackballController2.getBuilder()
 		    		.setSensitivity(1.0f)
 					.setPrimaryButtonIndex(0)
 					.setSecondaryButtonIndex(1)
-					.setModel(this.model.getTrackballModel(i))
+					.setModel(this.model.getTrackballModel2(i))
 					.create();
     		trackballs[i] = newTrackball;
     		newTrackball.setEnabled(i == 0);
@@ -56,14 +57,14 @@ public class TrackballLightController implements LightController, KeyPressListen
 		
 		lightControlTrackball.addAsWindowListener(window);
 		
-		for (TrackballController t : trackballs)
+		for (TrackballController2 t : trackballs)
 		{
-			t.addAsWindowListener(window);
+			//t.addAsWindowListener(window);
 		}
 	}
 	
 	@Override
-	public TrackballLightModel getLightModel()
+	public TrackballLightModel2 getLightModel()
 	{
 		return this.model;
 	}

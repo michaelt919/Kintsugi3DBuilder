@@ -1,93 +1,89 @@
-package tetzlaff.mvc.controllers.impl;
+package tetzlaff.ibr.alexkautz_workspace.render;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.MouseButtonState;
-import tetzlaff.gl.window.Window;
-import tetzlaff.gl.window.WindowSize;
+import tetzlaff.gl.window.*;
 import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;
 import tetzlaff.mvc.controllers.CameraController;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.impl.TrackballModel;
+import tetzlaff.ibr.alexkautz_workspace.render.*;
 
-public class TrackballController implements CameraController, CursorPositionListener, MouseButtonPressListener, ScrollListener
+public class TrackballController2 implements CameraController, CursorPositionListener, MouseButtonPressListener, ScrollListener
 {
 	private int inversion = 1;
 	private boolean enabled = true;
 	private int primaryButtonIndex;
 	private int secondaryButtonIndex;
 	private float sensitivity;
-	
+
 	private float startX = Float.NaN;
 	private float startY = Float.NaN;
 	private float mouseScale = Float.NaN;
-	
+
 	private Matrix4 oldTrackballMatrix;
 	private float oldLogScale;
-	
-	private final TrackballModel model;
-	
+
+	private final TrackballModel2 model;
+
 	public static interface Builder
 	{
 		Builder setSensitivity(float sensitivity);
 		Builder setPrimaryButtonIndex(int primaryButtonIndex);
 		Builder setSecondaryButtonIndex(int secondaryButtonIndex);
-		Builder setModel(TrackballModel model);
-		TrackballController create();
+		Builder setModel(TrackballModel2 model);
+		TrackballController2 create();
 	}
-	
+
 	private static class BuilderImpl implements Builder
 	{
 		private float sensitivity = 1.0f;
 		private int primaryButtonIndex = 0;
 		private int secondaryButtonIndex = 1;
-		private TrackballModel model;
-		
+		private TrackballModel2 model;
+
 		public Builder setSensitivity(float sensitivity)
 		{
 			this.sensitivity = sensitivity;
 			return this;
 		}
-		
+
 		public Builder setPrimaryButtonIndex(int primaryButtonIndex)
 		{
 			this.primaryButtonIndex = primaryButtonIndex;
 			return this;
 		}
-		
+
 		public Builder setSecondaryButtonIndex(int secondaryButtonIndex)
 		{
 			this.secondaryButtonIndex = secondaryButtonIndex;
 			return this;
 		}
-		
-		public Builder setModel(TrackballModel model)
+
+		public Builder setModel(TrackballModel2 model)
 		{
 			this.model = model;
 			return this;
 		}
-		
-		public TrackballController create()
+
+		public TrackballController2 create()
 		{
 			if (this.model == null)
 			{
-				this.model = new TrackballModel();
+				this.model = new TrackballModel2();
 			}
-			
-			return new TrackballController(model, sensitivity, primaryButtonIndex, secondaryButtonIndex);
+
+			return new TrackballController2(model, sensitivity, primaryButtonIndex, secondaryButtonIndex);
 		}
 	}
-	
+
 	public static Builder getBuilder()
 	{
 		return new BuilderImpl();
 	}
-	
-	private TrackballController(TrackballModel model, float sensitivity, int primaryButtonIndex, int secondaryButtonIndex)
+
+	private TrackballController2(TrackballModel2 model, float sensitivity, int primaryButtonIndex, int secondaryButtonIndex)
 	{
 		this.primaryButtonIndex = primaryButtonIndex;
 		this.secondaryButtonIndex = secondaryButtonIndex;
@@ -136,7 +132,7 @@ public class TrackballController implements CameraController, CursorPositionList
 					Vector3 rotationVector = 
 						new Vector3(
 							(float)(ypos - this.startY),
-							(float)(xpos - this.startX), 
+							(float)(xpos - this.startX),
 							0.0f
 						);
 					
