@@ -9,4 +9,5 @@ hs_err*.log
 .DS_Store
 doc/*
 bin/*
+target/*
 .idea
