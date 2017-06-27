@@ -181,7 +181,7 @@ public class IBRelight
 	        
 	        TrackballLightController lightController = new TrackballLightController();
 	        lightController.addAsWindowListener(window);
-	    	metaLightModel.normalLightModel = lightController.getModel();
+	    	metaLightModel.normalLightModel = lightController.getLightModel();
 	        
 	    	CameraModel fpCameraModel = new BasicCameraModel();
 	    	
@@ -332,7 +332,7 @@ public class IBRelight
 	        
 	        // Create a user interface that examines the ULFRendererList for renderer settings and
 	        // selecting between different loaded models.
-	        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getModel(), (request) -> requestQueue.addRequest(request), window.isHighDPI());
+	        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getLightModel(), (request) -> requestQueue.addRequest(request), window.isHighDPI());
 	        gui.showGUI();        
 	        //app.addPollable(gui); // Needed for Qt UI
 	        
