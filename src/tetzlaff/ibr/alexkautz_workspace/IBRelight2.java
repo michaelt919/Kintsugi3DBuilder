@@ -20,10 +20,7 @@ import tetzlaff.gl.window.WindowSize;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.RenderPerams;
 import tetzlaff.ibr.alexkautz_workspace.render.TrackballLightController2;
-import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.CameraModelX;
-import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.DragToolControler;
-import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.GlobalController;
-import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.LightModelX;
+import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.*;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
@@ -119,16 +116,25 @@ public class IBRelight2
 
 
 			//Here i create my own brand of camera and light models;
+			LightModelX lightModelX = new LightModelX();
+			CameraModelX cameraModelX = new CameraModelX();
 
-            LightModelX lightModelX = new LightModelX();
-            CameraModelX cameraModelX = new CameraModelX();
-            GlobalController globalController = new GlobalController();
+			GlobalController globalController = new GlobalController();
 
-            DragToolControler dragToolControler = new DragToolControler(globalController, lightModelX, cameraModelX,
-                    0, 1);
+            LookToolController.getBuilder() //I do not need to keep my instance of LookToolController in a value
 
-            dragToolControler.addAsWindowListener(window);
+                    .setGlobalControler(globalController)
 
+                    .setCameraModelX(cameraModelX)
+                    .setLightModelX(lightModelX)
+
+                    .setPrimaryButtonIndex(0)
+                    .setSecondaryButtonIndex(1)
+                    .setSensitivity(1.0f)
+
+                    .setWindow(window)
+
+                    .create();
 			// Create a new 'renderer' to be attached to the window and the GUI.
 			// This is the object that loads the ULF models and handles drawing them.  This object abstracts
 			// the underlying data and provides ways of triggering events via the trackball and the user

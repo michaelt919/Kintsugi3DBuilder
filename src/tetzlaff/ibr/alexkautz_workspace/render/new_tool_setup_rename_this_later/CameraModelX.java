@@ -4,56 +4,50 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 
-/**
- * Created by alexk on 6/27/2017.
- */
 public class CameraModelX implements ReadonlyCameraModel {
 
-    public CameraModelX()
-    {
-        this.orbitMatrix = Matrix4.IDENTITY;
-        this.radius = 1.0f;
-        this.logRadius = 0.0f;
-    }
+    private Float zoom;
+    private Vector3 offSet;
+    private Matrix4 orbit;
 
-    float radius;
+    private final static Vector3 ORIGIN = new Vector3(0,0,0);
 
-    float logRadius;
-
-    Matrix4 orbitMatrix;
-
-    public float getRadius() {
-        return radius;
-    }
-
-    public void setRadius(float radius) {
-        this.radius = radius;
-        this.logRadius =(float) (Math.log(radius)/Math.log(2));
-    }
-
-    public float getLogRadius() {
-        return logRadius;
-    }
-
-    public void setLogRadius(float logRadius) {
-        this.logRadius = logRadius;
-        this.radius = (float) Math.pow(logRadius, 2);
-    }
-
-    public Matrix4 getOrbitMatrix() {
-        return orbitMatrix;
-    }
-
-    public void setOrbitMatrix(Matrix4 orbitMatrix) {
-        this.orbitMatrix = orbitMatrix;
+    public CameraModelX() {
+        zoom = 1f;
+        offSet = new Vector3(0,0,0);
+        orbit = Matrix4.IDENTITY;
     }
 
     @Override
     public Matrix4 getLookMatrix() {
-        return Matrix4.lookAt((new Vector3(0.0f, 0.0f, (1.0f/radius))),
-                new Vector3(0,0,0),
-                new Vector3(0, 1, 0)).times(
-                        orbitMatrix
-        );
+        return Matrix4.lookAt( new Vector3(0, 0, 1/zoom), ORIGIN, new Vector3(0,1,0))
+
+                .times(Matrix4.translate(offSet)
+
+                .times(orbit));
+    }
+
+    public Vector3 getOffSet() {
+        return offSet;
+    }
+
+    public void setOffSet(Vector3 offSet) {
+        this.offSet = offSet;
+    }
+
+    public Matrix4 getOrbit() {
+        return orbit;
+    }
+
+    public void setOrbit(Matrix4 orbit) {
+        this.orbit = orbit;
+    }
+
+    public Float getZoom() {
+        return zoom;
+    }
+
+    public void setZoom(Float zoom) {
+        this.zoom = zoom;
     }
 }
