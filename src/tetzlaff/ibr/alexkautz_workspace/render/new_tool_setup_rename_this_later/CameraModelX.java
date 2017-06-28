@@ -10,7 +10,7 @@ public class CameraModelX implements ReadonlyCameraModel {
     private Vector3 offSet;
     private Matrix4 orbit;
 
-    private final static Vector3 ORIGIN = new Vector3(0,0,0);
+    public final static Vector3 ORIGIN = new Vector3(0,0,0);
 
     public CameraModelX() {
         zoom = 1f;
