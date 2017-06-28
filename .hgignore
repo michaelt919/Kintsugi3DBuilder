@@ -11,3 +11,4 @@ doc/*
 bin/*
 target/*
 .idea
+quickSaveLoadConfig.txt
