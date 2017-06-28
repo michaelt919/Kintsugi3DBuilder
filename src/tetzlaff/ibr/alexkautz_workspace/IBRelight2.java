@@ -130,7 +130,7 @@ public class IBRelight2
 
                     .setPrimaryButtonIndex(0)
                     .setSecondaryButtonIndex(1)
-                    .setTertiaryButtonIndex(3)
+                    .setTertiaryButtonIndex(2)
                     .setSensitivityScrollWheel(15.0f)
                     .setSensitivityOrbit(1.5f)
 

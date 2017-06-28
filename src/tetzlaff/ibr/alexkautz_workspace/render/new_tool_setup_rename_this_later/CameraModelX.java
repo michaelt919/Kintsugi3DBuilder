@@ -22,7 +22,7 @@ public class CameraModelX implements ReadonlyCameraModel {
     public Matrix4 getLookMatrix() {
         return Matrix4.lookAt( new Vector3(0, 0, 1/zoom), ORIGIN, new Vector3(0,1,0))
 
-                .times(Matrix4.translate(offSet)
+                .times(Matrix4.translate(offSet) //TODO fix this distortion
 
                 .times(orbit));
     }
