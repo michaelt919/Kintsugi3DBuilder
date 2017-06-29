@@ -137,4 +137,8 @@ public class TrackballLightModel2 extends LightModelBase implements LightModel
 	{
 		this.cameraPoseOverride = null;
 	}
+
+
+
+
 }

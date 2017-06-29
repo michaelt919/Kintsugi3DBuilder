@@ -15,6 +15,7 @@ import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.WindowSize;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
@@ -116,8 +117,10 @@ public class IBRelight2
 
 
 			//Here i create my own brand of camera and light models;
-			LightModelX lightModelX = new LightModelX();
+			LightModelX lightModelX = new LightModelX(3);
 			CameraModelX cameraModelX = new CameraModelX();
+
+			lightModelX.setLightColor(0, new Vector3(1f, 1f, 1f));
 
 			GlobalController globalController = new GlobalController();
 
@@ -137,6 +140,18 @@ public class IBRelight2
                     .setWindow(window)
 
                     .create();
+
+            DragToolController dragToolController = DragToolController.Builder.aDragToolController()
+                    .setCameraModelX(cameraModelX)
+                    .setLightModelX(lightModelX)
+
+                    .setGlobalController(globalController)
+
+                    .setWindow(window)
+
+                    .build();
+
+
 			// Create a new 'renderer' to be attached to the window and the GUI.
 			// This is the object that loads the ULF models and handles drawing them.  This object abstracts
 			// the underlying data and provides ways of triggering events via the trackball and the user
@@ -147,7 +162,9 @@ public class IBRelight2
                     context,
                     program,
                     cameraModelX,
-                    lightController.getLightModel());
+                    lightModelX);
+
+            dragToolController.setModel(model);
 
 
             window.addCharacterListener((win, c) -> {
@@ -257,25 +274,25 @@ public class IBRelight2
 
 			// Make everything visible and start the event loop
 
-			window.addMouseButtonPressListener((win, buttonIndex, mods) ->
-			{
-				try
-				{
-					if (win == window && model.getSelectedItem() != null)
-					{
-						CursorPosition pos = window.getCursorPosition();
-						WindowSize size = window.getWindowSize();
-						double x = pos.x / size.width;
-						double y = pos.y / size.height;
-
-						System.out.println(model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y));
-					}
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-			});
+//			window.addMouseButtonPressListener((win, buttonIndex, mods) ->
+//			{
+//				try
+//				{
+//					if (win == window && model.getSelectedItem() != null)
+//					{
+//						CursorPosition pos = window.getCursorPosition();
+//						WindowSize size = window.getWindowSize();
+//						double x = pos.x / size.width;
+//						double y = pos.y / size.height;
+//
+//						System.out.println(model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y));
+//					}
+//				}
+//				catch (Exception e)
+//				{
+//					e.printStackTrace();
+//				}
+//			});
 
 			window.show();
 			app.run();
