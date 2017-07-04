@@ -66,6 +66,8 @@ public class GuiApp extends Application implements Runnable{
 
         //TODO stop the gui opening before the render window
 
+        primaryStage.setX(-7.0);
+        primaryStage.setY(-1.0);
         primaryStage.show();
 
 
