@@ -2,6 +2,7 @@ package tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 
 public class CameraModelX implements ReadonlyCameraModel {
@@ -17,6 +18,12 @@ public class CameraModelX implements ReadonlyCameraModel {
         offSet = new Vector3(0,0,0);
         orbit = Matrix4.IDENTITY;
     }
+
+    public Vector3 getDirectionIn(){
+        Vector4 direction = getLookMatrix().times(new Vector4(0,0,1,1));
+        return direction.getXYZ();
+    }
+
 
     @Override
     public Matrix4 getLookMatrix() {

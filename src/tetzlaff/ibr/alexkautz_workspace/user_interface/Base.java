@@ -2,9 +2,11 @@ package tetzlaff.ibr.alexkautz_workspace.user_interface;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ToggleGroup;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
 import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.Tool;
@@ -26,8 +28,8 @@ public class Base {
 
             Loader loader = fxmlLoader.getController();
 
-
             stage.show();
+
 
         } catch (IOException e) {
             e.printStackTrace();
