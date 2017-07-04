@@ -50,25 +50,26 @@ public class GUIApp extends Application{
         final double librarySection = 0.2;
         final double sceneSection = 0.3;
 
+        final double extra = 6;
+
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
-        menuBarStage.setX(primaryScreenBounds.getMinX());
+        menuBarStage.setX(primaryScreenBounds.getMinX()-4);
         menuBarStage.setY(primaryScreenBounds.getMinY());
-        menuBarStage.setWidth(primaryScreenBounds.getWidth());
+        menuBarStage.setWidth(primaryScreenBounds.getWidth()+8);
         menuBarStage.show();
         double menuBarHeight = menuBarStage.getHeight();
-        //System.out.println(" menuBarHeight: " + menuBarHeight);
 
-        libraryStage.setX(primaryScreenBounds.getMinX());
-        libraryStage.setY(primaryScreenBounds.getMinY() + menuBarHeight);
-        libraryStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight);
-        libraryStage.setWidth(primaryScreenBounds.getWidth()*librarySection);
+        libraryStage.setX(primaryScreenBounds.getMinX()-extra);
+        libraryStage.setY(primaryScreenBounds.getMinY() + menuBarHeight - extra);
+        libraryStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight + 2*extra);
+        libraryStage.setWidth(primaryScreenBounds.getWidth()*librarySection + 2*extra);
         libraryStage.show();
 
-        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth()*(1-sceneSection));
-        sceneStage.setWidth(primaryScreenBounds.getWidth()*sceneSection);
-        sceneStage.setY(primaryScreenBounds.getMinY() + menuBarHeight);
-        sceneStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight);
+        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth()*(1-sceneSection) - extra);
+        sceneStage.setWidth(primaryScreenBounds.getWidth()*sceneSection + 2*extra);
+        sceneStage.setY(primaryScreenBounds.getMinY() + menuBarHeight - extra);
+        sceneStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight + 2*extra);
         sceneStage.show();
 
         menuBarStage.hide();//this is just to have the menu bar have focus on the application starts, only aesthetic value.
