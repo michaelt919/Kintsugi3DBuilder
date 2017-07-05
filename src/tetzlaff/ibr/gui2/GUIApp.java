@@ -16,6 +16,8 @@ public class GUIApp extends Application{
     public void start(Stage menuBarStage) throws Exception {
         //We will make the menu bar our primary stage
 
+
+
         //get FXML URLs
         final String menuBarFXMLFileName = "fxml/menu_bar/MenuBar.fxml";
         final URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);

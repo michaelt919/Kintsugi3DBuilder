@@ -4,21 +4,20 @@
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 
-<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<TabPane tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
     <Tab text="Camera">
-      <content>
-         <ScrollPane fitToWidth="true">
-            <content>
-                 <fx:include source="camera/RootCameraScene.fxml" />
-            </content>
-         </ScrollPane>
-      </content>
+        <ScrollPane fitToWidth="true">
+            <fx:include source="camera/RootCameraScene.fxml"/>
+        </ScrollPane>
     </Tab>
-  <Tab text="Lights">
-      <fx:include source="lights/RootLightsScene.fxml" />
-  </Tab>
-  <Tab text="Environment map">
-      <fx:include source="environment_map/RootEnvironmentMapScene.fxml" />
-  </Tab>
-   <Tab text="DEBUG" />
+    <Tab text="Lights">
+        <ScrollPane fitToWidth="true">
+            <fx:include source="lights/RootLightsScene.fxml"/>
+        </ScrollPane>
+    </Tab>
+    <Tab text="Environment map">
+        <ScrollPane fitToWidth="true">
+            <fx:include source="environment_map/RootEnvironmentMapScene.fxml"/>
+        </ScrollPane>
+    </Tab>
 </TabPane>
