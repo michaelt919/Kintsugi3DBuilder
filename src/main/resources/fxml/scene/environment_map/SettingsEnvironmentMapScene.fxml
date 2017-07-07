@@ -3,70 +3,72 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
 <VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
-  <children>
-    <TitledPane text="Center Point">
-      <content>
+    <TitledPane text="Environment map" animated="false">
         <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
-          <children>
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="X:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Y:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Z:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-            <TextField GridPane.columnIndex="2" />
-            <TextField GridPane.columnIndex="2" GridPane.rowIndex="1" />
-            <TextField GridPane.columnIndex="2" GridPane.rowIndex="2" />
-            <Button mnemonicParsing="false" text="Select point" GridPane.rowIndex="2">
-              <GridPane.margin>
-                <Insets right="20.0" />
-              </GridPane.margin></Button>
-          </children>
-          <padding>
+            <CheckBox text="Use image" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+            <Text text="Filename" textAlignment="CENTER" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+            <Button text="Choose file" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+            <Separator GridPane.columnSpan="2" GridPane.rowIndex="3" />
+            <Text text="Color:" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
+            <ColorPicker GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Intensity:" GridPane.halignment="RIGHT" GridPane.rowIndex="6" />
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Rotation:" GridPane.halignment="RIGHT" GridPane.rowIndex="8" />
+            <TextField GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="6" />
+            <TextField GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="8" />
+            <Slider GridPane.columnSpan="2" GridPane.rowIndex="7" />
+            <Slider GridPane.columnSpan="2" GridPane.rowIndex="9" />
+         <AnchorPane prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <children>
+               <ImageView fitHeight="100.0" fitWidth="200.0" pickOnBounds="true" smooth="false">
+                  <image>
+                     <Image url="file:/C:/Users/alexk/Pictures/Screenshots/Screenshot%20(11).png" />
+                  </image>
+               </ImageView>
+            </children></AnchorPane>
+         <CheckBox mnemonicParsing="false" text="Use color" GridPane.rowIndex="4" />
+         <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
-          </padding>
+         </padding>
         </GridPane>
-      </content>
     </TitledPane>
-    <TitledPane text="Dolly">
+   <TitledPane text="Backplate" animated="false" expanded="false">
       <content>
-        <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
-          <children>
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Azimuth:" GridPane.halignment="RIGHT" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Twist:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
-            <TextField GridPane.columnIndex="1" />
-            <TextField GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <TextField GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <TextField GridPane.columnIndex="1" GridPane.rowIndex="3" />
-          </children>
-          <padding>
-            <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
-          </padding>
-        </GridPane>
+         <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+            <padding>
+               <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+            </padding>
+            <children>
+               <CheckBox text="Use image" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+               <Text text="Filename" textAlignment="CENTER" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+               <Button text="Choose file" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+               <Separator GridPane.columnSpan="2" GridPane.rowIndex="3" />
+               <Text text="Color:" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
+               <ColorPicker GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
+               <AnchorPane prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                  <children>
+                     <ImageView fitHeight="100.0" fitWidth="200.0" pickOnBounds="true" smooth="false">
+                        <image>
+                           <Image url="file:/C:/Users/alexk/Pictures/Screenshots/Screenshot%20(4).png" />
+                        </image>
+                     </ImageView>
+                  </children>
+               </AnchorPane>
+               <CheckBox mnemonicParsing="false" text="Use color" GridPane.rowIndex="4" />
+            </children>
+         </GridPane>
       </content>
-    </TitledPane>
-    <TitledPane text="Perspective">
-      <content>
-        <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
-          <children>
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Field of view:" GridPane.halignment="RIGHT" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Focal length:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Orthographic:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-            <TextField GridPane.columnIndex="1" />
-            <TextField GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <CheckBox mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-          </children>
-          <padding>
-            <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
-          </padding>
-        </GridPane>
-      </content>
-    </TitledPane>
-  </children>
+   </TitledPane>
 </VBox>
