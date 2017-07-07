@@ -6,4 +6,7 @@ public class MenubarController {
         System.exit(0);
     }
 
+    public void what(){
+        System.out.println("WHAAAT");
+    }
 }
