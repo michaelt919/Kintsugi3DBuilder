@@ -1,49 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.RadioMenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1"
-fx:controller="tetzlaff.ibr.gui2.controllers.menu_bar.MenubarController">
-   <children>
-      <MenuBar>
-         <menus>
-            <Menu mnemonicParsing="false" text="File">
+<VBox prefWidth="470.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.menu_bar.MenubarController">
+   <MenuBar>
+      <Menu mnemonicParsing="false" text="File">
+         <MenuItem mnemonicParsing="false" text="Create project" />
+         <MenuItem mnemonicParsing="false" text="Open project" />
+         <MenuItem mnemonicParsing="false" text="Save project" />
+         <MenuItem mnemonicParsing="false" text="Save project as..." />
+         <MenuItem mnemonicParsing="false" text="Close project" />
+         <Menu mnemonicParsing="false" text="Export">
+            <MenuItem mnemonicParsing="false" text="Re-sample..." />
+            <MenuItem mnemonicParsing="false" text="Fidelity Metric…" />
+            <MenuItem mnemonicParsing="false" text="BTF..." />
+            <MenuItem mnemonicParsing="false" text="Other..." />
+         </Menu>
+         <MenuItem mnemonicParsing="false" text="Load settings configuration" />
+         <MenuItem mnemonicParsing="false" onAction="#exit" text="Exit" />
+      </Menu>
+      <Menu mnemonicParsing="false" text="Viewport">
+         <items>
+            <CheckMenuItem mnemonicParsing="false" text="3D grid" />
+            <CheckMenuItem mnemonicParsing="false" text="Compass" />
+            <CheckMenuItem mnemonicParsing="false" text="Half resolution" />
+            <CheckMenuItem mnemonicParsing="false" text="Multi-sampling" />
+         </items>
+      </Menu>
+      <Menu mnemonicParsing="false" text="Lighting">
+         <items>
+            <CheckMenuItem mnemonicParsing="false" selected="true" text="Relighting" />
+            <CheckMenuItem mnemonicParsing="false" selected="true" text="Environment mapping" />
+            <CheckMenuItem mnemonicParsing="false" text="Shadows" />
+            <CheckMenuItem mnemonicParsing="false" selected="true" text="Show light sources" />
+            <CheckMenuItem mnemonicParsing="false" text="Show camera poses for photographs" />
+            <CheckMenuItem mnemonicParsing="false" text="Show saved camera poses" />
+         </items>
+      </Menu>
+      <Menu mnemonicParsing="false" text="Shading">
+         <items>
+            <RadioMenuItem mnemonicParsing="false" text="Wireframe" />
+            <RadioMenuItem mnemonicParsing="false" text="Lambertian shaded" />
+            <RadioMenuItem mnemonicParsing="false" text="Phong shaded" />
+            <RadioMenuItem mnemonicParsing="false" text="Solid textured" />
+            <RadioMenuItem mnemonicParsing="false" text="Lambertian textured" />
+            <RadioMenuItem mnemonicParsing="false" text="Material shaded" />
+            <RadioMenuItem mnemonicParsing="false" text="Image-based rendering" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="IBR settings…" />
+            <CheckMenuItem mnemonicParsing="false" text="Use materials for IBR" />
+            <CheckMenuItem mnemonicParsing="false" text="Physically based masking/shadowing" />
+            <CheckMenuItem mnemonicParsing="false" text="Fresnel effect" />
+         </items>
+      </Menu>
+      <Menu mnemonicParsing="false" text="Tools">
+         <items>
+            <RadioMenuItem mnemonicParsing="false" text="Silly tool" />
+            <RadioMenuItem mnemonicParsing="false" text="Orbit Camera tool" />
+            <RadioMenuItem mnemonicParsing="false" text="Pan Camera tool" />
+            <RadioMenuItem mnemonicParsing="false" text="Dolly Camera tool" />
+            <RadioMenuItem mnemonicParsing="false" text="Frame Selection tool" />
+            <RadioMenuItem mnemonicParsing="false" text="Look at Point tool" />
+            <RadioMenuItem mnemonicParsing="false" text="Zoom tool" />
+            <RadioMenuItem mnemonicParsing="false" text="First-person Camera tool" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <RadioMenuItem mnemonicParsing="false" text="Rotate Model tool" />
+            <RadioMenuItem mnemonicParsing="false" text="Translate Model tool" />
+            <RadioMenuItem mnemonicParsing="false" text="Scale Model tool" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <RadioMenuItem mnemonicParsing="false" text="Rotate Environment tool" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <CheckMenuItem mnemonicParsing="false" text="Orthographic view" />
+            <MenuItem mnemonicParsing="false" text="Reset view" />
+            <Menu mnemonicParsing="false" text="Center of rotation">
                <items>
-                  <MenuItem mnemonicParsing="false" text="Create project" />
-                  <MenuItem mnemonicParsing="false" text="Open project" />
-                  <MenuItem mnemonicParsing="false" text="Save project" />
-                  <MenuItem mnemonicParsing="false" text="Save project as..." />
-                  <MenuItem mnemonicParsing="false" text="Close project" />
-                  <Menu mnemonicParsing="false" text="Export">
-                     <items>
-                        <MenuItem mnemonicParsing="false" text="Resample..." />
-                        <MenuItem mnemonicParsing="false" text="Fidelity Metric…" />
-                        <MenuItem mnemonicParsing="false" text="BTF..." />
-                        <MenuItem mnemonicParsing="false" text="Other..." />
-                     </items>
-                  </Menu>
-                  <MenuItem mnemonicParsing="false" text="Load settings configuration" />
-                  <MenuItem mnemonicParsing="false" text="Exit" onAction="#exit"/>
+                  <RadioMenuItem mnemonicParsing="false" text="Use viewport center" />
+                  <RadioMenuItem mnemonicParsing="false" text="Use model centroid" />
+                  <MenuItem mnemonicParsing="false" text="Select center of rotation" />
                </items>
             </Menu>
-            <Menu mnemonicParsing="false" text="Windows">
-               <items>
-                  <CheckMenuItem mnemonicParsing="false" text="Scene" />
-                  <CheckMenuItem mnemonicParsing="false" text="Library" />
-               </items>
-            </Menu>
-         </menus>
-      </MenuBar>
-      <ToolBar>
+         </items>
+      </Menu>
+      <Menu mnemonicParsing="false" text="Windows">
+         <CheckMenuItem mnemonicParsing="false" selected="true" text="Scene" />
+         <CheckMenuItem mnemonicParsing="false" selected="true" text="Library" />
+         <CheckMenuItem mnemonicParsing="false" text="Full-screen render" />
+         <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
+      </Menu>
+      <Menu mnemonicParsing="false" text="Help">
         <items>
-          <Button mnemonicParsing="false" text="Button" />
+          <MenuItem mnemonicParsing="false" text="User Manual" />
+            <MenuItem mnemonicParsing="false" text="About" />
         </items>
-      </ToolBar>
-   </children>
+      </Menu>
+   </MenuBar>
 </VBox>

@@ -6,7 +6,7 @@
 
 
 <Pane>
-   <Text layoutY="69.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Library">
+   <Text layoutY="69.0" layoutX="10.0" text="Library">
       <font>
          <Font size="64.0"/>
       </font>
