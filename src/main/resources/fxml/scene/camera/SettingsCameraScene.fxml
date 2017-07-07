@@ -10,63 +10,50 @@
 <?import javafx.scene.text.Text?>
 
 <VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
-   <children>
-      <TitledPane text="Center Point">
-         <content>
-            <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
-               <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="X:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" />
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Y:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Z:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-                  <TextField GridPane.columnIndex="2" />
-                  <TextField GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                  <TextField GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                  <Button mnemonicParsing="false" text="Select point" GridPane.rowIndex="2">
-                     <GridPane.margin>
-                        <Insets right="20.0" />
-                     </GridPane.margin></Button>
-               </children>
-               <padding>
-                  <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
-               </padding>
-            </GridPane>
-         </content>
-      </TitledPane>
-      <TitledPane text="Dolly">
-         <content>
-            <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
-               <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Azimuth:" GridPane.halignment="RIGHT" />
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Twist:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
-                  <TextField GridPane.columnIndex="1" />
-                  <TextField GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                  <TextField GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                  <TextField GridPane.columnIndex="1" GridPane.rowIndex="3" />
-               </children>
-               <padding>
-                  <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
-               </padding>
-            </GridPane>
-         </content>
-      </TitledPane>
-      <TitledPane text="Perspective">
-         <content>
-            <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
-               <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Field of view:" GridPane.halignment="RIGHT" />
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Focal length:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Orthographic:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-                  <TextField GridPane.columnIndex="1" />
-                  <TextField GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                  <CheckBox mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-               </children>
-               <padding>
-                  <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
-               </padding>
-            </GridPane>
-         </content>
-      </TitledPane>
-   </children>
+   <TitledPane expanded="false" animated="false" text="Center Point">
+      <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+         <padding>
+            <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+         </padding>
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="X:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Y:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Z:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+         <TextField GridPane.columnIndex="2" />
+         <TextField GridPane.columnIndex="2" GridPane.rowIndex="1" />
+         <TextField GridPane.columnIndex="2" GridPane.rowIndex="2" />
+         <Button mnemonicParsing="false" text="Select point" GridPane.columnIndex="3" GridPane.rowIndex="0">
+            <GridPane.margin>
+               <Insets left="20.0" />
+            </GridPane.margin>
+         </Button>
+      </GridPane>
+   </TitledPane>
+   <TitledPane animated="false" text="Dolly">
+      <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+         <padding>
+            <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+         </padding>
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Azimuth:" GridPane.halignment="RIGHT" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Twist:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+         <TextField GridPane.columnIndex="1" />
+         <TextField GridPane.columnIndex="1" GridPane.rowIndex="1" />
+         <TextField GridPane.columnIndex="1" GridPane.rowIndex="2" />
+         <TextField GridPane.columnIndex="1" GridPane.rowIndex="3" />
+      </GridPane>
+   </TitledPane>
+   <TitledPane animated="false" text="Perspective">
+      <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+         <padding>
+            <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+         </padding>
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Field of view:" GridPane.halignment="RIGHT" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Focal length:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Orthographic:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+         <TextField GridPane.columnIndex="1" />
+         <TextField GridPane.columnIndex="1" GridPane.rowIndex="1" />
+         <CheckBox mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+      </GridPane>
+   </TitledPane>
 </VBox>

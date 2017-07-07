@@ -1,53 +1,94 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
 
-<?import javafx.scene.control.TableView?>
 <VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
-    <TitledPane text="Cameras" VBox.vgrow="ALWAYS">
-        <content>
-            <HBox prefHeight="0.0">
-                <TableView HBox.hgrow="ALWAYS" />
-                <Separator orientation="VERTICAL" />
-                <VBox alignment="CENTER_LEFT" spacing="5.0">
-                    <children>
-                        <Button mnemonicParsing="false" text="New">
-                            <tooltip>
-                                <Tooltip text="Create a new camera from the current view." />
-                            </tooltip>
-                        </Button>
-                        <Button mnemonicParsing="false" text="Save">
-                            <tooltip>
-                                <Tooltip text="Save the selected camera to the library." />
-                            </tooltip>
-                        </Button>
-                        <Button mnemonicParsing="false" text="Rename" />
-                        <Button mnemonicParsing="false" text="Move UP" />
-                        <Button mnemonicParsing="false" text="Move DOWN" />
-                        <Button mnemonicParsing="false" text="Lock/Unlock">
-                            <tooltip>
-                                <Tooltip text="Lock the settings for the selected camera so they cannot be changed." />
-                            </tooltip>
-                        </Button>
-                        <Button mnemonicParsing="false" text="Keyframe">
-                            <tooltip>
-                                <Tooltip text="Add the selected camera as a keyframe (for animation)." />
-                            </tooltip>
-                        </Button>
-                        <Button mnemonicParsing="false" text="Delete">
-                            <tooltip>
-                                <Tooltip text="Delete selected camera." />
-                            </tooltip>
-                        </Button>
-                    </children>
-                </VBox>
-            </HBox>
-        </content>
+    <TitledPane animated="false" text="Light Sets" VBox.vgrow="ALWAYS">
+        <HBox prefHeight="0.0" spacing="2.0">
+            <TableView HBox.hgrow="ALWAYS">
+            <columns>
+               <TableColumn editable="false" prefWidth="125.0" sortable="false" text="Set Name" />
+               <TableColumn editable="false" prefWidth="30.0" sortable="false" text="L1" />
+               <TableColumn editable="false" prefWidth="31.0" sortable="false" text="L2" />
+               <TableColumn editable="false" prefWidth="30.5" sortable="false" text="L3" />
+               <TableColumn editable="false" prefWidth="31.0" sortable="false" text="L4" />
+            </columns></TableView>
+            <Separator orientation="VERTICAL">
+            <HBox.margin>
+               <Insets />
+            </HBox.margin></Separator>
+            <VBox alignment="CENTER" spacing="5.0">
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Set" />
+                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="New">
+                    <tooltip>
+                        <Tooltip text="Create a new light set." />
+                    </tooltip>
+                </Button>
+                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Save">
+                    <tooltip>
+                        <Tooltip text="Save the selected camera to the library." />
+                    </tooltip>
+                </Button>
+                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Rename" />
+                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Move UP" />
+                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Move DOWN" />
+                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Lock/Unlock">
+                    <tooltip>
+                        <Tooltip text="Lock the settings for the selected light set so they cannot be changed." />
+                    </tooltip>
+                </Button>
+                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Keyframe">
+                    <tooltip>
+                        <Tooltip text="Add the selected light set as a keyframe (for animation)." />
+                    </tooltip>
+                </Button>
+                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Delete">
+                    <tooltip>
+                        <Tooltip text="Delete selected light set." />
+                    </tooltip>
+                </Button>
+            </VBox>
+         <Separator orientation="VERTICAL" prefHeight="200.0" />
+         <VBox alignment="TOP_CENTER" spacing="5.0">
+            <children>
+               <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Light" />
+               <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="New">
+                  <tooltip>
+                     <Tooltip text="Create a new light with default settings." />
+                  </tooltip>
+               </Button>
+               <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Save">
+                  <tooltip>
+                     <Tooltip text="Save the selected light to the library." />
+                  </tooltip>
+               </Button>
+               <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Duplicate">
+                  <tooltip>
+                     <Tooltip text="Duplicate the selected light." />
+                  </tooltip>
+               </Button>
+               <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Lock/Unlock">
+                  <tooltip>
+                     <Tooltip text="Lock the settings for the selected light so they cannot be changed." />
+                  </tooltip>
+               </Button>
+               <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Delete">
+                  <tooltip>
+                     <Tooltip text="Delete selected light." />
+                  </tooltip>
+               </Button>
+            </children>
+         </VBox>
+        </HBox>
     </TitledPane>
     <fx:include source="SettingsLightsScene.fxml" />
 </VBox>
