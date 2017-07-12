@@ -1,4 +1,4 @@
-package tetzlaff.ibr.gui2;
+package tetzlaff.ibr.gui2.app;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -66,7 +66,7 @@ public class GUIApp extends Application{
         libraryStage.setY(primaryScreenBounds.getMinY() + menuBarHeight - extra);
         libraryStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight + 2*extra);
         libraryStage.setWidth(primaryScreenBounds.getWidth()*librarySection + 2*extra);
-        libraryStage.show();
+        //libraryStage.show();
 
         sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth()*(1-sceneSection) - extra);
         sceneStage.setWidth(primaryScreenBounds.getWidth()*sceneSection + 2*extra);
