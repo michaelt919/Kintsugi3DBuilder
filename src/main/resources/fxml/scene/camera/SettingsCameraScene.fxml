@@ -12,34 +12,26 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.scene.camera.SettingsCameraSceneController">
-   <TitledPane animated="false" expanded="false" text="Center Point">
+<VBox fx:id="root" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.scene.camera.SettingsCameraSceneController">
+   <TitledPane animated="false" text="Center Point">
       <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="X:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Y:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Z:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-         <TextField GridPane.columnIndex="2" />
-         <TextField GridPane.columnIndex="2" GridPane.rowIndex="1" />
-         <TextField GridPane.columnIndex="2" GridPane.rowIndex="2" />
-         <Button mnemonicParsing="false" text="Select point" GridPane.columnIndex="3" GridPane.rowIndex="0">
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="X:" GridPane.halignment="RIGHT" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Y:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Z:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+         <TextField GridPane.columnIndex="1" fx:id="xCenterTextField" />
+         <TextField fx:id="yCenterTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+         <TextField fx:id="zCenterTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+         <Button mnemonicParsing="false" onAction="#pressSelectPointButton" text="Select point" GridPane.columnIndex="1" GridPane.rowIndex="3">
             <GridPane.margin>
-               <Insets left="20.0" />
+               <Insets />
             </GridPane.margin>
          </Button>
-         <columnConstraints>
-            <ColumnConstraints />
-            <ColumnConstraints />
-            <ColumnConstraints />
-            <ColumnConstraints />
-         </columnConstraints>
-         <rowConstraints>
-            <RowConstraints />
-            <RowConstraints />
-            <RowConstraints />
-         </rowConstraints>
+         <Slider fx:id="xCenterSlider" GridPane.columnIndex="2"  />
+         <Slider fx:id="yCenterSlider" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+         <Slider fx:id="zCenterSlider" GridPane.columnIndex="2" GridPane.rowIndex="2" />
       </GridPane>
    </TitledPane>
    <TitledPane animated="false" text="Dolly">
@@ -47,29 +39,18 @@
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Azimuth:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Twist:" GridPane.halignment="RIGHT" GridPane.rowIndex="5" />
-         <TextField fx:id="azimuthBox" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-         <TextField GridPane.columnIndex="1" GridPane.rowIndex="3" />
-         <TextField GridPane.columnIndex="1" GridPane.rowIndex="4" />
-         <TextField GridPane.columnIndex="1" GridPane.rowIndex="5" />
-         <Slider fx:id="azimuthSlider" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="1" />
-         <columnConstraints>
-            <ColumnConstraints />
-            <ColumnConstraints />
-            <ColumnConstraints />
-            <ColumnConstraints />
-         </columnConstraints>
-         <rowConstraints>
-            <RowConstraints />
-            <RowConstraints />
-            <RowConstraints />
-            <RowConstraints />
-            <RowConstraints />
-            <RowConstraints />
-         </rowConstraints>
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Azimuth:" GridPane.halignment="RIGHT" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Twist:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+         <TextField fx:id="azimuthTextField" GridPane.columnIndex="1" />
+         <TextField fx:id="inclinationTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+         <TextField fx:id="distanceTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+         <TextField fx:id="twistTextField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+         <Slider fx:id="azimuthSlider" GridPane.columnIndex="2" />
+         <Slider fx:id="inclinationSlider" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+         <Slider fx:id="distanceSlider" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+         <Slider fx:id="twistSlider" GridPane.columnIndex="2" GridPane.rowIndex="3" />
       </GridPane>
    </TitledPane>
    <TitledPane animated="false" text="Perspective">
@@ -80,10 +61,13 @@
          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Field of view:" GridPane.halignment="RIGHT" />
          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Focal length:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Orthographic:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-         <TextField GridPane.columnIndex="1" />
-         <TextField GridPane.columnIndex="1" GridPane.rowIndex="1" />
-         <CheckBox mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+         <TextField fx:id="fOVTextField" GridPane.columnIndex="1" />
+         <TextField fx:id="focalLengthTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+         <CheckBox fx:id="orthographicCheckBox" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+         <Slider fx:id="fOVSlider" GridPane.columnIndex="2" />
+         <Slider fx:id="focalLengthSlider" GridPane.columnIndex="2" GridPane.rowIndex="1" />
          <columnConstraints>
+            <ColumnConstraints />
             <ColumnConstraints />
             <ColumnConstraints />
          </columnConstraints>
