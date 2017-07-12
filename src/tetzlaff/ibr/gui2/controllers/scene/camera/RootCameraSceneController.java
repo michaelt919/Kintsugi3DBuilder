@@ -27,7 +27,7 @@ public class RootCameraSceneController implements Initializable {
 
     private final ObservableList<CameraSetting> listOfCameras = new ObservableListWrapper<CameraSetting>(new ArrayList<CameraSetting>());
     @FXML
-    VBox settings;
+    private VBox settings;
     @FXML
     private SettingsCameraSceneController settingsController;
     @FXML
@@ -42,11 +42,23 @@ public class RootCameraSceneController implements Initializable {
 
         cameraListView.setItems(listOfCameras);
 
-        cameraListView.getSelectionModel().selectedItemProperty().addListener(
-                settingsController.getCameraSettingChangeListener()
-        );
+        cameraListView.getSelectionModel().selectedItemProperty().addListener(settingsController.getBinder());
 
-        CameraSetting freeCam = new CameraSetting("Free Camera");
+        CameraSetting freeCam = new CameraSetting(
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                90.0,
+                1.0,
+                0.0,
+                1.0,
+                1.0,
+                false,
+                true,
+                "Free Camera"
+
+        );
         listOfCameras.add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
     }
@@ -129,6 +141,7 @@ public class RootCameraSceneController implements Initializable {
         cancelRenameButton.setOnAction(finishRename);
         renameTextField.setOnAction(doRename);
 
+        renameTextField.setText(s().getSelectedItem().getName());
         renameTextField.requestFocus();
 
     }
@@ -153,23 +166,22 @@ public class RootCameraSceneController implements Initializable {
 
     @FXML
     void lockCameraButton() {
-        //TODO
-        System.out.println("TODO: camera " + s().getSelectedItem() + " locked");
+        Boolean newValue = ! s().getSelectedItem().isLocked();
+        s().getSelectedItem().setLocked(newValue);
+        settingsController.setDisabled(newValue);
+        cameraListView.refresh();
     }
 
     @FXML
     void keyframeCameraButton() {
+        //TODO
         System.out.println("TODO: keyframe added for " + s().getSelectedItem());
     }
 
     @FXML
     void deleteCameraButton() {
         int i = s().getSelectedIndex();
-        if (i != 0) {
-
-            listOfCameras.remove(i);
-
-        }
+        if (i != 0) listOfCameras.remove(i);
     }
 
 
