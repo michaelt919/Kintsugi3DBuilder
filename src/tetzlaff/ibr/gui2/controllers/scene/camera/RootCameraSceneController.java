@@ -61,6 +61,7 @@ public class RootCameraSceneController implements Initializable {
         );
         listOfCameras.add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
+
     }
 
     private SelectionModel<CameraSetting> s() {

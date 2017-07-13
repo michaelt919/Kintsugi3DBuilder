@@ -1,8 +1,10 @@
 package tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later;
 
+import javafx.beans.property.Property;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.ibr.gui2.controllers.scene.camera.CameraSetting;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 
 public class CameraModelX implements ReadonlyCameraModel {

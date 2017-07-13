@@ -54,6 +54,7 @@ public class SettingsCameraSceneController {
                 bind(newValue);
                 setDisabled(newValue.isLocked());
             }
+            if(newValue == null) setDisabled(true);
         };
     }
 
@@ -118,7 +119,8 @@ public class SettingsCameraSceneController {
 
 @FXML
 private void pressSelectPointButton(){
-    System.out.println("LOOP");
+        //TODO
+    System.out.println("TODO: point selected");
 }
 //    @FXML
 //    private TextField azimuthBox;
