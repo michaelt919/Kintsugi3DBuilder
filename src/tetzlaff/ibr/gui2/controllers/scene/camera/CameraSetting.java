@@ -248,8 +248,6 @@ public class CameraSetting implements XML_Writable{
         this.name.set(name);
     }
 
-
-
     // V keep!
     public static void main(String[] args) {
         String[] things = {

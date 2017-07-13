@@ -8,12 +8,12 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:controller="tetzlaff.ibr.gui2.controllers.scene.environment_map.RootEVSceneController" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
     <TitledPane animated="false" text="Environment maps" VBox.vgrow="ALWAYS">
         <HBox prefHeight="0.0">
-            <ListView HBox.hgrow="ALWAYS" />
+            <ListView fx:id="eVListView" HBox.hgrow="ALWAYS" />
             <Separator orientation="VERTICAL" />
-            <VBox alignment="CENTER_LEFT" spacing="5.0">
+            <VBox fx:id="listControls" alignment="CENTER_LEFT" spacing="5.0">
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="New">
                     <tooltip>
                         <Tooltip text="Create a new environment map." />
@@ -24,7 +24,7 @@
                         <Tooltip text="Save the selected environment map to the library." />
                     </tooltip>
                 </Button>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Rename" />
+                <Button fx:id="theRenameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Rename" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Move UP" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Move DOWN" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Lock/Unlock">
@@ -32,7 +32,7 @@
                         <Tooltip text="Lock the settings for the selected environment map so they cannot be changed." />
                     </tooltip>
                 </Button>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Delete">
+                <Button onAction="#deleteCameraButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Delete">
                     <tooltip>
                         <Tooltip text="Delete selected environment map." />
                     </tooltip>
@@ -40,5 +40,5 @@
             </VBox>
         </HBox>
     </TitledPane>
-    <fx:include source="SettingsEnvironmentMapScene.fxml" />
+    <fx:include fx:id="settings" source="SettingsEnvironmentMapScene.fxml" />
 </VBox>
