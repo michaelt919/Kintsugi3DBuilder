@@ -50,7 +50,7 @@ public class SettingsEVSceneController {
         };
     }
 
-    private void setDisabled(boolean value){
+    public void setDisabled(boolean value){
         root.setDisable(value);
     }
 

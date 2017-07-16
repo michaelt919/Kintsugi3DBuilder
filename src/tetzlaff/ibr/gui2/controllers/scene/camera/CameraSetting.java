@@ -5,11 +5,10 @@ import org.jdom2.Element;
 import tetzlaff.misc.XML_Writable;
 
 public class CameraSetting implements XML_Writable{
-
+    private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
     private final DoubleProperty zCenter = new SimpleDoubleProperty();
     private final DoubleProperty azimuth = new SimpleDoubleProperty();
-    private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty inclination = new SimpleDoubleProperty();
     private final DoubleProperty distance = new SimpleDoubleProperty();
     private final DoubleProperty twist = new SimpleDoubleProperty();
