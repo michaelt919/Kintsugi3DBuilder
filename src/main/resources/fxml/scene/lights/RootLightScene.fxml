@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:controller="tetzlaff.ibr.gui2.controllers.scene.lights.RootLightSceneController" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
     <TitledPane animated="false" text="Light Sets" VBox.vgrow="ALWAYS">
         <HBox prefHeight="0.0" spacing="2.0">
             <TableView HBox.hgrow="ALWAYS">
@@ -90,5 +90,5 @@
          </VBox>
         </HBox>
     </TitledPane>
-    <fx:include source="SettingsLightsScene.fxml" />
+    <fx:include source="SettingsLightScene.fxml" />
 </VBox>

@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:controller="tetzlaff.ibr.gui2.controllers.scene.lights.SettingsLightSceneController" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
     <TitledPane animated="false" expanded="false" text="Center Point">
         <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <padding>
