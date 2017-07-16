@@ -20,7 +20,7 @@
 
     <Tab text="Lights">
     <ScrollPane fitToWidth="true">
-        <fx:include source="lights/RootLightsScene.fxml"/>
+        <fx:include source="lights/RootLightScene.fxml"/>
     </ScrollPane>
 
 </Tab>

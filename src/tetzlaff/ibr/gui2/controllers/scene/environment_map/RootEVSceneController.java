@@ -34,7 +34,7 @@ public class RootEVSceneController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        if (settingsController != null) System.out.println("EV controller linked");
+        //if (settingsController != null) System.out.println("EV controller linked");
 
         eVListView.setItems(listOfEVs);
 
