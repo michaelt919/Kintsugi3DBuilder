@@ -38,7 +38,7 @@ public class RootEVSceneController implements Initializable {
 
         eVListView.setItems(listOfEVs);
 
-        s().selectedItemProperty().addListener(settingsController.changeListener());
+        s().selectedItemProperty().addListener(settingsController.changeListener);
 
         EVSetting startingMap = new EVSetting(
                 false,
@@ -59,7 +59,6 @@ public class RootEVSceneController implements Initializable {
 
         listOfEVs.add(startingMap);
         s().select(0);
-
 
     }
 

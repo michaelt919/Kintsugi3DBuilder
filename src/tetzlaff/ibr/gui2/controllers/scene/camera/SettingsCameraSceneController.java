@@ -47,16 +47,15 @@ public class SettingsCameraSceneController {
 @FXML private CheckBox orthographicCheckBox;
 
 
-    public ChangeListener<CameraSetting> getBinder(){
-        return (observable, oldValue, newValue) -> {
+
+
+    public final ChangeListener<CameraSetting> changeListener =
+            (observable, oldValue, newValue) -> {
             if(oldValue != null) unbind(oldValue);
-            if(newValue != null) {
-                bind(newValue);
-                setDisabled(newValue.isLocked());
-            }
+
+            if(newValue != null) {bind(newValue);setDisabled(newValue.isLocked());}
             if(newValue == null) setDisabled(true);
-        };
-    }
+    };
 
     public void setDisabled(Boolean disabled){
         root.setDisable(disabled);
