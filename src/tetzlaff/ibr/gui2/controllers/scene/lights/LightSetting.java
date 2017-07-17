@@ -17,6 +17,12 @@ public class LightSetting implements XML_Writable {
     private final StringProperty name = new SimpleStringProperty();
     private final Property<LightType> lightType = new SimpleObjectProperty<>();
 
+    private final BooleanProperty groopLocked;
+
+    public boolean isGroopLocked() {
+        return groopLocked.get();
+    }
+
     public LightSetting(
             Double xCenter,
             Double yCenter,
@@ -27,7 +33,8 @@ public class LightSetting implements XML_Writable {
             Double intensity,
             Boolean locked,
             String name,
-            LightType lightType
+            LightType lightType,
+            BooleanProperty groopLockedProperty
     ) {
         this.xCenter.setValue(xCenter);
         this.yCenter.setValue(yCenter);
@@ -39,6 +46,7 @@ public class LightSetting implements XML_Writable {
         this.locked.setValue(locked);
         this.name.setValue(name);
         this.lightType.setValue(lightType);
+        this.groopLocked = groopLockedProperty;
     }
 
     public LightSetting duplicate() {
@@ -52,7 +60,8 @@ public class LightSetting implements XML_Writable {
                 intensity.getValue(),
                 locked.getValue(),
                 (name.getValue() + " copy"),
-                lightType.getValue()
+                lightType.getValue(),
+                this.groopLocked
         );
     }
 
@@ -77,7 +86,7 @@ public class LightSetting implements XML_Writable {
                 ;
     }
 
-    public static LightSetting fromJDOM2Element(Element e) {
+    public static LightSetting fromJDOM2Element(Element e, BooleanProperty groupLockedProperty) {
         return new LightSetting(
                 Double.valueOf(e.getAttributeValue("xCenter")),
                 Double.valueOf(e.getAttributeValue("yCenter")),
@@ -88,7 +97,8 @@ public class LightSetting implements XML_Writable {
                 Double.valueOf(e.getAttributeValue("intensity")),
                 Boolean.valueOf(e.getAttributeValue("locked")),
                 e.getAttributeValue("name"),
-                LightType.valueOf(e.getAttributeValue("lightType"))
+                LightType.valueOf(e.getAttributeValue("lightType")),
+                groupLockedProperty
         );
     }
 

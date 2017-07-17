@@ -41,14 +41,14 @@ public class SettingsEVSceneController {
     @FXML ColorPicker evColorPicker;
     @FXML ColorPicker bpColorPicker;
 
-    public ChangeListener<EVSetting> changeListener(){
-        return (observable, oldValue, newValue) -> {
-            if(oldValue != null)unbind(oldValue);
+    public ChangeListener<EVSetting> changeListener =
+            (observable, oldValue, newValue) -> {
+                if (oldValue != null) unbind(oldValue);
 
-            if(newValue !=null)bind(newValue);
-            else setDisabled(true);
-        };
-    }
+                if (newValue != null){ bind(newValue); setDisabled(newValue.isLocked());}
+                else setDisabled(true);
+            };
+
 
     public void setDisabled(boolean value){
         root.setDisable(value);
@@ -68,7 +68,7 @@ public class SettingsEVSceneController {
         evColorPicker.valueProperty().bindBidirectional(evSetting.evColorProperty());
         bpColorPicker.valueProperty().bindBidirectional(evSetting.bpColorProperty());
 
-        setDisabled(evSetting.isLocked());
+
 
     }
 

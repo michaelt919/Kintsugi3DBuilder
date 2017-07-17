@@ -42,7 +42,7 @@ public class RootCameraSceneController implements Initializable {
 
         cameraListView.setItems(listOfCameras);
 
-        cameraListView.getSelectionModel().selectedItemProperty().addListener(settingsController.getBinder());
+        cameraListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
         CameraSetting freeCam = new CameraSetting(
                 0.0,
