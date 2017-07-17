@@ -17,7 +17,20 @@ public class CameraSetting implements XML_Writable{
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final BooleanProperty orthographic = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
-
+    /*
+    xCenter
+    yCenter
+    zCenter
+    azimuth
+    inclination
+    distance
+    twist
+    fOV
+    focalLength
+    locked
+    orthographic
+    name
+     */
     public CameraSetting(Double xCenter, Double yCenter, Double zCenter, Double azimuth, Double inclination, Double distance, Double twist, Double fOV, Double focalLength, Boolean locked, Boolean orthographic, String name) {
         this.xCenter.setValue(xCenter);
         this.yCenter.setValue(yCenter);
