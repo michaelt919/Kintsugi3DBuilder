@@ -67,15 +67,7 @@
                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
             </padding>
 
-            <ChoiceBox value="Point light">
-                <items>
-                    <FXCollections fx:factory="observableArrayList">
-                        <String fx:value="Point light" />
-                        <String fx:value="Spot light" />
-                        <String fx:value="Area light" />
-                    </FXCollections>
-                </items>
-            </ChoiceBox>
+            <ChoiceBox fx:id="theChoiceBox" />
 
             <BorderPane prefHeight="200.0" prefWidth="200.0">
                 <top>
