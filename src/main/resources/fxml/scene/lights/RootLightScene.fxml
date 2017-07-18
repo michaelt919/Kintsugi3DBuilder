@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.Tooltip?>
@@ -11,75 +9,67 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<VBox fx:controller="tetzlaff.ibr.gui2.controllers.scene.lights.RootLightSceneController"
-      xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.scene.lights.RootLightSceneController">
     <TitledPane animated="false" text="Light Sets" VBox.vgrow="ALWAYS">
         <HBox prefHeight="0.0" spacing="2.0">
-            <TableView fx:id="tableView" HBox.hgrow="ALWAYS"/>
-            <Separator orientation="VERTICAL"/>
-            <VBox fx:id="groupControls" alignment="CENTER" spacing="5.0">
-                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Set"/>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="New">
+            <TableView fx:id="tableView" prefWidth="230.0" />
+            <Separator orientation="VERTICAL" />
+            <VBox fx:id="groupControls" alignment="CENTER" spacing="5.0" HBox.hgrow="ALWAYS">
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Group" />
+                <Button onAction="#newGroup" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="New">
                     <tooltip>
-                        <Tooltip text="Create a new light set."/>
+                        <Tooltip text="Create a new light set." />
                     </tooltip>
                 </Button>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Save">
+                <Button onAction="#saveGroup" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Save">
                     <tooltip>
-                        <Tooltip text="Save the selected camera to the library."/>
+                        <Tooltip text="Save the selected camera to the library." />
                     </tooltip>
                 </Button>
-                <Button fx:id="theRenameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Rename"/>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Move UP"/>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Move DOWN"/>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Lock/Unlock">
+                <Button onAction="#renameGroup" fx:id="theRenameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Rename" />
+                <Button onAction="#moveUPGroup" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Move UP" />
+                <Button onAction="#moveDOWNGroup" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Move DOWN" />
+                <Button onAction="#lockGroup" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Lock/Unlock">
                     <tooltip>
-                        <Tooltip text="Lock the settings for the selected light set so they cannot be changed."/>
+                        <Tooltip text="Lock the settings for the selected light set so they cannot be changed." />
                     </tooltip>
                 </Button>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Keyframe">
+                <Button onAction="#keyframeGroup" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Keyframe">
                     <tooltip>
-                        <Tooltip text="Add the selected light set as a keyframe (for animation)."/>
+                        <Tooltip text="Add the selected light set as a keyframe (for animation)." />
                     </tooltip>
                 </Button>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Delete">
+                <Button onAction="#deleteGroup" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Delete">
                     <tooltip>
-                        <Tooltip text="Delete selected light set."/>
+                        <Tooltip text="Delete selected light set." />
                     </tooltip>
                 </Button>
             </VBox>
-            <Separator orientation="VERTICAL" prefHeight="200.0"/>
-            <VBox fx:id="lightControls" alignment="TOP_CENTER" spacing="5.0">
-                <children>
-                    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Light"/>
-                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="New">
-                        <tooltip>
-                            <Tooltip text="Create a new light with default settings."/>
-                        </tooltip>
-                    </Button>
-                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Save">
-                        <tooltip>
-                            <Tooltip text="Save the selected light to the library."/>
-                        </tooltip>
-                    </Button>
-                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Duplicate">
-                        <tooltip>
-                            <Tooltip text="Duplicate the selected light."/>
-                        </tooltip>
-                    </Button>
-                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Lock/Unlock">
-                        <tooltip>
-                            <Tooltip text="Lock the settings for the selected light so they cannot be changed."/>
-                        </tooltip>
-                    </Button>
-                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Delete">
-                        <tooltip>
-                            <Tooltip text="Delete selected light."/>
-                        </tooltip>
-                    </Button>
-                </children>
+            <Separator orientation="VERTICAL" prefHeight="200.0" />
+            <VBox fx:id="lightControls" alignment="TOP_CENTER" spacing="5.0" HBox.hgrow="ALWAYS">
+                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Light"/>
+                <Button onAction="#newLight" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="New">
+                    <tooltip>
+                        <Tooltip text="Create a new light with default settings."/>
+                    </tooltip>
+                </Button>
+                <Button onAction="#saveLight" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Save">
+                    <tooltip>
+                        <Tooltip text="Save the selected light to the library."/>
+                    </tooltip>
+                </Button>
+<Button onAction="#lockLight" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Lock/Unlock">
+                    <tooltip>
+                        <Tooltip text="Lock the settings for the selected light so they cannot be changed."/>
+                    </tooltip>
+                </Button>
+                <Button onAction="#deleteLight" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Delete">
+                    <tooltip>
+                        <Tooltip text="Delete selected light."/>
+                    </tooltip>
+                </Button>
             </VBox>
         </HBox>
     </TitledPane>
-    <fx:include fx:id="settings" source="SettingsLightScene.fxml"/>
+    <fx:include fx:id="settings" source="SettingsLightScene.fxml" />
 </VBox>
