@@ -1,67 +1,86 @@
 package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+
+import com.sun.javafx.collections.ObservableListWrapper;
+import javafx.beans.property.*;
+import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class LightGroupSetting {
-    private final static int L =4; //max number of lights
+    public final static int LIGHT_LIMIT = 4;
+
+    private final ListProperty<LightSetting> lightList = new SimpleListProperty<>(
+            new ObservableListWrapper<LightSetting>(
+                    new ArrayList<>(LIGHT_LIMIT)
+            )
+    );
+
+    private final BooleanProperty locked = new SimpleBooleanProperty(false);
+
     private final StringProperty name = new SimpleStringProperty();
-    private final BooleanProperty groupLocked = new SimpleBooleanProperty();
-    private final ArrayList<LightSetting> lights = new ArrayList<>(L);
 
-
-
-    public LightSetting getLight(int index){
-        assert index < lights.size() : "try'd to get a light that doesn't exist yet!\n index:" + index
-                + " nLights:" + lights.size() + " groopName:" + name.getValue();
-        return lights.get(index);
+    public LightGroupSetting(String name) {
+        this.name.setValue(name);
     }
 
-    public void addLight(int duplicateFromIndex){
-        //If this is the first light added, we will create it with default settings
-        //Otherwise, we will duplicate the previous light.
-        //we will also prevent creating too many lights here.
-        LightSetting newLight;
-        if(lights.size() == 0){
-            newLight = new LightSetting(
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    90.0,
-                    1.0,
-                    0.0,
-                    false,
-                    ("L1"),
-                    LightType.PointLight,
-                    groupLocked
+    public void addLight(){
+        if(lightList.size() < LIGHT_LIMIT){
+            lightList.add(
+                    new LightSetting(
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                            90.0,
+                            1.0,
+                            1.0,
+                            false,
+                            ("L" + lightList.size()),
+                            LightType.PointLight,
+                            locked
+                    )
             );
         }
-        else if(lights.size() < L && duplicateFromIndex < lights.size()){
-            newLight = lights.get(duplicateFromIndex).duplicate();
-        }
-        else if(lights.size() < L){
-            newLight = lights.get(lights.size()-1).duplicate();
-        }
-        else return;//do nothing (since nLights=L)
-
-        assert newLight != null;
-
-        lights.add(newLight);
     }
 
-    public void removeLight(int removeFromIndex){
-        if(lights.size() == 0) return;
-        else if (removeFromIndex < lights.size()){
-           lights.remove(removeFromIndex);
-        } else {
-            lights.remove(lights.size()-1);
+    public void addLight(int index){
+        if(lightList.size() < LIGHT_LIMIT){
+            if(index < lightList.size()) lightList.add(lightList.get(index).duplicate());
+            else addLight();
         }
+    }
+
+    public void removeLight(){
+        if(lightList.size() > 0) lightList.remove(lightList.size() -1);
+    }
+
+    public void removeLight(int index){
+        if(lightList.size() > 0){
+            if(index<lightList.size()) lightList.remove(index);
+            else removeLight();
+        }
+    }
+
+
+    public ObservableList<LightSetting> getLightList() {
+        return lightList.get();
+    }
+
+    public ListProperty<LightSetting> lightListProperty() {
+        return lightList;
+    }
+
+    public boolean isLocked() {
+        return locked.get();
+    }
+
+    public BooleanProperty lockedProperty() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked.set(locked);
     }
 
     public String getName() {
@@ -74,17 +93,5 @@ public class LightGroupSetting {
 
     public void setName(String name) {
         this.name.set(name);
-    }
-
-    public boolean isGroupLocked() {
-        return groupLocked.get();
-    }
-
-    public BooleanProperty groupLockedProperty() {
-        return groupLocked;
-    }
-
-    public void setGroupLocked(boolean groupLocked) {
-        this.groupLocked.set(groupLocked);
     }
 }
