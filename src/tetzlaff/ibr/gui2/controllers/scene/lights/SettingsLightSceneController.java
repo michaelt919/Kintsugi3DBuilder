@@ -4,15 +4,23 @@ package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/20
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 
+import java.net.URL;
 import java.text.NumberFormat;
+import java.util.ResourceBundle;
 
-public class SettingsLightSceneController{
+public class SettingsLightSceneController implements Initializable{
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        setDisabled(true);
+    }
+
     @FXML private VBox root;
     @FXML private TextField xCenterTextField;
     @FXML private TextField yCenterTextField;
@@ -34,9 +42,10 @@ public class SettingsLightSceneController{
     public final ChangeListener<LightSetting> changeListener = (observable, oldValue, newValue) -> {
         if(oldValue != null) unbind(oldValue);
 
-        if(newValue != null){ bind(newValue); setDisabled(newValue.isLocked()); }
+        if(newValue != null){ bind(newValue); setDisabled(newValue.isLocked() | newValue.getGroupLocked()); }
         else setDisabled(true);
     };
+
 
     public void setDisabled(Boolean disabled){
         root.setDisable(disabled);

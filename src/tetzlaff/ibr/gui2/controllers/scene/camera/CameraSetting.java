@@ -17,6 +17,10 @@ public class CameraSetting implements XML_Writable{
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final BooleanProperty orthographic = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
+
+
+
+
     /*
     xCenter
     yCenter

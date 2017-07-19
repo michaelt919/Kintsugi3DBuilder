@@ -144,7 +144,7 @@ public class RootCameraSceneController implements Initializable {
 
         renameTextField.setText(s().getSelectedItem().getName());
         renameTextField.requestFocus();
-
+        renameTextField.selectAll();
     }
 
     @FXML

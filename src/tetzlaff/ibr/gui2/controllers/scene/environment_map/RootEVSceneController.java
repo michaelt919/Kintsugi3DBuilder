@@ -89,9 +89,10 @@ public class RootEVSceneController implements Initializable {
         listControls.getChildren().iterator().forEachRemaining(n -> {
             n.setDisable(true);
         });
-        theRenameButton.setDisable(false);
-
         settings.setDisable(true);
+
+
+        theRenameButton.setDisable(false);
 
         int renameIndex = listControls.getChildren().indexOf(theRenameButton);
 
@@ -108,7 +109,7 @@ public class RootEVSceneController implements Initializable {
         cancelRenameButton.setMaxWidth(Double.MAX_VALUE);
 
         //set up to event handlers, one to return the controls back to their original state,
-        //and the other to actually perform the rename
+        // and the other to actually perform the rename
         EventHandler<ActionEvent> finishRename = new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -144,6 +145,7 @@ public class RootEVSceneController implements Initializable {
 
         renameTextField.setText(s().getSelectedItem().getName());
         renameTextField.requestFocus();
+        renameTextField.selectAll();
 
     }
 
