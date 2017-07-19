@@ -10,10 +10,13 @@ layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec4 shadingInfo;
 layout(location = 2) out vec4 projTexCoord;
 
+
 #include "colorappearance_single.glsl"
 #include "imgspace_single.glsl"
 
-#line 17 1010
+#line 18 1010
+
+uniform bool lightIntensityCompensation;
 
 void main()
 {
@@ -37,19 +40,24 @@ void main()
 				discard;
 			}
 		}
-			
-        fragColor = vec4(texture(viewImage, projTexCoord.xy).rgb, 1.0);
 	
 		vec3 view = normalize(getViewVector());
 		vec3 lightPreNormalized = getLightVector();
-		// vec3 attenuatedLightIntensity = // infiniteLightSources ? lightIntensity : 
-			// lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
+		vec3 attenuatedLightIntensity = //infiniteLightSources ? lightIntensity : 
+			lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
 		vec3 light = normalize(lightPreNormalized);
 		vec3 halfway = normalize(light + view);
 		vec3 normal = normalize(fNormal);
 		shadingInfo = vec4(dot(normal, light), dot(normal, view), dot(normal, halfway), 
 			dot(halfway, view));
-		
-		// fragColor = vec4(pow(getLinearColor().rgb / attenuatedLightIntensity, vec3(1.0 / gamma)), 1.0);
+			
+		if (lightIntensityCompensation)
+		{
+			fragColor = vec4(pow(getLinearColor().rgb / attenuatedLightIntensity, vec3(1.0 / gamma)), 1.0);
+		}
+		else
+		{
+			fragColor = vec4(texture(viewImage, projTexCoord.xy).rgb, 1.0);
+		}
 	}
 }
