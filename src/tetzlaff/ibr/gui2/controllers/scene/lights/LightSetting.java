@@ -48,7 +48,7 @@ public class LightSetting implements XML_Writable{
         this.distance.setValue(distance);
         this.intensity.setValue(intensity);
         this.locked.setValue(locked);
-        this.name.setValue("X");
+        this.name.setValue(name);
         this.lightType.setValue(lightType);
         this.groupLocked = groopLockedProperty;
     }
@@ -63,7 +63,7 @@ public class LightSetting implements XML_Writable{
                 distance.getValue(),
                 intensity.getValue(),
                 locked.getValue(),
-                (name.getValue() + " copy"),
+                name.getValue(),
                 lightType.getValue(),
                 this.groupLocked
         );
