@@ -2,6 +2,7 @@ package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/20
 
 import javafx.beans.property.*;
 import javafx.fxml.Initializable;
+import javafx.scene.paint.Color;
 import org.jdom2.Element;
 import tetzlaff.misc.XML_Writable;
 
@@ -20,6 +21,7 @@ public class LightSetting implements XML_Writable{
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
     private final Property<LightType> lightType = new SimpleObjectProperty<>();
+    private final Property<Color> color = new SimpleObjectProperty<>();
 
     private final BooleanProperty groupLocked;
 
@@ -38,7 +40,8 @@ public class LightSetting implements XML_Writable{
             Boolean locked,
             String name,
             LightType lightType,
-            BooleanProperty groopLockedProperty
+            Color color,
+            BooleanProperty groupLockedProperty
     ) {
         this.xCenter.setValue(xCenter);
         this.yCenter.setValue(yCenter);
@@ -50,7 +53,8 @@ public class LightSetting implements XML_Writable{
         this.locked.setValue(locked);
         this.name.setValue(name);
         this.lightType.setValue(lightType);
-        this.groupLocked = groopLockedProperty;
+        this.color.setValue(color);
+        this.groupLocked = groupLockedProperty;
     }
 
     public LightSetting duplicate() {
@@ -65,6 +69,7 @@ public class LightSetting implements XML_Writable{
                 locked.getValue(),
                 name.getValue(),
                 lightType.getValue(),
+                color.getValue(),
                 this.groupLocked
         );
     }
@@ -87,6 +92,7 @@ public class LightSetting implements XML_Writable{
                 .setAttribute("locked", locked.getValue().toString())
                 .setAttribute("name", name.getValue())
                 .setAttribute("lightType", lightType.getValue().toString())
+                .setAttribute("color", color.getValue().toString())
                 ;
     }
 
@@ -102,6 +108,7 @@ public class LightSetting implements XML_Writable{
                 Boolean.valueOf(e.getAttributeValue("locked")),
                 e.getAttributeValue("name"),
                 LightType.valueOf(e.getAttributeValue("lightType")),
+                Color.valueOf(e.getAttributeValue("color")),
                 groupLockedProperty
         );
     }
@@ -224,5 +231,17 @@ public class LightSetting implements XML_Writable{
 
     public void setLightType(LightType lightType) {
         this.lightType.setValue(lightType);
+    }
+
+    public Color getColor() {
+        return color.getValue();
+    }
+
+    public Property<Color> colorProperty() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color.setValue(color);
     }
 }
