@@ -1,11 +1,15 @@
 package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
 import javafx.beans.property.*;
-import javafx.scene.paint.Color;
+import javafx.fxml.Initializable;
 import org.jdom2.Element;
 import tetzlaff.misc.XML_Writable;
 
-public class LightSetting implements XML_Writable {
+import java.net.URL;
+import java.util.ResourceBundle;
+
+public class LightSetting implements XML_Writable{
+
     private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
     private final DoubleProperty zCenter = new SimpleDoubleProperty();
@@ -17,10 +21,10 @@ public class LightSetting implements XML_Writable {
     private final StringProperty name = new SimpleStringProperty();
     private final Property<LightType> lightType = new SimpleObjectProperty<>();
 
-    private final BooleanProperty groopLocked;
+    private final BooleanProperty groupLocked;
 
-    public boolean isGroopLocked() {
-        return groopLocked.get();
+    public boolean getGroupLocked() {
+        return groupLocked.get();
     }
 
     public LightSetting(
@@ -44,9 +48,9 @@ public class LightSetting implements XML_Writable {
         this.distance.setValue(distance);
         this.intensity.setValue(intensity);
         this.locked.setValue(locked);
-        this.name.setValue(name);
+        this.name.setValue("X");
         this.lightType.setValue(lightType);
-        this.groopLocked = groopLockedProperty;
+        this.groupLocked = groopLockedProperty;
     }
 
     public LightSetting duplicate() {
@@ -61,7 +65,7 @@ public class LightSetting implements XML_Writable {
                 locked.getValue(),
                 (name.getValue() + " copy"),
                 lightType.getValue(),
-                this.groopLocked
+                this.groupLocked
         );
     }
 

@@ -46,7 +46,7 @@ public class LightGroupSetting {
 
     public void addLight(int index){
         if(lightList.size() < LIGHT_LIMIT){
-            if(index < lightList.size()) lightList.add(lightList.get(index).duplicate());
+            if(index>=0 && index < lightList.size()) lightList.add(lightList.get(index).duplicate());
             else addLight();
         }
     }
@@ -57,7 +57,7 @@ public class LightGroupSetting {
 
     public void removeLight(int index){
         if(lightList.size() > 0){
-            if(index<lightList.size()) lightList.remove(index);
+            if(index>=0 && index<lightList.size()) lightList.remove(index);
             else removeLight();
         }
     }
