@@ -174,32 +174,28 @@ public class RootLightSceneController implements Initializable {
 
         //set up to event handlers, one to return the controls back to their original state,
         //and the other to actually perform the rename
-        EventHandler<ActionEvent> finishRename = new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                groupControls.getChildren().removeAll(renameTextField, cancelRenameButton);
-                theRenameButton.setOnAction(oldOnAction);
+        EventHandler<ActionEvent> finishRename = event -> {
+            groupControls.getChildren().removeAll(renameTextField, cancelRenameButton);
+            theRenameButton.setOnAction(oldOnAction);
 
-                groupControls.getChildren().iterator().forEachRemaining(n -> {
-                    n.setDisable(false);
-                });
+            groupControls.getChildren().iterator().forEachRemaining(n -> n.setDisable(false));
+
+            lightControls.getChildren().iterator().forEachRemaining(n -> n.setDisable(false));
 
 //                tableView.refresh();
 
-                settings.setDisable(false);
-            }
+            settings.setDisable(false);
+
+            tableView.refresh();
         };
 
-        EventHandler<ActionEvent> doRename = new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                String newName = renameTextField.getText();
-                if (!newName.equals("")) {
-                    tableView.getSelectionModel().getSelectedItem().setName(newName);
-                }
-
-                finishRename.handle(event);
+        EventHandler<ActionEvent> doRename = event -> {
+            String newName = renameTextField.getText();
+            if (!newName.equals("")) {
+                tableView.getSelectionModel().getSelectedItem().setName(newName);
             }
+
+            finishRename.handle(event);
         };
 
 
@@ -244,8 +240,8 @@ public class RootLightSceneController implements Initializable {
         System.out.println("TODO saveLight");//TODO
     }
     @FXML private void lockLight(){
-        boolean newValue = !selectedLight.getValue().isLocked();
         if(selectedLight.getValue() != null) {
+            boolean newValue = !selectedLight.getValue().isLocked();
             selectedLight.getValue().setLocked(newValue);
             settingsController.setDisabled(newValue | selectedLight.getValue().getGroupLocked());
             if(newValue)selectedLight.getValue().setName("(X)");

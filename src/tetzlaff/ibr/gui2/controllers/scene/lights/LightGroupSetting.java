@@ -36,7 +36,7 @@ public class LightGroupSetting {
                             1.0,
                             1.0,
                             false,
-                            ("L" + lightList.size()),
+                            "X",
                             LightType.PointLight,
                             locked
                     )
