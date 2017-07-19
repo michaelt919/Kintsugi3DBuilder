@@ -61,11 +61,13 @@ public class GuiApp extends Application implements Runnable{
         primaryStage.setTitle(PassedParameters.get().getName());
         Parent root = FXMLLoader.load(please_dont_be_null);
         primaryStage.setScene(new Scene( root,
-                1200, 800
+                400, 400
         ));
 
         //TODO stop the gui opening before the render window
 
+        primaryStage.setX(-7.0);
+        primaryStage.setY(-1.0);
         primaryStage.show();
 
 

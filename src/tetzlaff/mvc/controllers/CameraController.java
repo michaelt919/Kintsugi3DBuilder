@@ -6,5 +6,5 @@ import tetzlaff.mvc.models.ReadonlyCameraModel;
 public interface CameraController 
 {
 	void addAsWindowListener(Window<?> window);
-	ReadonlyCameraModel getModel();
+	ReadonlyCameraModel getCameraModel();
 }

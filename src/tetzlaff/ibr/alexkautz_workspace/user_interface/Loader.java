@@ -14,10 +14,11 @@ import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
 import tetzlaff.ibr.util.IBRRequestQueue;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
+import java.util.stream.Stream;
 
 public class Loader implements Initializable{
 
@@ -162,6 +163,70 @@ public class Loader implements Initializable{
     private Stage getStage(){
         if(thisStage == null) thisStage = (Stage) root.getScene().getWindow();
         return thisStage;
+    }
+
+
+
+    private final String quickFilename = "quickSaveLoadConfig.txt";
+
+    @FXML private void quickSave(){
+        if ((cameraFile != null) & (objFile != null) & (photoDir != null)) {
+            System.out.println("Quick save");
+
+            try(BufferedWriter bw = new BufferedWriter(new FileWriter(quickFilename))){
+
+                String toWrite =
+                                cameraFile.getPath()
+                        + "\n" +
+                                objFile.getPath()
+                        + "\n" +
+                                photoDir.getPath()
+                        ;
+
+                bw.write(toWrite);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    @FXML private void quickLoad(){
+        System.out.println("Quick load");
+
+        try(BufferedReader br = new BufferedReader(new FileReader(quickFilename))){
+
+            Stream<String> lineStream = br.lines();
+
+            String[] lineArray = lineStream.toArray(String[]::new);
+
+            File newCam = new File(lineArray[0]);
+            File newObj = new File(lineArray[1]);
+            File newPhoto = new File(lineArray[2]);
+
+            if((newCam != null) & (newObj != null) & (newPhoto != null)){
+                System.out.println("Loaded");
+                cameraFile = newCam;
+                objFile = newObj;
+                photoDir = newPhoto;
+
+                setHomeDir(cameraFile);
+                loadCheckCameras.setText("Loaded");
+                loadCheckCameras.setFill(Paint.valueOf("Green"));
+                loadCheckObj.setText("Loaded");
+                loadCheckObj.setFill(Paint.valueOf("Green"));
+                loadCheckImages.setText("Loaded");
+                loadCheckImages.setFill(Paint.valueOf("Green"));
+            }else {
+                System.out.println("failed");
+            }
+
+        } catch (FileNotFoundException e) {
+            System.out.println("Can't find the file (but that's ok)");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

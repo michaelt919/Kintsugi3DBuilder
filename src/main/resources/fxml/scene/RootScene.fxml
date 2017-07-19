@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+
+<TabPane fx:controller="tetzlaff.ibr.gui2.controllers.scene.RootSceneController" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+
+    <Tab text="Camera">
+        <ScrollPane fitToWidth="true">
+            <fx:include source="camera/RootCameraScene.fxml"/>
+        </ScrollPane>
+    </Tab>
+
+    <Tab text="Environment map">
+        <ScrollPane fitToWidth="true">
+            <fx:include source="environment_map/RootEnvironmentMapScene.fxml"/>
+        </ScrollPane>
+    </Tab>
+
+    <Tab text="Lights">
+    <ScrollPane fitToWidth="true">
+        <fx:include source="lights/RootLightScene.fxml"/>
+    </ScrollPane>
+
+</Tab>
+</TabPane>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<VBox fx:id="root" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.scene.lights.SettingsLightSceneController">
+    <TitledPane animated="false" text="Center Point">
+        <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+            <padding>
+                <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+            </padding>
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="X:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" />
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Y:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Z:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+            <TextField GridPane.columnIndex="2" fx:id="xCenterTextField" />
+            <TextField fx:id="yCenterTextField" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+            <TextField fx:id="zCenterTextField" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+            <Button mnemonicParsing="false" text="Select point" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="3"/>
+         <Slider fx:id="xCenterSlider" GridPane.columnIndex="3" />
+         <Slider fx:id="yCenterSlider" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+         <Slider fx:id="zCenterSlider" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+        </GridPane>
+    </TitledPane>
+    <TitledPane animated="false" text="Dolly">
+        <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+            <padding>
+                <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+            </padding>
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Azimuth:" GridPane.halignment="RIGHT" />
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+            <TextField fx:id="azimuthTextField" GridPane.columnIndex="1" />
+            <TextField fx:id="inclinationTextField"  GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <TextField fx:id="distanceTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+         <Slider fx:id="azimuthSlider" GridPane.columnIndex="2" />
+         <Slider fx:id="inclinationSlider" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+         <Slider fx:id="distanceSlider" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+        </GridPane>
+    </TitledPane>
+    <TitledPane animated="false" text="Properties">
+        <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
+            <padding>
+                <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+            </padding>
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Intensity:" GridPane.halignment="RIGHT" />
+            <TextField fx:id="intensityTextField" GridPane.columnIndex="1" />
+            <Slider fx:id="intensitySlider" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Color:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+            <ColorPicker fx:id="colorPicker" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        </GridPane>
+    </TitledPane>
+    <TitledPane animated="false" text="Type">
+        <VBox spacing="15.0">
+            <padding>
+                <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+            </padding>
+            <ChoiceBox fx:id="lightTypeChoiceBox" />
+            <BorderPane prefHeight="200.0" prefWidth="200.0">
+                <top>
+                    <Separator prefWidth="200.0" BorderPane.alignment="CENTER" />
+                </top>
+                <bottom>
+                    <Separator prefWidth="200.0" BorderPane.alignment="CENTER" />
+                </bottom>
+                <left>
+                    <Separator orientation="VERTICAL" prefHeight="200.0" BorderPane.alignment="CENTER" />
+                </left>
+                <right>
+                    <Separator orientation="VERTICAL" prefHeight="200.0" BorderPane.alignment="CENTER" />
+                </right>
+            </BorderPane>
+        </VBox>
+    </TitledPane>
+</VBox>

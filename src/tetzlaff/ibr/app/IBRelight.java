@@ -181,7 +181,7 @@ public class IBRelight
 	        
 	        TrackballLightController lightController = new TrackballLightController();
 	        lightController.addAsWindowListener(window);
-	    	metaLightModel.normalLightModel = lightController.getModel();
+	    	metaLightModel.normalLightModel = lightController.getLightModel();
 	        
 	    	CameraModel fpCameraModel = new BasicCameraModel();
 	    	
@@ -256,25 +256,25 @@ public class IBRelight
 	        	}
 	        });
 	        
-	        window.addMouseButtonPressListener((win, buttonIndex, mods) ->
-	        {
-	        	try
-	        	{
-		        	if (win == window && model.getSelectedItem() != null)
-		        	{
-		        		CursorPosition pos = window.getCursorPosition();
-		        		WindowSize size = window.getWindowSize();
-		        		double x = pos.x / size.width;
-		        		double y = pos.y / size.height;
-		        		
-		        		System.out.println(model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y));
-		        	}
-	        	}
-	        	catch (Exception e)
-	        	{
-	        		e.printStackTrace();
-	        	}
-	        });
+//	        window.addMouseButtonPressListener((win, buttonIndex, mods) ->
+//	        {
+//	        	try
+//	        	{
+//		        	if (win == window && model.getSelectedItem() != null)
+//		        	{
+//		        		CursorPosition pos = window.getCursorPosition();
+//		        		WindowSize size = window.getWindowSize();
+//		        		double x = pos.x / size.width;
+//		        		double y = pos.y / size.height;
+//
+//		        		System.out.println(model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y));
+//		        	}
+//	        	}
+//	        	catch (Exception e)
+//	        	{
+//	        		e.printStackTrace();
+//	        	}
+//	        });
 	
 	    	// Create a new application to run our event loop and give it the GLFWWindow for polling
 	    	// of events and the OpenGL context.  The ULFRendererList provides the renderable.
@@ -332,7 +332,7 @@ public class IBRelight
 	        
 	        // Create a user interface that examines the ULFRendererList for renderer settings and
 	        // selecting between different loaded models.
-	        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getModel(), (request) -> requestQueue.addRequest(request), window.isHighDPI());
+	        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getLightModel(), (request) -> requestQueue.addRequest(request), window.isHighDPI());
 	        gui.showGUI();        
 	        //app.addPollable(gui); // Needed for Qt UI
 	        
