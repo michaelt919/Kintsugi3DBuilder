@@ -1,20 +1,24 @@
 package tetzlaff.ibr.alexkautz_workspace.mount_olympus;
 
-import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.ibr.IBRRenderableListModel;
-import tetzlaff.ibr.util.IBRRequestQueue;
+import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.GlobalController;
 
 public class RenderPerams {
 
-    private IBRRequestQueue<OpenGLContext> requestQueue;
-
     private final IBRRenderableListModel model;
 
-    public RenderPerams(IBRRenderableListModel model) {
+    private final GlobalController globalController;
+
+    public RenderPerams(IBRRenderableListModel model, GlobalController globalController) {
         this.model = model;
+        this.globalController = globalController;
     }
 
     public IBRRenderableListModel getModel() {
         return model;
+    }
+
+    public GlobalController getGlobalController() {
+        return globalController;
     }
 }

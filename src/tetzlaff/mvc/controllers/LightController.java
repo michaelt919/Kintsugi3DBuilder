@@ -6,5 +6,5 @@ import tetzlaff.mvc.models.ReadonlyLightModel;
 public interface LightController 
 {
 	void addAsWindowListener(Window<?> window);
-	ReadonlyLightModel getModel();
+	ReadonlyLightModel getLightModel();
 }
