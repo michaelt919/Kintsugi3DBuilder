@@ -36,7 +36,7 @@ public class SettingsLightSceneController implements Initializable{
     @FXML private Slider distanceSlider;
     @FXML private TextField intensityTextField;
     @FXML private Slider intensitySlider;
-    @FXML private ColorPicker colorPicker; //TODO add the color to LightSetting
+    @FXML private ColorPicker colorPicker;
     @FXML private ChoiceBox<LightType> lightTypeChoiceBox;
 
     public final ChangeListener<LightSetting> changeListener = (observable, oldValue, newValue) -> {
@@ -71,6 +71,8 @@ public class SettingsLightSceneController implements Initializable{
         intensitySlider.valueProperty().bindBidirectional(c.intensityProperty());
         lightTypeChoiceBox.valueProperty().bindBidirectional(c.lightTypeProperty());
 
+        colorPicker.valueProperty().bindBidirectional(c.colorProperty());
+
     }
 
     private void unbind(LightSetting c){
@@ -90,6 +92,7 @@ public class SettingsLightSceneController implements Initializable{
         distanceSlider.valueProperty().unbindBidirectional(c.distanceProperty());
         intensitySlider.valueProperty().unbindBidirectional(c.intensityProperty());
         lightTypeChoiceBox.valueProperty().unbindBidirectional(c.lightTypeProperty());
+        colorPicker.valueProperty().unbindBidirectional(c.colorProperty());
 
     }
 }

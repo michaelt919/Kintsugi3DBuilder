@@ -19,8 +19,8 @@
     <TitledPane text="Environment map" animated="false">
         <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <CheckBox fx:id="evUseImageCheckBox" text="Use image" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
-            <Text text="Filename" textAlignment="CENTER" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
-            <Button text="Choose file" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+            <Text fx:id="evFileNameText" text="Filename" textAlignment="CENTER" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+            <Button onAction="#pickEVImageFile" text="Choose file" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
             <Separator GridPane.columnSpan="2" GridPane.rowIndex="3" />
             <Text text="Color:" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
             <ColorPicker fx:id="evColorPicker" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
@@ -30,14 +30,9 @@
             <TextField fx:id="evRotationTextField" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="8" />
             <Slider fx:id="evColorIntensitySlider" GridPane.columnSpan="2" GridPane.rowIndex="7" />
             <Slider fx:id="evRotationSlider" GridPane.columnSpan="2" GridPane.rowIndex="9" />
-         <AnchorPane prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-            <children>
-               <ImageView fitHeight="100.0" fitWidth="200.0" pickOnBounds="true" smooth="false">
-                  <image>
-                     <Image url="file:/C:/Users/alexk/Pictures/Screenshots/Screenshot%20(11).png" />
-                  </image>
-               </ImageView>
-            </children></AnchorPane>
+            <AnchorPane prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                <ImageView fx:id="evImageView" fitHeight="100.0" fitWidth="200.0" pickOnBounds="true" smooth="false"/>
+            </AnchorPane>
          <CheckBox fx:id="evUseColorCheckBox" mnemonicParsing="false" text="Use color" GridPane.rowIndex="4" />
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
@@ -52,20 +47,15 @@
             </padding>
             <children>
                <CheckBox fx:id="bpUseImageCheckBox" text="Use image" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
-               <Text text="Filename" textAlignment="CENTER" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
-               <Button text="Choose file" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+               <Text fx:id="bpFileNameText" text="Filename" textAlignment="CENTER" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
+               <Button onAction="#pickBPImageFile" text="Choose file" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
                <Separator GridPane.columnSpan="2" GridPane.rowIndex="3" />
                <Text text="Color:" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
                <ColorPicker fx:id="bpColorPicker" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
-               <AnchorPane prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                  <children>
-                     <ImageView fitHeight="100.0" fitWidth="200.0" pickOnBounds="true" smooth="false">
-                        <image>
-                           <Image url="file:/C:/Users/alexk/Pictures/Screenshots/Screenshot%20(4).png" />
-                        </image>
-                     </ImageView>
-                  </children>
-               </AnchorPane>
+                <AnchorPane prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <ImageView fx:id="bpImageView" fitHeight="100.0" fitWidth="200.0" pickOnBounds="true"
+                               smooth="false"/>
+                </AnchorPane>
                <CheckBox fx:id="bpUseColorCheckBox" mnemonicParsing="false" text="Use color" GridPane.rowIndex="4" />
             </children>
          </GridPane>

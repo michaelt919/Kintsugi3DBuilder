@@ -4,6 +4,7 @@ package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/20
 import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
+import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 
@@ -38,6 +39,7 @@ public class LightGroupSetting {
                             false,
                             "X",
                             LightType.PointLight,
+                            Color.WHITE,
                             locked
                     )
             );
