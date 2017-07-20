@@ -1,4 +1,4 @@
-package tetzlaff.ibr.alexkautz_workspace;
+package tetzlaff.ibr.app2;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,13 +16,13 @@ import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.WindowSize;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.RenderPerams;
 import tetzlaff.ibr.alexkautz_workspace.render.TrackballLightController2;
 import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.*;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
+import tetzlaff.ibr.rendering2.CameraModelX;
+import tetzlaff.ibr.rendering2.LightModelX;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;

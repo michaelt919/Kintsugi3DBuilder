@@ -5,6 +5,8 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;
+import tetzlaff.ibr.rendering2.CameraModelX;
+import tetzlaff.ibr.rendering2.LightModelX;
 import tetzlaff.mvc.controllers.CameraController;
 import tetzlaff.mvc.controllers.LightController;
 import tetzlaff.mvc.models.ReadonlyCameraModel;

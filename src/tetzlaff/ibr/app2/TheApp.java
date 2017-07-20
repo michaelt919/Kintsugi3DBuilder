@@ -1,15 +1,14 @@
-package tetzlaff.ibr.alexkautz_workspace.mount_olympus;
+package tetzlaff.ibr.app2;
 
-import tetzlaff.ibr.alexkautz_workspace.IBRelight2;
+import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
+import tetzlaff.ibr.app2.IBRelight2;
 import tetzlaff.ibr.alexkautz_workspace.user_interface.GuiApp;
 
-public class RunMe {
-    public static void main(String[] args) {
-        System.out.println("Alex Kautz");
-        System.out.println("Start Main");
+public class TheApp {
 
-        System.out.println("Initlising Paramiters");
-        PassedParameters.init(null, "Hello World");
+    public static void main(String[] args) {
+
+        System.out.println("Creating Models");
 
         System.out.println("Starting JavaFX UI");
         startJavaFXUI();
@@ -17,7 +16,10 @@ public class RunMe {
         System.out.println("Starting Render Window");
         startRenderWindow();
 
-        System.out.println("End Main");
+    }
+
+    private static void createModels(){
+
     }
 
     private static void startJavaFXUI(){

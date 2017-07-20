@@ -1,6 +1,7 @@
-package tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later;
+package tetzlaff.ibr.rendering2;
 
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibr.rendering2.CameraModelX;
 
 public class PointLightModelX extends CameraModelX {
 
