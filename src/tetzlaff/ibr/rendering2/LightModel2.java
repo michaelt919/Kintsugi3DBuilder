@@ -12,7 +12,7 @@ public class LightModel2 implements ReadonlyLightModel {
         lights = new ArrayList<PointLightModel2>();
         for (int i = 0; i < startingNumLights; i++) addLight();
 
-        ambientLightColor = new Vector3(0f,0f,0f);
+        ambientLightColor = new Vector3(0.5f,0.5f,0.5f);
     }
 
     private final ArrayList<PointLightModel2> lights;

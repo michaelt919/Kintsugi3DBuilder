@@ -181,7 +181,7 @@ public class LookToolController implements LightController, CameraController, Cu
             this.startY = (float)pos.y;
             this.mouseScrollScale = (float)Math.PI * this.sensitivityScrollWheel / Math.min(size.width, size.height);
             this.mouseOrbitScale = (float)Math.PI * this.sensitivityOrbit / Math.min(size.width, size.height);
-            this.oldOrbitMatrix = cameraModel2.getOrbit();
+            this.oldOrbitMatrix = cameraModel2.getOrbitPlus();
             this.oldLogScale = (float) (Math.log(cameraModel2.getZoom())/Math.log(2));
             this.oldOffSet = cameraModel2.getOffSet();
         }
@@ -203,7 +203,7 @@ public class LookToolController implements LightController, CameraController, Cu
                                     0.0f
                             );
 
-                    this.cameraModel2.setOrbit(
+                    this.cameraModel2.setOrbitPlus(
                             Matrix4.rotateAxis(
                                     rotationVector.normalized(),
                                     this.mouseOrbitScale * rotationVector.length() * this.inversion
@@ -215,7 +215,7 @@ public class LookToolController implements LightController, CameraController, Cu
             {
                 if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseOrbitScale))
                 {
-                    this.cameraModel2.setOrbit(
+                    this.cameraModel2.setOrbitPlus(
                             Matrix4.rotateZ(this.mouseOrbitScale * (xpos - this.startX) * this.inversion)
                                     .times(this.oldOrbitMatrix));
                     double newLogScale = this.oldLogScale + this.mouseOrbitScale * (float)(ypos - this.startY);

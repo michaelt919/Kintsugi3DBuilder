@@ -2,6 +2,7 @@ package tetzlaff.ibr.gui2.controllers.scene.camera;
 
 import javafx.beans.property.*;
 import org.jdom2.Element;
+import tetzlaff.ibr.util.U;
 import tetzlaff.misc.XML_Writable;
 
 public class CameraSetting implements XML_Writable{

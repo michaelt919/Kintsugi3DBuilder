@@ -16,7 +16,10 @@ import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
 import tetzlaff.ibr.rendering2.CameraModel2;
+import tetzlaff.ibr.rendering2.Trigger;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -69,7 +72,22 @@ public class RootCameraSceneController implements Initializable {
 
         System.out.println("Cam in!");
 
+        cameraModel2.setSetOrbitTrigger(()->{
 
+            Vector3 poler = OrbitPolarConverter.self.convertRight(cameraModel2.getOrbit());
+            CameraSetting it = getIt();
+            if(it != null){
+                it.setAzimuth(poler.x);
+                it.setInclination(poler.y);
+                it.setTwist(poler.z);
+            }
+
+        });
+
+    }
+
+    private CameraSetting getIt(){
+        return s().getSelectedItem();
     }
 
     private SelectionModel<CameraSetting> s() {

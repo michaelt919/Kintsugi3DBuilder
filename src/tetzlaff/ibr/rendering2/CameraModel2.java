@@ -14,6 +14,15 @@ public class CameraModel2 implements ReadonlyCameraModel {
     private Vector3 offSet;
     private Matrix4 orbit;
 
+    private Trigger setOrbitTrigger;
+    private Trigger getOrbitTrigger;
+    public void setSetOrbitTrigger(Trigger setOrbitTrigger) {
+        this.setOrbitTrigger = setOrbitTrigger;
+    }
+    public void setGetOrbitTrigger(Trigger getOrbitTrigger) {
+        this.getOrbitTrigger = getOrbitTrigger;
+    }
+
     public final static Vector3 ORIGIN = new Vector3(0,0,0);
 
     public CameraModel2() {
@@ -42,11 +51,21 @@ public class CameraModel2 implements ReadonlyCameraModel {
         this.offSet = offSet;
     }
 
-    public Matrix4 getOrbit() {
+    public Matrix4 getOrbit(){
         return orbit;
     }
 
-    public void setOrbit(Matrix4 orbit) {
+    public Matrix4 getOrbitPlus() {
+        if(getOrbitTrigger != null)getOrbitTrigger.trigger();
+        return orbit;
+    }
+
+    public void setOrbitPlus(Matrix4 orbit) {
+        if(setOrbitTrigger != null)setOrbitTrigger.trigger();
+        this.orbit = orbit;
+    }
+
+    public void setOrbit(Matrix4 orbit){
         this.orbit = orbit;
     }
 
