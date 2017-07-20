@@ -8,7 +8,15 @@ public class OrbitPolarConverter implements Converter<Matrix4, Vector3>{
 
     @Override
     public Matrix4 convertLeft(Vector3 from) {
-        return null;
+
+        from = from.applyOperator(Math::toRadians);
+
+        return Matrix4.rotateZ(from.z).times(
+                Matrix4.rotateX(from.y).times(
+                        Matrix4.rotateY(from.x)
+                )
+        );
+
     }
     @Override
     public Vector3 convertRight(Matrix4 from) {

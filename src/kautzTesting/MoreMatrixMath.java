@@ -1,6 +1,7 @@
 package kautzTesting;//Created by alexk on 7/19/2017.
 
 import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
 
 public class MoreMatrixMath {
     public static String toString(Matrix4 in){
@@ -52,5 +53,10 @@ public class MoreMatrixMath {
             double factor = Math.pow(10, places);
             in[i] = (Math.round(in[i]*factor))/factor;
         }
+    }
+    public static String toString(Vector3 in){
+        StringBuilder s = new StringBuilder();
+        s.append("[ ").append(in.x).append(", ").append(in.y).append(", ").append(in.z).append("]\n");
+        return s.toString();
     }
 }
