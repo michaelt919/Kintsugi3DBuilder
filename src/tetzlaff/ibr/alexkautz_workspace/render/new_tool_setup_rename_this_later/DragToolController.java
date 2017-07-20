@@ -5,14 +5,14 @@ import tetzlaff.gl.window.*;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
+import tetzlaff.ibr.rendering2.CameraModelX;
+import tetzlaff.ibr.rendering2.LightModelX;
 import tetzlaff.mvc.controllers.CameraController;
 import tetzlaff.mvc.controllers.LightController;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
 import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.gl.Context;
-
-import javax.swing.*;
 
 
 public class DragToolController <ContextType extends Context<ContextType>> implements LightController, CameraController, MouseButtonPressListener {

@@ -1,5 +1,6 @@
 package tetzlaff.ibr.gui2;
 
+import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibr.gui2.app.GUIApp;
 
 public class DE {
@@ -7,5 +8,6 @@ public class DE {
 
     public static void main(String[] args) {
         GUIApp.launchWrapper("");
+        Matrix4 bob = Matrix4.IDENTITY;
     }
 }
