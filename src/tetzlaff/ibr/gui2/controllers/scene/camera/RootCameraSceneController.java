@@ -72,6 +72,19 @@ public class RootCameraSceneController implements Initializable {
 
         System.out.println("Cam in!");
 
+//        cameraModel2.setGetOrbitTrigger(()->{
+//            CameraSetting it =getIt();
+//            if(it != null){
+//                cameraModel2.setOrbit(
+//                        OrbitPolarConverter.self.convertLeft(new Vector3(
+//                                (float) it.getAzimuth(),
+//                                (float) it.getInclination(),
+//                                (float) it.getTwist()
+//                        ))
+//                );
+//            }
+//        });
+
         cameraModel2.setSetOrbitTrigger(()->{
 
             Vector3 poler = OrbitPolarConverter.self.convertRight(cameraModel2.getOrbit());

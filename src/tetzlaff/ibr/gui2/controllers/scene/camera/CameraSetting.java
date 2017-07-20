@@ -22,6 +22,8 @@ public class CameraSetting implements XML_Writable{
 
 
 
+
+
     /*
     xCenter
     yCenter
