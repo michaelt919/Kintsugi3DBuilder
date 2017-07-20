@@ -11,15 +11,18 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import tetzlaff.ibr.util.U;
 
 
 import java.net.URL;
 import java.text.NumberFormat;
 import java.util.ResourceBundle;
+import java.util.function.UnaryOperator;
 
-public class SettingsCameraSceneController {
+public class SettingsCameraSceneController implements Initializable {
 
 @FXML private VBox root;
 
@@ -46,8 +49,12 @@ public class SettingsCameraSceneController {
 
 @FXML private CheckBox orthographicCheckBox;
 
-
-
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+//        U.wrap(-180, 180, azimuthTextField);
+//        U.bound(-90, 90, inclinationTextField);
+//        U.wrap(-180, 180, twistTextField);
+    }
 
     public final ChangeListener<CameraSetting> changeListener =
             (observable, oldValue, newValue) -> {

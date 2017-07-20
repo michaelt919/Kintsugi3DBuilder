@@ -11,7 +11,7 @@
 <VBox prefWidth="470.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.menu_bar.MenubarController">
    <MenuBar>
       <Menu mnemonicParsing="false" text="File">
-         <MenuItem mnemonicParsing="false" text="Create project" />
+         <MenuItem onAction="#loadMenu" mnemonicParsing="false" text="Create project" />
          <MenuItem mnemonicParsing="false" text="Open project" />
          <MenuItem mnemonicParsing="false" text="Save project" />
          <MenuItem mnemonicParsing="false" text="Save project as..." />

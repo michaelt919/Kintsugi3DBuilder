@@ -119,6 +119,8 @@ public class IBRelight2
 			LightModel2 lightModel2 = TheApp.getRootModel().getLightModel2();
 			CameraModel2 cameraModel2 = TheApp.getRootModel().getCameraModel2();
 
+			//lightModel2.addLight();
+
 			lightModel2.setLightColor(0, new Vector3(1f, 1f, 1f));
 
 			ToolModel2 toolModel2 = TheApp.getRootModel().getToolModel2();
@@ -164,6 +166,9 @@ public class IBRelight2
 					lightModel2);
 
             dragToolController.setModel(model);
+            toolModel2.setModelPasser(new Passer<>(model));
+
+
 
 
             window.addCharacterListener((win, c) -> {

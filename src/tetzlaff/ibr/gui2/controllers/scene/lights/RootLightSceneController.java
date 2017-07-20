@@ -131,13 +131,11 @@ public class RootLightSceneController implements Initializable {
 
         selectedLight.addListener(settingsController.changeListener);
 
-
-
-
     }
 
     public void init2(LightModel2 lightModel2){
         System.out.println("Lights in!");
+
     }
 
     @FXML private void newGroup(){
@@ -270,5 +268,7 @@ public class RootLightSceneController implements Initializable {
     private LightGroupSetting getSelected(){
         return tableView.getSelectionModel().getSelectedItem();
     }
+
+
 
 }

@@ -1,4 +1,4 @@
-package tetzlaff.ibr.alexkautz_workspace.user_interface;
+package tetzlaff.ibr.gui2.controllers.menu_bar;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -8,20 +8,19 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
+import tetzlaff.ibr.rendering.ImageBasedRendererList;
 
 import java.io.*;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
-public class Loader implements Initializable{
-
-
-    private IBRRenderableListModel model;
+public class LoaderController implements Initializable{
 
 
     @FXML private Text loadCheckCameras;
@@ -38,6 +37,12 @@ public class Loader implements Initializable{
     private File cameraFile = null;
     private File objFile = null;
     private File photoDir = null;
+
+    private ImageBasedRendererList<OpenGLContext> model;
+
+    public void setModel(ImageBasedRendererList<OpenGLContext> model) {
+        this.model = model;
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -56,7 +61,6 @@ public class Loader implements Initializable{
         objFileChooser.setTitle("Select object file");
         photoDirectoryChooser.setTitle("Select undistorted photo directory");
 
-        model = PassedParameters.get().getRenderPerams().getModel();
     }
 
     @FXML private void camFileSelect(){
@@ -120,6 +124,7 @@ public class Loader implements Initializable{
     }
 
     private void loadIt() throws IOException {
+
 
         IBRLoadOptions loadOptions = new IBRLoadOptions()
                 .setColorImagesRequested(true)

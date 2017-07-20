@@ -5,8 +5,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ToggleGroup;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
+import tetzlaff.ibr.gui2.controllers.menu_bar.LoaderController;
 import tetzlaff.ibr.rendering2.tools.Tool;
 
 import java.io.IOException;
@@ -18,13 +20,15 @@ public class Base {
 
         try {
 
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("Loader.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("LoaderController.fxml"));
             Parent root = fxmlLoader.load();
             Stage stage = new Stage();
             stage.setTitle("Load Window");
             stage.setScene(new Scene(root, 750, 330));
 
-            Loader loader = fxmlLoader.getController();
+            LoaderController loaderController = fxmlLoader.getController();
+
+            stage.initModality(Modality.APPLICATION_MODAL);
 
             stage.show();
 
