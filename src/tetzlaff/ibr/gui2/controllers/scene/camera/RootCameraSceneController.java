@@ -16,6 +16,7 @@ import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import tetzlaff.ibr.rendering2.CameraModel2;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -61,6 +62,13 @@ public class RootCameraSceneController implements Initializable {
         );
         listOfCameras.add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
+
+    }
+
+    public void init2(CameraModel2 cameraModel2){
+
+        System.out.println("Cam in!");
+
 
     }
 

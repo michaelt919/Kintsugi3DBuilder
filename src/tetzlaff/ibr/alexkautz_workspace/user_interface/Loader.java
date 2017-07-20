@@ -12,11 +12,9 @@ import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
-import tetzlaff.ibr.util.IBRRequestQueue;
 
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.stream.Stream;
 

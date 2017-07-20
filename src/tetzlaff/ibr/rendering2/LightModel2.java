@@ -6,20 +6,20 @@ import tetzlaff.mvc.models.ReadonlyLightModel;
 
 import java.util.ArrayList;
 
-public class LightModelX implements ReadonlyLightModel {
+public class LightModel2 implements ReadonlyLightModel {
 
-    public LightModelX(int startingNumLights) {
-        lights = new ArrayList<PointLightModelX>();
+    public LightModel2(int startingNumLights) {
+        lights = new ArrayList<PointLightModel2>();
         for (int i = 0; i < startingNumLights; i++) addLight();
 
         ambientLightColor = new Vector3(0f,0f,0f);
     }
 
-    private final ArrayList<PointLightModelX> lights;
+    private final ArrayList<PointLightModel2> lights;
     private Vector3 ambientLightColor;
 
     public void addLight(){
-        PointLightModelX newLight = new PointLightModelX();
+        PointLightModel2 newLight = new PointLightModel2();
         lights.add(newLight);
     }
 
@@ -62,7 +62,7 @@ public class LightModelX implements ReadonlyLightModel {
     }
 
 
-    public PointLightModelX getLight(int i){
+    public PointLightModel2 getLight(int i){
         return lights.get(i);
     }
 }

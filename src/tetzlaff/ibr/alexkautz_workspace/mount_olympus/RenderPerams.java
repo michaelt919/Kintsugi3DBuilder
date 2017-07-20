@@ -1,24 +1,24 @@
 package tetzlaff.ibr.alexkautz_workspace.mount_olympus;
 
 import tetzlaff.ibr.IBRRenderableListModel;
-import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.GlobalController;
+import tetzlaff.ibr.rendering2.tools.ToolModel2;
 
 public class RenderPerams {
 
     private final IBRRenderableListModel model;
 
-    private final GlobalController globalController;
+    private final ToolModel2 toolModel2;
 
-    public RenderPerams(IBRRenderableListModel model, GlobalController globalController) {
+    public RenderPerams(IBRRenderableListModel model, ToolModel2 toolModel2) {
         this.model = model;
-        this.globalController = globalController;
+        this.toolModel2 = toolModel2;
     }
 
     public IBRRenderableListModel getModel() {
         return model;
     }
 
-    public GlobalController getGlobalController() {
-        return globalController;
+    public ToolModel2 getToolModel2() {
+        return toolModel2;
     }
 }
