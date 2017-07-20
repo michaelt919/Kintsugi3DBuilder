@@ -10,7 +10,7 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 
-public class GUIApp extends Application{
+public class GUIApp2 extends Application{
 
     @Override
     public void start(Stage menuBarStage) throws Exception {

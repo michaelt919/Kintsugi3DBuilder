@@ -1,6 +1,6 @@
-package tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later;
+package tetzlaff.ibr.rendering2.tools;
 
-public class GlobalController {
+public class ToolModel2 {
 
     private Tool tool = Tool.LOOK;
 

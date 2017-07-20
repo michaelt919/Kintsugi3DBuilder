@@ -5,7 +5,6 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.mvc.models.LightModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.impl.LightModelBase;
-import tetzlaff.ibr.alexkautz_workspace.render.*;
 
 public class TrackballLightModel2 extends LightModelBase implements LightModel
 {

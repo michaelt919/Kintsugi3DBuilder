@@ -8,7 +8,7 @@ import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.gui2.controllers.scene.camera.CameraSetting;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 
-public class CameraModelX implements ReadonlyCameraModel {
+public class CameraModel2 implements ReadonlyCameraModel {
 
     private Float zoom;
     private Vector3 offSet;
@@ -16,7 +16,7 @@ public class CameraModelX implements ReadonlyCameraModel {
 
     public final static Vector3 ORIGIN = new Vector3(0,0,0);
 
-    public CameraModelX() {
+    public CameraModel2() {
         zoom = 1f;
         offSet = new Vector3(0,0,0);
         orbit = Matrix4.IDENTITY;

@@ -40,6 +40,7 @@ import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.Callback;
+import tetzlaff.ibr.rendering2.LightModel2;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -133,6 +134,10 @@ public class RootLightSceneController implements Initializable {
 
 
 
+    }
+
+    public void init2(LightModel2 lightModel2){
+        System.out.println("Lights in!");
     }
 
     @FXML private void newGroup(){

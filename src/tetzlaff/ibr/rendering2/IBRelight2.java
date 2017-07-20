@@ -1,4 +1,4 @@
-package tetzlaff.ibr.app2;
+package tetzlaff.ibr.rendering2;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,13 +16,12 @@ import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
-import tetzlaff.ibr.alexkautz_workspace.mount_olympus.RenderPerams;
 import tetzlaff.ibr.alexkautz_workspace.render.TrackballLightController2;
-import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.*;
+import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
-import tetzlaff.ibr.rendering2.CameraModelX;
-import tetzlaff.ibr.rendering2.LightModelX;
+import tetzlaff.ibr.rendering2.tools.DragToolController;
+import tetzlaff.ibr.rendering2.tools.LookToolController;
+import tetzlaff.ibr.rendering2.tools.ToolModel2;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
@@ -117,19 +116,19 @@ public class IBRelight2
 
 
 			//Here i create my own brand of camera and light models;
-			LightModelX lightModelX = new LightModelX(3);
-			CameraModelX cameraModelX = new CameraModelX();
+			LightModel2 lightModel2 = TheApp.getRootModel().getLightModel2();
+			CameraModel2 cameraModel2 = TheApp.getRootModel().getCameraModel2();
 
-			lightModelX.setLightColor(0, new Vector3(1f, 1f, 1f));
+			lightModel2.setLightColor(0, new Vector3(1f, 1f, 1f));
 
-			GlobalController globalController = new GlobalController();
+			ToolModel2 toolModel2 = TheApp.getRootModel().getToolModel2();
 
             LookToolController.getBuilder() //I do not need to keep my instance of LookToolController in a value
 
-                    .setGlobalControler(globalController)
+                    .setGlobalController(toolModel2)
 
-                    .setCameraModelX(cameraModelX)
-                    .setLightModelX(lightModelX)
+                    .setCameraModelX(cameraModel2)
+                    .setLightModelX(lightModel2)
 
                     .setPrimaryButtonIndex(0)
                     .setSecondaryButtonIndex(1)
@@ -142,10 +141,10 @@ public class IBRelight2
                     .create();
 
             DragToolController dragToolController = DragToolController.Builder.aDragToolController()
-                    .setCameraModelX(cameraModelX)
-                    .setLightModelX(lightModelX)
+                    .setCameraModel2(cameraModel2)
+                    .setLightModel2(lightModel2)
 
-                    .setGlobalController(globalController)
+                    .setToolModel2(toolModel2)
 
                     .setWindow(window)
 
@@ -161,8 +160,8 @@ public class IBRelight2
             ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(
                     context,
                     program,
-                    cameraModelX,
-                    lightModelX);
+					cameraModel2,
+					lightModel2);
 
             dragToolController.setModel(model);
 
@@ -262,9 +261,7 @@ public class IBRelight2
 
 
 			//IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getCameraModel(), (request) -> requestQueue.addRequest(request), window.isHighDPI());
-			PassedParameters.get().setRenderPerams(new RenderPerams(model,
-					globalController
-					));
+
 
 
 			//gui.showGUI();
