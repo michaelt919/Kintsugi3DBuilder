@@ -1,5 +1,7 @@
 package tetzlaff.ibr;
 
+import tetzlaff.util.ShadingParameterMode;
+
 public class IBRSettings 
 {
     private float gamma = 2.2f;
@@ -14,6 +16,7 @@ public class IBRSettings
 	private boolean fresnelEnabled = false;
 	private boolean pbrGeometricAttenuationEnabled = false;
 	private boolean visibleLightsEnabled = false;
+	private ShadingParameterMode weightMode = ShadingParameterMode.PER_PIXEL;
 
 	public IBRSettings() 
 	{
@@ -137,5 +140,15 @@ public class IBRSettings
 	public void setVisibleLightsEnabled(boolean visibleLightsEnabled) 
 	{
 		this.visibleLightsEnabled = visibleLightsEnabled;
+	}
+
+	public ShadingParameterMode getWeightMode() 
+	{
+		return weightMode;
+	}
+
+	public void setWeightMode(ShadingParameterMode weightMode) 
+	{
+		this.weightMode = weightMode;
 	}
 }

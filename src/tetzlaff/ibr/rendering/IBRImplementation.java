@@ -24,6 +24,7 @@ import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.Texture3D;
 import tetzlaff.gl.TextureWrapMode;
+import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
@@ -42,6 +43,7 @@ import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
 import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.util.EnvironmentMap;
+import tetzlaff.util.ShadingParameterMode;
 
 public class IBRImplementation<ContextType extends Context<ContextType>> implements IBRRenderable<ContextType>
 {
@@ -83,6 +85,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Drawable<ContextType> environmentBackgroundDrawable;
     
     private boolean multisamplingEnabled = false;
+    
+    private UniformBuffer<ContextType> weightBuffer = null;
     
     private List<Matrix4> transformationMatrices;
     private Vector3 centroid;
@@ -430,12 +434,30 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private void setupForDraw(Program<ContextType> program)
 	{
 		this.resources.setupShaderProgram(program, this.settings().areTexturesEnabled());
+		
+		if (!this.settings.isRelightingEnabled() && this.settings.getWeightMode() == ShadingParameterMode.UNIFORM)
+		{
+			program.setUniform("perPixelWeightsEnabled", false);
+			if (weightBuffer != null)
+			{
+				weightBuffer.close();
+				weightBuffer = null;
+			}
+			weightBuffer = context.createUniformBuffer().setData(this.generateViewWeights());
+			program.setUniformBuffer("ViewWeights", weightBuffer);
+	    	program.setUniform("occlusionEnabled", false);
+		}
+		else
+		{
+			program.setUniform("perPixelWeightsEnabled", true);
+			program.setUniform("weightExponent", this.settings.getWeightExponent());
+	    	program.setUniform("isotropyFactor", this.settings.getIsotropyFactor());
+	    	program.setUniform("occlusionEnabled", this.resources.depthTextures != null && this.settings.isOcclusionEnabled());
+	    	program.setUniform("occlusionBias", this.settings.getOcclusionBias());
+		}
     	
     	program.setUniform("renderGamma", this.settings.getGamma());
-    	program.setUniform("weightExponent", this.settings.getWeightExponent());
-    	program.setUniform("isotropyFactor", this.settings.getIsotropyFactor());
-    	program.setUniform("occlusionEnabled", this.resources.depthTextures != null && this.settings.isOcclusionEnabled());
-    	program.setUniform("occlusionBias", this.settings.getOcclusionBias());
+    	
     	program.setUniform("imageBasedRenderingEnabled", this.settings.isIBREnabled());
     	program.setUniform("relightingEnabled", this.settings.isRelightingEnabled());
     	program.setUniform("pbrGeometricAttenuationEnabled", this.settings.isPBRGeometricAttenuationEnabled());
@@ -648,6 +670,30 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 			// Do first pass at half resolution to off-screen buffer
     		drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
     	}
+	}
+	
+	private NativeVectorBuffer generateViewWeights()
+	{
+		float[] viewWeights = new float[this.resources.viewSet.getCameraPoseCount()];
+		float viewWeightSum = 0.0f;
+		
+		for (int i = 0; i < viewWeights.length; i++)
+		{
+			Vector3 viewDir = this.resources.viewSet.getCameraPose(i).times(this.resources.geometry.getCentroid().asPosition()).getXYZ().negated().normalized();
+			Vector3 targetDir = this.resources.viewSet.getCameraPose(i).times(
+					getViewMatrix().quickInverse(0.01f).getColumn(3)
+						.minus(this.resources.geometry.getCentroid().asPosition())).getXYZ().normalized();
+			
+			viewWeights[i] = 1.0f / (float)Math.max(0.000001, 1.0 - Math.pow(Math.max(0.0, targetDir.dot(viewDir)), this.settings.getWeightExponent())) - 1.0f;
+			viewWeightSum += viewWeights[i];
+		}
+		
+		for (int i = 0; i < viewWeights.length; i++)
+		{
+			viewWeights[i] /= Math.max(0.01, viewWeightSum);
+		}
+		
+		return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
 	}
 	
 	@Override
@@ -919,6 +965,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		{
 			lightTexture.close();
 		}
+
+		if (weightBuffer != null)
+		{
+			weightBuffer.close();
+		}
 	}
 	
 	@Override
@@ -968,8 +1019,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	{
 		this.multisamplingEnabled = multisamplingEnabled;
 	}
-
-	
 	
 	@Override
 	public void setProgram(Program<ContextType> program) 
