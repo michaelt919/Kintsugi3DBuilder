@@ -1,31 +1,22 @@
 package tetzlaff.ibr.gui2.controllers.scene.camera;
 
 import com.sun.javafx.collections.ObservableListWrapper;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-import javafx.util.StringConverter;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
 import tetzlaff.ibr.rendering2.CameraModel2;
-import tetzlaff.ibr.rendering2.Trigger;
+import tetzlaff.ibr.rendering2.CameraModel3;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
 
 public class RootCameraSceneController implements Initializable {
 
@@ -68,34 +59,13 @@ public class RootCameraSceneController implements Initializable {
 
     }
 
-    public void init2(CameraModel2 cameraModel2){
+    public void init2(CameraModel3 cameraModel3){
 
         System.out.println("Cam in!");
 
-//        cameraModel2.setGetOrbitTrigger(()->{
-//            CameraSetting it =getIt();
-//            if(it != null){
-//                cameraModel2.setOrbit(
-//                        OrbitPolarConverter.self.convertLeft(new Vector3(
-//                                (float) it.getAzimuth(),
-//                                (float) it.getInclination(),
-//                                (float) it.getTwist()
-//                        ))
-//                );
-//            }
-//        });
-
-        cameraModel2.setSetOrbitTrigger(()->{
-
-            Vector3 poler = OrbitPolarConverter.self.convertRight(cameraModel2.getOrbit());
-            CameraSetting it = getIt();
-            if(it != null){
-                it.setAzimuth(poler.x);
-                it.setInclination(poler.y);
-                it.setTwist(poler.z);
-            }
-
-        });
+        cameraModel3.setSelectedCameraSettingProperty(
+                cameraListView.getSelectionModel().selectedItemProperty()
+        );
 
     }
 

@@ -8,6 +8,7 @@ import tetzlaff.ibr.gui2.controllers.scene.camera.RootCameraSceneController;
 import tetzlaff.ibr.gui2.controllers.scene.environment_map.RootEVSceneController;
 import tetzlaff.ibr.gui2.controllers.scene.lights.RootLightSceneController;
 import tetzlaff.ibr.rendering2.CameraModel2;
+import tetzlaff.ibr.rendering2.CameraModel3;
 import tetzlaff.ibr.rendering2.LightModel2;
 import tetzlaff.mvc.models.LightModel;
 
@@ -16,7 +17,7 @@ import java.util.ResourceBundle;
 
 public class RootSceneController implements Initializable{
 
-    private final CameraModel2 cameraModel2 = TheApp.getRootModel().getCameraModel2();
+    private final CameraModel3 cameraModel3 = TheApp.getRootModel().getCameraModel3();
     private final LightModel2 lightModel2 = TheApp.getRootModel().getLightModel2();
 
     @FXML
@@ -29,7 +30,7 @@ public class RootSceneController implements Initializable{
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-        cameraController.init2(cameraModel2);
+        cameraController.init2(cameraModel3);
         lightsController.init2(lightModel2);
 
     }

@@ -6,9 +6,10 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.gui2.controllers.scene.camera.CameraSetting;
+import tetzlaff.mvc.models.ControllableCameraModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 
-public class CameraModel2 implements ReadonlyCameraModel {
+public class CameraModel2 implements ReadonlyCameraModel{
 
     private Float zoom;
     private Vector3 offSet;
@@ -51,21 +52,21 @@ public class CameraModel2 implements ReadonlyCameraModel {
         this.offSet = offSet;
     }
 
-    public Matrix4 getOrbit(){
+    public Matrix4 getJustOrbit(){
         return orbit;
     }
 
-    public Matrix4 getOrbitPlus() {
+    public Matrix4 getOrbit() {
         if(getOrbitTrigger != null)getOrbitTrigger.trigger();
         return orbit;
     }
 
-    public void setOrbitPlus(Matrix4 orbit) {
+    public void setOrbit(Matrix4 orbit) {
         if(setOrbitTrigger != null)setOrbitTrigger.trigger();
         this.orbit = orbit;
     }
 
-    public void setOrbit(Matrix4 orbit){
+    public void setJustOrbit(Matrix4 orbit){
         this.orbit = orbit;
     }
 

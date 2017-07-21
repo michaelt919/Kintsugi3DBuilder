@@ -117,9 +117,7 @@ public class IBRelight2
 
 			//Here i create my own brand of camera and light models;
 			LightModel2 lightModel2 = TheApp.getRootModel().getLightModel2();
-			CameraModel2 cameraModel2 = TheApp.getRootModel().getCameraModel2();
-
-			//lightModel2.addLight();
+			CameraModel3 cameraModel3 = TheApp.getRootModel().getCameraModel3();
 
 			lightModel2.setLightColor(0, new Vector3(1f, 1f, 1f));
 
@@ -129,7 +127,7 @@ public class IBRelight2
 
                     .setGlobalController(toolModel2)
 
-                    .setCameraModelX(cameraModel2)
+                    .setCameraModelX(cameraModel3)
                     .setLightModelX(lightModel2)
 
                     .setPrimaryButtonIndex(0)
@@ -142,15 +140,15 @@ public class IBRelight2
 
                     .create();
 
-            DragToolController dragToolController = DragToolController.Builder.aDragToolController()
-                    .setCameraModel2(cameraModel2)
-                    .setLightModel2(lightModel2)
-
-                    .setToolModel2(toolModel2)
-
-                    .setWindow(window)
-
-                    .build();
+//            DragToolController dragToolController = DragToolController.Builder.aDragToolController()
+//                    .setCameraModel2(cameraModel2)
+//                    .setLightModel2(lightModel2)
+//
+//                    .setToolModel2(toolModel2)
+//
+//                    .setWindow(window)
+//
+//                    .build();
 
 
 			// Create a new 'renderer' to be attached to the window and the GUI.
@@ -162,10 +160,10 @@ public class IBRelight2
             ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(
                     context,
                     program,
-					cameraModel2,
+					cameraModel3,
 					lightModel2);
 
-            dragToolController.setModel(model);
+//            dragToolController.setModel(model);
             toolModel2.setModelPasser(new Passer<>(model));
 
 

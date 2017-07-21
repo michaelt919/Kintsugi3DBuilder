@@ -5,10 +5,10 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;
-import tetzlaff.ibr.rendering2.CameraModel2;
 import tetzlaff.ibr.rendering2.LightModel2;
 import tetzlaff.mvc.controllers.CameraController;
 import tetzlaff.mvc.controllers.LightController;
+import tetzlaff.mvc.models.ControllableCameraModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 
 import tetzlaff.gl.window.CursorPosition;
@@ -37,7 +37,7 @@ public class LookToolController implements LightController, CameraController, Cu
     private Vector3 oldOffSet;
 
     private final LightModel2 lightModel2;
-    private final CameraModel2 cameraModel2;
+    private final ControllableCameraModel cameraModel2;
 
     private final ToolModel2 toolModel2;
 
@@ -50,7 +50,7 @@ public class LookToolController implements LightController, CameraController, Cu
         Builder setTertiaryButtonIndex(int tertiaryButtonIndex);
         Builder setGlobalController(ToolModel2 toolModel2);
         Builder setLightModelX(LightModel2 lightModel2);
-        Builder setCameraModelX(CameraModel2 cameraModel2);
+        Builder setCameraModelX(ControllableCameraModel cameraModel);
         Builder setWindow(Window window);
         LookToolController create();
     }
@@ -64,7 +64,7 @@ public class LookToolController implements LightController, CameraController, Cu
         private int tertiaryButtonIndex = 2;
         private ToolModel2 toolModel2;
         private LightModel2 lightModel2;
-        private CameraModel2 cameraModel2;
+        private ControllableCameraModel cameraModel;
         private Window window;
 
         public Builder setSensitivityScrollWheel(float sensitivityScrollWheel)
@@ -88,7 +88,7 @@ public class LookToolController implements LightController, CameraController, Cu
         public LookToolController create()
         {
             LookToolController out = new LookToolController(sensitivityScrollWheel, sensitivityOrbit, primaryButtonIndex, secondaryButtonIndex, tertiaryButtonIndex, toolModel2,
-                    lightModel2, cameraModel2);
+                    lightModel2, cameraModel);
             out.addAsWindowListener(window);
             return out;
         }
@@ -106,8 +106,8 @@ public class LookToolController implements LightController, CameraController, Cu
         }
 
         @Override
-        public Builder setCameraModelX(CameraModel2 cameraModel2) {
-            this.cameraModel2 = cameraModel2;
+        public Builder setCameraModelX(ControllableCameraModel cameraModel) {
+            this.cameraModel = cameraModel;
             return this;
         }
 
@@ -137,8 +137,7 @@ public class LookToolController implements LightController, CameraController, Cu
 
     //------------------------------------------------------------------------------------------------------------------
 
-    private LookToolController(float sensitivityScrollWheel, float sensitivityOrbit, int primaryButtonIndex, int secondaryButtonIndex, int tertiaryButtonIndex,
-                               ToolModel2 toolModel2, LightModel2 lightModel2, CameraModel2 cameraModel2)
+    private LookToolController(float sensitivityScrollWheel, float sensitivityOrbit, int primaryButtonIndex, int secondaryButtonIndex, int tertiaryButtonIndex, ToolModel2 toolModel2, LightModel2 lightModel2, ControllableCameraModel cameraModel)
     {
         this.primaryButtonIndex = primaryButtonIndex;
         this.secondaryButtonIndex = secondaryButtonIndex;
@@ -147,7 +146,7 @@ public class LookToolController implements LightController, CameraController, Cu
         this.sensitivityOrbit = sensitivityOrbit;
         this.toolModel2 = toolModel2;
         this.lightModel2 = lightModel2;
-        this.cameraModel2 = cameraModel2;
+        this.cameraModel2 = cameraModel;
     }
 
     @Override
@@ -181,7 +180,7 @@ public class LookToolController implements LightController, CameraController, Cu
             this.startY = (float)pos.y;
             this.mouseScrollScale = (float)Math.PI * this.sensitivityScrollWheel / Math.min(size.width, size.height);
             this.mouseOrbitScale = (float)Math.PI * this.sensitivityOrbit / Math.min(size.width, size.height);
-            this.oldOrbitMatrix = cameraModel2.getOrbitPlus();
+            this.oldOrbitMatrix = cameraModel2.getOrbit();
             this.oldLogScale = (float) (Math.log(cameraModel2.getZoom())/Math.log(2));
             this.oldOffSet = cameraModel2.getOffSet();
         }
@@ -203,7 +202,7 @@ public class LookToolController implements LightController, CameraController, Cu
                                     0.0f
                             );
 
-                    this.cameraModel2.setOrbitPlus(
+                    this.cameraModel2.setOrbit(
                             Matrix4.rotateAxis(
                                     rotationVector.normalized(),
                                     this.mouseOrbitScale * rotationVector.length() * this.inversion
@@ -215,7 +214,7 @@ public class LookToolController implements LightController, CameraController, Cu
             {
                 if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseOrbitScale))
                 {
-                    this.cameraModel2.setOrbitPlus(
+                    this.cameraModel2.setOrbit(
                             Matrix4.rotateZ(this.mouseOrbitScale * (xpos - this.startX) * this.inversion)
                                     .times(this.oldOrbitMatrix));
                     double newLogScale = this.oldLogScale + this.mouseOrbitScale * (float)(ypos - this.startY);
@@ -235,9 +234,9 @@ public class LookToolController implements LightController, CameraController, Cu
                     );
                     cameraModel2.setOffSet(oldOffSet.plus(addedTranslation.times(scale)));
 
-                    //System.out.println("Start y: " + this.startY + " Mouse Scale: " + mouseScrollScale + " change: " + addedTranslation.times(this.mouseScrollScale).y + " final " + cameraModel2.getOffSet().y);
+                    //System.out.println("Start y: " + this.startY + " Mouse Scale: " + mouseScrollScale + " change: " + addedTranslation.times(this.mouseScrollScale).y + " final " + cameraModel.getOffSet().y);
 
-                    //System.out.println("Zoom: " + cameraModel2.getZoom());
+                    //System.out.println("Zoom: " + cameraModel.getZoom());
                 }
 
 
