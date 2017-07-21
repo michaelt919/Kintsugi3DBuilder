@@ -12,12 +12,24 @@ in vec3 fNormal;
 uniform float weightExponent;
 uniform mat4 model_view;
 
+uniform bool perPixelWeightsEnabled;
+
+layout(std140) uniform ViewWeights
+{
+	vec4 viewWeights[MAX_CAMERA_POSE_COUNT_DIV_4];
+};
+
 uniform ViewIndices
 {
 	int viewIndices[MAX_CAMERA_POSE_COUNT];
 };
 
 uniform int targetViewIndex;
+
+float getViewWeight(int viewIndex)
+{
+	return viewWeights[viewIndex/4][viewIndex%4];
+}
 
 layout(location = 0) out vec2 fidelity;
 
@@ -54,18 +66,39 @@ vec2 computeFidelity()
 	for (int i = 0; i < viewCount; i++)
 	{
 		int currentViewIndex = viewIndices[i];
-		sum += getSampleWeight(currentViewIndex) * getSample(currentViewIndex);
+		if (perPixelWeightsEnabled)
+		{
+			sum += getSampleWeight(currentViewIndex) * getSample(currentViewIndex);
+		}
+		else
+		{
+			sum += getViewWeight(currentViewIndex) * getSample(currentViewIndex);
+		}
 	}
 	
 	vec4 lfSample = getSample(targetViewIndex);
 	
-	if (sum.a <= 0.0)
+	// if (sum.a <= 0.0)
+	// {
+		// return vec2(-1.0, -1.0);
+	// }
+	// else
 	{
-		return vec2(-1.0, -1.0);
-	}
-	else
-	{
-		vec3 diff = sum.rgb / sum.a - lfSample.rgb;
+		vec3 diff;
+		
+		if (sum.a <= 0.0)
+		{
+			diff = -lfSample.rgb;
+		}
+		else if (perPixelWeightsEnabled)
+		{
+			diff = sum.rgb / sum.a - lfSample.rgb;
+		}
+		else
+		{
+			diff = sum.rgb - lfSample.rgb;
+		}
+		
 		return clamp(normalize(mat3(model_view) * fNormal).z, 0.0, 1.0) // n dot v
 			* lfSample.a
 			* vec2(dot(diff, diff), 1);

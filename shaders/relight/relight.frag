@@ -60,6 +60,18 @@ uniform bool relightingEnabled;
 uniform bool pbrGeometricAttenuationEnabled;
 uniform bool fresnelEnabled;
 
+uniform bool perPixelWeightsEnabled;
+
+layout(std140) uniform ViewWeights
+{
+	vec4 viewWeights[MAX_CAMERA_POSE_COUNT_DIV_4];
+};
+
+float getViewWeight(int viewIndex)
+{
+	return viewWeights[viewIndex/4][viewIndex%4];
+}
+
 vec3 getEnvironmentFresnel(vec3 lightDirection, float fresnelFactor)
 {
 	if (useEnvironmentMap)
@@ -399,40 +411,47 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
             
             for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
             {
-                vec3 virtualLightDir;
-				if (useTSOverrides)
+				if (perPixelWeightsEnabled)
 				{
-					virtualLightDir = 
-						normalize(mat3(cameraPoses[index]) * tangentToObject * lightDirTSOverride);
-				}
-				else if (relightingEnabled)
-				{
-					virtualLightDir = normalize((cameraPoses[index] * 
-						vec4(lightPosVirtual[lightPass], 1.0)).xyz - fragmentPos);
+					vec3 virtualLightDir;
+					if (useTSOverrides)
+					{
+						virtualLightDir = 
+							normalize(mat3(cameraPoses[index]) * tangentToObject * lightDirTSOverride);
+					}
+					else if (relightingEnabled)
+					{
+						virtualLightDir = normalize((cameraPoses[index] * 
+							vec4(lightPosVirtual[lightPass], 1.0)).xyz - fragmentPos);
+					}
+					else
+					{
+						virtualLightDir = virtualViewDir;
+					}
+
+					// Compute sample weight
+					vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
+					float virtualNdotH = max(0, dot(normalDirCameraSpace, virtualHalfDir));
+					float weight = computeSampleWeight(
+						isotropyFactor * (1.0 - (nDotH - virtualNdotH) * (nDotH - virtualNdotH)) + 
+						(1 - isotropyFactor) * dot(virtualHalfDir, sampleHalfDir));
+					
+					// float weight = computeSampleWeight(
+						// normalize(vec3(1,1,10) * (transpose(tangentToObject) * virtualHalfDir)), 
+						// normalize(vec3(1,1,10) * (transpose(tangentToObject) * sampleHalfDir)));
+					
+					// float virtualNDotH = dot(normalDirCameraSpace, virtualHalfDir);
+					// float sampleNDotH = dot(normalDirCameraSpace, sampleHalfDir);
+					// float weight = computeSampleWeight(
+						// vec3(virtualNDotH, sqrt(1.0 - virtualNDotH * virtualNDotH), 0.0),
+						// vec3(sampleNDotH, sqrt(1.0 - sampleNDotH * sampleNDotH), 0.0));
+					// float weight = 1.0 / abs(virtualNDotH - sampleNDotH);
+					result[lightPass] = weight * precomputedSample;
 				}
 				else
 				{
-					virtualLightDir = virtualViewDir;
+					result[lightPass] = getViewWeight(index) * precomputedSample;
 				}
-
-                // Compute sample weight
-                vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
-				float virtualNdotH = max(0, dot(normalDirCameraSpace, virtualHalfDir));
-				float weight = computeSampleWeight(
-					isotropyFactor * (1.0 - (nDotH - virtualNdotH) * (nDotH - virtualNdotH)) + 
-					(1 - isotropyFactor) * dot(virtualHalfDir, sampleHalfDir));
-				
-                // float weight = computeSampleWeight(
-					// normalize(vec3(1,1,10) * (transpose(tangentToObject) * virtualHalfDir)), 
-					// normalize(vec3(1,1,10) * (transpose(tangentToObject) * sampleHalfDir)));
-				
-				// float virtualNDotH = dot(normalDirCameraSpace, virtualHalfDir);
-				// float sampleNDotH = dot(normalDirCameraSpace, sampleHalfDir);
-				// float weight = computeSampleWeight(
-					// vec3(virtualNDotH, sqrt(1.0 - virtualNDotH * virtualNDotH), 0.0),
-					// vec3(sampleNDotH, sqrt(1.0 - sampleNDotH * sampleNDotH), 0.0));
-				// float weight = 1.0 / abs(virtualNDotH - sampleNDotH);
-                result[lightPass] = weight * precomputedSample;
             }
         }
 		else
@@ -481,7 +500,11 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
     vec4[MAX_VIRTUAL_LIGHT_COUNT] results;
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
     {
-        if (sums[i].y > 0.0)
+		if (!perPixelWeightsEnabled)
+		{
+			results[i] = sums[i];
+		}
+        else if (sums[i].y > 0.0)
         {
             results[i] = vec4(sums[i].rgb / max(0.01, sums[i].a), sums[i].a);
         }

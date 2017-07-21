@@ -12,21 +12,28 @@ layout(location = 1) out vec4 shadingInfo;
 #include "colorappearance_multi_as_single.glsl"
 #include "imgspace.glsl"
 
-#line 17 1011
+#line 16 1011
+
+uniform bool lightIntensityCompensation;
 
 void main()
 {
-    fragColor = getColor();
-	
 	vec3 view = normalize(getViewVector());
 	vec3 lightPreNormalized = getLightVector();
-	// vec3 attenuatedLightIntensity = // infiniteLightSources ? lightIntensity : 
-		// lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
+	vec3 attenuatedLightIntensity = // infiniteLightSources ? lightIntensity : 
+		lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
 	vec3 light = normalize(lightPreNormalized);
 	vec3 halfway = normalize(light + view);
 	vec3 normal = normalize(fNormal);
 	shadingInfo = vec4(dot(normal, light), dot(normal, view), dot(normal, halfway), 
 		dot(halfway, view));
 		
-	// fragColor = vec4(pow(getLinearColor().rgb / attenuatedLightIntensity, vec3(1.0 / gamma)), 1.0);
+	if (lightIntensityCompensation)
+	{
+		fragColor = vec4(pow(getLinearColor().rgb / attenuatedLightIntensity, vec3(1.0 / gamma)), 1.0);
+	}
+	else
+	{
+		fragColor = getColor();
+	}
 }
