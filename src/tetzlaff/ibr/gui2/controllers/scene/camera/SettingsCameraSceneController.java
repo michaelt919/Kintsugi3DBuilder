@@ -18,7 +18,10 @@ import tetzlaff.ibr.util.U;
 
 
 import java.net.URL;
+import java.text.FieldPosition;
 import java.text.NumberFormat;
+import java.text.ParsePosition;
+import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.function.UnaryOperator;
 
@@ -69,7 +72,6 @@ public class SettingsCameraSceneController implements Initializable {
     }
 
     private void bind(CameraSetting c) {
-
         NumberFormat n = NumberFormat.getNumberInstance();
 
         xCenterTextField.textProperty().bindBidirectional(c.xCenterProperty(), n);
@@ -93,6 +95,8 @@ public class SettingsCameraSceneController implements Initializable {
         focalLengthSlider.valueProperty().bindBidirectional(c.focalLengthProperty());
 
         orthographicCheckBox.selectedProperty().bindBidirectional(c.orthographicProperty());
+
+
 
     }
 
@@ -128,51 +132,6 @@ private void pressSelectPointButton(){
         //TODO
     System.out.println("TODO: point selected");
 }
-//    @FXML
-//    private TextField azimuthBox;
-//    @FXML
-//    private Slider azimuthSlider;
-//
-//
-//    public ChangeListener<CameraSetting> getCameraSettingChangeListener() {
-//        return null;
-//    }
-//
-//    private ChangeListener<CameraSetting> cameraSettingChangeListener = new ChangeListener<CameraSetting>() {
-//        @Override
-//        public void changed(ObservableValue<? extends CameraSetting> observable, CameraSetting oldValue, CameraSetting newValue) {
-//            //System.out.println("Change detected re-linking values");
-//
-//            //relink values
-//            if (oldValue != null) {
-////                azimuthSlider.valueProperty().unbindBidirectional(oldValue.azimuthProperty());
-////
-////                azimuthBox.textProperty().unbindBidirectional(oldValue.azimuthProperty());
-//
-//            }
-//
-//            StringConverter<Double> dts = new StringConverter<Double>() {
-//                @Override
-//                public String toString(Double object) {
-//                    return object.toString();
-//                }
-//
-//                @Override
-//                public Double fromString(String string) {
-//                    return Double.valueOf(string);
-//                }
-//            };
-//
-//            System.out.println("BIND");
-//            assert newValue != null : "the the camera in the list got deselected, I didn't know that could happen!";
-//
-////            azimuthSlider.valueProperty().bindBidirectional(newValue.azimuthProperty());
-////
-////            azimuthBox.textProperty().bindBidirectional(newValue.azimuthProperty(), NumberFormat.getNumberInstance());
-//        }
-//    };
-//
-//
 
 
 }
