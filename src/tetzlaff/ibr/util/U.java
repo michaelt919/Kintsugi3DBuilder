@@ -82,7 +82,7 @@ public class U {
                     textField.setText(Double.toString(
                             bound(min, max, value)
                     ));
-//                    textField.selectAll();
+                    textField.selectAll();
                     return null;
                 }
 

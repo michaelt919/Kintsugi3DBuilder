@@ -13,6 +13,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.util.converter.NumberStringConverter;
+import tetzlaff.util.SafeNumberStringConverter;
 
 import java.io.File;
 import java.net.URL;
@@ -51,7 +53,7 @@ public class SettingsEVSceneController implements Initializable{
     @FXML ImageView evImageView;
     @FXML ImageView bpImageView;
 
-
+    private final SafeNumberStringConverter n = new SafeNumberStringConverter();
 
     public ChangeListener<EVSetting> changeListener =
             (observable, oldValue, newValue) -> {
@@ -66,7 +68,6 @@ public class SettingsEVSceneController implements Initializable{
     }
 
     private void bind(EVSetting evSetting){
-        NumberFormat n = NumberFormat.getNumberInstance();
 
         evUseImageCheckBox.selectedProperty().bindBidirectional(evSetting.evUseImageProperty());
         evUseColorCheckBox.selectedProperty().bindBidirectional(evSetting.evUseColorProperty());

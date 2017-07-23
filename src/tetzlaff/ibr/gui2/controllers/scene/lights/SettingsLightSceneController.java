@@ -10,6 +10,8 @@ import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import javafx.util.converter.NumberStringConverter;
+import tetzlaff.util.SafeNumberStringConverter;
 
 import java.net.URL;
 import java.text.NumberFormat;
@@ -39,6 +41,8 @@ public class SettingsLightSceneController implements Initializable{
     @FXML private ColorPicker colorPicker;
     @FXML private ChoiceBox<LightType> lightTypeChoiceBox;
 
+    private final SafeNumberStringConverter n = new SafeNumberStringConverter();
+
     public final ChangeListener<LightSetting> changeListener = (observable, oldValue, newValue) -> {
         if(oldValue != null) unbind(oldValue);
 
@@ -52,8 +56,6 @@ public class SettingsLightSceneController implements Initializable{
     }
 
     private void bind(LightSetting c){
-
-        NumberFormat n = NumberFormat.getNumberInstance();
 
         xCenterTextField.textProperty().bindBidirectional(c.xCenterProperty(), n);
         yCenterTextField.textProperty().bindBidirectional(c.yCenterProperty(), n);
