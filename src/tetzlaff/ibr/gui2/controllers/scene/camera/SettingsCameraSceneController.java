@@ -14,12 +14,15 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import javafx.util.converter.NumberStringConverter;
 import tetzlaff.ibr.util.U;
+import tetzlaff.util.SafeNumberStringConverter;
 
 
 import java.net.URL;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.ParsePosition;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -52,11 +55,13 @@ public class SettingsCameraSceneController implements Initializable {
 
 @FXML private CheckBox orthographicCheckBox;
 
+private final SafeNumberStringConverter n = new SafeNumberStringConverter();
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-//        U.wrap(-180, 180, azimuthTextField);
-//        U.bound(-90, 90, inclinationTextField);
-//        U.wrap(-180, 180, twistTextField);
+        U.wrap(-180, 180, azimuthTextField);
+        U.bound(-90, 90, inclinationTextField);
+        U.wrap(-180, 180, twistTextField);
     }
 
     public final ChangeListener<CameraSetting> changeListener =
@@ -72,7 +77,6 @@ public class SettingsCameraSceneController implements Initializable {
     }
 
     private void bind(CameraSetting c) {
-        NumberFormat n = NumberFormat.getNumberInstance();
 
         xCenterTextField.textProperty().bindBidirectional(c.xCenterProperty(), n);
         yCenterTextField.textProperty().bindBidirectional(c.yCenterProperty(), n);
