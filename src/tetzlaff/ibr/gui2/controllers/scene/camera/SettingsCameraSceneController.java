@@ -134,7 +134,6 @@ private final SafeNumberStringConverter n = new SafeNumberStringConverter();
 
         fov.bindBidirectional(c.fOVProperty());
 
-
     }
 
     private void unbind(CameraSetting c) {

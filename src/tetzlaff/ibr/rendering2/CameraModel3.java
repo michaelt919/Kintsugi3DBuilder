@@ -28,6 +28,9 @@ public class CameraModel3 implements ControllableCameraModel {
             "backup"
     );
 
+    private Matrix4 orbitCash;
+    private boolean fromRender = false;
+
     public void setSelectedCameraSettingProperty(ReadOnlyObjectProperty<CameraSetting> selectedCameraSettingProperty){
         this.selected = selectedCameraSettingProperty;
     }
@@ -51,6 +54,10 @@ public class CameraModel3 implements ControllableCameraModel {
 
     @Override
     public Matrix4 getOrbit() {
+        if(fromRender){
+            fromRender = false;
+            return orbitCash;
+    }
         Vector3 poler = new Vector3((float) cam().getAzimuth(), (float) cam().getInclination(), (float) cam().getTwist());
         return OrbitPolarConverter.self.convertLeft(poler);
     }
@@ -61,6 +68,8 @@ public class CameraModel3 implements ControllableCameraModel {
         cam().setAzimuth(poler.x);
         cam().setInclination(poler.y);
         cam().setTwist(poler.z);
+        orbitCash = orbit;
+        fromRender = true;
     }
 
     @Override
@@ -95,6 +104,26 @@ public class CameraModel3 implements ControllableCameraModel {
     @Override
     public void setTwist(Double twist) {
         cam().setTwist(twist);
+    }
+
+    @Override
+    public Double getAzmuth() {
+        return cam().getAzimuth();
+    }
+
+    @Override
+    public void setAzimuth(Double azimuth) {
+        cam().setAzimuth(azimuth);
+    }
+
+    @Override
+    public Double getInclination() {
+        return cam().getInclination();
+    }
+
+    @Override
+    public void setInclination(Double inclination) {
+        cam().setInclination(inclination);
     }
 
     /**
