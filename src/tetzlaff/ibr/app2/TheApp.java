@@ -1,11 +1,8 @@
 package tetzlaff.ibr.app2;
 
-import tetzlaff.ibr.rendering2.CameraModel3;
+import tetzlaff.ibr.rendering2.*;
 import tetzlaff.ibr.rendering2.tools.ToolModel2;
 import tetzlaff.ibr.gui2.app.GUIApp2;
-import tetzlaff.ibr.rendering2.CameraModel2;
-import tetzlaff.ibr.rendering2.IBRelight2;
-import tetzlaff.ibr.rendering2.LightModel2;
 
 import com.sun.glass.ui.Application;
 
@@ -40,7 +37,7 @@ public class TheApp {
         rootModel = new RootModel(
                 new CameraModel3(),
                 new LightModel2(4),
-                new ToolModel2()
+                new ToolModel3()
         );
     }
 

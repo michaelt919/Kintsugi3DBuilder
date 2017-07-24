@@ -8,12 +8,7 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.ibr.IBRLoadOptions;
-import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.IBRRenderableListModel;
-import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
-import tetzlaff.ibr.rendering.ImageBasedRendererList;
+import tetzlaff.ibr.rendering2.ToolModel3;
 
 import java.io.*;
 import java.net.URL;
@@ -21,7 +16,6 @@ import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
 public class LoaderController implements Initializable{
-
 
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
@@ -38,10 +32,10 @@ public class LoaderController implements Initializable{
     private File objFile = null;
     private File photoDir = null;
 
-    private ImageBasedRendererList<OpenGLContext> model;
+    private ToolModel3 toolModel3;
 
-    public void setModel(ImageBasedRendererList<OpenGLContext> model) {
-        this.model = model;
+    void setToolModel3(ToolModel3 toolModel3) {
+        this.toolModel3 = toolModel3;
     }
 
     @Override
@@ -108,12 +102,10 @@ public class LoaderController implements Initializable{
             //ok!
 
             try {
-                loadIt();
+                toolModel3.loadFiles(cameraFile, objFile, photoDir);
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("files were malformed");
             }
-
-            //TODO pass the files
 
             close();
 
@@ -123,27 +115,6 @@ public class LoaderController implements Initializable{
 
     }
 
-    private void loadIt() throws IOException {
-
-
-        IBRLoadOptions loadOptions = new IBRLoadOptions()
-                .setColorImagesRequested(true)
-                .setCompressionRequested(true)
-                .setMipmapsRequested(true)
-                .setDepthImagesRequested(false);
-//                .setColorImagesRequested(true) //TODO set these settings to there current values and move this loading to diffrent class
-
-//                .setMipmapsRequested(chckbxUseMipmaps.isSelected())
-//                .setCompressionRequested(chckbxCompressImages.isSelected())
-//                .setDepthImagesRequested(chckbxGenerateDepthImages.isSelected())
-//                .setDepthImageWidth((Integer)spinnerDepthWidth.getValue())
-//                .setDepthImageHeight((Integer)spinnerDepthHeight.getValue());
-
-        IBRRenderable ibrRenderable = model.addFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, objFile, photoDir, loadOptions);
-        ibrRenderable.settings().setRelightingEnabled(true);
-        ibrRenderable.settings().setVisibleLightsEnabled(true);
-        ibrRenderable.setHalfResolution(true);
-    }
 
 
     @FXML private void cancleButtonPress(){

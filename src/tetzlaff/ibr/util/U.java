@@ -111,4 +111,15 @@ public class U {
         else return value;
     }
 
+
+
+    public static void powerBind(DoubleProperty d, DoubleProperty tenToD){
+
+        d.addListener((b,o,n)-> tenToD.set(Math.pow(10, n.doubleValue())));
+        tenToD.addListener((b,o,n)-> d.set(Math.log10(n.doubleValue())));
+
+    }
+
+
+
 }
