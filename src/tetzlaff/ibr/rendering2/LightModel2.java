@@ -2,11 +2,12 @@ package tetzlaff.ibr.rendering2;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.mvc.models.ControllableLightModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
 
 import java.util.ArrayList;
 
-public class LightModel2 implements ReadonlyLightModel {
+public class LightModel2 implements ControllableLightModel {
 
     public LightModel2(int startingNumLights) {
         lights = new ArrayList<PointLightModel2>();
@@ -38,6 +39,7 @@ public class LightModel2 implements ReadonlyLightModel {
         return lights.get(i).getColor();
     }
 
+    @Override
     public void setLightColor(int i, Vector3 color){
         lights.get(i).setColor(color);
     }

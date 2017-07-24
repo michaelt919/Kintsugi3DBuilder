@@ -6,6 +6,7 @@ import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;
 import tetzlaff.ibr.rendering2.LightModel2;
+import tetzlaff.ibr.rendering2.ToolModel3;
 import tetzlaff.mvc.controllers.CameraController;
 import tetzlaff.mvc.controllers.LightController;
 import tetzlaff.mvc.models.ControllableCameraModel;
@@ -182,7 +183,7 @@ public class LookToolController implements LightController, CameraController, Cu
             this.mouseOrbitScale = (float)Math.PI * this.sensitivityOrbit / Math.min(size.width, size.height);
             this.oldOrbitMatrix = cameraModel2.getOrbit();
             this.oldLogScale = (float) (Math.log(cameraModel2.getZoom())/Math.log(2));
-            this.oldOffSet = cameraModel2.getOffSet();
+            this.oldOffSet = cameraModel2.getCenter();
         }
     }
 
@@ -232,9 +233,9 @@ public class LookToolController implements LightController, CameraController, Cu
                             (((float)(this.startY - ypos))/((float)(window.getWindowSize().height))),
                             0.0f
                     );
-                    cameraModel2.setOffSet(oldOffSet.plus(addedTranslation.times(scale)));
+                    cameraModel2.setCenter(oldOffSet.plus(addedTranslation.times(scale)));
 
-                    //System.out.println("Start y: " + this.startY + " Mouse Scale: " + mouseScrollScale + " change: " + addedTranslation.times(this.mouseScrollScale).y + " final " + cameraModel.getOffSet().y);
+                    //System.out.println("Start y: " + this.startY + " Mouse Scale: " + mouseScrollScale + " change: " + addedTranslation.times(this.mouseScrollScale).y + " final " + cameraModel.getCenter().y);
 
                     //System.out.println("Zoom: " + cameraModel.getZoom());
                 }

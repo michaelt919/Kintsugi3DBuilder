@@ -44,7 +44,9 @@ public class CameraModel3 implements ControllableCameraModel {
                 new Vector3(0,0,1/getZoom()),
                 Vector3.ZERO,
                 new Vector3(0,1,0)
-        ).times(getOrbit());
+        ).times(getOrbit().times(
+                Matrix4.translate(getCenter())
+        ));
     }
 
     @Override
@@ -72,13 +74,27 @@ public class CameraModel3 implements ControllableCameraModel {
     }
 
     @Override
-    public Vector3 getOffSet() {
-        return Vector3.ZERO;
+    public Vector3 getCenter() {
+        return new Vector3((float) cam().getxCenter(),
+                (float) cam().getyCenter(),
+                (float) cam().getzCenter());
     }
 
     @Override
-    public void setOffSet(Vector3 offSet) {
+    public void setCenter(Vector3 center) {
+        cam().setxCenter(center.x);
+        cam().setyCenter(center.y);
+        cam().setzCenter(center.z);
+    }
 
+    @Override
+    public Double getTwist() {
+        return cam().getTwist();
+    }
+
+    @Override
+    public void setTwist(Double twist) {
+        cam().setTwist(twist);
     }
 
     /**

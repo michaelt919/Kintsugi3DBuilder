@@ -1,9 +1,7 @@
 package tetzlaff.ibr.gui2.controllers.scene.camera;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -55,6 +53,9 @@ public class SettingsCameraSceneController implements Initializable {
 
 @FXML private CheckBox orthographicCheckBox;
 
+
+private DoubleProperty fov = new SimpleDoubleProperty();
+
 private final SafeNumberStringConverter n = new SafeNumberStringConverter();
 
     @Override
@@ -62,6 +63,37 @@ private final SafeNumberStringConverter n = new SafeNumberStringConverter();
         U.wrap(-180, 180, azimuthTextField);
         U.bound(-90, 90, inclinationTextField);
         U.wrap(-180, 180, twistTextField);
+
+
+        fOVSlider.setMin(-2);
+        fOVSlider.setMax(2);
+        fOVSlider.setValue(0);
+        fOVSlider.setShowTickMarks(true);
+        fOVSlider.setShowTickLabels(true);
+        fOVSlider.setBlockIncrement(0.1);
+        fOVSlider.setMajorTickUnit(1);
+        fOVSlider.setMinorTickCount(1);
+        fOVSlider.setLabelFormatter(new StringConverter<Double>() {
+            @Override
+            public String toString(Double object) {
+                return Double.toString(Math.pow(10, object));
+            }
+
+            @Override
+            public Double fromString(String string) {
+                return null;
+            }
+        });
+
+        U.powerBind(fOVSlider.valueProperty(), fov);
+
+//        fOVSlider.setMin(-100);
+//        fOVSlider.setMax(100);
+//        fOVSlider.setShowTickLabels(true);
+//        fOVSlider.setShowTickMarks(true);
+//        fOVSlider.setBlockIncrement(10);
+//        fOVSlider.setMajorTickUnit(50);
+//        fOVSlider.setMinorTickCount(4);
     }
 
     public final ChangeListener<CameraSetting> changeListener =
@@ -95,11 +127,12 @@ private final SafeNumberStringConverter n = new SafeNumberStringConverter();
         inclinationSlider.valueProperty().bindBidirectional(c.inclinationProperty());
         distanceSlider.valueProperty().bindBidirectional(c.distanceProperty());
         twistSlider.valueProperty().bindBidirectional(c.twistProperty());
-        fOVSlider.valueProperty().bindBidirectional(c.fOVProperty());
+        //fOVSlider.valueProperty().bindBidirectional(c.fOVProperty());
         focalLengthSlider.valueProperty().bindBidirectional(c.focalLengthProperty());
 
         orthographicCheckBox.selectedProperty().bindBidirectional(c.orthographicProperty());
 
+        fov.bindBidirectional(c.fOVProperty());
 
 
     }
@@ -123,11 +156,12 @@ private final SafeNumberStringConverter n = new SafeNumberStringConverter();
         inclinationSlider.valueProperty().unbindBidirectional(c.inclinationProperty());
         distanceSlider.valueProperty().unbindBidirectional(c.distanceProperty());
         twistSlider.valueProperty().unbindBidirectional(c.twistProperty());
-        fOVSlider.valueProperty().unbindBidirectional(c.fOVProperty());
+        //fOVSlider.valueProperty().unbindBidirectional(c.fOVProperty());
         focalLengthSlider.valueProperty().unbindBidirectional(c.focalLengthProperty());
 
         orthographicCheckBox.selectedProperty().unbindBidirectional(c.orthographicProperty());
 
+        fov.bindBidirectional(c.fOVProperty());
     }
 
 

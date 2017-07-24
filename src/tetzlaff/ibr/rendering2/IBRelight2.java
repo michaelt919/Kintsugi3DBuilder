@@ -19,16 +19,15 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.alexkautz_workspace.render.TrackballLightController2;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
-import tetzlaff.ibr.rendering2.tools.DragToolController;
 import tetzlaff.ibr.rendering2.tools.LookToolController;
 import tetzlaff.ibr.rendering2.tools.ToolModel2;
+import tetzlaff.ibr.rendering2.tools2.ToolBox;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.mvc.controllers.impl.FirstPersonController;
 import tetzlaff.mvc.controllers.impl.TrackballController;
-import tetzlaff.mvc.models.CameraModel;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
+import tetzlaff.mvc.models.*;
 import tetzlaff.mvc.models.impl.BasicCameraModel;
 
 /**
@@ -116,40 +115,19 @@ public class IBRelight2
 
 
 			//Here i create my own brand of camera and light models;
-			LightModel2 lightModel2 = TheApp.getRootModel().getLightModel2();
-			CameraModel3 cameraModel3 = TheApp.getRootModel().getCameraModel3();
-
+			ControllableLightModel lightModel2 = TheApp.getRootModel().getLightModel2();
+			ControllableCameraModel cameraModel3 = TheApp.getRootModel().getCameraModel3();
+			ControllableToolModel toolModel = TheApp.getRootModel().getToolModel3();
 			lightModel2.setLightColor(0, new Vector3(1f, 1f, 1f));
 
-			ToolModel2 toolModel2 = TheApp.getRootModel().getToolModel2();
-
-            LookToolController.getBuilder() //I do not need to keep my instance of LookToolController in a value
-
-                    .setGlobalController(toolModel2)
-
-                    .setCameraModelX(cameraModel3)
-                    .setLightModelX(lightModel2)
-
-                    .setPrimaryButtonIndex(0)
-                    .setSecondaryButtonIndex(1)
-                    .setTertiaryButtonIndex(2)
-                    .setSensitivityScrollWheel(15.0f)
-                    .setSensitivityOrbit(1.5f)
-
-                    .setWindow(window)
-
-                    .create();
-
-//            DragToolController dragToolController = DragToolController.Builder.aDragToolController()
-//                    .setCameraModel2(cameraModel2)
-//                    .setLightModel2(lightModel2)
-//
-//                    .setToolModel2(toolModel2)
-//
-//                    .setWindow(window)
-//
-//                    .build();
-
+			ToolBox toolBox = (new ToolBox.ToolBoxBuilder())
+					.setCameraModel(cameraModel3)
+					.setEnvironmentMapModel(new ControllableEnvironmentMapModel() {
+					})
+					.setLightModel(lightModel2)
+					.setToolModel(toolModel)
+					.setWindow(window)
+					.build();
 
 			// Create a new 'renderer' to be attached to the window and the GUI.
 			// This is the object that loads the ULF models and handles drawing them.  This object abstracts
@@ -163,8 +141,7 @@ public class IBRelight2
 					cameraModel3,
 					lightModel2);
 
-//            dragToolController.setModel(model);
-            toolModel2.setModelPasser(new Passer<>(model));
+            toolModel.setModel(model);
 
 
 
