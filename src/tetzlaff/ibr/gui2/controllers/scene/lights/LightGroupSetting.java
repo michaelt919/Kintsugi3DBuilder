@@ -11,8 +11,8 @@ import java.util.ArrayList;
 public class LightGroupSetting {
     public final static int LIGHT_LIMIT = 4;
 
-    private final ListProperty<LightSetting> lightList = new SimpleListProperty<>(
-            new ObservableListWrapper<LightSetting>(
+    private final ListProperty<SubLightSetting> lightList = new SimpleListProperty<>(
+            new ObservableListWrapper<SubLightSetting>(
                     new ArrayList<>(LIGHT_LIMIT)
             )
     );
@@ -28,7 +28,7 @@ public class LightGroupSetting {
     public void addLight(){
         if(lightList.size() < LIGHT_LIMIT){
             lightList.add(
-                    new LightSetting(
+                    new SubLightSetting(
                             0.0,
                             0.0,
                             0.0,
@@ -65,11 +65,11 @@ public class LightGroupSetting {
     }
 
 
-    public ObservableList<LightSetting> getLightList() {
+    public ObservableList<SubLightSetting> getLightList() {
         return lightList.get();
     }
 
-    public ListProperty<LightSetting> lightListProperty() {
+    public ListProperty<SubLightSetting> lightListProperty() {
         return lightList;
     }
 

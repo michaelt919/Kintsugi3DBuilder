@@ -1,15 +1,11 @@
 package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
 import javafx.beans.property.*;
-import javafx.fxml.Initializable;
 import javafx.scene.paint.Color;
 import org.jdom2.Element;
 import tetzlaff.misc.XML_Writable;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
-public class LightSetting implements XML_Writable{
+public class SubLightSetting implements XML_Writable{
 
     private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
@@ -29,7 +25,7 @@ public class LightSetting implements XML_Writable{
         return groupLocked.get();
     }
 
-    public LightSetting(
+    public SubLightSetting(
             Double xCenter,
             Double yCenter,
             Double zCenter,
@@ -57,8 +53,8 @@ public class LightSetting implements XML_Writable{
         this.groupLocked = groupLockedProperty;
     }
 
-    public LightSetting duplicate() {
-        return new LightSetting(
+    public SubLightSetting duplicate() {
+        return new SubLightSetting(
                 xCenter.getValue(),
                 yCenter.getValue(),
                 zCenter.getValue(),
@@ -81,7 +77,7 @@ public class LightSetting implements XML_Writable{
 
     @Override
     public Element toJDOM2Element() {
-        return new Element("LightSetting")
+        return new Element("SubLightSetting")
                 .setAttribute("xCenter", xCenter.getValue().toString())
                 .setAttribute("yCenter", yCenter.getValue().toString())
                 .setAttribute("zCenter", zCenter.getValue().toString())
@@ -96,8 +92,8 @@ public class LightSetting implements XML_Writable{
                 ;
     }
 
-    public static LightSetting fromJDOM2Element(Element e, BooleanProperty groupLockedProperty) {
-        return new LightSetting(
+    public static SubLightSetting fromJDOM2Element(Element e, BooleanProperty groupLockedProperty) {
+        return new SubLightSetting(
                 Double.valueOf(e.getAttributeValue("xCenter")),
                 Double.valueOf(e.getAttributeValue("yCenter")),
                 Double.valueOf(e.getAttributeValue("zCenter")),

@@ -51,7 +51,7 @@ class OrbitTool extends AbstractTool {
 //
 //                System.out.println(changePolerVector);
 //
-//                cameraModel.setAzimuth(cameraModel.getAzmuth() + changePolerVector.x);
+//                cameraModel.setAzimuth(cameraModel.getAzimuth() + changePolerVector.x);
 //
 //                cameraModel.setInclination(cameraModel.getInclination() + changePolerVector.y);
 //
