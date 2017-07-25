@@ -27,7 +27,7 @@ public interface ControllableCameraModel extends ReadonlyCameraModel {
     public Double getTwist();
     public void setTwist(Double twist);
 
-    public Double getAzmuth();
+    public Double getAzimuth();
     public void setAzimuth(Double azmuth);
 
     public Double getInclination();
