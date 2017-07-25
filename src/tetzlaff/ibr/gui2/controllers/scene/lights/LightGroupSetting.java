@@ -64,6 +64,10 @@ public class LightGroupSetting {
         }
     }
 
+    public int getNLights(){
+        return lightList.size();
+    }
+
 
     public ObservableList<SubLightSetting> getLightList() {
         return lightList.get();
