@@ -181,16 +181,16 @@ public class FidelityMetricRequest implements IBRRequest
 				encodedVector.y / unitReflectanceEncoding,
 				encodedVector.z / unitReflectanceEncoding));
 		
-		SimpleMatrix weightVector = new SimpleMatrix(activeViewCount, 1);
-		for (int i = 0; i < activeViewCount; i++)
-		{
-			int viewIndex = viewIndexData.get(i, 0).intValue();
-			weightVector.set(i, viewWeightBuffer.get(viewIndex, 0).doubleValue());
-		}
-		
-        SimpleMatrix recon = system.mA.mult(weightVector);
-        SimpleMatrix error = recon.minus(system.b);
-		double matrixError = error.normF() / Math.sqrt(system.b.numRows() / 3);
+//		SimpleMatrix weightVector = new SimpleMatrix(activeViewCount, 1);
+//		for (int i = 0; i < activeViewCount; i++)
+//		{
+//			int viewIndex = viewIndexData.get(i, 0).intValue();
+//			weightVector.set(i, viewWeightBuffer.get(viewIndex, 0).doubleValue());
+//		}
+//		
+//        SimpleMatrix recon = system.mA.mult(weightVector);
+//        SimpleMatrix error = recon.minus(system.b);
+//		double matrixError = error.normF() / Math.sqrt(system.b.numRows() / 3);
         
 		// Primary error calculation method
         double sumSqError = 0.0;
