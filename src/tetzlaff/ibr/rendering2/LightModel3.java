@@ -31,11 +31,14 @@ public class LightModel3 implements ControllableLightModel {
         this.lightGroupSettingObservableValue = lightGroupSettingObservableValue;
 
         this.lightGroupSettingObservableValue.addListener((observable, oldValue, newValue) -> {
+            System.out.print("CCCCCCCCCCCCCCCCCC");
             if(newValue != null){
+                System.out.println("|||||||||||||||||||||Setup");
                 for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
                     subLightModel3s[i].setSubLightSettingObservableValue(newValue.lightListProperty().valueAt(i));
                 }
             } else {
+                System.out.println("|||||||||||||||||||Backup");
                 for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
                     subLightModel3s[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
                 }
@@ -44,9 +47,11 @@ public class LightModel3 implements ControllableLightModel {
     }
 
     private LightGroupSetting lightGroup(){
-        if (lightGroupSettingObservableValue != null || lightGroupSettingObservableValue.getValue() == null) {
+        if (lightGroupSettingObservableValue == null || lightGroupSettingObservableValue.getValue() == null) {
+//            System.out.println("Need Backup");
             return backup;
         }else {
+//            System.out.println("Need Value");
             return lightGroupSettingObservableValue.getValue();
         }
     }
@@ -57,7 +62,9 @@ public class LightModel3 implements ControllableLightModel {
 
     @Override
     public int getLightCount() {
-        return lightGroup().getNLights();
+        int count = lightGroup().getNLights();
+//        System.out.println("Counted " + count + "Lights");
+        return count;
     }
 
     @Override
@@ -72,6 +79,7 @@ public class LightModel3 implements ControllableLightModel {
 
     @Override
     public Vector3 getLightColor(int i) {
+        System.out.println("Get Color ");
         return lightModel(i).getColor();
     }
 
@@ -87,6 +95,18 @@ public class LightModel3 implements ControllableLightModel {
 
     @Override
     public Matrix4 getLightMatrix(int i) {
-        return lightModel(i).getLookMatrix();
+        System.out.println("get light matrix " + i);
+
+        Matrix4 out = lightModel(i).getLookMatrix();
+
+        for (int j = 0; j < 4; j++) {
+            System.out.print("[");
+            for (int k = 0; k < 4; k++) {
+                System.out.print("\t" + out.get(j,k));
+            }
+            System.out.print("]\n");
+        }
+
+        return out;
     }
 }
