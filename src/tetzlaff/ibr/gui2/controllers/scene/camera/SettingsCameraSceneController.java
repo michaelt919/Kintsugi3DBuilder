@@ -1,9 +1,7 @@
 package tetzlaff.ibr.gui2.controllers.scene.camera;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -11,15 +9,24 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import javafx.util.converter.NumberStringConverter;
+import tetzlaff.ibr.util.U;
+import tetzlaff.util.SafeNumberStringConverter;
 
 
 import java.net.URL;
+import java.text.FieldPosition;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.function.UnaryOperator;
 
-public class SettingsCameraSceneController {
+public class SettingsCameraSceneController implements Initializable {
 
 @FXML private VBox root;
 
@@ -47,7 +54,47 @@ public class SettingsCameraSceneController {
 @FXML private CheckBox orthographicCheckBox;
 
 
+private DoubleProperty fov = new SimpleDoubleProperty();
 
+private final SafeNumberStringConverter n = new SafeNumberStringConverter();
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        U.wrap(-180, 180, azimuthTextField);
+        U.bound(-90, 90, inclinationTextField);
+        U.wrap(-180, 180, twistTextField);
+
+
+        fOVSlider.setMin(-2);
+        fOVSlider.setMax(2);
+        fOVSlider.setValue(0);
+        fOVSlider.setShowTickMarks(true);
+        fOVSlider.setShowTickLabels(true);
+        fOVSlider.setBlockIncrement(0.1);
+        fOVSlider.setMajorTickUnit(1);
+        fOVSlider.setMinorTickCount(1);
+        fOVSlider.setLabelFormatter(new StringConverter<Double>() {
+            @Override
+            public String toString(Double object) {
+                return Double.toString(Math.pow(10, object));
+            }
+
+            @Override
+            public Double fromString(String string) {
+                return null;
+            }
+        });
+
+        U.powerBind(fOVSlider.valueProperty(), fov);
+
+//        fOVSlider.setMin(-100);
+//        fOVSlider.setMax(100);
+//        fOVSlider.setShowTickLabels(true);
+//        fOVSlider.setShowTickMarks(true);
+//        fOVSlider.setBlockIncrement(10);
+//        fOVSlider.setMajorTickUnit(50);
+//        fOVSlider.setMinorTickCount(4);
+    }
 
     public final ChangeListener<CameraSetting> changeListener =
             (observable, oldValue, newValue) -> {
@@ -62,8 +109,6 @@ public class SettingsCameraSceneController {
     }
 
     private void bind(CameraSetting c) {
-
-        NumberFormat n = NumberFormat.getNumberInstance();
 
         xCenterTextField.textProperty().bindBidirectional(c.xCenterProperty(), n);
         yCenterTextField.textProperty().bindBidirectional(c.yCenterProperty(), n);
@@ -82,10 +127,12 @@ public class SettingsCameraSceneController {
         inclinationSlider.valueProperty().bindBidirectional(c.inclinationProperty());
         distanceSlider.valueProperty().bindBidirectional(c.distanceProperty());
         twistSlider.valueProperty().bindBidirectional(c.twistProperty());
-        fOVSlider.valueProperty().bindBidirectional(c.fOVProperty());
+        //fOVSlider.valueProperty().bindBidirectional(c.fOVProperty());
         focalLengthSlider.valueProperty().bindBidirectional(c.focalLengthProperty());
 
         orthographicCheckBox.selectedProperty().bindBidirectional(c.orthographicProperty());
+
+        fov.bindBidirectional(c.fOVProperty());
 
     }
 
@@ -108,11 +155,12 @@ public class SettingsCameraSceneController {
         inclinationSlider.valueProperty().unbindBidirectional(c.inclinationProperty());
         distanceSlider.valueProperty().unbindBidirectional(c.distanceProperty());
         twistSlider.valueProperty().unbindBidirectional(c.twistProperty());
-        fOVSlider.valueProperty().unbindBidirectional(c.fOVProperty());
+        //fOVSlider.valueProperty().unbindBidirectional(c.fOVProperty());
         focalLengthSlider.valueProperty().unbindBidirectional(c.focalLengthProperty());
 
         orthographicCheckBox.selectedProperty().unbindBidirectional(c.orthographicProperty());
 
+        fov.bindBidirectional(c.fOVProperty());
     }
 
 
@@ -121,51 +169,6 @@ private void pressSelectPointButton(){
         //TODO
     System.out.println("TODO: point selected");
 }
-//    @FXML
-//    private TextField azimuthBox;
-//    @FXML
-//    private Slider azimuthSlider;
-//
-//
-//    public ChangeListener<CameraSetting> getCameraSettingChangeListener() {
-//        return null;
-//    }
-//
-//    private ChangeListener<CameraSetting> cameraSettingChangeListener = new ChangeListener<CameraSetting>() {
-//        @Override
-//        public void changed(ObservableValue<? extends CameraSetting> observable, CameraSetting oldValue, CameraSetting newValue) {
-//            //System.out.println("Change detected re-linking values");
-//
-//            //relink values
-//            if (oldValue != null) {
-////                azimuthSlider.valueProperty().unbindBidirectional(oldValue.azimuthProperty());
-////
-////                azimuthBox.textProperty().unbindBidirectional(oldValue.azimuthProperty());
-//
-//            }
-//
-//            StringConverter<Double> dts = new StringConverter<Double>() {
-//                @Override
-//                public String toString(Double object) {
-//                    return object.toString();
-//                }
-//
-//                @Override
-//                public Double fromString(String string) {
-//                    return Double.valueOf(string);
-//                }
-//            };
-//
-//            System.out.println("BIND");
-//            assert newValue != null : "the the camera in the list got deselected, I didn't know that could happen!";
-//
-////            azimuthSlider.valueProperty().bindBidirectional(newValue.azimuthProperty());
-////
-////            azimuthBox.textProperty().bindBidirectional(newValue.azimuthProperty(), NumberFormat.getNumberInstance());
-//        }
-//    };
-//
-//
 
 
 }

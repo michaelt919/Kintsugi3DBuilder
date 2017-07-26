@@ -2,7 +2,6 @@ package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/20
 
 
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ChoiceBox;
@@ -10,9 +9,9 @@ import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import tetzlaff.util.SafeNumberStringConverter;
 
 import java.net.URL;
-import java.text.NumberFormat;
 import java.util.ResourceBundle;
 
 public class SettingsLightSceneController implements Initializable{
@@ -36,10 +35,12 @@ public class SettingsLightSceneController implements Initializable{
     @FXML private Slider distanceSlider;
     @FXML private TextField intensityTextField;
     @FXML private Slider intensitySlider;
-    @FXML private ColorPicker colorPicker; //TODO add the color to LightSetting
+    @FXML private ColorPicker colorPicker;
     @FXML private ChoiceBox<LightType> lightTypeChoiceBox;
 
-    public final ChangeListener<LightSetting> changeListener = (observable, oldValue, newValue) -> {
+    private final SafeNumberStringConverter n = new SafeNumberStringConverter();
+
+    public final ChangeListener<SubLightSetting> changeListener = (observable, oldValue, newValue) -> {
         if(oldValue != null) unbind(oldValue);
 
         if(newValue != null){ bind(newValue); setDisabled(newValue.isLocked() | newValue.getGroupLocked()); }
@@ -51,9 +52,7 @@ public class SettingsLightSceneController implements Initializable{
         root.setDisable(disabled);
     }
 
-    private void bind(LightSetting c){
-
-        NumberFormat n = NumberFormat.getNumberInstance();
+    private void bind(SubLightSetting c){
 
         xCenterTextField.textProperty().bindBidirectional(c.xCenterProperty(), n);
         yCenterTextField.textProperty().bindBidirectional(c.yCenterProperty(), n);
@@ -71,9 +70,11 @@ public class SettingsLightSceneController implements Initializable{
         intensitySlider.valueProperty().bindBidirectional(c.intensityProperty());
         lightTypeChoiceBox.valueProperty().bindBidirectional(c.lightTypeProperty());
 
+        colorPicker.valueProperty().bindBidirectional(c.colorProperty());
+
     }
 
-    private void unbind(LightSetting c){
+    private void unbind(SubLightSetting c){
 
         xCenterTextField.textProperty().unbindBidirectional(c.xCenterProperty());
         yCenterTextField.textProperty().unbindBidirectional(c.yCenterProperty());
@@ -90,6 +91,7 @@ public class SettingsLightSceneController implements Initializable{
         distanceSlider.valueProperty().unbindBidirectional(c.distanceProperty());
         intensitySlider.valueProperty().unbindBidirectional(c.intensityProperty());
         lightTypeChoiceBox.valueProperty().unbindBidirectional(c.lightTypeProperty());
+        colorPicker.valueProperty().unbindBidirectional(c.colorProperty());
 
     }
 }

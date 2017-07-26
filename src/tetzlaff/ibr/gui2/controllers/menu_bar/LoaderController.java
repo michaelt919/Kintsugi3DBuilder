@@ -1,4 +1,4 @@
-package tetzlaff.ibr.alexkautz_workspace.user_interface;
+package tetzlaff.ibr.gui2.controllers.menu_bar;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -8,23 +8,14 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import tetzlaff.ibr.IBRLoadOptions;
-import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.IBRRenderableListModel;
-import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
-import tetzlaff.ibr.util.IBRRequestQueue;
+import tetzlaff.ibr.rendering2.ToolModel3;
 
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
-public class Loader implements Initializable{
-
-
-    private IBRRenderableListModel model;
-
+public class LoaderController implements Initializable{
 
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
@@ -40,6 +31,12 @@ public class Loader implements Initializable{
     private File cameraFile = null;
     private File objFile = null;
     private File photoDir = null;
+
+    private ToolModel3 toolModel3;
+
+    void setToolModel3(ToolModel3 toolModel3) {
+        this.toolModel3 = toolModel3;
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -58,7 +55,6 @@ public class Loader implements Initializable{
         objFileChooser.setTitle("Select object file");
         photoDirectoryChooser.setTitle("Select undistorted photo directory");
 
-        model = PassedParameters.get().getRenderPerams().getModel();
     }
 
     @FXML private void camFileSelect(){
@@ -106,12 +102,10 @@ public class Loader implements Initializable{
             //ok!
 
             try {
-                loadIt();
+                toolModel3.loadFiles(cameraFile, objFile, photoDir);
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("files were malformed");
             }
-
-            //TODO pass the files
 
             close();
 
@@ -121,26 +115,6 @@ public class Loader implements Initializable{
 
     }
 
-    private void loadIt() throws IOException {
-
-        IBRLoadOptions loadOptions = new IBRLoadOptions()
-                .setColorImagesRequested(true)
-                .setCompressionRequested(true)
-                .setMipmapsRequested(true)
-                .setDepthImagesRequested(false);
-//                .setColorImagesRequested(true) //TODO set these settings to there current values and move this loading to diffrent class
-
-//                .setMipmapsRequested(chckbxUseMipmaps.isSelected())
-//                .setCompressionRequested(chckbxCompressImages.isSelected())
-//                .setDepthImagesRequested(chckbxGenerateDepthImages.isSelected())
-//                .setDepthImageWidth((Integer)spinnerDepthWidth.getValue())
-//                .setDepthImageHeight((Integer)spinnerDepthHeight.getValue());
-
-        IBRRenderable ibrRenderable = model.addFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, objFile, photoDir, loadOptions);
-        ibrRenderable.settings().setRelightingEnabled(true);
-        ibrRenderable.settings().setVisibleLightsEnabled(true);
-        ibrRenderable.setHalfResolution(true);
-    }
 
 
     @FXML private void cancleButtonPress(){

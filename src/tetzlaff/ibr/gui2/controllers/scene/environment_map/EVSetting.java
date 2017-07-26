@@ -5,6 +5,8 @@ import org.jdom2.Element;
 import tetzlaff.misc.XML_Writable;
 import javafx.scene.paint.Color;
 
+import java.io.File;
+
 public class EVSetting implements XML_Writable{
 
     private final BooleanProperty evUseImage = new SimpleBooleanProperty();
@@ -12,35 +14,25 @@ public class EVSetting implements XML_Writable{
     private final BooleanProperty bpUseImage = new SimpleBooleanProperty();
     private final BooleanProperty bpUseColor = new SimpleBooleanProperty();
     private final BooleanProperty imagePathsRelative = new SimpleBooleanProperty();
-    private final StringProperty evImagePath = new SimpleStringProperty();
-    private final StringProperty bpImagePath = new SimpleStringProperty();
+
+    private final Property<File> evImageFile = new SimpleObjectProperty<>();
+    private final Property<File> bpImageFile = new SimpleObjectProperty<>();
+
     private final DoubleProperty evColorIntensity = new SimpleDoubleProperty();
     private final DoubleProperty evRotation = new SimpleDoubleProperty();
     private final Property<Color> evColor = new SimpleObjectProperty<>();
     private final Property<Color> bpColor = new SimpleObjectProperty<>();
     private final StringProperty name = new SimpleStringProperty();
     private final BooleanProperty locked = new SimpleBooleanProperty();
-// BooleanProperty evUseImage
-// BooleanProperty evUseColor
-// BooleanProperty bpUseImage
-// BooleanProperty bpUseColor
-// BooleanProperty imagePathsRelative
-// StringProperty evImagePath
-// StringProperty bpImagePath
-// DoubleProperty evColorIntensity
-// DoubleProperty evRotation
-// Property<Color> evColor
-// Property<Color> bpColor
-// StringProperty name
 
-    public EVSetting(Boolean evUseImage,Boolean evUseColor,Boolean bpUseImage,Boolean bpUseColor,Boolean imagePathsRelative,String evImagePath,String bpImagePath,Double evColorIntensity,Double evRotation,Color evColor,Color bpColor,String name, Boolean locked) {
+    public EVSetting(Boolean evUseImage,Boolean evUseColor,Boolean bpUseImage,Boolean bpUseColor,Boolean imagePathsRelative,File evImageFile, File bpImageFile, Double evColorIntensity,Double evRotation,Color evColor,Color bpColor,String name, Boolean locked) {
         this.evUseImage.setValue(evUseImage);
         this.evUseColor.setValue(evUseColor);
         this.bpUseImage.setValue(bpUseImage);
         this.bpUseColor.setValue(bpUseColor);
         this.imagePathsRelative.setValue(imagePathsRelative);
-        this.evImagePath.setValue(evImagePath);
-        this.bpImagePath.setValue(bpImagePath);
+        this.evImageFile.setValue(evImageFile);
+        this.bpImageFile.setValue(bpImageFile);
         this.evColorIntensity.setValue(evColorIntensity);
         this.evRotation.setValue(evRotation);
         this.evColor.setValue(evColor);
@@ -57,8 +49,9 @@ public class EVSetting implements XML_Writable{
                 .setAttribute("bpUseImage", bpUseImage.getValue().toString())
                 .setAttribute("bpUseColor", bpUseColor.getValue().toString())
                 .setAttribute("imagePathsRelative", imagePathsRelative.getValue().toString())
-                .setAttribute("evImagePath", evImagePath.getValue())
-                .setAttribute("bpImagePath", bpImagePath.getValue())
+                .setAttribute("evImageFile", evImageFile.getValue().getPath())
+                .setAttribute("bpImageFile", bpImageFile.getValue().getPath())
+
                 .setAttribute("evColorIntensity", evColorIntensity.getValue().toString())
                 .setAttribute("evRotation", evRotation.getValue().toString())
                 .setAttribute("evColor", evColor.getValue().toString())
@@ -75,8 +68,10 @@ public class EVSetting implements XML_Writable{
                 Boolean.valueOf(element.getAttributeValue("bpUseImage")),
                 Boolean.valueOf(element.getAttributeValue("bpUseColor")),
                 Boolean.valueOf(element.getAttributeValue("imagePathsRelative")),
-                String.valueOf(element.getAttributeValue("evImagePath")),
-                String.valueOf(element.getAttributeValue("bpImagePath")),
+
+                new File(element.getAttributeValue("evImageFile")),
+                new File(element.getAttributeValue("bpImageFile")),
+
                 Double.valueOf(element.getAttributeValue("evColorIntensity")),
                 Double.valueOf(element.getAttributeValue("evRotation")),
                 Color.valueOf(element.getAttributeValue("evColor")),
@@ -101,8 +96,8 @@ public class EVSetting implements XML_Writable{
                 bpUseImage.getValue(),
                 bpUseColor.getValue(),
                 imagePathsRelative.getValue(),
-                evImagePath.getValue(),
-                bpImagePath.getValue(),
+                evImageFile.getValue(),
+                bpImageFile.getValue(),
                 evColorIntensity.getValue(),
                 evRotation.getValue(),
                 evColor.getValue(),
@@ -173,28 +168,28 @@ public class EVSetting implements XML_Writable{
         this.imagePathsRelative.set(imagePathsRelative);
     }
 
-    public String getEvImagePath() {
-        return evImagePath.get();
+    public File getEvImageFile() {
+        return evImageFile.getValue();
     }
 
-    public StringProperty evImagePathProperty() {
-        return evImagePath;
+    public Property<File> evImageFileProperty() {
+        return evImageFile;
     }
 
-    public void setEvImagePath(String evImagePath) {
-        this.evImagePath.set(evImagePath);
+    public void setEvImageFile(File evImageFile) {
+        this.evImageFile.setValue(evImageFile);
     }
 
-    public String getBpImagePath() {
-        return bpImagePath.get();
+    public File getBpImageFile() {
+        return bpImageFile.getValue();
     }
 
-    public StringProperty bpImagePathProperty() {
-        return bpImagePath;
+    public Property<File> bpImageFileProperty() {
+        return bpImageFile;
     }
 
-    public void setBpImagePath(String bpImagePath) {
-        this.bpImagePath.set(bpImagePath);
+    public void setBpImageFile(File bpImageFile) {
+        this.bpImageFile.setValue(bpImageFile);
     }
 
     public double getEvColorIntensity() {

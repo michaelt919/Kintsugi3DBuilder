@@ -13,6 +13,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,8 +47,8 @@ public class RootEVSceneController implements Initializable {
                 false,
                 false,
                 false,
-                "",
-                "",
+                null,
+                null,
                 1.0,
                 0.0,
                 new Color(0.0, 0.0, 0.0, 1.0),

@@ -8,19 +8,19 @@
 
     <Tab text="Camera">
         <ScrollPane fitToWidth="true">
-            <fx:include source="camera/RootCameraScene.fxml"/>
+            <fx:include fx:id="camera" source="camera/RootCameraScene.fxml"/>
         </ScrollPane>
     </Tab>
 
     <Tab text="Environment map">
         <ScrollPane fitToWidth="true">
-            <fx:include source="environment_map/RootEnvironmentMapScene.fxml"/>
+            <fx:include fx:id="environmentMap" source="environment_map/RootEnvironmentMapScene.fxml"/>
         </ScrollPane>
     </Tab>
 
     <Tab text="Lights">
     <ScrollPane fitToWidth="true">
-        <fx:include source="lights/RootLightScene.fxml"/>
+        <fx:include fx:id="lights" source="lights/RootLightScene.fxml"/>
     </ScrollPane>
 
 </Tab>

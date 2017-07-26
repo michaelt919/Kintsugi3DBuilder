@@ -1,8 +1,8 @@
-package tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later;
+package tetzlaff.ibr.rendering2;
 
 import tetzlaff.gl.vecmath.Vector3;
 
-public class PointLightModelX extends CameraModelX {
+public class PointLightModel2 extends CameraModel2 {
 
     private Vector3 color = new Vector3(0.0f, 0.0f, 0.0f);
 

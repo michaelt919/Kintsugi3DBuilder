@@ -2,14 +2,14 @@ package tetzlaff.ibr.alexkautz_workspace.user_interface;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ToggleGroup;
-import javafx.stage.Screen;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
-import tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later.Tool;
+import tetzlaff.ibr.gui2.controllers.menu_bar.LoaderController;
+import tetzlaff.ibr.rendering2.tools.Tool;
 
 import java.io.IOException;
 
@@ -20,13 +20,15 @@ public class Base {
 
         try {
 
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("Loader.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("LoaderController.fxml"));
             Parent root = fxmlLoader.load();
             Stage stage = new Stage();
             stage.setTitle("Load Window");
             stage.setScene(new Scene(root, 750, 330));
 
-            Loader loader = fxmlLoader.getController();
+            LoaderController loaderController = fxmlLoader.getController();
+
+            stage.initModality(Modality.APPLICATION_MODAL);
 
             stage.show();
 
@@ -49,6 +51,6 @@ public class Base {
             case 1: newTool = Tool.DRAG; break;
             default: newTool = Tool.LOOK; break;
         }
-        PassedParameters.get().getRenderPerams().getGlobalController().setTool(newTool);
+        PassedParameters.get().getRenderPerams().getToolModel2().setTool(newTool);
     }
 }

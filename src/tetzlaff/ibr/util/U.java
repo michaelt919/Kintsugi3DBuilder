@@ -1,0 +1,118 @@
+package tetzlaff.ibr.util;//Created by alexk on 7/20/2017.
+
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+
+import java.util.function.UnaryOperator;
+
+/*
+I general utilities class.
+ */
+public class U {
+//    this method takes in a double property, and prevents it from reaching outside of its bound.
+    public static DoubleProperty  wrap(double min, double max, DoubleProperty property){
+       property.addListener((observable, oldValue, newValue) -> {
+          if(newValue != null && (newValue.doubleValue() < min || newValue.doubleValue() > max)){
+              property.set(wrap(min, max, newValue.doubleValue()));
+          }
+       });
+       return property;
+    }
+
+    public static DoubleProperty bound(double min, double max, DoubleProperty property){
+       property.addListener((observable, oldValue, newValue) -> {
+          if(newValue != null && (newValue.doubleValue() < min || newValue.doubleValue() > max)){
+              property.set(bound(min, max, newValue.doubleValue()));
+          }
+       });
+       return property;
+    }
+
+
+
+    private static final String DOUBLE_REG_EXP = "-?(0|([1-9]\\d{0,5}))?(\\.\\d*)?";
+
+    public static TextField wrap(double min, double max, TextField textField){
+        textField.setTextFormatter(new TextFormatter<Double>(change -> {
+            if(change.isDeleted() && !change.isReplaced()) return change;
+            String text = change.getControlNewText();
+            if(text.isEmpty() || text.equals("-") || text.matches(DOUBLE_REG_EXP)) return change;
+            else return null;
+
+        }));
+
+        textField.focusedProperty().addListener((ob,o,n)->{
+            if(o && !n){
+                try {
+                    double value = Double.valueOf(textField.getText());
+                    textField.setText(Double.toString(wrap(min, max, value)));
+                    System.out.println("Set text to " + Double.toString(wrap(min, max, value)));
+                }catch (NumberFormatException nfe){
+                    //do nothing
+                }
+            }
+        });
+
+        return textField;
+    }
+
+    public static TextField bound(double min, double max, TextField textField){
+
+        textField.setTextFormatter(new TextFormatter<Double>(change -> {
+            if(change.isDeleted() && !change.isReplaced()) return change;
+            String text = change.getControlNewText();
+            if(text.isEmpty() || text.equals("-") || text.matches(DOUBLE_REG_EXP)) return change;
+            else return null;
+
+        }));
+
+        textField.focusedProperty().addListener((ob,o,n)->{
+            if(o && !n){
+                try {
+                    double value = Double.valueOf(textField.getText());
+                    textField.setText(Double.toString(bound(min, max, value)));
+                    System.out.println("Set text to " + Double.toString(wrap(min, max, value)));
+                }catch (NumberFormatException nfe){
+                    //do nothing
+                }
+            }
+        });
+
+        return textField;
+    }
+
+
+
+
+
+    private static double wrap(double min, double max, double value){
+        double diff= max - min;
+        if(diff == 0) return max;
+        //System.out.printf("[%f %f %f]", min, max, value);
+        while (value<min) value+=diff;
+        while (value>max) value-=diff;
+        //System.out.println();
+        return value;
+    }
+
+    private static double bound(double min, double max, double value){
+        if(value < min) return min;
+        else if(value > max) return max;
+        else return value;
+    }
+
+
+
+    public static void powerBind(DoubleProperty d, DoubleProperty tenToD){
+
+        d.addListener((b,o,n)-> tenToD.set(Math.pow(10, n.doubleValue())));
+        tenToD.addListener((b,o,n)-> d.set(Math.log10(n.doubleValue())));
+
+    }
+
+
+
+}

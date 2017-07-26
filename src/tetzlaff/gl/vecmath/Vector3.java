@@ -210,4 +210,13 @@ public class Vector3
 	{
 		return new Vector3((float)operator.applyAsDouble(x), (float)operator.applyAsDouble(y), (float)operator.applyAsDouble(z));
 	}
+
+	@Override
+	public String toString() {
+		return "Vector3{" +
+				"x=" + x +
+				", y=" + y +
+				", z=" + z +
+				'}';
+	}
 }

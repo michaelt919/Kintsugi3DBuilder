@@ -2,21 +2,24 @@ package tetzlaff.ibr.gui2.controllers.scene.camera;
 
 import javafx.beans.property.*;
 import org.jdom2.Element;
+import tetzlaff.ibr.util.U;
 import tetzlaff.misc.XML_Writable;
 
 public class CameraSetting implements XML_Writable{
     private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
     private final DoubleProperty zCenter = new SimpleDoubleProperty();
-    private final DoubleProperty azimuth = new SimpleDoubleProperty();
-    private final DoubleProperty inclination = new SimpleDoubleProperty();
+    private final DoubleProperty azimuth = U.wrap(-180, 180, new SimpleDoubleProperty());
+    private final DoubleProperty inclination = U.bound(-90,90, new SimpleDoubleProperty());
     private final DoubleProperty distance = new SimpleDoubleProperty();
-    private final DoubleProperty twist = new SimpleDoubleProperty();
+    private final DoubleProperty twist = U.wrap(-180.0, 180.0, new SimpleDoubleProperty());
     private final DoubleProperty fOV = new SimpleDoubleProperty();
     private final DoubleProperty focalLength = new SimpleDoubleProperty();
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final BooleanProperty orthographic = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
+
+
 
 
 
