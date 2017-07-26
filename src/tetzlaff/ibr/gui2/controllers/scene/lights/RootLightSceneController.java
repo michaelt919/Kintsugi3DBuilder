@@ -20,7 +20,7 @@ import java.util.*;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
-import tetzlaff.ibr.rendering2.LightModel2;
+import tetzlaff.ibr.rendering2.LightModel3;
 
 import java.util.ArrayList;
 import java.util.ResourceBundle;
@@ -43,13 +43,10 @@ public class RootLightSceneController implements Initializable {
         //TABLE SET UP
         //columns
         TableColumn<LightGroupSetting, String> nameCol = new TableColumn<>("Name");
-        nameCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<LightGroupSetting, String>, ObservableValue<String>>() {
-            @Override
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<LightGroupSetting, String> param) {
-                String s = "";
-                if(param.getValue().isLocked()) s = "(L)";
-                return new SimpleStringProperty(s + param.getValue().getName());
-            }
+        nameCol.setCellValueFactory(param -> {
+            String s = "";
+            if(param.getValue().isLocked()) s = "(L)";
+            return new SimpleStringProperty(s + param.getValue().getName());
         });
         tableView.getColumns().add(nameCol);
 
@@ -111,9 +108,13 @@ public class RootLightSceneController implements Initializable {
 
     }
 
-    public void init2(LightModel2 lightModel2){
+    public void init2(LightModel3 lightModel3){
         System.out.println("Lights in!");
-
+        ObservableValue<LightGroupSetting> observableValue = tableView.getSelectionModel().selectedItemProperty();
+        System.out.println("Setting " + observableValue);
+        lightModel3.setLightGroupSettingObservableValue(
+                observableValue
+        );
     }
 
     @FXML private void newGroup(){

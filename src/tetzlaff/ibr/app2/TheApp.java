@@ -36,7 +36,7 @@ public class TheApp {
     private static void createModels(){
         rootModel = new RootModel(
                 new CameraModel3(),
-                new LightModel2(4),
+                new LightModel3(),
                 new ToolModel3()
         );
     }

@@ -19,8 +19,6 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.alexkautz_workspace.render.TrackballLightController2;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
-import tetzlaff.ibr.rendering2.tools.LookToolController;
-import tetzlaff.ibr.rendering2.tools.ToolModel2;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
@@ -115,16 +113,16 @@ public class IBRelight2
 
 
 			//Here i create my own brand of camera and light models;
-			ControllableLightModel lightModel2 = TheApp.getRootModel().getLightModel2();
+			ControllableLightModel lightModel3 = TheApp.getRootModel().getLightModel3();
 			ControllableCameraModel cameraModel3 = TheApp.getRootModel().getCameraModel3();
 			ControllableToolModel toolModel = TheApp.getRootModel().getToolModel3();
-			lightModel2.setLightColor(0, new Vector3(1f, 1f, 1f));
+//			lightModel3.setLightColor(0, new Vector3(1f, 1f, 1f));
 
 			ToolBox toolBox = (new ToolBox.ToolBoxBuilder())
 					.setCameraModel(cameraModel3)
 					.setEnvironmentMapModel(new ControllableEnvironmentMapModel() {
 					})
-					.setLightModel(lightModel2)
+					.setLightModel(lightModel3)
 					.setToolModel(toolModel)
 					.setWindow(window)
 					.build();
@@ -139,7 +137,7 @@ public class IBRelight2
                     context,
                     program,
 					cameraModel3,
-					lightModel2);
+					lightModel3);
 
             toolModel.setModel(model);
 
@@ -195,7 +193,7 @@ public class IBRelight2
 				@Override
 				public void refresh()
 				{
-					fpController.update();
+					//fpController.update();
 				}
 
 				@Override
