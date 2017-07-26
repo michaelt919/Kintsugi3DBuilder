@@ -1,27 +1,22 @@
 package tetzlaff.ibr.gui2.controllers.scene.camera;
 
 import com.sun.javafx.collections.ObservableListWrapper;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-import javafx.util.StringConverter;
+import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
+import tetzlaff.ibr.rendering2.CameraModel2;
+import tetzlaff.ibr.rendering2.CameraModel3;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
 
 public class RootCameraSceneController implements Initializable {
 
@@ -49,7 +44,7 @@ public class RootCameraSceneController implements Initializable {
                 0.0,
                 0.0,
                 0.0,
-                90.0,
+                0.0,
                 1.0,
                 0.0,
                 1.0,
@@ -62,6 +57,20 @@ public class RootCameraSceneController implements Initializable {
         listOfCameras.add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
 
+    }
+
+    public void init2(CameraModel3 cameraModel3){
+
+        System.out.println("Cam in!");
+
+        cameraModel3.setSelectedCameraSettingProperty(
+                cameraListView.getSelectionModel().selectedItemProperty()
+        );
+
+    }
+
+    private CameraSetting getIt(){
+        return s().getSelectedItem();
     }
 
     private SelectionModel<CameraSetting> s() {

@@ -29,9 +29,20 @@
                <Insets />
             </GridPane.margin>
          </Button>
-         <Slider fx:id="xCenterSlider" GridPane.columnIndex="2"  />
-         <Slider fx:id="yCenterSlider" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-         <Slider fx:id="zCenterSlider" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+         <Slider blockIncrement="0.05" majorTickUnit="0.25" max="0.5" min="-0.5" showTickLabels="true" showTickMarks="true" snapToTicks="true" GridPane.columnIndex="2" fx:id="xCenterSlider" />
+         <Slider fx:id="yCenterSlider" blockIncrement="0.05" majorTickUnit="0.25" max="0.5" min="-0.5" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+         <Slider fx:id="zCenterSlider" blockIncrement="0.05" majorTickUnit="0.25" max="0.5" min="-0.5" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+         <columnConstraints>
+            <ColumnConstraints />
+            <ColumnConstraints />
+            <ColumnConstraints />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+         </rowConstraints>
       </GridPane>
    </TitledPane>
    <TitledPane animated="false" text="Dolly">
@@ -41,16 +52,27 @@
          </padding>
          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Azimuth:" GridPane.halignment="RIGHT" />
          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Zoom:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Twist:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
          <TextField fx:id="azimuthTextField" GridPane.columnIndex="1" />
          <TextField fx:id="inclinationTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          <TextField fx:id="distanceTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
          <TextField fx:id="twistTextField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-         <Slider fx:id="azimuthSlider" GridPane.columnIndex="2" />
-         <Slider fx:id="inclinationSlider" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-         <Slider fx:id="distanceSlider" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-         <Slider fx:id="twistSlider" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+         <Slider fx:id="azimuthSlider" blockIncrement="30.0" majorTickUnit="90.0" max="180.0" min="-180.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" />
+         <Slider fx:id="inclinationSlider" blockIncrement="15.0" majorTickUnit="45.0" max="90.0" min="-90.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+         <Slider fx:id="distanceSlider" majorTickUnit="2.5" max="10.0" minorTickCount="4" showTickLabels="true" showTickMarks="true" value="1.0" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+         <Slider fx:id="twistSlider" blockIncrement="30.0" majorTickUnit="90.0" max="180.0" min="-180.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+         <columnConstraints>
+            <ColumnConstraints />
+            <ColumnConstraints />
+            <ColumnConstraints />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+         </rowConstraints>
       </GridPane>
    </TitledPane>
    <TitledPane animated="false" text="Perspective">

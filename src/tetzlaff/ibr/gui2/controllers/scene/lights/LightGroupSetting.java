@@ -4,14 +4,15 @@ package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/20
 import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
+import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 
 public class LightGroupSetting {
     public final static int LIGHT_LIMIT = 4;
 
-    private final ListProperty<LightSetting> lightList = new SimpleListProperty<>(
-            new ObservableListWrapper<LightSetting>(
+    private final ListProperty<SubLightSetting> lightList = new SimpleListProperty<>(
+            new ObservableListWrapper<SubLightSetting>(
                     new ArrayList<>(LIGHT_LIMIT)
             )
     );
@@ -27,7 +28,7 @@ public class LightGroupSetting {
     public void addLight(){
         if(lightList.size() < LIGHT_LIMIT){
             lightList.add(
-                    new LightSetting(
+                    new SubLightSetting(
                             0.0,
                             0.0,
                             0.0,
@@ -38,6 +39,7 @@ public class LightGroupSetting {
                             false,
                             "X",
                             LightType.PointLight,
+                            Color.WHITE,
                             locked
                     )
             );
@@ -63,11 +65,11 @@ public class LightGroupSetting {
     }
 
 
-    public ObservableList<LightSetting> getLightList() {
+    public ObservableList<SubLightSetting> getLightList() {
         return lightList.get();
     }
 
-    public ListProperty<LightSetting> lightListProperty() {
+    public ListProperty<SubLightSetting> lightListProperty() {
         return lightList;
     }
 

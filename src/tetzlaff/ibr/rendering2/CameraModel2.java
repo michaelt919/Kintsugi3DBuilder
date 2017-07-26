@@ -1,21 +1,32 @@
-package tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later;
+package tetzlaff.ibr.rendering2;
 
 import javafx.beans.property.Property;
+import kautzTesting.MoreMatrixMath;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.gui2.controllers.scene.camera.CameraSetting;
+import tetzlaff.mvc.models.ControllableCameraModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 
-public class CameraModelX implements ReadonlyCameraModel {
+public class CameraModel2 implements ReadonlyCameraModel{
 
     private Float zoom;
     private Vector3 offSet;
     private Matrix4 orbit;
 
+    private Trigger setOrbitTrigger;
+    private Trigger getOrbitTrigger;
+    public void setSetOrbitTrigger(Trigger setOrbitTrigger) {
+        this.setOrbitTrigger = setOrbitTrigger;
+    }
+    public void setGetOrbitTrigger(Trigger getOrbitTrigger) {
+        this.getOrbitTrigger = getOrbitTrigger;
+    }
+
     public final static Vector3 ORIGIN = new Vector3(0,0,0);
 
-    public CameraModelX() {
+    public CameraModel2() {
         zoom = 1f;
         offSet = new Vector3(0,0,0);
         orbit = Matrix4.IDENTITY;
@@ -30,9 +41,6 @@ public class CameraModelX implements ReadonlyCameraModel {
     @Override
     public Matrix4 getLookMatrix() {
         return Matrix4.lookAt( new Vector3(0, 0, 1/zoom), ORIGIN, new Vector3(0,1,0))
-
-                //.times(Matrix4.translate(offSet) //TODO fix this distortion
-
                 .times(orbit);
     }
 
@@ -44,11 +52,21 @@ public class CameraModelX implements ReadonlyCameraModel {
         this.offSet = offSet;
     }
 
+    public Matrix4 getJustOrbit(){
+        return orbit;
+    }
+
     public Matrix4 getOrbit() {
+        if(getOrbitTrigger != null)getOrbitTrigger.trigger();
         return orbit;
     }
 
     public void setOrbit(Matrix4 orbit) {
+        if(setOrbitTrigger != null)setOrbitTrigger.trigger();
+        this.orbit = orbit;
+    }
+
+    public void setJustOrbit(Matrix4 orbit){
         this.orbit = orbit;
     }
 

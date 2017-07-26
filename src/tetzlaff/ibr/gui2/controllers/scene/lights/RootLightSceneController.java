@@ -2,12 +2,7 @@ package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/20
 
 import com.sun.javafx.collections.ObservableListWrapper;
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
-import javafx.beans.binding.ListExpression;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -15,36 +10,20 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
 import java.net.URL;
 import java.util.*;
 
-import com.sun.javafx.collections.ObservableListWrapper;
-import javafx.beans.binding.Binding;
-import javafx.beans.binding.ObjectBinding;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.util.Callback;
+import tetzlaff.ibr.rendering2.LightModel2;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
 
 public class RootLightSceneController implements Initializable {
     @FXML private VBox settings;
@@ -55,7 +34,7 @@ public class RootLightSceneController implements Initializable {
     @FXML private Button theRenameButton;
 
     private final ObservableList<LightGroupSetting> lightGroups = new ObservableListWrapper<>(new ArrayList<>());
-    private final Property<LightSetting> selectedLight = new SimpleObjectProperty<>();
+    private final Property<SubLightSetting> selectedLight = new SimpleObjectProperty<>();
     private int lastSelectedIndex = -1;
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -77,7 +56,7 @@ public class RootLightSceneController implements Initializable {
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
             final Integer tempFinalInt = i;
 
-            TableColumn<LightGroupSetting, LightSetting> newCol = new TableColumn<>("L" + (tempFinalInt+1));
+            TableColumn<LightGroupSetting, SubLightSetting> newCol = new TableColumn<>("L" + (tempFinalInt+1));
 
             newCol.setCellValueFactory(param -> param.getValue().lightListProperty().valueAt(tempFinalInt));
 
@@ -98,8 +77,8 @@ public class RootLightSceneController implements Initializable {
                     assert c.getAddedSize() == 1;
                     TablePosition tb = c.getAddedSubList().get(0);
                     ObservableValue selected = tb.getTableColumn().getCellObservableValue(tb.getRow());
-                    if(selected != null && selected.getValue() instanceof LightSetting){
-                            selectedLight.setValue((LightSetting) selected.getValue());
+                    if(selected != null && selected.getValue() instanceof SubLightSetting){
+                            selectedLight.setValue((SubLightSetting) selected.getValue());
                             lastSelectedIndex = tb.getColumn()-1;
                         }
                         else {
@@ -130,8 +109,10 @@ public class RootLightSceneController implements Initializable {
 
         selectedLight.addListener(settingsController.changeListener);
 
+    }
 
-
+    public void init2(LightModel2 lightModel2){
+        System.out.println("Lights in!");
 
     }
 
@@ -265,5 +246,7 @@ public class RootLightSceneController implements Initializable {
     private LightGroupSetting getSelected(){
         return tableView.getSelectionModel().getSelectedItem();
     }
+
+
 
 }

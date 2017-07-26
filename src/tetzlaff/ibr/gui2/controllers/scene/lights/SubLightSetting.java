@@ -1,14 +1,11 @@
 package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
 import javafx.beans.property.*;
-import javafx.fxml.Initializable;
+import javafx.scene.paint.Color;
 import org.jdom2.Element;
 import tetzlaff.misc.XML_Writable;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
-public class LightSetting implements XML_Writable{
+public class SubLightSetting implements XML_Writable{
 
     private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
@@ -20,6 +17,7 @@ public class LightSetting implements XML_Writable{
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
     private final Property<LightType> lightType = new SimpleObjectProperty<>();
+    private final Property<Color> color = new SimpleObjectProperty<>();
 
     private final BooleanProperty groupLocked;
 
@@ -27,7 +25,7 @@ public class LightSetting implements XML_Writable{
         return groupLocked.get();
     }
 
-    public LightSetting(
+    public SubLightSetting(
             Double xCenter,
             Double yCenter,
             Double zCenter,
@@ -38,7 +36,8 @@ public class LightSetting implements XML_Writable{
             Boolean locked,
             String name,
             LightType lightType,
-            BooleanProperty groopLockedProperty
+            Color color,
+            BooleanProperty groupLockedProperty
     ) {
         this.xCenter.setValue(xCenter);
         this.yCenter.setValue(yCenter);
@@ -50,11 +49,12 @@ public class LightSetting implements XML_Writable{
         this.locked.setValue(locked);
         this.name.setValue(name);
         this.lightType.setValue(lightType);
-        this.groupLocked = groopLockedProperty;
+        this.color.setValue(color);
+        this.groupLocked = groupLockedProperty;
     }
 
-    public LightSetting duplicate() {
-        return new LightSetting(
+    public SubLightSetting duplicate() {
+        return new SubLightSetting(
                 xCenter.getValue(),
                 yCenter.getValue(),
                 zCenter.getValue(),
@@ -65,6 +65,7 @@ public class LightSetting implements XML_Writable{
                 locked.getValue(),
                 name.getValue(),
                 lightType.getValue(),
+                color.getValue(),
                 this.groupLocked
         );
     }
@@ -76,7 +77,7 @@ public class LightSetting implements XML_Writable{
 
     @Override
     public Element toJDOM2Element() {
-        return new Element("LightSetting")
+        return new Element("SubLightSetting")
                 .setAttribute("xCenter", xCenter.getValue().toString())
                 .setAttribute("yCenter", yCenter.getValue().toString())
                 .setAttribute("zCenter", zCenter.getValue().toString())
@@ -87,11 +88,12 @@ public class LightSetting implements XML_Writable{
                 .setAttribute("locked", locked.getValue().toString())
                 .setAttribute("name", name.getValue())
                 .setAttribute("lightType", lightType.getValue().toString())
+                .setAttribute("color", color.getValue().toString())
                 ;
     }
 
-    public static LightSetting fromJDOM2Element(Element e, BooleanProperty groupLockedProperty) {
-        return new LightSetting(
+    public static SubLightSetting fromJDOM2Element(Element e, BooleanProperty groupLockedProperty) {
+        return new SubLightSetting(
                 Double.valueOf(e.getAttributeValue("xCenter")),
                 Double.valueOf(e.getAttributeValue("yCenter")),
                 Double.valueOf(e.getAttributeValue("zCenter")),
@@ -102,6 +104,7 @@ public class LightSetting implements XML_Writable{
                 Boolean.valueOf(e.getAttributeValue("locked")),
                 e.getAttributeValue("name"),
                 LightType.valueOf(e.getAttributeValue("lightType")),
+                Color.valueOf(e.getAttributeValue("color")),
                 groupLockedProperty
         );
     }
@@ -224,5 +227,17 @@ public class LightSetting implements XML_Writable{
 
     public void setLightType(LightType lightType) {
         this.lightType.setValue(lightType);
+    }
+
+    public Color getColor() {
+        return color.getValue();
+    }
+
+    public Property<Color> colorProperty() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color.setValue(color);
     }
 }

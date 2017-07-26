@@ -1,20 +1,27 @@
 package tetzlaff.ibr.gui2.controllers.scene.environment_map;
 
 
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.ColorPicker;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+import javafx.util.converter.NumberStringConverter;
+import tetzlaff.util.SafeNumberStringConverter;
 
+import java.io.File;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.util.ResourceBundle;
 
-public class SettingsEVSceneController {
+public class SettingsEVSceneController implements Initializable{
 // Boolean evUseImage
 // Boolean evUseColor
 // Boolean bpUseImage
@@ -41,6 +48,13 @@ public class SettingsEVSceneController {
     @FXML ColorPicker evColorPicker;
     @FXML ColorPicker bpColorPicker;
 
+    @FXML Text evFileNameText;
+    @FXML Text bpFileNameText;
+    @FXML ImageView evImageView;
+    @FXML ImageView bpImageView;
+
+    private final SafeNumberStringConverter n = new SafeNumberStringConverter();
+
     public ChangeListener<EVSetting> changeListener =
             (observable, oldValue, newValue) -> {
                 if (oldValue != null) unbind(oldValue);
@@ -49,13 +63,11 @@ public class SettingsEVSceneController {
                 else setDisabled(true);
             };
 
-
     public void setDisabled(boolean value){
         root.setDisable(value);
     }
 
     private void bind(EVSetting evSetting){
-        NumberFormat n = NumberFormat.getNumberInstance();
 
         evUseImageCheckBox.selectedProperty().bindBidirectional(evSetting.evUseImageProperty());
         evUseColorCheckBox.selectedProperty().bindBidirectional(evSetting.evUseColorProperty());
@@ -68,6 +80,8 @@ public class SettingsEVSceneController {
         evColorPicker.valueProperty().bindBidirectional(evSetting.evColorProperty());
         bpColorPicker.valueProperty().bindBidirectional(evSetting.bpColorProperty());
 
+        localEVImageFile.bindBidirectional(evSetting.evImageFileProperty());
+        localBPImageFile.bindBidirectional(evSetting.bpImageFileProperty());
 
 
     }
@@ -85,6 +99,82 @@ public class SettingsEVSceneController {
         evColorPicker.valueProperty().unbindBidirectional(evSetting.evColorProperty());
         bpColorPicker.valueProperty().unbindBidirectional(evSetting.bpColorProperty());
 
+        localEVImageFile.unbindBidirectional(evSetting.evImageFileProperty());
+        localBPImageFile.unbindBidirectional(evSetting.bpImageFileProperty());
+
+    }
+
+    //Files
+    private Property<File> localEVImageFile = new SimpleObjectProperty<>();
+    private Property<File> localBPImageFile = new SimpleObjectProperty<>();
+
+    private final FileChooser evImageFileChooser = new FileChooser();
+    private final FileChooser bpImageFileChooser = new FileChooser();
+
+
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        evImageFileChooser.setTitle("Pick file for environment map");
+        bpImageFileChooser.setTitle("pick file for backplate");
+
+        evImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        bpImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+
+        evImageFileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("PNG", "*.png"),
+                new FileChooser.ExtensionFilter("JPG", "*.jpg"),
+                new FileChooser.ExtensionFilter("HDR", "*.hdr"),
+                new FileChooser.ExtensionFilter("Other", "*.*")
+        );
+
+        bpImageFileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("PNG", "*.png"),
+                new FileChooser.ExtensionFilter("JPG", "*.jpg"),
+                new FileChooser.ExtensionFilter("HDR", "*.hdr"),
+                new FileChooser.ExtensionFilter("Other", "*.*")
+        );
+
+        localEVImageFile.addListener((observable, oldValue, newValue) -> {
+            if(newValue != null){
+                evFileNameText.setText(newValue.getName());
+
+                evImageView.setImage(new Image(newValue.toURI().toString()));
+
+            }
+            else{
+                evFileNameText.setText("Filename");
+
+                evImageView.setImage(null);
+            }
+        });
+
+        localBPImageFile.addListener((ob, o, n)->{
+            if(n != null){
+                bpFileNameText.setText(n.getName());
+
+                bpImageView.setImage(new Image(n.toURI().toString()));
+
+            }
+            else{
+                bpFileNameText.setText("Filename");
+
+                bpImageView.setImage(null);
+            }
+        });
+
+
+
+
+    }
+
+    @FXML private void pickEVImageFile(){
+       File newFile = evImageFileChooser.showOpenDialog(root.getScene().getWindow());
+        if(newFile != null) localEVImageFile.setValue(newFile);
+    }
+    @FXML private void pickBPImageFile(){
+        File newFile = bpImageFileChooser.showOpenDialog(root.getScene().getWindow());
+        if(newFile != null) localBPImageFile.setValue(newFile);
     }
 }
 

@@ -6,9 +6,7 @@ import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.KeyReleaseListener;
 import tetzlaff.mvc.controllers.LightController;
-import tetzlaff.ibr.alexkautz_workspace.render.*;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.impl.TrackballLightModel;
 
 public class TrackballLightController2 implements LightController, KeyPressListener, KeyReleaseListener
 {

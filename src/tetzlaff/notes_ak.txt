@@ -1,0 +1,5 @@
+Notes
+
+* RootLightSceneController.java is pretty messy and janky. This is mainly because of the use of the table view. For now, just make sure to test it heavily at all stages of development, and in the future maybe investigate another way to display the lights besides the table view. It's probably not worth the rewrite if were still using the table view.
+
+* in LightSetting.java, the conversion between the file properties and strings for "to/fromJDOM2Element" currently have stand-in code that probably won't function. 

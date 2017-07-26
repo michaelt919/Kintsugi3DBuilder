@@ -1,10 +1,12 @@
-package tetzlaff.ibr.alexkautz_workspace.render.new_tool_setup_rename_this_later;
+package tetzlaff.ibr.rendering2.tools;
 
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.window.*;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
+import tetzlaff.ibr.rendering2.CameraModel2;
+import tetzlaff.ibr.rendering2.LightModel2;
 import tetzlaff.mvc.controllers.CameraController;
 import tetzlaff.mvc.controllers.LightController;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
@@ -12,26 +14,24 @@ import tetzlaff.mvc.models.ReadonlyLightModel;
 import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.gl.Context;
 
-import javax.swing.*;
-
 
 public class DragToolController <ContextType extends Context<ContextType>> implements LightController, CameraController, MouseButtonPressListener {
 
-    private DragToolController(LightModelX lightModelX, CameraModelX cameraModelX, Window window, GlobalController globalController) {
-        this.lightModelX = lightModelX;
-        this.cameraModelX = cameraModelX;
-        this.globalController = globalController;
+    private DragToolController(LightModel2 lightModel2, CameraModel2 cameraModel2, Window window, ToolModel2 toolModel2) {
+        this.lightModel2 = lightModel2;
+        this.cameraModel2 = cameraModel2;
+        this.toolModel2 = toolModel2;
         addAsWindowListener(window);
     }
 
-    private final LightModelX lightModelX;
-    private final CameraModelX cameraModelX;
-    private final GlobalController globalController;
+    private final LightModel2 lightModel2;
+    private final CameraModel2 cameraModel2;
+    private final ToolModel2 toolModel2;
 
     private int mousedLightIndex = -1;
 
     private Boolean enabled(){
-        return globalController.getTool() == Tool.DRAG;
+        return toolModel2.getTool() == Tool.DRAG;
     }
 
     @Override
@@ -112,9 +112,9 @@ public class DragToolController <ContextType extends Context<ContextType>> imple
 
 
     public static final class Builder {
-        private LightModelX lightModelX;
-        private CameraModelX cameraModelX;
-        private GlobalController globalController;
+        private LightModel2 lightModel2;
+        private CameraModel2 cameraModel2;
+        private ToolModel2 toolModel2;
         private Window window;
 
         private Builder() {
@@ -124,18 +124,18 @@ public class DragToolController <ContextType extends Context<ContextType>> imple
             return new Builder();
         }
 
-        public Builder setLightModelX(LightModelX lightModelX) {
-            this.lightModelX = lightModelX;
+        public Builder setLightModel2(LightModel2 lightModel2) {
+            this.lightModel2 = lightModel2;
             return this;
         }
 
-        public Builder setCameraModelX(CameraModelX cameraModelX) {
-            this.cameraModelX = cameraModelX;
+        public Builder setCameraModel2(CameraModel2 cameraModel2) {
+            this.cameraModel2 = cameraModel2;
             return this;
         }
 
-        public Builder setGlobalController(GlobalController globalController) {
-            this.globalController = globalController;
+        public Builder setToolModel2(ToolModel2 toolModel2) {
+            this.toolModel2 = toolModel2;
             return this;
         }
 
@@ -145,7 +145,7 @@ public class DragToolController <ContextType extends Context<ContextType>> imple
         }
 
         public DragToolController build() {
-            DragToolController dragToolController = new DragToolController(lightModelX, cameraModelX,window, globalController);
+            DragToolController dragToolController = new DragToolController(lightModel2, cameraModel2,window, toolModel2);
             return dragToolController;
         }
     }
