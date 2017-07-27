@@ -237,8 +237,6 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
         		}
         	}
 		}
-		
-		Function<IntVector3, Vector3> pixelEvaluationFunction;
     	
     	pixelEvaluationFunction = encodedVector -> new Vector3(
 			encodedVector.x / unitReflectanceEncoding,
