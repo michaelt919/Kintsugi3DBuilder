@@ -236,10 +236,12 @@ public class FidelityMetricRequest implements IBRRequest
     			distances.add(0.0);
     			errors.add(0.0);
     			
-    			List<Integer> activeViewIndexList = new ArrayList<Integer>();
-		    	
+    			List<Integer> activeViewIndexList;
+    			
 		    	do 
     			{
+    				activeViewIndexList = new ArrayList<Integer>();
+    			
 			    	minDistance = Float.MAX_VALUE;
 			    	for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
 			    	{
@@ -511,7 +513,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    				originalUsed[j] = true;
 	    				out.print(resources.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t");
 	    				
-	    				out.print(fidelityTechnique.evaluateError(j));
+	    				out.print(fidelityTechnique.evaluateError(j) + "\t");
 	    				
 	    				activeViewIndexList.add(j);
 	    				fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
