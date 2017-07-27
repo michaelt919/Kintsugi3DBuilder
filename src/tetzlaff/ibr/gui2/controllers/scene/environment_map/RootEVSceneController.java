@@ -79,7 +79,6 @@ public class RootEVSceneController implements Initializable {
         System.out.println("TODO: saved " + s().getSelectedItem() + " to the library.");
     }
 
-    @SuppressWarnings("Duplicates")
     @FXML
     private void renameEVButton() {
         if (s().getSelectedIndex() == 0) return;
