@@ -345,4 +345,17 @@ public class Matrix4
 	{
 		return this.buffer.asReadOnlyBuffer();
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder s = new StringBuilder();
+		for (int i = 0; i < 4; i++) {
+			s.append(getRow(i).toString()).append('\n');
+		}
+		return s.toString();
+	}
+
+	public void print(){
+		System.out.println(this.toString());
+	}
 }

@@ -33,7 +33,7 @@ public class SubLightModel3 implements ControllableSubLightModel {
 
     private SubLightSetting cam(){
         if(subLightSettingObservableValue == null || subLightSettingObservableValue.getValue() == null){
-//            System.out.println("Loss");
+//            System.out.println("Using SubLight Backup");
             return backup;
         }
         else {
@@ -143,7 +143,7 @@ public class SubLightModel3 implements ControllableSubLightModel {
     public Vector3 getColor() {
         Color color = cam().getColor();
         Vector3 out = new Vector3((float) color.getRed(), (float) color.getBlue(), (float) color.getGreen());
-        System.out.println("Light Color: " + out);
+//        System.out.println("Light Color: " + out);
         return out;
     }
 

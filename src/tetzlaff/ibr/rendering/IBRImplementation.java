@@ -7,30 +7,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import tetzlaff.gl.AlphaBlendingFunction;
+import tetzlaff.gl.*;
 import tetzlaff.gl.AlphaBlendingFunction.Weight;
-import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.ColorFormat.DataType;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Cubemap;
-import tetzlaff.gl.CubemapFace;
-import tetzlaff.gl.Drawable;
-import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.FramebufferObject;
-import tetzlaff.gl.FramebufferSize;
-import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.Program;
-import tetzlaff.gl.ShaderType;
-import tetzlaff.gl.Texture2D;
-import tetzlaff.gl.Texture3D;
-import tetzlaff.gl.TextureWrapMode;
-import tetzlaff.gl.UniformBuffer;
-import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -555,9 +540,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	
 	private void generateShadowMaps(int lightIndex)
 	{
-		shadowProgram.setUniform("projection", getLightProjection(lightIndex));
-		
-		shadowFramebuffer.setDepthAttachment(shadowMaps.getLayerAsFramebufferAttachment(lightIndex));
+		Matrix4 lightProj = getLightProjection(lightIndex);
+
+		shadowProgram.setUniform("projection", lightProj);
+
+
+		FramebufferAttachment<ContextType> attachment =shadowMaps.getLayerAsFramebufferAttachment(lightIndex);
+
+		shadowFramebuffer.setDepthAttachment(attachment);
 		shadowFramebuffer.clearDepthBuffer();
 		
 		for (Matrix4 m : this.transformationMatrices)

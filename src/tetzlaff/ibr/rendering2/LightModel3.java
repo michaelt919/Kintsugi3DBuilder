@@ -26,14 +26,12 @@ public class LightModel3 implements ControllableLightModel {
         this.lightGroupSettingObservableValue = lightGroupSettingObservableValue;
 
         this.lightGroupSettingObservableValue.addListener((observable, oldValue, newValue) -> {
-            System.out.print("CCCCCCCCCCCCCCCCCC");
             if(newValue != null){
-                System.out.println("|||||||||||||||||||||Setup");
                 for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
                     subLightModel3s[i].setSubLightSettingObservableValue(newValue.lightListProperty().valueAt(i));
                 }
             } else {
-                System.out.println("|||||||||||||||||||Backup");
+                System.out.println("Binding Backup");
                 for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
                     subLightModel3s[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
                 }
@@ -43,7 +41,7 @@ public class LightModel3 implements ControllableLightModel {
 
     private LightGroupSetting lightGroup(){
         if (lightGroupSettingObservableValue == null || lightGroupSettingObservableValue.getValue() == null) {
-//            System.out.println("Need Backup");
+//            System.out.println("Using LightGroup Backup");
             return backup;
         }else {
 //            System.out.println("Need Value");
@@ -59,7 +57,7 @@ public class LightModel3 implements ControllableLightModel {
     public int getLightCount() {
         int count = lightGroup().getNLights();
 //        System.out.println("Counted " + count + "Lights");
-        return count;
+        return LightGroupSetting.LIGHT_LIMIT; //TODO ERROR HERE
     }
 
     @Override
@@ -74,7 +72,7 @@ public class LightModel3 implements ControllableLightModel {
 
     @Override
     public Vector3 getLightColor(int i) {
-        System.out.println("Get Color ");
+//        System.out.println("Get Color ");
         return lightModel(i).getColor();
     }
 
@@ -90,17 +88,17 @@ public class LightModel3 implements ControllableLightModel {
 
     @Override
     public Matrix4 getLightMatrix(int i) {
-        System.out.println("get light matrix " + i);
+//        System.out.println("get light matrix " + i);
 
         Matrix4 out = lightModel(i).getLookMatrix();
 
-        for (int j = 0; j < 4; j++) {
-            System.out.print("[");
-            for (int k = 0; k < 4; k++) {
-                System.out.print("\t" + out.get(j,k));
-            }
-            System.out.print("]\n");
-        }
+//        for (int j = 0; j < 4; j++) {
+//            System.out.print("[");
+//            for (int k = 0; k < 4; k++) {
+//                System.out.print("\t" + out.get(j,k));
+//            }
+//            System.out.print("]\n");
+//        }
 
         return out;
     }

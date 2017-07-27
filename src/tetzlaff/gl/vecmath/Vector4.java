@@ -193,4 +193,15 @@ public class Vector4
 	{
 		return new Vector4((float)operator.applyAsDouble(x), (float)operator.applyAsDouble(y), (float)operator.applyAsDouble(z), (float)operator.applyAsDouble(w));
 	}
+
+
+	@Override
+	public String toString() {
+		return "[" +
+				"" + x +
+				"\t" + y +
+				"\t" + z +
+				"\t" + w +
+				']';
+	}
 }
