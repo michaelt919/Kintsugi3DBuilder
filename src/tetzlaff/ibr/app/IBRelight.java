@@ -17,8 +17,6 @@ import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.WindowSize;
 import tetzlaff.ibr.rendering.CameraBasedLightModel;
 import tetzlaff.ibr.rendering.HardcodedLightModel;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;

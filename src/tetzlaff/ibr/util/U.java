@@ -1,12 +1,8 @@
 package tetzlaff.ibr.util;//Created by alexk on 7/20/2017.
 
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
-
-import java.util.function.UnaryOperator;
 
 /*
 I general utilities class.

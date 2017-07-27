@@ -1,6 +1,9 @@
 package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
 
+import java.net.URL;
+import java.util.ResourceBundle;
+
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -10,9 +13,6 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import tetzlaff.util.SafeNumberStringConverter;
-
-import java.net.URL;
-import java.util.ResourceBundle;
 
 public class SettingsLightSceneController implements Initializable{
     @Override

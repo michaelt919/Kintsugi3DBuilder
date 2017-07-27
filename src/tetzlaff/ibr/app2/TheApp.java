@@ -1,10 +1,9 @@
 package tetzlaff.ibr.app2;
 
-import tetzlaff.ibr.rendering2.*;
-import tetzlaff.ibr.rendering2.tools.ToolModel2;
-import tetzlaff.ibr.gui2.app.GUIApp2;
-
-import com.sun.glass.ui.Application;
+import tetzlaff.ibr.rendering2.CameraModel3;
+import tetzlaff.ibr.rendering2.IBRelight2;
+import tetzlaff.ibr.rendering2.LightModel2;
+import tetzlaff.ibr.rendering2.ToolModel3;
 
 public class TheApp {
 

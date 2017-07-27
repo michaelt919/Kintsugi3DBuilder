@@ -1,22 +1,23 @@
 package tetzlaff.ibr.gui2.controllers.scene.camera;
 
-import com.sun.javafx.collections.ObservableListWrapper;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.ResourceBundle;
+
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionModel;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
-import tetzlaff.ibr.rendering2.CameraModel2;
 import tetzlaff.ibr.rendering2.CameraModel3;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.ResourceBundle;
+import com.sun.javafx.collections.ObservableListWrapper;
 
 public class RootCameraSceneController implements Initializable {
 

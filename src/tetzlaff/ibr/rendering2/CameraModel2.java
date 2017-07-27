@@ -1,12 +1,8 @@
 package tetzlaff.ibr.rendering2;
 
-import javafx.beans.property.Property;
-import kautzTesting.MoreMatrixMath;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibr.gui2.controllers.scene.camera.CameraSetting;
-import tetzlaff.mvc.models.ControllableCameraModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 
 public class CameraModel2 implements ReadonlyCameraModel{

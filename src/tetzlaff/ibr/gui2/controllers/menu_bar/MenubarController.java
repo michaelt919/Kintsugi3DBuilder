@@ -1,5 +1,9 @@
 package tetzlaff.ibr.gui2.controllers.menu_bar;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -7,15 +11,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
-import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.ibr.app2.TheApp;
-import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.rendering2.ToolModel3;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
 
 public class MenubarController implements Initializable {
 

@@ -1,8 +1,8 @@
 package tetzlaff.ibr.app2;//Created by alexk on 7/19/2017.
 
 import tetzlaff.ibr.rendering2.CameraModel3;
-import tetzlaff.ibr.rendering2.ToolModel3;
 import tetzlaff.ibr.rendering2.LightModel2;
+import tetzlaff.ibr.rendering2.ToolModel3;
 
 public class RootModel {
     private final CameraModel3 cameraModel3;
