@@ -40,7 +40,7 @@ public class LookToolController implements LightController, CameraController, Cu
 
     private final ToolModel2 toolModel2;
 
-    public static interface Builder
+    public  interface Builder
     {
         Builder setSensitivityScrollWheel(float sensitivityScrollWheel);
         Builder setSensitivityOrbit(float sensitivityOrbit);
@@ -50,7 +50,7 @@ public class LookToolController implements LightController, CameraController, Cu
         Builder setGlobalController(ToolModel2 toolModel2);
         Builder setLightModelX(LightModel2 lightModel2);
         Builder setCameraModelX(ControllableCameraModel cameraModel);
-        Builder setWindow(Window window);
+        Builder setWindow(Window<?> window);
         LookToolController create();
     }
 
@@ -64,7 +64,7 @@ public class LookToolController implements LightController, CameraController, Cu
         private ToolModel2 toolModel2;
         private LightModel2 lightModel2;
         private ControllableCameraModel cameraModel;
-        private Window window;
+        private Window<?> window;
 
         public Builder setSensitivityScrollWheel(float sensitivityScrollWheel)
         {
@@ -111,7 +111,7 @@ public class LookToolController implements LightController, CameraController, Cu
         }
 
         @Override
-        public Builder setWindow(Window window) {
+        public Builder setWindow(Window<?> window) {
             this.window = window;
             return this;
         }
