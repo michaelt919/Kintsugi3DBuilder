@@ -1,8 +1,8 @@
 package tetzlaff.gl.vecmath;
 
-import java.nio.FloatBuffer;
-
 import org.lwjgl.BufferUtils;
+
+import java.nio.FloatBuffer;
 
 public class Matrix4 
 {
@@ -79,10 +79,7 @@ public class Matrix4
 							0.0f,				0.0f,				0.0f,				1.0f	);
 	}
 	
-	/**
-	 * Creates a 4x4 matrix from a 3x3 matrix by dropping the fourth row and column.
-	 * @param m4 The 4x4 matrix.
-	 */
+
 	public Matrix3 getUpperLeft3x3() 
 	{
 		return Matrix3.fromRows(

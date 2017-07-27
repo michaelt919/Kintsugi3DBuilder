@@ -1,8 +1,8 @@
 package tetzlaff.gl;
 
-import java.nio.ByteBuffer;
-
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+
+import java.nio.ByteBuffer;
 
 /**
  * An interface for a uniform buffer object that can provide data to be used in conjunction with a shader program.

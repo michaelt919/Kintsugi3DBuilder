@@ -1,12 +1,12 @@
 package tetzlaff.ibr.util.fidelity;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
 import tetzlaff.gl.Context;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.rendering.IBRResources;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 public interface FidelityEvaluationTechnique<ContextType extends Context<ContextType>> extends AutoCloseable
 {

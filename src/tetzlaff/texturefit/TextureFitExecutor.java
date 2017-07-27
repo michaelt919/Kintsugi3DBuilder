@@ -1,36 +1,6 @@
 package tetzlaff.texturefit;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.Date;
-import java.util.function.IntFunction;
-import java.util.function.IntToDoubleFunction;
-
-import javax.imageio.ImageIO;
-
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Drawable;
-import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.FramebufferObject;
-import tetzlaff.gl.FramebufferSize;
-import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.Program;
-import tetzlaff.gl.ShaderType;
-import tetzlaff.gl.Texture;
-import tetzlaff.gl.Texture2D;
-import tetzlaff.gl.Texture3D;
-import tetzlaff.gl.UniformBuffer;
-import tetzlaff.gl.VertexBuffer;
+import tetzlaff.gl.*;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.TextureBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
@@ -45,6 +15,16 @@ import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Date;
+import java.util.function.IntFunction;
+import java.util.function.IntToDoubleFunction;
 
 public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
