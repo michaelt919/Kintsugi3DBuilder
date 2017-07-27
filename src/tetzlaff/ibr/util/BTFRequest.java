@@ -1,14 +1,19 @@
 package tetzlaff.ibr.util;
 
-import tetzlaff.gl.*;
+import java.io.File;
+import java.io.IOException;
+
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Drawable;
+import tetzlaff.gl.FramebufferObject;
+import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Program;
+import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.rendering.IBRResources;
-
-import java.io.File;
-import java.io.IOException;
 
 public class BTFRequest implements IBRRequest
 {

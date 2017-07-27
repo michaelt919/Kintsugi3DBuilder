@@ -1,9 +1,9 @@
 package tetzlaff.gl.nativebuffer;
 
-import org.lwjgl.BufferUtils;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+
+import org.lwjgl.BufferUtils;
 
 class NativeUnsignedShortVectorBuffer implements NativeVectorBuffer
 {

@@ -1,5 +1,10 @@
 package tetzlaff.ibr.rendering;
 
+import java.io.File;
+import java.io.IOException;
+
+import javax.swing.AbstractListModel;
+
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
@@ -10,10 +15,6 @@ import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
-
-import javax.swing.*;
-import java.io.File;
-import java.io.IOException;
 
 public class ImageBasedRendererList<ContextType extends Context<ContextType>> extends AbstractListModel<IBRRenderable<ContextType>> implements IBRRenderableListModel<ContextType>
 {

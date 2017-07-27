@@ -1,15 +1,15 @@
 package tetzlaff.ibr.util;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+
 import tetzlaff.gl.Context;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
 public class ResampleRequest implements IBRRequest
 {

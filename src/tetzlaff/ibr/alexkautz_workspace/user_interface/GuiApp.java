@@ -1,13 +1,13 @@
 package tetzlaff.ibr.alexkautz_workspace.user_interface;
 
+import java.net.URL;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
-
-import java.net.URL;
 
 public class GuiApp extends Application implements Runnable{
 

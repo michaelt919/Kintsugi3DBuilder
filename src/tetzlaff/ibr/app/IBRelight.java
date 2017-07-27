@@ -1,5 +1,14 @@
 package tetzlaff.ibr.app;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.imageio.ImageIO;
+
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.glfw.GLFWWindow;
@@ -22,14 +31,6 @@ import tetzlaff.mvc.models.LightModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.impl.BasicCameraModel;
 import tetzlaff.mvc.models.impl.TrackballModel;
-
-import javax.imageio.ImageIO;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * ULFProgram is a container for the main entry point of the Unstructured Light Field

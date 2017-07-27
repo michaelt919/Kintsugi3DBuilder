@@ -1,15 +1,22 @@
 package tetzlaff.misc;
 
-import tetzlaff.gl.*;
+import java.io.File;
+import java.io.IOException;
+
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import tetzlaff.gl.Drawable;
+import tetzlaff.gl.FramebufferObject;
+import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Program;
+import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.Texture2D;
+import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Vector4;
-
-import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.io.File;
-import java.io.IOException;
 
 public class TextureUpscaleProgram
 {

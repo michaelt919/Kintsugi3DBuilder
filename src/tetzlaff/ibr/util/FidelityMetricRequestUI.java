@@ -1,11 +1,12 @@
 package tetzlaff.ibr.util;
 
-import tetzlaff.ibr.IBRSettings;
-
-import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.*;
+import java.awt.Component;
 import java.io.File;
+
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import tetzlaff.ibr.IBRSettings;
 
 public class FidelityMetricRequestUI implements IBRRequestUI 
 {

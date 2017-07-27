@@ -1,10 +1,10 @@
 package tetzlaff.ibr.rendering2;
 
+import java.util.ArrayList;
+
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.mvc.models.ControllableLightModel;
-
-import java.util.ArrayList;
 
 public class LightModel2 implements ControllableLightModel {
 
