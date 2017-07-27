@@ -5,6 +5,11 @@ import javafx.util.converter.NumberStringConverter;
 
 public class SafeNumberStringConverter extends StringConverter<Number>{
     private final NumberStringConverter nsc = new NumberStringConverter();
+    private final Number defaultValue;
+
+    public SafeNumberStringConverter(Number defaultValue) {
+        this.defaultValue = Math.log10(defaultValue.doubleValue());
+    }
 
     /**
      * Converts the object provided into its string form.
@@ -30,7 +35,7 @@ public class SafeNumberStringConverter extends StringConverter<Number>{
         try {
             return nsc.fromString(string);
         } catch (RuntimeException re){
-            return 0;
+            return defaultValue;
         }
     }
 }

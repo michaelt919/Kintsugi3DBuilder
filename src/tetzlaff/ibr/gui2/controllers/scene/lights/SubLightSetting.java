@@ -21,7 +21,7 @@ public class SubLightSetting implements XML_Writable{
     private final DoubleProperty zCenter = new SimpleDoubleProperty();
     private final DoubleProperty azimuth = new SimpleDoubleProperty();
     private final DoubleProperty inclination = new SimpleDoubleProperty();
-    private final DoubleProperty distance = new SimpleDoubleProperty();
+    private final DoubleProperty log10distance = new SimpleDoubleProperty();
     private final DoubleProperty intensity = new SimpleDoubleProperty();
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
@@ -40,7 +40,7 @@ public class SubLightSetting implements XML_Writable{
             Double zCenter,
             Double azimuth,
             Double inclination,
-            Double distance,
+            Double log10distance,
             Double intensity,
             Boolean locked,
             String name,
@@ -53,7 +53,7 @@ public class SubLightSetting implements XML_Writable{
         this.zCenter.setValue(zCenter);
         this.azimuth.setValue(azimuth);
         this.inclination.setValue(inclination);
-        this.distance.setValue(distance);
+        this.log10distance.setValue(log10distance);
         this.intensity.setValue(intensity);
         this.locked.setValue(locked);
         this.name.setValue(name);
@@ -69,7 +69,7 @@ public class SubLightSetting implements XML_Writable{
                 zCenter.getValue(),
                 azimuth.getValue(),
                 inclination.getValue(),
-                distance.getValue(),
+                log10distance.getValue(),
                 intensity.getValue(),
                 locked.getValue(),
                 name.getValue(),
@@ -92,7 +92,7 @@ public class SubLightSetting implements XML_Writable{
                 .setAttribute("zCenter", zCenter.getValue().toString())
                 .setAttribute("azimuth", azimuth.getValue().toString())
                 .setAttribute("inclination", inclination.getValue().toString())
-                .setAttribute("distance", distance.getValue().toString())
+                .setAttribute("log10distance", log10distance.getValue().toString())
                 .setAttribute("intensity", intensity.getValue().toString())
                 .setAttribute("locked", locked.getValue().toString())
                 .setAttribute("name", name.getValue())
@@ -108,7 +108,7 @@ public class SubLightSetting implements XML_Writable{
                 Double.valueOf(e.getAttributeValue("zCenter")),
                 Double.valueOf(e.getAttributeValue("azimuth")),
                 Double.valueOf(e.getAttributeValue("inclination")),
-                Double.valueOf(e.getAttributeValue("distance")),
+                Double.valueOf(e.getAttributeValue("log10distance")),
                 Double.valueOf(e.getAttributeValue("intensity")),
                 Boolean.valueOf(e.getAttributeValue("locked")),
                 e.getAttributeValue("name"),
@@ -178,16 +178,16 @@ public class SubLightSetting implements XML_Writable{
         this.inclination.set(inclination);
     }
 
-    public double getDistance() {
-        return distance.get();
+    public double getLog10distance() {
+        return log10distance.get();
     }
 
-    public DoubleProperty distanceProperty() {
-        return distance;
+    public DoubleProperty log10distanceProperty() {
+        return log10distance;
     }
 
-    public void setDistance(double distance) {
-        this.distance.set(distance);
+    public void setLog10distance(double log10distance) {
+        this.log10distance.set(log10distance);
     }
 
     public double getIntensity() {

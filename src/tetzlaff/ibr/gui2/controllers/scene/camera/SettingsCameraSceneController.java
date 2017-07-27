@@ -14,7 +14,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import tetzlaff.ibr.util.U;
+import tetzlaff.util.Math2;
 import tetzlaff.util.SafeNumberStringConverter;
+import tetzlaff.util.SafeNumberStringConverterPow10;
 
 public class SettingsCameraSceneController implements Initializable {
 
@@ -46,7 +48,8 @@ public class SettingsCameraSceneController implements Initializable {
 
 private DoubleProperty fov = new SimpleDoubleProperty();
 
-private final SafeNumberStringConverter n = new SafeNumberStringConverter();
+private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
+private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -55,18 +58,13 @@ private final SafeNumberStringConverter n = new SafeNumberStringConverter();
         U.wrap(-180, 180, twistTextField);
 
 
-        fOVSlider.setMin(-2);
-        fOVSlider.setMax(2);
-        fOVSlider.setValue(0);
-        fOVSlider.setShowTickMarks(true);
-        fOVSlider.setShowTickLabels(true);
-        fOVSlider.setBlockIncrement(0.1);
-        fOVSlider.setMajorTickUnit(1);
-        fOVSlider.setMinorTickCount(1);
-        fOVSlider.setLabelFormatter(new StringConverter<Double>() {
+
+        distanceSlider.setLabelFormatter(new StringConverter<Double>() {
             @Override
             public String toString(Double object) {
-                return Double.toString(Math.pow(10, object));
+                String out = n10.toString(object);
+                if(out.length() >=4 ) return out.substring(0, 4);
+                else return out;
             }
 
             @Override
@@ -75,15 +73,6 @@ private final SafeNumberStringConverter n = new SafeNumberStringConverter();
             }
         });
 
-        U.powerBind(fOVSlider.valueProperty(), fov);
-
-//        fOVSlider.setMin(-100);
-//        fOVSlider.setMax(100);
-//        fOVSlider.setShowTickLabels(true);
-//        fOVSlider.setShowTickMarks(true);
-//        fOVSlider.setBlockIncrement(10);
-//        fOVSlider.setMajorTickUnit(50);
-//        fOVSlider.setMinorTickCount(4);
     }
 
     public final ChangeListener<CameraSetting> changeListener =
@@ -105,7 +94,7 @@ private final SafeNumberStringConverter n = new SafeNumberStringConverter();
         zCenterTextField.textProperty().bindBidirectional(c.zCenterProperty(), n);
         azimuthTextField.textProperty().bindBidirectional(c.azimuthProperty(), n);
         inclinationTextField.textProperty().bindBidirectional(c.inclinationProperty(), n);
-        distanceTextField.textProperty().bindBidirectional(c.distanceProperty(), n);
+        distanceTextField.textProperty().bindBidirectional(c.log10distanceProperty(), n10);
         twistTextField.textProperty().bindBidirectional(c.twistProperty(), n);
         fOVTextField.textProperty().bindBidirectional(c.fOVProperty(), n);
         focalLengthTextField.textProperty().bindBidirectional(c.focalLengthProperty(), n);
@@ -115,7 +104,7 @@ private final SafeNumberStringConverter n = new SafeNumberStringConverter();
         zCenterSlider.valueProperty().bindBidirectional(c.zCenterProperty());
         azimuthSlider.valueProperty().bindBidirectional(c.azimuthProperty());
         inclinationSlider.valueProperty().bindBidirectional(c.inclinationProperty());
-        distanceSlider.valueProperty().bindBidirectional(c.distanceProperty());
+        distanceSlider.valueProperty().bindBidirectional(c.log10distanceProperty());
         twistSlider.valueProperty().bindBidirectional(c.twistProperty());
         //fOVSlider.valueProperty().bindBidirectional(c.fOVProperty());
         focalLengthSlider.valueProperty().bindBidirectional(c.focalLengthProperty());
@@ -133,7 +122,7 @@ private final SafeNumberStringConverter n = new SafeNumberStringConverter();
         zCenterTextField.textProperty().unbindBidirectional(c.zCenterProperty());
         azimuthTextField.textProperty().unbindBidirectional(c.azimuthProperty());
         inclinationTextField.textProperty().unbindBidirectional(c.inclinationProperty());
-        distanceTextField.textProperty().unbindBidirectional(c.distanceProperty());
+        distanceTextField.textProperty().unbindBidirectional(c.log10distanceProperty());
         twistTextField.textProperty().unbindBidirectional(c.twistProperty());
         fOVTextField.textProperty().unbindBidirectional(c.fOVProperty());
         focalLengthTextField.textProperty().unbindBidirectional(c.focalLengthProperty());
@@ -143,7 +132,7 @@ private final SafeNumberStringConverter n = new SafeNumberStringConverter();
         zCenterSlider.valueProperty().unbindBidirectional(c.zCenterProperty());
         azimuthSlider.valueProperty().unbindBidirectional(c.azimuthProperty());
         inclinationSlider.valueProperty().unbindBidirectional(c.inclinationProperty());
-        distanceSlider.valueProperty().unbindBidirectional(c.distanceProperty());
+        distanceSlider.valueProperty().unbindBidirectional(c.log10distanceProperty());
         twistSlider.valueProperty().unbindBidirectional(c.twistProperty());
         //fOVSlider.valueProperty().unbindBidirectional(c.fOVProperty());
         focalLengthSlider.valueProperty().unbindBidirectional(c.focalLengthProperty());
