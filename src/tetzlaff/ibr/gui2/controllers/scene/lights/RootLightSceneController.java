@@ -37,7 +37,8 @@ public class RootLightSceneController implements Initializable {
     private final ObservableList<LightGroupSetting> lightGroups = new ObservableListWrapper<>(new ArrayList<>());
     private final Property<SubLightSetting> selectedLight = new SimpleObjectProperty<>();
     private int lastSelectedIndex = -1;
-    @Override
+    @SuppressWarnings("rawtypes")
+	@Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("GLSC started!");
 
