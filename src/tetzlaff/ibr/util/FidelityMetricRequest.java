@@ -1,48 +1,32 @@
 package tetzlaff.ibr.util;
 
-import static org.ejml.dense.row.CommonOps_DDRM.*;
-
-import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.AbstractList;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
-import java.util.function.Function;
 
-import javax.imageio.ImageIO;
-
-import org.ejml.simple.SimpleMatrix;
-
-import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Drawable;
 import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.Program;
-import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.UniformBuffer;
-import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
-import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
-import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources;
+import tetzlaff.ibr.util.fidelity.FidelityEvaluationTechnique;
+import tetzlaff.ibr.util.fidelity.IBRFidelityTechnique;
+import tetzlaff.ibr.util.fidelity.LinearSystemFidelityTechnique;
 import tetzlaff.util.CubicHermiteSpline;
-import tetzlaff.util.NonNegativeLeastSquares;
-import tetzlaff.util.ShadingParameterMode;
 
 public class FidelityMetricRequest implements IBRRequest
 {
@@ -62,338 +46,73 @@ public class FidelityMetricRequest implements IBRRequest
 		this.settings = settings;
 	}
 	
-	private NativeVectorBuffer generateViewWeights(IBRResources<?> resources, List<Integer> viewIndexList, int targetViewIndex)
-	{
-		float[] viewWeights = new float[resources.viewSet.getCameraPoseCount()];
-		float viewWeightSum = 0.0f;
-		
-		for (int k = 0; k < viewIndexList.size(); k++)
-		{
-			int viewIndex = viewIndexList.get(k).intValue();
-			
-			Vector3 viewDir = resources.viewSet.getCameraPose(viewIndex).times(resources.geometry.getCentroid().asPosition()).getXYZ().negated().normalized();
-			Vector3 targetDir = resources.viewSet.getCameraPose(viewIndex).times(
-					resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3)
-						.minus(resources.geometry.getCentroid().asPosition())).getXYZ().normalized();
-			
-			viewWeights[viewIndex] = 1.0f / (float)Math.max(0.000001, 1.0 - Math.pow(Math.max(0.0, targetDir.dot(viewDir)), this.settings.getWeightExponent())) - 1.0f;
-			viewWeightSum += viewWeights[viewIndex];
-		}
-		
-		for (int i = 0; i < viewWeights.length; i++)
-		{
-			viewWeights[i] /= viewWeightSum;
-		}
-		
-		return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
-	}
-	
 	private <ContextType extends Context<ContextType>> 
-		double calculateErrorIBR(ContextType context, IBRResources<ContextType> resources, Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, 
-				NativeVectorBuffer viewIndexData, int targetViewIndex, int activeViewCount)
+		void computeTextures(
+			ContextType context, IBRResources<ContextType> resources, Drawable<ContextType> texFitDrawable, Framebuffer<ContextType> framebuffer,
+			NativeVectorBuffer viewIndexData, int activeViewCount)
 	{
-		resources.setupShaderProgram(drawable.program(), false);
+		resources.setupShaderProgram(texFitDrawable.program(), false);
 		
-		NativeVectorBuffer viewWeightBuffer = null;
-		UniformBuffer<ContextType> weightBuffer = null;
-		
-		if (this.settings.getWeightMode() == ShadingParameterMode.UNIFORM)
+		try (UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer().setData(viewIndexData))
 		{
-			drawable.program().setUniform("perPixelWeightsEnabled", false);
-			weightBuffer = context.createUniformBuffer().setData(
-				viewWeightBuffer = this.generateViewWeights(resources, 
-						new AbstractList<Integer>()
-						{
-							@Override
-							public Integer get(int index) 
-							{
-								return viewIndexData.get(index, 0).intValue();
-							}
-		
-							@Override
-							public int size() 
-							{
-								return activeViewCount;
-							}
-						}, 
-					targetViewIndex));
-			drawable.program().setUniformBuffer("ViewWeights", weightBuffer);
-			drawable.program().setUniform("occlusionEnabled", false);
-		}
-		else
-		{
-			drawable.program().setUniform("perPixelWeightsEnabled", true);
-			
-			drawable.program().setUniform("weightExponent", this.settings.getWeightExponent());
-			drawable.program().setUniform("occlusionEnabled", resources.depthTextures != null && this.settings.isOcclusionEnabled());
-			drawable.program().setUniform("occlusionBias", this.settings.getOcclusionBias());
-		}
-    	
-    	drawable.program().setUniform("model_view", resources.viewSet.getCameraPose(targetViewIndex));
-    	drawable.program().setUniform("viewPos", resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3).getXYZ());
-    	drawable.program().setUniform("projection", 
-    			resources.viewSet.getCameraProjection(resources.viewSet.getCameraProjectionIndex(targetViewIndex))
-				.getProjectionMatrix(resources.viewSet.getRecommendedNearPlane(), resources.viewSet.getRecommendedFarPlane()));
-
-    	drawable.program().setUniform("targetViewIndex", targetViewIndex);
-		
-    	try (UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer().setData(viewIndexData))
-    	{
-	    	drawable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
-	    	drawable.program().setUniform("viewCount", activeViewCount);
+			texFitDrawable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
+			texFitDrawable.program().setUniform("viewCount", activeViewCount);
 	    	
 	    	framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
 	    	framebuffer.clearDepthBuffer();
 	    	
-	    	drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-    	}
-
-    	try
-    	{
-	        if (activeViewCount == resources.viewSet.getCameraPoseCount() - 1 /*&& this.assets.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
-	        {
-		    	File fidelityImage = new File(new File(fidelityExportPath.getParentFile(), "debug"), resources.viewSet.getImageFileName(targetViewIndex));
-		        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
-	        }
-    	}
-    	catch(IOException e)
-    	{
-    		e.printStackTrace();
-    	}
-    	
-    	// Alternate error calculation method that should give the same result in theory
-		MatrixSystem system = getMatrixSystem(targetViewIndex, new AbstractList<Integer>()
-		{
-			@Override
-			public Integer get(int index) 
-			{
-				return viewIndexData.get(index, 0).intValue();
-			}
-
-			@Override
-			public int size() 
-			{
-				return activeViewCount;
-			}
-		},
-		encodedVector -> new Vector3(
-				encodedVector.x / unitReflectanceEncoding,
-				encodedVector.y / unitReflectanceEncoding,
-				encodedVector.z / unitReflectanceEncoding));
+	    	texFitDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+		}
+	}
+	
+	private <ContextType extends Context<ContextType>> 
+		double calculateErrorTexFit(
+			ContextType context, IBRResources<ContextType> resources, Drawable<ContextType> texErrorDrawable, Framebuffer<ContextType> framebuffer, 
+			Texture2D<ContextType> specularTexture, Texture2D<ContextType> roughnessTexture, int targetViewIndex)
+	{
+		resources.setupShaderProgram(texErrorDrawable.program(), false);
 		
-//		SimpleMatrix weightVector = new SimpleMatrix(activeViewCount, 1);
-//		for (int i = 0; i < activeViewCount; i++)
+		texErrorDrawable.program().setUniform("model_view", resources.viewSet.getCameraPose(targetViewIndex));
+		texErrorDrawable.program().setUniform("viewPos", resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3).getXYZ());
+		texErrorDrawable.program().setUniform("projection", 
+				resources.viewSet.getCameraProjection(resources.viewSet.getCameraProjectionIndex(targetViewIndex))
+				.getProjectionMatrix(resources.viewSet.getRecommendedNearPlane(), resources.viewSet.getRecommendedFarPlane()));
+	
+		texErrorDrawable.program().setUniform("targetViewIndex", targetViewIndex);
+		
+		texErrorDrawable.program().setTexture("specularTexture", specularTexture);
+		texErrorDrawable.program().setTexture("roughnessTexture", roughnessTexture);
+		
+//		try
 //		{
-//			int viewIndex = viewIndexData.get(i, 0).intValue();
-//			weightVector.set(i, viewWeightBuffer.get(viewIndex, 0).doubleValue());
+//	        if (activeViewCount == resources.viewSet.getCameraPoseCount() - 1 /*&& this.assets.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
+//	        {
+//		    	File fidelityImage = new File(new File(fidelityExportPath.getParentFile(), "debug"), resources.viewSet.getImageFileName(targetViewIndex));
+//		        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
+//	        }
 //		}
-//		
-//        SimpleMatrix recon = system.mA.mult(weightVector);
-//        SimpleMatrix error = recon.minus(system.b);
-//		double matrixError = error.normF() / Math.sqrt(system.b.numRows() / 3);
-        
-		// Primary error calculation method
-        double sumSqError = 0.0;
-        //double sumWeights = 0.0;
-        double sumMask = 0.0;
-
-    	float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
-    	for (int k = 0; 4 * k + 3 < fidelityArray.length; k++)
-    	{
+//		catch(IOException e)
+//		{
+//			e.printStackTrace();
+//		}
+		
+	    double sumSqError = 0.0;
+	    //double sumWeights = 0.0;
+	    double sumMask = 0.0;
+	
+		float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
+		for (int k = 0; 4 * k + 3 < fidelityArray.length; k++)
+		{
 			if (fidelityArray[4 * k + 1] >= 0.0f)
 			{
 				sumSqError += fidelityArray[4 * k];
 				//sumWeights += fidelityArray[4 * k + 1];
 				sumMask += 1.0;
 			}
-    	}
-    	
-    	if (weightBuffer != null)
-    	{
-    		weightBuffer.close();
-    	}
-
-    	double renderError = Math.sqrt(sumSqError / sumMask);
-    	return renderError;
-	}
-	
-	private NonNegativeLeastSquares solver;
-	private List<SimpleMatrix> listATA;
-	private List<SimpleMatrix> listATb;
-	private byte[][] images;
-	private byte[][] weights;
-	private float unitReflectanceEncoding;
-	
-	private static class MatrixSystem
-	{
-		SimpleMatrix mA;
-		SimpleMatrix b;
-		List<Integer> activePixels;
-	}
-	
-	private MatrixSystem getMatrixSystem(int targetViewIndex, List<Integer> viewIndexList, Function<IntVector3, Vector3> decodeFunction)
-	{
-		MatrixSystem result = new MatrixSystem();
-		
-		result.activePixels = new ArrayList<Integer>();
-        for (int i = 0; i < weights[targetViewIndex].length; i++)
-        {
-        	if ((0x000000FF & weights[targetViewIndex][i]) > 0)
-        	{
-        		result.activePixels.add(i);
-        	}
-        }
-		
-        result.mA = new SimpleMatrix(result.activePixels.size() * 3, viewIndexList == null ? images.length : viewIndexList.size());
-        result.b = new SimpleMatrix(result.activePixels.size() * 3, 1);
-		
-		for (int i = 0; i < result.activePixels.size(); i++)
-        {
-        	double weight = (0x000000FF & weights[targetViewIndex][result.activePixels.get(i)]) / 255.0;
-        	
-        	Vector3 targetColor = decodeFunction.apply(new IntVector3(
-        			0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i)],
-        			0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i) + 1],
-        			0x000000FF & images[targetViewIndex][3 * result.activePixels.get(i) + 2]));
-        	
-        	result.b.set(3 * i, weight * targetColor.x);
-        	result.b.set(3 * i + 1, weight * targetColor.y);
-        	result.b.set(3 * i + 2, weight * targetColor.z);
-    		
-        	if (viewIndexList == null)
-        	{
-	        	for (int j = 0; j < images.length; j++)
-	        	{
-	        		Vector3 color = decodeFunction.apply(new IntVector3(
-	            			0x000000FF & images[j][3 * result.activePixels.get(i)],
-	            			0x000000FF & images[j][3 * result.activePixels.get(i) + 1],
-	            			0x000000FF & images[j][3 * result.activePixels.get(i) + 2]));
-	        		
-	            	result.mA.set(3 * i, j, weight * color.x);
-	            	result.mA.set(3 * i + 1, j, weight * color.y);
-	            	result.mA.set(3 * i + 2, j, weight * color.z);
-	        	}
-        	}
-        	else
-        	{
-        		for (int j = 0; j < viewIndexList.size(); j++)
-	        	{
-	        		Vector3 color = decodeFunction.apply(new IntVector3(
-	            			0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i)],
-	            			0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i) + 1],
-	            			0x000000FF & images[viewIndexList.get(j)][3 * result.activePixels.get(i) + 2]));
-	        		
-	            	result.mA.set(3 * i, j, weight * color.x);
-	            	result.mA.set(3 * i + 1, j, weight * color.y);
-	            	result.mA.set(3 * i + 2, j, weight * color.z);
-	        	}
-        	}
-        }
-		
-		return result;
-	}
-	
-	private void initializeMatrices(Function<IntVector3, Vector3> decodeFunction)
-	{
-		for (int k = 0; k < images.length; k++)
-		{
-			MatrixSystem system = getMatrixSystem(k, null, decodeFunction);
-			
-			SimpleMatrix mATA = new SimpleMatrix(system.mA.numCols(), system.mA.numCols());
-			SimpleMatrix vATb = new SimpleMatrix(system.mA.numCols(), 1);
-			
-			// Low level operations to avoid using unnecessary memory.
-			multTransA(system.mA.getMatrix(), system.mA.getMatrix(), mATA.getMatrix());
-			multTransA(system.mA.getMatrix(), system.b.getMatrix(), vATb.getMatrix());
-			
-			listATA.add(mATA);
-			listATb.add(vATb);
-		}
-	}
-	
-	private <ContextType extends Context<ContextType>> double calculateErrorNNLS(int targetViewIndex, List<Integer> viewIndexList, Function<IntVector3, Vector3> decodeFunction)
-	{
-		return this.calculateErrorNNLS(targetViewIndex, viewIndexList, decodeFunction, null, null, 0, 0);
-	}
-	
-	private <ContextType extends Context<ContextType>> 
-		double calculateErrorNNLS(int targetViewIndex, List<Integer> viewIndexList, Function<IntVector3, Vector3> decodeFunction, 
-				File debugFile, Function<Vector3, IntVector3> encodeFunction, int imgWidth, int imgHeight)
-	{
-		MatrixSystem system = getMatrixSystem(targetViewIndex, viewIndexList, decodeFunction);
-		
-		SimpleMatrix mATA = new SimpleMatrix(viewIndexList.size(), viewIndexList.size());
-		SimpleMatrix vATb = new SimpleMatrix(viewIndexList.size(), 1);
-		
-		SimpleMatrix mATA_full = listATA.get(targetViewIndex);
-		SimpleMatrix vATb_full = listATb.get(targetViewIndex);
-		
-		for (int i = 0; i < viewIndexList.size(); i++)
-		{
-			vATb.set(i, vATb_full.get(viewIndexList.get(i)));
-			
-			for (int j = 0; j < viewIndexList.size(); j++)
-			{
-				mATA.set(i, j, mATA_full.get(viewIndexList.get(i), viewIndexList.get(j)));
-			}
 		}
 	
-		SimpleMatrix solution = solver.solvePremultiplied(mATA, vATb, 0.001);
-        SimpleMatrix recon = system.mA.mult(solution);
-		
-		if (debugFile != null)
-		{
-	        BufferedImage outImg = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_ARGB);
-	        
-	        int[] pixels = new int[imgWidth * imgHeight];
-	        for (int i = 0; i < imgWidth * imgHeight; i++)
-	        {
-	        	pixels[i] = new Color(0,0,0).getRGB();
-	        }
-	        
-	        for (int i = 0; i < system.activePixels.size(); i++)
-	        {
-	        	int pixelIndex = system.activePixels.get(i);
-	        	double weight = (0x000000FF & weights[targetViewIndex][pixelIndex]) / 255.0;
-	        	
-	        	IntVector3 encodedColor = encodeFunction.apply(
-	        			new Vector3((float)(recon.get(3 * i) / weight), 
-	        						(float)(recon.get(3 * i + 1) / weight), 
-	        						(float)(recon.get(3 * i + 2) / weight)));
-	        	
-	        	pixels[pixelIndex] = new Color(
-	        			Math.max(0, Math.min(255, encodedColor.x)), 
-	        			Math.max(0, Math.min(255, encodedColor.y)), 
-    					Math.max(0, Math.min(255, encodedColor.z))).getRGB();
-	        }
-
-	        // Flip the array vertically
-	        for (int y = 0; y < imgHeight / 2; y++)
-	        {
-	        	int limit = (y + 1) * imgWidth;
-	        	for (int i1 = y * imgWidth, i2 = (imgHeight - y - 1) * imgWidth; i1 < limit; i1++, i2++)
-	        	{
-	            	int tmp = pixels[i1];
-	            	pixels[i1] = pixels[i2];
-	            	pixels[i2] = tmp;
-	        	}
-	        }
-	        
-	        outImg.setRGB(0, 0, imgWidth, imgHeight, pixels, 0, imgWidth);
-	        
-	        try
-	        {
-	        	ImageIO.write(outImg, "PNG", debugFile);
-	        }
-	        catch (IOException e)
-	        {
-	        	e.printStackTrace();
-	        }
-		}
-		
-		SimpleMatrix error = recon.minus(system.b);
-		
-		return error.normF() / Math.sqrt(system.b.numRows() / 3);
+		double renderError = Math.sqrt(sumSqError / sumMask);
+		return renderError;
 	}
 	
 	private double estimateErrorQuadratic(double slope, double peak, double distance)
@@ -446,84 +165,10 @@ public class FidelityMetricRequest implements IBRRequest
 		
 		return sum / sumWeights;
 	}
-	
-	private Function<IntVector3, Vector3> fullDecodeFunction;
-
 	@Override
 	public <ContextType extends Context<ContextType>> void executeRequest(ContextType context, IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
 	{
 		IBRResources<ContextType> resources = renderable.getResources();
-		
-		fullDecodeFunction = (color) -> 
-		{
-			if (color.x <= 0 || color.y <= 0 || color.z <= 0)
-			{
-				return Vector3.ZERO;
-			}
-			else
-			{
-				// Step 1: remove gamma correction
-	            Vector3 colorGamma = color.asFloatingPointNormalized().applyOperator(x -> Math.pow(x, 2.2));
-				
-	            // Step 2: convert to CIE luminance
-	            // Clamp to 1 so that the ratio computed in step 3 is well defined
-	            // if the luminance value somehow exceeds 1.0
-	            double luminanceNonlinear = colorGamma.dot(new Vector3(0.2126729f, 0.7151522f, 0.0721750f));
-				
-	            double maxLuminance = resources.viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
-				
-				if (luminanceNonlinear > 1.0)
-				{
-					return colorGamma.times((float)maxLuminance);
-				}
-				else
-				{
-					// Step 3: determine the ratio between the linear and nonlinear luminance
-					// Reapply gamma correction to the single luminance value
-					float scale = (float)Math.min(5.0 * maxLuminance, 
-							resources.viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(
-									255.0 * Math.pow(luminanceNonlinear, 1.0 / 2.2)) / luminanceNonlinear);
-					
-					// Step 4: return the color, scaled to have the correct luminance,
-					// but the original saturation and hue.
-					return colorGamma.times(scale);
-				}
-			}
-		};
-		
-		Function<Vector3, IntVector3> encodeFunction = (color) ->
-		{
-			if (color.x <= 0 || color.y <= 0 || color.z <= 0)
-			{
-				return new IntVector3(0);
-			}
-			else
-			{
-				float luminance = color.dot(new Vector3(0.2126729f, 0.7151522f, 0.0721750f));
-				double maxLuminance = resources.viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
-				if (luminance >= maxLuminance)
-				{
-					Vector3 result = color.dividedBy((float)maxLuminance).applyOperator(x -> Math.pow(x, 1.0 / 2.2));
-					return new IntVector3(Math.round(255 * result.x), Math.round(255 * result.y), Math.round(255 * result.z));
-				}
-				else
-				{
-					// Step 2: determine the ratio between the tonemapped and linear luminance
-					// Remove implicit gamma correction from the lookup table
-					double tonemappedGammaCorrected = 
-							resources.viewSet.getLuminanceEncoding().encodeFunction.applyAsDouble(luminance) / 255.0;
-					double tonemappedNoGamma = Math.pow(tonemappedGammaCorrected, 2.2);
-					double scale = tonemappedNoGamma / luminance;
-						
-					// Step 3: return the color, scaled to have the correct luminance,
-					// but the original saturation and hue.
-					// Step 4: apply gamma correction
-					Vector3 colorScaled = color.times((float)scale);
-					Vector3 result = colorScaled.applyOperator(x -> Math.pow(x, 1.0 / 2.2));
-					return new IntVector3(Math.round(255 * result.x), Math.round(255 * result.y), Math.round(255 * result.z));
-				}
-			}
-		};
 		
 		System.out.println("\nView Importance:");
 		
@@ -545,140 +190,25 @@ public class FidelityMetricRequest implements IBRRequest
     		}
     	}
 		
-		new File(fidelityExportPath.getParentFile(), "debug").mkdir();
-    	
-    	int size = 256; // 1024;
-    	
-    	Vector3 primaryViewDisplacement = resources.viewSet.getCameraPose(resources.viewSet.getPrimaryViewIndex())
-    			.times(resources.geometry.getCentroid().asPosition()).getXYZ();
-    	
-    	// TODO should this change when operating in perceptually linear space (gamma-corrected)?
-    	unitReflectanceEncoding = 255.0f
-    			/ fullDecodeFunction.apply(new IntVector3(255)).y
-    			* resources.viewSet.getLightIntensity(resources.viewSet.getLightIndex(resources.viewSet.getPrimaryViewIndex())).y
-    			/ primaryViewDisplacement.dot(primaryViewDisplacement);
-    			
-    		//encodeFunction.apply(new Vector3(1.0f)).y;
-    	
-    	images = new byte[renderable.getActiveViewSet().getCameraPoseCount()][size * size * 3];
-    	weights = new byte[renderable.getActiveViewSet().getCameraPoseCount()][size * size];
-    	
-    	try
-    	(
-			Program<ContextType> projTexProgram = context.getShaderProgramBuilder()
-				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-				.addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_multi.frag"))
-				.createProgram();
-    			
-			FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(size, size)
-				.addColorAttachment(ColorFormat.RGB8)
-				.addColorAttachment(ColorFormat.RGBA8)
-				.createFramebufferObject();
-		)
+		File debugDirectory = null;
+		if (DEBUG)
 		{
-    		Drawable<ContextType> drawable = context.createDrawable(projTexProgram);
-        	drawable.addVertexBuffer("position", resources.positionBuffer);
-        	drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
-        	drawable.addVertexBuffer("normal", resources.normalBuffer);
-        	drawable.addVertexBuffer("tangent", resources.tangentBuffer);
-        	
-        	renderable.getResources().setupShaderProgram(projTexProgram, false);
-        	if (!this.settings.isOcclusionEnabled())
-        	{
-        		projTexProgram.setUniform("occlusionEnabled", false);
-        	}
-        	else
-        	{
-        		projTexProgram.setUniform("occlusionBias", this.settings.getOcclusionBias());
-        	}
-
-        	drawable.program().setUniform("lightIntensityCompensation", true);
-        	
-        	context.getState().disableBackFaceCulling();
-        	
-        	for (int i = 0; i < renderable.getActiveViewSet().getCameraPoseCount(); i++)
-        	{
-        		framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-        		framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-        		
-        		projTexProgram.setUniform("viewIndex", i);
-        		
-        		drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-        		int[] colors = framebuffer.readColorBufferARGB(0);
-        		for (int j = 0; j < colors.length; j++)
-        		{
-        			Color color = new Color(colors[j], true);
-        			IntVector3 colorVector = new IntVector3(color.getRed(), color.getGreen(), color.getBlue());
-        			
-        			Vector3 decodedColor = colorVector.asFloatingPoint().dividedBy(255.0f);
-        			if (!USE_PERCEPTUALLY_LINEAR_ERROR)
-    				{
-        				decodedColor = decodedColor.applyOperator(x -> Math.pow(x, 2.2));
-        				//decodedColor = fullDecodeFunction.apply(colorVector);
-    				}
-        			images[i][3 * j] = (byte)Math.round(decodedColor.x * unitReflectanceEncoding);
-        			images[i][3 * j + 1] = (byte)Math.round(decodedColor.y * unitReflectanceEncoding);
-        			images[i][3 * j + 2] = (byte)Math.round(decodedColor.z * unitReflectanceEncoding);
-        		}
-        		
-        		if (DEBUG)
-        		{
-	        		try
-	        		{
-		        		framebuffer.saveColorBufferToFile(0, "PNG", 
-		        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + ".png"));
-		        		
-		        		framebuffer.saveColorBufferToFile(1, "PNG", 
-		        				new File(new File(fidelityExportPath.getParentFile(), "debug"), renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_geometry.png"));
-	        		}
-	        		catch (IOException e)
-	        		{
-	        			e.printStackTrace();
-	        		}
-        		}
-
-        		int[] geometry = framebuffer.readColorBufferARGB(1);
-        		for (int j = 0; j < geometry.length; j++)
-        		{
-        			weights[i][j] = (byte)(new Color(geometry[j], true)).getGreen(); // n dot v
-        		}
-        	}
+			debugDirectory = new File(fidelityExportPath.getParentFile(), "debug");
+			debugDirectory.mkdir();
 		}
     	
-    	Function<IntVector3, Vector3> pixelEvaluationFunction;
-    	
-    	pixelEvaluationFunction = encodedVector -> new Vector3(
-			encodedVector.x / unitReflectanceEncoding,
-			encodedVector.y / unitReflectanceEncoding,
-			encodedVector.z / unitReflectanceEncoding);
-    	
-    	solver = new NonNegativeLeastSquares();
-    	listATA = new ArrayList<>();
-    	listATb = new ArrayList<>();
-    	initializeMatrices(pixelEvaluationFunction);
-    	
     	try
     	(
-			Program<ContextType> fidelityProgram = context.getShaderProgramBuilder()
-				.addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/fidelity.frag"))
-				.createProgram();
-    			
-			FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(size, size)
-				.addColorAttachment(ColorFormat.RG32F)
-				.createFramebufferObject();
+			FidelityEvaluationTechnique<ContextType> fidelityTechnique = 
+    			USE_RENDERER_WEIGHTS ? new IBRFidelityTechnique<ContextType>()
+					: new LinearSystemFidelityTechnique<ContextType>(USE_PERCEPTUALLY_LINEAR_ERROR, debugDirectory);
     			
 			PrintStream out = new PrintStream(fidelityExportPath);
 		)
     	{
-    		context.getState().disableBackFaceCulling();
-    		
-    		Drawable<ContextType> drawable = context.createDrawable(fidelityProgram);
-        	drawable.addVertexBuffer("position", resources.positionBuffer);
-        	drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
-        	drawable.addVertexBuffer("normal", resources.normalBuffer);
-        	drawable.addVertexBuffer("tangent", resources.tangentBuffer);
         	
+        	fidelityTechnique.initialize(resources, settings, 256);
+    		
     		double[] slopes = new double[resources.viewSet.getCameraPoseCount()];
     		double[] peaks = new double[resources.viewSet.getCameraPoseCount()];
     		
@@ -699,7 +229,6 @@ public class FidelityMetricRequest implements IBRRequest
     			
     			double lastMinDistance = 0.0;
     			double minDistance;
-    			int activeViewCount;
     			double sumMask = 0.0;
     			
     			List<Double> distances = new ArrayList<Double>();
@@ -708,83 +237,36 @@ public class FidelityMetricRequest implements IBRRequest
     			distances.add(0.0);
     			errors.add(0.0);
     			
-    			do 
+    			List<Integer> activeViewIndexList = new ArrayList<Integer>();
+		    	
+		    	do 
     			{
-			    	NativeVectorBuffer viewIndexBuffer = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
-			    	
-			    	activeViewCount = 0;
-			    	
 			    	minDistance = Float.MAX_VALUE;
 			    	for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
 			    	{
 			    		if (i != j && viewDistances[i][j] > lastMinDistance)
 			    		{
 			    			minDistance = Math.min(minDistance, viewDistances[i][j]);
-			    			viewIndexBuffer.set(activeViewCount, 0, j);
-			    			activeViewCount++;
+			    			activeViewIndexList.add(j);
+			    			fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
 			    		}
 			    	}
 			    	
-			    	if (activeViewCount > 0)
+			    	if (activeViewIndexList.size() > 0)
 			    	{
 				    	if (sumMask >= 0.0)
 				    	{
 					        distances.add(minDistance);
 					        
-					        final int copyActiveViewCount = activeViewCount;
-					       
-					        
-					        if (USE_RENDERER_WEIGHTS)
-					        {
-					        	errors.add(calculateErrorIBR(context, resources, drawable, framebuffer, viewIndexBuffer, i, activeViewCount));
-					        }
-					        else if (DEBUG)
-					        {
-					        	 errors.add(calculateErrorNNLS(i, 
-					        		new AbstractList<Integer>()
-					    			{
-										@Override
-										public Integer get(int index) 
-										{
-											return viewIndexBuffer.get(index, 0).intValue();
-										}
-
-										@Override
-										public int size()
-										{
-											return copyActiveViewCount;
-										}
-					    			},
-					    			pixelEvaluationFunction,
-					    			new File(new File(fidelityExportPath.getParentFile(), "debug"), 
-					    					renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_" + errors.size() + ".png"), 
-			    					encodeFunction, size, size));
-					        }
-					        else
-					        {
-					        	 errors.add(calculateErrorNNLS(i, 
-					        		new AbstractList<Integer>()
-					    			{
-										@Override
-										public Integer get(int index) 
-										{
-											return viewIndexBuffer.get(index, 0).intValue();
-										}
-
-										@Override
-										public int size()
-										{
-											return copyActiveViewCount;
-										}
-					    			},
-					    			pixelEvaluationFunction));
-					        }
+					        errors.add(fidelityTechnique.evaluateError(i, DEBUG ? 
+					        		new File(new File(fidelityExportPath.getParentFile(), "debug"), 
+				    					renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_" + errors.size() + ".png") : null));
 					        
 					    	lastMinDistance = minDistance;
 				    	}
 			    	}
     			}
-    			while(sumMask >= 0.0 && activeViewCount > 0 && minDistance < /*0*/ Math.PI / 4);
+    			while(sumMask >= 0.0 && activeViewIndexList.size() > 0 && minDistance < /*0*/ Math.PI / 4);
     			
     			double[] errorArray = new double[errors.size()];
     			double[] distanceArray = new double[distances.size()];
@@ -1007,8 +489,8 @@ public class FidelityMetricRequest implements IBRRequest
 	    		
 	    		boolean[] originalUsed = new boolean[resources.viewSet.getCameraPoseCount()];
 				
-				NativeVectorBuffer viewIndexBuffer = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
-	    		int activeViewCount = 0;
+	    		List<Integer> activeViewIndexList = new ArrayList<Integer>();
+	    		fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
 	    		
 	    		// Print views that are only in the original view set and NOT in the target view set
 	    		// This also initializes the distances for the target views.
@@ -1030,34 +512,10 @@ public class FidelityMetricRequest implements IBRRequest
 	    				originalUsed[j] = true;
 	    				out.print(resources.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t");
 	    				
-	    				if (USE_RENDERER_WEIGHTS)
-	    				{
-	    					out.print(calculateErrorIBR(context, resources, drawable, framebuffer, viewIndexBuffer, j, activeViewCount) + "\t");
-	    				}
-	    				else
-	    				{
-		    				final int copyActiveViewCount = activeViewCount;
-					        out.print(calculateErrorNNLS(j, 
-					        		new AbstractList<Integer>()
-					    			{
-										@Override
-										public Integer get(int index) 
-										{
-											return viewIndexBuffer.get(index, 0).intValue();
-										}
-	
-										@Override
-										public int size()
-										{
-											return copyActiveViewCount;
-										}
-					    			},
-					    			pixelEvaluationFunction)
-				    			+ "\t");
-	    				}
-
-	    				viewIndexBuffer.set(activeViewCount, 0, j);
-	    				activeViewCount++;
+	    				out.print(fidelityTechnique.evaluateError(j));
+	    				
+	    				activeViewIndexList.add(j);
+	    				fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
 
 			    		double cumError = 0.0;
 			    		
@@ -1065,31 +523,7 @@ public class FidelityMetricRequest implements IBRRequest
 			    		{
 			    			if (!originalUsed[k])
 			    			{
-			    				
-			    				if (USE_RENDERER_WEIGHTS)
-			    				{
-			    					cumError += calculateErrorIBR(context, resources, drawable, framebuffer, viewIndexBuffer, k, activeViewCount);
-			    				}
-			    				else
-			    				{
-				    				final int copyActiveViewCount2 = activeViewCount;
-							        cumError += calculateErrorNNLS(k, 
-							        		new AbstractList<Integer>()
-							    			{
-												@Override
-												public Integer get(int index) 
-												{
-													return viewIndexBuffer.get(index, 0).intValue();
-												}
-	
-												@Override
-												public int size()
-												{
-													return copyActiveViewCount2;
-												}
-							    			},
-							    			pixelEvaluationFunction);
-			    				}
+			    				cumError += fidelityTechnique.evaluateError(k);
 			    			}
 			    		}
 			    		
@@ -1104,14 +538,14 @@ public class FidelityMetricRequest implements IBRRequest
 	    			
 			        if (callback != null)
 			        {
-			        	callback.setProgress(activeViewCount);
+			        	callback.setProgress(activeViewIndexList.size());
 			        }
 	    		}
 	    		
 				// Now update the errors for all of the target views
 				for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
     			{
-					if (USE_RENDERER_WEIGHTS)
+					if (!fidelityTechnique.isGuaranteedMonotonic())
 					{
 						targetErrors[i] = estimateErrorQuadratic(targetSlopes[i], targetPeaks[i], targetDistances[i]);
 					}
@@ -1160,6 +594,9 @@ public class FidelityMetricRequest implements IBRRequest
 		    		
 	    			double minTotalError = Double.MAX_VALUE;
 	    			
+	    			int activeViewCount = activeViewIndexList.size();
+	    			activeViewIndexList.add(-1);
+	    			
 		    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 		    		{
 		    			if (!targetUsed[i])
@@ -1168,7 +605,8 @@ public class FidelityMetricRequest implements IBRRequest
 			    			{
 		    	    			if (targetViewSet.getImageFileName(i).contains(resources.viewSet.getImageFileName(j).split("\\.")[0]))
 		    	    			{
-		    	    				viewIndexBuffer.set(activeViewCount, 0, j);
+		    	    				activeViewIndexList.set(activeViewCount, j);
+		    	    				fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
 		    	    				
 		    	    				double totalError = 0.0;
 			    	    			for (int k = 0; k < targetViewSet.getCameraPoseCount(); k++)
@@ -1179,31 +617,7 @@ public class FidelityMetricRequest implements IBRRequest
 				    	    				{
 				    	    					if (targetViewSet.getImageFileName(k).contains(resources.viewSet.getImageFileName(l).split("\\.")[0]))
 				    		    				{
-				    	    						if (USE_RENDERER_WEIGHTS)
-				    	    	    				{
-				    	    							totalError += calculateErrorIBR(context, resources, drawable, framebuffer, viewIndexBuffer, l, activeViewCount + 1);
-				    	    	    				}
-				    	    						else
-				    	    						{
-					    	    						final int copyActiveViewCount = activeViewCount;
-					    	    				        totalError += calculateErrorNNLS(l, 
-					    	    				        		new AbstractList<Integer>()
-					    	    				    			{
-					    	    									@Override
-					    	    									public Integer get(int index) 
-					    	    									{
-					    	    										return viewIndexBuffer.get(index, 0).intValue();
-					    	    									}
-	
-					    	    									@Override
-					    	    									public int size()
-					    	    									{
-					    	    										return copyActiveViewCount;
-					    	    									}
-					    	    				    			},
-					    	    				    			pixelEvaluationFunction);
-				    	    						}
-				    	    						
+				    	    						totalError += fidelityTechnique.evaluateError(l);
 				    	    	    				break;
 				    		    				}
 				    	    				}
@@ -1230,8 +644,7 @@ public class FidelityMetricRequest implements IBRRequest
 		    		// Flag that its been used
 					targetUsed[nextViewTargetIndex] = true;
 					originalUsed[nextViewOriginalIndex] = true;
-					viewIndexBuffer.set(activeViewCount, 0, nextViewOriginalIndex);
-					activeViewCount++;
+					activeViewIndexList.set(activeViewCount, nextViewOriginalIndex);
 					
 					double expectedTotalError = 0.0;
 	    			
@@ -1246,7 +659,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[nextViewTargetIndex])))));
 
 	    					// error
-	    					if (USE_RENDERER_WEIGHTS)
+	    					if (!fidelityTechnique.isGuaranteedMonotonic())
 		    				{
 		    					targetErrors[i] = estimateErrorQuadratic(targetSlopes[i], targetPeaks[i], targetDistances[i]);
 		    				}
@@ -1272,7 +685,7 @@ public class FidelityMetricRequest implements IBRRequest
 		    		
 			        if (callback != null)
 			        {
-			        	callback.setProgress(activeViewCount);
+			        	callback.setProgress(activeViewIndexList.size());
 			        }
 	    		}
 
@@ -1325,7 +738,7 @@ public class FidelityMetricRequest implements IBRRequest
 		    							Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[maxErrorIndex])))));
 	
 		    					// error
-		    					if (USE_RENDERER_WEIGHTS)
+		    					if (!fidelityTechnique.isGuaranteedMonotonic())
 			    				{
 			    					targetErrors[i] = estimateErrorQuadratic(targetSlopes[i], targetPeaks[i], targetDistances[i]);
 			    				}
@@ -1343,5 +756,9 @@ public class FidelityMetricRequest implements IBRRequest
 	    		while(maxError > 0.0 && unused > 0);
     		}
     	}
+    	catch (Exception e) 
+    	{
+			e.printStackTrace();
+		}
 	}
 }

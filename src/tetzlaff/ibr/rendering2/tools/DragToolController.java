@@ -1,7 +1,11 @@
 package tetzlaff.ibr.rendering2.tools;
 
+import tetzlaff.gl.Context;
 import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.gl.window.*;
+import tetzlaff.gl.window.CursorPosition;
+import tetzlaff.gl.window.ModifierKeys;
+import tetzlaff.gl.window.Window;
+import tetzlaff.gl.window.WindowSize;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
@@ -12,7 +16,6 @@ import tetzlaff.mvc.controllers.LightController;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
 import tetzlaff.mvc.models.SceneViewportModel;
-import tetzlaff.gl.Context;
 
 
 public class DragToolController <ContextType extends Context<ContextType>> implements LightController, CameraController, MouseButtonPressListener {

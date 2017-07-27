@@ -6,7 +6,6 @@ import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.MouseButtonState;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.WindowSize;
-import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
 import tetzlaff.mvc.models.ControllableCameraModel;
 import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
 import tetzlaff.mvc.models.ControllableLightModel;

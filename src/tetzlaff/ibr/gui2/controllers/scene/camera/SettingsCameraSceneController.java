@@ -1,30 +1,20 @@
 package tetzlaff.ibr.gui2.controllers.scene.camera;
 
-import javafx.beans.InvalidationListener;
-import javafx.beans.property.*;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
-import javafx.util.converter.NumberStringConverter;
 import tetzlaff.ibr.util.U;
 import tetzlaff.util.SafeNumberStringConverter;
-
-
-import java.net.URL;
-import java.text.FieldPosition;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.ParsePosition;
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.function.UnaryOperator;
 
 public class SettingsCameraSceneController implements Initializable {
 

@@ -1,25 +1,25 @@
 package tetzlaff.ibr.gui2.controllers.scene.environment_map;
 
 
+import java.io.File;
+import java.net.URL;
+import java.util.ResourceBundle;
+
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ColorPicker;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
-import javafx.util.converter.NumberStringConverter;
 import tetzlaff.util.SafeNumberStringConverter;
-
-import java.io.File;
-import java.net.URL;
-import java.text.NumberFormat;
-import java.util.ResourceBundle;
 
 public class SettingsEVSceneController implements Initializable{
 // Boolean evUseImage

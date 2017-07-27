@@ -1,19 +1,16 @@
 package tetzlaff.ibr.gui2.controllers.scene;
 
+import java.net.URL;
+import java.util.ResourceBundle;
+
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.layout.VBox;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.gui2.controllers.scene.camera.RootCameraSceneController;
 import tetzlaff.ibr.gui2.controllers.scene.environment_map.RootEVSceneController;
 import tetzlaff.ibr.gui2.controllers.scene.lights.RootLightSceneController;
-import tetzlaff.ibr.rendering2.CameraModel2;
 import tetzlaff.ibr.rendering2.CameraModel3;
 import tetzlaff.ibr.rendering2.LightModel2;
-import tetzlaff.mvc.models.LightModel;
-
-import java.net.URL;
-import java.util.ResourceBundle;
 
 public class RootSceneController implements Initializable{
 

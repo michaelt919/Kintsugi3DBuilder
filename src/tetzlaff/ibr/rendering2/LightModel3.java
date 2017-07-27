@@ -1,11 +1,9 @@
 package tetzlaff.ibr.rendering2;//Created by alexk on 7/25/2017.
 
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ObservableValue;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.gui2.controllers.scene.lights.LightGroupSetting;
-import tetzlaff.ibr.gui2.controllers.scene.lights.SubLightSetting;
 import tetzlaff.mvc.models.ControllableLightModel;
 
 public class LightModel3 implements ControllableLightModel {

@@ -3,8 +3,6 @@ package tetzlaff.mvc.models;//Created by alexk on 7/21/2017.
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 
-import java.awt.geom.Point2D;
-
 public interface ControllableCameraModel extends ReadonlyCameraModel {
 
     /**

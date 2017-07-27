@@ -1,12 +1,18 @@
 package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
 
-import com.sun.javafx.collections.ObservableListWrapper;
-import javafx.beans.property.*;
+import java.util.ArrayList;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.paint.Color;
 
-import java.util.ArrayList;
+import com.sun.javafx.collections.ObservableListWrapper;
 
 public class LightGroupSetting {
     public final static int LIGHT_LIMIT = 4;

@@ -1,7 +1,6 @@
 package tetzlaff.mvc.models;//Created by alexk on 7/25/2017.
 
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.mvc.models.ControllableCameraModel;
 
 public interface ControllableSubLightModel extends ControllableCameraModel {
     public Vector3 getColor();

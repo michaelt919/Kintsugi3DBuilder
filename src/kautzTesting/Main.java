@@ -1,12 +1,6 @@
 package kautzTesting;//Created by alexk on 7/19/2017.
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
 
 public class Main {

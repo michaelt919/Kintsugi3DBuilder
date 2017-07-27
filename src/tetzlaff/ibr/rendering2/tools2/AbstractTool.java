@@ -3,7 +3,10 @@ package tetzlaff.ibr.rendering2.tools2;//Created by alexk on 7/24/2017.
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
-import tetzlaff.gl.window.listeners.*;
+import tetzlaff.gl.window.listeners.CursorPositionListener;
+import tetzlaff.gl.window.listeners.KeyPressListener;
+import tetzlaff.gl.window.listeners.MouseButtonPressListener;
+import tetzlaff.gl.window.listeners.ScrollListener;
 import tetzlaff.mvc.models.ControllableCameraModel;
 import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
 import tetzlaff.mvc.models.ControllableLightModel;

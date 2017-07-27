@@ -19,15 +19,18 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.alexkautz_workspace.render.TrackballLightController2;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
-import tetzlaff.ibr.rendering2.tools.LookToolController;
-import tetzlaff.ibr.rendering2.tools.ToolModel2;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.mvc.controllers.impl.FirstPersonController;
 import tetzlaff.mvc.controllers.impl.TrackballController;
-import tetzlaff.mvc.models.*;
+import tetzlaff.mvc.models.CameraModel;
+import tetzlaff.mvc.models.ControllableCameraModel;
+import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
+import tetzlaff.mvc.models.ControllableLightModel;
+import tetzlaff.mvc.models.ControllableToolModel;
+import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.impl.BasicCameraModel;
 
 /**

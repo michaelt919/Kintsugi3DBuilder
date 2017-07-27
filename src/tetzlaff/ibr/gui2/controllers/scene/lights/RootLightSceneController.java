@@ -1,8 +1,13 @@
 package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
-import com.sun.javafx.collections.ObservableListWrapper;
-import com.sun.javafx.scene.control.skin.TableHeaderRow;
-import javafx.beans.property.*;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.ResourceBundle;
+
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -10,20 +15,17 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-
-import java.net.URL;
-import java.util.*;
-
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import tetzlaff.ibr.rendering2.LightModel2;
 
-import java.util.ArrayList;
-import java.util.ResourceBundle;
+import com.sun.javafx.collections.ObservableListWrapper;
+import com.sun.javafx.scene.control.skin.TableHeaderRow;
 
 public class RootLightSceneController implements Initializable {
     @FXML private VBox settings;
