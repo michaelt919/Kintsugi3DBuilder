@@ -470,6 +470,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 			this.environmentMapEnabled = true;
 		}
 		
+		program.setUniform("virtualLightCount", Math.min(4, lightModel.getLightCount()));
+		
 		program.setUniform("ambientColor", lightModel.getAmbientLightColor());
     	
     	this.clearColor = new Vector3(
@@ -595,7 +597,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		program.setUniform("lightIntensityVirtual[" + lightIndex + "]", 
 				controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (scale * scale)));
 		program.setUniform("lightMatrixVirtual[" + lightIndex + "]", getLightProjection(lightIndex).times(lightMatrix));
-		program.setUniform("virtualLightCount", Math.min(4, lightModel.getLightCount()));
 		
 		return lightMatrix;
 	}
