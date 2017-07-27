@@ -793,7 +793,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    			context.getState().enableDepthTest();
 	    		}
 				
-				for (int lightIndex = 0; lightIndex < lightModel.getLightCount(); lightIndex++)
+	    		if (shadowMaps.getDepth() < lightModel.getLightCount())
+	    		{
+	    			shadowMaps.close();
+	    			shadowMaps = null;
+	    			shadowMaps = context.build2DDepthTextureArray(2048, 2048, lightModel.getLightCount()).createTexture();
+	    		}
+	    		
+	    		for (int lightIndex = 0; lightIndex < lightModel.getLightCount(); lightIndex++)
 				{
 					generateShadowMaps(lightIndex);
 				}
