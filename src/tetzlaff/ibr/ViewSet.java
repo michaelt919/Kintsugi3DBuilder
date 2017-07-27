@@ -1,24 +1,5 @@
 package tetzlaff.ibr;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
@@ -26,6 +7,13 @@ import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
+
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import java.io.*;
+import java.util.*;
 
 /**
  * A class representing a collection of photographs, or views.
@@ -1063,7 +1051,7 @@ public class ViewSet
 	/**
 	 * A subroutine for guessing an appropriate far plane from an Agisoft PhotoScan XML file.
 	 * Assumes that the object must lie between all of the cameras in the file.
-	 * @param cameraPoseList The list of camera poses.
+	 * @param cameraPoseInvList The list of camera poses.
 	 * @return A far plane estimate.
 	 */
 	private static float findFarPlane(List<Matrix4> cameraPoseInvList)
@@ -1247,7 +1235,7 @@ public class ViewSet
 	
 	/**
 	 * Sets the image file path associated with this view set.
-	 * @param imageFilePath The image file path.
+	 * @return imageFilePath The image file path.
 	 */
 	public String getRelativeImagePathName()
 	{
@@ -1256,7 +1244,7 @@ public class ViewSet
 	
 	/**
 	 * Sets the image file path associated with this view set.
-	 * @param imageFilePath The image file path.
+	 * @param relativeImagePath The image file path.
 	 */
 	public void setRelativeImagePathName(String relativeImagePath)
 	{

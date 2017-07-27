@@ -1,28 +1,20 @@
 package tetzlaff.gl.opengl;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL31.*;
 
-import java.util.AbstractCollection;
-import java.util.ArrayList;
-
-import tetzlaff.gl.Program;
-import tetzlaff.gl.Resource;
-import tetzlaff.gl.Shader;
-import tetzlaff.gl.Texture;
-import tetzlaff.gl.UniformBuffer;
+import tetzlaff.gl.*;
 import tetzlaff.gl.builders.base.ProgramBuilderBase;
 import tetzlaff.gl.exceptions.InvalidProgramException;
 import tetzlaff.gl.exceptions.ProgramLinkFailureException;
 import tetzlaff.gl.exceptions.UnlinkedProgramException;
-import tetzlaff.gl.vecmath.IntVector2;
-import tetzlaff.gl.vecmath.IntVector3;
-import tetzlaff.gl.vecmath.IntVector4;
-import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.gl.vecmath.Vector2;
-import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.gl.vecmath.*;
 import tetzlaff.util.ResourceManager;
+
+import java.util.AbstractCollection;
+import java.util.ArrayList;
+
+import static org.lwjgl.opengl.GL11.GL_FALSE;
+import static org.lwjgl.opengl.GL11.GL_TRUE;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL31.*;
 
 class OpenGLProgram implements Resource, Program<OpenGLContext>
 {

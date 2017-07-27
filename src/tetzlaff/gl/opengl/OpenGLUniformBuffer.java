@@ -1,12 +1,12 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL31.*;
+import tetzlaff.gl.UniformBuffer;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 
 import java.nio.ByteBuffer;
 
-import tetzlaff.gl.UniformBuffer;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
+import static org.lwjgl.opengl.GL31.GL_UNIFORM_BUFFER;
 
 class OpenGLUniformBuffer extends OpenGLBuffer implements UniformBuffer<OpenGLContext>
 {

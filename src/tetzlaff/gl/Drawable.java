@@ -1,14 +1,6 @@
 package tetzlaff.gl;
 
-import tetzlaff.gl.vecmath.DoubleVector2;
-import tetzlaff.gl.vecmath.DoubleVector3;
-import tetzlaff.gl.vecmath.DoubleVector4;
-import tetzlaff.gl.vecmath.IntVector2;
-import tetzlaff.gl.vecmath.IntVector3;
-import tetzlaff.gl.vecmath.IntVector4;
-import tetzlaff.gl.vecmath.Vector2;
-import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.gl.vecmath.*;
 
 /**
  * A drawable entity for a GL context.

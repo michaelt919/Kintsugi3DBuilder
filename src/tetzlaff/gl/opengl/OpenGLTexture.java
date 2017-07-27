@@ -1,26 +1,22 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL14.*;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.*;
-import static org.lwjgl.opengl.GL44.*;
+import org.lwjgl.BufferUtils;
+import tetzlaff.gl.*;
+import tetzlaff.util.RadianceImageLoader;
 
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import org.lwjgl.BufferUtils;
-
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Texture;
-import tetzlaff.gl.TextureType;
-import tetzlaff.gl.TextureWrapMode;
-import tetzlaff.util.RadianceImageLoader;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
+import static org.lwjgl.opengl.GL14.GL_MIRRORED_REPEAT;
+import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL32.glFramebufferTexture;
+import static org.lwjgl.opengl.GL44.GL_MIRROR_CLAMP_TO_EDGE;
 
 abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebufferAttachment
 {

@@ -1,53 +1,20 @@
 package tetzlaff.gl.glfw;
 
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
+import org.lwjgl.glfw.*;
+import tetzlaff.gl.window.WindowListenerManager;
+import tetzlaff.gl.window.listeners.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.lwjgl.glfw.GLFWCharCallback;
-import org.lwjgl.glfw.GLFWCharModsCallback;
-import org.lwjgl.glfw.GLFWCursorEnterCallback;
-import org.lwjgl.glfw.GLFWCursorPosCallback;
-// Other misc. callbacks
-import org.lwjgl.glfw.GLFWDropCallback;
-import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
-// Keyboard callbacks
-import org.lwjgl.glfw.GLFWKeyCallback;
-// Mouse callbacks
-import org.lwjgl.glfw.GLFWMouseButtonCallback;
-import org.lwjgl.glfw.GLFWScrollCallback;
-// Window event callbacks
-import org.lwjgl.glfw.GLFWWindowCloseCallback;
-import org.lwjgl.glfw.GLFWWindowFocusCallback;
-import org.lwjgl.glfw.GLFWWindowIconifyCallback;
-import org.lwjgl.glfw.GLFWWindowPosCallback;
-import org.lwjgl.glfw.GLFWWindowRefreshCallback;
-import org.lwjgl.glfw.GLFWWindowSizeCallback;
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.GL_TRUE;
 
-import tetzlaff.gl.window.WindowListenerManager;
+// Other misc. callbacks
+// Keyboard callbacks
+// Mouse callbacks
+// Window event callbacks
 // Internal classes for wrapping GLFW callbacks
-import tetzlaff.gl.window.listeners.CharacterListener;
-import tetzlaff.gl.window.listeners.CharacterModifiersListener;
-import tetzlaff.gl.window.listeners.CursorEnteredListener;
-import tetzlaff.gl.window.listeners.CursorExitedListener;
-import tetzlaff.gl.window.listeners.CursorPositionListener;
-import tetzlaff.gl.window.listeners.FramebufferSizeListener;
-import tetzlaff.gl.window.listeners.KeyPressListener;
-import tetzlaff.gl.window.listeners.KeyReleaseListener;
-import tetzlaff.gl.window.listeners.KeyRepeatListener;
-import tetzlaff.gl.window.listeners.MouseButtonPressListener;
-import tetzlaff.gl.window.listeners.MouseButtonReleaseListener;
-import tetzlaff.gl.window.listeners.ScrollListener;
-import tetzlaff.gl.window.listeners.WindowCloseListener;
-import tetzlaff.gl.window.listeners.WindowFocusGainedListener;
-import tetzlaff.gl.window.listeners.WindowFocusLostListener;
-import tetzlaff.gl.window.listeners.WindowIconifiedListener;
-import tetzlaff.gl.window.listeners.WindowPositionListener;
-import tetzlaff.gl.window.listeners.WindowRefreshListener;
-import tetzlaff.gl.window.listeners.WindowRestoredListener;
-import tetzlaff.gl.window.listeners.WindowSizeListener;
 
 class GLFWWindowCallback implements WindowListenerManager
 {

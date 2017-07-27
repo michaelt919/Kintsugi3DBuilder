@@ -1,13 +1,5 @@
 package tetzlaff.gl.util;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Dictionary;
-import java.util.List;
-import java.util.Scanner;
-
 import tetzlaff.gl.material.Material;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -15,6 +7,10 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 public class VertexGeometry 
 {

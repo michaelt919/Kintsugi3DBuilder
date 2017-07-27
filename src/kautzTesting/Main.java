@@ -1,7 +1,7 @@
 package kautzTesting;//Created by alexk on 7/19/2017.
 
+import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
 
 public class Main {
     public static void main(String[] args) {
@@ -32,30 +32,43 @@ public class Main {
 //                ("44".matches("(0|([1-9]\\d*))"))
 //        );
 
-        for (int i = 0; i < 100; i++) {
-            Vector3 vector3 = new Vector3((float) random360(), (float) random180(), (float) random360());
-            System.out.print("Before:\t");
-            System.out.print(MoreMatrixMath.toString(vector3));
-            System.out.print("After:\t");
-            System.out.print(MoreMatrixMath.toString(
-                    OrbitPolarConverter.self.convertRight(
-                            OrbitPolarConverter.self.convertLeft(
-                                    vector3
-                            )
-                    )
-            ));
-        }
+//        for (int i = 0; i < 100; i++) {
+//            Vector3 vector3 = new Vector3((float) random360(), (float) random180(), (float) random360());
+//            System.out.print("Before:\t");
+//            System.out.print(MoreMatrixMath.toString(vector3));
+//            System.out.print("After:\t");
+//            System.out.print(MoreMatrixMath.toString(
+//                    OrbitPolarConverter.self.convertRight(
+//                            OrbitPolarConverter.self.convertLeft(
+//                                    vector3
+//                            )
+//                    )
+//            ));
+//        }
+//
+//    }
+//
+//    private static double random180(){
+//        return (Math.random()*180.0)-90.0;
+//    }
+//
+//    private static double random360(){
+//        return (Math.random()*360.0)-180.0;
+//    }
+
+
+
+        String s = MoreMatrixMath.toString(
+
+                 Matrix4.lookAt(new Vector3(0,0,1),
+                new Vector3(0,0,0),
+                new Vector3(0,1,0))
+
+        );
+
+        System.out.println(s);
 
     }
-
-    private static double random180(){
-        return (Math.random()*180.0)-90.0;
-    }
-
-    private static double random360(){
-        return (Math.random()*360.0)-180.0;
-    }
-
 
 
 }

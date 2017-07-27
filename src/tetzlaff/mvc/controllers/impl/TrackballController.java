@@ -2,11 +2,7 @@ package tetzlaff.mvc.controllers.impl;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.MouseButtonState;
-import tetzlaff.gl.window.Window;
-import tetzlaff.gl.window.WindowSize;
+import tetzlaff.gl.window.*;
 import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;

@@ -1,16 +1,5 @@
 package tetzlaff.ibr.gui2.controllers.menu_bar;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-import java.util.stream.Stream;
-
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.BorderPane;
@@ -20,6 +9,11 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import tetzlaff.ibr.rendering2.ToolModel3;
+
+import java.io.*;
+import java.net.URL;
+import java.util.ResourceBundle;
+import java.util.stream.Stream;
 
 public class LoaderController implements Initializable{
 
