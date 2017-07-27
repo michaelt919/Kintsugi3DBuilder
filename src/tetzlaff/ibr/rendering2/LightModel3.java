@@ -57,7 +57,9 @@ public class LightModel3 implements ControllableLightModel {
     public int getLightCount() {
         int count = lightGroup().getNLights();
 //        System.out.println("Counted " + count + "Lights");
-        return LightGroupSetting.LIGHT_LIMIT; //TODO ERROR HERE
+//        return LightGroupSetting.LIGHT_LIMIT; //TODO ERROR HERE
+        System.out.println("Count: " + count);
+        return count;
     }
 
     @Override
