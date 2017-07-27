@@ -8,6 +8,7 @@ import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
 import tetzlaff.mvc.models.ControllableCameraModel;
 
 import com.sun.istack.internal.NotNull;
+import tetzlaff.util.Math2;
 
 public class CameraModel3 implements ControllableCameraModel {
 
@@ -45,7 +46,7 @@ public class CameraModel3 implements ControllableCameraModel {
     @Override
     public Matrix4 getLookMatrix() {
         return Matrix4.lookAt(
-                new Vector3(0,0,1/getZoom()),
+                new Vector3(0,0,getDistance()),
                 Vector3.ZERO,
                 new Vector3(0,1,0)
         ).times(getOrbit().times(
@@ -74,13 +75,23 @@ public class CameraModel3 implements ControllableCameraModel {
     }
 
     @Override
-    public Float getZoom() {
-        return (float) cam().getDistance();
+    public Float getLog10distance() {
+        return (float) cam().getLog10distance();
     }
 
     @Override
-    public void setZoom(Float zoom) {
-        cam().setDistance(zoom);
+    public void setLog10distance(Float log10distance) {
+        cam().setLog10distance(log10distance);
+    }
+
+    @Override
+    public Float getDistance() {
+        return (float) Math2.pow10(cam().getLog10distance());
+    }
+
+    @Override
+    public void setDistance(Float distance) {
+        cam().setLog10distance(Math.log10(distance));
     }
 
     @Override

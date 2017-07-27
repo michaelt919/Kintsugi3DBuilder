@@ -18,7 +18,7 @@ public class CameraSetting implements XML_Writable{
     private final DoubleProperty zCenter = new SimpleDoubleProperty();
     private final DoubleProperty azimuth = U.wrap(-180, 180, new SimpleDoubleProperty());
     private final DoubleProperty inclination = U.bound(-90,90, new SimpleDoubleProperty());
-    private final DoubleProperty distance = new SimpleDoubleProperty();
+    private final DoubleProperty log10distance = new SimpleDoubleProperty();
     private final DoubleProperty twist = U.wrap(-180.0, 180.0, new SimpleDoubleProperty());
     private final DoubleProperty fOV = new SimpleDoubleProperty();
     private final DoubleProperty focalLength = new SimpleDoubleProperty();
@@ -37,7 +37,7 @@ public class CameraSetting implements XML_Writable{
     zCenter
     azimuth
     inclination
-    distance
+    log10distance
     twist
     fOV
     focalLength
@@ -45,13 +45,13 @@ public class CameraSetting implements XML_Writable{
     orthographic
     name
      */
-    public CameraSetting(Double xCenter, Double yCenter, Double zCenter, Double azimuth, Double inclination, Double distance, Double twist, Double fOV, Double focalLength, Boolean locked, Boolean orthographic, String name) {
+    public CameraSetting(Double xCenter, Double yCenter, Double zCenter, Double azimuth, Double inclination, Double log10distance, Double twist, Double fOV, Double focalLength, Boolean locked, Boolean orthographic, String name) {
         this.xCenter.setValue(xCenter);
         this.yCenter.setValue(yCenter);
         this.zCenter.setValue(zCenter);
         this.azimuth.setValue(azimuth);
         this.inclination.setValue(inclination);
-        this.distance.setValue(distance);
+        this.log10distance.setValue(log10distance);
         this.twist.setValue(twist);
         this.fOV.setValue(fOV);
         this.focalLength.setValue(focalLength);
@@ -67,7 +67,7 @@ public class CameraSetting implements XML_Writable{
                 .setAttribute("zCenter", zCenter.getValue().toString())
                 .setAttribute("azimuth", azimuth.getValue().toString())
                 .setAttribute("inclination", inclination.getValue().toString())
-                .setAttribute("distance", distance.getValue().toString())
+                .setAttribute("log10distance", log10distance.getValue().toString())
                 .setAttribute("twist", twist.getValue().toString())
                 .setAttribute("fOV", fOV.getValue().toString())
                 .setAttribute("focalLength", focalLength.getValue().toString())
@@ -84,7 +84,7 @@ public class CameraSetting implements XML_Writable{
                 Double.valueOf(element.getAttributeValue("zCenter")),
                 Double.valueOf(element.getAttributeValue("azimuth")),
                 Double.valueOf(element.getAttributeValue("inclination")),
-                Double.valueOf(element.getAttributeValue("distance")),
+                Double.valueOf(element.getAttributeValue("log10distance")),
                 Double.valueOf(element.getAttributeValue("twist")),
                 Double.valueOf(element.getAttributeValue("fOV")),
                 Double.valueOf(element.getAttributeValue("focalLength")),
@@ -111,7 +111,7 @@ public class CameraSetting implements XML_Writable{
                 this.zCenter.getValue(),
                 this.azimuth.getValue(),
                 this.inclination.getValue(),
-                this.distance.getValue(),
+                this.log10distance.getValue(),
                 this.twist.getValue(),
                 this.fOV.getValue(),
                 this.focalLength.getValue(),
@@ -190,16 +190,16 @@ public class CameraSetting implements XML_Writable{
         this.inclination.set(inclination);
     }
 
-    public double getDistance() {
-        return distance.get();
+    public double getLog10distance() {
+        return log10distance.get();
     }
 
-    public DoubleProperty distanceProperty() {
-        return distance;
+    public DoubleProperty log10distanceProperty() {
+        return log10distance;
     }
 
-    public void setDistance(double distance) {
-        this.distance.set(distance);
+    public void setLog10distance(double log10distance) {
+        this.log10distance.set(log10distance);
     }
 
     public double getTwist() {
@@ -282,7 +282,7 @@ public class CameraSetting implements XML_Writable{
                 "zCenter",
                 "azimuth",
                 "inclination",
-                "distance",
+                "log10distance",
                 "twist",
                 "fOV",
                 "focalLength"

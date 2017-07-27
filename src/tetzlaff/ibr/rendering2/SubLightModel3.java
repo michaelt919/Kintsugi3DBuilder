@@ -9,6 +9,7 @@ import tetzlaff.ibr.gui2.controllers.scene.lights.LightType;
 import tetzlaff.ibr.gui2.controllers.scene.lights.SubLightSetting;
 import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
 import tetzlaff.mvc.models.ControllableSubLightModel;
+import tetzlaff.util.Math2;
 
 public class SubLightModel3 implements ControllableSubLightModel {
 
@@ -47,7 +48,7 @@ public class SubLightModel3 implements ControllableSubLightModel {
     @Override
     public Matrix4 getLookMatrix() {
         return Matrix4.lookAt(
-                new Vector3(0,0,1/getZoom()),
+                new Vector3(0,0, getDistance()),
                 Vector3.ZERO,
                 new Vector3(0,1,0)
         ).times(getOrbit().times(
@@ -75,13 +76,23 @@ public class SubLightModel3 implements ControllableSubLightModel {
     }
 
     @Override
-    public Float getZoom() {
-        return (float) cam().getDistance();
+    public Float getLog10distance() {
+        return (float) cam().getLog10distance();
     }
 
     @Override
-    public void setZoom(Float zoom) {
-        cam().setDistance(zoom);
+    public void setLog10distance(Float log10distance) {
+        cam().setLog10distance(log10distance);
+    }
+
+    @Override
+    public Float getDistance() {
+        return (float) Math2.pow10(getLog10distance());
+    }
+
+    @Override
+    public void setDistance(Float distance) {
+        setLog10distance((float) Math.log10(distance.doubleValue()));
     }
 
     @Override
@@ -144,7 +155,7 @@ public class SubLightModel3 implements ControllableSubLightModel {
         Color color = cam().getColor();
         Vector3 out = new Vector3((float) color.getRed(), (float) color.getBlue(), (float) color.getGreen());
 //        System.out.println("Light Color: " + out);
-        return out;
+        return out.times((float) cam().getIntensity());
     }
 
     @Override
@@ -153,4 +164,6 @@ public class SubLightModel3 implements ControllableSubLightModel {
                 new Color(color.x, color.y, color.z, 1)
         );
     }
+
+
 }

@@ -180,7 +180,7 @@ public class LookToolController implements LightController, CameraController, Cu
             this.mouseScrollScale = (float)Math.PI * this.sensitivityScrollWheel / Math.min(size.width, size.height);
             this.mouseOrbitScale = (float)Math.PI * this.sensitivityOrbit / Math.min(size.width, size.height);
             this.oldOrbitMatrix = cameraModel2.getOrbit();
-            this.oldLogScale = (float) (Math.log(cameraModel2.getZoom())/Math.log(2));
+            this.oldLogScale = (float) (Math.log(cameraModel2.getLog10distance())/Math.log(2));
             this.oldOffSet = cameraModel2.getCenter();
         }
     }
@@ -217,14 +217,14 @@ public class LookToolController implements LightController, CameraController, Cu
                             Matrix4.rotateZ(this.mouseOrbitScale * (xpos - this.startX) * this.inversion)
                                     .times(this.oldOrbitMatrix));
                     double newLogScale = this.oldLogScale + this.mouseOrbitScale * (float)(ypos - this.startY);
-                    this.cameraModel2.setZoom((float)(Math.pow(2, newLogScale)));
+                    this.cameraModel2.setLog10distance((float)(Math.pow(2, newLogScale)));
                 }
             }
             else if (this.tertiaryButtonIndex >= 0 && window.getMouseButtonState(tertiaryButtonIndex) == MouseButtonState.Pressed)
             {
                 if (!Float.isNaN(startX) && !Float.isNaN(startY) && (xpos != this.startX || ypos != this.startY)) {
                     //System.out.println("Panning Time");
-                    final float scale = 0.6f/(cameraModel2.getZoom()); //TODO make this panning exact.
+                    final float scale = 0.6f/(cameraModel2.getLog10distance()); //TODO make this panning exact.
                     //TODO check for panning distortion
                     Vector3 addedTranslation = new Vector3(
                             (((float)(xpos - this.startX))/((float)(window.getWindowSize().height))),
@@ -235,7 +235,7 @@ public class LookToolController implements LightController, CameraController, Cu
 
                     //System.out.println("Start y: " + this.startY + " Mouse Scale: " + mouseScrollScale + " change: " + addedTranslation.times(this.mouseScrollScale).y + " final " + cameraModel.getCenter().y);
 
-                    //System.out.println("Zoom: " + cameraModel.getZoom());
+                    //System.out.println("Zoom: " + cameraModel.getLog10distance());
                 }
 
 
@@ -250,7 +250,7 @@ public class LookToolController implements LightController, CameraController, Cu
     {
         if (enabled())
         {
-            cameraModel2.setZoom(cameraModel2.getZoom() * (float) (Math.pow(2, (sensitivityScrollWheel * (yoffset) / 256.0 ))));
+            cameraModel2.setLog10distance(cameraModel2.getLog10distance() * (float) (Math.pow(2, (sensitivityScrollWheel * (yoffset) / 256.0 ))));
         }
     }
 

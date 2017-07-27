@@ -16,7 +16,7 @@ public class DollyTool extends AbstractTool {
     private final double dollySensitivity = Math.PI;
     private double dollySensitivityAdjusted;
 
-    private double oldLogZoom;
+    private double oldLog10Distance;
     private double oldTwist;
 
     @Override
@@ -25,7 +25,7 @@ public class DollyTool extends AbstractTool {
         if(buttonIndex == MB1){
             WindowSize windowSize = window.getWindowSize();
             oldTwist = cameraModel.getTwist();
-            oldLogZoom = Math.log(cameraModel.getZoom());
+            oldLog10Distance = cameraModel.getLog10distance();
             dollySensitivityAdjusted = dollySensitivity / Math.min(windowSize.width, windowSize.height);
         }
     }
@@ -39,7 +39,7 @@ public class DollyTool extends AbstractTool {
                     oldTwist + Math.toDegrees ((xpos - mouseStartX_MB1)*dollySensitivityAdjusted)
             );
 
-            cameraModel.setZoom((float)(Math.exp(oldLogZoom + dollySensitivityAdjusted * (ypos - mouseStartY_MB1))));
+            cameraModel.setLog10distance((float) (oldLog10Distance + 0.5* dollySensitivityAdjusted*(mouseStartY_MB1 - ypos)));
 
 
 
