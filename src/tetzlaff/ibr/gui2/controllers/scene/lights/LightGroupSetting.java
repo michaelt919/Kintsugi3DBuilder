@@ -41,7 +41,7 @@ public class LightGroupSetting {
                             0.0,
                             0.0,
                             1.0,
-                            255.0,
+                            1.0,
                             false,
                             "X",
                             LightType.PointLight,
