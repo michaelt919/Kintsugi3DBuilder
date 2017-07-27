@@ -206,7 +206,6 @@ public class FidelityMetricRequest implements IBRRequest
 			PrintStream out = new PrintStream(fidelityExportPath);
 		)
     	{
-        	
         	fidelityTechnique.initialize(resources, settings, 256);
     		
     		double[] slopes = new double[resources.viewSet.getCameraPoseCount()];
