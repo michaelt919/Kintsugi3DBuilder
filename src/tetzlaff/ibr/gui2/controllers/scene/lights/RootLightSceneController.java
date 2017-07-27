@@ -68,13 +68,14 @@ public class RootLightSceneController implements Initializable {
         tableView.getSelectionModel().setCellSelectionEnabled(true);
 
         //light selection listener
+        //noinspection rawtypes
         tableView.getSelectionModel().getSelectedCells().addListener((ListChangeListener<TablePosition>) c -> {
             while (c.next()){
                 if(c.wasAdded()){
                     //new cell selected
                     assert c.getAddedSize() == 1;
-                    TablePosition tb = c.getAddedSubList().get(0);
-                    ObservableValue selected = tb.getTableColumn().getCellObservableValue(tb.getRow());
+                    TablePosition<?,?> tb = c.getAddedSubList().get(0);
+                    ObservableValue<?> selected = tb.getTableColumn().getCellObservableValue(tb.getRow());
                     if(selected != null && selected.getValue() instanceof SubLightSetting){
                             selectedLight.setValue((SubLightSetting) selected.getValue());
                             lastSelectedIndex = tb.getColumn()-1;

@@ -18,9 +18,9 @@ import tetzlaff.mvc.models.ReadonlyLightModel;
 import tetzlaff.mvc.models.SceneViewportModel;
 
 
-public class DragToolController <ContextType extends Context<ContextType>> implements LightController, CameraController, MouseButtonPressListener {
+public class DragToolController implements LightController, CameraController, MouseButtonPressListener {
 
-    private DragToolController(LightModel2 lightModel2, CameraModel2 cameraModel2, Window window, ToolModel2 toolModel2) {
+    private DragToolController(LightModel2 lightModel2, CameraModel2 cameraModel2, Window<?> window, ToolModel2 toolModel2) {
         this.lightModel2 = lightModel2;
         this.cameraModel2 = cameraModel2;
         this.toolModel2 = toolModel2;
@@ -118,7 +118,7 @@ public class DragToolController <ContextType extends Context<ContextType>> imple
         private LightModel2 lightModel2;
         private CameraModel2 cameraModel2;
         private ToolModel2 toolModel2;
-        private Window window;
+        private Window<?> window;
 
         private Builder() {
         }
@@ -142,14 +142,13 @@ public class DragToolController <ContextType extends Context<ContextType>> imple
             return this;
         }
 
-        public Builder setWindow(Window window) {
+        public Builder setWindow(Window<?> window) {
             this.window = window;
             return this;
         }
 
         public DragToolController build() {
-            DragToolController dragToolController = new DragToolController(lightModel2, cameraModel2,window, toolModel2);
-            return dragToolController;
+            return new DragToolController(lightModel2, cameraModel2,window, toolModel2);
         }
     }
 }
