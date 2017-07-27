@@ -1,13 +1,11 @@
 package tetzlaff.gl.opengl;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL30.*;
 import tetzlaff.gl.Resource;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.exceptions.NoSpecifiedVertexBuffersException;
-
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
-import static org.lwjgl.opengl.GL15.glBindBuffer;
-import static org.lwjgl.opengl.GL30.*;
 
 class OpenGLVertexArray implements Resource
 {

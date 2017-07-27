@@ -1,10 +1,11 @@
 package tetzlaff.ibr;
 
-import tetzlaff.gl.Context;
-
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+
+import javax.swing.ComboBoxModel;
+
+import tetzlaff.gl.Context;
 
 public interface IBRRenderableListModel<ContextType extends Context<ContextType>> extends ComboBoxModel<IBRRenderable<ContextType>>
 {

@@ -1,13 +1,14 @@
 package tetzlaff.gl.glfw;
 
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.FramebufferSize;
+import static org.lwjgl.glfw.GLFW.*;
 
 import java.nio.ByteBuffer;
 
-import static org.lwjgl.glfw.GLFW.*;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL;
+
+import tetzlaff.gl.Context;
+import tetzlaff.gl.FramebufferSize;
 
 public abstract class GLFWWindowContextBase<ContextType extends GLFWWindowContextBase<ContextType>> implements Context<ContextType>
 {

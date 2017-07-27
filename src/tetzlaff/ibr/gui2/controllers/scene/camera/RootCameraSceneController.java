@@ -1,6 +1,10 @@
 package tetzlaff.ibr.gui2.controllers.scene.camera;
 
-import com.sun.javafx.collections.ObservableListWrapper;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.ResourceBundle;
+
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -13,10 +17,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import tetzlaff.ibr.rendering2.CameraModel3;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.ResourceBundle;
+import com.sun.javafx.collections.ObservableListWrapper;
 
 public class RootCameraSceneController implements Initializable {
 

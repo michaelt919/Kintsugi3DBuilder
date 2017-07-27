@@ -1,5 +1,8 @@
 package tetzlaff.ibr.gui2.controllers.scene.camera;
 
+import java.net.URL;
+import java.util.ResourceBundle;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -12,9 +15,6 @@ import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import tetzlaff.ibr.util.U;
 import tetzlaff.util.SafeNumberStringConverter;
-
-import java.net.URL;
-import java.util.ResourceBundle;
 
 public class SettingsCameraSceneController implements Initializable {
 

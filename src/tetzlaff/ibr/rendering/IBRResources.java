@@ -1,6 +1,28 @@
 package tetzlaff.ibr.rendering;
 
-import tetzlaff.gl.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+
+import javax.imageio.ImageIO;
+
+import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.CompressionFormat;
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Drawable;
+import tetzlaff.gl.FramebufferObject;
+import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Program;
+import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.Texture1D;
+import tetzlaff.gl.Texture2D;
+import tetzlaff.gl.Texture3D;
+import tetzlaff.gl.UniformBuffer;
+import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.material.Material;
 import tetzlaff.gl.nativebuffer.NativeDataType;
@@ -12,11 +34,6 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.util.Date;
 
 public class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {

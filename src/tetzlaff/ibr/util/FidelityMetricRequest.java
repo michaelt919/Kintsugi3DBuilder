@@ -1,6 +1,21 @@
 package tetzlaff.ibr.util;
 
-import tetzlaff.gl.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.PriorityQueue;
+
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Drawable;
+import tetzlaff.gl.Framebuffer;
+import tetzlaff.gl.PrimitiveMode;
+import tetzlaff.gl.Texture2D;
+import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRRenderable;
@@ -12,11 +27,6 @@ import tetzlaff.ibr.util.fidelity.FidelityEvaluationTechnique;
 import tetzlaff.ibr.util.fidelity.IBRFidelityTechnique;
 import tetzlaff.ibr.util.fidelity.LinearSystemFidelityTechnique;
 import tetzlaff.util.CubicHermiteSpline;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.*;
 
 public class FidelityMetricRequest implements IBRRequest
 {

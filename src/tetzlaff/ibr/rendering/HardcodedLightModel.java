@@ -1,5 +1,7 @@
 package tetzlaff.ibr.rendering;
 
+import java.util.function.Supplier;
+
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
@@ -7,8 +9,6 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
-
-import java.util.function.Supplier;
 
 public class HardcodedLightModel implements CameraBasedLightModel
 {

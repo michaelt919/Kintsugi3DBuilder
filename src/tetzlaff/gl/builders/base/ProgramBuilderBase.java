@@ -1,14 +1,14 @@
 package tetzlaff.gl.builders.base;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Shader;
-import tetzlaff.gl.ShaderType;
-import tetzlaff.gl.builders.ProgramBuilder;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+
+import tetzlaff.gl.Context;
+import tetzlaff.gl.Shader;
+import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.builders.ProgramBuilder;
 
 public abstract class ProgramBuilderBase<ContextType extends Context<ContextType>> implements ProgramBuilder<ContextType> 
 {

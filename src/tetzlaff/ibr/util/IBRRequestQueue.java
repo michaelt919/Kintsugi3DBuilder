@@ -1,11 +1,11 @@
 package tetzlaff.ibr.util;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 import tetzlaff.gl.Context;
 import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.LoadingMonitor;
-
-import java.util.LinkedList;
-import java.util.Queue;
 
 public class IBRRequestQueue<ContextType extends Context<ContextType>> 
 {

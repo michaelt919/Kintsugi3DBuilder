@@ -1,5 +1,8 @@
 package tetzlaff.ibr;
 
+import java.io.File;
+import java.util.List;
+
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.Program;
@@ -8,9 +11,6 @@ import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibr.rendering.IBRResources;
 import tetzlaff.mvc.models.SceneViewportModel;
-
-import java.io.File;
-import java.util.List;
 
 public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {

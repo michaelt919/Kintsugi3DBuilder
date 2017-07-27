@@ -1,19 +1,27 @@
 package tetzlaff.gl.opengl;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL32.*;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 import tetzlaff.gl.Drawable;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.VertexBuffer;
 import tetzlaff.gl.exceptions.UnrecognizedPrimitiveModeException;
-import tetzlaff.gl.vecmath.*;
-
-import java.util.Map;
-import java.util.TreeMap;
-
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.*;
+import tetzlaff.gl.vecmath.DoubleVector2;
+import tetzlaff.gl.vecmath.DoubleVector3;
+import tetzlaff.gl.vecmath.DoubleVector4;
+import tetzlaff.gl.vecmath.IntVector2;
+import tetzlaff.gl.vecmath.IntVector3;
+import tetzlaff.gl.vecmath.IntVector4;
+import tetzlaff.gl.vecmath.Vector2;
+import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.vecmath.Vector4;
 
 class OpenGLDrawable implements Drawable<OpenGLContext>
 {

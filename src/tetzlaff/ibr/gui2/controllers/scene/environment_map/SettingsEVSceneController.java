@@ -1,6 +1,10 @@
 package tetzlaff.ibr.gui2.controllers.scene.environment_map;
 
 
+import java.io.File;
+import java.net.URL;
+import java.util.ResourceBundle;
+
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -16,10 +20,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import tetzlaff.util.SafeNumberStringConverter;
-
-import java.io.File;
-import java.net.URL;
-import java.util.ResourceBundle;
 
 public class SettingsEVSceneController implements Initializable{
 // Boolean evUseImage

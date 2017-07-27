@@ -1,15 +1,16 @@
 package tetzlaff.texturefit;
 
-import tetzlaff.gl.exceptions.GLOutOfMemoryException;
-import tetzlaff.gl.glfw.GLFWWindow;
-import tetzlaff.gl.glfw.GLFWWindowFactory;
-import tetzlaff.gl.opengl.OpenGLContext;
-
-import javax.swing.*;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+
+import javax.swing.JOptionPane;
+
+import tetzlaff.gl.exceptions.GLOutOfMemoryException;
+import tetzlaff.gl.glfw.GLFWWindow;
+import tetzlaff.gl.glfw.GLFWWindowFactory;
+import tetzlaff.gl.opengl.OpenGLContext;
 
 public class TextureGenerationProgram
 {

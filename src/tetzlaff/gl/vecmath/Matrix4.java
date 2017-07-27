@@ -1,8 +1,8 @@
 package tetzlaff.gl.vecmath;
 
-import org.lwjgl.BufferUtils;
-
 import java.nio.FloatBuffer;
+
+import org.lwjgl.BufferUtils;
 
 public class Matrix4 
 {

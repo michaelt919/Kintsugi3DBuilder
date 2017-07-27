@@ -1,14 +1,48 @@
 package tetzlaff.gl.glfw;
 
-import org.lwjgl.glfw.*;
-import tetzlaff.gl.window.WindowListenerManager;
-import tetzlaff.gl.window.listeners.*;
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.GL_TRUE;
+import org.lwjgl.glfw.GLFWCharCallback;
+import org.lwjgl.glfw.GLFWCharModsCallback;
+import org.lwjgl.glfw.GLFWCursorEnterCallback;
+import org.lwjgl.glfw.GLFWCursorPosCallback;
+import org.lwjgl.glfw.GLFWDropCallback;
+import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
+import org.lwjgl.glfw.GLFWKeyCallback;
+import org.lwjgl.glfw.GLFWMouseButtonCallback;
+import org.lwjgl.glfw.GLFWScrollCallback;
+import org.lwjgl.glfw.GLFWWindowCloseCallback;
+import org.lwjgl.glfw.GLFWWindowFocusCallback;
+import org.lwjgl.glfw.GLFWWindowIconifyCallback;
+import org.lwjgl.glfw.GLFWWindowPosCallback;
+import org.lwjgl.glfw.GLFWWindowRefreshCallback;
+import org.lwjgl.glfw.GLFWWindowSizeCallback;
+
+import tetzlaff.gl.window.WindowListenerManager;
+import tetzlaff.gl.window.listeners.CharacterListener;
+import tetzlaff.gl.window.listeners.CharacterModifiersListener;
+import tetzlaff.gl.window.listeners.CursorEnteredListener;
+import tetzlaff.gl.window.listeners.CursorExitedListener;
+import tetzlaff.gl.window.listeners.CursorPositionListener;
+import tetzlaff.gl.window.listeners.FramebufferSizeListener;
+import tetzlaff.gl.window.listeners.KeyPressListener;
+import tetzlaff.gl.window.listeners.KeyReleaseListener;
+import tetzlaff.gl.window.listeners.KeyRepeatListener;
+import tetzlaff.gl.window.listeners.MouseButtonPressListener;
+import tetzlaff.gl.window.listeners.MouseButtonReleaseListener;
+import tetzlaff.gl.window.listeners.ScrollListener;
+import tetzlaff.gl.window.listeners.WindowCloseListener;
+import tetzlaff.gl.window.listeners.WindowFocusGainedListener;
+import tetzlaff.gl.window.listeners.WindowFocusLostListener;
+import tetzlaff.gl.window.listeners.WindowIconifiedListener;
+import tetzlaff.gl.window.listeners.WindowPositionListener;
+import tetzlaff.gl.window.listeners.WindowRefreshListener;
+import tetzlaff.gl.window.listeners.WindowRestoredListener;
+import tetzlaff.gl.window.listeners.WindowSizeListener;
 
 // Other misc. callbacks
 // Keyboard callbacks

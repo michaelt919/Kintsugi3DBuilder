@@ -1,10 +1,14 @@
 package tetzlaff.gl.material;
 
-import tetzlaff.gl.vecmath.Vector3;
-
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.InputMismatchException;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
+
+import tetzlaff.gl.vecmath.Vector3;
 
 public class Material 
 {

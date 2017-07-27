@@ -1,10 +1,12 @@
 package tetzlaff.ibr.util;
 
+import java.awt.Component;
+
+import javax.swing.JFileChooser;
+import javax.swing.JSpinner;
+
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRSettings;
-
-import javax.swing.*;
-import java.awt.*;
 
 public class BTFRequestUI implements IBRRequestUI
 {
