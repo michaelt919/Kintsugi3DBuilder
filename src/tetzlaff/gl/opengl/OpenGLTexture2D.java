@@ -1,31 +1,30 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL30.*;
-// mipmaps
-import static org.lwjgl.opengl.GL32.*;
+import tetzlaff.gl.*;
+import tetzlaff.gl.ColorFormat.DataType;
+import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
+import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
+import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
+import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
+import tetzlaff.util.RadianceImageLoader;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import javax.imageio.ImageIO;
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.GL_BGRA;
+import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
+import static org.lwjgl.opengl.GL30.GL_DEPTH_STENCIL;
+import static org.lwjgl.opengl.GL30.GL_RGBA_INTEGER;
+import static org.lwjgl.opengl.GL32.GL_TEXTURE_2D_MULTISAMPLE;
+import static org.lwjgl.opengl.GL32.glTexImage2DMultisample;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.ColorFormat.DataType;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Texture2D;
-import tetzlaff.gl.TextureType;
-import tetzlaff.gl.TextureWrapMode;
-import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
-import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
-import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
-import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
-import tetzlaff.util.RadianceImageLoader;
+// mipmaps
 
 class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 {

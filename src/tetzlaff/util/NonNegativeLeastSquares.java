@@ -1,12 +1,13 @@
 package tetzlaff.util;
 
-import static org.ejml.dense.row.CommonOps_DDRM.*;
+import org.ejml.dense.row.CommonOps_DDRM;
+import org.ejml.simple.SimpleMatrix;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.ejml.dense.row.CommonOps_DDRM;
-import org.ejml.simple.SimpleMatrix;
+import static org.ejml.dense.row.CommonOps_DDRM.elementMin;
+import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 
 public class NonNegativeLeastSquares 
 {

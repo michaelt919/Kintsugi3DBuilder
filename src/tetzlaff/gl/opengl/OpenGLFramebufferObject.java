@@ -1,20 +1,19 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
-
-import java.nio.IntBuffer;
-import java.util.AbstractCollection;
-import java.util.ArrayList;
-
 import org.lwjgl.BufferUtils;
-
 import tetzlaff.gl.FramebufferAttachment;
 import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.FramebufferSize;
 import tetzlaff.gl.Resource;
 import tetzlaff.gl.builders.base.FramebufferObjectBuilderBase;
+
+import java.nio.IntBuffer;
+import java.util.AbstractCollection;
+import java.util.ArrayList;
+
+import static org.lwjgl.opengl.GL11.glReadBuffer;
+import static org.lwjgl.opengl.GL20.glDrawBuffers;
+import static org.lwjgl.opengl.GL30.*;
 
 class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferObject<OpenGLContext>, Resource
 {

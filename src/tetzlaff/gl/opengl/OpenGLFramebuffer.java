@@ -1,8 +1,10 @@
 package tetzlaff.gl.opengl;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL30.*;
 
+import org.lwjgl.BufferUtils;
+import tetzlaff.gl.Framebuffer;
+import tetzlaff.gl.FramebufferSize;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -10,12 +12,9 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import javax.imageio.ImageIO;
-
-import org.lwjgl.BufferUtils;
-
-import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.FramebufferSize;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.GL_BGRA;
+import static org.lwjgl.opengl.GL30.*;
 
 abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext> 
 {

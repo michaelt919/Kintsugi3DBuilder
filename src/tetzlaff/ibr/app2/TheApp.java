@@ -2,7 +2,7 @@ package tetzlaff.ibr.app2;
 
 import tetzlaff.ibr.rendering2.CameraModel3;
 import tetzlaff.ibr.rendering2.IBRelight2;
-import tetzlaff.ibr.rendering2.LightModel2;
+import tetzlaff.ibr.rendering2.LightModel3;
 import tetzlaff.ibr.rendering2.ToolModel3;
 
 public class TheApp {
@@ -35,7 +35,7 @@ public class TheApp {
     private static void createModels(){
         rootModel = new RootModel(
                 new CameraModel3(),
-                new LightModel2(4),
+                new LightModel3(),
                 new ToolModel3()
         );
     }

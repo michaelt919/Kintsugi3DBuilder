@@ -1,8 +1,8 @@
 package tetzlaff.gl.vecmath;
 
-import java.nio.DoubleBuffer;
-
 import org.lwjgl.BufferUtils;
+
+import java.nio.DoubleBuffer;
 
 public class DoubleMatrix4 
 {
@@ -206,10 +206,7 @@ public class DoubleMatrix4
 		return DoubleMatrix3.fromQuaternion(x, y, z, w).asMatrix4();
 	}
 	
-	/**
-	 * Creates a 4x4 matrix from a 3x3 matrix by dropping the fourth row and column.
-	 * @param m4 The 4x4 matrix.
-	 */
+
 	public DoubleMatrix3 getUpperLeft3x3() 
 	{
 		return DoubleMatrix3.fromRows(

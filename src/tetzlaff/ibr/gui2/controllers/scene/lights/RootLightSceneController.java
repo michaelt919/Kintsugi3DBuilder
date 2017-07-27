@@ -1,10 +1,7 @@
 package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.ResourceBundle;
-
+import com.sun.javafx.collections.ObservableListWrapper;
+import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,17 +12,14 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TablePosition;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-import tetzlaff.ibr.rendering2.LightModel2;
+import tetzlaff.ibr.rendering2.LightModel3;
 
-import com.sun.javafx.collections.ObservableListWrapper;
-import com.sun.javafx.scene.control.skin.TableHeaderRow;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.ResourceBundle;
 
 public class RootLightSceneController implements Initializable {
     @FXML private VBox settings;
@@ -45,13 +39,10 @@ public class RootLightSceneController implements Initializable {
         //TABLE SET UP
         //columns
         TableColumn<LightGroupSetting, String> nameCol = new TableColumn<>("Name");
-        nameCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<LightGroupSetting, String>, ObservableValue<String>>() {
-            @Override
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<LightGroupSetting, String> param) {
-                String s = "";
-                if(param.getValue().isLocked()) s = "(L)";
-                return new SimpleStringProperty(s + param.getValue().getName());
-            }
+        nameCol.setCellValueFactory(param -> {
+            String s = "";
+            if(param.getValue().isLocked()) s = "(L)";
+            return new SimpleStringProperty(s + param.getValue().getName());
         });
         tableView.getColumns().add(nameCol);
 
@@ -113,9 +104,13 @@ public class RootLightSceneController implements Initializable {
 
     }
 
-    public void init2(LightModel2 lightModel2){
+    public void init2(LightModel3 lightModel3){
         System.out.println("Lights in!");
-
+        ObservableValue<LightGroupSetting> observableValue = tableView.getSelectionModel().selectedItemProperty();
+        System.out.println("Setting " + observableValue);
+        lightModel3.setLightGroupSettingObservableValue(
+                observableValue
+        );
     }
 
     @FXML private void newGroup(){

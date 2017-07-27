@@ -1,18 +1,6 @@
 package tetzlaff.ibr.util.fidelity;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Drawable;
-import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.Program;
-import tetzlaff.gl.ShaderType;
-import tetzlaff.gl.UniformBuffer;
+import tetzlaff.gl.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
@@ -20,6 +8,11 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.rendering.IBRResources;
 import tetzlaff.util.ShadingParameterMode;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IBRFidelityTechnique<ContextType extends Context<ContextType>> implements FidelityEvaluationTechnique<ContextType>
 {

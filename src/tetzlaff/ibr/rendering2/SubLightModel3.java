@@ -19,8 +19,8 @@ public class SubLightModel3 implements ControllableSubLightModel {
             0.0,
             0.0,
             0.0,
-            1.0,
-            1.0,
+            0.0,
+            0.0,
             true,
             "backup",
             LightType.PointLight,
@@ -32,9 +32,12 @@ public class SubLightModel3 implements ControllableSubLightModel {
     }
 
     private SubLightSetting cam(){
-        if(subLightSettingObservableValue == null || subLightSettingObservableValue.getValue() == null) return backup;
+        if(subLightSettingObservableValue == null || subLightSettingObservableValue.getValue() == null){
+//            System.out.println("Loss");
+            return backup;
+        }
         else {
-            System.out.println("Win");
+//            System.out.println("Win");
             return subLightSettingObservableValue.getValue();
         }
     }
@@ -139,7 +142,9 @@ public class SubLightModel3 implements ControllableSubLightModel {
     @Override
     public Vector3 getColor() {
         Color color = cam().getColor();
-        return new Vector3((float) color.getRed(), (float) color.getBlue(), (float) color.getGreen());
+        Vector3 out = new Vector3((float) color.getRed(), (float) color.getBlue(), (float) color.getGreen());
+        System.out.println("Light Color: " + out);
+        return out;
     }
 
     @Override
