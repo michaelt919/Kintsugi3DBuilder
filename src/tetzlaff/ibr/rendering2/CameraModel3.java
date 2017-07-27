@@ -1,13 +1,12 @@
 package tetzlaff.ibr.rendering2;//Created by alexk on 7/21/2017.
 
+import com.sun.istack.internal.NotNull;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.gui2.controllers.scene.camera.CameraSetting;
 import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
 import tetzlaff.mvc.models.ControllableCameraModel;
-
-import com.sun.istack.internal.NotNull;
 
 public class CameraModel3 implements ControllableCameraModel {
 

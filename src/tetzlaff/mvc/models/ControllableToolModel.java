@@ -1,13 +1,13 @@
 package tetzlaff.mvc.models;//Created by alexk on 7/24/2017.
 
-import java.io.File;
-import java.io.IOException;
-
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
+
+import java.io.File;
+import java.io.IOException;
 
 public abstract class ControllableToolModel {
     private ImageBasedRendererList<OpenGLContext> model;

@@ -1,12 +1,6 @@
 package tetzlaff.ibr.util;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-
 import org.ejml.simple.SimpleMatrix;
-
 import tetzlaff.gl.Context;
 import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Vector3;
@@ -14,6 +8,11 @@ import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.rendering.IBRResources;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 public class FidelityMetricRequest2 implements IBRRequest 
 {

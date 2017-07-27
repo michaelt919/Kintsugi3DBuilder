@@ -1,7 +1,5 @@
 package tetzlaff.ibr.gui2.app;
 
-import java.net.URL;
-
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
@@ -9,6 +7,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+
+import java.net.URL;
 
 public class GUIApp2 extends Application{
 

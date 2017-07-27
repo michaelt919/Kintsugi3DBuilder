@@ -1,7 +1,5 @@
 package tetzlaff.ibr;
 
-import java.util.function.DoubleUnaryOperator;
-
 import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture1D;
@@ -9,6 +7,8 @@ import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.util.CubicHermiteSpline;
+
+import java.util.function.DoubleUnaryOperator;
 
 public class SampledLuminanceEncoding 
 {

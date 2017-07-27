@@ -1,12 +1,12 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL30.*;
+import tetzlaff.gl.Contextual;
+import tetzlaff.gl.Resource;
 
 import java.nio.ByteBuffer;
 
-import tetzlaff.gl.Contextual;
-import tetzlaff.gl.Resource;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL30.glBindBufferBase;
 
 abstract class OpenGLBuffer implements Contextual<OpenGLContext>, Resource
 {

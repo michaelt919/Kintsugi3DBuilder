@@ -1,22 +1,11 @@
 package tetzlaff.gl;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-
-import tetzlaff.gl.builders.ColorCubemapBuilder;
-import tetzlaff.gl.builders.ColorTextureBuilder;
-import tetzlaff.gl.builders.DepthStencilTextureBuilder;
-import tetzlaff.gl.builders.DepthTextureBuilder;
-import tetzlaff.gl.builders.ProgramBuilder;
-import tetzlaff.gl.builders.StencilTextureBuilder;
-import tetzlaff.gl.builders.TextureBuilder;
+import tetzlaff.gl.builders.*;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+
+import java.io.*;
 
 /**
  * An interface for any OpenGL-like graphics context.

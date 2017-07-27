@@ -1,21 +1,11 @@
 package tetzlaff.ibr.rendering2;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.imageio.ImageIO;
-
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
-import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.alexkautz_workspace.render.TrackballLightController2;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
@@ -25,13 +15,16 @@ import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.mvc.controllers.impl.FirstPersonController;
 import tetzlaff.mvc.controllers.impl.TrackballController;
-import tetzlaff.mvc.models.CameraModel;
-import tetzlaff.mvc.models.ControllableCameraModel;
-import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
-import tetzlaff.mvc.models.ControllableLightModel;
-import tetzlaff.mvc.models.ControllableToolModel;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
+import tetzlaff.mvc.models.*;
 import tetzlaff.mvc.models.impl.BasicCameraModel;
+
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * ULFProgram is a container for the main entry point of the Unstructured Light Field
@@ -118,16 +111,16 @@ public class IBRelight2
 
 
 			//Here i create my own brand of camera and light models;
-			ControllableLightModel lightModel2 = TheApp.getRootModel().getLightModel2();
+			ControllableLightModel lightModel3 = TheApp.getRootModel().getLightModel3();
 			ControllableCameraModel cameraModel3 = TheApp.getRootModel().getCameraModel3();
 			ControllableToolModel toolModel = TheApp.getRootModel().getToolModel3();
-			lightModel2.setLightColor(0, new Vector3(1f, 1f, 1f));
+//			lightModel3.setLightColor(0, new Vector3(1f, 1f, 1f));
 
 			ToolBox toolBox = (new ToolBox.ToolBoxBuilder())
 					.setCameraModel(cameraModel3)
 					.setEnvironmentMapModel(new ControllableEnvironmentMapModel() {
 					})
-					.setLightModel(lightModel2)
+					.setLightModel(lightModel3)
 					.setToolModel(toolModel)
 					.setWindow(window)
 					.build();
@@ -142,7 +135,7 @@ public class IBRelight2
                     context,
                     program,
 					cameraModel3,
-					lightModel2);
+					lightModel3);
 
             toolModel.setModel(model);
 
@@ -198,7 +191,7 @@ public class IBRelight2
 				@Override
 				public void refresh()
 				{
-					fpController.update();
+					//fpController.update();
 				}
 
 				@Override

@@ -1,14 +1,10 @@
 package tetzlaff.gl.interactive;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.util.SelectableList;
+
+import java.util.*;
 
 /**
  * A container that can hold many InteractiveRenderable objects with one of them being selected/active. It

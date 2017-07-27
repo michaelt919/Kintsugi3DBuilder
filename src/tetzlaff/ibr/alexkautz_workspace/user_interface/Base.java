@@ -1,7 +1,5 @@
 package tetzlaff.ibr.alexkautz_workspace.user_interface;
 
-import java.io.IOException;
-
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -12,6 +10,8 @@ import javafx.stage.Stage;
 import tetzlaff.ibr.alexkautz_workspace.mount_olympus.PassedParameters;
 import tetzlaff.ibr.gui2.controllers.menu_bar.LoaderController;
 import tetzlaff.ibr.rendering2.tools.Tool;
+
+import java.io.IOException;
 
 public class Base {
 
