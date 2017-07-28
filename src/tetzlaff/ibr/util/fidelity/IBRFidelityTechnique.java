@@ -26,13 +26,12 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
 	private IBRResources<ContextType> resources;
 	private Drawable<ContextType> drawable;
 	private Framebuffer<ContextType> framebuffer;
-	private NativeVectorBuffer viewIndexData;
     private IBRSettings settings;
     
     private List<Integer> activeViewIndexList;
 	
 	private Program<ContextType> fidelityProgram;
-	private NativeVectorBuffer viewIndexBuffer;
+	private NativeVectorBuffer viewIndexData;
 	
 	@Override
 	public boolean isGuaranteedMonotonic()
@@ -63,7 +62,7 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
     	drawable.addVertexBuffer("normal", resources.normalBuffer);
     	drawable.addVertexBuffer("tangent", resources.tangentBuffer);
     	
-    	viewIndexBuffer = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
+    	viewIndexData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
 	}
 	
 	@Override
@@ -73,7 +72,7 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
 		
 		for (int i = 0; i < activeViewIndexList.size(); i++)
 		{
-			viewIndexBuffer.set(i, 0, activeViewIndexList.get(i));
+			viewIndexData.set(i, 0, activeViewIndexList.get(i));
 		}
 	}
 	
@@ -149,10 +148,9 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
 
     	try
     	{
-	        if (debugFile != null /*activeViewIndexList.size() == resources.viewSet.getCameraPoseCount() - 1 /*&& this.assets.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
+	        if (debugFile != null)
 	        {
-		    	//File fidelityImage = new File(debugDirectory/*new File(fidelityExportPath.getParentFile(), "debug")*/, resources.viewSet.getImageFileName(targetViewIndex));
-		        framebuffer.saveColorBufferToFile(0, "PNG", /*fidelityImage*/debugFile);
+		    	framebuffer.saveColorBufferToFile(0, "PNG", debugFile);
 	        }
     	}
     	catch(IOException e)
