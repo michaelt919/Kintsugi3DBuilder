@@ -10,7 +10,6 @@ import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.rendering2.CameraModel2;
-import tetzlaff.ibr.rendering2.LightModel2;
 import tetzlaff.mvc.controllers.CameraController;
 import tetzlaff.mvc.controllers.LightController;
 import tetzlaff.mvc.models.ReadonlyCameraModel;

@@ -12,11 +12,11 @@ import tetzlaff.ibr.rendering2.tools2.ToolBox;
 
 public abstract class ControllableToolModel {
     private ImageBasedRendererList<?> model;
-    public void setModel(ImageBasedRendererList<?> model) {
+    public final void setModel(ImageBasedRendererList<?> model) {
         this.model = model;
     }
 
-    public void loadFiles(File cameraFile, File objFile, File photoDir) throws IOException{
+    public final void loadFiles(File cameraFile, File objFile, File photoDir) throws IOException{
         IBRLoadOptions loadOptions = new IBRLoadOptions()
                 .setColorImagesRequested(true)
                 .setCompressionRequested(true)
@@ -30,6 +30,10 @@ public abstract class ControllableToolModel {
         ibrRenderable.settings().setRelightingEnabled(true);
         ibrRenderable.settings().setVisibleLightsEnabled(true);
         ibrRenderable.setHalfResolution(true);
+    }
+
+    final void loadEV(File ev){
+        model.getSelectedItem().setEnvironment(ev);
     }
 
     public abstract ToolBox.TOOL getTool();
