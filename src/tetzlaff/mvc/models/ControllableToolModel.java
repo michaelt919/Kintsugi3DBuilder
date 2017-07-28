@@ -36,5 +36,9 @@ public abstract class ControllableToolModel {
         model.getSelectedItem().setEnvironment(ev);
     }
 
+    final void unloadEV(){
+        model.getSelectedItem().setEnvironment(null);
+    }
+
     public abstract ToolBox.TOOL getTool();
 }
