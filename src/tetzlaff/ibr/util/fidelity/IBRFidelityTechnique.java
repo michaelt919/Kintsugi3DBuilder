@@ -148,10 +148,9 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
 
     	try
     	{
-	        if (debugFile != null /*activeViewIndexList.size() == resources.viewSet.getCameraPoseCount() - 1 /*&& this.assets.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
+	        if (debugFile != null)
 	        {
-		    	//File fidelityImage = new File(debugDirectory/*new File(fidelityExportPath.getParentFile(), "debug")*/, resources.viewSet.getImageFileName(targetViewIndex));
-		        framebuffer.saveColorBufferToFile(0, "PNG", /*fidelityImage*/debugFile);
+		    	framebuffer.saveColorBufferToFile(0, "PNG", debugFile);
 	        }
     	}
     	catch(IOException e)

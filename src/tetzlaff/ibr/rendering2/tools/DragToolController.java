@@ -1,6 +1,5 @@
 package tetzlaff.ibr.rendering2.tools;
 
-import tetzlaff.gl.Context;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.ModifierKeys;

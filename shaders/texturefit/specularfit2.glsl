@@ -7,23 +7,32 @@
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
-uniform sampler2D roughnessEstimate;
 
 uniform float fittingGamma;
+uniform bool standaloneMode;
 
 vec3 getDiffuseColor()
 {
-    return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
+	if (standaloneMode)
+	{
+		return vec3(0);
+	}
+	else
+	{
+		return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
+	}
 }
 
 vec3 getDiffuseNormalVector()
 {
-    return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
-}
-
-float getRoughness()
-{
-    return texture(roughnessEstimate, fTexCoord).r;
+	if (standaloneMode)
+	{
+		return vec3(0,0,1);
+	}
+	else
+	{
+		return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
+	}
 }
 
 struct ParameterizedFit
