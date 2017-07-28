@@ -359,7 +359,7 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
 		SimpleMatrix solution = solver.solvePremultiplied(mATA, vATb, 0.001);
         SimpleMatrix recon = system.mA.mult(solution);
 		
-		if (debugDirectory != null)
+		if (debugFile != null)
 		{
 	        BufferedImage outImg = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_ARGB);
 	        
@@ -417,7 +417,5 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
 	@Override
 	public void close() throws Exception 
 	{
-		// TODO Auto-generated method stub
-		
 	}
 }
