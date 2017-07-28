@@ -13,7 +13,11 @@ public abstract class ControllableEnvironmentMapModel {
     }
 
     protected final void loadEV(File ev){
+        System.out.println("Loading EV file " + ev.getName());
         tool.loadEV(ev);
+    }
+    protected final void unloadEV(){
+        tool.unloadEV();
     }
 
 }

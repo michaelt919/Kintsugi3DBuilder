@@ -57,11 +57,10 @@ public class LightModel3 extends ControllableLightModel {
 
     @Override
     public int getLightCount() {
-        int count = lightGroup().getNLights();
-//        System.out.println("Counted " + count + "Lights");
+        //        System.out.println("Counted " + count + "Lights");
 //        return LightGroupSetting.LIGHT_LIMIT; //TODO ERROR HERE
-        System.out.println("Count: " + count);
-        return count;
+//        System.out.println("Count: " + count);
+        return lightGroup().getNLights();
     }
 
     @Override
@@ -84,7 +83,7 @@ public class LightModel3 extends ControllableLightModel {
 
     @Override
     public boolean getEnvironmentMappingEnabled() {
-        return false;
+        return true; //TODO
     }
 
     @Override

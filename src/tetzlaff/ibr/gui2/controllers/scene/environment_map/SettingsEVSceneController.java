@@ -165,6 +165,7 @@ public class SettingsEVSceneController implements Initializable{
 
 
 
+        setDisabled(true);
 
     }
 

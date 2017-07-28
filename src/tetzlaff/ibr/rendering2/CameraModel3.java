@@ -1,6 +1,7 @@
 package tetzlaff.ibr.rendering2;//Created by alexk on 7/21/2017.
 
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.value.ObservableValue;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.gui2.controllers.scene.camera.CameraSetting;
@@ -12,7 +13,7 @@ import tetzlaff.util.Math2;
 
 public class CameraModel3 implements ControllableCameraModel {
 
-    private ReadOnlyObjectProperty<CameraSetting> selected;
+    private ObservableValue<CameraSetting> selected;
     private final CameraSetting backup = new CameraSetting(
             0.0,
             0.0,
@@ -30,7 +31,7 @@ public class CameraModel3 implements ControllableCameraModel {
 
 
 
-    public void setSelectedCameraSettingProperty(ReadOnlyObjectProperty<CameraSetting> selectedCameraSettingProperty){
+    public void setSelectedCameraSettingProperty(ObservableValue<CameraSetting> selectedCameraSettingProperty){
         this.selected = selectedCameraSettingProperty;
     }
 
