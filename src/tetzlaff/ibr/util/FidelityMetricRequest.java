@@ -11,12 +11,6 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 import tetzlaff.gl.Context;
-import tetzlaff.gl.Drawable;
-import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.Texture2D;
-import tetzlaff.gl.UniformBuffer;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRSettings;
@@ -24,15 +18,14 @@ import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources;
 import tetzlaff.ibr.util.fidelity.FidelityEvaluationTechnique;
-import tetzlaff.ibr.util.fidelity.IBRFidelityTechnique;
-import tetzlaff.ibr.util.fidelity.LinearSystemFidelityTechnique;
+import tetzlaff.ibr.util.fidelity.TextureFitFidelityTechnique;
 import tetzlaff.util.CubicHermiteSpline;
 
 public class FidelityMetricRequest implements IBRRequest
 {
-	private final static boolean DEBUG = false;
+	private final static boolean DEBUG = true;
 	
-	private final static boolean USE_RENDERER_WEIGHTS = false;
+	private final static boolean USE_RENDERER_WEIGHTS = true;
 	private final static boolean USE_PERCEPTUALLY_LINEAR_ERROR = false;
 	
     private File fidelityExportPath;
@@ -44,75 +37,6 @@ public class FidelityMetricRequest implements IBRRequest
 		this.fidelityExportPath = exportPath;
 		this.fidelityVSETFile = targetVSETFile;
 		this.settings = settings;
-	}
-	
-	private <ContextType extends Context<ContextType>> 
-		void computeTextures(
-			ContextType context, IBRResources<ContextType> resources, Drawable<ContextType> texFitDrawable, Framebuffer<ContextType> framebuffer,
-			NativeVectorBuffer viewIndexData, int activeViewCount)
-	{
-		resources.setupShaderProgram(texFitDrawable.program(), false);
-		
-		try (UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer().setData(viewIndexData))
-		{
-			texFitDrawable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
-			texFitDrawable.program().setUniform("viewCount", activeViewCount);
-	    	
-	    	framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
-	    	framebuffer.clearDepthBuffer();
-	    	
-	    	texFitDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-		}
-	}
-	
-	private <ContextType extends Context<ContextType>> 
-		double calculateErrorTexFit(
-			ContextType context, IBRResources<ContextType> resources, Drawable<ContextType> texErrorDrawable, Framebuffer<ContextType> framebuffer, 
-			Texture2D<ContextType> specularTexture, Texture2D<ContextType> roughnessTexture, int targetViewIndex)
-	{
-		resources.setupShaderProgram(texErrorDrawable.program(), false);
-		
-		texErrorDrawable.program().setUniform("model_view", resources.viewSet.getCameraPose(targetViewIndex));
-		texErrorDrawable.program().setUniform("viewPos", resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3).getXYZ());
-		texErrorDrawable.program().setUniform("projection", 
-				resources.viewSet.getCameraProjection(resources.viewSet.getCameraProjectionIndex(targetViewIndex))
-				.getProjectionMatrix(resources.viewSet.getRecommendedNearPlane(), resources.viewSet.getRecommendedFarPlane()));
-	
-		texErrorDrawable.program().setUniform("targetViewIndex", targetViewIndex);
-		
-		texErrorDrawable.program().setTexture("specularTexture", specularTexture);
-		texErrorDrawable.program().setTexture("roughnessTexture", roughnessTexture);
-		
-//		try
-//		{
-//	        if (activeViewCount == resources.viewSet.getCameraPoseCount() - 1 /*&& this.assets.viewSet.getImageFileName(i).matches(".*R1[^1-9].*")*/)
-//	        {
-//		    	File fidelityImage = new File(new File(fidelityExportPath.getParentFile(), "debug"), resources.viewSet.getImageFileName(targetViewIndex));
-//		        framebuffer.saveColorBufferToFile(0, "PNG", fidelityImage);
-//	        }
-//		}
-//		catch(IOException e)
-//		{
-//			e.printStackTrace();
-//		}
-		
-	    double sumSqError = 0.0;
-	    //double sumWeights = 0.0;
-	    double sumMask = 0.0;
-	
-		float[] fidelityArray = framebuffer.readFloatingPointColorBufferRGBA(0);
-		for (int k = 0; 4 * k + 3 < fidelityArray.length; k++)
-		{
-			if (fidelityArray[4 * k + 1] >= 0.0f)
-			{
-				sumSqError += fidelityArray[4 * k];
-				//sumWeights += fidelityArray[4 * k + 1];
-				sumMask += 1.0;
-			}
-		}
-	
-		double renderError = Math.sqrt(sumSqError / sumMask);
-		return renderError;
 	}
 	
 	private double estimateErrorQuadratic(double slope, double peak, double distance)
@@ -200,8 +124,9 @@ public class FidelityMetricRequest implements IBRRequest
     	try
     	(
 			FidelityEvaluationTechnique<ContextType> fidelityTechnique = 
-    			USE_RENDERER_WEIGHTS ? new IBRFidelityTechnique<ContextType>()
-					: new LinearSystemFidelityTechnique<ContextType>(USE_PERCEPTUALLY_LINEAR_ERROR, debugDirectory);
+				new TextureFitFidelityTechnique<ContextType>(USE_PERCEPTUALLY_LINEAR_ERROR);
+//    			USE_RENDERER_WEIGHTS ? new IBRFidelityTechnique<ContextType>()
+//					: new LinearSystemFidelityTechnique<ContextType>(USE_PERCEPTUALLY_LINEAR_ERROR, debugDirectory);
     			
 			PrintStream out = new PrintStream(fidelityExportPath);
 		)
@@ -236,10 +161,12 @@ public class FidelityMetricRequest implements IBRRequest
     			distances.add(0.0);
     			errors.add(0.0);
     			
-    			List<Integer> activeViewIndexList = new ArrayList<Integer>();
-		    	
+    			List<Integer> activeViewIndexList;
+    			
 		    	do 
     			{
+    				activeViewIndexList = new ArrayList<Integer>();
+    			
 			    	minDistance = Float.MAX_VALUE;
 			    	for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
 			    	{
@@ -257,9 +184,11 @@ public class FidelityMetricRequest implements IBRRequest
 				    	{
 					        distances.add(minDistance);
 					        
-					        errors.add(fidelityTechnique.evaluateError(i, DEBUG ? 
-					        		new File(new File(fidelityExportPath.getParentFile(), "debug"), 
-				    					renderable.getActiveViewSet().getImageFileName(i).split("\\.")[0] + "_" + errors.size() + ".png") : null));
+					        errors.add(fidelityTechnique.evaluateError(i, 
+					        		DEBUG && activeViewIndexList.size() == resources.viewSet.getCameraPoseCount() - 1 ? 
+					        				new File(new File(fidelityExportPath.getParentFile(), "debug"), 
+				        							renderable.getActiveViewSet().getImageFileName(i)) 
+					        				: null));
 					        
 					    	lastMinDistance = minDistance;
 				    	}
@@ -511,7 +440,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    				originalUsed[j] = true;
 	    				out.print(resources.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t");
 	    				
-	    				out.print(fidelityTechnique.evaluateError(j));
+	    				out.print(fidelityTechnique.evaluateError(j) + "\t");
 	    				
 	    				activeViewIndexList.add(j);
 	    				fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
