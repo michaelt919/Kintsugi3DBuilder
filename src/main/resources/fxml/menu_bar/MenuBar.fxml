@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.CheckMenuItem?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.RadioMenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.VBox?>
+
 <VBox prefWidth="470.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.menu_bar.MenubarController">
    <MenuBar>
       <Menu mnemonicParsing="false" text="File">
-         <MenuItem mnemonicParsing="false" onAction="#loadMenu" text="Create project" />
+         <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project" />
          <MenuItem mnemonicParsing="false" text="Open project" />
          <MenuItem mnemonicParsing="false" text="Save project" />
          <MenuItem mnemonicParsing="false" text="Save project as..." />
@@ -17,7 +24,8 @@
             <MenuItem mnemonicParsing="false" text="Other..." />
          </Menu>
          <MenuItem mnemonicParsing="false" text="Load settings configuration" />
-         <MenuItem mnemonicParsing="false" onAction="#exit" text="Exit" />
+         <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." />
+         <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
       </Menu>
       <Menu mnemonicParsing="false" text="Viewport">
          <items>
@@ -57,7 +65,10 @@
          <fx:define>
             <ToggleGroup fx:id="toolGroup" />
          </fx:define>
-         <RadioMenuItem mnemonicParsing="false" selected="true" text="Orbit Camera tool" toggleGroup="$toolGroup"/>
+         <RadioMenuItem mnemonicParsing="false" selected="true" text="Orbit Camera tool">
+            <toggleGroup>
+               <ToggleGroup fx:id="toolGroup" />
+            </toggleGroup></RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Pan Camera tool" toggleGroup="$toolGroup" />
          <RadioMenuItem mnemonicParsing="false" text="Dolly Camera tool" toggleGroup="$toolGroup" />
          <RadioMenuItem mnemonicParsing="false" text="Frame Selection tool" toggleGroup="$toolGroup" />

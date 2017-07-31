@@ -12,12 +12,28 @@ import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 import tetzlaff.util.SafeNumberStringConverter;
+import tetzlaff.util.SafeNumberStringConverterPow10;
 
 public class SettingsLightSceneController implements Initializable{
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setDisabled(true);
+
+        distanceSlider.setLabelFormatter(new StringConverter<Double>() {
+            @Override
+            public String toString(Double object) {
+                String s = n10.toString(object);
+                if(s.length() > 3) return s.substring(0,3);
+                else return s;
+            }
+
+            @Override
+            public Double fromString(String string) {
+                return null;
+            }
+        });
     }
 
     @FXML private VBox root;
@@ -38,7 +54,8 @@ public class SettingsLightSceneController implements Initializable{
     @FXML private ColorPicker colorPicker;
     @FXML private ChoiceBox<LightType> lightTypeChoiceBox;
 
-    private final SafeNumberStringConverter n = new SafeNumberStringConverter();
+    private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
+    private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);
 
     public final ChangeListener<SubLightSetting> changeListener = (observable, oldValue, newValue) -> {
         if(oldValue != null) unbind(oldValue);
@@ -59,14 +76,14 @@ public class SettingsLightSceneController implements Initializable{
         zCenterTextField.textProperty().bindBidirectional(c.zCenterProperty(), n);
         azimuthTextField.textProperty().bindBidirectional(c.azimuthProperty(), n);
         inclinationTextField.textProperty().bindBidirectional(c.inclinationProperty(), n);
-        distanceTextField.textProperty().bindBidirectional(c.distanceProperty(), n);
+        distanceTextField.textProperty().bindBidirectional(c.log10distanceProperty(), n10);
         intensityTextField.textProperty().bindBidirectional(c.intensityProperty(), n);
         xCenterSlider.valueProperty().bindBidirectional(c.xCenterProperty());
         yCenterSlider.valueProperty().bindBidirectional(c.yCenterProperty());
         zCenterSlider.valueProperty().bindBidirectional(c.zCenterProperty());
         azimuthSlider.valueProperty().bindBidirectional(c.azimuthProperty());
         inclinationSlider.valueProperty().bindBidirectional(c.inclinationProperty());
-        distanceSlider.valueProperty().bindBidirectional(c.distanceProperty());
+        distanceSlider.valueProperty().bindBidirectional(c.log10distanceProperty());
         intensitySlider.valueProperty().bindBidirectional(c.intensityProperty());
         lightTypeChoiceBox.valueProperty().bindBidirectional(c.lightTypeProperty());
 
@@ -81,14 +98,14 @@ public class SettingsLightSceneController implements Initializable{
         zCenterTextField.textProperty().unbindBidirectional(c.zCenterProperty());
         azimuthTextField.textProperty().unbindBidirectional(c.azimuthProperty());
         inclinationTextField.textProperty().unbindBidirectional(c.inclinationProperty());
-        distanceTextField.textProperty().unbindBidirectional(c.distanceProperty());
+        distanceTextField.textProperty().unbindBidirectional(c.log10distanceProperty());
         intensityTextField.textProperty().unbindBidirectional(c.intensityProperty());
         xCenterSlider.valueProperty().unbindBidirectional(c.xCenterProperty());
         yCenterSlider.valueProperty().unbindBidirectional(c.yCenterProperty());
         zCenterSlider.valueProperty().unbindBidirectional(c.zCenterProperty());
         azimuthSlider.valueProperty().unbindBidirectional(c.azimuthProperty());
         inclinationSlider.valueProperty().unbindBidirectional(c.inclinationProperty());
-        distanceSlider.valueProperty().unbindBidirectional(c.distanceProperty());
+        distanceSlider.valueProperty().unbindBidirectional(c.log10distanceProperty());
         intensitySlider.valueProperty().unbindBidirectional(c.intensityProperty());
         lightTypeChoiceBox.valueProperty().unbindBidirectional(c.lightTypeProperty());
         colorPicker.valueProperty().unbindBidirectional(c.colorProperty());

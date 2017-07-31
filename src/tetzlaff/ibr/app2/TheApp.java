@@ -33,11 +33,7 @@ public class TheApp {
     }
 
     private static void createModels(){
-        rootModel = new RootModel(
-                new CameraModel3(),
-                new LightModel3(),
-                new ToolModel3()
-        );
+        rootModel = new RootModel();
     }
 
     private static void startJavaFXUI(){

@@ -53,7 +53,7 @@ public class SettingsEVSceneController implements Initializable{
     @FXML ImageView evImageView;
     @FXML ImageView bpImageView;
 
-    private final SafeNumberStringConverter n = new SafeNumberStringConverter();
+    private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
 
     public ChangeListener<EVSetting> changeListener =
             (observable, oldValue, newValue) -> {
@@ -165,6 +165,7 @@ public class SettingsEVSceneController implements Initializable{
 
 
 
+        setDisabled(true);
 
     }
 

@@ -16,8 +16,10 @@ public interface ControllableCameraModel extends ReadonlyCameraModel {
     public Matrix4 getOrbit();
     public void setOrbit(Matrix4 orbit);
 
-    public Float getZoom();
-    public void setZoom(Float zoom);
+    public Float getLog10distance();
+    public void setLog10distance(Float log10distance);
+    public Float getDistance();
+    public void setDistance(Float distance);
 
     public Vector3 getCenter();
     public void setCenter(Vector3 offSet);
