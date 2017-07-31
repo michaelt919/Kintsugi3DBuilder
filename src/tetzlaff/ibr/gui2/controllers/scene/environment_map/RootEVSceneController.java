@@ -18,6 +18,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
 import com.sun.javafx.collections.ObservableListWrapper;
+import tetzlaff.ibr.rendering2.EnvironmentMapModel3;
 
 public class RootEVSceneController implements Initializable {
     private ObservableList<EVSetting> listOfEVs = new ObservableListWrapper<>(new ArrayList<>());
@@ -32,6 +33,7 @@ public class RootEVSceneController implements Initializable {
     @FXML
     private Button theRenameButton;
 
+    private final static boolean hasStatingMap = false;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -41,26 +43,33 @@ public class RootEVSceneController implements Initializable {
 
         s().selectedItemProperty().addListener(settingsController.changeListener);
 
-        EVSetting startingMap = new EVSetting(
-                false,
-                false,
-                false,
-                false,
-                false,
-                null,
-                null,
-                1.0,
-                0.0,
-                new Color(0.0, 0.0, 0.0, 1.0),
-                new Color(0, 0, 0, 1),
-                "Free Environment Map",
-                false
-        );
+        if(hasStatingMap) {
+            EVSetting startingMap = new EVSetting(
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    null,
+                    null,
+                    1.0,
+                    0.0,
+                    new Color(0.0, 0.0, 0.0, 1.0),
+                    new Color(0, 0, 0, 1),
+                    "Free Environment Map",
+                    false
+            );
 
 
-        listOfEVs.add(startingMap);
-        s().select(0);
+            listOfEVs.add(startingMap);
+            s().select(0);
+        }
 
+
+    }
+
+    public void init2(EnvironmentMapModel3 environmentMapModel3){
+        environmentMapModel3.setSelected(s().selectedItemProperty());
     }
 
     private SelectionModel<EVSetting> s() {
@@ -70,8 +79,28 @@ public class RootEVSceneController implements Initializable {
 
     @FXML
     private void newEVButton() {
-        listOfEVs.add(s().getSelectedItem().duplicate());
-        s().select(listOfEVs.size() - 1);
+        if(s().getSelectedItem() == null){
+            listOfEVs.add(
+                    new EVSetting(
+                            false,
+                            false,
+                            false,
+                            false,
+                            false,
+                            null,
+                            null,
+                            1.0,
+                            0.0,
+                            Color.BLACK,
+                            Color.BLACK,
+                            "New EV",
+                            false
+                    )
+            );
+        } else {
+            listOfEVs.add(s().getSelectedItem().duplicate());
+            s().select(listOfEVs.size() - 1);
+        }
     }
 
     @FXML
@@ -81,7 +110,7 @@ public class RootEVSceneController implements Initializable {
 
     @FXML
     private void renameEVButton() {
-        if (s().getSelectedIndex() == 0) return;
+        if (hasStatingMap && s().getSelectedIndex() == 0) return;
 
         EventHandler<ActionEvent> oldOnAction = theRenameButton.getOnAction();//backup the old on action event for the rename button
 
@@ -152,7 +181,8 @@ public class RootEVSceneController implements Initializable {
     @FXML
     private void moveUPButton() {
         int i = s().getSelectedIndex();
-        if (i > 1) {
+        if(hasStatingMap && i == 1)return;
+        if (i > 0) {
             Collections.swap(listOfEVs, i, i - 1);
             s().select(i - 1);
         }
@@ -161,7 +191,8 @@ public class RootEVSceneController implements Initializable {
     @FXML
     void moveDOWNButton() {
         int i = s().getSelectedIndex();
-        if (i != 0 && i < listOfEVs.size() - 1) {
+        if(hasStatingMap && i == 0) return;
+        if (i < listOfEVs.size() - 1) {
             Collections.swap(listOfEVs, i, i + 1);
             s().select(i + 1);
         }
@@ -178,7 +209,8 @@ public class RootEVSceneController implements Initializable {
     @FXML
     void deleteEVButton() {
         int i = s().getSelectedIndex();
-        if (i != 0) listOfEVs.remove(i);
+        if(hasStatingMap && i ==0)return;
+        listOfEVs.remove(i);
     }
 
 }

@@ -12,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 import tetzlaff.ibr.app2.TheApp;
+import tetzlaff.ibr.gui2.controllers.menu_bar.load_options.LoadOptionsController;
 import tetzlaff.ibr.rendering2.ToolModel3;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 
@@ -38,7 +39,10 @@ public class MenubarController implements Initializable {
 
     }
 
-    @FXML private void loadMenu(){
+
+    //Menubar->File
+
+    @FXML private void file_createProject(){
         try {
             URL url = getClass().getClassLoader().getResource("fxml/menu_bar/Loader.fxml");
             FXMLLoader fxmlLoader = new FXMLLoader(url);
@@ -58,8 +62,58 @@ public class MenubarController implements Initializable {
 
     }
 
-    public void exit(){
+
+    @FXML private void file_loadOptions(){
+        LoadOptionsController loadOptionsController = makeWindow("Load Options", "fxml/menu_bar/load_options/LoadOptions.fxml");
+
+        toolModel.setLoadOptions(loadOptionsController);
+    }
+
+    @FXML private void file_exit(){
         System.exit(0);
+    }
+
+
+    public static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, String urlString){
+        try {
+            URL url = MenubarController.class.getClassLoader().getResource(urlString);
+            if (url == null) {
+                throw new IOException("Cant find file " + urlString);
+            }
+            FXMLLoader fxmlLoader = new FXMLLoader(url);
+            Parent root = fxmlLoader.load();
+            Stage stage= new Stage();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root));
+
+            stage.show();
+
+            return fxmlLoader.getController();
+
+        }catch (IOException e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, int width, int height, String urlString){
+        try {
+            URL url = urlString.getClass().getClassLoader().getResource(urlString);
+            if (url == null) {
+                throw new IOException("Cant find file " + urlString);
+            }
+            FXMLLoader fxmlLoader = new FXMLLoader(url);
+            Parent root = fxmlLoader.load();
+            Stage stage= new Stage();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root, width, height));
+
+            return fxmlLoader.getController();
+
+        }catch (IOException e){
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }

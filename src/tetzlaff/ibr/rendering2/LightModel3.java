@@ -4,16 +4,18 @@ import javafx.beans.value.ObservableValue;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.gui2.controllers.scene.lights.LightGroupSetting;
+import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
 import tetzlaff.mvc.models.ControllableLightModel;
 
-public class LightModel3 implements ControllableLightModel {
+public class LightModel3 extends ControllableLightModel {
 
     private ObservableValue<LightGroupSetting> lightGroupSettingObservableValue;
     private LightGroupSetting backup = new LightGroupSetting("backup");
 
     private SubLightModel3[] subLightModel3s = new SubLightModel3[LightGroupSetting.LIGHT_LIMIT];
 
-    public LightModel3() {
+    public LightModel3(EnvironmentMapModel3 ev) {
+        super(ev);
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
             subLightModel3s[i] = new SubLightModel3();
 
@@ -55,11 +57,10 @@ public class LightModel3 implements ControllableLightModel {
 
     @Override
     public int getLightCount() {
-        int count = lightGroup().getNLights();
-//        System.out.println("Counted " + count + "Lights");
+        //        System.out.println("Counted " + count + "Lights");
 //        return LightGroupSetting.LIGHT_LIMIT; //TODO ERROR HERE
-        System.out.println("Count: " + count);
-        return count;
+//        System.out.println("Count: " + count);
+        return lightGroup().getNLights();
     }
 
     @Override
@@ -78,14 +79,11 @@ public class LightModel3 implements ControllableLightModel {
         return lightModel(i).getColor();
     }
 
-    @Override
-    public Vector3 getAmbientLightColor() {
-        return new Vector3(0.0f, 0.0f, 0.0f);
-    }
+
 
     @Override
     public boolean getEnvironmentMappingEnabled() {
-        return false;
+        return true; //TODO
     }
 
     @Override

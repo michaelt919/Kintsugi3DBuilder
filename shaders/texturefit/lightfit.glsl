@@ -82,13 +82,13 @@ LightFit fitLight()
         vec3 solution = inverse(a) * b;
         fit.position = vec3(solution.xy, 0.0) / solution.z;
         // Intensity is close to:
-        // weighted sum of intensity * [n dot l / light distance squared]
-        // divided by weighted sum of [n dot l squared / light distance ^ 4]
-        // = estimate of intensity / n dot l * light distance squared
-        // = estimate of albedo * light distance squared
+        // weighted sum of intensity * [n dot l / light log10distance squared]
+        // divided by weighted sum of [n dot l squared / light log10distance ^ 4]
+        // = estimate of intensity / n dot l * light log10distance squared
+        // = estimate of albedo * light log10distance squared
         // = estimate of albedo * light intensity required to have an incident intensity of one
         // at a typical surface position
-        // TODO: there are probably more robust ways to estimate the average light distance squared
+        // TODO: there are probably more robust ways to estimate the average light log10distance squared
         fit.intensity = solution.z; 
         fit.quality = max(solution.z * determinant(a) / weightSum, 0.0);
     }
@@ -106,7 +106,7 @@ LightFit fitLight()
         // effectively "one" at the object's position.
         // This is reasonable since the luminance curve is balanced so that a reflectance of "one" 
         // corresponds to 100% of the incident light being reflected diffusely.
-        // (Based on the XRite/MacBeth chart, which is at a location essentially the same distance
+        // (Based on the XRite/MacBeth chart, which is at a location essentially the same log10distance
         // from the light source as the object.)
         fit.intensity *= weightSum / weightedIntensitySum;
     }
