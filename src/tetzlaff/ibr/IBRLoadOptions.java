@@ -1,6 +1,8 @@
 package tetzlaff.ibr;
 
-public class IBRLoadOptions 
+import tetzlaff.ibr.rendering2.to_sort.IBRLoadOptions2;
+
+public class IBRLoadOptions implements IBRLoadOptions2
 {
 	private boolean colorImagesRequested;
 	private boolean mipmapsRequested;
@@ -13,7 +15,7 @@ public class IBRLoadOptions
 	{
 	}
 
-	public boolean areColorImagesRequested() 
+	public boolean areColorImagesRequested()
 	{
 		return this.colorImagesRequested;
 	}

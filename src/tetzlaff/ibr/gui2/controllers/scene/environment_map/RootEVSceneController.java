@@ -209,7 +209,8 @@ public class RootEVSceneController implements Initializable {
     @FXML
     void deleteEVButton() {
         int i = s().getSelectedIndex();
-        if (i != 0) listOfEVs.remove(i);
+        if(hasStatingMap && i ==0)return;
+        listOfEVs.remove(i);
     }
 
 }

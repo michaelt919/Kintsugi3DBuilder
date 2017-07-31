@@ -17,6 +17,7 @@ public abstract class ControllableEnvironmentMapModel {
         tool.loadEV(ev);
     }
     protected final void unloadEV(){
+        System.out.println("Unloading EV file.");
         tool.unloadEV();
     }
 
