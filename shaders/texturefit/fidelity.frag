@@ -12,7 +12,7 @@ in vec3 fBitangent;
 #line 13 0
 
 // uniform sampler2D diffuseEstimate;
-// uniform sampler2D normalEstimate;
+ uniform sampler2D normalEstimate;
 uniform sampler2D specularEstimate;
 uniform sampler2D roughnessEstimate;
 
@@ -31,8 +31,7 @@ vec3 getDiffuseColor()
 
 vec3 getDiffuseNormalVector()
 {
-	return vec3(0,0,1);
-    // return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
+    return normalize(texture(normalEstimate, fTexCoord).xyz * 2 - vec3(1,1,1));
 }
 
 vec3 getSpecularColor()

@@ -153,7 +153,6 @@ public class FidelityMetricRequest implements IBRRequest
     			
     			double lastMinDistance = 0.0;
     			double minDistance;
-    			double sumMask = 0.0;
     			
     			List<Double> distances = new ArrayList<Double>();
     			List<Double> errors = new ArrayList<Double>();
@@ -180,21 +179,18 @@ public class FidelityMetricRequest implements IBRRequest
 			    	
 			    	if (activeViewIndexList.size() > 0)
 			    	{
-				    	if (sumMask >= 0.0)
-				    	{
-					        distances.add(minDistance);
-					        
-					        errors.add(fidelityTechnique.evaluateError(i, 
-					        		DEBUG && activeViewIndexList.size() == resources.viewSet.getCameraPoseCount() - 1 ? 
-					        				new File(new File(fidelityExportPath.getParentFile(), "debug"), 
-				        							renderable.getActiveViewSet().getImageFileName(i)) 
-					        				: null));
-					        
-					    	lastMinDistance = minDistance;
-				    	}
+				        distances.add(minDistance);
+				        
+				        errors.add(fidelityTechnique.evaluateError(i, 
+				        		DEBUG && activeViewIndexList.size() == resources.viewSet.getCameraPoseCount() - 1 ? 
+				        				new File(new File(fidelityExportPath.getParentFile(), "debug"), 
+			        							renderable.getActiveViewSet().getImageFileName(i)) 
+				        				: null));
+				        
+				    	lastMinDistance = minDistance;
 			    	}
     			}
-    			while(sumMask >= 0.0 && activeViewIndexList.size() > 0 && minDistance < /*0*/ Math.PI / 4);
+    			while(Double.isFinite(errors.get(errors.size() - 1)) && activeViewIndexList.size() > 0 && minDistance < /*0*/ Math.PI / 4);
     			
     			double[] errorArray = new double[errors.size()];
     			double[] distanceArray = new double[distances.size()];
