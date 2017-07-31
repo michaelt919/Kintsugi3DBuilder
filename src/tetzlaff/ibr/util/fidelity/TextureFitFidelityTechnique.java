@@ -120,11 +120,11 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 			
 			if (this.usePerceptuallyLinearError)
 			{
-				textureFitDrawable.program().setUniform("fittingGamma", 1.0f);
+				textureFitDrawable.program().setUniform("fittingGamma", 2.2f);
 			}
 			else
 			{
-				textureFitDrawable.program().setUniform("fittingGamma", 2.2f);
+				textureFitDrawable.program().setUniform("fittingGamma", 1.0f);
 			}
 			
 			textureFitDrawable.program().setUniform("standaloneMode", true);
@@ -142,11 +142,11 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 		
 		if (this.usePerceptuallyLinearError)
 		{
-			textureFitBaselineDrawable.program().setUniform("fittingGamma", 1.0f);
+			textureFitBaselineDrawable.program().setUniform("fittingGamma", 2.2f);
 		}
 		else
 		{
-			textureFitBaselineDrawable.program().setUniform("fittingGamma", 2.2f);
+			textureFitBaselineDrawable.program().setUniform("fittingGamma", 1.0f);
 		}
 		
 		textureFitBaselineDrawable.program().setUniform("standaloneMode", true);
@@ -167,11 +167,11 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 		
 		if (this.usePerceptuallyLinearError)
 		{
-			fidelityDrawable.program().setUniform("fittingGamma", 1.0f);
+			fidelityDrawable.program().setUniform("fittingGamma", 2.2f);
 		}
 		else
 		{
-			fidelityDrawable.program().setUniform("fittingGamma", 2.2f);
+			fidelityDrawable.program().setUniform("fittingGamma", 1.0f);
 		}
 
 		fidelityDrawable.program().setUniform("evaluateInXYZ", false);
@@ -179,6 +179,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 		////////////
 		// Baseline
 		////////////
+		fidelityDrawable.program().setTexture("normalEstimate", textureFitBaselineFramebuffer.getColorAttachmentTexture(1));
 		fidelityDrawable.program().setTexture("specularEstimate", textureFitBaselineFramebuffer.getColorAttachmentTexture(2));
 		fidelityDrawable.program().setTexture("roughnessEstimate", textureFitBaselineFramebuffer.getColorAttachmentTexture(3));
 		
@@ -213,14 +214,10 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 	        	fidelityFramebuffer.saveColorBufferToFile(0, "PNG", 
 						new File(debugFile.getParentFile(), "baseline_" + debugFile.getName()));
 	    	    
-				textureFitBaselineFramebuffer.saveColorBufferToFile(0, "PNG", 
-						new File(debugFile.getParentFile(), "baseline_diffuse_" + debugFile.getName()));
-				textureFitBaselineFramebuffer.saveColorBufferToFile(1, "PNG", 
-						new File(debugFile.getParentFile(), "baseline_normal_" + debugFile.getName()));
-				textureFitBaselineFramebuffer.saveColorBufferToFile(2, "PNG", 
-						new File(debugFile.getParentFile(), "baseline_specular_" + debugFile.getName()));
-				textureFitBaselineFramebuffer.saveColorBufferToFile(3, "PNG", 
-						new File(debugFile.getParentFile(), "baseline_roughness_" + debugFile.getName()));
+				textureFitBaselineFramebuffer.saveColorBufferToFile(0, "PNG", new File(debugFile.getParentFile(), "baseline_diffuse.png"));
+				textureFitBaselineFramebuffer.saveColorBufferToFile(1, "PNG", new File(debugFile.getParentFile(), "baseline_normal.png"));
+				textureFitBaselineFramebuffer.saveColorBufferToFile(2, "PNG", new File(debugFile.getParentFile(), "baseline_specular.png"));
+				textureFitBaselineFramebuffer.saveColorBufferToFile(3, "PNG", new File(debugFile.getParentFile(), "baseline_roughness.png"));
 			}
 			catch(IOException e)
 			{
@@ -231,6 +228,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 		/////////////////////
 		// Fidelity estimate
 		/////////////////////
+		fidelityDrawable.program().setTexture("normalEstimate", textureFitFramebuffer.getColorAttachmentTexture(1));
 		fidelityDrawable.program().setTexture("specularEstimate", textureFitFramebuffer.getColorAttachmentTexture(2));
 		fidelityDrawable.program().setTexture("roughnessEstimate", textureFitFramebuffer.getColorAttachmentTexture(3));
 		
