@@ -13,6 +13,7 @@ import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.LoadingMonitor;
+import tetzlaff.ibr.rendering2.to_sort.IBRLoadOptions2;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
 
@@ -111,7 +112,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	}
 	
 	@Override
-	public IBRRenderable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, IBRLoadOptions loadOptions) throws IOException
+	public IBRRenderable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, IBRLoadOptions2 loadOptions) throws IOException
 	{
 		IBRRenderable<ContextType> newItem = 
 			new IBRImplementation<ContextType>(id, context, this.getProgram(), this.cameraModel, lightModel,

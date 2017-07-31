@@ -6,7 +6,7 @@ public class SafeNumberStringConverterPow10 extends StringConverter<Number>{
     private final SafeNumberStringConverter safeConverter;
 
     public SafeNumberStringConverterPow10(Number defaultValue) {
-        safeConverter = new SafeNumberStringConverter(defaultValue);
+        safeConverter = new SafeNumberStringConverter(Math.log10(defaultValue.doubleValue()));
     }
 
     @Override
