@@ -1167,8 +1167,8 @@ public class IBRelightConfigFrame extends JFrame
 		btnFidelity.setToolTipText("Evaluate the fidelity of the image-based sampling.");
 		
 		JButton btnBTFExport = new JButton("Export BTF");
-		btnBTFExport.setEnabled(false);
-		btnBTFExport.setVisible(false);
+//		btnBTFExport.setEnabled(false);
+//		btnBTFExport.setVisible(false);
 		panel_1.add(btnBTFExport);
 		btnBTFExport.setToolTipText("Evaluate the fidelity of the image-based sampling.");
 		modelDependentComponents.add(lblNewDimensions);

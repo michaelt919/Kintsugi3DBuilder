@@ -182,13 +182,13 @@ ParameterizedFit fitSpecular()
 					
 				if (nDotV * (1 + nDotHSquared) * (1 + nDotHSquared) > 1.0)
 				{
-					roughnessSums[0] += pow(colorXYZ * nDotV, vec3(1.0 / fittingGamma))
+					roughnessSums[0] += 1//pow(colorXYZ * nDotV, vec3(1.0 / fittingGamma))
 						* sqrt(colorXYZ.y * nDotV) * (1 - nDotHSquared);
 						
-					roughnessSums[1] += pow(colorXYZ * nDotV, vec3(1.0 / fittingGamma))
+					roughnessSums[1] += 1//pow(colorXYZ * nDotV, vec3(1.0 / fittingGamma))
 						* sqrt(colorXYZ.y * nDotV) * nDotHSquared;
 						
-					roughnessSums[2] += pow(colorXYZ * nDotV, vec3(1.0 / fittingGamma));
+					roughnessSums[2] += 1;//pow(colorXYZ * nDotV, vec3(1.0 / fittingGamma));
 				}
             }
         }
