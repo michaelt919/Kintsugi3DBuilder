@@ -10,7 +10,7 @@ I general utilities class.
  */
 public class U {
 //    this method takes in a double property, and prevents it from reaching outside of its bound.
-    public static Property<Number> wrap(double min, double max, Property<Number> property){
+    public static <H extends Property<Number>> H wrap(double min, double max, H property){
        property.addListener((observable, oldValue, newValue) -> {
           if(newValue != null && (newValue.doubleValue() < min || newValue.doubleValue() > max)){
               property.setValue(wrap(min, max, newValue.doubleValue()));
@@ -19,7 +19,7 @@ public class U {
        return property;
     }
 
-    public static Property<Number> bound(double min, double max, Property <Number> property){
+    public static <H extends Property<Number>> H bound(double min, double max, H property){
        property.addListener((observable, oldValue, newValue) -> {
           if(newValue != null && (newValue.doubleValue() < min || newValue.doubleValue() > max)){
               property.setValue(bound(min, max, newValue.doubleValue()));
