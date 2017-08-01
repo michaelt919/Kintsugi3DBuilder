@@ -10,6 +10,7 @@ import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibr.rendering.IBRResources;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
 import tetzlaff.mvc.models.SceneViewportModel;
 
 public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
@@ -21,7 +22,8 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
 	
 	SceneViewportModel getSceneViewportModel();
 	
-	IBRSettings settings();
+	IBRSettings2 settings();
+	void setSettings(IBRSettings2 ibrSettings2);
 	
 	boolean getHalfResolution();
 	boolean getMultisampling();
