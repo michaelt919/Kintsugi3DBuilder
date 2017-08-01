@@ -6,7 +6,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JSpinner;
 
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.IBRSettings;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
 
 public class BTFRequestUI implements IBRRequestUI
 {
@@ -14,10 +14,10 @@ public class BTFRequestUI implements IBRRequestUI
 	private JFileChooser fileChooser;
 	private JSpinner spinnerWidth;
 	private JSpinner spinnerHeight;
-	private IBRSettings settings;
+	private IBRSettings2 settings;
 	private Vector3 lightColor;
 	
-	public BTFRequestUI(Component parent, JFileChooser fileChooser, JSpinner spinnerWidth, JSpinner spinnerHeight, IBRSettings settings, Vector3 lightColor) 
+	public BTFRequestUI(Component parent, JFileChooser fileChooser, JSpinner spinnerWidth, JSpinner spinnerHeight, IBRSettings2 settings, Vector3 lightColor)
 	{
 		this.parent = parent;
 		this.fileChooser = fileChooser;

@@ -40,6 +40,7 @@ import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
 import tetzlaff.mvc.models.SceneViewportModel;
@@ -54,7 +55,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private ReadonlyLightModel lightModel;
 	private LoadingMonitor callback;
 	private boolean suppressErrors = false;
-	private IBRSettings settings;
+	private IBRSettings2 settings;
 
 	private IBRResources.Builder<ContextType> resourceBuilder;
 	private IBRResources<ContextType> resources;
@@ -1005,9 +1006,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	}
 
 	@Override
-	public IBRSettings settings()
+	public IBRSettings2 settings()
 	{
 		return this.settings;
+	}
+
+	@Override
+	public void setSettings(IBRSettings2 ibrSettings2) {
+		this.settings = ibrSettings2;
 	}
 
 	@Override
