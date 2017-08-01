@@ -18,6 +18,18 @@ public class Main {
         System.out.println("Big int value: " + big.intValue());
 
 
+        House house = new House();
+
+        int i;
+        char c = 'g';
+        try {
+            i = house.chartoint(c);
+        } catch (Exception e) {
+            i = -1;
+        }
+
+        System.out.println("i: " + i);
+
     }
 
 

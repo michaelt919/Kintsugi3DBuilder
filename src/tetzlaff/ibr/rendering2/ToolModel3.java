@@ -1,6 +1,6 @@
 package tetzlaff.ibr.rendering2;//Created by alexk on 7/24/2017.
 
-import tetzlaff.ibr.gui2.controllers.menu_bar.IBRSettings3;
+import tetzlaff.ibr.gui2.controllers.menu_bar.IBRSettingsUIImpl;
 import tetzlaff.ibr.gui2.controllers.menu_bar.LoadSettings;
 import tetzlaff.ibr.rendering2.to_sort.IBRLoadOptions2;
 import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
@@ -17,19 +17,19 @@ public class ToolModel3 extends ControllableToolModel {
     }
 
     private final LoadSettings loadSettings = new LoadSettings();
-    private final IBRSettings3 ibrSettings3 = new IBRSettings3();
+    private final IBRSettingsUIImpl ibrSettingsUIImpl = new IBRSettingsUIImpl();
 
     public LoadSettings getLoadSettings() {
         return loadSettings;
     }
 
-    public IBRSettings3 getIbrSettings3() {
-        return ibrSettings3;
+    public IBRSettingsUIImpl getIbrSettingsUIImpl() {
+        return ibrSettingsUIImpl;
     }
 
     @Override
     protected IBRSettings2 getSettings() {
-        return ibrSettings3;
+        return ibrSettingsUIImpl;
     }
 
     @Override

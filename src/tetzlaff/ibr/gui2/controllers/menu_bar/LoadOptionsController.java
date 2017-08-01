@@ -84,7 +84,7 @@ public class LoadOptionsController implements Initializable{
         loadSettingsCash = loadSettings;
         root.getScene().getWindow().setOnCloseRequest(event -> unbind());
     }
-    public void unbind(){
+    private void unbind(){
         if(loadSettingsCash != null){
             compressedImages.selectedProperty().bindBidirectional(loadSettingsCash.compression);
             mipmaps.selectedProperty().bindBidirectional(loadSettingsCash.mipmaps);

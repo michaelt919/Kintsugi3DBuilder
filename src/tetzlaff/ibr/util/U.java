@@ -46,7 +46,7 @@ public class U {
                 try {
                     double value = Double.valueOf(textField.getText());
                     textField.setText(Double.toString(wrap(min, max, value)));
-                    System.out.println("Set text to " + Double.toString(wrap(min, max, value)));
+//                    System.out.println("Set text to " + Double.toString(wrap(min, max, value)));
                 }catch (NumberFormatException nfe){
                     //do nothing
                 }
@@ -71,7 +71,7 @@ public class U {
                 try {
                     double value = Double.valueOf(textField.getText());
                     textField.setText(Double.toString(bound(min, max, value)));
-                    System.out.println("Set text to " + Double.toString(wrap(min, max, value)));
+//                    System.out.println("Set text to " + Double.toString(wrap(min, max, value)));
                 }catch (NumberFormatException nfe){
                     //do nothing
                 }

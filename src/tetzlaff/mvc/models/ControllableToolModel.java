@@ -25,6 +25,8 @@ public abstract class ControllableToolModel {
 
     public final void loadFiles(File cameraFile, File objFile, File photoDir) throws IOException{
 
+
+
         ibrRenderable = model.addFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, objFile, photoDir, getLoadOptions());
 
         //TODO remove temp-def.

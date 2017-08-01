@@ -1,10 +1,11 @@
 package tetzlaff.ibr.gui2.controllers.menu_bar;//Created by alexk on 7/31/2017.
 
 import javafx.beans.property.*;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
 import tetzlaff.util.ShadingParameterMode;
 
-public class IBRSettings3 implements IBRSettings2{
+public class IBRSettingsUIImpl implements IBRSettings2{
 
     public final BooleanProperty occlusion = new SimpleBooleanProperty(true);
     public final BooleanProperty iBR = new SimpleBooleanProperty(true);
@@ -92,66 +93,78 @@ public class IBRSettings3 implements IBRSettings2{
 
     @Override @Deprecated
     public void setGamma(float gamma) {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setWeightExponent(float weightExponent) {
 
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setIsotropyFactor(float isotropyFactor) {
 
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setOcclusionEnabled(boolean occlusionEnabled) {
 
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setOcclusionBias(float occlusionBias) {
 
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setIBREnabled(boolean ibrEnabled) {
 
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setFresnelEnabled(boolean fresnelEnabled) {
 
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled) {
 
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setRelightingEnabled(boolean relightingEnabled) {
 
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setTexturesEnabled(boolean texturesEnabled) {
 
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setShadowsEnabled(boolean shadowsEnabled) {
 
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setVisibleLightsEnabled(boolean visibleLightsEnabled) {
 
+        throw new UnsupportedOperationException();
     }
 
     @Override @Deprecated
     public void setWeightMode(ShadingParameterMode weightMode) {
 
+        throw new UnsupportedOperationException();
     }
 }
