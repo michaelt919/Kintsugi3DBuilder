@@ -11,6 +11,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.rendering2.ToolModel3;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
@@ -81,6 +82,8 @@ public class MenubarController implements Initializable {
             stage.setTitle(title);
             stage.setScene(new Scene(root));
 
+            stage.setResizable(false);
+
             stage.show();
 
             return fxmlLoader.getController();
@@ -102,6 +105,8 @@ public class MenubarController implements Initializable {
             Stage stage= new Stage();
             stage.setTitle(title);
             stage.setScene(new Scene(root, width, height));
+
+            stage.setResizable(false);
 
             stage.show();
 

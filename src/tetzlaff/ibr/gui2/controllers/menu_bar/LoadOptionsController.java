@@ -11,6 +11,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import javafx.util.StringConverter;
@@ -27,7 +28,7 @@ public class LoadOptionsController implements Initializable{
     @FXML private CheckBox compressedImages;
     @FXML private CheckBox mipmaps;
     @FXML private CheckBox depthImages;
-    @FXML private GridPane root;
+    @FXML private VBox root;
     @FXML private TextField depthWidth;
     @FXML private TextField depthHeight;
 
