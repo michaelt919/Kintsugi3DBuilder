@@ -146,7 +146,6 @@ public class IBRelight2
 
 
 
-
             window.addCharacterListener((win, c) -> {
 				if (c == 'p')
 				{

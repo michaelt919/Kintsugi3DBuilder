@@ -1,14 +1,18 @@
-package tetzlaff.ibr.gui2.controllers.menu_bar.load_options;//Created by alexk on 7/31/2017.
+package tetzlaff.ibr.gui2.controllers.menu_bar;//Created by alexk on 7/31/2017.
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 import javafx.util.StringConverter;
 import tetzlaff.ibr.rendering2.to_sort.IBRLoadOptions2;
 import tetzlaff.ibr.util.U;
@@ -19,7 +23,7 @@ import javax.swing.event.ChangeListener;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class LoadOptionsController implements Initializable, IBRLoadOptions2{
+public class LoadOptionsController implements Initializable{
     @FXML private CheckBox compressedImages;
     @FXML private CheckBox mipmaps;
     @FXML private CheckBox depthImages;
@@ -37,6 +41,8 @@ public class LoadOptionsController implements Initializable, IBRLoadOptions2{
 
         depthWidth.disableProperty().bind(depthImages.selectedProperty().not());
         depthHeight.disableProperty().bind(depthImages.selectedProperty().not());
+
+
     }
 
     private void setupTextAndProp(IntegerProperty prop, TextField tex){
@@ -64,38 +70,27 @@ public class LoadOptionsController implements Initializable, IBRLoadOptions2{
             }
         });
         prop.addListener((ob,o,n)->{
-            if(n.intValue() < 0) prop.setValue(0);
+            if(n.intValue() < 1) prop.setValue(1);
         });
     }
 
-
-    @Override
-    public boolean areColorImagesRequested() {
-        return true;
+    private LoadSettings loadSettingsCash = null;
+    public void bind(LoadSettings loadSettings){
+        compressedImages.selectedProperty().bindBidirectional(loadSettings.compression);
+        mipmaps.selectedProperty().bindBidirectional(loadSettings.mipmaps);
+        depthImages.selectedProperty().bindBidirectional(loadSettings.depthImages);
+        w.bindBidirectional(loadSettings.depthWidth);
+        h.bindBidirectional(loadSettings.depthHeight);
+        loadSettingsCash = loadSettings;
+        root.getScene().getWindow().setOnCloseRequest(event -> unbind());
     }
-
-    @Override
-    public boolean areMipmapsRequested() {
-        return mipmaps.isSelected();
-    }
-
-    @Override
-    public boolean isCompressionRequested() {
-        return compressedImages.isSelected();
-    }
-
-    @Override
-    public boolean areDepthImagesRequested() {
-        return depthImages.isSelected();
-    }
-
-    @Override
-    public int getDepthImageWidth() {
-        return w.get();
-    }
-
-    @Override
-    public int getDepthImageHeight() {
-        return h.get();
+    private void unbind(){
+        if(loadSettingsCash != null){
+            compressedImages.selectedProperty().bindBidirectional(loadSettingsCash.compression);
+            mipmaps.selectedProperty().bindBidirectional(loadSettingsCash.mipmaps);
+            depthImages.selectedProperty().bindBidirectional(loadSettingsCash.depthImages);
+            w.bindBidirectional(loadSettingsCash.depthWidth);
+            h.bindBidirectional(loadSettingsCash.depthHeight);
+        }
     }
 }
