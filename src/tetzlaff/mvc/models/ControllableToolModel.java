@@ -33,8 +33,6 @@ public abstract class ControllableToolModel {
         IBRRenderable<?> ibrRenderable = model.addFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, objFile, photoDir, loadOptions);
 
         //TODO remove temp-def.
-        ibrRenderable.settings().setRelightingEnabled(true);
-        ibrRenderable.settings().setVisibleLightsEnabled(true);
         ibrRenderable.setHalfResolution(true);
     }
 

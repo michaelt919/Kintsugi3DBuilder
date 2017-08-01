@@ -11,12 +11,12 @@ public class IBRSettings implements IBRSettings2
     private boolean occlusionEnabled = true;
     private float occlusionBias = 0.0025f;
 	private boolean ibrEnabled = true;
-	private boolean relightingEnabled = false;
+	private boolean relightingEnabled = true;
 	private boolean texturesEnabled = false;
 	private boolean shadowsEnabled = false;
 	private boolean fresnelEnabled = false;
 	private boolean pbrGeometricAttenuationEnabled = false;
-	private boolean visibleLightsEnabled = false;
+	private boolean visibleLightsEnabled = true;
 	private ShadingParameterMode weightMode = ShadingParameterMode.PER_PIXEL;
 
 	public IBRSettings() 
