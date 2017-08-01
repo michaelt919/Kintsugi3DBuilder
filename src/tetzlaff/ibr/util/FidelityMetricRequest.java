@@ -13,10 +13,10 @@ import java.util.PriorityQueue;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
 import tetzlaff.ibr.util.fidelity.FidelityEvaluationTechnique;
 import tetzlaff.ibr.util.fidelity.TextureFitFidelityTechnique;
 import tetzlaff.util.CubicHermiteSpline;
@@ -30,9 +30,9 @@ public class FidelityMetricRequest implements IBRRequest
 	
     private File fidelityExportPath;
     private File fidelityVSETFile;
-    private IBRSettings settings;
+    private IBRSettings2 settings;
     
-	public FidelityMetricRequest(File exportPath, File targetVSETFile, IBRSettings settings)
+	public FidelityMetricRequest(File exportPath, File targetVSETFile, IBRSettings2 settings)
 	{
 		this.fidelityExportPath = exportPath;
 		this.fidelityVSETFile = targetVSETFile;

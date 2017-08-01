@@ -1,8 +1,9 @@
 package tetzlaff.ibr;
 
+import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
 import tetzlaff.util.ShadingParameterMode;
 
-public class IBRSettings 
+public class IBRSettings implements IBRSettings2
 {
     private float gamma = 2.2f;
     private float weightExponent = 16.0f;
@@ -137,7 +138,7 @@ public class IBRSettings
 		return this.visibleLightsEnabled;
 	}
 
-	public void setVisibleLightsEnabled(boolean visibleLightsEnabled) 
+	public void setVisibleLightsEnabled(boolean visibleLightsEnabled)
 	{
 		this.visibleLightsEnabled = visibleLightsEnabled;
 	}
@@ -150,5 +151,36 @@ public class IBRSettings
 	public void setWeightMode(ShadingParameterMode weightMode) 
 	{
 		this.weightMode = weightMode;
+	}
+
+	private interface foo{
+
+	    @Deprecated
+		public void setGamma(float gamma) ;
+	    @Deprecated
+		public void setWeightExponent(float weightExponent) ;
+	    @Deprecated
+		public void setIsotropyFactor(float isotropyFactor) ;
+	    @Deprecated
+		public void setOcclusionEnabled(boolean occlusionEnabled) ;
+	    @Deprecated
+		public void setOcclusionBias(float occlusionBias) ;
+	    @Deprecated
+		public void setIBREnabled(boolean ibrEnabled) ;
+	    @Deprecated
+		public void setFresnelEnabled(boolean fresnelEnabled) ;
+	    @Deprecated
+		public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled) ;
+	    @Deprecated
+		public void setRelightingEnabled(boolean relightingEnabled) ;
+	    @Deprecated
+		public void setTexturesEnabled(boolean texturesEnabled) ;
+	    @Deprecated
+		public void setShadowsEnabled(boolean shadowsEnabled) ;
+	    @Deprecated
+		public void setVisibleLightsEnabled(boolean visibleLightsEnabled);
+	    @Deprecated
+		public void setWeightMode(ShadingParameterMode weightMode) ;
+
 	}
 }
