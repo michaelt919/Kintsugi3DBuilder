@@ -42,23 +42,6 @@ public class MenubarController implements Initializable {
     //Menubar->File
 
     @FXML private void file_createProject(){
-/*        try {
-            URL url = getClass().getClassLoader().getResource("fxml/menu_bar/Loader.fxml");
-            FXMLLoader fxmlLoader = new FXMLLoader(url);
-            Parent root =fxmlLoader.load();
-            Stage stage = new Stage();
-            stage.setTitle("Load Window");
-            stage.setScene(new Scene(root, 750, 330));
-
-            LoaderController loaderController = fxmlLoader.getController();
-            loaderController.setToolModel3(toolModel);
-
-            stage.show();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-
         LoaderController loaderController = makeWindow("Load Files", 750, 330,"fxml/menu_bar/Loader.fxml");
         if (loaderController != null) {
             loaderController.setToolModel3(toolModel);
@@ -76,7 +59,9 @@ public class MenubarController implements Initializable {
     @FXML private void shading_IBRSettings(){
         IBROptionsController ibrOptionsController = makeWindow("IBRL Settings",
                 "fxml/menu_bar/IBROptions.fxml");
-
+        if (ibrOptionsController != null) {
+            ibrOptionsController.bind(toolModel.getIbrSettingsUIImpl());
+        }
     }
 
     @FXML private void file_exit(){

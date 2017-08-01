@@ -1,29 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Spinner?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<GridPane fx:controller="tetzlaff.ibr.gui2.controllers.menu_bar.IBROptionsController" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
-  <columnConstraints>
-    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-  </columnConstraints>
-  <rowConstraints>
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-  </rowConstraints>
-   <children>
-      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="IBR settings" GridPane.columnSpan="2147483647" GridPane.halignment="CENTER">
-         <font>
-            <Font size="48.0" />
-         </font>
-      </Text>
-      <Spinner fx:id="gammaSpinner" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-      <Text  strokeType="OUTSIDE" strokeWidth="0.0" text="Gama: " GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-   </children>
+<GridPane fx:id="root" fx:controller="tetzlaff.ibr.gui2.controllers.menu_bar.IBROptionsController" hgap="15.0" vgap="15.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+    <CheckBox fx:id="iBRenderingCheckBox" mnemonicParsing="false" text="Image-based rendering" GridPane.rowIndex="1" />
+    <CheckBox fx:id="relightingCheckBox" mnemonicParsing="false" text="Relighting" GridPane.rowIndex="2" />
+    <CheckBox fx:id="texturesCheckBox" mnemonicParsing="false" text="Textures" GridPane.rowIndex="3" />
+    <CheckBox fx:id="shadowsCheckBox" mnemonicParsing="false" text="Shadows" GridPane.rowIndex="4" />
+    <CheckBox fx:id="visibleLightsCheckBox" mnemonicParsing="false" text="Visible lights" GridPane.rowIndex="5" />
+    <CheckBox fx:id="fresnelCheckBox" mnemonicParsing="false" text="Fresnel" GridPane.rowIndex="6" />
+    <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" text="Occlusion" GridPane.rowIndex="7" />
+    <CheckBox fx:id="geometricAttenuationCheckBox" mnemonicParsing="false" text="Geometric attenuation" GridPane.rowIndex="8" />
+    <Text text="Settings" textAlignment="CENTER" GridPane.columnSpan="2147483647" GridPane.halignment="CENTER">
+      <font>
+         <Font size="48.0" />
+      </font></Text>
+    <Separator orientation="VERTICAL" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.rowSpan="2147483647" />
+    <Text text="Gamma: " GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+    <Text text="Weight exponent: " GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+    <Text text="Isotropy factor: " GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+    <Text text="Occlusion bias: " GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
+    <TextField fx:id="occlusionBiasTextField" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+    <TextField fx:id="isotropyFactorTextField" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+    <TextField fx:id="weightExponentTextField" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+    <TextField fx:id="gamaTextField" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+    <Slider fx:id="gamaSlider" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+    <Slider fx:id="weightExponentSlider" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+    <Slider fx:id="isotropyFactorSlider" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+    <Slider fx:id="occlusionBiasSlider" GridPane.columnIndex="4" GridPane.rowIndex="4" />
+   <ChoiceBox fx:id="weightModeChoiceBox" prefWidth="150.0" GridPane.columnIndex="3" GridPane.rowIndex="5" />
+   <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Weight mode: " GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="5" />
+   <padding>
+      <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+   </padding>
 </GridPane>

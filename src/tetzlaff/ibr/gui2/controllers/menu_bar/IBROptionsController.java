@@ -2,149 +2,98 @@ package tetzlaff.ibr.gui2.controllers.menu_bar;//Created by alexk on 7/31/2017.
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Spinner;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.util.StringConverter;
 import tetzlaff.util.ShadingParameterMode;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class IBROptionsController implements Initializable, IBRSettings2 {
+public class IBROptionsController implements Initializable{
+    @FXML private CheckBox iBRenderingCheckBox;
+    @FXML private CheckBox relightingCheckBox;
+    @FXML private CheckBox texturesCheckBox;
+    @FXML private CheckBox shadowsCheckBox;
+    @FXML private CheckBox visibleLightsCheckBox;
+    @FXML private CheckBox fresnelCheckBox;
+    @FXML private CheckBox occlusionCheckBox;
+    @FXML private CheckBox geometricAttenuationCheckBox;
+    @FXML private TextField gamaTextField;
+    @FXML private TextField weightExponentTextField;
+    @FXML private TextField isotropyFactorTextField;
+    @FXML private TextField occlusionBiasTextField;
+    @FXML private Slider gamaSlider;
+    @FXML private Slider weightExponentSlider;
+    @FXML private Slider isotropyFactorSlider;
+    @FXML private Slider occlusionBiasSlider;
+    @FXML private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
+    @FXML private GridPane root;
 
-    @FXML private Spinner<Double> gammaSpinner;
-
+    private IBRSettingsUIImpl settingCash;
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-//        gammaSpinner.set
-    }
 
-    @Override
-    public float getGamma() {
-        return 0;
-    }
+        weightModeChoiceBox.setConverter(new StringConverter<ShadingParameterMode>() {
+            @Override
+            public String toString(ShadingParameterMode object) {
+                return object.name();
+            }
 
-    @Override
-    public float getWeightExponent() {
-        return 0;
-    }
+            @Override
+            public ShadingParameterMode fromString(String string) {
+                return ShadingParameterMode.valueOf(string);
+            }
+        });
 
-    @Override
-    public float getIsotropyFactor() {
-        return 0;
-    }
-
-    @Override
-    public float getOcclusionBias() {
-        return 0;
-    }
-
-    @Override
-    public ShadingParameterMode getWeightMode() {
-        return null;
-    }
-
-    @Override
-    public boolean isOcclusionEnabled() {
-        return false;
-    }
-
-    @Override
-    public boolean isIBREnabled() {
-        return false;
-    }
-
-    @Override
-    public boolean isFresnelEnabled() {
-        return false;
-    }
-
-    @Override
-    public boolean isPBRGeometricAttenuationEnabled() {
-        return false;
-    }
-
-    @Override
-    public boolean isRelightingEnabled() {
-        return false;
-    }
-
-    @Override
-    public boolean areTexturesEnabled() {
-        return false;
-    }
-
-    @Override
-    public boolean areShadowsEnabled() {
-        return false;
-    }
-
-    @Override
-    public boolean areVisibleLightsEnabled() {
-        return false;
-    }
-
-    @Override
-    public void setGamma(float gamma) {
+        weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
 
     }
 
-    @Override
-    public void setWeightExponent(float weightExponent) {
+    private void setUpSlider(Slider slider, float valueStart){
+//        slider.set
+    }
+
+    private void preBindSlidersSetup(float gamaStart, float weightStart, float isoStart, float occStart){
+
+
+
 
     }
 
-    @Override
-    public void setIsotropyFactor(float isotropyFactor) {
 
+    public void bind(IBRSettingsUIImpl ibrSettingsUIImpl){
+
+        iBRenderingCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.iBR);
+        relightingCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.relighting);
+        texturesCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.textures);
+        shadowsCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.shadows);
+        visibleLightsCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.visibleLights);
+        fresnelCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.fresnel);
+        occlusionCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.occlusion);
+        geometricAttenuationCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.pBRGeometricAttenuation);
+
+        weightModeChoiceBox.valueProperty().bindBidirectional(ibrSettingsUIImpl.weightMode);
+
+        settingCash = ibrSettingsUIImpl;
+        root.getScene().getWindow().setOnCloseRequest(param->unbind());
     }
 
-    @Override
-    public void setOcclusionEnabled(boolean occlusionEnabled) {
+    private void unbind(){
 
-    }
+        iBRenderingCheckBox.selectedProperty().unbindBidirectional(settingCash.iBR);
+        relightingCheckBox.selectedProperty().unbindBidirectional(settingCash.relighting);
+        texturesCheckBox.selectedProperty().unbindBidirectional(settingCash.textures);
+        shadowsCheckBox.selectedProperty().unbindBidirectional(settingCash.shadows);
+        visibleLightsCheckBox.selectedProperty().unbindBidirectional(settingCash.visibleLights);
+        fresnelCheckBox.selectedProperty().unbindBidirectional(settingCash.fresnel);
+        occlusionCheckBox.selectedProperty().unbindBidirectional(settingCash.occlusion);
+        geometricAttenuationCheckBox.selectedProperty().unbindBidirectional(settingCash.pBRGeometricAttenuation);
 
-    @Override
-    public void setOcclusionBias(float occlusionBias) {
-
-    }
-
-    @Override
-    public void setIBREnabled(boolean ibrEnabled) {
-
-    }
-
-    @Override
-    public void setFresnelEnabled(boolean fresnelEnabled) {
-
-    }
-
-    @Override
-    public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled) {
-
-    }
-
-    @Override
-    public void setRelightingEnabled(boolean relightingEnabled) {
-
-    }
-
-    @Override
-    public void setTexturesEnabled(boolean texturesEnabled) {
-
-    }
-
-    @Override
-    public void setShadowsEnabled(boolean shadowsEnabled) {
-
-    }
-
-    @Override
-    public void setVisibleLightsEnabled(boolean visibleLightsEnabled) {
-
-    }
-
-    @Override
-    public void setWeightMode(ShadingParameterMode weightMode) {
+        weightModeChoiceBox.valueProperty().unbindBidirectional(settingCash.weightMode);
 
     }
 }
