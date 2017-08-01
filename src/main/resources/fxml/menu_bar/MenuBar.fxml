@@ -55,7 +55,7 @@
             <RadioMenuItem mnemonicParsing="false" text="Material shaded" />
             <RadioMenuItem mnemonicParsing="false" text="Image-based rendering" />
             <SeparatorMenuItem mnemonicParsing="false" />
-            <MenuItem mnemonicParsing="false" text="IBR settings…" />
+            <MenuItem  onAction="#shading_IBRSettings" mnemonicParsing="false" text="IBR settings…" />
             <CheckMenuItem mnemonicParsing="false" text="Use materials for IBR" />
             <CheckMenuItem mnemonicParsing="false" text="Physically based masking/shadowing" />
             <CheckMenuItem mnemonicParsing="false" text="Fresnel effect" />

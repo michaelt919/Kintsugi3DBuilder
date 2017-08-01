@@ -1,22 +1,27 @@
 package kautzTesting;//Created by alexk on 7/19/2017.
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.gl.vecmath.Vector3;
+
+import javafx.stage.Window;
 
 public class Main {
     public static void main(String[] args) {
 
-        BooleanProperty startedFalse = new SimpleBooleanProperty(false);
-        BooleanProperty startedTrue = new SimpleBooleanProperty(true);
+        System.out.println("Double max:\t" + Double.MAX_VALUE);
+        System.out.println("Float max:\t" + Float.MAX_VALUE);
+        System.out.println("Float min:\t" + Float.MIN_VALUE);
+        System.out.println("Double min:\t" + Double.MIN_VALUE);
 
-        startedFalse.bindBidirectional(startedTrue);
+        Double big = 7.0*Math.pow(10.0,50.0);
 
-        System.out.println("F .b T winner: " + startedTrue.getValue() + startedFalse.getValue());
+        System.out.println("Big double value: " + big.doubleValue());
+        System.out.println("Big float value: " + big.floatValue());
+        System.out.println("Big int value: " + big.intValue());
 
 
     }
+
+
+
 
 
 }

@@ -1,6 +1,7 @@
 package tetzlaff.ibr.util;//Created by alexk on 7/20/2017.
 
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.Property;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 
@@ -9,19 +10,19 @@ I general utilities class.
  */
 public class U {
 //    this method takes in a double property, and prevents it from reaching outside of its bound.
-    public static DoubleProperty  wrap(double min, double max, DoubleProperty property){
+    public static Property<Number> wrap(double min, double max, Property<Number> property){
        property.addListener((observable, oldValue, newValue) -> {
           if(newValue != null && (newValue.doubleValue() < min || newValue.doubleValue() > max)){
-              property.set(wrap(min, max, newValue.doubleValue()));
+              property.setValue(wrap(min, max, newValue.doubleValue()));
           }
        });
        return property;
     }
 
-    public static DoubleProperty bound(double min, double max, DoubleProperty property){
+    public static Property<Number> bound(double min, double max, Property <Number> property){
        property.addListener((observable, oldValue, newValue) -> {
           if(newValue != null && (newValue.doubleValue() < min || newValue.doubleValue() > max)){
-              property.set(bound(min, max, newValue.doubleValue()));
+              property.setValue(bound(min, max, newValue.doubleValue()));
           }
        });
        return property;

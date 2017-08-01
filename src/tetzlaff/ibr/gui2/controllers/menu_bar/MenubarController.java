@@ -12,7 +12,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 import tetzlaff.ibr.app2.TheApp;
-import tetzlaff.ibr.gui2.controllers.menu_bar.load_options.LoadOptionsController;
 import tetzlaff.ibr.rendering2.ToolModel3;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 
@@ -43,7 +42,7 @@ public class MenubarController implements Initializable {
     //Menubar->File
 
     @FXML private void file_createProject(){
-        try {
+/*        try {
             URL url = getClass().getClassLoader().getResource("fxml/menu_bar/Loader.fxml");
             FXMLLoader fxmlLoader = new FXMLLoader(url);
             Parent root =fxmlLoader.load();
@@ -58,15 +57,26 @@ public class MenubarController implements Initializable {
 
         } catch (IOException e) {
             e.printStackTrace();
+        }*/
+
+        LoaderController loaderController = makeWindow("Load Files", 750, 330,"fxml/menu_bar/Loader.fxml");
+        if (loaderController != null) {
+            loaderController.setToolModel3(toolModel);
+        }
+    }
+
+    @FXML private void file_loadOptions(){
+        LoadOptionsController loadOptionsController = makeWindow("Load Options", "fxml/menu_bar/LoadOptions.fxml");
+        if (loadOptionsController != null) {
+            loadOptionsController.bind(toolModel.getLoadSettings());
         }
 
     }
 
+    @FXML private void shading_IBRSettings(){
+        IBROptionsController ibrOptionsController = makeWindow("IBRL Settings",
+                "fxml/menu_bar/IBROptions.fxml");
 
-    @FXML private void file_loadOptions(){
-        LoadOptionsController loadOptionsController = makeWindow("Load Options", "fxml/menu_bar/load_options/LoadOptions.fxml");
-
-        toolModel.setLoadOptions(loadOptionsController);
     }
 
     @FXML private void file_exit(){
@@ -98,7 +108,7 @@ public class MenubarController implements Initializable {
 
     public static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, int width, int height, String urlString){
         try {
-            URL url = urlString.getClass().getClassLoader().getResource(urlString);
+            URL url = MenubarController.class.getClassLoader().getResource(urlString);
             if (url == null) {
                 throw new IOException("Cant find file " + urlString);
             }
@@ -107,6 +117,8 @@ public class MenubarController implements Initializable {
             Stage stage= new Stage();
             stage.setTitle(title);
             stage.setScene(new Scene(root, width, height));
+
+            stage.show();
 
             return fxmlLoader.getController();
 

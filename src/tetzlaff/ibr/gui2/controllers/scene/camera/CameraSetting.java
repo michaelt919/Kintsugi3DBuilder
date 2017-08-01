@@ -16,10 +16,10 @@ public class CameraSetting implements XML_Writable{
     private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
     private final DoubleProperty zCenter = new SimpleDoubleProperty();
-    private final DoubleProperty azimuth = U.wrap(-180, 180, new SimpleDoubleProperty());
-    private final DoubleProperty inclination = U.bound(-90,90, new SimpleDoubleProperty());
+    private final DoubleProperty azimuth = (DoubleProperty) U.wrap(-180, 180, new SimpleDoubleProperty());
+    private final DoubleProperty inclination =(DoubleProperty) U.bound(-90,90, new SimpleDoubleProperty());
     private final DoubleProperty log10distance = new SimpleDoubleProperty();
-    private final DoubleProperty twist = U.wrap(-180.0, 180.0, new SimpleDoubleProperty());
+    private final DoubleProperty twist =(DoubleProperty) U.wrap(-180.0, 180.0, new SimpleDoubleProperty());
     private final DoubleProperty fOV = new SimpleDoubleProperty();
     private final DoubleProperty focalLength = new SimpleDoubleProperty();
     private final BooleanProperty locked = new SimpleBooleanProperty();
