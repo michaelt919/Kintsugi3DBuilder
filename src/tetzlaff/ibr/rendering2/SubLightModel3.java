@@ -165,5 +165,8 @@ public class SubLightModel3 implements ControllableSubLightModel {
         );
     }
 
-
+    @Override
+    public boolean exists() {
+        return !(subLightSettingObservableValue == null || subLightSettingObservableValue.getValue() == null);
+    }
 }
