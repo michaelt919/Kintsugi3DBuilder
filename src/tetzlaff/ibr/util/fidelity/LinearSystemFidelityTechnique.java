@@ -66,6 +66,18 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
 	}
 	
 	@Override
+	public boolean isGuaranteedInterpolating()
+	{
+		return true;
+	}
+	
+	@Override
+	public double evaluateBaselineError(int targetViewIndex, File debugFile)
+	{
+		return 0.0;
+	}
+	
+	@Override
 	public void initialize(IBRResources<ContextType> resources, IBRSettings2 settings, int size) throws IOException
 	{
 		this.settings = settings;

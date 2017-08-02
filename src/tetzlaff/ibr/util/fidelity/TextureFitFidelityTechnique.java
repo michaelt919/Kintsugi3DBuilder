@@ -41,6 +41,12 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 	{
 		this.usePerceptuallyLinearError = usePerceptuallyLinearError;
 	}
+	
+	@Override
+	public boolean isGuaranteedInterpolating()
+	{
+		return false;
+	}
 
 	@Override
 	public boolean isGuaranteedMonotonic() 
@@ -156,9 +162,9 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
     	
     	textureFitBaselineDrawable.draw(PrimitiveMode.TRIANGLES, textureFitBaselineFramebuffer);
 	}
-
+	
 	@Override
-	public double evaluateError(int targetViewIndex, File debugFile) 
+	public double evaluateBaselineError(int targetViewIndex, File debugFile)
 	{
 		resources.setupShaderProgram(fidelityDrawable.program(), false);
 		
@@ -176,9 +182,6 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 
 		fidelityDrawable.program().setUniform("evaluateInXYZ", false);
 		
-		////////////
-		// Baseline
-		////////////
 		fidelityDrawable.program().setTexture("normalEstimate", textureFitBaselineFramebuffer.getColorAttachmentTexture(1));
 		fidelityDrawable.program().setTexture("specularEstimate", textureFitBaselineFramebuffer.getColorAttachmentTexture(2));
 		fidelityDrawable.program().setTexture("roughnessEstimate", textureFitBaselineFramebuffer.getColorAttachmentTexture(3));
@@ -212,7 +215,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 	    	    System.out.println("Baseline: " + baselineError);
 	        	
 	        	fidelityFramebuffer.saveColorBufferToFile(0, "PNG", 
-						new File(debugFile.getParentFile(), "baseline_" + debugFile.getName()));
+						new File(debugFile.getParentFile(), debugFile.getName()));
 	    	    
 				textureFitBaselineFramebuffer.saveColorBufferToFile(0, "PNG", new File(debugFile.getParentFile(), "baseline_diffuse.png"));
 				textureFitBaselineFramebuffer.saveColorBufferToFile(1, "PNG", new File(debugFile.getParentFile(), "baseline_normal.png"));
@@ -225,9 +228,28 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 			}
         }
 		
-		/////////////////////
-		// Fidelity estimate
-		/////////////////////
+		return baselineError;
+	}
+
+	@Override
+	public double evaluateError(int targetViewIndex, File debugFile) 
+	{
+		resources.setupShaderProgram(fidelityDrawable.program(), false);
+		
+		fidelityDrawable.program().setUniform("model_view", resources.viewSet.getCameraPose(targetViewIndex));
+		fidelityDrawable.program().setUniform("targetViewIndex", targetViewIndex);
+		
+		if (this.usePerceptuallyLinearError)
+		{
+			fidelityDrawable.program().setUniform("fittingGamma", 2.2f);
+		}
+		else
+		{
+			fidelityDrawable.program().setUniform("fittingGamma", 1.0f);
+		}
+
+		fidelityDrawable.program().setUniform("evaluateInXYZ", false);
+		
 		fidelityDrawable.program().setTexture("normalEstimate", textureFitFramebuffer.getColorAttachmentTexture(1));
 		fidelityDrawable.program().setTexture("specularEstimate", textureFitFramebuffer.getColorAttachmentTexture(2));
 		fidelityDrawable.program().setTexture("roughnessEstimate", textureFitFramebuffer.getColorAttachmentTexture(3));

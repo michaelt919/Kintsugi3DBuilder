@@ -34,9 +34,21 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
 	private NativeVectorBuffer viewIndexData;
 	
 	@Override
+	public boolean isGuaranteedInterpolating()
+	{
+		return true;
+	}
+	
+	@Override
 	public boolean isGuaranteedMonotonic()
 	{
 		return false;
+	}
+	
+	@Override
+	public double evaluateBaselineError(int targetViewIndex, File debugFile)
+	{
+		return 0.0;
 	}
 	
 	@Override
