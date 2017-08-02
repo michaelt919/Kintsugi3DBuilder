@@ -39,23 +39,23 @@ public class FidelityMetricRequest implements IBRRequest
 		this.settings = settings;
 	}
 	
-	private double estimateErrorQuadratic(double slope, double peak, double distance)
+	private double estimateErrorQuadratic(double baseline, double slope, double peak, double distance)
 	{
 		if (Double.isFinite(peak))
 		{
 			double peakDistance = 2 * peak / slope;
 			if (distance > peakDistance)
 			{
-				return peak;
+				return baseline + peak;
 			}
 			else
 			{
-				return slope * distance - slope * slope * distance * distance / (4 * peak);
+				return baseline + slope * distance - slope * slope * distance * distance / (4 * peak);
 			}
 		}
 		else
 		{
-			return slope * distance;
+			return baseline + slope * distance;
 		}
 	}
 	
@@ -135,6 +135,7 @@ public class FidelityMetricRequest implements IBRRequest
     		
     		double[] slopes = new double[resources.viewSet.getCameraPoseCount()];
     		double[] peaks = new double[resources.viewSet.getCameraPoseCount()];
+    		double[] baselines = new double[resources.viewSet.getCameraPoseCount()];
     		
 			if (callback != null)
 			{
@@ -144,7 +145,7 @@ public class FidelityMetricRequest implements IBRRequest
 			
 			CubicHermiteSpline[] errorFunctions = new CubicHermiteSpline[resources.viewSet.getCameraPoseCount()];
 			
-			out.println("#Name\tSlope\tPeak\tMinDistance\tError\t(CumError)");
+			out.println("#Name\tBaseline\tSlope\tPeak\tMinDistance\tError\t(CumError)");
     		
     		for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
 			{
@@ -157,8 +158,13 @@ public class FidelityMetricRequest implements IBRRequest
     			List<Double> distances = new ArrayList<Double>();
     			List<Double> errors = new ArrayList<Double>();
     			
+    			baselines[i] = fidelityTechnique.evaluateBaselineError(i, DEBUG ? 
+    				new File(new File(fidelityExportPath.getParentFile(), "debug"),
+    						"baseline_" + renderable.getActiveViewSet().getImageFileName(i)) 
+						: null);
+    			
     			distances.add(0.0);
-    			errors.add(0.0);
+    			errors.add(baselines[i]);
     			
     			List<Integer> activeViewIndexList;
     			
@@ -228,13 +234,13 @@ public class FidelityMetricRequest implements IBRRequest
 	    			double sumErrorDistanceProducts = 0.0;
 	    			double sumErrorSquareDistanceProducts = 0.0;
 	    			
-	    			double sumHighErrors = 0.0;
-	    			int countHighErrors = 0;
+	    			double sumHighErrorDiffs = 0.0;
+	    			int countHighErrorDiffs = 0;
 	    			
 	    			for (int k = 0; k < distances.size(); k++)
 	    			{
 	    				double distance = distances.get(k);
-	    				double error = errors.get(k);
+	    				double errorDiff = Math.max(0.0, errors.get(k) - baselines[i]);
 	    				
 	    				if (distance < maxDistance)
 	    				{
@@ -243,13 +249,13 @@ public class FidelityMetricRequest implements IBRRequest
 		    				sumSquareDistances += distanceSq;
 		    				sumCubeDistances += distance * distanceSq;
 		    				sumFourthDistances += distanceSq * distanceSq;
-		    				sumErrorDistanceProducts += error * distance;
-		    				sumErrorSquareDistanceProducts += error * distanceSq;
+		    				sumErrorDistanceProducts += errorDiff * distance;
+		    				sumErrorSquareDistanceProducts += errorDiff * distanceSq;
 	    				}
 	    				else
 	    				{
-	    					sumHighErrors += error;
-	    					countHighErrors++;
+	    					sumHighErrorDiffs += errorDiff;
+	    					countHighErrorDiffs++;
 	    				}
 	    			}
 	    			
@@ -262,7 +268,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    			
 	    			slope = (sumCubeDistances * sumErrorSquareDistanceProducts - sumFourthDistances * sumErrorDistanceProducts) / d;
 	    			
-	    			if (slope <= 0.0 || !Double.isFinite(slope) || countHighErrors > errors.size() - 5)
+	    			if (slope <= 0.0 || !Double.isFinite(slope) || countHighErrorDiffs > errors.size() - 5)
 	    			{
 	    				if (prevSlope < 0.0)
 	    				{
@@ -285,7 +291,7 @@ public class FidelityMetricRequest implements IBRRequest
 
 		    			if (Double.isFinite(leastSquaresPeak) && leastSquaresPeak > 0.0)
 		    			{
-		    				if (countHighErrors == 0)
+		    				if (countHighErrorDiffs == 0)
 		    				{
 		    					peak = leastSquaresPeak;
 		    				}
@@ -294,7 +300,7 @@ public class FidelityMetricRequest implements IBRRequest
 				    			// Do a weighted average between the least-squares peak and the average of all the errors that would be on the downward slope of the quadratic,
 				    			// but are instead clamped to the maximum of the quadratic.
 				    			// Clamp the contribution of the least-squares peak to be no greater than twice the average of the other values.
-				    			peak = (Math.min(2 * sumHighErrors / countHighErrors, leastSquaresPeak) * (errors.size() - countHighErrors) + sumHighErrors) / errors.size();
+				    			peak = (Math.min(2 * sumHighErrorDiffs / countHighErrorDiffs, leastSquaresPeak) * (errors.size() - countHighErrorDiffs) + sumHighErrorDiffs) / errors.size();
 		    				}
 		    			}
 		    			else if (prevPeak < 0.0)
@@ -320,9 +326,10 @@ public class FidelityMetricRequest implements IBRRequest
     			
     			if (errors.size() >= 2)
     			{
-    				out.println(slope + "\t" + peak + "\t" + minDistance + "\t" + errors.get(1));
+    				out.println(baselines[i] + "\t" + slope + "\t" + peak + "\t" + minDistance + "\t" + errors.get(1));
     			}
-    			
+
+    			System.out.println("Baseline: " + baselines[i]);
     			System.out.println("Slope: " + slope);
     			System.out.println("Peak: " + peak);
     			System.out.println();
@@ -373,11 +380,13 @@ public class FidelityMetricRequest implements IBRRequest
 	    		}
 	    		
 	    		// Determine a function describing the error of each quadratic view by blending the slope and peak parameters from the known views.
+	    		double[] targetBaselines = new double[targetViewSet.getCameraPoseCount()];
 	    		double[] targetSlopes = new double[targetViewSet.getCameraPoseCount()];
 	    		double[] targetPeaks = new double[targetViewSet.getCameraPoseCount()];
 	    		
 	    		for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
 	    		{
+	    			double weightedBaselineSum = 0.0;
 	    			double weightedSlopeSum = 0.0;
 	    			double weightSum = 0.0;
 	    			double weightedPeakSum = 0.0;
@@ -395,10 +404,12 @@ public class FidelityMetricRequest implements IBRRequest
 	    					peakWeightSum += weight;
     					}
 	    				
+	    				weightedBaselineSum += weight * baselines[k];
 						weightedSlopeSum += weight * slopes[k];
 	    				weightSum += weight;
 	    			}
 	    			
+	    			targetBaselines[i] = weightedBaselineSum / weightSum;
 	    			targetSlopes[i] = weightedSlopeSum / weightSum;
 	    			targetPeaks[i] = peakWeightSum == 0.0 ? 0.0 : weightedPeakSum / peakWeightSum;
 	    		}
@@ -434,7 +445,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    			{
 	    				// If it isn't, then print it to the file
 	    				originalUsed[j] = true;
-	    				out.print(resources.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t");
+	    				out.print(resources.viewSet.getImageFileName(j).split("\\.")[0] + "\t" + baselines[j] + "\t" + slopes[j] + "\t" + peaks[j] + "\tn/a\t");
 	    				
 	    				out.print(fidelityTechnique.evaluateError(j) + "\t");
 	    				
@@ -445,7 +456,7 @@ public class FidelityMetricRequest implements IBRRequest
 			    		
 			    		for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
 			    		{
-			    			if (!originalUsed[k])
+			    			if (!originalUsed[k] || !fidelityTechnique.isGuaranteedInterpolating())
 			    			{
 			    				cumError += fidelityTechnique.evaluateError(k);
 			    			}
@@ -471,7 +482,7 @@ public class FidelityMetricRequest implements IBRRequest
     			{
 					if (!fidelityTechnique.isGuaranteedMonotonic())
 					{
-						targetErrors[i] = estimateErrorQuadratic(targetSlopes[i], targetPeaks[i], targetDistances[i]);
+						targetErrors[i] = estimateErrorQuadratic(targetBaselines[i], targetSlopes[i], targetPeaks[i], targetDistances[i]);
 					}
 					else
 					{
@@ -535,7 +546,7 @@ public class FidelityMetricRequest implements IBRRequest
 		    	    				double totalError = 0.0;
 			    	    			for (int k = 0; k < targetViewSet.getCameraPoseCount(); k++)
 			    	    			{
-			    	    				if (k != i && !targetUsed[k])
+			    	    				if ((k != i && !targetUsed[k]) || !fidelityTechnique.isGuaranteedInterpolating())
 			    	    				{
 				    	    				for (int l = 0; l < resources.viewSet.getCameraPoseCount(); l++)
 				    	    				{
@@ -562,7 +573,7 @@ public class FidelityMetricRequest implements IBRRequest
 		    		}
 		    		
 		    		// Print the view to the file
-		    		out.print(targetViewSet.getImageFileName(nextViewTargetIndex).split("\\.")[0] + "\t" + targetSlopes[nextViewTargetIndex] + "\t" + targetPeaks[nextViewTargetIndex] + "\t" + 
+		    		out.print(targetViewSet.getImageFileName(nextViewTargetIndex).split("\\.")[0] + "\t" + targetBaselines[nextViewTargetIndex] + "\t" + targetSlopes[nextViewTargetIndex] + "\t" + targetPeaks[nextViewTargetIndex] + "\t" + 
 	    					targetDistances[nextViewTargetIndex] + "\t" + targetErrors[nextViewTargetIndex] + "\t");
 					
 		    		// Flag that its been used
@@ -585,7 +596,7 @@ public class FidelityMetricRequest implements IBRRequest
 	    					// error
 	    					if (!fidelityTechnique.isGuaranteedMonotonic())
 		    				{
-		    					targetErrors[i] = estimateErrorQuadratic(targetSlopes[i], targetPeaks[i], targetDistances[i]);
+		    					targetErrors[i] = estimateErrorQuadratic(targetBaselines[i], targetSlopes[i], targetPeaks[i], targetDistances[i]);
 		    				}
 	    					else
 	    					{
@@ -642,7 +653,7 @@ public class FidelityMetricRequest implements IBRRequest
 		    		if (maxErrorIndex >= 0)
 		    		{
 			    		// Print the view to the file
-		    			out.print(targetViewSet.getImageFileName(maxErrorIndex).split("\\.")[0] + "\t" + targetSlopes[maxErrorIndex] + "\t" + targetPeaks[maxErrorIndex] + "\t" + 
+		    			out.print(targetViewSet.getImageFileName(maxErrorIndex).split("\\.")[0] + "\t" + targetBaselines[maxErrorIndex] + "\t" + targetSlopes[maxErrorIndex] + "\t" + targetPeaks[maxErrorIndex] + "\t" + 
     	    					targetDistances[maxErrorIndex] + "\t" + targetErrors[maxErrorIndex] + "\t"); 
 		    			
 		    			// Flag that its been used
@@ -664,7 +675,7 @@ public class FidelityMetricRequest implements IBRRequest
 		    					// error
 		    					if (!fidelityTechnique.isGuaranteedMonotonic())
 			    				{
-			    					targetErrors[i] = estimateErrorQuadratic(targetSlopes[i], targetPeaks[i], targetDistances[i]);
+			    					targetErrors[i] = estimateErrorQuadratic(targetBaselines[i], targetSlopes[i], targetPeaks[i], targetDistances[i]);
 			    				}
 		    					else
 		    					{
