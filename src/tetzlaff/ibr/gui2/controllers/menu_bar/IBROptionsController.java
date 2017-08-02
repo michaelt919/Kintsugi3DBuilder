@@ -8,6 +8,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
+import tetzlaff.ibr.util.Flag;
 import tetzlaff.util.ShadingParameterMode;
 
 import java.net.URL;
@@ -82,7 +83,10 @@ public class IBROptionsController implements Initializable{
         root.getScene().getWindow().setOnCloseRequest(param->unbind());
     }
 
+
     private void unbind(){
+
+        System.out.println("unbind");
 
         iBRenderingCheckBox.selectedProperty().unbindBidirectional(settingCash.iBR);
         relightingCheckBox.selectedProperty().unbindBidirectional(settingCash.relighting);
