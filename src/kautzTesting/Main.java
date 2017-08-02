@@ -17,6 +17,7 @@ public class Main {
         System.out.println("Big float value: " + big.floatValue());
         System.out.println("Big int value: " + big.intValue());
 
+        Boolean bob = true;
 
         House house = new House();
 

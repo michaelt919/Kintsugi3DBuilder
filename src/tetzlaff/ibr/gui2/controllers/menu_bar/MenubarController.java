@@ -11,12 +11,16 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.rendering2.ToolModel3;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
+import tetzlaff.ibr.util.Flag;
 
 public class MenubarController implements Initializable {
+
+    Flag iBROptionsWindowOpen = new Flag(false);
+    Flag loadOptionsWindowOpen = new Flag(false);
+    Flag loaderWindowOpen = new Flag(false);
 
     @FXML private ToggleGroup toolGroup;
 
@@ -43,14 +47,20 @@ public class MenubarController implements Initializable {
     //Menubar->File
 
     @FXML private void file_createProject(){
-        LoaderController loaderController = makeWindow("Load Files", 750, 330,"fxml/menu_bar/Loader.fxml");
+
+        if(loaderWindowOpen.get())return;
+
+        LoaderController loaderController = makeWindow("Load Files", loaderWindowOpen, 750, 330,"fxml/menu_bar/Loader.fxml");
         if (loaderController != null) {
             loaderController.setToolModel3(toolModel);
         }
     }
 
     @FXML private void file_loadOptions(){
-        LoadOptionsController loadOptionsController = makeWindow("Load Options", "fxml/menu_bar/LoadOptions.fxml");
+
+        if(loadOptionsWindowOpen.get())return;
+
+        LoadOptionsController loadOptionsController = makeWindow("Load Options", loadOptionsWindowOpen, "fxml/menu_bar/LoadOptions.fxml");
         if (loadOptionsController != null) {
             loadOptionsController.bind(toolModel.getLoadSettings());
         }
@@ -58,7 +68,10 @@ public class MenubarController implements Initializable {
     }
 
     @FXML private void shading_IBRSettings(){
-        IBROptionsController ibrOptionsController = makeWindow("IBRL Settings",
+
+        if(iBROptionsWindowOpen.get())return;
+
+        IBROptionsController ibrOptionsController = makeWindow("IBRL Settings", iBROptionsWindowOpen,
                 "fxml/menu_bar/IBROptions.fxml");
         if (ibrOptionsController != null) {
             ibrOptionsController.bind(toolModel.getIbrSettingsUIImpl());
@@ -94,6 +107,33 @@ public class MenubarController implements Initializable {
         }
     }
 
+    public static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, String urlString){
+        try {
+            URL url = MenubarController.class.getClassLoader().getResource(urlString);
+            if (url == null) {
+                throw new IOException("Cant find file " + urlString);
+            }
+            FXMLLoader fxmlLoader = new FXMLLoader(url);
+            Parent root = fxmlLoader.load();
+            Stage stage= new Stage();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root));
+
+            stage.setResizable(false);
+
+            flag.set(true);
+            flag.addFalseToClose(stage);
+
+            stage.show();
+
+            return fxmlLoader.getController();
+
+        }catch (IOException e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, int width, int height, String urlString){
         try {
             URL url = MenubarController.class.getClassLoader().getResource(urlString);
@@ -108,6 +148,29 @@ public class MenubarController implements Initializable {
 
             stage.setResizable(false);
 
+            stage.show();
+
+            return fxmlLoader.getController();
+
+        }catch (IOException e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, int width, int height, String urlString){
+        try {
+            URL url = MenubarController.class.getClassLoader().getResource(urlString);
+            if (url == null) {
+                throw new IOException("Cant find file " + urlString);
+            }
+            FXMLLoader fxmlLoader = new FXMLLoader(url);
+            Parent root = fxmlLoader.load();
+            Stage stage= new Stage();
+            stage.setTitle(title);
+            stage.setScene(new Scene(root, width, height));
+            stage.setResizable(false);
+            flag.set(true);
+            flag.addFalseToClose(stage);
             stage.show();
 
             return fxmlLoader.getController();

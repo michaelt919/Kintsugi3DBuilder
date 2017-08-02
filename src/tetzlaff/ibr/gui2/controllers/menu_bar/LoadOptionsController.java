@@ -2,25 +2,13 @@ package tetzlaff.ibr.gui2.controllers.menu_bar;//Created by alexk on 7/31/2017.
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import javafx.util.StringConverter;
-import tetzlaff.ibr.rendering2.to_sort.IBRLoadOptions2;
-import tetzlaff.ibr.util.U;
-import tetzlaff.util.SafeIntegerStringConverter;
-import tetzlaff.util.SafeNumberStringConverter;
 
-import javax.swing.event.ChangeListener;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -83,8 +71,10 @@ public class LoadOptionsController implements Initializable{
         w.bindBidirectional(loadSettings.depthWidth);
         h.bindBidirectional(loadSettings.depthHeight);
         loadSettingsCash = loadSettings;
-        root.getScene().getWindow().setOnCloseRequest(event -> unbind());
+
+        root.getScene().getWindow().setOnCloseRequest(param -> unbind());
     }
+
     private void unbind(){
         if(loadSettingsCash != null){
             compressedImages.selectedProperty().bindBidirectional(loadSettingsCash.compression);
@@ -93,5 +83,6 @@ public class LoadOptionsController implements Initializable{
             w.bindBidirectional(loadSettingsCash.depthWidth);
             h.bindBidirectional(loadSettingsCash.depthHeight);
         }
+        System.out.println("unbind");
     }
 }
