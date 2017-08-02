@@ -31,11 +31,13 @@ public class MenubarController implements Initializable {
 
         toolGroup.selectedToggleProperty().addListener((ob,o,n)->{
             if(n != null){
+
                 int indexInToolList = toolGroup.getToggles().indexOf(n);
                 switch (indexInToolList){
                     case 0: toolModel.setTool(ToolBox.TOOL.ORBIT); return;
                     case 1: toolModel.setTool(ToolBox.TOOL.PAN); return;
                     case 2: toolModel.setTool(ToolBox.TOOL.DOLLY); return;
+                    case 11: toolModel.setTool(ToolBox.TOOL.LIGHT_DRAG); return;
                     default: toolModel.setTool(ToolBox.TOOL.ORBIT);
                 }
             }

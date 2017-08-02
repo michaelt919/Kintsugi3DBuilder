@@ -15,4 +15,9 @@ public abstract class ControllableLightModel implements ReadonlyLightModel {
     public final Vector3 getAmbientLightColor() {
         return ev.getAmbientLightColor();
     }
+
+
+    public abstract ControllableSubLightModel getLight(int i);
+
+
 }

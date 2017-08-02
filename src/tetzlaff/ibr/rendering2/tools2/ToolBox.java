@@ -24,15 +24,16 @@ public class ToolBox extends AbstractTool implements Controller {
     private DollyTool dollyTool = new DollyTool(cameraModel, environmentMapModel, lightModel);
     private OrbitTool orbitTool = new OrbitTool(cameraModel, environmentMapModel, lightModel);
     private PanTool panTool = new PanTool(cameraModel, environmentMapModel, lightModel);
+    private LightDragTool lightDragTool = new LightDragTool(cameraModel, environmentMapModel, lightModel);
     public enum TOOL{
-        DOLLY, ORBIT, PAN
+        DOLLY, ORBIT, PAN, LIGHT_DRAG
     }
     private AbstractTool selectedTool(){
         switch (toolModel.getTool()){
             case DOLLY: return dollyTool;
             case ORBIT: return orbitTool;
             case PAN: return panTool;
-
+            case LIGHT_DRAG: return lightDragTool;
             default: return orbitTool;
         }
     }

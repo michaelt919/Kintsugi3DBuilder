@@ -179,4 +179,12 @@ public class Vector2
 	{
 		return new Vector2((float)operator.applyAsDouble(x), (float)operator.applyAsDouble(y));
 	}
+
+	@Override
+	public String toString() {
+		return "Vector2{" +
+				"x=" + x +
+				", y=" + y +
+				'}';
+	}
 }
