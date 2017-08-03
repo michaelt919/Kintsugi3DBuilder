@@ -135,7 +135,10 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 			
 			textureFitDrawable.program().setUniform("standaloneMode", true);
 	    	
-			textureFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+			textureFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+			textureFitFramebuffer.clearColorBuffer(1, 0.5f, 0.5f, 1.0f, 1.0f);
+			textureFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 1.0f);
+			textureFitFramebuffer.clearColorBuffer(3, 1.0f, 1.0f, 1.0f, 1.0f);
 			textureFitFramebuffer.clearDepthBuffer();
 	    	
 	    	textureFitDrawable.draw(PrimitiveMode.TRIANGLES, textureFitFramebuffer);
@@ -156,8 +159,11 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 		}
 		
 		textureFitBaselineDrawable.program().setUniform("standaloneMode", true);
-    	
-		textureFitBaselineFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+
+		textureFitBaselineFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+		textureFitBaselineFramebuffer.clearColorBuffer(1, 0.5f, 0.5f, 1.0f, 1.0f);
+		textureFitBaselineFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 1.0f);
+		textureFitBaselineFramebuffer.clearColorBuffer(3, 1.0f, 1.0f, 1.0f, 1.0f);
 		textureFitBaselineFramebuffer.clearDepthBuffer();
     	
     	textureFitBaselineDrawable.draw(PrimitiveMode.TRIANGLES, textureFitBaselineFramebuffer);
@@ -212,9 +218,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
         {
 	        try
 			{
-	    	    System.out.println("Baseline: " + baselineError);
-	        	
-	        	fidelityFramebuffer.saveColorBufferToFile(0, "PNG", 
+	    	    fidelityFramebuffer.saveColorBufferToFile(0, "PNG", 
 						new File(debugFile.getParentFile(), debugFile.getName()));
 	    	    
 				textureFitBaselineFramebuffer.saveColorBufferToFile(0, "PNG", new File(debugFile.getParentFile(), "baseline_diffuse.png"));

@@ -127,11 +127,12 @@ ParameterizedFit fitSpecular()
 	float specularNormalCertainty = 
 		min(1, directionScale) * dot(specularNormalEstimate, certaintyDirection);
 	vec3 scaledCertaintyDirection = specularNormalCertainty * certaintyDirection;
-	specularNormal = scaledCertaintyDirection 
-		+ sqrt(1 - specularNormalCertainty * specularNormalCertainty 
-					* dot(certaintyDirection, certaintyDirection))
-			* normalize(mix(normal, normalize(specularNormalEstimate - scaledCertaintyDirection), 
-				min(1, directionScale) * specularNormalFidelity));
+	specularNormal = normalize(
+		scaledCertaintyDirection 
+			+ sqrt(1 - specularNormalCertainty * specularNormalCertainty 
+						* dot(certaintyDirection, certaintyDirection))
+				* normalize(mix(normal, normalize(specularNormalEstimate - scaledCertaintyDirection), 
+					min(1, directionScale) * specularNormalFidelity)));
 	
 	vec3 chromaticitySum = vec3(0);
 	vec3 roughnessSums[3];
@@ -217,7 +218,7 @@ ParameterizedFit fitSpecular()
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
     // for texels where there isn't enough information at the specular peak.
     return ParameterizedFit(adjustedDiffuseColor,
-		transpose(tangentToObject) * specularNormal, specularColor, sqrt(roughnessSquared));
+		normalize(transpose(tangentToObject) * specularNormal), specularColor, sqrt(roughnessSquared));
 }
 
 #endif // SPECULARFIT_GLSL

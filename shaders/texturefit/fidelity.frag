@@ -68,9 +68,9 @@ vec2 computeFidelity()
 		specularColor = getSpecularColor();
 	}
 	
+	float maxLuminance = getMaxLuminance();
 	float roughness = getRoughness();
 	float roughnessSquared = roughness * roughness;
-	float maxLuminance = getMaxLuminance();
 	float fittingGammaInv = 1.0 / fittingGamma;
 	
 	vec3 view = normalize(getViewVector(targetViewIndex));
@@ -102,15 +102,16 @@ vec2 computeFidelity()
 		if (nDotV > 0 && nDotL > 0.0)
 		{
 			float nDotHSquared = nDotH * nDotH;
-				
-			float q1 = roughnessSquared + (1.0 - nDotHSquared) / nDotHSquared;
-			float mfdEval = roughnessSquared / (nDotHSquared * nDotHSquared * q1 * q1);
+			
+			float q1 = roughnessSquared * nDotHSquared + (1.0 - nDotHSquared);
+			float mfdEval = roughnessSquared / (q1 * q1);
 			
 			float hDotV = max(0, dot(half, view));
 			float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
 			
 			vec3 currentFit = diffuseColor * nDotL + specularColor * mfdEval * geomRatio;
-			vec3 colorResidual = colorScaled - pow(currentFit, vec3(fittingGammaInv));
+			vec3 colorResidual = colorScaled - 
+				pow(min(maxLuminance / attenuatedLightIntensity, currentFit), vec3(fittingGammaInv));
 			
 			return nDotV * color.a * vec2(dot(colorResidual, colorResidual), 1);
 		}
