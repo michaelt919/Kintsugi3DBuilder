@@ -15,7 +15,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class IBROptionsController implements Initializable{
-    @FXML private CheckBox iBRenderingCheckBox;
     @FXML private CheckBox relightingCheckBox;
     @FXML private CheckBox texturesCheckBox;
     @FXML private CheckBox shadowsCheckBox;
@@ -68,16 +67,15 @@ public class IBROptionsController implements Initializable{
 
     public void bind(IBRSettingsUIImpl ibrSettingsUIImpl){
 
-        iBRenderingCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.iBR);
-        relightingCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.relighting);
-        texturesCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.textures);
-        shadowsCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.shadows);
-        visibleLightsCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.visibleLights);
-        fresnelCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.fresnel);
-        occlusionCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.occlusion);
-        geometricAttenuationCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.pBRGeometricAttenuation);
+        relightingCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.relightingProperty());
+        texturesCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.texturesProperty());
+        shadowsCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.shadowsProperty());
+        visibleLightsCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.visibleLightsProperty());
+        fresnelCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.fresnelProperty());
+        occlusionCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.occlusionProperty());
+        geometricAttenuationCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.pBRGeometricAttenuationProperty());
 
-        weightModeChoiceBox.valueProperty().bindBidirectional(ibrSettingsUIImpl.weightMode);
+        weightModeChoiceBox.valueProperty().bindBidirectional(ibrSettingsUIImpl.weightModeProperty());
 
         settingCash = ibrSettingsUIImpl;
         root.getScene().getWindow().setOnCloseRequest(param->unbind());
@@ -88,16 +86,15 @@ public class IBROptionsController implements Initializable{
 
         System.out.println("unbind");
 
-        iBRenderingCheckBox.selectedProperty().unbindBidirectional(settingCash.iBR);
-        relightingCheckBox.selectedProperty().unbindBidirectional(settingCash.relighting);
-        texturesCheckBox.selectedProperty().unbindBidirectional(settingCash.textures);
-        shadowsCheckBox.selectedProperty().unbindBidirectional(settingCash.shadows);
-        visibleLightsCheckBox.selectedProperty().unbindBidirectional(settingCash.visibleLights);
-        fresnelCheckBox.selectedProperty().unbindBidirectional(settingCash.fresnel);
-        occlusionCheckBox.selectedProperty().unbindBidirectional(settingCash.occlusion);
-        geometricAttenuationCheckBox.selectedProperty().unbindBidirectional(settingCash.pBRGeometricAttenuation);
+        relightingCheckBox.selectedProperty().unbindBidirectional(settingCash.relightingProperty());
+        texturesCheckBox.selectedProperty().unbindBidirectional(settingCash.texturesProperty());
+        shadowsCheckBox.selectedProperty().unbindBidirectional(settingCash.shadowsProperty());
+        visibleLightsCheckBox.selectedProperty().unbindBidirectional(settingCash.visibleLightsProperty());
+        fresnelCheckBox.selectedProperty().unbindBidirectional(settingCash.fresnelProperty());
+        occlusionCheckBox.selectedProperty().unbindBidirectional(settingCash.occlusionProperty());
+        geometricAttenuationCheckBox.selectedProperty().unbindBidirectional(settingCash.pBRGeometricAttenuationProperty());
 
-        weightModeChoiceBox.valueProperty().unbindBidirectional(settingCash.weightMode);
+        weightModeChoiceBox.valueProperty().unbindBidirectional(settingCash.weightModeProperty());
 
     }
 }
