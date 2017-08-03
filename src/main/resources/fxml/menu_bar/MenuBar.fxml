@@ -12,28 +12,26 @@
 <VBox prefWidth="470.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.menu_bar.MenubarController">
    <MenuBar>
       <Menu mnemonicParsing="false" text="File">
-         <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project" />
-         <MenuItem mnemonicParsing="false" text="Open project" />
-         <MenuItem mnemonicParsing="false" text="Save project" />
-         <MenuItem mnemonicParsing="false" text="Save project as..." />
-         <MenuItem mnemonicParsing="false" text="Close project" />
+         <MenuItem onAction="#file_createProject" mnemonicParsing="false"  text="Create project" />
+         <MenuItem onAction="#file_openProject" mnemonicParsing="false" text="Open project" />
+         <MenuItem onAction="#file_saveProject" mnemonicParsing="false" text="Save project" />
+         <MenuItem onAction="#file_saveProjectAs" mnemonicParsing="false" text="Save project as..." />
+         <MenuItem onAction="#file_closeProject" mnemonicParsing="false" text="Close project" />
          <Menu mnemonicParsing="false" text="Export">
-            <MenuItem mnemonicParsing="false" text="Re-sample..." />
-            <MenuItem mnemonicParsing="false" text="Fidelity Metric…" />
-            <MenuItem mnemonicParsing="false" text="BTF..." />
-            <MenuItem mnemonicParsing="false" text="Other..." />
+            <MenuItem onAction="#file_export_reSample" mnemonicParsing="false" text="Re-sample..." />
+            <MenuItem onAction="#file_export_fidelityMetric" mnemonicParsing="false" text="Fidelity Metric…" />
+            <MenuItem onAction="#file_export_BTF" mnemonicParsing="false" text="BTF..." />
+            <MenuItem onAction="#file_export_Other" mnemonicParsing="false" text="Other..." />
          </Menu>
-         <MenuItem mnemonicParsing="false" text="Load settings configuration" />
+         <MenuItem onAction="#file_loadSettingsConfiguration" mnemonicParsing="false" text="Load settings configuration" />
          <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." />
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
       </Menu>
       <Menu mnemonicParsing="false" text="Viewport">
-         <items>
-            <CheckMenuItem mnemonicParsing="false" text="3D grid" />
-            <CheckMenuItem mnemonicParsing="false" text="Compass" />
-            <CheckMenuItem mnemonicParsing="false" text="Half resolution" />
-            <CheckMenuItem mnemonicParsing="false" text="Multi-sampling" />
-         </items>
+         <CheckMenuItem fx:id="d3GridCheckMenuItem" mnemonicParsing="false" text="3D grid"/>
+         <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass"/>
+         <CheckMenuItem selected="true" fx:id="halfResolutionCheckMenuItem" mnemonicParsing="false" text="Half resolution"/>
+         <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling"/>
       </Menu>
       <Menu mnemonicParsing="false" text="Lighting">
          <items>
@@ -46,29 +44,28 @@
          </items>
       </Menu>
       <Menu mnemonicParsing="false" text="Shading">
-         <items>
-            <RadioMenuItem mnemonicParsing="false" text="Wireframe" />
-            <RadioMenuItem mnemonicParsing="false" text="Lambertian shaded" />
-            <RadioMenuItem mnemonicParsing="false" text="Phong shaded" />
-            <RadioMenuItem mnemonicParsing="false" text="Solid textured" />
-            <RadioMenuItem mnemonicParsing="false" text="Lambertian textured" />
-            <RadioMenuItem mnemonicParsing="false" text="Material shaded" />
-            <RadioMenuItem mnemonicParsing="false" text="Image-based rendering" />
-            <SeparatorMenuItem mnemonicParsing="false" />
-            <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="IBR settings…" />
-            <CheckMenuItem mnemonicParsing="false" text="Use materials for IBR" />
-            <CheckMenuItem mnemonicParsing="false" text="Physically based masking/shadowing" />
-            <CheckMenuItem mnemonicParsing="false" text="Fresnel effect" />
-         </items>
+         <fx:define>
+            <ToggleGroup fx:id="renderGroup"/>
+         </fx:define>
+         <RadioMenuItem toggleGroup="$renderGroup" mnemonicParsing="false" text="None" userData="None"/>
+         <RadioMenuItem toggleGroup="$renderGroup" mnemonicParsing="false" text="Wireframe" userData="Wireframe"/>
+         <RadioMenuItem toggleGroup="$renderGroup" mnemonicParsing="false" text="Lambertian shaded" userData="Lambertian shaded"/>
+         <RadioMenuItem toggleGroup="$renderGroup" mnemonicParsing="false" text="Phong shaded" userData="Phong shaded"/>
+         <RadioMenuItem toggleGroup="$renderGroup" mnemonicParsing="false" text="Solid textured" userData="Solid textured"/>
+         <RadioMenuItem toggleGroup="$renderGroup" mnemonicParsing="false" text="Lambertian textured" userData="Lambertian textured"/>
+         <RadioMenuItem toggleGroup="$renderGroup" mnemonicParsing="false" text="Material shaded" userData="Material shaded"/>
+         <RadioMenuItem selected="true" toggleGroup="$renderGroup" mnemonicParsing="false" text="Image-based rendering" userData="Image-based rendering"/>
+         <SeparatorMenuItem mnemonicParsing="false"/>
+         <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="IBR settings…"/>
+         <CheckMenuItem mnemonicParsing="false" text="Use materials for IBR"/>
+         <CheckMenuItem mnemonicParsing="false" text="Physically based masking/shadowing"/>
+         <CheckMenuItem mnemonicParsing="false" text="Fresnel effect"/>
       </Menu>
       <Menu mnemonicParsing="false" text="Tools">
          <fx:define>
             <ToggleGroup fx:id="toolGroup" />
          </fx:define>
-         <RadioMenuItem mnemonicParsing="false" selected="true" text="Orbit Camera tool">
-            <toggleGroup>
-               <ToggleGroup fx:id="toolGroup" />
-            </toggleGroup></RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" selected="true" text="Orbit Camera tool" toggleGroup="$toolGroup"/>
          <RadioMenuItem mnemonicParsing="false" text="Pan Camera tool" toggleGroup="$toolGroup" />
          <RadioMenuItem mnemonicParsing="false" text="Dolly Camera tool" toggleGroup="$toolGroup" />
          <RadioMenuItem mnemonicParsing="false" text="Frame Selection tool" toggleGroup="$toolGroup" />

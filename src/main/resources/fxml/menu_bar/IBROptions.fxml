@@ -13,10 +13,6 @@
 <?import javafx.scene.text.Text?>
 
 <GridPane fx:id="root" hgap="15.0" vgap="15.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.menu_bar.IBROptionsController">
-    <CheckBox fx:id="iBRenderingCheckBox" mnemonicParsing="false" text="Image-based rendering" GridPane.columnSpan="2147483647" GridPane.rowIndex="1">
-      <font>
-         <Font size="24.0" />
-      </font></CheckBox>
     <CheckBox fx:id="relightingCheckBox" mnemonicParsing="false" text="Relighting" GridPane.columnSpan="2147483647" GridPane.rowIndex="2">
       <font>
          <Font size="24.0" />

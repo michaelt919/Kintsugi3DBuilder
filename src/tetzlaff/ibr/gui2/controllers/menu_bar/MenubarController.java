@@ -9,26 +9,51 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
+import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.rendering2.ToolModel3;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 import tetzlaff.ibr.util.Flag;
 
 public class MenubarController implements Initializable {
+    //toolModel
+    private final ToolModel3 toolModel = TheApp.getRootModel().getToolModel3();
+    private IBRSettingsUIImpl getSettings(){
+        return toolModel.getIbrSettingsUIImpl();
+    }
+    private LoadSettings getLoadSettings(){
+        return toolModel.getLoadSettings();
+    }
+    private IBRRenderable<?> getRenderable(){
+        return toolModel.getIBRRenderable();
+    }
 
+    //Window open flags
     Flag iBROptionsWindowOpen = new Flag(false);
     Flag loadOptionsWindowOpen = new Flag(false);
     Flag loaderWindowOpen = new Flag(false);
 
+    //toggle groups
     @FXML private ToggleGroup toolGroup;
+    @FXML private ToggleGroup renderGroup;
 
-    private final ToolModel3 toolModel = TheApp.getRootModel().getToolModel3();
+    //menu items
+    @FXML private CheckMenuItem d3GridCheckMenuItem;
+    @FXML private CheckMenuItem compassCheckMenuItem;
+    @FXML private CheckMenuItem halfResolutionCheckMenuItem;
+    @FXML private CheckMenuItem multiSamplingCheckMenuItem;
+
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        initToggleGroups();
+        bindCheckMenuItems();
+    }
 
+    private void initToggleGroups(){
         toolGroup.selectedToggleProperty().addListener((ob,o,n)->{
             if(n != null){
 
@@ -42,9 +67,33 @@ public class MenubarController implements Initializable {
                 }
             }
         });
+        renderGroup.selectedToggleProperty().addListener((ob,o,n)->{
+            if(n!=null && n.getUserData() != null){
 
+                switch ((String) n.getUserData()){
+                    case "Wireframe": toolModel.getIbrSettingsUIImpl().setRenderingType(RenderingType.WIREFRAME); return;
+                    case "Lambertian shaded":toolModel.getIbrSettingsUIImpl().setRenderingType(RenderingType.LAMBERTIAN_SHADED); return;
+                    case "Phong shaded":toolModel.getIbrSettingsUIImpl().setRenderingType(RenderingType.PHONG_SHADED); return;
+                    case "Solid textured":toolModel.getIbrSettingsUIImpl().setRenderingType(RenderingType.SOLID_TEXTURED); return;
+                    case "Lambertian textured":toolModel.getIbrSettingsUIImpl().setRenderingType(RenderingType.LAMBERTIAN_TEXTURED); return;
+                    case "Material shaded":toolModel.getIbrSettingsUIImpl().setRenderingType(RenderingType.MATERIAL_SHADED); return;
+                    case "Image-based rendering":toolModel.getIbrSettingsUIImpl().setRenderingType(RenderingType.IMAGE_BASED_RENDERING); return;
+                    case "None": toolModel.getIbrSettingsUIImpl().setRenderingType(RenderingType.NONE); return;
+                }
+            }
+        });
     }
 
+    private void bindCheckMenuItems(){
+        //value binding
+        d3GridCheckMenuItem.selectedProperty().bindBidirectional(getSettings().d3GridEnabledProperty());
+        compassCheckMenuItem.selectedProperty().bindBidirectional(getSettings().compassEnabledProperty());
+
+        //onAction Binding
+        halfResolutionCheckMenuItem.setOnAction(param-> getRenderable().setHalfResolution(halfResolutionCheckMenuItem.isSelected()));
+        multiSamplingCheckMenuItem.setOnAction(param -> getRenderable().setMultisampling(multiSamplingCheckMenuItem.isSelected()));
+
+    }
 
     //Menubar->File
 
@@ -58,6 +107,38 @@ public class MenubarController implements Initializable {
         }
     }
 
+    @FXML private void file_openProject(){
+        System.out.println("TODO: open project");
+    }
+
+    @FXML private void file_saveProject(){
+        System.out.println("TODO: save project");
+    }
+
+    @FXML private void file_saveProjectAs(){
+        System.out.println("TODO: save project as...");
+    }
+
+    @FXML private void file_closeProject(){
+        file_exit();
+    }
+
+    @FXML private void file_export_reSample(){
+        System.out.println("TODO: export re-sample...");
+    }
+    @FXML private void file_export_fidelityMetric(){
+        System.out.println("TODO: export fidelity metric...");
+    }
+    @FXML private void file_export_BTF(){
+        System.out.println("TODO: export BTF...");
+    }
+    @FXML private void file_export_Other(){
+        System.out.println("TODO: export Other...");
+    }
+    @FXML private void file_loadSettingsConfiguration(){
+        System.out.println("TODO: load settings configuration");
+    }
+
     @FXML private void file_loadOptions(){
 
         if(loadOptionsWindowOpen.get())return;
@@ -67,6 +148,9 @@ public class MenubarController implements Initializable {
             loadOptionsController.bind(toolModel.getLoadSettings());
         }
 
+    }
+    @FXML private void file_exit(){
+        System.exit(0);
     }
 
     @FXML private void shading_IBRSettings(){
@@ -80,12 +164,10 @@ public class MenubarController implements Initializable {
         }
     }
 
-    @FXML private void file_exit(){
-        System.exit(0);
-    }
 
 
-    public static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, String urlString){
+    //window helpers
+    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, String urlString){
         try {
             URL url = MenubarController.class.getClassLoader().getResource(urlString);
             if (url == null) {
@@ -109,7 +191,7 @@ public class MenubarController implements Initializable {
         }
     }
 
-    public static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, String urlString){
+    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, String urlString){
         try {
             URL url = MenubarController.class.getClassLoader().getResource(urlString);
             if (url == null) {
@@ -135,8 +217,7 @@ public class MenubarController implements Initializable {
             return null;
         }
     }
-
-    public static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, int width, int height, String urlString){
+    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, int width, int height, String urlString){
         try {
             URL url = MenubarController.class.getClassLoader().getResource(urlString);
             if (url == null) {
@@ -159,7 +240,7 @@ public class MenubarController implements Initializable {
             return null;
         }
     }
-    public static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, int width, int height, String urlString){
+    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, int width, int height, String urlString){
         try {
             URL url = MenubarController.class.getClassLoader().getResource(urlString);
             if (url == null) {

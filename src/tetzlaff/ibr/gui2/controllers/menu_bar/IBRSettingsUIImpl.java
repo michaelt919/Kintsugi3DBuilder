@@ -1,170 +1,202 @@
 package tetzlaff.ibr.gui2.controllers.menu_bar;//Created by alexk on 7/31/2017.
 
 import javafx.beans.property.*;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
 import tetzlaff.util.ShadingParameterMode;
 
-public class IBRSettingsUIImpl implements IBRSettings2{
+public class IBRSettingsUIImpl implements IBRSettings2 {
+    private final BooleanProperty occlusion = new SimpleBooleanProperty(true);
+    private final BooleanProperty fresnel = new SimpleBooleanProperty(false);
+    private final BooleanProperty pBRGeometricAttenuation = new SimpleBooleanProperty(false);
+    private final BooleanProperty relighting = new SimpleBooleanProperty(true);
+    private final BooleanProperty textures = new SimpleBooleanProperty(false);
+    private final BooleanProperty shadows = new SimpleBooleanProperty(false);
+    private final BooleanProperty visibleLights = new SimpleBooleanProperty(true);
+    private final FloatProperty gamma = new SimpleFloatProperty(2.2f);
+    private final FloatProperty weightExponent = new SimpleFloatProperty(16f);
+    private final FloatProperty isotropyFactor = new SimpleFloatProperty(0.5f);
+    private final FloatProperty occlusionBias = new SimpleFloatProperty(0.0025f);
+    private final ObjectProperty<ShadingParameterMode> weightMode = new SimpleObjectProperty<>(ShadingParameterMode.PER_PIXEL);
+    private final ObjectProperty<RenderingType> renderingType = new SimpleObjectProperty<>(RenderingType.IMAGE_BASED_RENDERING);
 
-    public final BooleanProperty occlusion = new SimpleBooleanProperty(true);
-    public final BooleanProperty iBR = new SimpleBooleanProperty(true);
-    public final BooleanProperty fresnel = new SimpleBooleanProperty(false);
-    public final BooleanProperty pBRGeometricAttenuation = new SimpleBooleanProperty(false);
-    public final BooleanProperty relighting = new SimpleBooleanProperty(true);
-    public final BooleanProperty textures = new SimpleBooleanProperty(false);
-    public final BooleanProperty shadows = new SimpleBooleanProperty(false);
-    public final BooleanProperty visibleLights = new SimpleBooleanProperty(true);
-    public final FloatProperty gamma = new SimpleFloatProperty(2.2f);
-    public final FloatProperty weightExponent = new SimpleFloatProperty(16f);
-    public final FloatProperty isotropyFactor = new SimpleFloatProperty(0.5f);
-    public final FloatProperty occlusionBias = new SimpleFloatProperty(0.0025f);
-    public final ObjectProperty<ShadingParameterMode> weightMode = new SimpleObjectProperty<>(ShadingParameterMode.PER_PIXEL);
-
-
+    private final BooleanProperty d3GridEnabled = new SimpleBooleanProperty(false);
+    private final BooleanProperty compassEnabled = new SimpleBooleanProperty(false);
     @Override
-    public float getGamma() {
-        return gamma.get();
+    public boolean isD3GridEnabled() {
+        return d3GridEnabled.get();
     }
-
+    public BooleanProperty d3GridEnabledProperty() {
+        return d3GridEnabled;
+    }
     @Override
-    public float getWeightExponent() {
-        return weightExponent.get();
+    public void setD3GridEnabled(boolean d3GridEnabled) {
+        this.d3GridEnabled.set(d3GridEnabled);
     }
-
     @Override
-    public float getIsotropyFactor() {
-        return isotropyFactor.get();
+    public boolean isCompassEnabled() {
+        return compassEnabled.get();
     }
-
+    public BooleanProperty compassEnabledProperty() {
+        return compassEnabled;
+    }
     @Override
-    public float getOcclusionBias() {
-        return occlusionBias.get();
+    public void setCompassEnabled(boolean compassEnabled) {
+        this.compassEnabled.set(compassEnabled);
     }
-
-    @Override
-    public ShadingParameterMode getWeightMode() {
-        return weightMode.get();
-    }
-
     @Override
     public boolean isOcclusionEnabled() {
         return occlusion.get();
     }
-
-    @Override
-    public boolean isIBREnabled() {
-        return iBR.get();
+    public BooleanProperty occlusionProperty() {
+        return occlusion;
     }
-
+    @Override
+    public void setOcclusionEnabled(boolean occlusion) {
+        this.occlusion.set(occlusion);
+    }
     @Override
     public boolean isFresnelEnabled() {
         return fresnel.get();
     }
-
+    public BooleanProperty fresnelProperty() {
+        return fresnel;
+    }
+    @Override
+    public void setFresnelEnabled(boolean fresnel) {
+        this.fresnel.set(fresnel);
+    }
     @Override
     public boolean isPBRGeometricAttenuationEnabled() {
         return pBRGeometricAttenuation.get();
     }
-
+    public BooleanProperty pBRGeometricAttenuationProperty() {
+        return pBRGeometricAttenuation;
+    }
+    @Override
+    public void setPBRGeometricAttenuationEnabled(boolean pBRGeometricAttenuation) {
+        this.pBRGeometricAttenuation.set(pBRGeometricAttenuation);
+    }
     @Override
     public boolean isRelightingEnabled() {
         return relighting.get();
     }
-
+    public BooleanProperty relightingProperty() {
+        return relighting;
+    }
+    @Override
+    public void setRelightingEnabled(boolean relighting) {
+        this.relighting.set(relighting);
+    }
     @Override
     public boolean areTexturesEnabled() {
         return textures.get();
     }
-
+    public BooleanProperty texturesProperty() {
+        return textures;
+    }
+    @Override
+    public void setTexturesEnabled(boolean textures) {
+        this.textures.set(textures);
+    }
     @Override
     public boolean areShadowsEnabled() {
         return shadows.get();
     }
-
+    public BooleanProperty shadowsProperty() {
+        return shadows;
+    }
+    @Override
+    public void setShadowsEnabled(boolean shadows) {
+        this.shadows.set(shadows);
+    }
     @Override
     public boolean areVisibleLightsEnabled() {
         return visibleLights.get();
     }
-
-
-
-
-
-    @Override @Deprecated
+    public BooleanProperty visibleLightsProperty() {
+        return visibleLights;
+    }
+    @Override
+    public void setVisibleLightsEnabled(boolean visibleLights) {
+        this.visibleLights.set(visibleLights);
+    }
+    @Override
+    public float getGamma() {
+        return gamma.get();
+    }
+    public FloatProperty gammaProperty() {
+        return gamma;
+    }
+    @Override
     public void setGamma(float gamma) {
-        throw new UnsupportedOperationException();
+        this.gamma.set(gamma);
     }
-
-    @Override @Deprecated
+    @Override
+    public float getWeightExponent() {
+        return weightExponent.get();
+    }
+    public FloatProperty weightExponentProperty() {
+        return weightExponent;
+    }
+    @Override
     public void setWeightExponent(float weightExponent) {
-
-        throw new UnsupportedOperationException();
+        this.weightExponent.set(weightExponent);
     }
-
-    @Override @Deprecated
+    @Override
+    public float getIsotropyFactor() {
+        return isotropyFactor.get();
+    }
+    public FloatProperty isotropyFactorProperty() {
+        return isotropyFactor;
+    }
+    @Override
     public void setIsotropyFactor(float isotropyFactor) {
-
-        throw new UnsupportedOperationException();
+        this.isotropyFactor.set(isotropyFactor);
     }
-
-    @Override @Deprecated
-    public void setOcclusionEnabled(boolean occlusionEnabled) {
-
-        throw new UnsupportedOperationException();
+    @Override
+    public float getOcclusionBias() {
+        return occlusionBias.get();
     }
-
-    @Override @Deprecated
+    public FloatProperty occlusionBiasProperty() {
+        return occlusionBias;
+    }
+    @Override
     public void setOcclusionBias(float occlusionBias) {
-
-        throw new UnsupportedOperationException();
+        this.occlusionBias.set(occlusionBias);
     }
-
-    @Override @Deprecated
-    public void setIBREnabled(boolean ibrEnabled) {
-
-        throw new UnsupportedOperationException();
+    @Override
+    public ShadingParameterMode getWeightMode() {
+        return weightMode.get();
     }
-
-    @Override @Deprecated
-    public void setFresnelEnabled(boolean fresnelEnabled) {
-
-        throw new UnsupportedOperationException();
+    public ObjectProperty<ShadingParameterMode> weightModeProperty() {
+        return weightMode;
     }
-
-    @Override @Deprecated
-    public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override @Deprecated
-    public void setRelightingEnabled(boolean relightingEnabled) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override @Deprecated
-    public void setTexturesEnabled(boolean texturesEnabled) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override @Deprecated
-    public void setShadowsEnabled(boolean shadowsEnabled) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override @Deprecated
-    public void setVisibleLightsEnabled(boolean visibleLightsEnabled) {
-
-        throw new UnsupportedOperationException();
-    }
-
-    @Override @Deprecated
+    @Override
     public void setWeightMode(ShadingParameterMode weightMode) {
-
-        throw new UnsupportedOperationException();
+        this.weightMode.set(weightMode);
+    }
+    @Override
+    public RenderingType getRenderingType() {
+        return renderingType.get();
+    }
+    public ObjectProperty<RenderingType> renderingTypeProperty() {
+        return renderingType;
+    }
+    @Override
+    public void setRenderingType(RenderingType renderingType) {
+        this.renderingType.set(renderingType);
+    }
+    @Override
+    public boolean isIBREnabled() {
+        return renderingType.getValue().equals(RenderingType.IMAGE_BASED_RENDERING);
+    }
+    @Override
+    public void setIBREnabled(boolean ibrEnabled) {
+        if(ibrEnabled){
+            renderingType.setValue(RenderingType.IMAGE_BASED_RENDERING);
+        }
+        else if(isIBREnabled()){//ibrEnabled == false
+            renderingType.setValue(RenderingType.NONE);
+        }
     }
 }
