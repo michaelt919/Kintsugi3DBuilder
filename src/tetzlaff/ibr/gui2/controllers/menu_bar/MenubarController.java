@@ -45,6 +45,13 @@ public class MenubarController implements Initializable {
     @FXML private CheckMenuItem compassCheckMenuItem;
     @FXML private CheckMenuItem halfResolutionCheckMenuItem;
     @FXML private CheckMenuItem multiSamplingCheckMenuItem;
+    @FXML private CheckMenuItem relightingCheckMenuItem;
+    @FXML private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
+    @FXML private CheckMenuItem shadowsCheckMenuItem;
+    @FXML private CheckMenuItem visibleLightsCheckMenuItem;
+    @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
+    @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
+
 
 
     @Override
@@ -88,11 +95,15 @@ public class MenubarController implements Initializable {
         //value binding
         d3GridCheckMenuItem.selectedProperty().bindBidirectional(getSettings().d3GridEnabledProperty());
         compassCheckMenuItem.selectedProperty().bindBidirectional(getSettings().compassEnabledProperty());
+        relightingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().relightingProperty());
+        shadowsCheckMenuItem.selectedProperty().bindBidirectional(getSettings().shadowsProperty());
+        visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleLightsProperty());
+        visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleCameraPoseProperty());
+        visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleSavedCameraPoseProperty());
 
         //onAction Binding
         halfResolutionCheckMenuItem.setOnAction(param-> getRenderable().setHalfResolution(halfResolutionCheckMenuItem.isSelected()));
         multiSamplingCheckMenuItem.setOnAction(param -> getRenderable().setMultisampling(multiSamplingCheckMenuItem.isSelected()));
-
     }
 
     //Menubar->File

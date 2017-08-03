@@ -15,10 +15,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class IBROptionsController implements Initializable{
-    @FXML private CheckBox relightingCheckBox;
     @FXML private CheckBox texturesCheckBox;
-    @FXML private CheckBox shadowsCheckBox;
-    @FXML private CheckBox visibleLightsCheckBox;
     @FXML private CheckBox fresnelCheckBox;
     @FXML private CheckBox occlusionCheckBox;
     @FXML private CheckBox geometricAttenuationCheckBox;
@@ -67,10 +64,7 @@ public class IBROptionsController implements Initializable{
 
     public void bind(IBRSettingsUIImpl ibrSettingsUIImpl){
 
-        relightingCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.relightingProperty());
         texturesCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.texturesProperty());
-        shadowsCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.shadowsProperty());
-        visibleLightsCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.visibleLightsProperty());
         fresnelCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.fresnelProperty());
         occlusionCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.occlusionProperty());
         geometricAttenuationCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.pBRGeometricAttenuationProperty());
@@ -86,10 +80,7 @@ public class IBROptionsController implements Initializable{
 
         System.out.println("unbind");
 
-        relightingCheckBox.selectedProperty().unbindBidirectional(settingCash.relightingProperty());
         texturesCheckBox.selectedProperty().unbindBidirectional(settingCash.texturesProperty());
-        shadowsCheckBox.selectedProperty().unbindBidirectional(settingCash.shadowsProperty());
-        visibleLightsCheckBox.selectedProperty().unbindBidirectional(settingCash.visibleLightsProperty());
         fresnelCheckBox.selectedProperty().unbindBidirectional(settingCash.fresnelProperty());
         occlusionCheckBox.selectedProperty().unbindBidirectional(settingCash.occlusionProperty());
         geometricAttenuationCheckBox.selectedProperty().unbindBidirectional(settingCash.pBRGeometricAttenuationProperty());

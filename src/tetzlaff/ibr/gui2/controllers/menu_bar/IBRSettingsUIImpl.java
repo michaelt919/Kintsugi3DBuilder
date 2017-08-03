@@ -1,6 +1,7 @@
 package tetzlaff.ibr.gui2.controllers.menu_bar;//Created by alexk on 7/31/2017.
 
 import javafx.beans.property.*;
+import javafx.fxml.FXML;
 import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
 import tetzlaff.util.ShadingParameterMode;
 
@@ -12,6 +13,8 @@ public class IBRSettingsUIImpl implements IBRSettings2 {
     private final BooleanProperty textures = new SimpleBooleanProperty(false);
     private final BooleanProperty shadows = new SimpleBooleanProperty(false);
     private final BooleanProperty visibleLights = new SimpleBooleanProperty(true);
+    private final BooleanProperty visibleCameraPose = new SimpleBooleanProperty(false);
+    private final BooleanProperty visibleSavedCameraPose = new SimpleBooleanProperty(false);
     private final FloatProperty gamma = new SimpleFloatProperty(2.2f);
     private final FloatProperty weightExponent = new SimpleFloatProperty(16f);
     private final FloatProperty isotropyFactor = new SimpleFloatProperty(0.5f);
@@ -21,6 +24,28 @@ public class IBRSettingsUIImpl implements IBRSettings2 {
 
     private final BooleanProperty d3GridEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty compassEnabled = new SimpleBooleanProperty(false);
+    @Override
+    public boolean isVisibleCameraPose() {
+        return visibleCameraPose.get();
+    }
+    public BooleanProperty visibleCameraPoseProperty() {
+        return visibleCameraPose;
+    }
+    @Override
+    public void setVisibleCameraPose(boolean visibleCameraPose) {
+        this.visibleCameraPose.set(visibleCameraPose);
+    }
+    @Override
+    public boolean isVisibleSavedCameraPose() {
+        return visibleSavedCameraPose.get();
+    }
+    public BooleanProperty visibleSavedCameraPoseProperty() {
+        return visibleSavedCameraPose;
+    }
+    @Override
+    public void setVisibleSavedCameraPose(boolean visibleSavedCameraPose) {
+        this.visibleSavedCameraPose.set(visibleSavedCameraPose);
+    }
     @Override
     public boolean isD3GridEnabled() {
         return d3GridEnabled.get();

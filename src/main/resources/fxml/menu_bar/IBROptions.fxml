@@ -13,19 +13,7 @@
 <?import javafx.scene.text.Text?>
 
 <GridPane fx:id="root" hgap="15.0" vgap="15.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.menu_bar.IBROptionsController">
-    <CheckBox fx:id="relightingCheckBox" mnemonicParsing="false" text="Relighting" GridPane.columnSpan="2147483647" GridPane.rowIndex="2">
-      <font>
-         <Font size="24.0" />
-      </font></CheckBox>
     <CheckBox fx:id="texturesCheckBox" mnemonicParsing="false" text="Textures" GridPane.columnSpan="2147483647" GridPane.rowIndex="3">
-      <font>
-         <Font size="24.0" />
-      </font></CheckBox>
-    <CheckBox fx:id="shadowsCheckBox" mnemonicParsing="false" text="Shadows" GridPane.columnSpan="2147483647" GridPane.rowIndex="4">
-      <font>
-         <Font size="24.0" />
-      </font></CheckBox>
-    <CheckBox fx:id="visibleLightsCheckBox" mnemonicParsing="false" text="Visible lights" GridPane.columnSpan="2147483647" GridPane.rowIndex="5">
       <font>
          <Font size="24.0" />
       </font></CheckBox>
