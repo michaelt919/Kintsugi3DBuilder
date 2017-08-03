@@ -153,7 +153,7 @@ public class SubLightModel3 implements ControllableSubLightModel {
     @Override
     public Vector3 getColor() {
         Color color = cam().getColor();
-        Vector3 out = new Vector3((float) color.getRed(), (float) color.getBlue(), (float) color.getGreen());
+        Vector3 out = new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue());
 //        System.out.println("Light Color: " + out);
         return out.times((float) cam().getIntensity());
     }
