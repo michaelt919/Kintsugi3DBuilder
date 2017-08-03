@@ -2,34 +2,22 @@ package kautzTesting;//Created by alexk on 7/19/2017.
 
 
 import javafx.stage.Window;
+import javafx.util.converter.DoubleStringConverter;
+import javafx.util.converter.FloatStringConverter;
+import javafx.util.converter.NumberStringConverter;
 
 public class Main {
     public static void main(String[] args) {
 
-        System.out.println("Double max:\t" + Double.MAX_VALUE);
-        System.out.println("Float max:\t" + Float.MAX_VALUE);
-        System.out.println("Float min:\t" + Float.MIN_VALUE);
-        System.out.println("Double min:\t" + Double.MIN_VALUE);
+        NumberStringConverter nsc = new NumberStringConverter();
+        DoubleStringConverter dsc = new DoubleStringConverter();
+        FloatStringConverter  fsc = new FloatStringConverter();
 
-        Double big = 7.0*Math.pow(10.0,50.0);
+        System.out.println(nsc.toString(0.0025));
+        System.out.println(dsc.toString(0.0025));
+        System.out.println(fsc.toString(0.0025f));
 
-        System.out.println("Big double value: " + big.doubleValue());
-        System.out.println("Big float value: " + big.floatValue());
-        System.out.println("Big int value: " + big.intValue());
-
-        Boolean bob = true;
-
-        House house = new House();
-
-        int i;
-        char c = 'g';
-        try {
-            i = house.chartoint(c);
-        } catch (Exception e) {
-            i = -1;
-        }
-
-        System.out.println("i: " + i);
+        System.out.println(fsc.fromString(""));
 
     }
 

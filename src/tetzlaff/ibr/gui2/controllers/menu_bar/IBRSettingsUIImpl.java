@@ -3,6 +3,7 @@ package tetzlaff.ibr.gui2.controllers.menu_bar;//Created by alexk on 7/31/2017.
 import javafx.beans.property.*;
 import javafx.fxml.FXML;
 import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
+import tetzlaff.ibr.util.StaticHouse;
 import tetzlaff.util.ShadingParameterMode;
 
 public class IBRSettingsUIImpl implements IBRSettings2 {
@@ -15,10 +16,10 @@ public class IBRSettingsUIImpl implements IBRSettings2 {
     private final BooleanProperty visibleLights = new SimpleBooleanProperty(true);
     private final BooleanProperty visibleCameraPose = new SimpleBooleanProperty(false);
     private final BooleanProperty visibleSavedCameraPose = new SimpleBooleanProperty(false);
-    private final FloatProperty gamma = new SimpleFloatProperty(2.2f);
-    private final FloatProperty weightExponent = new SimpleFloatProperty(16f);
-    private final FloatProperty isotropyFactor = new SimpleFloatProperty(0.5f);
-    private final FloatProperty occlusionBias = new SimpleFloatProperty(0.0025f);
+    private final FloatProperty gamma = StaticHouse.bound(1,5, new SimpleFloatProperty(2.2f));
+    private final FloatProperty weightExponent = StaticHouse.bound(1,100,  new SimpleFloatProperty(16f));
+    private final FloatProperty isotropyFactor = StaticHouse.bound(0, 1,  new SimpleFloatProperty(0.0f));
+    private final FloatProperty occlusionBias = StaticHouse.bound(0,0.1, new SimpleFloatProperty(0.0025f));
     private final ObjectProperty<ShadingParameterMode> weightMode = new SimpleObjectProperty<>(ShadingParameterMode.PER_PIXEL);
     private final ObjectProperty<RenderingType> renderingType = new SimpleObjectProperty<>(RenderingType.IMAGE_BASED_RENDERING);
     private final BooleanProperty d3GridEnabled = new SimpleBooleanProperty(false);

@@ -4,9 +4,10 @@ import javafx.util.StringConverter;
 
 public class SafeNumberStringConverterPow10 extends StringConverter<Number>{
     private final SafeNumberStringConverter safeConverter;
-
+    private Number def;
     public SafeNumberStringConverterPow10(Number defaultValue) {
-        safeConverter = new SafeNumberStringConverter(Math.log10(defaultValue.doubleValue()));
+        def = Math.log10(defaultValue.doubleValue());
+        safeConverter = new SafeNumberStringConverter(def);
     }
 
     @Override
@@ -18,6 +19,7 @@ public class SafeNumberStringConverterPow10 extends StringConverter<Number>{
     @Override
     public Number fromString(String string) {
         Number raw = safeConverter.fromString(string);
+        if(raw.doubleValue() == 0.0) return def;
         return Math.log10(raw.doubleValue());
     }
 }
