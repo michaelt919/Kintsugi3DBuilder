@@ -306,7 +306,7 @@ public class EnvironmentMap {
 
     double invResolution = 1.0 / size;
 
-    // U and V are the -1..1 texture coordinate on the current face.
+    // StaticHouse and V are the -1..1 texture coordinate on the current face.
     // Get projected area for this texel
     double x0 = u - invResolution;
     double y0 = v - invResolution;

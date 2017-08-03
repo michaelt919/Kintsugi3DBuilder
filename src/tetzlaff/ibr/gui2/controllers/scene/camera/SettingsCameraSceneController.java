@@ -13,8 +13,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
-import tetzlaff.ibr.util.U;
-import tetzlaff.util.Math2;
+import tetzlaff.ibr.util.StaticHouse;
 import tetzlaff.util.SafeNumberStringConverter;
 import tetzlaff.util.SafeNumberStringConverterPow10;
 
@@ -53,9 +52,9 @@ private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverter
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        U.wrap(-180, 180, azimuthTextField);
-        U.bound(-90, 90, inclinationTextField);
-        U.wrap(-180, 180, twistTextField);
+        StaticHouse.wrap(-180, 180, azimuthTextField);
+        StaticHouse.bound(-90, 90, inclinationTextField);
+        StaticHouse.wrap(-180, 180, twistTextField);
 
 
 
