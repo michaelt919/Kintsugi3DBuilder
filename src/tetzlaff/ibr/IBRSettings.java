@@ -156,5 +156,25 @@ public class IBRSettings implements IBRSettings2 {
 	public void setCompassEnabled(boolean compassEnabled) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override @Deprecated
+	public boolean isVisibleCameraPose() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override @Deprecated
+	public boolean isVisibleSavedCameraPose() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override @Deprecated
+	public void setVisibleCameraPose(boolean visibleCameraPose) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override @Deprecated
+	public void setVisibleSavedCameraPose(boolean visibleSavedCameraPose) {
+		throw new UnsupportedOperationException();
+	}
 }
 

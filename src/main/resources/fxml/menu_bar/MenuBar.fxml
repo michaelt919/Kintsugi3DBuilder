@@ -34,14 +34,12 @@
          <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling"/>
       </Menu>
       <Menu mnemonicParsing="false" text="Lighting">
-         <items>
-            <CheckMenuItem mnemonicParsing="false" selected="true" text="Relighting" />
-            <CheckMenuItem mnemonicParsing="false" selected="true" text="Environment mapping" />
-            <CheckMenuItem mnemonicParsing="false" text="Shadows" />
-            <CheckMenuItem mnemonicParsing="false" selected="true" text="Show light sources" />
-            <CheckMenuItem mnemonicParsing="false" text="Show camera poses for photographs" />
-            <CheckMenuItem mnemonicParsing="false" text="Show saved camera poses" />
-         </items>
+         <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" selected="true" text="Relighting"/>
+         <CheckMenuItem fx:id="environmentMappingCheckMenuItem" mnemonicParsing="false" selected="true" text="Environment mapping"/>
+         <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" text="Shadows"/>
+         <CheckMenuItem fx:id="visibleLightsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light sources"/>
+         <CheckMenuItem fx:id="visibleCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show camera poses for photographs"/>
+         <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show saved camera poses"/>
       </Menu>
       <Menu mnemonicParsing="false" text="Shading">
          <fx:define>

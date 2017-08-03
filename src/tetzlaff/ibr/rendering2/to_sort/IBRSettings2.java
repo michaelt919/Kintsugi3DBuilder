@@ -16,6 +16,8 @@ public interface IBRSettings2 {
     public boolean isRelightingEnabled();
     public boolean isD3GridEnabled();
     public boolean isCompassEnabled();
+    public boolean isVisibleCameraPose();
+    public boolean isVisibleSavedCameraPose();
     public boolean areTexturesEnabled();
     public boolean areShadowsEnabled();
     public boolean areVisibleLightsEnabled();
@@ -31,6 +33,8 @@ public interface IBRSettings2 {
     public void setRelightingEnabled(boolean relightingEnabled);
     public void setD3GridEnabled(boolean d3GridEnabled);
     public void setCompassEnabled(boolean compassEnabled);
+    public void setVisibleCameraPose(boolean visibleCameraPose);
+    public void setVisibleSavedCameraPose(boolean visibleSavedCameraPose);
     public void setTexturesEnabled(boolean texturesEnabled);
     public void setShadowsEnabled(boolean shadowsEnabled);
     public void setVisibleLightsEnabled(boolean visibleLightsEnabled);
