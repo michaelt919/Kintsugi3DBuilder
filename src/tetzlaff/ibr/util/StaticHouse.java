@@ -32,7 +32,7 @@ public class StaticHouse {
 
 
 
-    private static final String DOUBLE_REG_EXP = "-?(0|([1-9]\\d{0,5}))?(\\.\\d*)?";
+    private static final String DOUBLE_REG_EXP = "-?(0|([1-9]\\d{0,7}))?(\\.\\d*)?";
 
     public static TextField wrap(double min, double max, TextField textField){
         textField.setTextFormatter(new TextFormatter<Double>(change -> {

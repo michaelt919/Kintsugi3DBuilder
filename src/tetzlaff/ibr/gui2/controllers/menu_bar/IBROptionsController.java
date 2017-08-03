@@ -9,6 +9,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import tetzlaff.ibr.util.Flag;
+import tetzlaff.ibr.util.StaticHouse;
+import tetzlaff.util.SafeFloatStringConverter;
+import tetzlaff.util.SafeNumberStringConverter;
 import tetzlaff.util.ShadingParameterMode;
 
 import java.net.URL;
@@ -30,6 +33,7 @@ public class IBROptionsController implements Initializable{
     @FXML private GridPane root;
 
     private IBRSettingsUIImpl settingCash;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
@@ -44,19 +48,13 @@ public class IBROptionsController implements Initializable{
                 return ShadingParameterMode.valueOf(string);
             }
         });
-
         weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
 
-    }
 
-    private void setUpSlider(Slider slider, float valueStart){
-//        slider.set
-    }
-
-    private void preBindSlidersSetup(float gamaStart, float weightStart, float isoStart, float occStart){
-
-
-
+        StaticHouse.bound(1,5, gamaTextField);
+        StaticHouse.bound(1,100, weightExponentTextField);
+        StaticHouse.bound(0,1, isotropyFactorTextField);
+        StaticHouse.bound(0, 0.1, occlusionBiasTextField);
 
     }
 
@@ -66,8 +64,20 @@ public class IBROptionsController implements Initializable{
         texturesCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.texturesProperty());
         occlusionCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.occlusionProperty());
         geometricAttenuationCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.pBRGeometricAttenuationProperty());
-
         weightModeChoiceBox.valueProperty().bindBidirectional(ibrSettingsUIImpl.weightModeProperty());
+
+        gamaSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.gammaProperty());
+        gamaTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.gammaProperty(), new SafeFloatStringConverter(2.2f));
+
+        weightExponentSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.weightExponentProperty());
+        weightExponentTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.weightExponentProperty(), new SafeFloatStringConverter(16f));
+
+        isotropyFactorSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.isotropyFactorProperty());
+        isotropyFactorTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.isotropyFactorProperty(), new SafeFloatStringConverter(0f));
+
+        occlusionBiasSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.occlusionBiasProperty());
+        occlusionBiasTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.occlusionBiasProperty(), new SafeFloatStringConverter(0.0025f));
+
 
         settingCash = ibrSettingsUIImpl;
         root.getScene().getWindow().setOnCloseRequest(param->unbind());
@@ -83,6 +93,18 @@ public class IBROptionsController implements Initializable{
         geometricAttenuationCheckBox.selectedProperty().unbindBidirectional(settingCash.pBRGeometricAttenuationProperty());
 
         weightModeChoiceBox.valueProperty().unbindBidirectional(settingCash.weightModeProperty());
+
+        gamaSlider.valueProperty().unbindBidirectional(settingCash.gammaProperty());
+        gamaTextField.textProperty().unbindBidirectional(settingCash.gammaProperty());
+
+        weightExponentSlider.valueProperty().unbindBidirectional(settingCash.weightExponentProperty());
+        weightExponentTextField.textProperty().unbindBidirectional(settingCash.weightExponentProperty());
+
+        isotropyFactorSlider.valueProperty().unbindBidirectional(settingCash.isotropyFactorProperty());
+        isotropyFactorTextField.textProperty().unbindBidirectional(settingCash.occlusionBiasProperty());
+
+        occlusionBiasSlider.valueProperty().unbindBidirectional(settingCash.occlusionBiasProperty());
+        occlusionBiasTextField.textProperty().unbindBidirectional(settingCash.occlusionBiasProperty());
 
     }
 }
