@@ -18,6 +18,7 @@ public class SafeNumberStringConverter extends StringConverter<Number>{
 
     @Override
     public Number fromString(String string) {
+        if(string.equals(""))return defaultValue;
         try {
             return nsc.fromString(string);
         } catch (RuntimeException re){
