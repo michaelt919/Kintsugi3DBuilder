@@ -14,14 +14,14 @@
          <Insets bottom="5.0" top="5.0" />
       </VBox.margin>
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></CheckBox>
     <CheckBox fx:id="mipmaps" mnemonicParsing="false" selected="true" text="Use mipmaps">
       <VBox.margin>
          <Insets bottom="5.0" top="5.0" />
       </VBox.margin>
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></CheckBox>
    <Separator prefWidth="200.0" />
     <CheckBox fx:id="depthImages" mnemonicParsing="false" selected="true" text="Generate depth images">
@@ -29,23 +29,23 @@
          <Insets bottom="5.0" top="5.0" />
       </VBox.margin>
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></CheckBox>
     <Text text="Width">
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></Text>
     <TextField fx:id="depthWidth" text="1024">
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></TextField>
     <Text text="Height">
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></Text>
    <TextField fx:id="depthHeight" text="1024">
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></TextField>
    <opaqueInsets>
       <Insets />

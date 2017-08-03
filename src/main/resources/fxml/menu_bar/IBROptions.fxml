@@ -15,40 +15,48 @@
 <GridPane fx:id="root" hgap="15.0" vgap="15.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.menu_bar.IBROptionsController">
     <CheckBox fx:id="texturesCheckBox" mnemonicParsing="false" text="Textures" GridPane.columnSpan="2147483647" GridPane.rowIndex="3">
       <font>
-         <Font size="24.0" />
-      </font></CheckBox>
-    <CheckBox fx:id="fresnelCheckBox" mnemonicParsing="false" text="Fresnel" GridPane.columnSpan="2147483647" GridPane.rowIndex="6">
-      <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></CheckBox>
     <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" text="Occlusion" GridPane.columnSpan="2147483647" GridPane.rowIndex="7">
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></CheckBox>
     <CheckBox fx:id="geometricAttenuationCheckBox" mnemonicParsing="false" text="Geometric attenuation" GridPane.columnSpan="2147483647" GridPane.rowIndex="8">
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></CheckBox>
     <Text text="Gamma: " GridPane.halignment="RIGHT" GridPane.rowIndex="10">
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></Text>
     <Text text="Weight exponent: " GridPane.halignment="RIGHT" GridPane.rowIndex="11">
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></Text>
     <Text text="Isotropy factor: " GridPane.halignment="RIGHT" GridPane.rowIndex="12">
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></Text>
     <Text text="Occlusion bias: " GridPane.halignment="RIGHT" GridPane.rowIndex="13">
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></Text>
-    <TextField fx:id="occlusionBiasTextField" GridPane.columnIndex="1" GridPane.rowIndex="13" />
-    <TextField fx:id="isotropyFactorTextField" GridPane.columnIndex="1" GridPane.rowIndex="12" />
-    <TextField fx:id="weightExponentTextField" GridPane.columnIndex="1" GridPane.rowIndex="11" />
-    <TextField fx:id="gamaTextField" GridPane.columnIndex="1" GridPane.rowIndex="10" />
+    <TextField fx:id="occlusionBiasTextField" GridPane.columnIndex="1" GridPane.rowIndex="13">
+      <font>
+         <Font size="18.0" />
+      </font></TextField>
+    <TextField fx:id="isotropyFactorTextField" GridPane.columnIndex="1" GridPane.rowIndex="12">
+      <font>
+         <Font size="18.0" />
+      </font></TextField>
+    <TextField fx:id="weightExponentTextField" GridPane.columnIndex="1" GridPane.rowIndex="11">
+      <font>
+         <Font size="18.0" />
+      </font></TextField>
+    <TextField fx:id="gamaTextField" GridPane.columnIndex="1" GridPane.rowIndex="10">
+      <font>
+         <Font size="18.0" />
+      </font></TextField>
     <Slider fx:id="gamaSlider" GridPane.columnIndex="2" GridPane.rowIndex="10" />
     <Slider fx:id="weightExponentSlider" GridPane.columnIndex="2" GridPane.rowIndex="11" />
     <Slider fx:id="isotropyFactorSlider" GridPane.columnIndex="2" GridPane.rowIndex="12" />
@@ -56,7 +64,7 @@
    <ChoiceBox fx:id="weightModeChoiceBox" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="14" />
    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Weight mode: " GridPane.halignment="RIGHT" GridPane.rowIndex="14">
       <font>
-         <Font size="24.0" />
+         <Font size="18.0" />
       </font></Text>
    <Separator prefWidth="200.0" GridPane.columnSpan="2147483647" GridPane.rowIndex="9" />
    <padding>
