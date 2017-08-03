@@ -52,6 +52,10 @@ public class MenubarController implements Initializable {
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
 
+    @FXML private CheckMenuItem materialsForIBRCheckMenuItem;
+    @FXML private CheckMenuItem phyMaskingCheckMenuItem;
+    @FXML private CheckMenuItem fresnelEffectCheckMenuItem;
+
 
 
     @Override
@@ -100,6 +104,12 @@ public class MenubarController implements Initializable {
         visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleLightsProperty());
         visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleCameraPoseProperty());
         visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleSavedCameraPoseProperty());
+
+        materialsForIBRCheckMenuItem.selectedProperty().bindBidirectional(getSettings().materialsForIBRProperty());
+        phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().phyMaskingProperty());
+        fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(getSettings().fresnelProperty());
+
+
 
         //onAction Binding
         halfResolutionCheckMenuItem.setOnAction(param-> getRenderable().setHalfResolution(halfResolutionCheckMenuItem.isSelected()));

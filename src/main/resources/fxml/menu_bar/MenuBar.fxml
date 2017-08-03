@@ -55,9 +55,9 @@
          <RadioMenuItem selected="true" toggleGroup="$renderGroup" mnemonicParsing="false" text="Image-based rendering" userData="Image-based rendering"/>
          <SeparatorMenuItem mnemonicParsing="false"/>
          <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="IBR settings…"/>
-         <CheckMenuItem mnemonicParsing="false" text="Use materials for IBR"/>
-         <CheckMenuItem mnemonicParsing="false" text="Physically based masking/shadowing"/>
-         <CheckMenuItem mnemonicParsing="false" text="Fresnel effect"/>
+         <CheckMenuItem fx:id="materialsForIBRCheckMenuItem" mnemonicParsing="false" text="Use materials for IBR"/>
+         <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing"/>
+         <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect"/>
       </Menu>
       <Menu mnemonicParsing="false" text="Tools">
          <fx:define>

@@ -176,5 +176,25 @@ public class IBRSettings implements IBRSettings2 {
 	public void setVisibleSavedCameraPose(boolean visibleSavedCameraPose) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override @Deprecated
+	public boolean isMaterialsForIBR() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override @Deprecated
+	public boolean isPhyMasking() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override @Deprecated
+	public void setMaterialsForIBR(boolean materialsForIBR) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override @Deprecated
+	public void setPhyMasking(boolean phyMasking) {
+		throw new UnsupportedOperationException();
+	}
 }
 

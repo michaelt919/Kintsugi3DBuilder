@@ -18,6 +18,8 @@ public interface IBRSettings2 {
     public boolean isCompassEnabled();
     public boolean isVisibleCameraPose();
     public boolean isVisibleSavedCameraPose();
+    public boolean isMaterialsForIBR();
+    public boolean isPhyMasking();
     public boolean areTexturesEnabled();
     public boolean areShadowsEnabled();
     public boolean areVisibleLightsEnabled();
@@ -35,6 +37,8 @@ public interface IBRSettings2 {
     public void setCompassEnabled(boolean compassEnabled);
     public void setVisibleCameraPose(boolean visibleCameraPose);
     public void setVisibleSavedCameraPose(boolean visibleSavedCameraPose);
+    public void setMaterialsForIBR(boolean materialsForIBR);
+    public void setPhyMasking(boolean phyMasking);
     public void setTexturesEnabled(boolean texturesEnabled);
     public void setShadowsEnabled(boolean shadowsEnabled);
     public void setVisibleLightsEnabled(boolean visibleLightsEnabled);

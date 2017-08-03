@@ -16,7 +16,6 @@ import java.util.ResourceBundle;
 
 public class IBROptionsController implements Initializable{
     @FXML private CheckBox texturesCheckBox;
-    @FXML private CheckBox fresnelCheckBox;
     @FXML private CheckBox occlusionCheckBox;
     @FXML private CheckBox geometricAttenuationCheckBox;
     @FXML private TextField gamaTextField;
@@ -65,7 +64,6 @@ public class IBROptionsController implements Initializable{
     public void bind(IBRSettingsUIImpl ibrSettingsUIImpl){
 
         texturesCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.texturesProperty());
-        fresnelCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.fresnelProperty());
         occlusionCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.occlusionProperty());
         geometricAttenuationCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.pBRGeometricAttenuationProperty());
 
@@ -81,7 +79,6 @@ public class IBROptionsController implements Initializable{
         System.out.println("unbind");
 
         texturesCheckBox.selectedProperty().unbindBidirectional(settingCash.texturesProperty());
-        fresnelCheckBox.selectedProperty().unbindBidirectional(settingCash.fresnelProperty());
         occlusionCheckBox.selectedProperty().unbindBidirectional(settingCash.occlusionProperty());
         geometricAttenuationCheckBox.selectedProperty().unbindBidirectional(settingCash.pBRGeometricAttenuationProperty());
 

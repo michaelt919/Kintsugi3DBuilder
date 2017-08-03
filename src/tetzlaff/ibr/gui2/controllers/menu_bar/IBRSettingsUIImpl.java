@@ -21,9 +21,35 @@ public class IBRSettingsUIImpl implements IBRSettings2 {
     private final FloatProperty occlusionBias = new SimpleFloatProperty(0.0025f);
     private final ObjectProperty<ShadingParameterMode> weightMode = new SimpleObjectProperty<>(ShadingParameterMode.PER_PIXEL);
     private final ObjectProperty<RenderingType> renderingType = new SimpleObjectProperty<>(RenderingType.IMAGE_BASED_RENDERING);
-
     private final BooleanProperty d3GridEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty compassEnabled = new SimpleBooleanProperty(false);
+    private final BooleanProperty materialsForIBR = new SimpleBooleanProperty(false);
+    private final BooleanProperty phyMasking = new SimpleBooleanProperty(false);
+    @Override
+    public boolean isMaterialsForIBR() {
+        return materialsForIBR.get();
+    }
+
+    public BooleanProperty materialsForIBRProperty() {
+        return materialsForIBR;
+    }
+    @Override
+    public void setMaterialsForIBR(boolean materialsForIBR) {
+        this.materialsForIBR.set(materialsForIBR);
+    }
+    @Override
+    public boolean isPhyMasking() {
+        return phyMasking.get();
+    }
+
+    public BooleanProperty phyMaskingProperty() {
+        return phyMasking;
+    }
+    @Override
+    public void setPhyMasking(boolean phyMasking) {
+        this.phyMasking.set(phyMasking);
+    }
+
     @Override
     public boolean isVisibleCameraPose() {
         return visibleCameraPose.get();
