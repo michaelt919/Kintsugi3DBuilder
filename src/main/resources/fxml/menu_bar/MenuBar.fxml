@@ -78,15 +78,6 @@
          <RadioMenuItem mnemonicParsing="false" text="Rotate Environment tool" toggleGroup="$toolGroup" />
          <SeparatorMenuItem mnemonicParsing="false" />
          <RadioMenuItem mnemonicParsing="false" text="Drag Light Tool" toggleGroup="$toolGroup" />
-         <SeparatorMenuItem mnemonicParsing="false" />
-         <SeparatorMenuItem mnemonicParsing="false" />
-         <CheckMenuItem mnemonicParsing="false" text="Orthographic view" />
-         <MenuItem mnemonicParsing="false" text="Reset view" />
-         <Menu mnemonicParsing="false" text="Center of rotation">
-            <RadioMenuItem mnemonicParsing="false" text="Use viewport center" />
-            <RadioMenuItem mnemonicParsing="false" text="Use model centroid" />
-            <MenuItem mnemonicParsing="false" text="Select center of rotation" />
-         </Menu>
       </Menu>
       <Menu mnemonicParsing="false" text="Windows">
          <CheckMenuItem mnemonicParsing="false" selected="true" text="Scene" />
