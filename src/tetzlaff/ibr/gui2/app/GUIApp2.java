@@ -9,6 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class GUIApp2 extends Application{
 
@@ -53,13 +54,16 @@ public class GUIApp2 extends Application{
         final double librarySection = 0.2;
         final double sceneSection = 0.3;
 
-        final double extra = 6;
+        final double extra = 0;
 
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
         menuBarStage.setX(primaryScreenBounds.getMinX()-4);
         menuBarStage.setY(primaryScreenBounds.getMinY());
         menuBarStage.setWidth(primaryScreenBounds.getWidth()+8);
+
+        menuBarStage.initStyle(StageStyle.UNDECORATED);
+
         menuBarStage.show();
         double menuBarHeight = menuBarStage.getHeight();
 
@@ -73,6 +77,8 @@ public class GUIApp2 extends Application{
         sceneStage.setWidth(primaryScreenBounds.getWidth()*sceneSection + 2*extra);
         sceneStage.setY(primaryScreenBounds.getMinY() + menuBarHeight - extra);
         sceneStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight + 2*extra);
+
+        sceneStage.initStyle(StageStyle.UNDECORATED);
         sceneStage.show();
 
         menuBarStage.hide();//this is just to have the menu bar have focus on the application starts, only aesthetic value.

@@ -4,11 +4,13 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 
 /*
 I general utilities class.
  */
-public class U {
+public class StaticHouse {
 //    this method takes in a double property, and prevents it from reaching outside of its bound.
     public static <H extends Property<Number>> H wrap(double min, double max, H property){
        property.addListener((observable, oldValue, newValue) -> {
@@ -110,7 +112,9 @@ public class U {
 
     }
 
-
+    public static void naturalClose(Window window){
+        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
+    }
 
 
 }

@@ -6,6 +6,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.gui2.controllers.scene.lights.LightGroupSetting;
 import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
 import tetzlaff.mvc.models.ControllableLightModel;
+import tetzlaff.mvc.models.ControllableSubLightModel;
 
 public class LightModel3 extends ControllableLightModel {
 
@@ -101,5 +102,11 @@ public class LightModel3 extends ControllableLightModel {
 //        }
 
         return out;
+    }
+
+
+    @Override
+    public ControllableSubLightModel getLight(int i) {
+        return subLightModel3s[i];
     }
 }

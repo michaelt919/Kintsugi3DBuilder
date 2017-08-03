@@ -11,6 +11,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.BorderPane;
@@ -19,7 +20,10 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import tetzlaff.ibr.rendering2.ToolModel3;
+import tetzlaff.ibr.util.Flag;
+import tetzlaff.ibr.util.StaticHouse;
 
 public class LoaderController implements Initializable{
 
@@ -128,7 +132,7 @@ public class LoaderController implements Initializable{
     }
 
     private void close(){
-        getStage().close();
+        StaticHouse.naturalClose(root.getScene().getWindow());
     }
 
 

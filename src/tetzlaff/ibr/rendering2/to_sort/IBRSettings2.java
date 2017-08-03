@@ -1,5 +1,6 @@
 package tetzlaff.ibr.rendering2.to_sort;//Created by alexk on 7/31/2017.
 
+import tetzlaff.ibr.gui2.controllers.menu_bar.RenderingType;
 import tetzlaff.util.ShadingParameterMode;
 
 public interface IBRSettings2 {
@@ -13,35 +14,26 @@ public interface IBRSettings2 {
     public boolean isFresnelEnabled();
     public boolean isPBRGeometricAttenuationEnabled();
     public boolean isRelightingEnabled();
+    public boolean isD3GridEnabled();
+    public boolean isCompassEnabled();
     public boolean areTexturesEnabled();
     public boolean areShadowsEnabled();
     public boolean areVisibleLightsEnabled();
-
-
-    @Deprecated
-    public void setGamma(float gamma) ;
-    @Deprecated
-    public void setWeightExponent(float weightExponent) ;
-    @Deprecated
-    public void setIsotropyFactor(float isotropyFactor) ;
-    @Deprecated
-    public void setOcclusionEnabled(boolean occlusionEnabled) ;
-    @Deprecated
-    public void setOcclusionBias(float occlusionBias) ;
-    @Deprecated
-    public void setIBREnabled(boolean ibrEnabled) ;
-    @Deprecated
-    public void setFresnelEnabled(boolean fresnelEnabled) ;
-    @Deprecated
-    public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled) ;
-    @Deprecated
-    public void setRelightingEnabled(boolean relightingEnabled) ;
-    @Deprecated
-    public void setTexturesEnabled(boolean texturesEnabled) ;
-    @Deprecated
-    public void setShadowsEnabled(boolean shadowsEnabled) ;
-    @Deprecated
+    public RenderingType getRenderingType();
+    public void setGamma(float gamma);
+    public void setWeightExponent(float weightExponent);
+    public void setIsotropyFactor(float isotropyFactor);
+    public void setOcclusionEnabled(boolean occlusionEnabled);
+    public void setOcclusionBias(float occlusionBias);
+    public void setIBREnabled(boolean ibrEnabled);
+    public void setFresnelEnabled(boolean fresnelEnabled);
+    public void setPBRGeometricAttenuationEnabled(boolean pBRGeometricAttenuation);
+    public void setRelightingEnabled(boolean relightingEnabled);
+    public void setD3GridEnabled(boolean d3GridEnabled);
+    public void setCompassEnabled(boolean compassEnabled);
+    public void setTexturesEnabled(boolean texturesEnabled);
+    public void setShadowsEnabled(boolean shadowsEnabled);
     public void setVisibleLightsEnabled(boolean visibleLightsEnabled);
-    @Deprecated
-    public void setWeightMode(ShadingParameterMode weightMode) ;
+    public void setRenderingType(RenderingType renderingType);
+    public void setWeightMode(ShadingParameterMode weightMode);
 }

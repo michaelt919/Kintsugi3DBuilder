@@ -12,7 +12,6 @@ import tetzlaff.ibr.rendering2.tools2.ToolBox;
 
 public abstract class ControllableToolModel {
     private IBRRenderable<?> ibrRenderable = null;
-
     protected abstract IBRSettings2 getSettings();
     protected abstract IBRLoadOptions2 getLoadOptions();
 
@@ -34,6 +33,10 @@ public abstract class ControllableToolModel {
 
         ibrRenderable.setSettings(getSettings());
 
+    }
+
+    public final IBRRenderable<?> getIBRRenderable(){
+        return ibrRenderable;
     }
 
 
