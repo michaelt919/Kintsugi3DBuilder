@@ -626,11 +626,11 @@ public class FidelityMetricRequest implements IBRRequest
 
 	    		// Views that are in the target view set and NOT in the original view set
     			int unused;
-    			double maxError;
+    			double maxErrorDiff;
 	    		do
 	    		{
 	    			unused = 0;
-	    			maxError = -1.0;
+	    			maxErrorDiff = -1.0;
 	    			int maxErrorIndex = -1;
 
 	    			// Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
@@ -642,9 +642,9 @@ public class FidelityMetricRequest implements IBRRequest
 		    				// Keep track of number of unused views at the same time
 		    				unused++;
 		    				
-		    				if (targetErrors[i] > maxError)
+		    				if (targetErrors[i] - targetBaselines[i] > maxErrorDiff)
 		    				{
-		    					maxError = targetErrors[i];
+		    					maxErrorDiff = targetErrors[i] - targetBaselines[i];
 		    					maxErrorIndex = i;
 		    				}
 		    			}
@@ -688,7 +688,7 @@ public class FidelityMetricRequest implements IBRRequest
 			    		out.println(cumError);
 		    		}
 	    		}
-	    		while(maxError > 0.0 && unused > 0);
+	    		while(maxErrorDiff > 0.0 && unused > 0);
     		}
     	}
     	catch (Exception e) 
