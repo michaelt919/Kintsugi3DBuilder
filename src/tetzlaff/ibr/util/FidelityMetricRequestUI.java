@@ -44,7 +44,20 @@ public class FidelityMetricRequestUI implements IBRRequestUI
 			{
 				File targetVSETFile = fileChooser.getSelectedFile();
 				
-				return new FidelityMetricRequest(fidelityOutputFile, targetVSETFile, settings);
+				fileChooser.setDialogTitle("Choose a Mask File");
+				fileChooser.resetChoosableFileFilters();
+				fileChooser.removeChoosableFileFilter(fileChooser.getAcceptAllFileFilter());
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setFileFilter(new FileNameExtensionFilter("Image files", "jpg", "jpeg", "png", "bmp", "wbmp", "gif"));
+				
+				if (fileChooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION)
+				{
+					return new FidelityMetricRequest(fidelityOutputFile, targetVSETFile, fileChooser.getSelectedFile(), settings);
+				}
+				else
+				{
+					return new FidelityMetricRequest(fidelityOutputFile, targetVSETFile, null, settings);
+				}
 			}
 		}
 		

@@ -261,6 +261,15 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
     	initializeMatrices(pixelEvaluationFunction);
 	}
 	
+	@Override
+	public void setMask(File maskFile) throws IOException
+	{
+		if (maskFile != null)
+		{
+			throw new UnsupportedOperationException("Masks are not currently supported.");
+		}
+	}
+	
 	private MatrixSystem getMatrixSystem(int targetViewIndex, List<Integer> viewIndexList, Function<IntVector3, Vector3> decodeFunction)
 	{
 		MatrixSystem result = new MatrixSystem();
