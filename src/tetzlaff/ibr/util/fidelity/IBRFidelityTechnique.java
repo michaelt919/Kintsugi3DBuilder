@@ -78,6 +78,15 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
 	}
 	
 	@Override
+	public void setMask(File maskFile) throws IOException
+	{
+		if (maskFile != null)
+		{
+			throw new UnsupportedOperationException("Masks are not currently supported.");
+		}
+	}
+	
+	@Override
 	public void updateActiveViewIndexList(List<Integer> activeViewIndexList) 
 	{
 		this.activeViewIndexList = new ArrayList<Integer>(activeViewIndexList);

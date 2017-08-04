@@ -11,6 +11,7 @@ import tetzlaff.gl.FramebufferObject;
 import tetzlaff.gl.PrimitiveMode;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -30,6 +31,8 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 	private Program<ContextType> textureFitBaselineProgram;
 	private Drawable<ContextType> textureFitBaselineDrawable;
 	private FramebufferObject<ContextType> textureFitBaselineFramebuffer;
+	
+	private Texture2D<ContextType> maskTexture;
 
 	private Program<ContextType> fidelityProgram;
 	private Drawable<ContextType> fidelityDrawable; 
@@ -107,6 +110,25 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 		textureFitBaselineDrawable.addVertexBuffer("tangent", resources.tangentBuffer);
     	
     	viewIndexData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
+	}
+	
+	@Override
+	public void setMask(File maskFile) throws IOException
+	{
+		if (this.maskTexture != null)
+		{
+			this.maskTexture.close();
+			this.maskTexture = null;
+		}
+		
+		if (maskFile != null)
+		{
+			this.maskTexture = resources.context.build2DColorTextureFromFile(maskFile, true)
+					.setInternalFormat(ColorFormat.R8)
+					.setLinearFilteringEnabled(false)
+					.setMipmapsEnabled(false)
+					.createTexture();
+		}
 	}
 
 	@Override
@@ -187,6 +209,9 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 		}
 
 		fidelityDrawable.program().setUniform("evaluateInXYZ", false);
+
+		fidelityDrawable.program().setUniform("useMaskTexture", this.maskTexture != null);
+		fidelityDrawable.program().setTexture("maskTexture", this.maskTexture);
 		
 		fidelityDrawable.program().setTexture("normalEstimate", textureFitBaselineFramebuffer.getColorAttachmentTexture(1));
 		fidelityDrawable.program().setTexture("specularEstimate", textureFitBaselineFramebuffer.getColorAttachmentTexture(2));
@@ -253,6 +278,9 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 		}
 
 		fidelityDrawable.program().setUniform("evaluateInXYZ", false);
+
+		fidelityDrawable.program().setUniform("useMaskTexture", this.maskTexture != null);
+		fidelityDrawable.program().setTexture("maskTexture", this.maskTexture);
 		
 		fidelityDrawable.program().setTexture("normalEstimate", textureFitFramebuffer.getColorAttachmentTexture(1));
 		fidelityDrawable.program().setTexture("specularEstimate", textureFitFramebuffer.getColorAttachmentTexture(2));

@@ -3,6 +3,7 @@ package tetzlaff.ibr.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.AbstractList;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,15 +28,18 @@ public class FidelityMetricRequest implements IBRRequest
 	
 	private final static boolean USE_RENDERER_WEIGHTS = true;
 	private final static boolean USE_PERCEPTUALLY_LINEAR_ERROR = false;
+	private final static boolean LITE_MODE = true;
 	
     private File fidelityExportPath;
     private File fidelityVSETFile;
+    private File maskFile;
     private IBRSettings2 settings;
     
-	public FidelityMetricRequest(File exportPath, File targetVSETFile, IBRSettings2 settings)
+	public FidelityMetricRequest(File exportPath, File targetVSETFile, File maskFile, IBRSettings2 settings)
 	{
 		this.fidelityExportPath = exportPath;
 		this.fidelityVSETFile = targetVSETFile;
+		this.maskFile = maskFile;
 		this.settings = settings;
 	}
 	
@@ -132,6 +136,7 @@ public class FidelityMetricRequest implements IBRRequest
 		)
     	{
         	fidelityTechnique.initialize(resources, settings, 256);
+        	fidelityTechnique.setMask(maskFile);
     		
     		double[] slopes = new double[resources.viewSet.getCameraPoseCount()];
     		double[] peaks = new double[resources.viewSet.getCameraPoseCount()];
@@ -196,7 +201,7 @@ public class FidelityMetricRequest implements IBRRequest
 				    	lastMinDistance = minDistance;
 			    	}
     			}
-    			while(Double.isFinite(errors.get(errors.size() - 1)) && activeViewIndexList.size() > 0 && minDistance < /*0*/ Math.PI / 4);
+    			while(!LITE_MODE && Double.isFinite(errors.get(errors.size() - 1)) && activeViewIndexList.size() > 0 && minDistance < /*0*/ Math.PI / 4);
     			
     			double[] errorArray = new double[errors.size()];
     			double[] distanceArray = new double[distances.size()];
@@ -544,20 +549,31 @@ public class FidelityMetricRequest implements IBRRequest
 		    	    				fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
 		    	    				
 		    	    				double totalError = 0.0;
-			    	    			for (int k = 0; k < targetViewSet.getCameraPoseCount(); k++)
-			    	    			{
-			    	    				if ((k != i && !targetUsed[k]) || !fidelityTechnique.isGuaranteedInterpolating())
-			    	    				{
-				    	    				for (int l = 0; l < resources.viewSet.getCameraPoseCount(); l++)
+		    	    				
+		    	    				if (!fidelityTechnique.isGuaranteedInterpolating())
+		    	    				{
+		    	    					for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
+		    	    					{
+		    	    						totalError += fidelityTechnique.evaluateError(k);
+		    	    					}
+		    	    				}
+		    	    				else
+		    	    				{
+		    	    					for (int k = 0; k < targetViewSet.getCameraPoseCount(); k++)
+				    	    			{
+				    	    				if (k != i && !targetUsed[k])
 				    	    				{
-				    	    					if (targetViewSet.getImageFileName(k).contains(resources.viewSet.getImageFileName(l).split("\\.")[0]))
-				    		    				{
-				    	    						totalError += fidelityTechnique.evaluateError(l);
-				    	    	    				break;
-				    		    				}
+					    	    				for (int l = 0; l < resources.viewSet.getCameraPoseCount(); l++)
+					    	    				{
+					    	    					if (targetViewSet.getImageFileName(k).contains(resources.viewSet.getImageFileName(l).split("\\.")[0]))
+					    		    				{
+					    	    						totalError += fidelityTechnique.evaluateError(l);
+					    	    	    				break;
+					    		    				}
+					    	    				}
 				    	    				}
-			    	    				}
-			    	    			}
+				    	    			}
+		    	    				}
 			    	    			
 			    	    			if (totalError < minTotalError)
 			    	    			{
