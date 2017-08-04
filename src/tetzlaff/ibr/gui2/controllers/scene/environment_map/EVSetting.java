@@ -14,6 +14,7 @@ import javafx.scene.paint.Color;
 
 import org.jdom2.Element;
 
+import tetzlaff.ibr.util.StaticHouse;
 import tetzlaff.misc.XML_Writable;
 
 public class EVSetting implements XML_Writable{
@@ -27,8 +28,8 @@ public class EVSetting implements XML_Writable{
     private final Property<File> evImageFile = new SimpleObjectProperty<>();
     private final Property<File> bpImageFile = new SimpleObjectProperty<>();
 
-    private final DoubleProperty evColorIntensity = new SimpleDoubleProperty();
-    private final DoubleProperty evRotation = new SimpleDoubleProperty();
+    private final DoubleProperty evColorIntensity = StaticHouse.bound(0, Double.MAX_VALUE, new SimpleDoubleProperty());
+    private final DoubleProperty evRotation = StaticHouse.wrap(-180, 180, new SimpleDoubleProperty());
     private final Property<Color> evColor = new SimpleObjectProperty<>();
     private final Property<Color> bpColor = new SimpleObjectProperty<>();
     private final StringProperty name = new SimpleStringProperty();

@@ -1,12 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-<VBox fx:id="root" fx:controller="tetzlaff.ibr.gui2.controllers.scene.environment_map.SettingsEVSceneController" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
-    <TitledPane text="Environment map" animated="false">
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<VBox fx:id="root" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.scene.environment_map.SettingsEVSceneController">
+    <TitledPane animated="false" text="Environment map">
         <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <CheckBox fx:id="evUseImageCheckBox" text="Use image" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
             <Text fx:id="evFileNameText" text="Filename" textAlignment="CENTER" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
@@ -18,18 +29,34 @@
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Rotation:" GridPane.halignment="RIGHT" GridPane.rowIndex="8" />
             <TextField fx:id="evColorIntensityTextField" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="6" />
             <TextField fx:id="evRotationTextField" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="8" />
-            <Slider fx:id="evColorIntensitySlider" GridPane.columnSpan="2" GridPane.rowIndex="7" />
-            <Slider fx:id="evRotationSlider" GridPane.columnSpan="2" GridPane.rowIndex="9" />
+            <Slider fx:id="evColorIntensitySlider" blockIncrement="0.5" majorTickUnit="1.0" max="2.0" min="-2.0" minorTickCount="1" showTickLabels="true" showTickMarks="true" GridPane.columnSpan="2" GridPane.rowIndex="7" />
+            <Slider fx:id="evRotationSlider" blockIncrement="60.0" majorTickUnit="45.0" max="180.0" min="-180.0" minorTickCount="2" showTickLabels="true" showTickMarks="true" GridPane.columnSpan="2" GridPane.rowIndex="9" />
             <AnchorPane prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                <ImageView fx:id="evImageView" fitHeight="100.0" fitWidth="200.0" pickOnBounds="true" smooth="false"/>
+                <ImageView fx:id="evImageView" fitHeight="100.0" fitWidth="200.0" pickOnBounds="true" smooth="false" />
             </AnchorPane>
          <CheckBox fx:id="evUseColorCheckBox" mnemonicParsing="false" text="Use color" GridPane.rowIndex="4" />
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
+         <columnConstraints>
+            <ColumnConstraints />
+            <ColumnConstraints />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+         </rowConstraints>
         </GridPane>
     </TitledPane>
-   <TitledPane text="Backplate" animated="false" expanded="false">
+   <TitledPane animated="false" expanded="false" text="Backplate">
       <content>
          <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <padding>
@@ -43,11 +70,22 @@
                <Text text="Color:" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
                <ColorPicker fx:id="bpColorPicker" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
                 <AnchorPane prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                    <ImageView fx:id="bpImageView" fitHeight="100.0" fitWidth="200.0" pickOnBounds="true"
-                               smooth="false"/>
+                    <ImageView fx:id="bpImageView" fitHeight="100.0" fitWidth="200.0" pickOnBounds="true" smooth="false" />
                 </AnchorPane>
                <CheckBox fx:id="bpUseColorCheckBox" mnemonicParsing="false" text="Use color" GridPane.rowIndex="4" />
             </children>
+            <columnConstraints>
+               <ColumnConstraints />
+               <ColumnConstraints />
+            </columnConstraints>
+            <rowConstraints>
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+               <RowConstraints />
+            </rowConstraints>
          </GridPane>
       </content>
    </TitledPane>
