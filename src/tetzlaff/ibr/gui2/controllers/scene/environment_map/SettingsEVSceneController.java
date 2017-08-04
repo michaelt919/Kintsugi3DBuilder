@@ -5,7 +5,9 @@ import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -19,7 +21,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.util.converter.DoubleStringConverter;
+import tetzlaff.ibr.util.StaticHouse;
 import tetzlaff.util.SafeNumberStringConverter;
+import tetzlaff.util.SafeNumberStringConverterPow10;
 
 public class SettingsEVSceneController implements Initializable{
 // Boolean evUseImage
@@ -53,6 +58,8 @@ public class SettingsEVSceneController implements Initializable{
     @FXML ImageView evImageView;
     @FXML ImageView bpImageView;
 
+    private DoubleProperty trueEVColorIntes = new SimpleDoubleProperty();
+
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
 
     public ChangeListener<EVSetting> changeListener =
@@ -73,7 +80,10 @@ public class SettingsEVSceneController implements Initializable{
         evUseColorCheckBox.selectedProperty().bindBidirectional(evSetting.evUseColorProperty());
         bpUseImageCheckBox.selectedProperty().bindBidirectional(evSetting.bpUseImageProperty());
         bpUseColorCheckBox.selectedProperty().bindBidirectional(evSetting.bpUseColorProperty());
-        evColorIntensitySlider.valueProperty().bindBidirectional(evSetting.evColorIntensityProperty());
+
+//        evColorIntensitySlider.valueProperty().bindBidirectional(evSetting.evColorIntensityProperty());
+        trueEVColorIntes.bindBidirectional(evSetting.evColorIntensityProperty());
+
         evRotationSlider.valueProperty().bindBidirectional(evSetting.evRotationProperty());
         evColorIntensityTextField.textProperty().bindBidirectional(evSetting.evColorIntensityProperty(), n);
         evRotationTextField.textProperty().bindBidirectional(evSetting.evRotationProperty(), n);
@@ -92,7 +102,10 @@ public class SettingsEVSceneController implements Initializable{
         evUseColorCheckBox.selectedProperty().unbindBidirectional(evSetting.evUseColorProperty());
         bpUseImageCheckBox.selectedProperty().unbindBidirectional(evSetting.bpUseImageProperty());
         bpUseColorCheckBox.selectedProperty().unbindBidirectional(evSetting.bpUseColorProperty());
-        evColorIntensitySlider.valueProperty().unbindBidirectional(evSetting.evColorIntensityProperty());
+
+//        evColorIntensitySlider.valueProperty().unbindBidirectional(evSetting.evColorIntensityProperty());
+        trueEVColorIntes.unbindBidirectional(evSetting.evColorIntensityProperty());
+
         evRotationSlider.valueProperty().unbindBidirectional(evSetting.evRotationProperty());
         evColorIntensityTextField.textProperty().unbindBidirectional(evSetting.evColorIntensityProperty());
         evRotationTextField.textProperty().unbindBidirectional(evSetting.evRotationProperty());
@@ -115,6 +128,18 @@ public class SettingsEVSceneController implements Initializable{
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
+        evColorIntensitySlider.setLabelFormatter(new DoubleStringConverter(){
+            @Override
+            public String toString(Double value) {
+                return super.toString(Math.pow(10,value));
+            }
+        });
+        StaticHouse.powerBind(evColorIntensitySlider.valueProperty(), trueEVColorIntes);
+
+
+
+
         evImageFileChooser.setTitle("Pick file for environment map");
         bpImageFileChooser.setTitle("pick file for backplate");
 
@@ -163,10 +188,10 @@ public class SettingsEVSceneController implements Initializable{
             }
         });
 
-
-
         setDisabled(true);
 
+        StaticHouse.wrap(-180, 180, evRotationTextField);
+        StaticHouse.bound(0, Double.MAX_VALUE, evColorIntensityTextField);
     }
 
     @FXML private void pickEVImageFile(){
