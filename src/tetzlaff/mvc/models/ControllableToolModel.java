@@ -28,11 +28,19 @@ public abstract class ControllableToolModel {
 
         ibrRenderable = model.addFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, objFile, photoDir, getLoadOptions());
 
-        //TODO remove temp-def.
         ibrRenderable.setHalfResolution(true);
 
         ibrRenderable.setSettings(getSettings());
 
+    }
+
+    public final void loadVset(File vsetFile) throws IOException{
+
+        ibrRenderable = model.addFromVSETFile(vsetFile.getPath(), vsetFile, getLoadOptions());
+
+        ibrRenderable.setHalfResolution(true);
+
+        ibrRenderable.setSettings(getSettings());
     }
 
     public final IBRRenderable<?> getIBRRenderable(){

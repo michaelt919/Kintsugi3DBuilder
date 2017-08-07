@@ -9,7 +9,6 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.interactive.InteractiveRenderableList;
-import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.LoadingMonitor;
@@ -55,7 +54,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	}
 
 	@Override
-	public IBRRenderable<ContextType> addFromVSETFile(String id, File vsetFile, IBRLoadOptions loadOptions) throws IOException
+	public IBRRenderable<ContextType> addFromVSETFile(String id, File vsetFile, IBRLoadOptions2 loadOptions) throws IOException
 	{
 		// id = vsetFile.getPath()
 		

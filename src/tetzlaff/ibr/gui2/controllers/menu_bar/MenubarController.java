@@ -1,5 +1,6 @@
 package tetzlaff.ibr.gui2.controllers.menu_bar;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -11,6 +12,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ToggleGroup;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.app2.TheApp;
@@ -56,10 +58,22 @@ public class MenubarController implements Initializable {
     @FXML private CheckMenuItem phyMaskingCheckMenuItem;
     @FXML private CheckMenuItem fresnelEffectCheckMenuItem;
 
+    @FXML private FileChooser vSetFileChooser;
+
 
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
+        vSetFileChooser = new FileChooser();
+
+        vSetFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        vSetFileChooser.setTitle("Load V-Set File");
+        vSetFileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("V-Set Files", "*.vset")
+        );
+
+
         initToggleGroups();
         bindCheckMenuItems();
     }
@@ -129,7 +143,12 @@ public class MenubarController implements Initializable {
     }
 
     @FXML private void file_openProject(){
-        System.out.println("TODO: open project");
+        File vsetFile = vSetFileChooser.showOpenDialog(null);
+        if (vsetFile != null) try {
+            toolModel.loadVset(vsetFile);
+        } catch (IOException e) {
+            //do nothing
+        }
     }
 
     @FXML private void file_saveProject(){
