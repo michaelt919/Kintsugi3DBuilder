@@ -12,7 +12,7 @@ in vec3 fBitangent;
 #line 13 0
 
 // uniform sampler2D diffuseEstimate;
- uniform sampler2D normalEstimate;
+uniform sampler2D normalEstimate;
 uniform sampler2D specularEstimate;
 uniform sampler2D roughnessEstimate;
 
@@ -20,6 +20,9 @@ uniform mat4 model_view;
 uniform int targetViewIndex;
 uniform float fittingGamma;
 uniform bool evaluateInXYZ;
+
+uniform bool useMaskTexture;
+uniform sampler2D maskTexture;
 
 layout(location = 0) out vec2 fidelity;
 
@@ -128,5 +131,12 @@ vec2 computeFidelity()
 
 void main()
 {
-    fidelity = computeFidelity();
+	if (useMaskTexture && texture(maskTexture, fTexCoord)[0] < 1.0)
+	{
+		discard;
+	}
+	else
+	{
+		fidelity = computeFidelity();
+	}
 }

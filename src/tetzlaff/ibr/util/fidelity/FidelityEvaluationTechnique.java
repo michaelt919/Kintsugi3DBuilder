@@ -13,6 +13,7 @@ public interface FidelityEvaluationTechnique<ContextType extends Context<Context
 	boolean isGuaranteedMonotonic();
 	boolean isGuaranteedInterpolating();
 	void initialize(IBRResources<ContextType> resources, IBRSettings2 settings, int size) throws IOException;
+	void setMask(File maskFile) throws IOException;
 	void updateActiveViewIndexList(List<Integer> activeViewIndexList);
 	double evaluateBaselineError(int targetViewIndex, File debugFile);
 	double evaluateError(int targetViewIndex, File debugFile);
