@@ -53,7 +53,7 @@ class PanTool extends AbstractTool{
 
             Vector3 worldMoveVector = orbit.transpose().times(moveVector.asVector4(0f)).getXYZ();
 
-            cameraModel.setCenter(oldCenter.plus(worldMoveVector));
+            cameraModel.setCenter(oldCenter.minus(worldMoveVector));
 
         }
     }
