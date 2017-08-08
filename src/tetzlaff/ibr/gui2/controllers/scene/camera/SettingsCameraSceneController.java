@@ -56,6 +56,13 @@ private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverter
         StaticHouse.bound(-90, 90, inclinationTextField);
         StaticHouse.wrap(-180, 180, twistTextField);
 
+        StaticHouse.cleanInput(xCenterTextField);
+        StaticHouse.cleanInput(yCenterTextField);
+        StaticHouse.cleanInput(zCenterTextField);
+
+        StaticHouse.cleanInput(fOVTextField);
+        StaticHouse.cleanInput(focalLengthTextField);
+
 
 
         distanceSlider.setLabelFormatter(new StringConverter<Double>() {
