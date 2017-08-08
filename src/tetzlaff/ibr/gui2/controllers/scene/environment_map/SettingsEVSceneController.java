@@ -129,6 +129,9 @@ public class SettingsEVSceneController implements Initializable{
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
+        StaticHouse.wrap(-180, 180, evRotationTextField);
+        StaticHouse.bound(0, Double.MAX_VALUE, evColorIntensityTextField);
+
         evColorIntensitySlider.setLabelFormatter(new DoubleStringConverter(){
             @Override
             public String toString(Double value) {
@@ -190,8 +193,6 @@ public class SettingsEVSceneController implements Initializable{
 
         setDisabled(true);
 
-        StaticHouse.wrap(-180, 180, evRotationTextField);
-        StaticHouse.bound(0, Double.MAX_VALUE, evColorIntensityTextField);
     }
 
     @FXML private void pickEVImageFile(){

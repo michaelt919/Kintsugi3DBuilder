@@ -220,6 +220,8 @@ public class RootLightSceneController implements Initializable {
 
     @FXML private void newLight(){
         if(getSelected() != null)getSelected().addLight(lastSelectedIndex);
+        tableView.refresh();
+        tableView.getSelectionModel().selectRightCell();
     }
     @FXML private void saveLight(){
         System.out.println("TODO saveLight");//TODO

@@ -7,6 +7,8 @@ import javafx.scene.control.TextFormatter;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 
+import javax.xml.soap.Text;
+
 /*
 I general utilities class.
  */
@@ -35,14 +37,7 @@ public class StaticHouse {
     private static final String DOUBLE_REG_EXP = "-?(0|([1-9]\\d{0,7}))?(\\.\\d*)?";
 
     public static TextField wrap(double min, double max, TextField textField){
-        textField.setTextFormatter(new TextFormatter<Double>(change -> {
-            if(change.isDeleted() && !change.isReplaced()) return change;
-            String text = change.getControlNewText();
-            if(text.isEmpty() || text.equals("-") || text.matches(DOUBLE_REG_EXP)) return change;
-            else return null;
-
-        }));
-
+        cleanInput(textField);
         textField.focusedProperty().addListener((ob,o,n)->{
             if(o && !n){
                 try {
@@ -60,13 +55,7 @@ public class StaticHouse {
 
     public static TextField bound(double min, double max, TextField textField){
 
-        textField.setTextFormatter(new TextFormatter<Double>(change -> {
-            if(change.isDeleted() && !change.isReplaced()) return change;
-            String text = change.getControlNewText();
-            if(text.isEmpty() || text.equals("-") || text.matches(DOUBLE_REG_EXP)) return change;
-            else return null;
-
-        }));
+        cleanInput(textField);
 
         textField.focusedProperty().addListener((ob,o,n)->{
             if(o && !n){
@@ -83,8 +72,15 @@ public class StaticHouse {
         return textField;
     }
 
-
-
+    public static TextField cleanInput(TextField textField){
+        textField.setTextFormatter(new TextFormatter<Double>(change -> {
+            if(change.isDeleted() && !change.isReplaced()) return change;
+            String text = change.getControlNewText();
+            if(text.isEmpty() || text.equals("-") || text.matches(DOUBLE_REG_EXP)) return change;
+            else return null;
+        }));
+        return textField;
+    }
 
 
     private static double wrap(double min, double max, double value){

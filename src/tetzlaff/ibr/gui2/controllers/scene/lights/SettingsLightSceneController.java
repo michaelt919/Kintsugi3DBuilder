@@ -13,6 +13,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import tetzlaff.ibr.util.StaticHouse;
 import tetzlaff.util.SafeNumberStringConverter;
 import tetzlaff.util.SafeNumberStringConverterPow10;
 
@@ -34,6 +35,19 @@ public class SettingsLightSceneController implements Initializable{
                 return null;
             }
         });
+
+
+        StaticHouse.cleanInput(xCenterTextField);
+        StaticHouse.cleanInput(yCenterTextField);
+        StaticHouse.cleanInput(zCenterTextField);
+
+        StaticHouse.bound(0, Double.MAX_VALUE, distanceTextField);
+        StaticHouse.bound(0, Double.MAX_VALUE, intensityTextField);
+
+
+        StaticHouse.wrap(-180, 180, azimuthTextField);
+        StaticHouse.bound(-90,90,inclinationTextField);
+
     }
 
     @FXML private VBox root;
