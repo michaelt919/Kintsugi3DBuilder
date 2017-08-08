@@ -104,6 +104,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private List<String> sceneObjectNameList;
     private Map<String, Integer> sceneObjectIDLookup;
 	private int[] pixelObjectIDs;
+	private short[] pixelDepths;
     private FramebufferSize fboSize;
 	
 	IBRImplementation(String id, ContextType context, Program<ContextType> program, 
@@ -886,6 +887,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		    	context.flush();
 
 		    	pixelObjectIDs = offscreenFBO.readIntegerColorBufferRGBA(1);
+		    	pixelDepths = offscreenFBO.readDepthBuffer();
 		    	fboSize = offscreenFBO.getSize();
 			}
 		}
@@ -1142,13 +1144,50 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	@Override
 	public SceneViewportModel getSceneViewportModel() 
 	{
-		return (x, y) ->
+		return new SceneViewportModel()
 		{
-			x = Math.min(Math.max(x, 0), 1);
-			y = 1.0 - Math.min(Math.max(y, 0), 1);
-			
-			int index = 4 * (int)(Math.round(fboSize.height * y) * fboSize.width + Math.round(fboSize.width * x));
-			return this.sceneObjectNameList.get(this.pixelObjectIDs[index]);
+			@Override
+			public Object getObjectAtCoordinates(double x, double y)
+			{
+				double xRemapped = Math.min(Math.max(x, 0), 1);
+				double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
+				
+				int index = 4 * (int)(Math.round(fboSize.height * yRemapped) * fboSize.width + Math.round(fboSize.width * xRemapped));
+				return sceneObjectNameList.get(pixelObjectIDs[index]);
+			}
+
+			@Override
+			public Vector3 get3DPositionAtCoordinates(double x, double y) 
+			{
+				double xRemapped = Math.min(Math.max(x, 0), 1);
+				double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
+				
+				int index = (int)(Math.round(fboSize.height * yRemapped) * fboSize.width + Math.round(fboSize.width * xRemapped));
+				
+				Matrix4 projection = getProjectionMatrix(fboSize);
+				Matrix4 projectionInverse = Matrix4.fromRows(
+						new Vector4(1.0f / projection.get(0, 0), 0, 0, 0),
+						new Vector4(0, 1.0f / projection.get(1, 1), 0, 0),
+						new Vector4(0, 0, 0, -1),
+						new Vector4(0, 0, 1.0f, projection.get(2, 2))
+							.dividedBy(projection.get(2, 3)));
+				
+				// TODO Transform from screen space into world space
+				Vector4 unscaledPosition = projectionInverse
+					.times(new Vector4((float)(2 * x - 1), (float)(1 - 2 * y), 2 * (float)(0x0000FFFF & pixelDepths[index]) / (float)0xFFFF - 1, 1.0f));
+				
+				cameraModel.getLookMatrix();
+				
+				float scale = resources.viewSet.getCameraPose(0).times(resources.geometry.getCentroid().asPosition())
+		    			.getXYZ().length() 
+		    			* boundingRadius / resources.geometry.getBoundingRadius();
+				
+				return Matrix4.scale(scale)
+						.times(cameraModel.getLookMatrix().quickInverse(0.01f))
+		    			.times(Matrix4.scale(1.0f / scale))
+						.times(unscaledPosition.getXYZ().dividedBy(unscaledPosition.w).asPosition())
+						.getXYZ();
+			};
 		};
 	}
 }
