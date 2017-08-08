@@ -19,6 +19,8 @@ import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources;
 import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
 import tetzlaff.ibr.util.fidelity.FidelityEvaluationTechnique;
+import tetzlaff.ibr.util.fidelity.IBRFidelityTechnique;
+import tetzlaff.ibr.util.fidelity.LinearSystemFidelityTechnique;
 import tetzlaff.ibr.util.fidelity.TextureFitFidelityTechnique;
 import tetzlaff.util.CubicHermiteSpline;
 
