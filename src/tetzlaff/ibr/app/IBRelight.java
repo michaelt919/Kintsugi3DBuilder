@@ -17,6 +17,8 @@ import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.window.CursorPosition;
+import tetzlaff.gl.window.WindowSize;
 import tetzlaff.ibr.rendering.CameraBasedLightModel;
 import tetzlaff.ibr.rendering.HardcodedLightModel;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
@@ -254,25 +256,26 @@ public class IBRelight
 	        	}
 	        });
 	        
-//	        window.addMouseButtonPressListener((win, buttonIndex, mods) ->
-//	        {
-//	        	try
-//	        	{
-//		        	if (win == window && model.getSelectedItem() != null)
-//		        	{
-//		        		CursorPosition pos = window.getCursorPosition();
-//		        		WindowSize size = window.getWindowSize();
-//		        		double x = pos.x / size.width;
-//		        		double y = pos.y / size.height;
-//
-//		        		System.out.println(model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y));
-//		        	}
-//	        	}
-//	        	catch (Exception e)
-//	        	{
-//	        		e.printStackTrace();
-//	        	}
-//	        });
+	        window.addMouseButtonPressListener((win, buttonIndex, mods) ->
+	        {
+	        	try
+	        	{
+		        	if (win == window && model.getSelectedItem() != null)
+		        	{
+		        		CursorPosition pos = window.getCursorPosition();
+		        		WindowSize size = window.getWindowSize();
+		        		double x = pos.x / size.width;
+		        		double y = pos.y / size.height;
+
+		        		System.out.println(model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y) + "\t" + 
+		        				model.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y));
+		        	}
+	        	}
+	        	catch (Exception e)
+	        	{
+	        		e.printStackTrace();
+	        	}
+	        });
 	
 	    	// Create a new application to run our event loop and give it the GLFWWindow for polling
 	    	// of events and the OpenGL context.  The ULFRendererList provides the renderable.
