@@ -147,16 +147,16 @@ public class SettingsEVSceneController implements Initializable{
         bpImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
         evImageFileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("HDR", "*.hdr"),
                 new FileChooser.ExtensionFilter("PNG", "*.png"),
                 new FileChooser.ExtensionFilter("JPG", "*.jpg"),
-                new FileChooser.ExtensionFilter("HDR", "*.hdr"),
                 new FileChooser.ExtensionFilter("Other", "*.*")
         );
 
         bpImageFileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("HDR", "*.hdr"),
                 new FileChooser.ExtensionFilter("PNG", "*.png"),
                 new FileChooser.ExtensionFilter("JPG", "*.jpg"),
-                new FileChooser.ExtensionFilter("HDR", "*.hdr"),
                 new FileChooser.ExtensionFilter("Other", "*.*")
         );
 
