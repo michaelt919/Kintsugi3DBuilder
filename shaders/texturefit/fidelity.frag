@@ -116,7 +116,13 @@ vec2 computeFidelity()
 			vec3 colorResidual = colorScaled - 
 				pow(min(maxLuminance / attenuatedLightIntensity, currentFit), vec3(fittingGammaInv));
 			
+			// float luminanceResidual =  
+				// pow(getLuminance(color.rgb / attenuatedLightIntensity), fittingGammaInv)
+					// - pow(min(getLuminance(maxLuminance / attenuatedLightIntensity), 
+						// getLuminance(currentFit)), fittingGammaInv);
+			
 			return nDotV * color.a * vec2(dot(colorResidual, colorResidual), 1);
+			//return nDotV * color.a * vec2(luminanceResidual * luminanceResidual, 1);
 		}
 		else
 		{

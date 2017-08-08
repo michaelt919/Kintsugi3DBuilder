@@ -108,6 +108,30 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 		textureFitBaselineDrawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
 		textureFitBaselineDrawable.addVertexBuffer("normal", resources.normalBuffer);
 		textureFitBaselineDrawable.addVertexBuffer("tangent", resources.tangentBuffer);
+		
+		// Baseline
+		resources.setupShaderProgram(textureFitBaselineDrawable.program(), false);
+		
+		textureFitBaselineDrawable.program().setUniform("viewCount", resources.viewSet.getCameraPoseCount());
+		
+		if (this.usePerceptuallyLinearError)
+		{
+			textureFitBaselineDrawable.program().setUniform("fittingGamma", 2.2f);
+		}
+		else
+		{
+			textureFitBaselineDrawable.program().setUniform("fittingGamma", 1.0f);
+		}
+		
+		textureFitBaselineDrawable.program().setUniform("standaloneMode", true);
+
+		textureFitBaselineFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+		textureFitBaselineFramebuffer.clearColorBuffer(1, 0.5f, 0.5f, 1.0f, 1.0f);
+		textureFitBaselineFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 1.0f);
+		textureFitBaselineFramebuffer.clearColorBuffer(3, 1.0f, 1.0f, 1.0f, 1.0f);
+		textureFitBaselineFramebuffer.clearDepthBuffer();
+    	
+    	textureFitBaselineDrawable.draw(PrimitiveMode.TRIANGLES, textureFitBaselineFramebuffer);
     	
     	viewIndexData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
 	}
@@ -165,30 +189,6 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 	    	
 	    	textureFitDrawable.draw(PrimitiveMode.TRIANGLES, textureFitFramebuffer);
 		}
-    	
-    	// Baseline
-		resources.setupShaderProgram(textureFitBaselineDrawable.program(), false);
-		
-		textureFitBaselineDrawable.program().setUniform("viewCount", resources.viewSet.getCameraPoseCount());
-		
-		if (this.usePerceptuallyLinearError)
-		{
-			textureFitBaselineDrawable.program().setUniform("fittingGamma", 2.2f);
-		}
-		else
-		{
-			textureFitBaselineDrawable.program().setUniform("fittingGamma", 1.0f);
-		}
-		
-		textureFitBaselineDrawable.program().setUniform("standaloneMode", true);
-
-		textureFitBaselineFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
-		textureFitBaselineFramebuffer.clearColorBuffer(1, 0.5f, 0.5f, 1.0f, 1.0f);
-		textureFitBaselineFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 1.0f);
-		textureFitBaselineFramebuffer.clearColorBuffer(3, 1.0f, 1.0f, 1.0f, 1.0f);
-		textureFitBaselineFramebuffer.clearDepthBuffer();
-    	
-    	textureFitBaselineDrawable.draw(PrimitiveMode.TRIANGLES, textureFitBaselineFramebuffer);
 	}
 	
 	@Override
@@ -217,7 +217,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 		fidelityDrawable.program().setTexture("specularEstimate", textureFitBaselineFramebuffer.getColorAttachmentTexture(2));
 		fidelityDrawable.program().setTexture("roughnessEstimate", textureFitBaselineFramebuffer.getColorAttachmentTexture(3));
 		
-		fidelityFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		fidelityFramebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
 		fidelityFramebuffer.clearDepthBuffer();
     	
 		fidelityDrawable.draw(PrimitiveMode.TRIANGLES, fidelityFramebuffer);
@@ -286,7 +286,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 		fidelityDrawable.program().setTexture("specularEstimate", textureFitFramebuffer.getColorAttachmentTexture(2));
 		fidelityDrawable.program().setTexture("roughnessEstimate", textureFitFramebuffer.getColorAttachmentTexture(3));
 		
-		fidelityFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+		fidelityFramebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
 		fidelityFramebuffer.clearDepthBuffer();
     	
 		fidelityDrawable.draw(PrimitiveMode.TRIANGLES, fidelityFramebuffer);
