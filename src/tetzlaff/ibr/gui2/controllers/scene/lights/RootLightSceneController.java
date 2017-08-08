@@ -5,9 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ResourceBundle;
 
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -33,6 +31,7 @@ public class RootLightSceneController implements Initializable {
     @FXML private VBox groupControls;
     @FXML private VBox lightControls;
     @FXML private Button theRenameButton;
+
 
     private final ObservableList<LightGroupSetting> lightGroups = new ObservableListWrapper<>(new ArrayList<>());
     private final Property<SubLightSetting> selectedLight = new SimpleObjectProperty<>();
