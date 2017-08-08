@@ -4,6 +4,8 @@ package tetzlaff.ibr.gui2.controllers.scene.lights;//Created by alexk on 7/16/20
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -22,11 +24,11 @@ public class SettingsLightSceneController implements Initializable{
     public void initialize(URL location, ResourceBundle resources) {
         setDisabled(true);
 
-        distanceSlider.setLabelFormatter(new StringConverter<Double>() {
+        StringConverter pow10converter = new StringConverter<Double>() {
             @Override
             public String toString(Double object) {
                 String s = n10.toString(object);
-                if(s.length() > 3) return s.substring(0,3);
+                if(s.length() > 4) return s.substring(0,4);
                 else return s;
             }
 
@@ -34,7 +36,14 @@ public class SettingsLightSceneController implements Initializable{
             public Double fromString(String string) {
                 return null;
             }
-        });
+        };
+
+        distanceSlider.setLabelFormatter(pow10converter);
+
+        intensitySlider.setLabelFormatter(pow10converter);
+        StaticHouse.powerBind(intensitySlider.valueProperty(), trueIntensity);
+
+
 
 
         StaticHouse.cleanInput(xCenterTextField);
@@ -68,6 +77,8 @@ public class SettingsLightSceneController implements Initializable{
     @FXML private ColorPicker colorPicker;
     @FXML private ChoiceBox<LightType> lightTypeChoiceBox;
 
+    private DoubleProperty trueIntensity = new SimpleDoubleProperty(1);
+
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
     private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);
 
@@ -98,7 +109,9 @@ public class SettingsLightSceneController implements Initializable{
         azimuthSlider.valueProperty().bindBidirectional(c.azimuthProperty());
         inclinationSlider.valueProperty().bindBidirectional(c.inclinationProperty());
         distanceSlider.valueProperty().bindBidirectional(c.log10distanceProperty());
-        intensitySlider.valueProperty().bindBidirectional(c.intensityProperty());
+
+        trueIntensity.bindBidirectional(c.intensityProperty());
+
         lightTypeChoiceBox.valueProperty().bindBidirectional(c.lightTypeProperty());
 
         colorPicker.valueProperty().bindBidirectional(c.colorProperty());
@@ -120,7 +133,9 @@ public class SettingsLightSceneController implements Initializable{
         azimuthSlider.valueProperty().unbindBidirectional(c.azimuthProperty());
         inclinationSlider.valueProperty().unbindBidirectional(c.inclinationProperty());
         distanceSlider.valueProperty().unbindBidirectional(c.log10distanceProperty());
-        intensitySlider.valueProperty().unbindBidirectional(c.intensityProperty());
+
+        trueIntensity.unbindBidirectional(c.intensityProperty());
+
         lightTypeChoiceBox.valueProperty().unbindBidirectional(c.lightTypeProperty());
         colorPicker.valueProperty().unbindBidirectional(c.colorProperty());
 
