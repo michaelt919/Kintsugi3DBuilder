@@ -150,4 +150,6 @@ public class CameraModel3 implements ControllableCameraModel {
     public boolean getLocked() {
         return cam().isLocked();
     }
+
+
 }
