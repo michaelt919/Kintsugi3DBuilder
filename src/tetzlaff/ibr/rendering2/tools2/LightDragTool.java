@@ -51,6 +51,38 @@ public class LightDragTool extends AbstractTool {
             }
 
         }
+        else if(window.getMouseButtonState(MB2).equals(MouseButtonState.Pressed)){
+            float xF =(float) (xpos / window.getWindowSize().height);
+            float yF =(float) (ypos / window.getWindowSize().height);
+
+            System.out.println("Fire!");
+
+            Vector4 out = new Vector4((xF-0.5f)*.5f, (0.5f-yF)*.5f, -1f, 0f);
+            out = cameraModel.getOrbit().transpose().times(out);
+
+            Vector3 start =cameraModel.getCenter().plus(cameraModel.getOrbit().transpose().times(new Vector4(0,0,cameraModel.getDistance(), 1f)).getXYZ());
+
+            System.out.println("Shooting from " + start + " into " + out.getXYZ());
+
+            ControllableSubLightModel light = lightModel.getLight(0);
+
+            if(light.exists()){
+                System.out.println("We have a light");
+                float radius = light.getDistance();
+                System.out.println("Distance: " + radius);
+
+                Vector2 azANDinc = SphereMath.ShootSphereInner(start, out.getXYZ().normalized(), radius);
+
+                System.out.println("Setting az and inc to " + azANDinc);
+                light.setAzimuth(Math.toDegrees(azANDinc.x));
+                light.setInclination(Math.toDegrees(azANDinc.y));
+
+
+            }else {
+                System.out.println("No light.");
+            }
+
+        }
     }
 
     @Override

@@ -63,21 +63,21 @@
          <fx:define>
             <ToggleGroup fx:id="toolGroup" />
          </fx:define>
-         <RadioMenuItem mnemonicParsing="false" selected="true" text="Orbit Camera tool" toggleGroup="$toolGroup"/>
-         <RadioMenuItem mnemonicParsing="false" text="Pan Camera tool" toggleGroup="$toolGroup" />
-         <RadioMenuItem mnemonicParsing="false" text="Dolly Camera tool" toggleGroup="$toolGroup" />
-         <RadioMenuItem mnemonicParsing="false" text="Frame Selection tool" toggleGroup="$toolGroup" />
-         <RadioMenuItem mnemonicParsing="false" text="Look at Point tool" toggleGroup="$toolGroup" />
-         <RadioMenuItem mnemonicParsing="false" text="Zoom tool" toggleGroup="$toolGroup" />
-         <RadioMenuItem mnemonicParsing="false" text="First-person Camera tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="ORBIT" mnemonicParsing="false" selected="true" text="Orbit Camera tool" toggleGroup="$toolGroup"/>
+         <RadioMenuItem userData="PAN" mnemonicParsing="false" text="Pan Camera tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="DOLLY" mnemonicParsing="false" text="Dolly Camera tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="X" mnemonicParsing="false" text="Frame Selection tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="CENTER_POINT" mnemonicParsing="false" text="Look at Point tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="X" mnemonicParsing="false" text="Zoom tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="X" mnemonicParsing="false" text="First-person Camera tool" toggleGroup="$toolGroup" />
          <SeparatorMenuItem mnemonicParsing="false" />
-         <RadioMenuItem mnemonicParsing="false" text="Rotate Model tool" toggleGroup="$toolGroup" />
-         <RadioMenuItem mnemonicParsing="false" text="Translate Model tool" toggleGroup="$toolGroup" />
-         <RadioMenuItem mnemonicParsing="false" text="Scale Model tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="X" mnemonicParsing="false" text="Rotate Model tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="X" mnemonicParsing="false" text="Translate Model tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="X" mnemonicParsing="false" text="Scale Model tool" toggleGroup="$toolGroup" />
          <SeparatorMenuItem mnemonicParsing="false" />
-         <RadioMenuItem mnemonicParsing="false" text="Rotate Environment tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="X" mnemonicParsing="false" text="Rotate Environment tool" toggleGroup="$toolGroup" />
          <SeparatorMenuItem mnemonicParsing="false" />
-         <RadioMenuItem mnemonicParsing="false" text="Drag Light Tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="LIGHT_DRAG" mnemonicParsing="false" text="Drag Light Tool" toggleGroup="$toolGroup" />
       </Menu>
       <Menu mnemonicParsing="false" text="Windows">
          <CheckMenuItem mnemonicParsing="false" selected="true" text="Scene" />

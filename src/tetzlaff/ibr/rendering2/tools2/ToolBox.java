@@ -21,12 +21,13 @@ public class ToolBox extends AbstractTool implements Controller {
     }
 
     //toolSelect
-    private DollyTool dollyTool = new DollyTool(cameraModel, environmentMapModel, lightModel);
-    private OrbitTool orbitTool = new OrbitTool(cameraModel, environmentMapModel, lightModel);
-    private PanTool panTool = new PanTool(cameraModel, environmentMapModel, lightModel);
-    private LightDragTool lightDragTool = new LightDragTool(cameraModel, environmentMapModel, lightModel);
+    private DollyTool dollyTool;
+    private OrbitTool orbitTool;
+    private PanTool panTool;
+    private LightDragTool lightDragTool;
+    private CenterPointTool centerPointTool;
     public enum TOOL{
-        DOLLY, ORBIT, PAN, LIGHT_DRAG
+        DOLLY, ORBIT, PAN, LIGHT_DRAG, CENTER_POINT
     }
     private AbstractTool selectedTool(){
         switch (toolModel.getTool()){
@@ -34,6 +35,7 @@ public class ToolBox extends AbstractTool implements Controller {
             case ORBIT: return orbitTool;
             case PAN: return panTool;
             case LIGHT_DRAG: return lightDragTool;
+            case CENTER_POINT: return centerPointTool;
             default: return orbitTool;
         }
     }
@@ -63,6 +65,13 @@ public class ToolBox extends AbstractTool implements Controller {
     private ToolBox(ControllableCameraModel cameraModel, ControllableEnvironmentMapModel environmentMapModel, ControllableLightModel lightModel, ControllableToolModel toolModel, Window<?> window) {
         super(cameraModel, environmentMapModel, lightModel);
         this.toolModel = toolModel;
+
+        dollyTool = new DollyTool(cameraModel, environmentMapModel, lightModel);
+        orbitTool = new OrbitTool(cameraModel, environmentMapModel, lightModel);
+        panTool = new PanTool(cameraModel, environmentMapModel, lightModel);
+        lightDragTool = new LightDragTool(cameraModel, environmentMapModel, lightModel);
+        centerPointTool = new CenterPointTool(cameraModel, environmentMapModel, lightModel, toolModel);
+
         addAsWindowListener(window);
     }
 

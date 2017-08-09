@@ -80,15 +80,14 @@ public class MenubarController implements Initializable {
 
     private void initToggleGroups(){
         toolGroup.selectedToggleProperty().addListener((ob,o,n)->{
-            if(n != null){
+            if(n!=null && n.getUserData() != null){
+                switch ((String) n.getUserData()){
+                    case "ORBIT": toolModel.setTool(ToolBox.TOOL.ORBIT); break;
+                    case "DOLLY": toolModel.setTool(ToolBox.TOOL.DOLLY); break;
+                    case "PAN": toolModel.setTool(ToolBox.TOOL.PAN); break;
+                    case "LIGHT_DRAG": toolModel.setTool(ToolBox.TOOL.LIGHT_DRAG); break;
+                    case "CENTER_POINT": toolModel.setTool(ToolBox.TOOL.CENTER_POINT); break;
 
-                int indexInToolList = toolGroup.getToggles().indexOf(n);
-                switch (indexInToolList){
-                    case 0: toolModel.setTool(ToolBox.TOOL.ORBIT); return;
-                    case 1: toolModel.setTool(ToolBox.TOOL.PAN); return;
-                    case 2: toolModel.setTool(ToolBox.TOOL.DOLLY); return;
-                    case 11: toolModel.setTool(ToolBox.TOOL.LIGHT_DRAG); return;
-                    default: toolModel.setTool(ToolBox.TOOL.ORBIT);
                 }
             }
         });
