@@ -119,8 +119,7 @@ public class LightModel3 extends ControllableLightModel {
 	@Override
 	public Vector3 getLightCenter(int i) 
 	{
-		// TODO
-		throw new UnsupportedOperationException();
+	    return getLight(i).getCenter();
 	}
 
 	@Override
