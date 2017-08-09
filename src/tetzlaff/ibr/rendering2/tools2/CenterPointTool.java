@@ -9,7 +9,7 @@ import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
 import tetzlaff.mvc.models.ControllableLightModel;
 import tetzlaff.mvc.models.ControllableToolModel;
 
-public class CenterPointTool extends AbstractTool{
+class CenterPointTool extends AbstractTool{
     private ControllableToolModel toolModel;
     public CenterPointTool(ControllableCameraModel cameraModel, ControllableEnvironmentMapModel environmentMapModel, ControllableLightModel lightModel, ControllableToolModel toolModel) {
         super(cameraModel, environmentMapModel, lightModel);
@@ -20,8 +20,18 @@ public class CenterPointTool extends AbstractTool{
     public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods) {
         super.mouseButtonPressed(window, buttonIndex, mods);
         if(buttonIndex == MB1){
-            Vector3 newCenter = toolModel.getPoint((float) mouseStartX_MB1,(float) mouseStartY_MB1);
-            System.out.println("You clicked: " + newCenter);
+
+            double trueX = mouseStartX_MB1 / window.getWindowSize().width;
+            double trueY = mouseStartY_MB1 / window.getWindowSize().height;
+
+            Vector3 newCenter = toolModel.getPoint(trueX, trueY);
+            ControllableToolModel.WHAT_CLICKED whatClicked = toolModel.whatClicked(trueX, trueY);
+//            System.out.println("You clicked: " + whatClicked + " at " + newCenter);
+
+            if(whatClicked.equals(ControllableToolModel.WHAT_CLICKED.OBJECT)){
+                cameraModel.setCenter(newCenter);//TODO fix this
+                System.out.println("Set center to " + newCenter);
+            }
         }
     }
 }

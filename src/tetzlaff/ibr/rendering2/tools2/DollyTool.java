@@ -8,7 +8,7 @@ import tetzlaff.mvc.models.ControllableCameraModel;
 import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
 import tetzlaff.mvc.models.ControllableLightModel;
 
-public class DollyTool extends AbstractTool {
+class DollyTool extends AbstractTool {
     DollyTool(ControllableCameraModel cameraModel, ControllableEnvironmentMapModel environmentMapModel, ControllableLightModel lightModel) {
         super(cameraModel, environmentMapModel, lightModel);
     }

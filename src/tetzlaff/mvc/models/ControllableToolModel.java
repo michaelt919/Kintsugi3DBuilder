@@ -60,7 +60,7 @@ public abstract class ControllableToolModel {
 
     public abstract ToolBox.TOOL getTool();
 
-    public Vector3 getPoint(float x, float y){
+    public Vector3 getPoint(double x, double y){
         return model.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
     }
 
@@ -69,12 +69,20 @@ public abstract class ControllableToolModel {
     }
 
     public enum WHAT_CLICKED{
-        OBJECT, LIGHT, OTHER
+        OBJECT, LIGHT, BACK, OTHER
     }
 
-    public WHAT_CLICKED whatClicked(float x, float y){
-        model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y);
-
+    public WHAT_CLICKED whatClicked(double x, double y){
+        Object thing = model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y);
+        if(thing != null && thing instanceof String){
+            if(thing.equals("IBRObject")){
+                return WHAT_CLICKED.OBJECT;
+            }else if(((String) thing).startsWith("Light")){
+                return WHAT_CLICKED.LIGHT;
+            }
+        }else {
+            return WHAT_CLICKED.BACK;
+        }
         return WHAT_CLICKED.OTHER;
     }
 }
