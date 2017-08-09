@@ -32,6 +32,20 @@ public class OpenGLContextState implements ContextState<OpenGLContext>
 	}
 	
 	@Override
+	public void enableDepthWrite()
+	{
+		glDepthMask(true);
+		context.openGLErrorCheck();
+	}
+	
+	@Override
+	public void disableDepthWrite()
+	{
+		glDepthMask(false);
+		context.openGLErrorCheck();
+	}
+	
+	@Override
 	public void enableMultisampling()
 	{
 		glEnable(GL_MULTISAMPLE);

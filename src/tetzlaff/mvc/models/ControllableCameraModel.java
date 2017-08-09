@@ -21,7 +21,6 @@ public interface ControllableCameraModel extends ReadonlyCameraModel {
     public Float getDistance();
     public void setDistance(Float distance);
 
-    public Vector3 getCenter();
     public void setCenter(Vector3 offSet);
 
     public Double getTwist();

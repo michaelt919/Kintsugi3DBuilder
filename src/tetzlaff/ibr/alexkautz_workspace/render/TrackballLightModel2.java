@@ -102,6 +102,12 @@ public class TrackballLightModel2 extends LightModelBase implements LightModel
 		//return i != this.selectedLightIndex;
 		return true;
 	}
+	
+	@Override
+	public boolean isLightWidgetEnabled(int i) 
+	{
+		return i == 0;
+	}
 
 	@Override
 	public Matrix4 getLightMatrix(int i) 
@@ -137,7 +143,15 @@ public class TrackballLightModel2 extends LightModelBase implements LightModel
 		this.cameraPoseOverride = null;
 	}
 
+	@Override
+	public Vector3 getLightCenter(int i) 
+	{
+		return this.TrackballModel2s[i].getCenter();
+	}
 
-
-
+	@Override
+	public void setLightCenter(int i, Vector3 lightTargetPoint) 
+	{
+		throw new UnsupportedOperationException();
+	}
 }

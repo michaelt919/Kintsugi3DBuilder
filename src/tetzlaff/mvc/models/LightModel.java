@@ -9,4 +9,5 @@ public interface LightModel extends ReadonlyLightModel
 	void setAmbientLightColor(Vector3 ambientLightColor);
 	void setEnvironmentMappingEnabled(boolean enabled);
 	void setLightMatrix(int i, Matrix4 lightMatrix);
+	void setLightCenter(int i, Vector3 lightTargetPoint);
 }

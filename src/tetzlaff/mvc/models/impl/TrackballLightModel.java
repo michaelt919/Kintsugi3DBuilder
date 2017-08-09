@@ -100,6 +100,12 @@ public class TrackballLightModel extends LightModelBase implements LightModel
 	{
 		return i != this.selectedLightIndex;
 	}
+	
+	@Override
+	public boolean isLightWidgetEnabled(int i) 
+	{
+		return i == 0;
+	}
 
 	@Override
 	public Matrix4 getLightMatrix(int i) 
@@ -121,6 +127,18 @@ public class TrackballLightModel extends LightModelBase implements LightModel
 
 	@Override
 	public void setLightMatrix(int i, Matrix4 lightMatrix) 
+	{
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Vector3 getLightCenter(int i) 
+	{
+		return this.trackballModels[i].getCenter();
+	}
+
+	@Override
+	public void setLightCenter(int i, Vector3 lightTargetPoint) 
 	{
 		throw new UnsupportedOperationException();
 	}

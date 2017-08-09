@@ -68,6 +68,12 @@ public class LightModel3 extends ControllableLightModel {
     public boolean isLightVisualizationEnabled(int i) {
         return true;
     }
+	
+	@Override
+	public boolean isLightWidgetEnabled(int i) 
+	{
+		return true;
+	}
 
     @Override
     public void setLightColor(int i, Vector3 color) {
@@ -109,4 +115,11 @@ public class LightModel3 extends ControllableLightModel {
     public ControllableSubLightModel getLight(int i) {
         return subLightModel3s[i];
     }
+
+	@Override
+	public Vector3 getLightCenter(int i) 
+	{
+		// TODO
+		throw new UnsupportedOperationException();
+	}
 }

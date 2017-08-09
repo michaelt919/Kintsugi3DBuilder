@@ -38,6 +38,12 @@ public class HardcodedLightModel implements CameraBasedLightModel
 	}
 
 	@Override
+	public boolean isLightWidgetEnabled(int i) 
+	{
+		return false;
+	}
+
+	@Override
 	public Vector3 getLightColor(int i) 
 	{
 		if (i == 0)
@@ -174,6 +180,18 @@ public class HardcodedLightModel implements CameraBasedLightModel
 
 	@Override
 	public void setLightMatrix(int i, Matrix4 lightMatrix) 
+	{
+		// Ignore
+	}
+
+	@Override
+	public Vector3 getLightCenter(int i) 
+	{
+		return Vector3.ZERO;
+	}
+
+	@Override
+	public void setLightCenter(int i, Vector3 lightTargetPoint) 
 	{
 		// Ignore
 	}
