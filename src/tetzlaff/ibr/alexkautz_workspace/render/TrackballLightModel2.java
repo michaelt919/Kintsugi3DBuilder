@@ -154,4 +154,10 @@ public class TrackballLightModel2 extends LightModelBase implements LightModel
 	{
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public Matrix4 getEnvironmentMapMatrix() 
+	{
+		return getLightMatrix(0);
+	}
 }

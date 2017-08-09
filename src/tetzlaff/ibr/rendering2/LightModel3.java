@@ -122,4 +122,11 @@ public class LightModel3 extends ControllableLightModel {
 		// TODO
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public Matrix4 getEnvironmentMapMatrix() 
+	{
+		// TODO
+		return getLightMatrix(0);
+	}
 }

@@ -152,4 +152,10 @@ public class TrackballLightModel extends LightModelBase implements LightModel
 	{
 		this.cameraPoseOverride = null;
 	}
+
+	@Override
+	public Matrix4 getEnvironmentMapMatrix() 
+	{
+		return getLightMatrix(0);
+	}
 }
