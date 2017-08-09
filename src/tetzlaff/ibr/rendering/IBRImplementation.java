@@ -1172,7 +1172,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 						new Vector4(0, 0, 1.0f, projection.get(2, 2))
 							.dividedBy(projection.get(2, 3)));
 				
-				// TODO Transform from screen space into world space
+				// Transform from screen space into world space
 				Vector4 unscaledPosition = projectionInverse
 					.times(new Vector4((float)(2 * x - 1), (float)(1 - 2 * y), 2 * (float)(0x0000FFFF & pixelDepths[index]) / (float)0xFFFF - 1, 1.0f));
 				

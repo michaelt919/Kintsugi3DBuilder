@@ -84,19 +84,34 @@ vec2 computeFidelity()
 	// }
 	// else
 	{
-		vec3 diff;
+		//vec3 diff;
+		
+		// if (sum.a <= 0.0)
+		// {
+			// diff = -lfSample.rgb;
+		// }
+		// else if (perPixelWeightsEnabled)
+		// {
+			// diff = sum.rgb / sum.a - lfSample.rgb;
+		// }
+		// else
+		// {
+			// diff = sum.rgb - lfSample.rgb;
+		// }
+		
+		float diff;
 		
 		if (sum.a <= 0.0)
 		{
-			diff = -lfSample.rgb;
+			diff = -getLuminance(lfSample.rgb);
 		}
 		else if (perPixelWeightsEnabled)
 		{
-			diff = sum.rgb / sum.a - lfSample.rgb;
+			diff = getLuminance(sum.rgb / sum.a) - getLuminance(lfSample.rgb);
 		}
 		else
 		{
-			diff = sum.rgb - lfSample.rgb;
+			diff = getLuminance(sum.rgb) - getLuminance(lfSample.rgb);
 		}
 		
 		return clamp(normalize(mat3(model_view) * fNormal).z, 0.0, 1.0) // n dot v
