@@ -11,7 +11,7 @@ import tetzlaff.gl.window.MouseButtonState;
 import tetzlaff.gl.window.Window;
 import tetzlaff.mvc.models.*;
 
-public class LightDragTool extends AbstractTool {
+class LightDragTool extends AbstractTool {
     public LightDragTool(ControllableCameraModel cameraModel, ControllableEnvironmentMapModel environmentMapModel, ControllableLightModel lightModel) {
         super(cameraModel, environmentMapModel, lightModel);
     }
