@@ -145,6 +145,12 @@ public class IBRelight
 		{
 			normalLightModel.setLightCenter(i, lightTargetPoint);
 		}
+
+		@Override
+		public Matrix4 getEnvironmentMapMatrix() 
+		{
+			return hardcodedMode ? hardcodedLightModel.getEnvironmentMapMatrix() : normalLightModel.getEnvironmentMapMatrix();
+		}
 	}
 	
 	public static void runProgram()
