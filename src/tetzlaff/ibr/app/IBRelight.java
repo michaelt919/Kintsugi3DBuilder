@@ -127,6 +127,24 @@ public class IBRelight
 		{
 			return hardcodedMode ? hardcodedLightModel.isLightVisualizationEnabled(index) : normalLightModel.isLightVisualizationEnabled(index);
 		}
+
+		@Override
+		public boolean isLightWidgetEnabled(int index) 
+		{
+			return hardcodedMode ? hardcodedLightModel.isLightWidgetEnabled(index) : normalLightModel.isLightWidgetEnabled(index);
+		}
+
+		@Override
+		public Vector3 getLightCenter(int i) 
+		{
+			return hardcodedMode ? hardcodedLightModel.getLightCenter(i) : normalLightModel.getLightCenter(i);
+		}
+
+		@Override
+		public void setLightCenter(int i, Vector3 lightTargetPoint) 
+		{
+			normalLightModel.setLightCenter(i, lightTargetPoint);
+		}
 	}
 	
 	public static void runProgram()

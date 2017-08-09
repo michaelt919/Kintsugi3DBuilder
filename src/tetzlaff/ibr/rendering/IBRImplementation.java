@@ -67,6 +67,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private Program<ContextType> lightProgram;
 	private VertexBuffer<ContextType> lightVertices;
 	private Texture2D<ContextType> lightTexture;
+	private Texture2D<ContextType> lightTargetTexture;
 	private Drawable<ContextType> lightDrawable;
     
     private String id;
@@ -143,8 +144,17 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     	this.sceneObjectNameList.add("Light4");
     	this.sceneObjectIDLookup.put("Light4", 6);
     	
+    	this.sceneObjectNameList.add("Light1Target");
+    	this.sceneObjectIDLookup.put("Light1Target", 7);
+    	this.sceneObjectNameList.add("Light2Target");
+    	this.sceneObjectIDLookup.put("Light2Target", 8);
+    	this.sceneObjectNameList.add("Light3Target");
+    	this.sceneObjectIDLookup.put("Light3Target", 9);
+    	this.sceneObjectNameList.add("Light4Target");
+    	this.sceneObjectIDLookup.put("Light4Target", 10);
+    	
     	this.sceneObjectNameList.add("SceneObject");
-    	this.sceneObjectIDLookup.put("SceneObject", 7);
+    	this.sceneObjectIDLookup.put("SceneObject", 11);
     }
 	
 	@Override
@@ -272,6 +282,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    		this.lightDrawable.addVertexBuffer("position", lightVertices);
 	    		
 	    		NativeVectorBuffer lightTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
+
+	    		NativeVectorBuffer lightTargetTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
 	    		
 	    		int k = 0;
 	    		for (int i = 0; i < 64; i++)
@@ -284,11 +296,23 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    				
 	    				double rSq = x*x + y*y;
 	    				lightTextureData.set(k, 0, (float)(Math.cos(Math.min(Math.sqrt(rSq), 1.0) * Math.PI) + 1.0) * 0.5f);
+	    				
+	    				if (rSq <= 1.0)
+	    				{
+	    					lightTargetTextureData.set(k, 0, 1.0f);
+	    				}
+	    				
 	    				k++;
 	    			}
 	    		}
 	    		
 	    		this.lightTexture = context.build2DColorTextureFromBuffer(64, 64, lightTextureData)
+    					.setInternalFormat(ColorFormat.R8)
+    					.setLinearFilteringEnabled(true)
+    					.setMipmapsEnabled(true)
+    					.createTexture();
+	    		
+	    		this.lightTargetTexture = context.build2DColorTextureFromBuffer(64, 64, lightTargetTextureData)
     					.setInternalFormat(ColorFormat.R8)
     					.setLinearFilteringEnabled(true)
     					.setMipmapsEnabled(true)
@@ -849,6 +873,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 				{
 					// Draw lights
 					context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+					context.getState().disableDepthWrite();
+					
+					float scale = resources.viewSet.getCameraPose(0).times(resources.geometry.getCentroid().asPosition())
+			    			.getXYZ().length() 
+			    			* this.boundingRadius / resources.geometry.getBoundingRadius();
+					
+					// TODO make this a method since its used multiple times
+					Matrix4 partialViewMatrix =  Matrix4.scale(scale)
+			    			.times(cameraModel.getLookMatrix())
+			    			.times(Matrix4.scale(1.0f / scale));
 					
 					Matrix4 viewMatrix = this.getViewMatrix();
 					
@@ -865,14 +899,39 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		
 		//							modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
 								Matrix4.translate(lightPosition)
-									.times(Matrix4.scale((float)size.height * -lightPosition.z / (16.0f * size.width), -lightPosition.z / 16.0f, 1.0f)));
+									.times(Matrix4.scale(-lightPosition.z / 16.0f, -lightPosition.z / 16.0f, 1.0f)));
 							this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
 				    		this.lightProgram.setTexture("lightTexture", this.lightTexture);
+							this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+						}
+						
+						if (lightModel.isLightWidgetEnabled(i))
+						{
+							this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + "Target"));
+							this.lightProgram.setUniform("color", new Vector3(0.5f,0,0.5f) /* magenta */);
+							
+							Vector3 lightPosition = partialViewMatrix.times(this.lightModel.getLightCenter(i).asPosition()).getXYZ();
+							
+							this.lightProgram.setUniform("model_view",
+		
+		//							modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
+								Matrix4.translate(lightPosition)
+									.times(Matrix4.scale(-lightPosition.z / 128.0f, -lightPosition.z / 128.0f, 1.0f)));
+							this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
+				    		this.lightProgram.setTexture("lightTexture", this.lightTargetTexture);
+				    		
+				    		this.context.getState().disableDepthTest();
+							this.lightProgram.setUniform("color", new Vector3(0.5f,0,0.0f) /* purple / dark magenta */);
+							this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							this.lightProgram.setUniform("color", new Vector3(0.5f,0,1.0f) /* magenta */);
 							this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
 						}
 					}
 					
 					context.getState().disableAlphaBlending();
+					context.getState().enableDepthWrite();
 				}
 				
 				// Finish drawing
