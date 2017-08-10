@@ -1,10 +1,10 @@
 package tetzlaff.ibr;
 
 import tetzlaff.ibr.gui2.controllers.menu_bar.RenderingType;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
 import tetzlaff.util.ShadingParameterMode;
 
-public class IBRSettings implements IBRSettings2 {
+public class IBRSettings implements IBRSettingsModel {
 	private float gamma = 2.2f;
 	private float weightExponent = 16.0f;
 	private float isotropyFactor = 0.5f;

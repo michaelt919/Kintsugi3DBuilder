@@ -7,6 +7,9 @@ import javax.swing.ComboBoxModel;
 
 import tetzlaff.gl.Context;
 import tetzlaff.ibr.rendering2.to_sort.IBRLoadOptions2;
+import tetzlaff.mvc.models.ReadonlyCameraModel;
+import tetzlaff.mvc.models.ReadonlyLightModel;
+import tetzlaff.mvc.models.ReadonlyObjectModel;
 
 public interface IBRRenderableListModel<ContextType extends Context<ContextType>> extends ComboBoxModel<IBRRenderable<ContextType>>
 {
@@ -15,4 +18,8 @@ public interface IBRRenderableListModel<ContextType extends Context<ContextType>
 	@Override
 	IBRRenderable<ContextType> getSelectedItem();
 	void setLoadingMonitor(LoadingMonitor loadingMonitor);
+	
+	void setObjectModel(ReadonlyObjectModel objectModel);
+	void setCameraModel(ReadonlyCameraModel cameraModel);
+	void setLightModel(ReadonlyLightModel lightModel);
 }

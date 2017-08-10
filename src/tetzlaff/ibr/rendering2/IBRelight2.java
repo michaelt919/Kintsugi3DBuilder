@@ -15,6 +15,7 @@ import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
+import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibr.alexkautz_workspace.render.TrackballLightController2;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
@@ -136,15 +137,13 @@ public class IBRelight2
 			// interface later when it is passed to the ULFUserInterface object.
 			//ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program, cameraModel, lightController.getLightModel());
 
-            ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(
-                    context,
-                    program,
-					cameraModel3,
-					lightModel3);
+            ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
+            
+            rendererList.setObjectModel(() -> Matrix4.IDENTITY);
+            rendererList.setCameraModel(cameraModel3);
+            rendererList.setLightModel(lightModel3);
 
             toolModel.setModel(rendererList);
-
-
 
             window.addCharacterListener((win, c) -> {
 				if (c == 'p')

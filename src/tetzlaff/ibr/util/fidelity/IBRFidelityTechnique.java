@@ -18,7 +18,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
 import tetzlaff.util.ShadingParameterMode;
 
 public class IBRFidelityTechnique<ContextType extends Context<ContextType>> implements FidelityEvaluationTechnique<ContextType>
@@ -26,7 +26,7 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
 	private IBRResources<ContextType> resources;
 	private Drawable<ContextType> drawable;
 	private Framebuffer<ContextType> framebuffer;
-    private IBRSettings2 settings;
+    private IBRSettingsModel settings;
     
     private List<Integer> activeViewIndexList;
 	
@@ -52,7 +52,7 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
 	}
 	
 	@Override
-	public void initialize(IBRResources<ContextType> resources, IBRSettings2 settings, int size) throws IOException
+	public void initialize(IBRResources<ContextType> resources, IBRSettingsModel settings, int size) throws IOException
 	{
 		this.resources = resources;
 		this.settings = settings;
