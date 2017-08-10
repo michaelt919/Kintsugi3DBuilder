@@ -88,10 +88,6 @@ public class LightModel3 extends ControllableLightModel {
 
 
 
-    @Override
-    public boolean getEnvironmentMappingEnabled() {
-        return true; //TODO
-    }
 
     @Override
     public Matrix4 getLightMatrix(int i) {
@@ -120,12 +116,5 @@ public class LightModel3 extends ControllableLightModel {
 	public Vector3 getLightCenter(int i) 
 	{
 	    return getLight(i).getCenter();
-	}
-
-	@Override
-	public Matrix4 getEnvironmentMapMatrix() 
-	{
-		// TODO
-		return getLightMatrix(0);
 	}
 }
