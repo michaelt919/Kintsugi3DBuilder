@@ -2,11 +2,11 @@ package tetzlaff.ibr.gui2.controllers.menu_bar;//Created by alexk on 7/31/2017.
 
 import javafx.beans.property.*;
 import javafx.fxml.FXML;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
 import tetzlaff.ibr.util.StaticHouse;
 import tetzlaff.util.ShadingParameterMode;
 
-public class IBRSettingsUIImpl implements IBRSettings2 {
+public class IBRSettingsUIImpl implements IBRSettingsModel {
     private final BooleanProperty occlusion = new SimpleBooleanProperty(true);
     private final BooleanProperty fresnel = new SimpleBooleanProperty(false);
     private final BooleanProperty pBRGeometricAttenuation = new SimpleBooleanProperty(false);

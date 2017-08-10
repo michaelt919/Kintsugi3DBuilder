@@ -3,7 +3,7 @@ package tetzlaff.ibr.rendering2.to_sort;//Created by alexk on 7/31/2017.
 import tetzlaff.ibr.gui2.controllers.menu_bar.RenderingType;
 import tetzlaff.util.ShadingParameterMode;
 
-public interface IBRSettings2 {
+public interface IBRSettingsModel {
     public float getGamma();
     public float getWeightExponent();
     public float getIsotropyFactor();
