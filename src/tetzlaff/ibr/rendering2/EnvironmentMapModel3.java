@@ -51,11 +51,17 @@ public class EnvironmentMapModel3 extends ControllableEnvironmentMapModel {
 
     @Override
     public boolean getEnvironmentMappingEnabled() {
-        return false;
+        return true;
     }
 
+    Matrix4 identity = Matrix4.IDENTITY;
     @Override
     public Matrix4 getEnvironmentMapMatrix() {
-        return null;
+        if(nn()){
+            double azmuth = selected.getValue().getEvRotation();
+            return Matrix4.rotateY(Math.toRadians(azmuth));
+        }else {
+            return identity;
+        }
     }
 }
