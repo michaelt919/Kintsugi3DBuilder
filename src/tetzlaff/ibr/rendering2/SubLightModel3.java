@@ -52,7 +52,7 @@ public class SubLightModel3 implements ControllableSubLightModel {
                 Vector3.ZERO,
                 new Vector3(0,1,0)
         ).times(getOrbit().times(
-                Matrix4.translate(getCenter())
+                Matrix4.translate(getCenter().negated())
         ));
     }
 
