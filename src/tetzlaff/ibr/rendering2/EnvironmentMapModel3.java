@@ -51,11 +51,11 @@ public class EnvironmentMapModel3 extends ControllableEnvironmentMapModel {
 
     @Override
     public boolean getEnvironmentMappingEnabled() {
-        return false;
+        return true;
     }
 
     @Override
     public Matrix4 getEnvironmentMapMatrix() {
-        return null;
+        return Matrix4.IDENTITY;//null;
     }
 }
