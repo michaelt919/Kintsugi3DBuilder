@@ -69,6 +69,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private Texture2D<ContextType> lightTexture;
 	private Texture2D<ContextType> lightTargetTexture;
 	private Drawable<ContextType> lightDrawable;
+	
+	private Program<ContextType> widgetProgram;
+	private VertexBuffer<ContextType> widgetVertices;
+	private Drawable<ContextType> widgetDrawable;
     
     private String id;
     private Drawable<ContextType> mainDrawable;
@@ -83,6 +87,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Drawable<ContextType> simpleTexDrawable;
     
     private File newEnvironmentFile = null;
+    private boolean environmentMapUnloadRequested = false;
     private boolean environmentMapEnabled;
     private Cubemap<ContextType> environmentMap;
 
@@ -269,6 +274,32 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	        }
 		}
 		
+		if (this.widgetProgram == null)
+    	{
+	    	try
+	        {
+	    		this.widgetProgram = context.getShaderProgramBuilder()
+	    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+	    				.addShader(ShaderType.FRAGMENT, new File("shaders/common/solid.frag"))
+	    				.createProgram();
+	    		this.widgetVertices = context.createVertexBuffer()
+	    				.setData(NativeVectorBufferFactory.getInstance()
+    						.createFromFloatArray(3, 3, new float[] 
+							{ 
+								-1, 0, 1,
+								1, 0, 1, 
+								0, 0, -1
+							}));
+	    		
+	    		this.widgetDrawable = context.createDrawable(this.widgetProgram);
+	    		this.widgetDrawable.addVertexBuffer("position", widgetVertices);
+	        }
+	        catch (IOException e)
+	        {
+	        	e.printStackTrace();
+	        }
+    	}
+		
 		if (this.lightProgram == null)
     	{
 	    	try
@@ -280,49 +311,55 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    		this.lightVertices = context.createRectangle();
 	    		this.lightDrawable = context.createDrawable(this.lightProgram);
 	    		this.lightDrawable.addVertexBuffer("position", lightVertices);
-	    		
-	    		NativeVectorBuffer lightTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
-
-	    		NativeVectorBuffer lightTargetTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
-	    		
-	    		int k = 0;
-	    		for (int i = 0; i < 64; i++)
-	    		{
-    				double x = i * 2.0 / 63.0 - 1.0;
-	    			
-	    			for (int j = 0; j < 64; j++)
-	    			{
-	    				double y = j * 2.0 / 63.0 - 1.0;
-	    				
-	    				double rSq = x*x + y*y;
-	    				lightTextureData.set(k, 0, (float)(Math.cos(Math.min(Math.sqrt(rSq), 1.0) * Math.PI) + 1.0) * 0.5f);
-	    				
-	    				if (rSq <= 1.0)
-	    				{
-	    					lightTargetTextureData.set(k, 0, 1.0f);
-	    				}
-	    				
-	    				k++;
-	    			}
-	    		}
-	    		
-	    		this.lightTexture = context.build2DColorTextureFromBuffer(64, 64, lightTextureData)
-    					.setInternalFormat(ColorFormat.R8)
-    					.setLinearFilteringEnabled(true)
-    					.setMipmapsEnabled(true)
-    					.createTexture();
-	    		
-	    		this.lightTargetTexture = context.build2DColorTextureFromBuffer(64, 64, lightTargetTextureData)
-    					.setInternalFormat(ColorFormat.R8)
-    					.setLinearFilteringEnabled(true)
-    					.setMipmapsEnabled(true)
-    					.createTexture();
 	        }
 	        catch (IOException e)
 	        {
 	        	e.printStackTrace();
 	        }
     	}
+		
+		NativeVectorBuffer lightTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
+
+		NativeVectorBuffer lightTargetTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
+		
+		int k = 0;
+		for (int i = 0; i < 64; i++)
+		{
+			double x = i * 2.0 / 63.0 - 1.0;
+			
+			for (int j = 0; j < 64; j++)
+			{
+				double y = j * 2.0 / 63.0 - 1.0;
+				
+				double rSq = x*x + y*y;
+				lightTextureData.set(k, 0, (float)(Math.cos(Math.min(Math.sqrt(rSq), 1.0) * Math.PI) + 1.0) * 0.5f);
+				
+				if (rSq <= 1.0)
+				{
+					lightTargetTextureData.set(k, 0, 1.0f);
+				}
+				
+				k++;
+			}
+		}
+	    		
+		if (this.lightTexture == null)
+		{
+    		this.lightTexture = context.build2DColorTextureFromBuffer(64, 64, lightTextureData)
+					.setInternalFormat(ColorFormat.R8)
+					.setLinearFilteringEnabled(true)
+					.setMipmapsEnabled(true)
+					.createTexture();
+		}
+    		
+		if (this.lightTargetTexture == null)
+		{
+    		this.lightTargetTexture = context.build2DColorTextureFromBuffer(64, 64, lightTargetTextureData)
+					.setInternalFormat(ColorFormat.R8)
+					.setLinearFilteringEnabled(true)
+					.setMipmapsEnabled(true)
+					.createTexture();
+		}
 		
 		shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
 
@@ -346,6 +383,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	public void update() 
 	{
 		this.updateCentroidAndRadius();
+		
+		if (this.environmentMapUnloadRequested = true && this.environmentMap != null)
+		{
+			this.environmentMap.close();
+			this.environmentMap = null;
+		}
 		
 		if (this.newEnvironmentFile != null)
 		{
@@ -1134,10 +1177,20 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	@Override
 	public void setEnvironment(File environmentFile)
 	{
-		if (environmentFile != null && environmentFile.exists())
+		if (environmentFile == null && this.environmentMap != null)
+		{
+			this.environmentMapUnloadRequested = true;
+		}
+		else if (environmentFile.exists())
 		{
 			this.newEnvironmentFile = environmentFile;
 		}
+	}
+
+	@Override
+	public void setBackplate(File backplateFile) 
+	{
+		// TODO Auto-generated method stub
 	}
 	
 	@Override
@@ -1181,6 +1234,21 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     		this.lightProgram = newProgram;
     		this.lightDrawable = context.createDrawable(this.lightProgram);
     		this.lightDrawable.addVertexBuffer("position", lightVertices);
+    		
+    		newProgram = context.getShaderProgramBuilder()
+    				.addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+    				.addShader(ShaderType.FRAGMENT, new File("shaders/common/solid.frag"))
+    				.createProgram();
+    		
+    		if (this.widgetProgram != null)
+    		{
+    			this.widgetProgram.close();
+    		}
+    		
+    		this.widgetProgram = newProgram;
+    		
+    		this.widgetDrawable = context.createDrawable(this.widgetProgram);
+    		this.widgetDrawable.addVertexBuffer("position", widgetVertices);
         }
         catch (IOException e)
         {
@@ -1244,12 +1312,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 						.getXYZ();
 			};
 		};
-	}
-
-	@Override
-	public void setBackplate(File backplateFile) 
-	{
-		// TODO Auto-generated method stub
 	}
 
 	@Override
