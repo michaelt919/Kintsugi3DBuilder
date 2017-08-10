@@ -386,7 +386,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().settings().setIBREnabled(chckbxImagebasedRendering.isSelected());
+				model.getSelectedItem().getSettingsModel().setIBREnabled(chckbxImagebasedRendering.isSelected());
 			}
 		});
 		
@@ -402,7 +402,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().settings().setTexturesEnabled(chckbxUseTextures.isSelected());
+				model.getSelectedItem().getSettingsModel().setTexturesEnabled(chckbxUseTextures.isSelected());
 			}
 		});
 		
@@ -419,7 +419,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().settings().setRelightingEnabled(chckbxRelighting.isSelected());
+				model.getSelectedItem().getSettingsModel().setRelightingEnabled(chckbxRelighting.isSelected());
 			}
 		});
 		
@@ -435,7 +435,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().settings().setShadowsEnabled(chckbxShadows.isSelected());
+				model.getSelectedItem().getSettingsModel().setShadowsEnabled(chckbxShadows.isSelected());
 			}
 		});
 		
@@ -452,7 +452,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().settings().setFresnelEnabled(chckbxFresnelEffect.isSelected());
+				model.getSelectedItem().getSettingsModel().setFresnelEnabled(chckbxFresnelEffect.isSelected());
 			}
 		});
 		
@@ -469,7 +469,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().settings().setVisibleLightsEnabled(chckbxVisualizeLights.isSelected());
+				model.getSelectedItem().getSettingsModel().setVisibleLightsEnabled(chckbxVisualizeLights.isSelected());
 			}
 		});
 		
@@ -530,19 +530,19 @@ public class IBRelightConfigFrame extends JFrame
 		
 		Runnable updateWidgetsFromSettings = () ->
 		{
-			spinnerGamma.setValue((double)model.getSelectedItem().settings().getGamma());
-			spinnerExponent.setValue((double)model.getSelectedItem().settings().getWeightExponent());
-			isotropySpinner.setValue((double)model.getSelectedItem().settings().getIsotropyFactor());
-			chckbxOcclusion.setSelected(model.getSelectedItem().settings().isOcclusionEnabled());
-			spinnerOccBias.setValue((double)model.getSelectedItem().settings().getOcclusionBias());
+			spinnerGamma.setValue((double)model.getSelectedItem().getSettingsModel().getGamma());
+			spinnerExponent.setValue((double)model.getSelectedItem().getSettingsModel().getWeightExponent());
+			isotropySpinner.setValue((double)model.getSelectedItem().getSettingsModel().getIsotropyFactor());
+			chckbxOcclusion.setSelected(model.getSelectedItem().getSettingsModel().isOcclusionEnabled());
+			spinnerOccBias.setValue((double)model.getSelectedItem().getSettingsModel().getOcclusionBias());
 			chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
-			chckbxImagebasedRendering.setSelected(model.getSelectedItem().settings().isIBREnabled());
-			chckbxRelighting.setSelected(model.getSelectedItem().settings().isRelightingEnabled());
-			chckbxShadows.setSelected(model.getSelectedItem().settings().areShadowsEnabled());
-			chckbxUseTextures.setSelected(model.getSelectedItem().settings().areTexturesEnabled());
-			chckbxPhysicallybasedGeometricAttenuation.setSelected(model.getSelectedItem().settings().isPBRGeometricAttenuationEnabled());
-			chckbxFresnelEffect.setSelected(model.getSelectedItem().settings().isFresnelEnabled());
-			chckbxVisualizeLights.setSelected(model.getSelectedItem().settings().areVisibleLightsEnabled());
+			chckbxImagebasedRendering.setSelected(model.getSelectedItem().getSettingsModel().isIBREnabled());
+			chckbxRelighting.setSelected(model.getSelectedItem().getSettingsModel().isRelightingEnabled());
+			chckbxShadows.setSelected(model.getSelectedItem().getSettingsModel().areShadowsEnabled());
+			chckbxUseTextures.setSelected(model.getSelectedItem().getSettingsModel().areTexturesEnabled());
+			chckbxPhysicallybasedGeometricAttenuation.setSelected(model.getSelectedItem().getSettingsModel().isPBRGeometricAttenuationEnabled());
+			chckbxFresnelEffect.setSelected(model.getSelectedItem().getSettingsModel().isFresnelEnabled());
+			chckbxVisualizeLights.setSelected(model.getSelectedItem().getSettingsModel().areVisibleLightsEnabled());
 		};
 		
 		// Set initial values from the 'model' parameter
@@ -673,7 +673,7 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().settings().setGamma((float)(double)(Double)spinnerGamma.getModel().getValue());
+				model.getSelectedItem().getSettingsModel().setGamma((float)(double)(Double)spinnerGamma.getModel().getValue());
 			}
 		});
 		
@@ -682,7 +682,7 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().settings().setWeightExponent((float)(double)(Double)spinnerExponent.getModel().getValue());
+				model.getSelectedItem().getSettingsModel().setWeightExponent((float)(double)(Double)spinnerExponent.getModel().getValue());
 			}
 		});
 		
@@ -691,7 +691,7 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().settings().setIsotropyFactor((float)(double)(Double)isotropySpinner.getModel().getValue());
+				model.getSelectedItem().getSettingsModel().setIsotropyFactor((float)(double)(Double)isotropySpinner.getModel().getValue());
 			}
 		});
 		
@@ -701,7 +701,7 @@ public class IBRelightConfigFrame extends JFrame
 			if (model.getSelectedItem() != null)
 			{
 				boolean selected = chckbxOcclusion.isSelected();
-				model.getSelectedItem().settings().setOcclusionEnabled(selected);
+				model.getSelectedItem().getSettingsModel().setOcclusionEnabled(selected);
 				lblBias.setEnabled(selected);
 				spinnerOccBias.setEnabled(selected);
 			}
@@ -712,7 +712,7 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().settings().setOcclusionBias((float)(double)(Double)spinnerOccBias.getModel().getValue());
+				model.getSelectedItem().getSettingsModel().setOcclusionBias((float)(double)(Double)spinnerOccBias.getModel().getValue());
 			}
 		});
 		
@@ -721,7 +721,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().settings().setPBRGeometricAttenuationEnabled(chckbxPhysicallybasedGeometricAttenuation.isSelected());
+				model.getSelectedItem().getSettingsModel().setPBRGeometricAttenuationEnabled(chckbxPhysicallybasedGeometricAttenuation.isSelected());
 			}
 		});
 		
@@ -1181,7 +1181,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		btnBTFExport.addActionListener(e ->
 		{
-			IBRRequest request = new BTFRequestUI(this, fileChooser, spinnerWidth, spinnerHeight, model.getSelectedItem().settings(), lightModel.getLightColor(0)).prompt();
+			IBRRequest request = new BTFRequestUI(this, fileChooser, spinnerWidth, spinnerHeight, model.getSelectedItem().getSettingsModel(), lightModel.getLightColor(0)).prompt();
 			
 			if (request != null)
 			{
@@ -1196,7 +1196,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for the 'resample' button to generate new vies for the current light field.
 		btnFidelity.addActionListener(e -> 
 		{
-			IBRRequest request = new FidelityMetricRequestUI(this, fileChooser, model.getSelectedItem().settings()).prompt();
+			IBRRequest request = new FidelityMetricRequestUI(this, fileChooser, model.getSelectedItem().getSettingsModel()).prompt();
 			
 			if (request != null)
 			{
@@ -1263,7 +1263,7 @@ public class IBRelightConfigFrame extends JFrame
 						}
 					}
 					
-					model.getSelectedItem().setTransformationMatrices(matrices);
+					model.getSelectedItem().setMultiTransformationModel(matrices);
 				} 
 				catch (Exception ex) 
 				{

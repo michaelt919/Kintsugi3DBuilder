@@ -13,17 +13,17 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
 
 public class BTFRequest implements IBRRequest
 {
 	private int width;
 	private int height;
 	private File exportPath;
-	private IBRSettings2 settings;
+	private IBRSettingsModel settings;
 	private Vector3 lightColor;
 	
-	public BTFRequest(int width, int height, File exportPath, IBRSettings2 settings, Vector3 lightColor)
+	public BTFRequest(int width, int height, File exportPath, IBRSettingsModel settings, Vector3 lightColor)
 	{
 		this.width = width;
 		this.height = height;

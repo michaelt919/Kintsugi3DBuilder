@@ -6,13 +6,13 @@ import java.util.List;
 
 import tetzlaff.gl.Context;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
 
 public interface FidelityEvaluationTechnique<ContextType extends Context<ContextType>> extends AutoCloseable
 {
 	boolean isGuaranteedMonotonic();
 	boolean isGuaranteedInterpolating();
-	void initialize(IBRResources<ContextType> resources, IBRSettings2 settings, int size) throws IOException;
+	void initialize(IBRResources<ContextType> resources, IBRSettingsModel settings, int size) throws IOException;
 	void setMask(File maskFile) throws IOException;
 	void updateActiveViewIndexList(List<Integer> activeViewIndexList);
 	double evaluateBaselineError(int targetViewIndex, File debugFile);

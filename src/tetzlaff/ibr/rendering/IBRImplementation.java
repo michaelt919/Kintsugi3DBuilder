@@ -40,9 +40,10 @@ import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRSettings;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
+import tetzlaff.mvc.models.ReadonlyObjectModel;
 import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.util.EnvironmentMap;
 import tetzlaff.util.ShadingParameterMode;
@@ -52,10 +53,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private ContextType context;
 	private Program<ContextType> program;
 	private Program<ContextType> shadowProgram;
-	private ReadonlyLightModel lightModel;
 	private LoadingMonitor callback;
 	private boolean suppressErrors = false;
-	private IBRSettings2 settings;
+	private IBRSettingsModel settings;
 
 	private IBRResources.Builder<ContextType> resourceBuilder;
 	private IBRResources<ContextType> resources;
@@ -72,7 +72,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     
     private String id;
     private Drawable<ContextType> mainDrawable;
+
+    private ReadonlyObjectModel objectModel;
     private ReadonlyCameraModel cameraModel;
+	private ReadonlyLightModel lightModel;
 
     private Vector3 clearColor;
     private boolean halfResEnabled;
@@ -82,7 +85,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private File newEnvironmentFile = null;
     private boolean environmentMapEnabled;
     private Cubemap<ContextType> environmentMap;
-    private Matrix4 envMapMatrix = null;
 
     private Program<ContextType> environmentBackgroundProgram;
     private Drawable<ContextType> environmentBackgroundDrawable;
@@ -91,7 +93,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     
     private UniformBuffer<ContextType> weightBuffer = null;
     
-    private List<Matrix4> transformationMatrices;
+    private List<Matrix4> multiTransformationModel;
     private Vector3 centroid;
     private float boundingRadius;
     
@@ -107,21 +109,19 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private int[] pixelObjectIDs;
 	private short[] pixelDepths;
     private FramebufferSize fboSize;
+    private Matrix4 partialViewMatrix;
 	
-	IBRImplementation(String id, ContextType context, Program<ContextType> program, 
-			ReadonlyCameraModel cameraModel, ReadonlyLightModel lightModel,
+	IBRImplementation(String id, ContextType context, Program<ContextType> program,
 			IBRResources.Builder<ContextType> resourceBuilder)
     {
     	this.id = id;
 		this.context = context;
 		this.program = program;
     	this.resourceBuilder = resourceBuilder;
-    	this.cameraModel = cameraModel;
-    	this.lightModel = lightModel;
     	
     	this.clearColor = new Vector3(0.0f);
-    	this.transformationMatrices = new ArrayList<Matrix4>();
-    	this.transformationMatrices.add(Matrix4.IDENTITY);
+    	this.multiTransformationModel = new ArrayList<Matrix4>();
+    	this.multiTransformationModel.add(Matrix4.IDENTITY);
     	this.settings = new IBRSettings();
     	
     	this.sceneObjectNameList = new ArrayList<String>();
@@ -453,14 +453,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		}
 	}
 	
-	private void setupForDraw()
+	private void setupForDraw(Matrix4 view)
 	{
-		this.setupForDraw(this.mainDrawable.program());
+		this.setupForDraw(this.mainDrawable.program(), view);
 	}
 	
-	private void setupForDraw(Program<ContextType> program)
+	private void setupForDraw(Program<ContextType> program, Matrix4 view)
 	{
-		this.resources.setupShaderProgram(program, this.settings().areTexturesEnabled());
+		this.resources.setupShaderProgram(program, this.getSettingsModel().areTexturesEnabled());
 		
 		if (!this.settings.isRelightingEnabled() && this.settings.getWeightMode() == ShadingParameterMode.UNIFORM)
 		{
@@ -470,7 +470,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 				weightBuffer.close();
 				weightBuffer = null;
 			}
-			weightBuffer = context.createUniformBuffer().setData(this.generateViewWeights());
+			weightBuffer = context.createUniformBuffer().setData(this.generateViewWeights(view));
 			program.setUniformBuffer("ViewWeights", weightBuffer);
 	    	program.setUniform("occlusionEnabled", false);
 		}
@@ -517,22 +517,20 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		program.setUniform("ambientColor", lightModel.getAmbientLightColor());
     	
     	this.clearColor = new Vector3(
-    			(float)Math.pow(lightModel.getAmbientLightColor().x, 1.0 / this.settings().getGamma()),
-    			(float)Math.pow(lightModel.getAmbientLightColor().y, 1.0 / this.settings().getGamma()),
-    			(float)Math.pow(lightModel.getAmbientLightColor().z, 1.0 / this.settings().getGamma()));
+    			(float)Math.pow(lightModel.getAmbientLightColor().x, 1.0 / this.getSettingsModel().getGamma()),
+    			(float)Math.pow(lightModel.getAmbientLightColor().y, 1.0 / this.getSettingsModel().getGamma()),
+    			(float)Math.pow(lightModel.getAmbientLightColor().z, 1.0 / this.getSettingsModel().getGamma()));
 	}
 	
 	private void updateCentroidAndRadius()
 	{
 		Vector4 sumPositions = new Vector4(0.0f);
     	this.boundingRadius = resources.geometry.getBoundingRadius();
-    	
-    	
     	this.centroid = resources.geometry.getCentroid();
     	
-    	if (transformationMatrices != null)
+    	if (multiTransformationModel != null)
     	{
-    		for (Matrix4 m : transformationMatrices)
+    		for (Matrix4 m : multiTransformationModel)
     		{
     			Vector4 position = m.times(resources.geometry.getCentroid().asPosition());
     			sumPositions = sumPositions.plus(position);
@@ -540,7 +538,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     		
     		this.centroid = sumPositions.getXYZ().dividedBy(sumPositions.w);
     		
-    		for(Matrix4 m : transformationMatrices)
+    		for(Matrix4 m : multiTransformationModel)
     		{
     			float distance = m.times(resources.geometry.getCentroid().asPosition()).getXYZ().distance(this.centroid);
     			this.boundingRadius = Math.max(this.boundingRadius, distance + resources.geometry.getBoundingRadius());
@@ -561,6 +559,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		float scale = getScale();
 		return Matrix4.scale(scale)
 			.times(lightModel.getLightMatrix(lightIndex))
+			.times(Matrix4.scale(1.0f / scale))
+			.times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
+			.times(Matrix4.translate(this.centroid.negated()));
+	}
+	
+	private Matrix4 getEnvironmentMapMatrix()
+	{
+		float scale = getScale();
+		return Matrix4.scale(scale)
+			.times(lightModel.getEnvironmentMapMatrix())
 			.times(Matrix4.scale(1.0f / scale))
 			.times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
 			.times(Matrix4.translate(this.centroid.negated()));
@@ -594,17 +602,17 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		shadowFramebuffer.setDepthAttachment(attachment);
 		shadowFramebuffer.clearDepthBuffer();
 		
-		for (Matrix4 m : this.transformationMatrices)
+		for (Matrix4 m : this.multiTransformationModel)
 		{
 			shadowProgram.setUniform("model_view", getLightMatrix(lightIndex).times(m));
 			shadowDrawable.draw(PrimitiveMode.TRIANGLES, shadowFramebuffer);
 		}
 	}
 	
-	private Matrix4 setupLight(int lightIndex, int modelInstance)
+	private void setupLight(int lightIndex, int modelInstance)
 	{
 		Matrix4 lightMatrix = 
-			getLightMatrix(lightIndex).times(this.transformationMatrices.get(modelInstance));
+			getLightMatrix(lightIndex).times(this.multiTransformationModel.get(modelInstance));
 		
 		// lightMatrix can be hardcoded here (comment out previous line)
 			
@@ -620,10 +628,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 			// Always end with this when hardcoding:
 			//	.times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0))));
 		
-		if (lightIndex == 0)
-		{
-			program.setUniform("envMapMatrix", lightMatrix);
-		}
 		Vector3 lightPos = lightMatrix.quickInverse(0.001f).times(Vector4.ORIGIN).getXYZ();
 		
 		program.setUniform("lightPosVirtual[" + lightIndex + "]", lightPos);
@@ -639,34 +643,47 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		program.setUniform("lightIntensityVirtual[" + lightIndex + "]", 
 				controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (scale * scale)));
 		program.setUniform("lightMatrixVirtual[" + lightIndex + "]", getLightProjection(lightIndex).times(lightMatrix));
+	}
+	
+	private Matrix4 getPartialViewMatrix()
+	{
+		float scale = getScale();
 		
-		return lightMatrix;
+		return Matrix4.scale(scale)
+    			.times(cameraModel.getLookMatrix())
+    			.times(Matrix4.scale(1.0f / scale));
+	}
+	
+	private Matrix4 getPartialViewMatrix(Matrix4 viewMatrix)
+	{
+		return viewMatrix
+    			.times(Matrix4.translate(this.centroid))
+    			.times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().transpose().asMatrix4());
 	}
 	
 	private Matrix4 getViewMatrix()
 	{
-    	float scale = resources.viewSet.getCameraPose(0).times(resources.geometry.getCentroid().asPosition())
-    			.getXYZ().length() 
-    			* this.boundingRadius / resources.geometry.getBoundingRadius();
-		
-		return Matrix4.scale(scale)
-    			.times(cameraModel.getLookMatrix())
-    			.times(Matrix4.scale(1.0f / scale))
+    	return getPartialViewMatrix()
     			.times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
     			.times(Matrix4.translate(this.centroid.negated()));
 	}
 	
-	private Matrix4 getModelViewMatrix(Matrix4 viewMatrix, int modelInstance)
+	private Matrix4 getModelViewMatrix(Matrix4 partialViewMatrix, int modelInstance)
 	{
-		return viewMatrix.times(transformationMatrices.get(modelInstance));
+		float scale = getScale();
+		
+		return partialViewMatrix
+				.times(Matrix4.scale(scale))
+				.times(this.objectModel.getTransformationMatrix())
+    			.times(Matrix4.scale(1.0f / scale))
+    			.times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
+    			.times(Matrix4.translate(this.centroid.negated()))
+				.times(multiTransformationModel.get(modelInstance));
 	}
 	
 	private Matrix4 getProjectionMatrix(FramebufferSize size)
 	{
-		float scale = resources.viewSet.getCameraPose(0)
-				.times(resources.geometry.getCentroid().asPosition())
-			.getXYZ().length()
-			* this.boundingRadius / resources.geometry.getBoundingRadius();
+		float scale = getScale();
 		
 		return Matrix4.perspective(
     			//(float)(1.0),
@@ -677,7 +694,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     			0.01f * scale, 100.0f * scale);
 	}
 
-	private void drawReferenceScene(Program<ContextType> program, Framebuffer<ContextType> framebuffer)
+	private void drawReferenceScene(Program<ContextType> program, Framebuffer<ContextType> framebuffer, Matrix4 view)
 	{
     	if (referenceScene != null && refScenePositions != null && refSceneNormals != null)
     	{
@@ -695,8 +712,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 			{
 				program.setUniform("useDiffuseTexture", false);
 			}
-			
-			Matrix4 view = getViewMatrix();
     		program.setUniform("model_view", view);
 			program.setUniform("viewPos", view.quickInverse(0.01f).getColumn(3).getXYZ());
         	
@@ -705,7 +720,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     	}
 	}
 	
-	private NativeVectorBuffer generateViewWeights()
+	private NativeVectorBuffer generateViewWeights(Matrix4 view)
 	{
 		float[] viewWeights = new float[this.resources.viewSet.getCameraPoseCount()];
 		float viewWeightSum = 0.0f;
@@ -714,7 +729,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		{
 			Vector3 viewDir = this.resources.viewSet.getCameraPose(i).times(this.resources.geometry.getCentroid().asPosition()).getXYZ().negated().normalized();
 			Vector3 targetDir = this.resources.viewSet.getCameraPose(i).times(
-					getViewMatrix().quickInverse(0.01f).getColumn(3)
+					view.quickInverse(0.01f).getColumn(3)
 						.minus(this.resources.geometry.getCentroid().asPosition())).getXYZ().normalized();
 			
 			viewWeights[i] = 1.0f / (float)Math.max(0.000001, 1.0 - Math.pow(Math.max(0.0, targetDir.dot(viewDir)), this.settings.getWeightExponent())) - 1.0f;
@@ -750,9 +765,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    	if (!customViewMatrix)
 	    	{
 	    		view = this.getViewMatrix();
+	    		partialViewMatrix = getPartialViewMatrix();
 	    	}
 	    	else
 	    	{
+	    		partialViewMatrix = getPartialViewMatrix(view);
+	    		
 	    		if (lightModel instanceof CameraBasedLightModel)
 				{
 			    	float scale = resources.viewSet.getCameraPose(0)
@@ -775,18 +793,20 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    		projection = this.getProjectionMatrix(size);
 	    	}
 	    	
-	    	this.setupForDraw();
+	    	this.setupForDraw(view);
 	    	
 	    	mainDrawable.program().setUniform("projection", projection);
+	    	
+			Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
 	    	
 	    	if (environmentMap != null && environmentMapEnabled)
 			{
 				environmentBackgroundProgram.setUniform("objectID", this.sceneObjectIDLookup.get("EnvironmentMap"));
 				environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
 				environmentBackgroundProgram.setTexture("env", environmentMap);
-				environmentBackgroundProgram.setUniform("model_view", this.getViewMatrix());
+				environmentBackgroundProgram.setUniform("model_view", view);
 				environmentBackgroundProgram.setUniform("projection", projection);
-				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix == null ? Matrix4.IDENTITY : envMapMatrix);
+				environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix);
 				environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
 				
 
@@ -840,28 +860,23 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	
 				this.program.setUniform("imageBasedRenderingEnabled", false);
 				this.program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
-				this.drawReferenceScene(this.program, offscreenFBO);
+				this.drawReferenceScene(this.program, offscreenFBO, view);
 				
 				this.program.setUniform("imageBasedRenderingEnabled", this.settings.isIBREnabled());
-				setupForDraw(); // changed anything changed when drawing the reference scene.
+				setupForDraw(view); // changed anything changed when drawing the reference scene.
 				this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
 				
-				for (int modelInstance = 0; modelInstance < transformationMatrices.size(); modelInstance++)
+				this.program.setUniform("envMapMatrix", envMapMatrix);
+				
+				for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
 				{
-					this.envMapMatrix = null;
-					
 					for (int lightIndex = 0; lightIndex < lightModel.getLightCount(); lightIndex++)
 					{
-						Matrix4 matrix = setupLight(lightIndex, modelInstance);
-						
-						if (lightIndex == 0)
-						{
-							this.envMapMatrix = matrix;
-						}
+						setupLight(lightIndex, modelInstance);
 					}
 					
 					// Draw instance
-					Matrix4 modelView = getModelViewMatrix(view, modelInstance);
+					Matrix4 modelView = getModelViewMatrix(partialViewMatrix, modelInstance);
 					this.program.setUniform("model_view", modelView);
 					this.program.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
 			    	
@@ -869,22 +884,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 			        mainDrawable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
 				}
 				
-				if (this.settings().isRelightingEnabled() && this.settings().areVisibleLightsEnabled())
+				if (this.getSettingsModel().isRelightingEnabled() && this.getSettingsModel().areVisibleLightsEnabled())
 				{
 					// Draw lights
 					context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
 					context.getState().disableDepthWrite();
-					
-					float scale = resources.viewSet.getCameraPose(0).times(resources.geometry.getCentroid().asPosition())
-			    			.getXYZ().length() 
-			    			* this.boundingRadius / resources.geometry.getBoundingRadius();
-					
-					// TODO make this a method since its used multiple times
-					Matrix4 partialViewMatrix =  Matrix4.scale(scale)
-			    			.times(cameraModel.getLookMatrix())
-			    			.times(Matrix4.scale(1.0f / scale));
-					
-					Matrix4 viewMatrix = this.getViewMatrix();
 					
 					for (int i = 0; i < lightModel.getLightCount(); i++)
 					{
@@ -893,7 +897,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 							this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1)));
 							this.lightProgram.setUniform("color", lightModel.getLightColor(i));
 							
-							Vector3 lightPosition = viewMatrix.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3).getXYZ();
+							Vector3 lightPosition = view.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3).getXYZ();
 							
 							this.lightProgram.setUniform("model_view",
 		
@@ -1055,7 +1059,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	}
 	
 	@Override
-	public VertexGeometry getActiveProxy()
+	public VertexGeometry getActiveGeometry()
 	{
 		return this.resources.geometry;
 	}
@@ -1067,13 +1071,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	}
 
 	@Override
-	public IBRSettings2 settings()
+	public IBRSettingsModel getSettingsModel()
 	{
 		return this.settings;
 	}
 
 	@Override
-	public void setSettings(IBRSettings2 ibrSettings2) {
+	public void setSettingsModel(IBRSettingsModel ibrSettings2) {
 		this.settings = ibrSettings2;
 	}
 
@@ -1185,11 +1189,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	}
 
 	@Override
-	public void setTransformationMatrices(List<Matrix4> matrices) 
+	public void setMultiTransformationModel(List<Matrix4> multiTransformationModel) 
 	{
-		if (matrices != null)
+		if (multiTransformationModel != null)
 		{
-			this.transformationMatrices = matrices;
+			this.multiTransformationModel = multiTransformationModel;
 		}
 	}
 	
@@ -1235,18 +1239,34 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 				Vector4 unscaledPosition = projectionInverse
 					.times(new Vector4((float)(2 * x - 1), (float)(1 - 2 * y), 2 * (float)(0x0000FFFF & pixelDepths[index]) / (float)0xFFFF - 1, 1.0f));
 				
-				cameraModel.getLookMatrix();
-				
-				float scale = resources.viewSet.getCameraPose(0).times(resources.geometry.getCentroid().asPosition())
-		    			.getXYZ().length() 
-		    			* boundingRadius / resources.geometry.getBoundingRadius();
-				
-				return Matrix4.scale(scale)
-						.times(cameraModel.getLookMatrix().quickInverse(0.01f))
-		    			.times(Matrix4.scale(1.0f / scale))
+				return getPartialViewMatrix().quickInverse(0.01f)
 						.times(unscaledPosition.getXYZ().dividedBy(unscaledPosition.w).asPosition())
 						.getXYZ();
 			};
 		};
+	}
+
+	@Override
+	public void setBackplate(File backplateFile) 
+	{
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void setObjectModel(ReadonlyObjectModel objectModel) 
+	{
+		this.objectModel = objectModel;
+	}
+
+	@Override
+	public void setCameraModel(ReadonlyCameraModel cameraModel) 
+	{
+		this.cameraModel = cameraModel;
+	}
+
+	@Override
+	public void setLightModel(ReadonlyLightModel lightModel) 
+	{
+		this.lightModel = lightModel;
 	}
 }

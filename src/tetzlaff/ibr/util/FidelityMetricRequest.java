@@ -17,7 +17,7 @@ import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
 import tetzlaff.ibr.util.fidelity.FidelityEvaluationTechnique;
 import tetzlaff.ibr.util.fidelity.IBRFidelityTechnique;
 import tetzlaff.ibr.util.fidelity.LinearSystemFidelityTechnique;
@@ -35,9 +35,9 @@ public class FidelityMetricRequest implements IBRRequest
     private File fidelityExportPath;
     private File fidelityVSETFile;
     private File maskFile;
-    private IBRSettings2 settings;
+    private IBRSettingsModel settings;
     
-	public FidelityMetricRequest(File exportPath, File targetVSETFile, File maskFile, IBRSettings2 settings)
+	public FidelityMetricRequest(File exportPath, File targetVSETFile, File maskFile, IBRSettingsModel settings)
 	{
 		this.fidelityExportPath = exportPath;
 		this.fidelityVSETFile = targetVSETFile;

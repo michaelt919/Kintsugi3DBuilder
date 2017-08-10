@@ -15,25 +15,25 @@ import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.rendering2.to_sort.IBRLoadOptions2;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
+import tetzlaff.mvc.models.ReadonlyObjectModel;
 
 public class ImageBasedRendererList<ContextType extends Context<ContextType>> extends AbstractListModel<IBRRenderable<ContextType>> implements IBRRenderableListModel<ContextType>
 {
 	private static final long serialVersionUID = 4167467314632694946L;
 	
 	protected final ContextType context;
-	protected final ReadonlyCameraModel cameraModel;
-	protected final ReadonlyLightModel lightModel;
+	private ReadonlyObjectModel objectModel;
+	private ReadonlyCameraModel cameraModel;
+	private ReadonlyLightModel lightModel;
 	private Program<ContextType> program;
-	private InteractiveRenderableList<ContextType, IBRRenderable<ContextType>> ulfs;
+	private InteractiveRenderableList<ContextType, IBRRenderable<ContextType>> renderableList;
 	private int effectiveSize;
 	private LoadingMonitor loadingMonitor;
 	
-	public ImageBasedRendererList(ContextType context, Program<ContextType> program, ReadonlyCameraModel cameraModel, ReadonlyLightModel lightModel) 
+	public ImageBasedRendererList(ContextType context, Program<ContextType> program) 
 	{
 		this.context = context;
-		this.cameraModel = cameraModel;
-		this.lightModel = lightModel;
-		this.ulfs = new InteractiveRenderableList<ContextType, IBRRenderable<ContextType>>();
+		this.renderableList = new InteractiveRenderableList<ContextType, IBRRenderable<ContextType>>();
 		this.effectiveSize = 0;
 		
 		this.program = program;
@@ -47,7 +47,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	public void setProgram(Program<ContextType> program)
 	{
 		this.program = program;
-		for (IBRRenderable<ContextType> ulf : ulfs)
+		for (IBRRenderable<ContextType> ulf : renderableList)
 		{
 			ulf.setProgram(program);
 		}
@@ -59,11 +59,15 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 		// id = vsetFile.getPath()
 		
 		IBRRenderable<ContextType> newItem = 
-			new IBRImplementation<ContextType>(id, context, this.getProgram(), this.cameraModel, lightModel,
+			new IBRImplementation<ContextType>(id, context, this.getProgram(),
 				IBRResources.getBuilderForContext(this.context)
 					.setLoadingMonitor(this.loadingMonitor)
 					.setLoadOptions(loadOptions)
 					.loadVSETFile(vsetFile));
+		
+		newItem.setObjectModel(this.objectModel);
+		newItem.setCameraModel(this.cameraModel);
+		newItem.setLightModel(this.lightModel);
 		
 		newItem.setOnLoadCallback(new LoadingMonitor()
 		{
@@ -97,16 +101,16 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 			@Override
 			public void loadingComplete()
 			{
-				ulfs.setSelectedItem(newItem);
-				effectiveSize = ulfs.size();
+				renderableList.setSelectedItem(newItem);
+				effectiveSize = renderableList.size();
 				if (loadingMonitor != null)
 				{
 					loadingMonitor.loadingComplete();
 				}
-				fireIntervalAdded(this, ulfs.size() - 1, ulfs.size() - 1);
+				fireIntervalAdded(this, renderableList.size() - 1, renderableList.size() - 1);
 			}
 		});
-		ulfs.add(newItem);
+		renderableList.add(newItem);
 		return newItem;
 	}
 	
@@ -114,11 +118,16 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	public IBRRenderable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, IBRLoadOptions2 loadOptions) throws IOException
 	{
 		IBRRenderable<ContextType> newItem = 
-			new IBRImplementation<ContextType>(id, context, this.getProgram(), this.cameraModel, lightModel,
+			new IBRImplementation<ContextType>(id, context, this.getProgram(),
 				IBRResources.getBuilderForContext(this.context)
 					.setLoadingMonitor(this.loadingMonitor)
 					.setLoadOptions(loadOptions)
 					.loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory));
+
+		newItem.setObjectModel(this.objectModel);
+		newItem.setCameraModel(this.cameraModel);
+		newItem.setLightModel(this.lightModel);
+		
 		newItem.setOnLoadCallback(new LoadingMonitor()
 		{
 			@Override
@@ -151,16 +160,16 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 			@Override
 			public void loadingComplete()
 			{
-				ulfs.setSelectedItem(newItem);
-				effectiveSize = ulfs.size();
+				renderableList.setSelectedItem(newItem);
+				effectiveSize = renderableList.size();
 				if (loadingMonitor != null)
 				{
 					loadingMonitor.loadingComplete();
 				}
-				fireIntervalAdded(this, ulfs.size() - 1, ulfs.size() - 1);
+				fireIntervalAdded(this, renderableList.size() - 1, renderableList.size() - 1);
 			}
 		});
-		ulfs.add(newItem);
+		renderableList.add(newItem);
 		return newItem;
 	}
 
@@ -173,13 +182,13 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	@Override
 	public IBRRenderable<ContextType> getElementAt(int index) 
 	{
-		return ulfs.get(index);
+		return renderableList.get(index);
 	}
 
 	@Override
 	public IBRRenderable<ContextType> getSelectedItem() 
 	{
-		return ulfs.getSelectedItem();
+		return renderableList.getSelectedItem();
 	}
 
 	@Override
@@ -187,15 +196,15 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	{
 		if (item == null)
 		{
-			ulfs.setSelectedItem(null);
+			renderableList.setSelectedItem(null);
 		}
 		else
 		{
-			for (int i = 0; i < ulfs.size(); i++)
+			for (int i = 0; i < renderableList.size(); i++)
 			{
-				if (ulfs.get(i) == item)
+				if (renderableList.get(i) == item)
 				{
-					ulfs.setSelectedIndex(i);
+					renderableList.setSelectedIndex(i);
 				}
 			}
 		}
@@ -210,6 +219,36 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	
 	public InteractiveRenderable<ContextType> getRenderable()
 	{
-		return ulfs;
+		return renderableList;
+	}
+	
+	@Override
+	public void setObjectModel(ReadonlyObjectModel objectModel) 
+	{
+		this.objectModel = objectModel;
+		for (IBRRenderable<?> renderable : renderableList)
+		{
+			renderable.setObjectModel(objectModel);
+		}
+	}
+
+	@Override
+	public void setCameraModel(ReadonlyCameraModel cameraModel) 
+	{
+		this.cameraModel = cameraModel;
+		for (IBRRenderable<?> renderable : renderableList)
+		{
+			renderable.setCameraModel(cameraModel);
+		}
+	}
+
+	@Override
+	public void setLightModel(ReadonlyLightModel lightModel) 
+	{
+		this.lightModel = lightModel;
+		for (IBRRenderable<?> renderable : renderableList)
+		{
+			renderable.setLightModel(lightModel);
+		}
 	}
 }
