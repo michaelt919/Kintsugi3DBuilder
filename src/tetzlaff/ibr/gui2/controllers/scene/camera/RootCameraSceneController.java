@@ -18,6 +18,8 @@ import javafx.scene.layout.VBox;
 import tetzlaff.ibr.rendering2.CameraModel3;
 
 import com.sun.javafx.collections.ObservableListWrapper;
+import tetzlaff.ibr.rendering2.ToolModel3;
+import tetzlaff.ibr.rendering2.tools2.ToolBox;
 
 public class RootCameraSceneController implements Initializable {
 
@@ -60,7 +62,7 @@ public class RootCameraSceneController implements Initializable {
 
     }
 
-    public void init2(CameraModel3 cameraModel3){
+    public void init2(CameraModel3 cameraModel3, ToolModel3 toolModel3){
 
         System.out.println("Cam in!");
 
@@ -68,6 +70,7 @@ public class RootCameraSceneController implements Initializable {
                 cameraListView.getSelectionModel().selectedItemProperty()
         );
 
+        settingsController.setOnActionSelectPoint(event -> toolModel3.setTool(ToolBox.TOOL.CENTER_POINT));
     }
 
     private CameraSetting getIt(){
