@@ -3,6 +3,7 @@ package tetzlaff.ibr.rendering2;//Created by alexk on 7/28/2017.
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
+import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.gui2.controllers.scene.environment_map.EVSetting;
 import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
@@ -47,4 +48,14 @@ public class EnvironmentMapModel3 extends ControllableEnvironmentMapModel {
             o.evImageFileProperty().removeListener(evFileChange);
         }
     };
+
+    @Override
+    public boolean getEnvironmentMappingEnabled() {
+        return false;
+    }
+
+    @Override
+    public Matrix4 getEnvironmentMapMatrix() {
+        return null;
+    }
 }
