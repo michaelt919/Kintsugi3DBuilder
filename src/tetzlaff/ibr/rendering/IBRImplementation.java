@@ -384,10 +384,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	{
 		this.updateCentroidAndRadius();
 		
-		if (this.environmentMapUnloadRequested = true && this.environmentMap != null)
+		if (this.environmentMapUnloadRequested == true && this.environmentMap != null)
 		{
 			this.environmentMap.close();
 			this.environmentMap = null;
+			this.environmentMapUnloadRequested = false;
 		}
 		
 		if (this.newEnvironmentFile != null)
@@ -957,7 +958,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 							this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + "Target"));
 							this.lightProgram.setUniform("color", new Vector3(0.5f,0,0.5f) /* magenta */);
 							
-							Vector3 lightPosition = partialViewMatrix.times(this.lightModel.getLightCenter(i).asPosition()).getXYZ();
+							Vector3 lightPosition = partialViewMatrix.times(this.lightModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
 							
 							this.lightProgram.setUniform("model_view",
 		
@@ -1181,7 +1182,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		{
 			this.environmentMapUnloadRequested = true;
 		}
-		else if (environmentFile.exists())
+		else if (environmentFile != null && environmentFile.exists())
 		{
 			this.newEnvironmentFile = environmentFile;
 		}
@@ -1309,7 +1310,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 				
 				return getPartialViewMatrix().quickInverse(0.01f)
 						.times(unscaledPosition.getXYZ().dividedBy(unscaledPosition.w).asPosition())
-						.getXYZ();
+						.getXYZ().dividedBy(getScale());
 			};
 		};
 	}
