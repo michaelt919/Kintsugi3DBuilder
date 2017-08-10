@@ -286,9 +286,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    				.setData(NativeVectorBufferFactory.getInstance()
     						.createFromFloatArray(3, 3, new float[] 
 							{ 
-								-1, 0, 1,
-								1, 0, 1, 
-								0, 0, -1
+								-1, -1, 0,
+								1, -1, 0, 
+								0, 1, 0
 							}));
 	    		
 	    		this.widgetDrawable = context.createDrawable(this.widgetProgram);
@@ -956,25 +956,150 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 						if (lightModel.isLightWidgetEnabled(i))
 						{
 							this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + "Target"));
-							this.lightProgram.setUniform("color", new Vector3(0.5f,0,0.5f) /* magenta */);
 							
-							Vector3 lightPosition = partialViewMatrix.times(this.lightModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
+							Vector3 lightTarget = partialViewMatrix.times(this.lightModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
 							
 							this.lightProgram.setUniform("model_view",
-		
 		//							modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
-								Matrix4.translate(lightPosition)
-									.times(Matrix4.scale(-lightPosition.z / 128.0f, -lightPosition.z / 128.0f, 1.0f)));
+								Matrix4.translate(lightTarget)
+									.times(Matrix4.scale(-lightTarget.z / 128.0f, -lightTarget.z / 128.0f, 1.0f)));
 							this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
+							
 				    		this.lightProgram.setTexture("lightTexture", this.lightTargetTexture);
 				    		
 				    		this.context.getState().disableDepthTest();
-							this.lightProgram.setUniform("color", new Vector3(0.5f,0,0.0f) /* purple / dark magenta */);
+							this.lightProgram.setUniform("color", new Vector3(0.5f,0,0.0f) /* dark red */);
 							this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
 
 				    		this.context.getState().enableDepthTest();
 							this.lightProgram.setUniform("color", new Vector3(0.5f,0,1.0f) /* magenta */);
 							this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							
+							this.widgetProgram.setUniform("objectID", /*this.sceneObjectIDLookup.get("Light" + (i + 1) + "Arrow")*/0);
+							this.widgetProgram.setUniform("projection", this.getProjectionMatrix(size));
+							
+							
+							Matrix4 widgetTransformation = view.times(this.getLightMatrix(i).quickInverse(0.001f));
+							
+							Vector3 arrow1PositionR = widgetTransformation.times(new Vector4(1,0,0,1)).getXYZ();
+							Vector3 arrow1PositionL = widgetTransformation.times(new Vector4(-1,0,0,1)).getXYZ();
+							Vector3 arrow2PositionR = widgetTransformation.times(new Vector4(0,1,0,1)).getXYZ();
+							Vector3 arrow2PositionL = widgetTransformation.times(new Vector4(0,-1,0,1)).getXYZ();
+							Vector3 arrow3PositionR = widgetTransformation.times(new Vector4(0,0,1,1)).getXYZ();
+							Vector3 arrow3PositionL = widgetTransformation.times(new Vector4(0,0,-1,1)).getXYZ();
+							
+							Vector4 arrow1DirectionY = widgetTransformation.times(new Vector4(1,0,0,0)).getXY().asDirection();
+							Vector4 arrow2DirectionY = widgetTransformation.times(new Vector4(0,1,0,0)).getXY().asDirection();
+							Vector4 arrow3DirectionY = widgetTransformation.times(new Vector4(0,0,1,0)).getXY().asDirection();
+							
+							Vector4 arrow1DirectionX = new Vector4(arrow1DirectionY.y, -arrow1DirectionY.x, 0, 0).normalized();
+							Vector4 arrow2DirectionX = new Vector4(arrow2DirectionY.y, -arrow2DirectionY.x, 0, 0).normalized();
+							Vector4 arrow3DirectionX = new Vector4(arrow3DirectionY.y, -arrow3DirectionY.x, 0, 0).normalized();
+							
+							this.widgetProgram.setUniform("model_view",
+								Matrix4.translate(arrow1PositionR)
+									.times(Matrix4.scale(-arrow1PositionR.z / 128.0f, -arrow1PositionR.z / 128.0f, 1.0f))
+									.times(Matrix4.fromColumns(
+											arrow1DirectionX, 
+											arrow1DirectionY, 
+											new Vector4(0,0,1,0), 
+											new Vector4(0,0,0,1))));
+							
+				    		this.context.getState().disableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.5f, 0.0f, 1) /* green */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.5f, 1.0f, 1) /* cyan */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							this.widgetProgram.setUniform("model_view",
+								Matrix4.translate(arrow1PositionL)
+									.times(Matrix4.scale(-arrow1PositionL.z / 128.0f, -arrow1PositionL.z / 128.0f, 1.0f))
+									.times(Matrix4.fromColumns(
+											arrow1DirectionX.negated(), 
+											arrow1DirectionY.negated(), 
+											new Vector4(0,0,1,0), 
+											new Vector4(0,0,0,1))));
+							
+				    		this.context.getState().disableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.5f, 0.0f, 1) /* green */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.5f, 1.0f, 1) /* cyan */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							
+							this.widgetProgram.setUniform("model_view",
+									Matrix4.translate(arrow2PositionR)
+										.times(Matrix4.scale(-arrow2PositionR.z / 128.0f, -arrow2PositionR.z / 128.0f, 1.0f))
+										.times(Matrix4.fromColumns(
+												arrow2DirectionX, 
+												arrow2DirectionY, 
+												new Vector4(0,0,1,0), 
+												new Vector4(0,0,0,1))));
+								
+				    		this.context.getState().disableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.25f, 0.25f, 0.0f, 1) /* dark yellow / gold */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.75f, 0.25f, 1.0f, 1) /* orange */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							this.widgetProgram.setUniform("model_view",
+								Matrix4.translate(arrow2PositionL)
+									.times(Matrix4.scale(-arrow2PositionL.z / 128.0f, -arrow1PositionL.z / 128.0f, 1.0f))
+									.times(Matrix4.fromColumns(
+											arrow2DirectionX.negated(), 
+											arrow2DirectionY.negated(), 
+											new Vector4(0,0,1,0), 
+											new Vector4(0,0,0,1))));
+
+				    		this.context.getState().disableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.5f, 0.0f, 0.0f, 1) /* red */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.5f, 0.5f, 1.0f, 1) /* orange */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							
+							this.widgetProgram.setUniform("model_view",
+								Matrix4.translate(arrow3PositionR)
+									.times(Matrix4.scale(-arrow3PositionR.z / 128.0f, -arrow3PositionR.z / 128.0f, 1.0f))
+									.times(Matrix4.fromColumns(
+											arrow3DirectionX, 
+											arrow3DirectionY, 
+											new Vector4(0,0,1,0), 
+											new Vector4(0,0,0,1))));
+							
+				    		this.context.getState().disableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.0f, 0.5f, 1) /* blue */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.5f, 0.0f, 0.5f, 1) /* lavender(?) */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							this.widgetProgram.setUniform("model_view",
+								Matrix4.translate(arrow3PositionL)
+									.times(Matrix4.scale(-arrow3PositionL.z / 128.0f, -arrow3PositionL.z / 128.0f, 1.0f))
+									.times(Matrix4.fromColumns(
+											arrow3DirectionX.negated(), 
+											arrow3DirectionY.negated(), 
+											new Vector4(0,0,1,0), 
+											new Vector4(0,0,0,1))));
+							
+				    		this.context.getState().disableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.0f, 0.5f, 1) /* blue */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							this.widgetProgram.setUniform("color", new Vector4(0.5f, 0.0f, 0.5f, 1) /* lavender(?) */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
 						}
 					}
 					
