@@ -1186,6 +1186,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		{
 			this.newEnvironmentFile = environmentFile;
 		}
+		else {
+			System.out.println("TEMP FIX IN IBRImplementation.setEnvironment");;
+//			this.environmentMapUnloadRequested = true;//TODO this is a temp fix
+		}
 	}
 
 	@Override
