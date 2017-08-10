@@ -9,12 +9,12 @@ import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.rendering2.to_sort.IBRLoadOptions2;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettings2;
+import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 
 public abstract class ControllableToolModel {
     private IBRRenderable<?> ibrRenderable = null;
-    protected abstract IBRSettings2 getSettings();
+    protected abstract IBRSettingsModel getSettings();
     protected abstract IBRLoadOptions2 getLoadOptions();
 
 
@@ -32,7 +32,7 @@ public abstract class ControllableToolModel {
 
         ibrRenderable.setHalfResolution(true);
 
-        ibrRenderable.setSettings(getSettings());
+        ibrRenderable.setSettingsModel(getSettings());
 
     }
 
@@ -42,7 +42,7 @@ public abstract class ControllableToolModel {
 
         ibrRenderable.setHalfResolution(true);
 
-        ibrRenderable.setSettings(getSettings());
+        ibrRenderable.setSettingsModel(getSettings());
     }
 
     public final IBRRenderable<?> getIBRRenderable(){

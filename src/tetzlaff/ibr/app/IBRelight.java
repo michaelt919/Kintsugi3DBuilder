@@ -234,12 +234,15 @@ public class IBRelight
 	        // This is the object that loads the ULF models and handles drawing them.  This object abstracts
 	        // the underlying data and provides ways of triggering events via the trackball and the user
 	        // interface later when it is passed to the ULFUserInterface object.
-	        ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(context, program, cameraModel, metaLightModel);
+	        ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(context, program);
+	        model.setObjectModel(() -> Matrix4.IDENTITY);
+	        model.setCameraModel(cameraModel);
+	        model.setLightModel(metaLightModel);
 	    	
 	        HardcodedLightModel hardcodedLightController = 
 	    			new HardcodedLightModel(
 						() -> model.getSelectedItem().getActiveViewSet(),
-						() -> model.getSelectedItem().getActiveProxy(),
+						() -> model.getSelectedItem().getActiveGeometry(),
 						hardcodedLightTrackballModel);
 	    	metaLightModel.hardcodedLightModel = hardcodedLightController;
 	        
