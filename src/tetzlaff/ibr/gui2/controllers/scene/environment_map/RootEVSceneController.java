@@ -57,6 +57,7 @@ public class RootEVSceneController implements Initializable {
                     new Color(0.0, 0.0, 0.0, 1.0),
                     new Color(0, 0, 0, 1),
                     "Free Environment Map",
+                    false,
                     false
             );
 
@@ -94,6 +95,7 @@ public class RootEVSceneController implements Initializable {
                             Color.BLACK,
                             Color.BLACK,
                             "New EV",
+                            false,
                             false
                     )
             );

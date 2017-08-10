@@ -94,6 +94,7 @@ public class SettingsEVSceneController implements Initializable{
         localBPImageFile.bindBidirectional(evSetting.bpImageFileProperty());
 
 
+        evUseImageCheckBox.disableProperty().bind(evSetting.firstEVLoadedProperty().not());
     }
 
     private void unbind(EVSetting evSetting){
