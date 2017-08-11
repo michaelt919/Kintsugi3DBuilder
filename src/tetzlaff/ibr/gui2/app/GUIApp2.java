@@ -3,6 +3,7 @@ package tetzlaff.ibr.gui2.app;
 import java.net.URL;
 
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -10,6 +11,8 @@ import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
+import tetzlaff.ibr.app2.Quit;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.gui2.controllers.menu_bar.MenubarController;
 import tetzlaff.ibr.gui2.controllers.scene.RootSceneController;
@@ -17,15 +20,12 @@ import tetzlaff.ibr.rendering2.CameraModel3;
 import tetzlaff.ibr.rendering2.EnvironmentMapModel3;
 import tetzlaff.ibr.rendering2.LightModel3;
 import tetzlaff.ibr.rendering2.ToolModel3;
+import tetzlaff.ibr.util.StaticHouse;
 
 public class GUIApp2 extends Application{
 
     @Override
     public void start(Stage menuBarStage) throws Exception {
-
-
-
-
 
         //get FXML URLs
         final String menuBarFXMLFileName = "fxml/menu_bar/MenuBar.fxml";
@@ -115,6 +115,19 @@ public class GUIApp2 extends Application{
         //distribute to controllers
         sceneController.init2(cameraModel3, lightModel3, environmentMapModel3, toolModel3);
         menuBarController.init2(toolModel3);
+
+
+
+
+        //set up close
+        Quit.getInstance().addCloseTrigger(()->{
+            sceneStage.close();
+            menuBarStage.close();
+        });
+        sceneStage.setOnCloseRequest(Quit.getInstance());
+        menuBarStage.setOnCloseRequest(Quit.getInstance());
+
+
 
     }
 

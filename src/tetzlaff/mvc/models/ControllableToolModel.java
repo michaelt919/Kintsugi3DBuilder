@@ -16,6 +16,7 @@ public abstract class ControllableToolModel {
     private IBRRenderable<?> ibrRenderable = null;
     protected abstract IBRSettingsModel getSettings();
     protected abstract IBRLoadOptions2 getLoadOptions();
+    protected abstract void requestGUIClose();
 
 
 

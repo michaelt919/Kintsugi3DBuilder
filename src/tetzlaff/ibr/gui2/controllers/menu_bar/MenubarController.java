@@ -20,6 +20,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import tetzlaff.ibr.IBRRenderable;
+import tetzlaff.ibr.app2.Quit;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.rendering2.ToolModel3;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
@@ -210,7 +211,7 @@ public class MenubarController {
 
     }
     @FXML private void file_exit(){
-        System.exit(0);
+        Quit.getInstance().trigger();
     }
 
     @FXML private void shading_IBRSettings(){
