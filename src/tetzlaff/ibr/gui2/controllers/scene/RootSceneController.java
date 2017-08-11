@@ -13,23 +13,23 @@ import tetzlaff.ibr.gui2.controllers.scene.lights.RootLightSceneController;
 import tetzlaff.ibr.rendering2.CameraModel3;
 import tetzlaff.ibr.rendering2.EnvironmentMapModel3;
 import tetzlaff.ibr.rendering2.LightModel3;
+import tetzlaff.ibr.rendering2.ToolModel3;
+import tetzlaff.mvc.controllers.CameraController;
+import tetzlaff.mvc.models.LightModel;
 
-public class RootSceneController implements Initializable{
+public class RootSceneController {
 
 
     @FXML
-    RootCameraSceneController cameraController;
+    private RootCameraSceneController cameraController;
     @FXML
-    RootLightSceneController lightsController;
+    private RootLightSceneController lightsController;
     @FXML
-    RootEVSceneController environmentMapController;
+    private RootEVSceneController environmentMapController;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-
-        cameraController.init2(cameraModel3);
-        environmentMapController.init2(environmentMapModel3);
+    public void init2(CameraModel3 cameraModel3, LightModel3 lightModel3, EnvironmentMapModel3 environmentMapModel3, ToolModel3 toolModel3){
+        cameraController.init2(cameraModel3, toolModel3);
         lightsController.init2(lightModel3);
-
+        environmentMapController.init2(environmentMapModel3);
     }
 }

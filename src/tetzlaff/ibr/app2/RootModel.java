@@ -24,22 +24,34 @@ public class RootModel {
     }
 
     public CameraModel3 getCameraModel3() {
-        if(gotCameraModel++ > 2) throw error;
+        if(gotCameraModel++ >= 2){
+            System.out.println("{camera model}");
+            throw error;
+        }
         return cameraModel3;
     }
 
     public LightModel3 getLightModel3() {
-        if(gotLightModel++ > 2) throw error;
+        if(gotLightModel++ >= 2){
+            System.out.println("{light model}");
+            throw error;
+        }
         return lightModel3;
     }
 
     public ToolModel3 getToolModel3() {
-        if(gotToolModel++ > 2) throw error;
+        if(gotToolModel++ >= 2){
+            System.out.println("{tool model}");
+            throw error;
+        }
         return toolModel3;
     }
 
     public EnvironmentMapModel3 getEnvironmentMapModel3(){
-        if(gotEnvironmentMapModel++ > 2) throw error;
+        if(gotEnvironmentMapModel++ >= 2){
+            System.out.println("{environment model}");
+            throw error;
+        }
         return environmentMapModel3;
     }
 }
