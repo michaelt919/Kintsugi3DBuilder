@@ -16,7 +16,6 @@ import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.ibr.alexkautz_workspace.render.TrackballLightController2;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
@@ -92,8 +91,6 @@ public class IBRelight
 			}
 
 
-			TrackballLightController2 lightController = new TrackballLightController2();
-			lightController.addAsWindowListener(window);
 
 			CameraModel fpCameraModel = new BasicCameraModel();
 
