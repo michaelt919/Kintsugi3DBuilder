@@ -60,6 +60,8 @@ public abstract class ControllableToolModel {
 
     public abstract ToolBox.TOOL getTool();
 
+    public abstract void setTool(ToolBox.TOOL tool);
+
     public Vector3 getPoint(double x, double y){
         return model.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
     }

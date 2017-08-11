@@ -29,8 +29,10 @@ class CenterPointTool extends AbstractTool{
 //            System.out.println("You clicked: " + whatClicked + " at " + newCenter);
 
             if(whatClicked.equals(ControllableToolModel.WHAT_CLICKED.OBJECT)){
-                cameraModel.setCenter(newCenter);//TODO fix this
+                cameraModel.setCenter(newCenter);
                 System.out.println("Set center to " + newCenter);
+
+                toolModel.setTool(ToolBox.TOOL.ORBIT);
             }
         }
     }
