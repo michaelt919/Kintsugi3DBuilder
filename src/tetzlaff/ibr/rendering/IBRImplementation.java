@@ -34,6 +34,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.IBRRenderable;
@@ -134,32 +135,54 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     	
     	this.sceneObjectNameList.add(null);
     	
+    	int k = 1;
+    	
     	this.sceneObjectNameList.add("IBRObject");
-    	this.sceneObjectIDLookup.put("IBRObject", 1);
+    	this.sceneObjectIDLookup.put("IBRObject", k);
+    	k++;
     	
     	this.sceneObjectNameList.add("EnvironmentMap");
-    	this.sceneObjectIDLookup.put("EnvironmentMap", 2);
-    	
-    	this.sceneObjectNameList.add("Light1");
-    	this.sceneObjectIDLookup.put("Light1", 3);
-    	this.sceneObjectNameList.add("Light2");
-    	this.sceneObjectIDLookup.put("Light2", 4);
-    	this.sceneObjectNameList.add("Light3");
-    	this.sceneObjectIDLookup.put("Light3", 5);
-    	this.sceneObjectNameList.add("Light4");
-    	this.sceneObjectIDLookup.put("Light4", 6);
-    	
-    	this.sceneObjectNameList.add("Light1Target");
-    	this.sceneObjectIDLookup.put("Light1Target", 7);
-    	this.sceneObjectNameList.add("Light2Target");
-    	this.sceneObjectIDLookup.put("Light2Target", 8);
-    	this.sceneObjectNameList.add("Light3Target");
-    	this.sceneObjectIDLookup.put("Light3Target", 9);
-    	this.sceneObjectNameList.add("Light4Target");
-    	this.sceneObjectIDLookup.put("Light4Target", 10);
+    	this.sceneObjectIDLookup.put("EnvironmentMap", k);
+    	k++;
     	
     	this.sceneObjectNameList.add("SceneObject");
-    	this.sceneObjectIDLookup.put("SceneObject", 11);
+    	this.sceneObjectIDLookup.put("SceneObject", k);
+    	k++;
+    	
+    	for (int i = 1; i <= 4; i++)
+    	{
+    		this.sceneObjectNameList.add("Light" + i);
+        	this.sceneObjectIDLookup.put("Light" + i, k);
+    		k++;
+
+    		this.sceneObjectNameList.add("Light" + i + ".Target");
+        	this.sceneObjectIDLookup.put("Light" + i + ".Target", k);
+    		k++;
+
+    		this.sceneObjectNameList.add("Light" + i + ".AzimuthUp");
+        	this.sceneObjectIDLookup.put("Light" + i + ".AzimuthUp", k);
+    		k++;
+
+    		this.sceneObjectNameList.add("Light" + i + ".AzimuthDown");
+        	this.sceneObjectIDLookup.put("Light" + i + ".AzimuthDown", k);
+    		k++;
+
+    		this.sceneObjectNameList.add("Light" + i + ".InclinationUp");
+        	this.sceneObjectIDLookup.put("Light" + i + ".InclinationUp", k);
+    		k++;
+
+    		this.sceneObjectNameList.add("Light" + i + ".InclinationDown");
+        	this.sceneObjectIDLookup.put("Light" + i + ".InclinationDown", k);
+    		k++;
+
+    		this.sceneObjectNameList.add("Light" + i + ".DistanceUp");
+        	this.sceneObjectIDLookup.put("Light" + i + ".DistanceUp", k);
+    		k++;
+
+    		this.sceneObjectNameList.add("Light" + i + ".DistanceDown");
+        	this.sceneObjectIDLookup.put("Light" + i + ".DistanceDown", k);
+    		k++;
+    	}
     }
 	
 	@Override
@@ -931,13 +954,215 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 				if (this.getSettingsModel().isRelightingEnabled() && this.getSettingsModel().areVisibleLightsEnabled())
 				{
 					// Draw lights
-					context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
-					context.getState().disableDepthWrite();
-					
 					for (int i = 0; i < lightModel.getLightCount(); i++)
 					{
+						context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+						context.getState().disableDepthWrite();
+						
+						if (lightModel.isLightWidgetEnabled(i))
+						{
+							this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".Target"));
+							
+							Vector3 lightTarget = partialViewMatrix.times(this.lightModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
+							
+							this.lightProgram.setUniform("model_view",
+		//							modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
+								Matrix4.translate(lightTarget)
+									.times(Matrix4.scale(-lightTarget.z / 64.0f, -lightTarget.z / 64.0f, 1.0f)));
+							this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
+							
+				    		this.lightProgram.setTexture("lightTexture", this.lightTargetTexture);
+				    		
+				    		this.context.getState().disableDepthTest();
+							this.lightProgram.setUniform("color", new Vector3(0.5f,0,0.0f) /* dark red */);
+							this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							context.getState().disableAlphaBlending();
+							this.lightProgram.setUniform("color", new Vector3(1.0f,0,1.0f) /* magenta */);
+							this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							this.widgetProgram.setUniform("projection", this.getProjectionMatrix(size));
+							
+							Matrix4 widgetTransformation = view.times(this.getLightMatrix(i).quickInverse(0.001f));
+
+							Vector3 lightPosition = widgetTransformation.getColumn(3).getXYZ();
+							
+				    		this.context.getState().disableDepthTest();
+							context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+							
+							Vector3 lineEndpoint = lightPosition.minus(lightTarget).times(0.5f / lightPosition.getXY().distance(lightTarget.getXY())).minus(lightTarget);
+							
+							try
+							(
+								VertexBuffer<ContextType> line = 
+									context.createVertexBuffer()
+										.setData(NativeVectorBufferFactory.getInstance()
+											.createFromFloatArray(3, 2, new float[] 
+											{
+												lineEndpoint.x, lineEndpoint.y, lineEndpoint.z, 
+												lightTarget.x, lightTarget.y, lightTarget.z
+											}));
+							)
+							{
+								Drawable<ContextType> lineRenderable = context.createDrawable(this.widgetProgram);
+								lineRenderable.addVertexBuffer("position", line);
+								this.widgetProgram.setUniform("model_view", Matrix4.IDENTITY);
+								this.widgetProgram.setUniform("color", new Vector4(1));
+								this.widgetProgram.setUniform("objectID", 0);
+								lineRenderable.draw(PrimitiveMode.LINES, offscreenFBO);
+							}
+							
+							Vector4 arrow1DirectionY = widgetTransformation.times(new Vector4(1,0,0,0)).getXY().normalized().asDirection();
+							Vector4 arrow2DirectionY = widgetTransformation.times(new Vector4(0,1,0,0)).getXY().normalized().asDirection();
+							Vector4 arrow3DirectionY = widgetTransformation.times(new Vector4(0,0,1,0)).getXY().normalized().asDirection();
+							
+							Vector4 arrow1DirectionX = new Vector4(arrow1DirectionY.y, -arrow1DirectionY.x, 0, 0).normalized();
+							Vector4 arrow2DirectionX = new Vector4(arrow2DirectionY.y, -arrow2DirectionY.x, 0, 0).normalized();
+							Vector4 arrow3DirectionX = new Vector4(arrow3DirectionY.y, -arrow3DirectionY.x, 0, 0).normalized();
+							
+							Vector3 arrow1PositionR = lightPosition.plus(arrow1DirectionY.getXYZ().normalized().times(-lightPosition.z / 16.0f));
+							Vector3 arrow1PositionL = lightPosition.minus(arrow1DirectionY.getXYZ().normalized().times(-lightPosition.z / 16.0f));
+							Vector3 arrow2PositionR = lightPosition.plus(arrow2DirectionY.getXYZ().normalized().times(-lightPosition.z / 16.0f));
+							Vector3 arrow2PositionL = lightPosition.minus(arrow2DirectionY.getXYZ().normalized().times(-lightPosition.z / 16.0f));
+							Vector3 arrow3PositionR = lightPosition.plus(arrow3DirectionY.getXYZ().normalized().times(-lightPosition.z / 16.0f));
+							Vector3 arrow3PositionL = lightPosition.minus(arrow3DirectionY.getXYZ().normalized().times(-lightPosition.z / 16.0f));
+							
+//							Vector3 arrow1PositionR = widgetTransformation.times(new Vector4(1,0,0,1)).getXYZ();
+//							Vector3 arrow1PositionL = widgetTransformation.times(new Vector4(-1,0,0,1)).getXYZ();
+//							Vector3 arrow2PositionR = widgetTransformation.times(new Vector4(0,1,0,1)).getXYZ();
+//							Vector3 arrow2PositionL = widgetTransformation.times(new Vector4(0,-1,0,1)).getXYZ();
+//							Vector3 arrow3PositionR = widgetTransformation.times(new Vector4(0,0,1,1)).getXYZ();
+//							Vector3 arrow3PositionL = widgetTransformation.times(new Vector4(0,0,-1,1)).getXYZ();
+							
+							this.widgetProgram.setUniform("model_view",
+								Matrix4.translate(arrow1PositionR)
+									.times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+									.times(Matrix4.fromColumns(
+											arrow1DirectionX, 
+											arrow1DirectionY, 
+											new Vector4(0,0,1,0), 
+											new Vector4(0,0,0,1))));
+							this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".AzimuthUp"));
+							
+				    		this.context.getState().disableDepthTest();
+							context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.5f, 0.0f, 1) /* green */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							context.getState().disableAlphaBlending();
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 1.0f, 1.0f, 1) /* cyan */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							this.widgetProgram.setUniform("model_view",
+								Matrix4.translate(arrow1PositionL)
+									.times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+									.times(Matrix4.fromColumns(
+											arrow1DirectionX.negated(), 
+											arrow1DirectionY.negated(), 
+											new Vector4(0,0,1,0), 
+											new Vector4(0,0,0,1))));
+							this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".AzimuthDown"));
+							
+				    		this.context.getState().disableDepthTest();
+							context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.5f, 0.0f, 1) /* green */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							context.getState().disableAlphaBlending();
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 1.0f, 1.0f, 1) /* cyan */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							
+							this.widgetProgram.setUniform("model_view",
+									Matrix4.translate(arrow2PositionR)
+										.times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+										.times(Matrix4.fromColumns(
+												arrow2DirectionX, 
+												arrow2DirectionY, 
+												new Vector4(0,0,1,0), 
+												new Vector4(0,0,0,1))));
+							this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".InclinationUp"));
+								
+				    		this.context.getState().disableDepthTest();
+							context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+							this.widgetProgram.setUniform("color", new Vector4(0.25f, 0.25f, 0.0f, 1) /* dark yellow / gold */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							context.getState().disableAlphaBlending();
+							this.widgetProgram.setUniform("color", new Vector4(1.0f, 0.5f, 0.0f, 1) /* orange */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							this.widgetProgram.setUniform("model_view",
+								Matrix4.translate(arrow2PositionL)
+									.times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+									.times(Matrix4.fromColumns(
+											arrow2DirectionX.negated(), 
+											arrow2DirectionY.negated(), 
+											new Vector4(0,0,1,0), 
+											new Vector4(0,0,0,1))));
+							this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".InclinationDown"));
+
+				    		this.context.getState().disableDepthTest();
+							context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+							this.widgetProgram.setUniform("color", new Vector4(0.25f, 0.25f, 0.0f, 1) /* dark yellow / gold */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							context.getState().disableAlphaBlending();
+							this.widgetProgram.setUniform("color", new Vector4(1.0f, 0.5f, 0.0f, 1) /* orange */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							
+							this.widgetProgram.setUniform("model_view",
+								Matrix4.translate(arrow3PositionR)
+									.times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+									.times(Matrix4.fromColumns(
+											arrow3DirectionX, 
+											arrow3DirectionY, 
+											new Vector4(0,0,1,0), 
+											new Vector4(0,0,0,1))));
+							this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".DistanceUp"));
+							
+				    		this.context.getState().disableDepthTest();
+							context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.0f, 0.5f, 1) /* blue */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							context.getState().disableAlphaBlending();
+							this.widgetProgram.setUniform("color", new Vector4(0.5f, 0.0f, 1.0f, 1) /* lavender(?) */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+							
+							this.widgetProgram.setUniform("model_view",
+								Matrix4.translate(arrow3PositionL)
+									.times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+									.times(Matrix4.fromColumns(
+											arrow3DirectionX.negated(), 
+											arrow3DirectionY.negated(), 
+											new Vector4(0,0,1,0), 
+											new Vector4(0,0,0,1))));
+							this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".DistanceDown"));
+							
+				    		this.context.getState().disableDepthTest();
+							context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.0f, 0.5f, 1) /* blue */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+				    		this.context.getState().enableDepthTest();
+							context.getState().disableAlphaBlending();
+							this.widgetProgram.setUniform("color", new Vector4(0.5f, 0.0f, 1.0f, 1) /* lavender(?) */);
+							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+						}
+						
 						if (lightModel.isLightVisualizationEnabled(i))
 						{
+							this.context.getState().disableDepthTest();
+							context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+							
 							this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1)));
 							this.lightProgram.setUniform("color", lightModel.getLightColor(i));
 							
@@ -952,159 +1177,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 				    		this.lightProgram.setTexture("lightTexture", this.lightTexture);
 							this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
 						}
-						
-						if (lightModel.isLightWidgetEnabled(i))
-						{
-							this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + "Target"));
-							
-							Vector3 lightTarget = partialViewMatrix.times(this.lightModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
-							
-							this.lightProgram.setUniform("model_view",
-		//							modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
-								Matrix4.translate(lightTarget)
-									.times(Matrix4.scale(-lightTarget.z / 128.0f, -lightTarget.z / 128.0f, 1.0f)));
-							this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
-							
-				    		this.lightProgram.setTexture("lightTexture", this.lightTargetTexture);
-				    		
-				    		this.context.getState().disableDepthTest();
-							this.lightProgram.setUniform("color", new Vector3(0.5f,0,0.0f) /* dark red */);
-							this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-
-				    		this.context.getState().enableDepthTest();
-							this.lightProgram.setUniform("color", new Vector3(0.5f,0,1.0f) /* magenta */);
-							this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-							
-							
-							this.widgetProgram.setUniform("objectID", /*this.sceneObjectIDLookup.get("Light" + (i + 1) + "Arrow")*/0);
-							this.widgetProgram.setUniform("projection", this.getProjectionMatrix(size));
-							
-							
-							Matrix4 widgetTransformation = view.times(this.getLightMatrix(i).quickInverse(0.001f));
-							
-							Vector3 arrow1PositionR = widgetTransformation.times(new Vector4(1,0,0,1)).getXYZ();
-							Vector3 arrow1PositionL = widgetTransformation.times(new Vector4(-1,0,0,1)).getXYZ();
-							Vector3 arrow2PositionR = widgetTransformation.times(new Vector4(0,1,0,1)).getXYZ();
-							Vector3 arrow2PositionL = widgetTransformation.times(new Vector4(0,-1,0,1)).getXYZ();
-							Vector3 arrow3PositionR = widgetTransformation.times(new Vector4(0,0,1,1)).getXYZ();
-							Vector3 arrow3PositionL = widgetTransformation.times(new Vector4(0,0,-1,1)).getXYZ();
-							
-							Vector4 arrow1DirectionY = widgetTransformation.times(new Vector4(1,0,0,0)).getXY().asDirection();
-							Vector4 arrow2DirectionY = widgetTransformation.times(new Vector4(0,1,0,0)).getXY().asDirection();
-							Vector4 arrow3DirectionY = widgetTransformation.times(new Vector4(0,0,1,0)).getXY().asDirection();
-							
-							Vector4 arrow1DirectionX = new Vector4(arrow1DirectionY.y, -arrow1DirectionY.x, 0, 0).normalized();
-							Vector4 arrow2DirectionX = new Vector4(arrow2DirectionY.y, -arrow2DirectionY.x, 0, 0).normalized();
-							Vector4 arrow3DirectionX = new Vector4(arrow3DirectionY.y, -arrow3DirectionY.x, 0, 0).normalized();
-							
-							this.widgetProgram.setUniform("model_view",
-								Matrix4.translate(arrow1PositionR)
-									.times(Matrix4.scale(-arrow1PositionR.z / 128.0f, -arrow1PositionR.z / 128.0f, 1.0f))
-									.times(Matrix4.fromColumns(
-											arrow1DirectionX, 
-											arrow1DirectionY, 
-											new Vector4(0,0,1,0), 
-											new Vector4(0,0,0,1))));
-							
-				    		this.context.getState().disableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.5f, 0.0f, 1) /* green */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-
-				    		this.context.getState().enableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.5f, 1.0f, 1) /* cyan */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-							
-							this.widgetProgram.setUniform("model_view",
-								Matrix4.translate(arrow1PositionL)
-									.times(Matrix4.scale(-arrow1PositionL.z / 128.0f, -arrow1PositionL.z / 128.0f, 1.0f))
-									.times(Matrix4.fromColumns(
-											arrow1DirectionX.negated(), 
-											arrow1DirectionY.negated(), 
-											new Vector4(0,0,1,0), 
-											new Vector4(0,0,0,1))));
-							
-				    		this.context.getState().disableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.5f, 0.0f, 1) /* green */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-
-				    		this.context.getState().enableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.5f, 1.0f, 1) /* cyan */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-							
-							
-							this.widgetProgram.setUniform("model_view",
-									Matrix4.translate(arrow2PositionR)
-										.times(Matrix4.scale(-arrow2PositionR.z / 128.0f, -arrow2PositionR.z / 128.0f, 1.0f))
-										.times(Matrix4.fromColumns(
-												arrow2DirectionX, 
-												arrow2DirectionY, 
-												new Vector4(0,0,1,0), 
-												new Vector4(0,0,0,1))));
-								
-				    		this.context.getState().disableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.25f, 0.25f, 0.0f, 1) /* dark yellow / gold */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-
-				    		this.context.getState().enableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.75f, 0.25f, 1.0f, 1) /* orange */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-							
-							this.widgetProgram.setUniform("model_view",
-								Matrix4.translate(arrow2PositionL)
-									.times(Matrix4.scale(-arrow2PositionL.z / 128.0f, -arrow1PositionL.z / 128.0f, 1.0f))
-									.times(Matrix4.fromColumns(
-											arrow2DirectionX.negated(), 
-											arrow2DirectionY.negated(), 
-											new Vector4(0,0,1,0), 
-											new Vector4(0,0,0,1))));
-
-				    		this.context.getState().disableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.5f, 0.0f, 0.0f, 1) /* red */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-
-				    		this.context.getState().enableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.5f, 0.5f, 1.0f, 1) /* orange */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-							
-							
-							this.widgetProgram.setUniform("model_view",
-								Matrix4.translate(arrow3PositionR)
-									.times(Matrix4.scale(-arrow3PositionR.z / 128.0f, -arrow3PositionR.z / 128.0f, 1.0f))
-									.times(Matrix4.fromColumns(
-											arrow3DirectionX, 
-											arrow3DirectionY, 
-											new Vector4(0,0,1,0), 
-											new Vector4(0,0,0,1))));
-							
-				    		this.context.getState().disableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.0f, 0.5f, 1) /* blue */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-
-				    		this.context.getState().enableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.5f, 0.0f, 0.5f, 1) /* lavender(?) */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-							
-							this.widgetProgram.setUniform("model_view",
-								Matrix4.translate(arrow3PositionL)
-									.times(Matrix4.scale(-arrow3PositionL.z / 128.0f, -arrow3PositionL.z / 128.0f, 1.0f))
-									.times(Matrix4.fromColumns(
-											arrow3DirectionX.negated(), 
-											arrow3DirectionY.negated(), 
-											new Vector4(0,0,1,0), 
-											new Vector4(0,0,0,1))));
-							
-				    		this.context.getState().disableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.0f, 0.0f, 0.5f, 1) /* blue */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-
-				    		this.context.getState().enableDepthTest();
-							this.widgetProgram.setUniform("color", new Vector4(0.5f, 0.0f, 0.5f, 1) /* lavender(?) */);
-							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-						}
 					}
 					
 					context.getState().disableAlphaBlending();
 					context.getState().enableDepthWrite();
+					this.context.getState().enableDepthTest();
 				}
 				
 				// Finish drawing
