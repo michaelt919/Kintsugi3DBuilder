@@ -1,6 +1,5 @@
 package tetzlaff.ibr.rendering2;//Created by alexk on 7/21/2017.
 
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ObservableValue;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -9,7 +8,6 @@ import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
 import tetzlaff.mvc.models.ControllableCameraModel;
 
 import com.sun.istack.internal.NotNull;
-import tetzlaff.util.Math2;
 
 public class CameraModelImp implements ControllableCameraModel {
 
@@ -87,7 +85,7 @@ public class CameraModelImp implements ControllableCameraModel {
 
     @Override
     public Float getDistance() {
-        return (float) Math2.pow10(cam().getLog10distance());
+        return (float) Math.pow(10, (cam().getLog10distance()));
     }
 
     @Override

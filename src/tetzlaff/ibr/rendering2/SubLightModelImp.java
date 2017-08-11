@@ -9,7 +9,6 @@ import tetzlaff.ibr.gui2.controllers.scene.lights.LightType;
 import tetzlaff.ibr.gui2.controllers.scene.lights.SubLightSetting;
 import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
 import tetzlaff.mvc.models.ControllableSubLightModel;
-import tetzlaff.util.Math2;
 
 public class SubLightModelImp implements ControllableSubLightModel {
 
@@ -87,7 +86,7 @@ public class SubLightModelImp implements ControllableSubLightModel {
 
     @Override
     public Float getDistance() {
-        return (float) Math2.pow10(getLog10distance());
+        return (float) Math.pow(10, (getLog10distance()));
     }
 
     @Override

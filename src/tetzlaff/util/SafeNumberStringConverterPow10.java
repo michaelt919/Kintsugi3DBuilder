@@ -12,7 +12,7 @@ public class SafeNumberStringConverterPow10 extends StringConverter<Number>{
 
     @Override
     public String toString(Number object) {
-        Double to10 = Math2.pow10(object.doubleValue());
+        Double to10 = Math.pow(10, (object.doubleValue()));
         return safeConverter.toString(to10);
     }
 
