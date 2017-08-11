@@ -24,7 +24,7 @@
          <TextField GridPane.columnIndex="1" fx:id="xCenterTextField" />
          <TextField fx:id="yCenterTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          <TextField fx:id="zCenterTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-         <Button mnemonicParsing="false" onAction="#pressSelectPointButton" text="Select point" GridPane.columnIndex="1" GridPane.rowIndex="3">
+         <Button fx:id="selectPointButton" mnemonicParsing="false" text="Select point" GridPane.columnIndex="1" GridPane.rowIndex="3">
             <GridPane.margin>
                <Insets />
             </GridPane.margin>

@@ -6,8 +6,11 @@ import java.util.ResourceBundle;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
@@ -43,6 +46,9 @@ public class SettingsCameraSceneController implements Initializable {
 @FXML private Slider focalLengthSlider;
 
 @FXML private CheckBox orthographicCheckBox;
+
+@FXML private Button selectPointButton;
+
 
 
 private DoubleProperty fov = new SimpleDoubleProperty();
@@ -148,12 +154,9 @@ private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverter
         fov.bindBidirectional(c.fOVProperty());
     }
 
-
-@FXML
-private void pressSelectPointButton(){
-        //TODO
-    System.out.println("TODO: point selected");
-}
+    public void setOnActionSelectPoint(EventHandler<ActionEvent> actionEventEventHandler){
+        selectPointButton.setOnAction(actionEventEventHandler);
+    }
 
 
 }
