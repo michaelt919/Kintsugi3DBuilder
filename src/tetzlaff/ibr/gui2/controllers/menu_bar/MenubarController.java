@@ -4,13 +4,18 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -20,9 +25,9 @@ import tetzlaff.ibr.rendering2.ToolModel3;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 import tetzlaff.ibr.util.Flag;
 
-public class MenubarController implements Initializable {
+public class MenubarController {
     //toolModel
-    private final ToolModel3 toolModel = TheApp.getRootModel().getToolModel3();
+    private ToolModel3 toolModel;
     private IBRSettingsUIImpl getSettings(){
         return toolModel.getIbrSettingsUIImpl();
     }
@@ -62,9 +67,9 @@ public class MenubarController implements Initializable {
 
 
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
 
+    public void init2(ToolModel3 toolModel3){
+        this.toolModel = toolModel3;
         vSetFileChooser = new FileChooser();
 
         vSetFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -91,6 +96,22 @@ public class MenubarController implements Initializable {
                 }
             }
         });
+
+        toolModel.toolProperty().addListener((observable, oldValue, newValue) -> {
+            final String data;
+            switch (newValue){
+                case ORBIT: data = "ORBIT"; break;
+                case DOLLY: data = "DOLLY"; break;
+                case PAN: data = "PAN"; break;
+                case LIGHT_DRAG: data = "LIGHT_DRAG"; break;
+                case CENTER_POINT: data = "CENTER_POINT"; break;
+                default: data = "ERROR";
+            }
+            selectToggelWithData(toolGroup, data);
+        });
+
+
+
         renderGroup.selectedToggleProperty().addListener((ob,o,n)->{
             if(n!=null && n.getUserData() != null){
 
@@ -301,6 +322,16 @@ public class MenubarController implements Initializable {
             e.printStackTrace();
             return null;
         }
+    }
+
+    //toggle group helpers
+    private static void selectToggelWithData(ToggleGroup toggleGroup, String data){
+        ObservableList<Toggle> toggles = toggleGroup.getToggles();
+        toggles.iterator().forEachRemaining(toggle -> {
+            if(toggle.getUserData() instanceof String && toggle.getUserData().equals(data)){
+                toggleGroup.selectToggle(toggle);
+            }
+        });
     }
 
 }

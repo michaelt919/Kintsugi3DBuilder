@@ -34,8 +34,9 @@ public class EVSetting implements XML_Writable{
     private final Property<Color> bpColor = new SimpleObjectProperty<>();
     private final StringProperty name = new SimpleStringProperty();
     private final BooleanProperty locked = new SimpleBooleanProperty();
+    private final BooleanProperty firstEVLoaded = new SimpleBooleanProperty();
 
-    public EVSetting(Boolean evUseImage,Boolean evUseColor,Boolean bpUseImage,Boolean bpUseColor,Boolean imagePathsRelative,File evImageFile, File bpImageFile, Double evColorIntensity,Double evRotation,Color evColor,Color bpColor,String name, Boolean locked) {
+    public EVSetting(Boolean evUseImage,Boolean evUseColor,Boolean bpUseImage,Boolean bpUseColor,Boolean imagePathsRelative,File evImageFile, File bpImageFile, Double evColorIntensity,Double evRotation,Color evColor,Color bpColor,String name, Boolean locked, Boolean firstEVLoaded) {
         this.evUseImage.setValue(evUseImage);
         this.evUseColor.setValue(evUseColor);
         this.bpUseImage.setValue(bpUseImage);
@@ -49,6 +50,7 @@ public class EVSetting implements XML_Writable{
         this.bpColor.setValue(bpColor);
         this.name.setValue(name);
         this.locked.setValue(locked);
+        this.firstEVLoaded.setValue(firstEVLoaded);
     }
 
     @Override
@@ -67,7 +69,8 @@ public class EVSetting implements XML_Writable{
                 .setAttribute("evColor", evColor.getValue().toString())
                 .setAttribute("bpColor", bpColor.getValue().toString())
                 .setAttribute("name", name.getValue())
-                .setAttribute("locked", locked.getValue().toString());
+                .setAttribute("locked", locked.getValue().toString())
+                .setAttribute("firstEVLoaded", firstEVLoaded.getValue().toString());
     }
 
 
@@ -87,7 +90,8 @@ public class EVSetting implements XML_Writable{
                 Color.valueOf(element.getAttributeValue("evColor")),
                 Color.valueOf(element.getAttributeValue("bpColor")),
                 String.valueOf(element.getAttributeValue("name")),
-                Boolean.valueOf(element.getAttributeValue("locked"))
+                Boolean.valueOf(element.getAttributeValue("locked")),
+                Boolean.valueOf(element.getAttributeValue("firstEVLoaded"))
         );
     }
 
@@ -113,7 +117,8 @@ public class EVSetting implements XML_Writable{
                 evColor.getValue(),
                 bpColor.getValue(),
                 (name.getValue() + " copy"),
-                locked.getValue()
+                locked.getValue(),
+                firstEVLoaded.getValue()
         );
 
     }
@@ -272,5 +277,17 @@ public class EVSetting implements XML_Writable{
 
     public void setLocked(boolean locked) {
         this.locked.set(locked);
+    }
+
+    public boolean isFirstEVLoaded() {
+        return firstEVLoaded.get();
+    }
+
+    public BooleanProperty firstEVLoadedProperty() {
+        return firstEVLoaded;
+    }
+
+    public void setFirstEVLoaded(boolean firstEVLoaded) {
+        this.firstEVLoaded.set(firstEVLoaded);
     }
 }

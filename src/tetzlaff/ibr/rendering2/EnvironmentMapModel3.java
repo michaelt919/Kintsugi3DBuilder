@@ -24,19 +24,35 @@ public class EnvironmentMapModel3 extends ControllableEnvironmentMapModel {
         return (selected != null && selected.getValue() != null);
     }
 
-    private final Vector3 black = Vector3.ZERO;
     @Override
     public Vector3 getAmbientLightColor() {
         if(nn()){
-            Color color = selected.getValue().getEvColor();
-            return new Vector3((float) color.getRed(),(float) color.getBlue(),(float) color.getGreen()).times((float) selected.getValue().getEvColorIntensity());
+
+            if(selected.getValue().isEvUseColor()){
+                Color color = selected.getValue().getEvColor();
+                return new Vector3((float) color.getRed(),(float) color.getBlue(),(float) color.getGreen()).times((float) selected.getValue().getEvColorIntensity());
+            }{
+
+                if(selected.getValue().isEvUseImage()){
+                    return new Vector3(1f);
+                }else {
+                    return Vector3.ZERO;
+                }
+
+
+
+            }
+
+
         }
-        else return black;
+        else return Vector3.ZERO;
     }
 
     private final ChangeListener<File> evFileChange = (ob, o, n)->{
-        if(n != null) loadEV(n);
-        else unloadEV();
+        if(n != null){
+            loadEV(n);
+            if(nn()) selected.getValue().setFirstEVLoaded(true);
+        }
     };
 
     private final ChangeListener<EVSetting> settingChange = (ob, o, n)->{
@@ -51,7 +67,9 @@ public class EnvironmentMapModel3 extends ControllableEnvironmentMapModel {
 
     @Override
     public boolean getEnvironmentMappingEnabled() {
-        return true;
+        if(nn()){
+            return selected.getValue().isEvUseImage();
+        }else return false;
     }
 
     @Override
