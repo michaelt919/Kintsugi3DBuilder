@@ -23,7 +23,6 @@
             <MenuItem onAction="#file_export_BTF" mnemonicParsing="false" text="BTF..." />
             <MenuItem onAction="#file_export_Other" mnemonicParsing="false" text="Other..." />
          </Menu>
-         <MenuItem onAction="#file_loadSettingsConfiguration" mnemonicParsing="false" text="Load settings configuration" />
          <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." />
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
       </Menu>
