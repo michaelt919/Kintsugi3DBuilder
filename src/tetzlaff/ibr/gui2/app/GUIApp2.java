@@ -3,7 +3,6 @@ package tetzlaff.ibr.gui2.app;
 import java.net.URL;
 
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -11,16 +10,14 @@ import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.stage.WindowEvent;
 import tetzlaff.ibr.app2.Quit;
 import tetzlaff.ibr.app2.TheApp;
 import tetzlaff.ibr.gui2.controllers.menu_bar.MenubarController;
 import tetzlaff.ibr.gui2.controllers.scene.RootSceneController;
-import tetzlaff.ibr.rendering2.CameraModel3;
-import tetzlaff.ibr.rendering2.EnvironmentMapModel3;
-import tetzlaff.ibr.rendering2.LightModel3;
-import tetzlaff.ibr.rendering2.ToolModel3;
-import tetzlaff.ibr.util.StaticHouse;
+import tetzlaff.ibr.rendering2.CameraModelImp;
+import tetzlaff.ibr.rendering2.EnvironmentMapModelImp;
+import tetzlaff.ibr.rendering2.LightModelImp;
+import tetzlaff.ibr.rendering2.ToolModelImp;
 
 public class GUIApp2 extends Application{
 
@@ -107,14 +104,14 @@ public class GUIApp2 extends Application{
 
 
         //get models
-        final CameraModel3 cameraModel3 = TheApp.getRootModel().getCameraModel3();
-        final EnvironmentMapModel3 environmentMapModel3 = TheApp.getRootModel().getEnvironmentMapModel3();
-        final LightModel3 lightModel3 = TheApp.getRootModel().getLightModel3();
-        final ToolModel3 toolModel3 = TheApp.getRootModel().getToolModel3();
+        final CameraModelImp cameraModel = TheApp.getRootModel().getCameraModel();
+        final EnvironmentMapModelImp environmentMapModel = TheApp.getRootModel().getEnvironmentMapModel();
+        final LightModelImp lightModel = TheApp.getRootModel().getLightModel();
+        final ToolModelImp toolModel = TheApp.getRootModel().getToolModel();
 
         //distribute to controllers
-        sceneController.init2(cameraModel3, lightModel3, environmentMapModel3, toolModel3);
-        menuBarController.init2(toolModel3);
+        sceneController.init2(cameraModel, lightModel, environmentMapModel, toolModel);
+        menuBarController.init2(toolModel);
 
 
 

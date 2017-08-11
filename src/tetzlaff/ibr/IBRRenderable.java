@@ -10,7 +10,7 @@ import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
+import tetzlaff.ibr.rendering2.IBRSettingsModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightModel;
 import tetzlaff.mvc.models.ReadonlyObjectModel;

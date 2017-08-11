@@ -17,7 +17,7 @@ import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
+import tetzlaff.ibr.rendering2.IBRSettingsModel;
 
 public class TextureFitFidelityTechnique<ContextType extends Context<ContextType>> implements FidelityEvaluationTechnique<ContextType>
 {

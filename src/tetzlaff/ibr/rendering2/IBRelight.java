@@ -39,7 +39,7 @@ import tetzlaff.mvc.models.impl.BasicCameraModel;
  *
  * @author Michael Tetzlaff
  */
-public class IBRelight2
+public class IBRelight
 {
 	private static final boolean DEBUG = true;
 
@@ -118,10 +118,10 @@ public class IBRelight2
 
 
 			//Here i create my own brand of camera and light models;
-			ControllableLightModel lightModel3 = TheApp.getRootModel().getLightModel3();
-			ControllableEnvironmentMapModel environmentMapModel3 = TheApp.getRootModel().getEnvironmentMapModel3();
-			ControllableCameraModel cameraModel3 = TheApp.getRootModel().getCameraModel3();
-			ControllableToolModel toolModel = TheApp.getRootModel().getToolModel3();
+			ControllableLightModel lightModel3 = TheApp.getRootModel().getLightModel();
+			ControllableEnvironmentMapModel environmentMapModel3 = TheApp.getRootModel().getEnvironmentMapModel();
+			ControllableCameraModel cameraModel3 = TheApp.getRootModel().getCameraModel();
+			ControllableToolModel toolModel = TheApp.getRootModel().getToolModel();
 
 			ToolBox toolBox = (new ToolBox.ToolBoxBuilder())
 					.setCameraModel(cameraModel3)

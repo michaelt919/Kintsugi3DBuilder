@@ -11,7 +11,7 @@ import tetzlaff.ibr.gui2.other.OrbitPolarConverter;
 import tetzlaff.mvc.models.ControllableSubLightModel;
 import tetzlaff.util.Math2;
 
-public class SubLightModel3 implements ControllableSubLightModel {
+public class SubLightModelImp implements ControllableSubLightModel {
 
     private ObservableValue<SubLightSetting> subLightSettingObservableValue;
     private final SubLightSetting backup= new SubLightSetting(

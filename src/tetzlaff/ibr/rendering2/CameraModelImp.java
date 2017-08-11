@@ -11,7 +11,7 @@ import tetzlaff.mvc.models.ControllableCameraModel;
 import com.sun.istack.internal.NotNull;
 import tetzlaff.util.Math2;
 
-public class CameraModel3 implements ControllableCameraModel {
+public class CameraModelImp implements ControllableCameraModel {
 
     private ObservableValue<CameraSetting> selected;
     private final CameraSetting backup = new CameraSetting(

@@ -5,17 +5,16 @@ import java.io.IOException;
 
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.IBRLoadOptions;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
-import tetzlaff.ibr.rendering2.to_sort.IBRLoadOptions2;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
+import tetzlaff.ibr.rendering2.IBRLoadOptions;
+import tetzlaff.ibr.rendering2.IBRSettingsModel;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 
 public abstract class ControllableToolModel {
     private IBRRenderable<?> ibrRenderable = null;
     protected abstract IBRSettingsModel getSettings();
-    protected abstract IBRLoadOptions2 getLoadOptions();
+    protected abstract IBRLoadOptions getLoadOptions();
     protected abstract void requestGUIClose();
 
 

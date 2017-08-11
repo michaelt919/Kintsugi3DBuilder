@@ -19,7 +19,7 @@ import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import tetzlaff.ibr.rendering2.LightModel3;
+import tetzlaff.ibr.rendering2.LightModelImp;
 
 import com.sun.javafx.collections.ObservableListWrapper;
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
@@ -110,11 +110,11 @@ public class RootLightSceneController implements Initializable {
 
     }
 
-    public void init2(LightModel3 lightModel3){
+    public void init2(LightModelImp lightModel){
         System.out.println("Lights in!");
         ObservableValue<LightGroupSetting> observableValue = tableView.getSelectionModel().selectedItemProperty();
         System.out.println("Setting " + observableValue);
-        lightModel3.setLightGroupSettingObservableValue(
+        lightModel.setLightGroupSettingObservableValue(
                 observableValue
         );
     }
