@@ -10,6 +10,10 @@ import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import tetzlaff.ibr.app2.TheApp;
+import tetzlaff.ibr.rendering2.CameraModel3;
+import tetzlaff.ibr.rendering2.EnvironmentMapModel3;
+import tetzlaff.ibr.rendering2.LightModel3;
 
 public class GUIApp2 extends Application{
 
@@ -84,6 +88,13 @@ public class GUIApp2 extends Application{
         menuBarStage.hide();//this is just to have the menu bar have focus on the application starts, only aesthetic value.
         menuBarStage.show();
 
+
+
+
+        //Distribute
+        private final CameraModel3 cameraModel3 = TheApp.getRootModel().getCameraModel3();
+        private final EnvironmentMapModel3 environmentMapModel3 = TheApp.getRootModel().getEnvironmentMapModel3();
+        private final LightModel3 lightModel3 = TheApp.getRootModel().getLightModel3();
     }
 
 

@@ -16,9 +16,6 @@ import tetzlaff.ibr.rendering2.LightModel3;
 
 public class RootSceneController implements Initializable{
 
-    private final CameraModel3 cameraModel3 = TheApp.getRootModel().getCameraModel3();
-    private final EnvironmentMapModel3 environmentMapModel3 = TheApp.getRootModel().getEnvironmentMapModel3();
-    private final LightModel3 lightModel3 = TheApp.getRootModel().getLightModel3();
 
     @FXML
     RootCameraSceneController cameraController;
