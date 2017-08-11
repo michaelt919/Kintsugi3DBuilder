@@ -1,6 +1,6 @@
 package tetzlaff.ibr.app2;//Created by alexk on 7/19/2017.
 
-import tetzlaff.ibr.gui2.app.GUIApp2;
+import tetzlaff.ibr.gui2.app.GUIApp;
 
 public class ThreadableUI implements Runnable {
     /**
@@ -16,6 +16,6 @@ public class ThreadableUI implements Runnable {
      */
     @Override
     public void run() {
-        GUIApp2.launchWrapper("");
+        GUIApp.launchWrapper("");
     }
 }
