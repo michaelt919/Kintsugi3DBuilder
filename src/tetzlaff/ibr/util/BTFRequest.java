@@ -13,7 +13,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
+import tetzlaff.ibr.rendering2.IBRSettingsModel;
 
 public class BTFRequest implements IBRRequest
 {

@@ -4,23 +4,22 @@ import javafx.beans.value.ObservableValue;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.gui2.controllers.scene.lights.LightGroupSetting;
-import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
 import tetzlaff.mvc.models.ControllableLightModel;
 import tetzlaff.mvc.models.ControllableSubLightModel;
 
-public class LightModel3 extends ControllableLightModel {
+public class LightModelImp extends ControllableLightModel {
 
     private ObservableValue<LightGroupSetting> lightGroupSettingObservableValue;
     private LightGroupSetting backup = new LightGroupSetting("backup");
 
-    private SubLightModel3[] subLightModel3s = new SubLightModel3[LightGroupSetting.LIGHT_LIMIT];
+    private SubLightModelImp[] subLightModelImps = new SubLightModelImp[LightGroupSetting.LIGHT_LIMIT];
 
-    public LightModel3(EnvironmentMapModel3 ev) {
+    public LightModelImp(EnvironmentMapModelImp ev) {
         super(ev);
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
-            subLightModel3s[i] = new SubLightModel3();
+            subLightModelImps[i] = new SubLightModelImp();
 
-            subLightModel3s[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
+            subLightModelImps[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
 
         }
     }
@@ -31,12 +30,12 @@ public class LightModel3 extends ControllableLightModel {
         this.lightGroupSettingObservableValue.addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
                 for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
-                    subLightModel3s[i].setSubLightSettingObservableValue(newValue.lightListProperty().valueAt(i));
+                    subLightModelImps[i].setSubLightSettingObservableValue(newValue.lightListProperty().valueAt(i));
                 }
             } else {
                 System.out.println("Binding Backup");
                 for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
-                    subLightModel3s[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
+                    subLightModelImps[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
                 }
             }
         });
@@ -52,8 +51,8 @@ public class LightModel3 extends ControllableLightModel {
         }
     }
 
-    private SubLightModel3 lightModel(int index){
-        return subLightModel3s[index];
+    private SubLightModelImp lightModel(int index){
+        return subLightModelImps[index];
     }
 
     @Override
@@ -109,7 +108,7 @@ public class LightModel3 extends ControllableLightModel {
 
     @Override
     public ControllableSubLightModel getLight(int i) {
-        return subLightModel3s[i];
+        return subLightModelImps[i];
     }
 
 	@Override

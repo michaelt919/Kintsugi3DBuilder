@@ -6,7 +6,7 @@ import java.util.List;
 
 import tetzlaff.gl.Context;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
+import tetzlaff.ibr.rendering2.IBRSettingsModel;
 
 public interface FidelityEvaluationTechnique<ContextType extends Context<ContextType>> extends AutoCloseable
 {

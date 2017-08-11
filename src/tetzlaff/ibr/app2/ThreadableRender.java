@@ -1,6 +1,6 @@
 package tetzlaff.ibr.app2;//Created by alexk on 7/19/2017.
 
-import tetzlaff.ibr.rendering2.IBRelight2;
+import tetzlaff.ibr.rendering2.IBRelight;
 
 public class ThreadableRender implements Runnable {
     /**
@@ -16,6 +16,6 @@ public class ThreadableRender implements Runnable {
      */
     @Override
     public void run() {
-        IBRelight2.runProgram();
+        IBRelight.runProgram();
     }
 }

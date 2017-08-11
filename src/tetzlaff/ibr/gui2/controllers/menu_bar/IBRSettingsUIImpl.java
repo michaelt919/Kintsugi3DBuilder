@@ -1,8 +1,7 @@
 package tetzlaff.ibr.gui2.controllers.menu_bar;//Created by alexk on 7/31/2017.
 
 import javafx.beans.property.*;
-import javafx.fxml.FXML;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
+import tetzlaff.ibr.rendering2.IBRSettingsModel;
 import tetzlaff.ibr.util.StaticHouse;
 import tetzlaff.util.ShadingParameterMode;
 

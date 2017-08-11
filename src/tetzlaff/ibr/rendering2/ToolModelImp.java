@@ -6,13 +6,12 @@ import javafx.event.EventHandler;
 import javafx.stage.WindowEvent;
 import tetzlaff.ibr.gui2.controllers.menu_bar.IBRSettingsUIImpl;
 import tetzlaff.ibr.gui2.controllers.menu_bar.LoadSettings;
-import tetzlaff.ibr.rendering2.to_sort.IBRLoadOptions2;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 import tetzlaff.mvc.models.ControllableToolModel;
 
 
-public class ToolModel3 extends ControllableToolModel {
+public class ToolModelImp extends ControllableToolModel {
+
     private EventHandler<WindowEvent> closeEvent;
     public void setCloseEvent(EventHandler<WindowEvent> closeEvent) {
         this.closeEvent = closeEvent;
@@ -53,7 +52,7 @@ public class ToolModel3 extends ControllableToolModel {
     }
 
     @Override
-    protected IBRLoadOptions2 getLoadOptions() {
+    protected IBRLoadOptions getLoadOptions() {
         return loadSettings;
     }
 }

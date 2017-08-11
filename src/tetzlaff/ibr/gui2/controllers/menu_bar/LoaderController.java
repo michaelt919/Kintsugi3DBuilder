@@ -11,7 +11,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.BorderPane;
@@ -20,9 +19,7 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
-import tetzlaff.ibr.rendering2.ToolModel3;
-import tetzlaff.ibr.util.Flag;
+import tetzlaff.ibr.rendering2.ToolModelImp;
 import tetzlaff.ibr.util.StaticHouse;
 
 public class LoaderController implements Initializable{
@@ -42,10 +39,10 @@ public class LoaderController implements Initializable{
     private File objFile = null;
     private File photoDir = null;
 
-    private ToolModel3 toolModel3;
+    private ToolModelImp toolModel;
 
-    void setToolModel3(ToolModel3 toolModel3) {
-        this.toolModel3 = toolModel3;
+    void setToolModel(ToolModelImp toolModel) {
+        this.toolModel = toolModel;
     }
 
     @Override
@@ -112,7 +109,7 @@ public class LoaderController implements Initializable{
             //ok!
 
             try {
-                toolModel3.loadFiles(cameraFile, objFile, photoDir);
+                toolModel.loadFiles(cameraFile, objFile, photoDir);
             } catch (IOException e) {
                 System.out.println("files were malformed");
             }

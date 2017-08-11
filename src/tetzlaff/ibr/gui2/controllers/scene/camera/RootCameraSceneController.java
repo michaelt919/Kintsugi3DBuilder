@@ -15,10 +15,10 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import tetzlaff.ibr.rendering2.CameraModel3;
+import tetzlaff.ibr.rendering2.CameraModelImp;
 
 import com.sun.javafx.collections.ObservableListWrapper;
-import tetzlaff.ibr.rendering2.ToolModel3;
+import tetzlaff.ibr.rendering2.ToolModelImp;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 
 public class RootCameraSceneController implements Initializable {
@@ -62,15 +62,15 @@ public class RootCameraSceneController implements Initializable {
 
     }
 
-    public void init2(CameraModel3 cameraModel3, ToolModel3 toolModel3){
+    public void init2(CameraModelImp cameraModel, ToolModelImp toolModel){
 
         System.out.println("Cam in!");
 
-        cameraModel3.setSelectedCameraSettingProperty(
+        cameraModel.setSelectedCameraSettingProperty(
                 cameraListView.getSelectionModel().selectedItemProperty()
         );
 
-        settingsController.setOnActionSelectPoint(event -> toolModel3.setTool(ToolBox.TOOL.CENTER_POINT));
+        settingsController.setOnActionSelectPoint(event -> toolModel.setTool(ToolBox.TOOL.CENTER_POINT));
     }
 
     private CameraSetting getIt(){

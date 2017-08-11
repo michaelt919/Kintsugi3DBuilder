@@ -18,7 +18,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
 import com.sun.javafx.collections.ObservableListWrapper;
-import tetzlaff.ibr.rendering2.EnvironmentMapModel3;
+import tetzlaff.ibr.rendering2.EnvironmentMapModelImp;
 
 public class RootEVSceneController implements Initializable {
     private ObservableList<EVSetting> listOfEVs = new ObservableListWrapper<>(new ArrayList<>());
@@ -69,8 +69,8 @@ public class RootEVSceneController implements Initializable {
 
     }
 
-    public void init2(EnvironmentMapModel3 environmentMapModel3){
-        environmentMapModel3.setSelected(s().selectedItemProperty());
+    public void init2(EnvironmentMapModelImp environmentMapModel){
+        environmentMapModel.setSelected(s().selectedItemProperty());
     }
 
     private SelectionModel<EVSetting> s() {

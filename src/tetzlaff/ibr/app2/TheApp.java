@@ -1,9 +1,6 @@
 package tetzlaff.ibr.app2;
 
-import tetzlaff.ibr.rendering2.CameraModel3;
-import tetzlaff.ibr.rendering2.IBRelight2;
-import tetzlaff.ibr.rendering2.LightModel3;
-import tetzlaff.ibr.rendering2.ToolModel3;
+import tetzlaff.ibr.rendering2.IBRelight;
 
 public class TheApp {
 
@@ -42,7 +39,7 @@ public class TheApp {
 
     private static void startRenderWindow(){
 //        (new Thread(new ThreadableRender())).start();
-        IBRelight2.runProgram();
+        IBRelight.runProgram();
     }
 
     public static RootModel getRootModel() {

@@ -3,15 +3,10 @@ package tetzlaff.ibr.gui2.controllers.menu_bar;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ResourceBundle;
-import java.util.function.Consumer;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckMenuItem;
@@ -21,14 +16,13 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.app2.Quit;
-import tetzlaff.ibr.app2.TheApp;
-import tetzlaff.ibr.rendering2.ToolModel3;
+import tetzlaff.ibr.rendering2.ToolModelImp;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 import tetzlaff.ibr.util.Flag;
 
 public class MenubarController {
     //toolModel
-    private ToolModel3 toolModel;
+    private ToolModelImp toolModel;
     private IBRSettingsUIImpl getSettings(){
         return toolModel.getIbrSettingsUIImpl();
     }
@@ -69,8 +63,8 @@ public class MenubarController {
 
 
 
-    public void init2(ToolModel3 toolModel3){
-        this.toolModel = toolModel3;
+    public void init2(ToolModelImp toolModel){
+        this.toolModel = toolModel;
         vSetFileChooser = new FileChooser();
 
         vSetFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -159,7 +153,7 @@ public class MenubarController {
 
         LoaderController loaderController = makeWindow("Load Files", loaderWindowOpen, 750, 330,"fxml/menu_bar/Loader.fxml");
         if (loaderController != null) {
-            loaderController.setToolModel3(toolModel);
+            loaderController.setToolModel(toolModel);
         }
     }
 

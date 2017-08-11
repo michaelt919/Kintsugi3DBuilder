@@ -1,15 +1,15 @@
 package tetzlaff.ibr.app2;//Created by alexk on 7/19/2017.
 
-import tetzlaff.ibr.rendering2.CameraModel3;
-import tetzlaff.ibr.rendering2.EnvironmentMapModel3;
-import tetzlaff.ibr.rendering2.LightModel3;
-import tetzlaff.ibr.rendering2.ToolModel3;
+import tetzlaff.ibr.rendering2.CameraModelImp;
+import tetzlaff.ibr.rendering2.EnvironmentMapModelImp;
+import tetzlaff.ibr.rendering2.LightModelImp;
+import tetzlaff.ibr.rendering2.ToolModelImp;
 
 public class RootModel {
-    private final CameraModel3 cameraModel3;
-    private final EnvironmentMapModel3 environmentMapModel3;
-    private final LightModel3 lightModel3;
-    private final ToolModel3 toolModel3;
+    private final CameraModelImp cameraModel;
+    private final EnvironmentMapModelImp environmentMapModel;
+    private final LightModelImp lightModel;
+    private final ToolModelImp toolModel;
     private final Error error = new Error("tried to distribute a model 3 times");
     private int gotCameraModel = 0;
     private int gotEnvironmentMapModel = 0;
@@ -17,41 +17,41 @@ public class RootModel {
     private int gotToolModel = 0;
 
     public RootModel(){
-        cameraModel3 = new CameraModel3();
-        toolModel3 = new ToolModel3();
-        environmentMapModel3 = new EnvironmentMapModel3(toolModel3);
-        lightModel3 = new LightModel3(environmentMapModel3);
+        cameraModel = new CameraModelImp();
+        toolModel = new ToolModelImp();
+        environmentMapModel = new EnvironmentMapModelImp(toolModel);
+        lightModel = new LightModelImp(environmentMapModel);
     }
 
-    public CameraModel3 getCameraModel3() {
+    public CameraModelImp getCameraModel() {
         if(gotCameraModel++ >= 2){
             System.out.println("{camera model}");
             throw error;
         }
-        return cameraModel3;
+        return cameraModel;
     }
 
-    public LightModel3 getLightModel3() {
+    public LightModelImp getLightModel() {
         if(gotLightModel++ >= 2){
             System.out.println("{light model}");
             throw error;
         }
-        return lightModel3;
+        return lightModel;
     }
 
-    public ToolModel3 getToolModel3() {
+    public ToolModelImp getToolModel() {
         if(gotToolModel++ >= 2){
             System.out.println("{tool model}");
             throw error;
         }
-        return toolModel3;
+        return toolModel;
     }
 
-    public EnvironmentMapModel3 getEnvironmentMapModel3(){
+    public EnvironmentMapModelImp getEnvironmentMapModel(){
         if(gotEnvironmentMapModel++ >= 2){
             System.out.println("{environment model}");
             throw error;
         }
-        return environmentMapModel3;
+        return environmentMapModel;
     }
 }

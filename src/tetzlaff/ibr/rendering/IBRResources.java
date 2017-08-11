@@ -33,7 +33,7 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ViewSet;
-import tetzlaff.ibr.rendering2.to_sort.IBRLoadOptions2;
+import tetzlaff.ibr.rendering2.IBRLoadOptions;
 
 public class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
@@ -109,7 +109,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		private ViewSet viewSet;
 		private VertexGeometry geometry;
 		private File imageDirectoryOverride;
-		private IBRLoadOptions2 loadOptions;
+		private IBRLoadOptions loadOptions;
 		private LoadingMonitor loadingMonitor;
 		
 		private float gamma;
@@ -121,7 +121,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			this.context = context;
 		}
 		
-		public Builder<ContextType> setLoadOptions(IBRLoadOptions2 loadOptions)
+		public Builder<ContextType> setLoadOptions(IBRLoadOptions loadOptions)
 		{
 			this.loadOptions = loadOptions;
 			return this;
@@ -210,7 +210,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		return new IBRResources.Builder<ContextType>(context);
 	}
 	
-	private IBRResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, IBRLoadOptions2 loadOptions, LoadingMonitor loadingMonitor) throws IOException
+	private IBRResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, IBRLoadOptions loadOptions, LoadingMonitor loadingMonitor) throws IOException
 	{
 		this.context = context;
 		this.viewSet = viewSet;

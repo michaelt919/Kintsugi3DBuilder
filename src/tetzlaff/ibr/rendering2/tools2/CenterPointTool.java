@@ -3,7 +3,6 @@ package tetzlaff.ibr.rendering2.tools2;//Created by alexk on 8/8/2017.
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
-import tetzlaff.ibr.rendering2.ToolModel3;
 import tetzlaff.mvc.models.ControllableCameraModel;
 import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
 import tetzlaff.mvc.models.ControllableLightModel;

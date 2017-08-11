@@ -1,7 +1,7 @@
 package tetzlaff.ibr;
 
 import tetzlaff.ibr.gui2.controllers.menu_bar.RenderingType;
-import tetzlaff.ibr.rendering2.to_sort.IBRSettingsModel;
+import tetzlaff.ibr.rendering2.IBRSettingsModel;
 import tetzlaff.util.ShadingParameterMode;
 
 public class IBRSettings implements IBRSettingsModel {

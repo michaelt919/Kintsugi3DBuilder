@@ -10,8 +10,8 @@ import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
 
 import java.io.File;
 
-public class EnvironmentMapModel3 extends ControllableEnvironmentMapModel {
-    public EnvironmentMapModel3(ToolModel3 tool) {
+public class EnvironmentMapModelImp extends ControllableEnvironmentMapModel {
+    public EnvironmentMapModelImp(ToolModelImp tool) {
         super(tool);
     }
 
