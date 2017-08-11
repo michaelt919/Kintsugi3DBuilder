@@ -1159,7 +1159,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 						
 						if (lightModel.isLightVisualizationEnabled(i))
 						{
-							this.context.getState().disableDepthTest();
+							this.context.getState().enableDepthTest();
 							context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
 							
 							this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1)));
