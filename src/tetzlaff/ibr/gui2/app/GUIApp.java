@@ -19,7 +19,7 @@ import tetzlaff.ibr.rendering2.EnvironmentMapModelImp;
 import tetzlaff.ibr.rendering2.LightModelImp;
 import tetzlaff.ibr.rendering2.ToolModelImp;
 
-public class GUIApp2 extends Application{
+public class GUIApp extends Application{
 
     @Override
     public void start(Stage menuBarStage) throws Exception {

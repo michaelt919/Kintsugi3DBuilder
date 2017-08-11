@@ -1,4 +1,4 @@
-package kautzTesting;//Created by alexk on 8/2/2017.
+package tetzlaff.ibr.rendering2;//Created by alexk on 8/2/2017.
 
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;

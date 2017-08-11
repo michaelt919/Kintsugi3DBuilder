@@ -1,7 +1,6 @@
 package tetzlaff.ibr.rendering2.tools2;//Created by alexk on 8/2/2017.
 
-import javafx.beans.property.DoubleProperty;
-import kautzTesting.SphereMath;
+import tetzlaff.ibr.rendering2.SphereMath;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
