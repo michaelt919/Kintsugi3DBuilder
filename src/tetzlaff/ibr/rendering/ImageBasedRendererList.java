@@ -60,7 +60,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 	}
 
 	@Override
-	public IBRRenderable<ContextType> addFromVSETFile(String id, File vsetFile, ReadonlyIBRLoadOptionsModel loadOptions) throws IOException
+	public void loadFromVSETFile(String id, File vsetFile, ReadonlyIBRLoadOptionsModel loadOptions) throws IOException
 	{
 		// id = vsetFile.getPath()
 		
@@ -118,11 +118,10 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 			}
 		});
 		renderableList.add(newItem);
-		return newItem;
 	}
 	
 	@Override
-	public IBRRenderable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, ReadonlyIBRLoadOptionsModel loadOptions) throws IOException
+	public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, ReadonlyIBRLoadOptionsModel loadOptions) throws IOException
 	{
 		IBRRenderable<ContextType> newItem = 
 			new IBRImplementation<ContextType>(id, context, this.getProgram(),
@@ -178,7 +177,6 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 			}
 		});
 		renderableList.add(newItem);
-		return newItem;
 	}
 
 	@Override
@@ -268,5 +266,11 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 		{
 			renderable.setSettingsModel(settingsModel);
 		}
+	}
+
+	@Override
+	public void loadEnvironmentMap(File environmentMapFile) throws IOException 
+	{
+		this.getSelectedItem().setEnvironment(environmentMapFile);
 	}
 }

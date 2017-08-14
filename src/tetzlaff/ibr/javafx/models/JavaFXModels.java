@@ -22,7 +22,7 @@ public class JavaFXModels
     {
         cameraModel = new JavaFXCameraModel();
         toolModel = new ToolModelImp();
-        environmentMapModel = new JavaFXEnvironmentMapModel(toolModel);
+        environmentMapModel = new JavaFXEnvironmentMapModel();
         lightModel = new JavaFXLightingModel(environmentMapModel);
         loadOptionsModel = new JavaFXLoadOptionsModel();
         settingsModel = new JavaFXSettingsModel();

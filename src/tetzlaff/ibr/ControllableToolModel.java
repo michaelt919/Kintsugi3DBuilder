@@ -1,7 +1,6 @@
 package tetzlaff.ibr;//Created by alexk on 7/24/2017.
 
 import java.io.File;
-import java.io.IOException;
 
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
@@ -41,17 +40,12 @@ public abstract class ControllableToolModel
         return model.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
     }
 
-    public Vector3 getPoint(Vector2 vector2)
-    {
-        return getPoint(vector2.x, vector2.y);
-    }
-
     public enum SceneObjectType
     {
         OBJECT, LIGHT, BACKGROUND, OTHER
     }
 
-    public SceneObjectType whatClicked(double x, double y)
+    public SceneObjectType getClickedObjectType(double x, double y)
     {
         Object thing = model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y);
         if(thing != null && thing instanceof String)

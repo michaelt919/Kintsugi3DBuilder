@@ -1,6 +1,7 @@
 package tetzlaff.ibr.javafx.models;//Created by alexk on 7/28/2017.
 
 import java.io.File;
+import java.io.IOException;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -12,8 +13,8 @@ import tetzlaff.ibr.rendering2.ToolModelImp;
 import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
 
 public class JavaFXEnvironmentMapModel extends EnvironmentMapModelBase {
-    public JavaFXEnvironmentMapModel(ToolModelImp tool) {
-        super(tool);
+    public JavaFXEnvironmentMapModel() {
+        super();
     }
 
     private ObservableValue<EVSetting> selected;
@@ -51,7 +52,14 @@ public class JavaFXEnvironmentMapModel extends EnvironmentMapModelBase {
 
     private final ChangeListener<File> evFileChange = (ob, o, n)->{
         if(n != null){
-            loadEnvironmentMap(n);
+        	try
+        	{
+        		loadEnvironmentMap(n);
+        	}
+        	catch(IOException e)
+        	{
+        		e.printStackTrace();
+        	}
             if(nn()) selected.getValue().setFirstEVLoaded(true);
         }
     };
