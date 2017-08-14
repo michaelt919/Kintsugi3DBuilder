@@ -25,9 +25,9 @@ public class FidelityMetricRequest implements IBRRequest
 {
 	private final static boolean DEBUG = true;
 	
-	private final static boolean USE_RENDERER_WEIGHTS = true;
+	//private final static boolean USE_RENDERER_WEIGHTS = true;
 	private final static boolean USE_PERCEPTUALLY_LINEAR_ERROR = false;
-	private final static boolean LITE_MODE = true;
+	private final static boolean LITE_MODE = false;
 	
     private File fidelityExportPath;
     private File fidelityVSETFile;
