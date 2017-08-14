@@ -29,10 +29,10 @@ import tetzlaff.mvc.controllers.impl.FirstPersonController;
 import tetzlaff.mvc.controllers.impl.TrackballController;
 import tetzlaff.mvc.models.CameraModel;
 import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.mvc.models.impl.BasicCameraModel;
-import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
-import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.mvc.models.impl.ReadonlyEnvironmentMapModel;
 
 public class Rendering
 {
@@ -85,12 +85,9 @@ public class Rendering
 
 			trackballController.addAsWindowListener(window);
 
-			//Here I create my own brand of camera and light models;
-			// TODO NEWUI refactor against interfaces not implementations
-			LightingModelBase lightingModel = JavaFXModels.getInstance().getLightingModel();
-			EnvironmentMapModelBase environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
+			ReadonlyLightingModel lightingModel = JavaFXModels.getInstance().getLightingModel();
+			ReadonlyEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
 			ExtendedCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
-			
 			ReadonlyIBRSettingsModel settingsModel = JavaFXModels.getInstance().getSettingsModel();
 			ReadonlyIBRLoadOptionsModel loadOptionsModel = JavaFXModels.getInstance().getLoadOptionsModel();
 			

@@ -7,9 +7,9 @@ import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;
 import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.SceneViewportModel;
-import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
-import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.mvc.models.impl.ReadonlyEnvironmentMapModel;
 
 public class ToolBox implements CursorPositionListener, MouseButtonPressListener, ScrollListener, KeyPressListener, Controller {
 
@@ -67,7 +67,7 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
     }
 
     //builder
-    private ToolBox(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightingModel, 
+    private ToolBox(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, 
     		ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel, Window<?> window) {
         this.toolModel = toolModel;
 
@@ -82,8 +82,8 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
     public static final class ToolBoxBuilder {
         private ToolSelectionModel toolModel;
         private ExtendedCameraModel cameraModel;
-        private EnvironmentMapModelBase environmentMapModel;
-        private LightingModelBase lightingModel;
+        private ReadonlyEnvironmentMapModel environmentMapModel;
+        private ReadonlyLightingModel lightingModel;
         private SceneViewportModel sceneViewportModel;
         private Window<?> window;
 
@@ -105,12 +105,12 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
             return this;
         }
 
-        public ToolBoxBuilder setEnvironmentMapModel(EnvironmentMapModelBase environmentMapModel) {
+        public ToolBoxBuilder setEnvironmentMapModel(ReadonlyEnvironmentMapModel environmentMapModel) {
             this.environmentMapModel = environmentMapModel;
             return this;
         }
 
-        public ToolBoxBuilder setLightingModel(LightingModelBase lightingModel) {
+        public ToolBoxBuilder setLightingModel(ReadonlyLightingModel lightingModel) {
             this.lightingModel = lightingModel;
             return this;
         }

@@ -70,14 +70,9 @@ public class JavaFXLightingModel extends LightingModelBase {
 	}
 
     @Override
-    public void setLightColor(int i, Vector3 color) {
-        getLightInstanceModel(i).setColor(color);
-    }
-
-    @Override
     public Vector3 getLightColor(int i) {
 //        System.out.println("Get Color ");
-        return getLightInstanceModel(i).getColor();
+        return lightInstanceModels[i].getColor();
     }
 
 
@@ -87,7 +82,7 @@ public class JavaFXLightingModel extends LightingModelBase {
     public Matrix4 getLightMatrix(int i) {
 //        System.out.println("get light matrix " + i);
 
-        Matrix4 out = getLightInstanceModel(i).getLookMatrix();
+        Matrix4 out = lightInstanceModels[i].getLookMatrix();
 
 //        for (int j = 0; j < 4; j++) {
 //            System.out.print("[");
@@ -102,13 +97,8 @@ public class JavaFXLightingModel extends LightingModelBase {
 
 
     @Override
-    public JavaFXLightInstanceModel getLightInstanceModel(int i) {
-        return lightInstanceModels[i];
-    }
-
-	@Override
 	public Vector3 getLightCenter(int i) 
 	{
-	    return getLightInstanceModel(i).getCenter();
+	    return lightInstanceModels[i].getCenter();
 	}
 }
