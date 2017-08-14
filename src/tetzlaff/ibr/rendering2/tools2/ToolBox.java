@@ -2,10 +2,10 @@ package tetzlaff.ibr.rendering2.tools2;//Created by alexk on 7/24/2017.
 
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
-import tetzlaff.mvc.models.ControllableCameraModel;
-import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
-import tetzlaff.mvc.models.ControllableLightModel;
-import tetzlaff.mvc.models.ControllableToolModel;
+import tetzlaff.ibr.ControllableToolModel;
+import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
 
 public class ToolBox extends AbstractTool implements Controller {
 
@@ -24,7 +24,6 @@ public class ToolBox extends AbstractTool implements Controller {
     private DollyTool dollyTool;
     private OrbitTool orbitTool;
     private PanTool panTool;
-    private LightDragTool lightDragTool;
     private CenterPointTool centerPointTool;
     public enum TOOL{
         DOLLY, ORBIT, PAN, LIGHT_DRAG, CENTER_POINT
@@ -34,7 +33,6 @@ public class ToolBox extends AbstractTool implements Controller {
             case DOLLY: return dollyTool;
             case ORBIT: return orbitTool;
             case PAN: return panTool;
-            case LIGHT_DRAG: return lightDragTool;
             case CENTER_POINT: return centerPointTool;
             default: return orbitTool;
         }
@@ -62,14 +60,13 @@ public class ToolBox extends AbstractTool implements Controller {
     }
 
     //builder
-    private ToolBox(ControllableCameraModel cameraModel, ControllableEnvironmentMapModel environmentMapModel, ControllableLightModel lightModel, ControllableToolModel toolModel, Window<?> window) {
+    private ToolBox(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, ControllableToolModel toolModel, Window<?> window) {
         super(cameraModel, environmentMapModel, lightModel);
         this.toolModel = toolModel;
 
         dollyTool = new DollyTool(cameraModel, environmentMapModel, lightModel);
         orbitTool = new OrbitTool(cameraModel, environmentMapModel, lightModel);
         panTool = new PanTool(cameraModel, environmentMapModel, lightModel);
-        lightDragTool = new LightDragTool(cameraModel, environmentMapModel, lightModel);
         centerPointTool = new CenterPointTool(cameraModel, environmentMapModel, lightModel, toolModel);
 
         addAsWindowListener(window);
@@ -77,9 +74,9 @@ public class ToolBox extends AbstractTool implements Controller {
 
     public static final class ToolBoxBuilder {
         private ControllableToolModel toolModel;
-        private ControllableCameraModel cameraModel;
-        private ControllableEnvironmentMapModel environmentMapModel;
-        private ControllableLightModel lightModel;
+        private ExtendedCameraModel cameraModel;
+        private EnvironmentMapModelBase environmentMapModel;
+        private LightingModelBase lightModel;
         private Window<?> window;
 
         public static ToolBoxBuilder aToolBox() {
@@ -91,17 +88,17 @@ public class ToolBox extends AbstractTool implements Controller {
             return this;
         }
 
-        public ToolBoxBuilder setCameraModel(ControllableCameraModel cameraModel) {
+        public ToolBoxBuilder setCameraModel(ExtendedCameraModel cameraModel) {
             this.cameraModel = cameraModel;
             return this;
         }
 
-        public ToolBoxBuilder setEnvironmentMapModel(ControllableEnvironmentMapModel environmentMapModel) {
+        public ToolBoxBuilder setEnvironmentMapModel(EnvironmentMapModelBase environmentMapModel) {
             this.environmentMapModel = environmentMapModel;
             return this;
         }
 
-        public ToolBoxBuilder setLightModel(ControllableLightModel lightModel) {
+        public ToolBoxBuilder setLightModel(LightingModelBase lightModel) {
             this.lightModel = lightModel;
             return this;
         }

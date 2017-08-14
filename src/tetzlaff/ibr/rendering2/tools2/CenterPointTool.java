@@ -3,14 +3,14 @@ package tetzlaff.ibr.rendering2.tools2;//Created by alexk on 8/8/2017.
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
-import tetzlaff.mvc.models.ControllableCameraModel;
-import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
-import tetzlaff.mvc.models.ControllableLightModel;
-import tetzlaff.mvc.models.ControllableToolModel;
+import tetzlaff.ibr.ControllableToolModel;
+import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
 
 class CenterPointTool extends AbstractTool{
     private ControllableToolModel toolModel;
-    public CenterPointTool(ControllableCameraModel cameraModel, ControllableEnvironmentMapModel environmentMapModel, ControllableLightModel lightModel, ControllableToolModel toolModel) {
+    public CenterPointTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, ControllableToolModel toolModel) {
         super(cameraModel, environmentMapModel, lightModel);
         this.toolModel = toolModel;
     }
@@ -24,10 +24,10 @@ class CenterPointTool extends AbstractTool{
             double trueY = mouseStartY_MB1 / window.getWindowSize().height;
 
             Vector3 newCenter = toolModel.getPoint(trueX, trueY);
-            ControllableToolModel.WHAT_CLICKED whatClicked = toolModel.whatClicked(trueX, trueY);
+            ControllableToolModel.SceneObjectType whatClicked = toolModel.whatClicked(trueX, trueY);
 //            System.out.println("You clicked: " + whatClicked + " at " + newCenter);
 
-            if(whatClicked.equals(ControllableToolModel.WHAT_CLICKED.OBJECT)){
+            if(whatClicked.equals(ControllableToolModel.SceneObjectType.OBJECT)){
                 cameraModel.setCenter(newCenter);
                 System.out.println("Set center to " + newCenter);
 

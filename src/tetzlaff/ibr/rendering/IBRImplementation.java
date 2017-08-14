@@ -37,12 +37,13 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.IBRSettings;
+import tetzlaff.ibr.IBRSettingsModel;
 import tetzlaff.ibr.LoadingMonitor;
+import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 import tetzlaff.ibr.ViewSet;
-import tetzlaff.ibr.rendering2.IBRSettingsModel;
+import tetzlaff.ibr.old.IBRSettingsModelImpl;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.ReadonlyLightModel;
+import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.ReadonlyObjectModel;
 import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.util.EnvironmentMap;
@@ -55,7 +56,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private Program<ContextType> shadowProgram;
 	private LoadingMonitor callback;
 	private boolean suppressErrors = false;
-	private IBRSettingsModel settings;
+	private ReadonlyIBRSettingsModel settings;
 
 	private IBRResources.Builder<ContextType> resourceBuilder;
 	private IBRResources<ContextType> resources;
@@ -79,7 +80,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private ReadonlyObjectModel objectModel;
     private ReadonlyCameraModel cameraModel;
-	private ReadonlyLightModel lightModel;
+	private ReadonlyLightingModel lightModel;
 
     private Vector3 clearColor;
     private boolean halfResEnabled;
@@ -127,7 +128,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     	this.clearColor = new Vector3(0.0f);
     	this.multiTransformationModel = new ArrayList<Matrix4>();
     	this.multiTransformationModel.add(Matrix4.IDENTITY);
-    	this.settings = new IBRSettings();
+    	this.settings = new IBRSettingsModelImpl();
     	
     	this.sceneObjectNameList = new ArrayList<String>();
     	this.sceneObjectIDLookup = new HashMap<String, Integer>();
@@ -1316,14 +1317,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	}
 
 	@Override
-	public IBRSettingsModel getSettingsModel()
+	public ReadonlyIBRSettingsModel getSettingsModel()
 	{
 		return this.settings;
 	}
 
 	@Override
-	public void setSettingsModel(IBRSettingsModel ibrSettings2) {
-		this.settings = ibrSettings2;
+	public void setSettingsModel(ReadonlyIBRSettingsModel settings) {
+		this.settings = settings;
 	}
 
 	@Override
@@ -1533,7 +1534,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	}
 
 	@Override
-	public void setLightModel(ReadonlyLightModel lightModel) 
+	public void setLightModel(ReadonlyLightingModel lightModel) 
 	{
 		this.lightModel = lightModel;
 	}

@@ -7,9 +7,9 @@ import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;
-import tetzlaff.mvc.models.ControllableCameraModel;
-import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
-import tetzlaff.mvc.models.ControllableLightModel;
+import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
 
 class AbstractTool implements CursorPositionListener, MouseButtonPressListener, ScrollListener, KeyPressListener{
 
@@ -20,11 +20,11 @@ class AbstractTool implements CursorPositionListener, MouseButtonPressListener, 
     protected static final int MB2 = 1;
     protected static final int MB3 = 2;
 
-    protected ControllableCameraModel cameraModel;
-    protected ControllableEnvironmentMapModel environmentMapModel;
-    protected ControllableLightModel lightModel;
+    protected ExtendedCameraModel cameraModel;
+    protected EnvironmentMapModelBase environmentMapModel;
+    protected LightingModelBase lightModel;
 
-    AbstractTool(ControllableCameraModel cameraModel, ControllableEnvironmentMapModel environmentMapModel, ControllableLightModel lightModel) {
+    AbstractTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel) {
         this.cameraModel = cameraModel;
         this.environmentMapModel = environmentMapModel;
         this.lightModel = lightModel;

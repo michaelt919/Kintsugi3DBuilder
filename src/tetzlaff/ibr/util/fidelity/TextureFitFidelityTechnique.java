@@ -16,8 +16,9 @@ import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.ibr.IBRSettingsModel;
+import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.ibr.rendering2.IBRSettingsModel;
 
 public class TextureFitFidelityTechnique<ContextType extends Context<ContextType>> implements FidelityEvaluationTechnique<ContextType>
 {
@@ -58,7 +59,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 	}
 
 	@Override
-	public void initialize(IBRResources<ContextType> resources, IBRSettingsModel settings, int size) throws IOException
+	public void initialize(IBRResources<ContextType> resources, ReadonlyIBRSettingsModel settings, int size) throws IOException
 	{
 		this.resources = resources;
 		

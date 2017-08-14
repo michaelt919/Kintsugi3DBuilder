@@ -4,10 +4,12 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
 import javafx.stage.WindowEvent;
-import tetzlaff.ibr.gui2.controllers.menu_bar.IBRSettingsUIImpl;
-import tetzlaff.ibr.gui2.controllers.menu_bar.LoadSettings;
+import tetzlaff.ibr.ControllableToolModel;
+import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
+import tetzlaff.ibr.IBRSettingsModel;
+import tetzlaff.ibr.javafx.models.JavaFXLoadOptionsModel;
+import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
-import tetzlaff.mvc.models.ControllableToolModel;
 
 
 public class ToolModelImp extends ControllableToolModel {
@@ -33,26 +35,5 @@ public class ToolModelImp extends ControllableToolModel {
     }
     public ObjectProperty<ToolBox.TOOL> toolProperty() {
         return tool;
-    }
-
-    private final LoadSettings loadSettings = new LoadSettings();
-    private final IBRSettingsUIImpl ibrSettingsUIImpl = new IBRSettingsUIImpl();
-
-    public LoadSettings getLoadSettings() {
-        return loadSettings;
-    }
-
-    public IBRSettingsUIImpl getIbrSettingsUIImpl() {
-        return ibrSettingsUIImpl;
-    }
-
-    @Override
-    protected IBRSettingsModel getSettings() {
-        return ibrSettingsUIImpl;
-    }
-
-    @Override
-    protected IBRLoadOptions getLoadOptions() {
-        return loadSettings;
     }
 }

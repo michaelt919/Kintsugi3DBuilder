@@ -6,15 +6,16 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import tetzlaff.ibr.rendering2.IBRSettingsModel;
+import tetzlaff.ibr.IBRSettingsModel;
+import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 
 public class FidelityMetricRequestUI implements IBRRequestUI 
 {
 	private Component parent;
 	private JFileChooser fileChooser;
-	private IBRSettingsModel settings;
+	private ReadonlyIBRSettingsModel settings;
 	
-	public FidelityMetricRequestUI(Component parent, JFileChooser fileChooser, IBRSettingsModel settings)
+	public FidelityMetricRequestUI(Component parent, JFileChooser fileChooser, ReadonlyIBRSettingsModel settings)
 	{
 		this.parent = parent;
 		this.fileChooser = fileChooser;

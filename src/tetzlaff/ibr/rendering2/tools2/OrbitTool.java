@@ -6,16 +6,16 @@ import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.MouseButtonState;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.WindowSize;
-import tetzlaff.mvc.models.ControllableCameraModel;
-import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
-import tetzlaff.mvc.models.ControllableLightModel;
+import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
 
 class OrbitTool extends AbstractTool {
 
     private final double orbitSensitivity = 1.0 * Math.PI; //todo: get from gui somehow
     private double orbitSensitivityAdjusted = 1.0;
 
-    OrbitTool(ControllableCameraModel cameraModel, ControllableEnvironmentMapModel environmentMapModel, ControllableLightModel lightModel) {
+    OrbitTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel) {
         super(cameraModel, environmentMapModel, lightModel);
     }
 

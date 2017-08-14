@@ -10,9 +10,8 @@ import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.ibr.rendering2.IBRSettingsModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.ReadonlyLightModel;
+import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.ReadonlyObjectModel;
 import tetzlaff.mvc.models.SceneViewportModel;
 
@@ -25,8 +24,8 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
 	
 	SceneViewportModel getSceneViewportModel();
 	
-	IBRSettingsModel getSettingsModel();
-	void setSettingsModel(IBRSettingsModel ibrSettingsModel);
+	ReadonlyIBRSettingsModel getSettingsModel();
+	void setSettingsModel(ReadonlyIBRSettingsModel ibrSettingsModel);
 	
 	boolean getHalfResolution();
 	boolean getMultisampling();
@@ -42,7 +41,7 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
 
 	void setObjectModel(ReadonlyObjectModel objectModel);
 	void setCameraModel(ReadonlyCameraModel cameraModel);
-	void setLightModel(ReadonlyLightModel lightModel);
+	void setLightModel(ReadonlyLightingModel lightModel);
 	
 	void setMultiTransformationModel(List<Matrix4> multiTransformationModel);
 	void setReferenceScene(VertexGeometry scene);
