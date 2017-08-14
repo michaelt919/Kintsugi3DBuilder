@@ -2,7 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.scene.camera.RootCameraSceneController">
+<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.camera.RootCameraSceneController">
    <TitledPane animated="false" text="Cameras" VBox.vgrow="ALWAYS">
       <HBox prefHeight="0.0">
          <ListView fx:id="cameraListView" HBox.hgrow="ALWAYS" />

@@ -37,7 +37,6 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.IBRSettingsModel;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 import tetzlaff.ibr.ViewSet;
@@ -54,7 +53,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private ContextType context;
 	private Program<ContextType> program;
 	private Program<ContextType> shadowProgram;
-	private LoadingMonitor callback;
+	private LoadingMonitor loadingMonitor;
 	private boolean suppressErrors = false;
 	private ReadonlyIBRSettingsModel settings;
 
@@ -269,9 +268,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    	
 			context.flush();
 
-			if (this.callback != null)
+			if (this.loadingMonitor != null)
 			{
-				this.callback.setMaximum(0.0); // make indeterminate
+				this.loadingMonitor.setMaximum(0.0); // make indeterminate
 			}
 		} 
     	catch (IOException e) 
@@ -396,9 +395,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		// Make sure that everything is loaded onto the graphics card before announcing that loading is complete.
 		this.draw(context.getDefaultFramebuffer());
 		
-		if (this.callback != null)
+		if (this.loadingMonitor != null)
 		{
-			this.callback.loadingComplete();
+			this.loadingMonitor.loadingComplete();
 		}
 	}
 
@@ -1299,9 +1298,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	}
 	
 	@Override
-	public void setOnLoadCallback(LoadingMonitor callback) 
+	public void setLoadingMonitor(LoadingMonitor loadingMonitor) 
 	{
-		this.callback = callback;
+		this.loadingMonitor = loadingMonitor;
 	}
 	
 	@Override

@@ -19,6 +19,7 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.WindowSize;
+import tetzlaff.ibr.IBRLoadingModel;
 import tetzlaff.ibr.IBRSettingsModel;
 import tetzlaff.ibr.old.IBRSettingsModelImpl;
 import tetzlaff.ibr.rendering.CameraBasedLightModel;
@@ -240,6 +241,8 @@ public class IBRelight
 	        model.setObjectModel(() -> Matrix4.IDENTITY);
 	        model.setCameraModel(cameraModel);
 	        model.setLightModel(metaLightModel);
+	        
+	        IBRLoadingModel.getInstance().setLoadingHandler(model);
 	    	
 	        HardcodedLightModel hardcodedLightController = 
 	    			new HardcodedLightModel(
@@ -368,7 +371,8 @@ public class IBRelight
 	        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getLightModel(), settingsModel, (request) -> requestQueue.addRequest(request), window.isHighDPI());
 	        gui.showGUI();        
 	        //app.addPollable(gui); // Needed for Qt UI
-	        
+
+	        IBRLoadingModel.getInstance().setLoadingMonitor(gui.getLoadingMonitor());
 	        requestQueue.setLoadingMonitor(gui.getLoadingMonitor());
 	        
 	    	// Make everything visible and start the event loop

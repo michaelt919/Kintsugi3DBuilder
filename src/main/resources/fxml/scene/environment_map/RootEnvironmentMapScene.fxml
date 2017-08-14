@@ -2,7 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:controller="tetzlaff.ibr.gui2.controllers.scene.environment_map.RootEVSceneController" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:controller="tetzlaff.ibr.javafx.controllers.scene.environment_map.RootEVSceneController" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
     <TitledPane animated="false" text="Environment maps" VBox.vgrow="ALWAYS">
         <HBox prefHeight="0.0">
             <ListView fx:id="eVListView" HBox.hgrow="ALWAYS" />

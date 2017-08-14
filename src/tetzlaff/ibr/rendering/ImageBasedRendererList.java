@@ -76,7 +76,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 		newItem.setLightModel(this.lightModel);
 		newItem.setSettingsModel(this.settingsModel);
 		
-		newItem.setOnLoadCallback(new LoadingMonitor()
+		newItem.setLoadingMonitor(new LoadingMonitor()
 		{
 			@Override
 			public void startLoading()
@@ -135,7 +135,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 		newItem.setLightModel(this.lightModel);
 		newItem.setSettingsModel(this.settingsModel);
 		
-		newItem.setOnLoadCallback(new LoadingMonitor()
+		newItem.setLoadingMonitor(new LoadingMonitor()
 		{
 			@Override
 			public void startLoading()

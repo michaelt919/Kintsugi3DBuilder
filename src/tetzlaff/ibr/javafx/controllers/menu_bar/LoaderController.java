@@ -116,7 +116,7 @@ public class LoaderController implements Initializable
             //ok!
 
             try {
-                IBRLoadingModel.getInstance().loadFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, objFile, photoDir);
+                IBRLoadingModel.getInstance().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir);
             } catch (IOException e) {
                 System.out.println("files were malformed");
             }
