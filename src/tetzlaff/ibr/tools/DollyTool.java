@@ -5,20 +5,20 @@ import tetzlaff.gl.window.MouseButtonState;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.WindowSize;
 import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.SceneViewportModel;
-import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
-import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.mvc.models.impl.ReadonlyEnvironmentMapModel;
 
 class DollyTool extends AbstractTool {
-    DollyTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightingModel, SceneViewportModel sceneViewportModel) {
+    DollyTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, SceneViewportModel sceneViewportModel) {
         super(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
     }
 
     private final double dollySensitivity = Math.PI;
     private double dollySensitivityAdjusted;
 
-    private double oldLog10Distance;
-    private double oldTwist;
+    private float oldLog10Distance;
+    private float oldTwist;
 
     @Override
     public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods) {
@@ -26,7 +26,7 @@ class DollyTool extends AbstractTool {
         if(buttonIndex == MB1){
             WindowSize windowSize = window.getWindowSize();
             oldTwist = cameraModel.getTwist();
-            oldLog10Distance = cameraModel.getLog10distance();
+            oldLog10Distance = cameraModel.getLog10Distance();
             dollySensitivityAdjusted = dollySensitivity / Math.min(windowSize.width, windowSize.height);
         }
     }
@@ -37,10 +37,10 @@ class DollyTool extends AbstractTool {
         if(window.getMouseButtonState(MB1) == MouseButtonState.Pressed && xpos != mouseStartX_MB1 && ypos != mouseStartY_MB1){
 
             cameraModel.setTwist(
-                    oldTwist + Math.toDegrees ((xpos - mouseStartX_MB1)*dollySensitivityAdjusted)
+                    oldTwist + (float)Math.toDegrees ((xpos - mouseStartX_MB1)*dollySensitivityAdjusted)
             );
 
-            cameraModel.setLog10distance((float) (oldLog10Distance + 0.5* dollySensitivityAdjusted*(mouseStartY_MB1 - ypos)));
+            cameraModel.setLog10Distance((float) (oldLog10Distance + 0.5* dollySensitivityAdjusted*(mouseStartY_MB1 - ypos)));
 
 
 

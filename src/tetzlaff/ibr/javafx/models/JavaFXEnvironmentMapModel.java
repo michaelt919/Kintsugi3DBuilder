@@ -8,10 +8,11 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibr.IBRLoadingModel;
 import tetzlaff.ibr.javafx.controllers.scene.environment_map.EVSetting;
-import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
+import tetzlaff.mvc.models.impl.ReadonlyEnvironmentMapModel;
 
-public class JavaFXEnvironmentMapModel extends EnvironmentMapModelBase {
+public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel {
     public JavaFXEnvironmentMapModel() {
         super();
     }
@@ -53,7 +54,8 @@ public class JavaFXEnvironmentMapModel extends EnvironmentMapModelBase {
         if(n != null){
         	try
         	{
-        		loadEnvironmentMap(n);
+        		System.out.println("Loading environment map file " + n.getName());
+                IBRLoadingModel.getInstance().loadEnvironmentMap(n);
         	}
         	catch(IOException e)
         	{

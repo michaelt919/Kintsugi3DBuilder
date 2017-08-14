@@ -75,23 +75,23 @@ public class JavaFXLightInstanceModel implements LightInstanceModel {
     }
 
     @Override
-    public Float getLog10distance() {
-        return (float) cam().getLog10distance();
+    public float getLog10Distance() {
+        return (float) cam().getLog10Distance();
     }
 
     @Override
-    public void setLog10distance(Float log10distance) {
+    public void setLog10Distance(float log10distance) {
         cam().setLog10distance(log10distance);
     }
 
     @Override
-    public Float getDistance() {
-        return (float) Math.pow(10, (getLog10distance()));
+    public float getDistance() {
+        return (float) Math.pow(10, (getLog10Distance()));
     }
 
     @Override
-    public void setDistance(Float distance) {
-        setLog10distance((float) Math.log10(distance.doubleValue()));
+    public void setDistance(float distance) {
+        setLog10Distance((float) Math.log10(distance));
     }
 
     @Override
@@ -109,31 +109,31 @@ public class JavaFXLightInstanceModel implements LightInstanceModel {
     }
 
     @Override
-    public Double getTwist() {
-        return 0.0;
+    public float getTwist() {
+        return 0.0f;
     }
 
     @Override
-    public void setTwist(Double twist) {
+    public void setTwist(float twist) {
     }
 
     @Override
-    public Double getAzimuth() {
-        return cam().getAzimuth();
+    public float getAzimuth() {
+        return (float)cam().getAzimuth();
     }
 
     @Override
-    public void setAzimuth(Double azimuth) {
+    public void setAzimuth(float azimuth) {
         cam().setAzimuth(azimuth);
     }
 
     @Override
-    public Double getInclination() {
-        return cam().getInclination();
+    public float getInclination() {
+        return (float)cam().getInclination();
     }
 
     @Override
-    public void setInclination(Double inclination) {
+    public void setInclination(float inclination) {
         cam().setInclination(inclination);
     }
 
@@ -168,4 +168,10 @@ public class JavaFXLightInstanceModel implements LightInstanceModel {
     public boolean exists() {
         return !(subLightSettingObservableValue == null || subLightSettingObservableValue.getValue() == null);
     }
+
+	@Override
+	public void setLookMatrix(Matrix4 lookMatrix) 
+	{
+		throw new UnsupportedOperationException();
+	}
 }

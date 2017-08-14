@@ -4,13 +4,13 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
 import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.SceneViewportModel;
-import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
-import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.mvc.models.impl.ReadonlyEnvironmentMapModel;
 
 class CenterPointTool extends AbstractTool{
     private ToolSelectionModel toolModel;
-    public CenterPointTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightingModel, 
+    public CenterPointTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, 
     		ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel) 
     {
         super(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);

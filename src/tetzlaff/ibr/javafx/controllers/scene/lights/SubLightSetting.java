@@ -179,7 +179,7 @@ public class SubLightSetting implements XML_Writable{
         this.inclination.set(inclination);
     }
 
-    public double getLog10distance() {
+    public double getLog10Distance() {
         return log10distance.get();
     }
 

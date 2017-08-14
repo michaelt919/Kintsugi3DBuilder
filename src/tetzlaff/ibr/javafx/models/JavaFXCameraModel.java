@@ -74,22 +74,22 @@ public class JavaFXCameraModel implements ExtendedCameraModel {
     }
 
     @Override
-    public Float getLog10distance() {
+    public float getLog10Distance() {
         return (float) cam().getLog10distance();
     }
 
     @Override
-    public void setLog10distance(Float log10distance) {
+    public void setLog10Distance(float log10distance) {
         cam().setLog10distance(log10distance);
     }
 
     @Override
-    public Float getDistance() {
+    public float getDistance() {
         return (float) Math.pow(10, (cam().getLog10distance()));
     }
 
     @Override
-    public void setDistance(Float distance) {
+    public void setDistance(float distance) {
         cam().setLog10distance(Math.log10(distance));
     }
 
@@ -108,32 +108,32 @@ public class JavaFXCameraModel implements ExtendedCameraModel {
     }
 
     @Override
-    public Double getTwist() {
-        return cam().getTwist();
+    public float getTwist() {
+        return (float)cam().getTwist();
     }
 
     @Override
-    public void setTwist(Double twist) {
+    public void setTwist(float twist) {
         cam().setTwist(twist);
     }
 
     @Override
-    public Double getAzimuth() {
-        return cam().getAzimuth();
+    public float getAzimuth() {
+        return (float)cam().getAzimuth();
     }
 
     @Override
-    public void setAzimuth(Double azimuth) {
+    public void setAzimuth(float azimuth) {
         cam().setAzimuth(azimuth);
     }
 
     @Override
-    public Double getInclination() {
-        return cam().getInclination();
+    public float getInclination() {
+        return (float)cam().getInclination();
     }
 
     @Override
-    public void setInclination(Double inclination) {
+    public void setInclination(float inclination) {
         cam().setInclination(inclination);
     }
 
@@ -149,5 +149,9 @@ public class JavaFXCameraModel implements ExtendedCameraModel {
         return cam().isLocked();
     }
 
-
+	@Override
+	public void setLookMatrix(Matrix4 lookMatrix) 
+	{
+		throw new UnsupportedOperationException();
+	}
 }
