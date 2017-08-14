@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.List;
 
 import tetzlaff.gl.Context;
-import tetzlaff.ibr.IBRSettingsModel;
 import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
 

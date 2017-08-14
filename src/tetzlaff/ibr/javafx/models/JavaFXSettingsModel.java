@@ -31,6 +31,9 @@ public class JavaFXSettingsModel implements IBRSettingsModel {
     private final BooleanProperty compassEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty materialsForIBR = new SimpleBooleanProperty(false);
     private final BooleanProperty phyMasking = new SimpleBooleanProperty(false);
+    private final BooleanProperty multisamplingEnabled = new SimpleBooleanProperty(false);
+    private final BooleanProperty halfResolutionEnabled = new SimpleBooleanProperty(false);
+    
     @Override
     public boolean isMaterialsForIBR() {
         return materialsForIBR.get();
@@ -256,4 +259,38 @@ public class JavaFXSettingsModel implements IBRSettingsModel {
             renderingType.setValue(RenderingMode.NONE);
         }
     }
+
+	@Override
+	public boolean isHalfResolutionEnabled() 
+	{
+		return halfResolutionEnabled.get();
+	}
+
+	@Override
+	public void setHalfResolutionEnabled(boolean halfResEnabled) 
+	{
+		this.halfResolutionEnabled.set(halfResEnabled);
+	}
+	
+	public BooleanProperty halfResolutionEnabledProperty()
+	{
+		return this.halfResolutionEnabled;
+	}
+
+	@Override
+	public boolean isMultisamplingEnabled() 
+	{
+		return multisamplingEnabled.get();
+	}
+
+	@Override
+	public void setMultisamplingEnabled(boolean multisamplingEnabled) 
+	{
+		this.multisamplingEnabled.set(multisamplingEnabled);
+	}
+	
+	public BooleanProperty multisamplingEnabledProperty()
+	{
+		return this.multisamplingEnabled;
+	}
 }

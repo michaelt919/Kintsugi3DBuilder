@@ -5,10 +5,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
 import javafx.stage.WindowEvent;
 import tetzlaff.ibr.ControllableToolModel;
-import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
-import tetzlaff.ibr.IBRSettingsModel;
-import tetzlaff.ibr.javafx.models.JavaFXLoadOptionsModel;
-import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
 import tetzlaff.ibr.rendering2.tools2.ToolBox;
 
 
@@ -25,15 +21,15 @@ public class ToolModelImp extends ControllableToolModel {
         }
     }
 
-    private ObjectProperty<ToolBox.TOOL> tool = new SimpleObjectProperty<>(ToolBox.TOOL.ORBIT);
+    private ObjectProperty<ToolBox.ToolType> tool = new SimpleObjectProperty<>(ToolBox.ToolType.ORBIT);
 
-    public void setTool(ToolBox.TOOL tool) {
+    public void setTool(ToolBox.ToolType tool) {
         this.tool.setValue(tool);
     }
-    public ToolBox.TOOL getTool() {
+    public ToolBox.ToolType getTool() {
         return tool.getValue();
     }
-    public ObjectProperty<ToolBox.TOOL> toolProperty() {
+    public ObjectProperty<ToolBox.ToolType> toolProperty() {
         return tool;
     }
 }

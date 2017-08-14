@@ -21,9 +21,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import tetzlaff.ibr.IBRLoadingModel;
 import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
-import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.IBRRenderableListModel;
-import tetzlaff.ibr.rendering2.ToolModelImp;
 import tetzlaff.ibr.util.StaticHouse;
 
 public class LoaderController implements Initializable

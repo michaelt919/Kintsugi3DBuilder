@@ -18,6 +18,8 @@ public class IBRSettingsModelImpl implements IBRSettingsModel {
 	private boolean pbrGeometricAttenuationEnabled = false;
 	private boolean visibleLightsEnabled = true;
 	private ShadingParameterMode weightMode = ShadingParameterMode.PER_PIXEL;
+	private boolean multisamplingEnabled = false;
+	private boolean halfResolutionEnabled = false;
 
 	public IBRSettingsModelImpl() {
 	}
@@ -195,6 +197,26 @@ public class IBRSettingsModelImpl implements IBRSettingsModel {
 	@Override @Deprecated
 	public void setPhyMasking(boolean phyMasking) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isMultisamplingEnabled() {
+		return multisamplingEnabled;
+	}
+
+	@Override
+	public void setMultisamplingEnabled(boolean multisamplingEnabled) {
+		this.multisamplingEnabled = multisamplingEnabled;
+	}
+
+	@Override
+	public boolean isHalfResolutionEnabled() {
+		return halfResolutionEnabled;
+	}
+
+	@Override
+	public void setHalfResolutionEnabled(boolean halfResolutionEnabled) {
+		this.halfResolutionEnabled = halfResolutionEnabled;
 	}
 }
 

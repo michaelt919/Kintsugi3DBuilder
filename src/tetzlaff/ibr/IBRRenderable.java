@@ -27,12 +27,6 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
 	ReadonlyIBRSettingsModel getSettingsModel();
 	void setSettingsModel(ReadonlyIBRSettingsModel ibrSettingsModel);
 	
-	boolean getHalfResolution();
-	boolean getMultisampling();
-
-	void setHalfResolution(boolean halfResEnabled);
-	void setMultisampling(boolean multisamplingEnabled);
-	
 	void setProgram(Program<ContextType> program);
 	void reloadHelperShaders();
 

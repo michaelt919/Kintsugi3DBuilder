@@ -6,7 +6,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JSpinner;
 
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.IBRSettingsModel;
 import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 
 public class BTFRequestUI implements IBRRequestUI

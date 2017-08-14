@@ -13,7 +13,6 @@ import java.util.PriorityQueue;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.IBRSettingsModel;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 import tetzlaff.ibr.ViewSet;

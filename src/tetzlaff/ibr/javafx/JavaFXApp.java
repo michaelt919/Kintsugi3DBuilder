@@ -10,7 +10,6 @@ import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import tetzlaff.ibr.app.IBRelight;
 import tetzlaff.ibr.app.Quit;
 import tetzlaff.ibr.javafx.controllers.menu_bar.MenubarController;
 import tetzlaff.ibr.javafx.controllers.scene.RootSceneController;

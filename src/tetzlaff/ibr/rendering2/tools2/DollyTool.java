@@ -5,12 +5,13 @@ import tetzlaff.gl.window.MouseButtonState;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.WindowSize;
 import tetzlaff.mvc.models.ExtendedCameraModel;
-import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
+import tetzlaff.mvc.models.impl.LightingModelBase;
 
 class DollyTool extends AbstractTool {
-    DollyTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel) {
-        super(cameraModel, environmentMapModel, lightModel);
+    DollyTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, SceneViewportModel sceneViewportModel) {
+        super(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
     }
 
     private final double dollySensitivity = Math.PI;

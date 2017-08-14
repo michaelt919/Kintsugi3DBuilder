@@ -70,7 +70,7 @@ public class RootCameraSceneController implements Initializable {
                 cameraListView.getSelectionModel().selectedItemProperty()
         );
 
-        settingsController.setOnActionSelectPoint(event -> toolModel.setTool(ToolBox.TOOL.CENTER_POINT));
+        settingsController.setOnActionSelectPoint(event -> toolModel.setTool(ToolBox.ToolType.CENTER_POINT));
     }
 
     private CameraSetting getIt(){

@@ -4,24 +4,26 @@ import tetzlaff.util.ShadingParameterMode;
 
 public interface IBRSettingsModel extends ReadonlyIBRSettingsModel
 {
-    public void setGamma(float gamma);
-    public void setWeightExponent(float weightExponent);
-    public void setIsotropyFactor(float isotropyFactor);
-    public void setOcclusionEnabled(boolean occlusionEnabled);
-    public void setOcclusionBias(float occlusionBias);
-    public void setIBREnabled(boolean ibrEnabled);
-    public void setFresnelEnabled(boolean fresnelEnabled);
-    public void setPBRGeometricAttenuationEnabled(boolean pBRGeometricAttenuation);
-    public void setRelightingEnabled(boolean relightingEnabled);
-    public void setD3GridEnabled(boolean d3GridEnabled);
-    public void setCompassEnabled(boolean compassEnabled);
-    public void setVisibleCameraPose(boolean visibleCameraPose);
-    public void setVisibleSavedCameraPose(boolean visibleSavedCameraPose);
-    public void setMaterialsForIBR(boolean materialsForIBR);
-    public void setPhyMasking(boolean phyMasking);
-    public void setTexturesEnabled(boolean texturesEnabled);
-    public void setShadowsEnabled(boolean shadowsEnabled);
-    public void setVisibleLightsEnabled(boolean visibleLightsEnabled);
-    public void setRenderingMode(RenderingMode renderingMode);
-    public void setWeightMode(ShadingParameterMode weightMode);
+    void setGamma(float gamma);
+    void setWeightExponent(float weightExponent);
+    void setIsotropyFactor(float isotropyFactor);
+    void setOcclusionEnabled(boolean occlusionEnabled);
+    void setOcclusionBias(float occlusionBias);
+    void setIBREnabled(boolean ibrEnabled);
+    void setFresnelEnabled(boolean fresnelEnabled);
+    void setPBRGeometricAttenuationEnabled(boolean pBRGeometricAttenuation);
+    void setRelightingEnabled(boolean relightingEnabled);
+    void setD3GridEnabled(boolean d3GridEnabled);
+    void setCompassEnabled(boolean compassEnabled);
+    void setVisibleCameraPose(boolean visibleCameraPose);
+    void setVisibleSavedCameraPose(boolean visibleSavedCameraPose);
+    void setMaterialsForIBR(boolean materialsForIBR);
+    void setPhyMasking(boolean phyMasking);
+    void setTexturesEnabled(boolean texturesEnabled);
+    void setShadowsEnabled(boolean shadowsEnabled);
+    void setVisibleLightsEnabled(boolean visibleLightsEnabled);
+    void setRenderingMode(RenderingMode renderingMode);
+    void setWeightMode(ShadingParameterMode weightMode);
+    void setHalfResolutionEnabled(boolean halfResEnabled);
+	void setMultisamplingEnabled(boolean multisamplingEnabled);
 }

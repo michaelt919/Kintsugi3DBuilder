@@ -14,6 +14,7 @@ import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.ControllableToolModel;
 import tetzlaff.ibr.IBRLoadingModel;
 import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
@@ -28,11 +29,10 @@ import tetzlaff.mvc.controllers.impl.FirstPersonController;
 import tetzlaff.mvc.controllers.impl.TrackballController;
 import tetzlaff.mvc.models.CameraModel;
 import tetzlaff.mvc.models.ExtendedCameraModel;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.ReadonlyLightingModel;
+import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.mvc.models.impl.BasicCameraModel;
-import tetzlaff.mvc.models.impl.LightingModelBase;
 import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
+import tetzlaff.mvc.models.impl.LightingModelBase;
 
 public class Rendering
 {
@@ -96,15 +96,29 @@ public class Rendering
 			
 			ControllableToolModel toolModel = JavaFXModels.getInstance().getToolModel();
 
-			ToolBox toolBox = (new ToolBox.ToolBoxBuilder())
+			ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
+
+			ToolBox toolBox = ToolBox.ToolBoxBuilder.create()
 					.setCameraModel(cameraModel)
 					.setEnvironmentMapModel(environmentMapModel)
 					.setLightModel(lightingModel)
 					.setToolModel(toolModel)
+					.setSceneViewportModel(new SceneViewportModel()
+					{
+						@Override
+						public Object getObjectAtCoordinates(double x, double y) 
+						{
+							return rendererList.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y);
+						}
+
+						@Override
+						public Vector3 get3DPositionAtCoordinates(double x, double y) 
+						{
+							return rendererList.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
+						}
+					})
 					.setWindow(window)
 					.build();
-
-			ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
 			
 			IBRLoadingModel.getInstance().setLoadingHandler(rendererList);
 			IBRLoadingModel.getInstance().setLoadOptionsModel(loadOptionsModel);
@@ -113,8 +127,6 @@ public class Rendering
             rendererList.setCameraModel(cameraModel);
             rendererList.setLightModel(lightingModel);
             rendererList.setSettingsModel(settingsModel);
-
-            toolModel.setModel(rendererList);
 
             window.addCharacterListener((win, c) -> {
 				if (c == 'p')
