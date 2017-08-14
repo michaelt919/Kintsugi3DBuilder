@@ -17,7 +17,7 @@ import tetzlaff.mvc.models.SceneViewportModel;
 
 public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
-	void setOnLoadCallback(LoadingMonitor callback);
+	void setLoadingMonitor(LoadingMonitor callback);
 
 	ViewSet getActiveViewSet();
 	VertexGeometry getActiveGeometry();

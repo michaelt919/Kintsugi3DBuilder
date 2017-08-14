@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
-<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.scene.lights.RootLightSceneController">
+<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.lights.RootLightSceneController">
     <TitledPane animated="false" text="Light Sets" VBox.vgrow="ALWAYS">
         <HBox prefHeight="0.0" spacing="2.0">
             <TableView fx:id="tableView" prefWidth="230.0" />

@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<VBox fx:id="root" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.scene.environment_map.SettingsEVSceneController">
+<VBox fx:id="root" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.environment_map.SettingsEVSceneController">
     <TitledPane animated="false" text="Environment map">
         <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <CheckBox fx:id="evUseImageCheckBox" text="Use image" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />

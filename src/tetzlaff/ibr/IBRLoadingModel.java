@@ -9,7 +9,7 @@ public class IBRLoadingModel
 	private LoadingMonitor monitor;
 	private ReadonlyIBRLoadOptionsModel options;
 	
-	private static IBRLoadingModel instance;
+	private static IBRLoadingModel instance = new IBRLoadingModel();
 	
 	public static IBRLoadingModel getInstance()
 	{
@@ -50,7 +50,7 @@ public class IBRLoadingModel
 		this.handler.loadFromVSETFile(id, vsetFile, options);
 	}
 	
-	public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory) throws IOException
+	public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory) throws IOException
 	{
 		this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, options);
 	}

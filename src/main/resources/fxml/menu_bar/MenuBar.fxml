@@ -9,7 +9,7 @@
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefWidth="470.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.gui2.controllers.menu_bar.MenubarController">
+<VBox prefWidth="470.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.menu_bar.MenubarController">
    <MenuBar>
       <Menu mnemonicParsing="false" text="File">
          <MenuItem onAction="#file_createProject" mnemonicParsing="false"  text="Create project" />

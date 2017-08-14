@@ -38,7 +38,7 @@ import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibr.IBRLoadOptionsModelImpl;
+import tetzlaff.ibr.IBRLoadingModel;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.IBRSettingsModel;
@@ -645,12 +645,6 @@ public class IBRelightConfigFrame extends JFrame
 			}
 		};
 		
-		// Create callback monitor to show the loading window when the model is being read
-		if(model != null)
-		{
-			model.setLoadingMonitor(loadingMonitor);
-		}
-		
 		// Add listener for changes to half resolution checkbox.
 		chckbxHalfRes.addChangeListener(e ->
 		{
@@ -785,7 +779,8 @@ public class IBRelightConfigFrame extends JFrame
 							
 							if (imageChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 							{
-								model.loadFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, fileChooser.getSelectedFile(), imageChooser.getSelectedFile(), loadOptions);
+								IBRLoadingModel.getInstance().setLoadOptionsModel(loadOptions);
+								IBRLoadingModel.getInstance().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, fileChooser.getSelectedFile(), imageChooser.getSelectedFile());
 								
 								SwingUtilities.invokeLater(new Runnable()
 								{
@@ -802,7 +797,8 @@ public class IBRelightConfigFrame extends JFrame
 					}
 					else
 					{
-						model.loadFromVSETFile(cameraFile.getPath(), cameraFile, loadOptions);
+						IBRLoadingModel.getInstance().setLoadOptionsModel(loadOptions);
+						IBRLoadingModel.getInstance().loadFromVSETFile(cameraFile.getPath(), cameraFile);
 						SwingUtilities.invokeLater(new Runnable()
 						{
 							@Override
