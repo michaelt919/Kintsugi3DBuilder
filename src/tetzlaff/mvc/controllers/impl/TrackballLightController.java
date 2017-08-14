@@ -7,11 +7,11 @@ import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.KeyReleaseListener;
 import tetzlaff.mvc.controllers.LightController;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.impl.TrackballLightModel;
+import tetzlaff.mvc.models.old.TrackballLightingModel;
 
 public class TrackballLightController implements LightController, KeyPressListener, KeyReleaseListener
 {
-	private TrackballLightModel model;
+	private TrackballLightingModel model;
 	private TrackballController lightControlTrackball;
 	private TrackballController[] trackballs;
 	
@@ -22,7 +22,7 @@ public class TrackballLightController implements LightController, KeyPressListen
 	
 	public TrackballLightController(int lightCount)
 	{
-    	this.model = new TrackballLightModel(lightCount);
+    	this.model = new TrackballLightingModel(lightCount);
     	
     	this.lightControlTrackball = TrackballController.getBuilder()
     			.setSensitivity(1.0f)
@@ -63,7 +63,7 @@ public class TrackballLightController implements LightController, KeyPressListen
 	}
 	
 	@Override
-	public TrackballLightModel getLightModel()
+	public TrackballLightingModel getLightModel()
 	{
 		return this.model;
 	}

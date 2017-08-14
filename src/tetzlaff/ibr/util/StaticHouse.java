@@ -7,8 +7,6 @@ import javafx.scene.control.TextFormatter;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 
-import javax.xml.soap.Text;
-
 /*
 I general utilities class.
  */

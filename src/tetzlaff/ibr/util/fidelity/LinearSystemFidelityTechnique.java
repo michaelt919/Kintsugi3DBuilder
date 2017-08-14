@@ -23,8 +23,9 @@ import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.ibr.IBRSettingsModel;
+import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.ibr.rendering2.IBRSettingsModel;
 import tetzlaff.util.NonNegativeLeastSquares;
 
 public class LinearSystemFidelityTechnique<ContextType extends Context<ContextType>> implements FidelityEvaluationTechnique<ContextType>
@@ -33,7 +34,7 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
 	private Function<IntVector3, Vector3> pixelEvaluationFunction;
 	private int imgWidth;
 	private int imgHeight;
-    private IBRSettingsModel settings;
+    private ReadonlyIBRSettingsModel settings;
     private boolean usePerceptuallyLinearError;
 	
 	private File debugDirectory;
@@ -78,7 +79,7 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
 	}
 	
 	@Override
-	public void initialize(IBRResources<ContextType> resources, IBRSettingsModel settings, int size) throws IOException
+	public void initialize(IBRResources<ContextType> resources, ReadonlyIBRSettingsModel settings, int size) throws IOException
 	{
 		this.settings = settings;
 		this.imgWidth = this.imgHeight = size;

@@ -42,7 +42,7 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibr.IBRLoadOptions;
+import tetzlaff.ibr.IBRLoadOptionsModelImpl;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources;
 
@@ -2036,7 +2036,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     	// Only generate view set uniform buffers
 		viewSetResources = IBRResources.getBuilderForContext(context)
 				.useExistingViewSet(viewSet)
-    			.setLoadOptions(new IBRLoadOptions().setColorImagesRequested(false))
+    			.setLoadOptions(new IBRLoadOptionsModelImpl().setColorImagesRequested(false))
     			.create();
     	
     	auxDir = new File(outputDir, "_aux");

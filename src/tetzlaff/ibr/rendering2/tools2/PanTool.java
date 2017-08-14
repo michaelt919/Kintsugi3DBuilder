@@ -6,15 +6,15 @@ import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.MouseButtonState;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.WindowSize;
-import tetzlaff.mvc.models.ControllableCameraModel;
-import tetzlaff.mvc.models.ControllableEnvironmentMapModel;
-import tetzlaff.mvc.models.ControllableLightModel;
+import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
 
 /*
 not this work as intended at a zoom of 0.5
  */
 class PanTool extends AbstractTool{
-    PanTool(ControllableCameraModel cameraModel, ControllableEnvironmentMapModel environmentMapModel, ControllableLightModel lightModel) {
+    PanTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel) {
         super(cameraModel, environmentMapModel, lightModel);
     }
     private final double panSensitivity = 1.0;

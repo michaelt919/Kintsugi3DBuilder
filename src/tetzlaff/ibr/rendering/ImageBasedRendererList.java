@@ -9,26 +9,32 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.interactive.InteractiveRenderableList;
+import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.LoadingMonitor;
-import tetzlaff.ibr.rendering2.IBRLoadOptions;
+import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.ReadonlyLightModel;
+import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.ReadonlyObjectModel;
 
-public class ImageBasedRendererList<ContextType extends Context<ContextType>> extends AbstractListModel<IBRRenderable<ContextType>> implements IBRRenderableListModel<ContextType>
+// TODO NEWUI replace this class with one that is JavaFX tailored or general-purpose (not Swing)
+public class ImageBasedRendererList<ContextType extends Context<ContextType>> 
+	extends AbstractListModel<IBRRenderable<ContextType>> implements IBRRenderableListModel<ContextType>
 {
 	private static final long serialVersionUID = 4167467314632694946L;
 	
 	protected final ContextType context;
-	private ReadonlyObjectModel objectModel;
-	private ReadonlyCameraModel cameraModel;
-	private ReadonlyLightModel lightModel;
+	
 	private Program<ContextType> program;
 	private InteractiveRenderableList<ContextType, IBRRenderable<ContextType>> renderableList;
 	private int effectiveSize;
 	private LoadingMonitor loadingMonitor;
+	
+	private ReadonlyObjectModel objectModel;
+	private ReadonlyCameraModel cameraModel;
+	private ReadonlyLightingModel lightModel;
+	private ReadonlyIBRSettingsModel settingsModel;
 	
 	public ImageBasedRendererList(ContextType context, Program<ContextType> program) 
 	{
@@ -54,7 +60,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	}
 
 	@Override
-	public IBRRenderable<ContextType> addFromVSETFile(String id, File vsetFile, IBRLoadOptions loadOptions) throws IOException
+	public IBRRenderable<ContextType> addFromVSETFile(String id, File vsetFile, ReadonlyIBRLoadOptionsModel loadOptions) throws IOException
 	{
 		// id = vsetFile.getPath()
 		
@@ -68,6 +74,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 		newItem.setObjectModel(this.objectModel);
 		newItem.setCameraModel(this.cameraModel);
 		newItem.setLightModel(this.lightModel);
+		newItem.setSettingsModel(this.settingsModel);
 		
 		newItem.setOnLoadCallback(new LoadingMonitor()
 		{
@@ -115,7 +122,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	}
 	
 	@Override
-	public IBRRenderable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, IBRLoadOptions loadOptions) throws IOException
+	public IBRRenderable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, ReadonlyIBRLoadOptionsModel loadOptions) throws IOException
 	{
 		IBRRenderable<ContextType> newItem = 
 			new IBRImplementation<ContextType>(id, context, this.getProgram(),
@@ -127,6 +134,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 		newItem.setObjectModel(this.objectModel);
 		newItem.setCameraModel(this.cameraModel);
 		newItem.setLightModel(this.lightModel);
+		newItem.setSettingsModel(this.settingsModel);
 		
 		newItem.setOnLoadCallback(new LoadingMonitor()
 		{
@@ -243,12 +251,22 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>> ex
 	}
 
 	@Override
-	public void setLightModel(ReadonlyLightModel lightModel) 
+	public void setLightModel(ReadonlyLightingModel lightModel) 
 	{
 		this.lightModel = lightModel;
 		for (IBRRenderable<?> renderable : renderableList)
 		{
 			renderable.setLightModel(lightModel);
+		}
+	}
+
+	@Override
+	public void setSettingsModel(ReadonlyIBRSettingsModel settingsModel) 
+	{
+		this.settingsModel = settingsModel;
+		for (IBRRenderable<?> renderable : renderableList)
+		{
+			renderable.setSettingsModel(settingsModel);
 		}
 	}
 }

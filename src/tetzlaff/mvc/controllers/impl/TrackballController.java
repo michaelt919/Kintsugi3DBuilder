@@ -12,7 +12,7 @@ import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;
 import tetzlaff.mvc.controllers.CameraController;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.impl.TrackballModel;
+import tetzlaff.mvc.models.old.TrackballModel;
 
 public class TrackballController implements CameraController, CursorPositionListener, MouseButtonPressListener, ScrollListener
 {
