@@ -24,7 +24,7 @@ class CenterPointTool extends AbstractTool{
             double trueY = mouseStartY_MB1 / window.getWindowSize().height;
 
             Vector3 newCenter = toolModel.getPoint(trueX, trueY);
-            ControllableToolModel.SceneObjectType whatClicked = toolModel.whatClicked(trueX, trueY);
+            ControllableToolModel.SceneObjectType whatClicked = toolModel.getClickedObjectType(trueX, trueY);
 //            System.out.println("You clicked: " + whatClicked + " at " + newCenter);
 
             if(whatClicked.equals(ControllableToolModel.SceneObjectType.OBJECT)){

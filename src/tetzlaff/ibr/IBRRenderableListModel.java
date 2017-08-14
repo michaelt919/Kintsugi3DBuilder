@@ -10,13 +10,10 @@ import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.ReadonlyObjectModel;
 
-public interface IBRRenderableListModel<ContextType extends Context<ContextType>> extends ComboBoxModel<IBRRenderable<ContextType>>
+public interface IBRRenderableListModel<ContextType extends Context<ContextType>> extends ComboBoxModel<IBRRenderable<ContextType>>, IBRLoadingHandler
 {
-	IBRRenderable<ContextType> addFromVSETFile(String id, File vsetFile, ReadonlyIBRLoadOptionsModel loadOptions) throws IOException;
-	IBRRenderable<ContextType> addFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, ReadonlyIBRLoadOptionsModel loadOptions) throws IOException;
 	@Override
 	IBRRenderable<ContextType> getSelectedItem();
-	void setLoadingMonitor(LoadingMonitor loadingMonitor);
 
 	void setSettingsModel(ReadonlyIBRSettingsModel settingsModel);
 	void setObjectModel(ReadonlyObjectModel objectModel);

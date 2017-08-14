@@ -15,6 +15,7 @@ import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibr.ControllableToolModel;
+import tetzlaff.ibr.IBRLoadingModel;
 import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
 import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
@@ -91,6 +92,7 @@ public class Rendering
 			ExtendedCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
 			
 			ReadonlyIBRSettingsModel settingsModel = JavaFXModels.getInstance().getSettingsModel();
+			ReadonlyIBRLoadOptionsModel loadOptionsModel = JavaFXModels.getInstance().getLoadOptionsModel();
 			
 			ControllableToolModel toolModel = JavaFXModels.getInstance().getToolModel();
 
@@ -103,6 +105,9 @@ public class Rendering
 					.build();
 
 			ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
+			
+			IBRLoadingModel.getInstance().setLoadingHandler(rendererList);
+			IBRLoadingModel.getInstance().setLoadOptionsModel(loadOptionsModel);
             
             rendererList.setObjectModel(() -> Matrix4.IDENTITY);
             rendererList.setCameraModel(cameraModel);

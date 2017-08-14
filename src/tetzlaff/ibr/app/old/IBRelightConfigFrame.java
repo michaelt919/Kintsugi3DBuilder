@@ -41,6 +41,7 @@ import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.IBRLoadOptionsModelImpl;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
+import tetzlaff.ibr.IBRSettingsModel;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.util.BTFRequestUI;
 import tetzlaff.ibr.util.FidelityMetricRequestUI;
@@ -85,7 +86,7 @@ public class IBRelightConfigFrame extends JFrame
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRRenderableListModel<ContextType> model, LightingModel lightModel, Consumer<IBRRequest> ibrRequestProcessor, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRRenderableListModel<ContextType> model, LightingModel lightModel, IBRSettingsModel settingsModel, Consumer<IBRRequest> ibrRequestProcessor, boolean isHighDPI)
 	{		//TODO youll need this too
 		setResizable(false);
 		setTitle("IBRelight: Settings");
@@ -386,7 +387,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().getSettingsModel().setIBREnabled(chckbxImagebasedRendering.isSelected());
+				settingsModel.setIBREnabled(chckbxImagebasedRendering.isSelected());
 			}
 		});
 		
@@ -402,7 +403,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().getSettingsModel().setTexturesEnabled(chckbxUseTextures.isSelected());
+				settingsModel.setTexturesEnabled(chckbxUseTextures.isSelected());
 			}
 		});
 		
@@ -419,7 +420,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().getSettingsModel().setRelightingEnabled(chckbxRelighting.isSelected());
+				settingsModel.setRelightingEnabled(chckbxRelighting.isSelected());
 			}
 		});
 		
@@ -435,7 +436,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().getSettingsModel().setShadowsEnabled(chckbxShadows.isSelected());
+				settingsModel.setShadowsEnabled(chckbxShadows.isSelected());
 			}
 		});
 		
@@ -452,7 +453,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().getSettingsModel().setFresnelEnabled(chckbxFresnelEffect.isSelected());
+				settingsModel.setFresnelEnabled(chckbxFresnelEffect.isSelected());
 			}
 		});
 		
@@ -469,7 +470,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().getSettingsModel().setVisibleLightsEnabled(chckbxVisualizeLights.isSelected());
+				settingsModel.setVisibleLightsEnabled(chckbxVisualizeLights.isSelected());
 			}
 		});
 		
@@ -673,7 +674,7 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().getSettingsModel().setGamma((float)(double)(Double)spinnerGamma.getModel().getValue());
+				settingsModel.setGamma((float)(double)(Double)spinnerGamma.getModel().getValue());
 			}
 		});
 		
@@ -682,7 +683,7 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().getSettingsModel().setWeightExponent((float)(double)(Double)spinnerExponent.getModel().getValue());
+				settingsModel.setWeightExponent((float)(double)(Double)spinnerExponent.getModel().getValue());
 			}
 		});
 		
@@ -691,7 +692,7 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().getSettingsModel().setIsotropyFactor((float)(double)(Double)isotropySpinner.getModel().getValue());
+				settingsModel.setIsotropyFactor((float)(double)(Double)isotropySpinner.getModel().getValue());
 			}
 		});
 		
@@ -701,7 +702,7 @@ public class IBRelightConfigFrame extends JFrame
 			if (model.getSelectedItem() != null)
 			{
 				boolean selected = chckbxOcclusion.isSelected();
-				model.getSelectedItem().getSettingsModel().setOcclusionEnabled(selected);
+				settingsModel.setOcclusionEnabled(selected);
 				lblBias.setEnabled(selected);
 				spinnerOccBias.setEnabled(selected);
 			}
@@ -712,7 +713,7 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().getSettingsModel().setOcclusionBias((float)(double)(Double)spinnerOccBias.getModel().getValue());
+				settingsModel.setOcclusionBias((float)(double)(Double)spinnerOccBias.getModel().getValue());
 			}
 		});
 		
@@ -721,7 +722,7 @@ public class IBRelightConfigFrame extends JFrame
 		{			
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().getSettingsModel().setPBRGeometricAttenuationEnabled(chckbxPhysicallybasedGeometricAttenuation.isSelected());
+				settingsModel.setPBRGeometricAttenuationEnabled(chckbxPhysicallybasedGeometricAttenuation.isSelected());
 			}
 		});
 		
@@ -784,7 +785,7 @@ public class IBRelightConfigFrame extends JFrame
 							
 							if (imageChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 							{
-								model.addFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, fileChooser.getSelectedFile(), imageChooser.getSelectedFile(), loadOptions);
+								model.loadFromAgisoftXMLFile(cameraFile.getPath(), cameraFile, fileChooser.getSelectedFile(), imageChooser.getSelectedFile(), loadOptions);
 								
 								SwingUtilities.invokeLater(new Runnable()
 								{
@@ -801,7 +802,7 @@ public class IBRelightConfigFrame extends JFrame
 					}
 					else
 					{
-						model.addFromVSETFile(cameraFile.getPath(), cameraFile, loadOptions);
+						model.loadFromVSETFile(cameraFile.getPath(), cameraFile, loadOptions);
 						SwingUtilities.invokeLater(new Runnable()
 						{
 							@Override
