@@ -16,8 +16,8 @@ class OrbitTool extends AbstractTool {
     private final double orbitSensitivity = 1.0 * Math.PI; //todo: get from gui somehow
     private double orbitSensitivityAdjusted = 1.0;
 
-    OrbitTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, SceneViewportModel sceneViewportModel) {
-        super(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
+    OrbitTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightingModel, SceneViewportModel sceneViewportModel) {
+        super(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
     }
 
     private Matrix4 oldOrbitMatrix;

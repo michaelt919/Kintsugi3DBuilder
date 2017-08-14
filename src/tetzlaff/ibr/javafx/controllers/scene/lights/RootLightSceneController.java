@@ -112,11 +112,11 @@ public class RootLightSceneController implements Initializable {
 
     }
 
-    public void init2(JavaFXLightingModel lightModel){
+    public void init2(JavaFXLightingModel lightingModel){
         System.out.println("Lights in!");
         ObservableValue<LightGroupSetting> observableValue = tableView.getSelectionModel().selectedItemProperty();
         System.out.println("Setting " + observableValue);
-        lightModel.setLightGroupSettingObservableValue(
+        lightingModel.setLightGroupSettingObservableValue(
                 observableValue
         );
     }

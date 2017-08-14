@@ -35,7 +35,7 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
 
 	void setObjectModel(ReadonlyObjectModel objectModel);
 	void setCameraModel(ReadonlyCameraModel cameraModel);
-	void setLightModel(ReadonlyLightingModel lightModel);
+	void setLightingModel(ReadonlyLightingModel lightingModel);
 	
 	void setMultiTransformationModel(List<Matrix4> multiTransformationModel);
 	void setReferenceScene(VertexGeometry scene);

@@ -24,14 +24,14 @@ class AbstractTool implements CursorPositionListener, MouseButtonPressListener, 
 
     protected final ExtendedCameraModel cameraModel;
     protected final EnvironmentMapModelBase environmentMapModel;
-    protected final LightingModelBase lightModel;
+    protected final LightingModelBase lightingModel;
     protected final SceneViewportModel sceneViewportModel;
 
-    AbstractTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, SceneViewportModel sceneViewportModel) 
+    AbstractTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightingModel, SceneViewportModel sceneViewportModel) 
     {
         this.cameraModel = cameraModel;
         this.environmentMapModel = environmentMapModel;
-        this.lightModel = lightModel;
+        this.lightingModel = lightingModel;
         this.sceneViewportModel = sceneViewportModel;
     }
 

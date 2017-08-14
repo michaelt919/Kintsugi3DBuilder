@@ -106,11 +106,11 @@ public class JavaFXApp extends Application{
         //get models
         final JavaFXCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
         final JavaFXEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
-        final JavaFXLightingModel lightModel = JavaFXModels.getInstance().getLightModel();
+        final JavaFXLightingModel lightingModel = JavaFXModels.getInstance().getLightingModel();
         final JavaFXToolSelectionModel toolModel = JavaFXModels.getInstance().getToolModel();
 
         //distribute to controllers
-        sceneController.init2(cameraModel, lightModel, environmentMapModel, toolModel);
+        sceneController.init2(cameraModel, lightingModel, environmentMapModel, toolModel);
         menuBarController.init2(toolModel);
 
 

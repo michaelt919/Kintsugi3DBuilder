@@ -15,8 +15,8 @@ import tetzlaff.mvc.models.impl.LightingModelBase;
 not this work as intended at a zoom of 0.5
  */
 class PanTool extends AbstractTool{
-    PanTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, SceneViewportModel sceneViewportModel) {
-        super(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
+    PanTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightingModel, SceneViewportModel sceneViewportModel) {
+        super(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
     }
     private final double panSensitivity = 1.0;
     private double panSensitivityAdjusted = 1.0;

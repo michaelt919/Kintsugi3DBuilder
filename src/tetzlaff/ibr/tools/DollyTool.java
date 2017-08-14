@@ -10,8 +10,8 @@ import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
 import tetzlaff.mvc.models.impl.LightingModelBase;
 
 class DollyTool extends AbstractTool {
-    DollyTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, SceneViewportModel sceneViewportModel) {
-        super(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
+    DollyTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightingModel, SceneViewportModel sceneViewportModel) {
+        super(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
     }
 
     private final double dollySensitivity = Math.PI;

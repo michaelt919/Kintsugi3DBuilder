@@ -15,5 +15,5 @@ public interface IBRRenderableListModel<ContextType extends Context<ContextType>
 	void setSettingsModel(ReadonlyIBRSettingsModel settingsModel);
 	void setObjectModel(ReadonlyObjectModel objectModel);
 	void setCameraModel(ReadonlyCameraModel cameraModel);
-	void setLightModel(ReadonlyLightingModel lightModel);
+	void setLightingModel(ReadonlyLightingModel lightingModel);
 }

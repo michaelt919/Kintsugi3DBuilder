@@ -5,7 +5,7 @@ public class JavaFXModels
 {
     private final JavaFXCameraModel cameraModel;
     private final JavaFXEnvironmentMapModel environmentMapModel;
-    private final JavaFXLightingModel lightModel;
+    private final JavaFXLightingModel lightingModel;
     private final JavaFXLoadOptionsModel loadOptionsModel;
     private final JavaFXSettingsModel settingsModel;
     private final JavaFXToolSelectionModel toolModel;
@@ -22,7 +22,7 @@ public class JavaFXModels
         cameraModel = new JavaFXCameraModel();
         toolModel = new JavaFXToolSelectionModel();
         environmentMapModel = new JavaFXEnvironmentMapModel();
-        lightModel = new JavaFXLightingModel(environmentMapModel);
+        lightingModel = new JavaFXLightingModel(environmentMapModel);
         loadOptionsModel = new JavaFXLoadOptionsModel();
         settingsModel = new JavaFXSettingsModel();
     }
@@ -32,9 +32,9 @@ public class JavaFXModels
         return cameraModel;
     }
 
-    public JavaFXLightingModel getLightModel()
+    public JavaFXLightingModel getLightingModel()
     {
-        return lightModel;
+        return lightingModel;
     }
 
     public JavaFXToolSelectionModel getToolModel()

@@ -21,8 +21,8 @@ import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.WindowSize;
 import tetzlaff.ibr.IBRLoadingModel;
 import tetzlaff.ibr.IBRSettingsModel;
-import tetzlaff.ibr.rendering.CameraBasedLightModel;
-import tetzlaff.ibr.rendering.HardcodedLightModel;
+import tetzlaff.ibr.rendering.CameraBasedLightingModel;
+import tetzlaff.ibr.rendering.HardcodedLightingModel;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
@@ -46,34 +46,34 @@ public class IBRelight
 {
 	private static final boolean DEBUG = true;
 	
-	private static class MetaLightModel implements CameraBasedLightModel
+	private static class MetaLightingModel implements CameraBasedLightingModel
 	{
 		boolean hardcodedMode = false;
-		LightingModel normalLightModel;
-		HardcodedLightModel hardcodedLightModel;
+		LightingModel normalLightingModel;
+		HardcodedLightingModel hardcodedLightingModel;
 
 		@Override
 		public int getLightCount() 
 		{
-			return hardcodedMode ? hardcodedLightModel.getLightCount() : normalLightModel.getLightCount();
+			return hardcodedMode ? hardcodedLightingModel.getLightCount() : normalLightingModel.getLightCount();
 		}
 
 		@Override
 		public Vector3 getLightColor(int i) 
 		{
-			return hardcodedMode ? hardcodedLightModel.getLightColor(i) : normalLightModel.getLightColor(i);
+			return hardcodedMode ? hardcodedLightingModel.getLightColor(i) : normalLightingModel.getLightColor(i);
 		}
 		
 		@Override
 		public void setLightColor(int i, Vector3 lightColor)
 		{
-			normalLightModel.setLightColor(i, lightColor);
+			normalLightingModel.setLightColor(i, lightColor);
 		}
 		
 		@Override
 		public Matrix4 getLightMatrix(int i) 
 		{
-			return hardcodedMode ? hardcodedLightModel.getLightMatrix(i) : normalLightModel.getLightMatrix(i);
+			return hardcodedMode ? hardcodedLightingModel.getLightMatrix(i) : normalLightingModel.getLightMatrix(i);
 		}
 
 		@Override
@@ -87,7 +87,7 @@ public class IBRelight
 		{
 			if (hardcodedMode)
 			{
-				hardcodedLightModel.overrideCameraPose(cameraPoseOverride);
+				hardcodedLightingModel.overrideCameraPose(cameraPoseOverride);
 			}
 		}
 
@@ -96,62 +96,62 @@ public class IBRelight
 		{
 			if (hardcodedMode)
 			{
-				hardcodedLightModel.removeCameraPoseOverride();
+				hardcodedLightingModel.removeCameraPoseOverride();
 			}
 		}
 
 		@Override
 		public Vector3 getAmbientLightColor() 
 		{
-			return hardcodedMode ? hardcodedLightModel.getAmbientLightColor() : normalLightModel.getAmbientLightColor();
+			return hardcodedMode ? hardcodedLightingModel.getAmbientLightColor() : normalLightingModel.getAmbientLightColor();
 		}
 
 		@Override
 		public void setAmbientLightColor(Vector3 ambientLightColor) 
 		{
-			normalLightModel.setAmbientLightColor(ambientLightColor);
+			normalLightingModel.setAmbientLightColor(ambientLightColor);
 		}
 
 		@Override
 		public boolean getEnvironmentMappingEnabled() 
 		{
-			return hardcodedMode ? hardcodedLightModel.getEnvironmentMappingEnabled() : normalLightModel.getEnvironmentMappingEnabled();
+			return hardcodedMode ? hardcodedLightingModel.getEnvironmentMappingEnabled() : normalLightingModel.getEnvironmentMappingEnabled();
 		}
 
 		@Override
 		public void setEnvironmentMappingEnabled(boolean enabled) 
 		{
-			normalLightModel.setEnvironmentMappingEnabled(enabled);
+			normalLightingModel.setEnvironmentMappingEnabled(enabled);
 		}
 
 		@Override
 		public boolean isLightVisualizationEnabled(int index) 
 		{
-			return hardcodedMode ? hardcodedLightModel.isLightVisualizationEnabled(index) : normalLightModel.isLightVisualizationEnabled(index);
+			return hardcodedMode ? hardcodedLightingModel.isLightVisualizationEnabled(index) : normalLightingModel.isLightVisualizationEnabled(index);
 		}
 
 		@Override
 		public boolean isLightWidgetEnabled(int index) 
 		{
-			return hardcodedMode ? hardcodedLightModel.isLightWidgetEnabled(index) : normalLightModel.isLightWidgetEnabled(index);
+			return hardcodedMode ? hardcodedLightingModel.isLightWidgetEnabled(index) : normalLightingModel.isLightWidgetEnabled(index);
 		}
 
 		@Override
 		public Vector3 getLightCenter(int i) 
 		{
-			return hardcodedMode ? hardcodedLightModel.getLightCenter(i) : normalLightModel.getLightCenter(i);
+			return hardcodedMode ? hardcodedLightingModel.getLightCenter(i) : normalLightingModel.getLightCenter(i);
 		}
 
 		@Override
 		public void setLightCenter(int i, Vector3 lightTargetPoint) 
 		{
-			normalLightModel.setLightCenter(i, lightTargetPoint);
+			normalLightingModel.setLightCenter(i, lightTargetPoint);
 		}
 
 		@Override
 		public Matrix4 getEnvironmentMapMatrix() 
 		{
-			return hardcodedMode ? hardcodedLightModel.getEnvironmentMapMatrix() : normalLightModel.getEnvironmentMapMatrix();
+			return hardcodedMode ? hardcodedLightingModel.getEnvironmentMapMatrix() : normalLightingModel.getEnvironmentMapMatrix();
 		}
 	}
 	
@@ -203,11 +203,11 @@ public class IBRelight
 	        	throw new IllegalStateException("The shader program could not be initialized.", e);
 	        }
 	        
-	        MetaLightModel metaLightModel = new MetaLightModel();
+	        MetaLightingModel metaLightingModel = new MetaLightingModel();
 	        
 	        TrackballLightController lightController = new TrackballLightController();
 	        lightController.addAsWindowListener(window);
-	    	metaLightModel.normalLightModel = lightController.getLightModel();
+	    	metaLightingModel.normalLightingModel = lightController.getLightingModel();
 	        
 	    	CameraModel fpCameraModel = new BasicCameraModel();
 	    	
@@ -230,7 +230,7 @@ public class IBRelight
 	        
 	        // Hybrid FP + Trackball controls
 	        ReadonlyCameraModel cameraModel = () -> fpCameraModel.getLookMatrix().times(
-	        		(metaLightModel.hardcodedMode ? hardcodedLightTrackballModel : lightController.getCurrentCameraModel()).getLookMatrix());
+	        		(metaLightingModel.hardcodedMode ? hardcodedLightTrackballModel : lightController.getCurrentCameraModel()).getLookMatrix());
 	
 	        // Create a new 'renderer' to be attached to the window and the GUI.
 	        // This is the object that loads the ULF models and handles drawing them.  This object abstracts
@@ -239,16 +239,16 @@ public class IBRelight
 	        ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(context, program);
 	        model.setObjectModel(() -> Matrix4.IDENTITY);
 	        model.setCameraModel(cameraModel);
-	        model.setLightModel(metaLightModel);
+	        model.setLightingModel(metaLightingModel);
 	        
 	        IBRLoadingModel.getInstance().setLoadingHandler(model);
 	    	
-	        HardcodedLightModel hardcodedLightController = 
-	    			new HardcodedLightModel(
+	        HardcodedLightingModel hardcodedLightController = 
+	    			new HardcodedLightingModel(
 						() -> model.getSelectedItem().getActiveViewSet(),
 						() -> model.getSelectedItem().getActiveGeometry(),
 						hardcodedLightTrackballModel);
-	    	metaLightModel.hardcodedLightModel = hardcodedLightController;
+	    	metaLightingModel.hardcodedLightingModel = hardcodedLightController;
 	        
 	        window.addCharacterListener((win, c) -> 
 	        {
@@ -279,7 +279,7 @@ public class IBRelight
 	        	}
 	        	else if (c == 'l')
 	        	{
-	        		//metaLightModel.hardcodedMode = !metaLightModel.hardcodedMode;
+	        		//metaLightingModel.hardcodedMode = !metaLightingModel.hardcodedMode;
 	        	}
 	        	else if (c == ' ')
 	        	{
@@ -367,7 +367,7 @@ public class IBRelight
 	        
 	        // Create a user interface that examines the ULFRendererList for renderer settings and
 	        // selecting between different loaded models.
-	        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getLightModel(), settingsModel, (request) -> requestQueue.addRequest(request), window.isHighDPI());
+	        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getLightingModel(), settingsModel, (request) -> requestQueue.addRequest(request), window.isHighDPI());
 	        gui.showGUI();        
 	        //app.addPollable(gui); // Needed for Qt UI
 
