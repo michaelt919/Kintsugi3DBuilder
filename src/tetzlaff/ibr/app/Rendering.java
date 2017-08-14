@@ -87,7 +87,7 @@ public class Rendering
 
 			//Here I create my own brand of camera and light models;
 			// TODO NEWUI refactor against interfaces not implementations
-			LightingModelBase lightingModel = JavaFXModels.getInstance().getLightModel();
+			LightingModelBase lightingModel = JavaFXModels.getInstance().getLightingModel();
 			EnvironmentMapModelBase environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
 			ExtendedCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
 			
@@ -101,7 +101,7 @@ public class Rendering
 			ToolBox toolBox = ToolBox.ToolBoxBuilder.create()
 					.setCameraModel(cameraModel)
 					.setEnvironmentMapModel(environmentMapModel)
-					.setLightModel(lightingModel)
+					.setLightingModel(lightingModel)
 					.setToolModel(toolModel)
 					.setSceneViewportModel(new SceneViewportModel()
 					{
@@ -125,7 +125,7 @@ public class Rendering
             
             rendererList.setObjectModel(() -> Matrix4.IDENTITY);
             rendererList.setCameraModel(cameraModel);
-            rendererList.setLightModel(lightingModel);
+            rendererList.setLightingModel(lightingModel);
             rendererList.setSettingsModel(settingsModel);
 
             window.addCharacterListener((win, c) -> {
@@ -156,7 +156,7 @@ public class Rendering
 				}
 				else if (c == 'l')
 				{
-					//metaLightModel.hardcodedMode = !metaLightModel.hardcodedMode;
+					//metaLightingModel.hardcodedMode = !metaLightingModel.hardcodedMode;
 				}
 				else if (c == ' ')
 				{

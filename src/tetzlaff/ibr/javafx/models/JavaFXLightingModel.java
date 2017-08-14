@@ -12,14 +12,14 @@ public class JavaFXLightingModel extends LightingModelBase {
     private ObservableValue<LightGroupSetting> lightGroupSettingObservableValue;
     private LightGroupSetting backup = new LightGroupSetting("backup");
 
-    private JavaFXLightInstanceModel[] subLightModelImps = new JavaFXLightInstanceModel[LightGroupSetting.LIGHT_LIMIT];
+    private JavaFXLightInstanceModel[] lightInstanceModels = new JavaFXLightInstanceModel[LightGroupSetting.LIGHT_LIMIT];
 
     public JavaFXLightingModel(JavaFXEnvironmentMapModel ev) {
         super(ev);
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
-            subLightModelImps[i] = new JavaFXLightInstanceModel();
+            lightInstanceModels[i] = new JavaFXLightInstanceModel();
 
-            subLightModelImps[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
+            lightInstanceModels[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
 
         }
     }
@@ -30,12 +30,12 @@ public class JavaFXLightingModel extends LightingModelBase {
         this.lightGroupSettingObservableValue.addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
                 for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
-                    subLightModelImps[i].setSubLightSettingObservableValue(newValue.lightListProperty().valueAt(i));
+                    lightInstanceModels[i].setSubLightSettingObservableValue(newValue.lightListProperty().valueAt(i));
                 }
             } else {
                 System.out.println("Binding Backup");
                 for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
-                    subLightModelImps[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
+                    lightInstanceModels[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
                 }
             }
         });
@@ -50,11 +50,7 @@ public class JavaFXLightingModel extends LightingModelBase {
             return lightGroupSettingObservableValue.getValue();
         }
     }
-
-    private JavaFXLightInstanceModel lightModel(int index){
-        return subLightModelImps[index];
-    }
-
+    
     @Override
     public int getLightCount() {
         //        System.out.println("Counted " + count + "Lights");
@@ -76,13 +72,13 @@ public class JavaFXLightingModel extends LightingModelBase {
 
     @Override
     public void setLightColor(int i, Vector3 color) {
-        lightModel(i).setColor(color);
+        getLightInstanceModel(i).setColor(color);
     }
 
     @Override
     public Vector3 getLightColor(int i) {
 //        System.out.println("Get Color ");
-        return lightModel(i).getColor();
+        return getLightInstanceModel(i).getColor();
     }
 
 
@@ -92,7 +88,7 @@ public class JavaFXLightingModel extends LightingModelBase {
     public Matrix4 getLightMatrix(int i) {
 //        System.out.println("get light matrix " + i);
 
-        Matrix4 out = lightModel(i).getLookMatrix();
+        Matrix4 out = getLightInstanceModel(i).getLookMatrix();
 
 //        for (int j = 0; j < 4; j++) {
 //            System.out.print("[");
@@ -107,8 +103,8 @@ public class JavaFXLightingModel extends LightingModelBase {
 
 
     @Override
-    public LightInstanceModel getLightInstanceModel(int i) {
-        return subLightModelImps[i];
+    public JavaFXLightInstanceModel getLightInstanceModel(int i) {
+        return lightInstanceModels[i];
     }
 
 	@Override

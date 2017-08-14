@@ -10,10 +10,10 @@ import tetzlaff.mvc.models.impl.LightingModelBase;
 
 class CenterPointTool extends AbstractTool{
     private ToolSelectionModel toolModel;
-    public CenterPointTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, 
+    public CenterPointTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightingModel, 
     		ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel) 
     {
-        super(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
+        super(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
         this.toolModel = toolModel;
     }
 

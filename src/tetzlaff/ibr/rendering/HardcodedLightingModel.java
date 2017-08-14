@@ -10,7 +10,7 @@ import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 
-public class HardcodedLightModel implements CameraBasedLightModel
+public class HardcodedLightingModel implements CameraBasedLightingModel
 {
 	Supplier<ViewSet> viewSetSupplier;
 	Supplier<VertexGeometry> proxySupplier;
@@ -18,7 +18,7 @@ public class HardcodedLightModel implements CameraBasedLightModel
 	
 	private Matrix4 cameraPoseOverride;
 	
-	public HardcodedLightModel(Supplier<ViewSet> viewSetSupplier, Supplier<VertexGeometry> proxySupplier, ReadonlyCameraModel cameraModel) 
+	public HardcodedLightingModel(Supplier<ViewSet> viewSetSupplier, Supplier<VertexGeometry> proxySupplier, ReadonlyCameraModel cameraModel) 
 	{
 		this.viewSetSupplier = viewSetSupplier;
 		this.proxySupplier = proxySupplier;

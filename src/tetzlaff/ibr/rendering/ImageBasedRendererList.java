@@ -33,7 +33,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 	
 	private ReadonlyObjectModel objectModel;
 	private ReadonlyCameraModel cameraModel;
-	private ReadonlyLightingModel lightModel;
+	private ReadonlyLightingModel lightingModel;
 	private ReadonlyIBRSettingsModel settingsModel;
 	
 	public ImageBasedRendererList(ContextType context, Program<ContextType> program) 
@@ -73,7 +73,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 		
 		newItem.setObjectModel(this.objectModel);
 		newItem.setCameraModel(this.cameraModel);
-		newItem.setLightModel(this.lightModel);
+		newItem.setLightingModel(this.lightingModel);
 		newItem.setSettingsModel(this.settingsModel);
 		
 		newItem.setLoadingMonitor(new LoadingMonitor()
@@ -132,7 +132,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 
 		newItem.setObjectModel(this.objectModel);
 		newItem.setCameraModel(this.cameraModel);
-		newItem.setLightModel(this.lightModel);
+		newItem.setLightingModel(this.lightingModel);
 		newItem.setSettingsModel(this.settingsModel);
 		
 		newItem.setLoadingMonitor(new LoadingMonitor()
@@ -249,12 +249,12 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 	}
 
 	@Override
-	public void setLightModel(ReadonlyLightingModel lightModel) 
+	public void setLightingModel(ReadonlyLightingModel lightingModel) 
 	{
-		this.lightModel = lightModel;
+		this.lightingModel = lightingModel;
 		for (IBRRenderable<?> renderable : renderableList)
 		{
-			renderable.setLightModel(lightModel);
+			renderable.setLightingModel(lightingModel);
 		}
 	}
 

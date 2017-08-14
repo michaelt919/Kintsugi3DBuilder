@@ -67,14 +67,14 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
     }
 
     //builder
-    private ToolBox(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, 
+    private ToolBox(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightingModel, 
     		ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel, Window<?> window) {
         this.toolModel = toolModel;
 
-        dollyTool = new DollyTool(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
-        orbitTool = new OrbitTool(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
-        panTool = new PanTool(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
-        centerPointTool = new CenterPointTool(cameraModel, environmentMapModel, lightModel, toolModel, sceneViewportModel);
+        dollyTool = new DollyTool(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
+        orbitTool = new OrbitTool(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
+        panTool = new PanTool(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
+        centerPointTool = new CenterPointTool(cameraModel, environmentMapModel, lightingModel, toolModel, sceneViewportModel);
 
         addAsWindowListener(window);
     }
@@ -83,7 +83,7 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
         private ToolSelectionModel toolModel;
         private ExtendedCameraModel cameraModel;
         private EnvironmentMapModelBase environmentMapModel;
-        private LightingModelBase lightModel;
+        private LightingModelBase lightingModel;
         private SceneViewportModel sceneViewportModel;
         private Window<?> window;
 
@@ -110,8 +110,8 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
             return this;
         }
 
-        public ToolBoxBuilder setLightModel(LightingModelBase lightModel) {
-            this.lightModel = lightModel;
+        public ToolBoxBuilder setLightingModel(LightingModelBase lightingModel) {
+            this.lightingModel = lightingModel;
             return this;
         }
 
@@ -126,7 +126,7 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
         }
 
         public ToolBox build() {
-            return new ToolBox(cameraModel, environmentMapModel, lightModel, toolModel, sceneViewportModel, window);
+            return new ToolBox(cameraModel, environmentMapModel, lightingModel, toolModel, sceneViewportModel, window);
         }
     }
 }

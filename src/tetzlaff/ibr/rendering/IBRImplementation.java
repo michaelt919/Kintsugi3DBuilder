@@ -79,7 +79,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private ReadonlyObjectModel objectModel;
     private ReadonlyCameraModel cameraModel;
-	private ReadonlyLightingModel lightModel;
+	private ReadonlyLightingModel lightingModel;
 
     private Vector3 clearColor;
     private Program<ContextType> simpleTexProgram;
@@ -382,7 +382,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		
 		shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
 
-		shadowMaps = context.build2DDepthTextureArray(2048, 2048, lightModel.getLightCount()).createTexture();
+		shadowMaps = context.build2DDepthTextureArray(2048, 2048, lightingModel.getLightCount()).createTexture();
 		shadowFramebuffer = context.buildFramebufferObject(2048, 2048)
 			.addDepthAttachment()
 			.createFramebufferObject();
@@ -556,7 +556,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     	
 		program.setTexture("shadowMaps", shadowMaps);
 		
-		if (this.environmentMap == null || !lightModel.getEnvironmentMappingEnabled())
+		if (this.environmentMap == null || !lightingModel.getEnvironmentMappingEnabled())
 		{
 			program.setUniform("useEnvironmentTexture", false);
 			program.setTexture("environmentMap", null);
@@ -575,14 +575,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 			this.environmentMapEnabled = true;
 		}
 		
-		program.setUniform("virtualLightCount", Math.min(4, lightModel.getLightCount()));
+		program.setUniform("virtualLightCount", Math.min(4, lightingModel.getLightCount()));
 		
-		program.setUniform("ambientColor", lightModel.getAmbientLightColor());
+		program.setUniform("ambientColor", lightingModel.getAmbientLightColor());
     	
     	this.clearColor = new Vector3(
-    			(float)Math.pow(lightModel.getAmbientLightColor().x, 1.0 / this.getSettingsModel().getGamma()),
-    			(float)Math.pow(lightModel.getAmbientLightColor().y, 1.0 / this.getSettingsModel().getGamma()),
-    			(float)Math.pow(lightModel.getAmbientLightColor().z, 1.0 / this.getSettingsModel().getGamma()));
+    			(float)Math.pow(lightingModel.getAmbientLightColor().x, 1.0 / this.getSettingsModel().getGamma()),
+    			(float)Math.pow(lightingModel.getAmbientLightColor().y, 1.0 / this.getSettingsModel().getGamma()),
+    			(float)Math.pow(lightingModel.getAmbientLightColor().z, 1.0 / this.getSettingsModel().getGamma()));
 	}
 	
 	private void updateCentroidAndRadius()
@@ -621,7 +621,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	{
 		float scale = getScale();
 		return Matrix4.scale(scale)
-			.times(lightModel.getLightMatrix(lightIndex))
+			.times(lightingModel.getLightMatrix(lightIndex))
 			.times(Matrix4.scale(1.0f / scale))
 			.times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
 			.times(Matrix4.translate(this.centroid.negated()));
@@ -631,7 +631,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	{
 		float scale = getScale();
 		return Matrix4.scale(scale)
-			.times(lightModel.getEnvironmentMapMatrix())
+			.times(lightingModel.getEnvironmentMapMatrix())
 			.times(Matrix4.scale(1.0f / scale))
 			.times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
 			.times(Matrix4.translate(this.centroid.negated()));
@@ -695,7 +695,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		
 		program.setUniform("lightPosVirtual[" + lightIndex + "]", lightPos);
 		
-		Vector3 controllerLightIntensity = lightModel.getLightColor(lightIndex);
+		Vector3 controllerLightIntensity = lightingModel.getLightColor(lightIndex);
 		float lightDistance = getLightMatrix(lightIndex).times(this.centroid.asPosition()).getXYZ().length();
 
 		float scale = resources.viewSet.areLightSourcesInfinite() ? 1.0f :
@@ -834,13 +834,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    	{
 	    		partialViewMatrix = getPartialViewMatrix(view);
 	    		
-	    		if (lightModel instanceof CameraBasedLightModel)
+	    		if (lightingModel instanceof CameraBasedLightingModel)
 				{
 			    	float scale = resources.viewSet.getCameraPose(0)
 			    			.times(resources.geometry.getCentroid().asPosition())
 		    			.getXYZ().length();
 					
-					((CameraBasedLightModel)lightModel).overrideCameraPose(
+					((CameraBasedLightingModel)lightingModel).overrideCameraPose(
 							Matrix4.scale(1.0f / scale)
 								.times(view)
 								.times(Matrix4.translate(resources.geometry.getCentroid()))
@@ -909,14 +909,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    			context.getState().enableDepthTest();
 	    		}
 				
-	    		if (shadowMaps.getDepth() < lightModel.getLightCount())
+	    		if (shadowMaps.getDepth() < lightingModel.getLightCount())
 	    		{
 	    			shadowMaps.close();
 	    			shadowMaps = null;
-	    			shadowMaps = context.build2DDepthTextureArray(2048, 2048, lightModel.getLightCount()).createTexture();
+	    			shadowMaps = context.build2DDepthTextureArray(2048, 2048, lightingModel.getLightCount()).createTexture();
 	    		}
 	    		
-	    		for (int lightIndex = 0; lightIndex < lightModel.getLightCount(); lightIndex++)
+	    		for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
 				{
 					generateShadowMaps(lightIndex);
 				}
@@ -933,7 +933,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 				
 				for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
 				{
-					for (int lightIndex = 0; lightIndex < lightModel.getLightCount(); lightIndex++)
+					for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
 					{
 						setupLight(lightIndex, modelInstance);
 					}
@@ -950,16 +950,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 				if (this.getSettingsModel().isRelightingEnabled() && this.getSettingsModel().areVisibleLightsEnabled())
 				{
 					// Draw lights
-					for (int i = 0; i < lightModel.getLightCount(); i++)
+					for (int i = 0; i < lightingModel.getLightCount(); i++)
 					{
 						context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
 						context.getState().disableDepthWrite();
 						
-						if (lightModel.isLightWidgetEnabled(i))
+						if (lightingModel.isLightWidgetEnabled(i))
 						{
 							this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".Target"));
 							
-							Vector3 lightTarget = partialViewMatrix.times(this.lightModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
+							Vector3 lightTarget = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
 							
 							this.lightProgram.setUniform("model_view",
 		//							modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
@@ -1154,13 +1154,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 							this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
 						}
 						
-						if (lightModel.isLightVisualizationEnabled(i))
+						if (lightingModel.isLightVisualizationEnabled(i))
 						{
 							this.context.getState().enableDepthTest();
 							context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
 							
 							this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1)));
-							this.lightProgram.setUniform("color", lightModel.getLightColor(i));
+							this.lightProgram.setUniform("color", lightingModel.getLightColor(i));
 							
 							Vector3 lightPosition = view.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3).getXYZ();
 							
@@ -1206,9 +1206,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 		}
 		finally
 		{
-			if (customViewMatrix && lightModel instanceof CameraBasedLightModel)
+			if (customViewMatrix && lightingModel instanceof CameraBasedLightingModel)
 			{
-				((CameraBasedLightModel)lightModel).removeCameraPoseOverride();
+				((CameraBasedLightingModel)lightingModel).removeCameraPoseOverride();
 			}
 		}
 	}
@@ -1506,8 +1506,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	}
 
 	@Override
-	public void setLightModel(ReadonlyLightingModel lightModel) 
+	public void setLightingModel(ReadonlyLightingModel lightingModel) 
 	{
-		this.lightModel = lightModel;
+		this.lightingModel = lightingModel;
 	}
 }
