@@ -18,7 +18,6 @@ import tetzlaff.ibr.IBRLoadingModel;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.RenderingMode;
 import tetzlaff.ibr.app.Quit;
-import tetzlaff.ibr.javafx.models.JavaFXLoadOptionsModel;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
 import tetzlaff.ibr.rendering2.ToolModelImp;
@@ -31,10 +30,7 @@ public class MenubarController {
     private JavaFXSettingsModel getSettings(){
         return JavaFXModels.getInstance().getSettingsModel();
     }
-    private IBRRenderable<?> getRenderable(){
-        return toolModel.getIBRRenderable();
-    }
-
+    
     //Window open flags
     Flag iBROptionsWindowOpen = new Flag(false);
     Flag loadOptionsWindowOpen = new Flag(false);
@@ -84,11 +80,11 @@ public class MenubarController {
         toolGroup.selectedToggleProperty().addListener((ob,o,n)->{
             if(n!=null && n.getUserData() != null){
                 switch ((String) n.getUserData()){
-                    case "ORBIT": toolModel.setTool(ToolBox.TOOL.ORBIT); break;
-                    case "DOLLY": toolModel.setTool(ToolBox.TOOL.DOLLY); break;
-                    case "PAN": toolModel.setTool(ToolBox.TOOL.PAN); break;
-                    case "LIGHT_DRAG": toolModel.setTool(ToolBox.TOOL.LIGHT_DRAG); break;
-                    case "CENTER_POINT": toolModel.setTool(ToolBox.TOOL.CENTER_POINT); break;
+                    case "ORBIT": toolModel.setTool(ToolBox.ToolType.ORBIT); break;
+                    case "DOLLY": toolModel.setTool(ToolBox.ToolType.DOLLY); break;
+                    case "PAN": toolModel.setTool(ToolBox.ToolType.PAN); break;
+                    case "LIGHT_DRAG": toolModel.setTool(ToolBox.ToolType.LIGHT_DRAG); break;
+                    case "CENTER_POINT": toolModel.setTool(ToolBox.ToolType.CENTER_POINT); break;
 
                 }
             }
@@ -141,10 +137,8 @@ public class MenubarController {
         fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(getSettings().fresnelProperty());
 
 
-
-        //onAction Binding
-        halfResolutionCheckMenuItem.setOnAction(param-> getRenderable().setHalfResolution(halfResolutionCheckMenuItem.isSelected()));
-        multiSamplingCheckMenuItem.setOnAction(param -> getRenderable().setMultisampling(multiSamplingCheckMenuItem.isSelected()));
+        halfResolutionCheckMenuItem.selectedProperty().bindBidirectional(getSettings().halfResolutionEnabledProperty());
+        multiSamplingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().multisamplingEnabledProperty());
     }
 
     //Menubar->File

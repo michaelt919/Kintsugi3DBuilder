@@ -536,7 +536,7 @@ public class IBRelightConfigFrame extends JFrame
 			isotropySpinner.setValue((double)model.getSelectedItem().getSettingsModel().getIsotropyFactor());
 			chckbxOcclusion.setSelected(model.getSelectedItem().getSettingsModel().isOcclusionEnabled());
 			spinnerOccBias.setValue((double)model.getSelectedItem().getSettingsModel().getOcclusionBias());
-			chckbxMultisampling.setSelected(model.getSelectedItem().getMultisampling());
+			chckbxMultisampling.setSelected(model.getSelectedItem().getSettingsModel().isMultisamplingEnabled());
 			chckbxImagebasedRendering.setSelected(model.getSelectedItem().getSettingsModel().isIBREnabled());
 			chckbxRelighting.setSelected(model.getSelectedItem().getSettingsModel().isRelightingEnabled());
 			chckbxShadows.setSelected(model.getSelectedItem().getSettingsModel().areShadowsEnabled());
@@ -567,7 +567,7 @@ public class IBRelightConfigFrame extends JFrame
 			
 			updateWidgetsFromSettings.run();
 			
-			model.getSelectedItem().setHalfResolution(isHighDPI);
+			settingsModel.setHalfResolutionEnabled(isHighDPI);
 			chckbxHalfRes.setSelected(isHighDPI);
 		}
 		
@@ -650,7 +650,7 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().setHalfResolution(chckbxHalfRes.isSelected());
+				settingsModel.setHalfResolutionEnabled(chckbxHalfRes.isSelected());
 			}
 		});
 		
@@ -659,7 +659,7 @@ public class IBRelightConfigFrame extends JFrame
 		{
 			if (model.getSelectedItem() != null)
 			{
-				model.getSelectedItem().setMultisampling(chckbxMultisampling.isSelected());
+				settingsModel.setMultisamplingEnabled(chckbxMultisampling.isSelected());
 			}
 		});
 		

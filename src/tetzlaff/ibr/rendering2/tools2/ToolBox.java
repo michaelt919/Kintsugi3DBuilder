@@ -2,12 +2,17 @@ package tetzlaff.ibr.rendering2.tools2;//Created by alexk on 7/24/2017.
 
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
+import tetzlaff.gl.window.listeners.CursorPositionListener;
+import tetzlaff.gl.window.listeners.KeyPressListener;
+import tetzlaff.gl.window.listeners.MouseButtonPressListener;
+import tetzlaff.gl.window.listeners.ScrollListener;
 import tetzlaff.ibr.ControllableToolModel;
 import tetzlaff.mvc.models.ExtendedCameraModel;
-import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
+import tetzlaff.mvc.models.impl.LightingModelBase;
 
-public class ToolBox extends AbstractTool implements Controller {
+public class ToolBox implements CursorPositionListener, MouseButtonPressListener, ScrollListener, KeyPressListener, Controller {
 
     private ControllableToolModel toolModel;
 
@@ -25,9 +30,12 @@ public class ToolBox extends AbstractTool implements Controller {
     private OrbitTool orbitTool;
     private PanTool panTool;
     private CenterPointTool centerPointTool;
-    public enum TOOL{
+    
+    public enum ToolType
+    {
         DOLLY, ORBIT, PAN, LIGHT_DRAG, CENTER_POINT
     }
+    
     private AbstractTool selectedTool(){
         switch (toolModel.getTool()){
             case DOLLY: return dollyTool;
@@ -60,14 +68,14 @@ public class ToolBox extends AbstractTool implements Controller {
     }
 
     //builder
-    private ToolBox(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, ControllableToolModel toolModel, Window<?> window) {
-        super(cameraModel, environmentMapModel, lightModel);
+    private ToolBox(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, 
+    		ControllableToolModel toolModel, SceneViewportModel sceneViewportModel, Window<?> window) {
         this.toolModel = toolModel;
 
-        dollyTool = new DollyTool(cameraModel, environmentMapModel, lightModel);
-        orbitTool = new OrbitTool(cameraModel, environmentMapModel, lightModel);
-        panTool = new PanTool(cameraModel, environmentMapModel, lightModel);
-        centerPointTool = new CenterPointTool(cameraModel, environmentMapModel, lightModel, toolModel);
+        dollyTool = new DollyTool(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
+        orbitTool = new OrbitTool(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
+        panTool = new PanTool(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
+        centerPointTool = new CenterPointTool(cameraModel, environmentMapModel, lightModel, toolModel, sceneViewportModel);
 
         addAsWindowListener(window);
     }
@@ -77,10 +85,15 @@ public class ToolBox extends AbstractTool implements Controller {
         private ExtendedCameraModel cameraModel;
         private EnvironmentMapModelBase environmentMapModel;
         private LightingModelBase lightModel;
+        private SceneViewportModel sceneViewportModel;
         private Window<?> window;
 
-        public static ToolBoxBuilder aToolBox() {
+        public static ToolBoxBuilder create() {
             return new ToolBoxBuilder();
+        }
+        
+        private ToolBoxBuilder()
+        {
         }
 
         public ToolBoxBuilder setToolModel(ControllableToolModel toolModel) {
@@ -103,13 +116,18 @@ public class ToolBox extends AbstractTool implements Controller {
             return this;
         }
 
+        public ToolBoxBuilder setSceneViewportModel(SceneViewportModel sceneViewportModel) {
+            this.sceneViewportModel = sceneViewportModel;
+            return this;
+        }
+
         public ToolBoxBuilder setWindow(Window<?> window) {
             this.window = window;
             return this;
         }
 
         public ToolBox build() {
-            return new ToolBox(cameraModel, environmentMapModel, lightModel, toolModel, window);
+            return new ToolBox(cameraModel, environmentMapModel, lightModel, toolModel, sceneViewportModel, window);
         }
     }
 }

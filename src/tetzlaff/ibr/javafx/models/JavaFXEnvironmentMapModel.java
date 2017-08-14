@@ -9,7 +9,6 @@ import javafx.scene.paint.Color;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.environment_map.EVSetting;
-import tetzlaff.ibr.rendering2.ToolModelImp;
 import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
 
 public class JavaFXEnvironmentMapModel extends EnvironmentMapModelBase {

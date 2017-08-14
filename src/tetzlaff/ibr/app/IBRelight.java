@@ -3,8 +3,6 @@ package tetzlaff.ibr.app;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import tetzlaff.ibr.javafx.models.JavaFXModels;
-
 public class IBRelight 
 {
 	private static final boolean DEBUG = true;

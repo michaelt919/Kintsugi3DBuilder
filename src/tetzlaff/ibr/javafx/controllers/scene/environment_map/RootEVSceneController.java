@@ -33,7 +33,7 @@ public class RootEVSceneController implements Initializable {
     @FXML
     private Button theRenameButton;
 
-    private final static boolean hasStatingMap = false;
+    private final static boolean USE_STARTING_MAP = false;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -43,7 +43,7 @@ public class RootEVSceneController implements Initializable {
 
         s().selectedItemProperty().addListener(settingsController.changeListener);
 
-        if(hasStatingMap) {
+        if(USE_STARTING_MAP) {
             EVSetting startingMap = new EVSetting(
                     false,
                     false,
@@ -112,7 +112,7 @@ public class RootEVSceneController implements Initializable {
 
     @FXML
     private void renameEVButton() {
-        if (hasStatingMap && s().getSelectedIndex() == 0) return;
+        if (USE_STARTING_MAP && s().getSelectedIndex() == 0) return;
 
         EventHandler<ActionEvent> oldOnAction = theRenameButton.getOnAction();//backup the old on action event for the rename button
 
@@ -183,7 +183,7 @@ public class RootEVSceneController implements Initializable {
     @FXML
     private void moveUPButton() {
         int i = s().getSelectedIndex();
-        if(hasStatingMap && i == 1)return;
+        if(USE_STARTING_MAP && i == 1)return;
         if (i > 0) {
             Collections.swap(listOfEVs, i, i - 1);
             s().select(i - 1);
@@ -193,7 +193,7 @@ public class RootEVSceneController implements Initializable {
     @FXML
     void moveDOWNButton() {
         int i = s().getSelectedIndex();
-        if(hasStatingMap && i == 0) return;
+        if(USE_STARTING_MAP && i == 0) return;
         if (i < listOfEVs.size() - 1) {
             Collections.swap(listOfEVs, i, i + 1);
             s().select(i + 1);
@@ -211,7 +211,7 @@ public class RootEVSceneController implements Initializable {
     @FXML
     void deleteEVButton() {
         int i = s().getSelectedIndex();
-        if(hasStatingMap && i ==0)return;
+        if(USE_STARTING_MAP && i ==0)return;
         listOfEVs.remove(i);
     }
 

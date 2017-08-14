@@ -1,6 +1,5 @@
 package tetzlaff.ibr.app.old;
 
-import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
 
 public class IBRLoadOptionsModelImpl implements tetzlaff.ibr.ReadonlyIBRLoadOptionsModel
 {

@@ -82,7 +82,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private ReadonlyLightingModel lightModel;
 
     private Vector3 clearColor;
-    private boolean halfResEnabled;
     private Program<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
     
@@ -93,8 +92,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private Program<ContextType> environmentBackgroundProgram;
     private Drawable<ContextType> environmentBackgroundDrawable;
-    
-    private boolean multisamplingEnabled = false;
     
     private UniformBuffer<ContextType> weightBuffer = null;
     
@@ -817,7 +814,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     	
 		try
 		{
-			if(multisamplingEnabled)
+			if(this.settings.isMultisamplingEnabled())
 			{
 				context.getState().enableMultisampling();
 			}
@@ -885,7 +882,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	    	int fboWidth = size.width;
 	        int fboHeight = size.height;
 	        
-			if (halfResEnabled)
+			if (settings.isHalfResolutionEnabled())
 			{
 				fboWidth /= 2;
 				fboHeight /= 2;
@@ -1324,30 +1321,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	@Override
 	public void setSettingsModel(ReadonlyIBRSettingsModel settings) {
 		this.settings = settings;
-	}
-
-	@Override
-	public boolean getHalfResolution()
-	{
-		return this.halfResEnabled;
-	}
-	
-	@Override
-	public void setHalfResolution(boolean halfResEnabled) 
-	{
-		this.halfResEnabled = halfResEnabled;
-	}
-
-	@Override
-	public boolean getMultisampling() 
-	{
-		return this.multisamplingEnabled;
-	}
-
-	@Override
-	public void setMultisampling(boolean multisamplingEnabled) 
-	{
-		this.multisamplingEnabled = multisamplingEnabled;
 	}
 	
 	@Override

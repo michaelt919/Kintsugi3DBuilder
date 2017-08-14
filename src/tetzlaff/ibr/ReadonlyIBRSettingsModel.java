@@ -4,24 +4,26 @@ import tetzlaff.util.ShadingParameterMode;
 
 public interface ReadonlyIBRSettingsModel 
 {
-	public float getGamma();
-    public float getWeightExponent();
-    public float getIsotropyFactor();
-    public float getOcclusionBias();
-    public ShadingParameterMode getWeightMode();
-    public boolean isOcclusionEnabled();
-    public boolean isIBREnabled();
-    public boolean isFresnelEnabled();
-    public boolean isPBRGeometricAttenuationEnabled();
-    public boolean isRelightingEnabled();
-    public boolean isD3GridEnabled();
-    public boolean isCompassEnabled();
-    public boolean isVisibleCameraPose();
-    public boolean isVisibleSavedCameraPose();
-    public boolean isMaterialsForIBR();
-    public boolean isPhyMasking();
-    public boolean areTexturesEnabled();
-    public boolean areShadowsEnabled();
-    public boolean areVisibleLightsEnabled();
-    public RenderingMode getRenderingMode();
+	float getGamma();
+    float getWeightExponent();
+    float getIsotropyFactor();
+    float getOcclusionBias();
+    ShadingParameterMode getWeightMode();
+    boolean isOcclusionEnabled();
+    boolean isIBREnabled();
+    boolean isFresnelEnabled();
+    boolean isPBRGeometricAttenuationEnabled();
+    boolean isRelightingEnabled();
+    boolean isD3GridEnabled();
+    boolean isCompassEnabled();
+    boolean isVisibleCameraPose();
+    boolean isVisibleSavedCameraPose();
+    boolean isMaterialsForIBR();
+    boolean isPhyMasking();
+    boolean areTexturesEnabled();
+    boolean areShadowsEnabled();
+    boolean areVisibleLightsEnabled();
+    RenderingMode getRenderingMode();
+	boolean isHalfResolutionEnabled();
+	boolean isMultisamplingEnabled();
 }

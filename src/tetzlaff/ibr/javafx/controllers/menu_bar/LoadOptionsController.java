@@ -3,7 +3,6 @@ package tetzlaff.ibr.javafx.controllers.menu_bar;//Created by alexk on 7/31/2017
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import tetzlaff.ibr.javafx.models.JavaFXLoadOptionsModel;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
@@ -12,6 +11,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import tetzlaff.ibr.javafx.models.JavaFXLoadOptionsModel;
 
 public class LoadOptionsController implements Initializable{
     @FXML private CheckBox compressedImages;
