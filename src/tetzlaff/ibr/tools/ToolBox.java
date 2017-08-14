@@ -1,4 +1,4 @@
-package tetzlaff.ibr.rendering2.tools2;//Created by alexk on 7/24/2017.
+package tetzlaff.ibr.tools;//Created by alexk on 7/24/2017.
 
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
@@ -6,7 +6,6 @@ import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;
-import tetzlaff.ibr.ControllableToolModel;
 import tetzlaff.mvc.models.ExtendedCameraModel;
 import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
@@ -14,7 +13,7 @@ import tetzlaff.mvc.models.impl.LightingModelBase;
 
 public class ToolBox implements CursorPositionListener, MouseButtonPressListener, ScrollListener, KeyPressListener, Controller {
 
-    private ControllableToolModel toolModel;
+    private ToolSelectionModel toolModel;
 
     //window listener
     @Override
@@ -69,7 +68,7 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
 
     //builder
     private ToolBox(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, 
-    		ControllableToolModel toolModel, SceneViewportModel sceneViewportModel, Window<?> window) {
+    		ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel, Window<?> window) {
         this.toolModel = toolModel;
 
         dollyTool = new DollyTool(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
@@ -81,7 +80,7 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
     }
 
     public static final class ToolBoxBuilder {
-        private ControllableToolModel toolModel;
+        private ToolSelectionModel toolModel;
         private ExtendedCameraModel cameraModel;
         private EnvironmentMapModelBase environmentMapModel;
         private LightingModelBase lightModel;
@@ -96,7 +95,7 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
         {
         }
 
-        public ToolBoxBuilder setToolModel(ControllableToolModel toolModel) {
+        public ToolBoxBuilder setToolModel(ToolSelectionModel toolModel) {
             this.toolModel = toolModel;
             return this;
         }

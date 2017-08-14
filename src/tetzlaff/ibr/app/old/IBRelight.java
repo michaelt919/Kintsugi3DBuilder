@@ -21,7 +21,6 @@ import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.WindowSize;
 import tetzlaff.ibr.IBRLoadingModel;
 import tetzlaff.ibr.IBRSettingsModel;
-import tetzlaff.ibr.old.IBRSettingsModelImpl;
 import tetzlaff.ibr.rendering.CameraBasedLightModel;
 import tetzlaff.ibr.rendering.HardcodedLightModel;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;

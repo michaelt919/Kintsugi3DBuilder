@@ -15,18 +15,17 @@ import javafx.scene.control.ToggleGroup;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import tetzlaff.ibr.IBRLoadingModel;
-import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.RenderingMode;
 import tetzlaff.ibr.app.Quit;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
-import tetzlaff.ibr.rendering2.ToolModelImp;
-import tetzlaff.ibr.rendering2.tools2.ToolBox;
+import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
+import tetzlaff.ibr.tools.ToolBox;
 import tetzlaff.ibr.util.Flag;
 
 public class MenubarController {
     //toolModel
-    private ToolModelImp toolModel;
+    private JavaFXToolSelectionModel toolModel;
     private JavaFXSettingsModel getSettings(){
         return JavaFXModels.getInstance().getSettingsModel();
     }
@@ -61,7 +60,7 @@ public class MenubarController {
 
 
 
-    public void init2(ToolModelImp toolModel){
+    public void init2(JavaFXToolSelectionModel toolModel){
         this.toolModel = toolModel;
         vSetFileChooser = new FileChooser();
 

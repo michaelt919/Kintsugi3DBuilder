@@ -1,4 +1,4 @@
-package tetzlaff.ibr.old;
+package tetzlaff.ibr.app.old;
 
 import tetzlaff.ibr.IBRSettingsModel;
 import tetzlaff.ibr.RenderingMode;

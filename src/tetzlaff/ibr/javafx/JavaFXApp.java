@@ -17,7 +17,7 @@ import tetzlaff.ibr.javafx.models.JavaFXCameraModel;
 import tetzlaff.ibr.javafx.models.JavaFXEnvironmentMapModel;
 import tetzlaff.ibr.javafx.models.JavaFXLightingModel;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
-import tetzlaff.ibr.rendering2.ToolModelImp;
+import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
 
 public class JavaFXApp extends Application{
 
@@ -107,7 +107,7 @@ public class JavaFXApp extends Application{
         final JavaFXCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
         final JavaFXEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
         final JavaFXLightingModel lightModel = JavaFXModels.getInstance().getLightModel();
-        final ToolModelImp toolModel = JavaFXModels.getInstance().getToolModel();
+        final JavaFXToolSelectionModel toolModel = JavaFXModels.getInstance().getToolModel();
 
         //distribute to controllers
         sceneController.init2(cameraModel, lightModel, environmentMapModel, toolModel);
