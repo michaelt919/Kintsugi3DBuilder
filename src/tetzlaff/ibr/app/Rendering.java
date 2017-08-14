@@ -98,7 +98,7 @@ public class Rendering
 
 			ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
 
-			ToolBox toolBox = ToolBox.ToolBoxBuilder.create()
+			ToolBox.ToolBoxBuilder.create()
 					.setCameraModel(cameraModel)
 					.setEnvironmentMapModel(environmentMapModel)
 					.setLightingModel(lightingModel)

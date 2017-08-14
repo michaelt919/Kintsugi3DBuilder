@@ -20,7 +20,6 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import tetzlaff.ibr.IBRLoadingModel;
-import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
 import tetzlaff.ibr.util.StaticHouse;
 
 public class LoaderController implements Initializable
@@ -40,13 +39,6 @@ public class LoaderController implements Initializable
     private File cameraFile = null;
     private File objFile = null;
     private File photoDir = null;
-
-    private ReadonlyIBRLoadOptionsModel loadOptionsModel;
-
-    void setLoadOptionsModel(ReadonlyIBRLoadOptionsModel loadOptionsModel) 
-    {
-        this.loadOptionsModel = loadOptionsModel;
-    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) 

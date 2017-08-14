@@ -24,7 +24,7 @@ public class SettingsLightSceneController implements Initializable{
     public void initialize(URL location, ResourceBundle resources) {
         setDisabled(true);
 
-        StringConverter pow10converter = new StringConverter<Double>() {
+        StringConverter<Double> pow10converter = new StringConverter<Double>() {
             @Override
             public String toString(Double object) {
                 String s = n10.toString(object);

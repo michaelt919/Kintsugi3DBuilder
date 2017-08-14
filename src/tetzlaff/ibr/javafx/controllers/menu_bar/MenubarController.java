@@ -99,7 +99,7 @@ public class MenubarController {
                 case CENTER_POINT: data = "CENTER_POINT"; break;
                 default: data = "ERROR";
             }
-            selectToggelWithData(toolGroup, data);
+            selectToggleWithData(toolGroup, data);
         });
 
 
@@ -146,10 +146,7 @@ public class MenubarController {
 
         if(loaderWindowOpen.get())return;
 
-        LoaderController loaderController = makeWindow("Load Files", loaderWindowOpen, 750, 330,"fxml/menu_bar/Loader.fxml");
-        if (loaderController != null) {
-            loaderController.setLoadOptionsModel(JavaFXModels.getInstance().getLoadOptionsModel());
-        }
+        makeWindow("Load Files", loaderWindowOpen, 750, 330,"fxml/menu_bar/Loader.fxml");
     }
 
     @FXML private void file_openProject(){
@@ -217,30 +214,6 @@ public class MenubarController {
 
 
     //window helpers
-    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, String urlString){
-        try {
-            URL url = MenubarController.class.getClassLoader().getResource(urlString);
-            if (url == null) {
-                throw new IOException("Cant find file " + urlString);
-            }
-            FXMLLoader fxmlLoader = new FXMLLoader(url);
-            Parent root = fxmlLoader.load();
-            Stage stage= new Stage();
-            stage.setTitle(title);
-            stage.setScene(new Scene(root));
-
-            stage.setResizable(false);
-
-            stage.show();
-
-            return fxmlLoader.getController();
-
-        }catch (IOException e){
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, String urlString){
         try {
             URL url = MenubarController.class.getClassLoader().getResource(urlString);
@@ -267,29 +240,7 @@ public class MenubarController {
             return null;
         }
     }
-    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, int width, int height, String urlString){
-        try {
-            URL url = MenubarController.class.getClassLoader().getResource(urlString);
-            if (url == null) {
-                throw new IOException("Cant find file " + urlString);
-            }
-            FXMLLoader fxmlLoader = new FXMLLoader(url);
-            Parent root = fxmlLoader.load();
-            Stage stage= new Stage();
-            stage.setTitle(title);
-            stage.setScene(new Scene(root, width, height));
-
-            stage.setResizable(false);
-
-            stage.show();
-
-            return fxmlLoader.getController();
-
-        }catch (IOException e){
-            e.printStackTrace();
-            return null;
-        }
-    }
+    
     private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, int width, int height, String urlString){
         try {
             URL url = MenubarController.class.getClassLoader().getResource(urlString);
@@ -315,7 +266,7 @@ public class MenubarController {
     }
 
     //toggle group helpers
-    private static void selectToggelWithData(ToggleGroup toggleGroup, String data){
+    private static void selectToggleWithData(ToggleGroup toggleGroup, String data){
         ObservableList<Toggle> toggles = toggleGroup.getToggles();
         toggles.iterator().forEachRemaining(toggle -> {
             if(toggle.getUserData() instanceof String && toggle.getUserData().equals(data)){
