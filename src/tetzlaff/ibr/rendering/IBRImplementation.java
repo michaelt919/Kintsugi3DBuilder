@@ -40,7 +40,7 @@ import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 import tetzlaff.ibr.ViewSet;
-import tetzlaff.ibr.old.IBRSettingsModelImpl;
+import tetzlaff.ibr.app.old.IBRSettingsModelImpl;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.ReadonlyObjectModel;

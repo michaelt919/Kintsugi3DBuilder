@@ -7,7 +7,7 @@ import tetzlaff.ibr.javafx.controllers.scene.lights.RootLightSceneController;
 import tetzlaff.ibr.javafx.models.JavaFXCameraModel;
 import tetzlaff.ibr.javafx.models.JavaFXEnvironmentMapModel;
 import tetzlaff.ibr.javafx.models.JavaFXLightingModel;
-import tetzlaff.ibr.rendering2.ToolModelImp;
+import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
 
 public class RootSceneController {
 
@@ -19,7 +19,7 @@ public class RootSceneController {
     @FXML
     private RootEVSceneController environmentMapController;
 
-    public void init2(JavaFXCameraModel cameraModel, JavaFXLightingModel lightModel, JavaFXEnvironmentMapModel environmentMapModel, ToolModelImp toolModel){
+    public void init2(JavaFXCameraModel cameraModel, JavaFXLightingModel lightModel, JavaFXEnvironmentMapModel environmentMapModel, JavaFXToolSelectionModel toolModel){
         cameraController.init2(cameraModel, toolModel);
         lightsController.init2(lightModel);
         environmentMapController.init2(environmentMapModel);

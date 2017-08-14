@@ -15,13 +15,13 @@ import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.ControllableToolModel;
 import tetzlaff.ibr.IBRLoadingModel;
 import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
 import tetzlaff.ibr.ReadonlyIBRSettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
-import tetzlaff.ibr.rendering2.tools2.ToolBox;
+import tetzlaff.ibr.tools.ToolBox;
+import tetzlaff.ibr.tools.ToolSelectionModel;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
@@ -94,7 +94,7 @@ public class Rendering
 			ReadonlyIBRSettingsModel settingsModel = JavaFXModels.getInstance().getSettingsModel();
 			ReadonlyIBRLoadOptionsModel loadOptionsModel = JavaFXModels.getInstance().getLoadOptionsModel();
 			
-			ControllableToolModel toolModel = JavaFXModels.getInstance().getToolModel();
+			ToolSelectionModel toolModel = JavaFXModels.getInstance().getToolModel();
 
 			ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
 

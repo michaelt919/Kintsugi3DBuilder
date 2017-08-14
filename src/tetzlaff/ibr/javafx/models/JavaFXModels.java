@@ -1,6 +1,5 @@
 package tetzlaff.ibr.javafx.models;//Created by alexk on 7/19/2017.
 
-import tetzlaff.ibr.rendering2.ToolModelImp;
 
 public class JavaFXModels 
 {
@@ -9,7 +8,7 @@ public class JavaFXModels
     private final JavaFXLightingModel lightModel;
     private final JavaFXLoadOptionsModel loadOptionsModel;
     private final JavaFXSettingsModel settingsModel;
-    private final ToolModelImp toolModel;
+    private final JavaFXToolSelectionModel toolModel;
     
     private static JavaFXModels instance = new JavaFXModels();
     
@@ -21,7 +20,7 @@ public class JavaFXModels
     private JavaFXModels()
     {
         cameraModel = new JavaFXCameraModel();
-        toolModel = new ToolModelImp();
+        toolModel = new JavaFXToolSelectionModel();
         environmentMapModel = new JavaFXEnvironmentMapModel();
         lightModel = new JavaFXLightingModel(environmentMapModel);
         loadOptionsModel = new JavaFXLoadOptionsModel();
@@ -38,7 +37,7 @@ public class JavaFXModels
         return lightModel;
     }
 
-    public ToolModelImp getToolModel()
+    public JavaFXToolSelectionModel getToolModel()
     {
         return toolModel;
     }

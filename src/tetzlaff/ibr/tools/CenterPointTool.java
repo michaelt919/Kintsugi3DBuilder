@@ -1,18 +1,17 @@
-package tetzlaff.ibr.rendering2.tools2;//Created by alexk on 8/8/2017.
+package tetzlaff.ibr.tools;//Created by alexk on 8/8/2017.
 
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
-import tetzlaff.ibr.ControllableToolModel;
 import tetzlaff.mvc.models.ExtendedCameraModel;
 import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.mvc.models.impl.EnvironmentMapModelBase;
 import tetzlaff.mvc.models.impl.LightingModelBase;
 
 class CenterPointTool extends AbstractTool{
-    private ControllableToolModel toolModel;
+    private ToolSelectionModel toolModel;
     public CenterPointTool(ExtendedCameraModel cameraModel, EnvironmentMapModelBase environmentMapModel, LightingModelBase lightModel, 
-    		ControllableToolModel toolModel, SceneViewportModel sceneViewportModel) 
+    		ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel) 
     {
         super(cameraModel, environmentMapModel, lightModel, sceneViewportModel);
         this.toolModel = toolModel;

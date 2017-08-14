@@ -16,8 +16,8 @@ import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import tetzlaff.ibr.javafx.models.JavaFXCameraModel;
-import tetzlaff.ibr.rendering2.ToolModelImp;
-import tetzlaff.ibr.rendering2.tools2.ToolBox;
+import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
+import tetzlaff.ibr.tools.ToolBox;
 
 import com.sun.javafx.collections.ObservableListWrapper;
 
@@ -62,7 +62,7 @@ public class RootCameraSceneController implements Initializable {
 
     }
 
-    public void init2(JavaFXCameraModel cameraModel, ToolModelImp toolModel){
+    public void init2(JavaFXCameraModel cameraModel, JavaFXToolSelectionModel toolModel){
 
         System.out.println("Cam in!");
 
