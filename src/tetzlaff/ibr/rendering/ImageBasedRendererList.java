@@ -12,8 +12,8 @@ import tetzlaff.gl.interactive.InteractiveRenderableList;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.LoadingMonitor;
-import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
-import tetzlaff.ibr.ReadonlyIBRSettingsModel;
+import tetzlaff.ibr.ReadonlyLoadOptionsModel;
+import tetzlaff.ibr.ReadonlySettingsModel;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
 import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.ReadonlyObjectModel;
@@ -34,7 +34,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 	private ReadonlyObjectModel objectModel;
 	private ReadonlyCameraModel cameraModel;
 	private ReadonlyLightingModel lightingModel;
-	private ReadonlyIBRSettingsModel settingsModel;
+	private ReadonlySettingsModel settingsModel;
 	
 	public ImageBasedRendererList(ContextType context, Program<ContextType> program) 
 	{
@@ -60,7 +60,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 	}
 
 	@Override
-	public void loadFromVSETFile(String id, File vsetFile, ReadonlyIBRLoadOptionsModel loadOptions) throws IOException
+	public void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions) throws IOException
 	{
 		// id = vsetFile.getPath()
 		
@@ -121,7 +121,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 	}
 	
 	@Override
-	public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, ReadonlyIBRLoadOptionsModel loadOptions) throws IOException
+	public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, ReadonlyLoadOptionsModel loadOptions) throws IOException
 	{
 		IBRRenderable<ContextType> newItem = 
 			new IBRImplementation<ContextType>(id, context, this.getProgram(),
@@ -259,7 +259,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 	}
 
 	@Override
-	public void setSettingsModel(ReadonlyIBRSettingsModel settingsModel) 
+	public void setSettingsModel(ReadonlySettingsModel settingsModel) 
 	{
 		this.settingsModel = settingsModel;
 		for (IBRRenderable<?> renderable : renderableList)

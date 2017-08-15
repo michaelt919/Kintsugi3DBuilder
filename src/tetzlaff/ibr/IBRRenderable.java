@@ -24,8 +24,8 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
 	
 	SceneViewportModel getSceneViewportModel();
 	
-	ReadonlyIBRSettingsModel getSettingsModel();
-	void setSettingsModel(ReadonlyIBRSettingsModel ibrSettingsModel);
+	ReadonlySettingsModel getSettingsModel();
+	void setSettingsModel(ReadonlySettingsModel ibrSettingsModel);
 	
 	void setProgram(Program<ContextType> program);
 	void reloadHelperShaders();

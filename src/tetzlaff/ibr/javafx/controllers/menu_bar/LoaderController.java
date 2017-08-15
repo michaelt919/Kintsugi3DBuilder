@@ -19,7 +19,7 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import tetzlaff.ibr.IBRLoadingModel;
+import tetzlaff.ibr.LoadingModel;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 
 public class LoaderController implements Initializable
@@ -105,7 +105,7 @@ public class LoaderController implements Initializable
             //ok!
 
             try {
-                IBRLoadingModel.getInstance().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir);
+                LoadingModel.getInstance().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir);
             } catch (IOException e) {
                 System.out.println("files were malformed");
             }

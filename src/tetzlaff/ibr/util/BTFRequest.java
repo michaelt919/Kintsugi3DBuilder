@@ -12,7 +12,7 @@ import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.LoadingMonitor;
-import tetzlaff.ibr.ReadonlyIBRSettingsModel;
+import tetzlaff.ibr.ReadonlySettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
 
 public class BTFRequest implements IBRRequest
@@ -20,10 +20,10 @@ public class BTFRequest implements IBRRequest
 	private int width;
 	private int height;
 	private File exportPath;
-	private ReadonlyIBRSettingsModel settings;
+	private ReadonlySettingsModel settings;
 	private Vector3 lightColor;
 	
-	public BTFRequest(int width, int height, File exportPath, ReadonlyIBRSettingsModel settings, Vector3 lightColor)
+	public BTFRequest(int width, int height, File exportPath, ReadonlySettingsModel settings, Vector3 lightColor)
 	{
 		this.width = width;
 		this.height = height;

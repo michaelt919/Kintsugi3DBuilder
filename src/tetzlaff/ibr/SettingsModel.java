@@ -2,7 +2,7 @@ package tetzlaff.ibr;//Created by alexk on 7/31/2017.
 
 import tetzlaff.util.ShadingParameterMode;
 
-public interface IBRSettingsModel extends ReadonlyIBRSettingsModel
+public interface SettingsModel extends ReadonlySettingsModel
 {
     void setGamma(float gamma);
     void setWeightExponent(float weightExponent);

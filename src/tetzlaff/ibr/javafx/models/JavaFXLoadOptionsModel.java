@@ -4,9 +4,9 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
+import tetzlaff.ibr.ReadonlyLoadOptionsModel;
 
-public class JavaFXLoadOptionsModel implements ReadonlyIBRLoadOptionsModel {
+public class JavaFXLoadOptionsModel implements ReadonlyLoadOptionsModel {
     public final BooleanProperty colorImages = new SimpleBooleanProperty(true);
     public final BooleanProperty mipmaps = new SimpleBooleanProperty(true);
     public final BooleanProperty compression = new SimpleBooleanProperty(true);

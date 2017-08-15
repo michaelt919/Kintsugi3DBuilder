@@ -1,6 +1,6 @@
 package tetzlaff.ibr;//Created by alexk on 7/31/2017.
 
-public interface ReadonlyIBRLoadOptionsModel 
+public interface ReadonlyLoadOptionsModel 
 {
     public boolean areColorImagesRequested();
     public boolean areMipmapsRequested();

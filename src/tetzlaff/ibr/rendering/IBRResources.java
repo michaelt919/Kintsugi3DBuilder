@@ -32,7 +32,7 @@ import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.LoadingMonitor;
-import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
+import tetzlaff.ibr.ReadonlyLoadOptionsModel;
 import tetzlaff.ibr.ViewSet;
 
 public class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
@@ -109,7 +109,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		private ViewSet viewSet;
 		private VertexGeometry geometry;
 		private File imageDirectoryOverride;
-		private ReadonlyIBRLoadOptionsModel loadOptions;
+		private ReadonlyLoadOptionsModel loadOptions;
 		private LoadingMonitor loadingMonitor;
 		
 		private float gamma;
@@ -121,7 +121,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 			this.context = context;
 		}
 		
-		public Builder<ContextType> setLoadOptions(ReadonlyIBRLoadOptionsModel loadOptions)
+		public Builder<ContextType> setLoadOptions(ReadonlyLoadOptionsModel loadOptions)
 		{
 			this.loadOptions = loadOptions;
 			return this;
@@ -210,7 +210,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 		return new IBRResources.Builder<ContextType>(context);
 	}
 	
-	private IBRResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, ReadonlyIBRLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor) throws IOException
+	private IBRResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, ReadonlyLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor) throws IOException
 	{
 		this.context = context;
 		this.viewSet = viewSet;

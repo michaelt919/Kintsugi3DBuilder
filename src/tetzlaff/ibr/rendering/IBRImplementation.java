@@ -38,7 +38,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.LoadingMonitor;
-import tetzlaff.ibr.ReadonlyIBRSettingsModel;
+import tetzlaff.ibr.ReadonlySettingsModel;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.app.old.IBRSettingsModelImpl;
 import tetzlaff.mvc.models.ReadonlyCameraModel;
@@ -55,7 +55,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	private Program<ContextType> shadowProgram;
 	private LoadingMonitor loadingMonitor;
 	private boolean suppressErrors = false;
-	private ReadonlyIBRSettingsModel settings;
+	private ReadonlySettingsModel settings;
 
 	private IBRResources.Builder<ContextType> resourceBuilder;
 	private IBRResources<ContextType> resources;
@@ -1313,13 +1313,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 	}
 
 	@Override
-	public ReadonlyIBRSettingsModel getSettingsModel()
+	public ReadonlySettingsModel getSettingsModel()
 	{
 		return this.settings;
 	}
 
 	@Override
-	public void setSettingsModel(ReadonlyIBRSettingsModel settings) {
+	public void setSettingsModel(ReadonlySettingsModel settings) {
 		this.settings = settings;
 	}
 	
