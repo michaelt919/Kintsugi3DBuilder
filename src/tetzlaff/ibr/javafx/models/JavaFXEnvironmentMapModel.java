@@ -8,19 +8,19 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.javafx.controllers.scene.environment_map.EVSetting;
+import tetzlaff.ibr.javafx.controllers.scene.environment_map.EnvironmentSettings;
 import tetzlaff.models.ReadonlyEnvironmentMapModel;
 
 public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel 
 {
-    private ObservableValue<EVSetting> selected;
+    private ObservableValue<EnvironmentSettings> selected;
     
     public JavaFXEnvironmentMapModel() 
     {
         super();
     }
 
-    public void setSelected(ObservableValue<EVSetting> selected)
+    public void setSelected(ObservableValue<EnvironmentSettings> selected)
     {
         this.selected = selected;
         this.selected.addListener(settingChange);
@@ -36,14 +36,14 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
     {
         if(selectedExists())
         {
-            if(selected.getValue().isEvUseColor())
+            if(selected.getValue().isEnvUseColorEnabled())
             {
-                Color color = selected.getValue().getEvColor();
-                return new Vector3((float) color.getRed(),(float) color.getBlue(),(float) color.getGreen()).times((float) selected.getValue().getEvColorIntensity());
+                Color color = selected.getValue().getEnvColor();
+                return new Vector3((float) color.getRed(),(float) color.getBlue(),(float) color.getGreen()).times((float) selected.getValue().getEnvColorIntensity());
             }
             else
             {
-                if(selected.getValue().isEvUseImage())
+                if(selected.getValue().isEnvUseImageEnabled())
                 {
                     return new Vector3(1f);
                 }
@@ -56,7 +56,7 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
         else return Vector3.ZERO;
     }
 
-    private final ChangeListener<File> evFileChange = (observable, oldFile, newFile) ->
+    private final ChangeListener<File> envFileChange = (observable, oldFile, newFile) ->
     {
     	// TODO NEWUI don't reload if oldFile == newFile
         if(newFile != null)
@@ -73,22 +73,22 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
         	
             if(selectedExists()) 
         	{
-            	selected.getValue().setFirstEVLoaded(true);
+            	selected.getValue().setFirstEnvLoaded(true);
         	}
         }
     };
 
-    private final ChangeListener<EVSetting> settingChange = (observable, oldSetting, newSetting) ->
+    private final ChangeListener<EnvironmentSettings> settingChange = (observable, oldSetting, newSetting) ->
     {
         if (newSetting != null) 
         {
-            newSetting.evImageFileProperty().addListener(evFileChange);
-            evFileChange.changed(null, null, newSetting.getEvImageFile());
+            newSetting.envImageFileProperty().addListener(envFileChange);
+            envFileChange.changed(null, null, newSetting.getEnvImageFile());
         }
         
         if (oldSetting != null) 
         {
-            oldSetting.evImageFileProperty().removeListener(evFileChange);
+            oldSetting.envImageFileProperty().removeListener(envFileChange);
         }
     };
 
@@ -97,7 +97,7 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
     {
         if(selectedExists())
         {
-            return selected.getValue().isEvUseImage();
+            return selected.getValue().isEnvUseImageEnabled();
         }
         else 
     	{
@@ -110,7 +110,7 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
     {
         if(selectedExists())
         {
-            double azmuth = selected.getValue().getEvRotation();
+            double azmuth = selected.getValue().getEnvRotation();
             return Matrix4.rotateY(Math.toRadians(azmuth));
         }
         else 

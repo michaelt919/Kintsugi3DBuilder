@@ -2,31 +2,31 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:controller="tetzlaff.ibr.javafx.controllers.scene.environment_map.RootEVSceneController" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:controller="tetzlaff.ibr.javafx.controllers.scene.environment_map.RootEnvironmentSceneController" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
     <TitledPane animated="false" text="Environment maps" VBox.vgrow="ALWAYS">
         <HBox prefHeight="0.0">
-            <ListView fx:id="eVListView" HBox.hgrow="ALWAYS" />
+            <ListView fx:id="environmentListView" HBox.hgrow="ALWAYS" />
             <Separator orientation="VERTICAL" />
             <VBox fx:id="listControls" alignment="CENTER_LEFT" spacing="5.0">
-                <Button onAction="#newEVButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="New">
+                <Button onAction="#newEnvButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="New">
                     <tooltip>
                         <Tooltip text="Create a new environment map." />
                     </tooltip>
                 </Button>
-                <Button onAction="#saveEVButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Save">
+                <Button onAction="#saveEnvButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Save">
                     <tooltip>
                         <Tooltip text="Save the selected environment map to the library." />
                     </tooltip>
                 </Button>
-                <Button onAction="#renameEVButton" fx:id="theRenameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Rename" />
+                <Button onAction="#renameEnvButton" fx:id="theRenameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Rename" />
                 <Button onAction="#moveUPButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Move UP" />
                 <Button onAction="#moveDOWNButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Move DOWN" />
-                <Button onAction="#lockEVButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Lock/Unlock">
+                <Button onAction="#lockEnvButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Lock/Unlock">
                     <tooltip>
                         <Tooltip text="Lock the settings for the selected environment map so they cannot be changed." />
                     </tooltip>
                 </Button>
-                <Button onAction="#deleteEVButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Delete">
+                <Button onAction="#deleteEnvButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Delete">
                     <tooltip>
                         <Tooltip text="Delete selected environment map." />
                     </tooltip>

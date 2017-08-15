@@ -13,8 +13,8 @@ public class JavaFXLightingModel extends LightingModelBase {
 
     private JavaFXLightInstanceModel[] lightInstanceModels = new JavaFXLightInstanceModel[LightGroupSetting.LIGHT_LIMIT];
 
-    public JavaFXLightingModel(JavaFXEnvironmentMapModel ev) {
-        super(ev);
+    public JavaFXLightingModel(JavaFXEnvironmentMapModel envModel) {
+        super(envModel);
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
             lightInstanceModels[i] = new JavaFXLightInstanceModel();
 

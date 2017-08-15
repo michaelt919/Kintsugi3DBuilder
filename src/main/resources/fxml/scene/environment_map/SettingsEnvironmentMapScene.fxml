@@ -16,12 +16,12 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<VBox fx:id="root" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.environment_map.SettingsEVSceneController">
+<VBox fx:id="root" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.environment_map.SettingsEnvironmentSceneController">
     <TitledPane animated="false" text="Environment map">
         <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <CheckBox fx:id="evUseImageCheckBox" text="Use image" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
             <Text fx:id="evFileNameText" text="Filename" textAlignment="CENTER" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
-            <Button onAction="#pickEVImageFile" text="Choose file" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+            <Button onAction="#pickEnvImageFile" text="Choose file" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
             <Separator GridPane.columnSpan="2" GridPane.rowIndex="3" />
             <Text text="Color:" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
             <ColorPicker fx:id="evColorPicker" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
