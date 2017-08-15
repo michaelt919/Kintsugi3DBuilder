@@ -152,6 +152,12 @@ public class IBRelight
 		{
 			return hardcodedMode ? hardcodedLightingModel.getEnvironmentMapMatrix() : normalLightingModel.getEnvironmentMapMatrix();
 		}
+
+		@Override
+		public void setEnvironmentMapMatrix(Matrix4 environmentMapMatrix) 
+		{
+			throw new UnsupportedOperationException();
+		}
 	}
 	
 	public static void runProgram()

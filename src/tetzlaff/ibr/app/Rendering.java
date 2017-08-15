@@ -29,10 +29,10 @@ import tetzlaff.mvc.controllers.impl.FirstPersonController;
 import tetzlaff.mvc.controllers.impl.TrackballController;
 import tetzlaff.mvc.models.CameraModel;
 import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.mvc.models.ReadonlyEnvironmentMapModel;
 import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.SceneViewportModel;
 import tetzlaff.mvc.models.impl.BasicCameraModel;
-import tetzlaff.mvc.models.impl.ReadonlyEnvironmentMapModel;
 
 public class Rendering
 {

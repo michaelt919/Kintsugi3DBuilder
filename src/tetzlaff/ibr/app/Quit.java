@@ -7,26 +7,38 @@ import javafx.event.EventHandler;
 import javafx.stage.WindowEvent;
 
 
-public class Quit implements QuitListener, EventHandler<WindowEvent> {
+public class Quit implements QuitListener, EventHandler<WindowEvent> 
+{
     private List<QuitListener> quitTriggers = new LinkedList<>();
-    public void addCloseTrigger(QuitListener trigger){
+    
+    public void addCloseTrigger(QuitListener trigger)
+    {
         quitTriggers.add(trigger);
     }
+    
     @Override
-    public void handle(WindowEvent event) {
+    public void handle(WindowEvent event) 
+    {
         this.applicationQuitting();
     }
+    
     @Override
-    public void applicationQuitting() {
-        for(QuitListener trigger : quitTriggers){
+    public void applicationQuitting() 
+    {
+        for(QuitListener trigger : quitTriggers)
+        {
             trigger.applicationQuitting();
         }
     }
 
-    private Quit() {
+    private Quit() 
+    {
     }
+    
     private static Quit instance = new Quit();
-    public static Quit getInstance() {
+    
+    public static Quit getInstance() 
+    {
         return instance;
     }
 }

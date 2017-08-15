@@ -10,7 +10,7 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.LoadingModel;
 import tetzlaff.ibr.javafx.controllers.scene.environment_map.EVSetting;
-import tetzlaff.mvc.models.impl.ReadonlyEnvironmentMapModel;
+import tetzlaff.mvc.models.ReadonlyEnvironmentMapModel;
 
 public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel {
     public JavaFXEnvironmentMapModel() {
