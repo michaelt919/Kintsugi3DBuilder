@@ -202,4 +202,10 @@ public class HardcodedLightingModel implements CameraBasedLightingModel
 	{
 		return this.getLightMatrix(0);
 	}
+
+	@Override
+	public void setEnvironmentMapMatrix(Matrix4 environmentMapMatrix) 
+	{
+		// Ignore
+	}
 }

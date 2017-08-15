@@ -158,4 +158,10 @@ public class TrackballLightingModel extends LightingModelBase implements Lightin
 	{
 		return getLightMatrix(0);
 	}
+
+	@Override
+	public void setEnvironmentMapMatrix(Matrix4 environmentMapMatrix) 
+	{
+		this.setLightMatrix(0, environmentMapMatrix);
+	}
 }

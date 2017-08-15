@@ -5,9 +5,9 @@ import tetzlaff.gl.window.MouseButtonState;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.WindowSize;
 import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.mvc.models.ReadonlyEnvironmentMapModel;
 import tetzlaff.mvc.models.ReadonlyLightingModel;
 import tetzlaff.mvc.models.SceneViewportModel;
-import tetzlaff.mvc.models.impl.ReadonlyEnvironmentMapModel;
 
 class DollyTool extends AbstractTool {
     DollyTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, SceneViewportModel sceneViewportModel) {
