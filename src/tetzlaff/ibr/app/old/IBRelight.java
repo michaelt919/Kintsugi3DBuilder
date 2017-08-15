@@ -241,17 +241,18 @@ public class IBRelight
 	        // This is the object that loads the ULF models and handles drawing them.  This object abstracts
 	        // the underlying data and provides ways of triggering events via the trackball and the user
 	        // interface later when it is passed to the ULFUserInterface object.
-	        ImageBasedRendererList<OpenGLContext> model = new ImageBasedRendererList<OpenGLContext>(context, program);
-	        model.setObjectModel(() -> Matrix4.IDENTITY);
-	        model.setCameraModel(cameraModel);
-	        model.setLightingModel(metaLightingModel);
+	        ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
+	        rendererList.setObjectModel(() -> Matrix4.IDENTITY);
+	        rendererList.setCameraModel(cameraModel);
+	        rendererList.setLightingModel(metaLightingModel);
 	        
-	        LoadingModel.getInstance().setLoadingHandler(model);
+	        LoadingModel loadingModel = new LoadingModel();
+	        loadingModel.setLoadingHandler(rendererList);
 	    	
 	        HardcodedLightingModel hardcodedLightController = 
 	    			new HardcodedLightingModel(
-						() -> model.getSelectedItem().getActiveViewSet(),
-						() -> model.getSelectedItem().getActiveGeometry(),
+						() -> rendererList.getSelectedItem().getActiveViewSet(),
+						() -> rendererList.getSelectedItem().getActiveGeometry(),
 						hardcodedLightTrackballModel);
 	    	metaLightingModel.hardcodedLightingModel = hardcodedLightController;
 	        
@@ -269,13 +270,13 @@ public class IBRelight
 		        				.addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
 								.createProgram();
 			        	
-			        	if (model.getProgram() != null)
+			        	if (rendererList.getProgram() != null)
 		        		{
-		        			model.getProgram().close();
+		        			rendererList.getProgram().close();
 		        		}
-			        	model.setProgram(newProgram);
+			        	rendererList.setProgram(newProgram);
 			        	
-			        	model.getSelectedItem().reloadHelperShaders();
+			        	rendererList.getSelectedItem().reloadHelperShaders();
 					} 
 		        	catch (Exception e) 
 		        	{
@@ -296,15 +297,15 @@ public class IBRelight
 	        {
 	        	try
 	        	{
-		        	if (win == window && model.getSelectedItem() != null)
+		        	if (win == window && rendererList.getSelectedItem() != null)
 		        	{
 		        		CursorPosition pos = window.getCursorPosition();
 		        		WindowSize size = window.getWindowSize();
 		        		double x = pos.x / size.width;
 		        		double y = pos.y / size.height;
 
-		        		System.out.println(model.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y) + "\t" + 
-		        				model.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y));
+		        		System.out.println(rendererList.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y) + "\t" + 
+		        				rendererList.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y));
 		        	}
 	        	}
 	        	catch (Exception e)
@@ -315,7 +316,7 @@ public class IBRelight
 	
 	    	// Create a new application to run our event loop and give it the GLFWWindow for polling
 	    	// of events and the OpenGL context.  The ULFRendererList provides the renderable.
-	        InteractiveApplication app = InteractiveGraphics.createApplication(window, context, model.getRenderable());
+	        InteractiveApplication app = InteractiveGraphics.createApplication(window, context, rendererList.getRenderable());
 	        app.addRefreshable(new Refreshable() 
 	        {
 				@Override
@@ -346,7 +347,7 @@ public class IBRelight
 	//        // The Java process owns the native menu bar and won't relinquish it to Qt
 	//        QApplication.setAttribute(ApplicationAttribute.AA_DontUseNativeMenuBar);
 	        
-	        IBRRequestQueue<OpenGLContext> requestQueue = new IBRRequestQueue<OpenGLContext>(context, model);
+	        IBRRequestQueue<OpenGLContext> requestQueue = new IBRRequestQueue<OpenGLContext>(context, rendererList);
 	        
 	        app.addRefreshable(new Refreshable()
 	        {
@@ -368,15 +369,21 @@ public class IBRelight
 	        });
 	        
 	        SettingsModel settingsModel = new IBRSettingsModelImpl();
-	        model.setSettingsModel(settingsModel);
+	        rendererList.setSettingsModel(settingsModel);
 	        
 	        // Create a user interface that examines the ULFRendererList for renderer settings and
 	        // selecting between different loaded models.
-	        IBRelightConfigFrame gui = new IBRelightConfigFrame(model, lightController.getLightingModel(), settingsModel, (request) -> requestQueue.addRequest(request), window.isHighDPI());
+	        IBRelightConfigFrame gui = new IBRelightConfigFrame(
+	        		rendererList, 
+	        		lightController.getLightingModel(), 
+	        		settingsModel, 
+	        		loadingModel,
+	        		(request) -> requestQueue.addRequest(request), 
+	        		window.isHighDPI());
 	        gui.showGUI();        
 	        //app.addPollable(gui); // Needed for Qt UI
 
-	        LoadingModel.getInstance().setLoadingMonitor(gui.getLoadingMonitor());
+	        loadingModel.setLoadingMonitor(gui.getLoadingMonitor());
 	        requestQueue.setLoadingMonitor(gui.getLoadingMonitor());
 	        
 	    	// Make everything visible and start the event loop

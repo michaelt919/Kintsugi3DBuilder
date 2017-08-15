@@ -52,8 +52,6 @@ public class JavaFXApp extends Application{
         MenubarController menuBarController = menuBarFXMLLoader.getController();
 //        LibraryController libraryController = libraryFXMLLoader.getController();
 
-
-
         //load stages
         menuBarStage.setTitle("IBR2 Menu Bar");
         menuBarStage.setScene(new Scene(menuBarRoot));
