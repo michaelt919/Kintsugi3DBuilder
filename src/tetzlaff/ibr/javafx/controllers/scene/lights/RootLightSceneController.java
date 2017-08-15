@@ -36,7 +36,7 @@ public class RootLightSceneController implements Initializable {
 
 
     private final ObservableList<LightGroupSetting> lightGroups = new ObservableListWrapper<>(new ArrayList<>());
-    private final Property<SubLightSetting> selectedLight = new SimpleObjectProperty<>();
+    private final Property<LightInstanceSetting> selectedLight = new SimpleObjectProperty<>();
     private int lastSelectedIndex = -1;
     @SuppressWarnings("rawtypes")
 	@Override
@@ -56,7 +56,7 @@ public class RootLightSceneController implements Initializable {
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
             final Integer tempFinalInt = i;
 
-            TableColumn<LightGroupSetting, SubLightSetting> newCol = new TableColumn<>("L" + (tempFinalInt+1));
+            TableColumn<LightGroupSetting, LightInstanceSetting> newCol = new TableColumn<>("L" + (tempFinalInt+1));
 
             newCol.setCellValueFactory(param -> param.getValue().lightListProperty().valueAt(tempFinalInt));
 
@@ -78,8 +78,8 @@ public class RootLightSceneController implements Initializable {
                     assert c.getAddedSize() == 1;
                     TablePosition<?,?> tb = c.getAddedSubList().get(0);
                     ObservableValue<?> selected = tb.getTableColumn().getCellObservableValue(tb.getRow());
-                    if(selected != null && selected.getValue() instanceof SubLightSetting){
-                            selectedLight.setValue((SubLightSetting) selected.getValue());
+                    if(selected != null && selected.getValue() instanceof LightInstanceSetting){
+                            selectedLight.setValue((LightInstanceSetting) selected.getValue());
                             lastSelectedIndex = tb.getColumn()-1;
                         }
                         else {

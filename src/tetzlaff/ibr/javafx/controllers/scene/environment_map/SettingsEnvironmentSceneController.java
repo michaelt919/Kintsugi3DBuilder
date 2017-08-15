@@ -25,19 +25,7 @@ import javafx.util.converter.DoubleStringConverter;
 import tetzlaff.ibr.javafx.util.SafeNumberStringConverter;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 
-public class SettingsEVSceneController implements Initializable{
-// Boolean evUseImage
-// Boolean evUseColor
-// Boolean bpUseImage
-// Boolean bpUseColor
-// Boolean imagePathsRelative
-// String evImagePath
-// String bpImagePath
-// Double evColorIntensity
-// Double evRotation
-// Color evColor
-// Color bpColor
-// String name
+public class SettingsEnvironmentSceneController implements Initializable{
 
     @FXML VBox root;
 
@@ -57,11 +45,18 @@ public class SettingsEVSceneController implements Initializable{
     @FXML ImageView evImageView;
     @FXML ImageView bpImageView;
 
-    private DoubleProperty trueEVColorIntes = new SimpleDoubleProperty();
+    private DoubleProperty trueEnvColorIntes = new SimpleDoubleProperty();
 
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
 
-    public ChangeListener<EVSetting> changeListener =
+    //Files
+    private Property<File> localEnvImageFile = new SimpleObjectProperty<>();
+    private Property<File> localBPImageFile = new SimpleObjectProperty<>();
+
+    private final FileChooser envImageFileChooser = new FileChooser();
+    private final FileChooser bpImageFileChooser = new FileChooser();
+
+    public ChangeListener<EnvironmentSettings> changeListener =
             (observable, oldValue, newValue) -> {
                 if (oldValue != null) unbind(oldValue);
 
@@ -73,56 +68,49 @@ public class SettingsEVSceneController implements Initializable{
         root.setDisable(value);
     }
 
-    private void bind(EVSetting evSetting){
+    private void bind(EnvironmentSettings envSetting){
 
-        evUseImageCheckBox.selectedProperty().bindBidirectional(evSetting.evUseImageProperty());
-        evUseColorCheckBox.selectedProperty().bindBidirectional(evSetting.evUseColorProperty());
-        bpUseImageCheckBox.selectedProperty().bindBidirectional(evSetting.bpUseImageProperty());
-        bpUseColorCheckBox.selectedProperty().bindBidirectional(evSetting.bpUseColorProperty());
+        evUseImageCheckBox.selectedProperty().bindBidirectional(envSetting.envUseImageProperty());
+        evUseColorCheckBox.selectedProperty().bindBidirectional(envSetting.envUseColorProperty());
+        bpUseImageCheckBox.selectedProperty().bindBidirectional(envSetting.bpUseImageProperty());
+        bpUseColorCheckBox.selectedProperty().bindBidirectional(envSetting.bpUseColorProperty());
 
 //        evColorIntensitySlider.valueProperty().bindBidirectional(evSetting.evColorIntensityProperty());
-        trueEVColorIntes.bindBidirectional(evSetting.evColorIntensityProperty());
+        trueEnvColorIntes.bindBidirectional(envSetting.envColorIntensityProperty());
 
-        evRotationSlider.valueProperty().bindBidirectional(evSetting.evRotationProperty());
-        evColorIntensityTextField.textProperty().bindBidirectional(evSetting.evColorIntensityProperty(), n);
-        evRotationTextField.textProperty().bindBidirectional(evSetting.evRotationProperty(), n);
-        evColorPicker.valueProperty().bindBidirectional(evSetting.evColorProperty());
-        bpColorPicker.valueProperty().bindBidirectional(evSetting.bpColorProperty());
+        evRotationSlider.valueProperty().bindBidirectional(envSetting.envRotationProperty());
+        evColorIntensityTextField.textProperty().bindBidirectional(envSetting.envColorIntensityProperty(), n);
+        evRotationTextField.textProperty().bindBidirectional(envSetting.envRotationProperty(), n);
+        evColorPicker.valueProperty().bindBidirectional(envSetting.envColorProperty());
+        bpColorPicker.valueProperty().bindBidirectional(envSetting.bpColorProperty());
 
-        localEVImageFile.bindBidirectional(evSetting.evImageFileProperty());
-        localBPImageFile.bindBidirectional(evSetting.bpImageFileProperty());
+        localEnvImageFile.bindBidirectional(envSetting.envImageFileProperty());
+        localBPImageFile.bindBidirectional(envSetting.bpImageFileProperty());
 
 
-        evUseImageCheckBox.disableProperty().bind(evSetting.firstEVLoadedProperty().not());
+        evUseImageCheckBox.disableProperty().bind(envSetting.firstEnvLoadedProperty().not());
     }
 
-    private void unbind(EVSetting evSetting){
+    private void unbind(EnvironmentSettings evSetting){
 
-        evUseImageCheckBox.selectedProperty().unbindBidirectional(evSetting.evUseImageProperty());
-        evUseColorCheckBox.selectedProperty().unbindBidirectional(evSetting.evUseColorProperty());
+        evUseImageCheckBox.selectedProperty().unbindBidirectional(evSetting.envUseImageProperty());
+        evUseColorCheckBox.selectedProperty().unbindBidirectional(evSetting.envUseColorProperty());
         bpUseImageCheckBox.selectedProperty().unbindBidirectional(evSetting.bpUseImageProperty());
         bpUseColorCheckBox.selectedProperty().unbindBidirectional(evSetting.bpUseColorProperty());
 
 //        evColorIntensitySlider.valueProperty().unbindBidirectional(evSetting.evColorIntensityProperty());
-        trueEVColorIntes.unbindBidirectional(evSetting.evColorIntensityProperty());
+        trueEnvColorIntes.unbindBidirectional(evSetting.envColorIntensityProperty());
 
-        evRotationSlider.valueProperty().unbindBidirectional(evSetting.evRotationProperty());
-        evColorIntensityTextField.textProperty().unbindBidirectional(evSetting.evColorIntensityProperty());
-        evRotationTextField.textProperty().unbindBidirectional(evSetting.evRotationProperty());
-        evColorPicker.valueProperty().unbindBidirectional(evSetting.evColorProperty());
+        evRotationSlider.valueProperty().unbindBidirectional(evSetting.envRotationProperty());
+        evColorIntensityTextField.textProperty().unbindBidirectional(evSetting.envColorIntensityProperty());
+        evRotationTextField.textProperty().unbindBidirectional(evSetting.envRotationProperty());
+        evColorPicker.valueProperty().unbindBidirectional(evSetting.envColorProperty());
         bpColorPicker.valueProperty().unbindBidirectional(evSetting.bpColorProperty());
 
-        localEVImageFile.unbindBidirectional(evSetting.evImageFileProperty());
+        localEnvImageFile.unbindBidirectional(evSetting.envImageFileProperty());
         localBPImageFile.unbindBidirectional(evSetting.bpImageFileProperty());
 
     }
-
-    //Files
-    private Property<File> localEVImageFile = new SimpleObjectProperty<>();
-    private Property<File> localBPImageFile = new SimpleObjectProperty<>();
-
-    private final FileChooser evImageFileChooser = new FileChooser();
-    private final FileChooser bpImageFileChooser = new FileChooser();
 
 
 
@@ -138,18 +126,18 @@ public class SettingsEVSceneController implements Initializable{
                 return super.toString(Math.pow(10,value));
             }
         });
-        StaticUtilities.powerBind(evColorIntensitySlider.valueProperty(), trueEVColorIntes);
+        StaticUtilities.powerBind(evColorIntensitySlider.valueProperty(), trueEnvColorIntes);
 
 
 
 
-        evImageFileChooser.setTitle("Pick file for environment map");
+        envImageFileChooser.setTitle("Pick file for environment map");
         bpImageFileChooser.setTitle("pick file for backplate");
 
-        evImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        envImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         bpImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
-        evImageFileChooser.getExtensionFilters().addAll(
+        envImageFileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("HDR", "*.hdr"),
                 new FileChooser.ExtensionFilter("PNG", "*.png"),
                 new FileChooser.ExtensionFilter("JPG", "*.jpg"),
@@ -163,7 +151,7 @@ public class SettingsEVSceneController implements Initializable{
                 new FileChooser.ExtensionFilter("Other", "*.*")
         );
 
-        localEVImageFile.addListener((observable, oldValue, newValue) -> {
+        localEnvImageFile.addListener((observable, oldValue, newValue) -> {
             if(newValue != null){
                 evFileNameText.setText(newValue.getName());
 
@@ -195,9 +183,9 @@ public class SettingsEVSceneController implements Initializable{
 
     }
 
-    @FXML private void pickEVImageFile(){
-       File newFile = evImageFileChooser.showOpenDialog(root.getScene().getWindow());
-        if(newFile != null) localEVImageFile.setValue(newFile);
+    @FXML private void pickEnvImageFile(){
+       File newFile = envImageFileChooser.showOpenDialog(root.getScene().getWindow());
+        if(newFile != null) localEnvImageFile.setValue(newFile);
     }
     @FXML private void pickBPImageFile(){
         File newFile = bpImageFileChooser.showOpenDialog(root.getScene().getWindow());

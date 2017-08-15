@@ -15,7 +15,7 @@ import org.jdom2.Element;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.misc.XML_Writable;
 
-public class SubLightSetting implements XML_Writable{
+public class LightInstanceSetting implements XML_Writable{
 
     private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
@@ -35,7 +35,7 @@ public class SubLightSetting implements XML_Writable{
         return groupLocked.get();
     }
 
-    public SubLightSetting(
+    public LightInstanceSetting(
             Double xCenter,
             Double yCenter,
             Double zCenter,
@@ -63,8 +63,8 @@ public class SubLightSetting implements XML_Writable{
         this.groupLocked = groupLockedProperty;
     }
 
-    public SubLightSetting duplicate() {
-        return new SubLightSetting(
+    public LightInstanceSetting duplicate() {
+        return new LightInstanceSetting(
                 xCenter.getValue(),
                 yCenter.getValue(),
                 zCenter.getValue(),
@@ -102,8 +102,8 @@ public class SubLightSetting implements XML_Writable{
                 ;
     }
 
-    public static SubLightSetting fromJDOM2Element(Element e, BooleanProperty groupLockedProperty) {
-        return new SubLightSetting(
+    public static LightInstanceSetting fromJDOM2Element(Element e, BooleanProperty groupLockedProperty) {
+        return new LightInstanceSetting(
                 Double.valueOf(e.getAttributeValue("xCenter")),
                 Double.valueOf(e.getAttributeValue("yCenter")),
                 Double.valueOf(e.getAttributeValue("zCenter")),

@@ -17,8 +17,8 @@ import com.sun.javafx.collections.ObservableListWrapper;
 public class LightGroupSetting {
     public final static int LIGHT_LIMIT = 4;
 
-    private final ListProperty<SubLightSetting> lightList = new SimpleListProperty<>(
-            new ObservableListWrapper<SubLightSetting>(
+    private final ListProperty<LightInstanceSetting> lightList = new SimpleListProperty<>(
+            new ObservableListWrapper<LightInstanceSetting>(
                     new ArrayList<>(LIGHT_LIMIT)
             )
     );
@@ -34,7 +34,7 @@ public class LightGroupSetting {
     public void addLight(){
         if(lightList.size() < LIGHT_LIMIT){
             lightList.add(
-                    new SubLightSetting(
+                    new LightInstanceSetting(
                             0.0,
                             0.0,
                             0.0,
@@ -75,11 +75,11 @@ public class LightGroupSetting {
     }
 
 
-    public ObservableList<SubLightSetting> getLightList() {
+    public ObservableList<LightInstanceSetting> getLightList() {
         return lightList.get();
     }
 
-    public ListProperty<SubLightSetting> lightListProperty() {
+    public ListProperty<LightInstanceSetting> lightListProperty() {
         return lightList;
     }
 

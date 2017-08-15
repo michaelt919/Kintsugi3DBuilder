@@ -6,14 +6,14 @@ import javafx.scene.paint.Color;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.lights.LightType;
-import tetzlaff.ibr.javafx.controllers.scene.lights.SubLightSetting;
+import tetzlaff.ibr.javafx.controllers.scene.lights.LightInstanceSetting;
 import tetzlaff.models.LightInstanceModel;
 import tetzlaff.util.OrbitPolarConverter;
 
 public class JavaFXLightInstanceModel implements LightInstanceModel {
 
-    private ObservableValue<SubLightSetting> subLightSettingObservableValue;
-    private final SubLightSetting backup= new SubLightSetting(
+    private ObservableValue<LightInstanceSetting> subLightSettingObservableValue;
+    private final LightInstanceSetting backup= new LightInstanceSetting(
             0.0,
             0.0,
             0.0,
@@ -27,11 +27,11 @@ public class JavaFXLightInstanceModel implements LightInstanceModel {
             Color.BLACK,
             new SimpleBooleanProperty(true));
 
-    public void setSubLightSettingObservableValue(ObservableValue<SubLightSetting> subLightSettingObservableValue){
+    public void setSubLightSettingObservableValue(ObservableValue<LightInstanceSetting> subLightSettingObservableValue){
         this.subLightSettingObservableValue = subLightSettingObservableValue;
     }
 
-    private SubLightSetting cam(){
+    private LightInstanceSetting cam(){
         if(subLightSettingObservableValue == null || subLightSettingObservableValue.getValue() == null){
 //            System.out.println("Using SubLight Backup");
             return backup;

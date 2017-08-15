@@ -20,16 +20,16 @@ import tetzlaff.ibr.javafx.models.JavaFXEnvironmentMapModel;
 
 import com.sun.javafx.collections.ObservableListWrapper;
 
-public class RootEVSceneController implements Initializable {
-    private ObservableList<EVSetting> listOfEVs = new ObservableListWrapper<>(new ArrayList<>());
+public class RootEnvironmentSceneController implements Initializable {
+    private ObservableList<EnvironmentSettings> listOfEnvironments = new ObservableListWrapper<>(new ArrayList<>());
     @FXML
     private VBox settings;
     @FXML
-    private SettingsEVSceneController settingsController;
+    private SettingsEnvironmentSceneController settingsController;
     @FXML
     private VBox listControls;
     @FXML
-    private ListView<EVSetting> eVListView;
+    private ListView<EnvironmentSettings> environmentListView;
     @FXML
     private Button theRenameButton;
 
@@ -37,14 +37,13 @@ public class RootEVSceneController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        //if (settingsController != null) System.out.println("EV controller linked");
-
-        eVListView.setItems(listOfEVs);
+        
+    	environmentListView.setItems(listOfEnvironments);
 
         s().selectedItemProperty().addListener(settingsController.changeListener);
 
         if(useStartingMap) {
-            EVSetting startingMap = new EVSetting(
+            EnvironmentSettings startingMap = new EnvironmentSettings(
                     false,
                     false,
                     false,
@@ -62,7 +61,7 @@ public class RootEVSceneController implements Initializable {
             );
 
 
-            listOfEVs.add(startingMap);
+            listOfEnvironments.add(startingMap);
             s().select(0);
         }
 
@@ -73,16 +72,16 @@ public class RootEVSceneController implements Initializable {
         environmentMapModel.setSelected(s().selectedItemProperty());
     }
 
-    private SelectionModel<EVSetting> s() {
-        return eVListView.getSelectionModel();
+    private SelectionModel<EnvironmentSettings> s() {
+        return environmentListView.getSelectionModel();
     }
 
 
     @FXML
-    private void newEVButton() {
+    private void newEnvButton() {
         if(s().getSelectedItem() == null){
-            listOfEVs.add(
-                    new EVSetting(
+            listOfEnvironments.add(
+                    new EnvironmentSettings(
                             false,
                             false,
                             false,
@@ -94,24 +93,24 @@ public class RootEVSceneController implements Initializable {
                             0.0,
                             Color.BLACK,
                             Color.BLACK,
-                            "New EV",
+                            "New Environment",
                             false,
                             false
                     )
             );
         } else {
-            listOfEVs.add(s().getSelectedItem().duplicate());
-            s().select(listOfEVs.size() - 1);
+            listOfEnvironments.add(s().getSelectedItem().duplicate());
+            s().select(listOfEnvironments.size() - 1);
         }
     }
 
     @FXML
-    private void saveEVButton() {
+    private void saveEnvButton() {
         System.out.println("TODO: saved " + s().getSelectedItem() + " to the library.");
     }
 
     @FXML
-    private void renameEVButton() {
+    private void renameEnvButton() {
         if (useStartingMap && s().getSelectedIndex() == 0) return;
 
         EventHandler<ActionEvent> oldOnAction = theRenameButton.getOnAction();//backup the old on action event for the rename button
@@ -151,7 +150,7 @@ public class RootEVSceneController implements Initializable {
                     n.setDisable(false);
                 });
 
-                eVListView.refresh();
+                environmentListView.refresh();
 
                 settings.setDisable(false);
             }
@@ -185,7 +184,7 @@ public class RootEVSceneController implements Initializable {
         int i = s().getSelectedIndex();
         if(useStartingMap && i == 1)return;
         if (i > 0) {
-            Collections.swap(listOfEVs, i, i - 1);
+            Collections.swap(listOfEnvironments, i, i - 1);
             s().select(i - 1);
         }
     }
@@ -194,25 +193,25 @@ public class RootEVSceneController implements Initializable {
     void moveDOWNButton() {
         int i = s().getSelectedIndex();
         if(useStartingMap && i == 0) return;
-        if (i < listOfEVs.size() - 1) {
-            Collections.swap(listOfEVs, i, i + 1);
+        if (i < listOfEnvironments.size() - 1) {
+            Collections.swap(listOfEnvironments, i, i + 1);
             s().select(i + 1);
         }
     }
 
     @FXML
-    void lockEVButton() {
+    void lockEnvButton() {
         Boolean newValue = !s().getSelectedItem().isLocked();
         s().getSelectedItem().setLocked(newValue);
         settingsController.setDisabled(newValue);
-        eVListView.refresh();
+        environmentListView.refresh();
     }
 
     @FXML
-    void deleteEVButton() {
+    void deleteEnvButton() {
         int i = s().getSelectedIndex();
         if(useStartingMap && i ==0)return;
-        listOfEVs.remove(i);
+        listOfEnvironments.remove(i);
     }
 
 }

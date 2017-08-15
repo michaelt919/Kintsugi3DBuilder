@@ -17,65 +17,65 @@ import org.jdom2.Element;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.misc.XML_Writable;
 
-public class EVSetting implements XML_Writable{
+public class EnvironmentSettings implements XML_Writable{
 
-    private final BooleanProperty evUseImage = new SimpleBooleanProperty();
-    private final BooleanProperty evUseColor = new SimpleBooleanProperty();
+    private final BooleanProperty envUseImage = new SimpleBooleanProperty();
+    private final BooleanProperty envUseColor = new SimpleBooleanProperty();
     private final BooleanProperty bpUseImage = new SimpleBooleanProperty();
     private final BooleanProperty bpUseColor = new SimpleBooleanProperty();
     private final BooleanProperty imagePathsRelative = new SimpleBooleanProperty();
 
-    private final Property<File> evImageFile = new SimpleObjectProperty<>();
+    private final Property<File> envImageFile = new SimpleObjectProperty<>();
     private final Property<File> bpImageFile = new SimpleObjectProperty<>();
 
-    private final DoubleProperty evColorIntensity = StaticUtilities.bound(0, Double.MAX_VALUE, new SimpleDoubleProperty());
-    private final DoubleProperty evRotation = StaticUtilities.wrap(-180, 180, new SimpleDoubleProperty());
-    private final Property<Color> evColor = new SimpleObjectProperty<>();
+    private final DoubleProperty envColorIntensity = StaticUtilities.bound(0, Double.MAX_VALUE, new SimpleDoubleProperty());
+    private final DoubleProperty envRotation = StaticUtilities.wrap(-180, 180, new SimpleDoubleProperty());
+    private final Property<Color> envColor = new SimpleObjectProperty<>();
     private final Property<Color> bpColor = new SimpleObjectProperty<>();
     private final StringProperty name = new SimpleStringProperty();
     private final BooleanProperty locked = new SimpleBooleanProperty();
-    private final BooleanProperty firstEVLoaded = new SimpleBooleanProperty();
+    private final BooleanProperty firstEnvLoaded = new SimpleBooleanProperty();
 
-    public EVSetting(Boolean evUseImage,Boolean evUseColor,Boolean bpUseImage,Boolean bpUseColor,Boolean imagePathsRelative,File evImageFile, File bpImageFile, Double evColorIntensity,Double evRotation,Color evColor,Color bpColor,String name, Boolean locked, Boolean firstEVLoaded) {
-        this.evUseImage.setValue(evUseImage);
-        this.evUseColor.setValue(evUseColor);
+    public EnvironmentSettings(Boolean envUseImage,Boolean envUseColor,Boolean bpUseImage,Boolean bpUseColor,Boolean imagePathsRelative,File envImageFile, File bpImageFile, Double envColorIntensity,Double envRotation,Color envColor,Color bpColor,String name, Boolean locked, Boolean firstEnvLoaded) {
+        this.envUseImage.setValue(envUseImage);
+        this.envUseColor.setValue(envUseColor);
         this.bpUseImage.setValue(bpUseImage);
         this.bpUseColor.setValue(bpUseColor);
         this.imagePathsRelative.setValue(imagePathsRelative);
-        this.evImageFile.setValue(evImageFile);
+        this.envImageFile.setValue(envImageFile);
         this.bpImageFile.setValue(bpImageFile);
-        this.evColorIntensity.setValue(evColorIntensity);
-        this.evRotation.setValue(evRotation);
-        this.evColor.setValue(evColor);
+        this.envColorIntensity.setValue(envColorIntensity);
+        this.envRotation.setValue(envRotation);
+        this.envColor.setValue(envColor);
         this.bpColor.setValue(bpColor);
         this.name.setValue(name);
         this.locked.setValue(locked);
-        this.firstEVLoaded.setValue(firstEVLoaded);
+        this.firstEnvLoaded.setValue(firstEnvLoaded);
     }
 
     @Override
     public Element toJDOM2Element(){
         return new Element("EVSetting")
-                .setAttribute("evUseImage", evUseImage.getValue().toString())
-                .setAttribute("evUseColor", evUseColor.getValue().toString())
+                .setAttribute("evUseImage", envUseImage.getValue().toString())
+                .setAttribute("evUseColor", envUseColor.getValue().toString())
                 .setAttribute("bpUseImage", bpUseImage.getValue().toString())
                 .setAttribute("bpUseColor", bpUseColor.getValue().toString())
                 .setAttribute("imagePathsRelative", imagePathsRelative.getValue().toString())
-                .setAttribute("evImageFile", evImageFile.getValue().getPath())
+                .setAttribute("evImageFile", envImageFile.getValue().getPath())
                 .setAttribute("bpImageFile", bpImageFile.getValue().getPath())
 
-                .setAttribute("evColorIntensity", evColorIntensity.getValue().toString())
-                .setAttribute("evRotation", evRotation.getValue().toString())
-                .setAttribute("evColor", evColor.getValue().toString())
+                .setAttribute("evColorIntensity", envColorIntensity.getValue().toString())
+                .setAttribute("evRotation", envRotation.getValue().toString())
+                .setAttribute("evColor", envColor.getValue().toString())
                 .setAttribute("bpColor", bpColor.getValue().toString())
                 .setAttribute("name", name.getValue())
                 .setAttribute("locked", locked.getValue().toString())
-                .setAttribute("firstEVLoaded", firstEVLoaded.getValue().toString());
+                .setAttribute("firstEVLoaded", firstEnvLoaded.getValue().toString());
     }
 
 
-    public static EVSetting fromJDOM2Element(Element element){
-        return new EVSetting(
+    public static EnvironmentSettings fromJDOM2Element(Element element){
+        return new EnvironmentSettings(
                 Boolean.valueOf(element.getAttributeValue("evUseImage")),
                 Boolean.valueOf(element.getAttributeValue("evUseColor")),
                 Boolean.valueOf(element.getAttributeValue("bpUseImage")),
@@ -103,51 +103,51 @@ public class EVSetting implements XML_Writable{
     }
 
 
-    public EVSetting duplicate(){
-        return new EVSetting(
-                evUseImage.getValue(),
-                evUseColor.getValue(),
+    public EnvironmentSettings duplicate(){
+        return new EnvironmentSettings(
+                envUseImage.getValue(),
+                envUseColor.getValue(),
                 bpUseImage.getValue(),
                 bpUseColor.getValue(),
                 imagePathsRelative.getValue(),
-                evImageFile.getValue(),
+                envImageFile.getValue(),
                 bpImageFile.getValue(),
-                evColorIntensity.getValue(),
-                evRotation.getValue(),
-                evColor.getValue(),
+                envColorIntensity.getValue(),
+                envRotation.getValue(),
+                envColor.getValue(),
                 bpColor.getValue(),
                 (name.getValue() + " copy"),
                 locked.getValue(),
-                firstEVLoaded.getValue()
+                firstEnvLoaded.getValue()
         );
 
     }
 
-    public boolean isEvUseImage() {
-        return evUseImage.get();
+    public boolean isEnvUseImageEnabled() {
+        return envUseImage.get();
     }
 
-    public BooleanProperty evUseImageProperty() {
-        return evUseImage;
+    public BooleanProperty envUseImageProperty() {
+        return envUseImage;
     }
 
-    public void setEvUseImage(boolean evUseImage) {
-        this.evUseImage.set(evUseImage);
+    public void setEnvUseImageEnabled(boolean envUseImage) {
+        this.envUseImage.set(envUseImage);
     }
 
-    public boolean isEvUseColor() {
-        return evUseColor.get();
+    public boolean isEnvUseColorEnabled() {
+        return envUseColor.get();
     }
 
-    public BooleanProperty evUseColorProperty() {
-        return evUseColor;
+    public BooleanProperty envUseColorProperty() {
+        return envUseColor;
     }
 
-    public void setEvUseColor(boolean evUseColor) {
-        this.evUseColor.set(evUseColor);
+    public void setEnvUseColorEnabled(boolean envUseColor) {
+        this.envUseColor.set(envUseColor);
     }
 
-    public boolean isBpUseImage() {
+    public boolean isBpUseImageEnabled() {
         return bpUseImage.get();
     }
 
@@ -155,11 +155,11 @@ public class EVSetting implements XML_Writable{
         return bpUseImage;
     }
 
-    public void setBpUseImage(boolean bpUseImage) {
+    public void setBpUseImageEnabled(boolean bpUseImage) {
         this.bpUseImage.set(bpUseImage);
     }
 
-    public boolean isBpUseColor() {
+    public boolean isBpUseColorEnabled() {
         return bpUseColor.get();
     }
 
@@ -167,11 +167,11 @@ public class EVSetting implements XML_Writable{
         return bpUseColor;
     }
 
-    public void setBpUseColor(boolean bpUseColor) {
+    public void setBpUseColorEnabled(boolean bpUseColor) {
         this.bpUseColor.set(bpUseColor);
     }
 
-    public boolean isImagePathsRelative() {
+    public boolean areImagePathsRelative() {
         return imagePathsRelative.get();
     }
 
@@ -183,16 +183,16 @@ public class EVSetting implements XML_Writable{
         this.imagePathsRelative.set(imagePathsRelative);
     }
 
-    public File getEvImageFile() {
-        return evImageFile.getValue();
+    public File getEnvImageFile() {
+        return envImageFile.getValue();
     }
 
-    public Property<File> evImageFileProperty() {
-        return evImageFile;
+    public Property<File> envImageFileProperty() {
+        return envImageFile;
     }
 
-    public void setEvImageFile(File evImageFile) {
-        this.evImageFile.setValue(evImageFile);
+    public void setEnvImageFile(File envImageFile) {
+        this.envImageFile.setValue(envImageFile);
     }
 
     public File getBpImageFile() {
@@ -207,40 +207,40 @@ public class EVSetting implements XML_Writable{
         this.bpImageFile.setValue(bpImageFile);
     }
 
-    public double getEvColorIntensity() {
-        return evColorIntensity.get();
+    public double getEnvColorIntensity() {
+        return envColorIntensity.get();
     }
 
-    public DoubleProperty evColorIntensityProperty() {
-        return evColorIntensity;
+    public DoubleProperty envColorIntensityProperty() {
+        return envColorIntensity;
     }
 
-    public void setEvColorIntensity(double evColorIntensity) {
-        this.evColorIntensity.set(evColorIntensity);
+    public void setEnvColorIntensity(double envColorIntensity) {
+        this.envColorIntensity.set(envColorIntensity);
     }
 
-    public double getEvRotation() {
-        return evRotation.get();
+    public double getEnvRotation() {
+        return envRotation.get();
     }
 
-    public DoubleProperty evRotationProperty() {
-        return evRotation;
+    public DoubleProperty envRotationProperty() {
+        return envRotation;
     }
 
-    public void setEvRotation(double evRotation) {
-        this.evRotation.set(evRotation);
+    public void setEnvRotation(double envRotation) {
+        this.envRotation.set(envRotation);
     }
 
-    public Color getEvColor() {
-        return evColor.getValue();
+    public Color getEnvColor() {
+        return envColor.getValue();
     }
 
-    public Property<Color> evColorProperty() {
-        return evColor;
+    public Property<Color> envColorProperty() {
+        return envColor;
     }
 
-    public void setEvColor(Color evColor) {
-        this.evColor.setValue(evColor);
+    public void setEnvColor(Color envColor) {
+        this.envColor.setValue(envColor);
     }
 
     public Color getBpColor() {
@@ -279,15 +279,15 @@ public class EVSetting implements XML_Writable{
         this.locked.set(locked);
     }
 
-    public boolean isFirstEVLoaded() {
-        return firstEVLoaded.get();
+    public boolean isFirstEnvLoaded() {
+        return firstEnvLoaded.get();
     }
 
-    public BooleanProperty firstEVLoadedProperty() {
-        return firstEVLoaded;
+    public BooleanProperty firstEnvLoadedProperty() {
+        return firstEnvLoaded;
     }
 
-    public void setFirstEVLoaded(boolean firstEVLoaded) {
-        this.firstEVLoaded.set(firstEVLoaded);
+    public void setFirstEnvLoaded(boolean firstEnvLoaded) {
+        this.firstEnvLoaded.set(firstEnvLoaded);
     }
 }

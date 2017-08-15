@@ -82,7 +82,7 @@ public class SettingsLightSceneController implements Initializable{
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
     private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);
 
-    public final ChangeListener<SubLightSetting> changeListener = (observable, oldValue, newValue) -> {
+    public final ChangeListener<LightInstanceSetting> changeListener = (observable, oldValue, newValue) -> {
         if(oldValue != null) unbind(oldValue);
 
         if(newValue != null){ bind(newValue); setDisabled(newValue.isLocked() | newValue.getGroupLocked()); }
@@ -94,7 +94,7 @@ public class SettingsLightSceneController implements Initializable{
         root.setDisable(disabled);
     }
 
-    private void bind(SubLightSetting c){
+    private void bind(LightInstanceSetting c){
 
         xCenterTextField.textProperty().bindBidirectional(c.xCenterProperty(), n);
         yCenterTextField.textProperty().bindBidirectional(c.yCenterProperty(), n);
@@ -118,7 +118,7 @@ public class SettingsLightSceneController implements Initializable{
 
     }
 
-    private void unbind(SubLightSetting c){
+    private void unbind(LightInstanceSetting c){
 
         xCenterTextField.textProperty().unbindBidirectional(c.xCenterProperty());
         yCenterTextField.textProperty().unbindBidirectional(c.yCenterProperty());

@@ -9,9 +9,9 @@ public abstract class LightingModelBase implements ReadonlyLightingModel
 {
     private ReadonlyEnvironmentMapModel environmentMapModel;
 
-    public LightingModelBase(ReadonlyEnvironmentMapModel ev) 
+    public LightingModelBase(ReadonlyEnvironmentMapModel environmentMapModel) 
     {
-        this.environmentMapModel = ev;
+        this.environmentMapModel = environmentMapModel;
     }
 
     @Override
