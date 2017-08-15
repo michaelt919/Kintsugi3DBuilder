@@ -15,9 +15,9 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
-import tetzlaff.ibr.util.StaticHouse;
-import tetzlaff.util.SafeNumberStringConverter;
-import tetzlaff.util.SafeNumberStringConverterPow10;
+import tetzlaff.ibr.javafx.util.SafeNumberStringConverter;
+import tetzlaff.ibr.javafx.util.SafeNumberStringConverterPow10;
+import tetzlaff.ibr.javafx.util.StaticUtilities;
 
 public class SettingsLightSceneController implements Initializable{
     @Override
@@ -41,21 +41,21 @@ public class SettingsLightSceneController implements Initializable{
         distanceSlider.setLabelFormatter(pow10converter);
 
         intensitySlider.setLabelFormatter(pow10converter);
-        StaticHouse.powerBind(intensitySlider.valueProperty(), trueIntensity);
+        StaticUtilities.powerBind(intensitySlider.valueProperty(), trueIntensity);
 
 
 
 
-        StaticHouse.cleanInput(xCenterTextField);
-        StaticHouse.cleanInput(yCenterTextField);
-        StaticHouse.cleanInput(zCenterTextField);
+        StaticUtilities.cleanInput(xCenterTextField);
+        StaticUtilities.cleanInput(yCenterTextField);
+        StaticUtilities.cleanInput(zCenterTextField);
 
-        StaticHouse.bound(0, Double.MAX_VALUE, distanceTextField);
-        StaticHouse.bound(0, Double.MAX_VALUE, intensityTextField);
+        StaticUtilities.bound(0, Double.MAX_VALUE, distanceTextField);
+        StaticUtilities.bound(0, Double.MAX_VALUE, intensityTextField);
 
 
-        StaticHouse.wrap(-180, 180, azimuthTextField);
-        StaticHouse.bound(-90,90,inclinationTextField);
+        StaticUtilities.wrap(-180, 180, azimuthTextField);
+        StaticUtilities.bound(-90,90,inclinationTextField);
 
     }
 

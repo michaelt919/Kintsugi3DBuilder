@@ -8,7 +8,7 @@ import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import tetzlaff.ibr.IBRSettingsModel;
 import tetzlaff.ibr.RenderingMode;
-import tetzlaff.ibr.util.StaticHouse;
+import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
 
 public class JavaFXSettingsModel implements IBRSettingsModel {
@@ -21,10 +21,10 @@ public class JavaFXSettingsModel implements IBRSettingsModel {
     private final BooleanProperty visibleLights = new SimpleBooleanProperty(true);
     private final BooleanProperty visibleCameraPose = new SimpleBooleanProperty(false);
     private final BooleanProperty visibleSavedCameraPose = new SimpleBooleanProperty(false);
-    private final FloatProperty gamma = StaticHouse.bound(1,5, new SimpleFloatProperty(2.2f));
-    private final FloatProperty weightExponent = StaticHouse.bound(1,100,  new SimpleFloatProperty(16f));
-    private final FloatProperty isotropyFactor = StaticHouse.bound(0, 1,  new SimpleFloatProperty(0.0f));
-    private final FloatProperty occlusionBias = StaticHouse.bound(0,0.1, new SimpleFloatProperty(0.0025f));
+    private final FloatProperty gamma = StaticUtilities.bound(1,5, new SimpleFloatProperty(2.2f));
+    private final FloatProperty weightExponent = StaticUtilities.bound(1,100,  new SimpleFloatProperty(16f));
+    private final FloatProperty isotropyFactor = StaticUtilities.bound(0, 1,  new SimpleFloatProperty(0.0f));
+    private final FloatProperty occlusionBias = StaticUtilities.bound(0,0.1, new SimpleFloatProperty(0.0025f));
     private final ObjectProperty<ShadingParameterMode> weightMode = new SimpleObjectProperty<>(ShadingParameterMode.PER_PIXEL);
     private final ObjectProperty<RenderingMode> renderingType = new SimpleObjectProperty<>(RenderingMode.IMAGE_BASED_RENDERING);
     private final BooleanProperty d3GridEnabled = new SimpleBooleanProperty(false);

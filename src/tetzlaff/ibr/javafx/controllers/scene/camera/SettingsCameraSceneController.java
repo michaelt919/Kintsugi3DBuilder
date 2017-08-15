@@ -16,9 +16,9 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
-import tetzlaff.ibr.util.StaticHouse;
-import tetzlaff.util.SafeNumberStringConverter;
-import tetzlaff.util.SafeNumberStringConverterPow10;
+import tetzlaff.ibr.javafx.util.SafeNumberStringConverter;
+import tetzlaff.ibr.javafx.util.SafeNumberStringConverterPow10;
+import tetzlaff.ibr.javafx.util.StaticUtilities;
 
 public class SettingsCameraSceneController implements Initializable {
 
@@ -58,16 +58,16 @@ private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverter
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        StaticHouse.wrap(-180, 180, azimuthTextField);
-        StaticHouse.bound(-90, 90, inclinationTextField);
-        StaticHouse.wrap(-180, 180, twistTextField);
+        StaticUtilities.wrap(-180, 180, azimuthTextField);
+        StaticUtilities.bound(-90, 90, inclinationTextField);
+        StaticUtilities.wrap(-180, 180, twistTextField);
 
-        StaticHouse.cleanInput(xCenterTextField);
-        StaticHouse.cleanInput(yCenterTextField);
-        StaticHouse.cleanInput(zCenterTextField);
+        StaticUtilities.cleanInput(xCenterTextField);
+        StaticUtilities.cleanInput(yCenterTextField);
+        StaticUtilities.cleanInput(zCenterTextField);
 
-        StaticHouse.cleanInput(fOVTextField);
-        StaticHouse.cleanInput(focalLengthTextField);
+        StaticUtilities.cleanInput(fOVTextField);
+        StaticUtilities.cleanInput(focalLengthTextField);
 
 
 

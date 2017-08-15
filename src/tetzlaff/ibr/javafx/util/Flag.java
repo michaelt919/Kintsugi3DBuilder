@@ -1,4 +1,4 @@
-package tetzlaff.ibr.util;//Created by alexk on 8/1/2017.
+package tetzlaff.ibr.javafx.util;//Created by alexk on 8/1/2017.
 
 
 import javafx.event.EventHandler;

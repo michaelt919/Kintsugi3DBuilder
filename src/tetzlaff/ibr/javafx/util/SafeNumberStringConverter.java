@@ -1,4 +1,4 @@
-package tetzlaff.util;//Created by alexk on 7/23/2017.
+package tetzlaff.ibr.javafx.util;//Created by alexk on 7/23/2017.
 
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;

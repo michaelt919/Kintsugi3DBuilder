@@ -22,8 +22,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.util.converter.DoubleStringConverter;
-import tetzlaff.ibr.util.StaticHouse;
-import tetzlaff.util.SafeNumberStringConverter;
+import tetzlaff.ibr.javafx.util.SafeNumberStringConverter;
+import tetzlaff.ibr.javafx.util.StaticUtilities;
 
 public class SettingsEVSceneController implements Initializable{
 // Boolean evUseImage
@@ -129,8 +129,8 @@ public class SettingsEVSceneController implements Initializable{
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-        StaticHouse.wrap(-180, 180, evRotationTextField);
-        StaticHouse.bound(0, Double.MAX_VALUE, evColorIntensityTextField);
+        StaticUtilities.wrap(-180, 180, evRotationTextField);
+        StaticUtilities.bound(0, Double.MAX_VALUE, evColorIntensityTextField);
 
         evColorIntensitySlider.setLabelFormatter(new DoubleStringConverter(){
             @Override
@@ -138,7 +138,7 @@ public class SettingsEVSceneController implements Initializable{
                 return super.toString(Math.pow(10,value));
             }
         });
-        StaticHouse.powerBind(evColorIntensitySlider.valueProperty(), trueEVColorIntes);
+        StaticUtilities.powerBind(evColorIntensitySlider.valueProperty(), trueEVColorIntes);
 
 
 
