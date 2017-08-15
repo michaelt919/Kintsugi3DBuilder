@@ -1,6 +1,6 @@
 package tetzlaff.ibr;
 
-public class IBRLoadOptions implements tetzlaff.ibr.rendering2.IBRLoadOptions
+public class IBRLoadOptions implements ReadonlyLoadOptionsModel
 {
 	private boolean colorImagesRequested;
 	private boolean mipmapsRequested;
