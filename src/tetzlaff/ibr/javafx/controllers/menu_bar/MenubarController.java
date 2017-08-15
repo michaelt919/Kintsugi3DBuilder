@@ -14,7 +14,7 @@ import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import tetzlaff.ibr.IBRLoadingModel;
+import tetzlaff.ibr.LoadingModel;
 import tetzlaff.ibr.RenderingMode;
 import tetzlaff.ibr.app.Quit;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
@@ -152,7 +152,7 @@ public class MenubarController {
     @FXML private void file_openProject(){
         File vsetFile = vSetFileChooser.showOpenDialog(null);
         if (vsetFile != null) try {
-            IBRLoadingModel.getInstance().loadFromVSETFile(vsetFile.getPath(), vsetFile);
+            LoadingModel.getInstance().loadFromVSETFile(vsetFile.getPath(), vsetFile);
         } catch (IOException e) {
             //do nothing
         }
@@ -197,7 +197,7 @@ public class MenubarController {
 
     }
     @FXML private void file_exit(){
-        Quit.getInstance().trigger();
+        Quit.getInstance().applicationQuitting();
     }
 
     @FXML private void shading_IBRSettings(){

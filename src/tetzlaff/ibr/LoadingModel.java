@@ -3,24 +3,24 @@ package tetzlaff.ibr;
 import java.io.File;
 import java.io.IOException;
 
-public class IBRLoadingModel 
+public class LoadingModel 
 {
-	private IBRLoadingHandler handler;
+	private LoadingHandler handler;
 	private LoadingMonitor monitor;
-	private ReadonlyIBRLoadOptionsModel options;
+	private ReadonlyLoadOptionsModel options;
 	
-	private static IBRLoadingModel instance = new IBRLoadingModel();
+	private static LoadingModel instance = new LoadingModel();
 	
-	public static IBRLoadingModel getInstance()
+	public static LoadingModel getInstance()
 	{
 		return instance;
 	}
 	
-	private IBRLoadingModel()
+	private LoadingModel()
 	{
 	}
 	
-	public void setLoadingHandler(IBRLoadingHandler handler)
+	public void setLoadingHandler(LoadingHandler handler)
 	{
 		this.handler = handler;
 		
@@ -40,7 +40,7 @@ public class IBRLoadingModel
 		}
 	}
 	
-	public void setLoadOptionsModel(ReadonlyIBRLoadOptionsModel options)
+	public void setLoadOptionsModel(ReadonlyLoadOptionsModel options)
 	{
 		this.options = options;
 	}

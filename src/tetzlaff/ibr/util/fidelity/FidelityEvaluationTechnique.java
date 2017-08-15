@@ -5,14 +5,14 @@ import java.io.IOException;
 import java.util.List;
 
 import tetzlaff.gl.Context;
-import tetzlaff.ibr.ReadonlyIBRSettingsModel;
+import tetzlaff.ibr.ReadonlySettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
 
 public interface FidelityEvaluationTechnique<ContextType extends Context<ContextType>> extends AutoCloseable
 {
 	boolean isGuaranteedMonotonic();
 	boolean isGuaranteedInterpolating();
-	void initialize(IBRResources<ContextType> resources, ReadonlyIBRSettingsModel settings, int size) throws IOException;
+	void initialize(IBRResources<ContextType> resources, ReadonlySettingsModel settings, int size) throws IOException;
 	void setMask(File maskFile) throws IOException;
 	void updateActiveViewIndexList(List<Integer> activeViewIndexList);
 	double evaluateBaselineError(int targetViewIndex, File debugFile);

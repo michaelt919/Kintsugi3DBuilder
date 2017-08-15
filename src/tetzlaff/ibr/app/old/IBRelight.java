@@ -19,10 +19,9 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.WindowSize;
-import tetzlaff.ibr.IBRLoadingModel;
-import tetzlaff.ibr.IBRSettingsModel;
+import tetzlaff.ibr.LoadingModel;
+import tetzlaff.ibr.SettingsModel;
 import tetzlaff.ibr.rendering.CameraBasedLightingModel;
-import tetzlaff.ibr.rendering.HardcodedLightingModel;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
@@ -241,7 +240,7 @@ public class IBRelight
 	        model.setCameraModel(cameraModel);
 	        model.setLightingModel(metaLightingModel);
 	        
-	        IBRLoadingModel.getInstance().setLoadingHandler(model);
+	        LoadingModel.getInstance().setLoadingHandler(model);
 	    	
 	        HardcodedLightingModel hardcodedLightController = 
 	    			new HardcodedLightingModel(
@@ -362,7 +361,7 @@ public class IBRelight
 				}
 	        });
 	        
-	        IBRSettingsModel settingsModel = new IBRSettingsModelImpl();
+	        SettingsModel settingsModel = new IBRSettingsModelImpl();
 	        model.setSettingsModel(settingsModel);
 	        
 	        // Create a user interface that examines the ULFRendererList for renderer settings and
@@ -371,7 +370,7 @@ public class IBRelight
 	        gui.showGUI();        
 	        //app.addPollable(gui); // Needed for Qt UI
 
-	        IBRLoadingModel.getInstance().setLoadingMonitor(gui.getLoadingMonitor());
+	        LoadingModel.getInstance().setLoadingMonitor(gui.getLoadingMonitor());
 	        requestQueue.setLoadingMonitor(gui.getLoadingMonitor());
 	        
 	    	// Make everything visible and start the event loop

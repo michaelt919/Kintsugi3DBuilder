@@ -38,10 +38,10 @@ import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibr.IBRLoadingModel;
+import tetzlaff.ibr.LoadingModel;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.IBRRenderableListModel;
-import tetzlaff.ibr.IBRSettingsModel;
+import tetzlaff.ibr.SettingsModel;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.util.BTFRequestUI;
 import tetzlaff.ibr.util.FidelityMetricRequestUI;
@@ -86,7 +86,7 @@ public class IBRelightConfigFrame extends JFrame
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRRenderableListModel<ContextType> model, LightingModel lightingModel, IBRSettingsModel settingsModel, Consumer<IBRRequest> ibrRequestProcessor, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRRenderableListModel<ContextType> model, LightingModel lightingModel, SettingsModel settingsModel, Consumer<IBRRequest> ibrRequestProcessor, boolean isHighDPI)
 	{		//TODO youll need this too
 		setResizable(false);
 		setTitle("IBRelight: Settings");
@@ -779,8 +779,8 @@ public class IBRelightConfigFrame extends JFrame
 							
 							if (imageChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 							{
-								IBRLoadingModel.getInstance().setLoadOptionsModel(loadOptions);
-								IBRLoadingModel.getInstance().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, fileChooser.getSelectedFile(), imageChooser.getSelectedFile());
+								LoadingModel.getInstance().setLoadOptionsModel(loadOptions);
+								LoadingModel.getInstance().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, fileChooser.getSelectedFile(), imageChooser.getSelectedFile());
 								
 								SwingUtilities.invokeLater(new Runnable()
 								{
@@ -797,8 +797,8 @@ public class IBRelightConfigFrame extends JFrame
 					}
 					else
 					{
-						IBRLoadingModel.getInstance().setLoadOptionsModel(loadOptions);
-						IBRLoadingModel.getInstance().loadFromVSETFile(cameraFile.getPath(), cameraFile);
+						LoadingModel.getInstance().setLoadOptionsModel(loadOptions);
+						LoadingModel.getInstance().loadFromVSETFile(cameraFile.getPath(), cameraFile);
 						SwingUtilities.invokeLater(new Runnable()
 						{
 							@Override

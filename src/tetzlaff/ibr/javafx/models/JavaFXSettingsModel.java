@@ -6,12 +6,12 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import tetzlaff.ibr.IBRSettingsModel;
+import tetzlaff.ibr.SettingsModel;
 import tetzlaff.ibr.RenderingMode;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
 
-public class JavaFXSettingsModel implements IBRSettingsModel {
+public class JavaFXSettingsModel implements SettingsModel {
     private final BooleanProperty occlusion = new SimpleBooleanProperty(true);
     private final BooleanProperty fresnel = new SimpleBooleanProperty(false);
     private final BooleanProperty pBRGeometricAttenuation = new SimpleBooleanProperty(false);

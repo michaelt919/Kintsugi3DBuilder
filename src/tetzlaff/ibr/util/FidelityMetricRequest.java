@@ -14,7 +14,7 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.LoadingMonitor;
-import tetzlaff.ibr.ReadonlyIBRSettingsModel;
+import tetzlaff.ibr.ReadonlySettingsModel;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources;
 import tetzlaff.ibr.util.fidelity.FidelityEvaluationTechnique;
@@ -32,9 +32,9 @@ public class FidelityMetricRequest implements IBRRequest
     private File fidelityExportPath;
     private File fidelityVSETFile;
     private File maskFile;
-    private ReadonlyIBRSettingsModel settings;
+    private ReadonlySettingsModel settings;
     
-	public FidelityMetricRequest(File exportPath, File targetVSETFile, File maskFile, ReadonlyIBRSettingsModel settings)
+	public FidelityMetricRequest(File exportPath, File targetVSETFile, File maskFile, ReadonlySettingsModel settings)
 	{
 		this.fidelityExportPath = exportPath;
 		this.fidelityVSETFile = targetVSETFile;

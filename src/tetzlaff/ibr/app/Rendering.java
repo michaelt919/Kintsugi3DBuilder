@@ -15,9 +15,9 @@ import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.IBRLoadingModel;
-import tetzlaff.ibr.ReadonlyIBRLoadOptionsModel;
-import tetzlaff.ibr.ReadonlyIBRSettingsModel;
+import tetzlaff.ibr.LoadingModel;
+import tetzlaff.ibr.ReadonlyLoadOptionsModel;
+import tetzlaff.ibr.ReadonlySettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.tools.ToolBox;
@@ -88,8 +88,8 @@ public class Rendering
 			ReadonlyLightingModel lightingModel = JavaFXModels.getInstance().getLightingModel();
 			ReadonlyEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
 			ExtendedCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
-			ReadonlyIBRSettingsModel settingsModel = JavaFXModels.getInstance().getSettingsModel();
-			ReadonlyIBRLoadOptionsModel loadOptionsModel = JavaFXModels.getInstance().getLoadOptionsModel();
+			ReadonlySettingsModel settingsModel = JavaFXModels.getInstance().getSettingsModel();
+			ReadonlyLoadOptionsModel loadOptionsModel = JavaFXModels.getInstance().getLoadOptionsModel();
 			
 			ToolSelectionModel toolModel = JavaFXModels.getInstance().getToolModel();
 
@@ -117,8 +117,8 @@ public class Rendering
 					.setWindow(window)
 					.build();
 			
-			IBRLoadingModel.getInstance().setLoadingHandler(rendererList);
-			IBRLoadingModel.getInstance().setLoadOptionsModel(loadOptionsModel);
+			LoadingModel.getInstance().setLoadingHandler(rendererList);
+			LoadingModel.getInstance().setLoadOptionsModel(loadOptionsModel);
             
             rendererList.setObjectModel(() -> Matrix4.IDENTITY);
             rendererList.setCameraModel(cameraModel);

@@ -1,7 +1,7 @@
 package tetzlaff.ibr.app.old;
 
 
-public class IBRLoadOptionsModelImpl implements tetzlaff.ibr.ReadonlyIBRLoadOptionsModel
+public class IBRLoadOptionsModelImpl implements tetzlaff.ibr.ReadonlyLoadOptionsModel
 {
 	private boolean colorImagesRequested;
 	private boolean mipmapsRequested;
