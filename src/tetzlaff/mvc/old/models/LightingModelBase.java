@@ -1,7 +1,7 @@
-package tetzlaff.mvc.models.old;
+package tetzlaff.mvc.old.models;
 
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.mvc.models.LightingModel;
+import tetzlaff.models.LightingModel;
 
 public abstract class LightingModelBase implements LightingModel
 {

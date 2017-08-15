@@ -14,9 +14,9 @@ import tetzlaff.ibr.IBRRenderableListModel;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ReadonlyLoadOptionsModel;
 import tetzlaff.ibr.ReadonlySettingsModel;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.ReadonlyLightingModel;
-import tetzlaff.mvc.models.ReadonlyObjectModel;
+import tetzlaff.models.ReadonlyCameraModel;
+import tetzlaff.models.ReadonlyLightingModel;
+import tetzlaff.models.ReadonlyObjectModel;
 
 // TODO NEWUI replace this class with one that is JavaFX tailored or general-purpose (not Swing)
 public class ImageBasedRendererList<ContextType extends Context<ContextType>> 

@@ -4,7 +4,7 @@ import javafx.beans.value.ObservableValue;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.camera.CameraSetting;
-import tetzlaff.mvc.models.ExtendedCameraModel;
+import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.util.OrbitPolarConverter;
 
 import com.sun.istack.internal.NotNull;

@@ -1,13 +1,13 @@
-package tetzlaff.mvc.controllers.impl;
+package tetzlaff.mvc.old.controllers.impl;
 
 import tetzlaff.gl.window.KeyCodes;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.KeyReleaseListener;
-import tetzlaff.mvc.controllers.LightController;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.old.TrackballLightingModel;
+import tetzlaff.models.ReadonlyCameraModel;
+import tetzlaff.mvc.old.controllers.LightController;
+import tetzlaff.mvc.old.models.TrackballLightingModel;
 
 public class TrackballLightController implements LightController, KeyPressListener, KeyReleaseListener
 {

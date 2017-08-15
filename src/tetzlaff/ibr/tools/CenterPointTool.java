@@ -3,13 +3,15 @@ package tetzlaff.ibr.tools;//Created by alexk on 8/8/2017.
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
-import tetzlaff.mvc.models.ExtendedCameraModel;
-import tetzlaff.mvc.models.ReadonlyEnvironmentMapModel;
-import tetzlaff.mvc.models.ReadonlyLightingModel;
-import tetzlaff.mvc.models.SceneViewportModel;
+import tetzlaff.models.ExtendedCameraModel;
+import tetzlaff.models.ReadonlyEnvironmentMapModel;
+import tetzlaff.models.ReadonlyLightingModel;
+import tetzlaff.models.SceneViewportModel;
 
-class CenterPointTool extends AbstractTool{
+class CenterPointTool extends AbstractTool
+{
     private ToolSelectionModel toolModel;
+    
     public CenterPointTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, 
     		ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel) 
     {
@@ -35,7 +37,7 @@ class CenterPointTool extends AbstractTool{
                 cameraModel.setCenter(newCenter);
                 System.out.println("Set center to " + newCenter);
 
-                toolModel.setTool(ToolBox.ToolType.ORBIT);
+                toolModel.setTool(ToolType.ORBIT);
             }
         }
     }

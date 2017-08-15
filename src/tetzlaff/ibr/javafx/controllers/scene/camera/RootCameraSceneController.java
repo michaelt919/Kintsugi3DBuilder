@@ -17,7 +17,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import tetzlaff.ibr.javafx.models.JavaFXCameraModel;
 import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
-import tetzlaff.ibr.tools.ToolBox;
+import tetzlaff.ibr.tools.ToolType;
 
 import com.sun.javafx.collections.ObservableListWrapper;
 
@@ -70,7 +70,7 @@ public class RootCameraSceneController implements Initializable {
                 cameraListView.getSelectionModel().selectedItemProperty()
         );
 
-        settingsController.setOnActionSelectPoint(event -> toolModel.setTool(ToolBox.ToolType.CENTER_POINT));
+        settingsController.setOnActionSelectPoint(event -> toolModel.setTool(ToolType.CENTER_POINT));
     }
 
     private SelectionModel<CameraSetting> getCameraSelectionModel() {

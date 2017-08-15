@@ -1,9 +1,9 @@
-package tetzlaff.mvc.models.impl;//Created by alexk on 7/21/2017.
+package tetzlaff.models.impl;//Created by alexk on 7/21/2017.
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.mvc.models.ReadonlyEnvironmentMapModel;
-import tetzlaff.mvc.models.ReadonlyLightingModel;
+import tetzlaff.models.ReadonlyEnvironmentMapModel;
+import tetzlaff.models.ReadonlyLightingModel;
 
 public abstract class LightingModelBase implements ReadonlyLightingModel 
 {

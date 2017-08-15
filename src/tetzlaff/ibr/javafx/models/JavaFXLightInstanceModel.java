@@ -7,7 +7,7 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.lights.LightType;
 import tetzlaff.ibr.javafx.controllers.scene.lights.SubLightSetting;
-import tetzlaff.mvc.models.LightInstanceModel;
+import tetzlaff.models.LightInstanceModel;
 import tetzlaff.util.OrbitPolarConverter;
 
 public class JavaFXLightInstanceModel implements LightInstanceModel {

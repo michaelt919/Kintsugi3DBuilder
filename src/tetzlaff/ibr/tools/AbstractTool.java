@@ -8,10 +8,10 @@ import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;
-import tetzlaff.mvc.models.ExtendedCameraModel;
-import tetzlaff.mvc.models.ReadonlyEnvironmentMapModel;
-import tetzlaff.mvc.models.ReadonlyLightingModel;
-import tetzlaff.mvc.models.SceneViewportModel;
+import tetzlaff.models.ExtendedCameraModel;
+import tetzlaff.models.ReadonlyEnvironmentMapModel;
+import tetzlaff.models.ReadonlyLightingModel;
+import tetzlaff.models.SceneViewportModel;
 
 class AbstractTool implements CursorPositionListener, MouseButtonPressListener, ScrollListener, KeyPressListener
 {

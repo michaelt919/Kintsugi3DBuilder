@@ -3,9 +3,9 @@ package tetzlaff.ibr;
 import javax.swing.ComboBoxModel;
 
 import tetzlaff.gl.Context;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.ReadonlyLightingModel;
-import tetzlaff.mvc.models.ReadonlyObjectModel;
+import tetzlaff.models.ReadonlyCameraModel;
+import tetzlaff.models.ReadonlyLightingModel;
+import tetzlaff.models.ReadonlyObjectModel;
 
 public interface IBRRenderableListModel<ContextType extends Context<ContextType>> extends ComboBoxModel<IBRRenderable<ContextType>>, LoadingHandler
 {
