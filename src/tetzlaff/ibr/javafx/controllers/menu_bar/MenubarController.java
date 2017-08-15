@@ -20,8 +20,8 @@ import tetzlaff.ibr.app.Quit;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
+import tetzlaff.ibr.javafx.util.Flag;
 import tetzlaff.ibr.tools.ToolBox;
-import tetzlaff.ibr.util.Flag;
 
 public class MenubarController {
     //toolModel

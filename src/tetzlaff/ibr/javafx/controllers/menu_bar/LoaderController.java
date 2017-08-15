@@ -20,7 +20,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import tetzlaff.ibr.IBRLoadingModel;
-import tetzlaff.ibr.util.StaticHouse;
+import tetzlaff.ibr.javafx.util.StaticUtilities;
 
 public class LoaderController implements Initializable
 {
@@ -125,7 +125,7 @@ public class LoaderController implements Initializable
     }
 
     private void close(){
-        StaticHouse.naturalClose(root.getScene().getWindow());
+        StaticUtilities.naturalClose(root.getScene().getWindow());
     }
 
 

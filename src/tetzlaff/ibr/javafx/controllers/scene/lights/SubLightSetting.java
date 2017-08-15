@@ -12,7 +12,7 @@ import javafx.scene.paint.Color;
 
 import org.jdom2.Element;
 
-import tetzlaff.ibr.util.StaticHouse;
+import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.misc.XML_Writable;
 
 public class SubLightSetting implements XML_Writable{
@@ -20,10 +20,10 @@ public class SubLightSetting implements XML_Writable{
     private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
     private final DoubleProperty zCenter = new SimpleDoubleProperty();
-    private final DoubleProperty azimuth = StaticHouse.wrap(-180, 180, new SimpleDoubleProperty());
-    private final DoubleProperty inclination = StaticHouse.bound(-90, 90, new SimpleDoubleProperty());
+    private final DoubleProperty azimuth = StaticUtilities.wrap(-180, 180, new SimpleDoubleProperty());
+    private final DoubleProperty inclination = StaticUtilities.bound(-90, 90, new SimpleDoubleProperty());
     private final DoubleProperty log10distance = new SimpleDoubleProperty();
-    private final DoubleProperty intensity = StaticHouse.bound(0, Double.MAX_VALUE, new SimpleDoubleProperty());
+    private final DoubleProperty intensity = StaticUtilities.bound(0, Double.MAX_VALUE, new SimpleDoubleProperty());
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
     private final Property<LightType> lightType = new SimpleObjectProperty<>();

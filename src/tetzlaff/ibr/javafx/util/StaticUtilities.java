@@ -1,4 +1,4 @@
-package tetzlaff.ibr.util;//Created by alexk on 7/20/2017.
+package tetzlaff.ibr.javafx.util;//Created by alexk on 7/20/2017.
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
@@ -10,7 +10,7 @@ import javafx.stage.WindowEvent;
 /*
 I general utilities class.
  */
-public class StaticHouse {
+public class StaticUtilities {
 //    this method takes in a double property, and prevents it from reaching outside of its bound.
     public static <H extends Property<Number>> H wrap(double min, double max, H property){
        property.addListener((observable, oldValue, newValue) -> {

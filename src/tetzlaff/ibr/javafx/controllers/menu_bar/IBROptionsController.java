@@ -12,8 +12,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
-import tetzlaff.ibr.util.StaticHouse;
-import tetzlaff.util.SafeFloatStringConverter;
+import tetzlaff.ibr.javafx.util.SafeFloatStringConverter;
+import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
 
 public class IBROptionsController implements Initializable{
@@ -50,10 +50,10 @@ public class IBROptionsController implements Initializable{
         weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
 
 
-        StaticHouse.bound(1,5, gamaTextField);
-        StaticHouse.bound(1,100, weightExponentTextField);
-        StaticHouse.bound(0,1, isotropyFactorTextField);
-        StaticHouse.bound(0, 0.1, occlusionBiasTextField);
+        StaticUtilities.bound(1,5, gamaTextField);
+        StaticUtilities.bound(1,100, weightExponentTextField);
+        StaticUtilities.bound(0,1, isotropyFactorTextField);
+        StaticUtilities.bound(0, 0.1, occlusionBiasTextField);
 
     }
 
