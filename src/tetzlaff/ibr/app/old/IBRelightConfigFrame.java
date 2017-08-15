@@ -80,13 +80,19 @@ public class IBRelightConfigFrame extends JFrame
 	 * Build and layout the GUI in the central content pane.  Also sets all appropriate listeners to update
 	 * the given ULFListModel parameter.
 	 * 
-	 * @param model The model that abstracts the underlying light field data and provides entries for the combo
+	 * @param rendererListModel The model that abstracts the underlying light field data and provides entries for the combo
 	 * box.  It is expected that this will be empty (but not null) when the GUI is initially constructed and
 	 * the listeners for the loading buttons will add items to the model.
 	 * @param isHighDPI Is the display a high DPI display (a.k.a. retina).  If so, the half resolution option
 	 * defaults to being on.
 	 */
-	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(IBRRenderableListModel<ContextType> model, LightingModel lightingModel, SettingsModel settingsModel, Consumer<IBRRequest> ibrRequestProcessor, boolean isHighDPI)
+	public <ContextType extends Context<ContextType>> IBRelightConfigFrame(
+			IBRRenderableListModel<ContextType> rendererListModel, 
+			LightingModel lightingModel, 
+			SettingsModel settingsModel, 
+			LoadingModel loadingModel,
+			Consumer<IBRRequest> ibrRequestProcessor, 
+			boolean isHighDPI)
 	{		//TODO youll need this too
 		setResizable(false);
 		setTitle("IBRelight: Settings");
@@ -385,7 +391,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to IBR checkbox.
 		chckbxImagebasedRendering.addChangeListener(e ->
 		{			
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setIBREnabled(chckbxImagebasedRendering.isSelected());
 			}
@@ -401,7 +407,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to relighting checkbox.
 		chckbxUseTextures.addChangeListener(e ->
 		{			
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setTexturesEnabled(chckbxUseTextures.isSelected());
 			}
@@ -418,7 +424,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to relighting checkbox.
 		chckbxRelighting.addChangeListener(e ->
 		{			
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setRelightingEnabled(chckbxRelighting.isSelected());
 			}
@@ -434,7 +440,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to relighting checkbox.
 		chckbxShadows.addChangeListener(e ->
 		{			
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setShadowsEnabled(chckbxShadows.isSelected());
 			}
@@ -451,7 +457,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to fresnel checkbox.
 		chckbxFresnelEffect.addChangeListener(e ->
 		{			
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setFresnelEnabled(chckbxFresnelEffect.isSelected());
 			}
@@ -468,7 +474,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to fresnel checkbox.
 		chckbxVisualizeLights.addChangeListener(e ->
 		{			
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setVisibleLightsEnabled(chckbxVisualizeLights.isSelected());
 			}
@@ -507,7 +513,7 @@ public class IBRelightConfigFrame extends JFrame
 		qualitySettings.add(chckbxMultisampling, gbc_chckbxMultisampling);
 		
 		// Set the combo box model to the parameter
-		if(model != null) { comboBoxObjects.setModel(model); }
+		if(rendererListModel != null) { comboBoxObjects.setModel(rendererListModel); }
 		
 		modelDependentComponents = new ArrayList<JComponent>();
 		modelDependentComponents.add(lblGamma);
@@ -531,23 +537,23 @@ public class IBRelightConfigFrame extends JFrame
 		
 		Runnable updateWidgetsFromSettings = () ->
 		{
-			spinnerGamma.setValue((double)model.getSelectedItem().getSettingsModel().getGamma());
-			spinnerExponent.setValue((double)model.getSelectedItem().getSettingsModel().getWeightExponent());
-			isotropySpinner.setValue((double)model.getSelectedItem().getSettingsModel().getIsotropyFactor());
-			chckbxOcclusion.setSelected(model.getSelectedItem().getSettingsModel().isOcclusionEnabled());
-			spinnerOccBias.setValue((double)model.getSelectedItem().getSettingsModel().getOcclusionBias());
-			chckbxMultisampling.setSelected(model.getSelectedItem().getSettingsModel().isMultisamplingEnabled());
-			chckbxImagebasedRendering.setSelected(model.getSelectedItem().getSettingsModel().isIBREnabled());
-			chckbxRelighting.setSelected(model.getSelectedItem().getSettingsModel().isRelightingEnabled());
-			chckbxShadows.setSelected(model.getSelectedItem().getSettingsModel().areShadowsEnabled());
-			chckbxUseTextures.setSelected(model.getSelectedItem().getSettingsModel().areTexturesEnabled());
-			chckbxPhysicallybasedGeometricAttenuation.setSelected(model.getSelectedItem().getSettingsModel().isPBRGeometricAttenuationEnabled());
-			chckbxFresnelEffect.setSelected(model.getSelectedItem().getSettingsModel().isFresnelEnabled());
-			chckbxVisualizeLights.setSelected(model.getSelectedItem().getSettingsModel().areVisibleLightsEnabled());
+			spinnerGamma.setValue((double)rendererListModel.getSelectedItem().getSettingsModel().getGamma());
+			spinnerExponent.setValue((double)rendererListModel.getSelectedItem().getSettingsModel().getWeightExponent());
+			isotropySpinner.setValue((double)rendererListModel.getSelectedItem().getSettingsModel().getIsotropyFactor());
+			chckbxOcclusion.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isOcclusionEnabled());
+			spinnerOccBias.setValue((double)rendererListModel.getSelectedItem().getSettingsModel().getOcclusionBias());
+			chckbxMultisampling.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isMultisamplingEnabled());
+			chckbxImagebasedRendering.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isIBREnabled());
+			chckbxRelighting.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isRelightingEnabled());
+			chckbxShadows.setSelected(rendererListModel.getSelectedItem().getSettingsModel().areShadowsEnabled());
+			chckbxUseTextures.setSelected(rendererListModel.getSelectedItem().getSettingsModel().areTexturesEnabled());
+			chckbxPhysicallybasedGeometricAttenuation.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isPBRGeometricAttenuationEnabled());
+			chckbxFresnelEffect.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isFresnelEnabled());
+			chckbxVisualizeLights.setSelected(rendererListModel.getSelectedItem().getSettingsModel().areVisibleLightsEnabled());
 		};
 		
 		// Set initial values from the 'model' parameter
-		if (model == null || model.getSelectedItem() == null)
+		if (rendererListModel == null || rendererListModel.getSelectedItem() == null)
 		{
 			comboBoxObjects.setEnabled(false);
 
@@ -558,7 +564,7 @@ public class IBRelightConfigFrame extends JFrame
 		}
 		else
 		{
-			comboBoxObjects.setEnabled(model.getSize()>1?true:false);
+			comboBoxObjects.setEnabled(rendererListModel.getSize()>1?true:false);
 
 			for (JComponent c : modelDependentComponents)
 			{
@@ -648,7 +654,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to half resolution checkbox.
 		chckbxHalfRes.addChangeListener(e ->
 		{
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setHalfResolutionEnabled(chckbxHalfRes.isSelected());
 			}
@@ -657,7 +663,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to multisampling checkbox.
 		chckbxMultisampling.addChangeListener(e ->
 		{
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setMultisamplingEnabled(chckbxMultisampling.isSelected());
 			}
@@ -666,7 +672,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to the gamma spinner.
 		spinnerGamma.addChangeListener(e ->
 		{
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setGamma((float)(double)(Double)spinnerGamma.getModel().getValue());
 			}
@@ -675,7 +681,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to the alpha weight spinner.
 		spinnerExponent.addChangeListener(e ->
 		{
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setWeightExponent((float)(double)(Double)spinnerExponent.getModel().getValue());
 			}
@@ -684,7 +690,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to the alpha weight spinner.
 		isotropySpinner.addChangeListener(e ->
 		{
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setIsotropyFactor((float)(double)(Double)isotropySpinner.getModel().getValue());
 			}
@@ -693,7 +699,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to occlusion checkbox.
 		chckbxOcclusion.addChangeListener(e ->
 		{			
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				boolean selected = chckbxOcclusion.isSelected();
 				settingsModel.setOcclusionEnabled(selected);
@@ -705,7 +711,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to the occlusion bias spinner.
 		spinnerOccBias.addChangeListener(e ->
 		{
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setOcclusionBias((float)(double)(Double)spinnerOccBias.getModel().getValue());
 			}
@@ -714,7 +720,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for changes to geometric attenuation checkbox.
 		chckbxPhysicallybasedGeometricAttenuation.addChangeListener(e ->
 		{			
-			if (model.getSelectedItem() != null)
+			if (rendererListModel.getSelectedItem() != null)
 			{
 				settingsModel.setPBRGeometricAttenuationEnabled(chckbxPhysicallybasedGeometricAttenuation.isSelected());
 			}
@@ -723,7 +729,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Respond to combo box item changed event
 		comboBoxObjects.addItemListener(e ->
 		{
-			if (model == null || model.getSelectedItem() == null)
+			if (rendererListModel == null || rendererListModel.getSelectedItem() == null)
 			{
 				for (JComponent c : modelDependentComponents)
 				{
@@ -779,8 +785,8 @@ public class IBRelightConfigFrame extends JFrame
 							
 							if (imageChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
 							{
-								LoadingModel.getInstance().setLoadOptionsModel(loadOptions);
-								LoadingModel.getInstance().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, fileChooser.getSelectedFile(), imageChooser.getSelectedFile());
+								loadingModel.setLoadOptionsModel(loadOptions);
+								loadingModel.loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, fileChooser.getSelectedFile(), imageChooser.getSelectedFile());
 								
 								SwingUtilities.invokeLater(new Runnable()
 								{
@@ -797,8 +803,8 @@ public class IBRelightConfigFrame extends JFrame
 					}
 					else
 					{
-						LoadingModel.getInstance().setLoadOptionsModel(loadOptions);
-						LoadingModel.getInstance().loadFromVSETFile(cameraFile.getPath(), cameraFile);
+						loadingModel.setLoadOptionsModel(loadOptions);
+						loadingModel.loadFromVSETFile(cameraFile.getPath(), cameraFile);
 						SwingUtilities.invokeLater(new Runnable()
 						{
 							@Override
@@ -1053,7 +1059,7 @@ public class IBRelightConfigFrame extends JFrame
 				File file = fileChooser.getSelectedFile();
 				try 
 				{
-					model.getSelectedItem().setEnvironment(file);
+					rendererListModel.getSelectedItem().setEnvironment(file);
 				} 
 				catch (Exception ex) 
 				{
@@ -1085,7 +1091,7 @@ public class IBRelightConfigFrame extends JFrame
 			{
 				try
 				{
-					model.getSelectedItem().setReferenceScene(VertexGeometry.createFromOBJFile(fileChooser.getSelectedFile()));
+					rendererListModel.getSelectedItem().setReferenceScene(VertexGeometry.createFromOBJFile(fileChooser.getSelectedFile()));
 				} 
 				catch (IOException ex) 
 				{
@@ -1178,7 +1184,7 @@ public class IBRelightConfigFrame extends JFrame
 		
 		btnBTFExport.addActionListener(e ->
 		{
-			IBRRequest request = new BTFRequestUI(this, fileChooser, spinnerWidth, spinnerHeight, model.getSelectedItem().getSettingsModel(), lightingModel.getLightColor(0)).prompt();
+			IBRRequest request = new BTFRequestUI(this, fileChooser, spinnerWidth, spinnerHeight, rendererListModel.getSelectedItem().getSettingsModel(), lightingModel.getLightColor(0)).prompt();
 			
 			if (request != null)
 			{
@@ -1193,7 +1199,7 @@ public class IBRelightConfigFrame extends JFrame
 		// Add listener for the 'resample' button to generate new vies for the current light field.
 		btnFidelity.addActionListener(e -> 
 		{
-			IBRRequest request = new FidelityMetricRequestUI(this, fileChooser, model.getSelectedItem().getSettingsModel()).prompt();
+			IBRRequest request = new FidelityMetricRequestUI(this, fileChooser, rendererListModel.getSelectedItem().getSettingsModel()).prompt();
 			
 			if (request != null)
 			{
@@ -1260,7 +1266,7 @@ public class IBRelightConfigFrame extends JFrame
 						}
 					}
 					
-					model.getSelectedItem().setMultiTransformationModel(matrices);
+					rendererListModel.getSelectedItem().setMultiTransformationModel(matrices);
 				} 
 				catch (Exception ex) 
 				{

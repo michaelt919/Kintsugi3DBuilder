@@ -16,7 +16,6 @@ import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.LoadingModel;
-import tetzlaff.ibr.ReadonlyLoadOptionsModel;
 import tetzlaff.ibr.ReadonlySettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
@@ -69,8 +68,6 @@ public class Rendering
 				throw new IllegalStateException("The shader program could not be initialized.", e);
 			}
 
-
-
 			CameraModel fpCameraModel = new BasicCameraModel();
 
 			FirstPersonController fpController = new FirstPersonController(fpCameraModel);
@@ -85,37 +82,35 @@ public class Rendering
 			ReadonlyEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
 			ExtendedCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
 			ReadonlySettingsModel settingsModel = JavaFXModels.getInstance().getSettingsModel();
-			ReadonlyLoadOptionsModel loadOptionsModel = JavaFXModels.getInstance().getLoadOptionsModel();
-			
+			LoadingModel loadingModel = JavaFXModels.getInstance().getLoadingModel();
 			ToolSelectionModel toolModel = JavaFXModels.getInstance().getToolModel();
 
 			ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
 
 			WindowBasedController windowBasedController = ToolBox.Builder.create()
-					.setCameraModel(cameraModel)
-					.setEnvironmentMapModel(environmentMapModel)
-					.setLightingModel(lightingModel)
-					.setToolModel(toolModel)
-					.setSceneViewportModel(new SceneViewportModel()
+				.setCameraModel(cameraModel)
+				.setEnvironmentMapModel(environmentMapModel)
+				.setLightingModel(lightingModel)
+				.setToolModel(toolModel)
+				.setSceneViewportModel(new SceneViewportModel()
+				{
+					@Override
+					public Object getObjectAtCoordinates(double x, double y) 
 					{
-						@Override
-						public Object getObjectAtCoordinates(double x, double y) 
-						{
-							return rendererList.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y);
-						}
+						return rendererList.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y);
+					}
 
-						@Override
-						public Vector3 get3DPositionAtCoordinates(double x, double y) 
-						{
-							return rendererList.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
-						}
-					})
-					.build();
+					@Override
+					public Vector3 get3DPositionAtCoordinates(double x, double y) 
+					{
+						return rendererList.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
+					}
+				})
+				.build();
 			
 			windowBasedController.addAsWindowListener(window);
 			
-			LoadingModel.getInstance().setLoadingHandler(rendererList);
-			LoadingModel.getInstance().setLoadOptionsModel(loadOptionsModel);
+			loadingModel.setLoadingHandler(rendererList);
             
             rendererList.setObjectModel(() -> Matrix4.IDENTITY);
             rendererList.setCameraModel(cameraModel);

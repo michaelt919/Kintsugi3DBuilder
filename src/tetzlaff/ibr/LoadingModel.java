@@ -9,14 +9,7 @@ public class LoadingModel
 	private LoadingMonitor monitor;
 	private ReadonlyLoadOptionsModel options;
 	
-	private static LoadingModel instance = new LoadingModel();
-	
-	public static LoadingModel getInstance()
-	{
-		return instance;
-	}
-	
-	private LoadingModel()
+	public LoadingModel()
 	{
 	}
 	
