@@ -9,7 +9,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.CameraBasedLightingModel;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
+import tetzlaff.models.ReadonlyCameraModel;
 
 public class HardcodedLightingModel implements CameraBasedLightingModel
 {

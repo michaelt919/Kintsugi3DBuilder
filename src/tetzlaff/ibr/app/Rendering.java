@@ -25,14 +25,14 @@ import tetzlaff.ibr.tools.ToolSelectionModel;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
-import tetzlaff.mvc.controllers.impl.FirstPersonController;
-import tetzlaff.mvc.controllers.impl.TrackballController;
-import tetzlaff.mvc.models.CameraModel;
-import tetzlaff.mvc.models.ExtendedCameraModel;
-import tetzlaff.mvc.models.ReadonlyEnvironmentMapModel;
-import tetzlaff.mvc.models.ReadonlyLightingModel;
-import tetzlaff.mvc.models.SceneViewportModel;
-import tetzlaff.mvc.models.impl.BasicCameraModel;
+import tetzlaff.models.CameraModel;
+import tetzlaff.models.ExtendedCameraModel;
+import tetzlaff.models.ReadonlyEnvironmentMapModel;
+import tetzlaff.models.ReadonlyLightingModel;
+import tetzlaff.models.SceneViewportModel;
+import tetzlaff.models.impl.BasicCameraModel;
+import tetzlaff.mvc.old.controllers.impl.FirstPersonController;
+import tetzlaff.util.WindowBasedController;
 
 public class Rendering
 {
@@ -81,10 +81,6 @@ public class Rendering
 				fpController.setEnabled(false);
 			});
 
-			TrackballController trackballController = TrackballController.getBuilder().create();
-
-			trackballController.addAsWindowListener(window);
-
 			ReadonlyLightingModel lightingModel = JavaFXModels.getInstance().getLightingModel();
 			ReadonlyEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
 			ExtendedCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
@@ -95,7 +91,7 @@ public class Rendering
 
 			ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
 
-			ToolBox.ToolBoxBuilder.create()
+			WindowBasedController windowBasedController = ToolBox.Builder.create()
 					.setCameraModel(cameraModel)
 					.setEnvironmentMapModel(environmentMapModel)
 					.setLightingModel(lightingModel)
@@ -114,8 +110,9 @@ public class Rendering
 							return rendererList.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
 						}
 					})
-					.setWindow(window)
 					.build();
+			
+			windowBasedController.addAsWindowListener(window);
 			
 			LoadingModel.getInstance().setLoadingHandler(rendererList);
 			LoadingModel.getInstance().setLoadOptionsModel(loadOptionsModel);

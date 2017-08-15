@@ -1,7 +1,7 @@
 package tetzlaff.ibr.rendering;
 
 import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.mvc.models.LightingModel;
+import tetzlaff.models.LightingModel;
 
 public interface CameraBasedLightingModel extends LightingModel
 {

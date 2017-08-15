@@ -1,8 +1,8 @@
-package tetzlaff.mvc.models.old;
+package tetzlaff.mvc.old.models;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
+import tetzlaff.models.ReadonlyCameraModel;
 
 public class TrackballModel implements ReadonlyCameraModel
 {

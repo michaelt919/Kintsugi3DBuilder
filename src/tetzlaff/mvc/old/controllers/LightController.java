@@ -1,7 +1,7 @@
-package tetzlaff.mvc.controllers;
+package tetzlaff.mvc.old.controllers;
 
 import tetzlaff.gl.window.Window;
-import tetzlaff.mvc.models.ReadonlyLightingModel;
+import tetzlaff.models.ReadonlyLightingModel;
 
 public interface LightController 
 {

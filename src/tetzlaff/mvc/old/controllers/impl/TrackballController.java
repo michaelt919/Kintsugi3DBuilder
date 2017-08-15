@@ -1,4 +1,4 @@
-package tetzlaff.mvc.controllers.impl;
+package tetzlaff.mvc.old.controllers.impl;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
@@ -10,9 +10,9 @@ import tetzlaff.gl.window.WindowSize;
 import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;
-import tetzlaff.mvc.controllers.CameraController;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.old.TrackballModel;
+import tetzlaff.models.ReadonlyCameraModel;
+import tetzlaff.mvc.old.controllers.CameraController;
+import tetzlaff.mvc.old.models.TrackballModel;
 
 public class TrackballController implements CameraController, CursorPositionListener, MouseButtonPressListener, ScrollListener
 {

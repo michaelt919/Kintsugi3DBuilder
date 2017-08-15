@@ -1,7 +1,7 @@
-package tetzlaff.mvc.models.impl;
+package tetzlaff.models.impl;
 
 import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.mvc.models.CameraModel;
+import tetzlaff.models.CameraModel;
 
 public class BasicCameraModel implements CameraModel
 {

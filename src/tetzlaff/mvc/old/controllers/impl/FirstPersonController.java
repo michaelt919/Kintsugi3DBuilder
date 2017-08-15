@@ -1,4 +1,4 @@
-package tetzlaff.mvc.controllers.impl;
+package tetzlaff.mvc.old.controllers.impl;
 
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
@@ -10,9 +10,9 @@ import tetzlaff.gl.window.WindowSize;
 import tetzlaff.gl.window.listeners.CursorPositionListener;
 import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.KeyReleaseListener;
-import tetzlaff.mvc.models.CameraModel;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.impl.BasicCameraModel;
+import tetzlaff.models.CameraModel;
+import tetzlaff.models.ReadonlyCameraModel;
+import tetzlaff.models.impl.BasicCameraModel;
 
 public class FirstPersonController implements KeyPressListener, KeyReleaseListener, CursorPositionListener
 {

@@ -21,7 +21,7 @@ import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
 import tetzlaff.ibr.javafx.util.Flag;
-import tetzlaff.ibr.tools.ToolBox;
+import tetzlaff.ibr.tools.ToolType;
 
 public class MenubarController {
     //toolModel
@@ -79,11 +79,11 @@ public class MenubarController {
         toolGroup.selectedToggleProperty().addListener((ob,o,n)->{
             if(n!=null && n.getUserData() != null){
                 switch ((String) n.getUserData()){
-                    case "ORBIT": toolModel.setTool(ToolBox.ToolType.ORBIT); break;
-                    case "DOLLY": toolModel.setTool(ToolBox.ToolType.DOLLY); break;
-                    case "PAN": toolModel.setTool(ToolBox.ToolType.PAN); break;
-                    case "LIGHT_DRAG": toolModel.setTool(ToolBox.ToolType.LIGHT_DRAG); break;
-                    case "CENTER_POINT": toolModel.setTool(ToolBox.ToolType.CENTER_POINT); break;
+                    case "ORBIT": toolModel.setTool(ToolType.ORBIT); break;
+                    case "DOLLY": toolModel.setTool(ToolType.DOLLY); break;
+                    case "PAN": toolModel.setTool(ToolType.PAN); break;
+                    case "LIGHT_DRAG": toolModel.setTool(ToolType.LIGHT_DRAG); break;
+                    case "CENTER_POINT": toolModel.setTool(ToolType.CENTER_POINT); break;
 
                 }
             }

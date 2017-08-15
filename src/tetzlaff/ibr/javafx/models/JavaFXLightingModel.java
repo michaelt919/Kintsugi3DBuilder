@@ -4,7 +4,7 @@ import javafx.beans.value.ObservableValue;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.lights.LightGroupSetting;
-import tetzlaff.mvc.models.impl.LightingModelBase;
+import tetzlaff.models.impl.LightingModelBase;
 
 public class JavaFXLightingModel extends LightingModelBase {
 

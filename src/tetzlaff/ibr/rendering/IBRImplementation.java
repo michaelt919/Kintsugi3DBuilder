@@ -41,10 +41,10 @@ import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ReadonlySettingsModel;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.app.old.IBRSettingsModelImpl;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.ReadonlyLightingModel;
-import tetzlaff.mvc.models.ReadonlyObjectModel;
-import tetzlaff.mvc.models.SceneViewportModel;
+import tetzlaff.models.ReadonlyCameraModel;
+import tetzlaff.models.ReadonlyLightingModel;
+import tetzlaff.models.ReadonlyObjectModel;
+import tetzlaff.models.SceneViewportModel;
 import tetzlaff.util.EnvironmentMap;
 import tetzlaff.util.ShadingParameterMode;
 

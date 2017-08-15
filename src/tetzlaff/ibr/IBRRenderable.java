@@ -10,10 +10,10 @@ import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibr.rendering.IBRResources;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.ReadonlyLightingModel;
-import tetzlaff.mvc.models.ReadonlyObjectModel;
-import tetzlaff.mvc.models.SceneViewportModel;
+import tetzlaff.models.ReadonlyCameraModel;
+import tetzlaff.models.ReadonlyLightingModel;
+import tetzlaff.models.ReadonlyObjectModel;
+import tetzlaff.models.SceneViewportModel;
 
 public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {

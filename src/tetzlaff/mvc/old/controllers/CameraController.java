@@ -1,7 +1,7 @@
-package tetzlaff.mvc.controllers;
+package tetzlaff.mvc.old.controllers;
 
 import tetzlaff.gl.window.Window;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
+import tetzlaff.models.ReadonlyCameraModel;
 
 public interface CameraController 
 {

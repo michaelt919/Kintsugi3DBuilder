@@ -1,4 +1,4 @@
-package tetzlaff.mvc.models;
+package tetzlaff.models;
 
 import tetzlaff.gl.vecmath.Vector3;
 

@@ -47,7 +47,7 @@ import tetzlaff.ibr.util.BTFRequestUI;
 import tetzlaff.ibr.util.FidelityMetricRequestUI;
 import tetzlaff.ibr.util.IBRRequest;
 import tetzlaff.ibr.util.ResampleRequestUI;
-import tetzlaff.mvc.models.LightingModel;
+import tetzlaff.models.LightingModel;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the

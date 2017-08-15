@@ -26,14 +26,14 @@ import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
-import tetzlaff.mvc.controllers.impl.FirstPersonController;
-import tetzlaff.mvc.controllers.impl.TrackballController;
-import tetzlaff.mvc.controllers.impl.TrackballLightController;
-import tetzlaff.mvc.models.CameraModel;
-import tetzlaff.mvc.models.LightingModel;
-import tetzlaff.mvc.models.ReadonlyCameraModel;
-import tetzlaff.mvc.models.impl.BasicCameraModel;
-import tetzlaff.mvc.models.old.TrackballModel;
+import tetzlaff.models.CameraModel;
+import tetzlaff.models.LightingModel;
+import tetzlaff.models.ReadonlyCameraModel;
+import tetzlaff.models.impl.BasicCameraModel;
+import tetzlaff.mvc.old.controllers.impl.FirstPersonController;
+import tetzlaff.mvc.old.controllers.impl.TrackballController;
+import tetzlaff.mvc.old.controllers.impl.TrackballLightController;
+import tetzlaff.mvc.old.models.TrackballModel;
 
 /**
  * ULFProgram is a container for the main entry point of the Unstructured Light Field
