@@ -90,7 +90,7 @@ float getRoughness()
 
 // All vectors should be in tangent space
 // Result needs to be multiplied by specular reflectivity and derivative due to gamma
-vec2 computeSpecularNormalDerivs(vec3 normal, vec3 light, vec3 view, vec3 half,
+vec2 computeSpecularNormalDerivs(vec3 normal, vec3 light, vec3 view, vec3 halfway,
     float hDotV, float nDotL, float nDotV, float nDotH, float nDotHSq, float mSq, float geom)
 {
     float a = (mSq - 1) * nDotHSq;
@@ -114,14 +114,14 @@ vec2 computeSpecularNormalDerivs(vec3 normal, vec3 light, vec3 view, vec3 half,
         }
 
         return mSq / (2 * d * hDotV) *
-            (nDotV * (normal.z * (half.xy * nDotM * c + mask.xy * nDotH * b)
-                        - normal.xy * (half.z * nDotM * c + mask.z * nDotH * b))
+            (nDotV * (normal.z * (halfway.xy * nDotM * c + mask.xy * nDotH * b)
+                        - normal.xy * (halfway.z * nDotM * c + mask.z * nDotH * b))
                 + nDotM * nDotH * b * (normal.xy * view.z - normal.z * view.xy));
     }
     else
     {
         return mSq / (4 * d) *
-            (4 * (mSq - 1) * nDotH * nDotV * (normal.xy * half.z - normal.z * half.xy)
+            (4 * (mSq - 1) * nDotH * nDotV * (normal.xy * halfway.z - normal.z * halfway.xy)
                 + b * (normal.xy * view.z - normal.z * view.xy));
     }
 }
@@ -206,9 +206,9 @@ ParameterizedFit adjustFit()
                 float nDotL = max(0, dot(light, shadingNormal));
                 vec3 lightTS = objectToTangent * light;
 
-                vec3 half = normalize(view + light);
-                float nDotH = dot(half, shadingNormal);
-                vec3 halfTS = objectToTangent * half;
+                vec3 halfway = normalize(view + light);
+                float nDotH = dot(halfway, shadingNormal);
+                vec3 halfTS = objectToTangent * halfway;
 
                 if (nDotL > 0.0 && nDotH > sqrt(0.5))
                 {
@@ -232,7 +232,7 @@ ParameterizedFit adjustFit()
                     // and then as if the whole quantity were divided by m^2.
                     float mfdDerivOverRoughnessSquared = 2 * (1 - nDotHSquared) / (q2 * q2 * q2);
 
-                    float hDotV = max(0, dot(half, view));
+                    float hDotV = max(0, dot(halfway, view));
                     float geom = 1.0; //min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
                     float geomRatio = geom / (4 * nDotV);
 

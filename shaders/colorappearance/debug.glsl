@@ -34,8 +34,8 @@ vec4 getColor(int index)
         float nDotL = max(0, dot(light, shadingNormal));
         nDotV = max(0, dot(view, shadingNormal));
 
-        vec3 half = normalize(view + light);
-        float nDotH = dot(half, shadingNormal);
+        vec3 halfway = normalize(view + light);
+        float nDotH = dot(halfway, shadingNormal);
 
         if (nDotV > 0.0 && nDotH > 0.0)
         {
@@ -47,7 +47,7 @@ vec4 getColor(int index)
             float q = ROUGHNESS_SQUARED + (1 - nDotHSquared) / nDotHSquared;
             float mfdEval =  ROUGHNESS_SQUARED / (nDotHSquared * nDotHSquared * q * q);
 
-            float hDotV = max(0, dot(half, view));
+            float hDotV = max(0, dot(halfway, view));
 
             return vec4(pow((DIFFUSE_COLOR * nDotL + SPECULAR_COLOR * mfdEval / (4 * nDotV)
                     * min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV)) * attenuatedLightIntensity

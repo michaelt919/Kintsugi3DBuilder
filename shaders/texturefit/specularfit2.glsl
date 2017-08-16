@@ -92,18 +92,18 @@ ParameterizedFit fitSpecular()
                 attenuatedLightIntensity, shadingNormal, maxLuminance);
             float linearIntensity = getLuminance(colorRemainder.rgb / attenuatedLightIntensity);
 
-            vec3 half = normalize(view + light);
-            float nDotH = dot(normal, half);
+            vec3 halfway = normalize(view + light);
+            float nDotH = dot(normal, halfway);
 
             if (nDotH * nDotH > 0.5)
             {
-                directionSum += half;
-                intensityWeightedDirectionSum += half * linearIntensity;
+                directionSum += halfway;
+                intensityWeightedDirectionSum += halfway * linearIntensity;
 
                 if (linearIntensity * nDotH > maxResidual[0] * maxResidual[1])
                 {
                     maxResidual = vec2(linearIntensity, nDotH);
-                    //maxResidualDirection = half;
+                    //maxResidualDirection = halfway;
                 }
             }
         }
@@ -162,8 +162,8 @@ ParameterizedFit fitSpecular()
             float nDotL = max(0, dot(light, specularNormal));
             float nDotV = max(0, dot(specularNormal, view));
             
-            vec3 half = normalize(view + light);
-            float nDotH = dot(half, specularNormal);
+            vec3 halfway = normalize(view + light);
+            float nDotH = dot(halfway, specularNormal);
             float nDotHSquared = nDotH * nDotH;
 
             vec4 colorRemainder =
@@ -171,7 +171,7 @@ ParameterizedFit fitSpecular()
             
             if (nDotV > 0 && nDotHSquared > 0.5)
             {
-                float hDotV = max(0, dot(half, view));
+                float hDotV = max(0, dot(halfway, view));
 
                 vec3 colorXYZ = rgbToXYZ(colorRemainder.rgb / attenuatedLightIntensity);
                 vec3 colorXYZGammaCorrected = pow(colorXYZ, vec3(1.0 / fittingGamma));

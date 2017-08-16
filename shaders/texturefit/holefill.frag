@@ -22,43 +22,43 @@ layout(location=5) out vec4 output5;
 layout(location=6) out vec4 output6;
 layout(location=7) out vec4 output7;
 
-vec4 fill(sampler2D input)
+vec4 fill(sampler2D inputTexture)
 {
-    vec4 central = texture(input, fTexCoord);
-    
+    vec4 central = texture(inputTexture, fTexCoord);
+
     if (central.a >= 1.0)
     {
-        // Return the input pixel if it already has an alpha of 1.0
+        // Return the inputTexture pixel if it already has an alpha of 1.0
         return central;
     }
     else
     {
         // Sample the neighboring pixels
         vec4 sum = vec4(0.0);
-        vec4 north = textureOffset(input, fTexCoord, ivec2(0, 1));
+        vec4 north = textureOffset(inputTexture, fTexCoord, ivec2(0, 1));
         if (north.a >= minFillAlpha)
         {
             sum += north.a * vec4(north.rgb, 1.0);
         }
-        
-        vec4 south = textureOffset(input, fTexCoord, ivec2(0, -1));
+
+        vec4 south = textureOffset(inputTexture, fTexCoord, ivec2(0, -1));
         if (south.a >= minFillAlpha)
         {
             sum += south.a * vec4(south.rgb, 1.0);
         }
-        
-        vec4 east = textureOffset(input, fTexCoord, ivec2(1, 0));
+
+        vec4 east = textureOffset(inputTexture, fTexCoord, ivec2(1, 0));
         if (east.a >= minFillAlpha)
         {
             sum += east.a * vec4(east.rgb, 1.0);
         }
-        
-        vec4 west = textureOffset(input, fTexCoord, ivec2(-1, 0));
+
+        vec4 west = textureOffset(inputTexture, fTexCoord, ivec2(-1, 0));
         if (west.a >= minFillAlpha)
         {
             sum += west.a * vec4(west.rgb, 1.0);
         }
-        
+
         if (sum.a >= (1.0 - central.a))
         {
             return vec4(central.a * central.rgb + (1.0 - central.a) * sum.rgb / sum.a, 1.0);
