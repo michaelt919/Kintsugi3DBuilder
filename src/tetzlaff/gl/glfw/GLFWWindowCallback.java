@@ -553,9 +553,11 @@ class GLFWWindowCallback implements WindowListenerManager
                     }
                 });
 
-        glfwSetDropCallback(window.getHandle(), new GLFWDropCallback() {
+        glfwSetDropCallback(window.getHandle(), new GLFWDropCallback()
+        {
             @Override
-            public void invoke(long window, int count, long names) {
+            public void invoke(long window, int count, long names)
+            {
                 // Not supported
             }
         });

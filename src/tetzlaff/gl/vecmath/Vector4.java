@@ -196,7 +196,8 @@ public class Vector4
 
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "[" +
                 "" + x +
                 "\t" + y +

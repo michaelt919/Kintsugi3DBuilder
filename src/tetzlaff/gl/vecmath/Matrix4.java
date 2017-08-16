@@ -347,15 +347,18 @@ public class Matrix4
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         StringBuilder s = new StringBuilder();
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++)
+        {
             s.append(getRow(i).toString()).append('\n');
         }
         return s.toString();
     }
 
-    public void print(){
+    public void print()
+    {
         System.out.println(this.toString());
     }
 }

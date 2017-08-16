@@ -421,7 +421,8 @@ public class IBRelight
         // Get list of all informal format names understood by the current set of registered readers
         String[] formatNames = ImageIO.getReaderFormatNames();
 
-        for (int i = 0; i < formatNames.length; i++) {
+        for (int i = 0; i < formatNames.length; i++)
+        {
             set.add(formatNames[i].toLowerCase());
         }
 
