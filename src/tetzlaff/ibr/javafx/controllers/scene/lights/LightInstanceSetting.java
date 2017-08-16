@@ -1,17 +1,8 @@
 package tetzlaff.ibr.javafx.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.scene.paint.Color;
-
 import org.jdom2.Element;
-
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.misc.XML_Writable;
 

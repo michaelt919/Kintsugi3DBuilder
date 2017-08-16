@@ -2,11 +2,7 @@ package tetzlaff.gl.builders;
 
 import java.io.IOException;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Cubemap;
-import tetzlaff.gl.CubemapFace;
+import tetzlaff.gl.*;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 
 public interface ColorCubemapBuilder <ContextType extends Context<ContextType>, TextureType extends Cubemap<ContextType>> 

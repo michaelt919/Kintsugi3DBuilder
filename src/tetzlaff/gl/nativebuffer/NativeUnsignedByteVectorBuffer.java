@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Objects;
 
-import org.lwjgl.BufferUtils;
+import org.lwjgl.*;
 
 class NativeUnsignedByteVectorBuffer implements NativeVectorBuffer
 {

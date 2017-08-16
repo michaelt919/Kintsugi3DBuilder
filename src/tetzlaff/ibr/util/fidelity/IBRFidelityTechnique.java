@@ -5,14 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Drawable;
-import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.Program;
-import tetzlaff.gl.ShaderType;
-import tetzlaff.gl.UniformBuffer;
+import tetzlaff.gl.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;

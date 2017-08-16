@@ -4,8 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
-
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
 import tetzlaff.gl.exceptions.GLOutOfMemoryException;
 import tetzlaff.gl.glfw.GLFWWindow;

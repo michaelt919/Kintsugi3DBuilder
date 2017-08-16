@@ -1,5 +1,24 @@
 package tetzlaff.gl.opengl;
 
+import java.io.*;
+import java.nio.ByteBuffer;
+
+import tetzlaff.gl.*;
+import tetzlaff.gl.builders.*;
+import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
+import tetzlaff.gl.exceptions.*;
+import tetzlaff.gl.glfw.GLFWWindowContextBase;
+import tetzlaff.gl.nativebuffer.NativeDataType;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
+import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture1D.OpenGLTexture1DFromBufferBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture2D.*;
+import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DColorBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthStencilBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DStencilBuilder;
+
 import static org.lwjgl.opengl.EXTTextureCompressionS3TC.*;
 import static org.lwjgl.opengl.EXTTextureSRGB.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -16,63 +35,6 @@ import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.opengl.GL40.*;
 import static org.lwjgl.opengl.GL41.*;
 import static org.lwjgl.opengl.GL43.*;
-
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-
-import tetzlaff.gl.BufferAccessFrequency;
-import tetzlaff.gl.BufferAccessType;
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Cubemap;
-import tetzlaff.gl.Drawable;
-import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.IndexBuffer;
-import tetzlaff.gl.Program;
-import tetzlaff.gl.Shader;
-import tetzlaff.gl.ShaderType;
-import tetzlaff.gl.Texture1D;
-import tetzlaff.gl.Texture2D;
-import tetzlaff.gl.Texture3D;
-import tetzlaff.gl.UniformBuffer;
-import tetzlaff.gl.VertexBuffer;
-import tetzlaff.gl.builders.ColorCubemapBuilder;
-import tetzlaff.gl.builders.ColorTextureBuilder;
-import tetzlaff.gl.builders.DepthStencilTextureBuilder;
-import tetzlaff.gl.builders.DepthTextureBuilder;
-import tetzlaff.gl.builders.ProgramBuilder;
-import tetzlaff.gl.builders.StencilTextureBuilder;
-import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
-import tetzlaff.gl.exceptions.GLException;
-import tetzlaff.gl.exceptions.GLInvalidEnumException;
-import tetzlaff.gl.exceptions.GLInvalidFramebufferOperationException;
-import tetzlaff.gl.exceptions.GLInvalidOperationException;
-import tetzlaff.gl.exceptions.GLInvalidValueException;
-import tetzlaff.gl.exceptions.GLOutOfMemoryException;
-import tetzlaff.gl.exceptions.GLStackOverflowException;
-import tetzlaff.gl.exceptions.GLStackUnderflowException;
-import tetzlaff.gl.glfw.GLFWWindowContextBase;
-import tetzlaff.gl.nativebuffer.NativeDataType;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
-import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
-import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture1D.OpenGLTexture1DFromBufferBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DColorBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DDepthBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DDepthStencilBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DFromBufferBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DFromFileBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DFromHDRFileBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture2D.OpenGLTexture2DStencilBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DColorBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthStencilBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DStencilBuilder;
 
 public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implements Context<OpenGLContext>
 {

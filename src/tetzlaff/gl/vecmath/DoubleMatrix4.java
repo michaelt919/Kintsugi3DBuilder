@@ -2,7 +2,7 @@ package tetzlaff.gl.vecmath;
 
 import java.nio.DoubleBuffer;
 
-import org.lwjgl.BufferUtils;
+import org.lwjgl.*;
 
 public class DoubleMatrix4 
 {

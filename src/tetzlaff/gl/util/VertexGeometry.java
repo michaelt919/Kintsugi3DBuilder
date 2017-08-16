@@ -2,11 +2,7 @@ package tetzlaff.gl.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Dictionary;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import tetzlaff.gl.material.Material;
 import tetzlaff.gl.nativebuffer.NativeDataType;

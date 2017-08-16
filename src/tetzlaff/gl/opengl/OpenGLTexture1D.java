@@ -1,13 +1,5 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL14.*;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL44.*;
-// mipmaps
-
 import java.nio.ByteBuffer;
 
 import tetzlaff.gl.ColorFormat;
@@ -15,6 +7,15 @@ import tetzlaff.gl.CompressionFormat;
 import tetzlaff.gl.Texture1D;
 import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
+
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL14.*;
+import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL44.*;
+
+// mipmaps
 
 class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLContext>
 {

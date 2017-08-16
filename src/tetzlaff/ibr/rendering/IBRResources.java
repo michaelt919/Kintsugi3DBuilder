@@ -1,28 +1,11 @@
 package tetzlaff.ibr.rendering;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Date;
-
 import javax.imageio.ImageIO;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Drawable;
-import tetzlaff.gl.FramebufferObject;
-import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.Program;
-import tetzlaff.gl.ShaderType;
-import tetzlaff.gl.Texture1D;
-import tetzlaff.gl.Texture2D;
-import tetzlaff.gl.Texture3D;
-import tetzlaff.gl.UniformBuffer;
-import tetzlaff.gl.VertexBuffer;
+import tetzlaff.gl.*;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.material.Material;
 import tetzlaff.gl.nativebuffer.NativeDataType;

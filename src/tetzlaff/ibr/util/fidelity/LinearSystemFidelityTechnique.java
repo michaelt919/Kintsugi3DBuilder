@@ -1,31 +1,23 @@
 package tetzlaff.ibr.util.fidelity;
 
-import static org.ejml.dense.row.CommonOps_DDRM.*;
-
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-
 import javax.imageio.ImageIO;
 
 import org.ejml.simple.SimpleMatrix;
-
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Drawable;
-import tetzlaff.gl.FramebufferObject;
-import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.Program;
-import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.*;
 import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.ReadonlySettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
 import tetzlaff.util.NonNegativeLeastSquares;
+
+import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
 
 public class LinearSystemFidelityTechnique<ContextType extends Context<ContextType>> implements FidelityEvaluationTechnique<ContextType>
 {

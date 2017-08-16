@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.imageio.ImageIO;
 
 import tetzlaff.gl.Program;
@@ -24,11 +23,7 @@ import tetzlaff.ibr.tools.ToolSelectionModel;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
-import tetzlaff.models.CameraModel;
-import tetzlaff.models.ExtendedCameraModel;
-import tetzlaff.models.ReadonlyEnvironmentMapModel;
-import tetzlaff.models.ReadonlyLightingModel;
-import tetzlaff.models.SceneViewportModel;
+import tetzlaff.models.*;
 import tetzlaff.models.impl.BasicCameraModel;
 import tetzlaff.mvc.old.controllers.impl.FirstPersonController;
 import tetzlaff.util.WindowBasedController;

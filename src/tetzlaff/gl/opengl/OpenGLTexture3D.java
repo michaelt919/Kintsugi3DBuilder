@@ -1,13 +1,5 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL14.*;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.*;
-import static org.lwjgl.opengl.GL44.*;
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,21 +7,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-
 import javax.imageio.ImageIO;
 
-import org.lwjgl.BufferUtils;
-
-import tetzlaff.gl.ColorFormat;
+import org.lwjgl.*;
+import tetzlaff.gl.*;
 import tetzlaff.gl.ColorFormat.DataType;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Texture3D;
-import tetzlaff.gl.TextureType;
-import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
+
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL14.*;
+import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL44.*;
 
 class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 {

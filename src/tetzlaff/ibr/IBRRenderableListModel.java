@@ -1,6 +1,6 @@
 package tetzlaff.ibr;
 
-import javax.swing.ComboBoxModel;
+import javax.swing.*;
 
 import tetzlaff.gl.Context;
 import tetzlaff.models.ReadonlyCameraModel;

@@ -1,12 +1,11 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.GL15.*;
-
 import java.nio.ByteBuffer;
 
-import org.lwjgl.BufferUtils;
-
+import org.lwjgl.*;
 import tetzlaff.gl.IndexBuffer;
+
+import static org.lwjgl.opengl.GL15.*;
 
 class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer<OpenGLContext>
 {

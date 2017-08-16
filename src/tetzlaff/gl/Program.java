@@ -1,12 +1,6 @@
 package tetzlaff.gl;
 
-import tetzlaff.gl.vecmath.IntVector2;
-import tetzlaff.gl.vecmath.IntVector3;
-import tetzlaff.gl.vecmath.IntVector4;
-import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.gl.vecmath.Vector2;
-import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.gl.vecmath.*;
 
 /**
  * An interface for a program that can be used for rendering.

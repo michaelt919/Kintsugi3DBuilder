@@ -2,11 +2,7 @@ package tetzlaff.gl.material;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.InputMismatchException;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import java.util.*;
 
 import tetzlaff.gl.vecmath.Vector3;
 

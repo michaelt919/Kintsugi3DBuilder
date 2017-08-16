@@ -1,50 +1,19 @@
 package tetzlaff.gl.glfw;
 
+import java.nio.ByteBuffer;
+
+import org.lwjgl.*;
+import org.lwjgl.glfw.*;
+import org.lwjgl.opengl.*;
+import tetzlaff.gl.FramebufferSize;
+import tetzlaff.gl.exceptions.GLFWException;
+import tetzlaff.gl.window.*;
+import tetzlaff.gl.window.listeners.*;
+import tetzlaff.interactive.EventPollable;
+
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
-
-import java.nio.ByteBuffer;
-
-import org.lwjgl.BufferUtils;
-import org.lwjgl.Version;
-import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL11;
-
-import tetzlaff.gl.FramebufferSize;
-import tetzlaff.gl.exceptions.GLFWException;
-import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.KeyCodes;
-import tetzlaff.gl.window.KeyState;
-import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.MouseButtonState;
-import tetzlaff.gl.window.Window;
-import tetzlaff.gl.window.WindowListenerManager;
-import tetzlaff.gl.window.WindowPosition;
-import tetzlaff.gl.window.WindowSize;
-import tetzlaff.gl.window.listeners.CharacterListener;
-import tetzlaff.gl.window.listeners.CharacterModifiersListener;
-import tetzlaff.gl.window.listeners.CursorEnteredListener;
-import tetzlaff.gl.window.listeners.CursorExitedListener;
-import tetzlaff.gl.window.listeners.CursorPositionListener;
-import tetzlaff.gl.window.listeners.FramebufferSizeListener;
-import tetzlaff.gl.window.listeners.KeyPressListener;
-import tetzlaff.gl.window.listeners.KeyReleaseListener;
-import tetzlaff.gl.window.listeners.KeyRepeatListener;
-import tetzlaff.gl.window.listeners.MouseButtonPressListener;
-import tetzlaff.gl.window.listeners.MouseButtonReleaseListener;
-import tetzlaff.gl.window.listeners.ScrollListener;
-import tetzlaff.gl.window.listeners.WindowCloseListener;
-import tetzlaff.gl.window.listeners.WindowFocusGainedListener;
-import tetzlaff.gl.window.listeners.WindowFocusLostListener;
-import tetzlaff.gl.window.listeners.WindowIconifiedListener;
-import tetzlaff.gl.window.listeners.WindowPositionListener;
-import tetzlaff.gl.window.listeners.WindowRefreshListener;
-import tetzlaff.gl.window.listeners.WindowRestoredListener;
-import tetzlaff.gl.window.listeners.WindowSizeListener;
-import tetzlaff.interactive.EventPollable;
 
 public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> implements Window<ContextType>, EventPollable
 {
