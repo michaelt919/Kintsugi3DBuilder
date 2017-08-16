@@ -424,11 +424,10 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
         if (textureTarget == GL_TEXTURE_2D && multisamples > 1)
         {
             this.textureTarget = GL_TEXTURE_2D_MULTISAMPLE;
-            useLinearFiltering = false; // linear filtering not allowed with multisampling
-            useMipmaps = false; // mipmaps not allowed with multisampling
             this.levelCount = 1;
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, multisamples, internalFormat, width, height, fixedMultisampleLocations);
             this.context.openGLErrorCheck();
+            this.initFilteringAndMipmaps(false, false);  // linear filtering and mipmaps not allowed with multisampling
             // TODO: multisample textures don't seem to work correctly
         }
         else

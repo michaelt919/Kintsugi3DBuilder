@@ -383,8 +383,8 @@ public class Matrix3
 
     /**
      * Gets a particular column of the matrix.
-     * @param row The index of the row to retrieve.
-     * @return The row vector at the specified index.
+     * @param col The index of the column to retrieve.
+     * @return The column vector at the specified index.
      */
     public Vector3 getColumn(int col)
     {

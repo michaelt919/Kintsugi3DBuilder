@@ -2,6 +2,7 @@ package tetzlaff.ibr.rendering;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import javax.swing.AbstractListModel;
 
@@ -208,7 +209,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         {
             for (int i = 0; i < renderableList.size(); i++)
             {
-                if (renderableList.get(i) == item)
+                if (Objects.equals(renderableList.get(i), item))
                 {
                     renderableList.setSelectedIndex(i);
                 }
