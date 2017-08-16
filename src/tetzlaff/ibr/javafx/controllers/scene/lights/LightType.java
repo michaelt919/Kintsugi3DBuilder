@@ -2,14 +2,24 @@ package tetzlaff.ibr.javafx.controllers.scene.lights;//Created by alexk on 7/16/
 
 import javafx.util.StringConverter;
 
-public enum LightType {
-    PointLight, SpotLight, AreaLight, DirectionalLight;
+public enum LightType
+{
+    PointLight,
+    SpotLight,
+    AreaLight,
+    DirectionalLight;
 
-    public static final StringConverter<LightType> converter = new StringConverter<LightType>() {
+    public static final StringConverter<LightType> converter = new StringConverter<LightType>()
+    {
         @Override
-        public String toString(LightType object) {
-            if(object == null) return "Null";
-            switch (object){
+        public String toString(LightType object)
+        {
+            if (object == null)
+            {
+                return "Null";
+            }
+            switch (object)
+            {
                 case PointLight:
                     return "Point Light";
                 case SpotLight:
@@ -22,10 +32,16 @@ public enum LightType {
                     return null;
             }
         }
+
         @Override
-        public LightType fromString(String string) {
-            if(string == null || string.equals("Null")) return null;
-            switch (string) {
+        public LightType fromString(String string)
+        {
+            if (string == null || string.equals("Null"))
+            {
+                return null;
+            }
+            switch (string)
+            {
                 case "Point Light":
                     return LightType.PointLight;
                 case "Spot Light":

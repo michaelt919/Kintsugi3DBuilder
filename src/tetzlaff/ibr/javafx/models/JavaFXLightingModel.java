@@ -6,52 +6,66 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.lights.LightGroupSetting;
 import tetzlaff.models.impl.LightingModelBase;
 
-public class JavaFXLightingModel extends LightingModelBase {
+public class JavaFXLightingModel extends LightingModelBase
+{
 
     private ObservableValue<LightGroupSetting> lightGroupSettingObservableValue;
     private LightGroupSetting backup = new LightGroupSetting("backup");
 
     private JavaFXLightInstanceModel[] lightInstanceModels = new JavaFXLightInstanceModel[LightGroupSetting.LIGHT_LIMIT];
 
-    public JavaFXLightingModel(JavaFXEnvironmentMapModel envModel) {
+    public JavaFXLightingModel(JavaFXEnvironmentMapModel envModel)
+    {
         super(envModel);
-        for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
+        for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
+        {
             lightInstanceModels[i] = new JavaFXLightInstanceModel();
 
             lightInstanceModels[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
-
         }
     }
 
-    public void setLightGroupSettingObservableValue(ObservableValue<LightGroupSetting> lightGroupSettingObservableValue){
+    public void setLightGroupSettingObservableValue(ObservableValue<LightGroupSetting> lightGroupSettingObservableValue)
+    {
         this.lightGroupSettingObservableValue = lightGroupSettingObservableValue;
 
-        this.lightGroupSettingObservableValue.addListener((observable, oldValue, newValue) -> {
-            if(newValue != null){
-                for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
+        this.lightGroupSettingObservableValue.addListener((observable, oldValue, newValue) ->
+        {
+            if (newValue != null)
+            {
+                for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
+                {
                     lightInstanceModels[i].setSubLightSettingObservableValue(newValue.lightListProperty().valueAt(i));
                 }
-            } else {
+            }
+            else
+            {
                 System.out.println("Binding Backup");
-                for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++) {
+                for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
+                {
                     lightInstanceModels[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
                 }
             }
         });
     }
 
-    private LightGroupSetting lightGroup(){
-        if (lightGroupSettingObservableValue == null || lightGroupSettingObservableValue.getValue() == null) {
+    private LightGroupSetting lightGroup()
+    {
+        if (lightGroupSettingObservableValue == null || lightGroupSettingObservableValue.getValue() == null)
+        {
 //            System.out.println("Using LightGroup Backup");
             return backup;
-        }else {
+        }
+        else
+        {
 //            System.out.println("Need Value");
             return lightGroupSettingObservableValue.getValue();
         }
     }
-    
+
     @Override
-    public int getLightCount() {
+    public int getLightCount()
+    {
         //        System.out.println("Counted " + count + "Lights");
 //        return LightGroupSetting.LIGHT_LIMIT; //TODO ERROR HERE
 //        System.out.println("Count: " + count);
@@ -59,7 +73,8 @@ public class JavaFXLightingModel extends LightingModelBase {
     }
 
     @Override
-    public boolean isLightVisualizationEnabled(int i) {
+    public boolean isLightVisualizationEnabled(int i)
+    {
         return true;
     }
 
@@ -70,16 +85,15 @@ public class JavaFXLightingModel extends LightingModelBase {
     }
 
     @Override
-    public Vector3 getLightColor(int i) {
+    public Vector3 getLightColor(int i)
+    {
 //        System.out.println("Get Color ");
         return lightInstanceModels[i].getColor();
     }
 
-
-
-
     @Override
-    public Matrix4 getLightMatrix(int i) {
+    public Matrix4 getLightMatrix(int i)
+    {
 //        System.out.println("get light matrix " + i);
 
         Matrix4 out = lightInstanceModels[i].getLookMatrix();
@@ -94,7 +108,6 @@ public class JavaFXLightingModel extends LightingModelBase {
 
         return out;
     }
-
 
     @Override
     public Vector3 getLightCenter(int i)

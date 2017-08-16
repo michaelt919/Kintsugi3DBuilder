@@ -11,7 +11,8 @@ import tetzlaff.ibr.RenderingMode;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
 
-public class JavaFXSettingsModel implements SettingsModel {
+public class JavaFXSettingsModel implements SettingsModel
+{
     private final BooleanProperty occlusion = new SimpleBooleanProperty(true);
     private final BooleanProperty fresnel = new SimpleBooleanProperty(false);
     private final BooleanProperty pBRGeometricAttenuation = new SimpleBooleanProperty(false);
@@ -21,10 +22,10 @@ public class JavaFXSettingsModel implements SettingsModel {
     private final BooleanProperty visibleLights = new SimpleBooleanProperty(true);
     private final BooleanProperty visibleCameraPose = new SimpleBooleanProperty(false);
     private final BooleanProperty visibleSavedCameraPose = new SimpleBooleanProperty(false);
-    private final FloatProperty gamma = StaticUtilities.bound(1,5, new SimpleFloatProperty(2.2f));
-    private final FloatProperty weightExponent = StaticUtilities.bound(1,100,  new SimpleFloatProperty(16f));
-    private final FloatProperty isotropyFactor = StaticUtilities.bound(0, 1,  new SimpleFloatProperty(0.0f));
-    private final FloatProperty occlusionBias = StaticUtilities.bound(0,0.1, new SimpleFloatProperty(0.0025f));
+    private final FloatProperty gamma = StaticUtilities.bound(1, 5, new SimpleFloatProperty(2.2f));
+    private final FloatProperty weightExponent = StaticUtilities.bound(1, 100, new SimpleFloatProperty(16f));
+    private final FloatProperty isotropyFactor = StaticUtilities.bound(0, 1, new SimpleFloatProperty(0.0f));
+    private final FloatProperty occlusionBias = StaticUtilities.bound(0, 0.1, new SimpleFloatProperty(0.0025f));
     private final ObjectProperty<ShadingParameterMode> weightMode = new SimpleObjectProperty<>(ShadingParameterMode.PER_PIXEL);
     private final ObjectProperty<RenderingMode> renderingType = new SimpleObjectProperty<>(RenderingMode.IMAGE_BASED_RENDERING);
     private final BooleanProperty d3GridEnabled = new SimpleBooleanProperty(false);
@@ -33,229 +34,345 @@ public class JavaFXSettingsModel implements SettingsModel {
     private final BooleanProperty phyMasking = new SimpleBooleanProperty(false);
     private final BooleanProperty multisamplingEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty halfResolutionEnabled = new SimpleBooleanProperty(false);
-    
+
     @Override
-    public boolean isMaterialsForIBR() {
+    public boolean isMaterialsForIBR()
+    {
         return materialsForIBR.get();
     }
 
-    public BooleanProperty materialsForIBRProperty() {
+    public BooleanProperty materialsForIBRProperty()
+    {
         return materialsForIBR;
     }
+
     @Override
-    public void setMaterialsForIBR(boolean materialsForIBR) {
+    public void setMaterialsForIBR(boolean materialsForIBR)
+    {
         this.materialsForIBR.set(materialsForIBR);
     }
+
     @Override
-    public boolean isPhyMasking() {
+    public boolean isPhyMasking()
+    {
         return phyMasking.get();
     }
 
-    public BooleanProperty phyMaskingProperty() {
+    public BooleanProperty phyMaskingProperty()
+    {
         return phyMasking;
     }
+
     @Override
-    public void setPhyMasking(boolean phyMasking) {
+    public void setPhyMasking(boolean phyMasking)
+    {
         this.phyMasking.set(phyMasking);
     }
 
     @Override
-    public boolean isVisibleCameraPose() {
+    public boolean isVisibleCameraPose()
+    {
         return visibleCameraPose.get();
     }
-    public BooleanProperty visibleCameraPoseProperty() {
+
+    public BooleanProperty visibleCameraPoseProperty()
+    {
         return visibleCameraPose;
     }
+
     @Override
-    public void setVisibleCameraPose(boolean visibleCameraPose) {
+    public void setVisibleCameraPose(boolean visibleCameraPose)
+    {
         this.visibleCameraPose.set(visibleCameraPose);
     }
+
     @Override
-    public boolean isVisibleSavedCameraPose() {
+    public boolean isVisibleSavedCameraPose()
+    {
         return visibleSavedCameraPose.get();
     }
-    public BooleanProperty visibleSavedCameraPoseProperty() {
+
+    public BooleanProperty visibleSavedCameraPoseProperty()
+    {
         return visibleSavedCameraPose;
     }
+
     @Override
-    public void setVisibleSavedCameraPose(boolean visibleSavedCameraPose) {
+    public void setVisibleSavedCameraPose(boolean visibleSavedCameraPose)
+    {
         this.visibleSavedCameraPose.set(visibleSavedCameraPose);
     }
+
     @Override
-    public boolean isD3GridEnabled() {
+    public boolean isD3GridEnabled()
+    {
         return d3GridEnabled.get();
     }
-    public BooleanProperty d3GridEnabledProperty() {
+
+    public BooleanProperty d3GridEnabledProperty()
+    {
         return d3GridEnabled;
     }
+
     @Override
-    public void setD3GridEnabled(boolean d3GridEnabled) {
+    public void setD3GridEnabled(boolean d3GridEnabled)
+    {
         this.d3GridEnabled.set(d3GridEnabled);
     }
+
     @Override
-    public boolean isCompassEnabled() {
+    public boolean isCompassEnabled()
+    {
         return compassEnabled.get();
     }
-    public BooleanProperty compassEnabledProperty() {
+
+    public BooleanProperty compassEnabledProperty()
+    {
         return compassEnabled;
     }
+
     @Override
-    public void setCompassEnabled(boolean compassEnabled) {
+    public void setCompassEnabled(boolean compassEnabled)
+    {
         this.compassEnabled.set(compassEnabled);
     }
+
     @Override
-    public boolean isOcclusionEnabled() {
+    public boolean isOcclusionEnabled()
+    {
         return occlusion.get();
     }
-    public BooleanProperty occlusionProperty() {
+
+    public BooleanProperty occlusionProperty()
+    {
         return occlusion;
     }
+
     @Override
-    public void setOcclusionEnabled(boolean occlusion) {
+    public void setOcclusionEnabled(boolean occlusion)
+    {
         this.occlusion.set(occlusion);
     }
+
     @Override
-    public boolean isFresnelEnabled() {
+    public boolean isFresnelEnabled()
+    {
         return fresnel.get();
     }
-    public BooleanProperty fresnelProperty() {
+
+    public BooleanProperty fresnelProperty()
+    {
         return fresnel;
     }
+
     @Override
-    public void setFresnelEnabled(boolean fresnel) {
+    public void setFresnelEnabled(boolean fresnel)
+    {
         this.fresnel.set(fresnel);
     }
+
     @Override
-    public boolean isPBRGeometricAttenuationEnabled() {
+    public boolean isPBRGeometricAttenuationEnabled()
+    {
         return pBRGeometricAttenuation.get();
     }
-    public BooleanProperty pBRGeometricAttenuationProperty() {
+
+    public BooleanProperty pBRGeometricAttenuationProperty()
+    {
         return pBRGeometricAttenuation;
     }
+
     @Override
-    public void setPBRGeometricAttenuationEnabled(boolean pBRGeometricAttenuation) {
+    public void setPBRGeometricAttenuationEnabled(boolean pBRGeometricAttenuation)
+    {
         this.pBRGeometricAttenuation.set(pBRGeometricAttenuation);
     }
+
     @Override
-    public boolean isRelightingEnabled() {
+    public boolean isRelightingEnabled()
+    {
         return relighting.get();
     }
-    public BooleanProperty relightingProperty() {
+
+    public BooleanProperty relightingProperty()
+    {
         return relighting;
     }
+
     @Override
-    public void setRelightingEnabled(boolean relighting) {
+    public void setRelightingEnabled(boolean relighting)
+    {
         this.relighting.set(relighting);
     }
+
     @Override
-    public boolean areTexturesEnabled() {
+    public boolean areTexturesEnabled()
+    {
         return textures.get();
     }
-    public BooleanProperty texturesProperty() {
+
+    public BooleanProperty texturesProperty()
+    {
         return textures;
     }
+
     @Override
-    public void setTexturesEnabled(boolean textures) {
+    public void setTexturesEnabled(boolean textures)
+    {
         this.textures.set(textures);
     }
+
     @Override
-    public boolean areShadowsEnabled() {
+    public boolean areShadowsEnabled()
+    {
         return shadows.get();
     }
-    public BooleanProperty shadowsProperty() {
+
+    public BooleanProperty shadowsProperty()
+    {
         return shadows;
     }
+
     @Override
-    public void setShadowsEnabled(boolean shadows) {
+    public void setShadowsEnabled(boolean shadows)
+    {
         this.shadows.set(shadows);
     }
+
     @Override
-    public boolean areVisibleLightsEnabled() {
+    public boolean areVisibleLightsEnabled()
+    {
         return visibleLights.get();
     }
-    public BooleanProperty visibleLightsProperty() {
+
+    public BooleanProperty visibleLightsProperty()
+    {
         return visibleLights;
     }
+
     @Override
-    public void setVisibleLightsEnabled(boolean visibleLights) {
+    public void setVisibleLightsEnabled(boolean visibleLights)
+    {
         this.visibleLights.set(visibleLights);
     }
+
     @Override
-    public float getGamma() {
+    public float getGamma()
+    {
         return gamma.get();
     }
-    public FloatProperty gammaProperty() {
+
+    public FloatProperty gammaProperty()
+    {
         return gamma;
     }
+
     @Override
-    public void setGamma(float gamma) {
+    public void setGamma(float gamma)
+    {
         this.gamma.set(gamma);
     }
+
     @Override
-    public float getWeightExponent() {
+    public float getWeightExponent()
+    {
         return weightExponent.get();
     }
-    public FloatProperty weightExponentProperty() {
+
+    public FloatProperty weightExponentProperty()
+    {
         return weightExponent;
     }
+
     @Override
-    public void setWeightExponent(float weightExponent) {
+    public void setWeightExponent(float weightExponent)
+    {
         this.weightExponent.set(weightExponent);
     }
+
     @Override
-    public float getIsotropyFactor() {
+    public float getIsotropyFactor()
+    {
         return isotropyFactor.get();
     }
-    public FloatProperty isotropyFactorProperty() {
+
+    public FloatProperty isotropyFactorProperty()
+    {
         return isotropyFactor;
     }
+
     @Override
-    public void setIsotropyFactor(float isotropyFactor) {
+    public void setIsotropyFactor(float isotropyFactor)
+    {
         this.isotropyFactor.set(isotropyFactor);
     }
+
     @Override
-    public float getOcclusionBias() {
+    public float getOcclusionBias()
+    {
         return occlusionBias.get();
     }
-    public FloatProperty occlusionBiasProperty() {
+
+    public FloatProperty occlusionBiasProperty()
+    {
         return occlusionBias;
     }
+
     @Override
-    public void setOcclusionBias(float occlusionBias) {
+    public void setOcclusionBias(float occlusionBias)
+    {
         this.occlusionBias.set(occlusionBias);
     }
+
     @Override
-    public ShadingParameterMode getWeightMode() {
+    public ShadingParameterMode getWeightMode()
+    {
         return weightMode.get();
     }
-    public ObjectProperty<ShadingParameterMode> weightModeProperty() {
+
+    public ObjectProperty<ShadingParameterMode> weightModeProperty()
+    {
         return weightMode;
     }
+
     @Override
-    public void setWeightMode(ShadingParameterMode weightMode) {
+    public void setWeightMode(ShadingParameterMode weightMode)
+    {
         this.weightMode.set(weightMode);
     }
+
     @Override
-    public RenderingMode getRenderingMode() {
+    public RenderingMode getRenderingMode()
+    {
         return renderingType.get();
     }
-    public ObjectProperty<RenderingMode> renderingTypeProperty() {
+
+    public ObjectProperty<RenderingMode> renderingTypeProperty()
+    {
         return renderingType;
     }
+
     @Override
-    public void setRenderingMode(RenderingMode renderingType) {
+    public void setRenderingMode(RenderingMode renderingType)
+    {
         this.renderingType.set(renderingType);
     }
+
     @Override
-    public boolean isIBREnabled() {
+    public boolean isIBREnabled()
+    {
         return renderingType.getValue().equals(RenderingMode.IMAGE_BASED_RENDERING);
     }
+
     @Override
-    public void setIBREnabled(boolean ibrEnabled) {
-        if(ibrEnabled){
+    public void setIBREnabled(boolean ibrEnabled)
+    {
+        if (ibrEnabled)
+        {
             renderingType.setValue(RenderingMode.IMAGE_BASED_RENDERING);
         }
-        else if(isIBREnabled()){//ibrEnabled == false
+        else if (isIBREnabled())
+        {//ibrEnabled == false
             renderingType.setValue(RenderingMode.NONE);
         }
     }

@@ -17,7 +17,8 @@ import org.jdom2.Element;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.misc.XML_Writable;
 
-public class EnvironmentSettings implements XML_Writable{
+public class EnvironmentSettings implements XML_Writable
+{
 
     private final BooleanProperty envUseImage = new SimpleBooleanProperty();
     private final BooleanProperty envUseColor = new SimpleBooleanProperty();
@@ -36,7 +37,8 @@ public class EnvironmentSettings implements XML_Writable{
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final BooleanProperty firstEnvLoaded = new SimpleBooleanProperty();
 
-    public EnvironmentSettings(Boolean envUseImage,Boolean envUseColor,Boolean bpUseImage,Boolean bpUseColor,Boolean imagePathsRelative,File envImageFile, File bpImageFile, Double envColorIntensity,Double envRotation,Color envColor,Color bpColor,String name, Boolean locked, Boolean firstEnvLoaded) {
+    public EnvironmentSettings(Boolean envUseImage, Boolean envUseColor, Boolean bpUseImage, Boolean bpUseColor, Boolean imagePathsRelative, File envImageFile, File bpImageFile, Double envColorIntensity, Double envRotation, Color envColor, Color bpColor, String name, Boolean locked, Boolean firstEnvLoaded)
+    {
         this.envUseImage.setValue(envUseImage);
         this.envUseColor.setValue(envUseColor);
         this.bpUseImage.setValue(bpUseImage);
@@ -54,240 +56,286 @@ public class EnvironmentSettings implements XML_Writable{
     }
 
     @Override
-    public Element toJDOM2Element(){
+    public Element toJDOM2Element()
+    {
         return new Element("EVSetting")
-                .setAttribute("evUseImage", envUseImage.getValue().toString())
-                .setAttribute("evUseColor", envUseColor.getValue().toString())
-                .setAttribute("bpUseImage", bpUseImage.getValue().toString())
-                .setAttribute("bpUseColor", bpUseColor.getValue().toString())
-                .setAttribute("imagePathsRelative", imagePathsRelative.getValue().toString())
-                .setAttribute("evImageFile", envImageFile.getValue().getPath())
-                .setAttribute("bpImageFile", bpImageFile.getValue().getPath())
+            .setAttribute("evUseImage", envUseImage.getValue().toString())
+            .setAttribute("evUseColor", envUseColor.getValue().toString())
+            .setAttribute("bpUseImage", bpUseImage.getValue().toString())
+            .setAttribute("bpUseColor", bpUseColor.getValue().toString())
+            .setAttribute("imagePathsRelative", imagePathsRelative.getValue().toString())
+            .setAttribute("evImageFile", envImageFile.getValue().getPath())
+            .setAttribute("bpImageFile", bpImageFile.getValue().getPath())
 
-                .setAttribute("evColorIntensity", envColorIntensity.getValue().toString())
-                .setAttribute("evRotation", envRotation.getValue().toString())
-                .setAttribute("evColor", envColor.getValue().toString())
-                .setAttribute("bpColor", bpColor.getValue().toString())
-                .setAttribute("name", name.getValue())
-                .setAttribute("locked", locked.getValue().toString())
-                .setAttribute("firstEVLoaded", firstEnvLoaded.getValue().toString());
+            .setAttribute("evColorIntensity", envColorIntensity.getValue().toString())
+            .setAttribute("evRotation", envRotation.getValue().toString())
+            .setAttribute("evColor", envColor.getValue().toString())
+            .setAttribute("bpColor", bpColor.getValue().toString())
+            .setAttribute("name", name.getValue())
+            .setAttribute("locked", locked.getValue().toString())
+            .setAttribute("firstEVLoaded", firstEnvLoaded.getValue().toString());
     }
 
-
-    public static EnvironmentSettings fromJDOM2Element(Element element){
+    public static EnvironmentSettings fromJDOM2Element(Element element)
+    {
         return new EnvironmentSettings(
-                Boolean.valueOf(element.getAttributeValue("evUseImage")),
-                Boolean.valueOf(element.getAttributeValue("evUseColor")),
-                Boolean.valueOf(element.getAttributeValue("bpUseImage")),
-                Boolean.valueOf(element.getAttributeValue("bpUseColor")),
-                Boolean.valueOf(element.getAttributeValue("imagePathsRelative")),
+            Boolean.valueOf(element.getAttributeValue("evUseImage")),
+            Boolean.valueOf(element.getAttributeValue("evUseColor")),
+            Boolean.valueOf(element.getAttributeValue("bpUseImage")),
+            Boolean.valueOf(element.getAttributeValue("bpUseColor")),
+            Boolean.valueOf(element.getAttributeValue("imagePathsRelative")),
 
-                new File(element.getAttributeValue("evImageFile")),
-                new File(element.getAttributeValue("bpImageFile")),
+            new File(element.getAttributeValue("evImageFile")),
+            new File(element.getAttributeValue("bpImageFile")),
 
-                Double.valueOf(element.getAttributeValue("evColorIntensity")),
-                Double.valueOf(element.getAttributeValue("evRotation")),
-                Color.valueOf(element.getAttributeValue("evColor")),
-                Color.valueOf(element.getAttributeValue("bpColor")),
-                String.valueOf(element.getAttributeValue("name")),
-                Boolean.valueOf(element.getAttributeValue("locked")),
-                Boolean.valueOf(element.getAttributeValue("firstEVLoaded"))
+            Double.valueOf(element.getAttributeValue("evColorIntensity")),
+            Double.valueOf(element.getAttributeValue("evRotation")),
+            Color.valueOf(element.getAttributeValue("evColor")),
+            Color.valueOf(element.getAttributeValue("bpColor")),
+            String.valueOf(element.getAttributeValue("name")),
+            Boolean.valueOf(element.getAttributeValue("locked")),
+            Boolean.valueOf(element.getAttributeValue("firstEVLoaded"))
         );
     }
 
     @Override
-    public String toString(){
+    public String toString()
+    {
         String out = name.getValue();
-        if(locked.getValue()) out = "(L) " + out;
+        if (locked.getValue())
+        {
+            out = "(L) " + out;
+        }
         return out;
     }
 
-
-    public EnvironmentSettings duplicate(){
+    public EnvironmentSettings duplicate()
+    {
         return new EnvironmentSettings(
-                envUseImage.getValue(),
-                envUseColor.getValue(),
-                bpUseImage.getValue(),
-                bpUseColor.getValue(),
-                imagePathsRelative.getValue(),
-                envImageFile.getValue(),
-                bpImageFile.getValue(),
-                envColorIntensity.getValue(),
-                envRotation.getValue(),
-                envColor.getValue(),
-                bpColor.getValue(),
-                (name.getValue() + " copy"),
-                locked.getValue(),
-                firstEnvLoaded.getValue()
+            envUseImage.getValue(),
+            envUseColor.getValue(),
+            bpUseImage.getValue(),
+            bpUseColor.getValue(),
+            imagePathsRelative.getValue(),
+            envImageFile.getValue(),
+            bpImageFile.getValue(),
+            envColorIntensity.getValue(),
+            envRotation.getValue(),
+            envColor.getValue(),
+            bpColor.getValue(),
+            (name.getValue() + " copy"),
+            locked.getValue(),
+            firstEnvLoaded.getValue()
         );
-
     }
 
-    public boolean isEnvUseImageEnabled() {
+    public boolean isEnvUseImageEnabled()
+    {
         return envUseImage.get();
     }
 
-    public BooleanProperty envUseImageProperty() {
+    public BooleanProperty envUseImageProperty()
+    {
         return envUseImage;
     }
 
-    public void setEnvUseImageEnabled(boolean envUseImage) {
+    public void setEnvUseImageEnabled(boolean envUseImage)
+    {
         this.envUseImage.set(envUseImage);
     }
 
-    public boolean isEnvUseColorEnabled() {
+    public boolean isEnvUseColorEnabled()
+    {
         return envUseColor.get();
     }
 
-    public BooleanProperty envUseColorProperty() {
+    public BooleanProperty envUseColorProperty()
+    {
         return envUseColor;
     }
 
-    public void setEnvUseColorEnabled(boolean envUseColor) {
+    public void setEnvUseColorEnabled(boolean envUseColor)
+    {
         this.envUseColor.set(envUseColor);
     }
 
-    public boolean isBpUseImageEnabled() {
+    public boolean isBpUseImageEnabled()
+    {
         return bpUseImage.get();
     }
 
-    public BooleanProperty bpUseImageProperty() {
+    public BooleanProperty bpUseImageProperty()
+    {
         return bpUseImage;
     }
 
-    public void setBpUseImageEnabled(boolean bpUseImage) {
+    public void setBpUseImageEnabled(boolean bpUseImage)
+    {
         this.bpUseImage.set(bpUseImage);
     }
 
-    public boolean isBpUseColorEnabled() {
+    public boolean isBpUseColorEnabled()
+    {
         return bpUseColor.get();
     }
 
-    public BooleanProperty bpUseColorProperty() {
+    public BooleanProperty bpUseColorProperty()
+    {
         return bpUseColor;
     }
 
-    public void setBpUseColorEnabled(boolean bpUseColor) {
+    public void setBpUseColorEnabled(boolean bpUseColor)
+    {
         this.bpUseColor.set(bpUseColor);
     }
 
-    public boolean areImagePathsRelative() {
+    public boolean areImagePathsRelative()
+    {
         return imagePathsRelative.get();
     }
 
-    public BooleanProperty imagePathsRelativeProperty() {
+    public BooleanProperty imagePathsRelativeProperty()
+    {
         return imagePathsRelative;
     }
 
-    public void setImagePathsRelative(boolean imagePathsRelative) {
+    public void setImagePathsRelative(boolean imagePathsRelative)
+    {
         this.imagePathsRelative.set(imagePathsRelative);
     }
 
-    public File getEnvImageFile() {
+    public File getEnvImageFile()
+    {
         return envImageFile.getValue();
     }
 
-    public Property<File> envImageFileProperty() {
+    public Property<File> envImageFileProperty()
+    {
         return envImageFile;
     }
 
-    public void setEnvImageFile(File envImageFile) {
+    public void setEnvImageFile(File envImageFile)
+    {
         this.envImageFile.setValue(envImageFile);
     }
 
-    public File getBpImageFile() {
+    public File getBpImageFile()
+    {
         return bpImageFile.getValue();
     }
 
-    public Property<File> bpImageFileProperty() {
+    public Property<File> bpImageFileProperty()
+    {
         return bpImageFile;
     }
 
-    public void setBpImageFile(File bpImageFile) {
+    public void setBpImageFile(File bpImageFile)
+    {
         this.bpImageFile.setValue(bpImageFile);
     }
 
-    public double getEnvColorIntensity() {
+    public double getEnvColorIntensity()
+    {
         return envColorIntensity.get();
     }
 
-    public DoubleProperty envColorIntensityProperty() {
+    public DoubleProperty envColorIntensityProperty()
+    {
         return envColorIntensity;
     }
 
-    public void setEnvColorIntensity(double envColorIntensity) {
+    public void setEnvColorIntensity(double envColorIntensity)
+    {
         this.envColorIntensity.set(envColorIntensity);
     }
 
-    public double getEnvRotation() {
+    public double getEnvRotation()
+    {
         return envRotation.get();
     }
 
-    public DoubleProperty envRotationProperty() {
+    public DoubleProperty envRotationProperty()
+    {
         return envRotation;
     }
 
-    public void setEnvRotation(double envRotation) {
+    public void setEnvRotation(double envRotation)
+    {
         this.envRotation.set(envRotation);
     }
 
-    public Color getEnvColor() {
+    public Color getEnvColor()
+    {
         return envColor.getValue();
     }
 
-    public Property<Color> envColorProperty() {
+    public Property<Color> envColorProperty()
+    {
         return envColor;
     }
 
-    public void setEnvColor(Color envColor) {
+    public void setEnvColor(Color envColor)
+    {
         this.envColor.setValue(envColor);
     }
 
-    public Color getBpColor() {
+    public Color getBpColor()
+    {
         return bpColor.getValue();
     }
 
-    public Property<Color> bpColorProperty() {
+    public Property<Color> bpColorProperty()
+    {
         return bpColor;
     }
 
-    public void setBpColor(Color bpColor) {
+    public void setBpColor(Color bpColor)
+    {
         this.bpColor.setValue(bpColor);
     }
 
-    public String getName() {
+    public String getName()
+    {
         return name.get();
     }
 
-    public StringProperty nameProperty() {
+    public StringProperty nameProperty()
+    {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(String name)
+    {
         this.name.set(name);
     }
 
-    public boolean isLocked() {
+    public boolean isLocked()
+    {
         return locked.get();
     }
 
-    public BooleanProperty lockedProperty() {
+    public BooleanProperty lockedProperty()
+    {
         return locked;
     }
 
-    public void setLocked(boolean locked) {
+    public void setLocked(boolean locked)
+    {
         this.locked.set(locked);
     }
 
-    public boolean isFirstEnvLoaded() {
+    public boolean isFirstEnvLoaded()
+    {
         return firstEnvLoaded.get();
     }
 
-    public BooleanProperty firstEnvLoadedProperty() {
+    public BooleanProperty firstEnvLoadedProperty()
+    {
         return firstEnvLoaded;
     }
 
-    public void setFirstEnvLoaded(boolean firstEnvLoaded) {
+    public void setFirstEnvLoaded(boolean firstEnvLoaded)
+    {
         this.firstEnvLoaded.set(firstEnvLoaded);
     }
 }

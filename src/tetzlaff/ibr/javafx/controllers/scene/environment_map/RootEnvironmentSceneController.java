@@ -20,7 +20,8 @@ import tetzlaff.ibr.javafx.models.JavaFXEnvironmentMapModel;
 
 import com.sun.javafx.collections.ObservableListWrapper;
 
-public class RootEnvironmentSceneController implements Initializable {
+public class RootEnvironmentSceneController implements Initializable
+{
     private ObservableList<EnvironmentSettings> listOfEnvironments = new ObservableListWrapper<>(new ArrayList<>());
     @FXML
     private VBox settings;
@@ -36,14 +37,54 @@ public class RootEnvironmentSceneController implements Initializable {
     private boolean useStartingMap = false;
 
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        
+    public void initialize(URL location, ResourceBundle resources)
+    {
+
         environmentListView.setItems(listOfEnvironments);
 
         s().selectedItemProperty().addListener(settingsController.changeListener);
 
-        if(useStartingMap) {
+        if (useStartingMap)
+        {
             EnvironmentSettings startingMap = new EnvironmentSettings(
+                false,
+                false,
+                false,
+                false,
+                false,
+                null,
+                null,
+                1.0,
+                0.0,
+                new Color(0.0, 0.0, 0.0, 1.0),
+                new Color(0, 0, 0, 1),
+                "Free Environment Map",
+                false,
+                false
+            );
+
+            listOfEnvironments.add(startingMap);
+            s().select(0);
+        }
+    }
+
+    public void init2(JavaFXEnvironmentMapModel environmentMapModel)
+    {
+        environmentMapModel.setSelected(s().selectedItemProperty());
+    }
+
+    private SelectionModel<EnvironmentSettings> s()
+    {
+        return environmentListView.getSelectionModel();
+    }
+
+    @FXML
+    private void newEnvButton()
+    {
+        if (s().getSelectedItem() == null)
+        {
+            listOfEnvironments.add(
+                new EnvironmentSettings(
                     false,
                     false,
                     false,
@@ -53,74 +94,43 @@ public class RootEnvironmentSceneController implements Initializable {
                     null,
                     1.0,
                     0.0,
-                    new Color(0.0, 0.0, 0.0, 1.0),
-                    new Color(0, 0, 0, 1),
-                    "Free Environment Map",
+                    Color.BLACK,
+                    Color.BLACK,
+                    "New Environment",
                     false,
                     false
+                )
             );
-
-
-            listOfEnvironments.add(startingMap);
-            s().select(0);
         }
-
-
-    }
-
-    public void init2(JavaFXEnvironmentMapModel environmentMapModel){
-        environmentMapModel.setSelected(s().selectedItemProperty());
-    }
-
-    private SelectionModel<EnvironmentSettings> s() {
-        return environmentListView.getSelectionModel();
-    }
-
-
-    @FXML
-    private void newEnvButton() {
-        if(s().getSelectedItem() == null){
-            listOfEnvironments.add(
-                    new EnvironmentSettings(
-                            false,
-                            false,
-                            false,
-                            false,
-                            false,
-                            null,
-                            null,
-                            1.0,
-                            0.0,
-                            Color.BLACK,
-                            Color.BLACK,
-                            "New Environment",
-                            false,
-                            false
-                    )
-            );
-        } else {
+        else
+        {
             listOfEnvironments.add(s().getSelectedItem().duplicate());
             s().select(listOfEnvironments.size() - 1);
         }
     }
 
     @FXML
-    private void saveEnvButton() {
+    private void saveEnvButton()
+    {
         System.out.println("TODO: saved " + s().getSelectedItem() + " to the library.");
     }
 
     @FXML
-    private void renameEnvButton() {
-        if (useStartingMap && s().getSelectedIndex() == 0) return;
+    private void renameEnvButton()
+    {
+        if (useStartingMap && s().getSelectedIndex() == 0)
+        {
+            return;
+        }
 
         EventHandler<ActionEvent> oldOnAction = theRenameButton.getOnAction();//backup the old on action event for the rename button
 
         //set up two buttons and a text field for name entry
-        listControls.getChildren().iterator().forEachRemaining(n -> {
+        listControls.getChildren().iterator().forEachRemaining(n ->
+        {
             n.setDisable(true);
         });
         settings.setDisable(true);
-
 
         theRenameButton.setDisable(false);
 
@@ -140,13 +150,16 @@ public class RootEnvironmentSceneController implements Initializable {
 
         //set up to event handlers, one to return the controls back to their original state,
         // and the other to actually perform the rename
-        EventHandler<ActionEvent> finishRename = new EventHandler<ActionEvent>() {
+        EventHandler<ActionEvent> finishRename = new EventHandler<ActionEvent>()
+        {
             @Override
-            public void handle(ActionEvent event) {
+            public void handle(ActionEvent event)
+            {
                 listControls.getChildren().removeAll(renameTextField, cancelRenameButton);
                 theRenameButton.setOnAction(oldOnAction);
 
-                listControls.getChildren().iterator().forEachRemaining(n -> {
+                listControls.getChildren().iterator().forEachRemaining(n ->
+                {
                     n.setDisable(false);
                 });
 
@@ -156,11 +169,14 @@ public class RootEnvironmentSceneController implements Initializable {
             }
         };
 
-        EventHandler<ActionEvent> doRename = new EventHandler<ActionEvent>() {
+        EventHandler<ActionEvent> doRename = new EventHandler<ActionEvent>()
+        {
             @Override
-            public void handle(ActionEvent event) {
+            public void handle(ActionEvent event)
+            {
                 String newName = renameTextField.getText();
-                if (!newName.equals("")) {
+                if (!newName.equals(""))
+                {
                     s().getSelectedItem().setName(newName);
                 }
 
@@ -176,31 +192,41 @@ public class RootEnvironmentSceneController implements Initializable {
         renameTextField.setText(s().getSelectedItem().getName());
         renameTextField.requestFocus();
         renameTextField.selectAll();
-
     }
 
     @FXML
-    private void moveUPButton() {
+    private void moveUPButton()
+    {
         int i = s().getSelectedIndex();
-        if(useStartingMap && i == 1)return;
-        if (i > 0) {
+        if (useStartingMap && i == 1)
+        {
+            return;
+        }
+        if (i > 0)
+        {
             Collections.swap(listOfEnvironments, i, i - 1);
             s().select(i - 1);
         }
     }
 
     @FXML
-    void moveDOWNButton() {
+    void moveDOWNButton()
+    {
         int i = s().getSelectedIndex();
-        if(useStartingMap && i == 0) return;
-        if (i < listOfEnvironments.size() - 1) {
+        if (useStartingMap && i == 0)
+        {
+            return;
+        }
+        if (i < listOfEnvironments.size() - 1)
+        {
             Collections.swap(listOfEnvironments, i, i + 1);
             s().select(i + 1);
         }
     }
 
     @FXML
-    void lockEnvButton() {
+    void lockEnvButton()
+    {
         Boolean newValue = !s().getSelectedItem().isLocked();
         s().getSelectedItem().setLocked(newValue);
         settingsController.setDisabled(newValue);
@@ -208,10 +234,13 @@ public class RootEnvironmentSceneController implements Initializable {
     }
 
     @FXML
-    void deleteEnvButton() {
+    void deleteEnvButton()
+    {
         int i = s().getSelectedIndex();
-        if(useStartingMap && i ==0)return;
+        if (useStartingMap && i == 0)
+        {
+            return;
+        }
         listOfEnvironments.remove(i);
     }
-
 }

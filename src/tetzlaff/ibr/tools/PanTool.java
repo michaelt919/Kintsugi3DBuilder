@@ -22,16 +22,16 @@ class PanTool extends AbstractTool
     private Vector3 oldCenter = Vector3.ZERO;
     private Matrix4 orbit;
 
-    PanTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, SceneViewportModel sceneViewportModel) 
+    PanTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, SceneViewportModel sceneViewportModel)
     {
         super(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
     }
-    
+
     @Override
-    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods) 
+    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
         super.mouseButtonPressed(window, buttonIndex, mods);
-        if(buttonIndex == MB1)
+        if (buttonIndex == MB1)
         {
             oldCenter = cameraModel.getCenter();
             orbit = cameraModel.getOrbit();
@@ -42,18 +42,18 @@ class PanTool extends AbstractTool
     }
 
     @Override
-    public void cursorMoved(Window<?> window, double xpos, double ypos) 
+    public void cursorMoved(Window<?> window, double xpos, double ypos)
     {
-        if(window.getMouseButtonState(MB1).equals(MouseButtonState.Pressed) &&
+        if (window.getMouseButtonState(MB1).equals(MouseButtonState.Pressed) &&
             !Double.isNaN(mouseStartX_MB1) &&
             !Double.isNaN(mouseStartY_MB1) &&
             (xpos != mouseStartX_MB1 | ypos != mouseStartY_MB1))
         {
 
             Vector3 moveVector = new Vector3(
-                    (float) (xpos - mouseStartX_MB1),
-                    (float) (mouseStartY_MB1 - ypos),
-                    0.0f);
+                (float) (xpos - mouseStartX_MB1),
+                (float) (mouseStartY_MB1 - ypos),
+                0.0f);
 
             moveVector = moveVector.times((float) panSensitivityAdjusted);
             Vector3 worldMoveVector = orbit.transpose().times(moveVector.asVector4(0f)).getXYZ();

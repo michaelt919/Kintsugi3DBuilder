@@ -11,11 +11,11 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.environment_map.EnvironmentSettings;
 import tetzlaff.models.ReadonlyEnvironmentMapModel;
 
-public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel 
+public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
 {
     private ObservableValue<EnvironmentSettings> selected;
-    
-    public JavaFXEnvironmentMapModel() 
+
+    public JavaFXEnvironmentMapModel()
     {
         super();
     }
@@ -25,53 +25,56 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
         this.selected = selected;
         this.selected.addListener(settingChange);
     }
-    
+
     private boolean selectedExists()
     {
         return (selected != null && selected.getValue() != null);
     }
 
     @Override
-    public Vector3 getAmbientLightColor() 
+    public Vector3 getAmbientLightColor()
     {
-        if(selectedExists())
+        if (selectedExists())
         {
-            if(selected.getValue().isEnvUseColorEnabled())
+            if (selected.getValue().isEnvUseColorEnabled())
             {
                 Color color = selected.getValue().getEnvColor();
-                return new Vector3((float) color.getRed(),(float) color.getBlue(),(float) color.getGreen()).times((float) selected.getValue().getEnvColorIntensity());
+                return new Vector3((float) color.getRed(), (float) color.getBlue(), (float) color.getGreen()).times((float) selected.getValue().getEnvColorIntensity());
             }
             else
             {
-                if(selected.getValue().isEnvUseImageEnabled())
+                if (selected.getValue().isEnvUseImageEnabled())
                 {
                     return new Vector3(1f);
                 }
-                else 
+                else
                 {
                     return Vector3.ZERO;
                 }
             }
         }
-        else return Vector3.ZERO;
+        else
+        {
+            return Vector3.ZERO;
+        }
     }
 
     private final ChangeListener<File> envFileChange = (observable, oldFile, newFile) ->
     {
         // TODO NEWUI don't reload if oldFile == newFile
-        if(newFile != null)
+        if (newFile != null)
         {
             try
             {
                 System.out.println("Loading environment map file " + newFile.getName());
                 JavaFXModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
             }
-            catch (IOException e) 
+            catch (IOException e)
             {
                 e.printStackTrace();
             }
 
-            if(selectedExists()) 
+            if (selectedExists())
             {
                 selected.getValue().setFirstEnvLoaded(true);
             }
@@ -80,13 +83,13 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
 
     private final ChangeListener<EnvironmentSettings> settingChange = (observable, oldSetting, newSetting) ->
     {
-        if (newSetting != null) 
+        if (newSetting != null)
         {
             newSetting.envImageFileProperty().addListener(envFileChange);
             envFileChange.changed(null, null, newSetting.getEnvImageFile());
         }
-        
-        if (oldSetting != null) 
+
+        if (oldSetting != null)
         {
             oldSetting.envImageFileProperty().removeListener(envFileChange);
         }
@@ -95,25 +98,25 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
     @Override
     public boolean getEnvironmentMappingEnabled()
     {
-        if(selectedExists())
+        if (selectedExists())
         {
             return selected.getValue().isEnvUseImageEnabled();
         }
-        else 
+        else
         {
             return false;
         }
     }
 
     @Override
-    public Matrix4 getEnvironmentMapMatrix() 
+    public Matrix4 getEnvironmentMapMatrix()
     {
-        if(selectedExists())
+        if (selectedExists())
         {
             double azmuth = selected.getValue().getEnvRotation();
             return Matrix4.rotateY(Math.toRadians(azmuth));
         }
-        else 
+        else
         {
             return Matrix4.IDENTITY;
         }

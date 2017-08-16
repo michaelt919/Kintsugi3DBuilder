@@ -6,7 +6,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import tetzlaff.ibr.ReadonlyLoadOptionsModel;
 
-public class JavaFXLoadOptionsModel implements ReadonlyLoadOptionsModel {
+public class JavaFXLoadOptionsModel implements ReadonlyLoadOptionsModel
+{
     public final BooleanProperty colorImages = new SimpleBooleanProperty(true);
     public final BooleanProperty mipmaps = new SimpleBooleanProperty(true);
     public final BooleanProperty compression = new SimpleBooleanProperty(true);
@@ -15,32 +16,38 @@ public class JavaFXLoadOptionsModel implements ReadonlyLoadOptionsModel {
     public final IntegerProperty depthHeight = new SimpleIntegerProperty(1024);
 
     @Override
-    public boolean areColorImagesRequested() {
+    public boolean areColorImagesRequested()
+    {
         return colorImages.get();
     }
 
     @Override
-    public boolean areMipmapsRequested() {
+    public boolean areMipmapsRequested()
+    {
         return mipmaps.get();
     }
 
     @Override
-    public boolean isCompressionRequested() {
+    public boolean isCompressionRequested()
+    {
         return compression.get();
     }
 
     @Override
-    public boolean areDepthImagesRequested() {
+    public boolean areDepthImagesRequested()
+    {
         return depthImages.get();
     }
 
     @Override
-    public int getDepthImageWidth() {
+    public int getDepthImageWidth()
+    {
         return depthWidth.get();
     }
 
     @Override
-    public int getDepthImageHeight() {
+    public int getDepthImageHeight()
+    {
         return depthHeight.get();
     }
 }

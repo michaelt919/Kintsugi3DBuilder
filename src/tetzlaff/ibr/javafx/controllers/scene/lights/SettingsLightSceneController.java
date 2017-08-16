@@ -1,6 +1,5 @@
 package tetzlaff.ibr.javafx.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
-
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -19,21 +18,32 @@ import tetzlaff.ibr.javafx.util.SafeNumberStringConverter;
 import tetzlaff.ibr.javafx.util.SafeNumberStringConverterPow10;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 
-public class SettingsLightSceneController implements Initializable{
+public class SettingsLightSceneController implements Initializable
+{
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    public void initialize(URL location, ResourceBundle resources)
+    {
         setDisabled(true);
 
-        StringConverter<Double> pow10converter = new StringConverter<Double>() {
+        StringConverter<Double> pow10converter = new StringConverter<Double>()
+        {
             @Override
-            public String toString(Double object) {
+            public String toString(Double object)
+            {
                 String s = n10.toString(object);
-                if(s.length() > 4) return s.substring(0,4);
-                else return s;
+                if (s.length() > 4)
+                {
+                    return s.substring(0, 4);
+                }
+                else
+                {
+                    return s;
+                }
             }
 
             @Override
-            public Double fromString(String string) {
+            public Double fromString(String string)
+            {
                 return null;
             }
         };
@@ -43,9 +53,6 @@ public class SettingsLightSceneController implements Initializable{
         intensitySlider.setLabelFormatter(pow10converter);
         StaticUtilities.powerBind(intensitySlider.valueProperty(), trueIntensity);
 
-
-
-
         StaticUtilities.cleanInput(xCenterTextField);
         StaticUtilities.cleanInput(yCenterTextField);
         StaticUtilities.cleanInput(zCenterTextField);
@@ -53,10 +60,8 @@ public class SettingsLightSceneController implements Initializable{
         StaticUtilities.bound(0, Double.MAX_VALUE, distanceTextField);
         StaticUtilities.bound(0, Double.MAX_VALUE, intensityTextField);
 
-
         StaticUtilities.wrap(-180, 180, azimuthTextField);
-        StaticUtilities.bound(-90,90,inclinationTextField);
-
+        StaticUtilities.bound(-90, 90, inclinationTextField);
     }
 
     @FXML private VBox root;
@@ -82,19 +87,31 @@ public class SettingsLightSceneController implements Initializable{
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
     private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);
 
-    public final ChangeListener<LightInstanceSetting> changeListener = (observable, oldValue, newValue) -> {
-        if(oldValue != null) unbind(oldValue);
+    public final ChangeListener<LightInstanceSetting> changeListener = (observable, oldValue, newValue) ->
+    {
+        if (oldValue != null)
+        {
+            unbind(oldValue);
+        }
 
-        if(newValue != null){ bind(newValue); setDisabled(newValue.isLocked() | newValue.getGroupLocked()); }
-        else setDisabled(true);
+        if (newValue != null)
+        {
+            bind(newValue);
+            setDisabled(newValue.isLocked() | newValue.getGroupLocked());
+        }
+        else
+        {
+            setDisabled(true);
+        }
     };
 
-
-    public void setDisabled(Boolean disabled){
+    public void setDisabled(Boolean disabled)
+    {
         root.setDisable(disabled);
     }
 
-    private void bind(LightInstanceSetting c){
+    private void bind(LightInstanceSetting c)
+    {
 
         xCenterTextField.textProperty().bindBidirectional(c.xCenterProperty(), n);
         yCenterTextField.textProperty().bindBidirectional(c.yCenterProperty(), n);
@@ -115,10 +132,10 @@ public class SettingsLightSceneController implements Initializable{
         lightTypeChoiceBox.valueProperty().bindBidirectional(c.lightTypeProperty());
 
         colorPicker.valueProperty().bindBidirectional(c.colorProperty());
-
     }
 
-    private void unbind(LightInstanceSetting c){
+    private void unbind(LightInstanceSetting c)
+    {
 
         xCenterTextField.textProperty().unbindBidirectional(c.xCenterProperty());
         yCenterTextField.textProperty().unbindBidirectional(c.yCenterProperty());
@@ -138,6 +155,5 @@ public class SettingsLightSceneController implements Initializable{
 
         lightTypeChoiceBox.valueProperty().unbindBidirectional(c.lightTypeProperty());
         colorPicker.valueProperty().unbindBidirectional(c.colorProperty());
-
     }
 }

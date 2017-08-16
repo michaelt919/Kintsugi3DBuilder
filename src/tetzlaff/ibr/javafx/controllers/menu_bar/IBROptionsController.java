@@ -16,7 +16,8 @@ import tetzlaff.ibr.javafx.util.SafeFloatStringConverter;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
 
-public class IBROptionsController implements Initializable{
+public class IBROptionsController implements Initializable
+{
     @FXML private CheckBox texturesCheckBox;
     @FXML private CheckBox occlusionCheckBox;
     @FXML private CheckBox geometricAttenuationCheckBox;
@@ -34,31 +35,33 @@ public class IBROptionsController implements Initializable{
     private JavaFXSettingsModel settingCache;
 
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    public void initialize(URL location, ResourceBundle resources)
+    {
 
-        weightModeChoiceBox.setConverter(new StringConverter<ShadingParameterMode>() {
+        weightModeChoiceBox.setConverter(new StringConverter<ShadingParameterMode>()
+        {
             @Override
-            public String toString(ShadingParameterMode object) {
+            public String toString(ShadingParameterMode object)
+            {
                 return object.name();
             }
 
             @Override
-            public ShadingParameterMode fromString(String string) {
+            public ShadingParameterMode fromString(String string)
+            {
                 return ShadingParameterMode.valueOf(string);
             }
         });
         weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
 
-
-        StaticUtilities.bound(1,5, gamaTextField);
-        StaticUtilities.bound(1,100, weightExponentTextField);
-        StaticUtilities.bound(0,1, isotropyFactorTextField);
+        StaticUtilities.bound(1, 5, gamaTextField);
+        StaticUtilities.bound(1, 100, weightExponentTextField);
+        StaticUtilities.bound(0, 1, isotropyFactorTextField);
         StaticUtilities.bound(0, 0.1, occlusionBiasTextField);
-
     }
 
-
-    public void bind(JavaFXSettingsModel ibrSettingsUIImpl){
+    public void bind(JavaFXSettingsModel ibrSettingsUIImpl)
+    {
 
         texturesCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.texturesProperty());
         occlusionCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.occlusionProperty());
@@ -77,13 +80,12 @@ public class IBROptionsController implements Initializable{
         occlusionBiasSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.occlusionBiasProperty());
         occlusionBiasTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.occlusionBiasProperty(), new SafeFloatStringConverter(0.0025f));
 
-
         settingCache = ibrSettingsUIImpl;
-        root.getScene().getWindow().setOnCloseRequest(param->unbind());
+        root.getScene().getWindow().setOnCloseRequest(param -> unbind());
     }
 
-
-    private void unbind(){
+    private void unbind()
+    {
 
         System.out.println("unbind");
 
@@ -104,6 +106,5 @@ public class IBROptionsController implements Initializable{
 
         occlusionBiasSlider.valueProperty().unbindBidirectional(settingCache.occlusionBiasProperty());
         occlusionBiasTextField.textProperty().unbindBidirectional(settingCache.occlusionBiasProperty());
-
     }
 }

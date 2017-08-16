@@ -27,7 +27,7 @@ class AbstractTool implements CursorPositionListener, MouseButtonPressListener, 
     protected final ReadonlyLightingModel lightingModel;
     protected final SceneViewportModel sceneViewportModel;
 
-    AbstractTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, SceneViewportModel sceneViewportModel) 
+    AbstractTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, SceneViewportModel sceneViewportModel)
     {
         this.cameraModel = cameraModel;
         this.environmentMapModel = environmentMapModel;
@@ -36,25 +36,25 @@ class AbstractTool implements CursorPositionListener, MouseButtonPressListener, 
     }
 
     @Override
-    public void scroll(Window<?> window, double xoffset, double yoffset) 
+    public void scroll(Window<?> window, double xoffset, double yoffset)
     {
     }
 
     @Override
-    public void cursorMoved(Window<?> window, double xpos, double ypos) 
+    public void cursorMoved(Window<?> window, double xpos, double ypos)
     {
     }
 
     @Override
-    public void keyPressed(Window<?> window, int keycode, ModifierKeys mods) 
+    public void keyPressed(Window<?> window, int keycode, ModifierKeys mods)
     {
     }
 
     @Override
-    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods) 
+    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
         System.out.println("MB: " + buttonIndex);
-        if(buttonIndex == MB1)
+        if (buttonIndex == MB1)
         {
             CursorPosition pos = window.getCursorPosition();
             mouseStartX_MB1 = pos.x;
@@ -69,24 +69,27 @@ class AbstractTool implements CursorPositionListener, MouseButtonPressListener, 
 
     protected enum SceneObjectType
     {
-        OBJECT, LIGHT, BACKGROUND, OTHER
+        OBJECT,
+        LIGHT,
+        BACKGROUND,
+        OTHER
     }
 
     protected SceneObjectType getClickedObjectType(double x, double y)
     {
         Object thing = sceneViewportModel.getObjectAtCoordinates(x, y);
-        if(thing != null && thing instanceof String)
+        if (thing != null && thing instanceof String)
         {
-            if(thing.equals("IBRObject"))
+            if (thing.equals("IBRObject"))
             {
                 return SceneObjectType.OBJECT;
             }
-            else if(((String) thing).startsWith("Light"))
+            else if (((String) thing).startsWith("Light"))
             {
                 return SceneObjectType.LIGHT;
             }
         }
-        else 
+        else
         {
             return SceneObjectType.BACKGROUND;
         }

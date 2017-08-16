@@ -12,7 +12,8 @@ import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.SceneViewportModel;
 import tetzlaff.util.WindowBasedController;
 
-public class ToolBox implements CursorPositionListener, MouseButtonPressListener, ScrollListener, KeyPressListener, WindowBasedController 
+public class ToolBox
+    implements CursorPositionListener, MouseButtonPressListener, ScrollListener, KeyPressListener, WindowBasedController
 {
     private ToolSelectionModel toolModel;
 
@@ -24,54 +25,59 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
 
     //window listener
     @Override
-    public void addAsWindowListener(Window<?> window) 
+    public void addAsWindowListener(Window<?> window)
     {
         window.addCursorPositionListener(this);
         window.addMouseButtonPressListener(this);
         window.addScrollListener(this);
         window.addKeyPressListener(this);
     }
-    
+
     private AbstractTool selectedTool()
     {
         switch (toolModel.getTool())
         {
-            case DOLLY: return dollyTool;
-            case ORBIT: return orbitTool;
-            case PAN: return panTool;
-            case CENTER_POINT: return centerPointTool;
-            default: return orbitTool;
+            case DOLLY:
+                return dollyTool;
+            case ORBIT:
+                return orbitTool;
+            case PAN:
+                return panTool;
+            case CENTER_POINT:
+                return centerPointTool;
+            default:
+                return orbitTool;
         }
     }
 
     //pass methods to selected tool
     @Override
-    public void scroll(Window<?> window, double xoffset, double yoffset) 
+    public void scroll(Window<?> window, double xoffset, double yoffset)
     {
         selectedTool().scroll(window, xoffset, yoffset);
     }
 
     @Override
-    public void cursorMoved(Window<?> window, double xpos, double ypos) 
+    public void cursorMoved(Window<?> window, double xpos, double ypos)
     {
         selectedTool().cursorMoved(window, xpos, ypos);
     }
 
     @Override
-    public void keyPressed(Window<?> window, int keycode, ModifierKeys mods) 
+    public void keyPressed(Window<?> window, int keycode, ModifierKeys mods)
     {
         selectedTool().keyPressed(window, keycode, mods);
     }
 
     @Override
-    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods) 
+    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
         selectedTool().mouseButtonPressed(window, buttonIndex, mods);
     }
 
     //builder
-    private ToolBox(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, 
-            ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel)
+    private ToolBox(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel,
+        ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel)
     {
         this.toolModel = toolModel;
 
@@ -81,7 +87,7 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
         centerPointTool = new CenterPointTool(cameraModel, environmentMapModel, lightingModel, toolModel, sceneViewportModel);
     }
 
-    public static final class Builder 
+    public static final class Builder
     {
         private ToolSelectionModel toolModel;
         private ExtendedCameraModel cameraModel;
@@ -89,46 +95,46 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
         private ReadonlyLightingModel lightingModel;
         private SceneViewportModel sceneViewportModel;
 
-        public static Builder create() 
+        public static Builder create()
         {
             return new Builder();
         }
-        
+
         private Builder()
         {
         }
 
-        public Builder setToolModel(ToolSelectionModel toolModel) 
+        public Builder setToolModel(ToolSelectionModel toolModel)
         {
             this.toolModel = toolModel;
             return this;
         }
 
-        public Builder setCameraModel(ExtendedCameraModel cameraModel) 
+        public Builder setCameraModel(ExtendedCameraModel cameraModel)
         {
             this.cameraModel = cameraModel;
             return this;
         }
 
-        public Builder setEnvironmentMapModel(ReadonlyEnvironmentMapModel environmentMapModel) 
+        public Builder setEnvironmentMapModel(ReadonlyEnvironmentMapModel environmentMapModel)
         {
             this.environmentMapModel = environmentMapModel;
             return this;
         }
 
-        public Builder setLightingModel(ReadonlyLightingModel lightingModel) 
+        public Builder setLightingModel(ReadonlyLightingModel lightingModel)
         {
             this.lightingModel = lightingModel;
             return this;
         }
 
-        public Builder setSceneViewportModel(SceneViewportModel sceneViewportModel) 
+        public Builder setSceneViewportModel(SceneViewportModel sceneViewportModel)
         {
             this.sceneViewportModel = sceneViewportModel;
             return this;
         }
 
-        public WindowBasedController build() 
+        public WindowBasedController build()
         {
             return new ToolBox(cameraModel, environmentMapModel, lightingModel, toolModel, sceneViewportModel);
         }
