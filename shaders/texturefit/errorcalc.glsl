@@ -89,8 +89,8 @@ ErrorResult calculateError()
                 vec3 light = normalize(lightPreNormalized);
                 float nDotL = max(0, dot(light, shadingNormal));
 
-                vec3 half = normalize(view + light);
-                float nDotH = dot(half, shadingNormal);
+                vec3 halfway = normalize(view + light);
+                float nDotH = dot(halfway, shadingNormal);
 
                 if (nDotL > 0.0 && nDotH > sqrt(0.5))
                 {
@@ -99,7 +99,7 @@ ErrorResult calculateError()
                     float q1 = roughnessSquared + (1.0 - nDotHSquared) / nDotHSquared;
                     float mfdEval = roughnessSquared / (nDotHSquared * nDotHSquared * q1 * q1);
 
-                    float hDotV = max(0, dot(half, view));
+                    float hDotV = max(0, dot(halfway, view));
                     float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
 
                     vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity),

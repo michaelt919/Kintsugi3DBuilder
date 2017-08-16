@@ -89,8 +89,8 @@ vec2 computeFidelity()
         vec3 light = normalize(lightPreNormalized);
         float nDotL = max(0, dot(light, shadingNormal));
 
-        vec3 half = normalize(view + light);
-        float nDotH = dot(half, shadingNormal);
+        vec3 halfway = normalize(view + light);
+        float nDotH = dot(halfway, shadingNormal);
 
         vec3 colorScaled;
         if (evaluateInXYZ)
@@ -109,7 +109,7 @@ vec2 computeFidelity()
             float q1 = roughnessSquared * nDotHSquared + (1.0 - nDotHSquared);
             float mfdEval = roughnessSquared / (q1 * q1);
 
-            float hDotV = max(0, dot(half, view));
+            float hDotV = max(0, dot(halfway, view));
             float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
 
             vec3 currentFit = diffuseColor * nDotL + specularColor * mfdEval * geomRatio;
