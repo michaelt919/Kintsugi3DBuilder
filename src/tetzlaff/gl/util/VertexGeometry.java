@@ -228,7 +228,7 @@ public class VertexGeometry
 
         inst.centroid = sum.dividedBy(vertexList.size());
 
-        ArrayList<Vector4> orthoTangentsList = new ArrayList<Vector4>();
+        List<Vector4> orthoTangentsList = new ArrayList<Vector4>();
 
         // Normalize and orthogonalize tangent vectors
         for (int i = 0; i < tangentList.size(); i++)

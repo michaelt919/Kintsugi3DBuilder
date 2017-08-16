@@ -54,7 +54,8 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
 
     private ContextType context;
 
-    GLFWWindow(GLFWContextFactory<ContextType> contextFactory, int width, int height, String title, int x, int y, boolean resizable, int multisamples)
+    GLFWWindow(GLFWContextFactory<ContextType> contextFactory, int width, int height, String title, int xParam, int yParam,
+        boolean resizable, int multisamples)
     {
         glfwSetErrorCallback(GLFWErrorCallback.createString((error, description) ->
         {
@@ -88,6 +89,8 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
 
         // Query height and width of screen to set center point
         GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        int x = xParam;
+        int y = yParam;
         if (x < 0)
         {
             x = (vidmode.width() - width) / 2;

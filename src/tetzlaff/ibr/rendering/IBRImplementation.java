@@ -808,9 +808,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 projection)
+    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewParam, Matrix4 projectionParam)
     {
-        boolean customViewMatrix = (view != null);
+        boolean customViewMatrix = (viewParam != null);
 
         try
         {
@@ -824,6 +824,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
 
             context.getState().enableBackFaceCulling();
+
+            Matrix4 view = viewParam;
 
             if (!customViewMatrix)
             {
@@ -850,6 +852,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
 
             FramebufferSize size = framebuffer.getSize();
+
+            Matrix4 projection = projectionParam;
 
             if (projection == null)
             {

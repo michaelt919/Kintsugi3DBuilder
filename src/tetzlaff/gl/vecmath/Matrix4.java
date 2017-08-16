@@ -166,8 +166,8 @@ public class Matrix4
         Vector3 up)
     {
         Vector3 f = center.minus(eye).normalized();
-        up = up.normalized();
-        Vector3 s = f.cross(up).normalized();
+        Vector3 upNormalized = up.normalized();
+        Vector3 s = f.cross(upNormalized).normalized();
         Vector3 u = s.cross(f).normalized();
 
         return new Matrix4(

@@ -12,13 +12,13 @@ public class OrbitPolarConverter
         return instance;
     }
 
-    public Matrix4 convertToOrbitMatrix(Vector3 polarCoordinates) 
+    public Matrix4 convertToOrbitMatrix(Vector3 polarCoordinatesDegrees)
     {
-        polarCoordinates = polarCoordinates.applyOperator(Math::toRadians);
+        Vector3 polarCoordinatesRadians = polarCoordinatesDegrees.applyOperator(Math::toRadians);
 
-        return Matrix4.rotateZ(polarCoordinates.z).times(
-                Matrix4.rotateX(polarCoordinates.y).times(
-                        Matrix4.rotateY(polarCoordinates.x)
+        return Matrix4.rotateZ(polarCoordinatesRadians.z).times(
+                Matrix4.rotateX(polarCoordinatesRadians.y).times(
+                        Matrix4.rotateY(polarCoordinatesRadians.x)
                 )
         );
 

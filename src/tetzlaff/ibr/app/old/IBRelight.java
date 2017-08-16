@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -297,7 +298,7 @@ public class IBRelight
             {
                 try
                 {
-                    if (win == window && rendererList.getSelectedItem() != null)
+                    if (Objects.equals(win, window) && rendererList.getSelectedItem() != null)
                     {
                         CursorPosition pos = window.getCursorPosition();
                         WindowSize size = window.getWindowSize();

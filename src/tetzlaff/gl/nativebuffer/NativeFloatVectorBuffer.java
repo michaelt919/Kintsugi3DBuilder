@@ -2,6 +2,7 @@ package tetzlaff.gl.nativebuffer;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Objects;
 
 import org.lwjgl.BufferUtils;
 
@@ -43,7 +44,7 @@ class NativeFloatVectorBuffer implements NativeVectorBuffer
             throw new IllegalArgumentException("Insufficient buffer size - a list of " + count + dimensions +
                     "D 32-bit vertices requires a buffer with a capacity of at least " + dimensions * count * 4 + ".");
         }
-        if (buffer.order() != ByteOrder.nativeOrder())
+        if (!Objects.equals(buffer.order(), ByteOrder.nativeOrder()))
         {
             throw new IllegalArgumentException("Buffers used by OpenGL must be in native byte order.");
         }

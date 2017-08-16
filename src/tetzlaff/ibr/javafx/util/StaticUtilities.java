@@ -116,16 +116,17 @@ public class StaticUtilities
             return max;
         }
         //System.out.printf("[%f %f %f]", min, max, value);
-        while (value < min)
+        double sum = value;
+        while (sum < min)
         {
-            value += diff;
+            sum += diff;
         }
-        while (value > max)
+        while (sum > max)
         {
-            value -= diff;
+            sum -= diff;
         }
         //System.out.println();
-        return value;
+        return sum;
     }
 
     private static double bound(double min, double max, double value)

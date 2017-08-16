@@ -79,7 +79,6 @@ public class DistortionProjection implements Projection
      * @param k2 The "k2" camera distortion parameter.
      * @param k3 The "k3" camera distortion parameter.
      * @param k4 The "k4" camera distortion parameter.
-     * @param skew The "skew" camera distortion parameter.
      */
     public DistortionProjection( 
         float width, float height,

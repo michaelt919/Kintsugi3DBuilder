@@ -157,8 +157,8 @@ public class DoubleMatrix4
             DoubleVector3 up)
     {
         DoubleVector3 f = center.minus(eye).normalized();
-        up = up.normalized();
-        DoubleVector3 s = f.cross(up).normalized();
+        DoubleVector3 upNormalized = up.normalized();
+        DoubleVector3 s = f.cross(upNormalized).normalized();
         DoubleVector3 u = s.cross(f).normalized();
 
         return new DoubleMatrix4(
