@@ -1,14 +1,7 @@
 package tetzlaff.ibr.javafx.controllers.scene.camera;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-
+import javafx.beans.property.*;
 import org.jdom2.Element;
-
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.misc.XML_Writable;
 

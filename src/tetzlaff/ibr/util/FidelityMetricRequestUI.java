@@ -1,9 +1,8 @@
 package tetzlaff.ibr.util;
 
-import java.awt.Component;
+import java.awt.*;
 import java.io.File;
-
-import javax.swing.JFileChooser;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.ibr.ReadonlySettingsModel;

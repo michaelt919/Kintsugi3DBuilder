@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ResourceBundle;
 
+import com.sun.javafx.collections.ObservableListWrapper;
+import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,16 +17,9 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TablePosition;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import tetzlaff.ibr.javafx.models.JavaFXLightingModel;
-
-import com.sun.javafx.collections.ObservableListWrapper;
-import com.sun.javafx.scene.control.skin.TableHeaderRow;
 
 public class RootLightSceneController implements Initializable
 {

@@ -1,13 +1,8 @@
 package tetzlaff.ibr.javafx.models;//Created by alexk on 7/31/2017.
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.FloatProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleFloatProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import tetzlaff.ibr.SettingsModel;
+import javafx.beans.property.*;
 import tetzlaff.ibr.RenderingMode;
+import tetzlaff.ibr.SettingsModel;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
 

@@ -2,16 +2,10 @@ package tetzlaff.ibr.javafx.controllers.scene.lights;//Created by alexk on 7/16/
 
 import java.util.ArrayList;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import com.sun.javafx.collections.ObservableListWrapper;
+import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.scene.paint.Color;
-
-import com.sun.javafx.collections.ObservableListWrapper;
 
 public class LightGroupSetting
 {

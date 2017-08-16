@@ -5,8 +5,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.javafx.controllers.scene.lights.LightType;
 import tetzlaff.ibr.javafx.controllers.scene.lights.LightInstanceSetting;
+import tetzlaff.ibr.javafx.controllers.scene.lights.LightType;
 import tetzlaff.models.LightInstanceModel;
 import tetzlaff.util.OrbitPolarConverter;
 

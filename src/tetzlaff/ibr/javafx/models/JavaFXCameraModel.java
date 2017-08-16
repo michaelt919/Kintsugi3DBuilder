@@ -1,13 +1,12 @@
 package tetzlaff.ibr.javafx.models;//Created by alexk on 7/21/2017.
 
+import com.sun.istack.internal.NotNull;
 import javafx.beans.value.ObservableValue;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.camera.CameraSetting;
 import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.util.OrbitPolarConverter;
-
-import com.sun.istack.internal.NotNull;
 
 public class JavaFXCameraModel implements ExtendedCameraModel
 {

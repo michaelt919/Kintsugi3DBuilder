@@ -3,18 +3,13 @@ package tetzlaff.ibr.rendering;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
-
-import javax.swing.AbstractListModel;
+import javax.swing.*;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.interactive.InteractiveRenderableList;
-import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.IBRRenderableListModel;
-import tetzlaff.ibr.LoadingMonitor;
-import tetzlaff.ibr.ReadonlyLoadOptionsModel;
-import tetzlaff.ibr.ReadonlySettingsModel;
+import tetzlaff.ibr.*;
 import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.ReadonlyObjectModel;

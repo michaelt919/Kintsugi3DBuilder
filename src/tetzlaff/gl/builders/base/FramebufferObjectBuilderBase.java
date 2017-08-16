@@ -7,11 +7,7 @@ import tetzlaff.gl.ColorFormat;
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.builders.TextureBuilder;
-import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
-import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
-import tetzlaff.gl.builders.framebuffer.DepthStencilAttachmentSpec;
-import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
-import tetzlaff.gl.builders.framebuffer.StencilAttachmentSpec;
+import tetzlaff.gl.builders.framebuffer.*;
 
 public abstract class FramebufferObjectBuilderBase<ContextType extends Context<ContextType>> implements FramebufferObjectBuilder<ContextType>
 {

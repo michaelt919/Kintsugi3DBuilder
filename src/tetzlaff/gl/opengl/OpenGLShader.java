@@ -1,8 +1,5 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -10,6 +7,9 @@ import java.util.Scanner;
 import tetzlaff.gl.Shader;
 import tetzlaff.gl.exceptions.ShaderCompileFailureException;
 import tetzlaff.gl.exceptions.ShaderPreprocessingFailureException;
+
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.*;
 
 class OpenGLShader implements Shader<OpenGLContext>
 {

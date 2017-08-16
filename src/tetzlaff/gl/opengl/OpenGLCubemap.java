@@ -1,29 +1,23 @@
 package tetzlaff.gl.opengl;
 
-import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL32.*;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.*;
 import tetzlaff.gl.ColorFormat.DataType;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Cubemap;
-import tetzlaff.gl.CubemapFace;
-import tetzlaff.gl.FramebufferAttachment;
-import tetzlaff.gl.TextureType;
-import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.builders.base.ColorCubemapBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+
+import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL32.*;
 
 public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContext>
 {

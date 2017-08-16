@@ -13,11 +13,7 @@ import javafx.stage.StageStyle;
 import tetzlaff.ibr.app.Quit;
 import tetzlaff.ibr.javafx.controllers.menu_bar.MenubarController;
 import tetzlaff.ibr.javafx.controllers.scene.RootSceneController;
-import tetzlaff.ibr.javafx.models.JavaFXCameraModel;
-import tetzlaff.ibr.javafx.models.JavaFXEnvironmentMapModel;
-import tetzlaff.ibr.javafx.models.JavaFXLightingModel;
-import tetzlaff.ibr.javafx.models.JavaFXModels;
-import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
+import tetzlaff.ibr.javafx.models.*;
 
 public class JavaFXApp extends Application
 {

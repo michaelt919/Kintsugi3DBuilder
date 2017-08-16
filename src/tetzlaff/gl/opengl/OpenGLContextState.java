@@ -1,12 +1,13 @@
 package tetzlaff.gl.opengl;
 
+import tetzlaff.gl.AlphaBlendingFunction;
+import tetzlaff.gl.ContextState;
+
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL31.*;
-import tetzlaff.gl.AlphaBlendingFunction;
-import tetzlaff.gl.ContextState;
 
 public class OpenGLContextState implements ContextState<OpenGLContext>
 {

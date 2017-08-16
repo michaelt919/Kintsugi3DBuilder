@@ -1,11 +1,12 @@
 package tetzlaff.gl.opengl;
 
+import tetzlaff.gl.VertexBuffer;
+import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
-import tetzlaff.gl.VertexBuffer;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 
 class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLContext>
 {

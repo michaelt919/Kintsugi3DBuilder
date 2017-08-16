@@ -7,7 +7,6 @@ import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-
 import javax.imageio.ImageIO;
 
 import tetzlaff.gl.Program;
