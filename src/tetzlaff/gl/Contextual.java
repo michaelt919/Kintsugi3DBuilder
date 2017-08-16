@@ -8,9 +8,9 @@ package tetzlaff.gl;
  */
 public interface Contextual<ContextType extends Context<ContextType>>
 {
-	/**
-	 * Gets the associated GL context.
-	 * @return A GL context associated with this object.
-	 */
-	ContextType getContext();
+    /**
+     * Gets the associated GL context.
+     * @return A GL context associated with this object.
+     */
+    ContextType getContext();
 }

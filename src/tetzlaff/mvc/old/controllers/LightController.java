@@ -5,6 +5,6 @@ import tetzlaff.models.ReadonlyLightingModel;
 
 public interface LightController 
 {
-	void addAsWindowListener(Window<?> window);
-	ReadonlyLightingModel getLightingModel();
+    void addAsWindowListener(Window<?> window);
+    ReadonlyLightingModel getLightingModel();
 }

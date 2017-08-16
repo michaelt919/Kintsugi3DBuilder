@@ -23,43 +23,43 @@ import tetzlaff.gl.window.listeners.WindowSizeListener;
 
 public interface WindowListenerManager 
 {
-	void addWindowPositionListener(WindowPositionListener listener);
+    void addWindowPositionListener(WindowPositionListener listener);
 
-	void addWindowSizeListener(WindowSizeListener listener);
+    void addWindowSizeListener(WindowSizeListener listener);
 
-	void addWindowCloseListener(WindowCloseListener listener);
+    void addWindowCloseListener(WindowCloseListener listener);
 
-	void addWindowRefreshListener(WindowRefreshListener listener);
+    void addWindowRefreshListener(WindowRefreshListener listener);
 
-	void addWindowFocusLostListener(WindowFocusLostListener listener);
+    void addWindowFocusLostListener(WindowFocusLostListener listener);
 
-	void addWindowFocusGainedListener(WindowFocusGainedListener listener);
+    void addWindowFocusGainedListener(WindowFocusGainedListener listener);
 
-	void addWindowIconifiedListener(WindowIconifiedListener listener);
-	
-	void addWindowRestoredListener(WindowRestoredListener listener);
+    void addWindowIconifiedListener(WindowIconifiedListener listener);
 
-	void addFramebufferSizeListener(FramebufferSizeListener listener);
+    void addWindowRestoredListener(WindowRestoredListener listener);
 
-	void addKeyPressListener(KeyPressListener listener);
+    void addFramebufferSizeListener(FramebufferSizeListener listener);
 
-	void addKeyReleaseListener(KeyReleaseListener listener);
+    void addKeyPressListener(KeyPressListener listener);
 
-	void addKeyRepeatListener(KeyRepeatListener listener);
+    void addKeyReleaseListener(KeyReleaseListener listener);
 
-	void addCharacterListener(CharacterListener listener);
+    void addKeyRepeatListener(KeyRepeatListener listener);
 
-	void addCharacterModifiersListener(CharacterModifiersListener listener);
+    void addCharacterListener(CharacterListener listener);
 
-	void addMouseButtonPressListener(MouseButtonPressListener listener);
+    void addCharacterModifiersListener(CharacterModifiersListener listener);
 
-	void addMouseButtonReleaseListener(MouseButtonReleaseListener listener);
+    void addMouseButtonPressListener(MouseButtonPressListener listener);
 
-	void addCursorPositionListener(CursorPositionListener listener);
+    void addMouseButtonReleaseListener(MouseButtonReleaseListener listener);
 
-	void addCursorEnteredListener(CursorEnteredListener listener);
+    void addCursorPositionListener(CursorPositionListener listener);
 
-	void addCursorExitedListener(CursorExitedListener listener);
+    void addCursorEnteredListener(CursorEnteredListener listener);
 
-	void addScrollListener(ScrollListener listener);
+    void addCursorExitedListener(CursorExitedListener listener);
+
+    void addScrollListener(ScrollListener listener);
 }

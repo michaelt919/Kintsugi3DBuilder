@@ -9,19 +9,19 @@ import tetzlaff.gl.vecmath.Matrix4;
  */
 public interface Projection 
 {
-	/**
-	 * Gets the projective transformation matrix for this projection.
-	 * @param nearPlane The plane in 3D Cartesian space that will get mapped to the plane z=1.
-	 * @param farPlane The plane in 3D Cartesian space that will get mapped to the plane z=-1.
-	 * @return The projective transformation matrix.
-	 */
-	Matrix4 getProjectionMatrix(float nearPlane, float farPlane);
-	
-	float getVerticalFieldOfView();
-	float getAspectRatio();
-	
-	/**
-	 * Convert to a string designed for use in a VSET file
-	 */
-	String toVSETString();
+    /**
+     * Gets the projective transformation matrix for this projection.
+     * @param nearPlane The plane in 3D Cartesian space that will get mapped to the plane z=1.
+     * @param farPlane The plane in 3D Cartesian space that will get mapped to the plane z=-1.
+     * @return The projective transformation matrix.
+     */
+    Matrix4 getProjectionMatrix(float nearPlane, float farPlane);
+
+    float getVerticalFieldOfView();
+    float getAspectRatio();
+
+    /**
+     * Convert to a string designed for use in a VSET file
+     */
+    String toVSETString();
 }

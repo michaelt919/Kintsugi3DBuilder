@@ -17,36 +17,36 @@ import tetzlaff.models.SceneViewportModel;
 
 public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
-	void setLoadingMonitor(LoadingMonitor callback);
+    void setLoadingMonitor(LoadingMonitor callback);
 
-	ViewSet getActiveViewSet();
-	VertexGeometry getActiveGeometry();
-	
-	SceneViewportModel getSceneViewportModel();
-	
-	ReadonlySettingsModel getSettingsModel();
-	void setSettingsModel(ReadonlySettingsModel ibrSettingsModel);
-	
-	void setProgram(Program<ContextType> program);
-	void reloadHelperShaders();
+    ViewSet getActiveViewSet();
+    VertexGeometry getActiveGeometry();
 
-	void setBackplate(File backplateFile);
-	void setEnvironment(File environmentFile);
+    SceneViewportModel getSceneViewportModel();
 
-	void setObjectModel(ReadonlyObjectModel objectModel);
-	void setCameraModel(ReadonlyCameraModel cameraModel);
-	void setLightingModel(ReadonlyLightingModel lightingModel);
-	
-	void setMultiTransformationModel(List<Matrix4> multiTransformationModel);
-	void setReferenceScene(VertexGeometry scene);
-	
-	IBRResources<ContextType> getResources();
-	
-	void draw(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 projection);
-	
-	@Override
-	default void draw(Framebuffer<ContextType> framebuffer) 
-	{
-		draw(framebuffer, null, null);
-	}
+    ReadonlySettingsModel getSettingsModel();
+    void setSettingsModel(ReadonlySettingsModel ibrSettingsModel);
+
+    void setProgram(Program<ContextType> program);
+    void reloadHelperShaders();
+
+    void setBackplate(File backplateFile);
+    void setEnvironment(File environmentFile);
+
+    void setObjectModel(ReadonlyObjectModel objectModel);
+    void setCameraModel(ReadonlyCameraModel cameraModel);
+    void setLightingModel(ReadonlyLightingModel lightingModel);
+
+    void setMultiTransformationModel(List<Matrix4> multiTransformationModel);
+    void setReferenceScene(VertexGeometry scene);
+
+    IBRResources<ContextType> getResources();
+
+    void draw(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 projection);
+
+    @Override
+    default void draw(Framebuffer<ContextType> framebuffer)
+    {
+        draw(framebuffer, null, null);
+    }
 }

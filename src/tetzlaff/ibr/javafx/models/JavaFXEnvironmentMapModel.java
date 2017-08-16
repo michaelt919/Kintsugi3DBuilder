@@ -58,23 +58,23 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
 
     private final ChangeListener<File> envFileChange = (observable, oldFile, newFile) ->
     {
-    	// TODO NEWUI don't reload if oldFile == newFile
+        // TODO NEWUI don't reload if oldFile == newFile
         if(newFile != null)
         {
-        	try 
+            try
             {
-        		System.out.println("Loading environment map file " + newFile.getName());
-        		JavaFXModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
-			} 
+                System.out.println("Loading environment map file " + newFile.getName());
+                JavaFXModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
+            }
             catch (IOException e) 
             {
-				e.printStackTrace();
-			}
-        	
+                e.printStackTrace();
+            }
+
             if(selectedExists()) 
-        	{
-            	selected.getValue().setFirstEnvLoaded(true);
-        	}
+            {
+                selected.getValue().setFirstEnvLoaded(true);
+            }
         }
     };
 
@@ -100,9 +100,9 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
             return selected.getValue().isEnvUseImageEnabled();
         }
         else 
-    	{
-        	return false;
-    	}
+        {
+            return false;
+        }
     }
 
     @Override

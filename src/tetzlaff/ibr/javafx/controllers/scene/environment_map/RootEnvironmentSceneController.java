@@ -38,7 +38,7 @@ public class RootEnvironmentSceneController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         
-    	environmentListView.setItems(listOfEnvironments);
+        environmentListView.setItems(listOfEnvironments);
 
         s().selectedItemProperty().addListener(settingsController.changeListener);
 

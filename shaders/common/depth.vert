@@ -7,5 +7,5 @@ in vec3 position;
 
 void main()
 {
-	gl_Position = projection * model_view * vec4(position, 1.0);
+    gl_Position = projection * model_view * vec4(position, 1.0);
 }

@@ -12,26 +12,26 @@ import java.io.IOException;
  */
 public interface Framebuffer<ContextType extends Context<ContextType>> extends Contextual<ContextType>
 {
-	FramebufferSize getSize();
+    FramebufferSize getSize();
 
-	int[] readColorBufferARGB(int attachmentIndex);
-	int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height);
+    int[] readColorBufferARGB(int attachmentIndex);
+    int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height);
 
-	float[] readFloatingPointColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height);
-	float[] readFloatingPointColorBufferRGBA(int attachmentIndex);
+    float[] readFloatingPointColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height);
+    float[] readFloatingPointColorBufferRGBA(int attachmentIndex);
 
-	int[] readIntegerColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height);
-	int[] readIntegerColorBufferRGBA(int attachmentIndex);
+    int[] readIntegerColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height);
+    int[] readIntegerColorBufferRGBA(int attachmentIndex);
 
-	short[] readDepthBuffer(int x, int y, int width, int height);
-	short[] readDepthBuffer();
+    short[] readDepthBuffer(int x, int y, int width, int height);
+    short[] readDepthBuffer();
 
-	void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException;
-	void saveColorBufferToFile(int attachmentIndex, int x, int y, int width, int height, String fileFormat, File file) throws IOException;
+    void saveColorBufferToFile(int attachmentIndex, String fileFormat, File file) throws IOException;
+    void saveColorBufferToFile(int attachmentIndex, int x, int y, int width, int height, String fileFormat, File file) throws IOException;
 
-	void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a);
-	void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a);
-	void clearDepthBuffer(float depth);
-	void clearDepthBuffer();
-	void clearStencilBuffer(int stencilIndex);
+    void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a);
+    void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a);
+    void clearDepthBuffer(float depth);
+    void clearDepthBuffer();
+    void clearStencilBuffer(int stencilIndex);
 }

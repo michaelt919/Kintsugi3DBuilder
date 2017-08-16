@@ -16,7 +16,7 @@ not this work as intended at a zoom of 0.5
  */
 class PanTool extends AbstractTool
 {
-	private final double panSensitivity = 1.0;
+    private final double panSensitivity = 1.0;
     private double panSensitivityAdjusted = 1.0;
 
     private Vector3 oldCenter = Vector3.ZERO;

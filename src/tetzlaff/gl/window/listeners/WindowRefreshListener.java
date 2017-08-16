@@ -4,5 +4,5 @@ import tetzlaff.gl.window.Window;
 
 public interface WindowRefreshListener 
 {
-	void windowRefreshed(Window<?> window);
+    void windowRefreshed(Window<?> window);
 }

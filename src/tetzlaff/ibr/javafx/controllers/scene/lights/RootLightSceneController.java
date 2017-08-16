@@ -39,7 +39,7 @@ public class RootLightSceneController implements Initializable {
     private final Property<LightInstanceSetting> selectedLight = new SimpleObjectProperty<>();
     private int lastSelectedIndex = -1;
     @SuppressWarnings("rawtypes")
-	@Override
+    @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("GLSC started!");
 

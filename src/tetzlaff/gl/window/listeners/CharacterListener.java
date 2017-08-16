@@ -4,5 +4,5 @@ import tetzlaff.gl.window.Window;
 
 public interface CharacterListener 
 {
-	void characterTyped(Window<?> window, char c);
+    void characterTyped(Window<?> window, char c);
 }

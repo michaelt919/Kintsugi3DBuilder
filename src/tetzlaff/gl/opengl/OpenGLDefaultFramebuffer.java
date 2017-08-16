@@ -5,34 +5,34 @@ import tetzlaff.gl.FramebufferSize;
 
 class OpenGLDefaultFramebuffer extends OpenGLFramebuffer
 {
-	OpenGLDefaultFramebuffer(OpenGLContext context) 
-	{
-		super(context);
-	}
-	
-	@Override
-	protected int getId()
-	{
-		return 0;
-	}
+    OpenGLDefaultFramebuffer(OpenGLContext context)
+    {
+        super(context);
+    }
 
-	@Override
-	public FramebufferSize getSize() 
-	{
-		return this.context.getFramebufferSize();
-	}
+    @Override
+    protected int getId()
+    {
+        return 0;
+    }
 
-	@Override
-	protected void selectColorSourceForRead(int index) 
-	{
-		if (index != 0)
-		{
-			throw new IllegalArgumentException("The default framebuffer does not have multiple color attachments.");
-		}
-		else
-		{
-			glReadBuffer(GL_BACK);
-			this.context.openGLErrorCheck();
-		}
-	}
+    @Override
+    public FramebufferSize getSize()
+    {
+        return this.context.getFramebufferSize();
+    }
+
+    @Override
+    protected void selectColorSourceForRead(int index)
+    {
+        if (index != 0)
+        {
+            throw new IllegalArgumentException("The default framebuffer does not have multiple color attachments.");
+        }
+        else
+        {
+            glReadBuffer(GL_BACK);
+            this.context.openGLErrorCheck();
+        }
+    }
 }

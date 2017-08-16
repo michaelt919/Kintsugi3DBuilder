@@ -62,12 +62,12 @@ public class JavaFXLightingModel extends LightingModelBase {
     public boolean isLightVisualizationEnabled(int i) {
         return true;
     }
-	
-	@Override
-	public boolean isLightWidgetEnabled(int i) 
-	{
-		return true;
-	}
+
+    @Override
+    public boolean isLightWidgetEnabled(int i)
+    {
+        return true;
+    }
 
     @Override
     public Vector3 getLightColor(int i) {
@@ -97,8 +97,8 @@ public class JavaFXLightingModel extends LightingModelBase {
 
 
     @Override
-	public Vector3 getLightCenter(int i) 
-	{
-	    return lightInstanceModels[i].getCenter();
-	}
+    public Vector3 getLightCenter(int i)
+    {
+        return lightInstanceModels[i].getCenter();
+    }
 }

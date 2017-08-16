@@ -42,41 +42,41 @@ LightFit fitLight()
         
         for (int i = 0; i < viewCount; i++)
         {
-			if(getLightIndex(i) == lightIndex)
-			{
-				vec3 viewNormal = (cameraPoses[i] * vec4(normal, 0.0)).xyz;
-				vec3 surfacePosition = (cameraPoses[i] * vec4(fPosition, 1.0)).xyz;
-				float nDotV = dot(viewNormal, normalize(-surfacePosition));
-				
-				// Physically plausible values for the color components range from 0 to pi
-				// We don't need to scale by pi because it will just cancel out
-				// when we divide by the diffuse albedo estimate in the end.
-				vec4 color = getLinearColor(i);
-				
-				if (color.a * nDotV > 0)
-				{
-					vec3 lightUnnorm = fit.position-surfacePosition;
-					float lightSqr = dot(lightUnnorm, lightUnnorm);
-					vec3 scaledNormal = viewNormal * inversesqrt(lightSqr);
-					float nDotL = max(0, dot(scaledNormal, lightUnnorm));
-					scaledNormal /= lightSqr;
-					vec3 sampleVector = vec3(scaledNormal.xy, -dot(scaledNormal, surfacePosition));
-					float intensity = getLuminance(color.rgb);
-					
-					float weight = color.a * nDotV;
-					if (k != 0)
-					{
-						// TODO: think more about whether error should be divided by fit.intensity
-						float error = intensity - fit.intensity * dot(scaledNormal, lightUnnorm);
-						weight *= exp(-error*error/(2*delta*delta));
-					}
-						
-					a += weight * outerProduct(sampleVector, sampleVector);
-					b += weight * intensity * sampleVector;
-					weightedIntensitySum += weight * intensity;
-					weightSum += weight * nDotL;
-				}
-			}
+            if(getLightIndex(i) == lightIndex)
+            {
+                vec3 viewNormal = (cameraPoses[i] * vec4(normal, 0.0)).xyz;
+                vec3 surfacePosition = (cameraPoses[i] * vec4(fPosition, 1.0)).xyz;
+                float nDotV = dot(viewNormal, normalize(-surfacePosition));
+
+                // Physically plausible values for the color components range from 0 to pi
+                // We don't need to scale by pi because it will just cancel out
+                // when we divide by the diffuse albedo estimate in the end.
+                vec4 color = getLinearColor(i);
+
+                if (color.a * nDotV > 0)
+                {
+                    vec3 lightUnnorm = fit.position-surfacePosition;
+                    float lightSqr = dot(lightUnnorm, lightUnnorm);
+                    vec3 scaledNormal = viewNormal * inversesqrt(lightSqr);
+                    float nDotL = max(0, dot(scaledNormal, lightUnnorm));
+                    scaledNormal /= lightSqr;
+                    vec3 sampleVector = vec3(scaledNormal.xy, -dot(scaledNormal, surfacePosition));
+                    float intensity = getLuminance(color.rgb);
+
+                    float weight = color.a * nDotV;
+                    if (k != 0)
+                    {
+                        // TODO: think more about whether error should be divided by fit.intensity
+                        float error = intensity - fit.intensity * dot(scaledNormal, lightUnnorm);
+                        weight *= exp(-error*error/(2*delta*delta));
+                    }
+
+                    a += weight * outerProduct(sampleVector, sampleVector);
+                    b += weight * intensity * sampleVector;
+                    weightedIntensitySum += weight * intensity;
+                    weightSum += weight * nDotL;
+                }
+            }
         }
         
         vec3 solution = inverse(a) * b;

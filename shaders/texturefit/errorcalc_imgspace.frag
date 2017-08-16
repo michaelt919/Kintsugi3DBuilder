@@ -17,15 +17,15 @@ layout(location = 1) out float mask;
 
 void main()
 {
-	ErrorResult errorResult = calculateError();
-	if (errorResult.mask)
-	{
-		errorResultOut = vec2(errorResult.dampingFactor, errorResult.sumSqError);
-		mask = 1;
-	}
-	else
-	{
-		errorResultOut = vec2(errorResult.dampingFactor, errorResult.sumSqError);
-		mask = 0;
-	}
+    ErrorResult errorResult = calculateError();
+    if (errorResult.mask)
+    {
+        errorResultOut = vec2(errorResult.dampingFactor, errorResult.sumSqError);
+        mask = 1;
+    }
+    else
+    {
+        errorResultOut = vec2(errorResult.dampingFactor, errorResult.sumSqError);
+        mask = 0;
+    }
 }

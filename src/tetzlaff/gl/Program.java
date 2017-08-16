@@ -18,58 +18,58 @@ import tetzlaff.gl.vecmath.Vector4;
  */
 public interface Program<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
-	boolean setUniform(String name, boolean value);
+    boolean setUniform(String name, boolean value);
 
-	boolean setUniform(String name, Vector4 value);
+    boolean setUniform(String name, Vector4 value);
 
-	boolean setUniform(String name, Vector3 value);
+    boolean setUniform(String name, Vector3 value);
 
-	boolean setUniform(String name, Vector2 value);
+    boolean setUniform(String name, Vector2 value);
 
-	boolean setUniform(String name, float value);
+    boolean setUniform(String name, float value);
 
-	boolean setUniform(String name, IntVector4 value);
+    boolean setUniform(String name, IntVector4 value);
 
-	boolean setUniform(String name, IntVector3 value);
+    boolean setUniform(String name, IntVector3 value);
 
-	boolean setUniform(String name, IntVector2 value);
+    boolean setUniform(String name, IntVector2 value);
 
-	boolean setUniform(String name, int value);
-	
-	boolean setUniform(String name, Matrix4 value);
+    boolean setUniform(String name, int value);
 
-	boolean setUniform(int location, boolean value);
-	
-	boolean setUniform(int location, Vector4 value);
+    boolean setUniform(String name, Matrix4 value);
 
-	boolean setUniform(int location, Vector3 value);
+    boolean setUniform(int location, boolean value);
 
-	boolean setUniform(int location, Vector2 value);
+    boolean setUniform(int location, Vector4 value);
 
-	boolean setUniform(int location, float value);
+    boolean setUniform(int location, Vector3 value);
 
-	boolean setUniform(int location, IntVector4 value);
+    boolean setUniform(int location, Vector2 value);
 
-	boolean setUniform(int location, IntVector3 value);
+    boolean setUniform(int location, float value);
 
-	boolean setUniform(int location, IntVector2 value);
+    boolean setUniform(int location, IntVector4 value);
 
-	boolean setUniform(int location, int value);
-	
-	boolean setUniform(int location, Matrix4 value);
+    boolean setUniform(int location, IntVector3 value);
 
-	int getUniformLocation(String name);
+    boolean setUniform(int location, IntVector2 value);
 
-	int getVertexAttribLocation(String name);
+    boolean setUniform(int location, int value);
 
-	boolean setTexture(int location, Texture<ContextType> texture);
+    boolean setUniform(int location, Matrix4 value);
 
-	boolean setTexture(String name, Texture<ContextType> texture);
+    int getUniformLocation(String name);
 
-	boolean setUniformBuffer(int index, UniformBuffer<ContextType> buffer);
+    int getVertexAttribLocation(String name);
 
-	boolean setUniformBuffer(String name, UniformBuffer<ContextType> buffer);
+    boolean setTexture(int location, Texture<ContextType> texture);
 
-	int getUniformBlockIndex(String name);
+    boolean setTexture(String name, Texture<ContextType> texture);
+
+    boolean setUniformBuffer(int index, UniformBuffer<ContextType> buffer);
+
+    boolean setUniformBuffer(String name, UniformBuffer<ContextType> buffer);
+
+    int getUniformBlockIndex(String name);
 
 }

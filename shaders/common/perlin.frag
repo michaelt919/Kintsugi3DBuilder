@@ -268,7 +268,7 @@ float noise(vec2 P)
 // #define G2 0.211324865405
 
   // // Skew the (x,y) space to determine which cell of 2 simplices we're in
- 	// float s = (P.x + P.y) * F2;   // Hairy factor for 2D skewing
+     // float s = (P.x + P.y) * F2;   // Hairy factor for 2D skewing
   // vec2 Pi = floor(P + s);
   // float t = (Pi.x + Pi.y) * G2; // Hairy factor for unskewing
   // vec2 P0 = Pi - t; // Unskew the cell origin back to (x,y) space
@@ -330,7 +330,7 @@ float noise(vec2 P)
 // #define G3 0.166666666667
 
   // // Skew the (x,y,z) space to determine which cell of 6 simplices we're in
- 	// float s = (P.x + P.y + P.z) * F3; // Factor for 3D skewing
+     // float s = (P.x + P.y + P.z) * F3; // Factor for 3D skewing
   // vec3 Pi = floor(P + s);
   // float t = (Pi.x + Pi.y + Pi.z) * G3;
   // vec3 P0 = Pi - t; // Unskew the cell origin back to (x,y,z) space
@@ -418,7 +418,7 @@ float noise(vec2 P)
 // #define G4 0.138196601125
 
   // // Skew the (x,y,z,w) space to determine which cell of 24 simplices we're in
- 	// float s = (P.x + P.y + P.z + P.w) * F4; // Factor for 4D skewing
+     // float s = (P.x + P.y + P.z + P.w) * F4; // Factor for 4D skewing
   // vec4 Pi = floor(P + s);
   // float t = (Pi.x + Pi.y + Pi.z + Pi.w) * G4;
   // vec4 P0 = Pi - t; // Unskew the cell origin back to (x,y,z,w) space

@@ -9,7 +9,7 @@ public class OrbitPolarConverter
     
     public static OrbitPolarConverter getInstance()
     {
-    	return instance;
+        return instance;
     }
 
     public Matrix4 convertToOrbitMatrix(Vector3 polarCoordinates) 

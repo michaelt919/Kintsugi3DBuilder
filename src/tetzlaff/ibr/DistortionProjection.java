@@ -43,14 +43,14 @@ public class DistortionProjection implements Projection
      * @param p2 The "p2" camera distortion parameter.
      */
     public DistortionProjection( 
-		float width, float height, 
-		float fx, float fy, 
-		float cx, float cy, 
-		float k1, float k2, float k3, float k4,
-		float p1, float p2, float skew)
+        float width, float height,
+        float fx, float fy,
+        float cx, float cy,
+        float k1, float k2, float k3, float k4,
+        float p1, float p2, float skew)
     {
-    	this.width = width;
-    	this.height = height;
+        this.width = width;
+        this.height = height;
         this.fx = fx;
         this.fy = fy;
         this.cx = cx;
@@ -82,13 +82,13 @@ public class DistortionProjection implements Projection
      * @param skew The "skew" camera distortion parameter.
      */
     public DistortionProjection( 
-		float width, float height, 
-		float fx, float fy, 
-		float cx, float cy,
-		float k1, float k2, float k3, float k4)
-	{
-    	this(width, height, fx, fy, cx, cy, k1, k2, k3, k4, 0.0f, 0.0f, 0.0f);
-	}
+        float width, float height,
+        float fx, float fy,
+        float cx, float cy,
+        float k1, float k2, float k3, float k4)
+    {
+        this(width, height, fx, fy, cx, cy, k1, k2, k3, k4, 0.0f, 0.0f, 0.0f);
+    }
     
     /**
      * Creates a new distortion projection.  k4, p1 and p2 are assumed to be zero.
@@ -106,13 +106,13 @@ public class DistortionProjection implements Projection
      * @param k3 The "k3" camera distortion parameter.
      */
     public DistortionProjection( 
-		float width, float height, 
-		float fx, float fy, 
-		float cx, float cy,
-		float k1, float k2, float k3)
-	{
-    	this(width, height, fx, fy, cx, cy, k1, k2, k3, 0.0f, 0.0f, 0.0f, 0.0f);
-	}
+        float width, float height,
+        float fx, float fy,
+        float cx, float cy,
+        float k1, float k2, float k3)
+    {
+        this(width, height, fx, fy, cx, cy, k1, k2, k3, 0.0f, 0.0f, 0.0f, 0.0f);
+    }
 
     /**
      * Creates a new distortion projection.  k1, k2, k3, k4, p1, and p2 are assumed to be zero.
@@ -127,35 +127,35 @@ public class DistortionProjection implements Projection
      * This parameter is for reference only and is not actually used when computing a projection matrix.
      */
     public DistortionProjection( 
-		float width, float height, 
-		float fx, float fy, 
-		float cx, float cy)
-	{
-    	this(width, height, fx, fy, cx, cy, 0.0f, 0.0f, 0.0f);
-	}
+        float width, float height,
+        float fx, float fy,
+        float cx, float cy)
+    {
+        this(width, height, fx, fy, cx, cy, 0.0f, 0.0f, 0.0f);
+    }
     
     @Override
     public float getAspectRatio()
     {
-    	return width / height;
+        return width / height;
     }
     
     @Override
     public float getVerticalFieldOfView()
     {
-    	return 2.0f*(float)Math.atan2(height, 2*fy);
+        return 2.0f*(float)Math.atan2(height, 2*fy);
     }
     
     @Override
     public Matrix4 getProjectionMatrix(float nearPlane, float farPlane)
     {
-    	return Matrix4.perspective(this.getVerticalFieldOfView(), this.getAspectRatio(), nearPlane, farPlane);
+        return Matrix4.perspective(this.getVerticalFieldOfView(), this.getAspectRatio(), nearPlane, farPlane);
     }
     
     @Override
     public String toVSETString()
     {
-    	return String.format("D\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
-    							cx, cy, (width/height), fx, width, k1, k2, k3, p1, p2);
+        return String.format("D\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+                                cx, cy, (width/height), fx, width, k1, k2, k3, p1, p2);
     }
 }

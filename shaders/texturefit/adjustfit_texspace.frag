@@ -19,9 +19,9 @@ layout(location = 3) out vec4 roughness;
 
 void main()
 {
-	ParameterizedFit fit = adjustFit();
+    ParameterizedFit fit = adjustFit();
     diffuseColor = vec4(pow(fit.diffuseColor, vec3(1 / gamma)), 1.0);
-	normal = vec4(fit.normal * 0.5 + vec3(0.5), 1.0);
+    normal = vec4(fit.normal * 0.5 + vec3(0.5), 1.0);
     specularColor = vec4(pow(fit.specularColor, vec3(1 / gamma)), 1.0);
-	roughness = vec4(vec3(fit.roughness), 1.0);
+    roughness = vec4(vec3(fit.roughness), 1.0);
 }

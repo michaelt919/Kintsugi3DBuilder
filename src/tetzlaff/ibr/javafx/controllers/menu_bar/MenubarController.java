@@ -148,7 +148,7 @@ public class MenubarController {
     @FXML private void file_openProject(){
         File vsetFile = vSetFileChooser.showOpenDialog(null);
         if (vsetFile != null) try {
-        	JavaFXModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile);
+            JavaFXModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile);
         } catch (IOException e) {
             //do nothing
         }

@@ -3,80 +3,80 @@ package tetzlaff.ibr.app.old;
 
 public class IBRLoadOptionsModelImpl implements tetzlaff.ibr.ReadonlyLoadOptionsModel
 {
-	private boolean colorImagesRequested;
-	private boolean mipmapsRequested;
-	private boolean compressionRequested;
-	private boolean depthImagesRequested;
-	private int depthImageWidth;
-	private int depthImageHeight;
-	
-	public IBRLoadOptionsModelImpl() 
-	{
-	}
+    private boolean colorImagesRequested;
+    private boolean mipmapsRequested;
+    private boolean compressionRequested;
+    private boolean depthImagesRequested;
+    private int depthImageWidth;
+    private int depthImageHeight;
 
-	public boolean areColorImagesRequested()
-	{
-		return this.colorImagesRequested;
-	}
+    public IBRLoadOptionsModelImpl()
+    {
+    }
 
-	public IBRLoadOptionsModelImpl setColorImagesRequested(boolean colorImagesRequested)
-	{
-		this.colorImagesRequested = colorImagesRequested;
-		return this;
-	}
+    public boolean areColorImagesRequested()
+    {
+        return this.colorImagesRequested;
+    }
 
-	public boolean areMipmapsRequested() 
-	{
-		return this.mipmapsRequested;
-	}
+    public IBRLoadOptionsModelImpl setColorImagesRequested(boolean colorImagesRequested)
+    {
+        this.colorImagesRequested = colorImagesRequested;
+        return this;
+    }
 
-	public IBRLoadOptionsModelImpl setMipmapsRequested(boolean mipmapsRequested)
-	{
-		this.mipmapsRequested = mipmapsRequested;
-		return this;
-	}
+    public boolean areMipmapsRequested()
+    {
+        return this.mipmapsRequested;
+    }
 
-	public boolean isCompressionRequested() 
-	{
-		return this.compressionRequested;
-	}
+    public IBRLoadOptionsModelImpl setMipmapsRequested(boolean mipmapsRequested)
+    {
+        this.mipmapsRequested = mipmapsRequested;
+        return this;
+    }
 
-	public IBRLoadOptionsModelImpl setCompressionRequested(boolean compressionRequested)
-	{
-		this.compressionRequested = compressionRequested;
-		return this;
-	}
+    public boolean isCompressionRequested()
+    {
+        return this.compressionRequested;
+    }
 
-	public boolean areDepthImagesRequested()
-	{
-		return this.depthImagesRequested;
-	}
+    public IBRLoadOptionsModelImpl setCompressionRequested(boolean compressionRequested)
+    {
+        this.compressionRequested = compressionRequested;
+        return this;
+    }
 
-	public IBRLoadOptionsModelImpl setDepthImagesRequested(boolean depthImagesRequested)
-	{
-		this.depthImagesRequested = depthImagesRequested;
-		return this;
-	}
+    public boolean areDepthImagesRequested()
+    {
+        return this.depthImagesRequested;
+    }
 
-	public int getDepthImageWidth() 
-	{
-		return this.depthImageWidth;
-	}
+    public IBRLoadOptionsModelImpl setDepthImagesRequested(boolean depthImagesRequested)
+    {
+        this.depthImagesRequested = depthImagesRequested;
+        return this;
+    }
 
-	public IBRLoadOptionsModelImpl setDepthImageWidth(int depthImageWidth)
-	{
-		this.depthImageWidth = depthImageWidth;
-		return this;
-	}
+    public int getDepthImageWidth()
+    {
+        return this.depthImageWidth;
+    }
 
-	public int getDepthImageHeight() 
-	{
-		return this.depthImageHeight;
-	}
+    public IBRLoadOptionsModelImpl setDepthImageWidth(int depthImageWidth)
+    {
+        this.depthImageWidth = depthImageWidth;
+        return this;
+    }
 
-	public IBRLoadOptionsModelImpl setDepthImageHeight(int depthImageHeight)
-	{
-		this.depthImageHeight = depthImageHeight;
-		return this;
-	}
+    public int getDepthImageHeight()
+    {
+        return this.depthImageHeight;
+    }
+
+    public IBRLoadOptionsModelImpl setDepthImageHeight(int depthImageHeight)
+    {
+        this.depthImageHeight = depthImageHeight;
+        return this;
+    }
 }
