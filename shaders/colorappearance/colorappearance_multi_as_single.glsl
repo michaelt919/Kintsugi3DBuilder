@@ -8,9 +8,9 @@ uniform int viewIndex;
 #line 9 1002
 
 #define infiniteLightSource (infiniteLightSources)
-#define cameraPose 			(cameraPoses[viewIndex])
-#define lightPosition 		(lightPositions[getLightIndex(viewIndex)].xyz)
-#define lightIntensity 		(getLightIntensity(viewIndex).rgb)
+#define cameraPose             (cameraPoses[viewIndex])
+#define lightPosition         (lightPositions[getLightIndex(viewIndex)].xyz)
+#define lightIntensity         (getLightIntensity(viewIndex).rgb)
 
 vec3 getViewVector()
 {

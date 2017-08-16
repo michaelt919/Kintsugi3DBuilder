@@ -8,17 +8,17 @@ package tetzlaff.gl;
  */
 public interface Texture2D<ContextType extends Context<ContextType>> extends Texture<ContextType>, FramebufferAttachment<ContextType>
 {
-	/**
-	 * Gets the width of the texture.
-	 * @return The width of the texture.
-	 */
-	int getWidth();
-	
-	/**
-	 * Gets the height of the texture.
-	 * @return The height of the texture.
-	 */
-	int getHeight();
+    /**
+     * Gets the width of the texture.
+     * @return The width of the texture.
+     */
+    int getWidth();
 
-	void setTextureWrap(TextureWrapMode wrapS, TextureWrapMode wrapT);
+    /**
+     * Gets the height of the texture.
+     * @return The height of the texture.
+     */
+    int getHeight();
+
+    void setTextureWrap(TextureWrapMode wrapS, TextureWrapMode wrapT);
 }

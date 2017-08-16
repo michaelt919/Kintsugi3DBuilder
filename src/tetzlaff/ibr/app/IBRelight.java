@@ -5,19 +5,19 @@ import java.io.PrintStream;
 
 public class IBRelight 
 {
-	private static final boolean DEBUG = true;
+    private static final boolean DEBUG = true;
 
     public static void main(String[] args) throws IOException
     {
-    	if (!DEBUG)
-		{
-			PrintStream out = new PrintStream("out.log");
-			PrintStream err = new PrintStream("err.log");
-			System.setOut(out);
-			System.setErr(err);
-		}
+        if (!DEBUG)
+        {
+            PrintStream out = new PrintStream("out.log");
+            PrintStream err = new PrintStream("err.log");
+            System.setOut(out);
+            System.setErr(err);
+        }
 
-		//allow render thread to modify user interface thread
+        //allow render thread to modify user interface thread
         System.setProperty("glass.disableThreadChecks", "true");
         //TODO see com.sun.glass.ui.Application.java line 434
 

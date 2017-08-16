@@ -17,7 +17,7 @@ public class JavaFXModels
     
     public static JavaFXModels getInstance()
     {
-    	return instance;
+        return instance;
     }
 
     private JavaFXModels()
@@ -52,18 +52,18 @@ public class JavaFXModels
         return environmentMapModel;
     }
 
-	public JavaFXLoadOptionsModel getLoadOptionsModel() 
-	{
-		return loadOptionsModel;
-	}
+    public JavaFXLoadOptionsModel getLoadOptionsModel()
+    {
+        return loadOptionsModel;
+    }
 
-	public JavaFXSettingsModel getSettingsModel()
-	{
-		return settingsModel;
-	}
-	
-	public LoadingModel getLoadingModel()
-	{
-		return loadingModel;
-	}
+    public JavaFXSettingsModel getSettingsModel()
+    {
+        return settingsModel;
+    }
+
+    public LoadingModel getLoadingModel()
+    {
+        return loadingModel;
+    }
 }

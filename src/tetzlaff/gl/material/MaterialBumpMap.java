@@ -2,20 +2,20 @@ package tetzlaff.gl.material;
 
 public class MaterialBumpMap extends MaterialScalarMap 
 {
-	private float bumpMultiplier;
-	
-	public MaterialBumpMap() 
-	{
-		bumpMultiplier = 1.0f;
-	}
+    private float bumpMultiplier;
 
-	public float getBumpMultiplier() 
-	{
-		return bumpMultiplier;
-	}
+    public MaterialBumpMap()
+    {
+        bumpMultiplier = 1.0f;
+    }
 
-	public void setBumpMultiplier(float bumpMultiplier) 
-	{
-		this.bumpMultiplier = bumpMultiplier;
-	}
+    public float getBumpMultiplier()
+    {
+        return bumpMultiplier;
+    }
+
+    public void setBumpMultiplier(float bumpMultiplier)
+    {
+        this.bumpMultiplier = bumpMultiplier;
+    }
 }

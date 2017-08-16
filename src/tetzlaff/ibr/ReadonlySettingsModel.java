@@ -4,7 +4,7 @@ import tetzlaff.util.ShadingParameterMode;
 
 public interface ReadonlySettingsModel 
 {
-	float getGamma();
+    float getGamma();
     float getWeightExponent();
     float getIsotropyFactor();
     float getOcclusionBias();
@@ -24,6 +24,6 @@ public interface ReadonlySettingsModel
     boolean areShadowsEnabled();
     boolean areVisibleLightsEnabled();
     RenderingMode getRenderingMode();
-	boolean isHalfResolutionEnabled();
-	boolean isMultisamplingEnabled();
+    boolean isHalfResolutionEnabled();
+    boolean isMultisamplingEnabled();
 }

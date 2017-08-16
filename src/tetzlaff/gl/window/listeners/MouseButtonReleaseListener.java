@@ -5,5 +5,5 @@ import tetzlaff.gl.window.Window;
 
 public interface MouseButtonReleaseListener 
 {
-	void mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods);
+    void mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods);
 }

@@ -105,7 +105,7 @@ public class LoaderController implements Initializable
             //ok!
 
             try {
-            	JavaFXModels.getInstance().getLoadingModel().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir);
+                JavaFXModels.getInstance().getLoadingModel().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir);
             } catch (IOException e) {
                 System.out.println("files were malformed");
             }

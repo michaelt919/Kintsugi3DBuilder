@@ -13,6 +13,6 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
  */
 public interface UniformBuffer<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
-	UniformBuffer<ContextType> setData(ByteBuffer data);
-	UniformBuffer<ContextType> setData(NativeVectorBuffer data);
+    UniformBuffer<ContextType> setData(ByteBuffer data);
+    UniformBuffer<ContextType> setData(NativeVectorBuffer data);
 }

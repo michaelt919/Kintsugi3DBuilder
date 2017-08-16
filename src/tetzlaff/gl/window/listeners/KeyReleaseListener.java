@@ -5,5 +5,5 @@ import tetzlaff.gl.window.Window;
 
 public interface KeyReleaseListener 
 {
-	void keyReleased(Window<?> window, int keycode, ModifierKeys mods);
+    void keyReleased(Window<?> window, int keycode, ModifierKeys mods);
 }

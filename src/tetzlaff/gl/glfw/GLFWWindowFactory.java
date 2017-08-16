@@ -5,8 +5,8 @@ import tetzlaff.gl.opengl.OpenGLContextFactory;
 
 public final class GLFWWindowFactory 
 {
-	public static GLFWWindowBuilder<OpenGLContext> buildOpenGLWindow(String title, int width, int height)
-	{
-		return new GLFWWindowBuilder<OpenGLContext>(OpenGLContextFactory.getInstance(), title, width, height);
-	}
+    public static GLFWWindowBuilder<OpenGLContext> buildOpenGLWindow(String title, int width, int height)
+    {
+        return new GLFWWindowBuilder<OpenGLContext>(OpenGLContextFactory.getInstance(), title, width, height);
+    }
 }

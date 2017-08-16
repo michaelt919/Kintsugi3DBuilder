@@ -4,5 +4,5 @@ import tetzlaff.gl.vecmath.Matrix4;
 
 public interface ReadonlyObjectModel 
 {
-	Matrix4 getTransformationMatrix();
+    Matrix4 getTransformationMatrix();
 }

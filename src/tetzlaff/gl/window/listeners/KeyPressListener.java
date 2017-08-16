@@ -5,5 +5,5 @@ import tetzlaff.gl.window.Window;
 
 public interface KeyPressListener 
 {
-	void keyPressed(Window<?> window, int keycode, ModifierKeys mods);
+    void keyPressed(Window<?> window, int keycode, ModifierKeys mods);
 }

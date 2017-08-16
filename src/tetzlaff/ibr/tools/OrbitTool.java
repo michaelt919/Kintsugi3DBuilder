@@ -49,7 +49,7 @@ class OrbitTool extends AbstractTool
 
             cameraModel.setOrbit(
                 Matrix4.rotateAxis(rotationVector.normalized(), rotationVector.length() * orbitSensitivityAdjusted)
-                	.times(oldOrbitMatrix)
+                    .times(oldOrbitMatrix)
             );
         }
     }

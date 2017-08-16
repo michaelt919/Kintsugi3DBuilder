@@ -33,94 +33,94 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
  */
 public interface Context<ContextType extends Context<ContextType>>
 {
-	void makeContextCurrent();
+    void makeContextCurrent();
 
-	void flush();
-	void finish();
-	void swapBuffers();
+    void flush();
+    void finish();
+    void swapBuffers();
 
-	ContextState<ContextType> getState();
-	FramebufferSize getFramebufferSize();
-	
-	Shader<ContextType> createShader(ShaderType type, String source);
-	Shader<ContextType> createShader(ShaderType type, File file) throws FileNotFoundException;
-	ProgramBuilder<ContextType> getShaderProgramBuilder();
-	
-	Framebuffer<ContextType> getDefaultFramebuffer();
-	FramebufferObjectBuilder<ContextType> buildFramebufferObject(int width, int height);
-	
-	VertexBuffer<ContextType> createVertexBuffer();
-	
-	default VertexBuffer<ContextType> createRectangle()
-	{
-		return this.createVertexBuffer().setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(2, 4, new float[] { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f }), false);
-	}
-	
-	IndexBuffer<ContextType> createIndexBuffer();
-	UniformBuffer<ContextType> createUniformBuffer();
-	
-	Drawable<ContextType> createDrawable(Program<ContextType> program);
-	
-	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> 
-		build2DColorTextureFromStreamWithMask(InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
-	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> 
-		build2DColorHDRTextureFromStreamWithMask(BufferedInputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
-	
-	default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> 
-		build2DColorTextureFromStream(InputStream imageStream, boolean flipVertical) throws IOException
-	{
-		return build2DColorTextureFromStreamWithMask(imageStream, null, flipVertical);
-	}
-	
-	default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> 
-		build2DColorTextureFromFileWithMask(File imageFile, File maskFile, boolean flipVertical) throws IOException
-	{
-		if (imageFile.getName().endsWith(".hdr"))
-		{
-			return build2DColorHDRTextureFromStreamWithMask(new BufferedInputStream(new FileInputStream(imageFile)), new FileInputStream(maskFile), flipVertical);
-		}
-		else
-		{
-			return build2DColorTextureFromStreamWithMask(new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical);
-		}
-	}
+    ContextState<ContextType> getState();
+    FramebufferSize getFramebufferSize();
 
-	default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> 
-		build2DColorHDRTextureFromStream(BufferedInputStream imageStream, boolean flipVertical) throws IOException
-	{
-		return build2DColorHDRTextureFromStreamWithMask(imageStream, null, flipVertical);
-	}
-	
-	default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> 
-		build2DColorTextureFromFile(File imageFile, boolean flipVertical) throws IOException
-	{
-		if (imageFile.getName().endsWith(".hdr"))
-		{
-			return build2DColorHDRTextureFromStream(new BufferedInputStream(new FileInputStream(imageFile)), flipVertical);
-		}
-		else
-		{
-			return build2DColorTextureFromStream(new FileInputStream(imageFile), flipVertical);
-		}
-	}
+    Shader<ContextType> createShader(ShaderType type, String source);
+    Shader<ContextType> createShader(ShaderType type, File file) throws FileNotFoundException;
+    ProgramBuilder<ContextType> getShaderProgramBuilder();
 
-	ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> build1DColorTexture(NativeVectorBuffer data);
-	
-	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DColorTextureFromBuffer(int width, int height, NativeVectorBuffer data);
-	ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DColorTexture(int width, int height);
-	DepthTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DDepthTexture(int width, int height);
-	StencilTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DStencilTexture(int width, int height);
-	DepthStencilTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DDepthStencilTexture(int width, int height);
-	
-	TextureBuilder<ContextType, ? extends Texture2D<ContextType>> buildPerlinNoiseTexture();
+    Framebuffer<ContextType> getDefaultFramebuffer();
+    FramebufferObjectBuilder<ContextType> buildFramebufferObject(int width, int height);
 
-	ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> build2DColorTextureArray(int width, int height, int length);
-	DepthTextureBuilder<ContextType, ? extends Texture3D<ContextType>> build2DDepthTextureArray(int width, int height, int length);
-	StencilTextureBuilder<ContextType, ? extends Texture3D<ContextType>> build2DStencilTextureArray(int width, int height, int length);
-	DepthStencilTextureBuilder<ContextType, ? extends Texture3D<ContextType>> build2DDepthStencilTextureArray(int width, int height, int length);
+    VertexBuffer<ContextType> createVertexBuffer();
 
-	ColorCubemapBuilder<ContextType, ? extends Cubemap<ContextType>> buildColorCubemap(int faceSize) throws IOException;
-	DepthTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildDepthCubemap(int faceSize) throws IOException;
-	StencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildStencilCubemap(int faceSize) throws IOException;
-	DepthStencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildDepthStencilCubemap(int faceSize) throws IOException;
+    default VertexBuffer<ContextType> createRectangle()
+    {
+        return this.createVertexBuffer().setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(2, 4, new float[] { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f }), false);
+    }
+
+    IndexBuffer<ContextType> createIndexBuffer();
+    UniformBuffer<ContextType> createUniformBuffer();
+
+    Drawable<ContextType> createDrawable(Program<ContextType> program);
+
+    ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorTextureFromStreamWithMask(InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
+    ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorHDRTextureFromStreamWithMask(BufferedInputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
+
+    default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorTextureFromStream(InputStream imageStream, boolean flipVertical) throws IOException
+    {
+        return build2DColorTextureFromStreamWithMask(imageStream, null, flipVertical);
+    }
+
+    default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorTextureFromFileWithMask(File imageFile, File maskFile, boolean flipVertical) throws IOException
+    {
+        if (imageFile.getName().endsWith(".hdr"))
+        {
+            return build2DColorHDRTextureFromStreamWithMask(new BufferedInputStream(new FileInputStream(imageFile)), new FileInputStream(maskFile), flipVertical);
+        }
+        else
+        {
+            return build2DColorTextureFromStreamWithMask(new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical);
+        }
+    }
+
+    default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorHDRTextureFromStream(BufferedInputStream imageStream, boolean flipVertical) throws IOException
+    {
+        return build2DColorHDRTextureFromStreamWithMask(imageStream, null, flipVertical);
+    }
+
+    default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorTextureFromFile(File imageFile, boolean flipVertical) throws IOException
+    {
+        if (imageFile.getName().endsWith(".hdr"))
+        {
+            return build2DColorHDRTextureFromStream(new BufferedInputStream(new FileInputStream(imageFile)), flipVertical);
+        }
+        else
+        {
+            return build2DColorTextureFromStream(new FileInputStream(imageFile), flipVertical);
+        }
+    }
+
+    ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> build1DColorTexture(NativeVectorBuffer data);
+
+    ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DColorTextureFromBuffer(int width, int height, NativeVectorBuffer data);
+    ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DColorTexture(int width, int height);
+    DepthTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DDepthTexture(int width, int height);
+    StencilTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DStencilTexture(int width, int height);
+    DepthStencilTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DDepthStencilTexture(int width, int height);
+
+    TextureBuilder<ContextType, ? extends Texture2D<ContextType>> buildPerlinNoiseTexture();
+
+    ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> build2DColorTextureArray(int width, int height, int length);
+    DepthTextureBuilder<ContextType, ? extends Texture3D<ContextType>> build2DDepthTextureArray(int width, int height, int length);
+    StencilTextureBuilder<ContextType, ? extends Texture3D<ContextType>> build2DStencilTextureArray(int width, int height, int length);
+    DepthStencilTextureBuilder<ContextType, ? extends Texture3D<ContextType>> build2DDepthStencilTextureArray(int width, int height, int length);
+
+    ColorCubemapBuilder<ContextType, ? extends Cubemap<ContextType>> buildColorCubemap(int faceSize) throws IOException;
+    DepthTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildDepthCubemap(int faceSize) throws IOException;
+    StencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildStencilCubemap(int faceSize) throws IOException;
+    DepthStencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildDepthStencilCubemap(int faceSize) throws IOException;
 }

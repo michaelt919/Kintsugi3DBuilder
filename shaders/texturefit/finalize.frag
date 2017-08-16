@@ -15,15 +15,15 @@ uniform sampler2D alphaMask;
 
 void main()
 {
-	if (texture(alphaMask, fTexCoord).x < 1.0)
-	{
-		discard;
-	}
-	else
-	{
-		output0 = texture(input0, fTexCoord);
-		output1 = texture(input1, fTexCoord);
-		output2 = texture(input2, fTexCoord);
-		output3 = texture(input3, fTexCoord);
-	}
+    if (texture(alphaMask, fTexCoord).x < 1.0)
+    {
+        discard;
+    }
+    else
+    {
+        output0 = texture(input0, fTexCoord);
+        output1 = texture(input1, fTexCoord);
+        output2 = texture(input2, fTexCoord);
+        output3 = texture(input3, fTexCoord);
+    }
 }

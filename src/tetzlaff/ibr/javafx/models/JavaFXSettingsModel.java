@@ -260,37 +260,37 @@ public class JavaFXSettingsModel implements SettingsModel {
         }
     }
 
-	@Override
-	public boolean isHalfResolutionEnabled() 
-	{
-		return halfResolutionEnabled.get();
-	}
+    @Override
+    public boolean isHalfResolutionEnabled()
+    {
+        return halfResolutionEnabled.get();
+    }
 
-	@Override
-	public void setHalfResolutionEnabled(boolean halfResEnabled) 
-	{
-		this.halfResolutionEnabled.set(halfResEnabled);
-	}
-	
-	public BooleanProperty halfResolutionEnabledProperty()
-	{
-		return this.halfResolutionEnabled;
-	}
+    @Override
+    public void setHalfResolutionEnabled(boolean halfResEnabled)
+    {
+        this.halfResolutionEnabled.set(halfResEnabled);
+    }
 
-	@Override
-	public boolean isMultisamplingEnabled() 
-	{
-		return multisamplingEnabled.get();
-	}
+    public BooleanProperty halfResolutionEnabledProperty()
+    {
+        return this.halfResolutionEnabled;
+    }
 
-	@Override
-	public void setMultisamplingEnabled(boolean multisamplingEnabled) 
-	{
-		this.multisamplingEnabled.set(multisamplingEnabled);
-	}
-	
-	public BooleanProperty multisamplingEnabledProperty()
-	{
-		return this.multisamplingEnabled;
-	}
+    @Override
+    public boolean isMultisamplingEnabled()
+    {
+        return multisamplingEnabled.get();
+    }
+
+    @Override
+    public void setMultisamplingEnabled(boolean multisamplingEnabled)
+    {
+        this.multisamplingEnabled.set(multisamplingEnabled);
+    }
+
+    public BooleanProperty multisamplingEnabledProperty()
+    {
+        return this.multisamplingEnabled;
+    }
 }

@@ -71,7 +71,7 @@ public class ToolBox implements CursorPositionListener, MouseButtonPressListener
 
     //builder
     private ToolBox(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, 
-    		ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel) 
+            ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel)
     {
         this.toolModel = toolModel;
 

@@ -5,5 +5,5 @@ import tetzlaff.gl.window.Window;
 
 public interface CharacterModifiersListener
 {
-	void characterTypedWithModifiers(Window<?> window, char c, ModifierKeys mods);
+    void characterTypedWithModifiers(Window<?> window, char c, ModifierKeys mods);
 }

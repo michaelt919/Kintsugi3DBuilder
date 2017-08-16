@@ -16,15 +16,15 @@ uniform float gamma;
 
 void main()
 {
-	vec4 unprojected = inverse(projection) * vec4(fTexCoord * 2 - vec2(1), 0, 1);
+    vec4 unprojected = inverse(projection) * vec4(fTexCoord * 2 - vec2(1), 0, 1);
 
-	vec3 viewDir = 
-		normalize((envMapMatrix * inverse(model_view) * vec4(unprojected.xyz / unprojected.w, 0.0)).xyz);
-		
-	fragColor = vec4(envMapIntensity * pow(texture(env, viewDir).rgb, vec3(1.0 / gamma)), 1.0);
-	
-	// Use this version for a blurred background
-	//fragColor = vec4(envMapIntensity * pow(textureLod(env, viewDir, 3).rgb, vec3(1.0 / gamma)), 1.0);
-	
-	fragObjectID = objectID;
+    vec3 viewDir =
+        normalize((envMapMatrix * inverse(model_view) * vec4(unprojected.xyz / unprojected.w, 0.0)).xyz);
+
+    fragColor = vec4(envMapIntensity * pow(texture(env, viewDir).rgb, vec3(1.0 / gamma)), 1.0);
+
+    // Use this version for a blurred background
+    //fragColor = vec4(envMapIntensity * pow(textureLod(env, viewDir, 3).rgb, vec3(1.0 / gamma)), 1.0);
+
+    fragObjectID = objectID;
 }

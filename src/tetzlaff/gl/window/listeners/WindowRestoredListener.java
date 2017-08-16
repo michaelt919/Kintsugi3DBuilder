@@ -4,5 +4,5 @@ import tetzlaff.gl.window.Window;
 
 public interface WindowRestoredListener 
 {
-	void windowRestored(Window<?> window);
+    void windowRestored(Window<?> window);
 }

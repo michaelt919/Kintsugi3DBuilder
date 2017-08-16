@@ -9,5 +9,5 @@ layout(location = 1) out int fragObjectID;
 void main()
 {
     fragColor = color;
-	fragObjectID = objectID;
+    fragObjectID = objectID;
 }

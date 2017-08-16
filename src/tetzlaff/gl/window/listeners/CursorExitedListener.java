@@ -4,5 +4,5 @@ import tetzlaff.gl.window.Window;
 
 public interface CursorExitedListener 
 {
-	void cursorExited(Window<?> window);
+    void cursorExited(Window<?> window);
 }

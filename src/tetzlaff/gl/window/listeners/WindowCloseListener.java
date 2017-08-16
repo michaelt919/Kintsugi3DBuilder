@@ -4,5 +4,5 @@ import tetzlaff.gl.window.Window;
 
 public interface WindowCloseListener 
 {
-	void windowClosing(Window<?> window);
+    void windowClosing(Window<?> window);
 }

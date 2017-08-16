@@ -16,10 +16,10 @@ out vec3 fBitangent;
 
 void main(void)
 {
-	gl_Position = vec4(2 * (texCoord - minTexCoord) / (maxTexCoord - minTexCoord) - vec2(1), 0.0, 1.0);
-	fPosition = position;
-	fTexCoord = texCoord;
-	fNormal = normal;
+    gl_Position = vec4(2 * (texCoord - minTexCoord) / (maxTexCoord - minTexCoord) - vec2(1), 0.0, 1.0);
+    fPosition = position;
+    fTexCoord = texCoord;
+    fNormal = normal;
     fTangent = tangent.xyz;
     fBitangent = tangent.w * normalize(cross(normal, tangent.xyz));
 }

@@ -10,9 +10,9 @@ import tetzlaff.gl.exceptions.GLException;
  */
 public interface Resource extends AutoCloseable
 {
-	/**
-	 * Deletes all graphics resources associated with this object.  
-	 * Any usage of this object after calling this method will cause undefined results.
-	 */
-	void close() throws GLException;
+    /**
+     * Deletes all graphics resources associated with this object.
+     * Any usage of this object after calling this method will cause undefined results.
+     */
+    void close() throws GLException;
 }

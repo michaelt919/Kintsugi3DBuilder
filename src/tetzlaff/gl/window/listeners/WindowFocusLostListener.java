@@ -4,5 +4,5 @@ import tetzlaff.gl.window.Window;
 
 public interface WindowFocusLostListener 
 {
-	void windowFocusLost(Window<?> window);
+    void windowFocusLost(Window<?> window);
 }

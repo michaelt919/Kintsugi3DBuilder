@@ -10,9 +10,9 @@ import tetzlaff.gl.ShaderType;
 
 public interface ProgramBuilder<ContextType extends Context<ContextType>>
 {
-	ProgramBuilder<ContextType> addShader(Shader<ContextType> shader);
-	ProgramBuilder<ContextType> addShader(ShaderType type, File shaderFile) throws FileNotFoundException;
-	ProgramBuilder<ContextType> addShader(ShaderType type, String shaderSource);
-	
-	Program<ContextType> createProgram();
+    ProgramBuilder<ContextType> addShader(Shader<ContextType> shader);
+    ProgramBuilder<ContextType> addShader(ShaderType type, File shaderFile) throws FileNotFoundException;
+    ProgramBuilder<ContextType> addShader(ShaderType type, String shaderSource);
+
+    Program<ContextType> createProgram();
 }

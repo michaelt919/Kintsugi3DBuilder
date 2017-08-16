@@ -149,9 +149,9 @@ public class JavaFXCameraModel implements ExtendedCameraModel {
         return cam().isLocked();
     }
 
-	@Override
-	public void setLookMatrix(Matrix4 lookMatrix) 
-	{
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public void setLookMatrix(Matrix4 lookMatrix)
+    {
+        throw new UnsupportedOperationException();
+    }
 }

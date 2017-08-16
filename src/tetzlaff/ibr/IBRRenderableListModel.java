@@ -9,11 +9,11 @@ import tetzlaff.models.ReadonlyObjectModel;
 
 public interface IBRRenderableListModel<ContextType extends Context<ContextType>> extends ComboBoxModel<IBRRenderable<ContextType>>, LoadingHandler
 {
-	@Override
-	IBRRenderable<ContextType> getSelectedItem();
+    @Override
+    IBRRenderable<ContextType> getSelectedItem();
 
-	void setSettingsModel(ReadonlySettingsModel settingsModel);
-	void setObjectModel(ReadonlyObjectModel objectModel);
-	void setCameraModel(ReadonlyCameraModel cameraModel);
-	void setLightingModel(ReadonlyLightingModel lightingModel);
+    void setSettingsModel(ReadonlySettingsModel settingsModel);
+    void setObjectModel(ReadonlyObjectModel objectModel);
+    void setCameraModel(ReadonlyCameraModel cameraModel);
+    void setLightingModel(ReadonlyLightingModel lightingModel);
 }

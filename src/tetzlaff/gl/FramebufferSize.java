@@ -7,24 +7,24 @@ package tetzlaff.gl;
  */
 public class FramebufferSize
 {
-	/**
-	 * The width of the framebuffer.
-	 */
-	public final int width;
-	
-	/**
-	 * The height of the framebuffer.
-	 */
-	public final int height;
-	
-	/**
-	 * Creates a new FramebufferSize structure.
-	 * @param width The width of the framebuffer.
-	 * @param height The height of the framebuffer.
-	 */
-	public FramebufferSize(int width, int height) 
-	{
-		this.width = width;
-		this.height = height;
-	}
+    /**
+     * The width of the framebuffer.
+     */
+    public final int width;
+
+    /**
+     * The height of the framebuffer.
+     */
+    public final int height;
+
+    /**
+     * Creates a new FramebufferSize structure.
+     * @param width The width of the framebuffer.
+     * @param height The height of the framebuffer.
+     */
+    public FramebufferSize(int width, int height)
+    {
+        this.width = width;
+        this.height = height;
+    }
 }

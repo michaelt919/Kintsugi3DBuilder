@@ -10,9 +10,9 @@ uniform bool useDiffuseEstimate;
 struct SpecularResidualInfo
 {
     vec3 residualXYZ;
-	float nDotL;
+    float nDotL;
     vec3 halfAngleVector;
-	float geomRatio;
+    float geomRatio;
 };
 
 vec3 getDiffuseColor()
@@ -63,16 +63,16 @@ SpecularResidualInfo computeSpecularResidualInfo()
     {
         vec3 lightPreNormalized = getLightVector();
         vec3 attenuatedLightIntensity = infiniteLightSource ? 
-			lightIntensity : lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
+            lightIntensity : lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
         vec3 light = normalize(lightPreNormalized);
-		info.nDotL = max(0, dot(normal, light));
-		
+        info.nDotL = max(0, dot(normal, light));
+
         info.residualXYZ = useDiffuseEstimate ? 
-			removeDiffuse(color, getDiffuseColor(), maxLuminance, info.nDotL, attenuatedLightIntensity, 
-				getDiffuseNormalVector())
-			: rgbToXYZ(color.rgb / attenuatedLightIntensity);
-				
-		vec3 halfAngle = normalize(light + view);
+            removeDiffuse(color, getDiffuseColor(), maxLuminance, info.nDotL, attenuatedLightIntensity,
+                getDiffuseNormalVector())
+            : rgbToXYZ(color.rgb / attenuatedLightIntensity);
+
+        vec3 halfAngle = normalize(light + view);
         vec3 tangent = normalize(fTangent - dot(normal, fTangent));
         vec3 bitangent = normalize(fBitangent
             - dot(normal, fBitangent) * normal 
@@ -81,20 +81,20 @@ SpecularResidualInfo computeSpecularResidualInfo()
         mat3 tangentToObject = mat3(tangent, bitangent, normal);
         mat3 objectToTangent = transpose(tangentToObject);
         
-		
+
         info.halfAngleVector = objectToTangent * normalize(view + light);
-        	// Uncomment the following line for debugging purposes ONLY :
-			// acos(objectToTangent * normalize(view + light)) / PI;
-		info.geomRatio = 
-			max(0.0, min(1.0, 2.0 * max(0, info.halfAngleVector.z) * min(nDotV, info.nDotL)) / max(0, dot(view, halfAngle)))
-			/ (4 * nDotV * info.nDotL);
+            // Uncomment the following line for debugging purposes ONLY :
+            // acos(objectToTangent * normalize(view + light)) / PI;
+        info.geomRatio =
+            max(0.0, min(1.0, 2.0 * max(0, info.halfAngleVector.z) * min(nDotV, info.nDotL)) / max(0, dot(view, halfAngle)))
+            / (4 * nDotV * info.nDotL);
     }
     else
     {
         info.residualXYZ = vec3(0);
-		info.nDotL = 0.0;
-		info.halfAngleVector = vec3(0.0);
-		info.geomRatio = 0.0;
+        info.nDotL = 0.0;
+        info.halfAngleVector = vec3(0.0);
+        info.geomRatio = 0.0;
     }
     
     return info;

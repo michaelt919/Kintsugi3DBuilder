@@ -59,7 +59,7 @@ public class RadianceImageLoader
     
     public Image read(BufferedInputStream stream) throws IOException 
     {
-    	return this.read(stream, true, true);
+        return this.read(stream, true, true);
     }
 
     public Image read(BufferedInputStream stream, boolean topToBottom, boolean leftToRight) throws IOException 

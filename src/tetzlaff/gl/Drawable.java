@@ -23,71 +23,71 @@ import tetzlaff.gl.vecmath.Vector4;
  */
 public interface Drawable<ContextType extends Context<ContextType>> extends Contextual<ContextType>
 {
-	Program<ContextType> program();
+    Program<ContextType> program();
 
-	void draw(PrimitiveMode primitiveMode, Framebuffer<ContextType> framebuffer);
+    void draw(PrimitiveMode primitiveMode, Framebuffer<ContextType> framebuffer);
 
-	void draw(PrimitiveMode primitiveMode, Framebuffer<ContextType> framebuffer, int x, int y,
-			int width, int height);
+    void draw(PrimitiveMode primitiveMode, Framebuffer<ContextType> framebuffer, int x, int y,
+            int width, int height);
 
-	void draw(PrimitiveMode primitiveMode, Framebuffer<ContextType> framebuffer, int width,
-			int height);
-	
-	void draw(PrimitiveMode primitiveMode, ContextType context);
-	
-	void draw(PrimitiveMode primitiveMode, ContextType context, int x, int y, int width, int height);
+    void draw(PrimitiveMode primitiveMode, Framebuffer<ContextType> framebuffer, int width,
+            int height);
 
-	void draw(PrimitiveMode primitiveMode, ContextType context, int width, int height);
-	
-	boolean setVertexAttrib(String name, DoubleVector4 value);
+    void draw(PrimitiveMode primitiveMode, ContextType context);
 
-	boolean setVertexAttrib(String name, DoubleVector3 value);
+    void draw(PrimitiveMode primitiveMode, ContextType context, int x, int y, int width, int height);
 
-	boolean setVertexAttrib(String name, DoubleVector2 value);
+    void draw(PrimitiveMode primitiveMode, ContextType context, int width, int height);
 
-	boolean setVertexAttrib(String name, double value);
+    boolean setVertexAttrib(String name, DoubleVector4 value);
 
-	boolean setVertexAttrib(String name, Vector4 value);
+    boolean setVertexAttrib(String name, DoubleVector3 value);
 
-	boolean setVertexAttrib(String name, Vector3 value);
+    boolean setVertexAttrib(String name, DoubleVector2 value);
 
-	boolean setVertexAttrib(String name, Vector2 value);
+    boolean setVertexAttrib(String name, double value);
 
-	boolean setVertexAttrib(String name, float value);
+    boolean setVertexAttrib(String name, Vector4 value);
 
-	boolean setVertexAttrib(String name, IntVector4 value);
+    boolean setVertexAttrib(String name, Vector3 value);
 
-	boolean setVertexAttrib(String name, IntVector3 value);
+    boolean setVertexAttrib(String name, Vector2 value);
 
-	boolean setVertexAttrib(String name, IntVector2 value);
+    boolean setVertexAttrib(String name, float value);
 
-	boolean setVertexAttrib(String name, int value);
+    boolean setVertexAttrib(String name, IntVector4 value);
 
-	boolean setVertexAttrib(int location, DoubleVector4 value);
+    boolean setVertexAttrib(String name, IntVector3 value);
 
-	boolean setVertexAttrib(int location, DoubleVector3 value);
+    boolean setVertexAttrib(String name, IntVector2 value);
 
-	boolean setVertexAttrib(int location, DoubleVector2 value);
+    boolean setVertexAttrib(String name, int value);
 
-	boolean setVertexAttrib(int location, double value);
+    boolean setVertexAttrib(int location, DoubleVector4 value);
 
-	boolean setVertexAttrib(int location, Vector4 value);
+    boolean setVertexAttrib(int location, DoubleVector3 value);
 
-	boolean setVertexAttrib(int location, Vector3 value);
+    boolean setVertexAttrib(int location, DoubleVector2 value);
 
-	boolean setVertexAttrib(int location, Vector2 value);
+    boolean setVertexAttrib(int location, double value);
 
-	boolean setVertexAttrib(int location, float value);
+    boolean setVertexAttrib(int location, Vector4 value);
 
-	boolean setVertexAttrib(int location, IntVector4 value);
+    boolean setVertexAttrib(int location, Vector3 value);
 
-	boolean setVertexAttrib(int location, IntVector3 value);
+    boolean setVertexAttrib(int location, Vector2 value);
 
-	boolean setVertexAttrib(int location, IntVector2 value);
+    boolean setVertexAttrib(int location, float value);
 
-	boolean setVertexAttrib(int location, int value);
+    boolean setVertexAttrib(int location, IntVector4 value);
 
-	boolean addVertexBuffer(int location, VertexBuffer<ContextType> buffer);
+    boolean setVertexAttrib(int location, IntVector3 value);
 
-	boolean addVertexBuffer(String name, VertexBuffer<ContextType> buffer);
+    boolean setVertexAttrib(int location, IntVector2 value);
+
+    boolean setVertexAttrib(int location, int value);
+
+    boolean addVertexBuffer(int location, VertexBuffer<ContextType> buffer);
+
+    boolean addVertexBuffer(String name, VertexBuffer<ContextType> buffer);
 }

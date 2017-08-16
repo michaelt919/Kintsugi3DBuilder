@@ -11,11 +11,11 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
  */
 public interface VertexBuffer<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
-	int count();
-	VertexBuffer<ContextType> setData(NativeVectorBuffer data, boolean normalize);
-	
-	default VertexBuffer<ContextType> setData(NativeVectorBuffer  data)
-	{
-		return this.setData(data, false);
-	}
+    int count();
+    VertexBuffer<ContextType> setData(NativeVectorBuffer data, boolean normalize);
+
+    default VertexBuffer<ContextType> setData(NativeVectorBuffer  data)
+    {
+        return this.setData(data, false);
+    }
 }

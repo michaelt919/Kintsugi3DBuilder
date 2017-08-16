@@ -5,6 +5,6 @@ import tetzlaff.models.ReadonlyCameraModel;
 
 public interface CameraController 
 {
-	void addAsWindowListener(Window<?> window);
-	ReadonlyCameraModel getCameraModel();
+    void addAsWindowListener(Window<?> window);
+    ReadonlyCameraModel getCameraModel();
 }
