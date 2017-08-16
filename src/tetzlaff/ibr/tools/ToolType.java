@@ -1,6 +1,10 @@
 package tetzlaff.ibr.tools;
 
-public enum ToolType 
+public enum ToolType
 {
-    DOLLY, ORBIT, PAN, LIGHT_DRAG, CENTER_POINT
+    DOLLY,
+    ORBIT,
+    PAN,
+    LIGHT_DRAG,
+    CENTER_POINT
 }

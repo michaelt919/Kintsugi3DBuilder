@@ -20,44 +20,44 @@ import tetzlaff.ibr.javafx.util.SafeNumberStringConverter;
 import tetzlaff.ibr.javafx.util.SafeNumberStringConverterPow10;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 
-public class SettingsCameraSceneController implements Initializable {
+public class SettingsCameraSceneController implements Initializable
+{
 
-@FXML private VBox root;
+    @FXML private VBox root;
 
-@FXML private TextField xCenterTextField;
-@FXML private TextField yCenterTextField;
-@FXML private TextField zCenterTextField;
+    @FXML private TextField xCenterTextField;
+    @FXML private TextField yCenterTextField;
+    @FXML private TextField zCenterTextField;
 
-@FXML private Slider xCenterSlider;
-@FXML private Slider yCenterSlider;
-@FXML private Slider zCenterSlider;
+    @FXML private Slider xCenterSlider;
+    @FXML private Slider yCenterSlider;
+    @FXML private Slider zCenterSlider;
 
-@FXML private TextField azimuthTextField;
-@FXML private Slider azimuthSlider;
-@FXML private TextField inclinationTextField;
-@FXML private Slider inclinationSlider;
-@FXML private TextField distanceTextField;
-@FXML private Slider distanceSlider;
-@FXML private TextField twistTextField;
-@FXML private Slider twistSlider;
-@FXML private TextField fOVTextField;
-@FXML private Slider fOVSlider;
-@FXML private TextField focalLengthTextField;
-@FXML private Slider focalLengthSlider;
+    @FXML private TextField azimuthTextField;
+    @FXML private Slider azimuthSlider;
+    @FXML private TextField inclinationTextField;
+    @FXML private Slider inclinationSlider;
+    @FXML private TextField distanceTextField;
+    @FXML private Slider distanceSlider;
+    @FXML private TextField twistTextField;
+    @FXML private Slider twistSlider;
+    @FXML private TextField fOVTextField;
+    @FXML private Slider fOVSlider;
+    @FXML private TextField focalLengthTextField;
+    @FXML private Slider focalLengthSlider;
 
-@FXML private CheckBox orthographicCheckBox;
+    @FXML private CheckBox orthographicCheckBox;
 
-@FXML private Button selectPointButton;
+    @FXML private Button selectPointButton;
 
+    private DoubleProperty fov = new SimpleDoubleProperty();
 
-
-private DoubleProperty fov = new SimpleDoubleProperty();
-
-private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
-private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);
+    private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
+    private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);
 
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    public void initialize(URL location, ResourceBundle resources)
+    {
         StaticUtilities.wrap(-180, 180, azimuthTextField);
         StaticUtilities.bound(-90, 90, inclinationTextField);
         StaticUtilities.wrap(-180, 180, twistTextField);
@@ -69,37 +69,56 @@ private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverter
         StaticUtilities.cleanInput(fOVTextField);
         StaticUtilities.cleanInput(focalLengthTextField);
 
-
-
-        distanceSlider.setLabelFormatter(new StringConverter<Double>() {
+        distanceSlider.setLabelFormatter(new StringConverter<Double>()
+        {
             @Override
-            public String toString(Double object) {
+            public String toString(Double object)
+            {
                 String out = n10.toString(object);
-                if(out.length() >=4 ) return out.substring(0, 4);
-                else return out;
+                if (out.length() >= 4)
+                {
+                    return out.substring(0, 4);
+                }
+                else
+                {
+                    return out;
+                }
             }
 
             @Override
-            public Double fromString(String string) {
+            public Double fromString(String string)
+            {
                 return null;
             }
         });
-
     }
 
     public final ChangeListener<CameraSetting> changeListener =
-            (observable, oldValue, newValue) -> {
-            if(oldValue != null) unbind(oldValue);
+        (observable, oldValue, newValue) ->
+        {
+            if (oldValue != null)
+            {
+                unbind(oldValue);
+            }
 
-            if(newValue != null) {bind(newValue);setDisabled(newValue.isLocked());}
-            if(newValue == null) setDisabled(true);
-    };
+            if (newValue != null)
+            {
+                bind(newValue);
+                setDisabled(newValue.isLocked());
+            }
+            if (newValue == null)
+            {
+                setDisabled(true);
+            }
+        };
 
-    public void setDisabled(Boolean disabled){
+    public void setDisabled(Boolean disabled)
+    {
         root.setDisable(disabled);
     }
 
-    private void bind(CameraSetting c) {
+    private void bind(CameraSetting c)
+    {
 
         xCenterTextField.textProperty().bindBidirectional(c.xCenterProperty(), n);
         yCenterTextField.textProperty().bindBidirectional(c.yCenterProperty(), n);
@@ -110,7 +129,7 @@ private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverter
         twistTextField.textProperty().bindBidirectional(c.twistProperty(), n);
         fOVTextField.textProperty().bindBidirectional(c.fOVProperty(), n);
         focalLengthTextField.textProperty().bindBidirectional(c.focalLengthProperty(), n);
-        
+
         xCenterSlider.valueProperty().bindBidirectional(c.xCenterProperty());
         yCenterSlider.valueProperty().bindBidirectional(c.yCenterProperty());
         zCenterSlider.valueProperty().bindBidirectional(c.zCenterProperty());
@@ -124,10 +143,10 @@ private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverter
         orthographicCheckBox.selectedProperty().bindBidirectional(c.orthographicProperty());
 
         fov.bindBidirectional(c.fOVProperty());
-
     }
 
-    private void unbind(CameraSetting c) {
+    private void unbind(CameraSetting c)
+    {
 
         xCenterTextField.textProperty().unbindBidirectional(c.xCenterProperty());
         yCenterTextField.textProperty().unbindBidirectional(c.yCenterProperty());
@@ -154,9 +173,8 @@ private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverter
         fov.bindBidirectional(c.fOVProperty());
     }
 
-    public void setOnActionSelectPoint(EventHandler<ActionEvent> actionEventEventHandler){
+    public void setOnActionSelectPoint(EventHandler<ActionEvent> actionEventEventHandler)
+    {
         selectPointButton.setOnAction(actionEventEventHandler);
     }
-
-
 }

@@ -22,13 +22,16 @@ import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
 import tetzlaff.ibr.javafx.util.Flag;
 import tetzlaff.ibr.tools.ToolType;
 
-public class MenubarController {
+public class MenubarController
+{
     //toolModel
     private JavaFXToolSelectionModel toolModel;
-    private JavaFXSettingsModel getSettings(){
+
+    private JavaFXSettingsModel getSettings()
+    {
         return JavaFXModels.getInstance().getSettingsModel();
     }
-    
+
     //Window open flags
     Flag iBROptionsWindowOpen = new Flag(false);
     Flag loadOptionsWindowOpen = new Flag(false);
@@ -55,69 +58,113 @@ public class MenubarController {
     @FXML private CheckMenuItem fresnelEffectCheckMenuItem;
 
     @FXML private FileChooser vSetFileChooser;
-    
-    public void init2(JavaFXToolSelectionModel toolModel){
+
+    public void init2(JavaFXToolSelectionModel toolModel)
+    {
         this.toolModel = toolModel;
         vSetFileChooser = new FileChooser();
 
         vSetFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         vSetFileChooser.setTitle("Load V-Set File");
         vSetFileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("V-Set Files", "*.vset")
+            new FileChooser.ExtensionFilter("V-Set Files", "*.vset")
         );
-
 
         initToggleGroups();
         bindCheckMenuItems();
     }
 
-    private void initToggleGroups(){
-        toolGroup.selectedToggleProperty().addListener((ob,o,n)->{
-            if(n!=null && n.getUserData() != null){
-                switch ((String) n.getUserData()){
-                    case "ORBIT": toolModel.setTool(ToolType.ORBIT); break;
-                    case "DOLLY": toolModel.setTool(ToolType.DOLLY); break;
-                    case "PAN": toolModel.setTool(ToolType.PAN); break;
-                    case "LIGHT_DRAG": toolModel.setTool(ToolType.LIGHT_DRAG); break;
-                    case "CENTER_POINT": toolModel.setTool(ToolType.CENTER_POINT); break;
-
+    private void initToggleGroups()
+    {
+        toolGroup.selectedToggleProperty().addListener((ob, o, n) ->
+        {
+            if (n != null && n.getUserData() != null)
+            {
+                switch ((String) n.getUserData())
+                {
+                    case "ORBIT":
+                        toolModel.setTool(ToolType.ORBIT);
+                        break;
+                    case "DOLLY":
+                        toolModel.setTool(ToolType.DOLLY);
+                        break;
+                    case "PAN":
+                        toolModel.setTool(ToolType.PAN);
+                        break;
+                    case "LIGHT_DRAG":
+                        toolModel.setTool(ToolType.LIGHT_DRAG);
+                        break;
+                    case "CENTER_POINT":
+                        toolModel.setTool(ToolType.CENTER_POINT);
+                        break;
                 }
             }
         });
 
-        toolModel.toolProperty().addListener((observable, oldValue, newValue) -> {
+        toolModel.toolProperty().addListener((observable, oldValue, newValue) ->
+        {
             final String data;
-            switch (newValue){
-                case ORBIT: data = "ORBIT"; break;
-                case DOLLY: data = "DOLLY"; break;
-                case PAN: data = "PAN"; break;
-                case LIGHT_DRAG: data = "LIGHT_DRAG"; break;
-                case CENTER_POINT: data = "CENTER_POINT"; break;
-                default: data = "ERROR";
+            switch (newValue)
+            {
+                case ORBIT:
+                    data = "ORBIT";
+                    break;
+                case DOLLY:
+                    data = "DOLLY";
+                    break;
+                case PAN:
+                    data = "PAN";
+                    break;
+                case LIGHT_DRAG:
+                    data = "LIGHT_DRAG";
+                    break;
+                case CENTER_POINT:
+                    data = "CENTER_POINT";
+                    break;
+                default:
+                    data = "ERROR";
             }
             selectToggleWithData(toolGroup, data);
         });
 
+        renderGroup.selectedToggleProperty().addListener((ob, o, n) ->
+        {
+            if (n != null && n.getUserData() != null)
+            {
 
-
-        renderGroup.selectedToggleProperty().addListener((ob,o,n)->{
-            if(n!=null && n.getUserData() != null){
-
-                switch ((String) n.getUserData()){
-                    case "Wireframe": JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.WIREFRAME); return;
-                    case "Lambertian shaded":JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.LAMBERTIAN_SHADED); return;
-                    case "Phong shaded":JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.PHONG_SHADED); return;
-                    case "Solid textured":JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.SOLID_TEXTURED); return;
-                    case "Lambertian textured":JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.LAMBERTIAN_TEXTURED); return;
-                    case "Material shaded":JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.MATERIAL_SHADED); return;
-                    case "Image-based rendering":JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.IMAGE_BASED_RENDERING); return;
-                    case "None": JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.NONE); return;
+                switch ((String) n.getUserData())
+                {
+                    case "Wireframe":
+                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.WIREFRAME);
+                        return;
+                    case "Lambertian shaded":
+                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.LAMBERTIAN_SHADED);
+                        return;
+                    case "Phong shaded":
+                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.PHONG_SHADED);
+                        return;
+                    case "Solid textured":
+                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.SOLID_TEXTURED);
+                        return;
+                    case "Lambertian textured":
+                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.LAMBERTIAN_TEXTURED);
+                        return;
+                    case "Material shaded":
+                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.MATERIAL_SHADED);
+                        return;
+                    case "Image-based rendering":
+                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.IMAGE_BASED_RENDERING);
+                        return;
+                    case "None":
+                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.NONE);
+                        return;
                 }
             }
         });
     }
 
-    private void bindCheckMenuItems(){
+    private void bindCheckMenuItems()
+    {
         //value binding
         d3GridCheckMenuItem.selectedProperty().bindBidirectional(getSettings().d3GridEnabledProperty());
         compassCheckMenuItem.selectedProperty().bindBidirectional(getSettings().compassEnabledProperty());
@@ -131,94 +178,141 @@ public class MenubarController {
         phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().phyMaskingProperty());
         fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(getSettings().fresnelProperty());
 
-
         halfResolutionCheckMenuItem.selectedProperty().bindBidirectional(getSettings().halfResolutionEnabledProperty());
         multiSamplingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().multisamplingEnabledProperty());
     }
 
     //Menubar->File
 
-    @FXML private void file_createProject(){
+    @FXML
+    private void file_createProject()
+    {
 
-        if(loaderWindowOpen.get())return;
+        if (loaderWindowOpen.get())
+        {
+            return;
+        }
 
-        makeWindow("Load Files", loaderWindowOpen, 750, 330,"fxml/menu_bar/Loader.fxml");
+        makeWindow("Load Files", loaderWindowOpen, 750, 330, "fxml/menu_bar/Loader.fxml");
     }
 
-    @FXML private void file_openProject(){
+    @FXML
+    private void file_openProject()
+    {
         File vsetFile = vSetFileChooser.showOpenDialog(null);
-        if (vsetFile != null) try {
-            JavaFXModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile);
-        } catch (IOException e) {
-            //do nothing
+        if (vsetFile != null)
+        {
+            try
+            {
+                JavaFXModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile);
+            }
+            catch (IOException e)
+            {
+                //do nothing
+            }
         }
     }
 
-    @FXML private void file_saveProject(){
+    @FXML
+    private void file_saveProject()
+    {
         System.out.println("TODO: save project");
     }
 
-    @FXML private void file_saveProjectAs(){
+    @FXML
+    private void file_saveProjectAs()
+    {
         System.out.println("TODO: save project as...");
     }
 
-    @FXML private void file_closeProject(){
+    @FXML
+    private void file_closeProject()
+    {
         file_exit();
     }
 
-    @FXML private void file_export_reSample(){
+    @FXML
+    private void file_export_reSample()
+    {
         System.out.println("TODO: export re-sample...");
     }
-    @FXML private void file_export_fidelityMetric(){
+
+    @FXML
+    private void file_export_fidelityMetric()
+    {
         System.out.println("TODO: export fidelity metric...");
     }
-    @FXML private void file_export_BTF(){
+
+    @FXML
+    private void file_export_BTF()
+    {
         System.out.println("TODO: export BTF...");
     }
-    @FXML private void file_export_Other(){
+
+    @FXML
+    private void file_export_Other()
+    {
         System.out.println("TODO: export Other...");
     }
-    @FXML private void file_loadSettingsConfiguration(){
+
+    @FXML
+    private void file_loadSettingsConfiguration()
+    {
         System.out.println("TODO: load settings configuration");
     }
 
-    @FXML private void file_loadOptions(){
+    @FXML
+    private void file_loadOptions()
+    {
 
-        if(loadOptionsWindowOpen.get())return;
-
-        LoadOptionsController loadOptionsController = makeWindow("Load Options", loadOptionsWindowOpen, "fxml/menu_bar/LoadOptions.fxml");
-        if (loadOptionsController != null) {
-            loadOptionsController.bind(JavaFXModels.getInstance().getLoadOptionsModel());
+        if (loadOptionsWindowOpen.get())
+        {
+            return;
         }
 
+        LoadOptionsController loadOptionsController = makeWindow("Load Options", loadOptionsWindowOpen, "fxml/menu_bar/LoadOptions.fxml");
+        if (loadOptionsController != null)
+        {
+            loadOptionsController.bind(JavaFXModels.getInstance().getLoadOptionsModel());
+        }
     }
-    @FXML private void file_exit(){
+
+    @FXML
+    private void file_exit()
+    {
         Quit.getInstance().applicationQuitting();
     }
 
-    @FXML private void shading_IBRSettings(){
+    @FXML
+    private void shading_IBRSettings()
+    {
 
-        if(iBROptionsWindowOpen.get())return;
+        if (iBROptionsWindowOpen.get())
+        {
+            return;
+        }
 
         IBROptionsController ibrOptionsController = makeWindow("IBRL Settings", iBROptionsWindowOpen,
-                "fxml/menu_bar/IBROptions.fxml");
-        if (ibrOptionsController != null) {
+            "fxml/menu_bar/IBROptions.fxml");
+        if (ibrOptionsController != null)
+        {
             ibrOptionsController.bind(JavaFXModels.getInstance().getSettingsModel());
         }
     }
 
-
-
     //window helpers
-    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, String urlString){
-        try {
+    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, String urlString)
+    {
+        try
+        {
             URL url = MenubarController.class.getClassLoader().getResource(urlString);
-            if (url == null) {
+            if (url == null)
+            {
                 throw new IOException("Cant find file " + urlString);
             }
             FXMLLoader fxmlLoader = new FXMLLoader(url);
             Parent root = fxmlLoader.load();
-            Stage stage= new Stage();
+            Stage stage = new Stage();
             stage.setTitle(title);
             stage.setScene(new Scene(root));
 
@@ -230,22 +324,26 @@ public class MenubarController {
             stage.show();
 
             return fxmlLoader.getController();
-
-        }catch (IOException e){
+        }
+        catch (IOException e)
+        {
             e.printStackTrace();
             return null;
         }
     }
-    
-    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, int width, int height, String urlString){
-        try {
+
+    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, int width, int height, String urlString)
+    {
+        try
+        {
             URL url = MenubarController.class.getClassLoader().getResource(urlString);
-            if (url == null) {
+            if (url == null)
+            {
                 throw new IOException("Cant find file " + urlString);
             }
             FXMLLoader fxmlLoader = new FXMLLoader(url);
             Parent root = fxmlLoader.load();
-            Stage stage= new Stage();
+            Stage stage = new Stage();
             stage.setTitle(title);
             stage.setScene(new Scene(root, width, height));
             stage.setResizable(false);
@@ -254,21 +352,24 @@ public class MenubarController {
             stage.show();
 
             return fxmlLoader.getController();
-
-        }catch (IOException e){
+        }
+        catch (IOException e)
+        {
             e.printStackTrace();
             return null;
         }
     }
 
     //toggle group helpers
-    private static void selectToggleWithData(ToggleGroup toggleGroup, String data){
+    private static void selectToggleWithData(ToggleGroup toggleGroup, String data)
+    {
         ObservableList<Toggle> toggles = toggleGroup.getToggles();
-        toggles.iterator().forEachRemaining(toggle -> {
-            if(toggle.getUserData() instanceof String && toggle.getUserData().equals(data)){
+        toggles.iterator().forEachRemaining(toggle ->
+        {
+            if (toggle.getUserData() instanceof String && toggle.getUserData().equals(data))
+            {
                 toggleGroup.selectToggle(toggle);
             }
         });
     }
-
 }

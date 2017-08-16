@@ -19,23 +19,25 @@ import tetzlaff.ibr.javafx.models.JavaFXLightingModel;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
 
-public class JavaFXApp extends Application{
+public class JavaFXApp extends Application
+{
 
     @Override
-    public void start(Stage menuBarStage) throws Exception {
+    public void start(Stage menuBarStage) throws Exception
+    {
 
         //get FXML URLs
         final String menuBarFXMLFileName = "fxml/menu_bar/MenuBar.fxml";
         final URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);
-        assert menuBarURL != null: "cant find " + menuBarFXMLFileName;
+        assert menuBarURL != null : "cant find " + menuBarFXMLFileName;
 
         final String libraryFXMLFileName = "fxml/library/Library.fxml";
         final URL libraryURL = getClass().getClassLoader().getResource(libraryFXMLFileName);
-        assert libraryURL != null: "cant find " + libraryFXMLFileName;
+        assert libraryURL != null : "cant find " + libraryFXMLFileName;
 
         final String sceneFXMLFileName = "fxml/scene/RootScene.fxml";
         final URL sceneURL = getClass().getClassLoader().getResource(sceneFXMLFileName);
-        assert sceneURL != null: "cant find " + sceneFXMLFileName;
+        assert sceneURL != null : "cant find " + sceneFXMLFileName;
 
         //init fxml loaders
         FXMLLoader sceneFXMLLoader = new FXMLLoader(sceneURL);
@@ -72,34 +74,31 @@ public class JavaFXApp extends Application{
 
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
-        menuBarStage.setX(primaryScreenBounds.getMinX()-4);
+        menuBarStage.setX(primaryScreenBounds.getMinX() - 4);
         menuBarStage.setY(primaryScreenBounds.getMinY());
-        menuBarStage.setWidth(primaryScreenBounds.getWidth()+8);
+        menuBarStage.setWidth(primaryScreenBounds.getWidth() + 8);
 
         menuBarStage.initStyle(StageStyle.UNDECORATED);
 
         menuBarStage.show();
         double menuBarHeight = menuBarStage.getHeight();
 
-        libraryStage.setX(primaryScreenBounds.getMinX()-extra);
+        libraryStage.setX(primaryScreenBounds.getMinX() - extra);
         libraryStage.setY(primaryScreenBounds.getMinY() + menuBarHeight - extra);
-        libraryStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight + 2*extra);
-        libraryStage.setWidth(primaryScreenBounds.getWidth()*librarySection + 2*extra);
+        libraryStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight + 2 * extra);
+        libraryStage.setWidth(primaryScreenBounds.getWidth() * librarySection + 2 * extra);
         //libraryStage.show();
 
-        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth()*(1-sceneSection) - extra);
-        sceneStage.setWidth(primaryScreenBounds.getWidth()*sceneSection + 2*extra);
+        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() * (1 - sceneSection) - extra);
+        sceneStage.setWidth(primaryScreenBounds.getWidth() * sceneSection + 2 * extra);
         sceneStage.setY(primaryScreenBounds.getMinY() + menuBarHeight - extra);
-        sceneStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight + 2*extra);
+        sceneStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight + 2 * extra);
 
         sceneStage.initStyle(StageStyle.UNDECORATED);
         sceneStage.show();
 
         menuBarStage.hide();//this is just to have the menu bar have focus on the application starts, only aesthetic value.
         menuBarStage.show();
-
-
-
 
         //get models
         final JavaFXCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
@@ -111,23 +110,18 @@ public class JavaFXApp extends Application{
         sceneController.init2(cameraModel, lightingModel, environmentMapModel, toolModel);
         menuBarController.init2(toolModel);
 
-
-
-
         //set up close
-        Quit.getInstance().addCloseTrigger(()->{
+        Quit.getInstance().addCloseTrigger(() ->
+        {
             sceneStage.close();
             menuBarStage.close();
         });
         sceneStage.setOnCloseRequest(Quit.getInstance());
         menuBarStage.setOnCloseRequest(Quit.getInstance());
-
-
-
     }
 
-
-    public static void  launchWrapper(String args){
+    public static void launchWrapper(String args)
+    {
         launch(args);
     }
 }

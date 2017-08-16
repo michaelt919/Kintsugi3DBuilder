@@ -2,8 +2,7 @@ package tetzlaff.ibr.javafx.models;//Created by alexk on 7/19/2017.
 
 import tetzlaff.ibr.LoadingModel;
 
-
-public class JavaFXModels 
+public class JavaFXModels
 {
     private final JavaFXCameraModel cameraModel;
     private final JavaFXEnvironmentMapModel environmentMapModel;
@@ -12,9 +11,9 @@ public class JavaFXModels
     private final JavaFXSettingsModel settingsModel;
     private final JavaFXToolSelectionModel toolModel;
     private final LoadingModel loadingModel;
-    
+
     private static JavaFXModels instance = new JavaFXModels();
-    
+
     public static JavaFXModels getInstance()
     {
         return instance;

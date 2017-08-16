@@ -21,7 +21,8 @@ import tetzlaff.ibr.tools.ToolType;
 
 import com.sun.javafx.collections.ObservableListWrapper;
 
-public class RootCameraSceneController implements Initializable {
+public class RootCameraSceneController implements Initializable
+{
 
     private final ObservableList<CameraSetting> listOfCameras = new ObservableListWrapper<CameraSetting>(new ArrayList<CameraSetting>());
     @FXML
@@ -36,66 +37,75 @@ public class RootCameraSceneController implements Initializable {
     private Button theRenameButton;
 
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    public void initialize(URL location, ResourceBundle resources)
+    {
 
         cameraListView.setItems(listOfCameras);
 
         cameraListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
         CameraSetting freeCam = new CameraSetting(
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1.0,
-                1.0,
-                false,
-                true,
-                "Free Camera"
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+            false,
+            true,
+            "Free Camera"
 
         );
         listOfCameras.add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
-
     }
 
-    public void init2(JavaFXCameraModel cameraModel, JavaFXToolSelectionModel toolModel){
+    public void init2(JavaFXCameraModel cameraModel, JavaFXToolSelectionModel toolModel)
+    {
 
         System.out.println("Cam in!");
 
         cameraModel.setSelectedCameraSettingProperty(
-                cameraListView.getSelectionModel().selectedItemProperty()
+            cameraListView.getSelectionModel().selectedItemProperty()
         );
 
         settingsController.setOnActionSelectPoint(event -> toolModel.setTool(ToolType.CENTER_POINT));
     }
 
-    private SelectionModel<CameraSetting> getCameraSelectionModel() {
+    private SelectionModel<CameraSetting> getCameraSelectionModel()
+    {
         return cameraListView.getSelectionModel();
     }
 
     @FXML
-    private void newCameraButton() {
+    private void newCameraButton()
+    {
         listOfCameras.add(getCameraSelectionModel().getSelectedItem().duplicate());
         getCameraSelectionModel().select(listOfCameras.size() - 1);
     }
 
     @FXML
-    private void saveCameraButton() {
+    private void saveCameraButton()
+    {
         System.out.println("TODO: saved " + getCameraSelectionModel().getSelectedItem() + " to the library.");
     }
 
     @FXML
-    private void renameCameraButton() {
-        if (getCameraSelectionModel().getSelectedIndex() == 0) return;
+    private void renameCameraButton()
+    {
+        if (getCameraSelectionModel().getSelectedIndex() == 0)
+        {
+            return;
+        }
 
         EventHandler<ActionEvent> oldOnAction = theRenameButton.getOnAction();//backup the old on action event for the rename button
 
         //set up two buttons and a text field for name entry
-        listControls.getChildren().iterator().forEachRemaining(n -> {
+        listControls.getChildren().iterator().forEachRemaining(n ->
+        {
             n.setDisable(true);
         });
         theRenameButton.setDisable(false);
@@ -118,13 +128,16 @@ public class RootCameraSceneController implements Initializable {
 
         //set up to event handlers, one to return the controls back to their original state,
         //and the other to actually perform the rename
-        EventHandler<ActionEvent> finishRename = new EventHandler<ActionEvent>() {
+        EventHandler<ActionEvent> finishRename = new EventHandler<ActionEvent>()
+        {
             @Override
-            public void handle(ActionEvent event) {
+            public void handle(ActionEvent event)
+            {
                 listControls.getChildren().removeAll(renameTextField, cancelRenameButton);
                 theRenameButton.setOnAction(oldOnAction);
 
-                listControls.getChildren().iterator().forEachRemaining(n -> {
+                listControls.getChildren().iterator().forEachRemaining(n ->
+                {
                     n.setDisable(false);
                 });
 
@@ -134,11 +147,14 @@ public class RootCameraSceneController implements Initializable {
             }
         };
 
-        EventHandler<ActionEvent> doRename = new EventHandler<ActionEvent>() {
+        EventHandler<ActionEvent> doRename = new EventHandler<ActionEvent>()
+        {
             @Override
-            public void handle(ActionEvent event) {
+            public void handle(ActionEvent event)
+            {
                 String newName = renameTextField.getText();
-                if (!newName.equals("")) {
+                if (!newName.equals(""))
+                {
                     getCameraSelectionModel().getSelectedItem().setName(newName);
                 }
 
@@ -157,42 +173,50 @@ public class RootCameraSceneController implements Initializable {
     }
 
     @FXML
-    private void moveUPButton() {
+    private void moveUPButton()
+    {
         int i = getCameraSelectionModel().getSelectedIndex();
-        if (i > 1) {
+        if (i > 1)
+        {
             Collections.swap(listOfCameras, i, i - 1);
             getCameraSelectionModel().select(i - 1);
         }
     }
 
     @FXML
-    void moveDOWNButton() {
+    void moveDOWNButton()
+    {
         int i = getCameraSelectionModel().getSelectedIndex();
-        if (i != 0 && i < listOfCameras.size() - 1) {
+        if (i != 0 && i < listOfCameras.size() - 1)
+        {
             Collections.swap(listOfCameras, i, i + 1);
             getCameraSelectionModel().select(i + 1);
         }
     }
 
     @FXML
-    void lockCameraButton() {
-        Boolean newValue = ! getCameraSelectionModel().getSelectedItem().isLocked();
+    void lockCameraButton()
+    {
+        Boolean newValue = !getCameraSelectionModel().getSelectedItem().isLocked();
         getCameraSelectionModel().getSelectedItem().setLocked(newValue);
         settingsController.setDisabled(newValue);
         cameraListView.refresh();
     }
 
     @FXML
-    void keyframeCameraButton() {
+    void keyframeCameraButton()
+    {
         //TODO
         System.out.println("TODO: keyframe added for " + getCameraSelectionModel().getSelectedItem());
     }
 
     @FXML
-    void deleteCameraButton() {
+    void deleteCameraButton()
+    {
         int i = getCameraSelectionModel().getSelectedIndex();
-        if (i != 0) listOfCameras.remove(i);
+        if (i != 0)
+        {
+            listOfCameras.remove(i);
+        }
     }
-
-
 }

@@ -11,19 +11,19 @@ import tetzlaff.models.SceneViewportModel;
 class CenterPointTool extends AbstractTool
 {
     private ToolSelectionModel toolModel;
-    
-    public CenterPointTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, 
-            ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel)
+
+    public CenterPointTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel,
+        ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel)
     {
         super(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
         this.toolModel = toolModel;
     }
 
     @Override
-    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods) 
+    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
         super.mouseButtonPressed(window, buttonIndex, mods);
-        if(buttonIndex == MB1)
+        if (buttonIndex == MB1)
         {
             double trueX = mouseStartX_MB1 / window.getWindowSize().width;
             double trueY = mouseStartY_MB1 / window.getWindowSize().height;
@@ -32,7 +32,7 @@ class CenterPointTool extends AbstractTool
             SceneObjectType whatClicked = getClickedObjectType(trueX, trueY);
 //            System.out.println("You clicked: " + whatClicked + " at " + newCenter);
 
-            if(whatClicked.equals(SceneObjectType.OBJECT))
+            if (whatClicked.equals(SceneObjectType.OBJECT))
             {
                 cameraModel.setCenter(newCenter);
                 System.out.println("Set center to " + newCenter);

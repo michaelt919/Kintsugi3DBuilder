@@ -15,7 +15,8 @@ import org.jdom2.Element;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.misc.XML_Writable;
 
-public class LightInstanceSetting implements XML_Writable{
+public class LightInstanceSetting implements XML_Writable
+{
 
     private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
@@ -31,24 +32,26 @@ public class LightInstanceSetting implements XML_Writable{
 
     private final BooleanProperty groupLocked;
 
-    public boolean getGroupLocked() {
+    public boolean getGroupLocked()
+    {
         return groupLocked.get();
     }
 
     public LightInstanceSetting(
-            Double xCenter,
-            Double yCenter,
-            Double zCenter,
-            Double azimuth,
-            Double inclination,
-            Double log10distance,
-            Double intensity,
-            Boolean locked,
-            String name,
-            LightType lightType,
-            Color color,
-            BooleanProperty groupLockedProperty
-    ) {
+        Double xCenter,
+        Double yCenter,
+        Double zCenter,
+        Double azimuth,
+        Double inclination,
+        Double log10distance,
+        Double intensity,
+        Boolean locked,
+        String name,
+        LightType lightType,
+        Color color,
+        BooleanProperty groupLockedProperty
+    )
+    {
         this.xCenter.setValue(xCenter);
         this.yCenter.setValue(yCenter);
         this.zCenter.setValue(zCenter);
@@ -63,191 +66,228 @@ public class LightInstanceSetting implements XML_Writable{
         this.groupLocked = groupLockedProperty;
     }
 
-    public LightInstanceSetting duplicate() {
+    public LightInstanceSetting duplicate()
+    {
         return new LightInstanceSetting(
-                xCenter.getValue(),
-                yCenter.getValue(),
-                zCenter.getValue(),
-                azimuth.getValue(),
-                inclination.getValue(),
-                log10distance.getValue(),
-                intensity.getValue(),
-                locked.getValue(),
-                name.getValue(),
-                lightType.getValue(),
-                color.getValue(),
-                this.groupLocked
+            xCenter.getValue(),
+            yCenter.getValue(),
+            zCenter.getValue(),
+            azimuth.getValue(),
+            inclination.getValue(),
+            log10distance.getValue(),
+            intensity.getValue(),
+            locked.getValue(),
+            name.getValue(),
+            lightType.getValue(),
+            color.getValue(),
+            this.groupLocked
         );
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return name.getValue();
     }
 
     @Override
-    public Element toJDOM2Element() {
+    public Element toJDOM2Element()
+    {
         return new Element("SubLightSetting")
-                .setAttribute("xCenter", xCenter.getValue().toString())
-                .setAttribute("yCenter", yCenter.getValue().toString())
-                .setAttribute("zCenter", zCenter.getValue().toString())
-                .setAttribute("azimuth", azimuth.getValue().toString())
-                .setAttribute("inclination", inclination.getValue().toString())
-                .setAttribute("log10distance", log10distance.getValue().toString())
-                .setAttribute("intensity", intensity.getValue().toString())
-                .setAttribute("locked", locked.getValue().toString())
-                .setAttribute("name", name.getValue())
-                .setAttribute("lightType", lightType.getValue().toString())
-                .setAttribute("color", color.getValue().toString())
-                ;
+            .setAttribute("xCenter", xCenter.getValue().toString())
+            .setAttribute("yCenter", yCenter.getValue().toString())
+            .setAttribute("zCenter", zCenter.getValue().toString())
+            .setAttribute("azimuth", azimuth.getValue().toString())
+            .setAttribute("inclination", inclination.getValue().toString())
+            .setAttribute("log10distance", log10distance.getValue().toString())
+            .setAttribute("intensity", intensity.getValue().toString())
+            .setAttribute("locked", locked.getValue().toString())
+            .setAttribute("name", name.getValue())
+            .setAttribute("lightType", lightType.getValue().toString())
+            .setAttribute("color", color.getValue().toString())
+            ;
     }
 
-    public static LightInstanceSetting fromJDOM2Element(Element e, BooleanProperty groupLockedProperty) {
+    public static LightInstanceSetting fromJDOM2Element(Element e, BooleanProperty groupLockedProperty)
+    {
         return new LightInstanceSetting(
-                Double.valueOf(e.getAttributeValue("xCenter")),
-                Double.valueOf(e.getAttributeValue("yCenter")),
-                Double.valueOf(e.getAttributeValue("zCenter")),
-                Double.valueOf(e.getAttributeValue("azimuth")),
-                Double.valueOf(e.getAttributeValue("inclination")),
-                Double.valueOf(e.getAttributeValue("log10distance")),
-                Double.valueOf(e.getAttributeValue("intensity")),
-                Boolean.valueOf(e.getAttributeValue("locked")),
-                e.getAttributeValue("name"),
-                LightType.valueOf(e.getAttributeValue("lightType")),
-                Color.valueOf(e.getAttributeValue("color")),
-                groupLockedProperty
+            Double.valueOf(e.getAttributeValue("xCenter")),
+            Double.valueOf(e.getAttributeValue("yCenter")),
+            Double.valueOf(e.getAttributeValue("zCenter")),
+            Double.valueOf(e.getAttributeValue("azimuth")),
+            Double.valueOf(e.getAttributeValue("inclination")),
+            Double.valueOf(e.getAttributeValue("log10distance")),
+            Double.valueOf(e.getAttributeValue("intensity")),
+            Boolean.valueOf(e.getAttributeValue("locked")),
+            e.getAttributeValue("name"),
+            LightType.valueOf(e.getAttributeValue("lightType")),
+            Color.valueOf(e.getAttributeValue("color")),
+            groupLockedProperty
         );
     }
 
-    public double getxCenter() {
+    public double getxCenter()
+    {
         return xCenter.get();
     }
 
-    public DoubleProperty xCenterProperty() {
+    public DoubleProperty xCenterProperty()
+    {
         return xCenter;
     }
 
-    public void setxCenter(double xCenter) {
+    public void setxCenter(double xCenter)
+    {
         this.xCenter.set(xCenter);
     }
 
-    public double getyCenter() {
+    public double getyCenter()
+    {
         return yCenter.get();
     }
 
-    public DoubleProperty yCenterProperty() {
+    public DoubleProperty yCenterProperty()
+    {
         return yCenter;
     }
 
-    public void setyCenter(double yCenter) {
+    public void setyCenter(double yCenter)
+    {
         this.yCenter.set(yCenter);
     }
 
-    public double getzCenter() {
+    public double getzCenter()
+    {
         return zCenter.get();
     }
 
-    public DoubleProperty zCenterProperty() {
+    public DoubleProperty zCenterProperty()
+    {
         return zCenter;
     }
 
-    public void setzCenter(double zCenter) {
+    public void setzCenter(double zCenter)
+    {
         this.zCenter.set(zCenter);
     }
 
-    public double getAzimuth() {
+    public double getAzimuth()
+    {
         return azimuth.get();
     }
 
-    public DoubleProperty azimuthProperty() {
+    public DoubleProperty azimuthProperty()
+    {
         return azimuth;
     }
 
-    public void setAzimuth(double azimuth) {
+    public void setAzimuth(double azimuth)
+    {
         this.azimuth.set(azimuth);
     }
 
-    public double getInclination() {
+    public double getInclination()
+    {
         return inclination.get();
     }
 
-    public DoubleProperty inclinationProperty() {
+    public DoubleProperty inclinationProperty()
+    {
         return inclination;
     }
 
-    public void setInclination(double inclination) {
+    public void setInclination(double inclination)
+    {
         this.inclination.set(inclination);
     }
 
-    public double getLog10Distance() {
+    public double getLog10Distance()
+    {
         return log10distance.get();
     }
 
-    public DoubleProperty log10distanceProperty() {
+    public DoubleProperty log10distanceProperty()
+    {
         return log10distance;
     }
 
-    public void setLog10distance(double log10distance) {
+    public void setLog10distance(double log10distance)
+    {
         this.log10distance.set(log10distance);
     }
 
-    public double getIntensity() {
+    public double getIntensity()
+    {
         return intensity.get();
     }
 
-    public DoubleProperty intensityProperty() {
+    public DoubleProperty intensityProperty()
+    {
         return intensity;
     }
 
-    public void setIntensity(double intensity) {
+    public void setIntensity(double intensity)
+    {
         this.intensity.set(intensity);
     }
 
-    public boolean isLocked() {
+    public boolean isLocked()
+    {
         return locked.get();
     }
 
-    public BooleanProperty lockedProperty() {
+    public BooleanProperty lockedProperty()
+    {
         return locked;
     }
 
-    public void setLocked(boolean locked) {
+    public void setLocked(boolean locked)
+    {
         this.locked.set(locked);
     }
 
-    public String getName() {
+    public String getName()
+    {
         return name.get();
     }
 
-    public StringProperty nameProperty() {
+    public StringProperty nameProperty()
+    {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(String name)
+    {
         this.name.set(name);
     }
 
-    public LightType getLightType() {
+    public LightType getLightType()
+    {
         return lightType.getValue();
     }
 
-    public Property<LightType> lightTypeProperty() {
+    public Property<LightType> lightTypeProperty()
+    {
         return lightType;
     }
 
-    public void setLightType(LightType lightType) {
+    public void setLightType(LightType lightType)
+    {
         this.lightType.setValue(lightType);
     }
 
-    public Color getColor() {
+    public Color getColor()
+    {
         return color.getValue();
     }
 
-    public Property<Color> colorProperty() {
+    public Property<Color> colorProperty()
+    {
         return color;
     }
 
-    public void setColor(Color color) {
+    public void setColor(Color color)
+    {
         this.color.setValue(color);
     }
 }

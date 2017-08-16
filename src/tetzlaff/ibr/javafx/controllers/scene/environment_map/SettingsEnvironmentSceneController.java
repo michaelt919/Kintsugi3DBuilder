@@ -1,6 +1,5 @@
 package tetzlaff.ibr.javafx.controllers.scene.environment_map;
 
-
 import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -25,7 +24,8 @@ import javafx.util.converter.DoubleStringConverter;
 import tetzlaff.ibr.javafx.util.SafeNumberStringConverter;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 
-public class SettingsEnvironmentSceneController implements Initializable{
+public class SettingsEnvironmentSceneController implements Initializable
+{
 
     @FXML VBox root;
 
@@ -57,18 +57,31 @@ public class SettingsEnvironmentSceneController implements Initializable{
     private final FileChooser bpImageFileChooser = new FileChooser();
 
     public ChangeListener<EnvironmentSettings> changeListener =
-            (observable, oldValue, newValue) -> {
-                if (oldValue != null) unbind(oldValue);
+        (observable, oldValue, newValue) ->
+        {
+            if (oldValue != null)
+            {
+                unbind(oldValue);
+            }
 
-                if (newValue != null){ bind(newValue); setDisabled(newValue.isLocked());}
-                else setDisabled(true);
-            };
+            if (newValue != null)
+            {
+                bind(newValue);
+                setDisabled(newValue.isLocked());
+            }
+            else
+            {
+                setDisabled(true);
+            }
+        };
 
-    public void setDisabled(boolean value){
+    public void setDisabled(boolean value)
+    {
         root.setDisable(value);
     }
 
-    private void bind(EnvironmentSettings envSetting){
+    private void bind(EnvironmentSettings envSetting)
+    {
 
         evUseImageCheckBox.selectedProperty().bindBidirectional(envSetting.envUseImageProperty());
         evUseColorCheckBox.selectedProperty().bindBidirectional(envSetting.envUseColorProperty());
@@ -87,11 +100,11 @@ public class SettingsEnvironmentSceneController implements Initializable{
         localEnvImageFile.bindBidirectional(envSetting.envImageFileProperty());
         localBPImageFile.bindBidirectional(envSetting.bpImageFileProperty());
 
-
         evUseImageCheckBox.disableProperty().bind(envSetting.firstEnvLoadedProperty().not());
     }
 
-    private void unbind(EnvironmentSettings evSetting){
+    private void unbind(EnvironmentSettings evSetting)
+    {
 
         evUseImageCheckBox.selectedProperty().unbindBidirectional(evSetting.envUseImageProperty());
         evUseColorCheckBox.selectedProperty().unbindBidirectional(evSetting.envUseColorProperty());
@@ -109,27 +122,24 @@ public class SettingsEnvironmentSceneController implements Initializable{
 
         localEnvImageFile.unbindBidirectional(evSetting.envImageFileProperty());
         localBPImageFile.unbindBidirectional(evSetting.bpImageFileProperty());
-
     }
 
-
-
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    public void initialize(URL location, ResourceBundle resources)
+    {
 
         StaticUtilities.wrap(-180, 180, evRotationTextField);
         StaticUtilities.bound(0, Double.MAX_VALUE, evColorIntensityTextField);
 
-        evColorIntensitySlider.setLabelFormatter(new DoubleStringConverter(){
+        evColorIntensitySlider.setLabelFormatter(new DoubleStringConverter()
+        {
             @Override
-            public String toString(Double value) {
-                return super.toString(Math.pow(10,value));
+            public String toString(Double value)
+            {
+                return super.toString(Math.pow(10, value));
             }
         });
         StaticUtilities.powerBind(evColorIntensitySlider.valueProperty(), trueEnvColorIntes);
-
-
-
 
         envImageFileChooser.setTitle("Pick file for environment map");
         bpImageFileChooser.setTitle("pick file for backplate");
@@ -138,41 +148,45 @@ public class SettingsEnvironmentSceneController implements Initializable{
         bpImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
         envImageFileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("HDR", "*.hdr"),
-                new FileChooser.ExtensionFilter("PNG", "*.png"),
-                new FileChooser.ExtensionFilter("JPG", "*.jpg"),
-                new FileChooser.ExtensionFilter("Other", "*.*")
+            new FileChooser.ExtensionFilter("HDR", "*.hdr"),
+            new FileChooser.ExtensionFilter("PNG", "*.png"),
+            new FileChooser.ExtensionFilter("JPG", "*.jpg"),
+            new FileChooser.ExtensionFilter("Other", "*.*")
         );
 
         bpImageFileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("HDR", "*.hdr"),
-                new FileChooser.ExtensionFilter("PNG", "*.png"),
-                new FileChooser.ExtensionFilter("JPG", "*.jpg"),
-                new FileChooser.ExtensionFilter("Other", "*.*")
+            new FileChooser.ExtensionFilter("HDR", "*.hdr"),
+            new FileChooser.ExtensionFilter("PNG", "*.png"),
+            new FileChooser.ExtensionFilter("JPG", "*.jpg"),
+            new FileChooser.ExtensionFilter("Other", "*.*")
         );
 
-        localEnvImageFile.addListener((observable, oldValue, newValue) -> {
-            if(newValue != null){
+        localEnvImageFile.addListener((observable, oldValue, newValue) ->
+        {
+            if (newValue != null)
+            {
                 evFileNameText.setText(newValue.getName());
 
                 evImageView.setImage(new Image(newValue.toURI().toString()));
-
             }
-            else{
+            else
+            {
                 evFileNameText.setText("Filename");
 
                 evImageView.setImage(null);
             }
         });
 
-        localBPImageFile.addListener((ob, o, n)->{
-            if(n != null){
+        localBPImageFile.addListener((ob, o, n) ->
+        {
+            if (n != null)
+            {
                 bpFileNameText.setText(n.getName());
 
                 bpImageView.setImage(new Image(n.toURI().toString()));
-
             }
-            else{
+            else
+            {
                 bpFileNameText.setText("Filename");
 
                 bpImageView.setImage(null);
@@ -180,16 +194,26 @@ public class SettingsEnvironmentSceneController implements Initializable{
         });
 
         setDisabled(true);
-
     }
 
-    @FXML private void pickEnvImageFile(){
-       File newFile = envImageFileChooser.showOpenDialog(root.getScene().getWindow());
-        if(newFile != null) localEnvImageFile.setValue(newFile);
+    @FXML
+    private void pickEnvImageFile()
+    {
+        File newFile = envImageFileChooser.showOpenDialog(root.getScene().getWindow());
+        if (newFile != null)
+        {
+            localEnvImageFile.setValue(newFile);
+        }
     }
-    @FXML private void pickBPImageFile(){
+
+    @FXML
+    private void pickBPImageFile()
+    {
         File newFile = bpImageFileChooser.showOpenDialog(root.getScene().getWindow());
-        if(newFile != null) localBPImageFile.setValue(newFile);
+        if (newFile != null)
+        {
+            localBPImageFile.setValue(newFile);
+        }
     }
 }
 

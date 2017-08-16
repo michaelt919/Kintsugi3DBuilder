@@ -9,62 +9,73 @@ import tetzlaff.util.OrbitPolarConverter;
 
 import com.sun.istack.internal.NotNull;
 
-public class JavaFXCameraModel implements ExtendedCameraModel {
+public class JavaFXCameraModel implements ExtendedCameraModel
+{
 
     private ObservableValue<CameraSetting> selected;
     private final CameraSetting backup = new CameraSetting(
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-            0.0,
-            1.0,
-            1.0,
-            true,
-            false,
-            "backup"
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        true,
+        false,
+        "backup"
     );
 
-
-
-    public void setSelectedCameraSettingProperty(ObservableValue<CameraSetting> selectedCameraSettingProperty){
+    public void setSelectedCameraSettingProperty(ObservableValue<CameraSetting> selectedCameraSettingProperty)
+    {
         this.selected = selectedCameraSettingProperty;
     }
 
     @NotNull
-    private CameraSetting cam(){
-        if(selected == null || selected.getValue() == null)return backup;
-        else return selected.getValue();
+    private CameraSetting cam()
+    {
+        if (selected == null || selected.getValue() == null)
+        {
+            return backup;
+        }
+        else
+        {
+            return selected.getValue();
+        }
     }
-
 
     private Matrix4 orbitCache;
     private boolean fromRender = false;
+
     @Override
-    public Matrix4 getLookMatrix() {
+    public Matrix4 getLookMatrix()
+    {
         return Matrix4.lookAt(
-                new Vector3(0,0,getDistance()),
-                Vector3.ZERO,
-                new Vector3(0,1,0)
+            new Vector3(0, 0, getDistance()),
+            Vector3.ZERO,
+            new Vector3(0, 1, 0)
         ).times(getOrbit().times(
-                Matrix4.translate(getCenter().negated())
+            Matrix4.translate(getCenter().negated())
         ));
     }
 
     @Override
-    public Matrix4 getOrbit() {
-        if(fromRender){
+    public Matrix4 getOrbit()
+    {
+        if (fromRender)
+        {
             fromRender = false;
             return orbitCache;
-    }
+        }
         Vector3 poler = new Vector3((float) cam().getAzimuth(), (float) cam().getInclination(), (float) cam().getTwist());
         return OrbitPolarConverter.getInstance().convertToOrbitMatrix(poler);
     }
 
     @Override
-    public void setOrbit(Matrix4 orbit) {
+    public void setOrbit(Matrix4 orbit)
+    {
         Vector3 poler = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
         cam().setAzimuth(poler.x);
         cam().setInclination(poler.y);
@@ -74,66 +85,78 @@ public class JavaFXCameraModel implements ExtendedCameraModel {
     }
 
     @Override
-    public float getLog10Distance() {
+    public float getLog10Distance()
+    {
         return (float) cam().getLog10distance();
     }
 
     @Override
-    public void setLog10Distance(float log10distance) {
+    public void setLog10Distance(float log10distance)
+    {
         cam().setLog10distance(log10distance);
     }
 
     @Override
-    public float getDistance() {
+    public float getDistance()
+    {
         return (float) Math.pow(10, (cam().getLog10distance()));
     }
 
     @Override
-    public void setDistance(float distance) {
+    public void setDistance(float distance)
+    {
         cam().setLog10distance(Math.log10(distance));
     }
 
     @Override
-    public Vector3 getCenter() {
+    public Vector3 getCenter()
+    {
         return new Vector3((float) cam().getxCenter(),
-                (float) cam().getyCenter(),
-                (float) cam().getzCenter());
+            (float) cam().getyCenter(),
+            (float) cam().getzCenter());
     }
 
     @Override
-    public void setCenter(Vector3 center) {
+    public void setCenter(Vector3 center)
+    {
         cam().setxCenter(center.x);
         cam().setyCenter(center.y);
         cam().setzCenter(center.z);
     }
 
     @Override
-    public float getTwist() {
-        return (float)cam().getTwist();
+    public float getTwist()
+    {
+        return (float) cam().getTwist();
     }
 
     @Override
-    public void setTwist(float twist) {
+    public void setTwist(float twist)
+    {
         cam().setTwist(twist);
     }
 
     @Override
-    public float getAzimuth() {
-        return (float)cam().getAzimuth();
+    public float getAzimuth()
+    {
+        return (float) cam().getAzimuth();
     }
 
     @Override
-    public void setAzimuth(float azimuth) {
+    public void setAzimuth(float azimuth)
+    {
         cam().setAzimuth(azimuth);
     }
 
     @Override
-    public float getInclination() {
-        return (float)cam().getInclination();
+    public float getInclination()
+    {
+        return (float) cam().getInclination();
     }
 
     @Override
-    public void setInclination(float inclination) {
+    public void setInclination(float inclination)
+    {
         cam().setInclination(inclination);
     }
 
@@ -145,7 +168,8 @@ public class JavaFXCameraModel implements ExtendedCameraModel {
      * @return true for locked
      */
     @Override
-    public boolean getLocked() {
+    public boolean getLocked()
+    {
         return cam().isLocked();
     }
 

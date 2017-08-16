@@ -13,7 +13,8 @@ import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import tetzlaff.ibr.javafx.models.JavaFXLoadOptionsModel;
 
-public class LoadOptionsController implements Initializable{
+public class LoadOptionsController implements Initializable
+{
     @FXML private CheckBox compressedImages;
     @FXML private CheckBox mipmaps;
     @FXML private CheckBox depthImages;
@@ -25,47 +26,66 @@ public class LoadOptionsController implements Initializable{
     private IntegerProperty h = new SimpleIntegerProperty(1024);
 
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    public void initialize(URL location, ResourceBundle resources)
+    {
         setupTextAndProp(w, depthWidth);
         setupTextAndProp(h, depthHeight);
 
         depthWidth.disableProperty().bind(depthImages.selectedProperty().not());
         depthHeight.disableProperty().bind(depthImages.selectedProperty().not());
-
-
     }
 
-    private void setupTextAndProp(IntegerProperty prop, TextField tex){
-        StringConverter<Number> ISC = new StringConverter<Number>() {
+    private void setupTextAndProp(IntegerProperty prop, TextField tex)
+    {
+        StringConverter<Number> ISC = new StringConverter<Number>()
+        {
             @Override
-            public String toString(Number object) {
-                if (object != null) {
+            public String toString(Number object)
+            {
+                if (object != null)
+                {
                     return Integer.toString(object.intValue());
-                } else return "1024";
+                }
+                else
+                {
+                    return "1024";
+                }
             }
 
             @Override
-            public Number fromString(String string) {
-                try {
+            public Number fromString(String string)
+            {
+                try
+                {
                     return Integer.valueOf(string);
-                }catch (NumberFormatException nfe){
+                }
+                catch (NumberFormatException nfe)
+                {
                     return 1024;
                 }
             }
         };
         tex.textProperty().bindBidirectional(prop, ISC);
-        tex.focusedProperty().addListener((ob,o,n)->{
-            if(o&&!n){
+        tex.focusedProperty().addListener((ob, o, n) ->
+        {
+            if (o && !n)
+            {
                 tex.setText(prop.getValue().toString());
             }
         });
-        prop.addListener((ob,o,n)->{
-            if(n.intValue() < 1) prop.setValue(1);
+        prop.addListener((ob, o, n) ->
+        {
+            if (n.intValue() < 1)
+            {
+                prop.setValue(1);
+            }
         });
     }
 
     private JavaFXLoadOptionsModel loadSettingsCache = null;
-    public void bind(JavaFXLoadOptionsModel loadSettings){
+
+    public void bind(JavaFXLoadOptionsModel loadSettings)
+    {
         compressedImages.selectedProperty().bindBidirectional(loadSettings.compression);
         mipmaps.selectedProperty().bindBidirectional(loadSettings.mipmaps);
         depthImages.selectedProperty().bindBidirectional(loadSettings.depthImages);
@@ -76,8 +96,10 @@ public class LoadOptionsController implements Initializable{
         root.getScene().getWindow().setOnCloseRequest(param -> unbind());
     }
 
-    private void unbind(){
-        if(loadSettingsCache != null){
+    private void unbind()
+    {
+        if (loadSettingsCache != null)
+        {
             compressedImages.selectedProperty().bindBidirectional(loadSettingsCache.compression);
             mipmaps.selectedProperty().bindBidirectional(loadSettingsCache.mipmaps);
             depthImages.selectedProperty().bindBidirectional(loadSettingsCache.depthImages);
