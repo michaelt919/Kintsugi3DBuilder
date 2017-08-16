@@ -641,7 +641,10 @@ public class ViewSet
                                 break;
                             case "chunk":
                                 chunkLabel = reader.getAttributeValue(null, "label");
-                                if(chunkLabel == null) { chunkLabel = "unnamed"; }
+                                if(chunkLabel == null)
+                                {
+                                    chunkLabel = "unnamed";
+                                }
                                 System.out.printf("Reading chunk '%s'\n", chunkLabel);
                                 break;
                             case "group":

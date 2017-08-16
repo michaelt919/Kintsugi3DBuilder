@@ -4,7 +4,8 @@ public class NoAvailableTextureUnitsException extends RuntimeException {
 
     private static final long serialVersionUID = -3881373761882575026L;
 
-    public NoAvailableTextureUnitsException() {
+    public NoAvailableTextureUnitsException()
+    {
     }
 
     public NoAvailableTextureUnitsException(String message)

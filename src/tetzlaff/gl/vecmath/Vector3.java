@@ -212,7 +212,8 @@ public class Vector3
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "Vector3{" +
                 "x=" + x +
                 ", y=" + y +

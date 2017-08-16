@@ -513,7 +513,10 @@ public class IBRelightConfigFrame extends JFrame
         qualitySettings.add(chckbxMultisampling, gbc_chckbxMultisampling);
 
         // Set the combo box model to the parameter
-        if(rendererListModel != null) { comboBoxObjects.setModel(rendererListModel); }
+        if(rendererListModel != null)
+        {
+            comboBoxObjects.setModel(rendererListModel);
+        }
 
         modelDependentComponents = new ArrayList<JComponent>();
         modelDependentComponents.add(lblGamma);

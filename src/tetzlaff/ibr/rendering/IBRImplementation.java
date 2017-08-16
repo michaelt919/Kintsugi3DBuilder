@@ -1319,7 +1319,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     }
 
     @Override
-    public void setSettingsModel(ReadonlySettingsModel settings) {
+    public void setSettingsModel(ReadonlySettingsModel settings)
+    {
         this.settings = settings;
     }
 
