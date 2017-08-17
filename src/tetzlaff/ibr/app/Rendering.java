@@ -18,7 +18,7 @@ import tetzlaff.ibr.LoadingModel;
 import tetzlaff.ibr.ReadonlySettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
-import tetzlaff.ibr.tools.ToolBox;
+import tetzlaff.ibr.tools.ToolBox.Builder;
 import tetzlaff.ibr.tools.ToolSelectionModel;
 import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
@@ -82,7 +82,7 @@ public class Rendering
 
             ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
 
-            WindowBasedController windowBasedController = ToolBox.Builder.create()
+            WindowBasedController windowBasedController = Builder.create()
                 .setCameraModel(cameraModel)
                 .setEnvironmentMapModel(environmentMapModel)
                 .setLightingModel(lightingModel)

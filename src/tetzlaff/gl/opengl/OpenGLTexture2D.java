@@ -14,6 +14,7 @@ import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
 import tetzlaff.util.RadianceImageLoader;
+import tetzlaff.util.RadianceImageLoader.Image;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -33,10 +34,10 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 
     static class OpenGLTexture2DFromFileBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
     {
-        private int textureTarget;
-        private BufferedImage colorImg;
-        private BufferedImage maskImg = null;
-        private boolean flipVertical;
+        private final int textureTarget;
+        private final BufferedImage colorImg;
+        private BufferedImage maskImg;
+        private final boolean flipVertical;
 
         OpenGLTexture2DFromFileBuilder(OpenGLContext context, int textureTarget, InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
         {
@@ -96,9 +97,9 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 
     static class OpenGLTexture2DFromHDRFileBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
     {
-        private int textureTarget;
-        private RadianceImageLoader.Image colorImg;
-        private BufferedImage maskImg = null;
+        private final int textureTarget;
+        private final Image colorImg;
+        private BufferedImage maskImg;
 
         OpenGLTexture2DFromHDRFileBuilder(OpenGLContext context, int textureTarget, BufferedInputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
         {
@@ -158,12 +159,12 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 
     static class OpenGLTexture2DFromBufferBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
     {
-        private int textureTarget;
-        private int width;
-        private int height;
-        private int format;
-        private int type;
-        private ByteBuffer buffer;
+        private final int textureTarget;
+        private final int width;
+        private final int height;
+        private final int format;
+        private final int type;
+        private final ByteBuffer buffer;
 
         OpenGLTexture2DFromBufferBuilder(OpenGLContext context, int textureTarget, int width, int height, int format, int type, ByteBuffer buffer)
         {
@@ -214,9 +215,9 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 
     static class OpenGLTexture2DColorBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
     {
-        private int textureTarget;
-        private int width;
-        private int height;
+        private final int textureTarget;
+        private final int width;
+        private final int height;
 
         OpenGLTexture2DColorBuilder(OpenGLContext context, int textureTarget, int width, int height)
         {
@@ -266,9 +267,9 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 
     static class OpenGLTexture2DDepthBuilder extends DepthTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
     {
-        private int textureTarget;
-        private int width;
-        private int height;
+        private final int textureTarget;
+        private final int width;
+        private final int height;
 
         OpenGLTexture2DDepthBuilder(OpenGLContext context, int textureTarget, int width, int height)
         {
@@ -299,9 +300,9 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 
     static class OpenGLTexture2DStencilBuilder extends StencilTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
     {
-        private int textureTarget;
-        private int width;
-        private int height;
+        private final int textureTarget;
+        private final int width;
+        private final int height;
 
         OpenGLTexture2DStencilBuilder(OpenGLContext context, int textureTarget, int width, int height)
         {
@@ -332,9 +333,9 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 
     static class OpenGLTexture2DDepthStencilBuilder extends DepthStencilTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
     {
-        private int textureTarget;
-        private int width;
-        private int height;
+        private final int textureTarget;
+        private final int width;
+        private final int height;
 
         OpenGLTexture2DDepthStencilBuilder(OpenGLContext context, int textureTarget, int width, int height)
         {
@@ -462,6 +463,7 @@ class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
         }
     }
 
+    @Override
     void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps)
     {
         super.initFilteringAndMipmaps(useLinearFiltering, useMipmaps);

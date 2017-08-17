@@ -155,6 +155,6 @@ public class DistortionProjection implements Projection
     public String toVSETString()
     {
         return String.format("D\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
-                                cx, cy, (width/height), fx, width, k1, k2, k3, p1, p2);
+                                cx, cy, width/height, fx, width, k1, k2, k3, p1, p2);
     }
 }

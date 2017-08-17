@@ -6,7 +6,7 @@ package tetzlaff.gl;
  *
  * @param <ContextType> The type of the GL context that the FBO is associated with.
  */
-public interface FramebufferObject<ContextType extends Context<ContextType>> extends Framebuffer<ContextType>, Resource, Contextual<ContextType>
+public interface FramebufferObject<ContextType extends Context<ContextType>> extends Framebuffer<ContextType>, Resource
 {
     Texture2D<ContextType> getColorAttachmentTexture(int index);
     Texture2D<ContextType> getDepthAttachmentTexture();

@@ -28,8 +28,8 @@ public class VertexGeometry
     private Vector3 boundingBoxSize;
     private float boundingRadius;
 
-    private String materialFileName = null;
-    private Material material = null; // TODO support multiple materials
+    private String materialFileName;
+    private Material material; // TODO support multiple materials
 
     private VertexGeometry(File filename)
     {

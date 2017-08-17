@@ -14,9 +14,9 @@ public class TrackballController implements CameraController, CursorPositionList
 {
     private int inversion = 1;
     private boolean enabled = true;
-    private int primaryButtonIndex;
-    private int secondaryButtonIndex;
-    private float sensitivity;
+    private final int primaryButtonIndex;
+    private final int secondaryButtonIndex;
+    private final float sensitivity;
 
     private float startX = Float.NaN;
     private float startY = Float.NaN;
@@ -27,7 +27,7 @@ public class TrackballController implements CameraController, CursorPositionList
 
     private final TrackballModel model;
 
-    public static interface Builder
+    public interface Builder
     {
         Builder setSensitivity(float sensitivity);
         Builder setPrimaryButtonIndex(int primaryButtonIndex);
@@ -43,30 +43,35 @@ public class TrackballController implements CameraController, CursorPositionList
         private int secondaryButtonIndex = 1;
         private TrackballModel model;
 
+        @Override
         public Builder setSensitivity(float sensitivity)
         {
             this.sensitivity = sensitivity;
             return this;
         }
 
+        @Override
         public Builder setPrimaryButtonIndex(int primaryButtonIndex)
         {
             this.primaryButtonIndex = primaryButtonIndex;
             return this;
         }
 
+        @Override
         public Builder setSecondaryButtonIndex(int secondaryButtonIndex)
         {
             this.secondaryButtonIndex = secondaryButtonIndex;
             return this;
         }
 
+        @Override
         public Builder setModel(TrackballModel model)
         {
             this.model = model;
             return this;
         }
 
+        @Override
         public TrackballController create()
         {
             if (this.model == null)
@@ -163,7 +168,7 @@ public class TrackballController implements CameraController, CursorPositionList
     {
         if (enabled)
         {
-            model.setLogScale(model.getLogScale() + sensitivity / 256.0f * (float)(yoffset));
+            model.setLogScale(model.getLogScale() + sensitivity / 256.0f * (float) yoffset);
         }
     }
 

@@ -28,7 +28,7 @@ public abstract class DepthTextureBuilderBase<ContextType extends Context<Contex
     @Override
     public DepthTextureBuilderBase<ContextType, TextureType> setInternalPrecision(int precision)
     {
-        this.precision = precision;;
+        this.precision = precision;
         return this;
     }
 

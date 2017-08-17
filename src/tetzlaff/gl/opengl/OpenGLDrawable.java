@@ -17,16 +17,16 @@ import static org.lwjgl.opengl.GL32.*;
 
 class OpenGLDrawable implements Drawable<OpenGLContext>
 {
-    private static interface VertexAttributeSetting
+    private interface VertexAttributeSetting
     {
-        public void set();
+        void set();
     }
 
     protected final OpenGLContext context;
 
-    private OpenGLProgram program;
-    private OpenGLVertexArray vao;
-    private Map<Integer, VertexAttributeSetting> settings;
+    private final OpenGLProgram program;
+    private final OpenGLVertexArray vao;
+    private final Map<Integer, VertexAttributeSetting> settings;
 
     OpenGLDrawable(OpenGLContext context, OpenGLProgram program)
     {

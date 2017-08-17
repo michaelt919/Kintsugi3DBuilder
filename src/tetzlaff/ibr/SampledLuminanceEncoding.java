@@ -17,8 +17,8 @@ public class SampledLuminanceEncoding
 
     public SampledLuminanceEncoding(float gamma)
     {
-        this.decodeFunction = (encoded) -> Math.pow(encoded / 255.0, gamma);
-        this.encodeFunction = (decoded) -> Math.pow(decoded, 1.0 / gamma) * 255.0;
+        this.decodeFunction = encoded -> Math.pow(encoded / 255.0, gamma);
+        this.encodeFunction = decoded -> Math.pow(decoded, 1.0 / gamma) * 255.0;
     }
 
     public SampledLuminanceEncoding(double[] linear, byte[] encoded)

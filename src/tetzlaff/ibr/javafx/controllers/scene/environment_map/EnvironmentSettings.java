@@ -114,7 +114,7 @@ public class EnvironmentSettings implements XML_Writable
             envRotation.getValue(),
             envColor.getValue(),
             bpColor.getValue(),
-            (name.getValue() + " copy"),
+            name.getValue() + " copy",
             locked.getValue(),
             firstEnvLoaded.getValue()
         );

@@ -25,11 +25,11 @@ class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLContext>
 
     static class OpenGLTexture1DFromBufferBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture1D>
     {
-        private int textureTarget;
-        private int width;
-        private int format;
-        private int type;
-        private ByteBuffer buffer;
+        private final int textureTarget;
+        private final int width;
+        private final int format;
+        private final int type;
+        private final ByteBuffer buffer;
 
         OpenGLTexture1DFromBufferBuilder(OpenGLContext context, int textureTarget, int width, int format, int type, ByteBuffer buffer)
         {

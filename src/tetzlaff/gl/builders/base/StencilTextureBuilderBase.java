@@ -22,7 +22,7 @@ public abstract class StencilTextureBuilderBase<ContextType extends Context<Cont
     @Override
     public StencilTextureBuilderBase<ContextType, TextureType> setInternalPrecision(int precision)
     {
-        this.precision = precision;;
+        this.precision = precision;
         return this;
     }
 

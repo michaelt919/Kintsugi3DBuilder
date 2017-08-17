@@ -8,7 +8,7 @@ import org.lwjgl.*;
 
 class NativeDoubleVectorBuffer implements NativeVectorBuffer
 {
-    private ByteBuffer buffer;
+    private final ByteBuffer buffer;
 
     final int dimensions;
     final int count;
@@ -79,6 +79,7 @@ class NativeDoubleVectorBuffer implements NativeVectorBuffer
         return count;
     }
 
+    @Override
     public Double get(int index, int dimension)
     {
         if (index < 0)
@@ -127,6 +128,7 @@ class NativeDoubleVectorBuffer implements NativeVectorBuffer
         this.set(index, dimension, value.doubleValue());
     }
 
+    @Override
     public ByteBuffer getBuffer()
     {
         return buffer;

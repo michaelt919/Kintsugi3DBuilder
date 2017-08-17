@@ -15,13 +15,13 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
-class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferObject<OpenGLContext>, Resource
+class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferObject<OpenGLContext>
 {
-    private int width;
-    private int height;
-    private int fboId;
-    private AbstractCollection<Resource> ownedAttachments;
-    private OpenGLFramebufferAttachment[] colorAttachments;
+    private final int width;
+    private final int height;
+    private final int fboId;
+    private final AbstractCollection<Resource> ownedAttachments;
+    private final OpenGLFramebufferAttachment[] colorAttachments;
     private OpenGLFramebufferAttachment depthAttachment;
     private OpenGLFramebufferAttachment stencilAttachment;
     private OpenGLFramebufferAttachment depthStencilAttachment;

@@ -26,131 +26,157 @@ public class IBRSettingsModelImpl implements SettingsModel
     {
     }
 
+    @Override
     public float getGamma()
     {
         return this.gamma;
     }
 
+    @Override
     public void setGamma(float gamma)
     {
         this.gamma = gamma;
     }
 
+    @Override
     public float getWeightExponent()
     {
         return this.weightExponent;
     }
 
+    @Override
     public void setWeightExponent(float weightExponent)
     {
         this.weightExponent = weightExponent;
     }
 
+    @Override
     public float getIsotropyFactor()
     {
         return isotropyFactor;
     }
 
+    @Override
     public void setIsotropyFactor(float isotropyFactor)
     {
         this.isotropyFactor = isotropyFactor;
     }
 
+    @Override
     public boolean isOcclusionEnabled()
     {
         return this.occlusionEnabled;
     }
 
+    @Override
     public void setOcclusionEnabled(boolean occlusionEnabled)
     {
         this.occlusionEnabled = occlusionEnabled;
     }
 
+    @Override
     public float getOcclusionBias()
     {
         return this.occlusionBias;
     }
 
+    @Override
     public void setOcclusionBias(float occlusionBias)
     {
         this.occlusionBias = occlusionBias;
     }
 
+    @Override
     public boolean isIBREnabled()
     {
         return this.ibrEnabled;
     }
 
+    @Override
     public void setIBREnabled(boolean ibrEnabled)
     {
         this.ibrEnabled = ibrEnabled;
     }
 
+    @Override
     public boolean isFresnelEnabled()
     {
         return this.fresnelEnabled;
     }
 
+    @Override
     public void setFresnelEnabled(boolean fresnelEnabled)
     {
         this.fresnelEnabled = fresnelEnabled;
     }
 
+    @Override
     public boolean isPBRGeometricAttenuationEnabled()
     {
         return this.pbrGeometricAttenuationEnabled;
     }
 
+    @Override
     public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled)
     {
         this.pbrGeometricAttenuationEnabled = pbrGeometricAttenuationEnabled;
     }
 
+    @Override
     public boolean isRelightingEnabled()
     {
         return relightingEnabled;
     }
 
+    @Override
     public void setRelightingEnabled(boolean relightingEnabled)
     {
         this.relightingEnabled = relightingEnabled;
     }
 
+    @Override
     public boolean areTexturesEnabled()
     {
         return texturesEnabled;
     }
 
+    @Override
     public void setTexturesEnabled(boolean texturesEnabled)
     {
         this.texturesEnabled = texturesEnabled;
     }
 
+    @Override
     public boolean areShadowsEnabled()
     {
         return shadowsEnabled;
     }
 
+    @Override
     public void setShadowsEnabled(boolean shadowsEnabled)
     {
         this.shadowsEnabled = shadowsEnabled;
     }
 
+    @Override
     public boolean areVisibleLightsEnabled()
     {
         return this.visibleLightsEnabled;
     }
 
+    @Override
     public void setVisibleLightsEnabled(boolean visibleLightsEnabled)
     {
         this.visibleLightsEnabled = visibleLightsEnabled;
     }
 
+    @Override
     public ShadingParameterMode getWeightMode()
     {
         return weightMode;
     }
 
+    @Override
     public void setWeightMode(ShadingParameterMode weightMode)
     {
         this.weightMode = weightMode;

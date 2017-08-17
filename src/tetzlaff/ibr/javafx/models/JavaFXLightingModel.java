@@ -10,9 +10,9 @@ public class JavaFXLightingModel extends LightingModelBase
 {
 
     private ObservableValue<LightGroupSetting> lightGroupSettingObservableValue;
-    private LightGroupSetting backup = new LightGroupSetting("backup");
+    private final LightGroupSetting backup = new LightGroupSetting("backup");
 
-    private JavaFXLightInstanceModel[] lightInstanceModels = new JavaFXLightInstanceModel[LightGroupSetting.LIGHT_LIMIT];
+    private final JavaFXLightInstanceModel[] lightInstanceModels = new JavaFXLightInstanceModel[LightGroupSetting.LIGHT_LIMIT];
 
     public JavaFXLightingModel(JavaFXEnvironmentMapModel envModel)
     {

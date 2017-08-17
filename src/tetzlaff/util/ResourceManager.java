@@ -6,8 +6,8 @@ public class ResourceManager<ResourceType>
 {
     public final int length;
 
-    private int[] keys;
-    private Object[] resources;
+    private final int[] keys;
+    private final Object[] resources;
     private int nextSlot;
 
     public ResourceManager(int length)

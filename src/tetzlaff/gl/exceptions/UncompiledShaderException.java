@@ -6,7 +6,6 @@ public class UncompiledShaderException extends IllegalStateException
 
     public UncompiledShaderException()
     {
-        super();
     }
 
     public UncompiledShaderException(String message, Throwable cause)

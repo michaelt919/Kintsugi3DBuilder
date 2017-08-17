@@ -4,9 +4,9 @@ import java.util.function.DoubleUnaryOperator;
 
 public class CubicHermiteSpline implements DoubleUnaryOperator
 {
-    private double[] x;
-    private double[] y;
-    private double[] m;
+    private final double[] x;
+    private final double[] y;
+    private final double[] m;
 
     public CubicHermiteSpline(double[] x, double[] y, boolean monotone)
     {
@@ -88,6 +88,7 @@ public class CubicHermiteSpline implements DoubleUnaryOperator
         this.m = m;
     }
 
+    @Override
     public double applyAsDouble(double value)
     {
         int k = 0;

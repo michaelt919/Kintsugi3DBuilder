@@ -24,6 +24,7 @@ import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ReadonlySettingsModel;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.app.old.IBRSettingsModelImpl;
+import tetzlaff.ibr.rendering.IBRResources.Builder;
 import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.ReadonlyObjectModel;
@@ -33,14 +34,14 @@ import tetzlaff.util.ShadingParameterMode;
 
 public class IBRImplementation<ContextType extends Context<ContextType>> implements IBRRenderable<ContextType>
 {
-    private ContextType context;
+    private final ContextType context;
     private Program<ContextType> program;
     private Program<ContextType> shadowProgram;
     private LoadingMonitor loadingMonitor;
     private boolean suppressErrors = false;
     private ReadonlySettingsModel settings;
 
-    private IBRResources.Builder<ContextType> resourceBuilder;
+    private final Builder<ContextType> resourceBuilder;
     private IBRResources<ContextType> resources;
 
     private Texture3D<ContextType> shadowMaps;
@@ -57,7 +58,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private VertexBuffer<ContextType> widgetVertices;
     private Drawable<ContextType> widgetDrawable;
     
-    private String id;
+    private final String id;
     private Drawable<ContextType> mainDrawable;
 
     private ReadonlyObjectModel objectModel;
@@ -68,7 +69,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Program<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
     
-    private File newEnvironmentFile = null;
+    private File newEnvironmentFile;
     private boolean environmentMapUnloadRequested = false;
     private boolean environmentMapEnabled;
     private Cubemap<ContextType> environmentMap;
@@ -76,28 +77,28 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Program<ContextType> environmentBackgroundProgram;
     private Drawable<ContextType> environmentBackgroundDrawable;
     
-    private UniformBuffer<ContextType> weightBuffer = null;
+    private UniformBuffer<ContextType> weightBuffer;
     
     private List<Matrix4> multiTransformationModel;
     private Vector3 centroid;
     private float boundingRadius;
     
-    private VertexGeometry referenceScene = null;
+    private VertexGeometry referenceScene;
     private boolean referenceSceneChanged = false;
-    private VertexBuffer<ContextType> refScenePositions = null;
-    private VertexBuffer<ContextType> refSceneTexCoords = null;
-    private VertexBuffer<ContextType> refSceneNormals = null;
-    private Texture2D<ContextType> refSceneTexture = null;
+    private VertexBuffer<ContextType> refScenePositions;
+    private VertexBuffer<ContextType> refSceneTexCoords;
+    private VertexBuffer<ContextType> refSceneNormals;
+    private Texture2D<ContextType> refSceneTexture;
     
-    private List<String> sceneObjectNameList;
-    private Map<String, Integer> sceneObjectIDLookup;
+    private final List<String> sceneObjectNameList;
+    private final Map<String, Integer> sceneObjectIDLookup;
     private int[] pixelObjectIDs;
     private short[] pixelDepths;
     private FramebufferSize fboSize;
     private Matrix4 partialViewMatrix;
 
     IBRImplementation(String id, ContextType context, Program<ContextType> program,
-            IBRResources.Builder<ContextType> resourceBuilder)
+            Builder<ContextType> resourceBuilder)
     {
         this.id = id;
         this.context = context;
@@ -793,7 +794,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @Override
     public void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewParam, Matrix4 projectionParam)
     {
-        boolean customViewMatrix = (viewParam != null);
+        boolean customViewMatrix = viewParam != null;
 
         try
         {
@@ -985,7 +986,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                             {
                                                 lineEndpoint.x, lineEndpoint.y, lineEndpoint.z,
                                                 lightTarget.x, lightTarget.y, lightTarget.z
-                                            }));
+                                            }))
                             )
                             {
                                 Drawable<ContextType> lineRenderable = context.createDrawable(this.widgetProgram);
@@ -1349,7 +1350,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.newEnvironmentFile = environmentFile;
         }
         else {
-            System.out.println("TEMP FIX IN IBRImplementation.setEnvironment");;
+            System.out.println("TEMP FIX IN IBRImplementation.setEnvironment");
 //            this.environmentMapUnloadRequested = true;//TODO this is a temp fix
         }
     }
@@ -1477,7 +1478,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 return getPartialViewMatrix().quickInverse(0.01f)
                         .times(unscaledPosition.getXYZ().dividedBy(unscaledPosition.w).asPosition())
                         .getXYZ().dividedBy(getScale());
-            };
+            }
         };
     }
 

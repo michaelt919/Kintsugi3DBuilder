@@ -9,7 +9,7 @@ import javafx.stage.WindowEvent;
 
 public class Quit implements QuitListener, EventHandler<WindowEvent> 
 {
-    private List<QuitListener> quitTriggers = new LinkedList<>();
+    private final List<QuitListener> quitTriggers = new LinkedList<>();
     
     public void addCloseTrigger(QuitListener trigger)
     {
@@ -35,7 +35,7 @@ public class Quit implements QuitListener, EventHandler<WindowEvent>
     {
     }
     
-    private static Quit instance = new Quit();
+    private static final Quit instance = new Quit();
     
     public static Quit getInstance() 
     {

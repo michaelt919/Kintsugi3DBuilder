@@ -136,7 +136,7 @@ public class Matrix4
 
     public static Matrix4 ortho(float left, float right, float bottom, float top)
     {
-        return Matrix4.ortho(left, right, bottom, top, -1.0f, 1.0f);
+        return ortho(left, right, bottom, top, -1.0f, 1.0f);
     }
 
     public static Matrix4 frustum(float left, float right, float bottom, float top, float near, float far)
@@ -175,7 +175,7 @@ public class Matrix4
             u.x,     u.y,     u.z,     0.0f,
             -f.x,    -f.y,    -f.z,    0.0f,
             0.0f,    0.0f,    0.0f,    1.0f
-        ).times(Matrix4.translate(-eye.x, -eye.y, -eye.z));
+        ).times(translate(-eye.x, -eye.y, -eye.z));
     }
 
     public static Matrix4 lookAt(
@@ -183,7 +183,7 @@ public class Matrix4
         float centerX, float centerY, float centerZ,
         float upX, float upY, float upZ)
     {
-        return Matrix4.lookAt(
+        return lookAt(
             new Vector3(eyeX, eyeY, eyeZ),
             new Vector3(centerX, centerY, centerZ),
             new Vector3(upX, upY, upZ)
@@ -299,7 +299,7 @@ public class Matrix4
         float scaleSquared = (float)Math.pow(rotationScale.determinant(), 2.0 / 3.0);
 
         Matrix4 invCandidate = rotationScale.transpose().times(1.0f / scaleSquared).asMatrix4()
-                .times(Matrix4.translate(this.getColumn(3).getXYZ().negated()));
+                .times(translate(this.getColumn(3).getXYZ().negated()));
 
         Matrix4 identityCandidate = this.times(invCandidate);
 
@@ -352,13 +352,13 @@ public class Matrix4
         StringBuilder s = new StringBuilder();
         for (int i = 0; i < 4; i++)
         {
-            s.append(getRow(i).toString()).append('\n');
+            s.append(getRow(i)).append('\n');
         }
         return s.toString();
     }
 
     public void print()
     {
-        System.out.println(this.toString());
+        System.out.println(this);
     }
 }

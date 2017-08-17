@@ -7,7 +7,8 @@ import java.nio.IntBuffer;
 
 import org.lwjgl.*;
 import tetzlaff.gl.*;
-import tetzlaff.util.RadianceImageLoader;
+import tetzlaff.gl.ColorFormat.DataType;
+import tetzlaff.util.RadianceImageLoader.Image;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
@@ -21,11 +22,11 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 {
     protected final OpenGLContext context;
 
-    private int textureId;
+    private final int textureId;
 
-    private ColorFormat colorFormat = null;
-    private CompressionFormat compressionFormat = null;
-    private TextureType textureType;
+    private ColorFormat colorFormat;
+    private CompressionFormat compressionFormat;
+    private final TextureType textureType;
 
     OpenGLTexture(OpenGLContext context, TextureType textureType)
     {
@@ -185,7 +186,7 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         case COLOR:
         default:
             return context.getOpenGLInternalColorFormat(
-                ColorFormat.createCustom(precision, precision, precision, precision, ColorFormat.DataType.NORMALIZED_FIXED_POINT));
+                ColorFormat.createCustom(precision, precision, precision, precision, DataType.NORMALIZED_FIXED_POINT));
         }
     }
 
@@ -258,7 +259,7 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         return buffer;
     }
 
-    static ByteBuffer hdrImageToNativeBuffer(RadianceImageLoader.Image colorImg, BufferedImage maskImg)
+    static ByteBuffer hdrImageToNativeBuffer(Image colorImg, BufferedImage maskImg)
     {
         ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.width * colorImg.height * (maskImg == null ? 12 : 16));
         FloatBuffer floatBuffer = buffer.asFloatBuffer();

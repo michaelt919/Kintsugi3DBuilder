@@ -4,7 +4,7 @@ import javafx.util.StringConverter;
 
 public class SafeIntegerStringConverter extends StringConverter<Integer>
 {
-    private SafeNumberStringConverter snsc;
+    private final SafeNumberStringConverter snsc;
 
     public SafeIntegerStringConverter(Integer defaultValue)
     {

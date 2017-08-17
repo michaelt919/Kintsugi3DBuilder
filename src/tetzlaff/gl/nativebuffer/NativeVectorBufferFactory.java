@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 
 public final class NativeVectorBufferFactory 
 {
-    private final static NativeVectorBufferFactory INSTANCE = new NativeVectorBufferFactory();
+    private static final NativeVectorBufferFactory INSTANCE = new NativeVectorBufferFactory();
 
     public static NativeVectorBufferFactory getInstance()
     {

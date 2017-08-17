@@ -6,7 +6,7 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class GLFWModifierKeys implements ModifierKeys
 {
-    private int glfwCode;
+    private final int glfwCode;
 
     GLFWModifierKeys(int glfwCode)
     {

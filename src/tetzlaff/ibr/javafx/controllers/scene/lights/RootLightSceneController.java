@@ -56,7 +56,7 @@ public class RootLightSceneController implements Initializable
 
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
         {
-            final Integer tempFinalInt = i;
+            Integer tempFinalInt = i;
 
             TableColumn<LightGroupSetting, LightInstanceSetting> newCol = new TableColumn<>("L" + (tempFinalInt + 1));
 
@@ -98,7 +98,7 @@ public class RootLightSceneController implements Initializable
         //preventing reordering or rearranging
         tableView.skinProperty().addListener((obs, oldS, newS) ->
         {
-            final TableHeaderRow tableHeaderRow = (TableHeaderRow) tableView.lookup("TableHeaderRow");
+            TableHeaderRow tableHeaderRow = (TableHeaderRow) tableView.lookup("TableHeaderRow");
             tableHeaderRow.reorderingProperty().addListener((p, o, n) ->
                 tableHeaderRow.setReordering(false));
         });

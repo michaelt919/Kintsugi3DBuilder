@@ -33,7 +33,7 @@ public class IBRelight
 
     private static void startJavaFXUI()
     {
-        (new Thread(new ThreadableUI())).start();
+        new Thread(new ThreadableUI()).start();
     }
 
     private static void startRenderWindow()

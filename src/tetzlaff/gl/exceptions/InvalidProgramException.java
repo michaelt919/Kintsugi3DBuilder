@@ -6,7 +6,6 @@ public class InvalidProgramException extends RuntimeException
 
     public InvalidProgramException()
     {
-        super();
     }
 
     public InvalidProgramException(String message, Throwable cause)

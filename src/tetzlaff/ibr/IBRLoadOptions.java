@@ -13,6 +13,7 @@ public class IBRLoadOptions implements ReadonlyLoadOptionsModel
     {
     }
 
+    @Override
     public boolean areColorImagesRequested()
     {
         return this.colorImagesRequested;
@@ -24,6 +25,7 @@ public class IBRLoadOptions implements ReadonlyLoadOptionsModel
         return this;
     }
 
+    @Override
     public boolean areMipmapsRequested()
     {
         return this.mipmapsRequested;
@@ -35,6 +37,7 @@ public class IBRLoadOptions implements ReadonlyLoadOptionsModel
         return this;
     }
 
+    @Override
     public boolean isCompressionRequested()
     {
         return this.compressionRequested;
@@ -46,6 +49,7 @@ public class IBRLoadOptions implements ReadonlyLoadOptionsModel
         return this;
     }
 
+    @Override
     public boolean areDepthImagesRequested()
     {
         return this.depthImagesRequested;
@@ -57,6 +61,7 @@ public class IBRLoadOptions implements ReadonlyLoadOptionsModel
         return this;
     }
 
+    @Override
     public int getDepthImageWidth()
     {
         return this.depthImageWidth;
@@ -68,6 +73,7 @@ public class IBRLoadOptions implements ReadonlyLoadOptionsModel
         return this;
     }
 
+    @Override
     public int getDepthImageHeight()
     {
         return this.depthImageHeight;

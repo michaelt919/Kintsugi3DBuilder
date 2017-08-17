@@ -11,9 +11,9 @@ import tetzlaff.mvc.old.models.TrackballLightingModel;
 
 public class TrackballLightController implements LightController, KeyPressListener, KeyReleaseListener
 {
-    private TrackballLightingModel model;
-    private TrackballController lightControlTrackball;
-    private TrackballController[] trackballs;
+    private final TrackballLightingModel model;
+    private final TrackballController lightControlTrackball;
+    private final TrackballController[] trackballs;
 
     public TrackballLightController()
     {

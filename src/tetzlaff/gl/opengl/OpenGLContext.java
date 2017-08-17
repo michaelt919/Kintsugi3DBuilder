@@ -10,6 +10,10 @@ import tetzlaff.gl.exceptions.*;
 import tetzlaff.gl.glfw.GLFWWindowContextBase;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
+import tetzlaff.gl.opengl.OpenGLCubemap.ColorBuilder;
+import tetzlaff.gl.opengl.OpenGLCubemap.DepthBuilder;
+import tetzlaff.gl.opengl.OpenGLCubemap.DepthStencilBuilder;
+import tetzlaff.gl.opengl.OpenGLCubemap.StencilBuilder;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
 import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture1D.OpenGLTexture1DFromBufferBuilder;
@@ -36,9 +40,9 @@ import static org.lwjgl.opengl.GL40.*;
 import static org.lwjgl.opengl.GL41.*;
 import static org.lwjgl.opengl.GL43.*;
 
-public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implements Context<OpenGLContext>
+public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
 {
-    private OpenGLContextState state;
+    private final OpenGLContextState state;
 
     OpenGLContext(long handle)
     {
@@ -278,22 +282,25 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext> implemen
     @Override
     public ColorCubemapBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildColorCubemap(int faceSize) throws IOException
     {
-        return new OpenGLCubemap.ColorBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
+        return new ColorBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
+    @Override
     public DepthTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildDepthCubemap(int faceSize) throws IOException
     {
-        return new OpenGLCubemap.DepthBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
+        return new DepthBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
+    @Override
     public StencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildStencilCubemap(int faceSize) throws IOException
     {
-        return new OpenGLCubemap.StencilBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
+        return new StencilBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
+    @Override
     public DepthStencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildDepthStencilCubemap(int faceSize) throws IOException
     {
-        return new OpenGLCubemap.DepthStencilBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
+        return new DepthStencilBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
     protected void unbindBuffer(int bufferTarget, int index)

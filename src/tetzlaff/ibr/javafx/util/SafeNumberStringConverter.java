@@ -13,6 +13,7 @@ public class SafeNumberStringConverter extends StringConverter<Number>
         this.defaultValue = defaultValue;
     }
 
+    @Override
     public String toString(Number object)
     {
         return nsc.toString(object);

@@ -18,28 +18,28 @@ import static org.lwjgl.opengl.GL11.*;
 
 class GLFWWindowCallback implements WindowListenerManager
 {
-    private GLFWWindow<?> window;
+    private final GLFWWindow<?> window;
 
-    private List<WindowPositionListener> windowPosListeners;
-    private List<WindowSizeListener> windowSizeListeners;
-    private List<WindowCloseListener> windowCloseListeners;
-    private List<WindowRefreshListener> windowRefreshListeners;
-    private List<WindowFocusLostListener> windowFocusLostListeners;
-    private List<WindowFocusGainedListener> windowFocusGainedListeners;
-    private List<WindowIconifiedListener> windowIconifiedListeners;
-    private List<WindowRestoredListener> windowRestoredListeners;
-    private List<FramebufferSizeListener> framebufferSizeListeners;
-    private List<KeyPressListener> keyPressListeners;
-    private List<KeyReleaseListener> keyReleaseListeners;
-    private List<KeyRepeatListener> keyRepeatListeners;
-    private List<CharacterListener> characterListeners;
-    private List<CharacterModifiersListener> charModsListeners;
-    private List<MouseButtonPressListener> mouseButtonPressListeners;
-    private List<MouseButtonReleaseListener> mouseButtonReleaseListeners;
-    private List<CursorPositionListener> cursorPosListeners;
-    private List<CursorEnteredListener> cursorEnterListeners;
-    private List<CursorExitedListener> cursorExitListeners;
-    private List<ScrollListener> scrollListeners;
+    private final List<WindowPositionListener> windowPosListeners;
+    private final List<WindowSizeListener> windowSizeListeners;
+    private final List<WindowCloseListener> windowCloseListeners;
+    private final List<WindowRefreshListener> windowRefreshListeners;
+    private final List<WindowFocusLostListener> windowFocusLostListeners;
+    private final List<WindowFocusGainedListener> windowFocusGainedListeners;
+    private final List<WindowIconifiedListener> windowIconifiedListeners;
+    private final List<WindowRestoredListener> windowRestoredListeners;
+    private final List<FramebufferSizeListener> framebufferSizeListeners;
+    private final List<KeyPressListener> keyPressListeners;
+    private final List<KeyReleaseListener> keyReleaseListeners;
+    private final List<KeyRepeatListener> keyRepeatListeners;
+    private final List<CharacterListener> characterListeners;
+    private final List<CharacterModifiersListener> charModsListeners;
+    private final List<MouseButtonPressListener> mouseButtonPressListeners;
+    private final List<MouseButtonReleaseListener> mouseButtonReleaseListeners;
+    private final List<CursorPositionListener> cursorPosListeners;
+    private final List<CursorEnteredListener> cursorEnterListeners;
+    private final List<CursorExitedListener> cursorExitListeners;
+    private final List<ScrollListener> scrollListeners;
 
     GLFWWindowCallback(GLFWWindow<?> window)
     {
@@ -240,6 +240,7 @@ class GLFWWindowCallback implements WindowListenerManager
         glfwSetWindowPosCallback(window.getHandle(),
                 windowPosCallback = new GLFWWindowPosCallback()
                 {
+                    @Override
                     public void invoke(long windowHandle, int xpos, int ypos)
                     {
                         if (windowHandle == window.getHandle())

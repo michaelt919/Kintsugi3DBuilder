@@ -21,7 +21,7 @@ import tetzlaff.ibr.javafx.models.JavaFXEnvironmentMapModel;
 
 public class RootEnvironmentSceneController implements Initializable
 {
-    private ObservableList<EnvironmentSettings> listOfEnvironments = new ObservableListWrapper<>(new ArrayList<>());
+    private final ObservableList<EnvironmentSettings> listOfEnvironments = new ObservableListWrapper<>(new ArrayList<>());
     @FXML
     private VBox settings;
     @FXML
@@ -33,7 +33,7 @@ public class RootEnvironmentSceneController implements Initializable
     @FXML
     private Button theRenameButton;
 
-    private boolean useStartingMap = false;
+    private final boolean useStartingMap = false;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)

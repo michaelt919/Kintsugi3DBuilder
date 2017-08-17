@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.swing.*;
+import javax.swing.JSpinner.NumberEditor;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
@@ -20,32 +21,32 @@ public class TextureFitUserInterface extends JFrame
 {
     private static final long serialVersionUID = -8384432968465838469L;
 
-    private JButton executeButton;
+    private final JButton executeButton;
 
-    private FilePicker vsetFilePicker;
-    private FilePicker objFilePicker;
-    private FilePicker imageDirectoryPicker;
-    private FilePicker maskDirectoryPicker;
-    private FilePicker rescaleDirectoryPicker;
-    private FilePicker outputDirectoryPicker;
+    private final FilePicker vsetFilePicker;
+    private final FilePicker objFilePicker;
+    private final FilePicker imageDirectoryPicker;
+    private final FilePicker maskDirectoryPicker;
+    private final FilePicker rescaleDirectoryPicker;
+    private final FilePicker outputDirectoryPicker;
 
-    private JSpinner gammaSpinner;
+    private final JSpinner gammaSpinner;
 
-    private JCheckBox cameraVisCheckBox;
-    private JSpinner cameraVisBiasSpinner;
+    private final JCheckBox cameraVisCheckBox;
+    private final JSpinner cameraVisBiasSpinner;
 
-    private JSpinner imageWidthSpinner;
-    private JSpinner imageHeightSpinner;
-    private JCheckBox imageRescaleCheckBox;
+    private final JSpinner imageWidthSpinner;
+    private final JSpinner imageHeightSpinner;
+    private final JCheckBox imageRescaleCheckBox;
 
-    private JSpinner textureSizeSpinner;
-    private JSpinner textureBlockSizeSpinner;
-    private JCheckBox imagePreprojUseCheckBox;
-    private JCheckBox imagePreprojReuseCheckBox;
+    private final JSpinner textureSizeSpinner;
+    private final JSpinner textureBlockSizeSpinner;
+    private final JCheckBox imagePreprojUseCheckBox;
+    private final JCheckBox imagePreprojReuseCheckBox;
 
-    private JSpinner diffuseDeltaSpinner;
-    private JSpinner diffuseIterationsSpinner;
-    private JSpinner diffuseCompNormalSpinner;
+    private final JSpinner diffuseDeltaSpinner;
+    private final JSpinner diffuseIterationsSpinner;
+    private final JSpinner diffuseCompNormalSpinner;
 
     private JComboBox<String> primaryViewComboBox;
 
@@ -57,18 +58,18 @@ public class TextureFitUserInterface extends JFrame
     private JSpinner spinnerXRiteNeutral50;
     private JSpinner spinnerXRiteNeutral35;
     private JSpinner spinnerXRiteBlack;
-    private JCheckBox chckbxUseXriteMeasurements;
-    private JCheckBox chckbxComputeDiffuseTexture;
-    private JCheckBox chckbxComputeSpecularTexture;
-    private JCheckBox chckbxEstimateLightOffset;
-    private JCheckBox chckbxComputeNormalMap;
-    private JCheckBox checkBoxEstimateGlobalLightIntensity;
-    private JCheckBox chckbxDebugMode;
-    private JCheckBox chckbxLevenbergMarquardtSpecularOptimization;
+    private final JCheckBox chckbxUseXriteMeasurements;
+    private final JCheckBox chckbxComputeDiffuseTexture;
+    private final JCheckBox chckbxComputeSpecularTexture;
+    private final JCheckBox chckbxEstimateLightOffset;
+    private final JCheckBox chckbxComputeNormalMap;
+    private final JCheckBox checkBoxEstimateGlobalLightIntensity;
+    private final JCheckBox chckbxDebugMode;
+    private final JCheckBox chckbxLevenbergMarquardtSpecularOptimization;
 
     private class FilePicker
     {
-        File file = null;
+        File file;
     }
 
     public TextureFitUserInterface()
@@ -681,7 +682,7 @@ public class TextureFitUserInterface extends JFrame
         gbc_cameraVisBiasSpinner.gridy = 2;
         advancedSettingsPanel.add(cameraVisBiasSpinner, gbc_cameraVisBiasSpinner);
 
-        JSpinner.NumberEditor cameraVisBiasNumberEditor = new JSpinner.NumberEditor(cameraVisBiasSpinner, "0.0000");
+        NumberEditor cameraVisBiasNumberEditor = new NumberEditor(cameraVisBiasSpinner, "0.0000");
         cameraVisBiasSpinner.setEditor(cameraVisBiasNumberEditor);
         JLabel textureBlockSizeLabel = new JLabel("Texture block size:");
         GridBagConstraints gbc_textureBlockSizeLabel = new GridBagConstraints();
@@ -844,12 +845,12 @@ public class TextureFitUserInterface extends JFrame
 
     private float getValueAsFloat(JSpinner spinner)
     {
-        return (float)((double)((Double)spinner.getValue()));
+        return (float) (double) (Double)spinner.getValue();
     }
 
     private int getValueAsInt(JSpinner spinner)
     {
-        return (int)Math.round((((Double)spinner.getValue())));
+        return (int)Math.round((Double)spinner.getValue());
     }
 
     public TextureFitParameters getParameters()
@@ -887,12 +888,12 @@ public class TextureFitUserInterface extends JFrame
             param.setLinearLuminanceValues(new double[] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 });
             param.setEncodedLuminanceValues(new byte[]
             {
-                (byte)((int)((Integer)this.spinnerXRiteBlack.getValue())),
-                (byte)((int)((Integer)this.spinnerXRiteNeutral35.getValue())),
-                (byte)((int)((Integer)this.spinnerXRiteNeutral50.getValue())),
-                (byte)((int)((Integer)this.spinnerXRiteNeutral65.getValue())),
-                (byte)((int)((Integer)this.spinnerXRiteNeutral80.getValue())),
-                (byte)((int)((Integer)this.spinnerXRiteWhite.getValue()))
+                (byte) (int) (Integer)this.spinnerXRiteBlack.getValue(),
+                (byte) (int) (Integer)this.spinnerXRiteNeutral35.getValue(),
+                (byte) (int) (Integer)this.spinnerXRiteNeutral50.getValue(),
+                (byte) (int) (Integer)this.spinnerXRiteNeutral65.getValue(),
+                (byte) (int) (Integer)this.spinnerXRiteNeutral80.getValue(),
+                (byte) (int) (Integer)this.spinnerXRiteWhite.getValue()
             });
         }
         else

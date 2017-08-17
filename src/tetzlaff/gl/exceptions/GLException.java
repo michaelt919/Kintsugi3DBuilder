@@ -6,7 +6,6 @@ public class GLException extends RuntimeException
 
     public GLException()
     {
-        super();
     }
 
     public GLException(String message)

@@ -3,7 +3,10 @@ package tetzlaff.gl.opengl;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 
-import tetzlaff.gl.*;
+import tetzlaff.gl.Program;
+import tetzlaff.gl.Shader;
+import tetzlaff.gl.Texture;
+import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.builders.base.ProgramBuilderBase;
 import tetzlaff.gl.exceptions.InvalidProgramException;
 import tetzlaff.gl.exceptions.ProgramLinkFailureException;
@@ -15,7 +18,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL31.*;
 
-class OpenGLProgram implements Resource, Program<OpenGLContext>
+class OpenGLProgram implements Program<OpenGLContext>
 {
     protected final OpenGLContext context;
 

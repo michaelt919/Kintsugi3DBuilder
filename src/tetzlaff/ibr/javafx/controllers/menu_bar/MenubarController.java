@@ -13,6 +13,7 @@ import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import tetzlaff.ibr.RenderingMode;
 import tetzlaff.ibr.app.Quit;
@@ -67,7 +68,7 @@ public class MenubarController
         vSetFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         vSetFileChooser.setTitle("Load V-Set File");
         vSetFileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter("V-Set Files", "*.vset")
+            new ExtensionFilter("V-Set Files", "*.vset")
         );
 
         initToggleGroups();
@@ -103,7 +104,7 @@ public class MenubarController
 
         toolModel.toolProperty().addListener((observable, oldValue, newValue) ->
         {
-            final String data;
+            String data;
             switch (newValue)
             {
                 case ORBIT:

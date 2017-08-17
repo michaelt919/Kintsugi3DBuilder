@@ -8,12 +8,12 @@ import tetzlaff.ibr.ReadonlySettingsModel;
 
 public class BTFRequestUI implements IBRRequestUI
 {
-    private Component parent;
-    private JFileChooser fileChooser;
-    private JSpinner spinnerWidth;
-    private JSpinner spinnerHeight;
-    private ReadonlySettingsModel settings;
-    private Vector3 lightColor;
+    private final Component parent;
+    private final JFileChooser fileChooser;
+    private final JSpinner spinnerWidth;
+    private final JSpinner spinnerHeight;
+    private final ReadonlySettingsModel settings;
+    private final Vector3 lightColor;
 
     public BTFRequestUI(Component parent, JFileChooser fileChooser, JSpinner spinnerWidth, JSpinner spinnerHeight, ReadonlySettingsModel settings, Vector3 lightColor)
     {

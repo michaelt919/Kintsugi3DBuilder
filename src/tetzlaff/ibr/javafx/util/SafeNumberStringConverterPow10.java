@@ -5,7 +5,7 @@ import javafx.util.StringConverter;
 public class SafeNumberStringConverterPow10 extends StringConverter<Number>
 {
     private final SafeNumberStringConverter safeConverter;
-    private Number def;
+    private final Number def;
 
     public SafeNumberStringConverterPow10(Number defaultValue)
     {
@@ -16,7 +16,7 @@ public class SafeNumberStringConverterPow10 extends StringConverter<Number>
     @Override
     public String toString(Number object)
     {
-        Double to10 = Math.pow(10, (object.doubleValue()));
+        Double to10 = Math.pow(10, object.doubleValue());
         return safeConverter.toString(to10);
     }
 

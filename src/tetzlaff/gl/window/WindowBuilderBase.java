@@ -2,9 +2,9 @@ package tetzlaff.gl.window;
 
 public abstract class WindowBuilderBase<WindowType extends Window<?>> implements WindowBuilder<WindowType>
 {
-    private String title;
-    private int width;
-    private int height;
+    private final String title;
+    private final int width;
+    private final int height;
     private int x;
     private int y;
     private boolean resizable = false;

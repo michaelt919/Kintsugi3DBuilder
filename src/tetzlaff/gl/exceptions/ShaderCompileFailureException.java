@@ -6,7 +6,6 @@ public class ShaderCompileFailureException extends RuntimeException
 
     public ShaderCompileFailureException()
     {
-        super();
     }
 
     public ShaderCompileFailureException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)

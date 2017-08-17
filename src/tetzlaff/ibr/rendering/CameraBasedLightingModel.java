@@ -5,6 +5,6 @@ import tetzlaff.models.LightingModel;
 
 public interface CameraBasedLightingModel extends LightingModel
 {
-    public void overrideCameraPose(Matrix4 cameraPoseOverride);
-    public void removeCameraPoseOverride();
+    void overrideCameraPose(Matrix4 cameraPoseOverride);
+    void removeCameraPoseOverride();
 }

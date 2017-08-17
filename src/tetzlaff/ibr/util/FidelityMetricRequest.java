@@ -3,6 +3,7 @@ package tetzlaff.ibr.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 
 import tetzlaff.gl.Context;
@@ -18,16 +19,16 @@ import tetzlaff.util.CubicHermiteSpline;
 
 public class FidelityMetricRequest implements IBRRequest
 {
-    private final static boolean DEBUG = true;
+    private static final boolean DEBUG = true;
 
     //private final static boolean USE_RENDERER_WEIGHTS = true;
-    private final static boolean USE_PERCEPTUALLY_LINEAR_ERROR = false;
-    private final static boolean LITE_MODE = false;
+    private static final boolean USE_PERCEPTUALLY_LINEAR_ERROR = false;
+    private static final boolean LITE_MODE = false;
 
-    private File fidelityExportPath;
-    private File fidelityVSETFile;
-    private File maskFile;
-    private ReadonlySettingsModel settings;
+    private final File fidelityExportPath;
+    private final File fidelityVSETFile;
+    private final File maskFile;
+    private final ReadonlySettingsModel settings;
     
     public FidelityMetricRequest(File exportPath, File targetVSETFile, File maskFile, ReadonlySettingsModel settings)
     {
@@ -59,14 +60,14 @@ public class FidelityMetricRequest implements IBRRequest
 
     private double estimateErrorFromSplines(List<Vector3> directions, List<CubicHermiteSpline> splines, Vector3 targetDirection, double targetDistance)
     {
-        PriorityQueue<AbstractMap.SimpleEntry<Double, CubicHermiteSpline>> splineQueue
-            = new PriorityQueue<>(Comparator.<AbstractMap.SimpleEntry<Double, CubicHermiteSpline>>comparingDouble(entry -> entry.getKey())
+        PriorityQueue<SimpleEntry<Double, CubicHermiteSpline>> splineQueue
+            = new PriorityQueue<>(Comparator.<SimpleEntry<Double, CubicHermiteSpline>>comparingDouble(entry -> entry.getKey())
                     .reversed());
 
         for (int i = 0; i < directions.size(); i++)
         {
             double distance = Math.acos(Math.max(-1.0, Math.min(1.0f, directions.get(i).dot(targetDirection))));
-            splineQueue.add(new AbstractMap.SimpleEntry<Double, CubicHermiteSpline>(distance, splines.get(i)));
+            splineQueue.add(new SimpleEntry<Double, CubicHermiteSpline>(distance, splines.get(i)));
             if (splineQueue.size() > 5)
             {
                 splineQueue.remove();
@@ -79,7 +80,7 @@ public class FidelityMetricRequest implements IBRRequest
         double sumWeights = 0.0;
         while (!splineQueue.isEmpty())
         {
-            AbstractMap.SimpleEntry<Double, CubicHermiteSpline> next = splineQueue.remove();
+            SimpleEntry<Double, CubicHermiteSpline> next = splineQueue.remove();
             double weight = Math.min(1000000.0, 1.0 / next.getKey()) - thresholdInv;
             sum += weight * next.getValue().applyAsDouble(targetDistance);
             sumWeights += weight;
@@ -126,7 +127,7 @@ public class FidelityMetricRequest implements IBRRequest
 //                USE_RENDERER_WEIGHTS ? new IBRFidelityTechnique<ContextType>()
 //                    : new LinearSystemFidelityTechnique<ContextType>(USE_PERCEPTUALLY_LINEAR_ERROR, debugDirectory);
 
-            PrintStream out = new PrintStream(fidelityExportPath);
+            PrintStream out = new PrintStream(fidelityExportPath)
         )
         {
             fidelityTechnique.initialize(resources, settings, 256);
@@ -262,7 +263,7 @@ public class FidelityMetricRequest implements IBRRequest
                     prevSlope = slope;
 
                     // Fit error vs. distance to a quadratic using least squares: a*x^2 + slope * x = error
-                    double d = (sumCubeDistances * sumCubeDistances - sumFourthDistances * sumSquareDistances);
+                    double d = sumCubeDistances * sumCubeDistances - sumFourthDistances * sumSquareDistances;
                     double a = (sumCubeDistances * sumErrorDistanceProducts - sumSquareDistances * sumErrorSquareDistanceProducts) / d;
 
                     slope = (sumCubeDistances * sumErrorSquareDistanceProducts - sumFourthDistances * sumErrorDistanceProducts) / d;

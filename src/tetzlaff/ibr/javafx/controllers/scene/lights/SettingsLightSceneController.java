@@ -82,7 +82,7 @@ public class SettingsLightSceneController implements Initializable
     @FXML private ColorPicker colorPicker;
     @FXML private ChoiceBox<LightType> lightTypeChoiceBox;
 
-    private DoubleProperty trueIntensity = new SimpleDoubleProperty(1);
+    private final DoubleProperty trueIntensity = new SimpleDoubleProperty(1);
 
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
     private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);

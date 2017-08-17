@@ -12,8 +12,8 @@ abstract class OpenGLBuffer implements Contextual<OpenGLContext>, Resource
 {
     protected final OpenGLContext context;
 
-    private int bufferId;
-    private int usage;
+    private final int bufferId;
+    private final int usage;
 
     OpenGLBuffer(OpenGLContext context, int usage)
     {

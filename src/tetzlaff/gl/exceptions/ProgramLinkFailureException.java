@@ -6,7 +6,6 @@ public class ProgramLinkFailureException extends RuntimeException
 
     public ProgramLinkFailureException()
     {
-        super();
     }
 
     public ProgramLinkFailureException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)

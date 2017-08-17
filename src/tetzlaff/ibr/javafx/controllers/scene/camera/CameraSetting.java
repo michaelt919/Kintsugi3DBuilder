@@ -50,6 +50,7 @@ public class CameraSetting implements XML_Writable
         this.name.setValue(name);
     }
 
+    @Override
     public Element toJDOM2Element()
     {
         return new Element("CameraSetting")
@@ -111,7 +112,7 @@ public class CameraSetting implements XML_Writable
             this.focalLength.getValue(),
             this.locked.getValue(),
             this.orthographic.getValue(),
-            (this.name.getValue() + " copy")
+            this.name.getValue() + " copy"
         );
     }
 

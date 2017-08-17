@@ -1,6 +1,7 @@
 package tetzlaff.gl.opengl;
 
 import tetzlaff.gl.AlphaBlendingFunction;
+import tetzlaff.gl.AlphaBlendingFunction.Weight;
 import tetzlaff.gl.ContextState;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -74,7 +75,7 @@ public class OpenGLContextState implements ContextState<OpenGLContext>
         context.openGLErrorCheck();
     }
 
-    private int blendFuncEnumToInt(AlphaBlendingFunction.Weight func)
+    private int blendFuncEnumToInt(Weight func)
     {
         switch(func)
         {

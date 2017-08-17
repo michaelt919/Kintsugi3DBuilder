@@ -3,6 +3,7 @@ package tetzlaff.gl.glfw;
 import java.nio.ByteBuffer;
 
 import org.lwjgl.*;
+import org.lwjgl.Version.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import tetzlaff.gl.FramebufferSize;
@@ -17,11 +18,11 @@ import static org.lwjgl.system.MemoryUtil.*;
 
 public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> implements Window<ContextType>, EventPollable
 {
-    private long handle;
+    private final long handle;
     private boolean isDestroyed;
-    private WindowListenerManager listenerManager;
+    private final WindowListenerManager listenerManager;
 
-    private ContextType context;
+    private final ContextType context;
 
     GLFWWindow(GLFWContextFactory<ContextType> contextFactory, int width, int height, String title, int xParam, int yParam,
         boolean resizable, int multisamples)
@@ -31,7 +32,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
             throw new GLFWException(description);
         }));
 
-        if ( glfwInit() != GL11.GL_TRUE )
+        if ( glfwInit() != GL_TRUE )
         {
             throw new GLFWException("Unable to initialize GLFW.");
         }
@@ -74,10 +75,10 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
         glfwSwapInterval(1);
         
         GL.createCapabilities(); // Make a valid OpenGL Context
-        System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION));
+        System.out.println("OpenGL version: " + glGetString(GL_VERSION));
         System.out.println("LWJGL version: " + 
                 String.valueOf(Version.VERSION_MAJOR) + '.' + Version.VERSION_MINOR + '.' + Version.VERSION_REVISION +
-                (Version.BUILD_TYPE == Version.BuildType.ALPHA ? "a" : Version.BUILD_TYPE == Version.BuildType.BETA ? "b" : "")
+                (Version.BUILD_TYPE == BuildType.ALPHA ? "a" : Version.BUILD_TYPE == BuildType.BETA ? "b" : "")
                 /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
         System.out.println("GLFW version: " + glfwGetVersionString());
         
@@ -135,7 +136,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     {
         WindowSize winSize = getWindowSize();
         FramebufferSize fbSize = context.getFramebufferSize();
-        return (winSize.width != fbSize.width || winSize.height != fbSize.height);
+        return winSize.width != fbSize.width || winSize.height != fbSize.height;
     }
 
     @Override

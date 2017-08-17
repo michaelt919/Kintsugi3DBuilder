@@ -46,9 +46,9 @@ public class OrbitPolarConverter
 
 
             return new Vector3(
-                    ((float) Math.toDegrees(azimuth)),
-                    ((float) Math.toDegrees(inclination)),
-                    ((float) Math.toDegrees(twist))
+                (float) Math.toDegrees(azimuth),
+                (float) Math.toDegrees(inclination),
+                (float) Math.toDegrees(twist)
             );
 
 

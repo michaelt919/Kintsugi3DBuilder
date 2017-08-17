@@ -7,8 +7,12 @@ public interface DepthStencilTextureBuilder<ContextType extends Context<ContextT
 {
     DepthStencilTextureBuilder<ContextType, TextureType> setFloatingPointDepthEnabled(boolean enabled);
 
+    @Override
     DepthStencilTextureBuilder<ContextType, TextureType> setMultisamples(int samples, boolean fixedSampleLocations);
+    @Override
     DepthStencilTextureBuilder<ContextType, TextureType> setMipmapsEnabled(boolean enabled);
+    @Override
     DepthStencilTextureBuilder<ContextType, TextureType> setLinearFilteringEnabled(boolean enabled);
+    @Override
     DepthStencilTextureBuilder<ContextType, TextureType> setMaxAnisotropy(float maxAnisotropy);
 }

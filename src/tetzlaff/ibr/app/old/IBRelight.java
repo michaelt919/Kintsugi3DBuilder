@@ -378,7 +378,7 @@ public class IBRelight
                     lightController.getLightingModel(),
                     settingsModel,
                     loadingModel,
-                    (request) -> requestQueue.addRequest(request),
+                    request -> requestQueue.addRequest(request),
                     window.isHighDPI());
             gui.showGUI();
             //app.addPollable(gui); // Needed for Qt UI

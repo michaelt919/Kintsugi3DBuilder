@@ -9,9 +9,9 @@ import tetzlaff.ibr.LoadingMonitor;
 
 public class IBRRequestQueue<ContextType extends Context<ContextType>> 
 {
-    private Queue<IBRRequest> requestList;
-    private ContextType context;
-    private IBRRenderableListModel<ContextType> model;
+    private final Queue<IBRRequest> requestList;
+    private final ContextType context;
+    private final IBRRenderableListModel<ContextType> model;
     private LoadingMonitor loadingMonitor;
 
     public IBRRequestQueue(ContextType context, IBRRenderableListModel<ContextType> model)

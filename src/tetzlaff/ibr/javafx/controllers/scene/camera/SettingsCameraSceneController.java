@@ -50,7 +50,7 @@ public class SettingsCameraSceneController implements Initializable
 
     @FXML private Button selectPointButton;
 
-    private DoubleProperty fov = new SimpleDoubleProperty();
+    private final DoubleProperty fov = new SimpleDoubleProperty();
 
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
     private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);
