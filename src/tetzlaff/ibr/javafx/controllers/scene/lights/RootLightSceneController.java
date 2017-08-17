@@ -30,7 +30,7 @@ public class RootLightSceneController implements Initializable
     @FXML private VBox lightControls;
     @FXML private Button theRenameButton;
 
-    private final ObservableList<LightGroupSetting> lightGroups = new ObservableListWrapper<>(new ArrayList<>());
+    private final ObservableList<LightGroupSetting> lightGroups = new ObservableListWrapper<>(new ArrayList<>(64));
     private final Property<LightInstanceSetting> selectedLight = new SimpleObjectProperty<>();
     private int lastSelectedIndex = -1;
 
@@ -45,12 +45,14 @@ public class RootLightSceneController implements Initializable
         TableColumn<LightGroupSetting, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(param ->
         {
-            String s = "";
             if (param.getValue().isLocked())
             {
-                s = "(L)";
+                return new SimpleStringProperty("(L) " + param.getValue().getName());
             }
-            return new SimpleStringProperty(s + param.getValue().getName());
+            else
+            {
+                return new SimpleStringProperty( param.getValue().getName());
+            }
         });
         tableView.getColumns().add(nameCol);
 
@@ -58,7 +60,7 @@ public class RootLightSceneController implements Initializable
         {
             Integer tempFinalInt = i;
 
-            TableColumn<LightGroupSetting, LightInstanceSetting> newCol = new TableColumn<>("L" + (tempFinalInt + 1));
+            TableColumn<LightGroupSetting, LightInstanceSetting> newCol = new TableColumn<>(String.valueOf(tempFinalInt + 1));
 
             newCol.setCellValueFactory(param -> param.getValue().lightListProperty().valueAt(tempFinalInt));
 
@@ -116,14 +118,17 @@ public class RootLightSceneController implements Initializable
         selectedLight.addListener(settingsController.changeListener);
     }
 
-    public void init2(JavaFXLightingModel lightingModel)
+    public void init(JavaFXLightingModel lightingModel)
     {
         System.out.println("Lights in!");
         ObservableValue<LightGroupSetting> observableValue = tableView.getSelectionModel().selectedItemProperty();
         System.out.println("Setting " + observableValue);
-        lightingModel.setLightGroupSettingObservableValue(
-            observableValue
-        );
+        lightingModel.setLightGroupSettingObservableValue(observableValue );
+
+        // Setup an initial light group with a single light source.
+        // TODO don't do this if a default environment map is available.
+        newGroup();
+        newLight();
     }
 
     @FXML
@@ -190,7 +195,7 @@ public class RootLightSceneController implements Initializable
         EventHandler<ActionEvent> doRename = event ->
         {
             String newName = renameTextField.getText();
-            if (!newName.equals(""))
+            if (!newName.isEmpty())
             {
                 tableView.getSelectionModel().getSelectedItem().setName(newName);
             }
@@ -235,7 +240,7 @@ public class RootLightSceneController implements Initializable
             getSelected().setLocked(n);
             if (selectedLight.getValue() != null)
             {
-                settingsController.setDisabled(n | selectedLight.getValue().isLocked());
+                settingsController.setDisabled(n || selectedLight.getValue().isLocked());
             }
         }
 
@@ -251,7 +256,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void deleteGroup()
     {
-        if (lightGroups.size() > getRow() & getRow() >= 0)
+        if (lightGroups.size() > getRow() && getRow() >= 0)
         {
             lightGroups.remove(getRow());
         }
@@ -281,7 +286,7 @@ public class RootLightSceneController implements Initializable
         {
             boolean newValue = !selectedLight.getValue().isLocked();
             selectedLight.getValue().setLocked(newValue);
-            settingsController.setDisabled(newValue | selectedLight.getValue().getGroupLocked());
+            settingsController.setDisabled(newValue || selectedLight.getValue().getGroupLocked());
             if (newValue)
             {
                 selectedLight.getValue().setName("(X)");
