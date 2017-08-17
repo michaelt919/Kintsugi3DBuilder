@@ -92,7 +92,7 @@ public class RadianceImageLoader
         for (int y = 0; y < height; y++)
         {
             // we're using OpenGL's coordinate frame where bottom is 0
-            readScanLine(img, (topToBottom ? height - y - 1 : y), width, leftToRight, scan, in);
+            readScanLine(img, topToBottom ? height - y - 1 : y, width, leftToRight, scan, in);
         }
         return img;
     }
@@ -159,7 +159,7 @@ public class RadianceImageLoader
                 pixel[2] = scan[x + 2 * imgWidth];
                 pixel[3] = scan[x + 3 * imgWidth];
 
-                int xOffset = (leftToRight ? 3 * x : 3 * (imgWidth - x - 1));
+                int xOffset = leftToRight ? 3 * x : 3 * (imgWidth - x - 1);
                 convertRGBE(image, baseOffset + xOffset, pixel, 0);
             }
             //            System.out.println();
@@ -170,7 +170,7 @@ public class RadianceImageLoader
             readAll(in, scan, 4);
             for (int x = 0; x < imgWidth; x++)
             {
-                int xOffset = (leftToRight ? 3 * x : 3 * (imgWidth - x - 1));
+                int xOffset = leftToRight ? 3 * x : 3 * (imgWidth - x - 1);
                 convertRGBE(image, baseOffset + xOffset, scan, x * 4);
             }
         }
@@ -185,9 +185,9 @@ public class RadianceImageLoader
             // these are meant to be unsigned bytes
             // FIXME rereading the text, there might need to be a + 0.5
             // inside the expression multiplied by v
-            image[imgOffset] = v * ((0xff & rgbe[offset]));
-            image[imgOffset + 1] = v * ((0xff & rgbe[offset + 1]));
-            image[imgOffset + 2] = v * ((0xff & rgbe[offset + 2]));
+            image[imgOffset] = v * (0xff & rgbe[offset]);
+            image[imgOffset + 1] = v * (0xff & rgbe[offset + 1]);
+            image[imgOffset + 2] = v * (0xff & rgbe[offset + 2]);
         }
         else
         {

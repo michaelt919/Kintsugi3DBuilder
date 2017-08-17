@@ -7,8 +7,8 @@ import java.util.List;
 
 public class InteractiveApplication
 {
-    private List<EventPollable> pollables;
-    private List<Refreshable> refreshables;
+    private final List<EventPollable> pollables;
+    private final List<Refreshable> refreshables;
 
     public InteractiveApplication(EventPollable pollable, Refreshable refreshable)
     {

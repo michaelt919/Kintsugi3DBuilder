@@ -6,7 +6,7 @@ import javafx.util.converter.FloatStringConverter;
 public class SafeFloatStringConverter extends StringConverter<Number>
 {
     private final Float defaultValue;
-    private FloatStringConverter fsc = new FloatStringConverter();
+    private final FloatStringConverter fsc = new FloatStringConverter();
 
     public SafeFloatStringConverter(Float defaultValue)
     {

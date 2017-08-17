@@ -7,13 +7,15 @@ import tetzlaff.ibr.tools.ToolType;
 
 public class JavaFXToolSelectionModel implements ToolSelectionModel
 {
-    private ObjectProperty<ToolType> tool = new SimpleObjectProperty<>(ToolType.ORBIT);
+    private final ObjectProperty<ToolType> tool = new SimpleObjectProperty<>(ToolType.ORBIT);
 
+    @Override
     public void setTool(ToolType tool)
     {
         this.tool.setValue(tool);
     }
 
+    @Override
     public ToolType getTool()
     {
         return tool.getValue();

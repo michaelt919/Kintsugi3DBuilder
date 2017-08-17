@@ -127,7 +127,7 @@ public class DoubleMatrix4
 
     public static DoubleMatrix4 ortho(double left, double right, double bottom, double top)
     {
-        return DoubleMatrix4.ortho(left, right, bottom, top, -1.0f, 1.0f);
+        return ortho(left, right, bottom, top, -1.0f, 1.0f);
     }
 
     public static DoubleMatrix4 frustum(double left, double right, double bottom, double top, double near, double far)
@@ -142,7 +142,7 @@ public class DoubleMatrix4
 
     public static DoubleMatrix4 perspective(double fovy, double aspect, double near, double far)
     {
-        double f = 1.0f / (double)Math.tan(fovy / 2);
+        double f = 1.0f / Math.tan(fovy / 2);
         return new DoubleMatrix4(
             f / aspect,    0.0f,    0.0f,                            0.0f,
             0.0f,        f,        0.0f,                            0.0f,
@@ -166,7 +166,7 @@ public class DoubleMatrix4
             u.x,     u.y,     u.z,     0.0f,
             -f.x,    -f.y,    -f.z,    0.0f,
             0.0f,    0.0f,    0.0f,    1.0f
-        ).times(DoubleMatrix4.translate(-eye.x, -eye.y, -eye.z));
+        ).times(translate(-eye.x, -eye.y, -eye.z));
     }
 
     public static DoubleMatrix4 lookAt(
@@ -174,7 +174,7 @@ public class DoubleMatrix4
         double centerX, double centerY, double centerZ,
         double upX, double upY, double upZ)
     {
-        return DoubleMatrix4.lookAt(
+        return lookAt(
             new DoubleVector3(eyeX, eyeY, eyeZ),
             new DoubleVector3(centerX, centerY, centerZ),
             new DoubleVector3(upX, upY, upZ)
@@ -296,10 +296,10 @@ public class DoubleMatrix4
     public DoubleMatrix4 quickInverse(double tolerance)
     {
         DoubleMatrix3 rotationScale = this.getUpperLeft3x3();
-        double scaleSquared = (double)Math.pow(rotationScale.determinant(), 2.0 / 3.0);
+        double scaleSquared = Math.pow(rotationScale.determinant(), 2.0 / 3.0);
 
         DoubleMatrix4 invCandidate = rotationScale.transpose().times(1.0 / scaleSquared).asMatrix4()
-                .times(DoubleMatrix4.translate(this.getColumn(3).getXYZ().negated()));
+                .times(translate(this.getColumn(3).getXYZ().negated()));
 
         DoubleMatrix4 identityCandidate = this.times(invCandidate);
 

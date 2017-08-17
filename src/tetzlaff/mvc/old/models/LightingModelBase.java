@@ -7,7 +7,7 @@ public abstract class LightingModelBase implements LightingModel
 {
     Vector3 ambientLightColor;
     private boolean environmentMappingEnabled;
-    private Vector3[] lightColors;
+    private final Vector3[] lightColors;
 
     protected LightingModelBase(int lightCount)
     {

@@ -10,7 +10,7 @@ import tetzlaff.models.SceneViewportModel;
 
 class CenterPointTool extends AbstractTool
 {
-    private ToolSelectionModel toolModel;
+    private final ToolSelectionModel toolModel;
 
     public CenterPointTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel,
         ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel)

@@ -100,17 +100,17 @@ public class ViewSet
     /**
      * If false, inverse-square light attenuation should be applied.
      */
-    private boolean infiniteLightSources;
+    private final boolean infiniteLightSources;
 
     /**
      * The recommended near plane to use when rendering this view set.
      */
-    private float recommendedNearPlane;
+    private final float recommendedNearPlane;
 
     /**
      * The recommended far plane to use when rendering this view set.
      */
-    private float recommendedFarPlane;
+    private final float recommendedFarPlane;
 
     /**
      * The index of the view that sets the initial orientation when viewing, is used for color calibration, etc.
@@ -142,7 +142,7 @@ public class ViewSet
      * Creates a new view set object.
      * @param params The parameters defining the new view set.
      */
-    private ViewSet(ViewSet.Parameters params)
+    private ViewSet(Parameters params)
     {
         this.cameraPoseList = params.cameraPoseList;
         this.cameraPoseInvList = params.cameraPoseInvList;
@@ -310,7 +310,7 @@ public class ViewSet
     {
         Date timestamp = new Date();
 
-        ViewSet.Parameters params = new ViewSet.Parameters();
+        Parameters params = new Parameters();
 
         params.gamma = 2.2f;
         params.recommendedNearPlane = 0.0f;
@@ -432,7 +432,7 @@ public class ViewSet
                     {
                         // Non-linear encoding
                         linearLuminanceList.add(scanner.nextDouble());
-                        encodedLuminanceList.add((Byte)((byte)scanner.nextShort()));
+                        encodedLuminanceList.add((byte)scanner.nextShort());
                         scanner.nextLine();
                         break;
                     }
@@ -575,7 +575,7 @@ public class ViewSet
         public boolean equals(Object other)
         {
           Camera otherCam = (Camera)other;
-          return (this.id.equals(otherCam.id));
+          return this.id.equals(otherCam.id);
         }
     }
 
@@ -928,7 +928,7 @@ public class ViewSet
             e.printStackTrace();
         }
         
-        ViewSet.Parameters params = new ViewSet.Parameters();
+        Parameters params = new Parameters();
 
         // Initialize internal lists
         params.cameraPoseList = new ArrayList<Matrix4>();
@@ -983,7 +983,7 @@ public class ViewSet
             
             // Compute inverse by just reversing steps to build transformation
             Matrix4 cameraPoseInv = //Matrix4.scale(1.0f / globalScale)
-                                    /*       .times*/(Matrix4.translate(globalTranslate.negated()))
+                                    /*       .times*/Matrix4.translate(globalTranslate.negated())
                                            .times(globalRotation.transpose())
                                            .times(m1.getUpperLeft3x3().transpose().asMatrix4())
                                            .times(Matrix4.translate(m1.getColumn(3).getXYZ().negated()));
@@ -1074,7 +1074,7 @@ public class ViewSet
         }
 
         // Corner-to-corner
-        float dX = (maxX-minX), dY = (maxY-minY), dZ = (maxZ-minZ);
+        float dX = maxX-minX, dY = maxY-minY, dZ = maxZ-minZ;
         return (float)Math.sqrt(dX*dX + dY*dY + dZ*dZ);
 
         // Longest Side approach
@@ -1124,14 +1124,14 @@ public class ViewSet
 //                            loc.x, loc.y, loc.z, quat.x, quat.y, quat.z, quat.w);
 //            }
 //            else
-            {
+            //{
                 // Write a general 4x4 matrix
                 out.printf("P\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n",
                         pose.get(0, 0), pose.get(0, 1), pose.get(0, 2), pose.get(0, 3),
                         pose.get(1, 0), pose.get(1, 1), pose.get(1, 2), pose.get(1, 3),
                         pose.get(2, 0), pose.get(2, 1), pose.get(2, 2), pose.get(2, 3),
                         pose.get(3, 0), pose.get(3, 1), pose.get(3, 2), pose.get(3, 3));
-            }
+            //}
         }
 
         if(!lightPositionList.isEmpty())

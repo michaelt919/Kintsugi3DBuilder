@@ -20,6 +20,7 @@ public interface Window<ContextType extends Context<ContextType>> extends Window
 
     boolean isResourceClosed();
 
+    @Override
     void close();
 
     WindowSize getWindowSize();

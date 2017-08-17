@@ -28,8 +28,10 @@ package tetzlaff.util;
 
 import java.io.*;
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 
 import tetzlaff.gl.vecmath.DoubleVector3;
+import tetzlaff.util.RadianceImageLoader.Image;
 
 /**
  *
@@ -65,7 +67,7 @@ public class EnvironmentMap {
     diff = new float[6][DIR_SIDE * DIR_SIDE * 3];
     spec = new float[SPEC_COUNT][6][];
     for (int m = 0; m < SPEC_COUNT; m++) {
-      int s = (SPEC_SIDE[m] < 0 ? side : SPEC_SIDE[m]);
+      int s = SPEC_SIDE[m] < 0 ? side : SPEC_SIDE[m];
 
       for (int i = 0; i < 6; i++) {
         spec[m][i] = new float[s * s * 3];
@@ -78,7 +80,7 @@ public class EnvironmentMap {
   public static EnvironmentMap createFromHDRFile(
       File hdrFile/*, boolean computeIrradiance, boolean computeStructuredImportance*/) throws
       IOException {
-    RadianceImageLoader.Image hdr;
+    Image hdr;
     try (BufferedInputStream stream = new BufferedInputStream(new FileInputStream(hdrFile))) {
       hdr = new RadianceImageLoader().read(stream);
     }
@@ -178,7 +180,7 @@ public class EnvironmentMap {
     JFileChooser fc = new JFileChooser();
     fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
     fc.setAcceptAllFileFilterUsed(false);
-    fc.setFileFilter(new javax.swing.filechooser.FileFilter() {
+    fc.setFileFilter(new FileFilter() {
       @Override
       public boolean accept(File f) {
         return f.getName().endsWith(".hdr");
@@ -644,7 +646,7 @@ public class EnvironmentMap {
 
   // FIXME avery says I may have mirrored all the x images (so technically still a valid seamless environment
   // but won't be correct if i'm comparing it to the real place)
-  private static void convertCross(int side, float[][] env, RadianceImageLoader.Image cross) {
+  private static void convertCross(int side, float[][] env, Image cross) {
     // px
     for (int y = 0; y < side; y++) {
       for (int x = 0; x < side; x++) {
@@ -730,7 +732,7 @@ public class EnvironmentMap {
     }
   }
 
-  private static void convertPanorama(int side, float[][] env, RadianceImageLoader.Image pano) {
+  private static void convertPanorama(int side, float[][] env, Image pano) {
     // assumes equirectangular projection
     DoubleVector3 dir = DoubleVector3.ZERO;
     double[] p = new double[2];

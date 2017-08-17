@@ -41,11 +41,11 @@ public class IBRelightConfigFrame extends JFrame
     /**
      * The central panel of this frame where all widgets are laid out.
      */
-    private JPanel contentPane;
+    private final JPanel contentPane;
 
-    private List<JComponent> modelDependentComponents;
+    private final List<JComponent> modelDependentComponents;
 
-    private LoadingMonitor loadingMonitor;
+    private final LoadingMonitor loadingMonitor;
 
     public LoadingMonitor getLoadingMonitor()
     {
@@ -543,7 +543,7 @@ public class IBRelightConfigFrame extends JFrame
         }
         else
         {
-            comboBoxObjects.setEnabled(rendererListModel.getSize()>1?true:false);
+            comboBoxObjects.setEnabled(rendererListModel.getSize() > 1);
 
             for (JComponent c : modelDependentComponents)
             {
@@ -1018,7 +1018,7 @@ public class IBRelightConfigFrame extends JFrame
         panel_8.add(chckbxEnvironmentMapping, gbc_chckbxEnvironmentMapping);
 
 
-        chckbxEnvironmentMapping.addChangeListener((e) ->
+        chckbxEnvironmentMapping.addChangeListener(e ->
         {
             lightingModel.setEnvironmentMappingEnabled(chckbxEnvironmentMapping.isSelected());
         });
@@ -1260,7 +1260,7 @@ public class IBRelightConfigFrame extends JFrame
                 (float)Math.pow(light0ColorChooser.getColor().getRed() / 255.0, 2.2),
                 (float)Math.pow(light0ColorChooser.getColor().getGreen() / 255.0, 2.2),
                 (float)Math.pow(light0ColorChooser.getColor().getBlue() / 255.0, 2.2))
-                .times((float)((double)((Double)light0IntensitySpinner.getValue()))));
+                .times((float) (double) (Double)light0IntensitySpinner.getValue()));
         });
 
         light0IntensitySpinner.addChangeListener(e ->
@@ -1269,7 +1269,7 @@ public class IBRelightConfigFrame extends JFrame
                 (float)Math.pow(light0ColorChooser.getColor().getRed() / 255.0, 2.2),
                 (float)Math.pow(light0ColorChooser.getColor().getGreen() / 255.0, 2.2),
                 (float)Math.pow(light0ColorChooser.getColor().getBlue() / 255.0, 2.2))
-                .times((float)((double)((Double)light0IntensitySpinner.getValue()))));
+                .times((float) (double) (Double)light0IntensitySpinner.getValue()));
         });
 
         light1ColorChooser.getSelectionModel().addChangeListener(e ->
@@ -1278,7 +1278,7 @@ public class IBRelightConfigFrame extends JFrame
                 (float)Math.pow(light1ColorChooser.getColor().getRed() / 255.0, 2.2),
                 (float)Math.pow(light1ColorChooser.getColor().getGreen() / 255.0, 2.2),
                 (float)Math.pow(light1ColorChooser.getColor().getBlue() / 255.0, 2.2))
-                .times((float)((double)((Double)light1IntensitySpinner.getValue()))));
+                .times((float) (double) (Double)light1IntensitySpinner.getValue()));
         });
 
         light1IntensitySpinner.addChangeListener(e ->
@@ -1287,7 +1287,7 @@ public class IBRelightConfigFrame extends JFrame
                 (float)Math.pow(light1ColorChooser.getColor().getRed() / 255.0, 2.2),
                 (float)Math.pow(light1ColorChooser.getColor().getGreen() / 255.0, 2.2),
                 (float)Math.pow(light1ColorChooser.getColor().getBlue() / 255.0, 2.2))
-                .times((float)((double)((Double)light1IntensitySpinner.getValue()))));
+                .times((float) (double) (Double)light1IntensitySpinner.getValue()));
         });
 
         light2ColorChooser.getSelectionModel().addChangeListener(e ->
@@ -1296,7 +1296,7 @@ public class IBRelightConfigFrame extends JFrame
                 (float)Math.pow(light2ColorChooser.getColor().getRed() / 255.0, 2.2),
                 (float)Math.pow(light2ColorChooser.getColor().getGreen() / 255.0, 2.2),
                 (float)Math.pow(light2ColorChooser.getColor().getBlue() / 255.0, 2.2))
-                .times((float)((double)((Double)light2IntensitySpinner.getValue()))));
+                .times((float) (double) (Double)light2IntensitySpinner.getValue()));
         });
 
         light2IntensitySpinner.addChangeListener(e ->
@@ -1305,7 +1305,7 @@ public class IBRelightConfigFrame extends JFrame
                 (float)Math.pow(light2ColorChooser.getColor().getRed() / 255.0, 2.2),
                 (float)Math.pow(light2ColorChooser.getColor().getGreen() / 255.0, 2.2),
                 (float)Math.pow(light2ColorChooser.getColor().getBlue() / 255.0, 2.2))
-                .times((float)((double)((Double)light2IntensitySpinner.getValue()))));
+                .times((float) (double) (Double)light2IntensitySpinner.getValue()));
         });
 
         light3ColorChooser.getSelectionModel().addChangeListener(e ->
@@ -1314,7 +1314,7 @@ public class IBRelightConfigFrame extends JFrame
                 (float)Math.pow(light3ColorChooser.getColor().getRed() / 255.0, 2.2),
                 (float)Math.pow(light3ColorChooser.getColor().getGreen() / 255.0, 2.2),
                 (float)Math.pow(light3ColorChooser.getColor().getBlue() / 255.0, 2.2))
-                .times((float)((double)((Double)light3IntensitySpinner.getValue()))));
+                .times((float) (double) (Double)light3IntensitySpinner.getValue()));
         });
 
         light3IntensitySpinner.addChangeListener(e ->
@@ -1323,7 +1323,7 @@ public class IBRelightConfigFrame extends JFrame
                 (float)Math.pow(light3ColorChooser.getColor().getRed() / 255.0, 2.2),
                 (float)Math.pow(light3ColorChooser.getColor().getGreen() / 255.0, 2.2),
                 (float)Math.pow(light3ColorChooser.getColor().getBlue() / 255.0, 2.2))
-                .times((float)((double)((Double)light3IntensitySpinner.getValue()))));
+                .times((float) (double) (Double)light3IntensitySpinner.getValue()));
         });
 
         ambientColorChooser.getSelectionModel().addChangeListener(e ->
@@ -1332,7 +1332,7 @@ public class IBRelightConfigFrame extends JFrame
                 (float)Math.pow(ambientColorChooser.getColor().getRed() / 255.0, 2.2),
                 (float)Math.pow(ambientColorChooser.getColor().getGreen() / 255.0, 2.2),
                 (float)Math.pow(ambientColorChooser.getColor().getBlue() / 255.0, 2.2))
-                .times((float)((double)((Double)ambientIntensitySpinner.getValue()))));
+                .times((float) (double) (Double)ambientIntensitySpinner.getValue()));
         });
 
         ambientIntensitySpinner.addChangeListener(e ->
@@ -1341,7 +1341,7 @@ public class IBRelightConfigFrame extends JFrame
                 (float)Math.pow(ambientColorChooser.getColor().getRed() / 255.0, 2.2),
                 (float)Math.pow(ambientColorChooser.getColor().getGreen() / 255.0, 2.2),
                 (float)Math.pow(ambientColorChooser.getColor().getBlue() / 255.0, 2.2))
-                .times((float)((double)((Double)ambientIntensitySpinner.getValue()))));
+                .times((float) (double) (Double)ambientIntensitySpinner.getValue()));
         });
 
         this.pack(); // Pack initially with progress bar

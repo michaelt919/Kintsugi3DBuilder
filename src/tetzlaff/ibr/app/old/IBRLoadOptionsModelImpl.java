@@ -1,7 +1,8 @@
 package tetzlaff.ibr.app.old;
 
+import tetzlaff.ibr.ReadonlyLoadOptionsModel;
 
-public class IBRLoadOptionsModelImpl implements tetzlaff.ibr.ReadonlyLoadOptionsModel
+public class IBRLoadOptionsModelImpl implements ReadonlyLoadOptionsModel
 {
     private boolean colorImagesRequested;
     private boolean mipmapsRequested;
@@ -14,6 +15,7 @@ public class IBRLoadOptionsModelImpl implements tetzlaff.ibr.ReadonlyLoadOptions
     {
     }
 
+    @Override
     public boolean areColorImagesRequested()
     {
         return this.colorImagesRequested;
@@ -25,6 +27,7 @@ public class IBRLoadOptionsModelImpl implements tetzlaff.ibr.ReadonlyLoadOptions
         return this;
     }
 
+    @Override
     public boolean areMipmapsRequested()
     {
         return this.mipmapsRequested;
@@ -36,6 +39,7 @@ public class IBRLoadOptionsModelImpl implements tetzlaff.ibr.ReadonlyLoadOptions
         return this;
     }
 
+    @Override
     public boolean isCompressionRequested()
     {
         return this.compressionRequested;
@@ -47,6 +51,7 @@ public class IBRLoadOptionsModelImpl implements tetzlaff.ibr.ReadonlyLoadOptions
         return this;
     }
 
+    @Override
     public boolean areDepthImagesRequested()
     {
         return this.depthImagesRequested;
@@ -58,6 +63,7 @@ public class IBRLoadOptionsModelImpl implements tetzlaff.ibr.ReadonlyLoadOptions
         return this;
     }
 
+    @Override
     public int getDepthImageWidth()
     {
         return this.depthImageWidth;
@@ -69,6 +75,7 @@ public class IBRLoadOptionsModelImpl implements tetzlaff.ibr.ReadonlyLoadOptions
         return this;
     }
 
+    @Override
     public int getDepthImageHeight()
     {
         return this.depthImageHeight;

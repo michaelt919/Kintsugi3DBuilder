@@ -10,12 +10,12 @@ public interface ReadonlyExtendedCameraModel
      * the camera should not be able to be changed using the tools in the render window.
      * @return true for locked
      */
-    public boolean getLocked();
+    boolean getLocked();
 
-    public Matrix4 getOrbit();
-    public float getLog10Distance();
-    public float getDistance();
-    public float getTwist();
-    public float getAzimuth();
-    public float getInclination();
+    Matrix4 getOrbit();
+    float getLog10Distance();
+    float getDistance();
+    float getTwist();
+    float getAzimuth();
+    float getInclination();
 }

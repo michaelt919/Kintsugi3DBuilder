@@ -7,7 +7,7 @@ import tetzlaff.models.ReadonlyLightingModel;
 
 public abstract class LightingModelBase implements ReadonlyLightingModel 
 {
-    private ReadonlyEnvironmentMapModel environmentMapModel;
+    private final ReadonlyEnvironmentMapModel environmentMapModel;
 
     public LightingModelBase(ReadonlyEnvironmentMapModel environmentMapModel) 
     {

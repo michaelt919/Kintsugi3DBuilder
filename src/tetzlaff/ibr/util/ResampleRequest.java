@@ -13,9 +13,10 @@ import tetzlaff.ibr.ViewSet;
 
 public class ResampleRequest implements IBRRequest
 {
-    private int resampleWidth, resampleHeight;
-    private File resampleVSETFile;
-    private File resampleExportPath;
+    private final int resampleWidth;
+    private final int resampleHeight;
+    private final File resampleVSETFile;
+    private final File resampleExportPath;
     
     public ResampleRequest(int width, int height, File targetVSETFile, File exportPath)
     {

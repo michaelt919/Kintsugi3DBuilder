@@ -9,9 +9,9 @@ import tetzlaff.ibr.ReadonlySettingsModel;
 
 public class FidelityMetricRequestUI implements IBRRequestUI 
 {
-    private Component parent;
-    private JFileChooser fileChooser;
-    private ReadonlySettingsModel settings;
+    private final Component parent;
+    private final JFileChooser fileChooser;
+    private final ReadonlySettingsModel settings;
 
     public FidelityMetricRequestUI(Component parent, JFileChooser fileChooser, ReadonlySettingsModel settings)
     {

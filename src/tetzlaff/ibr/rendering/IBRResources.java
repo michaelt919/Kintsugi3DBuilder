@@ -190,7 +190,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 
     public static <ContextType extends Context<ContextType>> Builder<ContextType> getBuilderForContext(ContextType context)
     {
-        return new IBRResources.Builder<ContextType>(context);
+        return new Builder<ContextType>(context);
     }
 
     private IBRResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, ReadonlyLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor) throws IOException
@@ -297,7 +297,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
             {
                 // Try some alternate file formats/extensions
                 String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
-                for(final String extension : altFormats)
+                for(String extension : altFormats)
                 {
                     String[] filenameParts = viewSet.getImageFileName(0).split("\\.");
                     filenameParts[filenameParts.length - 1] = extension;
@@ -374,7 +374,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
                 {
                     // Try some alternate file formats/extensions
                     String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
-                    for(final String extension : altFormats)
+                    for(String extension : altFormats)
                     {
                         String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
                         filenameParts[filenameParts.length - 1] = extension;
@@ -438,7 +438,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
                 Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
                     .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
-                    .createProgram();
+                    .createProgram()
             )
             {
                 Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
@@ -629,7 +629,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
                 Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
                         .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
                         .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
-                        .createProgram();
+                        .createProgram()
             )
             {
                 Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
@@ -895,6 +895,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
         System.out.println("---");
     }
 
+    @Override
     public void close()
     {
         if (this.cameraWeightBuffer != null)

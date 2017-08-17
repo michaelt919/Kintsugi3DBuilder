@@ -12,6 +12,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
@@ -30,9 +31,9 @@ public class LoaderController implements Initializable
     private final FileChooser objFileChooser = new FileChooser();
     private final DirectoryChooser photoDirectoryChooser = new DirectoryChooser();
 
-    private File cameraFile = null;
-    private File objFile = null;
-    private File photoDir = null;
+    private File cameraFile;
+    private File objFile;
+    private File photoDir;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -40,12 +41,12 @@ public class LoaderController implements Initializable
 
         setHomeDir(new File(System.getProperty("user.home")));
         camFileChooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("Agisoft Photoscan XML file", "*.xml"),
-            new FileChooser.ExtensionFilter("All Files", "*.*")
+            new ExtensionFilter("Agisoft Photoscan XML file", "*.xml"),
+            new ExtensionFilter("All Files", "*.*")
         );
         objFileChooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("Wavefront OBJ file", "*.obj"),
-            new FileChooser.ExtensionFilter("All Files", "*.*")
+            new ExtensionFilter("Wavefront OBJ file", "*.obj"),
+            new ExtensionFilter("All Files", "*.*")
         );
 
         camFileChooser.setTitle("Select camera positions file");

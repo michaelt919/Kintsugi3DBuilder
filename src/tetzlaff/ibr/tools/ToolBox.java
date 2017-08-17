@@ -15,13 +15,13 @@ import tetzlaff.util.WindowBasedController;
 public class ToolBox
     implements CursorPositionListener, MouseButtonPressListener, ScrollListener, KeyPressListener, WindowBasedController
 {
-    private ToolSelectionModel toolModel;
+    private final ToolSelectionModel toolModel;
 
     //toolSelect
-    private DollyTool dollyTool;
-    private OrbitTool orbitTool;
-    private PanTool panTool;
-    private CenterPointTool centerPointTool;
+    private final DollyTool dollyTool;
+    private final OrbitTool orbitTool;
+    private final PanTool panTool;
+    private final CenterPointTool centerPointTool;
 
     //window listener
     @Override

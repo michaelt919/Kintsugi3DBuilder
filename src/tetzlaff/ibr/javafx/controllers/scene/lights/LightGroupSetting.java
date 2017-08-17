@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
 
 public class LightGroupSetting
 {
-    public final static int LIGHT_LIMIT = 4;
+    public static final int LIGHT_LIMIT = 4;
 
     private final ListProperty<LightInstanceSetting> lightList = new SimpleListProperty<>(
         new ObservableListWrapper<LightInstanceSetting>(

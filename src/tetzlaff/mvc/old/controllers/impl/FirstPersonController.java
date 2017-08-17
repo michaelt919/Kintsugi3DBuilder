@@ -18,7 +18,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
 {
     private boolean enabled;
 
-    private CameraModel model;
+    private final CameraModel model;
 
     private Vector3 velocity;
     private Vector3 position;
@@ -30,8 +30,8 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     private float phi;
 
     private boolean ignoreSensitivity = false;
-    private float sensitivity = 0.5f;
-    private float speed = 0.01f;
+    private final float sensitivity = 0.5f;
+    private final float speed = 0.01f;
 
     public FirstPersonController()
     {

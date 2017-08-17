@@ -17,7 +17,6 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
 
     public JavaFXEnvironmentMapModel()
     {
-        super();
     }
 
     public void setSelected(ObservableValue<EnvironmentSettings> selected)
@@ -28,7 +27,7 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
 
     private boolean selectedExists()
     {
-        return (selected != null && selected.getValue() != null);
+        return selected != null && selected.getValue() != null;
     }
 
     @Override

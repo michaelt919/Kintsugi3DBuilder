@@ -15,7 +15,7 @@ public class HardcodedLightingModel implements CameraBasedLightingModel
 {
     Supplier<ViewSet> viewSetSupplier;
     Supplier<VertexGeometry> proxySupplier;
-    private ReadonlyCameraModel cameraModel;
+    private final ReadonlyCameraModel cameraModel;
 
     private Matrix4 cameraPoseOverride;
 
@@ -108,8 +108,8 @@ public class HardcodedLightingModel implements CameraBasedLightingModel
             Vector4 lightOffset =
                 viewSetSupplier.get().getLightPosition(0)
                     .times(1.0f /
-                        (viewSetSupplier.get().getCameraPose(0)
-                            .times(proxySupplier.get().getCentroid().asPosition()))
+                        viewSetSupplier.get().getCameraPose(0)
+                            .times(proxySupplier.get().getCentroid().asPosition())
                         .getXYZ().length())
                     .asPosition();
 

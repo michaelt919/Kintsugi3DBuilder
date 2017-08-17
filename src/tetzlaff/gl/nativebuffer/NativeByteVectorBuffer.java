@@ -8,7 +8,7 @@ import org.lwjgl.*;
 
 public class NativeByteVectorBuffer implements NativeVectorBuffer
 {
-    private ByteBuffer buffer;
+    private final ByteBuffer buffer;
 
     public final int dimensions;
     public final int count;

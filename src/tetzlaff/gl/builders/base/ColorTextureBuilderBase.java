@@ -10,7 +10,7 @@ public abstract class ColorTextureBuilderBase<ContextType extends Context<Contex
     extends TextureBuilderBase<ContextType, TextureType> implements ColorTextureBuilder<ContextType, TextureType>
 {
     private ColorFormat internalColorFormat = ColorFormat.RGBA8;
-    private CompressionFormat internalCompressionFormat = null;
+    private CompressionFormat internalCompressionFormat;
 
     protected ColorFormat getInternalColorFormat()
     {

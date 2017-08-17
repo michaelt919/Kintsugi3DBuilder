@@ -26,9 +26,9 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
     private int imgWidth;
     private int imgHeight;
     private ReadonlySettingsModel settings;
-    private boolean usePerceptuallyLinearError;
+    private final boolean usePerceptuallyLinearError;
 
-    private File debugDirectory;
+    private final File debugDirectory;
 
     private NonNegativeLeastSquares solver;
     private List<SimpleMatrix> listATA;
@@ -75,7 +75,7 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
         this.settings = settings;
         this.imgWidth = this.imgHeight = size;
 
-        encodeFunction = (color) ->
+        encodeFunction = color ->
         {
             if (color.x <= 0 || color.y <= 0 || color.z <= 0)
             {
@@ -109,7 +109,7 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
             }
         };
 
-        Function<IntVector3, Vector3> fullDecodeFunction = (color) ->
+        Function<IntVector3, Vector3> fullDecodeFunction = color ->
         {
             if (color.x <= 0 || color.y <= 0 || color.z <= 0)
             {
@@ -170,7 +170,7 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
             FramebufferObject<ContextType> framebuffer = resources.context.buildFramebufferObject(size, size)
                 .addColorAttachment(ColorFormat.RGB8)
                 .addColorAttachment(ColorFormat.RGBA8)
-                .createFramebufferObject();
+                .createFramebufferObject()
         )
         {
             Drawable<ContextType> drawable = resources.context.createDrawable(projTexProgram);
@@ -237,7 +237,7 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
                 int[] geometry = framebuffer.readColorBufferARGB(1);
                 for (int j = 0; j < geometry.length; j++)
                 {
-                    weights[i][j] = (byte)(new Color(geometry[j], true)).getGreen(); // n dot v
+                    weights[i][j] = (byte) new Color(geometry[j], true).getGreen(); // n dot v
                 }
             }
         }

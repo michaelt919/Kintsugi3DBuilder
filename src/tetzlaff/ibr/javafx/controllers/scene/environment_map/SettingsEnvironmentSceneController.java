@@ -20,6 +20,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.converter.DoubleStringConverter;
 import tetzlaff.ibr.javafx.util.SafeNumberStringConverter;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
@@ -45,13 +46,13 @@ public class SettingsEnvironmentSceneController implements Initializable
     @FXML ImageView evImageView;
     @FXML ImageView bpImageView;
 
-    private DoubleProperty trueEnvColorIntes = new SimpleDoubleProperty();
+    private final DoubleProperty trueEnvColorIntes = new SimpleDoubleProperty();
 
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
 
     //Files
-    private Property<File> localEnvImageFile = new SimpleObjectProperty<>();
-    private Property<File> localBPImageFile = new SimpleObjectProperty<>();
+    private final Property<File> localEnvImageFile = new SimpleObjectProperty<>();
+    private final Property<File> localBPImageFile = new SimpleObjectProperty<>();
 
     private final FileChooser envImageFileChooser = new FileChooser();
     private final FileChooser bpImageFileChooser = new FileChooser();
@@ -148,17 +149,17 @@ public class SettingsEnvironmentSceneController implements Initializable
         bpImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
         envImageFileChooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("HDR", "*.hdr"),
-            new FileChooser.ExtensionFilter("PNG", "*.png"),
-            new FileChooser.ExtensionFilter("JPG", "*.jpg"),
-            new FileChooser.ExtensionFilter("Other", "*.*")
+            new ExtensionFilter("HDR", "*.hdr"),
+            new ExtensionFilter("PNG", "*.png"),
+            new ExtensionFilter("JPG", "*.jpg"),
+            new ExtensionFilter("Other", "*.*")
         );
 
         bpImageFileChooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("HDR", "*.hdr"),
-            new FileChooser.ExtensionFilter("PNG", "*.png"),
-            new FileChooser.ExtensionFilter("JPG", "*.jpg"),
-            new FileChooser.ExtensionFilter("Other", "*.*")
+            new ExtensionFilter("HDR", "*.hdr"),
+            new ExtensionFilter("PNG", "*.png"),
+            new ExtensionFilter("JPG", "*.jpg"),
+            new ExtensionFilter("Other", "*.*")
         );
 
         localEnvImageFile.addListener((observable, oldValue, newValue) ->

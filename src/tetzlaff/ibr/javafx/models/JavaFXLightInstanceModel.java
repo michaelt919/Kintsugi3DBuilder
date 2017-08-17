@@ -99,7 +99,7 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
     @Override
     public float getDistance()
     {
-        return (float) Math.pow(10, (getLog10Distance()));
+        return (float) Math.pow(10, getLog10Distance());
     }
 
     @Override
@@ -169,7 +169,7 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
     @Override
     public boolean getLocked()
     {
-        return (cam().isLocked() || cam().getGroupLocked());
+        return cam().isLocked() || cam().getGroupLocked();
     }
 
     @Override

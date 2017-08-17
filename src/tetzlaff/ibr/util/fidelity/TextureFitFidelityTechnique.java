@@ -14,7 +14,7 @@ import tetzlaff.ibr.rendering.IBRResources;
 public class TextureFitFidelityTechnique<ContextType extends Context<ContextType>> implements FidelityEvaluationTechnique<ContextType>
 {
     private IBRResources<ContextType> resources;
-    private boolean usePerceptuallyLinearError;
+    private final boolean usePerceptuallyLinearError;
 
     private Program<ContextType> textureFitProgram;
     private Drawable<ContextType> textureFitDrawable;

@@ -6,7 +6,6 @@ public class UnlinkedProgramException extends IllegalStateException
 
     public UnlinkedProgramException()
     {
-        super();
     }
 
     public UnlinkedProgramException(String message, Throwable cause)

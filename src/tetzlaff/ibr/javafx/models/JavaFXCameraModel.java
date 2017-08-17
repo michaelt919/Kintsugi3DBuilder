@@ -98,7 +98,7 @@ public class JavaFXCameraModel implements ExtendedCameraModel
     @Override
     public float getDistance()
     {
-        return (float) Math.pow(10, (cam().getLog10distance()));
+        return (float) Math.pow(10, cam().getLog10distance());
     }
 
     @Override

@@ -43,13 +43,13 @@ public enum LightType
             switch (string)
             {
                 case "Point Light":
-                    return LightType.PointLight;
+                    return PointLight;
                 case "Spot Light":
-                    return LightType.SpotLight;
+                    return SpotLight;
                 case "Area Light":
-                    return LightType.AreaLight;
+                    return AreaLight;
                 case "Directional Light":
-                    return LightType.DirectionalLight;
+                    return DirectionalLight;
                 default:
                     return null;
             }

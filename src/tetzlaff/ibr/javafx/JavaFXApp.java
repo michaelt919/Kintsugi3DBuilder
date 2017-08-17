@@ -23,16 +23,16 @@ public class JavaFXApp extends Application
     {
 
         //get FXML URLs
-        final String menuBarFXMLFileName = "fxml/menu_bar/MenuBar.fxml";
-        final URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);
+        String menuBarFXMLFileName = "fxml/menu_bar/MenuBar.fxml";
+        URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);
         assert menuBarURL != null : "cant find " + menuBarFXMLFileName;
 
-        final String libraryFXMLFileName = "fxml/library/Library.fxml";
-        final URL libraryURL = getClass().getClassLoader().getResource(libraryFXMLFileName);
+        String libraryFXMLFileName = "fxml/library/Library.fxml";
+        URL libraryURL = getClass().getClassLoader().getResource(libraryFXMLFileName);
         assert libraryURL != null : "cant find " + libraryFXMLFileName;
 
-        final String sceneFXMLFileName = "fxml/scene/RootScene.fxml";
-        final URL sceneURL = getClass().getClassLoader().getResource(sceneFXMLFileName);
+        String sceneFXMLFileName = "fxml/scene/RootScene.fxml";
+        URL sceneURL = getClass().getClassLoader().getResource(sceneFXMLFileName);
         assert sceneURL != null : "cant find " + sceneFXMLFileName;
 
         //init fxml loaders
@@ -63,10 +63,10 @@ public class JavaFXApp extends Application
         sceneStage.setScene(new Scene(sceneRoot));
 
         //set positions
-        final double librarySection = 0.2;
-        final double sceneSection = 0.3;
+        double librarySection = 0.2;
+        double sceneSection = 0.3;
 
-        final double extra = 0;
+        double extra = 0;
 
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
@@ -97,10 +97,10 @@ public class JavaFXApp extends Application
         menuBarStage.show();
 
         //get models
-        final JavaFXCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
-        final JavaFXEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
-        final JavaFXLightingModel lightingModel = JavaFXModels.getInstance().getLightingModel();
-        final JavaFXToolSelectionModel toolModel = JavaFXModels.getInstance().getToolModel();
+        JavaFXCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
+        JavaFXEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
+        JavaFXLightingModel lightingModel = JavaFXModels.getInstance().getLightingModel();
+        JavaFXToolSelectionModel toolModel = JavaFXModels.getInstance().getToolModel();
 
         //distribute to controllers
         sceneController.init2(cameraModel, lightingModel, environmentMapModel, toolModel);

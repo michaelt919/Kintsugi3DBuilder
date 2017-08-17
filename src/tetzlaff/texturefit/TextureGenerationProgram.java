@@ -13,7 +13,7 @@ import tetzlaff.gl.opengl.OpenGLContext;
 
 public class TextureGenerationProgram
 {
-    private final static boolean DEBUG = true;
+    private static final boolean DEBUG = true;
 
     private static void runProgram()
     {
@@ -75,7 +75,7 @@ public class TextureGenerationProgram
                 stackTracePrintStream.close();
                 JOptionPane.showMessageDialog(gui, "You've run out of graphics memory.  " +
                         "Reduce the number of photos, or try using either smaller photos or pre-projected photos to reduce the amount of graphics memory usage.  Stack Trace: " +
-                        stackTraceStream.toString(), "Out of graphics memory", JOptionPane.ERROR_MESSAGE);
+                    stackTraceStream, "Out of graphics memory", JOptionPane.ERROR_MESSAGE);
             }
             catch (Exception ex)
             {

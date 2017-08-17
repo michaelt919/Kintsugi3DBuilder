@@ -35,16 +35,16 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     private static final double FITTING_GAMMA_INV = 1.0 / FITTING_GAMMA;
 
 
-    private ContextType context;
-    private File vsetFile;
-    private File objFile;
+    private final ContextType context;
+    private final File vsetFile;
+    private final File objFile;
     private File imageDir;
     private File maskDir;
     private File rescaleDir;
-    private File outputDir;
+    private final File outputDir;
     private File tmpDir;
     private File auxDir;
-    private TextureFitParameters param;
+    private final TextureFitParameters param;
 
     private String materialFileName;
     private String materialName;
@@ -111,39 +111,39 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         lightFitProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
-                        (param.isImagePreprojectionUseEnabled() ? "texturefit/lightfit_texspace.frag" : "texturefit/lightfit_imgspace.frag")))
+                    param.isImagePreprojectionUseEnabled() ? "texturefit/lightfit_texspace.frag" : "texturefit/lightfit_imgspace.frag"))
                 .createProgram();
 
         diffuseFitProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
-                        (param.isImagePreprojectionUseEnabled() ? "texturefit/diffusefit_texspace.frag" : "texturefit/diffusefit_imgspace.frag")))
+                    param.isImagePreprojectionUseEnabled() ? "texturefit/diffusefit_texspace.frag" : "texturefit/diffusefit_imgspace.frag"))
                 .createProgram();
 
         specularFit2Program = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
-                        (param.isImagePreprojectionUseEnabled() ? "texturefit/specularfit2_texspace.frag" : "texturefit/specularfit2_imgspace.frag")))
+                    param.isImagePreprojectionUseEnabled() ? "texturefit/specularfit2_texspace.frag" : "texturefit/specularfit2_imgspace.frag"))
                 .createProgram();
 
         adjustFitProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
                         //"texturefit/adjustfit_debug.frag"))
-                        (param.isImagePreprojectionUseEnabled() ? "texturefit/adjustfit_texspace.frag" : "texturefit/adjustfit_imgspace.frag")))
+                    param.isImagePreprojectionUseEnabled() ? "texturefit/adjustfit_texspace.frag" : "texturefit/adjustfit_imgspace.frag"))
                 .createProgram();
 
         errorCalcProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
                         //"texturefit/errorcalc_debug.frag"))
-                        (param.isImagePreprojectionUseEnabled() ? "texturefit/errorcalc_texspace.frag" : "texturefit/errorcalc_imgspace.frag")))
+                    param.isImagePreprojectionUseEnabled() ? "texturefit/errorcalc_texspace.frag" : "texturefit/errorcalc_imgspace.frag"))
                 .createProgram();
 
         specularResidProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
-                        (param.isImagePreprojectionUseEnabled() ? "texturefit/specularresid_imgspace.frag" : "texturefit/specularresid_imgspace_multi.frag")))
+                    param.isImagePreprojectionUseEnabled() ? "texturefit/specularresid_imgspace.frag" : "texturefit/specularresid_imgspace_multi.frag"))
                 .createProgram();
 
         diffuseDebugProgram = context.getShaderProgramBuilder()
@@ -474,7 +474,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             double specularWeightSum;
             double nDotH;
 
-            final double SQRT_HALF = Math.sqrt(0.5);
+            double SQRT_HALF = Math.sqrt(0.5);
 
             // In case the first step(s) are missing
             int j = 0;
@@ -521,9 +521,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     //            specularReflectivitySum += lastWeight * lastNDotH * (lastNDotH - nDotHStart);
     //        }
     //        else
-            {
+            //{
                 lastWeight = 0.0;
-            }
+           // }
 
             int intervalCount = 0;
 
@@ -598,9 +598,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 }
 
                 //if (!param.isLevenbergMarquardtOptimizationEnabled())
-                {
+                //{
                     return new SpecularParams(reflectivity, Math.sqrt(roughnessSq), 0.0);
-                }
+                //}
     //            else
     //            {
     //                double remainder = 0.0;
@@ -755,7 +755,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
         for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {
-            final int K = k;
+            int K = k;
 
             projectIntoTextureSpace(specularResidProgram, k, /*param.getTextureSize()*/1024, 1, !param.isImagePreprojectionUseEnabled(),
                 (framebuffer, row, col) ->
@@ -809,7 +809,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                                     }
                                     else
                                     {
-                                        t = (bin - binFloor);
+                                        t = bin - binFloor;
                                     }
 
                                     s = 1.0 - t;
@@ -850,11 +850,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         }
 
         return computeSpecularParams(directionalRes, 0.0,
-                (j) -> new Vector3((float)colorSums[j][0], (float)colorSums[j][1], (float)colorSums[j][2]),
-                (j) -> new Vector3((float)colorSquareSums[j][0], (float)colorSquareSums[j][1], (float)colorSquareSums[j][2]),
-                (j) -> diffuseWeightSums[j],
-                (j) -> specularWeightSums[j],
-                (j) -> contributionSums[j],
+                j -> new Vector3((float)colorSums[j][0], (float)colorSums[j][1], (float)colorSums[j][2]),
+                j -> new Vector3((float)colorSquareSums[j][0], (float)colorSquareSums[j][1], (float)colorSquareSums[j][2]),
+                j -> diffuseWeightSums[j],
+                j -> specularWeightSums[j],
+                j -> contributionSums[j],
                 new File(auxDir, "mfd.csv"));
     }
 
@@ -930,9 +930,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         return drawable;
     }
 
-    private static abstract class LightFit<ContextType extends Context<ContextType>>
+    private abstract static class LightFit<ContextType extends Context<ContextType>>
     {
-        private Drawable<ContextType> drawable;
+        private final Drawable<ContextType> drawable;
         final int framebufferSize;
         final int framebufferSubdiv;
 
@@ -1010,8 +1010,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
     private static class TexSpaceLightFit<ContextType extends Context<ContextType>> extends LightFit<ContextType>
     {
-        private File preprojDir;
-        private int preprojCount;
+        private final File preprojDir;
+        private final int preprojCount;
 
         TexSpaceLightFit(Drawable<ContextType> drawable, File preprojDir, int preprojCount, int framebufferSize, int framebufferSubdiv)
         {
@@ -1060,8 +1060,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
     private static class ImgSpaceLightFit<ContextType extends Context<ContextType>> extends LightFit<ContextType>
     {
-        private Texture<ContextType> viewTextures;
-        private Texture<ContextType> depthTextures;
+        private final Texture<ContextType> viewTextures;
+        private final Texture<ContextType> depthTextures;
 
         ImgSpaceLightFit(Drawable<ContextType> drawable, Texture<ContextType> viewTextures, Texture<ContextType> depthTextures, int framebufferSize, int framebufferSubdiv)
         {
@@ -1174,7 +1174,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         }
     }
 
-    private static interface SubdivisionRenderingCallback
+    private interface SubdivisionRenderingCallback
     {
         void execute(int row, int col) throws IOException;
     }
@@ -1950,10 +1950,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 materialStream.println("Ns " + (2.0 / (specularParams.roughness * specularParams.roughness) - 2.0)); // Fallback for non-PBR
 
                 //if (param.isRoughnessTextureEnabled())
-                {
+                //{
                     materialStream.println("Pr 1.0");
                     materialStream.println("map_Pr " + materialName + "_Pr.png");
-                }
+                //}
     //            else
     //            {
     //                materialStream.println("Pr " + specularParams.roughness);
@@ -2089,7 +2089,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     FramebufferObject<ContextType> framebuffer3 =
                             context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
                                 .addColorAttachments(4)
-                                .createFramebufferObject();
+                                .createFramebufferObject()
                 )
                 {
                     FramebufferObject<ContextType> diffuseFitFramebuffer = framebuffer1;
@@ -2122,7 +2122,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                         if (param.isImagePreprojectionUseEnabled())
                         {
-                            final FramebufferObject<ContextType> currentFramebuffer = diffuseFitFramebuffer;
+                            FramebufferObject<ContextType> currentFramebuffer = diffuseFitFramebuffer;
                             diffuseFit.fitTextureSpace(tmpDir,
                                 (row, col) ->
                                 {
@@ -2271,7 +2271,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                             if (param.isImagePreprojectionUseEnabled())
                             {
-                                final FramebufferObject<ContextType> currentFramebuffer = backFramebuffer;
+                                FramebufferObject<ContextType> currentFramebuffer = backFramebuffer;
                                 specularFit.fitTextureSpace(tmpDir,
                                     !param.isDiffuseTextureEnabled() ? frontFramebuffer.getColorAttachmentTexture(0) : diffuseFitFramebuffer.getColorAttachmentTexture(0),
                                     !param.isDiffuseTextureEnabled() ? frontFramebuffer.getColorAttachmentTexture(1) : diffuseFitFramebuffer.getColorAttachmentTexture(3),

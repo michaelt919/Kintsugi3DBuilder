@@ -6,10 +6,10 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class ResampleRequestUI implements IBRRequestUI 
 {
-    private Component parent;
-    private JFileChooser fileChooser;
-    private JSpinner spinnerWidth;
-    private JSpinner spinnerHeight;
+    private final Component parent;
+    private final JFileChooser fileChooser;
+    private final JSpinner spinnerWidth;
+    private final JSpinner spinnerHeight;
 
     public ResampleRequestUI(Component parent, JFileChooser fileChooser, JSpinner spinnerWidth, JSpinner spinnerHeight)
     {

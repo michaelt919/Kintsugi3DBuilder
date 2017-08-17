@@ -28,15 +28,15 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 
     private static class FaceData
     {
-        ByteBuffer buffer = null;
+        ByteBuffer buffer;
         NativeDataType dataType = NativeDataType.UNSIGNED_BYTE;
         int format;
     }
 
     static class ColorBuilder extends ColorCubemapBuilderBase<OpenGLContext, OpenGLCubemap>
     {
-        private int textureTarget;
-        private int faceSize;
+        private final int textureTarget;
+        private final int faceSize;
 
         private final FaceData[] faces = new FaceData[6];
 
@@ -130,8 +130,8 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 
     static class DepthBuilder extends DepthTextureBuilderBase<OpenGLContext, OpenGLCubemap>
     {
-        private int textureTarget;
-        private int faceSize;
+        private final int textureTarget;
+        private final int faceSize;
 
         DepthBuilder(OpenGLContext context, int textureTarget, int faceSize)
         {
@@ -160,8 +160,8 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 
     static class StencilBuilder extends StencilTextureBuilderBase<OpenGLContext, OpenGLCubemap>
     {
-        private int textureTarget;
-        private int faceSize;
+        private final int textureTarget;
+        private final int faceSize;
 
         StencilBuilder(OpenGLContext context, int textureTarget, int faceSize)
         {
@@ -190,8 +190,8 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
 
     static class DepthStencilBuilder extends DepthStencilTextureBuilderBase<OpenGLContext, OpenGLCubemap>
     {
-        private int textureTarget;
-        private int faceSize;
+        private final int textureTarget;
+        private final int faceSize;
 
         DepthStencilBuilder(OpenGLContext context, int textureTarget, int faceSize)
         {
@@ -379,6 +379,7 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
         }
     }
 
+    @Override
     void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps)
     {
         super.initFilteringAndMipmaps(useLinearFiltering, useMipmaps);
@@ -456,10 +457,10 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
     @Override
     public FramebufferAttachment<OpenGLContext> getFaceAsFramebufferAttachment(CubemapFace face)
     {
-        final OpenGLContext context = this.context;
-        final int textureId = this.getTextureId();
+        OpenGLContext context = this.context;
+        int textureId = this.getTextureId();
 
-        final int layerIndex;
+        int layerIndex;
 
         switch(face)
         {

@@ -1,13 +1,11 @@
 package tetzlaff.gl.glfw;
 
-import tetzlaff.gl.window.WindowBuilder;
 import tetzlaff.gl.window.WindowBuilderBase;
 
 public class GLFWWindowBuilder<ContextType extends GLFWWindowContextBase<ContextType>>
     extends WindowBuilderBase<GLFWWindow<ContextType>>
-    implements WindowBuilder<GLFWWindow<ContextType>>
 {
-    private GLFWContextFactory<ContextType> contextFactory;
+    private final GLFWContextFactory<ContextType> contextFactory;
 
     GLFWWindowBuilder(GLFWContextFactory<ContextType> contextFactory, String title, int width, int height)
     {

@@ -42,5 +42,6 @@ public interface InteractiveRenderable<ContextType extends Context<ContextType>>
      * once by the associated InteractiveApplication created by InteractiveGraphics when the
      * application is terminating.  The associated context will be made current first.
      */
+    @Override
     void close();
 }

@@ -12,7 +12,7 @@ public class JavaFXModels
     private final JavaFXToolSelectionModel toolModel;
     private final LoadingModel loadingModel;
 
-    private static JavaFXModels instance = new JavaFXModels();
+    private static final JavaFXModels instance = new JavaFXModels();
 
     public static JavaFXModels getInstance()
     {

@@ -12,11 +12,11 @@ import tetzlaff.ibr.rendering.IBRResources;
 
 public class BTFRequest implements IBRRequest
 {
-    private int width;
-    private int height;
-    private File exportPath;
-    private ReadonlySettingsModel settings;
-    private Vector3 lightColor;
+    private final int width;
+    private final int height;
+    private final File exportPath;
+    private final ReadonlySettingsModel settings;
+    private final Vector3 lightColor;
 
     public BTFRequest(int width, int height, File exportPath, ReadonlySettingsModel settings, Vector3 lightColor)
     {

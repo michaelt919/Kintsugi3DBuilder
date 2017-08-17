@@ -2,16 +2,15 @@ package tetzlaff.mvc.old.models;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.models.LightingModel;
 import tetzlaff.models.ReadonlyCameraModel;
 
-public class TrackballLightingModel extends LightingModelBase implements LightingModel
+public class TrackballLightingModel extends LightingModelBase
 {
     private int selectedLightIndex;
-    private boolean[] lightTrackballEnabled;
+    private final boolean[] lightTrackballEnabled;
     private int trackballLightCount = 0;
-    private TrackballModel lightTrackballModel;
-    private TrackballModel[] trackballModels;
+    private final TrackballModel lightTrackballModel;
+    private final TrackballModel[] trackballModels;
     private Matrix4 cameraPoseOverride;
 
     public TrackballLightingModel(int lightCount)

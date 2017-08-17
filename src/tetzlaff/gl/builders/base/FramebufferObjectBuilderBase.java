@@ -18,9 +18,9 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
     private final List<TextureBuilder<ContextType, ? extends Texture2D<ContextType>>> colorAttachmentFormats =
             new ArrayList<TextureBuilder<ContextType, ? extends Texture2D<ContextType>>>();
 
-    private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> depthAttachmentBuilder = null;
-    private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> stencilAttachmentBuilder = null;
-    private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> depthStencilAttachmentBuilder = null;
+    private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> depthAttachmentBuilder;
+    private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> stencilAttachmentBuilder;
+    private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> depthStencilAttachmentBuilder;
 
     protected int getColorAttachmentCount()
     {

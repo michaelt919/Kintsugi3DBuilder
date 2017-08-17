@@ -23,7 +23,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     protected final ContextType context;
 
     private Program<ContextType> program;
-    private InteractiveRenderableList<ContextType, IBRRenderable<ContextType>> renderableList;
+    private final InteractiveRenderableList<ContextType, IBRRenderable<ContextType>> renderableList;
     private int effectiveSize;
     private LoadingMonitor loadingMonitor;
 

@@ -22,8 +22,8 @@ public class LoadOptionsController implements Initializable
     @FXML private TextField depthWidth;
     @FXML private TextField depthHeight;
 
-    private IntegerProperty w = new SimpleIntegerProperty(1024);
-    private IntegerProperty h = new SimpleIntegerProperty(1024);
+    private final IntegerProperty w = new SimpleIntegerProperty(1024);
+    private final IntegerProperty h = new SimpleIntegerProperty(1024);
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -82,7 +82,7 @@ public class LoadOptionsController implements Initializable
         });
     }
 
-    private JavaFXLoadOptionsModel loadSettingsCache = null;
+    private JavaFXLoadOptionsModel loadSettingsCache;
 
     public void bind(JavaFXLoadOptionsModel loadSettings)
     {

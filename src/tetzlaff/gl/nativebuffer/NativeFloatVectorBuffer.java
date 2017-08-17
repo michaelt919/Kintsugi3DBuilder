@@ -8,7 +8,7 @@ import org.lwjgl.*;
 
 class NativeFloatVectorBuffer implements NativeVectorBuffer
 {
-    private ByteBuffer buffer;
+    private final ByteBuffer buffer;
 
     final int dimensions;
     final int count;

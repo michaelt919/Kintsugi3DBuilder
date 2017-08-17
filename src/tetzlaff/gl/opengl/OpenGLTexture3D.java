@@ -37,10 +37,10 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 
     public static class OpenGLTexture3DColorBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture3D>
     {
-        private int textureTarget;
-        private int width;
-        private int height;
-        private int depth;
+        private final int textureTarget;
+        private final int width;
+        private final int height;
+        private final int depth;
 
         OpenGLTexture3DColorBuilder(OpenGLContext context, int textureTarget, int width, int height, int depth)
         {
@@ -95,10 +95,10 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 
     public static class OpenGLTexture3DDepthBuilder extends DepthTextureBuilderBase<OpenGLContext, OpenGLTexture3D>
     {
-        private int textureTarget;
-        private int width;
-        private int height;
-        private int depth;
+        private final int textureTarget;
+        private final int width;
+        private final int height;
+        private final int depth;
 
         OpenGLTexture3DDepthBuilder(OpenGLContext context, int textureTarget, int width, int height, int depth)
         {
@@ -131,10 +131,10 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 
     public static class OpenGLTexture3DStencilBuilder extends StencilTextureBuilderBase<OpenGLContext, OpenGLTexture3D>
     {
-        private int textureTarget;
-        private int width;
-        private int height;
-        private int depth;
+        private final int textureTarget;
+        private final int width;
+        private final int height;
+        private final int depth;
 
         OpenGLTexture3DStencilBuilder(OpenGLContext context, int textureTarget, int width, int height, int depth)
         {
@@ -167,10 +167,10 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 
     public static class OpenGLTexture3DDepthStencilBuilder extends DepthStencilTextureBuilderBase<OpenGLContext, OpenGLTexture3D>
     {
-        private int textureTarget;
-        private int width;
-        private int height;
-        private int depth;
+        private final int textureTarget;
+        private final int width;
+        private final int height;
+        private final int depth;
 
         OpenGLTexture3DDepthStencilBuilder(OpenGLContext context, int textureTarget, int width, int height, int depth)
         {
@@ -243,7 +243,7 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
         case COLOR:
         default:
             internalFormat = context.getOpenGLInternalColorFormat(
-                ColorFormat.createCustom(precision, precision, precision, precision, ColorFormat.DataType.NORMALIZED_FIXED_POINT));
+                ColorFormat.createCustom(precision, precision, precision, precision, DataType.NORMALIZED_FIXED_POINT));
             break;
         }
 
@@ -540,8 +540,8 @@ class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
     @Override
     public OpenGLFramebufferAttachment getLayerAsFramebufferAttachment(int layerIndex)
     {
-        final OpenGLContext context = this.context;
-        final int textureId = this.getTextureId();
+        OpenGLContext context = this.context;
+        int textureId = this.getTextureId();
         return new OpenGLFramebufferAttachment()
         {
             @Override

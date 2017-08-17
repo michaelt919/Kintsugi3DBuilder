@@ -12,8 +12,8 @@ class OpenGLVertexArray implements Resource
 {
     protected final OpenGLContext context;
 
-    private boolean usesIndexing = false;
-    private int vaoId;
+    private final boolean usesIndexing = false;
+    private final int vaoId;
     private int count = Integer.MAX_VALUE;
 
     OpenGLVertexArray(OpenGLContext context)
