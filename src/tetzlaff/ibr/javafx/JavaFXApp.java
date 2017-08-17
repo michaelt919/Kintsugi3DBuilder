@@ -100,7 +100,7 @@ public class JavaFXApp extends Application
         menuBarStage.setY(primaryScreenBounds.getMinY());
         menuBarStage.setWidth(primaryScreenBounds.getWidth() + 8);
 
-        menuBarStage.initStyle(StageStyle.UNDECORATED);
+        menuBarStage.initStyle(StageStyle.UNDECORATED); // TODO make non-resizable but with title bar.
 
         menuBarStage.show();
 
@@ -134,7 +134,7 @@ public class JavaFXApp extends Application
 
         //distribute to controllers
         sceneController.init(cameraModel, lightingModel, environmentMapModel, toolModel);
-        menuBarController.init2(toolModel);
+        menuBarController.init(toolModel);
 
         SynchronizedWindow sceneWindow = new StageSynchronization(sceneStage);
         SynchronizedWindow menuBarWindow = new StageSynchronization(menuBarStage);
