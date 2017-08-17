@@ -26,6 +26,7 @@ public final class WindowSynchronization
     {
         boolean alreadyRunning;
 
+        // Make sure that multiple focus-related methods don't run at the same time.
         synchronized (this)
         {
             if (!inFocusMethod)
@@ -41,24 +42,24 @@ public final class WindowSynchronization
 
         if (!alreadyRunning)
         {
-            System.out.println(trigger + ": Started focusGained()");
+            //System.out.println(trigger + ": Started focusGained()");
 
             if (!globalFocus)
             {
+                // Make sure that the application really doesn't have focus (could conceivably occur due to some race condition).
                 boolean focus = false;
                 for (SynchronizedWindow listener : listeners)
                 {
                     focus = focus || (!Objects.equals(listener, trigger) && listener.isFocused());
-                    if (listener.isFocused())
-                    {
-                        System.out.println(listener);
-                    }
                 }
 
                 globalFocus = focus;
             }
 
+            // Don't do anything if the application already had focus.
             if (!globalFocus && ChronoUnit.MILLIS.between(lastFocusLost, Instant.now()) >= 1000)
+                // ^ 1000 ms = arbitrary threshold for distinguishing whether the application as a whole lost focus for a long enough duration.
+                // TODO this threshold might need to be tweaked.
             {
                 globalFocus = true;
 
@@ -72,7 +73,7 @@ public final class WindowSynchronization
                 globalFocus = true;
             }
 
-            System.out.println(trigger + ": Ended focusGained()");
+            //System.out.println(trigger + ": Ended focusGained()");
 
             synchronized (this)
             {
@@ -85,6 +86,7 @@ public final class WindowSynchronization
     {
         boolean alreadyRunning;
 
+        // Make sure that multiple focus-related methods don't run at the same time.
         synchronized (this)
         {
             if (!inFocusMethod)
@@ -100,16 +102,13 @@ public final class WindowSynchronization
 
         if (!alreadyRunning)
         {
-            System.out.println(trigger + ": Started focusLost()");
+            //System.out.println(trigger + ": Started focusLost()");
 
+            // Determine if the application as a whole has lost focus.
             boolean focus = false;
             for (SynchronizedWindow listener : listeners)
             {
                 focus = focus || (!Objects.equals(listener, trigger) && listener.isFocused());
-                if (listener.isFocused())
-                {
-                    System.out.println(listener);
-                }
             }
 
             if (!focus)
@@ -119,7 +118,7 @@ public final class WindowSynchronization
 
             this.globalFocus = focus;
 
-            System.out.println(trigger + ": Ended focusLost()");
+            //System.out.println(trigger + ": Ended focusLost()");
 
             synchronized (this)
             {
