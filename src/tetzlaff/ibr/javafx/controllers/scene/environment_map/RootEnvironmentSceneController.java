@@ -67,7 +67,7 @@ public class RootEnvironmentSceneController implements Initializable
         }
     }
 
-    public void init2(JavaFXEnvironmentMapModel environmentMapModel)
+    public void init(JavaFXEnvironmentMapModel environmentMapModel)
     {
         environmentMapModel.setSelected(s().selectedItemProperty());
     }

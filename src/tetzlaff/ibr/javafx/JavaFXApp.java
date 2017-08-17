@@ -105,7 +105,7 @@ public class JavaFXApp extends Application
         JavaFXToolSelectionModel toolModel = JavaFXModels.getInstance().getToolModel();
 
         //distribute to controllers
-        sceneController.init2(cameraModel, lightingModel, environmentMapModel, toolModel);
+        sceneController.init(cameraModel, lightingModel, environmentMapModel, toolModel);
         menuBarController.init2(toolModel);
 
         //set up close

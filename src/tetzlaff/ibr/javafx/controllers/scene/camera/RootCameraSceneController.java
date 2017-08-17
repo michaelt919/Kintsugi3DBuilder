@@ -62,7 +62,7 @@ public class RootCameraSceneController implements Initializable
         cameraListView.getSelectionModel().select(freeCam);
     }
 
-    public void init2(JavaFXCameraModel cameraModel, JavaFXToolSelectionModel toolModel)
+    public void init(JavaFXCameraModel cameraModel, JavaFXToolSelectionModel toolModel)
     {
 
         System.out.println("Cam in!");

@@ -19,10 +19,10 @@ public class RootSceneController
     @FXML
     private RootEnvironmentSceneController environmentMapController;
 
-    public void init2(JavaFXCameraModel cameraModel, JavaFXLightingModel lightingModel, JavaFXEnvironmentMapModel environmentMapModel, JavaFXToolSelectionModel toolModel)
+    public void init(JavaFXCameraModel cameraModel, JavaFXLightingModel lightingModel, JavaFXEnvironmentMapModel environmentMapModel, JavaFXToolSelectionModel toolModel)
     {
-        cameraController.init2(cameraModel, toolModel);
-        lightsController.init2(lightingModel);
-        environmentMapController.init2(environmentMapModel);
+        cameraController.init(cameraModel, toolModel);
+        lightsController.init(lightingModel);
+        environmentMapController.init(environmentMapModel);
     }
 }
