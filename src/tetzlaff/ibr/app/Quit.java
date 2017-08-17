@@ -1,19 +1,19 @@
 package tetzlaff.ibr.app;//Created by alexk on 8/11/2017.
 
+import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 
 import javafx.event.EventHandler;
 import javafx.stage.WindowEvent;
 
 
-public class Quit implements QuitListener, EventHandler<WindowEvent> 
+public final class Quit implements QuitListener, EventHandler<WindowEvent>
 {
-    private final List<QuitListener> quitTriggers = new LinkedList<>();
+    private final Collection<QuitListener> quitListeners = new LinkedList<>();
     
-    public void addCloseTrigger(QuitListener trigger)
+    public void addQuitListener(QuitListener listener)
     {
-        quitTriggers.add(trigger);
+        quitListeners.add(listener);
     }
     
     @Override
@@ -25,9 +25,9 @@ public class Quit implements QuitListener, EventHandler<WindowEvent>
     @Override
     public void applicationQuitting() 
     {
-        for(QuitListener trigger : quitTriggers)
+        for(QuitListener listener : quitListeners)
         {
-            trigger.applicationQuitting();
+            listener.applicationQuitting();
         }
     }
 
@@ -35,10 +35,10 @@ public class Quit implements QuitListener, EventHandler<WindowEvent>
     {
     }
     
-    private static final Quit instance = new Quit();
+    private static final Quit INSTANCE = new Quit();
     
     public static Quit getInstance() 
     {
-        return instance;
+        return INSTANCE;
     }
 }

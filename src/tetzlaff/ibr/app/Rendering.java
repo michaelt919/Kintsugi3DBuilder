@@ -1,13 +1,16 @@
 package tetzlaff.ibr.app;//Created by alexk on 7/19/2017.
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
+import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.exceptions.GLException;
 import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
@@ -28,15 +31,19 @@ import tetzlaff.models.impl.BasicCameraModel;
 import tetzlaff.mvc.old.controllers.impl.FirstPersonController;
 import tetzlaff.util.WindowBasedController;
 
-public class Rendering
+public final class Rendering
 {
+    private Rendering()
+    {
+    }
+
     public static void runProgram()
     {
         System.getenv();
         System.setProperty("org.lwjgl.util.DEBUG", "true");
 
         // Check for and print supported image formats (some are not as easy as you would think)
-        checkSupportedImageFormats();
+        printSupportedImageFormats();
 
         // Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
         try(GLFWWindow<OpenGLContext> window =
@@ -45,6 +52,9 @@ public class Rendering
                             .setMultisamples(4)
                             .create())
         {
+            Quit.getInstance().addQuitListener(window::requestWindowClose);
+            window.addWindowCloseListener(win -> Quit.getInstance().applicationQuitting());
+
             OpenGLContext context = window.getContext();
 
             context.getState().enableDepthTest();
@@ -57,7 +67,7 @@ public class Rendering
                         .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
                         .createProgram();
             }
-            catch (IOException e)
+            catch (FileNotFoundException e)
             {
                 e.printStackTrace();
                 throw new IllegalStateException("The shader program could not be initialized.", e);
@@ -68,10 +78,7 @@ public class Rendering
             FirstPersonController fpController = new FirstPersonController(fpCameraModel);
             fpController.addAsWindowListener(window);
 
-            window.addMouseButtonPressListener((win, buttonIndex, mods) ->
-            {
-                fpController.setEnabled(false);
-            });
+            window.addMouseButtonPressListener((win, buttonIndex, mods) -> fpController.setEnabled(false));
 
             ReadonlyLightingModel lightingModel = JavaFXModels.getInstance().getLightingModel();
             ReadonlyEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
@@ -80,7 +87,7 @@ public class Rendering
             LoadingModel loadingModel = JavaFXModels.getInstance().getLoadingModel();
             ToolSelectionModel toolModel = JavaFXModels.getInstance().getToolModel();
 
-            ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
+            ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<>(context, program);
 
             WindowBasedController windowBasedController = Builder.create()
                 .setCameraModel(cameraModel)
@@ -133,15 +140,15 @@ public class Rendering
 
                         rendererList.getSelectedItem().reloadHelperShaders();
                     }
-                    catch (Exception e)
+                    catch (FileNotFoundException|GLException e)
                     {
                         e.printStackTrace();
                     }
                 }
-                else if (c == 'l')
-                {
+                //else if (c == 'l')
+                //{
                     //metaLightingModel.hardcodedMode = !metaLightingModel.hardcodedMode;
-                }
+                //}
                 else if (c == ' ')
                 {
                     fpController.setEnabled(!fpController.getEnabled());
@@ -170,7 +177,7 @@ public class Rendering
                 }
             });
 
-            IBRRequestQueue<OpenGLContext> requestQueue = new IBRRequestQueue<OpenGLContext>(context, rendererList);
+            IBRRequestQueue<OpenGLContext> requestQueue = new IBRRequestQueue<>(context, rendererList);
 
             app.addRefreshable(new Refreshable()
             {
@@ -200,17 +207,14 @@ public class Rendering
         GLFWWindow.closeAllWindows();
     }
 
-    private static void checkSupportedImageFormats()
+    private static void printSupportedImageFormats()
     {
-        Set<String> set = new HashSet<String>();
-
         // Get list of all informal format names understood by the current set of registered readers
         String[] formatNames = ImageIO.getReaderFormatNames();
 
-        for (int i = 0; i < formatNames.length; i++)
-        {
-            set.add(formatNames[i].toLowerCase());
-        }
+        Collection<String> set = Arrays.stream(formatNames)
+            .map(String::toLowerCase)
+            .collect(Collectors.toCollection(() -> new HashSet<>(formatNames.length)));
 
         System.out.println("Supported image formats: " + set);
     }
