@@ -1,8 +1,10 @@
 package tetzlaff.ibr.javafx;
 
+import java.io.IOException;
 import java.net.URL;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -19,7 +21,7 @@ public class JavaFXApp extends Application
 {
 
     @Override
-    public void start(Stage menuBarStage) throws Exception
+    public void start(Stage menuBarStage) throws IOException
     {
 
         //get FXML URLs
@@ -63,10 +65,6 @@ public class JavaFXApp extends Application
         sceneStage.setScene(new Scene(sceneRoot));
 
         //set positions
-        double librarySection = 0.2;
-        double sceneSection = 0.3;
-
-        double extra = 0;
 
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
@@ -77,14 +75,18 @@ public class JavaFXApp extends Application
         menuBarStage.initStyle(StageStyle.UNDECORATED);
 
         menuBarStage.show();
-        double menuBarHeight = menuBarStage.getHeight();
 
+        double menuBarHeight = menuBarStage.getHeight();
+        double extra = 0;
         libraryStage.setX(primaryScreenBounds.getMinX() - extra);
         libraryStage.setY(primaryScreenBounds.getMinY() + menuBarHeight - extra);
         libraryStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight + 2 * extra);
+
+        double librarySection = 0.2;
         libraryStage.setWidth(primaryScreenBounds.getWidth() * librarySection + 2 * extra);
         //libraryStage.show();
 
+        double sceneSection = 0.3;
         sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() * (1 - sceneSection) - extra);
         sceneStage.setWidth(primaryScreenBounds.getWidth() * sceneSection + 2 * extra);
         sceneStage.setY(primaryScreenBounds.getMinY() + menuBarHeight - extra);
@@ -107,10 +109,10 @@ public class JavaFXApp extends Application
         menuBarController.init2(toolModel);
 
         //set up close
-        Quit.getInstance().addCloseTrigger(() ->
+        Quit.getInstance().addQuitListener(() ->
         {
-            sceneStage.close();
-            menuBarStage.close();
+            Platform.runLater(sceneStage::close);
+            Platform.runLater(menuBarStage::close);
         });
         sceneStage.setOnCloseRequest(Quit.getInstance());
         menuBarStage.setOnCloseRequest(Quit.getInstance());
