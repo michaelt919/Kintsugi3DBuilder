@@ -10,6 +10,8 @@ public interface Window<ContextType extends Context<ContextType>> extends Window
 
     void hide();
 
+    void focus();
+
     boolean isHighDPI();
 
     boolean isWindowClosing();
@@ -40,4 +42,6 @@ public interface Window<ContextType extends Context<ContextType>> extends Window
     CursorPosition getCursorPosition();
 
     ModifierKeys getModifierKeys();
+
+    boolean isFocused();
 }

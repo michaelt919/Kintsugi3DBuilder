@@ -1,6 +1,7 @@
 package tetzlaff.gl.glfw;
 
-import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
+import java.nio.IntBuffer;
 
 import org.lwjgl.*;
 import org.lwjgl.Version.*;
@@ -27,12 +28,12 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     GLFWWindow(GLFWContextFactory<ContextType> contextFactory, int width, int height, String title, int xParam, int yParam,
         boolean resizable, int multisamples)
     {
-        glfwSetErrorCallback(GLFWErrorCallback.createString((error, description) ->
+        glfwSetErrorCallback(GLFWErrorCallback.create((i, l) ->
         {
-            throw new GLFWException(description);
+            throw new GLFWException(GLFWErrorCallback.getDescription(l));
         }));
 
-        if ( glfwInit() != GL_TRUE )
+        if ( !glfwInit() )
         {
             throw new GLFWException("Unable to initialize GLFW.");
         }
@@ -119,6 +120,12 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     }
 
     @Override
+    public void focus()
+    {
+        glfwFocusWindow(handle);
+    }
+
+    @Override
     public void pollEvents()
     {
         glfwMakeContextCurrent(handle);
@@ -142,7 +149,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     @Override
     public boolean isWindowClosing()
     {
-        return glfwWindowShouldClose(handle) == GL_TRUE;
+        return glfwWindowShouldClose(handle);
     }
 
     @Override
@@ -154,7 +161,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     @Override
     public void close()
     {
-        if (glfwWindowShouldClose(handle) == GL_TRUE)
+        if (glfwWindowShouldClose(handle))
         {
             glfwDestroyWindow(handle);
             this.isDestroyed = true;
@@ -164,34 +171,34 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     @Override
     public void requestWindowClose()
     {
-        glfwSetWindowShouldClose(handle, GL_TRUE);
+        glfwSetWindowShouldClose(handle, true);
     }
 
     @Override
     public void cancelWindowClose()
     {
-        glfwSetWindowShouldClose(handle, GL_FALSE);
+        glfwSetWindowShouldClose(handle, false);
     }
 
     @Override
     public WindowSize getWindowSize()
     {
-        ByteBuffer widthBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
-        ByteBuffer heightBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
+        IntBuffer widthBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
+        IntBuffer heightBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
         glfwGetWindowSize(handle, widthBuffer, heightBuffer);
-        int width = widthBuffer.asIntBuffer().get(0);
-        int height = heightBuffer.asIntBuffer().get(0);
+        int width = widthBuffer.get(0);
+        int height = heightBuffer.get(0);
         return new WindowSize(width, height);
     }
 
     @Override
     public WindowPosition getWindowPosition()
     {
-        ByteBuffer xBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
-        ByteBuffer yBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
+        IntBuffer xBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
+        IntBuffer yBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
         glfwGetWindowPos(handle, xBuffer, yBuffer);
-        int x = xBuffer.asIntBuffer().get(0);
-        int y = yBuffer.asIntBuffer().get(0);
+        int x = xBuffer.get(0);
+        int y = yBuffer.get(0);
         return new WindowPosition(x, y);
     }
 
@@ -211,6 +218,12 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     public void setWindowTitle(String title)
     {
         glfwSetWindowTitle(handle, title);
+    }
+
+    @Override
+    public boolean isFocused()
+    {
+        return glfwGetWindowAttrib(handle, GLFW_FOCUSED) == GLFW_TRUE;
     }
 
     @Override
@@ -238,11 +251,11 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     @Override
     public CursorPosition getCursorPosition()
     {
-        ByteBuffer xBuffer = BufferUtils.createByteBuffer(Double.BYTES);
-        ByteBuffer yBuffer = BufferUtils.createByteBuffer(Double.BYTES);
+        DoubleBuffer xBuffer = BufferUtils.createByteBuffer(Double.BYTES).asDoubleBuffer();
+        DoubleBuffer yBuffer = BufferUtils.createByteBuffer(Double.BYTES).asDoubleBuffer();
         glfwGetCursorPos(handle, xBuffer, yBuffer);
-        double x = xBuffer.asDoubleBuffer().get(0);
-        double y = yBuffer.asDoubleBuffer().get(0);
+        double x = xBuffer.get(0);
+        double y = yBuffer.get(0);
         return new CursorPosition(x, y);
     }
 

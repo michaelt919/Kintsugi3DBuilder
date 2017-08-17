@@ -1,6 +1,6 @@
 package tetzlaff.gl.glfw;
 
-import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 import org.lwjgl.*;
 import org.lwjgl.opengl.*;
@@ -34,11 +34,11 @@ public abstract class GLFWWindowContextBase<ContextType extends GLFWWindowContex
     @Override
     public FramebufferSize getFramebufferSize()
     {
-        ByteBuffer widthBuffer = BufferUtils.createByteBuffer(4);
-        ByteBuffer heightBuffer = BufferUtils.createByteBuffer(4);
+        IntBuffer widthBuffer = BufferUtils.createByteBuffer(4).asIntBuffer();
+        IntBuffer heightBuffer = BufferUtils.createByteBuffer(4).asIntBuffer();
         glfwGetFramebufferSize(handle, widthBuffer, heightBuffer);
-        int width = widthBuffer.asIntBuffer().get(0);
-        int height = heightBuffer.asIntBuffer().get(0);
+        int width = widthBuffer.get(0);
+        int height = heightBuffer.get(0);
         return new FramebufferSize(width, height);
     }
 }

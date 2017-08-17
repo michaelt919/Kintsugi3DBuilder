@@ -12,13 +12,41 @@ import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import tetzlaff.ibr.app.Quit;
+import tetzlaff.ibr.app.SynchronizedWindow;
+import tetzlaff.ibr.app.WindowSynchronization;
 import tetzlaff.ibr.javafx.controllers.menu_bar.MenubarController;
 import tetzlaff.ibr.javafx.controllers.scene.RootSceneController;
 import tetzlaff.ibr.javafx.models.*;
 
 public class JavaFXApp extends Application
 {
+    private static class StageSynchronization implements SynchronizedWindow
+    {
+        private final Stage stage;
+
+        StageSynchronization(Stage sceneStage)
+        {
+            this.stage = sceneStage;
+        }
+
+        @Override
+        public boolean isFocused()
+        {
+            return stage.isFocused();
+        }
+
+        @Override
+        public void focus()
+        {
+            stage.toFront();
+        }
+
+        @Override
+        public void quit()
+        {
+            Platform.runLater(stage::close);
+        }
+    }
 
     @Override
     public void start(Stage menuBarStage) throws IOException
@@ -95,7 +123,7 @@ public class JavaFXApp extends Application
         sceneStage.initStyle(StageStyle.UNDECORATED);
         sceneStage.show();
 
-        menuBarStage.hide();//this is just to have the menu bar have focus on the application starts, only aesthetic value.
+        menuBarStage.hide();//this is just to have the menu bar have focusGained on the application starts, only aesthetic value.
         menuBarStage.show();
 
         //get models
@@ -108,14 +136,38 @@ public class JavaFXApp extends Application
         sceneController.init(cameraModel, lightingModel, environmentMapModel, toolModel);
         menuBarController.init2(toolModel);
 
-        //set up close
-        Quit.getInstance().addQuitListener(() ->
+        SynchronizedWindow sceneWindow = new StageSynchronization(sceneStage);
+        SynchronizedWindow menuBarWindow = new StageSynchronization(menuBarStage);
+
+        //set up close and focusGained
+        WindowSynchronization.getInstance().addListener(sceneWindow);
+        WindowSynchronization.getInstance().addListener(menuBarWindow);
+
+        sceneStage.setOnCloseRequest(event -> WindowSynchronization.getInstance().quit());
+        menuBarStage.setOnCloseRequest(event -> WindowSynchronization.getInstance().quit());
+
+        sceneStage.focusedProperty().addListener(event ->
         {
-            Platform.runLater(sceneStage::close);
-            Platform.runLater(menuBarStage::close);
+            if (sceneStage.isFocused())
+            {
+                WindowSynchronization.getInstance().focusGained(sceneWindow);
+            }
+            else
+            {
+                WindowSynchronization.getInstance().focusLost(sceneWindow);
+            }
         });
-        sceneStage.setOnCloseRequest(Quit.getInstance());
-        menuBarStage.setOnCloseRequest(Quit.getInstance());
+        menuBarStage.focusedProperty().addListener(event ->
+        {
+            if (menuBarStage.isFocused())
+            {
+                WindowSynchronization.getInstance().focusGained(menuBarWindow);
+            }
+            else
+            {
+                WindowSynchronization.getInstance().focusLost(menuBarWindow);
+            }
+        });
     }
 
     public static void launchWrapper(String args)
