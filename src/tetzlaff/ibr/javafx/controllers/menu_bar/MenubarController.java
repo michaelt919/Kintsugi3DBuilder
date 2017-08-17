@@ -15,13 +15,14 @@ import javafx.scene.control.ToggleGroup;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import tetzlaff.ibr.RenderingMode;
 import tetzlaff.ibr.app.WindowSynchronization;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
-import tetzlaff.ibr.javafx.util.Flag;
 import tetzlaff.ibr.tools.ToolType;
+import tetzlaff.util.Flag;
 
 public class MenubarController
 {
@@ -60,7 +61,7 @@ public class MenubarController
 
     @FXML private FileChooser vSetFileChooser;
 
-    public void init2(JavaFXToolSelectionModel toolModel)
+    public void init(JavaFXToolSelectionModel toolModel)
     {
         this.toolModel = toolModel;
         vSetFileChooser = new FileChooser();
@@ -302,7 +303,7 @@ public class MenubarController
     }
 
     //window helpers
-    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, String urlString)
+    private static <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString)
     {
         try
         {
@@ -320,7 +321,7 @@ public class MenubarController
             stage.setResizable(false);
 
             flag.set(true);
-            flag.addFalseToClose(stage);
+            stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
 
             stage.show();
 
@@ -333,7 +334,7 @@ public class MenubarController
         }
     }
 
-    private static <CONTROLLER_CLASS> CONTROLLER_CLASS makeWindow(String title, Flag flag, int width, int height, String urlString)
+    private static <ControllerType> ControllerType makeWindow(String title, Flag flag, int width, int height, String urlString)
     {
         try
         {
@@ -349,7 +350,7 @@ public class MenubarController
             stage.setScene(new Scene(root, width, height));
             stage.setResizable(false);
             flag.set(true);
-            flag.addFalseToClose(stage);
+            stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
             stage.show();
 
             return fxmlLoader.getController();
