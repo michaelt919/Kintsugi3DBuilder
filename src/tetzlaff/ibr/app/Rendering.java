@@ -52,8 +52,33 @@ public final class Rendering
                             .setMultisamples(4)
                             .create())
         {
-            Quit.getInstance().addQuitListener(window::requestWindowClose);
-            window.addWindowCloseListener(win -> Quit.getInstance().applicationQuitting());
+            SynchronizedWindow glfwSynchronization = new SynchronizedWindow()
+            {
+                @Override
+                public boolean isFocused()
+                {
+                    return window.isFocused();
+                }
+
+                @Override
+                public void focus()
+                {
+                    new Thread(window::focus).start();
+                }
+
+                @Override
+                public void quit()
+                {
+                    window.requestWindowClose();
+                }
+            };
+
+            WindowSynchronization.getInstance().addListener(glfwSynchronization);
+
+            window.addWindowCloseListener(win -> WindowSynchronization.getInstance().quit());
+            window.addWindowFocusGainedListener(win -> WindowSynchronization.getInstance().focusGained(glfwSynchronization));
+            window.addWindowFocusLostListener(win -> WindowSynchronization.getInstance().focusLost(glfwSynchronization));
+
 
             OpenGLContext context = window.getContext();
 

@@ -16,7 +16,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import tetzlaff.ibr.RenderingMode;
-import tetzlaff.ibr.app.Quit;
+import tetzlaff.ibr.app.WindowSynchronization;
 import tetzlaff.ibr.javafx.models.JavaFXModels;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
@@ -281,7 +281,7 @@ public class MenubarController
     @FXML
     private void file_exit()
     {
-        Quit.getInstance().applicationQuitting();
+        WindowSynchronization.getInstance().quit();
     }
 
     @FXML
