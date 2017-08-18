@@ -146,28 +146,29 @@ public class JavaFXApp extends Application
         sceneStage.setOnCloseRequest(event -> WindowSynchronization.getInstance().quit());
         menuBarStage.setOnCloseRequest(event -> WindowSynchronization.getInstance().quit());
 
-        sceneStage.focusedProperty().addListener(event ->
-        {
-            if (sceneStage.isFocused())
-            {
-                WindowSynchronization.getInstance().focusGained(sceneWindow);
-            }
-            else
-            {
-                WindowSynchronization.getInstance().focusLost(sceneWindow);
-            }
-        });
-        menuBarStage.focusedProperty().addListener(event ->
-        {
-            if (menuBarStage.isFocused())
-            {
-                WindowSynchronization.getInstance().focusGained(menuBarWindow);
-            }
-            else
-            {
-                WindowSynchronization.getInstance().focusLost(menuBarWindow);
-            }
-        });
+        // Focus synchronization not working quite right.
+//        sceneStage.focusedProperty().addListener(event ->
+//        {
+//            if (sceneStage.isFocused())
+//            {
+//                WindowSynchronization.getInstance().focusGained(sceneWindow);
+//            }
+//            else
+//            {
+//                WindowSynchronization.getInstance().focusLost(sceneWindow);
+//            }
+//        });
+//        menuBarStage.focusedProperty().addListener(event ->
+//        {
+//            if (menuBarStage.isFocused())
+//            {
+//                WindowSynchronization.getInstance().focusGained(menuBarWindow);
+//            }
+//            else
+//            {
+//                WindowSynchronization.getInstance().focusLost(menuBarWindow);
+//            }
+//        });
     }
 
     public static void launchWrapper(String args)

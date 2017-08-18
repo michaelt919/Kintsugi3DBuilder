@@ -14,15 +14,17 @@ uniform mat4 projection;
 
 void main()
 {
-    vec4 transformedPosition = projection * model_view * vec4(fPosition, 1);
-    transformedPosition /= transformedPosition.w;
+    vec2 thinDirection = normalize(transpose(model_view)[2].xy);
+    vec2 thickDirection = vec2(-thinDirection.y, thinDirection.x);
 
-    vec4 transformedCirclePosition = projection * model_view * vec4(normalize(fPosition) / 2, 1);
-    transformedCirclePosition /= transformedCirclePosition.w;
+    float cosTheta = normalize(model_view[2].xyz).z;
 
-    vec2 diff = transformedPosition.xy - transformedCirclePosition.xy;
+    vec2 diff = fPosition.xy - normalize(fPosition.xyz).xy / 2;
 
-    float intensity = exp((4 * dot(diff, diff)) / width * width) - threshold;
+    vec2 diffScaled = dot(diff, thinDirection) * abs(cosTheta) * thinDirection
+        + dot(diff, thickDirection) * max(0.125, abs(cosTheta)) * thickDirection;
+
+    float intensity = exp(-4 * dot(diffScaled, diffScaled) / (width * width)) - threshold;
 
     if (intensity < 0)
     {
