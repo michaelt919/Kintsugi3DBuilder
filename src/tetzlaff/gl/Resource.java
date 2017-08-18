@@ -1,7 +1,5 @@
 package tetzlaff.gl;
 
-import tetzlaff.gl.exceptions.GLException;
-
 /**
  * A simple interface for a GL resource which needs to be memory-managed manually.
  * This is necessary because 
@@ -15,5 +13,5 @@ public interface Resource extends AutoCloseable
      * Any usage of this object after calling this method will cause undefined results.
      */
     @Override
-    void close() throws GLException;
+    void close();
 }
