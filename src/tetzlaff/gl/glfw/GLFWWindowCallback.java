@@ -8,6 +8,7 @@ import tetzlaff.gl.window.WindowListenerManager;
 import tetzlaff.gl.window.listeners.*;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
 
 // Other misc. callbacks
 // Keyboard callbacks
@@ -306,11 +307,11 @@ class GLFWWindowCallback implements WindowListenerManager
                 windowFocusCallback = new GLFWWindowFocusCallback()
                 {
                     @Override
-                    public void invoke(long windowHandle, boolean focused)
+                    public void invoke(long windowHandle, int focused)
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            if (focused)
+                            if (focused == GL_TRUE)
                             {
                                 for (WindowFocusGainedListener listener : windowFocusGainedListeners)
                                 {
@@ -332,11 +333,11 @@ class GLFWWindowCallback implements WindowListenerManager
                 windowIconifyCallback = new GLFWWindowIconifyCallback()
                 {
                     @Override
-                    public void invoke(long windowHandle, boolean iconified)
+                    public void invoke(long windowHandle, int iconified)
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            if (iconified)
+                            if (iconified == GL_TRUE)
                             {
                                 for (WindowIconifiedListener listener : windowIconifiedListeners)
                                 {
@@ -481,11 +482,11 @@ class GLFWWindowCallback implements WindowListenerManager
                 cursorEnterCallback = new GLFWCursorEnterCallback()
                 {
                     @Override
-                    public void invoke(long windowHandle, boolean entered)
+                    public void invoke(long windowHandle, int entered)
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            if (entered)
+                            if (entered == GL_TRUE)
                             {
                                 for (CursorEnteredListener listener : cursorEnterListeners)
                                 {

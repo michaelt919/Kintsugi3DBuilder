@@ -1,7 +1,6 @@
 package tetzlaff.gl.glfw;
 
-import java.nio.DoubleBuffer;
-import java.nio.IntBuffer;
+import java.nio.ByteBuffer;
 
 import org.lwjgl.*;
 import org.lwjgl.Version.*;
@@ -28,18 +27,18 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     GLFWWindow(GLFWContextFactory<ContextType> contextFactory, int width, int height, String title, int xParam, int yParam,
         boolean resizable, int multisamples)
     {
-        glfwSetErrorCallback(GLFWErrorCallback.create((i, l) ->
+        glfwSetErrorCallback(GLFWErrorCallback.createString((error, description) ->
         {
-            throw new GLFWException(GLFWErrorCallback.getDescription(l));
+            throw new GLFWException(description);
         }));
 
-        if ( !glfwInit() )
+        if ( glfwInit() != GL_TRUE )
         {
             throw new GLFWException("Unable to initialize GLFW.");
         }
- 
+
         glfwDefaultWindowHints();
-                
+
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
@@ -48,13 +47,13 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
         glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
         glfwWindowHint(GLFW_SAMPLES, multisamples);
-        
+
         handle = glfwCreateWindow(width, height, title, NULL, NULL);
         if ( handle == NULL )
         {
             throw new GLFWException("Failed to create the GLFW window");
         }
-        
+
         GLFWWindowCallback callback = new GLFWWindowCallback(this);
         this.listenerManager = callback;
 
@@ -71,20 +70,20 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
             y = (vidmode.height() - height) / 2;
         }
         glfwSetWindowPos(handle, x, y);
- 
+
         glfwMakeContextCurrent(handle);
         glfwSwapInterval(1);
-        
+
         GL.createCapabilities(); // Make a valid OpenGL Context
         System.out.println("OpenGL version: " + glGetString(GL_VERSION));
-        System.out.println("LWJGL version: " + 
+        System.out.println("LWJGL version: " +
                 String.valueOf(Version.VERSION_MAJOR) + '.' + Version.VERSION_MINOR + '.' + Version.VERSION_REVISION +
                 (Version.BUILD_TYPE == BuildType.ALPHA ? "a" : Version.BUILD_TYPE == BuildType.BETA ? "b" : "")
                 /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
         System.out.println("GLFW version: " + glfwGetVersionString());
-        
+
         this.context = contextFactory.createContext(handle);
-        
+
         if (multisamples > 0)
         {
             context.getState().enableMultisampling();
@@ -122,7 +121,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     @Override
     public void focus()
     {
-        glfwFocusWindow(handle);
+        // TODO requires newer LWJGL version.
     }
 
     @Override
@@ -149,7 +148,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     @Override
     public boolean isWindowClosing()
     {
-        return glfwWindowShouldClose(handle);
+        return glfwWindowShouldClose(handle) == GL_TRUE;
     }
 
     @Override
@@ -161,7 +160,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     @Override
     public void close()
     {
-        if (glfwWindowShouldClose(handle))
+        if (glfwWindowShouldClose(handle) == GL_TRUE)
         {
             glfwDestroyWindow(handle);
             this.isDestroyed = true;
@@ -171,34 +170,34 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     @Override
     public void requestWindowClose()
     {
-        glfwSetWindowShouldClose(handle, true);
+        glfwSetWindowShouldClose(handle, GL_TRUE);
     }
 
     @Override
     public void cancelWindowClose()
     {
-        glfwSetWindowShouldClose(handle, false);
+        glfwSetWindowShouldClose(handle, GL_FALSE);
     }
 
     @Override
     public WindowSize getWindowSize()
     {
-        IntBuffer widthBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
-        IntBuffer heightBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
+        ByteBuffer widthBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
+        ByteBuffer heightBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         glfwGetWindowSize(handle, widthBuffer, heightBuffer);
-        int width = widthBuffer.get(0);
-        int height = heightBuffer.get(0);
+        int width = widthBuffer.asIntBuffer().get(0);
+        int height = heightBuffer.asIntBuffer().get(0);
         return new WindowSize(width, height);
     }
 
     @Override
     public WindowPosition getWindowPosition()
     {
-        IntBuffer xBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
-        IntBuffer yBuffer = BufferUtils.createByteBuffer(Integer.BYTES).asIntBuffer();
+        ByteBuffer xBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
+        ByteBuffer yBuffer = BufferUtils.createByteBuffer(Integer.BYTES);
         glfwGetWindowPos(handle, xBuffer, yBuffer);
-        int x = xBuffer.get(0);
-        int y = yBuffer.get(0);
+        int x = xBuffer.asIntBuffer().get(0);
+        int y = yBuffer.asIntBuffer().get(0);
         return new WindowPosition(x, y);
     }
 
@@ -218,12 +217,6 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     public void setWindowTitle(String title)
     {
         glfwSetWindowTitle(handle, title);
-    }
-
-    @Override
-    public boolean isFocused()
-    {
-        return glfwGetWindowAttrib(handle, GLFW_FOCUSED) == GLFW_TRUE;
     }
 
     @Override
@@ -251,11 +244,11 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     @Override
     public CursorPosition getCursorPosition()
     {
-        DoubleBuffer xBuffer = BufferUtils.createByteBuffer(Double.BYTES).asDoubleBuffer();
-        DoubleBuffer yBuffer = BufferUtils.createByteBuffer(Double.BYTES).asDoubleBuffer();
+        ByteBuffer xBuffer = BufferUtils.createByteBuffer(Double.BYTES);
+        ByteBuffer yBuffer = BufferUtils.createByteBuffer(Double.BYTES);
         glfwGetCursorPos(handle, xBuffer, yBuffer);
-        double x = xBuffer.get(0);
-        double y = yBuffer.get(0);
+        double x = xBuffer.asDoubleBuffer().get(0);
+        double y = yBuffer.asDoubleBuffer().get(0);
         return new CursorPosition(x, y);
     }
 
@@ -268,6 +261,12 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
             getKeyState(KeyCodes.LEFT_ALT) == KeyState.Pressed || getKeyState(KeyCodes.RIGHT_ALT) == KeyState.Pressed,
             getKeyState(KeyCodes.LEFT_SUPER) == KeyState.Pressed || getKeyState(KeyCodes.RIGHT_SUPER) == KeyState.Pressed
         );
+    }
+
+    @Override
+    public boolean isFocused()
+    {
+        return glfwGetWindowAttrib(handle, GLFW_FOCUSED) == GLFW_TRUE;
     }
 
     @Override
