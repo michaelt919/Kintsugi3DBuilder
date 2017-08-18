@@ -63,7 +63,7 @@ public final class Rendering
                 @Override
                 public void focus()
                 {
-                    new Thread(window::focus).start();
+                    //new Thread(window::focus).start();
                 }
 
                 @Override
@@ -76,8 +76,8 @@ public final class Rendering
             WindowSynchronization.getInstance().addListener(glfwSynchronization);
 
             window.addWindowCloseListener(win -> WindowSynchronization.getInstance().quit());
-            window.addWindowFocusGainedListener(win -> WindowSynchronization.getInstance().focusGained(glfwSynchronization));
-            window.addWindowFocusLostListener(win -> WindowSynchronization.getInstance().focusLost(glfwSynchronization));
+            //window.addWindowFocusGainedListener(win -> WindowSynchronization.getInstance().focusGained(glfwSynchronization));
+            //window.addWindowFocusLostListener(win -> WindowSynchronization.getInstance().focusLost(glfwSynchronization));
 
 
             OpenGLContext context = window.getContext();

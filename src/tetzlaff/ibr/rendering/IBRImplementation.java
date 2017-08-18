@@ -1,6 +1,7 @@
 package tetzlaff.ibr.rendering;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,9 +17,7 @@ import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.util.VertexGeometry;
-import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ReadonlySettingsModel;
@@ -49,7 +48,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Drawable<ContextType> shadowDrawable;
 
     private Program<ContextType> lightProgram;
-    private VertexBuffer<ContextType> lightVertices;
+    private VertexBuffer<ContextType> rectangleVertices;
     private Texture2D<ContextType> lightTexture;
     private Texture2D<ContextType> lightTargetTexture;
     private Drawable<ContextType> lightDrawable;
@@ -95,7 +94,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private int[] pixelObjectIDs;
     private short[] pixelDepths;
     private FramebufferSize fboSize;
-    private Matrix4 partialViewMatrix;
+
+    private Program<ContextType> circleProgram;
+    private Drawable<ContextType> circleDrawable;
 
     IBRImplementation(String id, ContextType context, Program<ContextType> program,
             Builder<ContextType> resourceBuilder)
@@ -106,12 +107,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         this.resourceBuilder = resourceBuilder;
 
         this.clearColor = new Vector3(0.0f);
-        this.multiTransformationModel = new ArrayList<Matrix4>();
+        this.multiTransformationModel = new ArrayList<>(1);
         this.multiTransformationModel.add(Matrix4.IDENTITY);
         this.settings = new IBRSettingsModelImpl();
 
-        this.sceneObjectNameList = new ArrayList<String>();
-        this.sceneObjectIDLookup = new HashMap<String, Integer>();
+        this.sceneObjectNameList = new ArrayList<>(64);
+        this.sceneObjectIDLookup = new HashMap<>(64);
 
         this.sceneObjectNameList.add(null);
 
@@ -179,11 +180,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             try
             {
                 this.program = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
+                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "relight.frag"))
                         .createProgram();
             }
-            catch (IOException e)
+            catch (FileNotFoundException e)
             {
                 e.printStackTrace();
             }
@@ -194,11 +195,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             try
             {
                 this.simpleTexProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File("shaders/common/texture.frag"))
+                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture.frag"))
                         .createProgram();
             }
-            catch (IOException e)
+            catch (FileNotFoundException e)
             {
                 e.printStackTrace();
             }
@@ -209,11 +210,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             try
             {
                 this.environmentBackgroundProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File("shaders/common/envbackgroundtexture.frag"))
+                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
                         .createProgram();
             }
-            catch (IOException e)
+            catch (FileNotFoundException e)
             {
                 e.printStackTrace();
             }
@@ -264,13 +265,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             try
             {
                 shadowProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
+                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "depth.vert"))
+                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "depth.frag"))
                         .createProgram();
 
                 shadowDrawable = context.createDrawable(shadowProgram);
             }
-            catch (IOException e)
+            catch (FileNotFoundException e)
             {
                 e.printStackTrace();
                 throw new IllegalStateException("The shader program could not be initialized.", e);
@@ -282,8 +283,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             try
             {
                 this.widgetProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File("shaders/common/solid.frag"))
+                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
                         .createProgram();
                 this.widgetVertices = context.createVertexBuffer()
                         .setData(NativeVectorBufferFactory.getInstance()
@@ -297,25 +298,43 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.widgetDrawable = context.createDrawable(this.widgetProgram);
                 this.widgetDrawable.addVertexBuffer("position", widgetVertices);
             }
-            catch (IOException e)
+            catch (FileNotFoundException e)
             {
                 e.printStackTrace();
             }
         }
+
+        this.rectangleVertices = context.createRectangle();
 
         if (this.lightProgram == null)
         {
             try
             {
                 this.lightProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File("shaders/relight/light.frag"))
+                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "light.frag"))
                         .createProgram();
-                this.lightVertices = context.createRectangle();
                 this.lightDrawable = context.createDrawable(this.lightProgram);
-                this.lightDrawable.addVertexBuffer("position", lightVertices);
+                this.lightDrawable.addVertexBuffer("position", rectangleVertices);
             }
-            catch (IOException e)
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        if (this.circleProgram == null)
+        {
+            try
+            {
+                this.circleProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "circle.frag"))
+                    .createProgram();
+                this.circleDrawable = context.createDrawable(this.circleProgram);
+                this.circleDrawable.addVertexBuffer("position", rectangleVertices);
+            }
+            catch (FileNotFoundException e)
             {
                 e.printStackTrace();
             }
@@ -387,7 +406,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         this.updateCentroidAndRadius();
 
-        if (this.environmentMapUnloadRequested == true && this.environmentMap != null)
+        if (this.environmentMapUnloadRequested && this.environmentMap != null)
         {
             this.environmentMap.close();
             this.environmentMap = null;
@@ -446,7 +465,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 this.environmentMap = newEnvironmentTexture;
             }
-            catch (Exception e)
+            catch (IOException|RuntimeException e)
             {
                 e.printStackTrace();
             }
@@ -493,7 +512,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     .setLinearFilteringEnabled(true)
                     .createTexture();
             }
-            catch (Exception e)
+            catch (IOException|RuntimeException e)
             {
                 e.printStackTrace();
             }
@@ -811,6 +830,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             Matrix4 view = viewParam;
 
+            Matrix4 partialViewMatrix;
             if (!customViewMatrix)
             {
                 view = this.getViewMatrix();
@@ -1140,6 +1160,41 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             context.getState().disableAlphaBlending();
                             this.widgetProgram.setUniform("color", new Vector4(0.5f, 0.0f, 1.0f, 1) /* lavender(?) */);
                             this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+                            this.circleProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1)));
+                            this.circleProgram.setUniform("color", new Vector3(1));
+                            this.circleProgram.setUniform("projection", this.getProjectionMatrix(size));
+                            this.circleProgram.setUniform("width", 0.02f);
+                            this.circleProgram.setUniform("threshold", 0.005f);
+
+                            Vector3 lightDisplacement = lightPosition.minus(lightTarget);
+
+                            float lightDistance = lightDisplacement.length();
+
+                            float lightDistanceXZ = new Vector2(lightDisplacement.x, lightDisplacement.z).length();
+
+                            // Azimuth circle
+                            this.circleProgram.setUniform("color", new Vector3(1,0,0));
+                            this.circleProgram.setUniform("model_view",
+                                Matrix4.translate(new Vector3(lightTarget.x, lightPosition.y, lightTarget.z))
+                                    .times(Matrix4.scale(2 * lightDistanceXZ))
+                                    .times(Matrix4.rotateX(-Math.PI / 2)));
+                            this.circleDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+
+                            Vector3 inclinationNormal = new Vector3(-lightDisplacement.z, 0, lightDisplacement.x).normalized();
+
+                            // Inclination circle
+                            this.circleProgram.setUniform("color", new Vector3(0,1,0));
+                            this.circleProgram.setUniform("model_view",
+                                Matrix4.translate(lightTarget)
+                                    .times(Matrix4.scale(2 * lightDistance))
+                                    .times(
+                                        Matrix3.fromColumns(
+                                            lightDisplacement.normalized(),
+                                            inclinationNormal.cross(lightDisplacement).normalized(),
+                                            inclinationNormal)
+                                        .asMatrix4()));
+                            this.circleDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
                         }
 
                         if (lightingModel.isLightVisualizationEnabled(i))
@@ -1184,7 +1239,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 fboSize = offscreenFBO.getSize();
             }
         }
-        catch(Exception e)
+        catch(RuntimeException e)
         {
             if (!suppressErrors)
             {
@@ -1266,9 +1321,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             lightProgram.close();
         }
 
-        if (lightVertices != null)
+        if (rectangleVertices != null)
         {
-            lightVertices.close();
+            rectangleVertices.close();
         }
 
         if (lightTexture != null)
@@ -1330,7 +1385,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.mainDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
         }
 
-        if (this.resources.texCoordBuffer != null)
+        if (this.resources.tangentBuffer != null)
         {
             this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
         }
@@ -1374,9 +1429,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         try
         {
-            Program<ContextType> newProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File("shaders/common/envbackgroundtexture.frag"))
+            Program<ContextType> newEnvironmentBackgroundProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
                     .createProgram();
 
             if (this.environmentBackgroundProgram != null)
@@ -1384,14 +1439,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.environmentBackgroundProgram.close();
             }
 
-            this.environmentBackgroundProgram = newProgram;
+            this.environmentBackgroundProgram = newEnvironmentBackgroundProgram;
             this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
             this.environmentBackgroundDrawable.addVertexBuffer("position", context.createRectangle());
 
 
-            newProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File("shaders/relight/light.frag"))
+            Program<ContextType> newLightProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "light.frag"))
                     .createProgram();
 
             if (this.lightProgram != null)
@@ -1399,13 +1454,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.lightProgram.close();
             }
 
-            this.lightProgram = newProgram;
+            this.lightProgram = newLightProgram;
             this.lightDrawable = context.createDrawable(this.lightProgram);
-            this.lightDrawable.addVertexBuffer("position", lightVertices);
+            this.lightDrawable.addVertexBuffer("position", rectangleVertices);
 
-            newProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File("shaders/common/solid.frag"))
+            Program<ContextType> newWidgetProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
                     .createProgram();
 
             if (this.widgetProgram != null)
@@ -1413,12 +1468,27 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.widgetProgram.close();
             }
 
-            this.widgetProgram = newProgram;
+            this.widgetProgram = newWidgetProgram;
 
             this.widgetDrawable = context.createDrawable(this.widgetProgram);
             this.widgetDrawable.addVertexBuffer("position", widgetVertices);
+
+            Program<ContextType> newCircleProgram = context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "circle.frag"))
+                .createProgram();
+
+            if (this.circleProgram != null)
+            {
+                this.circleProgram.close();
+            }
+
+            this.circleProgram = newCircleProgram;
+
+            this.circleDrawable = context.createDrawable(this.circleProgram);
+            this.circleDrawable.addVertexBuffer("position", rectangleVertices);
         }
-        catch (IOException e)
+        catch (FileNotFoundException e)
         {
             e.printStackTrace();
         }
