@@ -63,6 +63,7 @@ public final class Rendering
                 @Override
                 public void focus()
                 {
+                    // TODO uncomment this if it becomes possible to upgrade to new version of LWJGL that supports window focus through updated GLFW.
                     //new Thread(window::focus).start();
                 }
 
@@ -76,8 +77,8 @@ public final class Rendering
             WindowSynchronization.getInstance().addListener(glfwSynchronization);
 
             window.addWindowCloseListener(win -> WindowSynchronization.getInstance().quit());
-            //window.addWindowFocusGainedListener(win -> WindowSynchronization.getInstance().focusGained(glfwSynchronization));
-            //window.addWindowFocusLostListener(win -> WindowSynchronization.getInstance().focusLost(glfwSynchronization));
+//            window.addWindowFocusGainedListener(win -> WindowSynchronization.getInstance().focusGained(glfwSynchronization));
+//            window.addWindowFocusLostListener(win -> WindowSynchronization.getInstance().focusLost(glfwSynchronization));
 
 
             OpenGLContext context = window.getContext();
