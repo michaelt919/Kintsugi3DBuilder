@@ -1,8 +1,8 @@
 package tetzlaff.ibr.tools;
 
 import tetzlaff.models.ExtendedCameraModel;
+import tetzlaff.models.ExtendedLightingModel;
 import tetzlaff.models.ReadonlyEnvironmentMapModel;
-import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.SceneViewportModel;
 
 abstract class ToolBuilderBase<ToolType extends Tool> implements ToolBuilder<ToolType>
@@ -10,7 +10,7 @@ abstract class ToolBuilderBase<ToolType extends Tool> implements ToolBuilder<Too
     private ToolSelectionModel toolSelectionModel;
     private ExtendedCameraModel cameraModel;
     private ReadonlyEnvironmentMapModel environmentMapModel;
-    private ReadonlyLightingModel lightingModel;
+    private ExtendedLightingModel lightingModel;
     private SceneViewportModel sceneViewportModel;
 
     protected ToolBuilderBase()
@@ -39,7 +39,7 @@ abstract class ToolBuilderBase<ToolType extends Tool> implements ToolBuilder<Too
     }
 
     @Override
-    public ToolBuilder<ToolType> setLightingModel(ReadonlyLightingModel lightingModel)
+    public ToolBuilder<ToolType> setLightingModel(ExtendedLightingModel lightingModel)
     {
         this.lightingModel = lightingModel;
         return this;
@@ -67,7 +67,7 @@ abstract class ToolBuilderBase<ToolType extends Tool> implements ToolBuilder<Too
         return environmentMapModel;
     }
 
-    ReadonlyLightingModel getLightingModel()
+    ExtendedLightingModel getLightingModel()
     {
         return lightingModel;
     }

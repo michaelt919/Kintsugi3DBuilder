@@ -4,7 +4,8 @@ import javafx.beans.value.ObservableValue;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.lights.LightGroupSetting;
-import tetzlaff.models.ReadonlyEnvironmentMapModel;
+import tetzlaff.models.EnvironmentMapModel;
+import tetzlaff.models.LightInstanceModel;
 import tetzlaff.models.impl.LightingModelBase;
 
 public class JavaFXLightingModel extends LightingModelBase
@@ -15,7 +16,7 @@ public class JavaFXLightingModel extends LightingModelBase
 
     private final JavaFXLightInstanceModel[] lightInstanceModels = new JavaFXLightInstanceModel[LightGroupSetting.LIGHT_LIMIT];
 
-    public JavaFXLightingModel(ReadonlyEnvironmentMapModel envModel)
+    public JavaFXLightingModel(EnvironmentMapModel envModel)
     {
         super(envModel);
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
@@ -24,6 +25,30 @@ public class JavaFXLightingModel extends LightingModelBase
 
             lightInstanceModels[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));
         }
+    }
+
+    @Override
+    public LightInstanceModel getLight(int index)
+    {
+        return this.lightInstanceModels[index];
+    }
+
+    @Override
+    public void setLightColor(int i, Vector3 lightColor)
+    {
+        this.lightInstanceModels[i].setColor(lightColor);
+    }
+
+    @Override
+    public void setLightMatrix(int i, Matrix4 lightMatrix)
+    {
+        this.lightInstanceModels[i].setLookMatrix(lightMatrix);
+    }
+
+    @Override
+    public void setLightCenter(int i, Vector3 lightCenter)
+    {
+        this.lightInstanceModels[i].setCenter(lightCenter);
     }
 
     public void setLightGroupSettingObservableValue(ObservableValue<LightGroupSetting> lightGroupSettingObservableValue)
@@ -54,12 +79,10 @@ public class JavaFXLightingModel extends LightingModelBase
     {
         if (lightGroupSettingObservableValue == null || lightGroupSettingObservableValue.getValue() == null)
         {
-//            System.out.println("Using LightGroup Backup");
             return backup;
         }
         else
         {
-//            System.out.println("Need Value");
             return lightGroupSettingObservableValue.getValue();
         }
     }
@@ -67,9 +90,6 @@ public class JavaFXLightingModel extends LightingModelBase
     @Override
     public int getLightCount()
     {
-        //        System.out.println("Counted " + count + "Lights");
-//        return LightGroupSetting.LIGHT_LIMIT; //TODO ERROR HERE
-//        System.out.println("Count: " + count);
         return lightGroup().getNLights();
     }
 

@@ -1,6 +1,5 @@
 package tetzlaff.ibr.tools;//Created by alexk on 8/8/2017.
 
-import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
@@ -42,16 +41,13 @@ final class CenterPointTool implements Tool
         {
             CursorPosition mousePos = window.getCursorPosition();
 
-            double windowX = mousePos.x / window.getWindowSize().width;
-            double windowY = mousePos.y / window.getWindowSize().height;
+            double normalizedX = mousePos.x / window.getWindowSize().width;
+            double normalizedY = mousePos.y / window.getWindowSize().height;
 
-            Vector3 newCenter = sceneViewportModel.get3DPositionAtCoordinates(windowX, windowY);
-            Object clickedObject = sceneViewportModel.getObjectAtCoordinates(windowX, windowY);
+            Object clickedObject = sceneViewportModel.getObjectAtCoordinates(normalizedX, normalizedY);
             if (clickedObject instanceof String && "IBRObject".equals(clickedObject))
             {
-                cameraModel.setCenter(newCenter);
-                System.out.println("Set center to " + newCenter);
-
+                cameraModel.setCenter(sceneViewportModel.get3DPositionAtCoordinates(normalizedX, normalizedY));
                 toolSelectionModel.setTool(ToolType.ORBIT);
             }
         }

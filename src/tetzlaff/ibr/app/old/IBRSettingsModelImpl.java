@@ -21,6 +21,7 @@ public class IBRSettingsModelImpl implements SettingsModel
     private ShadingParameterMode weightMode = ShadingParameterMode.PER_PIXEL;
     private boolean multisamplingEnabled = false;
     private boolean halfResolutionEnabled = false;
+    private boolean lightWidgetsEnabled = false;
 
     public IBRSettingsModelImpl()
     {
@@ -165,9 +166,21 @@ public class IBRSettingsModelImpl implements SettingsModel
     }
 
     @Override
+    public boolean areLightWidgetsEnabled()
+    {
+        return this.lightWidgetsEnabled;
+    }
+
+    @Override
     public void setVisibleLightsEnabled(boolean visibleLightsEnabled)
     {
         this.visibleLightsEnabled = visibleLightsEnabled;
+    }
+
+    @Override
+    public void setLightWidgetsEnabled(boolean lightWidgetsEnabled)
+    {
+        this.lightWidgetsEnabled = lightWidgetsEnabled;
     }
 
     @Override
@@ -198,7 +211,7 @@ public class IBRSettingsModelImpl implements SettingsModel
 
     @Override
     @Deprecated
-    public boolean isD3GridEnabled()
+    public boolean is3DGridEnabled()
     {
         throw new UnsupportedOperationException();
     }
@@ -212,7 +225,7 @@ public class IBRSettingsModelImpl implements SettingsModel
 
     @Override
     @Deprecated
-    public void setD3GridEnabled(boolean d3GridEnabled)
+    public void set3DGridEnabled(boolean d3GridEnabled)
     {
         throw new UnsupportedOperationException();
     }
@@ -226,28 +239,28 @@ public class IBRSettingsModelImpl implements SettingsModel
 
     @Override
     @Deprecated
-    public boolean isVisibleCameraPose()
+    public boolean areVisibleCameraPosesEnabled()
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
     @Deprecated
-    public boolean isVisibleSavedCameraPose()
+    public boolean areVisibleSavedCameraPosesEnabled()
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
     @Deprecated
-    public void setVisibleCameraPose(boolean visibleCameraPose)
+    public void setVisibleCameraPosesEnabled(boolean visibleCameraPosesEnabled)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
     @Deprecated
-    public void setVisibleSavedCameraPose(boolean visibleSavedCameraPose)
+    public void setVisibleSavedCameraPosesEnabled(boolean visibleSavedCameraPosesEnabled)
     {
         throw new UnsupportedOperationException();
     }

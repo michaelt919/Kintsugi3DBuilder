@@ -2,14 +2,13 @@ package tetzlaff.models.impl;//Created by alexk on 7/21/2017.
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.models.ReadonlyEnvironmentMapModel;
-import tetzlaff.models.ReadonlyLightingModel;
-
-public abstract class LightingModelBase implements ReadonlyLightingModel 
+import tetzlaff.models.EnvironmentMapModel;
+import tetzlaff.models.ExtendedLightingModel;
+public abstract class LightingModelBase implements ExtendedLightingModel
 {
-    private final ReadonlyEnvironmentMapModel environmentMapModel;
+    private final EnvironmentMapModel environmentMapModel;
 
-    public LightingModelBase(ReadonlyEnvironmentMapModel environmentMapModel) 
+    protected LightingModelBase(EnvironmentMapModel environmentMapModel)
     {
         this.environmentMapModel = environmentMapModel;
     }
@@ -21,14 +20,32 @@ public abstract class LightingModelBase implements ReadonlyLightingModel
     }
 
     @Override
-    public boolean getEnvironmentMappingEnabled() 
+    public final void setAmbientLightColor(Vector3 ambientLightColor)
     {
-        return environmentMapModel.getEnvironmentMappingEnabled();
+        environmentMapModel.setAmbientLightColor(ambientLightColor);
+    }
+
+    @Override
+    public boolean isEnvironmentMappingEnabled()
+    {
+        return environmentMapModel.isEnvironmentMappingEnabled();
+    }
+
+    @Override
+    public void setEnvironmentMappingEnabled(boolean enabled)
+    {
+        environmentMapModel.setEnvironmentMappingEnabled(enabled);
     }
 
     @Override
     public Matrix4 getEnvironmentMapMatrix() 
     {
         return environmentMapModel.getEnvironmentMapMatrix();
+    }
+
+    @Override
+    public void setEnvironmentMapMatrix(Matrix4 environmentMapMatrix)
+    {
+        environmentMapModel.setEnvironmentMapMatrix(environmentMapMatrix);
     }
 }

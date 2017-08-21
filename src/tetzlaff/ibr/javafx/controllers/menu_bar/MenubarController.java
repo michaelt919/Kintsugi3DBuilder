@@ -93,8 +93,8 @@ public class MenubarController
                     case "PAN":
                         toolModel.setTool(ToolType.PAN);
                         break;
-                    case "LIGHT_DRAG":
-                        toolModel.setTool(ToolType.LIGHT_DRAG);
+                    case "LIGHT":
+                        toolModel.setTool(ToolType.LIGHT);
                         break;
                     case "CENTER_POINT":
                         toolModel.setTool(ToolType.CENTER_POINT);
@@ -117,8 +117,8 @@ public class MenubarController
                 case PAN:
                     data = "PAN";
                     break;
-                case LIGHT_DRAG:
-                    data = "LIGHT_DRAG";
+                case LIGHT:
+                    data = "LIGHT";
                     break;
                 case CENTER_POINT:
                     data = "CENTER_POINT";
@@ -137,28 +137,28 @@ public class MenubarController
                 switch ((String) n.getUserData())
                 {
                     case "Wireframe":
-                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.WIREFRAME);
+                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.WIREFRAME);
                         return;
                     case "Lambertian shaded":
-                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.LAMBERTIAN_SHADED);
+                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_SHADED);
                         return;
                     case "Phong shaded":
-                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.PHONG_SHADED);
+                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.PHONG_SHADED);
                         return;
                     case "Solid textured":
-                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.SOLID_TEXTURED);
+                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.SOLID_TEXTURED);
                         return;
                     case "Lambertian textured":
-                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.LAMBERTIAN_TEXTURED);
+                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_TEXTURED);
                         return;
                     case "Material shaded":
-                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.MATERIAL_SHADED);
+                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.MATERIAL_SHADED);
                         return;
                     case "Image-based rendering":
-                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.IMAGE_BASED_RENDERING);
+                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.IMAGE_BASED_RENDERING);
                         return;
                     case "None":
-                        JavaFXModels.getInstance().getSettingsModel().setRenderingMode(RenderingMode.NONE);
+                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.NONE);
                         return;
                 }
             }
@@ -168,7 +168,7 @@ public class MenubarController
     private void bindCheckMenuItems()
     {
         //value binding
-        d3GridCheckMenuItem.selectedProperty().bindBidirectional(getSettings().d3GridEnabledProperty());
+        d3GridCheckMenuItem.selectedProperty().bindBidirectional(getSettings().is3DGridEnabledProperty());
         compassCheckMenuItem.selectedProperty().bindBidirectional(getSettings().compassEnabledProperty());
         relightingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().relightingProperty());
         shadowsCheckMenuItem.selectedProperty().bindBidirectional(getSettings().shadowsProperty());

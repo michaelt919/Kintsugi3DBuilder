@@ -9,15 +9,11 @@ import javafx.scene.paint.Color;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.environment_map.EnvironmentSettings;
-import tetzlaff.models.ReadonlyEnvironmentMapModel;
+import tetzlaff.models.EnvironmentMapModel;
 
-public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
+public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
 {
     private ObservableValue<EnvironmentSettings> selected;
-
-    public JavaFXEnvironmentMapModel()
-    {
-    }
 
     public void setSelected(ObservableValue<EnvironmentSettings> selected)
     {
@@ -25,7 +21,7 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
         this.selected.addListener(settingChange);
     }
 
-    private boolean selectedExists()
+    private boolean doesSelectedExist()
     {
         return selected != null && selected.getValue() != null;
     }
@@ -33,7 +29,7 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
     @Override
     public Vector3 getAmbientLightColor()
     {
-        if (selectedExists())
+        if (doesSelectedExist())
         {
             if (selected.getValue().isEnvUseColorEnabled())
             {
@@ -44,7 +40,7 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
             {
                 if (selected.getValue().isEnvUseImageEnabled())
                 {
-                    return new Vector3(1f);
+                    return new Vector3(1.0f);
                 }
                 else
                 {
@@ -73,7 +69,7 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
                 e.printStackTrace();
             }
 
-            if (selectedExists())
+            if (doesSelectedExist())
             {
                 selected.getValue().setFirstEnvLoaded(true);
             }
@@ -95,29 +91,40 @@ public class JavaFXEnvironmentMapModel implements ReadonlyEnvironmentMapModel
     };
 
     @Override
-    public boolean getEnvironmentMappingEnabled()
+    public boolean isEnvironmentMappingEnabled()
     {
-        if (selectedExists())
-        {
-            return selected.getValue().isEnvUseImageEnabled();
-        }
-        else
-        {
-            return false;
-        }
+        return doesSelectedExist() && selected.getValue().isEnvUseImageEnabled();
     }
 
     @Override
     public Matrix4 getEnvironmentMapMatrix()
     {
-        if (selectedExists())
+        if (doesSelectedExist())
         {
-            double azmuth = selected.getValue().getEnvRotation();
-            return Matrix4.rotateY(Math.toRadians(azmuth));
+            double azimuth = selected.getValue().getEnvRotation();
+            return Matrix4.rotateY(Math.toRadians(azimuth));
         }
         else
         {
             return Matrix4.IDENTITY;
         }
+    }
+
+    @Override
+    public void setAmbientLightColor(Vector3 ambientLightColor)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setEnvironmentMappingEnabled(boolean enabled)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setEnvironmentMapMatrix(Matrix4 environmentMapMatrix)
+    {
+        throw new UnsupportedOperationException();
     }
 }
