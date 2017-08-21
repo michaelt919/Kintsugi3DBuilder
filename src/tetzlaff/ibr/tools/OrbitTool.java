@@ -2,49 +2,62 @@ package tetzlaff.ibr.tools;//Created by alexk on 7/24/2017.
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.MouseButtonState;
-import tetzlaff.gl.window.Window;
-import tetzlaff.gl.window.WindowSize;
+import tetzlaff.gl.window.*;
 import tetzlaff.models.ExtendedCameraModel;
-import tetzlaff.models.ReadonlyEnvironmentMapModel;
-import tetzlaff.models.ReadonlyLightingModel;
-import tetzlaff.models.SceneViewportModel;
 
-class OrbitTool extends AbstractTool
+final class OrbitTool implements Tool
 {
-    private final double orbitSensitivity = 1.0 * Math.PI; //todo: get from gui somehow
+    private static final double ORBIT_SENSITIVITY = 1.0 * Math.PI; //todo: get from gui somehow
     private double orbitSensitivityAdjusted = 1.0;
 
     private Matrix4 oldOrbitMatrix;
 
-    OrbitTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, SceneViewportModel sceneViewportModel)
+    private CursorPosition mouseStart;
+
+    private final ExtendedCameraModel cameraModel;
+
+    private static class Builder extends ToolBuilderBase<OrbitTool>
     {
-        super(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
+        @Override
+        public OrbitTool build()
+        {
+            return new OrbitTool(getCameraModel());
+        }
+    }
+
+    static ToolBuilder<OrbitTool> getBuilder()
+    {
+        return new Builder();
+    }
+
+    private OrbitTool(ExtendedCameraModel cameraModel)
+    {
+        this.cameraModel = cameraModel;
     }
 
     @Override
     public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
-        super.mouseButtonPressed(window, buttonIndex, mods);
-        if (buttonIndex == MB1)
+        if (buttonIndex == 0)
         {
+            this.mouseStart = window.getCursorPosition();
+
             oldOrbitMatrix = cameraModel.getOrbit();
             WindowSize windowSize = window.getWindowSize();
-            orbitSensitivityAdjusted = orbitSensitivity / Math.min(windowSize.width, windowSize.height);
+            orbitSensitivityAdjusted = ORBIT_SENSITIVITY / Math.min(windowSize.width, windowSize.height);
         }
     }
 
     @Override
-    public void cursorMoved(Window<?> window, double xpos, double ypos)
+    public void cursorMoved(Window<?> window, double xPos, double yPos)
     {
-        if (window.getMouseButtonState(MB1) == MouseButtonState.Pressed &&
-            !Double.isNaN(mouseStartX_MB1) && !Double.isNaN(mouseStartY_MB1) &&
-            (ypos != mouseStartY_MB1 || xpos != mouseStartX_MB1))
+        if (window.getMouseButtonState(0) == MouseButtonState.Pressed &&
+            !Double.isNaN(mouseStart.x) && !Double.isNaN(mouseStart.y) &&
+            (yPos != mouseStart.y || xPos != mouseStart.x))
         {
             Vector3 rotationVector = new Vector3(
-                (float) (ypos - mouseStartY_MB1),
-                (float) (xpos - mouseStartX_MB1),
+                (float) (yPos - mouseStart.y),
+                (float) (xPos - mouseStart.x),
                 0.0f);
 
             cameraModel.setOrbit(

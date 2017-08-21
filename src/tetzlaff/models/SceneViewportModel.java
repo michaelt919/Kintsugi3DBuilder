@@ -6,4 +6,6 @@ public interface SceneViewportModel
 {
     Object getObjectAtCoordinates(double x, double y);
     Vector3 get3DPositionAtCoordinates(double x, double y);
+    Vector3 getViewingDirection(double x, double y);
+    Vector3 getViewportCenter();
 }

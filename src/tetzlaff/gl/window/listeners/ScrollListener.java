@@ -2,7 +2,8 @@ package tetzlaff.gl.window.listeners;
 
 import tetzlaff.gl.window.Window;
 
-public interface ScrollListener 
+@FunctionalInterface
+public interface ScrollListener
 {
-    void scroll(Window<?> window, double xoffset, double yoffset);
+    void scroll(Window<?> window, double xOffset, double yOffset);
 }

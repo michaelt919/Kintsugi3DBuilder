@@ -1591,6 +1591,18 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 return sceneObjectNameList.get(pixelObjectIDs[index]);
             }
 
+
+            private Matrix4 getProjectionInverse()
+            {
+                Matrix4 projection = getProjectionMatrix(fboSize);
+                return  Matrix4.fromRows(
+                    new Vector4(1.0f / projection.get(0, 0), 0, 0, 0),
+                    new Vector4(0, 1.0f / projection.get(1, 1), 0, 0),
+                    new Vector4(0, 0, 0, -1),
+                    new Vector4(0, 0, 1.0f, projection.get(2, 2))
+                        .dividedBy(projection.get(2, 3)));
+            }
+
             @Override
             public Vector3 get3DPositionAtCoordinates(double x, double y)
             {
@@ -1599,21 +1611,41 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 int index = (int)(Math.round(fboSize.height * yRemapped) * fboSize.width + Math.round(fboSize.width * xRemapped));
 
-                Matrix4 projection = getProjectionMatrix(fboSize);
-                Matrix4 projectionInverse = Matrix4.fromRows(
-                        new Vector4(1.0f / projection.get(0, 0), 0, 0, 0),
-                        new Vector4(0, 1.0f / projection.get(1, 1), 0, 0),
-                        new Vector4(0, 0, 0, -1),
-                        new Vector4(0, 0, 1.0f, projection.get(2, 2))
-                            .dividedBy(projection.get(2, 3)));
+                Matrix4 projectionInverse = getProjectionInverse();
 
-                // Transform from screen space into world space
+                // Transform from screen space into camera space
                 Vector4 unscaledPosition = projectionInverse
                     .times(new Vector4((float)(2 * x - 1), (float)(1 - 2 * y), 2 * (float)(0x0000FFFF & pixelDepths[index]) / (float)0xFFFF - 1, 1.0f));
 
+                // Transform from camera space into world space.
                 return getPartialViewMatrix().quickInverse(0.01f)
                         .times(unscaledPosition.getXYZ().dividedBy(unscaledPosition.w).asPosition())
                         .getXYZ().dividedBy(getScale());
+            }
+
+            @Override
+            public Vector3 getViewingDirection(double x, double y)
+            {
+                Matrix4 projectionInverse = getProjectionInverse();
+
+                // Take the position the pixel would have at the far clipping plane.
+                // Transform from screen space into world space.
+                Vector4 unscaledPosition = projectionInverse
+                    .times(new Vector4((float)(2 * x - 1), (float)(1 - 2 * y), 1.0f, 1.0f));
+
+                // Transform from camera space into world space.
+                // Interpret the vector as the direction from the origin (0,0,0) for this pixel.
+                return getPartialViewMatrix().quickInverse(0.01f)
+                    .times(unscaledPosition.getXYZ().dividedBy(unscaledPosition.w).asDirection())
+                    .getXYZ().normalized();
+            }
+
+            @Override
+            public Vector3 getViewportCenter()
+            {
+                return getPartialViewMatrix().quickInverse(0.01f)
+                    .getColumn(3)
+                    .getXYZ().dividedBy(getScale());
             }
         };
     }
