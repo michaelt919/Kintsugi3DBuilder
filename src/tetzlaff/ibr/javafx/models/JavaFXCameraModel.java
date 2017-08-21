@@ -167,7 +167,7 @@ public class JavaFXCameraModel implements ExtendedCameraModel
      * @return true for locked
      */
     @Override
-    public boolean getLocked()
+    public boolean isLocked()
     {
         return cam().isLocked();
     }

@@ -112,9 +112,9 @@ public class IBRelight
         }
 
         @Override
-        public boolean getEnvironmentMappingEnabled()
+        public boolean isEnvironmentMappingEnabled()
         {
-            return hardcodedMode ? hardcodedLightingModel.getEnvironmentMappingEnabled() : normalLightingModel.getEnvironmentMappingEnabled();
+            return hardcodedMode ? hardcodedLightingModel.isEnvironmentMappingEnabled() : normalLightingModel.isEnvironmentMappingEnabled();
         }
 
         @Override
@@ -142,9 +142,9 @@ public class IBRelight
         }
 
         @Override
-        public void setLightCenter(int i, Vector3 lightTargetPoint)
+        public void setLightCenter(int i, Vector3 lightCenter)
         {
-            normalLightingModel.setLightCenter(i, lightTargetPoint);
+            normalLightingModel.setLightCenter(i, lightCenter);
         }
 
         @Override

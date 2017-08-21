@@ -40,7 +40,7 @@ public abstract class LightingModelBase implements LightingModel
     }
 
     @Override
-    public boolean getEnvironmentMappingEnabled()
+    public boolean isEnvironmentMappingEnabled()
     {
         return this.environmentMappingEnabled;
     }

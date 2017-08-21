@@ -17,10 +17,7 @@ import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.util.VertexGeometry;
-import tetzlaff.gl.vecmath.Matrix3;
-import tetzlaff.gl.vecmath.Matrix4;
-import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibr.IBRRenderable;
 import tetzlaff.ibr.LoadingMonitor;
 import tetzlaff.ibr.ReadonlySettingsModel;
@@ -53,7 +50,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Program<ContextType> lightProgram;
     private VertexBuffer<ContextType> rectangleVertices;
     private Texture2D<ContextType> lightTexture;
-    private Texture2D<ContextType> lightTargetTexture;
+    private Texture2D<ContextType> lightCenterTexture;
     private Drawable<ContextType> lightDrawable;
 
     private Program<ContextType> widgetProgram;
@@ -101,8 +98,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Program<ContextType> circleProgram;
     private Drawable<ContextType> circleDrawable;
 
-    IBRImplementation(String id, ContextType context, Program<ContextType> program,
-            Builder<ContextType> resourceBuilder)
+    IBRImplementation(String id, ContextType context, Program<ContextType> program, Builder<ContextType> resourceBuilder)
     {
         this.id = id;
         this.context = context;
@@ -133,38 +129,26 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         this.sceneObjectIDLookup.put("SceneObject", k);
         k++;
 
-        for (int i = 1; i <= 4; i++)
+        for (int i = 0; i < 4; i++)
         {
-            this.sceneObjectNameList.add("Light" + i);
-            this.sceneObjectIDLookup.put("Light" + i, k);
+            this.sceneObjectNameList.add("Light." + i);
+            this.sceneObjectIDLookup.put("Light." + i, k);
             k++;
 
-            this.sceneObjectNameList.add("Light" + i + ".Target");
-            this.sceneObjectIDLookup.put("Light" + i + ".Target", k);
+            this.sceneObjectNameList.add("Light." + i + ".Center");
+            this.sceneObjectIDLookup.put("Light." + i + ".Center", k);
             k++;
 
-            this.sceneObjectNameList.add("Light" + i + ".AzimuthUp");
-            this.sceneObjectIDLookup.put("Light" + i + ".AzimuthUp", k);
+            this.sceneObjectNameList.add("Light." + i + ".Azimuth");
+            this.sceneObjectIDLookup.put("Light." + i + ".Azimuth", k);
             k++;
 
-            this.sceneObjectNameList.add("Light" + i + ".AzimuthDown");
-            this.sceneObjectIDLookup.put("Light" + i + ".AzimuthDown", k);
+            this.sceneObjectNameList.add("Light." + i + ".Inclination");
+            this.sceneObjectIDLookup.put("Light." + i + ".Inclination", k);
             k++;
 
-            this.sceneObjectNameList.add("Light" + i + ".InclinationUp");
-            this.sceneObjectIDLookup.put("Light" + i + ".InclinationUp", k);
-            k++;
-
-            this.sceneObjectNameList.add("Light" + i + ".InclinationDown");
-            this.sceneObjectIDLookup.put("Light" + i + ".InclinationDown", k);
-            k++;
-
-            this.sceneObjectNameList.add("Light" + i + ".DistanceUp");
-            this.sceneObjectIDLookup.put("Light" + i + ".DistanceUp", k);
-            k++;
-
-            this.sceneObjectNameList.add("Light" + i + ".DistanceDown");
-            this.sceneObjectIDLookup.put("Light" + i + ".DistanceDown", k);
+            this.sceneObjectNameList.add("Light." + i + ".Distance");
+            this.sceneObjectIDLookup.put("Light." + i + ".Distance", k);
             k++;
         }
     }
@@ -345,7 +329,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         NativeVectorBuffer lightTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
 
-        NativeVectorBuffer lightTargetTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
+        NativeVectorBuffer lightCenterTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
 
         int k = 0;
         for (int i = 0; i < 64; i++)
@@ -361,7 +345,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 if (rSq <= 1.0)
                 {
-                    lightTargetTextureData.set(k, 0, 1.0f);
+                    lightCenterTextureData.set(k, 0, 1.0f);
                 }
 
                 k++;
@@ -377,9 +361,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     .createTexture();
         }
 
-        if (this.lightTargetTexture == null)
+        if (this.lightCenterTexture == null)
         {
-            this.lightTargetTexture = context.build2DColorTextureFromBuffer(64, 64, lightTargetTextureData)
+            this.lightCenterTexture = context.build2DColorTextureFromBuffer(64, 64, lightCenterTextureData)
                     .setInternalFormat(ColorFormat.R8)
                     .setLinearFilteringEnabled(true)
                     .setMipmapsEnabled(true)
@@ -529,7 +513,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void setupForDraw(Program<ContextType> program, Matrix4 view)
     {
-        this.resources.setupShaderProgram(program, this.getSettingsModel().areTexturesEnabled());
+        this.resources.setupShaderProgram(program, this.settings.areTexturesEnabled());
 
         if (!this.settings.isRelightingEnabled() && this.settings.getWeightMode() == ShadingParameterMode.UNIFORM)
         {
@@ -562,7 +546,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         program.setTexture("shadowMaps", shadowMaps);
 
-        if (this.environmentMap == null || !lightingModel.getEnvironmentMappingEnabled())
+        if (this.environmentMap == null || !lightingModel.isEnvironmentMappingEnabled())
         {
             program.setUniform("useEnvironmentTexture", false);
             program.setTexture("environmentMap", null);
@@ -586,9 +570,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         program.setUniform("ambientColor", lightingModel.getAmbientLightColor());
 
         this.clearColor = new Vector3(
-                (float)Math.pow(lightingModel.getAmbientLightColor().x, 1.0 / this.getSettingsModel().getGamma()),
-                (float)Math.pow(lightingModel.getAmbientLightColor().y, 1.0 / this.getSettingsModel().getGamma()),
-                (float)Math.pow(lightingModel.getAmbientLightColor().z, 1.0 / this.getSettingsModel().getGamma()));
+                (float)Math.pow(lightingModel.getAmbientLightColor().x, 1.0 / this.settings.getGamma()),
+                (float)Math.pow(lightingModel.getAmbientLightColor().y, 1.0 / this.settings.getGamma()),
+                (float)Math.pow(lightingModel.getAmbientLightColor().z, 1.0 / this.settings.getGamma()));
     }
 
     private void updateCentroidAndRadius()
@@ -699,7 +683,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         Vector3 lightPos = lightMatrix.quickInverse(0.001f).times(Vector4.ORIGIN).getXYZ();
 
-        program.setUniform("lightPosVirtual[" + lightIndex + "]", lightPos);
+        program.setUniform("lightPosVirtual[" + lightIndex + ']', lightPos);
 
         Vector3 controllerLightIntensity = lightingModel.getLightColor(lightIndex);
         float lightDistance = getLightMatrix(lightIndex).times(this.centroid.asPosition()).getXYZ().length();
@@ -709,9 +693,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         .times(resources.geometry.getCentroid().asPosition())
                     .getXYZ().length();
 
-        program.setUniform("lightIntensityVirtual[" + lightIndex + "]",
+        program.setUniform("lightIntensityVirtual[" + lightIndex + ']',
                 controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (scale * scale)));
-        program.setUniform("lightMatrixVirtual[" + lightIndex + "]", getLightProjection(lightIndex).times(lightMatrix));
+        program.setUniform("lightMatrixVirtual[" + lightIndex + ']', getLightProjection(lightIndex).times(lightMatrix));
     }
 
     private Matrix4 getPartialViewMatrix()
@@ -958,50 +942,70 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     mainDrawable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
                 }
 
-                if (this.getSettingsModel().isRelightingEnabled() && this.getSettingsModel().areVisibleLightsEnabled())
+                if (this.settings.isRelightingEnabled() && this.settings.areVisibleLightsEnabled())
                 {
+                    this.context.getState().disableDepthWrite();
+
                     // Draw lights
                     for (int i = 0; i < lightingModel.getLightCount(); i++)
                     {
-                        context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
-                        context.getState().disableDepthWrite();
+                        this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+                        this.context.getState().enableDepthTest();
 
-                        if (lightingModel.isLightWidgetEnabled(i))
+                        if (settings.areLightWidgetsEnabled() && lightingModel.isLightWidgetEnabled(i))
                         {
-                            this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".Target"));
+                            this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Center"));
 
-                            Vector3 lightTarget = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
+                            Vector3 lightCenter = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
 
                             this.lightProgram.setUniform("model_view",
-        //                            modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
-                                Matrix4.translate(lightTarget)
-                                    .times(Matrix4.scale(-lightTarget.z / 64.0f, -lightTarget.z / 64.0f, 1.0f)));
+                                //                            modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
+                                Matrix4.translate(lightCenter)
+                                    .times(Matrix4.scale(-lightCenter.z / 64.0f, -lightCenter.z / 64.0f, 1.0f)));
                             this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
 
-                            this.lightProgram.setTexture("lightTexture", this.lightTargetTexture);
+                            this.lightProgram.setTexture("lightTexture", this.lightCenterTexture);
 
                             this.context.getState().disableDepthTest();
-                            this.lightProgram.setUniform("color", new Vector3(0.5f,0,0.0f) /* dark red */);
+                            this.lightProgram.setUniform("color", new Vector3(0.5f, 0.5f, 0.5f));
                             this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
 
                             this.context.getState().enableDepthTest();
                             context.getState().disableAlphaBlending();
-                            this.lightProgram.setUniform("color", new Vector3(1.0f,0,1.0f) /* magenta */);
+                            this.lightProgram.setUniform("color", new Vector3(1.0f, 1.0f, 1.0f));
                             this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+                        }
 
-                            this.widgetProgram.setUniform("projection", this.getProjectionMatrix(size));
+                        if (lightingModel.isLightVisualizationEnabled(i))
+                        {
+                            this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+                            this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i));
+                            this.lightProgram.setUniform("color", lightingModel.getLightColor(i));
 
+                            Vector3 lightPosition = view.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3).getXYZ();
+
+                            this.lightProgram.setUniform("model_view",
+
+                                //                            modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
+                                Matrix4.translate(lightPosition)
+                                    .times(Matrix4.scale(-lightPosition.z / 16.0f, -lightPosition.z / 16.0f, 1.0f)));
+                            this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
+                            this.lightProgram.setTexture("lightTexture", this.lightTexture);
+                            this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+                        }
+
+                        if (settings.areLightWidgetsEnabled() && lightingModel.isLightWidgetEnabled(i))
+                        {
+                            Vector3 lightCenter = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
                             Matrix4 widgetTransformation = view.times(this.getLightMatrix(i).quickInverse(0.001f));
-
                             Vector3 lightPosition = widgetTransformation.getColumn(3).getXYZ();
-
-                            Vector3 lightDisplacement = lightPosition.minus(lightTarget);
+                            Vector3 lightDisplacement = lightPosition.minus(lightCenter);
                             float lightDistance = lightDisplacement.length();
 
                             this.context.getState().disableDepthTest();
                             context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
 
-                            Vector3 lineEndpoint = lightPosition.minus(lightTarget).times(0.5f / lightPosition.getXY().distance(lightTarget.getXY())).minus(lightTarget);
+                            Vector3 lineEndpoint = lightPosition.minus(lightCenter).times(0.5f / lightPosition.getXY().distance(lightCenter.getXY())).minus(lightCenter);
 
                             try
                             (
@@ -1011,7 +1015,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                             .createFromFloatArray(3, 2, new float[]
                                             {
                                                 lineEndpoint.x, lineEndpoint.y, lineEndpoint.z,
-                                                lightTarget.x, lightTarget.y, lightTarget.z
+                                                lightCenter.x, lightCenter.y, lightCenter.z
                                             }))
                             )
                             {
@@ -1019,7 +1023,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                 lineRenderable.addVertexBuffer("position", line);
                                 this.widgetProgram.setUniform("model_view", Matrix4.IDENTITY);
                                 this.widgetProgram.setUniform("color", new Vector4(1));
-                                this.widgetProgram.setUniform("objectID", 0);
+                                this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Distance"));
                                 lineRenderable.draw(PrimitiveMode.LINES, offscreenFBO);
                             }
 
@@ -1031,12 +1035,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                 Math.PI * -lightPosition.z / (32 * lightDistance * Math.sqrt(1 - cosineLightToPole * cosineLightToPole)));
 
                             Vector3 arrow1PositionR = Matrix3.rotateAxis(azimuthRotationAxis, azimuthArrowRotation)
-                                                        .times(lightPosition.minus(lightTarget))
-                                                        .plus(lightTarget);
+                                                        .times(lightPosition.minus(lightCenter))
+                                                        .plus(lightCenter);
 
                             Vector3 arrow1PositionL = Matrix3.rotateAxis(azimuthRotationAxis, -azimuthArrowRotation)
-                                                        .times(lightPosition.minus(lightTarget))
-                                                        .plus(lightTarget);
+                                                        .times(lightPosition.minus(lightCenter))
+                                                        .plus(lightCenter);
 
                             double inclinationArrowRotation = Math.min(Math.PI / 4,
                                 Math.PI * -lightPosition.z / (32 * lightDistance));
@@ -1044,14 +1048,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             Vector3 arrow2PositionR = widgetTransformation.getUpperLeft3x3()
                                                             .times(Matrix3.rotateX(-inclinationArrowRotation))
                                                             .times(widgetTransformation.quickInverse(0.01f).getUpperLeft3x3())
-                                                            .times(lightPosition.minus(lightTarget))
-                                                        .plus(lightTarget);
+                                                            .times(lightPosition.minus(lightCenter))
+                                                        .plus(lightCenter);
 
                             Vector3 arrow2PositionL = widgetTransformation.getUpperLeft3x3()
                                                             .times(Matrix3.rotateX(inclinationArrowRotation))
                                                             .times(widgetTransformation.quickInverse(0.01f).getUpperLeft3x3())
-                                                            .times(lightPosition.minus(lightTarget))
-                                                        .plus(lightTarget);
+                                                            .times(lightPosition.minus(lightCenter))
+                                                        .plus(lightCenter);
 
                             Vector4 arrow1RDirectionY =  Matrix3.rotateAxis(azimuthRotationAxis, azimuthArrowRotation)
                                                             .times(widgetTransformation.getUpperLeft3x3())
@@ -1098,6 +1102,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 //                            Vector3 arrow3PositionR = widgetTransformation.times(new Vector4(0,0,1,1)).getXYZ();
 //                            Vector3 arrow3PositionL = widgetTransformation.times(new Vector4(0,0,-1,1)).getXYZ();
 
+                            this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Azimuth"));
+
                             this.widgetProgram.setUniform("model_view",
                                 Matrix4.translate(arrow1PositionR)
                                     .times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
@@ -1106,7 +1112,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                             arrow1RDirectionY,
                                             new Vector4(0,0,1,0),
                                             new Vector4(0,0,0,1))));
-                            this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".AzimuthUp"));
 
                             this.context.getState().disableDepthTest();
                             context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
@@ -1126,7 +1131,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                             arrow1LDirectionY.negated(),
                                             new Vector4(0,0,1,0),
                                             new Vector4(0,0,0,1))));
-                            this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".AzimuthDown"));
 
                             this.context.getState().disableDepthTest();
                             context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
@@ -1138,6 +1142,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             this.widgetProgram.setUniform("color", new Vector4(1.0f, 1.0f, 1.0f, 1));
                             this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
 
+                            this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Inclination"));
 
                             this.widgetProgram.setUniform("model_view",
                                     Matrix4.translate(arrow2PositionR)
@@ -1147,7 +1152,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                                 arrow2RDirectionY,
                                                 new Vector4(0,0,1,0),
                                                 new Vector4(0,0,0,1))));
-                            this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".InclinationUp"));
 
                             this.context.getState().disableDepthTest();
                             context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
@@ -1167,7 +1171,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                             arrow2LDirectionY.negated(),
                                             new Vector4(0,0,1,0),
                                             new Vector4(0,0,0,1))));
-                            this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".InclinationDown"));
 
                             this.context.getState().disableDepthTest();
                             context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
@@ -1179,6 +1182,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             this.widgetProgram.setUniform("color", new Vector4(1.0f, 1.0f, 1.0f, 1));
                             this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
 
+                            this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Distance"));
 
                             this.widgetProgram.setUniform("model_view",
                                 Matrix4.translate(arrow3PositionR)
@@ -1188,7 +1192,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                             arrow3DirectionY,
                                             new Vector4(0,0,1,0),
                                             new Vector4(0,0,0,1))));
-                            this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".DistanceUp"));
 
                             this.context.getState().disableDepthTest();
                             context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
@@ -1208,7 +1211,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                             arrow3DirectionY.negated(),
                                             new Vector4(0,0,1,0),
                                             new Vector4(0,0,0,1))));
-                            this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1) + ".DistanceDown"));
 
                             this.context.getState().disableDepthTest();
                             context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
@@ -1220,7 +1222,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             this.widgetProgram.setUniform("color", new Vector4(1.0f, 1.0f, 1.0f, 1));
                             this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
 
-                            this.circleProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1)));
                             this.circleProgram.setUniform("color", new Vector3(1));
                             this.circleProgram.setUniform("projection", this.getProjectionMatrix(size));
                             this.circleProgram.setUniform("width", 0.02f);
@@ -1235,9 +1236,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             context.getState().disableBackFaceCulling();
 
                             // Azimuth circle
+                            this.circleProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Azimuth"));
                             this.circleProgram.setUniform("color", new Vector3(0.5f,0.5f,0.5f));
                             this.circleProgram.setUniform("model_view",
-                                Matrix4.translate(lightTarget.plus(azimuthRotationAxis.times(lightDisplacement.dot(azimuthRotationAxis))))
+                                Matrix4.translate(lightCenter.plus(azimuthRotationAxis.times(lightDisplacement.dot(azimuthRotationAxis))))
                                     .times(partialViewMatrix.getUpperLeft3x3().asMatrix4())
                                     .times(Matrix4.scale(2 * lightDistanceAtInclination))
                                     .times(Matrix4.rotateX(-Math.PI / 2)));
@@ -1246,9 +1248,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             Vector3 inclinationNormal = lightDisplacement.cross(azimuthRotationAxis).normalized();
 
                             // Inclination circle
+                            this.circleProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Inclination"));
                             this.circleProgram.setUniform("color", new Vector3(0.5f,0.5f,0.5f));
                             this.circleProgram.setUniform("model_view",
-                                Matrix4.translate(lightTarget)
+                                Matrix4.translate(lightCenter)
                                     .times(Matrix4.scale(2 * lightDistance))
                                     .times(
                                         Matrix3.fromColumns(
@@ -1261,26 +1264,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             context.getState().enableDepthTest();
                             context.getState().disableAlphaBlending();
                             context.getState().enableBackFaceCulling();
-                        }
-
-                        if (lightingModel.isLightVisualizationEnabled(i))
-                        {
-                            this.context.getState().enableDepthTest();
-                            context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
-
-                            this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light" + (i + 1)));
-                            this.lightProgram.setUniform("color", lightingModel.getLightColor(i));
-
-                            Vector3 lightPosition = view.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3).getXYZ();
-
-                            this.lightProgram.setUniform("model_view",
-
-        //                            modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
-                                Matrix4.translate(lightPosition)
-                                    .times(Matrix4.scale(-lightPosition.z / 16.0f, -lightPosition.z / 16.0f, 1.0f)));
-                            this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
-                            this.lightProgram.setTexture("lightTexture", this.lightTexture);
-                            this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
                         }
                     }
 
@@ -1646,6 +1629,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 return getPartialViewMatrix().quickInverse(0.01f)
                     .getColumn(3)
                     .getXYZ().dividedBy(getScale());
+            }
+
+            @Override
+            public Vector2 projectPoint(Vector3 point)
+            {
+                Vector4 projectedPoint = getProjectionMatrix(fboSize)
+                    .times(getPartialViewMatrix())
+                    .times(point.times(getScale()).asPosition());
+
+                return new Vector2(0.5f + projectedPoint.x / (2 * projectedPoint.w), 0.5f + projectedPoint.y / (2 * projectedPoint.w));
             }
         };
     }

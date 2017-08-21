@@ -6,6 +6,6 @@ import tetzlaff.gl.vecmath.Vector3;
 public interface ReadonlyEnvironmentMapModel
 {
     Vector3 getAmbientLightColor() ;
-    boolean getEnvironmentMappingEnabled();
+    boolean isEnvironmentMappingEnabled();
     Matrix4 getEnvironmentMapMatrix();
 }

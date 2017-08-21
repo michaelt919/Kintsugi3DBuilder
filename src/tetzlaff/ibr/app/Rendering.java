@@ -16,6 +16,7 @@ import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
+import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.LoadingModel;
 import tetzlaff.ibr.ReadonlySettingsModel;
@@ -106,7 +107,7 @@ public final class Rendering
 
             window.addMouseButtonPressListener((win, buttonIndex, mods) -> fpController.setEnabled(false));
 
-            ReadonlyLightingModel lightingModel = JavaFXModels.getInstance().getLightingModel();
+            ExtendedLightingModel lightingModel = JavaFXModels.getInstance().getLightingModel();
             ReadonlyEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
             ExtendedCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
             ReadonlySettingsModel settingsModel = JavaFXModels.getInstance().getSettingsModel();
@@ -144,6 +145,12 @@ public final class Rendering
                     public Vector3 getViewportCenter()
                     {
                         return rendererList.getSelectedItem().getSceneViewportModel().getViewportCenter();
+                    }
+
+                    @Override
+                    public Vector2 projectPoint(Vector3 point)
+                    {
+                        return rendererList.getSelectedItem().getSceneViewportModel().projectPoint(point);
                     }
                 })
                 .build();

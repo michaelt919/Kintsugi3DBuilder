@@ -11,7 +11,7 @@ public interface ReadonlyLightingModel
 
     Vector3 getLightColor(int i);
     Vector3 getAmbientLightColor();
-    boolean getEnvironmentMappingEnabled();
+    boolean isEnvironmentMappingEnabled();
     Matrix4 getEnvironmentMapMatrix();
     Matrix4 getLightMatrix(int i);
     Vector3 getLightCenter(int i);

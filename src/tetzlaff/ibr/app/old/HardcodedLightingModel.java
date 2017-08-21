@@ -76,7 +76,7 @@ public class HardcodedLightingModel implements CameraBasedLightingModel
     }
 
     @Override
-    public boolean getEnvironmentMappingEnabled()
+    public boolean isEnvironmentMappingEnabled()
     {
         return false;
     }
@@ -192,7 +192,7 @@ public class HardcodedLightingModel implements CameraBasedLightingModel
     }
 
     @Override
-    public void setLightCenter(int i, Vector3 lightTargetPoint)
+    public void setLightCenter(int i, Vector3 lightCenter)
     {
         // Ignore
     }

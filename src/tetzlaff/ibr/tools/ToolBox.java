@@ -11,8 +11,8 @@ import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.MouseButtonPressListener;
 import tetzlaff.gl.window.listeners.ScrollListener;
 import tetzlaff.models.ExtendedCameraModel;
+import tetzlaff.models.ExtendedLightingModel;
 import tetzlaff.models.ReadonlyEnvironmentMapModel;
-import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.SceneViewportModel;
 import tetzlaff.util.WindowBasedController;
 
@@ -50,29 +50,57 @@ public final class ToolBox
     @Override
     public void scroll(Window<?> window, double xOffset, double yOffset)
     {
-        selectedTool().scroll(window, xOffset, yOffset);
+        try
+        {
+            selectedTool().scroll(window, xOffset, yOffset);
+        }
+        catch(RuntimeException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void cursorMoved(Window<?> window, double xPos, double yPos)
     {
-        selectedTool().cursorMoved(window, xPos, yPos);
+        try
+        {
+            selectedTool().cursorMoved(window, xPos, yPos);
+        }
+        catch(RuntimeException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void keyPressed(Window<?> window, int keyCode, ModifierKeys mods)
     {
-        selectedTool().keyPressed(window, keyCode, mods);
+        try
+        {
+            selectedTool().keyPressed(window, keyCode, mods);
+        }
+        catch(RuntimeException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
-        selectedTool().mouseButtonPressed(window, buttonIndex, mods);
+        try
+        {
+            selectedTool().mouseButtonPressed(window, buttonIndex, mods);
+        }
+        catch(RuntimeException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     //builder
-    private ToolBox(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel,
+    private ToolBox(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ExtendedLightingModel lightingModel,
         ToolSelectionModel toolSelectionModel, SceneViewportModel sceneViewportModel)
     {
         this.toolModel = toolSelectionModel;
@@ -84,6 +112,7 @@ public final class ToolBox
         builders.put(ToolType.ORBIT, OrbitTool.getBuilder());
         builders.put(ToolType.PAN, PanTool.getBuilder());
         builders.put(ToolType.CENTER_POINT, CenterPointTool.getBuilder());
+        builders.put(ToolType.LIGHT, LightTool.getBuilder());
 
         for (Entry<ToolType, ToolBuilder<?>> entries : builders.entrySet())
         {
@@ -103,7 +132,7 @@ public final class ToolBox
         private ToolSelectionModel toolModel;
         private ExtendedCameraModel cameraModel;
         private ReadonlyEnvironmentMapModel environmentMapModel;
-        private ReadonlyLightingModel lightingModel;
+        private ExtendedLightingModel lightingModel;
         private SceneViewportModel sceneViewportModel;
 
         public static Builder create()
@@ -133,7 +162,7 @@ public final class ToolBox
             return this;
         }
 
-        public Builder setLightingModel(ReadonlyLightingModel lightingModel)
+        public Builder setLightingModel(ExtendedLightingModel lightingModel)
         {
             this.lightingModel = lightingModel;
             return this;

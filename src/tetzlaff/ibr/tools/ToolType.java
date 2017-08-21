@@ -5,6 +5,6 @@ public enum ToolType
     DOLLY,
     ORBIT,
     PAN,
-    LIGHT_DRAG,
+    LIGHT,
     CENTER_POINT
 }

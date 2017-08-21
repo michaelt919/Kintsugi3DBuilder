@@ -10,6 +10,6 @@ public interface ExtendedCameraModel extends CameraModel, ReadonlyExtendedCamera
     void setDistance(float distance);
     void setCenter(Vector3 offSet);
     void setTwist(float twist);
-    void setAzimuth(float azmuth);
+    void setAzimuth(float azimuth);
     void setInclination(float inclination);
 }

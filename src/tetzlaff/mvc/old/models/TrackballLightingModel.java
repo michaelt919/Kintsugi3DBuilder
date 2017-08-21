@@ -137,7 +137,7 @@ public class TrackballLightingModel extends LightingModelBase
     }
 
     @Override
-    public void setLightCenter(int i, Vector3 lightTargetPoint)
+    public void setLightCenter(int i, Vector3 lightCenter)
     {
         throw new UnsupportedOperationException();
     }
