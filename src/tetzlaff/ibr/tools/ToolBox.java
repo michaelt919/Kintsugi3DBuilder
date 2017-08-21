@@ -1,5 +1,9 @@
 package tetzlaff.ibr.tools;//Created by alexk on 7/24/2017.
 
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.listeners.CursorPositionListener;
@@ -12,16 +16,13 @@ import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.SceneViewportModel;
 import tetzlaff.util.WindowBasedController;
 
-public class ToolBox
+public final class ToolBox
     implements CursorPositionListener, MouseButtonPressListener, ScrollListener, KeyPressListener, WindowBasedController
 {
     private final ToolSelectionModel toolModel;
 
     //toolSelect
-    private final DollyTool dollyTool;
-    private final OrbitTool orbitTool;
-    private final PanTool panTool;
-    private final CenterPointTool centerPointTool;
+    private final Map<ToolType, Tool> tools;
 
     //window listener
     @Override
@@ -33,40 +34,35 @@ public class ToolBox
         window.addKeyPressListener(this);
     }
 
-    private AbstractTool selectedTool()
+    private Tool selectedTool()
     {
-        switch (toolModel.getTool())
+        if (tools.containsKey(toolModel.getTool()))
         {
-            case DOLLY:
-                return dollyTool;
-            case ORBIT:
-                return orbitTool;
-            case PAN:
-                return panTool;
-            case CENTER_POINT:
-                return centerPointTool;
-            default:
-                return orbitTool;
+            return tools.get(toolModel.getTool());
+        }
+        else
+        {
+            return tools.get(ToolType.ORBIT);
         }
     }
 
     //pass methods to selected tool
     @Override
-    public void scroll(Window<?> window, double xoffset, double yoffset)
+    public void scroll(Window<?> window, double xOffset, double yOffset)
     {
-        selectedTool().scroll(window, xoffset, yoffset);
+        selectedTool().scroll(window, xOffset, yOffset);
     }
 
     @Override
-    public void cursorMoved(Window<?> window, double xpos, double ypos)
+    public void cursorMoved(Window<?> window, double xPos, double yPos)
     {
-        selectedTool().cursorMoved(window, xpos, ypos);
+        selectedTool().cursorMoved(window, xPos, yPos);
     }
 
     @Override
-    public void keyPressed(Window<?> window, int keycode, ModifierKeys mods)
+    public void keyPressed(Window<?> window, int keyCode, ModifierKeys mods)
     {
-        selectedTool().keyPressed(window, keycode, mods);
+        selectedTool().keyPressed(window, keyCode, mods);
     }
 
     @Override
@@ -77,14 +73,29 @@ public class ToolBox
 
     //builder
     private ToolBox(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel,
-        ToolSelectionModel toolModel, SceneViewportModel sceneViewportModel)
+        ToolSelectionModel toolSelectionModel, SceneViewportModel sceneViewportModel)
     {
-        this.toolModel = toolModel;
+        this.toolModel = toolSelectionModel;
 
-        dollyTool = new DollyTool(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
-        orbitTool = new OrbitTool(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
-        panTool = new PanTool(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
-        centerPointTool = new CenterPointTool(cameraModel, environmentMapModel, lightingModel, toolModel, sceneViewportModel);
+        this.tools = new EnumMap<>(ToolType.class);
+
+        Map<ToolType, ToolBuilder<?>> builders = new EnumMap<>(ToolType.class);
+        builders.put(ToolType.DOLLY, DollyTool.getBuilder());
+        builders.put(ToolType.ORBIT, OrbitTool.getBuilder());
+        builders.put(ToolType.PAN, PanTool.getBuilder());
+        builders.put(ToolType.CENTER_POINT, CenterPointTool.getBuilder());
+
+        for (Entry<ToolType, ToolBuilder<?>> entries : builders.entrySet())
+        {
+            tools.put(entries.getKey(),
+                entries.getValue()
+                    .setCameraModel(cameraModel)
+                    .setEnvironmentMapModel(environmentMapModel)
+                    .setLightingModel(lightingModel)
+                    .setSceneViewportModel(sceneViewportModel)
+                    .setToolSelectionModel(toolSelectionModel)
+                    .build());
+        }
     }
 
     public static final class Builder

@@ -126,18 +126,18 @@ public class TrackballController implements CameraController, CursorPositionList
     }
 
     @Override
-    public void cursorMoved(Window<?> window, double xpos, double ypos)
+    public void cursorMoved(Window<?> window, double xPos, double yPos)
     {
         if (enabled)
         {
             if (this.primaryButtonIndex >= 0 && window.getMouseButtonState(primaryButtonIndex) == MouseButtonState.Pressed)
             {
-                if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale) && (xpos != this.startX || ypos != this.startY))
+                if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale) && (xPos != this.startX || yPos != this.startY))
                 {
                     Vector3 rotationVector =
                         new Vector3(
-                            (float)(ypos - this.startY),
-                            (float)(xpos - this.startX),
+                            (float)(yPos - this.startY),
+                            (float)(xPos - this.startX),
                             0.0f
                         );
 
@@ -154,21 +154,21 @@ public class TrackballController implements CameraController, CursorPositionList
                 if (!Float.isNaN(startX) && !Float.isNaN(startY) && !Float.isNaN(mouseScale) && !Float.isNaN(mouseScale))
                 {
                     this.model.setTrackballMatrix(
-                        Matrix4.rotateZ(this.mouseScale * (xpos - this.startX) * this.inversion)
+                        Matrix4.rotateZ(this.mouseScale * (xPos - this.startX) * this.inversion)
                             .times(this.oldTrackballMatrix));
 
-                    this.model.setLogScale(this.oldLogScale + this.mouseScale * (float)(ypos - this.startY));
+                    this.model.setLogScale(this.oldLogScale + this.mouseScale * (float)(yPos - this.startY));
                 }
             }
         }
     }
 
     @Override
-    public void scroll(Window<?> window, double xoffset, double yoffset)
+    public void scroll(Window<?> window, double xOffset, double yOffset)
     {
         if (enabled)
         {
-            model.setLogScale(model.getLogScale() + sensitivity / 256.0f * (float) yoffset);
+            model.setLogScale(model.getLogScale() + sensitivity / 256.0f * (float) yOffset);
         }
     }
 

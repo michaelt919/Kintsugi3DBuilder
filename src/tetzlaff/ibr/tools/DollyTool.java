@@ -1,47 +1,60 @@
 package tetzlaff.ibr.tools;//Created by alexk on 7/24/2017.
 
-import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.MouseButtonState;
-import tetzlaff.gl.window.Window;
-import tetzlaff.gl.window.WindowSize;
+import tetzlaff.gl.window.*;
 import tetzlaff.models.ExtendedCameraModel;
-import tetzlaff.models.ReadonlyEnvironmentMapModel;
-import tetzlaff.models.ReadonlyLightingModel;
-import tetzlaff.models.SceneViewportModel;
 
-class DollyTool extends AbstractTool
+final class DollyTool implements Tool
 {
-    private final double dollySensitivity = Math.PI;
+    private static final double DOLLY_SENSITIVITY = Math.PI;
     private double dollySensitivityAdjusted;
 
     private float oldLog10Distance;
     private float oldTwist;
 
-    DollyTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ReadonlyLightingModel lightingModel, SceneViewportModel sceneViewportModel)
+    private CursorPosition mouseStart;
+
+    private final ExtendedCameraModel cameraModel;
+
+    private static class Builder extends ToolBuilderBase<DollyTool>
     {
-        super(cameraModel, environmentMapModel, lightingModel, sceneViewportModel);
+        @Override
+        public DollyTool build()
+        {
+            return new DollyTool(getCameraModel());
+        }
+    }
+
+    static ToolBuilder<DollyTool> getBuilder()
+    {
+        return new Builder();
+    }
+
+    private DollyTool(ExtendedCameraModel cameraModel)
+    {
+        this.cameraModel = cameraModel;
     }
 
     @Override
     public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
-        super.mouseButtonPressed(window, buttonIndex, mods);
-        if (buttonIndex == MB1)
+        if (buttonIndex == 0)
         {
+            this.mouseStart = window.getCursorPosition();
+
             WindowSize windowSize = window.getWindowSize();
             oldTwist = cameraModel.getTwist();
             oldLog10Distance = cameraModel.getLog10Distance();
-            dollySensitivityAdjusted = dollySensitivity / Math.min(windowSize.width, windowSize.height);
+            dollySensitivityAdjusted = DOLLY_SENSITIVITY / Math.min(windowSize.width, windowSize.height);
         }
     }
 
     @Override
-    public void cursorMoved(Window<?> window, double xpos, double ypos)
+    public void cursorMoved(Window<?> window, double xPos, double yPos)
     {
-        if (window.getMouseButtonState(MB1) == MouseButtonState.Pressed && xpos != mouseStartX_MB1 && ypos != mouseStartY_MB1)
+        if (window.getMouseButtonState(0) == MouseButtonState.Pressed && xPos != this.mouseStart.x && yPos != this.mouseStart.y)
         {
-            cameraModel.setTwist(oldTwist + (float) Math.toDegrees((xpos - mouseStartX_MB1) * dollySensitivityAdjusted));
-            cameraModel.setLog10Distance((float) (oldLog10Distance + 0.5 * dollySensitivityAdjusted * (mouseStartY_MB1 - ypos)));
+            cameraModel.setTwist(oldTwist + (float) Math.toDegrees((xPos - this.mouseStart.x) * dollySensitivityAdjusted));
+            cameraModel.setLog10Distance((float) (oldLog10Distance + 0.5 * dollySensitivityAdjusted * (this.mouseStart.y - yPos)));
         }
     }
 }

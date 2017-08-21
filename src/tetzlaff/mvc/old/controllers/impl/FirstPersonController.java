@@ -81,43 +81,43 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     }
 
     @Override
-    public void keyPressed(Window<?> window, int keycode, ModifierKeys mods)
+    public void keyPressed(Window<?> window, int keyCode, ModifierKeys mods)
     {
         if (enabled)
         {
-            if (keycode == KeyCodes.W)
+            if (keyCode == KeyCodes.W)
             {
                 velocity = velocity.plus(new Vector3(0.0f, 0.0f, -1.0f));
             }
 
-            if (keycode == KeyCodes.S)
+            if (keyCode == KeyCodes.S)
             {
                 velocity = velocity.plus(new Vector3(0.0f, 0.0f, 1.0f));
             }
 
-            if (keycode == KeyCodes.D)
+            if (keyCode == KeyCodes.D)
             {
                 velocity = velocity.plus(new Vector3(1.0f, 0.0f, 0.0f));
             }
 
-            if (keycode == KeyCodes.A)
+            if (keyCode == KeyCodes.A)
             {
                 velocity = velocity.plus(new Vector3(-1.0f, 0.0f, 0.0f));
             }
 
-            if (keycode == KeyCodes.E)
+            if (keyCode == KeyCodes.E)
             {
                 velocity = velocity.plus(new Vector3(0.0f, 1.0f, 0.0f));
             }
 
-            if (keycode == KeyCodes.Q)
+            if (keyCode == KeyCodes.Q)
             {
                 velocity = velocity.plus(new Vector3(0.0f, -1.0f, 0.0f));
             }
         }
 
         // Reset regardless of if enabled
-        if (keycode == KeyCodes.X)
+        if (keyCode == KeyCodes.X)
         {
             theta = 0.0f;
             phi = 0.0f;
@@ -129,36 +129,36 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     }
 
     @Override
-    public void keyReleased(Window<?> window, int keycode, ModifierKeys mods)
+    public void keyReleased(Window<?> window, int keyCode, ModifierKeys mods)
     {
         if (enabled)
         {
-            if (keycode == KeyCodes.W)
+            if (keyCode == KeyCodes.W)
             {
                 velocity = velocity.minus(new Vector3(0.0f, 0.0f, -1.0f));
             }
 
-            if (keycode == KeyCodes.S)
+            if (keyCode == KeyCodes.S)
             {
                 velocity = velocity.minus(new Vector3(0.0f, 0.0f, 1.0f));
             }
 
-            if (keycode == KeyCodes.D)
+            if (keyCode == KeyCodes.D)
             {
                 velocity = velocity.minus(new Vector3(1.0f, 0.0f, 0.0f));
             }
 
-            if (keycode == KeyCodes.A)
+            if (keyCode == KeyCodes.A)
             {
                 velocity = velocity.minus(new Vector3(-1.0f, 0.0f, 0.0f));
             }
 
-            if (keycode == KeyCodes.E)
+            if (keyCode == KeyCodes.E)
             {
                 velocity = velocity.minus(new Vector3(0.0f, 1.0f, 0.0f));
             }
 
-            if (keycode == KeyCodes.Q)
+            if (keyCode == KeyCodes.Q)
             {
                 velocity = velocity.minus(new Vector3(0.0f, -1.0f, 0.0f));
             }
@@ -168,7 +168,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     }
 
     @Override
-    public void cursorMoved(Window<?> window, double xpos, double ypos)
+    public void cursorMoved(Window<?> window, double xPos, double yPos)
     {
         if (enabled)
         {
@@ -176,8 +176,8 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
 
             if (!Double.isNaN(lastCursorX) && !Double.isNaN(lastCursorY))
             {
-                theta += (ignoreSensitivity ? 1.0f : sensitivity) * 2 * Math.PI * (xpos - lastCursorX) / size.width;
-                phi += (ignoreSensitivity ? 1.0f : sensitivity) * Math.PI * (ypos - lastCursorY) / size.height;
+                theta += (ignoreSensitivity ? 1.0f : sensitivity) * 2 * Math.PI * (xPos - lastCursorX) / size.width;
+                phi += (ignoreSensitivity ? 1.0f : sensitivity) * Math.PI * (yPos - lastCursorY) / size.height;
 
                 if (theta < 0.0f)
                 {
@@ -200,8 +200,8 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
                 }
             }
 
-            lastCursorX = xpos;
-            lastCursorY = ypos;
+            lastCursorX = xPos;
+            lastCursorY = yPos;
         }
     }
 

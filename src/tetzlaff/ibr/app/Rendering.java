@@ -133,6 +133,18 @@ public final class Rendering
                     {
                         return rendererList.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
                     }
+
+                    @Override
+                    public Vector3 getViewingDirection(double x, double y)
+                    {
+                        return rendererList.getSelectedItem().getSceneViewportModel().getViewingDirection(x, y);
+                    }
+
+                    @Override
+                    public Vector3 getViewportCenter()
+                    {
+                        return rendererList.getSelectedItem().getSceneViewportModel().getViewportCenter();
+                    }
                 })
                 .build();
 

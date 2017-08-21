@@ -74,11 +74,11 @@ public class TrackballLightController implements LightController, KeyPressListen
     }
 
     @Override
-    public void keyPressed(Window<?> window, int keycode, ModifierKeys mods)
+    public void keyPressed(Window<?> window, int keyCode, ModifierKeys mods)
     {
-        if (keycode >= KeyCodes.ONE && keycode <= KeyCodes.FOUR)
+        if (keyCode >= KeyCodes.ONE && keyCode <= KeyCodes.FOUR)
         {
-            int selection = keycode - KeyCodes.ONE;
+            int selection = keyCode - KeyCodes.ONE;
 
             if (mods.getAltModifier())
             {
@@ -99,11 +99,11 @@ public class TrackballLightController implements LightController, KeyPressListen
     }
 
     @Override
-    public void keyReleased(Window<?> window, int keycode, ModifierKeys mods)
+    public void keyReleased(Window<?> window, int keyCode, ModifierKeys mods)
     {
-        if (keycode >= KeyCodes.ONE && keycode <= KeyCodes.FOUR)
+        if (keyCode >= KeyCodes.ONE && keyCode <= KeyCodes.FOUR)
         {
-            int selection = keycode - KeyCodes.ONE;
+            int selection = keyCode - KeyCodes.ONE;
 
             if (selection < trackballs.length)
             {
