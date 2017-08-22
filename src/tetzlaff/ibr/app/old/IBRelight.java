@@ -27,6 +27,7 @@ import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.models.CameraModel;
+import tetzlaff.models.LightWidgetModel;
 import tetzlaff.models.LightingModel;
 import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.impl.BasicCameraModel;
@@ -130,9 +131,15 @@ public class IBRelight
         }
 
         @Override
-        public boolean isLightWidgetEnabled(int index)
+        public boolean areLightWidgetsEthereal()
         {
-            return hardcodedMode ? hardcodedLightingModel.isLightWidgetEnabled(index) : normalLightingModel.isLightWidgetEnabled(index);
+            return hardcodedMode ? hardcodedLightingModel.areLightWidgetsEthereal() : normalLightingModel.areLightWidgetsEthereal();
+        }
+
+        @Override
+        public LightWidgetModel getLightWidgetModel(int index)
+        {
+            return hardcodedMode ? hardcodedLightingModel.getLightWidgetModel(index) : normalLightingModel.getLightWidgetModel(index);
         }
 
         @Override
@@ -145,6 +152,12 @@ public class IBRelight
         public void setLightCenter(int i, Vector3 lightCenter)
         {
             normalLightingModel.setLightCenter(i, lightCenter);
+        }
+
+        @Override
+        public void setLightWidgetsEthereal(boolean lightWidgetsEthereal)
+        {
+            normalLightingModel.setLightWidgetsEthereal(lightWidgetsEthereal);
         }
 
         @Override

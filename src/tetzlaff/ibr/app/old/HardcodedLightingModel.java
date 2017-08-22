@@ -9,6 +9,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.rendering.CameraBasedLightingModel;
+import tetzlaff.models.LightWidgetModel;
 import tetzlaff.models.ReadonlyCameraModel;
 
 public class HardcodedLightingModel implements CameraBasedLightingModel
@@ -26,6 +27,117 @@ public class HardcodedLightingModel implements CameraBasedLightingModel
         this.cameraModel = cameraModel;
     }
 
+    private static class DummyLightWidgetModel implements LightWidgetModel
+    {
+        @Override
+        public boolean areWidgetsEnabled()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isAzimuthWidgetVisible()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isAzimuthWidgetSelected()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isInclinationWidgetVisible()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isInclinationWidgetSelected()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isDistanceWidgetVisible()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isDistanceWidgetSelected()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isCenterWidgetVisible()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isCenterWidgetSelected()
+        {
+            return false;
+        }
+
+        @Override
+        public void setWidgetsEnabled(boolean widgetsEnabled)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setAzimuthWidgetVisible(boolean azimuthWidgetVisible)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setAzimuthWidgetSelected(boolean azimuthWidgetSelected)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setInclinationWidgetVisible(boolean inclinationWidgetVisible)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setInclinationWidgetSelected(boolean inclinationWidgetSelected)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setDistanceWidgetVisible(boolean distanceWidgetVisible)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setDistanceWidgetSelected(boolean distanceWidgetSelected)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setCenterWidgetVisible(boolean centerWidgetVisible)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setCenterWidgetSelected(boolean centerWidgetSelected)
+        {
+            throw new UnsupportedOperationException();
+        }
+    }
+
     @Override
     public int getLightCount()
     {
@@ -33,15 +145,21 @@ public class HardcodedLightingModel implements CameraBasedLightingModel
     }
 
     @Override
-    public boolean isLightVisualizationEnabled(int i)
+    public boolean isLightVisualizationEnabled(int index)
     {
-        return i != 0;
+        return index != 0;
     }
 
     @Override
-    public boolean isLightWidgetEnabled(int i)
+    public boolean areLightWidgetsEthereal()
     {
-        return false;
+        return true;
+    }
+
+    @Override
+    public LightWidgetModel getLightWidgetModel(int index)
+    {
+        return new DummyLightWidgetModel();
     }
 
     @Override
@@ -195,6 +313,12 @@ public class HardcodedLightingModel implements CameraBasedLightingModel
     public void setLightCenter(int i, Vector3 lightCenter)
     {
         // Ignore
+    }
+
+    @Override
+    public void setLightWidgetsEthereal(boolean lightWidgetsEthereal)
+    {
+        throw new UnsupportedOperationException();
     }
 
     @Override

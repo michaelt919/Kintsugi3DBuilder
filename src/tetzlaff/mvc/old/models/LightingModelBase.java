@@ -5,7 +5,7 @@ import tetzlaff.models.LightingModel;
 
 public abstract class LightingModelBase implements LightingModel
 {
-    Vector3 ambientLightColor;
+    private Vector3 ambientLightColor;
     private boolean environmentMappingEnabled;
     private final Vector3[] lightColors;
 

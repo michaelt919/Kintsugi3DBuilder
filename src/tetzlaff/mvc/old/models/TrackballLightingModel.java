@@ -2,6 +2,7 @@ package tetzlaff.mvc.old.models;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.models.LightWidgetModel;
 import tetzlaff.models.ReadonlyCameraModel;
 
 public class TrackballLightingModel extends LightingModelBase
@@ -30,6 +31,117 @@ public class TrackballLightingModel extends LightingModelBase
             TrackballModel newTrackball = new TrackballModel();
             trackballModels[i] = newTrackball;
             lightTrackballEnabled[i] = false;
+        }
+    }
+
+    private static class DummyLightWidgetModel implements LightWidgetModel
+    {
+        @Override
+        public boolean areWidgetsEnabled()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isAzimuthWidgetVisible()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isAzimuthWidgetSelected()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isInclinationWidgetVisible()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isInclinationWidgetSelected()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isDistanceWidgetVisible()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isDistanceWidgetSelected()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isCenterWidgetVisible()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isCenterWidgetSelected()
+        {
+            return false;
+        }
+
+        @Override
+        public void setWidgetsEnabled(boolean widgetsEnabled)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setAzimuthWidgetVisible(boolean azimuthWidgetVisible)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setAzimuthWidgetSelected(boolean azimuthWidgetSelected)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setInclinationWidgetVisible(boolean inclinationWidgetVisible)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setInclinationWidgetSelected(boolean inclinationWidgetSelected)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setDistanceWidgetVisible(boolean distanceWidgetVisible)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setDistanceWidgetSelected(boolean distanceWidgetSelected)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setCenterWidgetVisible(boolean centerWidgetVisible)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void setCenterWidgetSelected(boolean centerWidgetSelected)
+        {
+            throw new UnsupportedOperationException();
         }
     }
 
@@ -95,15 +207,21 @@ public class TrackballLightingModel extends LightingModelBase
     }
 
     @Override
-    public boolean isLightVisualizationEnabled(int i)
+    public boolean isLightVisualizationEnabled(int index)
     {
-        return i != this.selectedLightIndex;
+        return index != this.selectedLightIndex;
     }
 
     @Override
-    public boolean isLightWidgetEnabled(int i)
+    public boolean areLightWidgetsEthereal()
     {
-        return i == 0;
+        return true;
+    }
+
+    @Override
+    public LightWidgetModel getLightWidgetModel(int index)
+    {
+        return new DummyLightWidgetModel();
     }
 
     @Override
@@ -138,6 +256,12 @@ public class TrackballLightingModel extends LightingModelBase
 
     @Override
     public void setLightCenter(int i, Vector3 lightCenter)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setLightWidgetsEthereal(boolean lightWidgetsEthereal)
     {
         throw new UnsupportedOperationException();
     }
