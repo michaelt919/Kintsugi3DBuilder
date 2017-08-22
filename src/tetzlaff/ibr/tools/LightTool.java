@@ -1,5 +1,6 @@
 package tetzlaff.ibr.tools;
 
+import java.time.LocalTime;
 import java.util.function.Consumer;
 
 import tetzlaff.gl.vecmath.DoubleVector2;
@@ -109,6 +110,8 @@ final class LightTool implements Tool
         {
             orbitFallbackTool.mouseButtonPressed(window, buttonIndex, mods);
         }
+
+        System.out.println("Click: " + LocalTime.now());
     }
 
     private float getAzimuthAtWindowPosition(DoubleVector2 normalizedPosition)
@@ -117,13 +120,17 @@ final class LightTool implements Tool
         Vector3 cursorDirection = sceneViewportModel.getViewingDirection(normalizedPosition.x, normalizedPosition.y);
 
         Vector3 azimuthCenter = lightingModel.getLightCenter(lightIndex)
-            .plus(new Vector3(0, (float)Math.sin(lightingModel.getLight(lightIndex).getInclination()), 0));
+            .plus(new Vector3(
+                0,
+                lightingModel.getLight(lightIndex).getDistance() *
+                    (float)Math.sin(lightingModel.getLight(lightIndex).getInclination() * Math.PI / 180),
+                0));
 
         float t = (azimuthCenter.y - viewportCenter.y) / cursorDirection.y;
         Vector3 newAzimuthDirection = viewportCenter.plus(cursorDirection.times(t)).minus(azimuthCenter);
         Vector2 newAzimuthDirectionNormalized = new Vector2(newAzimuthDirection.x, newAzimuthDirection.z).normalized();
 
-        return (float)Math.atan2(newAzimuthDirectionNormalized.y, newAzimuthDirectionNormalized.x);
+        return (float)Math.atan2(-newAzimuthDirectionNormalized.x, newAzimuthDirectionNormalized.y);
     }
 
     private float getInclinationAtWindowPosition(DoubleVector2 normalizedPosition)
@@ -135,14 +142,15 @@ final class LightTool implements Tool
         Vector3 lightDisplacement = lightingModel.getLightMatrix(lightIndex).quickInverse(0.01f).getColumn(3).getXYZ()
                                     .minus(lightingModel.getLightCenter(lightIndex));
 
-        Vector3 lightDirectionProjected = new Vector3(lightDisplacement.x, 0, lightDisplacement.z).normalized();
+        double azimuth = lightingModel.getLight(lightIndex).getAzimuth() * Math.PI / 180;
+
+        Vector3 lightDirectionProjected = new Vector3(-(float)Math.sin(azimuth), 0, (float)Math.cos(azimuth));
         Vector3 inclinationAxis = new Vector3(-lightDisplacement.z, 0, lightDisplacement.x).normalized();
 
         float t = lightCenter.minus(viewportCenter).dot(inclinationAxis) / cursorDirection.dot(inclinationAxis);
         Vector3 newLightDirection = viewportCenter.plus(cursorDirection.times(t)).minus(lightCenter).normalized();
 
-        return newLightDirection.dot(lightDirectionProjected) < 0.0f ? Math.signum(newLightDirection.y) * (float)Math.PI / 2
-            : (float)(Math.acos(newLightDirection.y) - Math.PI / 2);
+        return (float)Math.atan2(newLightDirection.y, newLightDirection.dot(lightDirectionProjected));
     }
 
     private float getDistanceAtWindowPosition(DoubleVector2 normalizedPosition)
@@ -166,7 +174,8 @@ final class LightTool implements Tool
 
     private void updateInclination(DoubleVector2 normalizedPosition)
     {
-        lightingModel.getLight(lightIndex).setInclination((inclinationOffset + getInclinationAtWindowPosition(normalizedPosition)) * 180 / (float)Math.PI);
+        lightingModel.getLight(lightIndex).setInclination(Math.max(-90, Math.min(90,
+            (inclinationOffset + getInclinationAtWindowPosition(normalizedPosition)) * 180 / (float)Math.PI)));
     }
 
     private void updateDistance(DoubleVector2 normalizedPosition)
@@ -178,7 +187,13 @@ final class LightTool implements Tool
     {
         if ("IBRObject".equals(sceneViewportModel.getObjectAtCoordinates(normalizedPosition.x, normalizedPosition.y)))
         {
+            System.out.println("Valid object");
+
             lightingModel.setLightCenter(lightIndex, sceneViewportModel.get3DPositionAtCoordinates(normalizedPosition.x, normalizedPosition.y));
+        }
+        else
+        {
+            System.out.println("INVALID OBJECT");
         }
     }
 
@@ -191,8 +206,12 @@ final class LightTool implements Tool
         }
         else if (window.getMouseButtonState(0) == MouseButtonState.Pressed)
         {
+            System.out.println("Move: " + LocalTime.now());
+
             WindowSize windowSize = window.getWindowSize();
             updateFunction.accept(new DoubleVector2(xPos / windowSize.width, yPos / windowSize.height));
+
+            System.out.println("Update finished: " + LocalTime.now());
         }
     }
 }
