@@ -734,15 +734,18 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 .times(multiTransformationModel.get(modelInstance));
     }
 
+    private float getVerticalFieldOfView()
+    {
+        return resources.viewSet.getCameraProjection(
+                resources.viewSet.getCameraProjectionIndex(resources.viewSet.getPrimaryViewIndex()))
+            .getVerticalFieldOfView();
+    }
+
     private Matrix4 getProjectionMatrix(FramebufferSize size)
     {
         float scale = getScale();
 
-        return Matrix4.perspective(
-                //(float)(1.0),
-                resources.viewSet.getCameraProjection(
-                        resources.viewSet.getCameraProjectionIndex(resources.viewSet.getPrimaryViewIndex()))
-                    .getVerticalFieldOfView(),
+        return Matrix4.perspective(getVerticalFieldOfView(),
                 (float)size.width / (float)size.height,
                 0.01f * scale, 100.0f * scale);
     }
@@ -959,9 +962,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             Vector3 lightCenter = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
 
                             this.lightProgram.setUniform("model_view",
-                                //                            modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
                                 Matrix4.translate(lightCenter)
-                                    .times(Matrix4.scale(-lightCenter.z / 64.0f, -lightCenter.z / 64.0f, 1.0f)));
+                                    .times(Matrix4.scale(
+                                        -lightCenter.z * getVerticalFieldOfView() / 64.0f,
+                                        -lightCenter.z * getVerticalFieldOfView() / 64.0f,
+                                        1.0f)));
                             this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
 
                             this.lightProgram.setTexture("lightTexture", this.lightCenterTexture);
@@ -985,8 +990,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             Vector3 lightPosition = view.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3).getXYZ();
 
                             this.lightProgram.setUniform("model_view",
-
-                                //                            modelView.times(this.getLightMatrix(i).quickInverse(0.001f)));
                                 Matrix4.translate(lightPosition)
                                     .times(Matrix4.scale(-lightPosition.z / 16.0f, -lightPosition.z / 16.0f, 1.0f)));
                             this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
@@ -1003,6 +1006,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             Vector3 lightPosition = widgetTransformation.getColumn(3).getXYZ();
                             Vector3 lightDisplacement = lightPosition.minus(lightCenter);
                             float lightDistance = lightDisplacement.length();
+
+                            float widgetScale = -lightPosition.z * getVerticalFieldOfView() / 64;
 
                             this.context.getState().disableDepthTest();
                             context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
@@ -1033,7 +1038,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                             this.circleProgram.setUniform("color", new Vector3(1));
                             this.circleProgram.setUniform("projection", this.getProjectionMatrix(size));
-                            this.circleProgram.setUniform("width", 0.02f);
+                            this.circleProgram.setUniform("width", getVerticalFieldOfView() / 64);
                             this.circleProgram.setUniform("threshold", 0.005f);
 
                             Vector3 lightDisplacementAtInclination = lightDisplacement
@@ -1079,7 +1084,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             float cosineLightToPole = lightDisplacement.normalized().dot(azimuthRotationAxis);
 
                             double azimuthArrowRotation = Math.min(Math.PI / 4,
-                                Math.PI * -lightPosition.z / (32 * lightDistance * Math.sqrt(1 - cosineLightToPole * cosineLightToPole)));
+                                 8 * widgetScale / (lightDistance * Math.sqrt(1 - cosineLightToPole * cosineLightToPole)));
 
                             Vector3 arrow1PositionR = Matrix3.rotateAxis(azimuthRotationAxis, azimuthArrowRotation)
                                                         .times(lightPosition.minus(lightCenter))
@@ -1089,8 +1094,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                                         .times(lightPosition.minus(lightCenter))
                                                         .plus(lightCenter);
 
-                            double inclinationArrowRotation = Math.min(Math.PI / 4,
-                                Math.PI * -lightPosition.z / (32 * lightDistance));
+                            double inclinationArrowRotation = Math.min(Math.PI / 4, 8 * widgetScale / lightDistance);
 
                             Vector3 arrow2PositionR = widgetTransformation.getUpperLeft3x3()
                                                             .times(Matrix3.rotateX(-inclinationArrowRotation))
@@ -1134,14 +1138,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             Vector4 arrow3DirectionY = lightCenter.minus(lightPosition).getXY().normalized().asDirection();
                             Vector4 arrow3DirectionX = new Vector4(arrow3DirectionY.y, -arrow3DirectionY.x, 0, 0).normalized();
 
-                            Vector3 arrow3PositionR = lightPosition.plus(lightCenter.minus(lightPosition).normalized()
-                                                        .times(Math.max(-lightPosition.z * (float)Math.PI / 64.0f,
-                                                            Math.min(lightDisplacement.length() / 2,
-                                                                -lightPosition.z * (float)Math.PI / 32.0f))));
-                            Vector3 arrow3PositionL = lightPosition.minus(lightCenter.minus(lightPosition).normalized()
-                                                        .times(Math.max(-lightPosition.z * (float)Math.PI / 64.0f,
-                                                            Math.min(lightDisplacement.length() / 2,
-                                                                -lightPosition.z * (float)Math.PI / 32.0f))));
+                            Vector3 arrow3PositionR = lightPosition.minus(lightDisplacement
+                                                        .times(Math.max(8 * widgetScale,
+                                                            Math.min(lightDisplacement.getXY().length() / 2, 8 * widgetScale))
+                                                            / lightDisplacement.getXY().length()));
+                            Vector3 arrow3PositionL = lightPosition.plus(lightDisplacement
+                                                        .times(Math.max(8 * widgetScale,
+                                                            Math.min(lightDisplacement.getXY().length() / 2, 8 * widgetScale))
+                                                            / lightDisplacement.getXY().length()));
 
 //                            Vector3 arrow1PositionR = widgetTransformation.times(new Vector4(1,0,0,1)).getXYZ();
 //                            Vector3 arrow1PositionL = widgetTransformation.times(new Vector4(-1,0,0,1)).getXYZ();
@@ -1156,7 +1160,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                                 this.widgetProgram.setUniform("model_view",
                                     Matrix4.translate(arrow1PositionR)
-                                        .times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+                                        .times(Matrix4.scale(widgetScale, widgetScale, 1.0f))
                                         .times(Matrix4.fromColumns(
                                             arrow1RDirectionX,
                                             arrow1RDirectionY,
@@ -1175,7 +1179,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                                 this.widgetProgram.setUniform("model_view",
                                     Matrix4.translate(arrow1PositionL)
-                                        .times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+                                        .times(Matrix4.scale(widgetScale, widgetScale, 1.0f))
                                         .times(Matrix4.fromColumns(
                                             arrow1LDirectionX.negated(),
                                             arrow1LDirectionY.negated(),
@@ -1197,7 +1201,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                             this.widgetProgram.setUniform("model_view",
                                     Matrix4.translate(arrow2PositionR)
-                                        .times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+                                        .times(Matrix4.scale(widgetScale, widgetScale, 1.0f))
                                         .times(Matrix4.fromColumns(
                                                 arrow2RDirectionX,
                                                 arrow2RDirectionY,
@@ -1216,7 +1220,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                             this.widgetProgram.setUniform("model_view",
                                 Matrix4.translate(arrow2PositionL)
-                                    .times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+                                    .times(Matrix4.scale(widgetScale, widgetScale, 1.0f))
                                     .times(Matrix4.fromColumns(
                                             arrow2LDirectionX.negated(),
                                             arrow2LDirectionY.negated(),
@@ -1237,7 +1241,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                             this.widgetProgram.setUniform("model_view",
                                 Matrix4.translate(arrow3PositionR)
-                                    .times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+                                    .times(Matrix4.scale(widgetScale, widgetScale, 1.0f))
                                     .times(Matrix4.fromColumns(
                                             arrow3DirectionX,
                                             arrow3DirectionY,
@@ -1256,7 +1260,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                             this.widgetProgram.setUniform("model_view",
                                 Matrix4.translate(arrow3PositionL)
-                                    .times(Matrix4.scale(-lightPosition.z / 64.0f, -lightPosition.z / 64.0f, 1.0f))
+                                    .times(Matrix4.scale(widgetScale, widgetScale, 1.0f))
                                     .times(Matrix4.fromColumns(
                                             arrow3DirectionX.negated(),
                                             arrow3DirectionY.negated(),
