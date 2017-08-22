@@ -6,10 +6,7 @@ import java.util.Map.Entry;
 
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
-import tetzlaff.gl.window.listeners.CursorPositionListener;
-import tetzlaff.gl.window.listeners.KeyPressListener;
-import tetzlaff.gl.window.listeners.MouseButtonPressListener;
-import tetzlaff.gl.window.listeners.ScrollListener;
+import tetzlaff.gl.window.listeners.*;
 import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.ExtendedLightingModel;
 import tetzlaff.models.ReadonlyEnvironmentMapModel;
@@ -17,7 +14,7 @@ import tetzlaff.models.SceneViewportModel;
 import tetzlaff.util.WindowBasedController;
 
 public final class ToolBox
-    implements CursorPositionListener, MouseButtonPressListener, ScrollListener, KeyPressListener, WindowBasedController
+    implements CursorPositionListener, MouseButtonPressListener, MouseButtonReleaseListener, ScrollListener, KeyPressListener, WindowBasedController
 {
     private final ToolSelectionModel toolModel;
 
@@ -30,6 +27,7 @@ public final class ToolBox
     {
         window.addCursorPositionListener(this);
         window.addMouseButtonPressListener(this);
+        window.addMouseButtonReleaseListener(this);
         window.addScrollListener(this);
         window.addKeyPressListener(this);
     }
@@ -92,6 +90,19 @@ public final class ToolBox
         try
         {
             selectedTool().mouseButtonPressed(window, buttonIndex, mods);
+        }
+        catch(RuntimeException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods)
+    {
+        try
+        {
+            selectedTool().mouseButtonReleased(window, buttonIndex, mods);
         }
         catch(RuntimeException e)
         {

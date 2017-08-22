@@ -69,7 +69,7 @@
          <SeparatorMenuItem mnemonicParsing="false" />
          <RadioMenuItem userData="X" mnemonicParsing="false" text="Rotate Environment tool" toggleGroup="$toolGroup" />
          <SeparatorMenuItem mnemonicParsing="false" />
-         <RadioMenuItem userData="LIGHT" mnemonicParsing="false" text="Drag Light Tool" toggleGroup="$toolGroup" />
+         <RadioMenuItem userData="LIGHT" mnemonicParsing="false" text="Light Tool" toggleGroup="$toolGroup" />
       </Menu>
       <Menu mnemonicParsing="false" text="Windows">
          <CheckMenuItem mnemonicParsing="false" selected="true" text="Scene" />

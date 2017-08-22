@@ -18,7 +18,7 @@ public class JavaFXLightingModel extends LightingModelBase
 
     public JavaFXLightingModel(EnvironmentMapModel envModel)
     {
-        super(envModel);
+        super(LightGroupSetting.LIGHT_LIMIT, envModel);
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
         {
             lightInstanceModels[i] = new JavaFXLightInstanceModel();
@@ -95,12 +95,6 @@ public class JavaFXLightingModel extends LightingModelBase
 
     @Override
     public boolean isLightVisualizationEnabled(int index)
-    {
-        return true;
-    }
-
-    @Override
-    public boolean isLightWidgetEnabled(int index)
     {
         return true;
     }
