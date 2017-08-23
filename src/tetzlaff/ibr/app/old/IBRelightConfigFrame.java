@@ -1038,7 +1038,7 @@ public class IBRelightConfigFrame extends JFrame
                 File file = fileChooser.getSelectedFile();
                 try
                 {
-                    rendererListModel.getSelectedItem().setEnvironment(file);
+                    rendererListModel.getSelectedItem().loadEnvironmentMap(file);
                 }
                 catch (Exception ex)
                 {

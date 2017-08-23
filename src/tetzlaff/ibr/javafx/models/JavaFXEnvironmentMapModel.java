@@ -1,7 +1,8 @@
 package tetzlaff.ibr.javafx.models;//Created by alexk on 7/28/2017.
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.util.Objects;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -14,6 +15,8 @@ import tetzlaff.models.EnvironmentMapModel;
 public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
 {
     private ObservableValue<EnvironmentSettings> selected;
+
+    private boolean environmentMapLoaded = false;
 
     public void setSelected(ObservableValue<EnvironmentSettings> selected)
     {
@@ -56,23 +59,30 @@ public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
 
     private final ChangeListener<File> envFileChange = (observable, oldFile, newFile) ->
     {
-        // TODO NEWUI don't reload if oldFile == newFile
-        if (newFile != null)
+        if (newFile != null && !Objects.equals(oldFile, newFile))
         {
-            try
-            {
-                System.out.println("Loading environment map file " + newFile.getName());
-                JavaFXModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+            environmentMapLoaded = false;
 
-            if (doesSelectedExist())
+            new Thread(() ->
             {
-                selected.getValue().setFirstEnvLoaded(true);
-            }
+                try
+                {
+                    System.out.println("Loading environment map file " + newFile.getName());
+                    JavaFXModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
+                }
+                catch (FileNotFoundException e)
+                {
+                    e.printStackTrace();
+                }
+
+                if (doesSelectedExist())
+                {
+                    selected.getValue().setFirstEnvLoaded(true);
+                }
+
+                environmentMapLoaded = true;
+
+            }).start();
         }
     };
 
@@ -81,7 +91,7 @@ public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
         if (newSetting != null)
         {
             newSetting.envImageFileProperty().addListener(envFileChange);
-            envFileChange.changed(null, null, newSetting.getEnvImageFile());
+            envFileChange.changed(null, oldSetting == null ? null : oldSetting.getEnvImageFile(), newSetting.getEnvImageFile());
         }
 
         if (oldSetting != null)
@@ -93,7 +103,7 @@ public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
     @Override
     public boolean isEnvironmentMappingEnabled()
     {
-        return doesSelectedExist() && selected.getValue().isEnvUseImageEnabled();
+        return this.environmentMapLoaded && doesSelectedExist() && selected.getValue().isEnvUseImageEnabled();
     }
 
     @Override

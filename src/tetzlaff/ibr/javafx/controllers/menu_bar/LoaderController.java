@@ -107,15 +107,17 @@ public class LoaderController implements Initializable
         {
 
             //ok!
-
-            try
+            new Thread(() ->
             {
-                JavaFXModels.getInstance().getLoadingModel().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir);
-            }
-            catch (IOException e)
-            {
-                System.out.println("files were malformed");
-            }
+                try
+                {
+                    JavaFXModels.getInstance().getLoadingModel().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir);
+                }
+                catch (FileNotFoundException e)
+                {
+                    System.out.println("files were malformed");
+                }
+            }).start();
 
             close();
         }
@@ -126,7 +128,7 @@ public class LoaderController implements Initializable
     }
 
     @FXML
-    private void cancleButtonPress()
+    private void cancelButtonPress()
     {
         close();
     }

@@ -24,7 +24,7 @@
             </HBox>
             <HBox alignment="CENTER_RIGHT" spacing="30.0" HBox.hgrow="ALWAYS">
                <children>
-                      <Button mnemonicParsing="false" onAction="#cancleButtonPress" text="Cancel">
+                      <Button mnemonicParsing="false" onAction="#cancelButtonPress" text="Cancel">
                           <font>
                               <Font name="System Bold" size="18.0" />
                           </font>

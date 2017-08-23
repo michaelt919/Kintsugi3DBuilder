@@ -124,7 +124,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
             return this;
         }
 
-        public Builder<ContextType> loadVSETFile(File vsetFile) throws IOException
+        public Builder<ContextType> loadVSETFile(File vsetFile) throws FileNotFoundException
         {
             this.viewSet = ViewSet.loadFromVSETFile(vsetFile);
             try
@@ -139,7 +139,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
         }
 
         // undistorted images are defined in the load options
-        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws IOException
+        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws FileNotFoundException
         {
             this.viewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
             if (geometryFile != null)

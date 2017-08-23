@@ -1,6 +1,7 @@
 package tetzlaff.ibr;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 import tetzlaff.gl.Context;
@@ -30,8 +31,8 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     void setProgram(Program<ContextType> program);
     void reloadHelperShaders();
 
-    void setBackplate(File backplateFile);
-    void setEnvironment(File environmentFile);
+    void loadBackplate(File backplateFile);
+    void loadEnvironmentMap(File environmentFile) throws FileNotFoundException;
 
     void setObjectModel(ReadonlyObjectModel objectModel);
     void setCameraModel(ReadonlyCameraModel cameraModel);

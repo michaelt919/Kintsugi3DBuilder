@@ -304,9 +304,9 @@ public class ViewSet
      * Loads a VSET file and creates a corresponding ViewSet object.
      * @param vsetFile The VSET file to load.
      * @return The newly created ViewSet object.
-     * @throws IOException Thrown due to a File I/O error occurring.
+     * @throws FileNotFoundException Thrown if the view set file is not found.
      */
-    public static ViewSet loadFromVSETFile(File vsetFile) throws IOException
+    public static ViewSet loadFromVSETFile(File vsetFile) throws FileNotFoundException
     {
         Date timestamp = new Date();
 
@@ -583,9 +583,9 @@ public class ViewSet
      * Loads a camera definition file exported in XML format from Agisoft PhotoScan.
      * @param file The Agisoft PhotoScan XML camera file to load.
      * @return The newly created ViewSet object.
-     * @throws IOException Thrown due to a File I/O error occurring.
+     * @throws FileNotFoundException Thrown if the XML camera file is not found.
      */
-    public static ViewSet loadFromAgisoftXMLFile(File file) throws IOException
+    public static ViewSet loadFromAgisoftXMLFile(File file) throws FileNotFoundException
     {
         Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
         HashSet<Camera> cameraSet = new HashSet<Camera>();

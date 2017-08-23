@@ -68,7 +68,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Program<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
     
-    private File newEnvironmentFile;
+    private EnvironmentMap newEnvironmentData;
     private boolean environmentMapUnloadRequested = false;
     private boolean environmentMapEnabled;
     private Cubemap<ContextType> environmentMap;
@@ -400,38 +400,17 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.environmentMapUnloadRequested = false;
         }
 
-        if (this.newEnvironmentFile != null)
+        if (this.newEnvironmentData != null)
         {
-            File environmentFile = this.newEnvironmentFile;
-            this.newEnvironmentFile = null;
+            EnvironmentMap environmentData = this.newEnvironmentData;
+            this.newEnvironmentData = null;
 
             try
             {
-                System.out.println("Loading new environment texture.");
-
-                // Use Michael Ludwig's code to convert to a cube map (supports either cross or panorama input)
-                EnvironmentMap envMap = EnvironmentMap.createFromHDRFile(environmentFile);
-                float[][] sides = envMap.getData();
-
-//                    // Uncomment to save the panorama as an image (i.e. for a figure in a paper)
-//                    float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
-//                    BufferedImage img = new BufferedImage(envMap.getSide() * 4, envMap.getSide() * 2, BufferedImage.TYPE_3BYTE_BGR);
-//                    int k = 0;
-//
-//                    for (int j = 0; j < envMap.getSide() * 2; j++)
-//                    {
-//                        for (int i = 0; i < envMap.getSide() * 4; i++)
-//                        {
-//                            img.setRGB(i,  j, ((int)(Math.pow(pixels[3 * k + 0], 1.0 / 2.2) * 255) << 16)
-//                                    | ((int)(Math.pow(pixels[3 * k + 1], 1.0 / 2.2) * 255) << 8)
-//                                    | (int)(Math.pow(pixels[3 * k + 2], 1.0 / 2.2) * 255));
-//                            k++;
-//                        }
-//                    }
-//                    ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_IBRelight_pan.hdr")));
+                float[][] sides = environmentData.getData();
 
                 Cubemap<ContextType> newEnvironmentTexture =
-                        context.buildColorCubemap(envMap.getSide())
+                        context.buildColorCubemap(environmentData.getSide())
                             .setInternalFormat(ColorFormat.RGB32F)
                             .loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
                             .loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
@@ -1456,7 +1435,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     }
 
     @Override
-    public void setEnvironment(File environmentFile)
+    public void loadEnvironmentMap(File environmentFile) throws FileNotFoundException
     {
         if (environmentFile == null && this.environmentMap != null)
         {
@@ -1464,16 +1443,44 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         }
         else if (environmentFile != null && environmentFile.exists())
         {
-            this.newEnvironmentFile = environmentFile;
-        }
-        else {
-            System.out.println("TEMP FIX IN IBRImplementation.setEnvironment");
-//            this.environmentMapUnloadRequested = true;//TODO this is a temp fix
+            System.out.println("Loading new environment texture.");
+
+            try
+            {
+                // Use Michael Ludwig's code to convert to a cube map (supports either cross or panorama input)
+                this.newEnvironmentData = EnvironmentMap.createFromHDRFile(environmentFile);
+
+
+//                    // Uncomment to save the panorama as an image (i.e. for a figure in a paper)
+//                    float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
+//                    BufferedImage img = new BufferedImage(envMap.getSide() * 4, envMap.getSide() * 2, BufferedImage.TYPE_3BYTE_BGR);
+//                    int k = 0;
+//
+//                    for (int j = 0; j < envMap.getSide() * 2; j++)
+//                    {
+//                        for (int i = 0; i < envMap.getSide() * 4; i++)
+//                        {
+//                            img.setRGB(i,  j, ((int)(Math.pow(pixels[3 * k + 0], 1.0 / 2.2) * 255) << 16)
+//                                    | ((int)(Math.pow(pixels[3 * k + 1], 1.0 / 2.2) * 255) << 8)
+//                                    | (int)(Math.pow(pixels[3 * k + 2], 1.0 / 2.2) * 255));
+//                            k++;
+//                        }
+//                    }
+//                    ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_IBRelight_pan.hdr")));
+            }
+            catch (FileNotFoundException e)
+            {
+                throw e;
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
     @Override
-    public void setBackplate(File backplateFile)
+    public void loadBackplate(File backplateFile)
     {
         // TODO Auto-generated method stub
     }
