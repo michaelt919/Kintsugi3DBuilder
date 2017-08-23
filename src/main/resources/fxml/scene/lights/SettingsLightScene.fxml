@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<VBox fx:id="root" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.lights.SettingsLightSceneController">
+<VBox fx:id="root" maxWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.lights.SettingsLightSceneController">
     <TitledPane animated="false" text="Center Point">
         <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <padding>
@@ -13,13 +13,13 @@
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="X:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" />
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Y:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Z:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-            <TextField GridPane.columnIndex="2" fx:id="xCenterTextField" />
-            <TextField fx:id="yCenterTextField" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-            <TextField fx:id="zCenterTextField" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+            <TextField prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="2" fx:id="xCenterTextField" />
+            <TextField fx:id="yCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+            <TextField fx:id="zCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="2" />
             <Button mnemonicParsing="false" text="Select point" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="3" />
-         <Slider blockIncrement="0.1" majorTickUnit="0.25" max="0.5" min="-0.5" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="3" fx:id="xCenterSlider" />
-         <Slider fx:id="yCenterSlider" blockIncrement="0.1" majorTickUnit="0.25" max="0.5" min="-0.5" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-         <Slider fx:id="zCenterSlider" blockIncrement="0.1" majorTickUnit="0.25" max="0.5" min="-0.5" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+         <Slider blockIncrement="0.1" majorTickUnit="0.25" max="1.0" min="-1.0" prefHeight="38.0" prefWidth="230.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="3" fx:id="xCenterSlider" />
+         <Slider fx:id="yCenterSlider" blockIncrement="0.1" majorTickUnit="0.25" max="1.0" min="-1.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+         <Slider fx:id="zCenterSlider" blockIncrement="0.1" majorTickUnit="0.25" max="1.0" min="-1.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="3" GridPane.rowIndex="2" />
          <columnConstraints>
             <ColumnConstraints />
             <ColumnConstraints />
@@ -34,7 +34,7 @@
          </rowConstraints>
         </GridPane>
     </TitledPane>
-    <TitledPane animated="false" text="Dolly">
+    <TitledPane animated="false" text="Position and Orientation">
         <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <padding>
                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
@@ -42,12 +42,12 @@
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Azimuth:" GridPane.halignment="RIGHT" />
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-            <TextField fx:id="azimuthTextField" GridPane.columnIndex="1" />
-            <TextField fx:id="inclinationTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <TextField fx:id="distanceTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-         <Slider fx:id="azimuthSlider" blockIncrement="30.0" majorTickUnit="90.0" max="180.0" min="-180.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" />
-         <Slider fx:id="inclinationSlider" blockIncrement="15.0" majorTickUnit="45.0" max="90.0" min="-90.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-         <Slider fx:id="distanceSlider" blockIncrement="0.1" majorTickUnit="0.5" max="1.0" min="-1.0" minorTickCount="1" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+            <TextField fx:id="azimuthTextField" prefHeight="25.0" prefWidth="59.0" GridPane.columnIndex="1" />
+            <TextField fx:id="inclinationTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <TextField fx:id="distanceTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+         <Slider fx:id="azimuthSlider" blockIncrement="30.0" majorTickUnit="90.0" max="360.0" min="-360.0" prefHeight="38.0" prefWidth="230.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" />
+         <Slider fx:id="inclinationSlider" blockIncrement="15.0" majorTickUnit="30.0" max="90.0" min="-90.0" minorTickCount="6" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+         <Slider fx:id="distanceSlider" blockIncrement="0.1" majorTickUnit="1.0" max="2.0" min="-2.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
          <columnConstraints>
             <ColumnConstraints />
             <ColumnConstraints />
@@ -66,12 +66,13 @@
                 <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
             </padding>
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Intensity:" GridPane.halignment="RIGHT" />
-            <TextField fx:id="intensityTextField" GridPane.columnIndex="1" />
-            <Slider fx:id="intensitySlider" blockIncrement="0.1" majorTickUnit="0.5" max="2.0" showTickLabels="true" showTickMarks="true" value="1.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+            <TextField fx:id="intensityTextField" prefHeight="25.0" prefWidth="70.0" GridPane.columnIndex="1" />
+            <Slider fx:id="intensitySlider" blockIncrement="0.1" majorTickUnit="1.0" max="2.0" min="-2.0" prefHeight="38.0" prefWidth="230.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Color:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-            <ColorPicker fx:id="colorPicker" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <ColorPicker fx:id="colorPicker" prefHeight="25.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+            <ChoiceBox fx:id="lightTypeChoiceBox" prefHeight="25.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2" />
+         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Type:" textAlignment="RIGHT" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
          <columnConstraints>
-            <ColumnConstraints />
             <ColumnConstraints />
             <ColumnConstraints />
             <ColumnConstraints />
@@ -79,29 +80,8 @@
          <rowConstraints>
             <RowConstraints />
             <RowConstraints />
+            <RowConstraints />
          </rowConstraints>
         </GridPane>
-    </TitledPane>
-    <TitledPane animated="false" text="Type">
-        <VBox spacing="15.0">
-            <padding>
-                <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
-            </padding>
-            <ChoiceBox fx:id="lightTypeChoiceBox" />
-            <BorderPane prefHeight="200.0" prefWidth="200.0">
-                <top>
-                    <Separator prefWidth="200.0" BorderPane.alignment="CENTER" />
-                </top>
-                <bottom>
-                    <Separator prefWidth="200.0" BorderPane.alignment="CENTER" />
-                </bottom>
-                <left>
-                    <Separator orientation="VERTICAL" prefHeight="200.0" BorderPane.alignment="CENTER" />
-                </left>
-                <right>
-                    <Separator orientation="VERTICAL" prefHeight="200.0" BorderPane.alignment="CENTER" />
-                </right>
-            </BorderPane>
-        </VBox>
     </TitledPane>
 </VBox>

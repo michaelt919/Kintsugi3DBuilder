@@ -2,11 +2,11 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.camera.RootCameraSceneController">
-   <TitledPane animated="false" text="Cameras" VBox.vgrow="ALWAYS">
+<VBox xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.camera.RootCameraSceneController">
+   <TitledPane animated="false" maxWidth="400.0" text="Cameras" VBox.vgrow="ALWAYS">
       <HBox prefHeight="0.0">
          <ListView fx:id="cameraListView" HBox.hgrow="ALWAYS" />
-         <Separator orientation="VERTICAL" />
+         <Separator orientation="VERTICAL" visible="false" />
          <VBox fx:id="listControls" alignment="CENTER_LEFT" spacing="5.0">
             <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#newCameraButton" text="New">
                <tooltip>
@@ -18,9 +18,9 @@
                   <Tooltip text="Save the selected camera to the library." />
                </tooltip>
             </Button>
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#renameCameraButton" text="Rename" fx:id="theRenameButton"/>
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveUPButton" text="Move UP" />
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveDOWNButton" text="Move DOWN" />
+            <Button fx:id="theRenameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#renameCameraButton" text="Rename" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveUPButton" text="Move up" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveDOWNButton" text="Move down" />
             <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#lockCameraButton" text="Lock/Unlock">
                <tooltip>
                   <Tooltip text="Lock the settings for the selected camera so they cannot be changed." />
