@@ -1,7 +1,7 @@
 package tetzlaff.ibr;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileNotFoundException;
 
 public class LoadingModel 
 {
@@ -38,17 +38,17 @@ public class LoadingModel
         this.options = options;
     }
 
-    public void loadFromVSETFile(String id, File vsetFile) throws IOException
+    public void loadFromVSETFile(String id, File vsetFile) throws FileNotFoundException
     {
         this.handler.loadFromVSETFile(id, vsetFile, options);
     }
 
-    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory) throws IOException
+    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory) throws FileNotFoundException
     {
         this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, options);
     }
 
-    public void loadEnvironmentMap(File environmentMapFile) throws IOException
+    public void loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
         this.handler.loadEnvironmentMap(environmentMapFile);
     }

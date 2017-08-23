@@ -1,6 +1,7 @@
 package tetzlaff.gl.util;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
@@ -39,7 +40,7 @@ public class VertexGeometry
     /**
      * Initializes the mesh from a file containing the mesh in Wavefront OBJ format.
      */
-    public static VertexGeometry createFromOBJFile(File file) throws IOException
+    public static VertexGeometry createFromOBJFile(File file) throws FileNotFoundException
     {
         VertexGeometry inst = new VertexGeometry(file);
 

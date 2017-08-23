@@ -1,7 +1,7 @@
 package tetzlaff.ibr.rendering;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.util.Objects;
 import javax.swing.*;
 
@@ -56,7 +56,8 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions) throws IOException
+    public void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions)
+        throws FileNotFoundException
     {
         // id = vsetFile.getPath()
 
@@ -117,10 +118,11 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, ReadonlyLoadOptionsModel loadOptions) throws IOException
+    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, ReadonlyLoadOptionsModel loadOptions)
+        throws FileNotFoundException
     {
         IBRRenderable<ContextType> newItem =
-            new IBRImplementation<ContextType>(id, context, this.getProgram(),
+            new IBRImplementation<>(id, context, this.getProgram(),
                 IBRResources.getBuilderForContext(this.context)
                     .setLoadingMonitor(this.loadingMonitor)
                     .setLoadOptions(loadOptions)
@@ -265,8 +267,8 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void loadEnvironmentMap(File environmentMapFile) throws IOException
+    public void loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
-        this.getSelectedItem().setEnvironment(environmentMapFile);
+        this.getSelectedItem().loadEnvironmentMap(environmentMapFile);
     }
 }

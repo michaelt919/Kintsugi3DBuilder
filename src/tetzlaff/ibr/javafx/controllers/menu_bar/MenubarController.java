@@ -1,6 +1,7 @@
 package tetzlaff.ibr.javafx.controllers.menu_bar;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 
@@ -204,14 +205,17 @@ public class MenubarController
         File vsetFile = vSetFileChooser.showOpenDialog(null);
         if (vsetFile != null)
         {
-            try
+            new Thread(() ->
             {
-                JavaFXModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile);
-            }
-            catch (IOException e)
-            {
-                //do nothing
-            }
+                try
+                {
+                    JavaFXModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile);
+                }
+                catch (FileNotFoundException e)
+                {
+                    //do nothing
+                }
+            }).start();
         }
     }
 
