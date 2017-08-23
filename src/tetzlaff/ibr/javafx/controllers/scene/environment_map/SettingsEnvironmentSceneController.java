@@ -204,6 +204,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         if (newFile != null)
         {
             localEnvImageFile.setValue(newFile);
+            evUseImageCheckBox.setSelected(true);
         }
     }
 
@@ -214,6 +215,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         if (newFile != null)
         {
             localBPImageFile.setValue(newFile);
+            bpUseImageCheckBox.setSelected(true);
         }
     }
 }

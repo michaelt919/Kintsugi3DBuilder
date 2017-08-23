@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
-<TabPane fx:controller="tetzlaff.ibr.javafx.controllers.scene.RootSceneController" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<TabPane maxWidth="400.0" fx:controller="tetzlaff.ibr.javafx.controllers.scene.RootSceneController" tabClosingPolicy="UNAVAILABLE"
+         xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
 
     <Tab text="Camera">
         <ScrollPane fitToWidth="true">

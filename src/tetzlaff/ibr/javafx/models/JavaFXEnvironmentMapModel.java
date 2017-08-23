@@ -37,18 +37,16 @@ public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
             if (selected.getValue().isEnvUseColorEnabled())
             {
                 Color color = selected.getValue().getEnvColor();
-                return new Vector3((float) color.getRed(), (float) color.getBlue(), (float) color.getGreen()).times((float) selected.getValue().getEnvColorIntensity());
+                return new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue())
+                    .times((float)selected.getValue().getEnvColorIntensity());
+            }
+            else  if (selected.getValue().isEnvUseImageEnabled())
+            {
+                return new Vector3((float)selected.getValue().getEnvColorIntensity());
             }
             else
             {
-                if (selected.getValue().isEnvUseImageEnabled())
-                {
-                    return new Vector3(1.0f);
-                }
-                else
-                {
-                    return Vector3.ZERO;
-                }
+                return Vector3.ZERO;
             }
         }
         else

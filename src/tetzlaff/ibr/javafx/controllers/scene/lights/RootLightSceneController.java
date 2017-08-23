@@ -54,6 +54,7 @@ public class RootLightSceneController implements Initializable
                 return new SimpleStringProperty( param.getValue().getName());
             }
         });
+        nameCol.setPrefWidth(100);
         tableView.getColumns().add(nameCol);
 
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
@@ -64,7 +65,7 @@ public class RootLightSceneController implements Initializable
 
             newCol.setCellValueFactory(param -> param.getValue().lightListProperty().valueAt(tempFinalInt));
 
-            newCol.setPrefWidth(35);
+            newCol.setPrefWidth(20);
 
             tableView.getColumns().add(newCol);
         }
