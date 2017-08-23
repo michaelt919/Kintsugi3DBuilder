@@ -17,8 +17,6 @@ public interface SettingsModel extends ReadonlySettingsModel
     void setCompassEnabled(boolean compassEnabled);
     void setVisibleCameraPosesEnabled(boolean visibleCameraPosesEnabled);
     void setVisibleSavedCameraPosesEnabled(boolean visibleSavedCameraPosesEnabled);
-    void setMaterialsForIBR(boolean materialsForIBR);
-    void setPhyMasking(boolean phyMasking);
     void setTexturesEnabled(boolean texturesEnabled);
     void setShadowsEnabled(boolean shadowsEnabled);
     void setVisibleLightsEnabled(boolean visibleLightsEnabled);

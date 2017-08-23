@@ -266,34 +266,6 @@ public class IBRSettingsModelImpl implements SettingsModel
     }
 
     @Override
-    @Deprecated
-    public boolean isMaterialsForIBR()
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    @Deprecated
-    public boolean isPhyMasking()
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    @Deprecated
-    public void setMaterialsForIBR(boolean materialsForIBR)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    @Deprecated
-    public void setPhyMasking(boolean phyMasking)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public boolean isMultisamplingEnabled()
     {
         return multisamplingEnabled;
