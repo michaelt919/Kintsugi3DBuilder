@@ -18,14 +18,12 @@ import tetzlaff.util.ShadingParameterMode;
 
 public class IBROptionsController implements Initializable
 {
-    @FXML private CheckBox texturesCheckBox;
     @FXML private CheckBox occlusionCheckBox;
-    @FXML private CheckBox geometricAttenuationCheckBox;
-    @FXML private TextField gamaTextField;
+    @FXML private TextField gammaTextField;
     @FXML private TextField weightExponentTextField;
     @FXML private TextField isotropyFactorTextField;
     @FXML private TextField occlusionBiasTextField;
-    @FXML private Slider gamaSlider;
+    @FXML private Slider gammaSlider;
     @FXML private Slider weightExponentSlider;
     @FXML private Slider isotropyFactorSlider;
     @FXML private Slider occlusionBiasSlider;
@@ -54,7 +52,7 @@ public class IBROptionsController implements Initializable
         });
         weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
 
-        StaticUtilities.bound(1, 5, gamaTextField);
+        StaticUtilities.bound(1, 5, gammaTextField);
         StaticUtilities.bound(1, 100, weightExponentTextField);
         StaticUtilities.bound(0, 1, isotropyFactorTextField);
         StaticUtilities.bound(0, 0.1, occlusionBiasTextField);
@@ -62,14 +60,11 @@ public class IBROptionsController implements Initializable
 
     public void bind(JavaFXSettingsModel ibrSettingsUIImpl)
     {
-
-        texturesCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.texturesProperty());
         occlusionCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.occlusionProperty());
-        geometricAttenuationCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.pBRGeometricAttenuationProperty());
         weightModeChoiceBox.valueProperty().bindBidirectional(ibrSettingsUIImpl.weightModeProperty());
 
-        gamaSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.gammaProperty());
-        gamaTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.gammaProperty(), new SafeFloatStringConverter(2.2f));
+        gammaSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.gammaProperty());
+        gammaTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.gammaProperty(), new SafeFloatStringConverter(2.2f));
 
         weightExponentSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.weightExponentProperty());
         weightExponentTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.weightExponentProperty(), new SafeFloatStringConverter(16f));
@@ -89,14 +84,12 @@ public class IBROptionsController implements Initializable
 
         System.out.println("unbind");
 
-        texturesCheckBox.selectedProperty().unbindBidirectional(settingCache.texturesProperty());
         occlusionCheckBox.selectedProperty().unbindBidirectional(settingCache.occlusionProperty());
-        geometricAttenuationCheckBox.selectedProperty().unbindBidirectional(settingCache.pBRGeometricAttenuationProperty());
 
         weightModeChoiceBox.valueProperty().unbindBidirectional(settingCache.weightModeProperty());
 
-        gamaSlider.valueProperty().unbindBidirectional(settingCache.gammaProperty());
-        gamaTextField.textProperty().unbindBidirectional(settingCache.gammaProperty());
+        gammaSlider.valueProperty().unbindBidirectional(settingCache.gammaProperty());
+        gammaTextField.textProperty().unbindBidirectional(settingCache.gammaProperty());
 
         weightExponentSlider.valueProperty().unbindBidirectional(settingCache.weightExponentProperty());
         weightExponentTextField.textProperty().unbindBidirectional(settingCache.weightExponentProperty());

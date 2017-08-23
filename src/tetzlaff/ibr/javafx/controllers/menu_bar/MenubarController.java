@@ -177,8 +177,8 @@ public class MenubarController
         visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleCameraPoseProperty());
         visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleSavedCameraPoseProperty());
 
-        materialsForIBRCheckMenuItem.selectedProperty().bindBidirectional(getSettings().materialsForIBRProperty());
-        phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().phyMaskingProperty());
+        materialsForIBRCheckMenuItem.selectedProperty().bindBidirectional(getSettings().useMaterialsProperty());
+        phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().pBRGeometricAttenuationProperty());
         fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(getSettings().fresnelProperty());
 
         halfResolutionCheckMenuItem.selectedProperty().bindBidirectional(getSettings().halfResolutionEnabledProperty());
@@ -298,7 +298,7 @@ public class MenubarController
             return;
         }
 
-        IBROptionsController ibrOptionsController = makeWindow("IBRL Settings", iBROptionsWindowOpen,
+        IBROptionsController ibrOptionsController = makeWindow("IBR Settings", iBROptionsWindowOpen,
             "fxml/menu_bar/IBROptions.fxml");
         if (ibrOptionsController != null)
         {

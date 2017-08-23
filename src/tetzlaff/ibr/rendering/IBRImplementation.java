@@ -505,6 +505,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             weightBuffer = context.createUniformBuffer().setData(this.generateViewWeights(view));
             program.setUniformBuffer("ViewWeights", weightBuffer);
             program.setUniform("occlusionEnabled", false);
+            program.setUniform("shadowTestEnabled", false);
         }
         else
         {
@@ -512,6 +513,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             program.setUniform("weightExponent", this.settings.getWeightExponent());
             program.setUniform("isotropyFactor", this.settings.getIsotropyFactor());
             program.setUniform("occlusionEnabled", this.resources.depthTextures != null && this.settings.isOcclusionEnabled());
+            program.setUniform("shadowTestEnabled", this.resources.shadowTextures != null && this.settings.isOcclusionEnabled());
             program.setUniform("occlusionBias", this.settings.getOcclusionBias());
         }
 

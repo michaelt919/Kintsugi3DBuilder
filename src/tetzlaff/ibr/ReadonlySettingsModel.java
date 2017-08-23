@@ -18,8 +18,6 @@ public interface ReadonlySettingsModel
     boolean isCompassEnabled();
     boolean areVisibleCameraPosesEnabled();
     boolean areVisibleSavedCameraPosesEnabled();
-    boolean isMaterialsForIBR();
-    boolean isPhyMasking();
     boolean areTexturesEnabled();
     boolean areShadowsEnabled();
     boolean areVisibleLightsEnabled();

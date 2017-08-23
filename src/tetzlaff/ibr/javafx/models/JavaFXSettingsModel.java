@@ -19,39 +19,15 @@ public class JavaFXSettingsModel implements ReadonlySettingsModel
     private final BooleanProperty visibleCameraPose = new SimpleBooleanProperty(false);
     private final BooleanProperty visibleSavedCameraPose = new SimpleBooleanProperty(false);
     private final FloatProperty gamma = StaticUtilities.bound(1, 5, new SimpleFloatProperty(2.2f));
-    private final FloatProperty weightExponent = StaticUtilities.bound(1, 100, new SimpleFloatProperty(16f));
+    private final FloatProperty weightExponent = StaticUtilities.bound(1, 100, new SimpleFloatProperty(16.0f));
     private final FloatProperty isotropyFactor = StaticUtilities.bound(0, 1, new SimpleFloatProperty(0.0f));
     private final FloatProperty occlusionBias = StaticUtilities.bound(0, 0.1, new SimpleFloatProperty(0.0025f));
     private final ObjectProperty<ShadingParameterMode> weightMode = new SimpleObjectProperty<>(ShadingParameterMode.PER_PIXEL);
     private final ObjectProperty<RenderingMode> renderingType = new SimpleObjectProperty<>(RenderingMode.IMAGE_BASED_RENDERING);
     private final BooleanProperty is3DGridEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty compassEnabled = new SimpleBooleanProperty(false);
-    private final BooleanProperty materialsForIBR = new SimpleBooleanProperty(false);
-    private final BooleanProperty phyMasking = new SimpleBooleanProperty(false);
     private final BooleanProperty multisamplingEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty halfResolutionEnabled = new SimpleBooleanProperty(false);
-
-    @Override
-    public boolean isMaterialsForIBR()
-    {
-        return materialsForIBR.get();
-    }
-
-    public BooleanProperty materialsForIBRProperty()
-    {
-        return materialsForIBR;
-    }
-
-    @Override
-    public boolean isPhyMasking()
-    {
-        return phyMasking.get();
-    }
-
-    public BooleanProperty phyMaskingProperty()
-    {
-        return phyMasking;
-    }
 
     @Override
     public boolean areVisibleCameraPosesEnabled()
@@ -147,7 +123,7 @@ public class JavaFXSettingsModel implements ReadonlySettingsModel
         return textures.get();
     }
 
-    public BooleanProperty texturesProperty()
+    public BooleanProperty useMaterialsProperty()
     {
         return textures;
     }
