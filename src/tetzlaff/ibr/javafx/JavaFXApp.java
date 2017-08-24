@@ -80,15 +80,15 @@ public class JavaFXApp extends Application
 //        LibraryController libraryController = libraryFXMLLoader.getController();
 
         //load stages
-        menuBarStage.setTitle("IBR2 Menu Bar");
+        menuBarStage.setTitle("IBRelight");
         menuBarStage.setScene(new Scene(menuBarRoot));
 
         Stage libraryStage = new Stage();
-        libraryStage.setTitle("IBR2 Library");
+        libraryStage.setTitle("Library");
         libraryStage.setScene(new Scene(libraryRoot));
 
         Stage sceneStage = new Stage();
-        sceneStage.setTitle("IBR2 Scene");
+        sceneStage.setTitle("Scene");
         sceneStage.setScene(new Scene(sceneRoot));
 
         //set positions
@@ -105,19 +105,20 @@ public class JavaFXApp extends Application
         libraryStage.setX(primaryScreenBounds.getMinX());
         libraryStage.setY(primaryScreenBounds.getMinY());
         libraryStage.setHeight(primaryScreenBounds.getHeight());
+        libraryStage.initOwner(menuBarStage.getScene().getWindow());
 
         //libraryStage.show();
 
         sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 400);
         sceneStage.setY(primaryScreenBounds.getMinY());
         sceneStage.setHeight(primaryScreenBounds.getHeight());
+        sceneStage.initOwner(menuBarStage.getScene().getWindow());
 
         sceneStage.show();
         sceneStage.setMinWidth(sceneStage.getWidth());
         sceneStage.setMaxWidth(sceneStage.getWidth());
 
-        menuBarStage.hide();//this is just to have the menu bar have focusGained on the application starts, only aesthetic value.
-        menuBarStage.show();
+        menuBarStage.requestFocus();
 
         //get models
         JavaFXCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
@@ -127,13 +128,11 @@ public class JavaFXApp extends Application
 
         //distribute to controllers
         sceneController.init(cameraModel, lightingModel, environmentMapModel, toolModel);
-        menuBarController.init(toolModel);
+        menuBarController.init(menuBarStage.getScene().getWindow(), toolModel);
 
-        SynchronizedWindow sceneWindow = new StageSynchronization(sceneStage);
         SynchronizedWindow menuBarWindow = new StageSynchronization(menuBarStage);
 
         //set up close and focusGained
-        WindowSynchronization.getInstance().addListener(sceneWindow);
         WindowSynchronization.getInstance().addListener(menuBarWindow);
 
         sceneStage.setOnCloseRequest(event -> WindowSynchronization.getInstance().quit());
