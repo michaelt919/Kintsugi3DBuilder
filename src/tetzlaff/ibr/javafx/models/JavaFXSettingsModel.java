@@ -1,8 +1,8 @@
 package tetzlaff.ibr.javafx.models;//Created by alexk on 7/31/2017.
 
 import javafx.beans.property.*;
-import tetzlaff.ibr.ReadonlySettingsModel;
-import tetzlaff.ibr.RenderingMode;
+import tetzlaff.ibr.core.ReadonlySettingsModel;
+import tetzlaff.ibr.core.RenderingMode;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.ibr.tools.ToolType;
 import tetzlaff.util.ShadingParameterMode;
@@ -148,7 +148,7 @@ public class JavaFXSettingsModel implements ReadonlySettingsModel
     @Override
     public boolean areLightWidgetsEnabled()
     {
-        return JavaFXModels.getInstance().getToolModel().getTool() == ToolType.LIGHT;
+        return JavaFXModelAccess.getInstance().getToolModel().getTool() == ToolType.LIGHT;
     }
 
     public BooleanProperty visibleLightsProperty()

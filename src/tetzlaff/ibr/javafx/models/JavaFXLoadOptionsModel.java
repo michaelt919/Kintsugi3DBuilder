@@ -4,7 +4,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import tetzlaff.ibr.ReadonlyLoadOptionsModel;
+import tetzlaff.ibr.core.ReadonlyLoadOptionsModel;
 
 public class JavaFXLoadOptionsModel implements ReadonlyLoadOptionsModel
 {

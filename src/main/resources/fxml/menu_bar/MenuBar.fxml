@@ -8,12 +8,7 @@
          <MenuItem mnemonicParsing="false" onAction="#file_saveProject" text="Save project" />
          <MenuItem mnemonicParsing="false" onAction="#file_saveProjectAs" text="Save project as..." />
          <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project" />
-         <Menu mnemonicParsing="false" text="Export">
-            <MenuItem mnemonicParsing="false" onAction="#file_export_reSample" text="Re-sample..." />
-            <MenuItem mnemonicParsing="false" onAction="#file_export_fidelityMetric" text="Fidelity Metric…" />
-            <MenuItem mnemonicParsing="false" onAction="#file_export_BTF" text="BTF..." />
-            <MenuItem mnemonicParsing="false" onAction="#file_export_Other" text="Other..." />
-         </Menu>
+         <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
          <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." />
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
       </Menu>
@@ -35,7 +30,10 @@
          <fx:define>
             <ToggleGroup fx:id="renderGroup" />
          </fx:define>
-         <RadioMenuItem mnemonicParsing="false" text="None" toggleGroup="$renderGroup" userData="None" />
+         <RadioMenuItem mnemonicParsing="false" text="None" userData="None">
+         <toggleGroup>
+            <ToggleGroup fx:id="renderGroup" />
+         </toggleGroup></RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" userData="Wireframe" />
          <RadioMenuItem mnemonicParsing="false" text="Lambertian shaded" toggleGroup="$renderGroup" userData="Lambertian shaded" />
          <RadioMenuItem mnemonicParsing="false" text="Phong shaded" toggleGroup="$renderGroup" userData="Phong shaded" />
@@ -53,7 +51,10 @@
          <fx:define>
             <ToggleGroup fx:id="toolGroup" />
          </fx:define>
-         <RadioMenuItem mnemonicParsing="false" selected="true" text="Orbit Camera tool" toggleGroup="$toolGroup" userData="ORBIT" />
+         <RadioMenuItem mnemonicParsing="false" selected="true" text="Orbit Camera tool" userData="ORBIT">
+         <toggleGroup>
+            <ToggleGroup fx:id="toolGroup" />
+         </toggleGroup></RadioMenuItem>
          <RadioMenuItem mnemonicParsing="false" text="Pan Camera tool" toggleGroup="$toolGroup" userData="PAN" />
          <RadioMenuItem mnemonicParsing="false" text="Dolly Camera tool" toggleGroup="$toolGroup" userData="DOLLY" />
          <RadioMenuItem mnemonicParsing="false" text="Frame Selection tool" toggleGroup="$toolGroup" userData="X" />

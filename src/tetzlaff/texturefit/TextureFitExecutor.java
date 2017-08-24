@@ -22,8 +22,8 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibr.ViewSet;
 import tetzlaff.ibr.app.old.IBRLoadOptionsModelImpl;
+import tetzlaff.ibr.core.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources;
 
 public class TextureFitExecutor<ContextType extends Context<ContextType>>

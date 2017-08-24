@@ -11,6 +11,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import tetzlaff.ibr.app.Rendering;
 import tetzlaff.ibr.app.SynchronizedWindow;
 import tetzlaff.ibr.app.WindowSynchronization;
 import tetzlaff.ibr.javafx.controllers.menu_bar.MenubarController;
@@ -121,14 +122,14 @@ public class JavaFXApp extends Application
         menuBarStage.requestFocus();
 
         //get models
-        JavaFXCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
-        JavaFXEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
-        JavaFXLightingModel lightingModel = JavaFXModels.getInstance().getLightingModel();
-        JavaFXToolSelectionModel toolModel = JavaFXModels.getInstance().getToolModel();
+        JavaFXCameraModel cameraModel = JavaFXModelAccess.getInstance().getCameraModel();
+        JavaFXEnvironmentMapModel environmentMapModel = JavaFXModelAccess.getInstance().getEnvironmentMapModel();
+        JavaFXLightingModel lightingModel = JavaFXModelAccess.getInstance().getLightingModel();
+        JavaFXToolSelectionModel toolModel = JavaFXModelAccess.getInstance().getToolModel();
 
         //distribute to controllers
         sceneController.init(cameraModel, lightingModel, environmentMapModel, toolModel);
-        menuBarController.init(menuBarStage.getScene().getWindow(), toolModel);
+        menuBarController.init(menuBarStage.getScene().getWindow(), toolModel, Rendering.getRequestQueue());
 
         SynchronizedWindow menuBarWindow = new StageSynchronization(menuBarStage);
 

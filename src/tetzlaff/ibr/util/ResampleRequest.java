@@ -7,9 +7,10 @@ import java.nio.file.StandardCopyOption;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.FramebufferObject;
-import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.LoadingMonitor;
-import tetzlaff.ibr.ViewSet;
+import tetzlaff.ibr.core.IBRRenderable;
+import tetzlaff.ibr.core.IBRRequest;
+import tetzlaff.ibr.core.LoadingMonitor;
+import tetzlaff.ibr.core.ViewSet;
 
 public class ResampleRequest implements IBRRequest
 {

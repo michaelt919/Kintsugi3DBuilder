@@ -7,7 +7,7 @@ import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibr.ViewSet;
+import tetzlaff.ibr.core.ViewSet;
 import tetzlaff.ibr.rendering.CameraBasedLightingModel;
 import tetzlaff.models.LightWidgetModel;
 import tetzlaff.models.ReadonlyCameraModel;

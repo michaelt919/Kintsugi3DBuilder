@@ -14,8 +14,8 @@ import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import tetzlaff.ibr.SampledLuminanceEncoding;
-import tetzlaff.ibr.ViewSet;
+import tetzlaff.ibr.core.SampledLuminanceEncoding;
+import tetzlaff.ibr.core.ViewSet;
 
 public class TextureFitUserInterface extends JFrame
 {

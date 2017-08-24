@@ -18,11 +18,10 @@ import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
-import tetzlaff.ibr.*;
-import tetzlaff.ibr.util.BTFRequestUI;
-import tetzlaff.ibr.util.FidelityMetricRequestUI;
-import tetzlaff.ibr.util.IBRRequest;
-import tetzlaff.ibr.util.ResampleRequestUI;
+import tetzlaff.ibr.app.old.util.BTFRequestUI;
+import tetzlaff.ibr.app.old.util.FidelityMetricRequestUI;
+import tetzlaff.ibr.app.old.util.ResampleRequestUI;
+import tetzlaff.ibr.core.*;
 import tetzlaff.models.LightingModel;
 
 /**
