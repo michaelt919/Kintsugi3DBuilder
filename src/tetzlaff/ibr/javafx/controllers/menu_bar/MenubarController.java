@@ -68,9 +68,9 @@ public class MenubarController
         vSetFileChooser = new FileChooser();
 
         vSetFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-        vSetFileChooser.setTitle("Load V-Set File");
+        vSetFileChooser.setTitle("Load view set file");
         vSetFileChooser.getExtensionFilters().add(
-            new ExtensionFilter("V-Set Files", "*.vset")
+            new ExtensionFilter("View set files", "*.vset")
         );
 
         initToggleGroups();

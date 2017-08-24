@@ -11,7 +11,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import tetzlaff.ibr.app.SynchronizedWindow;
 import tetzlaff.ibr.app.WindowSynchronization;
 import tetzlaff.ibr.javafx.controllers.menu_bar.MenubarController;
@@ -96,30 +95,26 @@ public class JavaFXApp extends Application
 
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
-        menuBarStage.setX(primaryScreenBounds.getMinX() - 4);
+        menuBarStage.setX(primaryScreenBounds.getMinX());
         menuBarStage.setY(primaryScreenBounds.getMinY());
-        menuBarStage.setWidth(primaryScreenBounds.getWidth() + 8);
 
-        menuBarStage.initStyle(StageStyle.UNDECORATED); // TODO make non-resizable but with title bar.
+        menuBarStage.setResizable(false);
 
         menuBarStage.show();
 
-        double menuBarHeight = menuBarStage.getHeight();
-        double extra = 0;
-        libraryStage.setX(primaryScreenBounds.getMinX() - extra);
-        libraryStage.setY(primaryScreenBounds.getMinY() + menuBarHeight - extra);
-        libraryStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight + 2 * extra);
+        libraryStage.setX(primaryScreenBounds.getMinX());
+        libraryStage.setY(primaryScreenBounds.getMinY());
+        libraryStage.setHeight(primaryScreenBounds.getHeight());
 
-        double librarySection = 0.2;
-        libraryStage.setWidth(primaryScreenBounds.getWidth() * librarySection + 2 * extra);
         //libraryStage.show();
 
-        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 400 - extra);
-        sceneStage.setY(primaryScreenBounds.getMinY() + menuBarHeight - extra);
-        sceneStage.setHeight(primaryScreenBounds.getHeight() - menuBarHeight + 2 * extra);
+        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 400);
+        sceneStage.setY(primaryScreenBounds.getMinY());
+        sceneStage.setHeight(primaryScreenBounds.getHeight());
 
-        sceneStage.initStyle(StageStyle.UNDECORATED);
         sceneStage.show();
+        sceneStage.setMinWidth(sceneStage.getWidth());
+        sceneStage.setMaxWidth(sceneStage.getWidth());
 
         menuBarStage.hide();//this is just to have the menu bar have focusGained on the application starts, only aesthetic value.
         menuBarStage.show();
