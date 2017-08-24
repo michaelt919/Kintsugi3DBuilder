@@ -7,7 +7,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.ibr.app.old.IBRRequestUI;
 import tetzlaff.ibr.core.ReadonlySettingsModel;
-import tetzlaff.ibr.fidelity.FidelityMetricRequest;
+import tetzlaff.ibr.export.fidelity.FidelityMetricRequest;
 
 public class FidelityMetricRequestUI implements IBRRequestUI
 {

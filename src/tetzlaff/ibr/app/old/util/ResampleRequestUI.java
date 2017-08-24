@@ -5,7 +5,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.ibr.app.old.IBRRequestUI;
-import tetzlaff.ibr.rendering.ResampleRequest;
+import tetzlaff.ibr.export.resample.ResampleRequest;
 
 public class ResampleRequestUI implements IBRRequestUI
 {
