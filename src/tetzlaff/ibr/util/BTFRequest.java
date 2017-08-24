@@ -5,9 +5,10 @@ import java.io.IOException;
 
 import tetzlaff.gl.*;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.IBRRenderable;
-import tetzlaff.ibr.LoadingMonitor;
-import tetzlaff.ibr.ReadonlySettingsModel;
+import tetzlaff.ibr.core.IBRRenderable;
+import tetzlaff.ibr.core.IBRRequest;
+import tetzlaff.ibr.core.LoadingMonitor;
+import tetzlaff.ibr.core.ReadonlySettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
 
 public class BTFRequest implements IBRRequest

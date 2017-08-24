@@ -1,8 +1,6 @@
-package tetzlaff.ibr.app.old;
+package tetzlaff.ibr.core;
 
-import tetzlaff.ibr.core.ReadonlyLoadOptionsModel;
-
-public class IBRLoadOptionsModelImpl implements ReadonlyLoadOptionsModel
+public class IBRLoadOptions implements ReadonlyLoadOptionsModel
 {
     private boolean colorImagesRequested;
     private boolean mipmapsRequested;
@@ -11,7 +9,7 @@ public class IBRLoadOptionsModelImpl implements ReadonlyLoadOptionsModel
     private int depthImageWidth;
     private int depthImageHeight;
 
-    public IBRLoadOptionsModelImpl()
+    public IBRLoadOptions()
     {
     }
 
@@ -21,7 +19,7 @@ public class IBRLoadOptionsModelImpl implements ReadonlyLoadOptionsModel
         return this.colorImagesRequested;
     }
 
-    public IBRLoadOptionsModelImpl setColorImagesRequested(boolean colorImagesRequested)
+    public IBRLoadOptions setColorImagesRequested(boolean colorImagesRequested)
     {
         this.colorImagesRequested = colorImagesRequested;
         return this;
@@ -33,7 +31,7 @@ public class IBRLoadOptionsModelImpl implements ReadonlyLoadOptionsModel
         return this.mipmapsRequested;
     }
 
-    public IBRLoadOptionsModelImpl setMipmapsRequested(boolean mipmapsRequested)
+    public IBRLoadOptions setMipmapsRequested(boolean mipmapsRequested)
     {
         this.mipmapsRequested = mipmapsRequested;
         return this;
@@ -45,7 +43,7 @@ public class IBRLoadOptionsModelImpl implements ReadonlyLoadOptionsModel
         return this.compressionRequested;
     }
 
-    public IBRLoadOptionsModelImpl setCompressionRequested(boolean compressionRequested)
+    public IBRLoadOptions setCompressionRequested(boolean compressionRequested)
     {
         this.compressionRequested = compressionRequested;
         return this;
@@ -57,7 +55,7 @@ public class IBRLoadOptionsModelImpl implements ReadonlyLoadOptionsModel
         return this.depthImagesRequested;
     }
 
-    public IBRLoadOptionsModelImpl setDepthImagesRequested(boolean depthImagesRequested)
+    public IBRLoadOptions setDepthImagesRequested(boolean depthImagesRequested)
     {
         this.depthImagesRequested = depthImagesRequested;
         return this;
@@ -69,7 +67,7 @@ public class IBRLoadOptionsModelImpl implements ReadonlyLoadOptionsModel
         return this.depthImageWidth;
     }
 
-    public IBRLoadOptionsModelImpl setDepthImageWidth(int depthImageWidth)
+    public IBRLoadOptions setDepthImageWidth(int depthImageWidth)
     {
         this.depthImageWidth = depthImageWidth;
         return this;
@@ -81,7 +79,7 @@ public class IBRLoadOptionsModelImpl implements ReadonlyLoadOptionsModel
         return this.depthImageHeight;
     }
 
-    public IBRLoadOptionsModelImpl setDepthImageHeight(int depthImageHeight)
+    public IBRLoadOptions setDepthImageHeight(int depthImageHeight)
     {
         this.depthImageHeight = depthImageHeight;
         return this;

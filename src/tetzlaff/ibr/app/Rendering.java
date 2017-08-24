@@ -18,13 +18,13 @@ import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.LoadingModel;
-import tetzlaff.ibr.ReadonlySettingsModel;
-import tetzlaff.ibr.javafx.models.JavaFXModels;
+import tetzlaff.ibr.core.IBRRequestQueue;
+import tetzlaff.ibr.core.LoadingModel;
+import tetzlaff.ibr.core.ReadonlySettingsModel;
+import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.tools.ToolBox.Builder;
 import tetzlaff.ibr.tools.ToolSelectionModel;
-import tetzlaff.ibr.util.IBRRequestQueue;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.models.*;
@@ -36,6 +36,13 @@ public final class Rendering
 {
     private Rendering()
     {
+    }
+
+    private static IBRRequestQueue<?> requestQueue;
+
+    public static IBRRequestQueue<?> getRequestQueue()
+    {
+        return requestQueue;
     }
 
     public static void runProgram()
@@ -107,12 +114,12 @@ public final class Rendering
 
             window.addMouseButtonPressListener((win, buttonIndex, mods) -> fpController.setEnabled(false));
 
-            ExtendedLightingModel lightingModel = JavaFXModels.getInstance().getLightingModel();
-            ReadonlyEnvironmentMapModel environmentMapModel = JavaFXModels.getInstance().getEnvironmentMapModel();
-            ExtendedCameraModel cameraModel = JavaFXModels.getInstance().getCameraModel();
-            ReadonlySettingsModel settingsModel = JavaFXModels.getInstance().getSettingsModel();
-            LoadingModel loadingModel = JavaFXModels.getInstance().getLoadingModel();
-            ToolSelectionModel toolModel = JavaFXModels.getInstance().getToolModel();
+            ExtendedLightingModel lightingModel = JavaFXModelAccess.getInstance().getLightingModel();
+            ReadonlyEnvironmentMapModel environmentMapModel = JavaFXModelAccess.getInstance().getEnvironmentMapModel();
+            ExtendedCameraModel cameraModel = JavaFXModelAccess.getInstance().getCameraModel();
+            ReadonlySettingsModel settingsModel = JavaFXModelAccess.getInstance().getSettingsModel();
+            LoadingModel loadingModel = JavaFXModelAccess.getInstance().getLoadingModel();
+            ToolSelectionModel toolModel = JavaFXModelAccess.getInstance().getToolModel();
 
             ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<>(context, program);
 
@@ -222,7 +229,7 @@ public final class Rendering
                 }
             });
 
-            IBRRequestQueue<OpenGLContext> requestQueue = new IBRRequestQueue<>(context, rendererList);
+            requestQueue = new IBRRequestQueue<>(context, rendererList);
 
             app.addRefreshable(new Refreshable()
             {

@@ -66,7 +66,7 @@ public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
                 try
                 {
                     System.out.println("Loading environment map file " + newFile.getName());
-                    JavaFXModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
+                    JavaFXModelAccess.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
                 }
                 catch (FileNotFoundException e)
                 {

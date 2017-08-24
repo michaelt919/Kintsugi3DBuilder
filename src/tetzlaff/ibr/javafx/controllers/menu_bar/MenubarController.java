@@ -3,24 +3,29 @@ package tetzlaff.ibr.javafx.controllers.menu_bar;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.util.Scanner;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import tetzlaff.ibr.RenderingMode;
 import tetzlaff.ibr.app.WindowSynchronization;
-import tetzlaff.ibr.javafx.models.JavaFXModels;
+import tetzlaff.ibr.core.IBRRequestQueue;
+import tetzlaff.ibr.core.IBRRequestUI;
+import tetzlaff.ibr.core.IBRelightModelAccess;
+import tetzlaff.ibr.core.RenderingMode;
+import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
 import tetzlaff.ibr.tools.ToolType;
@@ -33,7 +38,7 @@ public class MenubarController
 
     private JavaFXSettingsModel getSettings()
     {
-        return JavaFXModels.getInstance().getSettingsModel();
+        return JavaFXModelAccess.getInstance().getSettingsModel();
     }
 
     //Window open flags
@@ -63,12 +68,17 @@ public class MenubarController
 
     @FXML private FileChooser vSetFileChooser;
 
-    private Window parentWindow;
+    @FXML private Menu exportMenu;
 
-    public void init(Window parentWindow, JavaFXToolSelectionModel toolModel)
+    private Window parentWindow;
+    private IBRRequestQueue<?> requestQueue;
+
+    public void init(Window parentWindow, JavaFXToolSelectionModel toolModel, IBRRequestQueue<?> requestQueue)
     {
         this.parentWindow = parentWindow;
         this.toolModel = toolModel;
+        this.requestQueue = requestQueue;
+
         vSetFileChooser = new FileChooser();
 
         vSetFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -76,6 +86,55 @@ public class MenubarController
         vSetFileChooser.getExtensionFilters().add(
             new ExtensionFilter("View set files", "*.vset")
         );
+
+        try(Scanner scanner = new Scanner(new File("export-classes.txt")))
+        {
+            while (scanner.hasNext())
+            {
+                String className = scanner.next();
+
+                if (scanner.hasNextLine())
+                {
+                    String menuName = scanner.nextLine();
+
+                    try
+                    {
+                        Class<?> requestUIClass = Class.forName(className);
+                        Method createMethod = requestUIClass.getDeclaredMethod("create", Window.class, IBRelightModelAccess.class);
+                        if (IBRRequestUI.class.isAssignableFrom(createMethod.getReturnType())
+                            && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
+                        {
+                            MenuItem newItem = new MenuItem(menuName);
+                            newItem.setOnAction(event ->
+                            {
+                                try
+                                {
+                                    IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, parentWindow, JavaFXModelAccess.getInstance());
+                                    requestUI.prompt(requestQueue::addRequest);
+                                }
+                                catch (IllegalAccessException | InvocationTargetException e)
+                                {
+                                    e.printStackTrace();
+                                }
+                            });
+                            exportMenu.getItems().add(newItem);
+                        }
+                        else
+                        {
+                            System.err.println("create() method for " + requestUIClass.getName() + " is invalid.");
+                        }
+                    }
+                    catch (ClassNotFoundException | NoSuchMethodException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
 
         initToggleGroups();
         bindCheckMenuItems();
@@ -142,28 +201,28 @@ public class MenubarController
                 switch ((String) n.getUserData())
                 {
                     case "Wireframe":
-                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.WIREFRAME);
+                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.WIREFRAME);
                         return;
                     case "Lambertian shaded":
-                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_SHADED);
+                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_SHADED);
                         return;
                     case "Phong shaded":
-                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.PHONG_SHADED);
+                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.PHONG_SHADED);
                         return;
                     case "Solid textured":
-                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.SOLID_TEXTURED);
+                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.SOLID_TEXTURED);
                         return;
                     case "Lambertian textured":
-                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_TEXTURED);
+                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_TEXTURED);
                         return;
                     case "Material shaded":
-                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.MATERIAL_SHADED);
+                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.MATERIAL_SHADED);
                         return;
                     case "Image-based rendering":
-                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.IMAGE_BASED_RENDERING);
+                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.IMAGE_BASED_RENDERING);
                         return;
                     case "None":
-                        JavaFXModels.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.NONE);
+                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.NONE);
                         return;
                 }
             }
@@ -213,7 +272,7 @@ public class MenubarController
             {
                 try
                 {
-                    JavaFXModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile);
+                    JavaFXModelAccess.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile);
                 }
                 catch (FileNotFoundException e)
                 {
@@ -283,7 +342,7 @@ public class MenubarController
         LoadOptionsController loadOptionsController = makeWindow("Load Options", loadOptionsWindowOpen, "fxml/menu_bar/LoadOptions.fxml");
         if (loadOptionsController != null)
         {
-            loadOptionsController.bind(JavaFXModels.getInstance().getLoadOptionsModel());
+            loadOptionsController.bind(JavaFXModelAccess.getInstance().getLoadOptionsModel());
         }
     }
 
@@ -306,7 +365,7 @@ public class MenubarController
             "fxml/menu_bar/IBROptions.fxml");
         if (ibrOptionsController != null)
         {
-            ibrOptionsController.bind(JavaFXModels.getInstance().getSettingsModel());
+            ibrOptionsController.bind(JavaFXModelAccess.getInstance().getSettingsModel());
         }
     }
 

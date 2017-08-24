@@ -14,9 +14,9 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.LoadingMonitor;
-import tetzlaff.ibr.ReadonlyLoadOptionsModel;
-import tetzlaff.ibr.ViewSet;
+import tetzlaff.ibr.core.LoadingMonitor;
+import tetzlaff.ibr.core.ReadonlyLoadOptionsModel;
+import tetzlaff.ibr.core.ViewSet;
 
 public class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {

@@ -1,7 +1,7 @@
 package tetzlaff.ibr.app.old;
 
-import tetzlaff.ibr.RenderingMode;
-import tetzlaff.ibr.SettingsModel;
+import tetzlaff.ibr.core.RenderingMode;
+import tetzlaff.ibr.core.SettingsModel;
 import tetzlaff.util.ShadingParameterMode;
 
 public class IBRSettingsModelImpl implements SettingsModel
