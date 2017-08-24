@@ -16,6 +16,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import tetzlaff.ibr.RenderingMode;
 import tetzlaff.ibr.app.WindowSynchronization;
@@ -62,8 +63,11 @@ public class MenubarController
 
     @FXML private FileChooser vSetFileChooser;
 
-    public void init(JavaFXToolSelectionModel toolModel)
+    private Window parentWindow;
+
+    public void init(Window parentWindow, JavaFXToolSelectionModel toolModel)
     {
+        this.parentWindow = parentWindow;
         this.toolModel = toolModel;
         vSetFileChooser = new FileChooser();
 
@@ -307,7 +311,7 @@ public class MenubarController
     }
 
     //window helpers
-    private static <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString)
+    private <ControllerType> ControllerType makeWindow(String title, Flag flag, String urlString)
     {
         try
         {
@@ -321,6 +325,7 @@ public class MenubarController
             Stage stage = new Stage();
             stage.setTitle(title);
             stage.setScene(new Scene(root));
+            stage.initOwner(parentWindow);
 
             stage.setResizable(false);
 
@@ -338,7 +343,7 @@ public class MenubarController
         }
     }
 
-    private static <ControllerType> ControllerType makeWindow(String title, Flag flag, int width, int height, String urlString)
+    private <ControllerType> ControllerType makeWindow(String title, Flag flag, int width, int height, String urlString)
     {
         try
         {
@@ -352,6 +357,7 @@ public class MenubarController
             Stage stage = new Stage();
             stage.setTitle(title);
             stage.setScene(new Scene(root, width, height));
+            stage.initOwner(parentWindow);
             stage.setResizable(false);
             flag.set(true);
             stage.addEventHandler(WindowEvent.WINDOW_CLOSE_REQUEST, param -> flag.set(false));
