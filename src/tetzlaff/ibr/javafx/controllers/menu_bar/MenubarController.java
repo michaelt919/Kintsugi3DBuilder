@@ -87,53 +87,64 @@ public class MenubarController
             new ExtensionFilter("View set files", "*.vset")
         );
 
-        try(Scanner scanner = new Scanner(new File("export-classes.txt")))
+        boolean foundExportClass = false;
+        File exportClassDefinitionFile = new File("export-classes.txt");
+        if (exportClassDefinitionFile.exists())
         {
-            while (scanner.hasNext())
+            try (Scanner scanner = new Scanner(exportClassDefinitionFile))
             {
-                String className = scanner.next();
-
-                if (scanner.hasNextLine())
+                while (scanner.hasNext())
                 {
-                    String menuName = scanner.nextLine().trim();
+                    String className = scanner.next();
 
-                    try
+                    if (scanner.hasNextLine())
                     {
-                        Class<?> requestUIClass = Class.forName(className);
-                        Method createMethod = requestUIClass.getDeclaredMethod("create", Window.class, IBRelightModelAccess.class);
-                        if (IBRRequestUI.class.isAssignableFrom(createMethod.getReturnType())
-                            && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
+                        String menuName = scanner.nextLine().trim();
+
+                        try
                         {
-                            MenuItem newItem = new MenuItem(menuName);
-                            newItem.setOnAction(event ->
+                            Class<?> requestUIClass = Class.forName(className);
+                            Method createMethod = requestUIClass.getDeclaredMethod("create", Window.class, IBRelightModelAccess.class);
+                            if (IBRRequestUI.class.isAssignableFrom(createMethod.getReturnType())
+                                && ((createMethod.getModifiers() & (Modifier.PUBLIC | Modifier.STATIC)) == (Modifier.PUBLIC | Modifier.STATIC)))
                             {
-                                try
+                                MenuItem newItem = new MenuItem(menuName);
+                                newItem.setOnAction(event ->
                                 {
-                                    IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, parentWindow, JavaFXModelAccess.getInstance());
-                                    requestUI.prompt(requestQueue::addRequest);
-                                }
-                                catch (IllegalAccessException | InvocationTargetException e)
-                                {
-                                    e.printStackTrace();
-                                }
-                            });
-                            exportMenu.getItems().add(newItem);
+                                    try
+                                    {
+                                        IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, parentWindow, JavaFXModelAccess.getInstance());
+                                        requestUI.prompt(requestQueue::addRequest);
+                                    }
+                                    catch (IllegalAccessException | InvocationTargetException e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+                                });
+                                exportMenu.getItems().add(newItem);
+                                foundExportClass = true;
+                            }
+                            else
+                            {
+                                System.err.println("create() method for " + requestUIClass.getName() + " is invalid.");
+                            }
                         }
-                        else
+                        catch (ClassNotFoundException | NoSuchMethodException e)
                         {
-                            System.err.println("create() method for " + requestUIClass.getName() + " is invalid.");
+                            e.printStackTrace();
                         }
-                    }
-                    catch (ClassNotFoundException | NoSuchMethodException e)
-                    {
-                        e.printStackTrace();
                     }
                 }
             }
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
         }
-        catch (FileNotFoundException e)
+
+        if (!foundExportClass)
         {
-            e.printStackTrace();
+            exportMenu.setVisible(false);
         }
 
         initToggleGroups();
