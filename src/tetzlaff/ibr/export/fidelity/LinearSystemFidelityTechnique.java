@@ -1,4 +1,4 @@
-package tetzlaff.ibr.fidelity;
+package tetzlaff.ibr.export.fidelity;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

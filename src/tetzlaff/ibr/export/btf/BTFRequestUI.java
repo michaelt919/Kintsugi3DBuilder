@@ -1,4 +1,4 @@
-package tetzlaff.ibr.rendering;
+package tetzlaff.ibr.export.btf;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,23 +13,19 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
-import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import tetzlaff.ibr.core.IBRRequest;
 import tetzlaff.ibr.core.IBRRequestUI;
 import tetzlaff.ibr.core.IBRelightModelAccess;
 
-public class ResampleRequestUI implements IBRRequestUI
+public class BTFRequestUI implements IBRRequestUI
 {
     @FXML private TextField widthTextField;
     @FXML private TextField heightTextField;
     @FXML private TextField exportDirectoryField;
-    @FXML private TextField targetVSetFileField;
     @FXML private Button runButton;
 
-    private final FileChooser fileChooser = new FileChooser();
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
 
     private IBRelightModelAccess modelAccess;
@@ -37,23 +33,23 @@ public class ResampleRequestUI implements IBRRequestUI
 
     private File lastDirectory;
 
-    public static ResampleRequestUI create(Window window, IBRelightModelAccess modelAccess) throws IOException
+    public static BTFRequestUI create(Window window, IBRelightModelAccess modelAccess) throws IOException
     {
-        String fxmlFileName = "fxml/export/ResampleRequestUI.fxml";
-        URL url = ResampleRequestUI.class.getClassLoader().getResource(fxmlFileName);
+        String fxmlFileName = "fxml/export/BTFRequestUI.fxml";
+        URL url = BTFRequestUI.class.getClassLoader().getResource(fxmlFileName);
         assert url != null : "Can't find " + fxmlFileName;
 
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent parent = fxmlLoader.load();
-        ResampleRequestUI resampleRequestUI = fxmlLoader.getController();
-        resampleRequestUI.modelAccess = modelAccess;
+        BTFRequestUI btfRequestUI = fxmlLoader.getController();
+        btfRequestUI.modelAccess = modelAccess;
 
-        resampleRequestUI.stage = new Stage();
-        resampleRequestUI.stage.setTitle("Fidelity metric request");
-        resampleRequestUI.stage.setScene(new Scene(parent));
-        resampleRequestUI.stage.initOwner(window);
+        btfRequestUI.stage = new Stage();
+        btfRequestUI.stage.setTitle("Fidelity metric request");
+        btfRequestUI.stage.setScene(new Scene(parent));
+        btfRequestUI.stage.initOwner(window);
 
-        return resampleRequestUI;
+        return btfRequestUI;
     }
 
     @FXML
@@ -81,33 +77,6 @@ public class ResampleRequestUI implements IBRRequestUI
     }
 
     @FXML
-    private void targetVSetFileButtonAction()
-    {
-        this.fileChooser.setTitle("Choose a target view set file");
-        this.fileChooser.getExtensionFilters().clear();
-        this.fileChooser.getExtensionFilters().add(new ExtensionFilter("View set files", "*.vset"));
-        if (targetVSetFileField.getText().isEmpty())
-        {
-            if (lastDirectory != null)
-            {
-                this.fileChooser.setInitialDirectory(lastDirectory);
-            }
-        }
-        else
-        {
-            File currentValue = new File(targetVSetFileField.getText());
-            this.fileChooser.setInitialDirectory(currentValue.getParentFile());
-            this.fileChooser.setInitialFileName(currentValue.getName());
-        }
-        File file = this.fileChooser.showOpenDialog(stage.getOwner());
-        if (file != null)
-        {
-            targetVSetFileField.setText(file.toString());
-            lastDirectory = file.getParentFile();
-        }
-    }
-
-    @FXML
     public void cancelButtonAction(ActionEvent actionEvent)
     {
         stage.close();
@@ -123,11 +92,12 @@ public class ResampleRequestUI implements IBRRequestUI
             stage.close();
 
             requestHandler.accept(
-                new ResampleRequest(
+                new BTFRequest(
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText()),
-                    new File(targetVSetFileField.getText()),
-                    new File(exportDirectoryField.getText())));
+                    new File(exportDirectoryField.getText()),
+                    modelAccess.getSettingsModel(),
+                    modelAccess.getLightingModel().getLightColor(0)));
         });
     }
 }
