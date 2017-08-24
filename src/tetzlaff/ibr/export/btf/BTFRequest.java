@@ -1,4 +1,4 @@
-package tetzlaff.ibr.util;
+package tetzlaff.ibr.export.btf;
 
 import java.io.File;
 import java.io.IOException;

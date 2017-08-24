@@ -6,7 +6,7 @@ import javax.swing.*;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.app.old.IBRRequestUI;
 import tetzlaff.ibr.core.ReadonlySettingsModel;
-import tetzlaff.ibr.util.BTFRequest;
+import tetzlaff.ibr.export.btf.BTFRequest;
 
 public class BTFRequestUI implements IBRRequestUI
 {
