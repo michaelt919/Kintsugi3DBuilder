@@ -38,10 +38,13 @@ public final class Rendering
     {
     }
 
-    private static IBRRequestQueue<?> requestQueue;
+    private static volatile IBRRequestQueue<?> requestQueue;
 
     public static IBRRequestQueue<?> getRequestQueue()
     {
+        while (requestQueue == null)
+        {
+        }
         return requestQueue;
     }
 

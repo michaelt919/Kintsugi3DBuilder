@@ -1,4 +1,4 @@
-package tetzlaff.fidelity;
+package tetzlaff.ibr.fidelity;
 
 import java.io.File;
 import java.io.IOException;

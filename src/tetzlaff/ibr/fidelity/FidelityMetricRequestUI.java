@@ -1,10 +1,11 @@
-package tetzlaff.fidelity;
+package tetzlaff.ibr.fidelity;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.function.Consumer;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -35,7 +36,7 @@ public class FidelityMetricRequestUI implements IBRRequestUI
 
     public static FidelityMetricRequestUI create(Window window, IBRelightModelAccess modelAccess) throws IOException
     {
-        String fxmlFileName = "fxml/fidelity/FidelityMetricRequestUI.fxml";
+        String fxmlFileName = "fxml/export/FidelityMetricRequestUI.fxml";
         URL url = FidelityMetricRequestUI.class.getClassLoader().getResource(fxmlFileName);
         assert url != null : "Can't find " + fxmlFileName;
 
@@ -132,6 +133,12 @@ public class FidelityMetricRequestUI implements IBRRequestUI
             maskFileField.setText(file.toString());
             lastDirectory = file.getParentFile();
         }
+    }
+
+    @FXML
+    public void cancelButtonAction(ActionEvent actionEvent)
+    {
+        stage.close();
     }
 
     @Override

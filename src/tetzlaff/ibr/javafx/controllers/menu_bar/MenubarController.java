@@ -95,7 +95,7 @@ public class MenubarController
 
                 if (scanner.hasNextLine())
                 {
-                    String menuName = scanner.nextLine();
+                    String menuName = scanner.nextLine().trim();
 
                     try
                     {
