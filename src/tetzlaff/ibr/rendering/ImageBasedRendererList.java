@@ -61,6 +61,8 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     {
         // id = vsetFile.getPath()
 
+        this.loadingMonitor.startLoading();
+
         IBRRenderable<ContextType> newItem =
             new IBRImplementation<ContextType>(id, context, this.getProgram(),
                 IBRResources.getBuilderForContext(this.context)
@@ -121,6 +123,8 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, ReadonlyLoadOptionsModel loadOptions)
         throws FileNotFoundException
     {
+        this.loadingMonitor.startLoading();
+
         IBRRenderable<ContextType> newItem =
             new IBRImplementation<>(id, context, this.getProgram(),
                 IBRResources.getBuilderForContext(this.context)

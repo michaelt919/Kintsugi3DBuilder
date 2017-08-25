@@ -20,6 +20,7 @@ import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.core.IBRRequestQueue;
 import tetzlaff.ibr.core.LoadingModel;
+import tetzlaff.ibr.core.LoadingMonitor;
 import tetzlaff.ibr.core.ReadonlySettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
@@ -42,9 +43,14 @@ public final class Rendering
 
     public static IBRRequestQueue<?> getRequestQueue()
     {
+        if (requestQueue == null)
+        {
+            System.out.println("Waiting for requestQueue to be initialized...");
+        }
         while (requestQueue == null)
         {
         }
+        System.out.println("requestQueue initialized; continuing.");
         return requestQueue;
     }
 
@@ -233,6 +239,32 @@ public final class Rendering
             });
 
             requestQueue = new IBRRequestQueue<>(context, rendererList);
+            requestQueue.setLoadingMonitor(new LoadingMonitor()
+            {
+                @Override
+                public void startLoading()
+                {
+                    loadingModel.getLoadingMonitor().startLoading();
+                }
+
+                @Override
+                public void setMaximum(double maximum)
+                {
+                    loadingModel.getLoadingMonitor().setMaximum(maximum);
+                }
+
+                @Override
+                public void setProgress(double progress)
+                {
+                    loadingModel.getLoadingMonitor().setProgress(progress);
+                }
+
+                @Override
+                public void loadingComplete()
+                {
+                    loadingModel.getLoadingMonitor().loadingComplete();
+                }
+            });
 
             app.addRefreshable(new Refreshable()
             {

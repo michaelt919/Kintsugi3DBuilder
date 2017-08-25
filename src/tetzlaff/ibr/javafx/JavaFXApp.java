@@ -110,7 +110,7 @@ public class JavaFXApp extends Application
 
         //libraryStage.show();
 
-        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 400);
+        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 420);
         sceneStage.setY(primaryScreenBounds.getMinY());
         sceneStage.setHeight(primaryScreenBounds.getHeight());
         sceneStage.initOwner(menuBarStage.getScene().getWindow());

@@ -9,8 +9,9 @@ public class LoadingModel
     private LoadingMonitor monitor;
     private ReadonlyLoadOptionsModel options;
 
-    public LoadingModel()
+    public LoadingMonitor getLoadingMonitor()
     {
+        return monitor;
     }
 
     public void setLoadingHandler(LoadingHandler handler)
