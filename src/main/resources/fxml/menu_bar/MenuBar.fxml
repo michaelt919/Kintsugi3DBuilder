@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<MenuBar xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.menu_bar.MenubarController">
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.menu_bar.MenubarController">
+<MenuBar>
       <Menu mnemonicParsing="false" text="File">
          <MenuItem mnemonicParsing="false" onAction="#file_createProject" text="Create project" />
          <MenuItem mnemonicParsing="false" onAction="#file_openProject" text="Open project" />
@@ -30,10 +33,7 @@
          <fx:define>
             <ToggleGroup fx:id="renderGroup" />
          </fx:define>
-         <RadioMenuItem mnemonicParsing="false" text="None" userData="None">
-         <toggleGroup>
-            <ToggleGroup fx:id="renderGroup" />
-         </toggleGroup></RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="None" toggleGroup="$renderGroup" userData="None" />
          <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" userData="Wireframe" />
          <RadioMenuItem mnemonicParsing="false" text="Lambertian shaded" toggleGroup="$renderGroup" userData="Lambertian shaded" />
          <RadioMenuItem mnemonicParsing="false" text="Phong shaded" toggleGroup="$renderGroup" userData="Phong shaded" />
@@ -51,10 +51,7 @@
          <fx:define>
             <ToggleGroup fx:id="toolGroup" />
          </fx:define>
-         <RadioMenuItem mnemonicParsing="false" selected="true" text="Orbit Camera tool" userData="ORBIT">
-         <toggleGroup>
-            <ToggleGroup fx:id="toolGroup" />
-         </toggleGroup></RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" selected="true" text="Orbit Camera tool" toggleGroup="$renderGroup" userData="ORBIT" />
          <RadioMenuItem mnemonicParsing="false" text="Pan Camera tool" toggleGroup="$toolGroup" userData="PAN" />
          <RadioMenuItem mnemonicParsing="false" text="Dolly Camera tool" toggleGroup="$toolGroup" userData="DOLLY" />
          <RadioMenuItem mnemonicParsing="false" text="Frame Selection tool" toggleGroup="$toolGroup" userData="X" />
@@ -77,9 +74,16 @@
          <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
       </Menu>
       <Menu mnemonicParsing="false" text="Help">
-        <items>
           <MenuItem mnemonicParsing="false" text="User Manual" />
-            <MenuItem mnemonicParsing="false" text="About" />
-        </items>
+          <MenuItem mnemonicParsing="false" text="About" />
       </Menu>
    </MenuBar>
+   <ProgressBar fx:id="progressBar" prefWidth="410.0" progress="0.0" VBox.vgrow="ALWAYS" visible="false">
+       <VBox.margin>
+           <Insets>
+               <right>-10</right>
+               <bottom>-10</bottom>
+           </Insets>
+       </VBox.margin>
+   </ProgressBar>
+</VBox>

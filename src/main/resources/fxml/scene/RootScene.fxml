@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
-<TabPane maxWidth="400.0" fx:controller="tetzlaff.ibr.javafx.controllers.scene.RootSceneController" tabClosingPolicy="UNAVAILABLE"
-         xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<TabPane prefWidth="410.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
+         fx:controller="tetzlaff.ibr.javafx.controllers.scene.RootSceneController">
 
     <Tab text="Camera">
         <ScrollPane fitToWidth="true">
-            <fx:include fx:id="camera" source="camera/RootCameraScene.fxml"/>
+            <fx:include fx:id="camera" source="camera/RootCameraScene.fxml" />
         </ScrollPane>
     </Tab>
 
     <Tab text="Environment map">
         <ScrollPane fitToWidth="true">
-            <fx:include fx:id="environmentMap" source="environment_map/RootEnvironmentMapScene.fxml"/>
+            <fx:include fx:id="environmentMap" source="environment_map/RootEnvironmentMapScene.fxml" />
         </ScrollPane>
     </Tab>
 
     <Tab text="Lights">
     <ScrollPane fitToWidth="true">
-        <fx:include fx:id="lights" source="lights/RootLightScene.fxml"/>
+        <fx:include fx:id="lights" source="lights/RootLightScene.fxml" />
     </ScrollPane>
 
 </Tab>

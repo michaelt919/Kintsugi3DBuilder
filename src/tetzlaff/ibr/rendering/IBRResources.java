@@ -411,6 +411,8 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
             this.colorTextures = null;
         }
 
+        loadingMonitor.setMaximum(0.0);
+
         if (geometry != null)
         {
             this.positionBuffer = context.createVertexBuffer().setData(geometry.getVertices());

@@ -9,6 +9,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Scanner;
 
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -21,10 +22,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import tetzlaff.ibr.app.WindowSynchronization;
-import tetzlaff.ibr.core.IBRRequestQueue;
-import tetzlaff.ibr.core.IBRRequestUI;
-import tetzlaff.ibr.core.IBRelightModelAccess;
-import tetzlaff.ibr.core.RenderingMode;
+import tetzlaff.ibr.core.*;
 import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
@@ -33,6 +31,7 @@ import tetzlaff.util.Flag;
 
 public class MenubarController
 {
+
     //toolModel
     private JavaFXToolSelectionModel toolModel;
 
@@ -45,6 +44,8 @@ public class MenubarController
     Flag iBROptionsWindowOpen = new Flag(false);
     Flag loadOptionsWindowOpen = new Flag(false);
     Flag loaderWindowOpen = new Flag(false);
+
+    @FXML private ProgressBar progressBar;
 
     //toggle groups
     @FXML private ToggleGroup toolGroup;
@@ -71,13 +72,11 @@ public class MenubarController
     @FXML private Menu exportMenu;
 
     private Window parentWindow;
-    private IBRRequestQueue<?> requestQueue;
 
     public void init(Window parentWindow, JavaFXToolSelectionModel toolModel, IBRRequestQueue<?> requestQueue)
     {
         this.parentWindow = parentWindow;
         this.toolModel = toolModel;
-        this.requestQueue = requestQueue;
 
         vSetFileChooser = new FileChooser();
 
@@ -86,6 +85,43 @@ public class MenubarController
         vSetFileChooser.getExtensionFilters().add(
             new ExtensionFilter("View set files", "*.vset")
         );
+
+        JavaFXModelAccess.getInstance().getLoadingModel().setLoadingMonitor(new LoadingMonitor()
+        {
+            private double maximum = 0.0;
+            private double progress = 0.0;
+            @Override
+            public void startLoading()
+            {
+                progress = 0.0;
+                Platform.runLater(() ->
+                {
+                    progressBar.setVisible(true);
+                    progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : 0.0);
+                });
+            }
+
+            @Override
+            public void setMaximum(double maximum)
+            {
+                this.maximum = maximum;
+                Platform.runLater(() -> progressBar.setProgress(progress / maximum));
+            }
+
+            @Override
+            public void setProgress(double progress)
+            {
+                this.progress = progress;
+                Platform.runLater(() -> progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
+            }
+
+            @Override
+            public void loadingComplete()
+            {
+                this.maximum = 0.0;
+                Platform.runLater(() ->  progressBar.setVisible(false));
+            }
+        });
 
         boolean foundExportClass = false;
         File exportClassDefinitionFile = new File("export-classes.txt");
