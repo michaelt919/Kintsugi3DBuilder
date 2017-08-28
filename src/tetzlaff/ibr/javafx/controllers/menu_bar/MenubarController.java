@@ -21,19 +21,20 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
+import tetzlaff.gl.window.ModifierKeys;
+import tetzlaff.gl.window.ModifierKeysBuilder;
 import tetzlaff.ibr.app.WindowSynchronization;
 import tetzlaff.ibr.core.*;
 import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
-import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
+import tetzlaff.ibr.javafx.models.JavaFXToolBindingModel;
 import tetzlaff.ibr.tools.ToolType;
 import tetzlaff.util.Flag;
+import tetzlaff.util.MouseMode;
 
 public class MenubarController
 {
-
-    //toolModel
-    private JavaFXToolSelectionModel toolModel;
+    private JavaFXToolBindingModel toolBindingModel;
 
     private JavaFXSettingsModel getSettings()
     {
@@ -48,7 +49,6 @@ public class MenubarController
     @FXML private ProgressBar progressBar;
 
     //toggle groups
-    @FXML private ToggleGroup toolGroup;
     @FXML private ToggleGroup renderGroup;
 
     //menu items
@@ -60,6 +60,7 @@ public class MenubarController
     @FXML private CheckMenuItem environmentMappingCheckMenuItem; //TODO imp. this
     @FXML private CheckMenuItem shadowsCheckMenuItem;
     @FXML private CheckMenuItem visibleLightsCheckMenuItem;
+    @FXML private CheckMenuItem visibleLightWidgetsCheckMenuItem;
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
 
@@ -73,10 +74,16 @@ public class MenubarController
 
     private Window parentWindow;
 
-    public void init(Window parentWindow, JavaFXToolSelectionModel toolModel, IBRRequestQueue<?> requestQueue)
+    public void init(Window parentWindow, JavaFXToolBindingModel toolBindingModel, IBRRequestQueue<?> requestQueue)
     {
         this.parentWindow = parentWindow;
-        this.toolModel = toolModel;
+        this.toolBindingModel = toolBindingModel;
+        toolBindingModel.setTool(new MouseMode(0, ModifierKeys.NONE), ToolType.ORBIT);
+        toolBindingModel.setTool(new MouseMode(1, ModifierKeys.NONE), ToolType.PAN);
+        toolBindingModel.setTool(new MouseMode(2, ModifierKeys.NONE), ToolType.PAN);
+        toolBindingModel.setTool(new MouseMode(1, ModifierKeysBuilder.begin().shift().end()), ToolType.DOLLY);
+        toolBindingModel.setTool(new MouseMode(2, ModifierKeysBuilder.begin().shift().end()), ToolType.DOLLY);
+        toolBindingModel.setTool(new MouseMode(0, ModifierKeysBuilder.begin().shift().alt().end()), ToolType.CENTER_POINT);
 
         vSetFileChooser = new FileChooser();
 
@@ -189,57 +196,6 @@ public class MenubarController
 
     private void initToggleGroups()
     {
-        toolGroup.selectedToggleProperty().addListener((ob, o, n) ->
-        {
-            if (n != null && n.getUserData() != null)
-            {
-                switch ((String) n.getUserData())
-                {
-                    case "ORBIT":
-                        toolModel.setTool(ToolType.ORBIT);
-                        break;
-                    case "DOLLY":
-                        toolModel.setTool(ToolType.DOLLY);
-                        break;
-                    case "PAN":
-                        toolModel.setTool(ToolType.PAN);
-                        break;
-                    case "LIGHT":
-                        toolModel.setTool(ToolType.LIGHT);
-                        break;
-                    case "CENTER_POINT":
-                        toolModel.setTool(ToolType.CENTER_POINT);
-                        break;
-                }
-            }
-        });
-
-        toolModel.toolProperty().addListener((observable, oldValue, newValue) ->
-        {
-            String data;
-            switch (newValue)
-            {
-                case ORBIT:
-                    data = "ORBIT";
-                    break;
-                case DOLLY:
-                    data = "DOLLY";
-                    break;
-                case PAN:
-                    data = "PAN";
-                    break;
-                case LIGHT:
-                    data = "LIGHT";
-                    break;
-                case CENTER_POINT:
-                    data = "CENTER_POINT";
-                    break;
-                default:
-                    data = "ERROR";
-            }
-            selectToggleWithData(toolGroup, data);
-        });
-
         renderGroup.selectedToggleProperty().addListener((ob, o, n) ->
         {
             if (n != null && n.getUserData() != null)
@@ -284,6 +240,7 @@ public class MenubarController
         relightingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().relightingProperty());
         shadowsCheckMenuItem.selectedProperty().bindBidirectional(getSettings().shadowsProperty());
         visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleLightsProperty());
+        visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleLightWidgetsProperty());
         visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleCameraPoseProperty());
         visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleSavedCameraPoseProperty());
 

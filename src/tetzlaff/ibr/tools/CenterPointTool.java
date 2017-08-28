@@ -1,15 +1,14 @@
 package tetzlaff.ibr.tools;//Created by alexk on 8/8/2017.
 
 import tetzlaff.gl.window.CursorPosition;
-import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.Window;
+import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.SceneViewportModel;
 
-final class CenterPointTool implements Tool
+final class CenterPointTool implements DragTool
 {
 
-    private final ToolSelectionModel toolSelectionModel;
+    private final ToolBindingModel toolBindingModel;
     private final ExtendedCameraModel cameraModel;
     private final SceneViewportModel sceneViewportModel;
 
@@ -18,7 +17,7 @@ final class CenterPointTool implements Tool
         @Override
         public CenterPointTool build()
         {
-            return new CenterPointTool(getCameraModel(), getToolSelectionModel(), getSceneViewportModel());
+            return new CenterPointTool(getCameraModel(), getToolBindingModel(), getSceneViewportModel());
         }
     }
 
@@ -27,29 +26,23 @@ final class CenterPointTool implements Tool
         return new Builder();
     }
 
-    private CenterPointTool(ExtendedCameraModel cameraModel, ToolSelectionModel toolSelectionModel, SceneViewportModel sceneViewportModel)
+    private CenterPointTool(ExtendedCameraModel cameraModel, ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
     {
-        this.toolSelectionModel = toolSelectionModel;
+        this.toolBindingModel = toolBindingModel;
         this.cameraModel = cameraModel;
         this.sceneViewportModel = sceneViewportModel;
     }
 
     @Override
-    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
+    public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
     {
-        if (buttonIndex == 0)
+        double normalizedX = cursorPosition.x / windowSize.width;
+        double normalizedY = cursorPosition.y / windowSize.height;
+
+        Object clickedObject = sceneViewportModel.getObjectAtCoordinates(normalizedX, normalizedY);
+        if (clickedObject instanceof String && "IBRObject".equals(clickedObject))
         {
-            CursorPosition mousePos = window.getCursorPosition();
-
-            double normalizedX = mousePos.x / window.getWindowSize().width;
-            double normalizedY = mousePos.y / window.getWindowSize().height;
-
-            Object clickedObject = sceneViewportModel.getObjectAtCoordinates(normalizedX, normalizedY);
-            if (clickedObject instanceof String && "IBRObject".equals(clickedObject))
-            {
-                cameraModel.setCenter(sceneViewportModel.get3DPositionAtCoordinates(normalizedX, normalizedY));
-                toolSelectionModel.setTool(ToolType.ORBIT);
-            }
+            cameraModel.setCenter(sceneViewportModel.get3DPositionAtCoordinates(normalizedX, normalizedY));
         }
     }
 }

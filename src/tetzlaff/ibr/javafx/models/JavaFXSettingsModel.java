@@ -4,7 +4,6 @@ import javafx.beans.property.*;
 import tetzlaff.ibr.core.ReadonlySettingsModel;
 import tetzlaff.ibr.core.RenderingMode;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
-import tetzlaff.ibr.tools.ToolType;
 import tetzlaff.util.ShadingParameterMode;
 
 public class JavaFXSettingsModel implements ReadonlySettingsModel
@@ -16,6 +15,7 @@ public class JavaFXSettingsModel implements ReadonlySettingsModel
     private final BooleanProperty textures = new SimpleBooleanProperty(false);
     private final BooleanProperty shadows = new SimpleBooleanProperty(false);
     private final BooleanProperty visibleLights = new SimpleBooleanProperty(true);
+    private final BooleanProperty visibleLightWidgets = new SimpleBooleanProperty(false);
     private final BooleanProperty visibleCameraPose = new SimpleBooleanProperty(false);
     private final BooleanProperty visibleSavedCameraPose = new SimpleBooleanProperty(false);
     private final FloatProperty gamma = StaticUtilities.bound(1, 5, new SimpleFloatProperty(2.2f));
@@ -145,15 +145,20 @@ public class JavaFXSettingsModel implements ReadonlySettingsModel
         return visibleLights.get();
     }
 
-    @Override
-    public boolean areLightWidgetsEnabled()
-    {
-        return JavaFXModelAccess.getInstance().getToolModel().getTool() == ToolType.LIGHT;
-    }
-
     public BooleanProperty visibleLightsProperty()
     {
         return visibleLights;
+    }
+
+    @Override
+    public boolean areLightWidgetsEnabled()
+    {
+        return visibleLightWidgets.get();
+    }
+
+    public BooleanProperty visibleLightWidgetsProperty()
+    {
+        return visibleLightWidgets;
     }
 
     @Override

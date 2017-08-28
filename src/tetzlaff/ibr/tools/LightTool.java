@@ -7,9 +7,11 @@ import tetzlaff.gl.vecmath.DoubleVector2;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.*;
-import tetzlaff.models.*;
+import tetzlaff.models.ExtendedLightingModel;
+import tetzlaff.models.LightWidgetModel;
+import tetzlaff.models.SceneViewportModel;
 
-final class LightTool implements Tool
+final class LightTool implements PickerTool
 {
     private float azimuthOffset;
     private float inclinationOffset;
@@ -21,14 +23,12 @@ final class LightTool implements Tool
     private final ExtendedLightingModel lightingModel;
     private final SceneViewportModel sceneViewportModel;
 
-    private final OrbitTool orbitFallbackTool;
-
     private static class Builder extends ToolBuilderBase<LightTool>
     {
         @Override
         public LightTool build()
         {
-            return new LightTool(getCameraModel(), getEnvironmentMapModel(), getLightingModel(), getSceneViewportModel(), getToolSelectionModel());
+            return new LightTool(getLightingModel(), getSceneViewportModel());
         }
     }
 
@@ -37,22 +37,14 @@ final class LightTool implements Tool
         return new Builder();
     }
 
-    private LightTool(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ExtendedLightingModel lightingModel,
-        SceneViewportModel sceneViewportModel, ToolSelectionModel toolSelectionModel)
+    private LightTool(ExtendedLightingModel lightingModel, SceneViewportModel sceneViewportModel)
     {
         this.lightingModel = lightingModel;
         this.sceneViewportModel = sceneViewportModel;
-        this.orbitFallbackTool = OrbitTool.getBuilder()
-            .setCameraModel(cameraModel)
-            .setEnvironmentMapModel(environmentMapModel)
-            .setLightingModel(lightingModel)
-            .setSceneViewportModel(sceneViewportModel)
-            .setToolSelectionModel(toolSelectionModel)
-            .build();
     }
 
     @Override
-    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
+    public boolean mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
         if (buttonIndex == 0)
         {
@@ -135,16 +127,13 @@ final class LightTool implements Tool
             lightingModel.setLightWidgetsEthereal(true);
         }
 
-        if (updateFunction == null)
-        {
-            orbitFallbackTool.mouseButtonPressed(window, buttonIndex, mods);
-        }
-
         System.out.println("Click: " + LocalTime.now());
+
+        return updateFunction != null;
     }
 
     @Override
-    public void mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods)
+    public boolean mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
         if (buttonIndex == 0)
         {
@@ -161,6 +150,8 @@ final class LightTool implements Tool
 
             updateFunction = null;
         }
+
+        return updateFunction != null;
     }
 
     private void updateForHoverState(Window<?> window, double xPos, double yPos)
@@ -300,14 +291,14 @@ final class LightTool implements Tool
     }
 
     @Override
-    public void cursorMoved(Window<?> window, double xPos, double yPos)
+    public boolean cursorMoved(Window<?> window, double xPos, double yPos)
     {
         if (updateFunction == null)
         {
-            orbitFallbackTool.cursorMoved(window, xPos, yPos);
             updateForHoverState(window, xPos, yPos);
+            return false;
         }
-        else if (window.getMouseButtonState(0) == MouseButtonState.Pressed)
+        else
         {
             System.out.println("Move: " + LocalTime.now());
 
@@ -315,6 +306,7 @@ final class LightTool implements Tool
             updateFunction.accept(new DoubleVector2(xPos / windowSize.width, yPos / windowSize.height));
 
             System.out.println("Update finished: " + LocalTime.now());
+            return true;
         }
     }
 }

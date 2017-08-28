@@ -5,9 +5,9 @@ import tetzlaff.models.ExtendedLightingModel;
 import tetzlaff.models.ReadonlyEnvironmentMapModel;
 import tetzlaff.models.SceneViewportModel;
 
-abstract class ToolBuilderBase<ToolType extends Tool> implements ToolBuilder<ToolType>
+abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
 {
-    private ToolSelectionModel toolSelectionModel;
+    private ToolBindingModel toolBindingModel;
     private ExtendedCameraModel cameraModel;
     private ReadonlyEnvironmentMapModel environmentMapModel;
     private ExtendedLightingModel lightingModel;
@@ -18,9 +18,9 @@ abstract class ToolBuilderBase<ToolType extends Tool> implements ToolBuilder<Too
     }
 
     @Override
-    public ToolBuilder<ToolType> setToolSelectionModel(ToolSelectionModel toolSelectionModel)
+    public ToolBuilder<ToolType> setToolSelectionModel(ToolBindingModel toolBindingModel)
     {
-        this.toolSelectionModel = toolSelectionModel;
+        this.toolBindingModel = toolBindingModel;
         return this;
     }
 
@@ -52,9 +52,9 @@ abstract class ToolBuilderBase<ToolType extends Tool> implements ToolBuilder<Too
         return this;
     }
 
-    ToolSelectionModel getToolSelectionModel()
+    ToolBindingModel getToolBindingModel()
     {
-        return toolSelectionModel;
+        return toolBindingModel;
     }
 
     ExtendedCameraModel getCameraModel()

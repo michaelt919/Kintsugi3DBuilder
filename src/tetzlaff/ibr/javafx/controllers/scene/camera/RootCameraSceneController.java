@@ -17,8 +17,7 @@ import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import tetzlaff.ibr.javafx.models.JavaFXCameraModel;
-import tetzlaff.ibr.javafx.models.JavaFXToolSelectionModel;
-import tetzlaff.ibr.tools.ToolType;
+import tetzlaff.ibr.javafx.models.JavaFXToolBindingModel;
 
 public class RootCameraSceneController implements Initializable
 {
@@ -62,7 +61,7 @@ public class RootCameraSceneController implements Initializable
         cameraListView.getSelectionModel().select(freeCam);
     }
 
-    public void init(JavaFXCameraModel cameraModel, JavaFXToolSelectionModel toolModel)
+    public void init(JavaFXCameraModel cameraModel, JavaFXToolBindingModel toolModel)
     {
 
         System.out.println("Cam in!");
@@ -70,8 +69,6 @@ public class RootCameraSceneController implements Initializable
         cameraModel.setSelectedCameraSettingProperty(
             cameraListView.getSelectionModel().selectedItemProperty()
         );
-
-        settingsController.setOnActionSelectPoint(event -> toolModel.setTool(ToolType.CENTER_POINT));
     }
 
     private SelectionModel<CameraSetting> getCameraSelectionModel()

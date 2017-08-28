@@ -26,6 +26,7 @@
          <CheckMenuItem fx:id="environmentMappingCheckMenuItem" mnemonicParsing="false" selected="true" text="Environment mapping" />
          <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" text="Shadows" />
          <CheckMenuItem fx:id="visibleLightsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light sources" />
+          <CheckMenuItem fx:id="visibleLightWidgetsCheckMenuItem" mnemonicParsing="false" text="Show light widgets" />
          <CheckMenuItem fx:id="visibleCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show camera poses for photographs" />
          <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show saved camera poses" />
       </Menu>
@@ -46,26 +47,6 @@
          <CheckMenuItem fx:id="materialsForIBRCheckMenuItem" mnemonicParsing="false" text="Use materials for IBR" />
          <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing" />
          <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect" />
-      </Menu>
-      <Menu mnemonicParsing="false" text="Tools">
-         <fx:define>
-            <ToggleGroup fx:id="toolGroup" />
-         </fx:define>
-         <RadioMenuItem mnemonicParsing="false" selected="true" text="Orbit Camera tool" toggleGroup="$renderGroup" userData="ORBIT" />
-         <RadioMenuItem mnemonicParsing="false" text="Pan Camera tool" toggleGroup="$toolGroup" userData="PAN" />
-         <RadioMenuItem mnemonicParsing="false" text="Dolly Camera tool" toggleGroup="$toolGroup" userData="DOLLY" />
-         <RadioMenuItem mnemonicParsing="false" text="Frame Selection tool" toggleGroup="$toolGroup" userData="X" />
-         <RadioMenuItem mnemonicParsing="false" text="Look at Point tool" toggleGroup="$toolGroup" userData="CENTER_POINT" />
-         <RadioMenuItem mnemonicParsing="false" text="Zoom tool" toggleGroup="$toolGroup" userData="X" />
-         <RadioMenuItem mnemonicParsing="false" text="First-person Camera tool" toggleGroup="$toolGroup" userData="X" />
-         <SeparatorMenuItem mnemonicParsing="false" />
-         <RadioMenuItem mnemonicParsing="false" text="Rotate Model tool" toggleGroup="$toolGroup" userData="X" />
-         <RadioMenuItem mnemonicParsing="false" text="Translate Model tool" toggleGroup="$toolGroup" userData="X" />
-         <RadioMenuItem mnemonicParsing="false" text="Scale Model tool" toggleGroup="$toolGroup" userData="X" />
-         <SeparatorMenuItem mnemonicParsing="false" />
-         <RadioMenuItem mnemonicParsing="false" text="Rotate Environment tool" toggleGroup="$toolGroup" userData="X" />
-         <SeparatorMenuItem mnemonicParsing="false" />
-         <RadioMenuItem mnemonicParsing="false" text="Light Tool" toggleGroup="$toolGroup" userData="LIGHT" />
       </Menu>
       <Menu mnemonicParsing="false" text="Windows">
          <CheckMenuItem mnemonicParsing="false" selected="true" text="Scene" />
