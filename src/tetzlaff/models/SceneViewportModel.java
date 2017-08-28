@@ -10,4 +10,5 @@ public interface SceneViewportModel
     Vector3 getViewingDirection(double x, double y);
     Vector3 getViewportCenter();
     Vector2 projectPoint(Vector3 point);
+    float getLightWidgetScale();
 }
