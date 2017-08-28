@@ -203,6 +203,19 @@ public final class Rendering
                             return Vector2.ZERO;
                         }
                     }
+
+                    @Override
+                    public float getLightWidgetScale()
+                    {
+                        if (rendererList.getSelectedItem() != null)
+                        {
+                            return rendererList.getSelectedItem().getSceneViewportModel().getLightWidgetScale();
+                        }
+                        else
+                        {
+                            return 1.0f;
+                        }
+                    }
                 })
                 .build();
 

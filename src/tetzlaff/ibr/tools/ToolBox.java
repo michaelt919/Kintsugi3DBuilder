@@ -126,9 +126,9 @@ public final class ToolBox
     @Override
     public void mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
-        if (Objects.equals(currentMode, new MouseMode(buttonIndex, mods)))
+        try
         {
-            try
+            if (Objects.equals(currentMode, new MouseMode(buttonIndex, mods)))
             {
                 lightTool.mouseButtonReleased(window, buttonIndex, mods);
                 DragTool selectedTool = getSelectedTool();
@@ -138,10 +138,14 @@ public final class ToolBox
                 }
                 currentMode = null;
             }
-            catch (RuntimeException e)
+            else
             {
-                e.printStackTrace();
+                lightTool.mouseButtonReleased(window, buttonIndex, mods);
             }
+        }
+        catch (RuntimeException e)
+        {
+            e.printStackTrace();
         }
     }
 
