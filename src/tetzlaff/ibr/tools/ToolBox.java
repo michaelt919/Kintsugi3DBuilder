@@ -3,6 +3,7 @@ package tetzlaff.ibr.tools;//Created by alexk on 7/24/2017.
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.ModifierKeys;
@@ -101,40 +102,46 @@ public final class ToolBox
     @Override
     public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
-        try
+        if (getSelectedTool() == null) // Only do something if another drag isn't already in progress.
         {
-            if (!lightTool.mouseButtonPressed(window, buttonIndex, mods))
+            try
             {
-                currentMode = new MouseMode(buttonIndex, mods);
-                DragTool selectedTool = getSelectedTool();
-                if (selectedTool != null)
+                if (!lightTool.mouseButtonPressed(window, buttonIndex, mods))
                 {
-                    selectedTool.mouseButtonPressed(window.getCursorPosition(), window.getWindowSize());
+                    currentMode = new MouseMode(buttonIndex, mods);
+                    DragTool selectedTool = getSelectedTool();
+                    if (selectedTool != null)
+                    {
+                        selectedTool.mouseButtonPressed(window.getCursorPosition(), window.getWindowSize());
+                    }
                 }
             }
-        }
-        catch(RuntimeException e)
-        {
-            e.printStackTrace();
+            catch (RuntimeException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
     @Override
     public void mouseButtonReleased(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
-        try
+        if (Objects.equals(currentMode, new MouseMode(buttonIndex, mods)))
         {
-            lightTool.mouseButtonReleased(window, buttonIndex, mods);
-            DragTool selectedTool = getSelectedTool();
-            if (selectedTool != null)
+            try
             {
-                selectedTool.mouseButtonReleased(window.getCursorPosition(), window.getWindowSize());
+                lightTool.mouseButtonReleased(window, buttonIndex, mods);
+                DragTool selectedTool = getSelectedTool();
+                if (selectedTool != null)
+                {
+                    selectedTool.mouseButtonReleased(window.getCursorPosition(), window.getWindowSize());
+                }
+                currentMode = null;
             }
-            currentMode = null;
-        }
-        catch(RuntimeException e)
-        {
-            e.printStackTrace();
+            catch (RuntimeException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
