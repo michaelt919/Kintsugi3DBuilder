@@ -10,7 +10,7 @@ public class JavaFXModelAccess implements IBRelightModelAccess
     private final JavaFXLightingModel lightingModel;
     private final JavaFXLoadOptionsModel loadOptionsModel;
     private final JavaFXSettingsModel settingsModel;
-    private final JavaFXToolSelectionModel toolModel;
+    private final JavaFXToolBindingModel toolModel;
     private final LoadingModel loadingModel;
 
     private static final JavaFXModelAccess instance = new JavaFXModelAccess();
@@ -23,7 +23,7 @@ public class JavaFXModelAccess implements IBRelightModelAccess
     private JavaFXModelAccess()
     {
         cameraModel = new JavaFXCameraModel();
-        toolModel = new JavaFXToolSelectionModel();
+        toolModel = new JavaFXToolBindingModel();
         environmentMapModel = new JavaFXEnvironmentMapModel();
         lightingModel = new JavaFXLightingModel(environmentMapModel);
         loadOptionsModel = new JavaFXLoadOptionsModel();
@@ -56,7 +56,7 @@ public class JavaFXModelAccess implements IBRelightModelAccess
         return settingsModel;
     }
 
-    public JavaFXToolSelectionModel getToolModel()
+    public JavaFXToolBindingModel getToolModel()
     {
         return toolModel;
     }

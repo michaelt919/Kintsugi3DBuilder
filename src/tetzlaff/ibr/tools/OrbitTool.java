@@ -2,10 +2,11 @@ package tetzlaff.ibr.tools;//Created by alexk on 7/24/2017.
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.window.*;
+import tetzlaff.gl.window.CursorPosition;
+import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
 
-final class OrbitTool implements Tool
+final class OrbitTool implements DragTool
 {
     private static final double ORBIT_SENSITIVITY = 1.0 * Math.PI; //todo: get from gui somehow
     private double orbitSensitivityAdjusted = 1.0;
@@ -36,34 +37,27 @@ final class OrbitTool implements Tool
     }
 
     @Override
-    public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
+    public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
     {
-        if (buttonIndex == 0)
-        {
-            this.mouseStart = window.getCursorPosition();
+        this.mouseStart = cursorPosition;
 
-            oldOrbitMatrix = cameraModel.getOrbit();
-            WindowSize windowSize = window.getWindowSize();
-            orbitSensitivityAdjusted = ORBIT_SENSITIVITY / Math.min(windowSize.width, windowSize.height);
-        }
+        oldOrbitMatrix = cameraModel.getOrbit();
+        orbitSensitivityAdjusted = ORBIT_SENSITIVITY / Math.min(windowSize.width, windowSize.height);
     }
 
     @Override
-    public void cursorMoved(Window<?> window, double xPos, double yPos)
+    public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
     {
-        if (window.getMouseButtonState(0) == MouseButtonState.Pressed &&
-            !Double.isNaN(mouseStart.x) && !Double.isNaN(mouseStart.y) &&
-            (yPos != mouseStart.y || xPos != mouseStart.x))
+        if (cursorPosition.y != mouseStart.y || cursorPosition.x != mouseStart.x)
         {
             Vector3 rotationVector = new Vector3(
-                (float) (yPos - mouseStart.y),
-                (float) (xPos - mouseStart.x),
+                (float) (cursorPosition.y - mouseStart.y),
+                (float) (cursorPosition.x - mouseStart.x),
                 0.0f);
 
             cameraModel.setOrbit(
                 Matrix4.rotateAxis(rotationVector.normalized(), rotationVector.length() * orbitSensitivityAdjusted)
-                    .times(oldOrbitMatrix)
-            );
+                    .times(oldOrbitMatrix));
         }
     }
 }

@@ -1,10 +1,10 @@
 package tetzlaff.gl.glfw;
 
-import tetzlaff.gl.window.ModifierKeys;
+import tetzlaff.gl.window.ModifierKeysBase;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public class GLFWModifierKeys implements ModifierKeys
+public class GLFWModifierKeys extends ModifierKeysBase
 {
     private final int glfwCode;
 

@@ -24,8 +24,8 @@ import tetzlaff.ibr.core.LoadingMonitor;
 import tetzlaff.ibr.core.ReadonlySettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
+import tetzlaff.ibr.tools.ToolBindingModel;
 import tetzlaff.ibr.tools.ToolBox.Builder;
-import tetzlaff.ibr.tools.ToolSelectionModel;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.models.*;
@@ -128,7 +128,7 @@ public final class Rendering
             ExtendedCameraModel cameraModel = JavaFXModelAccess.getInstance().getCameraModel();
             ReadonlySettingsModel settingsModel = JavaFXModelAccess.getInstance().getSettingsModel();
             LoadingModel loadingModel = JavaFXModelAccess.getInstance().getLoadingModel();
-            ToolSelectionModel toolModel = JavaFXModelAccess.getInstance().getToolModel();
+            ToolBindingModel toolModel = JavaFXModelAccess.getInstance().getToolModel();
 
             ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<>(context, program);
 
@@ -142,31 +142,66 @@ public final class Rendering
                     @Override
                     public Object getObjectAtCoordinates(double x, double y)
                     {
-                        return rendererList.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y);
+                        if (rendererList.getSelectedItem() != null)
+                        {
+                            return rendererList.getSelectedItem().getSceneViewportModel().getObjectAtCoordinates(x, y);
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
 
                     @Override
                     public Vector3 get3DPositionAtCoordinates(double x, double y)
                     {
-                        return rendererList.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
+                        if (rendererList.getSelectedItem() != null)
+                        {
+                            return rendererList.getSelectedItem().getSceneViewportModel().get3DPositionAtCoordinates(x, y);
+                        }
+                        else
+                        {
+                            return Vector3.ZERO;
+                        }
                     }
 
                     @Override
                     public Vector3 getViewingDirection(double x, double y)
                     {
-                        return rendererList.getSelectedItem().getSceneViewportModel().getViewingDirection(x, y);
+                        if (rendererList.getSelectedItem() != null)
+                        {
+                            return rendererList.getSelectedItem().getSceneViewportModel().getViewingDirection(x, y);
+                        }
+                        else
+                        {
+                            return Vector3.ZERO;
+                        }
                     }
 
                     @Override
                     public Vector3 getViewportCenter()
                     {
-                        return rendererList.getSelectedItem().getSceneViewportModel().getViewportCenter();
+                        if (rendererList.getSelectedItem() != null)
+                        {
+                            return rendererList.getSelectedItem().getSceneViewportModel().getViewportCenter();
+                        }
+                        else
+                        {
+                            return Vector3.ZERO;
+                        }
                     }
 
                     @Override
                     public Vector2 projectPoint(Vector3 point)
                     {
-                        return rendererList.getSelectedItem().getSceneViewportModel().projectPoint(point);
+                        if (rendererList.getSelectedItem() != null)
+                        {
+                            return rendererList.getSelectedItem().getSceneViewportModel().projectPoint(point);
+                        }
+                        else
+                        {
+                            return Vector2.ZERO;
+                        }
                     }
                 })
                 .build();

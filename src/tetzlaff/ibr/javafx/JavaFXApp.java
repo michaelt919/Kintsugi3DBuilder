@@ -125,7 +125,7 @@ public class JavaFXApp extends Application
         JavaFXCameraModel cameraModel = JavaFXModelAccess.getInstance().getCameraModel();
         JavaFXEnvironmentMapModel environmentMapModel = JavaFXModelAccess.getInstance().getEnvironmentMapModel();
         JavaFXLightingModel lightingModel = JavaFXModelAccess.getInstance().getLightingModel();
-        JavaFXToolSelectionModel toolModel = JavaFXModelAccess.getInstance().getToolModel();
+        JavaFXToolBindingModel toolModel = JavaFXModelAccess.getInstance().getToolModel();
 
         //distribute to controllers
         sceneController.init(cameraModel, lightingModel, environmentMapModel, toolModel);
