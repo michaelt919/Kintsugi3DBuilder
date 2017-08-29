@@ -215,7 +215,7 @@ final class LightTool implements PickerTool
         Vector3 azimuthCenter = lightingModel.getLightCenter(lightIndex)
             .plus(new Vector3(
                 0,
-                lightingModel.getLight(lightIndex).getDistance() *
+                sceneViewportModel.getLightWidgetScale() *
                     (float)Math.sin(lightingModel.getLight(lightIndex).getInclination() * Math.PI / 180),
                 0));
 
