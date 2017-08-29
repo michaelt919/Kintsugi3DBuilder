@@ -1,18 +1,16 @@
 package tetzlaff.ibr.javafx.controllers.scene.lights;//Created by alexk on 7/16/2017.
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.ResourceBundle;
 
-import com.sun.javafx.collections.ObservableListWrapper;
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -20,6 +18,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import tetzlaff.ibr.javafx.models.JavaFXLightingModel;
+import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
 
 public class RootLightSceneController implements Initializable
 {
@@ -28,9 +27,8 @@ public class RootLightSceneController implements Initializable
     @FXML private TableView<LightGroupSetting> tableView;
     @FXML private VBox groupControls;
     @FXML private VBox lightControls;
-    @FXML private Button theRenameButton;
+    @FXML private Button renameButton;
 
-    private final ObservableList<LightGroupSetting> lightGroups = new ObservableListWrapper<>(new ArrayList<>(64));
     private final Property<LightInstanceSetting> selectedLight = new SimpleObjectProperty<>();
     private int lastSelectedIndex = -1;
 
@@ -38,8 +36,6 @@ public class RootLightSceneController implements Initializable
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
-        System.out.println("GLSC started!");
-
         //TABLE SET UP
         //columns
         TableColumn<LightGroupSetting, String> nameCol = new TableColumn<>("Name");
@@ -110,20 +106,18 @@ public class RootLightSceneController implements Initializable
 
         tableView.setColumnResizePolicy(param -> false);
 
-        tableView.setItems(lightGroups);
+        tableView.setItems(JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList());
 
         //TABLE SET UP DONE
 
-        //lightGroups.add(new LightGroupSetting("Free Lights"));
+        //lightGroupList.add(new LightGroupSetting("Free Lights"));
 
         selectedLight.addListener(settingsController.changeListener);
     }
 
     public void init(JavaFXLightingModel lightingModel)
     {
-        System.out.println("Lights in!");
         ObservableValue<LightGroupSetting> observableValue = tableView.getSelectionModel().selectedItemProperty();
-        System.out.println("Setting " + observableValue);
         lightingModel.setLightGroupSettingObservableValue(observableValue );
 
         // Setup an initial light group with a single light source.
@@ -138,8 +132,9 @@ public class RootLightSceneController implements Initializable
         //for now we will create a blank group
         //in the future we may want to duplicate the previous group instead
         LightGroupSetting newGroup = new LightGroupSetting("New Group");
-        lightGroups.add(newGroup);
-        tableView.getSelectionModel().select(lightGroups.size() - 1, tableView.getColumns().get(0));
+        List<LightGroupSetting> lightGroupList = JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList();
+        lightGroupList.add(newGroup);
+        tableView.getSelectionModel().select(lightGroupList.size() - 1, tableView.getColumns().get(0));
     }
 
     @FXML
@@ -152,16 +147,16 @@ public class RootLightSceneController implements Initializable
     private void renameGroup()
     {
 
-        EventHandler<ActionEvent> oldOnAction = theRenameButton.getOnAction();//backup the old on action event for the rename button
+        EventHandler<ActionEvent> oldOnAction = renameButton.getOnAction();//backup the old on action event for the rename button
 
         //disable all
         groupControls.getChildren().iterator().forEachRemaining(node -> node.setDisable(true));
         lightControls.getChildren().iterator().forEachRemaining(node -> node.setDisable(true));
         settings.setDisable(true);
 
-        theRenameButton.setDisable(false);
+        renameButton.setDisable(false);
 
-        int renameIndex = groupControls.getChildren().indexOf(theRenameButton);
+        int renameIndex = groupControls.getChildren().indexOf(renameButton);
 
         TextField renameTextField = new TextField();
 
@@ -180,7 +175,7 @@ public class RootLightSceneController implements Initializable
         EventHandler<ActionEvent> finishRename = event ->
         {
             groupControls.getChildren().removeAll(renameTextField, cancelRenameButton);
-            theRenameButton.setOnAction(oldOnAction);
+            renameButton.setOnAction(oldOnAction);
 
             groupControls.getChildren().iterator().forEachRemaining(n -> n.setDisable(false));
 
@@ -205,7 +200,7 @@ public class RootLightSceneController implements Initializable
         };
 
         //set the on actions
-        theRenameButton.setOnAction(doRename);
+        renameButton.setOnAction(doRename);
         cancelRenameButton.setOnAction(finishRename);
         renameTextField.setOnAction(doRename);
 
@@ -219,16 +214,17 @@ public class RootLightSceneController implements Initializable
     {
         if (getRow() > 0)
         {
-            Collections.swap(lightGroups, getRow(), getRow() - 1);
+            Collections.swap(JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList(), getRow(), getRow() - 1);
         }
     }
 
     @FXML
     private void moveDOWNGroup()
     {
-        if (getRow() < lightGroups.size() - 1)
+        List<LightGroupSetting> lightGroupList = JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList();
+        if (getRow() < lightGroupList.size() - 1)
         {
-            Collections.swap(lightGroups, getRow(), getRow() + 1);
+            Collections.swap(lightGroupList, getRow(), getRow() + 1);
         }
     }
 
@@ -257,9 +253,10 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void deleteGroup()
     {
-        if (lightGroups.size() > getRow() && getRow() >= 0)
+        List<LightGroupSetting> lightGroupList = JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList();
+        if (lightGroupList.size() > getRow() && getRow() >= 0)
         {
-            lightGroups.remove(getRow());
+            lightGroupList.remove(getRow());
         }
     }
 
@@ -287,7 +284,7 @@ public class RootLightSceneController implements Initializable
         {
             boolean newValue = !selectedLight.getValue().isLocked();
             selectedLight.getValue().setLocked(newValue);
-            settingsController.setDisabled(newValue || selectedLight.getValue().getGroupLocked());
+            settingsController.setDisabled(newValue || selectedLight.getValue().isGroupLocked());
             if (newValue)
             {
                 selectedLight.getValue().setName("(X)");

@@ -57,7 +57,7 @@ public class SettingsEnvironmentSceneController implements Initializable
     private final FileChooser envImageFileChooser = new FileChooser();
     private final FileChooser bpImageFileChooser = new FileChooser();
 
-    public ChangeListener<EnvironmentSettings> changeListener =
+    public ChangeListener<EnvironmentSetting> changeListener =
         (observable, oldValue, newValue) ->
         {
             if (oldValue != null)
@@ -81,7 +81,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         root.setDisable(value);
     }
 
-    private void bind(EnvironmentSettings envSetting)
+    private void bind(EnvironmentSetting envSetting)
     {
 
         evUseImageCheckBox.selectedProperty().bindBidirectional(envSetting.envUseImageProperty());
@@ -104,7 +104,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         evUseImageCheckBox.disableProperty().bind(envSetting.firstEnvLoadedProperty().not());
     }
 
-    private void unbind(EnvironmentSettings evSetting)
+    private void unbind(EnvironmentSetting evSetting)
     {
 
         evUseImageCheckBox.selectedProperty().unbindBidirectional(evSetting.envUseImageProperty());

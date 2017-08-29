@@ -3,7 +3,7 @@ package tetzlaff.ibr.javafx.models;//Created by alexk on 7/19/2017.
 import tetzlaff.ibr.core.IBRelightModelAccess;
 import tetzlaff.ibr.core.LoadingModel;
 
-public class JavaFXModelAccess implements IBRelightModelAccess
+public final class JavaFXModelAccess implements IBRelightModelAccess
 {
     private final JavaFXCameraModel cameraModel;
     private final JavaFXEnvironmentMapModel environmentMapModel;
@@ -11,13 +11,14 @@ public class JavaFXModelAccess implements IBRelightModelAccess
     private final JavaFXLoadOptionsModel loadOptionsModel;
     private final JavaFXSettingsModel settingsModel;
     private final JavaFXToolBindingModel toolModel;
+    private final JavaFXSceneModel sceneModel;
     private final LoadingModel loadingModel;
 
-    private static final JavaFXModelAccess instance = new JavaFXModelAccess();
+    private static final JavaFXModelAccess INSTANCE = new JavaFXModelAccess();
 
     public static JavaFXModelAccess getInstance()
     {
-        return instance;
+        return INSTANCE;
     }
 
     private JavaFXModelAccess()
@@ -28,6 +29,7 @@ public class JavaFXModelAccess implements IBRelightModelAccess
         lightingModel = new JavaFXLightingModel(environmentMapModel);
         loadOptionsModel = new JavaFXLoadOptionsModel();
         settingsModel = new JavaFXSettingsModel();
+        sceneModel = new JavaFXSceneModel();
         loadingModel = new LoadingModel();
         loadingModel.setLoadOptionsModel(loadOptionsModel);
     }
@@ -64,6 +66,11 @@ public class JavaFXModelAccess implements IBRelightModelAccess
     public JavaFXEnvironmentMapModel getEnvironmentMapModel()
     {
         return environmentMapModel;
+    }
+
+    public JavaFXSceneModel getSceneModel()
+    {
+        return sceneModel;
     }
 
     public LoadingModel getLoadingModel()

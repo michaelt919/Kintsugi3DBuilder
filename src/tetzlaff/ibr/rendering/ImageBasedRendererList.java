@@ -1,7 +1,6 @@
 package tetzlaff.ibr.rendering;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.Objects;
 import javax.swing.*;
 
@@ -274,5 +273,24 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     public void loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
         this.getSelectedItem().loadEnvironmentMap(environmentMapFile);
+    }
+
+    @Override
+    public void saveToVSETFile(File vsetFile) throws IOException
+    {
+        try (OutputStream stream = new FileOutputStream(vsetFile))
+        {
+            this.getSelectedItem().getActiveViewSet().writeVSETFileToStream(stream);
+        }
+    }
+
+    @Override
+    public void unload()
+    {
+        if (this.getSelectedItem() != null)
+        {
+            this.renderableList.remove(this.renderableList.getSelectedIndex());
+            this.renderableList.setSelectedItem(null);
+        }
     }
 }

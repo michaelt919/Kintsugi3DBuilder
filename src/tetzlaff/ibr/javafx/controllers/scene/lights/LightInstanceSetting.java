@@ -2,13 +2,13 @@ package tetzlaff.ibr.javafx.controllers.scene.lights;//Created by alexk on 7/16/
 
 import javafx.beans.property.*;
 import javafx.scene.paint.Color;
-import org.jdom2.Element;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import tetzlaff.ibr.javafx.util.DOMConvertable;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
-import tetzlaff.misc.XML_Writable;
 
-public class LightInstanceSetting implements XML_Writable
+public class LightInstanceSetting implements DOMConvertable
 {
-
     private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
     private final DoubleProperty zCenter = new SimpleDoubleProperty();
@@ -23,7 +23,7 @@ public class LightInstanceSetting implements XML_Writable
 
     private final BooleanProperty groupLocked;
 
-    public boolean getGroupLocked()
+    public boolean isGroupLocked()
     {
         return groupLocked.get();
     }
@@ -82,37 +82,37 @@ public class LightInstanceSetting implements XML_Writable
     }
 
     @Override
-    public Element toJDOM2Element()
+    public Element toDOMElement(Document document)
     {
-        return new Element("SubLightSetting")
-            .setAttribute("xCenter", xCenter.getValue().toString())
-            .setAttribute("yCenter", yCenter.getValue().toString())
-            .setAttribute("zCenter", zCenter.getValue().toString())
-            .setAttribute("azimuth", azimuth.getValue().toString())
-            .setAttribute("inclination", inclination.getValue().toString())
-            .setAttribute("log10distance", log10distance.getValue().toString())
-            .setAttribute("intensity", intensity.getValue().toString())
-            .setAttribute("locked", locked.getValue().toString())
-            .setAttribute("name", name.getValue())
-            .setAttribute("lightType", lightType.getValue().toString())
-            .setAttribute("color", color.getValue().toString())
-            ;
+        Element element = document.createElement("LightInstance");
+        element.setAttribute("xCenter", xCenter.getValue().toString());
+        element.setAttribute("yCenter", yCenter.getValue().toString());
+        element.setAttribute("zCenter", zCenter.getValue().toString());
+        element.setAttribute("azimuth", azimuth.getValue().toString());
+        element.setAttribute("inclination", inclination.getValue().toString());
+        element.setAttribute("log10distance", log10distance.getValue().toString());
+        element.setAttribute("intensity", intensity.getValue().toString());
+        element.setAttribute("locked", locked.getValue().toString());
+        element.setAttribute("name", name.getValue());
+        element.setAttribute("lightType", lightType.getValue().toString());
+        element.setAttribute("color", color.getValue().toString());
+        return element;
     }
 
-    public static LightInstanceSetting fromJDOM2Element(Element e, BooleanProperty groupLockedProperty)
+    public static LightInstanceSetting fromDOMElement(Element element, BooleanProperty groupLockedProperty)
     {
         return new LightInstanceSetting(
-            Double.valueOf(e.getAttributeValue("xCenter")),
-            Double.valueOf(e.getAttributeValue("yCenter")),
-            Double.valueOf(e.getAttributeValue("zCenter")),
-            Double.valueOf(e.getAttributeValue("azimuth")),
-            Double.valueOf(e.getAttributeValue("inclination")),
-            Double.valueOf(e.getAttributeValue("log10distance")),
-            Double.valueOf(e.getAttributeValue("intensity")),
-            Boolean.valueOf(e.getAttributeValue("locked")),
-            e.getAttributeValue("name"),
-            LightType.valueOf(e.getAttributeValue("lightType")),
-            Color.valueOf(e.getAttributeValue("color")),
+            Double.valueOf(element.getAttribute("xCenter")),
+            Double.valueOf(element.getAttribute("yCenter")),
+            Double.valueOf(element.getAttribute("zCenter")),
+            Double.valueOf(element.getAttribute("azimuth")),
+            Double.valueOf(element.getAttribute("inclination")),
+            Double.valueOf(element.getAttribute("log10distance")),
+            Double.valueOf(element.getAttribute("intensity")),
+            Boolean.valueOf(element.getAttribute("locked")),
+            element.getAttribute("name"),
+            LightType.valueOf(element.getAttribute("lightType")),
+            Color.valueOf(element.getAttribute("color")),
             groupLockedProperty
         );
     }

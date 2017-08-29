@@ -1,12 +1,10 @@
 package tetzlaff.ibr.javafx.controllers.scene.camera;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.ResourceBundle;
 
-import com.sun.javafx.collections.ObservableListWrapper;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -17,12 +15,11 @@ import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import tetzlaff.ibr.javafx.models.JavaFXCameraModel;
+import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
 import tetzlaff.ibr.javafx.models.JavaFXToolBindingModel;
 
 public class RootCameraSceneController implements Initializable
 {
-
-    private final ObservableList<CameraSetting> listOfCameras = new ObservableListWrapper<CameraSetting>(new ArrayList<CameraSetting>());
     @FXML
     private VBox settings;
     @FXML
@@ -37,9 +34,7 @@ public class RootCameraSceneController implements Initializable
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
-
-        cameraListView.setItems(listOfCameras);
-
+        cameraListView.setItems(JavaFXModelAccess.getInstance().getSceneModel().getCameraList());
         cameraListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
         CameraSetting freeCam = new CameraSetting(
@@ -57,18 +52,13 @@ public class RootCameraSceneController implements Initializable
             "Free Camera"
 
         );
-        listOfCameras.add(freeCam);
+        JavaFXModelAccess.getInstance().getSceneModel().getCameraList().add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
     }
 
     public void init(JavaFXCameraModel cameraModel, JavaFXToolBindingModel toolModel)
     {
-
-        System.out.println("Cam in!");
-
-        cameraModel.setSelectedCameraSettingProperty(
-            cameraListView.getSelectionModel().selectedItemProperty()
-        );
+        cameraModel.setSelectedCameraSettingProperty(cameraListView.getSelectionModel().selectedItemProperty());
     }
 
     private SelectionModel<CameraSetting> getCameraSelectionModel()
@@ -79,8 +69,9 @@ public class RootCameraSceneController implements Initializable
     @FXML
     private void newCameraButton()
     {
-        listOfCameras.add(getCameraSelectionModel().getSelectedItem().duplicate());
-        getCameraSelectionModel().select(listOfCameras.size() - 1);
+        JavaFXModelAccess.getInstance().getSceneModel().getCameraList()
+            .add(getCameraSelectionModel().getSelectedItem().duplicate());
+        getCameraSelectionModel().select(JavaFXModelAccess.getInstance().getSceneModel().getCameraList().size() - 1);
     }
 
     @FXML
@@ -174,7 +165,7 @@ public class RootCameraSceneController implements Initializable
         int i = getCameraSelectionModel().getSelectedIndex();
         if (i > 1)
         {
-            Collections.swap(listOfCameras, i, i - 1);
+            Collections.swap(JavaFXModelAccess.getInstance().getSceneModel().getCameraList(), i, i - 1);
             getCameraSelectionModel().select(i - 1);
         }
     }
@@ -183,9 +174,10 @@ public class RootCameraSceneController implements Initializable
     void moveDOWNButton()
     {
         int i = getCameraSelectionModel().getSelectedIndex();
-        if (i != 0 && i < listOfCameras.size() - 1)
+        List<CameraSetting> cameraList = JavaFXModelAccess.getInstance().getSceneModel().getCameraList();
+        if (i != 0 && i < cameraList.size() - 1)
         {
-            Collections.swap(listOfCameras, i, i + 1);
+            Collections.swap(cameraList, i, i + 1);
             getCameraSelectionModel().select(i + 1);
         }
     }
@@ -212,7 +204,7 @@ public class RootCameraSceneController implements Initializable
         int i = getCameraSelectionModel().getSelectedIndex();
         if (i != 0)
         {
-            listOfCameras.remove(i);
+            JavaFXModelAccess.getInstance().getSceneModel().getCameraList().remove(i);
         }
     }
 }

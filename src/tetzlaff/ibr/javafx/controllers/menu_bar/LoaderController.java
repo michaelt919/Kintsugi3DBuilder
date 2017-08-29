@@ -35,6 +35,8 @@ public class LoaderController implements Initializable
     private File objFile;
     private File photoDir;
 
+    private Runnable unloadFunction;
+
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
@@ -52,6 +54,11 @@ public class LoaderController implements Initializable
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");
         photoDirectoryChooser.setTitle("Select undistorted photo directory");
+    }
+
+    public void setUnloadFunction(Runnable unloadFunction)
+    {
+        this.unloadFunction = unloadFunction;
     }
 
     @FXML
@@ -102,9 +109,9 @@ public class LoaderController implements Initializable
     @FXML
     private void okButtonPress()
     {
-
         if ((cameraFile != null) & (objFile != null) & (photoDir != null))
         {
+            unloadFunction.run();
 
             //ok!
             new Thread(() ->
@@ -120,10 +127,6 @@ public class LoaderController implements Initializable
             }).start();
 
             close();
-        }
-        else
-        {
-            //TODO play sound or popup
         }
     }
 

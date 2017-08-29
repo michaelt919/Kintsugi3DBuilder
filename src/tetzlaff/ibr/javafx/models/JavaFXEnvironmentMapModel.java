@@ -9,16 +9,16 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.javafx.controllers.scene.environment_map.EnvironmentSettings;
+import tetzlaff.ibr.javafx.controllers.scene.environment_map.EnvironmentSetting;
 import tetzlaff.models.EnvironmentMapModel;
 
 public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
 {
-    private ObservableValue<EnvironmentSettings> selected;
+    private ObservableValue<EnvironmentSetting> selected;
 
     private boolean environmentMapLoaded = false;
 
-    public void setSelected(ObservableValue<EnvironmentSettings> selected)
+    public void setSelected(ObservableValue<EnvironmentSetting> selected)
     {
         this.selected = selected;
         this.selected.addListener(settingChange);
@@ -84,7 +84,7 @@ public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
         }
     };
 
-    private final ChangeListener<EnvironmentSettings> settingChange = (observable, oldSetting, newSetting) ->
+    private final ChangeListener<EnvironmentSetting> settingChange = (observable, oldSetting, newSetting) ->
     {
         if (newSetting != null)
         {
