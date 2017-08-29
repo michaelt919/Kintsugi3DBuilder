@@ -325,6 +325,6 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
     @Override
     public InteractiveRenderableList<ContextType, RenderableType> subList(int fromIndex, int toIndex)
     {
-        return new InteractiveRenderableList<ContextType, RenderableType>(renderables.subList(fromIndex, toIndex));
+        return new InteractiveRenderableList<>(renderables.subList(fromIndex, toIndex));
     }
 }

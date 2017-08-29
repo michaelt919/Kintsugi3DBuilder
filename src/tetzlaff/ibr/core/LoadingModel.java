@@ -2,6 +2,7 @@ package tetzlaff.ibr.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class LoadingModel 
 {
@@ -52,5 +53,15 @@ public class LoadingModel
     public void loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
         this.handler.loadEnvironmentMap(environmentMapFile);
+    }
+
+    public void saveToVSETFile(File vsetFile) throws IOException
+    {
+        this.handler.saveToVSETFile(vsetFile);
+    }
+
+    public void unload()
+    {
+        this.handler.unload();
     }
 }

@@ -2,6 +2,7 @@ package tetzlaff.ibr.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public interface LoadingHandler 
 {
@@ -10,6 +11,10 @@ public interface LoadingHandler
         throws FileNotFoundException;
 
     void loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
+
+    void saveToVSETFile(File vsetFile) throws IOException;
+
+    void unload();
 
     void setLoadingMonitor(LoadingMonitor loadingMonitor);
 }

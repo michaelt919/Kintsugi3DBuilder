@@ -4,11 +4,12 @@ import java.io.File;
 
 import javafx.beans.property.*;
 import javafx.scene.paint.Color;
-import org.jdom2.Element;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import tetzlaff.ibr.javafx.util.DOMConvertable;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
-import tetzlaff.misc.XML_Writable;
 
-public class EnvironmentSettings implements XML_Writable
+public class EnvironmentSetting implements DOMConvertable
 {
 
     private final BooleanProperty envUseImage = new SimpleBooleanProperty();
@@ -28,7 +29,7 @@ public class EnvironmentSettings implements XML_Writable
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final BooleanProperty firstEnvLoaded = new SimpleBooleanProperty();
 
-    public EnvironmentSettings(Boolean envUseImage, Boolean envUseColor, Boolean bpUseImage, Boolean bpUseColor, Boolean imagePathsRelative, File envImageFile, File bpImageFile, Double envColorIntensity, Double envRotation, Color envColor, Color bpColor, String name, Boolean locked, Boolean firstEnvLoaded)
+    public EnvironmentSetting(Boolean envUseImage, Boolean envUseColor, Boolean bpUseImage, Boolean bpUseColor, Boolean imagePathsRelative, File envImageFile, File bpImageFile, Double envColorIntensity, Double envRotation, Color envColor, Color bpColor, String name, Boolean locked, Boolean firstEnvLoaded)
     {
         this.envUseImage.setValue(envUseImage);
         this.envUseColor.setValue(envUseColor);
@@ -47,62 +48,70 @@ public class EnvironmentSettings implements XML_Writable
     }
 
     @Override
-    public Element toJDOM2Element()
+    public Element toDOMElement(Document document)
     {
-        return new Element("EVSetting")
-            .setAttribute("evUseImage", envUseImage.getValue().toString())
-            .setAttribute("evUseColor", envUseColor.getValue().toString())
-            .setAttribute("bpUseImage", bpUseImage.getValue().toString())
-            .setAttribute("bpUseColor", bpUseColor.getValue().toString())
-            .setAttribute("imagePathsRelative", imagePathsRelative.getValue().toString())
-            .setAttribute("evImageFile", envImageFile.getValue().getPath())
-            .setAttribute("bpImageFile", bpImageFile.getValue().getPath())
-
-            .setAttribute("evColorIntensity", envColorIntensity.getValue().toString())
-            .setAttribute("evRotation", envRotation.getValue().toString())
-            .setAttribute("evColor", envColor.getValue().toString())
-            .setAttribute("bpColor", bpColor.getValue().toString())
-            .setAttribute("name", name.getValue())
-            .setAttribute("locked", locked.getValue().toString())
-            .setAttribute("firstEVLoaded", firstEnvLoaded.getValue().toString());
+        Element element = document.createElement("Environment");
+        element.setAttribute("envUseImage", envUseImage.getValue().toString());
+        element.setAttribute("envUseColor", envUseColor.getValue().toString());
+        element.setAttribute("bpUseImage", bpUseImage.getValue().toString());
+        element.setAttribute("bpUseColor", bpUseColor.getValue().toString());
+        element.setAttribute("imagePathsRelative", imagePathsRelative.getValue().toString());
+        if (envImageFile.getValue() != null)
+        {
+            element.setAttribute("envImageFile", envImageFile.getValue().getPath());
+        }
+        if (bpImageFile.getValue() != null)
+        {
+            element.setAttribute("bpImageFile", bpImageFile.getValue().getPath());
+        }
+        element.setAttribute("envColorIntensity", envColorIntensity.getValue().toString());
+        element.setAttribute("envRotation", envRotation.getValue().toString());
+        element.setAttribute("envColor", envColor.getValue().toString());
+        element.setAttribute("bpColor", bpColor.getValue().toString());
+        element.setAttribute("name", name.getValue());
+        element.setAttribute("locked", locked.getValue().toString());
+        element.setAttribute("firstEnvLoaded", firstEnvLoaded.getValue().toString());
+        return element;
     }
 
-    public static EnvironmentSettings fromJDOM2Element(Element element)
+    public static EnvironmentSetting fromDOMElement(Element element)
     {
-        return new EnvironmentSettings(
-            Boolean.valueOf(element.getAttributeValue("evUseImage")),
-            Boolean.valueOf(element.getAttributeValue("evUseColor")),
-            Boolean.valueOf(element.getAttributeValue("bpUseImage")),
-            Boolean.valueOf(element.getAttributeValue("bpUseColor")),
-            Boolean.valueOf(element.getAttributeValue("imagePathsRelative")),
+        return new EnvironmentSetting(
+            Boolean.valueOf(element.getAttribute("envUseImage")),
+            Boolean.valueOf(element.getAttribute("envUseColor")),
+            Boolean.valueOf(element.getAttribute("bpUseImage")),
+            Boolean.valueOf(element.getAttribute("bpUseColor")),
+            Boolean.valueOf(element.getAttribute("imagePathsRelative")),
 
-            new File(element.getAttributeValue("evImageFile")),
-            new File(element.getAttributeValue("bpImageFile")),
+            new File(element.getAttribute("envImageFile")),
+            new File(element.getAttribute("bpImageFile")),
 
-            Double.valueOf(element.getAttributeValue("evColorIntensity")),
-            Double.valueOf(element.getAttributeValue("evRotation")),
-            Color.valueOf(element.getAttributeValue("evColor")),
-            Color.valueOf(element.getAttributeValue("bpColor")),
-            String.valueOf(element.getAttributeValue("name")),
-            Boolean.valueOf(element.getAttributeValue("locked")),
-            Boolean.valueOf(element.getAttributeValue("firstEVLoaded"))
+            Double.valueOf(element.getAttribute("envColorIntensity")),
+            Double.valueOf(element.getAttribute("envRotation")),
+            Color.valueOf(element.getAttribute("envColor")),
+            Color.valueOf(element.getAttribute("bpColor")),
+            String.valueOf(element.getAttribute("name")),
+            Boolean.valueOf(element.getAttribute("locked")),
+            Boolean.valueOf(element.getAttribute("firstEnvLoaded"))
         );
     }
 
     @Override
     public String toString()
     {
-        String out = name.getValue();
         if (locked.getValue())
         {
-            out = "(L) " + out;
+            return "(L) " + this.name.getValue();
         }
-        return out;
+        else
+        {
+            return this.name.getValue();
+        }
     }
 
-    public EnvironmentSettings duplicate()
+    public EnvironmentSetting duplicate()
     {
-        return new EnvironmentSettings(
+        return new EnvironmentSetting(
             envUseImage.getValue(),
             envUseColor.getValue(),
             bpUseImage.getValue(),

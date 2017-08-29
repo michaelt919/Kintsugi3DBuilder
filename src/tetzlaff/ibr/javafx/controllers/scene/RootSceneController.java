@@ -11,7 +11,6 @@ import tetzlaff.ibr.javafx.models.JavaFXToolBindingModel;
 
 public class RootSceneController
 {
-
     @FXML
     private RootCameraSceneController cameraController;
     @FXML

@@ -1,16 +1,18 @@
 package tetzlaff.ibr.javafx.controllers.menu_bar;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Scanner;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -21,11 +23,20 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.ModifierKeysBuilder;
 import tetzlaff.ibr.app.WindowSynchronization;
 import tetzlaff.ibr.core.*;
+import tetzlaff.ibr.javafx.controllers.scene.camera.CameraSetting;
+import tetzlaff.ibr.javafx.controllers.scene.environment_map.EnvironmentSetting;
+import tetzlaff.ibr.javafx.controllers.scene.lights.LightGroupSetting;
 import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
+import tetzlaff.ibr.javafx.models.JavaFXSceneModel;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXToolBindingModel;
 import tetzlaff.ibr.tools.ToolType;
@@ -68,11 +79,14 @@ public class MenubarController
     @FXML private CheckMenuItem phyMaskingCheckMenuItem;
     @FXML private CheckMenuItem fresnelEffectCheckMenuItem;
 
-    @FXML private FileChooser vSetFileChooser;
+    @FXML private FileChooser projectFileChooser;
 
     @FXML private Menu exportMenu;
 
     private Window parentWindow;
+
+    private File projectFile;
+    private File vsetFile;
 
     public void init(Window parentWindow, JavaFXToolBindingModel toolBindingModel, IBRRequestQueue<?> requestQueue)
     {
@@ -85,13 +99,11 @@ public class MenubarController
         toolBindingModel.setTool(new MouseMode(2, ModifierKeysBuilder.begin().shift().end()), ToolType.DOLLY);
         toolBindingModel.setTool(new MouseMode(0, ModifierKeysBuilder.begin().shift().alt().end()), ToolType.CENTER_POINT);
 
-        vSetFileChooser = new FileChooser();
+        projectFileChooser = new FileChooser();
 
-        vSetFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-        vSetFileChooser.setTitle("Load view set file");
-        vSetFileChooser.getExtensionFilters().add(
-            new ExtensionFilter("View set files", "*.vset")
-        );
+        projectFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.ibr"));
+        projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));
 
         JavaFXModelAccess.getInstance().getLoadingModel().setLoadingMonitor(new LoadingMonitor()
         {
@@ -263,75 +275,215 @@ public class MenubarController
             return;
         }
 
-        makeWindow("Load Files", loaderWindowOpen, 750, 330, "fxml/menu_bar/Loader.fxml");
+        LoaderController loaderController = makeWindow("Load Files", loaderWindowOpen, 750, 330, "fxml/menu_bar/Loader.fxml");
+        if (loaderController != null)
+        {
+            loaderController.setUnloadFunction(this::file_closeProject);
+        }
     }
 
     @FXML
     private void file_openProject()
     {
-        File vsetFile = vSetFileChooser.showOpenDialog(null);
-        if (vsetFile != null)
+        projectFileChooser.setTitle("Open project");
+        File selectedFile = projectFileChooser.showOpenDialog(parentWindow);
+        if (selectedFile != null)
         {
-            new Thread(() ->
+            this.projectFile = selectedFile;
+            File newVsetFile = null;
+
+            if (projectFile.getName().endsWith(".vset"))
+            {
+                newVsetFile = projectFile;
+            }
+            else
             {
                 try
                 {
-                    JavaFXModelAccess.getInstance().getLoadingModel().loadFromVSETFile(vsetFile.getPath(), vsetFile);
+                    Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(projectFile);
+
+                    Node vsetNode = document.getElementsByTagName("ViewSet").item(0);
+                    if (vsetNode instanceof Element)
+                    {
+                        newVsetFile = new File(((Element) vsetNode).getAttribute("src"));
+
+                        JavaFXSceneModel sceneModel = JavaFXModelAccess.getInstance().getSceneModel();
+
+                        Node cameraListNode = document.getElementsByTagName("CameraList").item(0);
+                        NodeList cameraNodes = cameraListNode.getChildNodes();
+                        sceneModel.getCameraList().clear();
+                        for (int i = 0; i < cameraNodes.getLength(); i++)
+                        {
+                            Node cameraNode = cameraNodes.item(i);
+                            if (cameraNode instanceof Element)
+                            {
+                                sceneModel.getCameraList().add(CameraSetting.fromDOMElement((Element) cameraNode));
+                            }
+                        }
+
+                        Node environmentListNode = document.getElementsByTagName("EnvironmentList").item(0);
+                        NodeList environmentNodes = environmentListNode.getChildNodes();
+                        sceneModel.getEnvironmentList().clear();
+                        for (int i = 0; i < environmentNodes.getLength(); i++)
+                        {
+                            Node environmentNode = environmentNodes.item(i);
+                            if (environmentNode instanceof Element)
+                            {
+                                sceneModel.getEnvironmentList().add(EnvironmentSetting.fromDOMElement((Element) environmentNode));
+                            }
+                        }
+
+                        Node lightGroupListNode = document.getElementsByTagName("LightGroupList").item(0);
+                        NodeList lightGroupNodes = lightGroupListNode.getChildNodes();
+                        sceneModel.getLightGroupList().clear();
+                        for (int i = 0; i < lightGroupNodes.getLength(); i++)
+                        {
+                            Node lightGroupNode = lightGroupNodes.item(i);
+                            if (lightGroupNode instanceof Element)
+                            {
+                                sceneModel.getLightGroupList().add(LightGroupSetting.fromDOMElement((Element) lightGroupNode));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        System.err.println("Error while processing the ViewSet element.");
+                    }
                 }
-                catch (FileNotFoundException e)
+                catch (SAXException|IOException|ParserConfigurationException e)
                 {
-                    //do nothing
+                    e.printStackTrace();
                 }
-            }).start();
+            }
+
+            if (newVsetFile != null)
+            {
+                file_closeProject();
+
+                this.vsetFile = newVsetFile;
+                File vsetFileRef = newVsetFile;
+
+                new Thread(() ->
+                {
+                    try
+                    {
+                        JavaFXModelAccess.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef);
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }).start();
+            }
         }
     }
 
     @FXML
     private void file_saveProject()
     {
-        System.out.println("TODO: save project");
+        if (projectFile == null)
+        {
+            file_saveProjectAs();
+        }
+        else
+        {
+            try
+            {
+                if (projectFile.getName().endsWith(".vset"))
+                {
+                    JavaFXModelAccess.getInstance().getLoadingModel().saveToVSETFile(projectFile);
+                    this.vsetFile = projectFile;
+                    this.projectFile = null;
+                }
+                else
+                {
+                    this.vsetFile = new File(projectFile + ".vset");
+
+                    JavaFXModelAccess.getInstance().getLoadingModel().saveToVSETFile(vsetFile);
+
+                    Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+                    Element rootElement = document.createElement("Scene");
+                    document.appendChild(rootElement);
+
+                    Element vsetElement = document.createElement("ViewSet");
+                    vsetElement.setAttribute("src", vsetFile.toString());
+                    rootElement.appendChild(vsetElement);
+
+                    JavaFXSceneModel sceneModel = JavaFXModelAccess.getInstance().getSceneModel();
+
+                    Element cameraListElement = document.createElement("CameraList");
+                    rootElement.appendChild(cameraListElement);
+
+                    for (CameraSetting camera : sceneModel.getCameraList())
+                    {
+                        cameraListElement.appendChild(camera.toDOMElement(document));
+                    }
+
+                    Element environmentListElement = document.createElement("EnvironmentList");
+                    rootElement.appendChild(environmentListElement);
+
+                    for (EnvironmentSetting environment : sceneModel.getEnvironmentList())
+                    {
+                        environmentListElement.appendChild(environment.toDOMElement(document));
+                    }
+
+                    Element lightGroupListElement = document.createElement("LightGroupList");
+                    rootElement.appendChild(lightGroupListElement);
+
+                    for (LightGroupSetting lightGroup : sceneModel.getLightGroupList())
+                    {
+                        lightGroupListElement.appendChild(lightGroup.toDOMElement(document));
+                    }
+
+                    Transformer transformer = TransformerFactory.newInstance().newTransformer();
+                    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+                    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+                    try(OutputStream out = new FileOutputStream(projectFile))
+                    {
+                        transformer.transform(new DOMSource(document), new StreamResult(out));
+                    }
+                    catch(FileNotFoundException|TransformerException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            catch(ParserConfigurationException|TransformerConfigurationException|IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
     @FXML
     private void file_saveProjectAs()
     {
-        System.out.println("TODO: save project as...");
+        projectFileChooser.setTitle("Save project");
+        projectFileChooser.setSelectedExtensionFilter(projectFileChooser.getExtensionFilters().get(0));
+        if (projectFile != null)
+        {
+            projectFileChooser.setInitialFileName(projectFile.toString());
+        }
+        else if (vsetFile != null)
+        {
+            projectFileChooser.setInitialDirectory(vsetFile.getParentFile());
+        }
+        File selectedFile = projectFileChooser.showSaveDialog(parentWindow);
+        if (selectedFile != null)
+        {
+            this.projectFile = selectedFile;
+            file_saveProject();
+        }
     }
 
     @FXML
     private void file_closeProject()
     {
-        file_exit();
-    }
+        projectFile = null;
+        vsetFile = null;
 
-    @FXML
-    private void file_export_reSample()
-    {
-        System.out.println("TODO: export re-sample...");
-    }
-
-    @FXML
-    private void file_export_fidelityMetric()
-    {
-        System.out.println("TODO: export fidelity metric...");
-    }
-
-    @FXML
-    private void file_export_BTF()
-    {
-        System.out.println("TODO: export BTF...");
-    }
-
-    @FXML
-    private void file_export_Other()
-    {
-        System.out.println("TODO: export Other...");
-    }
-
-    @FXML
-    private void file_loadSettingsConfiguration()
-    {
-        System.out.println("TODO: load settings configuration");
+        JavaFXModelAccess.getInstance().getLoadingModel().unload();
     }
 
     @FXML
@@ -433,18 +585,5 @@ public class MenubarController
             e.printStackTrace();
             return null;
         }
-    }
-
-    //toggle group helpers
-    private static void selectToggleWithData(ToggleGroup toggleGroup, String data)
-    {
-        ObservableList<Toggle> toggles = toggleGroup.getToggles();
-        toggles.iterator().forEachRemaining(toggle ->
-        {
-            if (toggle.getUserData() instanceof String && toggle.getUserData().equals(data))
-            {
-                toggleGroup.selectToggle(toggle);
-            }
-        });
     }
 }

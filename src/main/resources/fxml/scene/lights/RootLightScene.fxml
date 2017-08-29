@@ -20,7 +20,7 @@
                         <Tooltip text="Save the selected camera to the library." />
                     </tooltip>
                 </Button>
-                <Button fx:id="theRenameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#renameGroup" text="Rename" />
+                <Button fx:id="renameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#renameGroup" text="Rename" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveUPGroup" text="Move up" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveDOWNGroup" text="Move down" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#lockGroup" text="Lock/Unlock">

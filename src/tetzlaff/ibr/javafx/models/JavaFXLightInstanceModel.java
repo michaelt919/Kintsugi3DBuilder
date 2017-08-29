@@ -169,7 +169,7 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
     @Override
     public boolean isLocked()
     {
-        return cam().isLocked() || cam().getGroupLocked();
+        return cam().isLocked() || cam().isGroupLocked();
     }
 
     @Override

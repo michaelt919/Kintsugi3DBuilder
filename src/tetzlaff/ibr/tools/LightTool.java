@@ -127,8 +127,6 @@ final class LightTool implements PickerTool
             lightingModel.setLightWidgetsEthereal(true);
         }
 
-        System.out.println("Click: " + LocalTime.now());
-
         return updateFunction != null;
     }
 

@@ -97,7 +97,7 @@ public class SettingsLightSceneController implements Initializable
         if (newValue != null)
         {
             bind(newValue);
-            setDisabled(newValue.isLocked() | newValue.getGroupLocked());
+            setDisabled(newValue.isLocked() | newValue.isGroupLocked());
         }
         else
         {

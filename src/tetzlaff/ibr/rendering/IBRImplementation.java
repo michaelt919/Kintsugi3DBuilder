@@ -1361,8 +1361,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @Override
     public void close()
     {
-        resources.close();
-
         if (this.refScenePositions != null)
         {
             this.refScenePositions.close();
@@ -1399,7 +1397,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.environmentMap = null;
         }
 
-        // New code
         if (resources != null)
         {
             resources.close();
@@ -1421,21 +1418,55 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         if (lightProgram != null)
         {
             lightProgram.close();
+            lightProgram = null;
         }
 
         if (rectangleVertices != null)
         {
             rectangleVertices.close();
+            rectangleVertices = null;
         }
 
         if (lightTexture != null)
         {
             lightTexture.close();
+            lightTexture = null;
+        }
+
+        if (lightCenterTexture != null)
+        {
+            lightCenterTexture.close();
+            lightCenterTexture = null;
+        }
+
+        if (widgetProgram != null)
+        {
+            widgetProgram.close();
+            widgetProgram = null;
+        }
+
+        if (widgetVertices != null)
+        {
+            widgetVertices.close();
+            widgetVertices = null;
+        }
+
+        if (circleProgram != null)
+        {
+            circleProgram.close();
+            circleProgram = null;
         }
 
         if (weightBuffer != null)
         {
             weightBuffer.close();
+            weightBuffer = null;
+        }
+
+        if (simpleTexProgram != null)
+        {
+            simpleTexProgram.close();
+            simpleTexProgram = null;
         }
     }
 

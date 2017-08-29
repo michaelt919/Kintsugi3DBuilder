@@ -44,6 +44,7 @@ public class InteractiveGraphics
             {
                 context.makeContextCurrent();
                 renderable.update();
+                context.getDefaultFramebuffer().clearColorBuffer(0, 0, 0, 0, 0);
                 renderable.draw(context.getDefaultFramebuffer());
                 context.flush();
                 context.swapBuffers();

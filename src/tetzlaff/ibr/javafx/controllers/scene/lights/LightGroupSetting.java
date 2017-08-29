@@ -6,8 +6,13 @@ import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.scene.paint.Color;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import tetzlaff.ibr.javafx.util.DOMConvertable;
 
-public class LightGroupSetting
+public class LightGroupSetting implements DOMConvertable
 {
     public static final int LIGHT_LIMIT = 4;
 
@@ -85,6 +90,39 @@ public class LightGroupSetting
                 removeLight();
             }
         }
+    }
+
+    @Override
+    public Element toDOMElement(Document document)
+    {
+        Element element = document.createElement("LightGroup");
+        element.setAttribute("name", name.getValue());
+        element.setAttribute("locked", locked.getValue().toString());
+
+        for(LightInstanceSetting lightInstance : lightList)
+        {
+            element.appendChild(lightInstance.toDOMElement(document));
+        }
+
+        return element;
+    }
+
+    public static LightGroupSetting fromDOMElement(Element element)
+    {
+        LightGroupSetting lightGroup = new LightGroupSetting(element.getAttribute("name"));
+        lightGroup.setLocked(Boolean.valueOf(element.getAttribute("locked")));
+
+        NodeList children = element.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++)
+        {
+            Node child = children.item(i);
+            if (child instanceof Element)
+            {
+                lightGroup.lightList.add(LightInstanceSetting.fromDOMElement((Element)child, lightGroup.locked));
+            }
+        }
+
+        return lightGroup;
     }
 
     public int getNLights()

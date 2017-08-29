@@ -1,11 +1,12 @@
 package tetzlaff.ibr.javafx.controllers.scene.camera;
 
 import javafx.beans.property.*;
-import org.jdom2.Element;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import tetzlaff.ibr.javafx.util.DOMConvertable;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
-import tetzlaff.misc.XML_Writable;
 
-public class CameraSetting implements XML_Writable
+public class CameraSetting implements DOMConvertable
 {
     private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
@@ -51,39 +52,39 @@ public class CameraSetting implements XML_Writable
     }
 
     @Override
-    public Element toJDOM2Element()
+    public Element toDOMElement(Document document)
     {
-        return new Element("CameraSetting")
-            .setAttribute("xCenter", xCenter.getValue().toString())
-            .setAttribute("yCenter", yCenter.getValue().toString())
-            .setAttribute("zCenter", zCenter.getValue().toString())
-            .setAttribute("azimuth", azimuth.getValue().toString())
-            .setAttribute("inclination", inclination.getValue().toString())
-            .setAttribute("log10distance", log10distance.getValue().toString())
-            .setAttribute("twist", twist.getValue().toString())
-            .setAttribute("fOV", fOV.getValue().toString())
-            .setAttribute("focalLength", focalLength.getValue().toString())
-            .setAttribute("locked", locked.getValue().toString())
-            .setAttribute("orthographic", orthographic.getValue().toString())
-            .setAttribute("name", name.getValue())
-            ;
+        Element element = document.createElement("Camera");
+        element.setAttribute("xCenter", xCenter.getValue().toString());
+        element.setAttribute("yCenter", yCenter.getValue().toString());
+        element.setAttribute("zCenter", zCenter.getValue().toString());
+        element.setAttribute("azimuth", azimuth.getValue().toString());
+        element.setAttribute("inclination", inclination.getValue().toString());
+        element.setAttribute("log10distance", log10distance.getValue().toString());
+        element.setAttribute("twist", twist.getValue().toString());
+        element.setAttribute("fOV", fOV.getValue().toString());
+        element.setAttribute("focalLength", focalLength.getValue().toString());
+        element.setAttribute("locked", locked.getValue().toString());
+        element.setAttribute("orthographic", orthographic.getValue().toString());
+        element.setAttribute("name", name.getValue());
+        return element;
     }
 
-    public static CameraSetting fromJDOM2Element(Element element)
+    public static CameraSetting fromDOMElement(Element element)
     {
         return new CameraSetting(
-            Double.valueOf(element.getAttributeValue("xCenter")),
-            Double.valueOf(element.getAttributeValue("yCenter")),
-            Double.valueOf(element.getAttributeValue("zCenter")),
-            Double.valueOf(element.getAttributeValue("azimuth")),
-            Double.valueOf(element.getAttributeValue("inclination")),
-            Double.valueOf(element.getAttributeValue("log10distance")),
-            Double.valueOf(element.getAttributeValue("twist")),
-            Double.valueOf(element.getAttributeValue("fOV")),
-            Double.valueOf(element.getAttributeValue("focalLength")),
-            Boolean.valueOf(element.getAttributeValue("locked")),
-            Boolean.valueOf(element.getAttributeValue("orthographic")),
-            element.getAttributeValue("name")
+            Double.valueOf(element.getAttribute("xCenter")),
+            Double.valueOf(element.getAttribute("yCenter")),
+            Double.valueOf(element.getAttribute("zCenter")),
+            Double.valueOf(element.getAttribute("azimuth")),
+            Double.valueOf(element.getAttribute("inclination")),
+            Double.valueOf(element.getAttribute("log10distance")),
+            Double.valueOf(element.getAttribute("twist")),
+            Double.valueOf(element.getAttribute("fOV")),
+            Double.valueOf(element.getAttribute("focalLength")),
+            Boolean.valueOf(element.getAttribute("locked")),
+            Boolean.valueOf(element.getAttribute("orthographic")),
+            element.getAttribute("name")
         );
     }
 
@@ -330,7 +331,7 @@ public class CameraSetting implements XML_Writable
 
         System.out.println("}");
 
-        System.out.println("public Element toJDOM2Element() {");
+        System.out.println("public Element toDOMElement() {");
         System.out.println("    return new Element(\"CameraSetting\")");
         for (int i = 0; i < things.length; i++)
         {
@@ -338,7 +339,7 @@ public class CameraSetting implements XML_Writable
         }
         System.out.println("    ;\n}");
 
-        System.out.println("public static CameraSetting fromJDOM2Element(Element element){\n");
+        System.out.println("public static CameraSetting fromDOMElement(Element element){\n");
         System.out.println("    return new CameraSetting(");
         for (int i = 0; i < things.length; i++)
         {
