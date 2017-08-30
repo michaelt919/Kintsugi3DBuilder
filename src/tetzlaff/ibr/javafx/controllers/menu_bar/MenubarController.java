@@ -402,7 +402,7 @@ public class MenubarController
                     JavaFXModelAccess.getInstance().getLoadingModel().saveToVSETFile(vsetFile);
 
                     Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-                    Element rootElement = document.createElement("Scene");
+                    Element rootElement = document.createElement("Project");
                     document.appendChild(rootElement);
 
                     Element vsetElement = document.createElement("ViewSet");
