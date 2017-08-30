@@ -74,10 +74,10 @@
          </padding>
          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Field of view:" GridPane.halignment="RIGHT" />
          <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Focal length:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-         <TextField fx:id="fOVTextField" prefHeight="25.0" prefWidth="50.0" GridPane.columnIndex="1" />
+         <TextField fx:id="fovTextField" prefHeight="25.0" prefWidth="50.0" GridPane.columnIndex="1" />
          <TextField fx:id="focalLengthTextField" prefHeight="25.0" prefWidth="50.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          <CheckBox fx:id="orthographicCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="99.0" text="Orthographic" GridPane.columnSpan="2" GridPane.rowIndex="2" />
-         <Slider fx:id="fOVSlider" majorTickUnit="30.0" max="180.0" minorTickCount="5" prefHeight="38.0" prefWidth="225.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" />
+         <Slider fx:id="fovSlider" majorTickUnit="30.0" max="180.0" minorTickCount="5" prefHeight="38.0" prefWidth="225.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" />
          <Slider fx:id="focalLengthSlider" majorTickUnit="10.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
          <columnConstraints>
             <ColumnConstraints />

@@ -20,8 +20,8 @@ public class JavaFXCameraModel implements ExtendedCameraModel
         0.0,
         1.0,
         0.0,
-        1.0,
-        1.0,
+        90.0,
+        18.0,
         true,
         false,
         "backup"
@@ -33,7 +33,7 @@ public class JavaFXCameraModel implements ExtendedCameraModel
     }
 
     @NotNull
-    private CameraSetting cam()
+    private CameraSetting getActiveCameraSetting()
     {
         if (selected == null || selected.getValue() == null)
         {
@@ -68,7 +68,7 @@ public class JavaFXCameraModel implements ExtendedCameraModel
             fromRender = false;
             return orbitCache;
         }
-        Vector3 poler = new Vector3((float) cam().getAzimuth(), (float) cam().getInclination(), (float) cam().getTwist());
+        Vector3 poler = new Vector3((float) getActiveCameraSetting().getAzimuth(), (float) getActiveCameraSetting().getInclination(), (float) getActiveCameraSetting().getTwist());
         return OrbitPolarConverter.getInstance().convertToOrbitMatrix(poler);
     }
 
@@ -76,9 +76,9 @@ public class JavaFXCameraModel implements ExtendedCameraModel
     public void setOrbit(Matrix4 orbit)
     {
         Vector3 poler = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
-        cam().setAzimuth(poler.x);
-        cam().setInclination(poler.y);
-        cam().setTwist(poler.z);
+        getActiveCameraSetting().setAzimuth(poler.x);
+        getActiveCameraSetting().setInclination(poler.y);
+        getActiveCameraSetting().setTwist(poler.z);
         orbitCache = orbit;
         fromRender = true;
     }
@@ -86,77 +86,77 @@ public class JavaFXCameraModel implements ExtendedCameraModel
     @Override
     public float getLog10Distance()
     {
-        return (float) cam().getLog10distance();
+        return (float) getActiveCameraSetting().getLog10distance();
     }
 
     @Override
     public void setLog10Distance(float log10distance)
     {
-        cam().setLog10distance(log10distance);
+        getActiveCameraSetting().setLog10distance(log10distance);
     }
 
     @Override
     public float getDistance()
     {
-        return (float) Math.pow(10, cam().getLog10distance());
+        return (float) Math.pow(10, getActiveCameraSetting().getLog10distance());
     }
 
     @Override
     public void setDistance(float distance)
     {
-        cam().setLog10distance(Math.log10(distance));
+        getActiveCameraSetting().setLog10distance(Math.log10(distance));
     }
 
     @Override
     public Vector3 getCenter()
     {
-        return new Vector3((float) cam().getxCenter(),
-            (float) cam().getyCenter(),
-            (float) cam().getzCenter());
+        return new Vector3((float) getActiveCameraSetting().getxCenter(),
+            (float) getActiveCameraSetting().getyCenter(),
+            (float) getActiveCameraSetting().getzCenter());
     }
 
     @Override
     public void setCenter(Vector3 center)
     {
-        cam().setxCenter(center.x);
-        cam().setyCenter(center.y);
-        cam().setzCenter(center.z);
+        getActiveCameraSetting().setxCenter(center.x);
+        getActiveCameraSetting().setyCenter(center.y);
+        getActiveCameraSetting().setzCenter(center.z);
     }
 
     @Override
     public float getTwist()
     {
-        return (float) cam().getTwist();
+        return (float) getActiveCameraSetting().getTwist();
     }
 
     @Override
     public void setTwist(float twist)
     {
-        cam().setTwist(twist);
+        getActiveCameraSetting().setTwist(twist);
     }
 
     @Override
     public float getAzimuth()
     {
-        return (float) cam().getAzimuth();
+        return (float) getActiveCameraSetting().getAzimuth();
     }
 
     @Override
     public void setAzimuth(float azimuth)
     {
-        cam().setAzimuth(azimuth);
+        getActiveCameraSetting().setAzimuth(azimuth);
     }
 
     @Override
     public float getInclination()
     {
-        return (float) cam().getInclination();
+        return (float) getActiveCameraSetting().getInclination();
     }
 
     @Override
     public void setInclination(float inclination)
     {
-        cam().setInclination(inclination);
+        getActiveCameraSetting().setInclination(inclination);
     }
 
     /**
@@ -169,12 +169,23 @@ public class JavaFXCameraModel implements ExtendedCameraModel
     @Override
     public boolean isLocked()
     {
-        return cam().isLocked();
+        return getActiveCameraSetting().isLocked();
     }
 
     @Override
     public void setLookMatrix(Matrix4 lookMatrix)
     {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public float getHorizontalFOV()
+    {
+        return (float)(getActiveCameraSetting().getFOV() * Math.PI / 180);
+    }
+
+    public void setFOV(float fov)
+    {
+        getActiveCameraSetting().setFOV(fov * 180 / Math.PI);
     }
 }

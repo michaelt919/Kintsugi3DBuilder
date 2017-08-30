@@ -715,18 +715,19 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 .times(multiTransformationModel.get(modelInstance));
     }
 
-    private float getVerticalFieldOfView()
+    private float getVerticalFieldOfView(FramebufferSize size)
     {
-        return resources.viewSet.getCameraProjection(
-                resources.viewSet.getCameraProjectionIndex(resources.viewSet.getPrimaryViewIndex()))
-            .getVerticalFieldOfView();
+//        return resources.viewSet.getCameraProjection(
+//                resources.viewSet.getCameraProjectionIndex(resources.viewSet.getPrimaryViewIndex()))
+//            .getVerticalFieldOfView();
+        return 2 * (float)Math.atan(Math.tan(cameraModel.getHorizontalFOV() / 2) * size.height / size.width);
     }
 
     private Matrix4 getProjectionMatrix(FramebufferSize size)
     {
         float scale = getScale();
 
-        return Matrix4.perspective(getVerticalFieldOfView(),
+        return Matrix4.perspective(getVerticalFieldOfView(size),
                 (float)size.width / (float)size.height,
                 0.01f * scale, 100.0f * scale);
     }
@@ -781,12 +782,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
     }
 
-    private float computeLightWidgetScale(Matrix4 partialViewMatrix)
+    private float computeLightWidgetScale(Matrix4 partialViewMatrix, FramebufferSize size)
     {
         float cameraDistance = partialViewMatrix
             .times(this.cameraModel.getCenter().times(this.getScale()).asPosition())
             .getXYZ().length();
-        return cameraDistance * getVerticalFieldOfView() / 4;
+        return cameraDistance * getVerticalFieldOfView(size) / 4;
     }
 
     @Override
@@ -965,8 +966,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             this.lightProgram.setUniform("model_view",
                                 Matrix4.translate(lightCenter)
                                     .times(Matrix4.scale(
-                                        -lightCenter.z * getVerticalFieldOfView() / 64.0f,
-                                        -lightCenter.z * getVerticalFieldOfView() / 64.0f,
+                                        -lightCenter.z * getVerticalFieldOfView(size) / 64.0f,
+                                        -lightCenter.z * getVerticalFieldOfView(size) / 64.0f,
                                         1.0f)));
                             this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
 
@@ -998,7 +999,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         {
                             this.widgetProgram.setUniform("projection", this.getProjectionMatrix(size));
 
-                            float lightWidgetScale = computeLightWidgetScale(partialViewMatrix);
+                            float lightWidgetScale = computeLightWidgetScale(partialViewMatrix, size);
                             Vector3 lightCenter = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
                             Matrix4 widgetTransformation = view.times(this.getLightMatrix(i).quickInverse(0.001f));
                             Vector3 widgetPosition = widgetTransformation.getColumn(3).getXYZ()
@@ -1011,11 +1012,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                             Vector3 distanceWidgetPosition = widgetTransformation.getColumn(3).getXYZ()
                                 .minus(lightCenter)
-                                .times(Math.min(1, computeLightWidgetScale(partialViewMatrix) /
+                                .times(Math.min(1, computeLightWidgetScale(partialViewMatrix, size) /
                                                         widgetTransformation.getColumn(3).getXYZ().distance(lightCenter)))
                                 .plus(lightCenter);
 
-                            float perspectiveWidgetScale = -widgetPosition.z * getVerticalFieldOfView() / 64;
+                            float perspectiveWidgetScale = -widgetPosition.z * getVerticalFieldOfView(size) / 64;
 
                             this.context.getState().disableDepthTest();
                             this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
@@ -1756,7 +1757,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             @Override
             public float getLightWidgetScale()
             {
-                return computeLightWidgetScale(getPartialViewMatrix()) / getScale();
+                return computeLightWidgetScale(getPartialViewMatrix(), fboSize) / getScale();
             }
         };
     }
