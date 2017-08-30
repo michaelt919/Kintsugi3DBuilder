@@ -85,12 +85,12 @@ public class LightInstanceSetting implements DOMConvertable
     public Element toDOMElement(Document document)
     {
         Element element = document.createElement("LightInstance");
-        element.setAttribute("xCenter", xCenter.getValue().toString());
-        element.setAttribute("yCenter", yCenter.getValue().toString());
-        element.setAttribute("zCenter", zCenter.getValue().toString());
+        element.setAttribute("targetX", xCenter.getValue().toString());
+        element.setAttribute("targetY", yCenter.getValue().toString());
+        element.setAttribute("targetZ", zCenter.getValue().toString());
         element.setAttribute("azimuth", azimuth.getValue().toString());
         element.setAttribute("inclination", inclination.getValue().toString());
-        element.setAttribute("log10distance", log10distance.getValue().toString());
+        element.setAttribute("log10Distance", log10distance.getValue().toString());
         element.setAttribute("intensity", intensity.getValue().toString());
         element.setAttribute("locked", locked.getValue().toString());
         element.setAttribute("name", name.getValue());
@@ -102,12 +102,12 @@ public class LightInstanceSetting implements DOMConvertable
     public static LightInstanceSetting fromDOMElement(Element element, BooleanProperty groupLockedProperty)
     {
         return new LightInstanceSetting(
-            Double.valueOf(element.getAttribute("xCenter")),
-            Double.valueOf(element.getAttribute("yCenter")),
-            Double.valueOf(element.getAttribute("zCenter")),
+            Double.valueOf(element.getAttribute("targetX")),
+            Double.valueOf(element.getAttribute("targetY")),
+            Double.valueOf(element.getAttribute("targetZ")),
             Double.valueOf(element.getAttribute("azimuth")),
             Double.valueOf(element.getAttribute("inclination")),
-            Double.valueOf(element.getAttribute("log10distance")),
+            Double.valueOf(element.getAttribute("log10Distance")),
             Double.valueOf(element.getAttribute("intensity")),
             Boolean.valueOf(element.getAttribute("locked")),
             element.getAttribute("name"),
