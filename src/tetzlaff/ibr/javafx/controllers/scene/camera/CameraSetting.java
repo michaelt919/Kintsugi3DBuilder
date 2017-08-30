@@ -55,14 +55,14 @@ public class CameraSetting implements DOMConvertable
     public Element toDOMElement(Document document)
     {
         Element element = document.createElement("Camera");
-        element.setAttribute("xCenter", xCenter.getValue().toString());
-        element.setAttribute("yCenter", yCenter.getValue().toString());
-        element.setAttribute("zCenter", zCenter.getValue().toString());
+        element.setAttribute("lookAtX", xCenter.getValue().toString());
+        element.setAttribute("lookAtY", yCenter.getValue().toString());
+        element.setAttribute("lookAtZ", zCenter.getValue().toString());
         element.setAttribute("azimuth", azimuth.getValue().toString());
         element.setAttribute("inclination", inclination.getValue().toString());
-        element.setAttribute("log10distance", log10distance.getValue().toString());
+        element.setAttribute("log10Distance", log10distance.getValue().toString());
         element.setAttribute("twist", twist.getValue().toString());
-        element.setAttribute("fOV", fOV.getValue().toString());
+        element.setAttribute("fov", fOV.getValue().toString());
         element.setAttribute("focalLength", focalLength.getValue().toString());
         element.setAttribute("locked", locked.getValue().toString());
         element.setAttribute("orthographic", orthographic.getValue().toString());
@@ -73,14 +73,14 @@ public class CameraSetting implements DOMConvertable
     public static CameraSetting fromDOMElement(Element element)
     {
         return new CameraSetting(
-            Double.valueOf(element.getAttribute("xCenter")),
-            Double.valueOf(element.getAttribute("yCenter")),
-            Double.valueOf(element.getAttribute("zCenter")),
+            Double.valueOf(element.getAttribute("lookAtX")),
+            Double.valueOf(element.getAttribute("lookAtY")),
+            Double.valueOf(element.getAttribute("lookAtZ")),
             Double.valueOf(element.getAttribute("azimuth")),
             Double.valueOf(element.getAttribute("inclination")),
-            Double.valueOf(element.getAttribute("log10distance")),
+            Double.valueOf(element.getAttribute("log10Distance")),
             Double.valueOf(element.getAttribute("twist")),
-            Double.valueOf(element.getAttribute("fOV")),
+            Double.valueOf(element.getAttribute("fov")),
             Double.valueOf(element.getAttribute("focalLength")),
             Boolean.valueOf(element.getAttribute("locked")),
             Boolean.valueOf(element.getAttribute("orthographic")),
