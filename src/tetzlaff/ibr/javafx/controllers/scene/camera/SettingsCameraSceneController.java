@@ -41,8 +41,8 @@ public class SettingsCameraSceneController implements Initializable
     @FXML private Slider distanceSlider;
     @FXML private TextField twistTextField;
     @FXML private Slider twistSlider;
-    @FXML private TextField fOVTextField;
-    @FXML private Slider fOVSlider;
+    @FXML private TextField fovTextField;
+    @FXML private Slider fovSlider;
     @FXML private TextField focalLengthTextField;
     @FXML private Slider focalLengthSlider;
 
@@ -51,6 +51,7 @@ public class SettingsCameraSceneController implements Initializable
     @FXML private Button selectPointButton;
 
     private final DoubleProperty fov = new SimpleDoubleProperty();
+    private final DoubleProperty focalLength = new SimpleDoubleProperty();
 
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
     private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);
@@ -66,8 +67,11 @@ public class SettingsCameraSceneController implements Initializable
         StaticUtilities.cleanInput(yCenterTextField);
         StaticUtilities.cleanInput(zCenterTextField);
 
-        StaticUtilities.cleanInput(fOVTextField);
+        StaticUtilities.cleanInput(fovTextField);
         StaticUtilities.cleanInput(focalLengthTextField);
+
+        fov.addListener(change -> focalLength.setValue(18 / Math.tan(fov.getValue() * Math.PI / 360 /* convert and divide by 2 */)));
+        focalLength.addListener(change -> fov.setValue(360 / Math.PI /* convert and multiply by 2) */ * Math.atan(18 / focalLength.getValue())));
 
         distanceSlider.setLabelFormatter(new StringConverter<Double>()
         {
@@ -117,60 +121,62 @@ public class SettingsCameraSceneController implements Initializable
         root.setDisable(disabled);
     }
 
-    private void bind(CameraSetting c)
+    private void bind(CameraSetting camera)
     {
 
-        xCenterTextField.textProperty().bindBidirectional(c.xCenterProperty(), n);
-        yCenterTextField.textProperty().bindBidirectional(c.yCenterProperty(), n);
-        zCenterTextField.textProperty().bindBidirectional(c.zCenterProperty(), n);
-        azimuthTextField.textProperty().bindBidirectional(c.azimuthProperty(), n);
-        inclinationTextField.textProperty().bindBidirectional(c.inclinationProperty(), n);
-        distanceTextField.textProperty().bindBidirectional(c.log10distanceProperty(), n10);
-        twistTextField.textProperty().bindBidirectional(c.twistProperty(), n);
-        fOVTextField.textProperty().bindBidirectional(c.fOVProperty(), n);
-        focalLengthTextField.textProperty().bindBidirectional(c.focalLengthProperty(), n);
+        xCenterTextField.textProperty().bindBidirectional(camera.xCenterProperty(), n);
+        yCenterTextField.textProperty().bindBidirectional(camera.yCenterProperty(), n);
+        zCenterTextField.textProperty().bindBidirectional(camera.zCenterProperty(), n);
+        azimuthTextField.textProperty().bindBidirectional(camera.azimuthProperty(), n);
+        inclinationTextField.textProperty().bindBidirectional(camera.inclinationProperty(), n);
+        distanceTextField.textProperty().bindBidirectional(camera.log10distanceProperty(), n10);
+        twistTextField.textProperty().bindBidirectional(camera.twistProperty(), n);
+        fovTextField.textProperty().bindBidirectional(camera.fovProperty(), n);
+        focalLengthTextField.textProperty().bindBidirectional(camera.focalLengthProperty(), n);
 
-        xCenterSlider.valueProperty().bindBidirectional(c.xCenterProperty());
-        yCenterSlider.valueProperty().bindBidirectional(c.yCenterProperty());
-        zCenterSlider.valueProperty().bindBidirectional(c.zCenterProperty());
-        azimuthSlider.valueProperty().bindBidirectional(c.azimuthProperty());
-        inclinationSlider.valueProperty().bindBidirectional(c.inclinationProperty());
-        distanceSlider.valueProperty().bindBidirectional(c.log10distanceProperty());
-        twistSlider.valueProperty().bindBidirectional(c.twistProperty());
-        //fOVSlider.valueProperty().bindBidirectional(c.fOVProperty());
-        focalLengthSlider.valueProperty().bindBidirectional(c.focalLengthProperty());
+        xCenterSlider.valueProperty().bindBidirectional(camera.xCenterProperty());
+        yCenterSlider.valueProperty().bindBidirectional(camera.yCenterProperty());
+        zCenterSlider.valueProperty().bindBidirectional(camera.zCenterProperty());
+        azimuthSlider.valueProperty().bindBidirectional(camera.azimuthProperty());
+        inclinationSlider.valueProperty().bindBidirectional(camera.inclinationProperty());
+        distanceSlider.valueProperty().bindBidirectional(camera.log10distanceProperty());
+        twistSlider.valueProperty().bindBidirectional(camera.twistProperty());
+        fovSlider.valueProperty().bindBidirectional(camera.fovProperty());
+        focalLengthSlider.valueProperty().bindBidirectional(camera.focalLengthProperty());
 
-        orthographicCheckBox.selectedProperty().bindBidirectional(c.orthographicProperty());
+        orthographicCheckBox.selectedProperty().bindBidirectional(camera.orthographicProperty());
 
-        fov.bindBidirectional(c.fOVProperty());
+        fov.bindBidirectional(camera.fovProperty());
+        focalLength.bindBidirectional(camera.focalLengthProperty());
     }
 
-    private void unbind(CameraSetting c)
+    private void unbind(CameraSetting camera)
     {
 
-        xCenterTextField.textProperty().unbindBidirectional(c.xCenterProperty());
-        yCenterTextField.textProperty().unbindBidirectional(c.yCenterProperty());
-        zCenterTextField.textProperty().unbindBidirectional(c.zCenterProperty());
-        azimuthTextField.textProperty().unbindBidirectional(c.azimuthProperty());
-        inclinationTextField.textProperty().unbindBidirectional(c.inclinationProperty());
-        distanceTextField.textProperty().unbindBidirectional(c.log10distanceProperty());
-        twistTextField.textProperty().unbindBidirectional(c.twistProperty());
-        fOVTextField.textProperty().unbindBidirectional(c.fOVProperty());
-        focalLengthTextField.textProperty().unbindBidirectional(c.focalLengthProperty());
+        xCenterTextField.textProperty().unbindBidirectional(camera.xCenterProperty());
+        yCenterTextField.textProperty().unbindBidirectional(camera.yCenterProperty());
+        zCenterTextField.textProperty().unbindBidirectional(camera.zCenterProperty());
+        azimuthTextField.textProperty().unbindBidirectional(camera.azimuthProperty());
+        inclinationTextField.textProperty().unbindBidirectional(camera.inclinationProperty());
+        distanceTextField.textProperty().unbindBidirectional(camera.log10distanceProperty());
+        twistTextField.textProperty().unbindBidirectional(camera.twistProperty());
+        fovTextField.textProperty().unbindBidirectional(camera.fovProperty());
+        focalLengthTextField.textProperty().unbindBidirectional(camera.focalLengthProperty());
 
-        xCenterSlider.valueProperty().unbindBidirectional(c.xCenterProperty());
-        yCenterSlider.valueProperty().unbindBidirectional(c.yCenterProperty());
-        zCenterSlider.valueProperty().unbindBidirectional(c.zCenterProperty());
-        azimuthSlider.valueProperty().unbindBidirectional(c.azimuthProperty());
-        inclinationSlider.valueProperty().unbindBidirectional(c.inclinationProperty());
-        distanceSlider.valueProperty().unbindBidirectional(c.log10distanceProperty());
-        twistSlider.valueProperty().unbindBidirectional(c.twistProperty());
-        //fOVSlider.valueProperty().unbindBidirectional(c.fOVProperty());
-        focalLengthSlider.valueProperty().unbindBidirectional(c.focalLengthProperty());
+        xCenterSlider.valueProperty().unbindBidirectional(camera.xCenterProperty());
+        yCenterSlider.valueProperty().unbindBidirectional(camera.yCenterProperty());
+        zCenterSlider.valueProperty().unbindBidirectional(camera.zCenterProperty());
+        azimuthSlider.valueProperty().unbindBidirectional(camera.azimuthProperty());
+        inclinationSlider.valueProperty().unbindBidirectional(camera.inclinationProperty());
+        distanceSlider.valueProperty().unbindBidirectional(camera.log10distanceProperty());
+        twistSlider.valueProperty().unbindBidirectional(camera.twistProperty());
+        fovSlider.valueProperty().unbindBidirectional(camera.fovProperty());
+        focalLengthSlider.valueProperty().unbindBidirectional(camera.focalLengthProperty());
 
-        orthographicCheckBox.selectedProperty().unbindBidirectional(c.orthographicProperty());
+        orthographicCheckBox.selectedProperty().unbindBidirectional(camera.orthographicProperty());
 
-        fov.bindBidirectional(c.fOVProperty());
+        fov.unbindBidirectional(camera.fovProperty());
+        focalLength.unbindBidirectional(camera.focalLengthProperty());
     }
 
     public void setOnActionSelectPoint(EventHandler<ActionEvent> actionEventEventHandler)

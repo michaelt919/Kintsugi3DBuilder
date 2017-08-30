@@ -15,8 +15,8 @@ public class CameraSetting implements DOMConvertable
     private final DoubleProperty inclination = StaticUtilities.bound(-90, 90, new SimpleDoubleProperty());
     private final DoubleProperty log10distance = new SimpleDoubleProperty();
     private final DoubleProperty twist = StaticUtilities.wrap(-180.0, 180.0, new SimpleDoubleProperty());
-    private final DoubleProperty fOV = new SimpleDoubleProperty();
-    private final DoubleProperty focalLength = new SimpleDoubleProperty();
+    private final DoubleProperty fOV = new SimpleDoubleProperty(90.0);
+    private final DoubleProperty focalLength = new SimpleDoubleProperty(18.0);
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final BooleanProperty orthographic = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
@@ -222,17 +222,17 @@ public class CameraSetting implements DOMConvertable
         this.twist.set(twist);
     }
 
-    public double getfOV()
+    public double getFOV()
     {
         return fOV.get();
     }
 
-    public DoubleProperty fOVProperty()
+    public DoubleProperty fovProperty()
     {
         return fOV;
     }
 
-    public void setfOV(double fOV)
+    public void setFOV(double fOV)
     {
         this.fOV.set(fOV);
     }

@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -39,6 +41,8 @@ public class RootEnvironmentSceneController implements Initializable
 
         environmentListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
+        ObservableList<EnvironmentSetting> environmentList = JavaFXModelAccess.getInstance().getSceneModel().getEnvironmentList();
+
         if (useStartingMap)
         {
             EnvironmentSetting startingMap = new EnvironmentSetting(
@@ -61,6 +65,15 @@ public class RootEnvironmentSceneController implements Initializable
             JavaFXModelAccess.getInstance().getSceneModel().getEnvironmentList().add(startingMap);
             environmentListView.getSelectionModel().select(0);
         }
+
+        environmentList.addListener((ListChangeListener<? super EnvironmentSetting>) change ->
+        {
+            change.next();
+            if (change.wasAdded() && change.getAddedSize() == environmentList.size())
+            {
+                environmentListView.getSelectionModel().select(0);
+            }
+        });
     }
 
     public void init(JavaFXEnvironmentMapModel environmentMapModel)

@@ -11,6 +11,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -106,13 +107,24 @@ public class RootLightSceneController implements Initializable
 
         tableView.setColumnResizePolicy(param -> false);
 
-        tableView.setItems(JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList());
+        ObservableList<LightGroupSetting> lightGroupList = JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList();
+
+        tableView.setItems(lightGroupList);
 
         //TABLE SET UP DONE
 
         //lightGroupList.add(new LightGroupSetting("Free Lights"));
 
         selectedLight.addListener(settingsController.changeListener);
+
+        lightGroupList.addListener((ListChangeListener<? super LightGroupSetting>) change ->
+        {
+            change.next();
+            if (change.wasAdded() && change.getAddedSize() == lightGroupList.size())
+            {
+                tableView.getSelectionModel().select(0);
+            }
+        });
     }
 
     public void init(JavaFXLightingModel lightingModel)

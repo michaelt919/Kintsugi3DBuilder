@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -45,15 +47,27 @@ public class RootCameraSceneController implements Initializable
             0.0,
             0.0,
             0.0,
-            1.0,
-            1.0,
+            90.0,
+            18.0,
             false,
             true,
             "Free Camera"
 
         );
-        JavaFXModelAccess.getInstance().getSceneModel().getCameraList().add(freeCam);
+
+        ObservableList<CameraSetting> cameraList = JavaFXModelAccess.getInstance().getSceneModel().getCameraList();
+
+        cameraList.add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
+
+        cameraList.addListener((ListChangeListener<? super CameraSetting>) change ->
+        {
+            change.next();
+            if (change.wasAdded() && change.getAddedSize() == cameraList.size())
+            {
+                cameraListView.getSelectionModel().select(0);
+            }
+        });
     }
 
     public void init(JavaFXCameraModel cameraModel, JavaFXToolBindingModel toolModel)
