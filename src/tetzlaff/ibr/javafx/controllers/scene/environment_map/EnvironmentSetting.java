@@ -234,7 +234,7 @@ public class EnvironmentSetting implements DOMConvertable
         this.bpImageFile.setValue(bpImageFile);
     }
 
-    public double getEnvColorIntensity()
+    public double getEnvIntensity()
     {
         return envColorIntensity.get();
     }
@@ -244,7 +244,7 @@ public class EnvironmentSetting implements DOMConvertable
         return envColorIntensity;
     }
 
-    public void setEnvColorIntensity(double envColorIntensity)
+    public void setEnvIntensity(double envColorIntensity)
     {
         this.envColorIntensity.set(envColorIntensity);
     }

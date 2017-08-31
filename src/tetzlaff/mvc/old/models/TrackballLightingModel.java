@@ -251,7 +251,7 @@ public class TrackballLightingModel extends LightingModelBase
     @Override
     public Vector3 getLightCenter(int i)
     {
-        return this.trackballModels[i].getCenter();
+        return this.trackballModels[i].getTarget();
     }
 
     @Override

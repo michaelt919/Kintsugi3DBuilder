@@ -104,9 +104,9 @@ public class IBRSettingsModelImpl implements SettingsModel
     }
 
     @Override
-    public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuationEnabled)
+    public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuation)
     {
-        this.pbrGeometricAttenuationEnabled = pbrGeometricAttenuationEnabled;
+        this.pbrGeometricAttenuationEnabled = pbrGeometricAttenuation;
     }
 
     @Override
@@ -199,7 +199,7 @@ public class IBRSettingsModelImpl implements SettingsModel
 
     @Override
     @Deprecated
-    public void set3DGridEnabled(boolean d3GridEnabled)
+    public void set3DGridEnabled(boolean is3DGridEnabled)
     {
         throw new UnsupportedOperationException();
     }

@@ -45,7 +45,7 @@ class PanTool implements DragTool
     {
         this.mouseStart = cursorPosition;
 
-        oldCenter = cameraModel.getCenter();
+        oldCenter = cameraModel.getTarget();
         orbit = cameraModel.getOrbit();
 
         panSensitivityAdjusted = PAN_SENSITIVITY / Math.min(windowSize.width, windowSize.height);
@@ -61,6 +61,6 @@ class PanTool implements DragTool
 
         moveVector = moveVector.times((float) panSensitivityAdjusted);
         Vector3 worldMoveVector = orbit.transpose().times(moveVector.asVector4(0f)).getXYZ();
-        cameraModel.setCenter(oldCenter.minus(worldMoveVector));
+        cameraModel.setTarget(oldCenter.minus(worldMoveVector));
     }
 }

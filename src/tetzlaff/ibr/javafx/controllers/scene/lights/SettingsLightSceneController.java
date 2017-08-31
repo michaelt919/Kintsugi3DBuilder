@@ -113,19 +113,19 @@ public class SettingsLightSceneController implements Initializable
     private void bind(LightInstanceSetting c)
     {
 
-        xCenterTextField.textProperty().bindBidirectional(c.xCenterProperty(), n);
-        yCenterTextField.textProperty().bindBidirectional(c.yCenterProperty(), n);
-        zCenterTextField.textProperty().bindBidirectional(c.zCenterProperty(), n);
+        xCenterTextField.textProperty().bindBidirectional(c.targetXProperty(), n);
+        yCenterTextField.textProperty().bindBidirectional(c.targetYProperty(), n);
+        zCenterTextField.textProperty().bindBidirectional(c.targetZProperty(), n);
         azimuthTextField.textProperty().bindBidirectional(c.azimuthProperty(), n);
         inclinationTextField.textProperty().bindBidirectional(c.inclinationProperty(), n);
-        distanceTextField.textProperty().bindBidirectional(c.log10distanceProperty(), n10);
+        distanceTextField.textProperty().bindBidirectional(c.log10DistanceProperty(), n10);
         intensityTextField.textProperty().bindBidirectional(c.intensityProperty(), n);
-        xCenterSlider.valueProperty().bindBidirectional(c.xCenterProperty());
-        yCenterSlider.valueProperty().bindBidirectional(c.yCenterProperty());
-        zCenterSlider.valueProperty().bindBidirectional(c.zCenterProperty());
+        xCenterSlider.valueProperty().bindBidirectional(c.targetXProperty());
+        yCenterSlider.valueProperty().bindBidirectional(c.targetYProperty());
+        zCenterSlider.valueProperty().bindBidirectional(c.targetZProperty());
         azimuthSlider.valueProperty().bindBidirectional(c.azimuthProperty());
         inclinationSlider.valueProperty().bindBidirectional(c.inclinationProperty());
-        distanceSlider.valueProperty().bindBidirectional(c.log10distanceProperty());
+        distanceSlider.valueProperty().bindBidirectional(c.log10DistanceProperty());
 
         trueIntensity.bindBidirectional(c.intensityProperty());
 
@@ -137,19 +137,19 @@ public class SettingsLightSceneController implements Initializable
     private void unbind(LightInstanceSetting c)
     {
 
-        xCenterTextField.textProperty().unbindBidirectional(c.xCenterProperty());
-        yCenterTextField.textProperty().unbindBidirectional(c.yCenterProperty());
-        zCenterTextField.textProperty().unbindBidirectional(c.zCenterProperty());
+        xCenterTextField.textProperty().unbindBidirectional(c.targetXProperty());
+        yCenterTextField.textProperty().unbindBidirectional(c.targetYProperty());
+        zCenterTextField.textProperty().unbindBidirectional(c.targetZProperty());
         azimuthTextField.textProperty().unbindBidirectional(c.azimuthProperty());
         inclinationTextField.textProperty().unbindBidirectional(c.inclinationProperty());
-        distanceTextField.textProperty().unbindBidirectional(c.log10distanceProperty());
+        distanceTextField.textProperty().unbindBidirectional(c.log10DistanceProperty());
         intensityTextField.textProperty().unbindBidirectional(c.intensityProperty());
-        xCenterSlider.valueProperty().unbindBidirectional(c.xCenterProperty());
-        yCenterSlider.valueProperty().unbindBidirectional(c.yCenterProperty());
-        zCenterSlider.valueProperty().unbindBidirectional(c.zCenterProperty());
+        xCenterSlider.valueProperty().unbindBidirectional(c.targetXProperty());
+        yCenterSlider.valueProperty().unbindBidirectional(c.targetYProperty());
+        zCenterSlider.valueProperty().unbindBidirectional(c.targetZProperty());
         azimuthSlider.valueProperty().unbindBidirectional(c.azimuthProperty());
         inclinationSlider.valueProperty().unbindBidirectional(c.inclinationProperty());
-        distanceSlider.valueProperty().unbindBidirectional(c.log10distanceProperty());
+        distanceSlider.valueProperty().unbindBidirectional(c.log10DistanceProperty());
 
         trueIntensity.unbindBidirectional(c.intensityProperty());
 

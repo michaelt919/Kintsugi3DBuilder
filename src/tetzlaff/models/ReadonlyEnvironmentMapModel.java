@@ -5,7 +5,10 @@ import tetzlaff.gl.vecmath.Vector3;
 
 public interface ReadonlyEnvironmentMapModel
 {
-    Vector3 getAmbientLightColor() ;
+    double getEnvironmentRotation();
+    double getEnvironmentIntensity();
+
     boolean isEnvironmentMappingEnabled();
+    Vector3 getEnvironmentColor();
     Matrix4 getEnvironmentMapMatrix();
 }

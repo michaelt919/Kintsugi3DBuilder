@@ -147,13 +147,13 @@ public abstract class LightingModelBase implements ExtendedLightingModel
     @Override
     public final Vector3 getAmbientLightColor() 
     {
-        return environmentMapModel.getAmbientLightColor();
+        return environmentMapModel.getEnvironmentColor();
     }
 
     @Override
     public final void setAmbientLightColor(Vector3 ambientLightColor)
     {
-        environmentMapModel.setAmbientLightColor(ambientLightColor);
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -163,9 +163,9 @@ public abstract class LightingModelBase implements ExtendedLightingModel
     }
 
     @Override
-    public void setEnvironmentMappingEnabled(boolean environmentMappingEnabled)
+    public void setEnvironmentMappingEnabled(boolean enabled)
     {
-        environmentMapModel.setEnvironmentMappingEnabled(environmentMappingEnabled);
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -177,7 +177,7 @@ public abstract class LightingModelBase implements ExtendedLightingModel
     @Override
     public void setEnvironmentMapMatrix(Matrix4 environmentMapMatrix)
     {
-        environmentMapModel.setEnvironmentMapMatrix(environmentMapMatrix);
+        throw new UnsupportedOperationException();
     }
 
     @Override

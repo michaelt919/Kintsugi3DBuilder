@@ -28,8 +28,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import tetzlaff.gl.window.ModifierKeys;
-import tetzlaff.gl.window.ModifierKeysBuilder;
 import tetzlaff.ibr.app.WindowSynchronization;
 import tetzlaff.ibr.core.*;
 import tetzlaff.ibr.javafx.controllers.scene.camera.CameraSetting;
@@ -38,15 +36,10 @@ import tetzlaff.ibr.javafx.controllers.scene.lights.LightGroupSetting;
 import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
 import tetzlaff.ibr.javafx.models.JavaFXSceneModel;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
-import tetzlaff.ibr.javafx.models.JavaFXToolBindingModel;
-import tetzlaff.ibr.tools.ToolType;
 import tetzlaff.util.Flag;
-import tetzlaff.util.MouseMode;
 
 public class MenubarController
 {
-    private JavaFXToolBindingModel toolBindingModel;
-
     private JavaFXSettingsModel getSettings()
     {
         return JavaFXModelAccess.getInstance().getSettingsModel();
@@ -87,16 +80,9 @@ public class MenubarController
     private File projectFile;
     private File vsetFile;
 
-    public void init(Window parentWindow, JavaFXToolBindingModel toolBindingModel, IBRRequestQueue<?> requestQueue)
+    public void init(Window parentWindow, IBRRequestQueue<?> requestQueue)
     {
         this.parentWindow = parentWindow;
-        this.toolBindingModel = toolBindingModel;
-        toolBindingModel.setTool(new MouseMode(0, ModifierKeys.NONE), ToolType.ORBIT);
-        toolBindingModel.setTool(new MouseMode(1, ModifierKeys.NONE), ToolType.PAN);
-        toolBindingModel.setTool(new MouseMode(2, ModifierKeys.NONE), ToolType.PAN);
-        toolBindingModel.setTool(new MouseMode(1, ModifierKeysBuilder.begin().shift().end()), ToolType.DOLLY);
-        toolBindingModel.setTool(new MouseMode(2, ModifierKeysBuilder.begin().shift().end()), ToolType.DOLLY);
-        toolBindingModel.setTool(new MouseMode(0, ModifierKeysBuilder.begin().shift().alt().end()), ToolType.LOOK_AT_POINT);
 
         projectFileChooser = new FileChooser();
 
@@ -255,7 +241,7 @@ public class MenubarController
         visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleCameraPoseProperty());
         visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleSavedCameraPoseProperty());
 
-        phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().pBRGeometricAttenuationProperty());
+        phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().pbrGeometricAttenuationProperty());
         fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(getSettings().fresnelProperty());
 
         halfResolutionCheckMenuItem.selectedProperty().bindBidirectional(getSettings().halfResolutionEnabledProperty());

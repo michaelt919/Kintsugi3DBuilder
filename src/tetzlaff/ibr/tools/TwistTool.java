@@ -4,32 +4,32 @@ import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
 
-final class DollyTool implements DragTool
+final class TwistTool implements DragTool
 {
-    private static final double DOLLY_SENSITIVITY = Math.PI;
-    private double dollySensitivityAdjusted;
+    private static final double TWIST_SENSITIVITY = Math.PI;
+    private double twistSensitivityAdjusted;
 
-    private float oldLog10Distance;
+    private float oldTwist;
 
     private CursorPosition mouseStart;
 
     private final ExtendedCameraModel cameraModel;
 
-    private static class Builder extends ToolBuilderBase<DollyTool>
+    private static class Builder extends ToolBuilderBase<TwistTool>
     {
         @Override
-        public DollyTool build()
+        public TwistTool build()
         {
-            return new DollyTool(getCameraModel());
+            return new TwistTool(getCameraModel());
         }
     }
 
-    static ToolBuilder<DollyTool> getBuilder()
+    static ToolBuilder<TwistTool> getBuilder()
     {
         return new Builder();
     }
 
-    private DollyTool(ExtendedCameraModel cameraModel)
+    private TwistTool(ExtendedCameraModel cameraModel)
     {
         this.cameraModel = cameraModel;
     }
@@ -38,13 +38,13 @@ final class DollyTool implements DragTool
     public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
     {
         this.mouseStart = cursorPosition;
-        oldLog10Distance = cameraModel.getLog10Distance();
-        dollySensitivityAdjusted = DOLLY_SENSITIVITY / windowSize.height;
+        oldTwist = cameraModel.getTwist();
+        twistSensitivityAdjusted = TWIST_SENSITIVITY / windowSize.width;
     }
 
     @Override
     public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
     {
-        cameraModel.setLog10Distance((float) (oldLog10Distance + 0.5 * dollySensitivityAdjusted * (this.mouseStart.y - cursorPosition.y)));
+        cameraModel.setTwist(oldTwist + (float) Math.toDegrees((cursorPosition.x - this.mouseStart.x) * twistSensitivityAdjusted));
     }
 }

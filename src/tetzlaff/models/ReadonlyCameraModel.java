@@ -8,7 +8,7 @@ public interface ReadonlyCameraModel
 {
     Matrix4 getLookMatrix();
 
-    default Vector3 getCenter()
+    default Vector3 getTarget()
     {
         return Vector3.ZERO;
     }

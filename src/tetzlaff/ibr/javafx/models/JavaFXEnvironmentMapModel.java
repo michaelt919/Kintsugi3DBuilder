@@ -30,7 +30,7 @@ public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
     }
 
     @Override
-    public Vector3 getAmbientLightColor()
+    public Vector3 getEnvironmentColor()
     {
         if (doesSelectedExist())
         {
@@ -38,11 +38,11 @@ public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
             {
                 Color color = selected.getValue().getEnvColor();
                 return new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue())
-                    .times((float)selected.getValue().getEnvColorIntensity());
+                    .times((float)selected.getValue().getEnvIntensity());
             }
             else  if (selected.getValue().isEnvUseImageEnabled())
             {
-                return new Vector3((float)selected.getValue().getEnvColorIntensity());
+                return new Vector3((float)selected.getValue().getEnvIntensity());
             }
             else
             {
@@ -119,20 +119,26 @@ public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
     }
 
     @Override
-    public void setAmbientLightColor(Vector3 ambientLightColor)
+    public double getEnvironmentRotation()
     {
-        throw new UnsupportedOperationException();
+        return selected.getValue().getEnvRotation();
     }
 
     @Override
-    public void setEnvironmentMappingEnabled(boolean enabled)
+    public void setEnvironmentRotation(double environmentRotation)
     {
-        throw new UnsupportedOperationException();
+        selected.getValue().setEnvRotation(environmentRotation);
     }
 
     @Override
-    public void setEnvironmentMapMatrix(Matrix4 environmentMapMatrix)
+    public double getEnvironmentIntensity()
     {
-        throw new UnsupportedOperationException();
+        return selected.getValue().getEnvIntensity();
+    }
+
+    @Override
+    public void setEnvironmentIntensity(double environmentIntensity)
+    {
+        selected.getValue().setEnvIntensity(environmentIntensity);
     }
 }

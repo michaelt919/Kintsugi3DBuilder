@@ -790,7 +790,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private float computeLightWidgetScale(Matrix4 partialViewMatrix, FramebufferSize size)
     {
         float cameraDistance = partialViewMatrix
-            .times(this.cameraModel.getCenter().times(this.getScale()).asPosition())
+            .times(this.cameraModel.getTarget().times(this.getScale()).asPosition())
             .getXYZ().length();
         return cameraDistance * getVerticalFieldOfView(size) / 4;
     }

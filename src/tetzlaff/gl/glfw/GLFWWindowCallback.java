@@ -2,8 +2,10 @@ package tetzlaff.gl.glfw;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.lwjgl.glfw.*;
+import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.WindowListenerManager;
 import tetzlaff.gl.window.listeners.*;
 
@@ -379,25 +381,27 @@ class GLFWWindowCallback implements WindowListenerManager
                     {
                         if (windowHandle == window.getHandle())
                         {
+                            Map<Integer, Key> keyMap = GLFWKeyCodeMaps.getCodeToKeyMap();
+
                             if (action == GLFW_PRESS)
                             {
                                 for (KeyPressListener listener : keyPressListeners)
                                 {
-                                    listener.keyPressed(window, keycode, new GLFWModifierKeys(mods));
+                                    listener.keyPressed(window, keyMap.get(keycode), new GLFWModifierKeys(mods));
                                 }
                             }
                             else if (action == GLFW_RELEASE)
                             {
                                 for (KeyReleaseListener listener : keyReleaseListeners)
                                 {
-                                    listener.keyReleased(window, keycode, new GLFWModifierKeys(mods));
+                                    listener.keyReleased(window, keyMap.get(keycode), new GLFWModifierKeys(mods));
                                 }
                             }
                             else if (action == GLFW_REPEAT)
                             {
                                 for (KeyRepeatListener listener : keyRepeatListeners)
                                 {
-                                    listener.keyRepeated(window, keycode, new GLFWModifierKeys(mods));
+                                    listener.keyRepeated(window, keyMap.get(keycode), new GLFWModifierKeys(mods));
                                 }
                             }
                         }

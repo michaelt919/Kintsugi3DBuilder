@@ -21,7 +21,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.core.IBRRequestQueue;
 import tetzlaff.ibr.core.LoadingModel;
 import tetzlaff.ibr.core.LoadingMonitor;
-import tetzlaff.ibr.core.ReadonlySettingsModel;
+import tetzlaff.ibr.core.SettingsModel;
 import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.tools.ToolBindingModel;
@@ -124,9 +124,9 @@ public final class Rendering
             window.addMouseButtonPressListener((win, buttonIndex, mods) -> fpController.setEnabled(false));
 
             ExtendedLightingModel lightingModel = JavaFXModelAccess.getInstance().getLightingModel();
-            ReadonlyEnvironmentMapModel environmentMapModel = JavaFXModelAccess.getInstance().getEnvironmentMapModel();
+            EnvironmentMapModel environmentMapModel = JavaFXModelAccess.getInstance().getEnvironmentMapModel();
             ExtendedCameraModel cameraModel = JavaFXModelAccess.getInstance().getCameraModel();
-            ReadonlySettingsModel settingsModel = JavaFXModelAccess.getInstance().getSettingsModel();
+            SettingsModel settingsModel = JavaFXModelAccess.getInstance().getSettingsModel();
             LoadingModel loadingModel = JavaFXModelAccess.getInstance().getLoadingModel();
             ToolBindingModel toolModel = JavaFXModelAccess.getInstance().getToolModel();
 
@@ -136,6 +136,7 @@ public final class Rendering
                 .setCameraModel(cameraModel)
                 .setEnvironmentMapModel(environmentMapModel)
                 .setLightingModel(lightingModel)
+                .setSettingsModel(settingsModel)
                 .setToolModel(toolModel)
                 .setSceneViewportModel(new SceneViewportModel()
                 {
@@ -228,7 +229,8 @@ public final class Rendering
             rendererList.setLightingModel(lightingModel);
             rendererList.setSettingsModel(settingsModel);
 
-            window.addCharacterListener((win, c) -> {
+            window.addCharacterListener((win, c) ->
+            {
                 if (c == 'p')
                 {
                     System.out.println("reloading program...");

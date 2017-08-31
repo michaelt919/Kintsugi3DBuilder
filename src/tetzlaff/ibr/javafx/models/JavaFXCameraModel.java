@@ -56,7 +56,7 @@ public class JavaFXCameraModel implements ExtendedCameraModel
             Vector3.ZERO,
             new Vector3(0, 1, 0)
         ).times(getOrbit().times(
-            Matrix4.translate(getCenter().negated())
+            Matrix4.translate(getTarget().negated())
         ));
     }
 
@@ -108,7 +108,7 @@ public class JavaFXCameraModel implements ExtendedCameraModel
     }
 
     @Override
-    public Vector3 getCenter()
+    public Vector3 getTarget()
     {
         return new Vector3((float) getActiveCameraSetting().getxCenter(),
             (float) getActiveCameraSetting().getyCenter(),
@@ -116,11 +116,11 @@ public class JavaFXCameraModel implements ExtendedCameraModel
     }
 
     @Override
-    public void setCenter(Vector3 center)
+    public void setTarget(Vector3 target)
     {
-        getActiveCameraSetting().setxCenter(center.x);
-        getActiveCameraSetting().setyCenter(center.y);
-        getActiveCameraSetting().setzCenter(center.z);
+        getActiveCameraSetting().setxCenter(target.x);
+        getActiveCameraSetting().setyCenter(target.y);
+        getActiveCameraSetting().setzCenter(target.z);
     }
 
     @Override
@@ -184,8 +184,21 @@ public class JavaFXCameraModel implements ExtendedCameraModel
         return (float)(getActiveCameraSetting().getFOV() * Math.PI / 180);
     }
 
-    public void setFOV(float fov)
+    @Override
+    public void setHorizontalFOV(float fov)
     {
         getActiveCameraSetting().setFOV(fov * 180 / Math.PI);
+    }
+
+    @Override
+    public float getFocalLength()
+    {
+        return (float)getActiveCameraSetting().getFocalLength();
+    }
+
+    @Override
+    public void setFocalLength(float focalLength)
+    {
+        getActiveCameraSetting().setFocalLength(focalLength);
     }
 }

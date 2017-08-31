@@ -10,9 +10,9 @@ public interface SettingsModel extends ReadonlySettingsModel
     void setOcclusionEnabled(boolean occlusionEnabled);
     void setOcclusionBias(float occlusionBias);
     void setFresnelEnabled(boolean fresnelEnabled);
-    void setPBRGeometricAttenuationEnabled(boolean pBRGeometricAttenuation);
+    void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuation);
     void setRelightingEnabled(boolean relightingEnabled);
-    void set3DGridEnabled(boolean d3GridEnabled);
+    void set3DGridEnabled(boolean is3DGridEnabled);
     void setCompassEnabled(boolean compassEnabled);
     void setVisibleCameraPosesEnabled(boolean visibleCameraPosesEnabled);
     void setVisibleSavedCameraPosesEnabled(boolean visibleSavedCameraPosesEnabled);
