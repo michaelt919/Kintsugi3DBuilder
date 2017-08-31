@@ -11,9 +11,7 @@ public class IBRSettingsModelImpl implements SettingsModel
     private float isotropyFactor = 0.5f;
     private boolean occlusionEnabled = true;
     private float occlusionBias = 0.0025f;
-    private boolean ibrEnabled = true;
     private boolean relightingEnabled = true;
-    private boolean texturesEnabled = false;
     private boolean shadowsEnabled = false;
     private boolean fresnelEnabled = false;
     private boolean pbrGeometricAttenuationEnabled = false;
@@ -88,18 +86,6 @@ public class IBRSettingsModelImpl implements SettingsModel
     }
 
     @Override
-    public boolean isIBREnabled()
-    {
-        return this.ibrEnabled;
-    }
-
-    @Override
-    public void setIBREnabled(boolean ibrEnabled)
-    {
-        this.ibrEnabled = ibrEnabled;
-    }
-
-    @Override
     public boolean isFresnelEnabled()
     {
         return this.fresnelEnabled;
@@ -133,18 +119,6 @@ public class IBRSettingsModelImpl implements SettingsModel
     public void setRelightingEnabled(boolean relightingEnabled)
     {
         this.relightingEnabled = relightingEnabled;
-    }
-
-    @Override
-    public boolean areTexturesEnabled()
-    {
-        return texturesEnabled;
-    }
-
-    @Override
-    public void setTexturesEnabled(boolean texturesEnabled)
-    {
-        this.texturesEnabled = texturesEnabled;
     }
 
     @Override

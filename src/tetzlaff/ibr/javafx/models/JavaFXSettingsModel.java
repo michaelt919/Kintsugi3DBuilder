@@ -12,7 +12,6 @@ public class JavaFXSettingsModel implements ReadonlySettingsModel
     private final BooleanProperty fresnel = new SimpleBooleanProperty(false);
     private final BooleanProperty pBRGeometricAttenuation = new SimpleBooleanProperty(false);
     private final BooleanProperty relighting = new SimpleBooleanProperty(true);
-    private final BooleanProperty textures = new SimpleBooleanProperty(false);
     private final BooleanProperty shadows = new SimpleBooleanProperty(false);
     private final BooleanProperty visibleLights = new SimpleBooleanProperty(true);
     private final BooleanProperty visibleLightWidgets = new SimpleBooleanProperty(false);
@@ -23,7 +22,7 @@ public class JavaFXSettingsModel implements ReadonlySettingsModel
     private final FloatProperty isotropyFactor = StaticUtilities.bound(0, 1, new SimpleFloatProperty(0.0f));
     private final FloatProperty occlusionBias = StaticUtilities.bound(0, 0.1, new SimpleFloatProperty(0.0025f));
     private final ObjectProperty<ShadingParameterMode> weightMode = new SimpleObjectProperty<>(ShadingParameterMode.PER_PIXEL);
-    private final ObjectProperty<RenderingMode> renderingType = new SimpleObjectProperty<>(RenderingMode.IMAGE_BASED_RENDERING);
+    private final ObjectProperty<RenderingMode> renderingType = new SimpleObjectProperty<>(RenderingMode.IMAGE_BASED);
     private final BooleanProperty is3DGridEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty compassEnabled = new SimpleBooleanProperty(false);
     private final BooleanProperty multisamplingEnabled = new SimpleBooleanProperty(false);
@@ -115,17 +114,6 @@ public class JavaFXSettingsModel implements ReadonlySettingsModel
     public BooleanProperty relightingProperty()
     {
         return relighting;
-    }
-
-    @Override
-    public boolean areTexturesEnabled()
-    {
-        return textures.get();
-    }
-
-    public BooleanProperty useMaterialsProperty()
-    {
-        return textures;
     }
 
     @Override
@@ -225,12 +213,6 @@ public class JavaFXSettingsModel implements ReadonlySettingsModel
     public ObjectProperty<RenderingMode> renderingModeProperty()
     {
         return renderingType;
-    }
-
-    @Override
-    public boolean isIBREnabled()
-    {
-        return renderingType.getValue().equals(RenderingMode.IMAGE_BASED_RENDERING);
     }
 
     @Override

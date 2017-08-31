@@ -161,7 +161,7 @@ public final class ToolBox
         builders.put(ToolType.DOLLY, DollyTool.getBuilder());
         builders.put(ToolType.ORBIT, OrbitTool.getBuilder());
         builders.put(ToolType.PAN, PanTool.getBuilder());
-        builders.put(ToolType.CENTER_POINT, CenterPointTool.getBuilder());
+        builders.put(ToolType.LOOK_AT_POINT, LookAtPointTool.getBuilder());
 
         for (Entry<ToolType, ToolBuilder<? extends DragTool>> entries : builders.entrySet())
         {

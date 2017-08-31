@@ -5,30 +5,27 @@ import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.SceneViewportModel;
 
-final class CenterPointTool implements DragTool
+final class LookAtPointTool implements DragTool
 {
-
-    private final ToolBindingModel toolBindingModel;
     private final ExtendedCameraModel cameraModel;
     private final SceneViewportModel sceneViewportModel;
 
-    private static class Builder extends ToolBuilderBase<CenterPointTool>
+    private static class Builder extends ToolBuilderBase<LookAtPointTool>
     {
         @Override
-        public CenterPointTool build()
+        public LookAtPointTool build()
         {
-            return new CenterPointTool(getCameraModel(), getToolBindingModel(), getSceneViewportModel());
+            return new LookAtPointTool(getCameraModel(), getSceneViewportModel());
         }
     }
 
-    static ToolBuilder<CenterPointTool> getBuilder()
+    static ToolBuilder<LookAtPointTool> getBuilder()
     {
         return new Builder();
     }
 
-    private CenterPointTool(ExtendedCameraModel cameraModel, ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
+    private LookAtPointTool(ExtendedCameraModel cameraModel, SceneViewportModel sceneViewportModel)
     {
-        this.toolBindingModel = toolBindingModel;
         this.cameraModel = cameraModel;
         this.sceneViewportModel = sceneViewportModel;
     }

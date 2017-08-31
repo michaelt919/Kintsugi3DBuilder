@@ -37,14 +37,13 @@
          <RadioMenuItem mnemonicParsing="false" text="None" toggleGroup="$renderGroup" userData="None" />
          <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" userData="Wireframe" />
          <RadioMenuItem mnemonicParsing="false" text="Lambertian shaded" toggleGroup="$renderGroup" userData="Lambertian shaded" />
-         <RadioMenuItem mnemonicParsing="false" text="Phong shaded" toggleGroup="$renderGroup" userData="Phong shaded" />
+         <RadioMenuItem mnemonicParsing="false" text="Specular shaded" toggleGroup="$renderGroup" userData="Specular shaded" />
          <RadioMenuItem mnemonicParsing="false" text="Solid textured" toggleGroup="$renderGroup" userData="Solid textured" />
          <RadioMenuItem mnemonicParsing="false" text="Lambertian textured" toggleGroup="$renderGroup" userData="Lambertian textured" />
          <RadioMenuItem mnemonicParsing="false" text="Material shaded" toggleGroup="$renderGroup" userData="Material shaded" />
          <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based rendering" toggleGroup="$renderGroup" userData="Image-based rendering" />
          <SeparatorMenuItem mnemonicParsing="false" />
          <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="IBR settings…" />
-         <CheckMenuItem fx:id="materialsForIBRCheckMenuItem" mnemonicParsing="false" text="Use materials for IBR" />
          <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing" />
          <CheckMenuItem fx:id="fresnelEffectCheckMenuItem" mnemonicParsing="false" text="Fresnel effect" />
       </Menu>

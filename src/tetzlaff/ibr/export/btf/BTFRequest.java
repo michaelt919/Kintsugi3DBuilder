@@ -52,14 +52,14 @@ public class BTFRequest implements IBRRequest
             drawable.addVertexBuffer("normal", resources.normalBuffer);
             drawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
-            resources.setupShaderProgram(btfProgram, this.settings.areTexturesEnabled());
+            resources.setupShaderProgram(btfProgram, this.settings.getRenderingMode());
 
             btfProgram.setUniform("renderGamma", this.settings.getGamma());
             btfProgram.setUniform("weightExponent", this.settings.getWeightExponent());
             btfProgram.setUniform("isotropyFactor", this.settings.getIsotropyFactor());
             btfProgram.setUniform("occlusionEnabled", resources.depthTextures != null && this.settings.isOcclusionEnabled());
             btfProgram.setUniform("occlusionBias", this.settings.getOcclusionBias());
-            btfProgram.setUniform("imageBasedRenderingEnabled", this.settings.isIBREnabled());
+            btfProgram.setUniform("imageBasedRenderingEnabled", this.settings.getRenderingMode().isImageBased());
             btfProgram.setUniform("relightingEnabled", this.settings.isRelightingEnabled());
             btfProgram.setUniform("pbrGeometricAttenuationEnabled", this.settings.isPBRGeometricAttenuationEnabled());
             btfProgram.setUniform("fresnelEnabled", this.settings.isFresnelEnabled());
