@@ -48,7 +48,7 @@ public class JavaFXLightingModel extends LightingModelBase
     @Override
     public void setLightCenter(int i, Vector3 lightCenter)
     {
-        this.lightInstanceModels[i].setCenter(lightCenter);
+        this.lightInstanceModels[i].setTarget(lightCenter);
     }
 
     public void setLightGroupSettingObservableValue(ObservableValue<LightGroupSetting> lightGroupSettingObservableValue)
@@ -113,6 +113,6 @@ public class JavaFXLightingModel extends LightingModelBase
     @Override
     public Vector3 getLightCenter(int i)
     {
-        return lightInstanceModels[i].getCenter();
+        return lightInstanceModels[i].getTarget();
     }
 }

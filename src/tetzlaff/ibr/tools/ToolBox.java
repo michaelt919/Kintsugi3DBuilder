@@ -6,12 +6,15 @@ import java.util.Map.Entry;
 import java.util.Objects;
 
 import tetzlaff.gl.window.CursorPosition;
+import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.listeners.*;
+import tetzlaff.ibr.core.SettingsModel;
+import tetzlaff.ibr.tools.EnvironmentBrightnessTool.Type;
+import tetzlaff.models.EnvironmentMapModel;
 import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.ExtendedLightingModel;
-import tetzlaff.models.ReadonlyEnvironmentMapModel;
 import tetzlaff.models.SceneViewportModel;
 import tetzlaff.util.MouseMode;
 import tetzlaff.util.WindowBasedController;
@@ -22,7 +25,7 @@ public final class ToolBox
     private MouseMode currentMode;
     private final ToolBindingModel toolBindingModel;
 
-    private final Map<ToolType, DragTool> tools;
+    private final Map<DragToolType, DragTool> tools;
     private final LightTool lightTool;
 
     //window listener
@@ -36,19 +39,19 @@ public final class ToolBox
         window.addKeyPressListener(this);
     }
 
-    private DragTool getSelectedTool()
+    private DragTool getSelectedDragTool()
     {
         if (currentMode == null)
         {
             return null;
         }
-        else if (tools.get(toolBindingModel.getTool(currentMode)) != null)
+        else if (tools.get(toolBindingModel.getDragTool(currentMode)) != null)
         {
-            return tools.get(toolBindingModel.getTool(currentMode));
+            return tools.get(toolBindingModel.getDragTool(currentMode));
         }
         else
         {
-            return tools.get(ToolType.ORBIT);
+            return tools.get(DragToolType.ORBIT);
         }
     }
 
@@ -58,7 +61,7 @@ public final class ToolBox
     {
 //        try
 //        {
-//            getSelectedTool().scroll(window, xOffset, yOffset);
+//            getSelectedDragTool().scroll(window, xOffset, yOffset);
 //        }
 //        catch(RuntimeException e)
 //        {
@@ -73,7 +76,7 @@ public final class ToolBox
         {
             if (!lightTool.cursorMoved(window, xPos, yPos))
             {
-                DragTool selectedTool = getSelectedTool();
+                DragTool selectedTool = getSelectedDragTool();
                 if (selectedTool != null)
                 {
                     selectedTool.cursorDragged(new CursorPosition(xPos, yPos), window.getWindowSize());
@@ -87,11 +90,11 @@ public final class ToolBox
     }
 
     @Override
-    public void keyPressed(Window<?> window, int keyCode, ModifierKeys mods)
+    public void keyPressed(Window<?> window, Key key, ModifierKeys mods)
     {
 //        try
 //        {
-//            getSelectedTool().keyPressed(window, keyCode, mods);
+//            getSelectedDragTool().keyPressed(window, key, mods);
 //        }
 //        catch(RuntimeException e)
 //        {
@@ -102,14 +105,14 @@ public final class ToolBox
     @Override
     public void mouseButtonPressed(Window<?> window, int buttonIndex, ModifierKeys mods)
     {
-        if (getSelectedTool() == null) // Only do something if another drag isn't already in progress.
+        if (getSelectedDragTool() == null) // Only do something if another drag isn't already in progress.
         {
             try
             {
                 if (!lightTool.mouseButtonPressed(window, buttonIndex, mods))
                 {
                     currentMode = new MouseMode(buttonIndex, mods);
-                    DragTool selectedTool = getSelectedTool();
+                    DragTool selectedTool = getSelectedDragTool();
                     if (selectedTool != null)
                     {
                         selectedTool.mouseButtonPressed(window.getCursorPosition(), window.getWindowSize());
@@ -131,7 +134,7 @@ public final class ToolBox
             if (Objects.equals(currentMode, new MouseMode(buttonIndex, mods)))
             {
                 lightTool.mouseButtonReleased(window, buttonIndex, mods);
-                DragTool selectedTool = getSelectedTool();
+                DragTool selectedTool = getSelectedDragTool();
                 if (selectedTool != null)
                 {
                     selectedTool.mouseButtonReleased(window.getCursorPosition(), window.getWindowSize());
@@ -150,20 +153,23 @@ public final class ToolBox
     }
 
     //builder
-    private ToolBox(ExtendedCameraModel cameraModel, ReadonlyEnvironmentMapModel environmentMapModel, ExtendedLightingModel lightingModel,
-        ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
+    private ToolBox(ExtendedCameraModel cameraModel, EnvironmentMapModel environmentMapModel, ExtendedLightingModel lightingModel,
+        SettingsModel settingsModel, ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
     {
         this.toolBindingModel = toolBindingModel;
 
-        this.tools = new EnumMap<>(ToolType.class);
+        this.tools = new EnumMap<>(DragToolType.class);
 
-        Map<ToolType, ToolBuilder<? extends DragTool>> builders = new EnumMap<>(ToolType.class);
-        builders.put(ToolType.DOLLY, DollyTool.getBuilder());
-        builders.put(ToolType.ORBIT, OrbitTool.getBuilder());
-        builders.put(ToolType.PAN, PanTool.getBuilder());
-        builders.put(ToolType.LOOK_AT_POINT, LookAtPointTool.getBuilder());
+        Map<DragToolType, ToolBuilder<? extends DragTool>> dragToolBuilders = new EnumMap<>(DragToolType.class);
+        dragToolBuilders.put(DragToolType.DOLLY, DollyTool.getBuilder());
+        dragToolBuilders.put(DragToolType.TWIST, TwistTool.getBuilder());
+        dragToolBuilders.put(DragToolType.ORBIT, OrbitTool.getBuilder());
+        dragToolBuilders.put(DragToolType.PAN, PanTool.getBuilder());
+        dragToolBuilders.put(DragToolType.FOCAL_LENGTH, FocalLengthTool.getBuilder());
+        dragToolBuilders.put(DragToolType.ROTATE_ENVIRONMENT, RotateEnvironmentTool.getBuilder());
+        dragToolBuilders.put(DragToolType.LOOK_AT_POINT, LookAtPointTool.getBuilder());
 
-        for (Entry<ToolType, ToolBuilder<? extends DragTool>> entries : builders.entrySet())
+        for (Entry<DragToolType, ToolBuilder<? extends DragTool>> entries : dragToolBuilders.entrySet())
         {
             tools.put(entries.getKey(),
                 entries.getValue()
@@ -171,16 +177,27 @@ public final class ToolBox
                     .setEnvironmentMapModel(environmentMapModel)
                     .setLightingModel(lightingModel)
                     .setSceneViewportModel(sceneViewportModel)
-                    .setToolSelectionModel(toolBindingModel)
+                    .setToolBindingModel(toolBindingModel)
                     .build());
         }
+
+        Map<KeyPressToolType, ToolBuilder<? extends KeyPressTool>> keyPressToolBuilders = new EnumMap<>(KeyPressToolType.class);
+        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_LARGE, EnvironmentBrightnessTool.getBuilder(Type.UP_LARGE));
+        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_LARGE, EnvironmentBrightnessTool.getBuilder(Type.DOWN_LARGE));
+        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_SMALL, EnvironmentBrightnessTool.getBuilder(Type.UP_SMALL));
+        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_SMALL, EnvironmentBrightnessTool.getBuilder(Type.DOWN_SMALL));
+        keyPressToolBuilders.put(KeyPressToolType.TOGGLE_LIGHTS,
+            ToggleSettingTool.getBuilder(model -> model.setVisibleLightsEnabled(!model.areVisibleLightsEnabled())));
+        keyPressToolBuilders.put(KeyPressToolType.TOGGLE_LIGHT_WIDGETS,
+            ToggleSettingTool.getBuilder(model -> model.setLightWidgetsEnabled(!model.areLightWidgetsEnabled())));
 
         lightTool = LightTool.getBuilder()
             .setCameraModel(cameraModel)
             .setEnvironmentMapModel(environmentMapModel)
             .setLightingModel(lightingModel)
+            .setSettingsModel(settingsModel)
             .setSceneViewportModel(sceneViewportModel)
-            .setToolSelectionModel(toolBindingModel)
+            .setToolBindingModel(toolBindingModel)
             .build();
     }
 
@@ -188,7 +205,8 @@ public final class ToolBox
     {
         private ToolBindingModel toolModel;
         private ExtendedCameraModel cameraModel;
-        private ReadonlyEnvironmentMapModel environmentMapModel;
+        private EnvironmentMapModel environmentMapModel;
+        private SettingsModel settingsModel;
         private ExtendedLightingModel lightingModel;
         private SceneViewportModel sceneViewportModel;
 
@@ -213,9 +231,15 @@ public final class ToolBox
             return this;
         }
 
-        public Builder setEnvironmentMapModel(ReadonlyEnvironmentMapModel environmentMapModel)
+        public Builder setEnvironmentMapModel(EnvironmentMapModel environmentMapModel)
         {
             this.environmentMapModel = environmentMapModel;
+            return this;
+        }
+
+        public Builder setSettingsModel(SettingsModel settingsModel)
+        {
+            this.settingsModel = settingsModel;
             return this;
         }
 
@@ -233,7 +257,7 @@ public final class ToolBox
 
         public WindowBasedController build()
         {
-            return new ToolBox(cameraModel, environmentMapModel, lightingModel, toolModel, sceneViewportModel);
+            return new ToolBox(cameraModel, environmentMapModel, lightingModel, settingsModel, toolModel, sceneViewportModel);
         }
     }
 }

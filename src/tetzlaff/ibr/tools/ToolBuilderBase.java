@@ -1,24 +1,26 @@
 package tetzlaff.ibr.tools;
 
+import tetzlaff.ibr.core.SettingsModel;
+import tetzlaff.models.EnvironmentMapModel;
 import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.ExtendedLightingModel;
-import tetzlaff.models.ReadonlyEnvironmentMapModel;
 import tetzlaff.models.SceneViewportModel;
 
 abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
 {
     private ToolBindingModel toolBindingModel;
     private ExtendedCameraModel cameraModel;
-    private ReadonlyEnvironmentMapModel environmentMapModel;
+    private EnvironmentMapModel environmentMapModel;
     private ExtendedLightingModel lightingModel;
     private SceneViewportModel sceneViewportModel;
+    private SettingsModel settingsModel;
 
     protected ToolBuilderBase()
     {
     }
 
     @Override
-    public ToolBuilder<ToolType> setToolSelectionModel(ToolBindingModel toolBindingModel)
+    public ToolBuilder<ToolType> setToolBindingModel(ToolBindingModel toolBindingModel)
     {
         this.toolBindingModel = toolBindingModel;
         return this;
@@ -32,7 +34,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
     }
 
     @Override
-    public ToolBuilder<ToolType> setEnvironmentMapModel(ReadonlyEnvironmentMapModel environmentMapModel)
+    public ToolBuilder<ToolType> setEnvironmentMapModel(EnvironmentMapModel environmentMapModel)
     {
         this.environmentMapModel = environmentMapModel;
         return this;
@@ -52,6 +54,13 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
         return this;
     }
 
+    @Override
+    public ToolBuilder<ToolType> setSettingsModel(SettingsModel settingsModel)
+    {
+        this.settingsModel = settingsModel;
+        return this;
+    }
+
     ToolBindingModel getToolBindingModel()
     {
         return toolBindingModel;
@@ -62,7 +71,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
         return cameraModel;
     }
 
-    ReadonlyEnvironmentMapModel getEnvironmentMapModel()
+    EnvironmentMapModel getEnvironmentMapModel()
     {
         return environmentMapModel;
     }
@@ -75,5 +84,10 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
     SceneViewportModel getSceneViewportModel()
     {
         return sceneViewportModel;
+    }
+
+    SettingsModel getSettingsModel()
+    {
+        return settingsModel;
     }
 }

@@ -9,12 +9,12 @@ import tetzlaff.ibr.javafx.util.StaticUtilities;
 
 public class LightInstanceSetting implements DOMConvertable
 {
-    private final DoubleProperty xCenter = new SimpleDoubleProperty();
-    private final DoubleProperty yCenter = new SimpleDoubleProperty();
-    private final DoubleProperty zCenter = new SimpleDoubleProperty();
+    private final DoubleProperty targetX = new SimpleDoubleProperty();
+    private final DoubleProperty targetY = new SimpleDoubleProperty();
+    private final DoubleProperty targetZ = new SimpleDoubleProperty();
     private final DoubleProperty azimuth = StaticUtilities.wrap(-180, 180, new SimpleDoubleProperty());
     private final DoubleProperty inclination = StaticUtilities.bound(-90, 90, new SimpleDoubleProperty());
-    private final DoubleProperty log10distance = new SimpleDoubleProperty();
+    private final DoubleProperty log10Distance = new SimpleDoubleProperty();
     private final DoubleProperty intensity = StaticUtilities.bound(0, Double.MAX_VALUE, new SimpleDoubleProperty());
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
@@ -29,12 +29,12 @@ public class LightInstanceSetting implements DOMConvertable
     }
 
     public LightInstanceSetting(
-        Double xCenter,
-        Double yCenter,
-        Double zCenter,
+        Double targetX,
+        Double targetY,
+        Double targetZ,
         Double azimuth,
         Double inclination,
-        Double log10distance,
+        Double log10Distance,
         Double intensity,
         Boolean locked,
         String name,
@@ -43,12 +43,12 @@ public class LightInstanceSetting implements DOMConvertable
         BooleanProperty groupLockedProperty
     )
     {
-        this.xCenter.setValue(xCenter);
-        this.yCenter.setValue(yCenter);
-        this.zCenter.setValue(zCenter);
+        this.targetX.setValue(targetX);
+        this.targetY.setValue(targetY);
+        this.targetZ.setValue(targetZ);
         this.azimuth.setValue(azimuth);
         this.inclination.setValue(inclination);
-        this.log10distance.setValue(log10distance);
+        this.log10Distance.setValue(log10Distance);
         this.intensity.setValue(intensity);
         this.locked.setValue(locked);
         this.name.setValue(name);
@@ -60,12 +60,12 @@ public class LightInstanceSetting implements DOMConvertable
     public LightInstanceSetting duplicate()
     {
         return new LightInstanceSetting(
-            xCenter.getValue(),
-            yCenter.getValue(),
-            zCenter.getValue(),
+            targetX.getValue(),
+            targetY.getValue(),
+            targetZ.getValue(),
             azimuth.getValue(),
             inclination.getValue(),
-            log10distance.getValue(),
+            log10Distance.getValue(),
             intensity.getValue(),
             locked.getValue(),
             name.getValue(),
@@ -85,12 +85,12 @@ public class LightInstanceSetting implements DOMConvertable
     public Element toDOMElement(Document document)
     {
         Element element = document.createElement("LightInstance");
-        element.setAttribute("targetX", xCenter.getValue().toString());
-        element.setAttribute("targetY", yCenter.getValue().toString());
-        element.setAttribute("targetZ", zCenter.getValue().toString());
+        element.setAttribute("targetX", targetX.getValue().toString());
+        element.setAttribute("targetY", targetY.getValue().toString());
+        element.setAttribute("targetZ", targetZ.getValue().toString());
         element.setAttribute("azimuth", azimuth.getValue().toString());
         element.setAttribute("inclination", inclination.getValue().toString());
-        element.setAttribute("log10Distance", log10distance.getValue().toString());
+        element.setAttribute("log10Distance", log10Distance.getValue().toString());
         element.setAttribute("intensity", intensity.getValue().toString());
         element.setAttribute("locked", locked.getValue().toString());
         element.setAttribute("name", name.getValue());
@@ -117,49 +117,49 @@ public class LightInstanceSetting implements DOMConvertable
         );
     }
 
-    public double getxCenter()
+    public double getTargetX()
     {
-        return xCenter.get();
+        return targetX.get();
     }
 
-    public DoubleProperty xCenterProperty()
+    public DoubleProperty targetXProperty()
     {
-        return xCenter;
+        return targetX;
     }
 
-    public void setxCenter(double xCenter)
+    public void setTargetX(double targetX)
     {
-        this.xCenter.set(xCenter);
+        this.targetX.set(targetX);
     }
 
-    public double getyCenter()
+    public double getTargetY()
     {
-        return yCenter.get();
+        return targetY.get();
     }
 
-    public DoubleProperty yCenterProperty()
+    public DoubleProperty targetYProperty()
     {
-        return yCenter;
+        return targetY;
     }
 
-    public void setyCenter(double yCenter)
+    public void setTargetY(double targetY)
     {
-        this.yCenter.set(yCenter);
+        this.targetY.set(targetY);
     }
 
-    public double getzCenter()
+    public double getTargetZ()
     {
-        return zCenter.get();
+        return targetZ.get();
     }
 
-    public DoubleProperty zCenterProperty()
+    public DoubleProperty targetZProperty()
     {
-        return zCenter;
+        return targetZ;
     }
 
-    public void setzCenter(double zCenter)
+    public void setTargetZ(double targetZ)
     {
-        this.zCenter.set(zCenter);
+        this.targetZ.set(targetZ);
     }
 
     public double getAzimuth()
@@ -194,17 +194,17 @@ public class LightInstanceSetting implements DOMConvertable
 
     public double getLog10Distance()
     {
-        return log10distance.get();
+        return log10Distance.get();
     }
 
-    public DoubleProperty log10distanceProperty()
+    public DoubleProperty log10DistanceProperty()
     {
-        return log10distance;
+        return log10Distance;
     }
 
-    public void setLog10distance(double log10distance)
+    public void setLog10Distance(double log10Distance)
     {
-        this.log10distance.set(log10distance);
+        this.log10Distance.set(log10Distance);
     }
 
     public double getIntensity()

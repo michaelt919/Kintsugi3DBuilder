@@ -39,7 +39,7 @@ final class LookAtPointTool implements DragTool
         Object clickedObject = sceneViewportModel.getObjectAtCoordinates(normalizedX, normalizedY);
         if (clickedObject instanceof String && "IBRObject".equals(clickedObject))
         {
-            cameraModel.setCenter(sceneViewportModel.get3DPositionAtCoordinates(normalizedX, normalizedY));
+            cameraModel.setTarget(sceneViewportModel.get3DPositionAtCoordinates(normalizedX, normalizedY));
         }
     }
 }

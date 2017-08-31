@@ -2,7 +2,7 @@ package tetzlaff.models;
 
 import tetzlaff.gl.vecmath.Matrix4;
 
-public interface ReadonlyExtendedCameraModel 
+public interface ReadonlyExtendedCameraModel extends ReadonlyCameraModel
 {
     /**
      * This method is intended to return whether or not the selected camera is locked.
@@ -18,4 +18,8 @@ public interface ReadonlyExtendedCameraModel
     float getTwist();
     float getAzimuth();
     float getInclination();
+    float getFocalLength();
+
+    @Override
+    float getHorizontalFOV();
 }

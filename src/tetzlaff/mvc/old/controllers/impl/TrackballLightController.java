@@ -1,6 +1,6 @@
 package tetzlaff.mvc.old.controllers.impl;
 
-import tetzlaff.gl.window.KeyCodes;
+import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.listeners.KeyPressListener;
@@ -74,11 +74,20 @@ public class TrackballLightController implements LightController, KeyPressListen
     }
 
     @Override
-    public void keyPressed(Window<?> window, int keyCode, ModifierKeys mods)
+    public void keyPressed(Window<?> window, Key key, ModifierKeys mods)
     {
-        if (keyCode >= KeyCodes.ONE && keyCode <= KeyCodes.FOUR)
+        if (key == Key.ONE || key == Key.TWO || key == Key.THREE || key == Key.FOUR)
         {
-            int selection = keyCode - KeyCodes.ONE;
+            int selection;
+
+            switch(key)
+            {
+                case ONE: selection = 0; break;
+                case TWO: selection = 1; break;
+                case THREE: selection = 2; break;
+                case FOUR: selection = 3; break;
+                default: return; // shouldn't happen
+            }
 
             if (mods.getAltModifier())
             {
@@ -99,11 +108,20 @@ public class TrackballLightController implements LightController, KeyPressListen
     }
 
     @Override
-    public void keyReleased(Window<?> window, int keyCode, ModifierKeys mods)
+    public void keyReleased(Window<?> window, Key key, ModifierKeys mods)
     {
-        if (keyCode >= KeyCodes.ONE && keyCode <= KeyCodes.FOUR)
+        if (key == Key.ONE || key == Key.TWO || key == Key.THREE || key == Key.FOUR)
         {
-            int selection = keyCode - KeyCodes.ONE;
+            int selection;
+
+            switch(key)
+            {
+                case ONE: selection = 0; break;
+                case TWO: selection = 1; break;
+                case THREE: selection = 2; break;
+                case FOUR: selection = 3; break;
+                default: return; // shouldn't happen
+            }
 
             if (selection < trackballs.length)
             {

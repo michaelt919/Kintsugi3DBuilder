@@ -11,12 +11,19 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import tetzlaff.gl.window.Key;
+import tetzlaff.gl.window.ModifierKeys;
+import tetzlaff.gl.window.ModifierKeysBuilder;
 import tetzlaff.ibr.app.Rendering;
 import tetzlaff.ibr.app.SynchronizedWindow;
 import tetzlaff.ibr.app.WindowSynchronization;
 import tetzlaff.ibr.javafx.controllers.menu_bar.MenubarController;
 import tetzlaff.ibr.javafx.controllers.scene.RootSceneController;
 import tetzlaff.ibr.javafx.models.*;
+import tetzlaff.ibr.tools.DragToolType;
+import tetzlaff.ibr.tools.KeyPressToolType;
+import tetzlaff.util.KeyPress;
+import tetzlaff.util.MouseMode;
 
 public class JavaFXApp extends Application
 {
@@ -125,11 +132,30 @@ public class JavaFXApp extends Application
         JavaFXCameraModel cameraModel = JavaFXModelAccess.getInstance().getCameraModel();
         JavaFXEnvironmentMapModel environmentMapModel = JavaFXModelAccess.getInstance().getEnvironmentMapModel();
         JavaFXLightingModel lightingModel = JavaFXModelAccess.getInstance().getLightingModel();
-        JavaFXToolBindingModel toolModel = JavaFXModelAccess.getInstance().getToolModel();
+        JavaFXToolBindingModel toolBindingModel = JavaFXModelAccess.getInstance().getToolModel();
 
         //distribute to controllers
-        sceneController.init(cameraModel, lightingModel, environmentMapModel, toolModel);
-        menuBarController.init(menuBarStage.getScene().getWindow(), toolModel, Rendering.getRequestQueue());
+        sceneController.init(cameraModel, lightingModel, environmentMapModel);
+        menuBarController.init(menuBarStage.getScene().getWindow(), Rendering.getRequestQueue());
+
+        toolBindingModel.setDragTool(new MouseMode(0, ModifierKeys.NONE), DragToolType.ORBIT);
+        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeys.NONE), DragToolType.PAN);
+        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeys.NONE), DragToolType.PAN);
+        toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().alt().end()), DragToolType.TWIST);
+        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().alt().end()), DragToolType.DOLLY);
+        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().alt().end()), DragToolType.DOLLY);
+        toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().shift().end()), DragToolType.ROTATE_ENVIRONMENT);
+        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().shift().end()), DragToolType.FOCAL_LENGTH);
+        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().shift().end()), DragToolType.FOCAL_LENGTH);
+        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().control().alt().end()), DragToolType.LOOK_AT_POINT);
+        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().control().alt().end()), DragToolType.LOOK_AT_POINT);
+
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.UP, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_LARGE);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.DOWN, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_LARGE);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.RIGHT, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_SMALL);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.LEFT, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_SMALL);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeys.NONE), KeyPressToolType.TOGGLE_LIGHTS);
+        toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeys.NONE), KeyPressToolType.TOGGLE_LIGHT_WIDGETS);
 
         SynchronizedWindow menuBarWindow = new StageSynchronization(menuBarStage);
 

@@ -5,11 +5,16 @@ import tetzlaff.gl.vecmath.Vector3;
 
 public interface ExtendedCameraModel extends CameraModel, ReadonlyExtendedCameraModel 
 {
+    @Override
+    float getHorizontalFOV();
+
     void setOrbit(Matrix4 orbit);
     void setLog10Distance(float log10Distance);
     void setDistance(float distance);
-    void setCenter(Vector3 offSet);
+    void setTarget(Vector3 target);
     void setTwist(float twist);
     void setAzimuth(float azimuth);
     void setInclination(float inclination);
+    void setHorizontalFOV(float fov);
+    void setFocalLength(float focalLength);
 }

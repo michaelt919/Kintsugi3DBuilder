@@ -18,7 +18,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import tetzlaff.ibr.javafx.models.JavaFXCameraModel;
 import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
-import tetzlaff.ibr.javafx.models.JavaFXToolBindingModel;
 
 public class RootCameraSceneController implements Initializable
 {
@@ -70,7 +69,7 @@ public class RootCameraSceneController implements Initializable
         });
     }
 
-    public void init(JavaFXCameraModel cameraModel, JavaFXToolBindingModel toolModel)
+    public void init(JavaFXCameraModel cameraModel)
     {
         cameraModel.setSelectedCameraSettingProperty(cameraListView.getSelectionModel().selectedItemProperty());
     }

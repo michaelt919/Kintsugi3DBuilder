@@ -230,15 +230,20 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
         }
     }
 
-    @Override
-    public KeyState getKeyState(int keycode)
+    private KeyState getKeyState(int keycode)
     {
         switch (glfwGetKey(handle, keycode))
         {
-        case GLFW_PRESS: return KeyState.Pressed;
-        case GLFW_RELEASE: return KeyState.Released;
-        default: return KeyState.Unknown;
+            case GLFW_PRESS: return KeyState.Pressed;
+            case GLFW_RELEASE: return KeyState.Released;
+            default: return KeyState.Unknown;
         }
+    }
+
+    @Override
+    public KeyState getKeyState(Key key)
+    {
+        return getKeyState(GLFWKeyCodeMaps.getKeyToCodeMap().get(key));
     }
 
     @Override
@@ -256,10 +261,10 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     public ModifierKeys getModifierKeys()
     {
         return new GLFWModifierKeys(
-            getKeyState(KeyCodes.LEFT_SHIFT) == KeyState.Pressed || getKeyState(KeyCodes.RIGHT_SHIFT) == KeyState.Pressed,
-            getKeyState(KeyCodes.LEFT_CONTROL) == KeyState.Pressed || getKeyState(KeyCodes.RIGHT_CONTROL) == KeyState.Pressed,
-            getKeyState(KeyCodes.LEFT_ALT) == KeyState.Pressed || getKeyState(KeyCodes.RIGHT_ALT) == KeyState.Pressed,
-            getKeyState(KeyCodes.LEFT_SUPER) == KeyState.Pressed || getKeyState(KeyCodes.RIGHT_SUPER) == KeyState.Pressed
+            getKeyState(GLFW_KEY_LEFT_SHIFT) == KeyState.Pressed || getKeyState(GLFW_KEY_RIGHT_SHIFT) == KeyState.Pressed,
+            getKeyState(GLFW_KEY_LEFT_CONTROL) == KeyState.Pressed || getKeyState(GLFW_KEY_RIGHT_CONTROL) == KeyState.Pressed,
+            getKeyState(GLFW_KEY_LEFT_ALT) == KeyState.Pressed || getKeyState(GLFW_KEY_RIGHT_ALT) == KeyState.Pressed,
+            getKeyState(GLFW_KEY_LEFT_SUPER) == KeyState.Pressed || getKeyState(GLFW_KEY_RIGHT_SUPER) == KeyState.Pressed
         );
     }
 

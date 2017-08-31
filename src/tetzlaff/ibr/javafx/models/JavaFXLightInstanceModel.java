@@ -12,7 +12,6 @@ import tetzlaff.util.OrbitPolarConverter;
 
 public class JavaFXLightInstanceModel implements LightInstanceModel
 {
-
     private ObservableValue<LightInstanceSetting> subLightSettingObservableValue;
     private final LightInstanceSetting backup = new LightInstanceSetting(
         0.0,
@@ -33,7 +32,7 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
         this.subLightSettingObservableValue = subLightSettingObservableValue;
     }
 
-    private LightInstanceSetting cam()
+    private LightInstanceSetting getLightInstance()
     {
         if (subLightSettingObservableValue == null || subLightSettingObservableValue.getValue() == null)
         {
@@ -58,7 +57,7 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
             Vector3.ZERO,
             new Vector3(0, 1, 0)
         ).times(getOrbit().times(
-            Matrix4.translate(getCenter().negated())
+            Matrix4.translate(getTarget().negated())
         ));
     }
 
@@ -70,7 +69,7 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
             fromRender = false;
             return orbitCache;
         }
-        Vector3 poler = new Vector3((float) cam().getAzimuth(), (float) cam().getInclination(), 0);
+        Vector3 poler = new Vector3((float) getLightInstance().getAzimuth(), (float) getLightInstance().getInclination(), 0);
         return OrbitPolarConverter.getInstance().convertToOrbitMatrix(poler);
     }
 
@@ -78,8 +77,8 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
     public void setOrbit(Matrix4 orbit)
     {
         Vector3 poler = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
-        cam().setAzimuth(poler.x);
-        cam().setInclination(poler.y);
+        getLightInstance().setAzimuth(poler.x);
+        getLightInstance().setInclination(poler.y);
         orbitCache = orbit;
         fromRender = true;
     }
@@ -87,13 +86,13 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
     @Override
     public float getLog10Distance()
     {
-        return (float) cam().getLog10Distance();
+        return (float) getLightInstance().getLog10Distance();
     }
 
     @Override
     public void setLog10Distance(float log10distance)
     {
-        cam().setLog10distance(log10distance);
+        getLightInstance().setLog10Distance(log10distance);
     }
 
     @Override
@@ -109,19 +108,19 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
     }
 
     @Override
-    public Vector3 getCenter()
+    public Vector3 getTarget()
     {
-        return new Vector3((float) cam().getxCenter(),
-            (float) cam().getyCenter(),
-            (float) cam().getzCenter());
+        return new Vector3((float) getLightInstance().getTargetX(),
+            (float) getLightInstance().getTargetY(),
+            (float) getLightInstance().getTargetZ());
     }
 
     @Override
-    public void setCenter(Vector3 center)
+    public void setTarget(Vector3 target)
     {
-        cam().setxCenter(center.x);
-        cam().setyCenter(center.y);
-        cam().setzCenter(center.z);
+        getLightInstance().setTargetX(target.x);
+        getLightInstance().setTargetY(target.y);
+        getLightInstance().setTargetZ(target.z);
     }
 
     @Override
@@ -138,25 +137,49 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
     @Override
     public float getAzimuth()
     {
-        return (float) cam().getAzimuth();
+        return (float) getLightInstance().getAzimuth();
     }
 
     @Override
     public void setAzimuth(float azimuth)
     {
-        cam().setAzimuth(azimuth);
+        getLightInstance().setAzimuth(azimuth);
     }
 
     @Override
     public float getInclination()
     {
-        return (float) cam().getInclination();
+        return (float) getLightInstance().getInclination();
+    }
+
+    @Override
+    public float getFocalLength()
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setFocalLength(float focalLength)
+    {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void setInclination(float inclination)
     {
-        cam().setInclination(inclination);
+        getLightInstance().setInclination(inclination);
+    }
+
+    @Override
+    public float getHorizontalFOV()
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setHorizontalFOV(float fov)
+    {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -169,22 +192,22 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
     @Override
     public boolean isLocked()
     {
-        return cam().isLocked() || cam().isGroupLocked();
+        return getLightInstance().isLocked() || getLightInstance().isGroupLocked();
     }
 
     @Override
     public Vector3 getColor()
     {
-        Color color = cam().getColor();
+        Color color = getLightInstance().getColor();
         Vector3 out = new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue());
 //        System.out.println("Light Color: " + out);
-        return out.times((float) cam().getIntensity());
+        return out.times((float) getLightInstance().getIntensity());
     }
 
     @Override
     public void setColor(Vector3 color)
     {
-        cam().setColor(
+        getLightInstance().setColor(
             new Color(color.x, color.y, color.z, 1)
         );
     }

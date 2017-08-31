@@ -37,7 +37,7 @@ public interface Window<ContextType extends Context<ContextType>> extends Window
 
     MouseButtonState getMouseButtonState(int buttonIndex);
 
-    KeyState getKeyState(int keycode);
+    KeyState getKeyState(Key key);
 
     CursorPosition getCursorPosition();
 

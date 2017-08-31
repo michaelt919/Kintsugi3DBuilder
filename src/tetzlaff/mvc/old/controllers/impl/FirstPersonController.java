@@ -3,7 +3,7 @@ package tetzlaff.mvc.old.controllers.impl;
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.gl.window.KeyCodes;
+import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.WindowSize;
@@ -81,43 +81,43 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     }
 
     @Override
-    public void keyPressed(Window<?> window, int keyCode, ModifierKeys mods)
+    public void keyPressed(Window<?> window, Key key, ModifierKeys mods)
     {
         if (enabled)
         {
-            if (keyCode == KeyCodes.W)
+            if (key == Key.W)
             {
                 velocity = velocity.plus(new Vector3(0.0f, 0.0f, -1.0f));
             }
 
-            if (keyCode == KeyCodes.S)
+            if (key == Key.S)
             {
                 velocity = velocity.plus(new Vector3(0.0f, 0.0f, 1.0f));
             }
 
-            if (keyCode == KeyCodes.D)
+            if (key == Key.D)
             {
                 velocity = velocity.plus(new Vector3(1.0f, 0.0f, 0.0f));
             }
 
-            if (keyCode == KeyCodes.A)
+            if (key == Key.A)
             {
                 velocity = velocity.plus(new Vector3(-1.0f, 0.0f, 0.0f));
             }
 
-            if (keyCode == KeyCodes.E)
+            if (key == Key.E)
             {
                 velocity = velocity.plus(new Vector3(0.0f, 1.0f, 0.0f));
             }
 
-            if (keyCode == KeyCodes.Q)
+            if (key == Key.Q)
             {
                 velocity = velocity.plus(new Vector3(0.0f, -1.0f, 0.0f));
             }
         }
 
         // Reset regardless of if enabled
-        if (keyCode == KeyCodes.X)
+        if (key == Key.X)
         {
             theta = 0.0f;
             phi = 0.0f;
@@ -129,36 +129,36 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
     }
 
     @Override
-    public void keyReleased(Window<?> window, int keyCode, ModifierKeys mods)
+    public void keyReleased(Window<?> window, Key key, ModifierKeys mods)
     {
         if (enabled)
         {
-            if (keyCode == KeyCodes.W)
+            if (key == Key.W)
             {
                 velocity = velocity.minus(new Vector3(0.0f, 0.0f, -1.0f));
             }
 
-            if (keyCode == KeyCodes.S)
+            if (key == Key.S)
             {
                 velocity = velocity.minus(new Vector3(0.0f, 0.0f, 1.0f));
             }
 
-            if (keyCode == KeyCodes.D)
+            if (key == Key.D)
             {
                 velocity = velocity.minus(new Vector3(1.0f, 0.0f, 0.0f));
             }
 
-            if (keyCode == KeyCodes.A)
+            if (key == Key.A)
             {
                 velocity = velocity.minus(new Vector3(-1.0f, 0.0f, 0.0f));
             }
 
-            if (keyCode == KeyCodes.E)
+            if (key == Key.E)
             {
                 velocity = velocity.minus(new Vector3(0.0f, 1.0f, 0.0f));
             }
 
-            if (keyCode == KeyCodes.Q)
+            if (key == Key.Q)
             {
                 velocity = velocity.minus(new Vector3(0.0f, -1.0f, 0.0f));
             }
