@@ -16,6 +16,7 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.core.LoadingMonitor;
 import tetzlaff.ibr.core.ReadonlyLoadOptionsModel;
+import tetzlaff.ibr.core.RenderingMode;
 import tetzlaff.ibr.core.ViewSet;
 
 public class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
@@ -694,7 +695,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
         }
     }
 
-    public void setupShaderProgram(Program<ContextType> program, boolean enableTextures)
+    private void setupCommon(Program<ContextType> program)
     {
         program.setTexture("viewImages", this.colorTextures);
         program.setUniformBuffer("CameraWeights", this.cameraWeightBuffer);
@@ -715,50 +716,6 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
         }
 
         program.setUniform("gamma", this.viewSet.getGamma());
-
-        if (this.normalTexture == null)
-        {
-            program.setUniform("useNormalTexture", false);
-            program.setTexture("normalMap", null);
-        }
-        else
-        {
-            program.setUniform("useNormalTexture", enableTextures);
-            program.setTexture("normalMap", this.normalTexture);
-        }
-
-        if (this.diffuseTexture == null)
-        {
-            program.setUniform("useDiffuseTexture", false);
-            program.setTexture("diffuseMap", null);
-        }
-        else
-        {
-            program.setUniform("useDiffuseTexture", enableTextures);
-            program.setTexture("diffuseMap", this.diffuseTexture);
-        }
-
-        if (this.specularTexture == null)
-        {
-            program.setUniform("useSpecularTexture", false);
-            program.setTexture("specularMap", null);
-        }
-        else
-        {
-            program.setUniform("useSpecularTexture", enableTextures);
-            program.setTexture("specularMap", this.specularTexture);
-        }
-
-        if (this.roughnessTexture == null)
-        {
-            program.setUniform("useRoughnessTexture", false);
-            program.setTexture("roughnessMap", null);
-        }
-        else
-        {
-            program.setUniform("useRoughnessTexture", enableTextures);
-            program.setTexture("roughnessMap", this.roughnessTexture);
-        }
 
         if (this.luminanceMap == null)
         {
@@ -804,6 +761,104 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
             program.setUniformBuffer("ShadowMatrices", this.shadowMatrixBuffer);
             program.setTexture("shadowImages", this.shadowTextures);
             program.setUniform("occlusionBias", 0.002f);
+        }
+    }
+
+    public void setupShaderProgram(Program<ContextType> program, boolean enableTextures)
+    {
+        setupCommon(program);
+
+        if (this.normalTexture == null)
+        {
+            program.setUniform("useNormalTexture", false);
+            program.setTexture("normalMap", null);
+        }
+        else
+        {
+            program.setUniform("useNormalTexture", enableTextures);
+            program.setTexture("normalMap", this.normalTexture);
+        }
+
+        if (this.diffuseTexture == null)
+        {
+            program.setUniform("useDiffuseTexture", false);
+            program.setTexture("diffuseMap", null);
+        }
+        else
+        {
+            program.setUniform("useDiffuseTexture", enableTextures);
+            program.setTexture("diffuseMap", this.diffuseTexture);
+        }
+
+        if (this.specularTexture == null)
+        {
+            program.setUniform("useSpecularTexture", false);
+            program.setTexture("specularMap", null);
+        }
+        else
+        {
+            program.setUniform("useSpecularTexture", enableTextures);
+            program.setTexture("specularMap", this.specularTexture);
+        }
+
+        if (this.roughnessTexture == null)
+        {
+            program.setUniform("useRoughnessTexture", false);
+            program.setTexture("roughnessMap", null);
+        }
+        else
+        {
+            program.setUniform("useRoughnessTexture", enableTextures);
+            program.setTexture("roughnessMap", this.roughnessTexture);
+        }
+    }
+
+    public void setupShaderProgram(Program<ContextType> program, RenderingMode renderingMode)
+    {
+        setupCommon(program);
+
+        if (this.normalTexture == null)
+        {
+            program.setUniform("useNormalTexture", false);
+            program.setTexture("normalMap", null);
+        }
+        else
+        {
+            program.setUniform("useNormalTexture", renderingMode.useNormalTexture());
+            program.setTexture("normalMap", this.normalTexture);
+        }
+
+        if (this.diffuseTexture == null)
+        {
+            program.setUniform("useDiffuseTexture", false);
+            program.setTexture("diffuseMap", null);
+        }
+        else
+        {
+            program.setUniform("useDiffuseTexture", renderingMode.useDiffuseTexture());
+            program.setTexture("diffuseMap", this.diffuseTexture);
+        }
+
+        if (this.specularTexture == null)
+        {
+            program.setUniform("useSpecularTexture", false);
+            program.setTexture("specularMap", null);
+        }
+        else
+        {
+            program.setUniform("useSpecularTexture", renderingMode.useSpecularTextures());
+            program.setTexture("specularMap", this.specularTexture);
+        }
+
+        if (this.roughnessTexture == null)
+        {
+            program.setUniform("useRoughnessTexture", false);
+            program.setTexture("roughnessMap", null);
+        }
+        else
+        {
+            program.setUniform("useRoughnessTexture", renderingMode.useSpecularTextures());
+            program.setTexture("roughnessMap", this.roughnessTexture);
         }
     }
 

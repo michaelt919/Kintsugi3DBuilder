@@ -66,7 +66,6 @@ public class JavaFXLightingModel extends LightingModelBase
             }
             else
             {
-                System.out.println("Binding Backup");
                 for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
                 {
                     lightInstanceModels[i].setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));

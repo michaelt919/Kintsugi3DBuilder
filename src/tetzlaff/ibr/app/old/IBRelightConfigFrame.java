@@ -363,14 +363,14 @@ public class IBRelightConfigFrame extends JFrame
         gbc_chckbxImagebasedRendering.gridy = 6;
         renderingOptionsPanel.add(chckbxImagebasedRendering, gbc_chckbxImagebasedRendering);
 
-        // Add listener for changes to IBR checkbox.
-        chckbxImagebasedRendering.addChangeListener(e ->
-        {
-            if (rendererListModel.getSelectedItem() != null)
-            {
-                settingsModel.setIBREnabled(chckbxImagebasedRendering.isSelected());
-            }
-        });
+//        // Add listener for changes to IBR checkbox.
+//        chckbxImagebasedRendering.addChangeListener(e ->
+//        {
+//            if (rendererListModel.getSelectedItem() != null)
+//            {
+//                settingsModel.setIBREnabled(chckbxImagebasedRendering.isSelected());
+//            }
+//        });
 
         JCheckBox chckbxUseTextures = new JCheckBox("Use textures");
         GridBagConstraints gbc_chckbxUseTextures = new GridBagConstraints();
@@ -379,14 +379,14 @@ public class IBRelightConfigFrame extends JFrame
         gbc_chckbxUseTextures.gridy = 6;
         renderingOptionsPanel.add(chckbxUseTextures, gbc_chckbxUseTextures);
 
-        // Add listener for changes to relighting checkbox.
-        chckbxUseTextures.addChangeListener(e ->
-        {
-            if (rendererListModel.getSelectedItem() != null)
-            {
-                settingsModel.setTexturesEnabled(chckbxUseTextures.isSelected());
-            }
-        });
+//        // Add listener for changes to relighting checkbox.
+//        chckbxUseTextures.addChangeListener(e ->
+//        {
+//            if (rendererListModel.getSelectedItem() != null)
+//            {
+//                settingsModel.setTexturesEnabled(chckbxUseTextures.isSelected());
+//            }
+//        });
 
         JCheckBox chckbxRelighting = new JCheckBox("Relighting");
         GridBagConstraints gbc_chckbxRelighting = new GridBagConstraints();
@@ -521,10 +521,10 @@ public class IBRelightConfigFrame extends JFrame
             chckbxOcclusion.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isOcclusionEnabled());
             spinnerOccBias.setValue((double)rendererListModel.getSelectedItem().getSettingsModel().getOcclusionBias());
             chckbxMultisampling.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isMultisamplingEnabled());
-            chckbxImagebasedRendering.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isIBREnabled());
+//            chckbxImagebasedRendering.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isIBREnabled());
             chckbxRelighting.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isRelightingEnabled());
             chckbxShadows.setSelected(rendererListModel.getSelectedItem().getSettingsModel().areShadowsEnabled());
-            chckbxUseTextures.setSelected(rendererListModel.getSelectedItem().getSettingsModel().areTexturesEnabled());
+//            chckbxUseTextures.setSelected(rendererListModel.getSelectedItem().getSettingsModel().areTexturesEnabled());
             chckbxPhysicallybasedGeometricAttenuation.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isPBRGeometricAttenuationEnabled());
             chckbxFresnelEffect.setSelected(rendererListModel.getSelectedItem().getSettingsModel().isFresnelEnabled());
             chckbxVisualizeLights.setSelected(rendererListModel.getSelectedItem().getSettingsModel().areVisibleLightsEnabled());

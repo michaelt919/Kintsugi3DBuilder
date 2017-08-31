@@ -5,5 +5,5 @@ public enum ToolType
     DOLLY,
     ORBIT,
     PAN,
-    CENTER_POINT
+    LOOK_AT_POINT
 }

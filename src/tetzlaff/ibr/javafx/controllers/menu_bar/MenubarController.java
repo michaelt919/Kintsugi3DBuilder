@@ -75,7 +75,6 @@ public class MenubarController
     @FXML private CheckMenuItem visibleCameraPoseCheckMenuItem;
     @FXML private CheckMenuItem visibleSavedCameraPoseCheckMenuItem;
 
-    @FXML private CheckMenuItem materialsForIBRCheckMenuItem;
     @FXML private CheckMenuItem phyMaskingCheckMenuItem;
     @FXML private CheckMenuItem fresnelEffectCheckMenuItem;
 
@@ -97,7 +96,7 @@ public class MenubarController
         toolBindingModel.setTool(new MouseMode(2, ModifierKeys.NONE), ToolType.PAN);
         toolBindingModel.setTool(new MouseMode(1, ModifierKeysBuilder.begin().shift().end()), ToolType.DOLLY);
         toolBindingModel.setTool(new MouseMode(2, ModifierKeysBuilder.begin().shift().end()), ToolType.DOLLY);
-        toolBindingModel.setTool(new MouseMode(0, ModifierKeysBuilder.begin().shift().alt().end()), ToolType.CENTER_POINT);
+        toolBindingModel.setTool(new MouseMode(0, ModifierKeysBuilder.begin().shift().alt().end()), ToolType.LOOK_AT_POINT);
 
         projectFileChooser = new FileChooser();
 
@@ -221,20 +220,20 @@ public class MenubarController
                     case "Lambertian shaded":
                         JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_SHADED);
                         return;
-                    case "Phong shaded":
-                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.PHONG_SHADED);
+                    case "Specular shaded":
+                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.SPECULAR_SHADED);
                         return;
                     case "Solid textured":
                         JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.SOLID_TEXTURED);
                         return;
                     case "Lambertian textured":
-                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_TEXTURED);
+                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_DIFFUSE_TEXTURED);
                         return;
                     case "Material shaded":
                         JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.MATERIAL_SHADED);
                         return;
                     case "Image-based rendering":
-                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.IMAGE_BASED_RENDERING);
+                        JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.IMAGE_BASED);
                         return;
                     case "None":
                         JavaFXModelAccess.getInstance().getSettingsModel().renderingModeProperty().set(RenderingMode.NONE);
@@ -256,7 +255,6 @@ public class MenubarController
         visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleCameraPoseProperty());
         visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(getSettings().visibleSavedCameraPoseProperty());
 
-        materialsForIBRCheckMenuItem.selectedProperty().bindBidirectional(getSettings().useMaterialsProperty());
         phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(getSettings().pBRGeometricAttenuationProperty());
         fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(getSettings().fresnelProperty());
 
@@ -305,7 +303,7 @@ public class MenubarController
                     Node vsetNode = document.getElementsByTagName("ViewSet").item(0);
                     if (vsetNode instanceof Element)
                     {
-                        newVsetFile = new File(((Element) vsetNode).getAttribute("src"));
+                        newVsetFile = new File(projectFile.getParent(), ((Element) vsetNode).getAttribute("src"));
 
                         JavaFXSceneModel sceneModel = JavaFXModelAccess.getInstance().getSceneModel();
 
@@ -358,7 +356,7 @@ public class MenubarController
 
             if (newVsetFile != null)
             {
-                file_closeProject();
+                JavaFXModelAccess.getInstance().getLoadingModel().unload();
 
                 this.vsetFile = newVsetFile;
                 File vsetFileRef = newVsetFile;
@@ -406,7 +404,7 @@ public class MenubarController
                     document.appendChild(rootElement);
 
                     Element vsetElement = document.createElement("ViewSet");
-                    vsetElement.setAttribute("src", vsetFile.toString());
+                    vsetElement.setAttribute("src", projectFile.getParentFile().toPath().relativize(vsetFile.toPath()).toString());
                     rootElement.appendChild(vsetElement);
 
                     JavaFXSceneModel sceneModel = JavaFXModelAccess.getInstance().getSceneModel();

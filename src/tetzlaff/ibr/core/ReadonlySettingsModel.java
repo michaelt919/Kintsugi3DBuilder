@@ -10,7 +10,6 @@ public interface ReadonlySettingsModel
     float getOcclusionBias();
     ShadingParameterMode getWeightMode();
     boolean isOcclusionEnabled();
-    boolean isIBREnabled();
     boolean isFresnelEnabled();
     boolean isPBRGeometricAttenuationEnabled();
     boolean isRelightingEnabled();
@@ -18,7 +17,6 @@ public interface ReadonlySettingsModel
     boolean isCompassEnabled();
     boolean areVisibleCameraPosesEnabled();
     boolean areVisibleSavedCameraPosesEnabled();
-    boolean areTexturesEnabled();
     boolean areShadowsEnabled();
     boolean areVisibleLightsEnabled();
     boolean areLightWidgetsEnabled();

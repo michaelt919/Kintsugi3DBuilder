@@ -3,16 +3,15 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 <VBox fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.camera.SettingsCameraSceneController">
-   <TitledPane animated="false" text="Center Point">
+   <TitledPane animated="false" text="Look at point">
       <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="X:" GridPane.halignment="RIGHT" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Y:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Z:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+         <Label labelFor="$xCenterTextField" text="X:" GridPane.halignment="RIGHT" />
+         <Label labelFor="$yCenterTextField" text="Y:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+         <Label labelFor="$zCenterTextField" text="Z:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
          <TextField prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" fx:id="xCenterTextField" />
          <TextField fx:id="yCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          <TextField fx:id="zCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
@@ -37,15 +36,15 @@
          </rowConstraints>
       </GridPane>
    </TitledPane>
-   <TitledPane animated="false" text="Position and Orientation">
+   <TitledPane animated="false" text="Position and orientation">
       <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Azimuth:" GridPane.halignment="RIGHT" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Twist:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+         <Label labelFor="$azimuthTextField" text="Azimuth:" GridPane.halignment="RIGHT" />
+         <Label labelFor="$inclinationTextField" text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+         <Label labelFor="$distanceTextField" text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+         <Label labelFor="$twistTextField" text="Twist:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
          <TextField fx:id="azimuthTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" />
          <TextField fx:id="inclinationTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          <TextField fx:id="distanceTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
@@ -67,13 +66,13 @@
          </rowConstraints>
       </GridPane>
    </TitledPane>
-   <TitledPane animated="false" text="Intrinsic Properties">
+   <TitledPane animated="false" text="Intrinsic properties">
       <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Field of view:" GridPane.halignment="RIGHT" />
-         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Focal length:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+         <Label labelFor="$fovTextField" text="Field of view:" GridPane.halignment="RIGHT" />
+         <Label labelFor="$focalLengthTextField" text="Focal length:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
          <TextField fx:id="fovTextField" prefHeight="25.0" prefWidth="50.0" GridPane.columnIndex="1" />
          <TextField fx:id="focalLengthTextField" prefHeight="25.0" prefWidth="50.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          <CheckBox fx:id="orthographicCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="99.0" text="Orthographic" GridPane.columnSpan="2" GridPane.rowIndex="2" />

@@ -53,9 +53,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Texture2D<ContextType> lightCenterTexture;
     private Drawable<ContextType> lightDrawable;
 
-    private Program<ContextType> widgetProgram;
+    private Program<ContextType> solidProgram;
     private VertexBuffer<ContextType> widgetVertices;
     private Drawable<ContextType> widgetDrawable;
+    private VertexBuffer<ContextType> gridVertices;
+    private Drawable<ContextType> gridDrawable;
     
     private final String id;
     private Drawable<ContextType> mainDrawable;
@@ -177,34 +179,28 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
         }
 
-        if (this.simpleTexProgram == null)
+        try
         {
-            try
-            {
-                this.simpleTexProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture.frag"))
-                        .createProgram();
-            }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-            }
+            this.simpleTexProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture.frag"))
+                    .createProgram();
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
         }
 
-        if (this.environmentBackgroundProgram == null)
+        try
         {
-            try
-            {
-                this.environmentBackgroundProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
-                        .createProgram();
-            }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-            }
+            this.environmentBackgroundProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
+                    .createProgram();
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
         }
 
         try
@@ -247,84 +243,99 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             e.printStackTrace();
         }
 
-        if (this.shadowProgram == null)
+        try
         {
-            try
-            {
-                shadowProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "depth.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "depth.frag"))
-                        .createProgram();
+            shadowProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "depth.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "depth.frag"))
+                    .createProgram();
 
-                shadowDrawable = context.createDrawable(shadowProgram);
-            }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-                throw new IllegalStateException("The shader program could not be initialized.", e);
-            }
+            shadowDrawable = context.createDrawable(shadowProgram);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+            throw new IllegalStateException("The shader program could not be initialized.", e);
         }
 
-        if (this.widgetProgram == null)
+        try
         {
-            try
-            {
-                this.widgetProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
-                        .createProgram();
-                this.widgetVertices = context.createVertexBuffer()
-                        .setData(NativeVectorBufferFactory.getInstance()
-                            .createFromFloatArray(3, 3, new float[]
-                            {
-                                -1, -1, 0,
-                                1, -1, 0,
-                                0, 1, 0
-                            }));
+            this.solidProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
+                    .createProgram();
+            this.widgetVertices = context.createVertexBuffer()
+                    .setData(NativeVectorBufferFactory.getInstance()
+                        .createFromFloatArray(3, 3, new float[]
+                        {
+                            -1, -1, 0,
+                            1, -1, 0,
+                            0, 1, 0
+                        }));
 
-                this.widgetDrawable = context.createDrawable(this.widgetProgram);
-                this.widgetDrawable.addVertexBuffer("position", widgetVertices);
-            }
-            catch (FileNotFoundException e)
+            this.widgetDrawable = context.createDrawable(this.solidProgram);
+            this.widgetDrawable.addVertexBuffer("position", widgetVertices);
+
+            float[] grid = new float[252];
+            for (int i = 0; i < 21; i++)
             {
-                e.printStackTrace();
+                grid[i * 12] = i * 0.1f - 1.0f;
+                grid[i * 12 + 1] = 0;
+                grid[i * 12 + 2] = 1;
+
+                grid[i * 12 + 3] = i * 0.1f - 1.0f;
+                grid[i * 12 + 4] = 0;
+                grid[i * 12 + 5] = -1;
+
+                grid[i * 12 + 6] = 1;
+                grid[i * 12 + 7] = 0;
+                grid[i * 12 + 8] = i * 0.1f - 1.0f;
+
+                grid[i * 12 + 9] = -1;
+                grid[i * 12 + 10] = 0;
+                grid[i * 12 + 11] = i * 0.1f - 1.0f;
             }
+
+            this.gridVertices = context.createVertexBuffer()
+                .setData(NativeVectorBufferFactory.getInstance()
+                    .createFromFloatArray(3, 84, grid));
+
+            this.gridDrawable = context.createDrawable(this.solidProgram);
+            this.gridDrawable.addVertexBuffer("position", gridVertices);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
         }
 
         this.rectangleVertices = context.createRectangle();
 
-        if (this.lightProgram == null)
+        try
         {
-            try
-            {
-                this.lightProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "light.frag"))
-                        .createProgram();
-                this.lightDrawable = context.createDrawable(this.lightProgram);
-                this.lightDrawable.addVertexBuffer("position", rectangleVertices);
-            }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-            }
+            this.lightProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "light.frag"))
+                    .createProgram();
+            this.lightDrawable = context.createDrawable(this.lightProgram);
+            this.lightDrawable.addVertexBuffer("position", rectangleVertices);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
         }
 
-        if (this.circleProgram == null)
+        try
         {
-            try
-            {
-                this.circleProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "circle.frag"))
-                    .createProgram();
-                this.circleDrawable = context.createDrawable(this.circleProgram);
-                this.circleDrawable.addVertexBuffer("position", rectangleVertices);
-            }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-            }
+            this.circleProgram = context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "circle.frag"))
+                .createProgram();
+            this.circleDrawable = context.createDrawable(this.circleProgram);
+            this.circleDrawable.addVertexBuffer("position", rectangleVertices);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
         }
 
         NativeVectorBuffer lightTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
@@ -352,23 +363,17 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
         }
 
-        if (this.lightTexture == null)
-        {
-            this.lightTexture = context.build2DColorTextureFromBuffer(64, 64, lightTextureData)
-                    .setInternalFormat(ColorFormat.R8)
-                    .setLinearFilteringEnabled(true)
-                    .setMipmapsEnabled(true)
-                    .createTexture();
-        }
+        this.lightTexture = context.build2DColorTextureFromBuffer(64, 64, lightTextureData)
+                .setInternalFormat(ColorFormat.R8)
+                .setLinearFilteringEnabled(true)
+                .setMipmapsEnabled(true)
+                .createTexture();
 
-        if (this.lightCenterTexture == null)
-        {
-            this.lightCenterTexture = context.build2DColorTextureFromBuffer(64, 64, lightCenterTextureData)
-                    .setInternalFormat(ColorFormat.R8)
-                    .setLinearFilteringEnabled(true)
-                    .setMipmapsEnabled(true)
-                    .createTexture();
-        }
+        this.lightCenterTexture = context.build2DColorTextureFromBuffer(64, 64, lightCenterTextureData)
+                .setInternalFormat(ColorFormat.R8)
+                .setLinearFilteringEnabled(true)
+                .setMipmapsEnabled(true)
+                .createTexture();
 
         shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
 
@@ -492,7 +497,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void setupForDraw(Program<ContextType> program, Matrix4 view)
     {
-        this.resources.setupShaderProgram(program, this.settings.areTexturesEnabled());
+        this.resources.setupShaderProgram(program, this.settings.getRenderingMode());
 
         if (!this.settings.isRelightingEnabled() && this.settings.getWeightMode() == ShadingParameterMode.UNIFORM)
         {
@@ -519,7 +524,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         program.setUniform("renderGamma", this.settings.getGamma());
 
-        program.setUniform("imageBasedRenderingEnabled", this.settings.isIBREnabled());
+        program.setUniform("imageBasedRenderingEnabled", this.settings.getRenderingMode().isImageBased());
         program.setUniform("relightingEnabled", this.settings.isRelightingEnabled());
         program.setUniform("pbrGeometricAttenuationEnabled", this.settings.isPBRGeometricAttenuationEnabled());
         program.setUniform("fresnelEnabled", this.settings.isFresnelEnabled());
@@ -529,7 +534,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         if (this.environmentMap == null || !lightingModel.isEnvironmentMappingEnabled())
         {
-            program.setUniform("useEnvironmentTexture", false);
+            program.setUniform("useEnvironmentMap", false);
             program.setTexture("environmentMap", null);
             this.environmentMapEnabled = false;
         }
@@ -910,11 +915,21 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     generateShadowMaps(lightIndex);
                 }
 
+                // Draw grid
+                if (settings.is3DGridEnabled())
+                {
+                    this.solidProgram.setUniform("projection", this.getProjectionMatrix(size));
+                    this.solidProgram.setUniform("model_view", partialViewMatrix.times(Matrix4.scale(this.getScale())));
+                    this.solidProgram.setUniform("color", new Vector4(0.5f, 0.5f, 0.5f, 1.0f));
+                    this.solidProgram.setUniform("objectID", 0);
+                    this.gridDrawable.draw(PrimitiveMode.LINES, offscreenFBO);
+                }
+
                 this.program.setUniform("imageBasedRenderingEnabled", false);
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
                 this.drawReferenceScene(this.program, offscreenFBO, view);
 
-                this.program.setUniform("imageBasedRenderingEnabled", this.settings.isIBREnabled());
+                this.program.setUniform("imageBasedRenderingEnabled", this.settings.getRenderingMode().isImageBased());
                 setupForDraw(view); // changed anything changed when drawing the reference scene.
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
 
@@ -997,7 +1012,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                         if (settings.areLightWidgetsEnabled() && lightingModel.getLightWidgetModel(i).areWidgetsEnabled())
                         {
-                            this.widgetProgram.setUniform("projection", this.getProjectionMatrix(size));
+                            this.solidProgram.setUniform("projection", this.getProjectionMatrix(size));
 
                             float lightWidgetScale = computeLightWidgetScale(partialViewMatrix, size);
                             Vector3 lightCenter = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
@@ -1039,14 +1054,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                                 }))
                                 )
                                 {
-                                    Drawable<ContextType> lineRenderable = context.createDrawable(this.widgetProgram);
+                                    Drawable<ContextType> lineRenderable = context.createDrawable(this.solidProgram);
                                     lineRenderable.addVertexBuffer("position", line);
-                                    this.widgetProgram.setUniform("model_view", Matrix4.IDENTITY);
-                                    this.widgetProgram.setUniform("color",
+                                    this.solidProgram.setUniform("model_view", Matrix4.IDENTITY);
+                                    this.solidProgram.setUniform("color",
                                         new Vector3(lightingModel.getLightWidgetModel(i).isDistanceWidgetSelected()
                                             || lightingModel.getLightWidgetModel(i).isCenterWidgetSelected() ? 1.0f : 0.5f)
                                             .asVector4(1));
-                                    this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Distance"));
+                                    this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Distance"));
                                     lineRenderable.draw(PrimitiveMode.LINES, offscreenFBO);
                                 }
                             }
@@ -1071,14 +1086,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                                 }))
                                 )
                                 {
-                                    Drawable<ContextType> lineRenderable = context.createDrawable(this.widgetProgram);
+                                    Drawable<ContextType> lineRenderable = context.createDrawable(this.solidProgram);
                                     lineRenderable.addVertexBuffer("position", line);
-                                    this.widgetProgram.setUniform("model_view", Matrix4.IDENTITY);
-                                    this.widgetProgram.setUniform("color",
+                                    this.solidProgram.setUniform("model_view", Matrix4.IDENTITY);
+                                    this.solidProgram.setUniform("color",
                                         new Vector3(lightingModel.getLightWidgetModel(i).isDistanceWidgetSelected()
                                             || lightingModel.getLightWidgetModel(i).isCenterWidgetSelected() ? 1.0f : 0.5f)
                                             .asVector4(1));
-                                    this.widgetProgram.setUniform("objectID", 0);
+                                    this.solidProgram.setUniform("objectID", 0);
                                     lineRenderable.draw(PrimitiveMode.LINES, offscreenFBO);
                                 }
                             }
@@ -1216,9 +1231,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             if (lightingModel.getLightWidgetModel(i).isAzimuthWidgetVisible() &&
                                 (Math.abs(lightDisplacementWorld.x) > 0.001f || Math.abs(lightDisplacementWorld.z) > 0.001f))
                             {
-                                this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Azimuth"));
+                                this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Azimuth"));
 
-                                this.widgetProgram.setUniform("model_view",
+                                this.solidProgram.setUniform("model_view",
                                     Matrix4.translate(arrow1PositionR)
                                         .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
                                         .times(Matrix4.fromColumns(
@@ -1227,12 +1242,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                             new Vector4(0, 0, 1, 0),
                                             new Vector4(0, 0, 0, 1))));
 
-                                this.widgetProgram.setUniform("color",
+                                this.solidProgram.setUniform("color",
                                     new Vector3(lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ? 1.0f : 0.5f)
                                         .asVector4(1));
                                 this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
 
-                                this.widgetProgram.setUniform("model_view",
+                                this.solidProgram.setUniform("model_view",
                                     Matrix4.translate(arrow1PositionL)
                                         .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
                                         .times(Matrix4.fromColumns(
@@ -1241,7 +1256,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                             new Vector4(0, 0, 1, 0),
                                             new Vector4(0, 0, 0, 1))));
 
-                                this.widgetProgram.setUniform("color",
+                                this.solidProgram.setUniform("color",
                                     new Vector3(lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ? 1.0f : 0.5f)
                                         .asVector4(1));
                                 this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
@@ -1249,15 +1264,15 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                             if (lightingModel.getLightWidgetModel(i).isInclinationWidgetVisible())
                             {
-                                this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Inclination"));
+                                this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Inclination"));
 
-                                this.widgetProgram.setUniform("color",
+                                this.solidProgram.setUniform("color",
                                     new Vector3(lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected() ? 1.0f : 0.5f)
                                         .asVector4(1));
 
                                 if (Math.PI / 2 - inclination > 0.01f)
                                 {
-                                    this.widgetProgram.setUniform("model_view",
+                                    this.solidProgram.setUniform("model_view",
                                         Matrix4.translate(arrow2PositionR)
                                             .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
                                             .times(Matrix4.fromColumns(
@@ -1270,7 +1285,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                                 if (Math.PI / 2 + inclination > 0.01f)
                                 {
-                                    this.widgetProgram.setUniform("model_view",
+                                    this.solidProgram.setUniform("model_view",
                                         Matrix4.translate(arrow2PositionL)
                                             .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
                                             .times(Matrix4.fromColumns(
@@ -1284,13 +1299,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                             if (lightingModel.getLightWidgetModel(i).isDistanceWidgetVisible())
                             {
-                                this.widgetProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Distance"));
+                                this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Distance"));
 
-                                this.widgetProgram.setUniform("color",
+                                this.solidProgram.setUniform("color",
                                     new Vector3(lightingModel.getLightWidgetModel(i).isDistanceWidgetSelected() ? 1.0f : 0.5f)
                                         .asVector4(1));
 
-                                this.widgetProgram.setUniform("model_view",
+                                this.solidProgram.setUniform("model_view",
                                     Matrix4.translate(arrow3PositionL)
                                         .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
                                         .times(Matrix4.fromColumns(
@@ -1303,7 +1318,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                                 if (widgetTransformation.getColumn(3).getXYZ().distance(lightCenter) > 0.01f)
                                 {
-                                    this.widgetProgram.setUniform("model_view",
+                                    this.solidProgram.setUniform("model_view",
                                         Matrix4.translate(arrow3PositionR)
                                             .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
                                             .times(Matrix4.fromColumns(
@@ -1416,6 +1431,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             shadowFramebuffer = null;
         }
 
+        if (shadowProgram != null)
+        {
+            shadowProgram.close();
+            shadowProgram = null;
+        }
+
         if (lightProgram != null)
         {
             lightProgram.close();
@@ -1440,10 +1461,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             lightCenterTexture = null;
         }
 
-        if (widgetProgram != null)
+        if (solidProgram != null)
         {
-            widgetProgram.close();
-            widgetProgram = null;
+            solidProgram.close();
+            solidProgram = null;
         }
 
         if (widgetVertices != null)
@@ -1468,6 +1489,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             simpleTexProgram.close();
             simpleTexProgram = null;
+        }
+
+        if (gridVertices != null)
+        {
+            gridVertices.close();
+            gridVertices = null;
         }
     }
 
@@ -1625,14 +1652,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
                     .createProgram();
 
-            if (this.widgetProgram != null)
+            if (this.solidProgram != null)
             {
-                this.widgetProgram.close();
+                this.solidProgram.close();
             }
 
-            this.widgetProgram = newWidgetProgram;
+            this.solidProgram = newWidgetProgram;
 
-            this.widgetDrawable = context.createDrawable(this.widgetProgram);
+            this.widgetDrawable = context.createDrawable(this.solidProgram);
             this.widgetDrawable.addVertexBuffer("position", widgetVertices);
 
             Program<ContextType> newCircleProgram = context.getShaderProgramBuilder()
