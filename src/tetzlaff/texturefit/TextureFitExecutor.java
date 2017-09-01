@@ -1732,7 +1732,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                         }
 
                         System.out.println("Fitting specular residual...");
-                        timestamp = new Date();
 
                         if (param.isSpecularTextureEnabled())
                         {
@@ -2087,11 +2086,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                             if (param.isDiffuseTextureEnabled())
                             {
                                 frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDir, materialName + "_Kd.png"));
+                            }
 
-                                if (param.isNormalTextureEnabled())
-                                {
-                                    frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(outputDir, materialName + "_norm.png"));
-                                }
+                            if ((param.isDiffuseTextureEnabled() && param.isNormalTextureEnabled()) || param.isSpecularTextureEnabled())
+                            {
+                                frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(outputDir, materialName + "_norm.png"));
                             }
 
                             frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(outputDir, materialName + "_Ks.png"));
