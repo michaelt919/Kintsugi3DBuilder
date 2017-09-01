@@ -10,8 +10,12 @@ import javafx.stage.WindowEvent;
 /*
 I general utilities class.
  */
-public class StaticUtilities
+public final class StaticUtilities
 {
+    private StaticUtilities()
+    {
+    }
+
     //    this method takes in a double property, and prevents it from reaching outside of its bound.
     public static <H extends Property<Number>> H wrap(double min, double max, H property)
     {
@@ -96,7 +100,7 @@ public class StaticUtilities
                 return change;
             }
             String text = change.getControlNewText();
-            if (text.isEmpty() || text.equals("-") || text.matches(DOUBLE_REG_EXP))
+            if (text.isEmpty() || "-".equals(text) || text.matches(DOUBLE_REG_EXP))
             {
                 return change;
             }

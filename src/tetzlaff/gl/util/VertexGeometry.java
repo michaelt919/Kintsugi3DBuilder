@@ -13,7 +13,7 @@ import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.vecmath.Vector4;
 
-public class VertexGeometry 
+public final class VertexGeometry
 {
     private File filename;
 
@@ -51,14 +51,14 @@ public class VertexGeometry
         inst.hasTexCoords = true;
 
         // Initialize dynamic tables to store the data from the file
-        List<Vector3> vertexList = new ArrayList<Vector3>();
-        List<Vector3> normalList = new ArrayList<Vector3>();
-        List<Vector3> tangentList = new ArrayList<Vector3>();
-        List<Vector3> bitangentList = new ArrayList<Vector3>();
-        List<Vector2> texCoordList = new ArrayList<Vector2>();
-        List<Integer> vertexIndexList = new ArrayList<Integer>();
-        List<Integer> normalIndexList = new ArrayList<Integer>();
-        List<Integer> texCoordIndexList = new ArrayList<Integer>();
+        List<Vector3> vertexList = new ArrayList<>();
+        List<Vector3> normalList = new ArrayList<>();
+        List<Vector3> tangentList = new ArrayList<>();
+        List<Vector3> bitangentList = new ArrayList<>();
+        List<Vector2> texCoordList = new ArrayList<>();
+        List<Integer> vertexIndexList = new ArrayList<>();
+        List<Integer> normalIndexList = new ArrayList<>();
+        List<Integer> texCoordIndexList = new ArrayList<>();
 
         Vector3 sum = Vector3.ZERO;
 
@@ -69,7 +69,7 @@ public class VertexGeometry
             while(scanner.hasNext())
             {
                 String id = scanner.next();
-                if (id.equals("mtllib"))
+                if ("mtllib".equals(id))
                 {
                     if (inst.materialFileName == null)
                     {
@@ -77,7 +77,7 @@ public class VertexGeometry
                         inst.materialFileName = scanner.next();
                     }
                 }
-                else if (id.equals("usemtl"))
+                else if ("usemtl".equals(id))
                 {
                     if (materialName == null)
                     {
@@ -85,7 +85,7 @@ public class VertexGeometry
                         materialName = scanner.next();
                     }
                 }
-                else if (id.equals("v"))
+                else if ("v".equals(id))
                 {
                     // Vertex position
                     float x = scanner.nextFloat();
@@ -96,7 +96,7 @@ public class VertexGeometry
 
                     vertexList.add(new Vector3(x,y,z));
                 }
-                else if (id.equals("vt"))
+                else if ("vt".equals(id))
                 {
                     // Texture coordinate
                     if (inst.hasTexCoords)
@@ -104,7 +104,7 @@ public class VertexGeometry
                         texCoordList.add(new Vector2(scanner.nextFloat(), scanner.nextFloat()));
                     }
                 }
-                else if (id.equals("vn"))
+                else if ("vn".equals(id))
                 {
                     if (inst.hasNormals)
                     {
@@ -120,7 +120,7 @@ public class VertexGeometry
                         bitangentList.add(new Vector3(0.0f, 0.0f, 0.0f));
                     }
                 }
-                else if (id.equals("f"))
+                else if ("f".equals(id))
                 {
                     for (int i = 0; i < 3; i++) // Only support triangles
                     {
@@ -225,7 +225,7 @@ public class VertexGeometry
 
         inst.centroid = sum.dividedBy(vertexList.size());
 
-        List<Vector4> orthoTangentsList = new ArrayList<Vector4>();
+        List<Vector4> orthoTangentsList = new ArrayList<>();
 
         // Normalize and orthogonalize tangent vectors
         for (int i = 0; i < tangentList.size(); i++)
@@ -233,8 +233,12 @@ public class VertexGeometry
             orthoTangentsList.add(orthogonalizeTangent(normalList.get(i), tangentList.get(i), bitangentList.get(i)));
         }
 
-        float boundingBoxMinX = 0.0f, boundingBoxMinY = 0.0f, boundingBoxMinZ = 0.0f,
-                boundingBoxMaxX = 0.0f, boundingBoxMaxY = 0.0f, boundingBoxMaxZ = 0.0f;
+        float boundingBoxMinX = 0.0f;
+        float boundingBoxMinY = 0.0f;
+        float boundingBoxMinZ = 0.0f;
+        float boundingBoxMaxX = 0.0f;
+        float boundingBoxMaxY = 0.0f;
+        float boundingBoxMaxZ = 0.0f;
         inst.boundingRadius = 0.0f;
 
         // Copy the data from the dynamic tables into a data structure that OpenGL can use.

@@ -44,7 +44,9 @@ public class ResourceManager<ResourceType>
             // The key has not been assigned a resource, so use the next available slot
             keys[nextSlot] = key;
             resources[nextSlot] = resource;
-            return nextSlot++;
+            int result = nextSlot;
+            nextSlot++;
+            return result;
         }
     }
 

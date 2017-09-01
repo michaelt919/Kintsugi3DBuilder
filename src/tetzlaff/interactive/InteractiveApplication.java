@@ -12,9 +12,9 @@ public class InteractiveApplication
 
     public InteractiveApplication(EventPollable pollable, Refreshable refreshable)
     {
-        this.pollables = new ArrayList<EventPollable>();
+        this.pollables = new ArrayList<>();
         this.pollables.add(pollable);
-        this.refreshables = new ArrayList<Refreshable>();
+        this.refreshables = new ArrayList<>();
         this.refreshables.add(refreshable);
     }
 
@@ -69,7 +69,7 @@ public class InteractiveApplication
 
     public static void runSimultaneous(Iterable<InteractiveApplication> apps)
     {
-        Collection<InteractiveApplication> activeApps = new ArrayList<InteractiveApplication>();
+        Collection<InteractiveApplication> activeApps = new ArrayList<>();
         for (InteractiveApplication app : apps)
         {
             for (Refreshable refreshable : app.refreshables)
@@ -81,7 +81,7 @@ public class InteractiveApplication
 
         while(!activeApps.isEmpty())
         {
-            Collection<InteractiveApplication> appsToTerminate = new ArrayList<InteractiveApplication>();
+            Collection<InteractiveApplication> appsToTerminate = new ArrayList<>();
             for (InteractiveApplication app : activeApps)
             {
                 boolean shouldTerminate = false;

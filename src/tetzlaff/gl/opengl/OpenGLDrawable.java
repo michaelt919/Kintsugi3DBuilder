@@ -33,7 +33,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
         this.context = context;
         this.program = program;
         this.vao = new OpenGLVertexArray(context);
-        this.settings = new TreeMap<Integer, VertexAttributeSetting>();
+        this.settings = new TreeMap<>();
     }
 
     @Override

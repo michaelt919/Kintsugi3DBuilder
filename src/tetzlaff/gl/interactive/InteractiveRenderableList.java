@@ -26,16 +26,16 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
 
     public InteractiveRenderableList()
     {
-        renderables = new ArrayList<RenderableType>();
-        removedRenderables = new ArrayList<RenderableType>();
-        addedRenderables = new ArrayList<RenderableType>();
+        renderables = new ArrayList<>();
+        removedRenderables = new ArrayList<>();
+        addedRenderables = new ArrayList<>();
     }
 
     public InteractiveRenderableList(List<RenderableType> renderables)
     {
         this.renderables = renderables;
-        removedRenderables = new ArrayList<RenderableType>();
-        addedRenderables = new ArrayList<RenderableType>(renderables);
+        removedRenderables = new ArrayList<>();
+        addedRenderables = new ArrayList<>(renderables);
     }
 
     @Override
@@ -60,8 +60,8 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
             d.initialize();
         }
 
-        removedRenderables = new ArrayList<RenderableType>();
-        addedRenderables = new ArrayList<RenderableType>();
+        removedRenderables = new ArrayList<>();
+        addedRenderables = new ArrayList<>();
 
         for (InteractiveRenderable<ContextType> d : renderables)
         {
@@ -245,7 +245,7 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
     public void clear()
     {
         this.removedRenderables = this.renderables;
-        this.renderables = new ArrayList<RenderableType>();
+        this.renderables = new ArrayList<>();
     }
 
     @Override

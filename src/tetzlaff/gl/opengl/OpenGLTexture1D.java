@@ -17,7 +17,7 @@ import static org.lwjgl.opengl.GL44.*;
 
 // mipmaps
 
-class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLContext>
+final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLContext>
 {
     private int textureTarget;
     private int width;

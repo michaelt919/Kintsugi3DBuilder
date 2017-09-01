@@ -10,7 +10,7 @@ import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.mvc.old.controllers.CameraController;
 import tetzlaff.mvc.old.models.TrackballModel;
 
-public class TrackballController implements CameraController, CursorPositionListener, MouseButtonPressListener, ScrollListener
+public final class TrackballController implements CameraController, CursorPositionListener, MouseButtonPressListener, ScrollListener
 {
     private int inversion = 1;
     private boolean enabled = true;

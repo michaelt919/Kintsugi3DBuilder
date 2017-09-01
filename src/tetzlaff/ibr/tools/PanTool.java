@@ -9,7 +9,7 @@ import tetzlaff.models.ExtendedCameraModel;
 /*
 not this work as intended at a zoom of 0.5
  */
-class PanTool implements DragTool
+final class PanTool implements DragTool
 {
     private static final double PAN_SENSITIVITY = 1.0;
     private double panSensitivityAdjusted = 1.0;

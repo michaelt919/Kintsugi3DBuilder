@@ -19,7 +19,7 @@ import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 
-public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContext>
+public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContext>
 {
     private int textureTarget;
     private int faceSize;
@@ -231,11 +231,11 @@ public class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGLContex
         boolean useMipmaps = false;
         float maxAnisotropy = 1.0f;
 
-        public OptionalParameters()
+        OptionalParameters()
         {
         }
 
-        public OptionalParameters(int format)
+        OptionalParameters(int format)
         {
             positiveX.format = format;
             negativeX.format = format;

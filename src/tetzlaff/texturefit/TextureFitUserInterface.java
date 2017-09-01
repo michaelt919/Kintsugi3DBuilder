@@ -277,7 +277,7 @@ public class TextureFitUserInterface extends JFrame
                         currentViewSet = ViewSet.loadFromAgisoftXMLFile(new File(fileString));
                     }
 
-                    List<String> cameraPoseNames = new ArrayList<String>();
+                    List<String> cameraPoseNames = new ArrayList<>();
                     for (int i = 0; i < currentViewSet.getCameraPoseCount(); i++)
                     {
                         cameraPoseNames.add(currentViewSet.getImageFileName(i));
@@ -290,7 +290,7 @@ public class TextureFitUserInterface extends JFrame
                     String[] cameraPoseNameArray = new String[cameraPoseNames.size()];
                     cameraPoseNames.toArray(cameraPoseNameArray);
 
-                    primaryViewComboBox.setModel(new DefaultComboBoxModel<String>(cameraPoseNameArray));
+                    primaryViewComboBox.setModel(new DefaultComboBoxModel<>(cameraPoseNameArray));
                     primaryViewComboBox.setSelectedItem(primaryViewName);
 
                     SampledLuminanceEncoding luminanceEncoding = currentViewSet.getLuminanceEncoding();
@@ -364,7 +364,7 @@ public class TextureFitUserInterface extends JFrame
         gbc_lblPrimaryView.gridy = 0;
         panel_4.add(lblPrimaryView, gbc_lblPrimaryView);
 
-        primaryViewComboBox = new JComboBox<String>();
+        primaryViewComboBox = new JComboBox<>();
         GridBagConstraints gbc_comboBox = new GridBagConstraints();
         gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;
         gbc_comboBox.insets = new Insets(0, 0, 0, 5);
@@ -885,16 +885,8 @@ public class TextureFitUserInterface extends JFrame
 
         if (this.chckbxUseXriteMeasurements.isSelected())
         {
-            param.setLinearLuminanceValues(new double[] { 0.031, 0.090, 0.198, 0.362, 0.591, 0.900 });
-            param.setEncodedLuminanceValues(new byte[]
-            {
-                (byte) (int) (Integer)this.spinnerXRiteBlack.getValue(),
-                (byte) (int) (Integer)this.spinnerXRiteNeutral35.getValue(),
-                (byte) (int) (Integer)this.spinnerXRiteNeutral50.getValue(),
-                (byte) (int) (Integer)this.spinnerXRiteNeutral65.getValue(),
-                (byte) (int) (Integer)this.spinnerXRiteNeutral80.getValue(),
-                (byte) (int) (Integer)this.spinnerXRiteWhite.getValue()
-            });
+            param.setLinearLuminanceValues(0.031, 0.090, 0.198, 0.362, 0.591, 0.900);
+            param.setEncodedLuminanceValues((byte) (int) (Integer)this.spinnerXRiteBlack.getValue(), (byte) (int) (Integer)this.spinnerXRiteNeutral35.getValue(), (byte) (int) (Integer)this.spinnerXRiteNeutral50.getValue(), (byte) (int) (Integer)this.spinnerXRiteNeutral65.getValue(), (byte) (int) (Integer)this.spinnerXRiteNeutral80.getValue(), (byte) (int) (Integer)this.spinnerXRiteWhite.getValue());
         }
         else
         {

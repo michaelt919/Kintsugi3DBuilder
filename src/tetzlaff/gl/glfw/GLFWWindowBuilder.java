@@ -18,7 +18,7 @@ public class GLFWWindowBuilder<ContextType extends GLFWWindowContextBase<Context
     @Override
     public GLFWWindow<ContextType> create()
     {
-        return new GLFWWindow<ContextType>(contextFactory, this.getWidth(), this.getHeight(), this.getTitle(),
-                this.getX(), this.getY(), this.isResizable(), this.getMultisamples());
+        return new GLFWWindow<>(contextFactory, this.getWidth(), this.getHeight(), this.getTitle(),
+            this.getX(), this.getY(), this.isResizable(), this.getMultisamples());
     }
 }

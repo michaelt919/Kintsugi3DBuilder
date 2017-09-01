@@ -125,7 +125,7 @@ public class NonNegativeLeastSquares
                 SimpleMatrix s = new SimpleMatrix(mATA.numCols(), 1);
 
                 // Mapping from the set of free variables to the set of all variables.
-                List<Integer> mapping = new ArrayList<Integer>(sizeP + 1);
+                List<Integer> mapping = new ArrayList<>(sizeP + 1);
 
                 // Populates the mapping, sovles the system and copies it into s,
                 // and returns a vector containing only the free variables.
@@ -199,7 +199,7 @@ public class NonNegativeLeastSquares
         return x;
     }
 
-    public static void main(String[] args)
+    public static void main(String... args)
     {
         SimpleMatrix mA = new SimpleMatrix(10, 5, true
         ,    0.8147,    0.1576,    0.6557,    0.7060,    0.4387

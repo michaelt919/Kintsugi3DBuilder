@@ -42,7 +42,7 @@ public interface Context<ContextType extends Context<ContextType>>
 
     default VertexBuffer<ContextType> createRectangle()
     {
-        return this.createVertexBuffer().setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(2, 4, new float[] { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f }), false);
+        return this.createVertexBuffer().setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(2, 4, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f), false);
     }
 
     IndexBuffer<ContextType> createIndexBuffer();

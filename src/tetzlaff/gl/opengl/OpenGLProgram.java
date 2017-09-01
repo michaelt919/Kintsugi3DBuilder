@@ -18,7 +18,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL31.*;
 
-class OpenGLProgram implements Program<OpenGLContext>
+final class OpenGLProgram implements Program<OpenGLContext>
 {
     protected final OpenGLContext context;
 
@@ -57,10 +57,10 @@ class OpenGLProgram implements Program<OpenGLContext>
     {
         programId = glCreateProgram();
         this.context.openGLErrorCheck();
-        ownedShaders = new ArrayList<OpenGLShader>();
+        ownedShaders = new ArrayList<>();
         // Use one less texture unit because we don't use texture unit 0.
-        textureManager = new ResourceManager<OpenGLTexture>(this.context.getState().getMaxCombinedTextureImageUnits() - 1);
-        uniformBufferManager = new ResourceManager<OpenGLUniformBuffer>(this.context.getState().getMaxCombinedUniformBlocks());
+        textureManager = new ResourceManager<>(this.context.getState().getMaxCombinedTextureImageUnits() - 1);
+        uniformBufferManager = new ResourceManager<>(this.context.getState().getMaxCombinedUniformBlocks());
     }
 
     private OpenGLProgram attachShader(Shader<OpenGLContext> shader)

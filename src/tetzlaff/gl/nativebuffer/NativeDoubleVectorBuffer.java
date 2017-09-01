@@ -42,7 +42,7 @@ class NativeDoubleVectorBuffer implements NativeVectorBuffer
         if (buffer.capacity() < dimensions * count * 8)
         {
             throw new IllegalArgumentException("Insufficient buffer size - a list of " + count + dimensions +
-                    "D 64-bit vertices requires a buffer with a capacity of at least " + dimensions * count * 8 + ".");
+                    "D 64-bit vertices requires a buffer with a capacity of at least " + dimensions * count * 8 + '.');
         }
         if (!Objects.equals(buffer.order(), ByteOrder.nativeOrder()))
         {
@@ -54,14 +54,14 @@ class NativeDoubleVectorBuffer implements NativeVectorBuffer
         this.buffer = buffer;
     }
 
-    NativeDoubleVectorBuffer(int dimensions, int count, byte[] buffer)
+    NativeDoubleVectorBuffer(int dimensions, int count, byte... buffer)
     {
         this(dimensions, count);
         this.buffer.put(buffer);
         this.buffer.flip();
     }
 
-    NativeDoubleVectorBuffer(int dimensions, int count, double[] buffer)
+    NativeDoubleVectorBuffer(int dimensions, int count, double... buffer)
     {
         this(dimensions, count);
         this.buffer.asDoubleBuffer().put(buffer);

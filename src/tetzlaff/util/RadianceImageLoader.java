@@ -49,7 +49,7 @@ public class RadianceImageLoader
         public final int height;
         public final float[] data;
 
-        public Image(int width, int height, float[] data)
+        public Image(int width, int height, float... data)
         {
             this.width = width;
             this.height = height;
@@ -134,7 +134,7 @@ public class RadianceImageLoader
                     int len = in.read();
                     if (len > 128)
                     {
-                        len = len - 128;
+                        len -= 128;
                         // run of same value (which is the next byte)
                         Arrays.fill(scan, p, p + len, (byte) in.read());
                         p += len;

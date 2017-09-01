@@ -15,7 +15,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
-class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferObject<OpenGLContext>
+final class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferObject<OpenGLContext>
 {
     private final int width;
     private final int height;
@@ -38,7 +38,7 @@ class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferOb
         {
             if (this.getColorAttachmentCount() > GL_MAX_COLOR_ATTACHMENTS)
             {
-                throw new IllegalArgumentException("Too many color attachments specified - maximum is " + GL_MAX_COLOR_ATTACHMENTS + ".");
+                throw new IllegalArgumentException("Too many color attachments specified - maximum is " + GL_MAX_COLOR_ATTACHMENTS + '.');
             }
 
             OpenGLTexture2D[] colorAttachments = new OpenGLTexture2D[this.getColorAttachmentCount()];
@@ -89,7 +89,7 @@ class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferOb
 
         this.width = width;
         this.height = height;
-        this.ownedAttachments = new ArrayList<Resource>();
+        this.ownedAttachments = new ArrayList<>();
         this.colorAttachments = new OpenGLFramebufferAttachment[colorAttachments.length];
         this.depthAttachment = depthAttachment;
         this.stencilAttachment = stencilAttachment;
@@ -173,7 +173,10 @@ class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferOb
         {
             throw new UnsupportedOperationException("The color attachment for the framebuffer at index " + index + " is not a 2D texture.");
         }
-        else return (OpenGLTexture2D)this.colorAttachments[index];
+        else
+        {
+            return (OpenGLTexture2D) this.colorAttachments[index];
+        }
     }
 
     @Override
@@ -211,7 +214,10 @@ class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferOb
         {
             throw new UnsupportedOperationException("The depth attachment for the framebuffer is not a 2D texture.");
         }
-        else return (OpenGLTexture2D)this.depthAttachment;
+        else
+        {
+            return (OpenGLTexture2D) this.depthAttachment;
+        }
     }
 
     @Override
@@ -250,7 +256,10 @@ class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferOb
         {
             throw new UnsupportedOperationException("The stencil attachment for the framebuffer is not a 2D texture.");
         }
-        else return (OpenGLTexture2D)this.stencilAttachment;
+        else
+        {
+            return (OpenGLTexture2D) this.stencilAttachment;
+        }
     }
 
 
@@ -290,7 +299,10 @@ class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferOb
         {
             throw new UnsupportedOperationException("The depth/stencil attachment for the framebuffer is not a 2D texture.");
         }
-        else return (OpenGLTexture2D)this.depthStencilAttachment;
+        else
+        {
+            return (OpenGLTexture2D) this.depthStencilAttachment;
+        }
     }
 
 

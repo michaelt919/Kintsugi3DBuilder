@@ -19,7 +19,7 @@ import tetzlaff.gl.vecmath.Vector4;
  * A class representing a collection of photographs, or views.
  * @author Michael Tetzlaff
  */
-public class ViewSet
+public final class ViewSet
 {
     /**
      * A list of camera poses defining the transformation from object space to camera space for each view.
@@ -166,7 +166,7 @@ public class ViewSet
     public NativeVectorBuffer getCameraPoseData()
     {
         // Store the poses in a uniform buffer
-        if (cameraPoseList != null && cameraPoseList.size() > 0)
+        if (cameraPoseList != null && !cameraPoseList.isEmpty())
         {
             // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
             NativeVectorBuffer cameraPoseData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, cameraPoseList.size());
@@ -195,7 +195,7 @@ public class ViewSet
     public NativeVectorBuffer getCameraProjectionData()
     {
         // Store the camera projections in a uniform buffer
-        if (cameraProjectionList != null && cameraProjectionList.size() > 0)
+        if (cameraProjectionList != null && !cameraProjectionList.isEmpty())
         {
             // Flatten the camera projection matrices into 16-component vectors and store them in the vertex list data structure.
             NativeVectorBuffer cameraProjectionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, cameraProjectionList.size());
@@ -224,7 +224,7 @@ public class ViewSet
     public NativeVectorBuffer getCameraProjectionIndexData()
     {
         // Store the camera projection indices in a uniform buffer
-        if (cameraProjectionIndexList != null && cameraProjectionIndexList.size() > 0)
+        if (cameraProjectionIndexList != null && !cameraProjectionIndexList.isEmpty())
         {
             int[] indexArray = new int[cameraProjectionIndexList.size()];
             for (int i = 0; i < indexArray.length; i++)
@@ -242,7 +242,7 @@ public class ViewSet
     public NativeVectorBuffer getLightPositionData()
     {
         // Store the light positions in a uniform buffer
-        if (lightPositionList != null && lightPositionList.size() > 0)
+        if (lightPositionList != null && !lightPositionList.isEmpty())
         {
             NativeVectorBuffer lightPositionData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightPositionList.size());
             for (int k = 0; k < lightPositionList.size(); k++)
@@ -264,7 +264,7 @@ public class ViewSet
     public NativeVectorBuffer getLightIntensityData()
     {
         // Store the light positions in a uniform buffer
-        if (lightIntensityList != null && lightIntensityList.size() > 0)
+        if (lightIntensityList != null && !lightIntensityList.isEmpty())
         {
             NativeVectorBuffer lightIntensityData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, lightIntensityList.size());
             for (int k = 0; k < lightPositionList.size(); k++)
@@ -285,7 +285,7 @@ public class ViewSet
     public NativeVectorBuffer getLightIndexData()
     {
         // Store the light indices indices in a uniform buffer
-        if (lightIndexList != null && lightIndexList.size() > 0)
+        if (lightIndexList != null && !lightIndexList.isEmpty())
         {
             int[] indexArray = new int[lightIndexList.size()];
             for (int i = 0; i < indexArray.length; i++)
@@ -316,20 +316,20 @@ public class ViewSet
         params.recommendedNearPlane = 0.0f;
         params.recommendedFarPlane = Float.MAX_VALUE;
 
-        List<Matrix4> unorderedCameraPoseList = new ArrayList<Matrix4>();
-        List<Matrix4> unorderedCameraPoseInvList = new ArrayList<Matrix4>();
+        List<Matrix4> unorderedCameraPoseList = new ArrayList<>();
+        List<Matrix4> unorderedCameraPoseInvList = new ArrayList<>();
 
-        params.cameraPoseList = new ArrayList<Matrix4>();
-        params.cameraPoseInvList = new ArrayList<Matrix4>();
-        params.cameraProjectionList = new ArrayList<Projection>();
-        params.lightPositionList = new ArrayList<Vector3>();
-        params.lightIntensityList = new ArrayList<Vector3>();
-        params.cameraProjectionIndexList = new ArrayList<Integer>();
-        params.lightIndexList = new ArrayList<Integer>();
-        params.imageFileNames = new ArrayList<String>();
+        params.cameraPoseList = new ArrayList<>();
+        params.cameraPoseInvList = new ArrayList<>();
+        params.cameraProjectionList = new ArrayList<>();
+        params.lightPositionList = new ArrayList<>();
+        params.lightIntensityList = new ArrayList<>();
+        params.cameraProjectionIndexList = new ArrayList<>();
+        params.lightIndexList = new ArrayList<>();
+        params.imageFileNames = new ArrayList<>();
 
-        List<Double> linearLuminanceList = new ArrayList<Double>();
-        List<Byte> encodedLuminanceList = new ArrayList<Byte>();
+        List<Double> linearLuminanceList = new ArrayList<>();
+        List<Byte> encodedLuminanceList = new ArrayList<>();
 
         params.geometryFileName = "manifold.obj";
         params.relativeImagePath = null;
@@ -401,9 +401,11 @@ public class ViewSet
                         float aspect = scanner.nextFloat();
                         float focalLength = scanner.nextFloat();
 
-                        float sensorWidth, k1;
-                        float k2, k3;
-                        if (id.equals("D"))
+                        float sensorWidth;
+                        float k1;
+                        float k2;
+                        float k3;
+                        if ("D".equals(id))
                         {
                             sensorWidth = scanner.nextFloat();
                             k1 = scanner.nextFloat();
@@ -587,8 +589,8 @@ public class ViewSet
      */
     public static ViewSet loadFromAgisoftXMLFile(File file) throws FileNotFoundException
     {
-        Map<String, Sensor> sensorSet = new Hashtable<String, Sensor>();
-        HashSet<Camera> cameraSet = new HashSet<Camera>();
+        Map<String, Sensor> sensorSet = new Hashtable<>();
+        HashSet<Camera> cameraSet = new HashSet<>();
         
         Sensor sensor = null;
         Camera camera = null;
@@ -600,8 +602,12 @@ public class ViewSet
         Matrix4 globalRotation = Matrix4.IDENTITY;
         Vector3 globalTranslate = new Vector3(0.0f, 0.0f, 0.0f);
         
-        String version = "", chunkLabel = "", groupLabel = "";
-        String sensorID = "", cameraID = "", imageFile = "";
+        String version = "";
+        String chunkLabel = "";
+        String groupLabel = "";
+        String sensorID = "";
+        String cameraID = "";
+        String imageFile = "";
         int intVersion = 0;
         
         XMLInputFactory factory = XMLInputFactory.newInstance();
@@ -620,10 +626,10 @@ public class ViewSet
                             case "document":
                                 version = reader.getAttributeValue(null, "version");
                                 String[] verComponents = version.split("\\.");
-                                for(int i=0; i<verComponents.length; i++)
+                                for (String verComponent : verComponents)
                                 {
                                     intVersion *= 10;
-                                    intVersion += Integer.parseInt(verComponents[i]);
+                                    intVersion += Integer.parseInt(verComponent);
                                 }
                                 System.out.printf("PhotoScan XML version %s (%d)\n", version, intVersion);
                                 break;
@@ -655,7 +661,7 @@ public class ViewSet
                                 }
                                 else
                                 {
-                                    if (reader.getAttributeValue(null, "enabled").equals("true"))
+                                    if ("true".equals(reader.getAttributeValue(null, "enabled")))
                                     {
                                         if (lightIndex < 0)
                                         {
@@ -771,15 +777,18 @@ public class ViewSet
                             case "rotation":
                                 {
                                     String[] components = reader.getElementText().split("\\s");
-                                    if ((reader.getLocalName().equals("transform") && components.length < 16) ||
-                                        (reader.getLocalName().equals("rotation") && components.length < 9))
+                                    if (("transform".equals(reader.getLocalName()) && components.length < 16) ||
+                                        ("rotation".equals(reader.getLocalName()) && components.length < 9))
                                     {
                                         System.err.println("Error: Not enough components in the transform/rotation matrix");
                                     }
                                     else
                                     {
                                         int expectedSize = 16;
-                                        if(reader.getLocalName().equals("rotation")) expectedSize = 9;
+                                        if("rotation".equals(reader.getLocalName()))
+                                        {
+                                            expectedSize = 9;
+                                        }
 
                                         if(components.length > expectedSize)
                                         {
@@ -931,14 +940,14 @@ public class ViewSet
         Parameters params = new Parameters();
 
         // Initialize internal lists
-        params.cameraPoseList = new ArrayList<Matrix4>();
-        params.cameraPoseInvList = new ArrayList<Matrix4>();
-        params.cameraProjectionList = new ArrayList<Projection>();
-        params.lightPositionList = new ArrayList<Vector3>();
-        params.lightIntensityList = new ArrayList<Vector3>();
-        params.cameraProjectionIndexList = new ArrayList<Integer>();
-        params.lightIndexList = new ArrayList<Integer>();
-        params.imageFileNames = new ArrayList<String>();
+        params.cameraPoseList = new ArrayList<>();
+        params.cameraPoseInvList = new ArrayList<>();
+        params.cameraProjectionList = new ArrayList<>();
+        params.lightPositionList = new ArrayList<>();
+        params.lightIntensityList = new ArrayList<>();
+        params.cameraProjectionIndexList = new ArrayList<>();
+        params.lightIndexList = new ArrayList<>();
+        params.imageFileNames = new ArrayList<>();
         
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
         
@@ -967,29 +976,29 @@ public class ViewSet
         Camera[] cameras = cameraSet.toArray(new Camera[0]);
         
         // Fill out the camera pose, projection index, and light index lists
-        for (int i = 0; i < cameras.length; i++)
+        for (Camera camera1 : cameras)
         {
             // Apply the global transform to each camera
-            Matrix4 m1 = cameras[i].transform;
+            Matrix4 m1 = camera1.transform;
             Vector3 displacement = m1.getColumn(3).getXYZ();
             m1 = Matrix4.translate(displacement.times(1.0f / globalScale).minus(displacement)).times(m1);
 
             // TODO: Figure out the right way to integrate the global transforms
-            cameras[i].transform = m1.times(globalRotation)
-                                     .times(Matrix4.translate(globalTranslate))
-                                ;//     .times(Matrix4.scale(globalScale));
+            camera1.transform = m1.times(globalRotation)
+                .times(Matrix4.translate(globalTranslate))
+            ;//     .times(Matrix4.scale(globalScale));
 
-            params.cameraPoseList.add(cameras[i].transform);
-            
+            params.cameraPoseList.add(camera1.transform);
+
             // Compute inverse by just reversing steps to build transformation
             Matrix4 cameraPoseInv = //Matrix4.scale(1.0f / globalScale)
                                     /*       .times*/Matrix4.translate(globalTranslate.negated())
-                                           .times(globalRotation.transpose())
-                                           .times(m1.getUpperLeft3x3().transpose().asMatrix4())
-                                           .times(Matrix4.translate(m1.getColumn(3).getXYZ().negated()));
+                .times(globalRotation.transpose())
+                .times(m1.getUpperLeft3x3().transpose().asMatrix4())
+                .times(Matrix4.translate(m1.getColumn(3).getXYZ().negated()));
             params.cameraPoseInvList.add(cameraPoseInv);
-            
-            Matrix4 expectedIdentity = cameraPoseInv.times(cameras[i].transform);
+
+            Matrix4 expectedIdentity = cameraPoseInv.times(camera1.transform);
             boolean error = false;
             for (int r = 0; r < 4; r++)
             {
@@ -1005,7 +1014,7 @@ public class ViewSet
                         expectedValue = 0.0f;
                     }
 
-                    if(Math.abs(expectedIdentity.get(r, c) - expectedValue) > 0.001f)
+                    if (Math.abs(expectedIdentity.get(r, c) - expectedValue) > 0.001f)
                     {
                         error = true;
                         break;
@@ -1016,7 +1025,7 @@ public class ViewSet
                     break;
                 }
             }
-            
+
             if (error)
             {
                 System.err.println("Warning: matrix inverse could not be computed correctly - transformation is not affine.");
@@ -1024,16 +1033,15 @@ public class ViewSet
                 {
                     for (int c = 0; c < 4; c++)
                     {
-                        System.err.print("\t" + String.format("%.3f", expectedIdentity.get(r, c)));
+                        System.err.print('\t' + String.format("%.3f", expectedIdentity.get(r, c)));
                     }
                     System.err.println();
                 }
             }
-            
-            
-            params.cameraProjectionIndexList.add(cameras[i].sensor.index);
-            params.lightIndexList.add(cameras[i].lightIndex);
-            params.imageFileNames.add(cameras[i].filename);
+
+            params.cameraProjectionIndexList.add(camera1.sensor.index);
+            params.lightIndexList.add(camera1.lightIndex);
+            params.imageFileNames.add(camera1.filename);
         }
         
         for (int i = 0; i < nextLightIndex; i++)
@@ -1059,12 +1067,16 @@ public class ViewSet
      */
     private static float findFarPlane(List<Matrix4> cameraPoseInvList)
     {
-        float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY, minZ = Float.POSITIVE_INFINITY;
-        float maxX = Float.NEGATIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY, maxZ = Float.NEGATIVE_INFINITY;
+        float minX = Float.POSITIVE_INFINITY;
+        float minY = Float.POSITIVE_INFINITY;
+        float minZ = Float.POSITIVE_INFINITY;
+        float maxX = Float.NEGATIVE_INFINITY;
+        float maxY = Float.NEGATIVE_INFINITY;
+        float maxZ = Float.NEGATIVE_INFINITY;
 
-        for (int i = 0; i < cameraPoseInvList.size(); i++)
+        for (Matrix4 aCameraPoseInvList : cameraPoseInvList)
         {
-            Vector4 position = cameraPoseInvList.get(i).getColumn(3);
+            Vector4 position = aCameraPoseInvList.getColumn(3);
             minX = Math.min(minX, position.x);
             minY = Math.min(minY, position.y);
             minZ = Math.min(minZ, position.z);
@@ -1074,7 +1086,9 @@ public class ViewSet
         }
 
         // Corner-to-corner
-        float dX = maxX-minX, dY = maxY-minY, dZ = maxZ-minZ;
+        float dX = maxX-minX;
+        float dY = maxY-minY;
+        float dZ = maxZ-minZ;
         return (float)Math.sqrt(dX*dX + dY*dY + dZ*dZ);
 
         // Longest Side approach

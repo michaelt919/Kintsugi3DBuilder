@@ -4,7 +4,7 @@ import java.nio.DoubleBuffer;
 
 import org.lwjgl.*;
 
-public class DoubleMatrix4 
+public final class DoubleMatrix4
 {
     public static final DoubleMatrix4 IDENTITY = scale(1.0);
 

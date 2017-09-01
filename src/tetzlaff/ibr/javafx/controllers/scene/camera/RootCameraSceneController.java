@@ -153,7 +153,7 @@ public class RootCameraSceneController implements Initializable
             public void handle(ActionEvent event)
             {
                 String newName = renameTextField.getText();
-                if (!newName.equals(""))
+                if (!"".equals(newName))
                 {
                     getCameraSelectionModel().getSelectedItem().setName(newName);
                 }

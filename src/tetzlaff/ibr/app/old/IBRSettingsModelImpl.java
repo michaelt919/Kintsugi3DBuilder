@@ -21,10 +21,6 @@ public class IBRSettingsModelImpl implements SettingsModel
     private boolean halfResolutionEnabled = false;
     private boolean lightWidgetsEnabled = false;
 
-    public IBRSettingsModelImpl()
-    {
-    }
-
     @Override
     public float getGamma()
     {

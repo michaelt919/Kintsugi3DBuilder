@@ -11,10 +11,6 @@ public class IBRLoadOptionsModelImpl implements ReadonlyLoadOptionsModel
     private int depthImageWidth;
     private int depthImageHeight;
 
-    public IBRLoadOptionsModelImpl()
-    {
-    }
-
     @Override
     public boolean areColorImagesRequested()
     {

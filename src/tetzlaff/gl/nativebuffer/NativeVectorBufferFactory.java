@@ -23,7 +23,7 @@ public final class NativeVectorBufferFactory
         case UNSIGNED_INT: return new NativeUnsignedIntVectorBuffer(dimensions, count);
         case FLOAT: return new NativeFloatVectorBuffer(dimensions, count);
         case DOUBLE: return new NativeDoubleVectorBuffer(dimensions, count);
-        default: throw new IllegalArgumentException("Unrecognized data type " + dataType + ".");
+        default: throw new IllegalArgumentException("Unrecognized data type " + dataType + '.');
         }
     }
 
@@ -39,11 +39,11 @@ public final class NativeVectorBufferFactory
         case UNSIGNED_INT: return new NativeUnsignedIntVectorBuffer(dimensions, count, buffer);
         case FLOAT: return new NativeFloatVectorBuffer(dimensions, count, buffer);
         case DOUBLE: return new NativeDoubleVectorBuffer(dimensions, count, buffer);
-        default: throw new IllegalArgumentException("Unrecognized data type " + dataType + ".");
+        default: throw new IllegalArgumentException("Unrecognized data type " + dataType + '.');
         }
     }
 
-    public NativeVectorBuffer createFromByteArray(NativeDataType dataType, int dimensions, int count, byte[] byteArray)
+    public NativeVectorBuffer createFromByteArray(NativeDataType dataType, int dimensions, int count, byte... byteArray)
     {
         switch(dataType)
         {
@@ -55,11 +55,11 @@ public final class NativeVectorBufferFactory
         case UNSIGNED_INT: return new NativeUnsignedIntVectorBuffer(dimensions, count, byteArray);
         case FLOAT: return new NativeFloatVectorBuffer(dimensions, count, byteArray);
         case DOUBLE: return new NativeDoubleVectorBuffer(dimensions, count, byteArray);
-        default: throw new IllegalArgumentException("Unrecognized data type " + dataType + ".");
+        default: throw new IllegalArgumentException("Unrecognized data type " + dataType + '.');
         }
     }
 
-    public NativeVectorBuffer createFromShortArray(boolean unsigned, int dimensions, int count, short[] shortArray)
+    public NativeVectorBuffer createFromShortArray(boolean unsigned, int dimensions, int count, short... shortArray)
     {
         if (!unsigned)
         {
@@ -71,7 +71,7 @@ public final class NativeVectorBufferFactory
         }
     }
 
-    public NativeVectorBuffer createFromIntArray(boolean unsigned, int dimensions, int count, int[] intArray)
+    public NativeVectorBuffer createFromIntArray(boolean unsigned, int dimensions, int count, int... intArray)
     {
         if (!unsigned)
         {
@@ -83,12 +83,12 @@ public final class NativeVectorBufferFactory
         }
     }
 
-    public NativeVectorBuffer createFromFloatArray(int dimensions, int count, float[] floatArray)
+    public NativeVectorBuffer createFromFloatArray(int dimensions, int count, float... floatArray)
     {
         return new NativeFloatVectorBuffer(dimensions, count, floatArray);
     }
 
-    public NativeVectorBuffer createFromDoubleArray(int dimensions, int count, double[] doubleArray)
+    public NativeVectorBuffer createFromDoubleArray(int dimensions, int count, double... doubleArray)
     {
         return new NativeDoubleVectorBuffer(dimensions, count, doubleArray);
     }

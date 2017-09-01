@@ -36,7 +36,7 @@ import tetzlaff.util.RadianceImageLoader.Image;
 /**
  *
  */
-public class EnvironmentMap {
+public final class EnvironmentMap {
   public static final int DIR_SIDE = 32;
   public static final int NX = 3;
   public static final int NY = 4;
@@ -176,7 +176,7 @@ public class EnvironmentMap {
     }
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String... args) throws IOException {
     JFileChooser fc = new JFileChooser();
     fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
     fc.setAcceptAllFileFilterUsed(false);
@@ -212,7 +212,9 @@ public class EnvironmentMap {
   }
 
   public static DoubleVector3 sample(float[][] env, int side, DoubleVector3 coord) {
-    double sc, tc, ma;
+    double sc;
+    double tc;
+    double ma;
     int face;
 
     if (Math.abs(coord.x) > Math.abs(coord.y) && Math.abs(coord.x) > Math.abs(coord.z)) {
@@ -258,8 +260,8 @@ public class EnvironmentMap {
 
     int x = (int) Math.floor(s);
     int y = (int) Math.floor(t);
-    s = s - x;
-    t = t - y;
+    s -= x;
+    t -= y;
 
     int o1 = y * side * 3 + x * 3;
     int o2 = y * side * 3 + (x + 1) * 3;
@@ -587,10 +589,13 @@ public class EnvironmentMap {
         }
       }
 
-      for (int m = 0; m < spec.length; m++) {
-        for (int i = 0; i < 6; i++) {
-          for (int j = 0; j < spec[m][i].length; j++) {
-            out.writeFloat(spec[m][i][j]);
+      for (float[][] aSpec : spec)
+      {
+        for (int i = 0; i < 6; i++)
+        {
+          for (int j = 0; j < aSpec[i].length; j++)
+          {
+            out.writeFloat(aSpec[i][j]);
           }
         }
       }
@@ -763,23 +768,26 @@ public class EnvironmentMap {
                   + Math.max(0, Math.min(pano.width - 1, Math.floor(px + 1))));
 
           int faceIndex = 3 * (y * side + x);
-          env[i][faceIndex++] = (float) (
+          env[i][faceIndex] = (float) (
               (1.0 - ay) * ((1.0 - ax) * pano.data[o1] + ax * pano.data[o2]) + ay * (
                   (1.0 - ax) * pano.data[o3] + ax * pano.data[o4]));
+          faceIndex++;
           o1++;
           o2++;
           o3++;
           o4++;
-          env[i][faceIndex++] = (float) (
+          env[i][faceIndex] = (float) (
               (1.0 - ay) * ((1.0 - ax) * pano.data[o1] + ax * pano.data[o2]) + ay * (
                   (1.0 - ax) * pano.data[o3] + ax * pano.data[o4]));
+          faceIndex++;
           o1++;
           o2++;
           o3++;
           o4++;
-          env[i][faceIndex++] = (float) (
+          env[i][faceIndex] = (float) (
               (1.0 - ay) * ((1.0 - ax) * pano.data[o1] + ax * pano.data[o2]) + ay * (
                   (1.0 - ax) * pano.data[o3] + ax * pano.data[o4]));
+          faceIndex++;
         }
       }
     }

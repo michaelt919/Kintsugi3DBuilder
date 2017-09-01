@@ -25,7 +25,7 @@ import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL44.*;
 
-class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
+final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLContext>
 {
     private int textureTarget;
     private int mipmapCount;

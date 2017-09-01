@@ -68,7 +68,7 @@ class OpenGLShader implements Shader<OpenGLContext>
                 else
                 {
                     sb.append(nextLine);
-                    sb.append("\n");
+                    sb.append('\n');
                 }
 
                 lineCounter++;

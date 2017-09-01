@@ -11,9 +11,13 @@ import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.opengl.OpenGLContext;
 
-public class TextureGenerationProgram
+public final class TextureGenerationProgram
 {
     private static final boolean DEBUG = true;
+
+    private TextureGenerationProgram()
+    {
+    }
 
     private static void runProgram()
     {
@@ -49,8 +53,8 @@ public class TextureGenerationProgram
                     {
                         OpenGLContext context = window.getContext();
 
-                        new TextureFitExecutor<OpenGLContext>(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(),
-                                gui.getRescaleDirectory(), gui.getOutputDirectory(), gui.getParameters())
+                        new TextureFitExecutor<>(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(),
+                            gui.getRescaleDirectory(), gui.getOutputDirectory(), gui.getParameters())
                                 .execute();
                     }
 
@@ -62,7 +66,7 @@ public class TextureGenerationProgram
             {
                 System.gc(); // Suggest garbage collection.
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(gui, ex.getMessage(), "Error reading file (" + ex.getClass().getName() + ")", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(gui, ex.getMessage(), "Error reading file (" + ex.getClass().getName() + ')', JOptionPane.ERROR_MESSAGE);
             }
             catch (GLOutOfMemoryException ex)
             {
@@ -93,7 +97,7 @@ public class TextureGenerationProgram
         gui.setVisible(true);
     }
 
-    public static void main(String[] args) throws FileNotFoundException
+    public static void main(String... args) throws FileNotFoundException
     {
         if (!DEBUG)
         {

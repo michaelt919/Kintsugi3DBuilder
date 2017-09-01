@@ -41,8 +41,8 @@ class NativeShortVectorBuffer implements NativeVectorBuffer
         }
         if (buffer.capacity() < dimensions * count * 2)
         {
-            throw new IllegalArgumentException("Insufficient buffer size - a list of " + count + " " + dimensions +
-                    "D 16-bit vertices requires a buffer with a capacity of at least " + dimensions * count * 2 + ".");
+            throw new IllegalArgumentException("Insufficient buffer size - a list of " + count + ' ' + dimensions +
+                    "D 16-bit vertices requires a buffer with a capacity of at least " + dimensions * count * 2 + '.');
         }
         if (!Objects.equals(buffer.order(), ByteOrder.nativeOrder()))
         {
@@ -54,14 +54,14 @@ class NativeShortVectorBuffer implements NativeVectorBuffer
         this.buffer = buffer;
     }
 
-    NativeShortVectorBuffer(int dimensions, int count, byte[] buffer)
+    NativeShortVectorBuffer(int dimensions, int count, byte... buffer)
     {
         this(dimensions, count);
         this.buffer.put(buffer);
         this.buffer.flip();
     }
 
-    NativeShortVectorBuffer(int dimensions, int count, short[] buffer)
+    NativeShortVectorBuffer(int dimensions, int count, short... buffer)
     {
         this(dimensions, count);
         this.buffer.asShortBuffer().put(buffer);

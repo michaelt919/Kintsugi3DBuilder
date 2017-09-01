@@ -24,7 +24,7 @@ import static org.lwjgl.opengl.GL32.*;
 
 // mipmaps
 
-class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
+final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 {
     private int textureTarget;
     private int width;

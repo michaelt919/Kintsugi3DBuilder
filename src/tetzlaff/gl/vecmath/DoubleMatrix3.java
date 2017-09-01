@@ -5,7 +5,7 @@ package tetzlaff.gl.vecmath;
  * @author Michael Tetzlaff
  *
  */
-public class DoubleMatrix3 
+public final class DoubleMatrix3
 {
     public static final DoubleMatrix3 IDENTITY = scale(1.0f);
 

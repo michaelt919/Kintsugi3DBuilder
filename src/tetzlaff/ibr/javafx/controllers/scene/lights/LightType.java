@@ -36,7 +36,7 @@ public enum LightType
         @Override
         public LightType fromString(String string)
         {
-            if (string == null || string.equals("Null"))
+            if (string == null || "Null".equals(string))
             {
                 return null;
             }

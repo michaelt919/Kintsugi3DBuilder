@@ -91,12 +91,14 @@ public class CameraSetting implements DOMConvertable
     @Override
     public String toString()
     {
-        String out = name.getValue();
         if (locked.getValue())
         {
-            out = "(L) " + out;
+            return "(L) " + name.getValue();
         }
-        return out;
+        else
+        {
+            return name.getValue();
+        }
     }
 
     public CameraSetting duplicate()
@@ -298,7 +300,7 @@ public class CameraSetting implements DOMConvertable
     }
 
     // V keep!
-    public static void main(String[] args)
+    public static void main(String... args)
     {
         String[] things = {
             "xCenter",
@@ -312,46 +314,46 @@ public class CameraSetting implements DOMConvertable
             "focalLength"
         };
 
-        for (int i = 0; i < things.length; i++)
+        for (String thing5 : things)
         {
-            System.out.println("final DoubleProperty " + things[i] + " = new SimpleDoubleProperty();");
+            System.out.println("final DoubleProperty " + thing5 + " = new SimpleDoubleProperty();");
         }
 
         System.out.print("public CameraSetting(");
-        for (int i = 0; i < things.length; i++)
+        for (String thing4 : things)
         {
-            System.out.print("Double " + things[i] + ", ");
+            System.out.print("Double " + thing4 + ", ");
         }
         System.out.println(") {");
 
-        for (int i = 0; i < things.length; i++)
+        for (String thing3 : things)
         {
-            System.out.println("    this." + things[i] + ".setValue(" + things[i] + ");");
+            System.out.println("    this." + thing3 + ".setValue(" + thing3 + ");");
         }
 
         System.out.println("}");
 
         System.out.println("public Element toDOMElement() {");
         System.out.println("    return new Element(\"CameraSetting\")");
-        for (int i = 0; i < things.length; i++)
+        for (String thing2 : things)
         {
-            System.out.println("        .setAttribute(\"" + things[i] + "\", " + things[i] + ".getValue().toString())");
+            System.out.println("        .setAttribute(\"" + thing2 + "\", " + thing2 + ".getValue().toString())");
         }
         System.out.println("    ;\n}");
 
         System.out.println("public static CameraSetting fromDOMElement(Element element){\n");
         System.out.println("    return new CameraSetting(");
-        for (int i = 0; i < things.length; i++)
+        for (String thing1 : things)
         {
-            System.out.println("        Double.valueOf(element.getAttributeValue(\"" + things[i] + "\")),");
+            System.out.println("        Double.valueOf(element.getAttributeValue(\"" + thing1 + "\")),");
         }
         System.out.println("    );\n}");
 
         System.out.println("public CameraSetting duplicate(){");
         System.out.println("    return new CameraSetting(");
-        for (int i = 0; i < things.length; i++)
+        for (String thing : things)
         {
-            System.out.println("        this." + things[i] + ".getValue(),");
+            System.out.println("        this." + thing + ".getValue(),");
         }
         System.out.println("    );\n}");
     }
