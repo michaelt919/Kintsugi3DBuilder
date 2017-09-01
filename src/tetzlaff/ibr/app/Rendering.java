@@ -18,6 +18,7 @@ import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.gl.window.Key;
 import tetzlaff.ibr.core.IBRRequestQueue;
 import tetzlaff.ibr.core.LoadingModel;
 import tetzlaff.ibr.core.LoadingMonitor;
@@ -229,9 +230,9 @@ public final class Rendering
             rendererList.setLightingModel(lightingModel);
             rendererList.setSettingsModel(settingsModel);
 
-            window.addCharacterListener((win, c) ->
+            window.addKeyPressListener((win, key, modifierKeys) ->
             {
-                if (c == 'p')
+                if (key == Key.F10)
                 {
                     System.out.println("reloading program...");
 
@@ -256,11 +257,11 @@ public final class Rendering
                         e.printStackTrace();
                     }
                 }
-                //else if (c == 'l')
+                //else if (key == Key.L)
                 //{
                     //metaLightingModel.hardcodedMode = !metaLightingModel.hardcodedMode;
                 //}
-                else if (c == ' ')
+                else if (key == Key.SPACE)
                 {
                     fpController.setEnabled(!fpController.getEnabled());
                 }

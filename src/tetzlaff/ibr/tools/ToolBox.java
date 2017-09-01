@@ -16,6 +16,7 @@ import tetzlaff.models.EnvironmentMapModel;
 import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.ExtendedLightingModel;
 import tetzlaff.models.SceneViewportModel;
+import tetzlaff.util.KeyPress;
 import tetzlaff.util.MouseMode;
 import tetzlaff.util.WindowBasedController;
 
@@ -25,7 +26,8 @@ public final class ToolBox
     private MouseMode currentMode;
     private final ToolBindingModel toolBindingModel;
 
-    private final Map<DragToolType, DragTool> tools;
+    private final Map<DragToolType, DragTool> dragTools;
+    private final Map<KeyPressToolType, KeyPressTool> keyPressTools;
     private final LightTool lightTool;
 
     //window listener
@@ -45,13 +47,13 @@ public final class ToolBox
         {
             return null;
         }
-        else if (tools.get(toolBindingModel.getDragTool(currentMode)) != null)
+        else if (dragTools.get(toolBindingModel.getDragTool(currentMode)) != null)
         {
-            return tools.get(toolBindingModel.getDragTool(currentMode));
+            return dragTools.get(toolBindingModel.getDragTool(currentMode));
         }
         else
         {
-            return tools.get(DragToolType.ORBIT);
+            return dragTools.get(DragToolType.ORBIT);
         }
     }
 
@@ -92,14 +94,18 @@ public final class ToolBox
     @Override
     public void keyPressed(Window<?> window, Key key, ModifierKeys mods)
     {
-//        try
-//        {
-//            getSelectedDragTool().keyPressed(window, key, mods);
-//        }
-//        catch(RuntimeException e)
-//        {
-//            e.printStackTrace();
-//        }
+        try
+        {
+            KeyPressTool tool = keyPressTools.get(toolBindingModel.getKeyPressTool(new KeyPress(key, mods)));
+            if (tool != null)
+            {
+                tool.keyPressed();
+            }
+        }
+        catch(RuntimeException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -158,7 +164,8 @@ public final class ToolBox
     {
         this.toolBindingModel = toolBindingModel;
 
-        this.tools = new EnumMap<>(DragToolType.class);
+        this.dragTools = new EnumMap<>(DragToolType.class);
+        this.keyPressTools = new EnumMap<>(KeyPressToolType.class);
 
         Map<DragToolType, ToolBuilder<? extends DragTool>> dragToolBuilders = new EnumMap<>(DragToolType.class);
         dragToolBuilders.put(DragToolType.DOLLY, DollyTool.getBuilder());
@@ -171,11 +178,12 @@ public final class ToolBox
 
         for (Entry<DragToolType, ToolBuilder<? extends DragTool>> entries : dragToolBuilders.entrySet())
         {
-            tools.put(entries.getKey(),
+            dragTools.put(entries.getKey(),
                 entries.getValue()
                     .setCameraModel(cameraModel)
                     .setEnvironmentMapModel(environmentMapModel)
                     .setLightingModel(lightingModel)
+                    .setSettingsModel(settingsModel)
                     .setSceneViewportModel(sceneViewportModel)
                     .setToolBindingModel(toolBindingModel)
                     .build());
@@ -190,6 +198,19 @@ public final class ToolBox
             ToggleSettingTool.getBuilder(model -> model.setVisibleLightsEnabled(!model.areVisibleLightsEnabled())));
         keyPressToolBuilders.put(KeyPressToolType.TOGGLE_LIGHT_WIDGETS,
             ToggleSettingTool.getBuilder(model -> model.setLightWidgetsEnabled(!model.areLightWidgetsEnabled())));
+
+        for (Entry<KeyPressToolType, ToolBuilder<? extends KeyPressTool>> entries : keyPressToolBuilders.entrySet())
+        {
+            keyPressTools.put(entries.getKey(),
+                entries.getValue()
+                    .setCameraModel(cameraModel)
+                    .setEnvironmentMapModel(environmentMapModel)
+                    .setLightingModel(lightingModel)
+                    .setSettingsModel(settingsModel)
+                    .setSceneViewportModel(sceneViewportModel)
+                    .setToolBindingModel(toolBindingModel)
+                    .build());
+        }
 
         lightTool = LightTool.getBuilder()
             .setCameraModel(cameraModel)

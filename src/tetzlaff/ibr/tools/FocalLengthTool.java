@@ -6,7 +6,7 @@ import tetzlaff.models.ExtendedCameraModel;
 
 final class FocalLengthTool implements DragTool
 {
-    private static final double FOCAL_LENGTH_SENSITIVITY = Math.PI;
+    private static final double FOCAL_LENGTH_SENSITIVITY = 0.1;
     private double focalLengthSensitivityAdjusted;
 
     private double oldLog10FocalLength;
