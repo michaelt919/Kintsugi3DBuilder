@@ -6,7 +6,7 @@ import tetzlaff.models.EnvironmentMapModel;
 
 final class RotateEnvironmentTool implements DragTool
 {
-    private static final double ROTATE_SENSITIVITY = 1.0 * Math.PI; //todo: get from gui somehow
+    private static final double ROTATE_SENSITIVITY = Math.PI; //todo: get from gui somehow
     private double rotateSensitivityAdjusted = 1.0;
 
     private double oldEnvironmentRotation;

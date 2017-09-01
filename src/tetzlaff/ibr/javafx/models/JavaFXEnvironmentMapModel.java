@@ -121,24 +121,30 @@ public class JavaFXEnvironmentMapModel implements EnvironmentMapModel
     @Override
     public double getEnvironmentRotation()
     {
-        return selected.getValue().getEnvRotation();
+        return doesSelectedExist() ? selected.getValue().getEnvRotation() * Math.PI / 180 : 0.0;
     }
 
     @Override
     public void setEnvironmentRotation(double environmentRotation)
     {
-        selected.getValue().setEnvRotation(environmentRotation);
+        if (doesSelectedExist())
+        {
+            selected.getValue().setEnvRotation(environmentRotation * 180 / Math.PI);
+        }
     }
 
     @Override
     public double getEnvironmentIntensity()
     {
-        return selected.getValue().getEnvIntensity();
+        return doesSelectedExist() ? selected.getValue().getEnvIntensity() : 0.0;
     }
 
     @Override
     public void setEnvironmentIntensity(double environmentIntensity)
     {
-        selected.getValue().setEnvIntensity(environmentIntensity);
+        if (doesSelectedExist())
+        {
+            selected.getValue().setEnvIntensity(environmentIntensity);
+        }
     }
 }
