@@ -73,7 +73,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 
         textureFitProgram = resources.context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit2_imgspace_subset.frag"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit_imgspace_subset.frag"))
             .createProgram();
 
         textureFitFramebuffer = resources.context.buildFramebufferObject(size, size)
@@ -88,7 +88,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 
         textureFitBaselineProgram = resources.context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit2_imgspace.frag"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit_imgspace.frag"))
             .createProgram();
 
         textureFitBaselineFramebuffer = resources.context.buildFramebufferObject(size, size)

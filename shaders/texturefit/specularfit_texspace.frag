@@ -11,9 +11,9 @@ layout(location = 1) out vec4 normal;
 layout(location = 2) out vec4 specularColor;
 layout(location = 3) out vec4 roughness;
 
-#include "../colorappearance/colorappearance_subset.glsl"
-#include "../colorappearance/imgspace_subset.glsl"
-#include "specularfit2.glsl"
+#include "../colorappearance/colorappearance.glsl"
+#include "../colorappearance/texspace.glsl"
+#include "specularfit.glsl"
 
 #line 17 0
 
