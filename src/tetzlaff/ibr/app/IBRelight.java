@@ -3,11 +3,15 @@ package tetzlaff.ibr.app;
 import java.io.IOException;
 import java.io.PrintStream;
 
-public class IBRelight 
+public final class IBRelight
 {
     private static final boolean DEBUG = true;
 
-    public static void main(String[] args) throws IOException
+    private IBRelight()
+    {
+    }
+
+    public static void main(String... args) throws IOException
     {
         if (!DEBUG)
         {

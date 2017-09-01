@@ -12,8 +12,12 @@ import tetzlaff.interactive.Refreshable;
  * @see Refreshable InteractiveApplication
  * @author Michael Tetzlaff
  */
-public class InteractiveGraphics
+public final class InteractiveGraphics
 {
+    private InteractiveGraphics()
+    {
+    }
+
     /**
      * Make a new InteractiveApplication object that binds together the given InteractiveRenderable and
      * ContextType inside a new anonymous Refreshable.  The resulting application will always

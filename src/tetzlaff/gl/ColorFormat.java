@@ -8,7 +8,7 @@ package tetzlaff.gl;
  * @author Michael Tetzlaff
  *
  */
-public class ColorFormat
+public final class ColorFormat
 {
     /**
      * Enumerates the possible internal data types

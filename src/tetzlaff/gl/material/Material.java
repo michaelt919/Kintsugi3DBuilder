@@ -59,7 +59,7 @@ public class Material
 
     public static Dictionary<String, Material> loadFromMTLFile(File mtlFile) throws IOException
     {
-        Dictionary<String, Material> materials = new Hashtable<String, Material>();
+        Dictionary<String, Material> materials = new Hashtable<>();
         Material currentMaterial = null;
         boolean ambientSet = false;
 
@@ -71,7 +71,7 @@ public class Material
                 {
                     String id = scanner.next();
 
-                    if (id.equals("newmtl") && scanner.hasNext())
+                    if ("newmtl".equals(id) && scanner.hasNext())
                     {
                         currentMaterial = new Material(scanner.next());
                         materials.put(currentMaterial.getName(), currentMaterial);
@@ -285,7 +285,8 @@ public class Material
                     break;
                 case "-o":
                     float x = scanner.nextFloat();
-                    float y, z;
+                    float y;
+                    float z;
                     if (scanner.hasNextFloat())
                     {
                         y = scanner.nextFloat();
@@ -307,7 +308,8 @@ public class Material
                     break;
                 case "-s":
                     float sx = scanner.nextFloat();
-                    float sy, sz;
+                    float sy;
+                    float sz;
                     if (scanner.hasNextFloat())
                     {
                         sy = scanner.nextFloat();
@@ -328,7 +330,7 @@ public class Material
                     texture.setScale(new Vector3(sx, sy, sz));
                     break;
                 case "-clamp":
-                    if (scanner.next().equals("on"))
+                    if ("on".equals(scanner.next()))
                     {
                         texture.setClampingRequired(true);
                     }
@@ -388,9 +390,9 @@ public class Material
             String nextPart = scanner.next();
             if(nextPart.startsWith("-"))
             {
-                if (nextPart.equals("-cc"))
+                if ("-cc".equals(nextPart))
                 {
-                    if (scanner.next().equals("on"))
+                    if ("on".equals(scanner.next()))
                     {
                         texture.setGammaCorrectionRequired(true);
                     }
@@ -425,7 +427,7 @@ public class Material
             String nextPart = scanner.next();
             if(nextPart.startsWith("-"))
             {
-                if (nextPart.equals("-imfchan"))
+                if ("-imfchan".equals(nextPart))
                 {
                     switch(scanner.next().toLowerCase())
                     {
@@ -482,7 +484,7 @@ public class Material
             String nextPart = scanner.next();
             if(nextPart.startsWith("-"))
             {
-                if (nextPart.equals("-bm"))
+                if ("-bm".equals(nextPart))
                 {
                     if (scanner.hasNextFloat())
                     {
@@ -493,7 +495,7 @@ public class Material
                         scanner.next(); // unexpected format
                     }
                 }
-                else if (nextPart.equals("-imfchan"))
+                else if ("-imfchan".equals(nextPart))
                 {
                     switch(scanner.next().toLowerCase())
                     {

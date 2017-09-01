@@ -22,7 +22,7 @@ class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer<OpenGLContex
         this(context, GL_STATIC_DRAW);
     }
 
-    private static ByteBuffer convertToByteBuffer(int[] data)
+    private static ByteBuffer convertToByteBuffer(int... data)
     {
         ByteBuffer buffer = BufferUtils.createByteBuffer(data.length * 4);
         buffer.asIntBuffer().put(data);
@@ -43,7 +43,7 @@ class OpenGLIndexBuffer extends OpenGLBuffer implements IndexBuffer<OpenGLContex
     }
 
     @Override
-    public OpenGLIndexBuffer setData(int[] data)
+    public OpenGLIndexBuffer setData(int... data)
     {
         super.setData(convertToByteBuffer(data));
         this.count = data.length;

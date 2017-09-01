@@ -1,6 +1,6 @@
 package tetzlaff.gl.builders.framebuffer;
 
-public class DepthStencilAttachmentSpec extends AttachmentSpec
+public final class DepthStencilAttachmentSpec extends AttachmentSpec
 {
     public final boolean floatingPointDepth;
 

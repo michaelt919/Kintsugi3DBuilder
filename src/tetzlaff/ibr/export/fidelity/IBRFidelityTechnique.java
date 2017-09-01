@@ -82,7 +82,7 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
     @Override
     public void updateActiveViewIndexList(List<Integer> activeViewIndexList)
     {
-        this.activeViewIndexList = new ArrayList<Integer>(activeViewIndexList);
+        this.activeViewIndexList = new ArrayList<>(activeViewIndexList);
 
         for (int i = 0; i < activeViewIndexList.size(); i++)
         {
@@ -95,16 +95,16 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
         float[] viewWeights = new float[resources.viewSet.getCameraPoseCount()];
         float viewWeightSum = 0.0f;
 
-        for (int k = 0; k < activeViewIndexList.size(); k++)
+        for (Integer anActiveViewIndexList : activeViewIndexList)
         {
-            int viewIndex = activeViewIndexList.get(k).intValue();
+            int viewIndex = anActiveViewIndexList.intValue();
 
             Vector3 viewDir = resources.viewSet.getCameraPose(viewIndex).times(resources.geometry.getCentroid().asPosition()).getXYZ().negated().normalized();
             Vector3 targetDir = resources.viewSet.getCameraPose(viewIndex).times(
-                    resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3)
-                        .minus(resources.geometry.getCentroid().asPosition())).getXYZ().normalized();
+                resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3)
+                    .minus(resources.geometry.getCentroid().asPosition())).getXYZ().normalized();
 
-            viewWeights[viewIndex] = 1.0f / (float)Math.max(0.000001, 1.0 - Math.pow(Math.max(0.0, targetDir.dot(viewDir)), this.settings.getWeightExponent())) - 1.0f;
+            viewWeights[viewIndex] = 1.0f / (float) Math.max(0.000001, 1.0 - Math.pow(Math.max(0.0, targetDir.dot(viewDir)), this.settings.getWeightExponent())) - 1.0f;
             viewWeightSum += viewWeights[viewIndex];
         }
 

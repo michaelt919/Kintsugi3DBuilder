@@ -71,7 +71,7 @@ public class LightGroupSetting implements DOMConvertable
 
     public void removeLight()
     {
-        if (lightList.size() > 0)
+        if (!lightList.isEmpty())
         {
             lightList.remove(lightList.size() - 1);
         }
@@ -79,7 +79,7 @@ public class LightGroupSetting implements DOMConvertable
 
     public void removeLight(int index)
     {
-        if (lightList.size() > 0)
+        if (!lightList.isEmpty())
         {
             if (index >= 0 && index < lightList.size())
             {

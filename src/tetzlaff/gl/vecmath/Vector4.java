@@ -198,11 +198,11 @@ public class Vector4
     @Override
     public String toString()
     {
-        return "[" +
+        return '[' +
                 "" + x +
-                "\t" + y +
-                "\t" + z +
-                "\t" + w +
+            '\t' + y +
+            '\t' + z +
+            '\t' + w +
                 ']';
     }
 }

@@ -18,7 +18,7 @@ public abstract class ProgramBuilderBase<ContextType extends Context<ContextType
     protected ProgramBuilderBase(ContextType context)
     {
         this.context = context;
-        this.shaders = new ArrayList<Shader<ContextType>>();
+        this.shaders = new ArrayList<>();
     }
 
     protected Iterable<Shader<ContextType>> getShaders()

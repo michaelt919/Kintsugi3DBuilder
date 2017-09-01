@@ -42,9 +42,13 @@ import tetzlaff.mvc.old.models.TrackballModel;
  * 
  * @author Michael Tetzlaff
  */
-public class IBRelight
+public final class IBRelight
 {
     private static final boolean DEBUG = true;
+
+    private IBRelight()
+    {
+    }
 
     private static class MetaLightingModel implements CameraBasedLightingModel
     {
@@ -254,7 +258,7 @@ public class IBRelight
             // This is the object that loads the ULF models and handles drawing them.  This object abstracts
             // the underlying data and provides ways of triggering events via the trackball and the user
             // interface later when it is passed to the ULFUserInterface object.
-            ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<OpenGLContext>(context, program);
+            ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<>(context, program);
             rendererList.setObjectModel(() -> Matrix4.IDENTITY);
             rendererList.setCameraModel(cameraModel);
             rendererList.setLightingModel(metaLightingModel);
@@ -360,7 +364,7 @@ public class IBRelight
     //        // The Java process owns the native menu bar and won't relinquish it to Qt
     //        QApplication.setAttribute(ApplicationAttribute.AA_DontUseNativeMenuBar);
 
-            IBRRequestQueue<OpenGLContext> requestQueue = new IBRRequestQueue<OpenGLContext>(context, rendererList);
+            IBRRequestQueue<OpenGLContext> requestQueue = new IBRRequestQueue<>(context, rendererList);
 
             app.addRefreshable(new Refreshable()
             {
@@ -413,7 +417,7 @@ public class IBRelight
      * @param args The usual command line arguments
      * @throws FileNotFoundException 
      */
-    public static void main(String[] args) throws FileNotFoundException 
+    public static void main(String... args) throws FileNotFoundException
     {
         if (!DEBUG)
         {
@@ -429,14 +433,14 @@ public class IBRelight
         
     public static void checkSupportedImageFormats()
     {
-        Set<String> set = new HashSet<String>();
+        Set<String> set = new HashSet<>();
 
         // Get list of all informal format names understood by the current set of registered readers
         String[] formatNames = ImageIO.getReaderFormatNames();
 
-        for (int i = 0; i < formatNames.length; i++)
+        for (String formatName : formatNames)
         {
-            set.add(formatNames[i].toLowerCase());
+            set.add(formatName.toLowerCase());
         }
 
         System.out.println("Supported image formats: " + set);

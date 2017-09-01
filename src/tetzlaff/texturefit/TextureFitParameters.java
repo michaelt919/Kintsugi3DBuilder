@@ -36,10 +36,6 @@ public class TextureFitParameters
 
     private String primaryViewName;
 
-    public TextureFitParameters()
-    {
-    }
-
     public float getGamma()
     {
         return this.gamma;
@@ -251,7 +247,7 @@ public class TextureFitParameters
         return this.linearLuminanceValues;
     }
 
-    public void setLinearLuminanceValues(double[] linearLuminanceValues)
+    public void setLinearLuminanceValues(double... linearLuminanceValues)
     {
         this.linearLuminanceValues = linearLuminanceValues;
     }
@@ -261,7 +257,7 @@ public class TextureFitParameters
         return this.encodedLuminanceValues;
     }
 
-    public void setEncodedLuminanceValues(byte[] encodedLuminanceValues)
+    public void setEncodedLuminanceValues(byte... encodedLuminanceValues)
     {
         this.encodedLuminanceValues = encodedLuminanceValues;
     }

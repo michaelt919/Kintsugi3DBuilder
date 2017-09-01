@@ -16,7 +16,7 @@ public abstract class FramebufferObjectBuilderBase<ContextType extends Context<C
     protected final int height;
 
     private final List<TextureBuilder<ContextType, ? extends Texture2D<ContextType>>> colorAttachmentFormats =
-            new ArrayList<TextureBuilder<ContextType, ? extends Texture2D<ContextType>>>();
+        new ArrayList<>();
 
     private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> depthAttachmentBuilder;
     private TextureBuilder<? super ContextType, ? extends Texture2D<? super ContextType>> stencilAttachmentBuilder;

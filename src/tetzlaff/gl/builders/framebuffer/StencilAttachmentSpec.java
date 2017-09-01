@@ -1,6 +1,6 @@
 package tetzlaff.gl.builders.framebuffer;
 
-public class StencilAttachmentSpec extends AttachmentSpec
+public final class StencilAttachmentSpec extends AttachmentSpec
 {
     public final int precision;
 

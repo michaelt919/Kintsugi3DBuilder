@@ -181,7 +181,7 @@ public class RootEnvironmentSceneController implements Initializable
             public void handle(ActionEvent event)
             {
                 String newName = renameTextField.getText();
-                if (!newName.equals(""))
+                if (!"".equals(newName))
                 {
                     environmentListView.getSelectionModel().getSelectedItem().setName(newName);
                 }

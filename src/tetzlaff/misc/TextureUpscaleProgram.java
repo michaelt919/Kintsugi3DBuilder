@@ -11,7 +11,7 @@ import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Vector4;
 
-public class TextureUpscaleProgram
+public final class TextureUpscaleProgram
 {
     private static final float GAMMA = 2.2f;
     private static final int SCALE_FACTOR = 16;
@@ -23,7 +23,11 @@ public class TextureUpscaleProgram
     private static final float SHARPNESS = 0.0f;
     private static final int MAX_SAMPLES = 32;
 
-    public static void main(String[] args)
+    private TextureUpscaleProgram()
+    {
+    }
+
+    public static void main(String... args)
     {
         try(GLFWWindow<OpenGLContext> window = GLFWWindowFactory.buildOpenGLWindow("Texture Upscale", 800, 800).create())
         {

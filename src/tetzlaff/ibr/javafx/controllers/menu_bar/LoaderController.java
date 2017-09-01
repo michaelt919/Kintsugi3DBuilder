@@ -173,9 +173,9 @@ public class LoaderController implements Initializable
 
                 String toWrite =
                     cameraFile.getPath()
-                        + "\n" +
+                        + '\n' +
                         objFile.getPath()
-                        + "\n" +
+                        + '\n' +
                         photoDir.getPath();
 
                 bw.write(toWrite);

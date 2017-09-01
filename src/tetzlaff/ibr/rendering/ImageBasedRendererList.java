@@ -34,7 +34,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     public ImageBasedRendererList(ContextType context, Program<ContextType> program)
     {
         this.context = context;
-        this.renderableList = new InteractiveRenderableList<ContextType, IBRRenderable<ContextType>>();
+        this.renderableList = new InteractiveRenderableList<>();
         this.effectiveSize = 0;
 
         this.program = program;
@@ -63,7 +63,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         this.loadingMonitor.startLoading();
 
         IBRRenderable<ContextType> newItem =
-            new IBRImplementation<ContextType>(id, context, this.getProgram(),
+            new IBRImplementation<>(id, context, this.getProgram(),
                 IBRResources.getBuilderForContext(this.context)
                     .setLoadingMonitor(this.loadingMonitor)
                     .setLoadOptions(loadOptions)

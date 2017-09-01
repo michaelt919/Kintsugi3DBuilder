@@ -46,26 +46,26 @@ class GLFWWindowCallback implements WindowListenerManager
     GLFWWindowCallback(GLFWWindow<?> window)
     {
         this.window = window;
-        windowPosListeners = new ArrayList<WindowPositionListener>();
-        windowSizeListeners = new ArrayList<WindowSizeListener>();
-        windowCloseListeners = new ArrayList<WindowCloseListener>();
-        windowRefreshListeners = new ArrayList<WindowRefreshListener>();
-        windowFocusLostListeners = new ArrayList<WindowFocusLostListener>();
-        windowFocusGainedListeners = new ArrayList<WindowFocusGainedListener>();
-        windowIconifiedListeners = new ArrayList<WindowIconifiedListener>();
-        windowRestoredListeners = new ArrayList<WindowRestoredListener>();
-        framebufferSizeListeners = new ArrayList<FramebufferSizeListener>();
-        keyPressListeners = new ArrayList<KeyPressListener>();
-        keyReleaseListeners = new ArrayList<KeyReleaseListener>();
-        keyRepeatListeners = new ArrayList<KeyRepeatListener>();
-        characterListeners = new ArrayList<CharacterListener>();
-        charModsListeners = new ArrayList<CharacterModifiersListener>();
-        mouseButtonPressListeners = new ArrayList<MouseButtonPressListener>();
-        mouseButtonReleaseListeners = new ArrayList<MouseButtonReleaseListener>();
-        cursorPosListeners = new ArrayList<CursorPositionListener>();
-        cursorEnterListeners = new ArrayList<CursorEnteredListener>();
-        cursorExitListeners = new ArrayList<CursorExitedListener>();
-        scrollListeners = new ArrayList<ScrollListener>();
+        windowPosListeners = new ArrayList<>();
+        windowSizeListeners = new ArrayList<>();
+        windowCloseListeners = new ArrayList<>();
+        windowRefreshListeners = new ArrayList<>();
+        windowFocusLostListeners = new ArrayList<>();
+        windowFocusGainedListeners = new ArrayList<>();
+        windowIconifiedListeners = new ArrayList<>();
+        windowRestoredListeners = new ArrayList<>();
+        framebufferSizeListeners = new ArrayList<>();
+        keyPressListeners = new ArrayList<>();
+        keyReleaseListeners = new ArrayList<>();
+        keyRepeatListeners = new ArrayList<>();
+        characterListeners = new ArrayList<>();
+        charModsListeners = new ArrayList<>();
+        mouseButtonPressListeners = new ArrayList<>();
+        mouseButtonReleaseListeners = new ArrayList<>();
+        cursorPosListeners = new ArrayList<>();
+        cursorEnterListeners = new ArrayList<>();
+        cursorExitListeners = new ArrayList<>();
+        scrollListeners = new ArrayList<>();
 
         createAnonymousInnerCallbacks();
     }

@@ -266,12 +266,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     .createProgram();
             this.widgetVertices = context.createVertexBuffer()
                     .setData(NativeVectorBufferFactory.getInstance()
-                        .createFromFloatArray(3, 3, new float[]
-                        {
-                            -1, -1, 0,
-                            1, -1, 0,
-                            0, 1, 0
-                        }));
+                        .createFromFloatArray(3, 3, -1, -1, 0, 1, -1, 0, 0, 1, 0));
 
             this.widgetDrawable = context.createDrawable(this.solidProgram);
             this.widgetDrawable.addVertexBuffer("position", widgetVertices);
@@ -1047,11 +1042,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                     VertexBuffer<ContextType> line =
                                         context.createVertexBuffer()
                                             .setData(NativeVectorBufferFactory.getInstance()
-                                                .createFromFloatArray(3, 2, new float[]
-                                                {
-                                                    lineEndpoint.x, lineEndpoint.y, lineEndpoint.z,
-                                                    lightCenter.x, lightCenter.y, lightCenter.z
-                                                }))
+                                                .createFromFloatArray(3, 2, lineEndpoint.x, lineEndpoint.y, lineEndpoint.z, lightCenter.x, lightCenter.y, lightCenter.z))
                                 )
                                 {
                                     Drawable<ContextType> lineRenderable = context.createDrawable(this.solidProgram);
@@ -1079,11 +1070,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                     VertexBuffer<ContextType> line =
                                         context.createVertexBuffer()
                                             .setData(NativeVectorBufferFactory.getInstance()
-                                                .createFromFloatArray(3, 2, new float[]
-                                                {
-                                                    lineEndpoint1.x, lineEndpoint1.y, lineEndpoint1.z,
-                                                    lineEndpoint2.x, lineEndpoint2.y, lineEndpoint2.z
-                                                }))
+                                                .createFromFloatArray(3, 2, lineEndpoint1.x, lineEndpoint1.y, lineEndpoint1.z, lineEndpoint2.x, lineEndpoint2.y, lineEndpoint2.z))
                                 )
                                 {
                                     Drawable<ContextType> lineRenderable = context.createDrawable(this.solidProgram);

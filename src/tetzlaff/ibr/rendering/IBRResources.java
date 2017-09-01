@@ -19,7 +19,7 @@ import tetzlaff.ibr.core.ReadonlyLoadOptionsModel;
 import tetzlaff.ibr.core.RenderingMode;
 import tetzlaff.ibr.core.ViewSet;
 
-public class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
+public final class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
     public final Context<ContextType> context;
     public final ViewSet viewSet;
@@ -87,7 +87,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
 
     private final float[] cameraWeights;
 
-    public static class Builder<ContextType extends Context<ContextType>>
+    public static final class Builder<ContextType extends Context<ContextType>>
     {
         private final ContextType context;
         private ViewSet viewSet;
@@ -185,13 +185,13 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
                 viewSet.setRelativeImagePathName("");
             }
 
-            return new IBRResources<ContextType>(context, viewSet, geometry, loadOptions, loadingMonitor);
+            return new IBRResources<>(context, viewSet, geometry, loadOptions, loadingMonitor);
         }
     }
 
     public static <ContextType extends Context<ContextType>> Builder<ContextType> getBuilderForContext(ContextType context)
     {
-        return new Builder<ContextType>(context);
+        return new Builder<>(context);
     }
 
     private IBRResources(ContextType context, ViewSet viewSet, VertexGeometry geometry, ReadonlyLoadOptionsModel loadOptions, LoadingMonitor loadingMonitor) throws IOException
@@ -946,7 +946,7 @@ public class IBRResources<ContextType extends Context<ContextType>> implements A
         for (int k = 0; k < this.viewSet.getCameraPoseCount(); k++)
         {
             cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
-            System.out.println(this.viewSet.getImageFileName(k) + "\t" + cameraWeights[k]);
+            System.out.println(this.viewSet.getImageFileName(k) + '\t' + cameraWeights[k]);
         }
 
         System.out.println("---");

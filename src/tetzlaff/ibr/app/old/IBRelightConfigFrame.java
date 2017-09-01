@@ -224,7 +224,7 @@ public class IBRelightConfigFrame extends JFrame
         gbl_selectionPanel.rowWeights = new double[]{0.0};
         selectionPanel.setLayout(gbl_selectionPanel);
 
-        JComboBox<IBRRenderable<ContextType>> comboBoxObjects = new JComboBox<IBRRenderable<ContextType>>();
+        JComboBox<IBRRenderable<ContextType>> comboBoxObjects = new JComboBox<>();
         GridBagConstraints gbc_comboBoxObjects = new GridBagConstraints();
         gbc_comboBoxObjects.fill = GridBagConstraints.HORIZONTAL;
         gbc_comboBoxObjects.gridwidth = 2;
@@ -493,7 +493,7 @@ public class IBRelightConfigFrame extends JFrame
             comboBoxObjects.setModel(rendererListModel);
         }
 
-        modelDependentComponents = new ArrayList<JComponent>();
+        modelDependentComponents = new ArrayList<>();
         modelDependentComponents.add(lblGamma);
         modelDependentComponents.add(spinnerGamma);
         modelDependentComponents.add(lblWeightExponent);
@@ -1220,7 +1220,7 @@ public class IBRelightConfigFrame extends JFrame
             {
                 File file = matrixFileChooser.getSelectedFile();
 
-                List<Matrix4> matrices = new ArrayList<Matrix4>();
+                List<Matrix4> matrices = new ArrayList<>();
 
                 try(Scanner scanner = new Scanner(file))
                 {

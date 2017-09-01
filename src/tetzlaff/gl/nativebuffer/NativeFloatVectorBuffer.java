@@ -42,7 +42,7 @@ class NativeFloatVectorBuffer implements NativeVectorBuffer
         if (buffer.capacity() < dimensions * count * 4)
         {
             throw new IllegalArgumentException("Insufficient buffer size - a list of " + count + dimensions +
-                    "D 32-bit vertices requires a buffer with a capacity of at least " + dimensions * count * 4 + ".");
+                    "D 32-bit vertices requires a buffer with a capacity of at least " + dimensions * count * 4 + '.');
         }
         if (!Objects.equals(buffer.order(), ByteOrder.nativeOrder()))
         {
@@ -54,14 +54,14 @@ class NativeFloatVectorBuffer implements NativeVectorBuffer
         this.buffer = buffer;
     }
 
-    NativeFloatVectorBuffer(int dimensions, int count, byte[] buffer)
+    NativeFloatVectorBuffer(int dimensions, int count, byte... buffer)
     {
         this(dimensions, count);
         this.buffer.put(buffer);
         this.buffer.flip();
     }
 
-    NativeFloatVectorBuffer(int dimensions, int count, float[] buffer)
+    NativeFloatVectorBuffer(int dimensions, int count, float... buffer)
     {
         this(dimensions, count);
         this.buffer.asFloatBuffer().put(buffer);

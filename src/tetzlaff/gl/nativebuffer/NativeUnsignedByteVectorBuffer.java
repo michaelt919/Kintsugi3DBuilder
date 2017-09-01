@@ -42,7 +42,7 @@ class NativeUnsignedByteVectorBuffer implements NativeVectorBuffer
         if (buffer.capacity() < dimensions * count)
         {
             throw new IllegalArgumentException("Insufficient buffer size - a list of " + count + dimensions +
-                    "D vertices requires a buffer with a capacity of at least " + dimensions * count + ".");
+                    "D vertices requires a buffer with a capacity of at least " + dimensions * count + '.');
         }
         if (!Objects.equals(buffer.order(), ByteOrder.nativeOrder()))
         {
@@ -54,7 +54,7 @@ class NativeUnsignedByteVectorBuffer implements NativeVectorBuffer
         this.buffer = buffer;
     }
 
-    NativeUnsignedByteVectorBuffer(int dimensions, int count, byte[] buffer)
+    NativeUnsignedByteVectorBuffer(int dimensions, int count, byte... buffer)
     {
         this(dimensions, count);
         this.buffer.put(buffer);

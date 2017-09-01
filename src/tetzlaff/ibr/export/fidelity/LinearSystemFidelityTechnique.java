@@ -266,7 +266,7 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
     {
         MatrixSystem result = new MatrixSystem();
 
-        result.activePixels = new ArrayList<Integer>();
+        result.activePixels = new ArrayList<>();
         for (int i = 0; i < weights[targetViewIndex].length; i++)
         {
             if ((0x000000FF & weights[targetViewIndex][i]) > 0)
@@ -345,7 +345,7 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
     @Override
     public void updateActiveViewIndexList(List<Integer> viewIndexList)
     {
-        this.viewIndexList = new ArrayList<Integer>(viewIndexList);
+        this.viewIndexList = new ArrayList<>(viewIndexList);
     }
 
     @Override

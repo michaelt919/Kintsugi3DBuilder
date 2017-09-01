@@ -4,7 +4,7 @@ import java.nio.FloatBuffer;
 
 import org.lwjgl.*;
 
-public class Matrix4 
+public final class Matrix4
 {
     public static final Matrix4 IDENTITY = scale(1.0f);
 

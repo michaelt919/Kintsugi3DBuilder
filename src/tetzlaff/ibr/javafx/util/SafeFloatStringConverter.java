@@ -22,7 +22,7 @@ public class SafeFloatStringConverter extends StringConverter<Number>
     @Override
     public Float fromString(String string)
     {
-        if (string.equals(""))
+        if ("".equals(string))
         {
             return defaultValue;
         }

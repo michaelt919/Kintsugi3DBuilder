@@ -271,9 +271,12 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
             {
                 for (int x = 0; x < colorImg.width; x++)
                 {
-                    floatBuffer.put(colorImg.data[k++]);
-                    floatBuffer.put(colorImg.data[k++]);
-                    floatBuffer.put(colorImg.data[k++]);
+                    floatBuffer.put(colorImg.data[k]);
+                    k++;
+                    floatBuffer.put(colorImg.data[k]);
+                    k++;
+                    floatBuffer.put(colorImg.data[k]);
+                    k++;
                 }
             }
         }
@@ -283,9 +286,12 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
             {
                 for (int x = 0; x < colorImg.width; x++)
                 {
-                    floatBuffer.put(colorImg.data[k++]);
-                    floatBuffer.put(colorImg.data[k++]);
-                    floatBuffer.put(colorImg.data[k++]);
+                    floatBuffer.put(colorImg.data[k]);
+                    k++;
+                    floatBuffer.put(colorImg.data[k]);
+                    k++;
+                    floatBuffer.put(colorImg.data[k]);
+                    k++;
 
                     // Use green channel of the mask image for alpha
                     floatBuffer.put((float)((maskImg.getRGB(x, y) & 0x0000ff00) >>> 8) / 255.0f);
