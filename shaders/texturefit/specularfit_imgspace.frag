@@ -13,7 +13,7 @@ layout(location = 3) out vec4 roughness;
 
 #include "../colorappearance/colorappearance.glsl"
 #include "../colorappearance/imgspace.glsl"
-#include "specularfit2.glsl"
+#include "specularfit.glsl"
 
 #line 17 0
 
