@@ -42,34 +42,34 @@ DiffuseFit fitDiffuse()
         mat3 b = mat3(0);
         vec4 weightedRadianceSum = vec4(0.0);
         vec3 weightedIrradianceSum = vec3(0.0);
-        
+
         for (int i = 0; i < viewCount; i++)
         {
             vec3 view = normalize(getViewVector(i));
-            
+
             // Physically plausible values for the color components range from 0 to pi
             // We don't need to scale by 1 / pi because we would just need to multiply by pi again
             // at the end to get a diffuse albedo value.
             vec4 color = getLinearColor(i);
-            
+
             float nDotV = dot(geometricNormal, view);
             if (color.a * nDotV > 0)
             {
                 //vec4 light = vec4(getLightVector(i), 1.0);
                 vec3 light = getLightVector(i);
-                vec3 attenuatedIncidentRadiance = infiniteLightSources ? 
+                vec3 attenuatedIncidentRadiance = infiniteLightSources ?
                     getLightIntensity(i) : getLightIntensity(i) / (dot(light, light));
                 vec3 lightNormalized = normalize(light);
-                
+
                 float weight = color.a * nDotV;
                 if (k != 0)
                 {
                     vec3 error = color.rgb - fit.color * dot(fit.normal, lightNormalized) * attenuatedIncidentRadiance;
                     weight *= exp(-dot(error,error)/(2*delta*delta));
                 }
-                
+
                 float attenuatedLuminance = getLuminance(attenuatedIncidentRadiance);
-                    
+
                 a += weight * outerProduct(lightNormalized, lightNormalized);
                 //b += weight * outerProduct(lightNormalized, vec4(color.rgb / attenuatedIncidentRadiance, 0.0));
                 b += weight * outerProduct(lightNormalized, color.rgb / attenuatedIncidentRadiance);
@@ -77,7 +77,7 @@ DiffuseFit fitDiffuse()
                 weightedIrradianceSum += weight * attenuatedIncidentRadiance * max(0, dot(geometricNormal, lightNormalized));
             }
         }
-        
+
         if (fit3Weight > 0.0)
         {
             mat3 m = inverse(a) * b;
@@ -120,7 +120,7 @@ DiffuseFit fitDiffuse()
             fit.normal = fNormal;
         }
     }
-    
+
     if (!validateFit(fit))
     {
         fit.color = vec3(0.0);

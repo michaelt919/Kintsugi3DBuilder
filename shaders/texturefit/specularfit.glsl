@@ -195,8 +195,6 @@ ParameterizedFit fitSpecular()
         }
     }
 
-    vec3 specularPeakLab = pow(maxResidual[0], 1.0 / fittingGamma) * chromaticitySum / chromaticitySum[0];
-
     // // Chromatic roughness
     // vec3 roughnessSquared = min(vec3(1.0), roughnessSums[0] /
             // (sqrt(maxResidual[0]) * roughnessSums[2] - roughnessSums[1]));
@@ -206,11 +204,13 @@ ParameterizedFit fitSpecular()
         (sqrt(maxResidual[0]) * roughnessSums[2].y - roughnessSums[1].y)));
 
     vec3 specularColor =
-        xyzToRGB(pow(clamp(4 * roughnessSquared * vec3(
-            specularPeakLab[0] + 0.2 * specularPeakLab[1],
-            specularPeakLab[0],
-            specularPeakLab[0] - 0.5 * specularPeakLab[2]
-        ), 0.0, 1.0), vec3(fittingGamma)));
+        xyzToRGB(4 * roughnessSquared * maxResidual[0] *
+            pow(max(vec3(0.0),
+                vec3(chromaticitySum[0] + 0.2 * chromaticitySum[1],
+                     chromaticitySum[0],
+                     chromaticitySum[0] - 0.5 * chromaticitySum[2])
+                / chromaticitySum[0]),
+            vec3(fittingGamma)));
 
     vec3 adjustedDiffuseColor = diffuseColor - specularColor * roughnessSquared / 2;
 

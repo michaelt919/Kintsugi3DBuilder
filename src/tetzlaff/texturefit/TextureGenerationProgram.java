@@ -1,5 +1,6 @@
 package tetzlaff.texturefit;
 
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -62,6 +63,10 @@ public final class TextureGenerationProgram
                     System.out.println("Process terminated with no errors.");
                 }
             }
+            catch (HeadlessException ex)
+            {
+                ex.printStackTrace();
+            }
             catch (IOException ex)
             {
                 System.gc(); // Suggest garbage collection.
@@ -81,7 +86,7 @@ public final class TextureGenerationProgram
                         "Reduce the number of photos, or try using either smaller photos or pre-projected photos to reduce the amount of graphics memory usage.  Stack Trace: " +
                     stackTraceStream, "Out of graphics memory", JOptionPane.ERROR_MESSAGE);
             }
-            catch (Exception ex)
+            catch (RuntimeException ex)
             {
                 System.gc(); // Suggest garbage collection.
                 ex.printStackTrace();

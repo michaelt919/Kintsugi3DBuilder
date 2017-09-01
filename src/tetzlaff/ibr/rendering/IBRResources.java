@@ -2,7 +2,9 @@ package tetzlaff.ibr.rendering;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
 import tetzlaff.gl.*;
@@ -120,8 +122,8 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         public Builder<ContextType> setTonemapping(float gamma, double[] linearLuminanceValues, byte[] encodedLuminanceValues)
         {
             this.gamma = gamma;
-            this.linearLuminanceValues = linearLuminanceValues;
-            this.encodedLuminanceValues = encodedLuminanceValues;
+            this.linearLuminanceValues = Arrays.copyOf(linearLuminanceValues, linearLuminanceValues.length);
+            this.encodedLuminanceValues = Arrays.copyOf(encodedLuminanceValues, encodedLuminanceValues.length);
             return this;
         }
 
@@ -154,21 +156,21 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             return this;
         }
 
-        public Builder<ContextType> useExistingViewSet(ViewSet viewSet)
+        public Builder<ContextType> useExistingViewSet(ViewSet existingViewSet)
         {
-            this.viewSet = viewSet;
+            this.viewSet = existingViewSet;
             return this;
         }
 
-        public Builder<ContextType> useExistingGeometry(VertexGeometry geometry)
+        public Builder<ContextType> useExistingGeometry(VertexGeometry existingGeometry)
         {
-            this.geometry = geometry;
+            this.geometry = existingGeometry;
             return this;
         }
 
-        public Builder<ContextType> overrideImageDirectory(File imageDirectoryOverride)
+        public Builder<ContextType> overrideImageDirectory(File imageDirectory)
         {
-            this.imageDirectoryOverride = imageDirectoryOverride;
+            this.imageDirectoryOverride = imageDirectory;
             return this;
         }
 
@@ -200,10 +202,9 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         this.viewSet = viewSet;
         this.geometry = geometry;
 
-        if (this.geometry != null)
+        if (geometry != null)
         {
-            this.cameraWeights = new float[viewSet.getCameraPoseCount()];
-            computeCameraWeights();
+            this.cameraWeights = computeCameraWeights(viewSet, geometry);
             cameraWeightBuffer = context.createUniformBuffer().setData(NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewSet.getCameraPoseCount(), cameraWeights));
         }
         else
@@ -369,7 +370,8 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             int m = viewSet.getCameraPoseCount();
             for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
             {
-                System.out.printf("%d/%d\n", i, m);
+                System.out.printf("%d/%d", i, m);
+                System.out.println();
                 imageFile = viewSet.getImageFile(i);
                 if (!imageFile.exists())
                 {
@@ -412,7 +414,10 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             this.colorTextures = null;
         }
 
-        loadingMonitor.setMaximum(0.0);
+        if (loadingMonitor != null)
+        {
+            loadingMonitor.setMaximum(0.0);
+        }
 
         if (geometry != null)
         {
@@ -498,15 +503,15 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             this.tangentBuffer = null;
         }
 
-        String diffuseTextureName = null;
-        String normalTextureName = null;
-        String specularTextureName = null;
-        String roughnessTextureName = null;
-
         // TODO Use more information from the material.  Currently just pulling texture names.
         if (this.geometry != null)
         {
             Material material = this.geometry.getMaterial();
+            String diffuseTextureName = null;
+            String normalTextureName = null;
+            String specularTextureName = null;
+            String roughnessTextureName = null;
+
             if (material != null)
             {
                 if (material.getDiffuseMap() != null)
@@ -710,11 +715,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
         program.setUniform("viewCount", this.viewSet.getCameraPoseCount());
 
-        if (this.depthTextures != null)
-        {
-            program.setTexture("depthImages", this.depthTextures);
-        }
-
         program.setUniform("gamma", this.viewSet.getGamma());
 
         if (this.luminanceMap == null)
@@ -747,6 +747,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
         else
         {
+            program.setTexture("depthImages", this.depthTextures);
             program.setUniform("occlusionEnabled", true);
             program.setUniform("occlusionBias", 0.002f);
         }
@@ -874,28 +875,27 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
-    private void computeCameraWeights()
+    private static float[] computeCameraWeights(ViewSet viewSet, VertexGeometry geometry)
     {
-        Vector3[] viewDirections = new Vector3[this.viewSet.getCameraPoseCount()];
+        float[] cameraWeights = new float[viewSet.getCameraPoseCount()];
+        
+        Vector3[] viewDirections = IntStream.range(0, viewSet.getCameraPoseCount())
+            .mapToObj(i -> viewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
+                            .minus(geometry.getCentroid()).normalized())
+            .toArray(Vector3[]::new);
 
-        for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
-        {
-            viewDirections[i] = this.viewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
-                    .minus(this.geometry.getCentroid()).normalized();
-        }
-
-        int[] totals = new int[this.viewSet.getCameraPoseCount()];
-        int targetSampleCount = this.viewSet.getCameraPoseCount() * 256;
+        int[] totals = new int[viewSet.getCameraPoseCount()];
+        int targetSampleCount = viewSet.getCameraPoseCount() * 256;
         double densityFactor = Math.sqrt(Math.PI * targetSampleCount);
         int sampleRows = (int)Math.ceil(densityFactor / 2) + 1;
 
         // Find the view with the greatest distance from any other view.
-        // Directions that are further from any view than this distance will be ignored in the view weight calculation.
+        // Directions that are further from any view than distance will be ignored in the view weight calculation.
         double maxMinDistance = 0.0;
-        for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
+        for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
         {
             double minDistance = Double.MAX_VALUE;
-            for (int j = 0; j < this.viewSet.getCameraPoseCount(); j++)
+            for (int j = 0; j < viewSet.getCameraPoseCount(); j++)
             {
                 if (i != j)
                 {
@@ -921,7 +921,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
                 double minDistance = maxMinDistance;
                 int minIndex = -1;
-                for (int k = 0; k < this.viewSet.getCameraPoseCount(); k++)
+                for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
                 {
                     double distance = Math.acos(Math.max(-1.0, Math.min(1.0f, sampleDirection.dot(viewDirections[k]))));
                     if (distance < minDistance)
@@ -943,13 +943,15 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         System.out.println("---");
         System.out.println("View weights:");
 
-        for (int k = 0; k < this.viewSet.getCameraPoseCount(); k++)
+        for (int k = 0; k < viewSet.getCameraPoseCount(); k++)
         {
             cameraWeights[k] = (float)totals[k] / (float)actualSampleCount;
-            System.out.println(this.viewSet.getImageFileName(k) + '\t' + cameraWeights[k]);
+            System.out.println(viewSet.getImageFileName(k) + '\t' + cameraWeights[k]);
         }
 
         System.out.println("---");
+
+        return cameraWeights;
     }
 
     @Override
