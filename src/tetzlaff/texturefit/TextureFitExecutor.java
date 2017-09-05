@@ -1714,9 +1714,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                             timestamp = new Date();
 
                             diffuseFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-old.png"));
-                            diffuseFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal.png"));
+                            diffuseFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "diffuse-normal.png"));
                             //diffuseFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "ambient.png"));
-                            diffuseFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "normalts.png"));
+                            diffuseFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "diffuse-normalts.png"));
 
                             if (!param.isSpecularTextureEnabled())
                             {
