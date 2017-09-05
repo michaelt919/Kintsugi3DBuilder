@@ -140,27 +140,27 @@ float computeGeometricAttenuationVCavity(float nDotH, float nDotV, float nDotL, 
     return min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
 }
 
-float computeGeometricAttenuationSmithBeckmann(float roughness, float nDotV, float nDotL)
-{
-    float aV = 1.0 / (roughness * sqrt(1.0 - nDotV * nDotV) / nDotV);
-    float aVSq = aV * aV;
-    float aL = 1.0 / (roughness * sqrt(1.0 - nDotL * nDotL) / nDotL);
-    float aLSq = aL * aL;
-        
-    return (aV < 1.6 ? (3.535 * aV + 2.181 * aVSq) / (1 + 2.276 * aV + 2.577 * aVSq) : 1.0)
-            * (aL < 1.6 ? (3.535 * aL + 2.181 * aLSq) / (1 + 2.276 * aL + 2.577 * aLSq) : 1.0);
-        // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
-        // for this formula
-}
+//vec3 computeGeometricAttenuationSmithBeckmann(vec3 roughness, float nDotV, float nDotL)
+//{
+//    vec3 aV = 1.0 / (roughness * sqrt(1.0 - nDotV * nDotV) / nDotV);
+//    vec3 aVSq = aV * aV;
+//    vec3 aL = 1.0 / (roughness * sqrt(1.0 - nDotL * nDotL) / nDotL);
+//    vec3 aLSq = aL * aL;
+//
+//    return (aV < 1.6 ? (3.535 * aV + 2.181 * aVSq) / (1 + 2.276 * aV + 2.577 * aVSq) : 1.0)
+//            * (aL < 1.6 ? (3.535 * aL + 2.181 * aLSq) / (1 + 2.276 * aL + 2.577 * aLSq) : 1.0);
+//        // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
+//        // for this formula
+//}
 
-float computeGeometricAttenuationSmithGGX(float roughness, float nDotV, float nDotL)
+vec3 computeGeometricAttenuationSmithGGX(vec3 roughness, float nDotV, float nDotL)
 {
-    float roughnessSq = roughness * roughness;
+    vec3 roughnessSq = roughness * roughness;
     return 4 / (1 + sqrt(1 + roughnessSq * (1 / (nDotV * nDotV) - 1.0)))
              / (1 + sqrt(1 + roughnessSq * (1 / (nDotL * nDotL) - 1.0)));
 }
 
-float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV)
+vec3 geom(vec3 roughness, float nDotH, float nDotV, float nDotL, float hDotV)
 {
     //return nDotV * nDotL;
     //return computeGeometricAttenuationVCavity(nDotH, nDotV, nDotL, hDotV);
@@ -168,36 +168,36 @@ float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV)
     return computeGeometricAttenuationSmithGGX(roughness, nDotV, nDotL);
 }
 
-float computeMicrofacetDistributionGGX(float nDotH, float roughness)
+vec3 computeMicrofacetDistributionGGX(float nDotH, vec3 roughness)
 {
-    float roughnessSquared = roughness * roughness;
+    vec3 roughnessSquared = roughness * roughness;
     float nDotHSquared = nDotH * nDotH;
-    float q = roughnessSquared + (1 - nDotHSquared) / nDotHSquared;
+    vec3 q = roughnessSquared + (1 - nDotHSquared) / nDotHSquared;
 
     // Assume scaling by pi
     return roughnessSquared / (nDotHSquared * nDotHSquared * q * q);
 }
 
-float computeMicrofacetDistributionBeckmann(float nDotH, float roughness)
+vec3 computeMicrofacetDistributionBeckmann(float nDotH, vec3 roughness)
 {
     float nDotHSquared = nDotH * nDotH;
-    float roughnessSquared = roughness * roughness;
+    vec3 roughnessSquared = roughness * roughness;
     
     // Assume scaling by pi
     return exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
             / (nDotHSquared * nDotHSquared * roughnessSquared);
 }
 
-float computeMicrofacetDistributionPhong(float nDotH, float roughness)
+vec3 computeMicrofacetDistributionPhong(float nDotH, vec3 roughness)
 {
     float nDotHSquared = nDotH * nDotH;
-    float roughnessSquared = roughness * roughness;
+    vec3 roughnessSquared = roughness * roughness;
     
     // Assume scaling by pi
-    return max(0.0, pow(nDotH, 2 / roughnessSquared - 2) / (roughnessSquared));
+    return max(vec3(0.0), pow(vec3(nDotH), 2 / roughnessSquared - 2) / (roughnessSquared));
 }
 
-float dist(float nDotH, float roughness)
+vec3 dist(float nDotH, vec3 roughness)
 {
     return computeMicrofacetDistributionGGX(nDotH, roughness);
     //return computeMicrofacetDistributionBeckmann(nDotH, roughness);
@@ -224,7 +224,7 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
 }
 
 vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir, 
-    vec3 specularColor, float roughness, float maxLuminance)
+    vec3 specularColor, vec3 roughness, float maxLuminance)
 {
     vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
     vec3 normalDirCameraSpace = normalize((cameraPoses[index] * vec4(normalDir, 0.0)).xyz);
@@ -254,9 +254,9 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
             vec3 diffuseContrib = diffuseColor * nDotL_sample * lightIntensity
                 / (infiniteLightSources ? 1.0 : lightDistSquared);
 
-            float geomAttenSample = geom(roughness, nDotH, nDotV_sample, nDotL_sample, hDotV_sample);
+            vec3 geomAttenSample = geom(roughness, nDotH, nDotV_sample, nDotL_sample, hDotV_sample);
 
-            if (nDotV_sample > 0.0 && geomAttenSample > 0.0)
+            if (nDotV_sample > 0.0 && geomAttenSample != vec3(0))
             {
                 vec3 virtualViewDir =
                     normalize((cameraPoses[index] * vec4(viewPos, 1.0)).xyz - fragmentPos);
@@ -265,10 +265,10 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
                 float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
                 float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
 
-                float geomAttenVirtual =
+                vec3 geomAttenVirtual =
                     (pbrGeometricAttenuationEnabled ?
                         geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual) :
-                            nDotL_virtual * nDotV_virtual);
+                            vec3(nDotL_virtual * nDotV_virtual));
 
                 vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL_sample, maxLuminance);
 
@@ -279,7 +279,7 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
                 vec3 mfdFresnel = specularResid.rgb / (lightIntensity * PI)
                      * (infiniteLightSources ? 1.0 : lightDistSquared)
                      * (pbrGeometricAttenuationEnabled ?
-                        4 * nDotV_sample / geomAttenSample : 4 / nDotL_sample);
+                        4 * nDotV_sample / geomAttenSample : vec3(4 / nDotL_sample));
 
                 float mfdMono = getLuminance(mfdFresnel / specularColor);
 
@@ -313,7 +313,7 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
     }
 }
 
-vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness)
+vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
 {
     float maxLuminance = getMaxLuminance();
 
@@ -337,7 +337,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 }
 
 vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 normalDir, 
-    vec3 specularColor, float roughness, float maxLuminance)
+    vec3 specularColor, vec3 roughness, float maxLuminance)
 {
     vec4 sampleColor = getLinearColor(index);
     if (sampleColor.a > 0.0)
@@ -362,8 +362,8 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
         vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity 
             / (infiniteLightSources ? 1.0 : lightDistSquared);
         
-        float geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-        if (!relightingEnabled || geomAtten > 0.0)
+        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+        if (!relightingEnabled || geomAtten != vec3(0))
         {
             vec4 precomputedSample;
 
@@ -476,7 +476,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
 }
 
 vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
-    vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness)
+    vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
 {
     float maxLuminance = getMaxLuminance();
 
@@ -645,12 +645,13 @@ void main()
     vec3 normalDir;
     if (useNormalTexture)
     {
-        vec3 normalDirTS = normalize(texture(normalMap, fTexCoord).xyz * 2 - vec3(1.0));
+        vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
+        vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
 
         vec3 gNormal = normalize(fNormal);
         vec3 tangent = normalize(fTangent - dot(gNormal, fTangent));
         vec3 bitangent = normalize(fBitangent
-            - dot(gNormal, fBitangent) * gNormal 
+            - dot(gNormal, fBitangent) * gNormal
             - dot(tangent, fBitangent) * tangent);
         mat3 tangentToObject = mat3(tangent, bitangent, gNormal);
 
@@ -691,14 +692,14 @@ void main()
         specularColor = vec3(0.5); // TODO pass in a default?
     }
     
-    float roughness;
+    vec3 roughness;
     if (useRoughnessTexture)
     {
-        roughness = texture(roughnessMap, fTexCoord).r;
+        roughness = texture(roughnessMap, fTexCoord).rgb;
     }
     else
     {
-        roughness = 0.25; // TODO pass in a default?
+        roughness = vec3(0.25); // TODO pass in a default?
     }
     
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
@@ -759,7 +760,7 @@ void main()
     }
     
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && 
-        i < (relightingEnabled && imageBasedRenderingEnabled ? virtualLightCount : 1); i++)
+        i < (relightingEnabled || !imageBasedRenderingEnabled ? virtualLightCount : 1); i++)
     {
         vec3 lightDirUnNorm;
         vec3 lightDir;
@@ -846,8 +847,8 @@ void main()
                     }
                     else
                     {
-                        mfdFresnel =
-                            fresnel(specularColor, vec3(1.0), hDotV) * vec3(dist(nDotH, roughness));
+                        vec3 mfd = dist(nDotH, roughness);
+                        mfdFresnel = fresnel(specularColor * mfd, vec3(getLuminance(mfd)), hDotV);
                     }
                 }
                 else
@@ -858,7 +859,7 @@ void main()
                     }
                     else
                     {
-                        mfdFresnel = specularColor * vec3(dist(nDotH, roughness));
+                        mfdFresnel = specularColor * dist(nDotH, roughness);
                     }
                 }
 
@@ -869,7 +870,7 @@ void main()
                     mfdFresnel 
                      * ((!imageBasedRenderingEnabled || relightingEnabled) && pbrGeometricAttenuationEnabled
                         ? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV) :
-                            (!imageBasedRenderingEnabled || relightingEnabled ? nDotL / 4 : 1.0)))
+                            vec3(!imageBasedRenderingEnabled || relightingEnabled ? nDotL / 4 : 1.0)))
                      * ((relightingEnabled || !imageBasedRenderingEnabled) ? 
                         (useTSOverrides ? lightIntensityVirtual[i] :
                             lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed))

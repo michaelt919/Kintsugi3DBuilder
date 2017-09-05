@@ -559,9 +559,20 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             if (diffuseFile != null && diffuseFile.exists())
             {
                 System.out.println("Diffuse texture found.");
-                diffuseTexture = context.build2DColorTextureFromFile(diffuseFile, true)
-                        .setInternalFormat(ColorFormat.RGB8)
-                        .setMipmapsEnabled(true)
+                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> diffuseTextureBuilder =
+                    context.build2DColorTextureFromFile(diffuseFile, true);
+
+                if (loadOptions.isCompressionRequested())
+                {
+                    diffuseTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+                }
+                else
+                {
+                    diffuseTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                }
+
+                diffuseTexture = diffuseTextureBuilder
+                        .setMipmapsEnabled(loadOptions.areMipmapsRequested())
                         .setLinearFilteringEnabled(true)
                         .createTexture();
             }
@@ -573,9 +584,20 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             if (normalFile != null && normalFile.exists())
             {
                 System.out.println("Normal texture found.");
-                normalTexture = context.build2DColorTextureFromFile(normalFile, true)
-                        .setInternalFormat(ColorFormat.RGB8)
-                        .setMipmapsEnabled(true)
+                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> normalTextureBuilder =
+                    context.build2DColorTextureFromFile(normalFile, true);
+
+                if (loadOptions.isCompressionRequested())
+                {
+                    normalTextureBuilder.setInternalFormat(CompressionFormat.RED_4BPP_GREEN_4BPP);
+                }
+                else
+                {
+                    normalTextureBuilder.setInternalFormat(ColorFormat.RG8);
+                }
+
+                normalTexture = normalTextureBuilder
+                        .setMipmapsEnabled(loadOptions.areMipmapsRequested())
                         .setLinearFilteringEnabled(true)
                         .createTexture();
             }
@@ -587,9 +609,20 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             if (specularFile != null && specularFile.exists())
             {
                 System.out.println("Specular texture found.");
-                specularTexture = context.build2DColorTextureFromFile(specularFile, true)
-                        .setInternalFormat(ColorFormat.RGB8)
-                        .setMipmapsEnabled(true)
+                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> specularTextureBuilder =
+                    context.build2DColorTextureFromFile(specularFile, true);
+                if (loadOptions.isCompressionRequested())
+                {
+                    specularTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+                }
+                else
+                {
+                    specularTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                }
+
+
+                specularTexture = specularTextureBuilder
+                        .setMipmapsEnabled(loadOptions.areMipmapsRequested())
                         .setLinearFilteringEnabled(true)
                         .createTexture();
             }
@@ -601,9 +634,20 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             if (roughnessFile != null && roughnessFile.exists())
             {
                 System.out.println("Roughness texture found.");
-                roughnessTexture = context.build2DColorTextureFromFile(roughnessFile, true)
-                        .setInternalFormat(ColorFormat.R8)
-                        .setMipmapsEnabled(true)
+                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder =
+                    context.build2DColorTextureFromFile(roughnessFile, true);
+
+                if (loadOptions.isCompressionRequested())
+                {
+                    roughnessTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+                }
+                else
+                {
+                    roughnessTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                }
+
+                roughnessTexture = roughnessTextureBuilder
+                        .setMipmapsEnabled(loadOptions.areMipmapsRequested())
                         .setLinearFilteringEnabled(true)
                         .createTexture();
             }
