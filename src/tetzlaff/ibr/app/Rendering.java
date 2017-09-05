@@ -10,7 +10,6 @@ import javax.imageio.ImageIO;
 
 import tetzlaff.gl.Program;
 import tetzlaff.gl.ShaderType;
-import tetzlaff.gl.exceptions.GLException;
 import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
@@ -252,7 +251,7 @@ public final class Rendering
 
                         rendererList.getSelectedItem().reloadHelperShaders();
                     }
-                    catch (FileNotFoundException|GLException e)
+                    catch (FileNotFoundException|RuntimeException e)
                     {
                         e.printStackTrace();
                     }
