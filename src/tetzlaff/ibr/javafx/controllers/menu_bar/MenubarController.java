@@ -33,6 +33,7 @@ import tetzlaff.ibr.core.*;
 import tetzlaff.ibr.javafx.controllers.scene.camera.CameraSetting;
 import tetzlaff.ibr.javafx.controllers.scene.environment_map.EnvironmentSetting;
 import tetzlaff.ibr.javafx.controllers.scene.lights.LightGroupSetting;
+import tetzlaff.ibr.javafx.controllers.scene.object.ObjectPoseSetting;
 import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
 import tetzlaff.ibr.javafx.models.JavaFXSceneModel;
 import tetzlaff.ibr.javafx.models.JavaFXSettingsModel;
@@ -294,38 +295,62 @@ public class MenubarController
                         JavaFXSceneModel sceneModel = JavaFXModelAccess.getInstance().getSceneModel();
 
                         Node cameraListNode = document.getElementsByTagName("CameraList").item(0);
-                        NodeList cameraNodes = cameraListNode.getChildNodes();
-                        sceneModel.getCameraList().clear();
-                        for (int i = 0; i < cameraNodes.getLength(); i++)
+                        if (cameraListNode != null)
                         {
-                            Node cameraNode = cameraNodes.item(i);
-                            if (cameraNode instanceof Element)
+                            NodeList cameraNodes = cameraListNode.getChildNodes();
+                            sceneModel.getCameraList().clear();
+                            for (int i = 0; i < cameraNodes.getLength(); i++)
                             {
-                                sceneModel.getCameraList().add(CameraSetting.fromDOMElement((Element) cameraNode));
+                                Node cameraNode = cameraNodes.item(i);
+                                if (cameraNode instanceof Element)
+                                {
+                                    sceneModel.getCameraList().add(CameraSetting.fromDOMElement((Element) cameraNode));
+                                }
                             }
                         }
 
                         Node environmentListNode = document.getElementsByTagName("EnvironmentList").item(0);
-                        NodeList environmentNodes = environmentListNode.getChildNodes();
-                        sceneModel.getEnvironmentList().clear();
-                        for (int i = 0; i < environmentNodes.getLength(); i++)
+                        if (environmentListNode != null)
                         {
-                            Node environmentNode = environmentNodes.item(i);
-                            if (environmentNode instanceof Element)
+                            NodeList environmentNodes = environmentListNode.getChildNodes();
+                            sceneModel.getEnvironmentList().clear();
+                            for (int i = 0; i < environmentNodes.getLength(); i++)
                             {
-                                sceneModel.getEnvironmentList().add(EnvironmentSetting.fromDOMElement((Element) environmentNode));
+                                Node environmentNode = environmentNodes.item(i);
+                                if (environmentNode instanceof Element)
+                                {
+                                    sceneModel.getEnvironmentList().add(EnvironmentSetting.fromDOMElement((Element) environmentNode));
+                                }
                             }
                         }
 
                         Node lightGroupListNode = document.getElementsByTagName("LightGroupList").item(0);
-                        NodeList lightGroupNodes = lightGroupListNode.getChildNodes();
-                        sceneModel.getLightGroupList().clear();
-                        for (int i = 0; i < lightGroupNodes.getLength(); i++)
+                        if (lightGroupListNode != null)
                         {
-                            Node lightGroupNode = lightGroupNodes.item(i);
-                            if (lightGroupNode instanceof Element)
+                            NodeList lightGroupNodes = lightGroupListNode.getChildNodes();
+                            sceneModel.getLightGroupList().clear();
+                            for (int i = 0; i < lightGroupNodes.getLength(); i++)
                             {
-                                sceneModel.getLightGroupList().add(LightGroupSetting.fromDOMElement((Element) lightGroupNode));
+                                Node lightGroupNode = lightGroupNodes.item(i);
+                                if (lightGroupNode instanceof Element)
+                                {
+                                    sceneModel.getLightGroupList().add(LightGroupSetting.fromDOMElement((Element) lightGroupNode));
+                                }
+                            }
+                        }
+
+                        Node objectPoseListNode = document.getElementsByTagName("ObjectPoseList").item(0);
+                        if (objectPoseListNode != null)
+                        {
+                            NodeList objectPoseNodes = objectPoseListNode.getChildNodes();
+                            sceneModel.getObjectPoseList().clear();
+                            for (int i = 0; i < objectPoseNodes.getLength(); i++)
+                            {
+                                Node objectPoseNode = objectPoseNodes.item(i);
+                                if (objectPoseNode instanceof Element)
+                                {
+                                    sceneModel.getObjectPoseList().add(ObjectPoseSetting.fromDOMElement((Element) objectPoseNode));
+                                }
                             }
                         }
                     }
@@ -417,6 +442,14 @@ public class MenubarController
                     for (LightGroupSetting lightGroup : sceneModel.getLightGroupList())
                     {
                         lightGroupListElement.appendChild(lightGroup.toDOMElement(document));
+                    }
+
+                    Element objectPoseListElement = document.createElement("ObjectPoseList");
+                    rootElement.appendChild(objectPoseListElement);
+
+                    for (ObjectPoseSetting objectPose : sceneModel.getObjectPoseList())
+                    {
+                        objectPoseListElement.appendChild(objectPose.toDOMElement(document));
                     }
 
                     Transformer transformer = TransformerFactory.newInstance().newTransformer();

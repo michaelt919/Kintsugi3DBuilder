@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.object.RootObjectSceneController">
+   <TitledPane animated="false" prefWidth="400.0" text="Poses" VBox.vgrow="ALWAYS">
+      <HBox prefHeight="0.0">
+         <ListView fx:id="objectPoseListView" HBox.hgrow="ALWAYS" />
+         <Separator orientation="VERTICAL" visible="false" />
+         <VBox fx:id="listControls" alignment="CENTER_LEFT" spacing="5.0">
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#newPoseButton" text="New">
+               <tooltip>
+                  <Tooltip text="Create a new pose from the current one." />
+               </tooltip>
+            </Button>
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#savePoseButton" text="Save">
+               <tooltip>
+                  <Tooltip text="Save the selected pose to the library." />
+               </tooltip>
+            </Button>
+            <Button fx:id="renameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#renamePoseButton" text="Rename" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveUPButton" text="Move up" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveDOWNButton" text="Move down" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#lockPoseButton" text="Lock/Unlock">
+               <tooltip>
+                  <Tooltip text="Lock the settings for the selected pose so they cannot be changed." />
+               </tooltip>
+            </Button>
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#keyframePoseButton" text="Keyframe">
+               <tooltip>
+                  <Tooltip text="Add the selected pose as a keyframe (for animation)." />
+               </tooltip>
+            </Button>
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#deletePoseButton" text="Delete">
+               <tooltip>
+                  <Tooltip text="Delete selected pose." />
+               </tooltip>
+            </Button>
+         </VBox>
+      </HBox>
+   </TitledPane>
+   <fx:include fx:id="settings" source="SettingsObjectScene.fxml" />
+</VBox>

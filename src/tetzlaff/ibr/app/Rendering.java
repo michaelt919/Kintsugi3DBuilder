@@ -126,6 +126,7 @@ public final class Rendering
             ExtendedLightingModel lightingModel = JavaFXModelAccess.getInstance().getLightingModel();
             EnvironmentMapModel environmentMapModel = JavaFXModelAccess.getInstance().getEnvironmentMapModel();
             ExtendedCameraModel cameraModel = JavaFXModelAccess.getInstance().getCameraModel();
+            ExtendedObjectModel objectModel = JavaFXModelAccess.getInstance().getObjectModel();
             SettingsModel settingsModel = JavaFXModelAccess.getInstance().getSettingsModel();
             LoadingModel loadingModel = JavaFXModelAccess.getInstance().getLoadingModel();
             ToolBindingModel toolModel = JavaFXModelAccess.getInstance().getToolModel();
@@ -136,6 +137,7 @@ public final class Rendering
                 .setCameraModel(cameraModel)
                 .setEnvironmentMapModel(environmentMapModel)
                 .setLightingModel(lightingModel)
+                .setObjectModel(objectModel)
                 .setSettingsModel(settingsModel)
                 .setToolModel(toolModel)
                 .setSceneViewportModel(new SceneViewportModel()
@@ -227,6 +229,7 @@ public final class Rendering
             rendererList.setObjectModel(() -> Matrix4.IDENTITY);
             rendererList.setCameraModel(cameraModel);
             rendererList.setLightingModel(lightingModel);
+            rendererList.setObjectModel(objectModel);
             rendererList.setSettingsModel(settingsModel);
 
             window.addKeyPressListener((win, key, modifierKeys) ->

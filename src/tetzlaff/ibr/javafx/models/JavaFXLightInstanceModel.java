@@ -69,16 +69,16 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
             fromRender = false;
             return orbitCache;
         }
-        Vector3 poler = new Vector3((float) getLightInstance().getAzimuth(), (float) getLightInstance().getInclination(), 0);
-        return OrbitPolarConverter.getInstance().convertToOrbitMatrix(poler);
+        Vector3 polar = new Vector3((float) getLightInstance().getAzimuth(), (float) getLightInstance().getInclination(), 0);
+        return OrbitPolarConverter.getInstance().convertToOrbitMatrix(polar);
     }
 
     @Override
     public void setOrbit(Matrix4 orbit)
     {
-        Vector3 poler = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
-        getLightInstance().setAzimuth(poler.x);
-        getLightInstance().setInclination(poler.y);
+        Vector3 polar = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
+        getLightInstance().setAzimuth(polar.x);
+        getLightInstance().setInclination(polar.y);
         orbitCache = orbit;
         fromRender = true;
     }
