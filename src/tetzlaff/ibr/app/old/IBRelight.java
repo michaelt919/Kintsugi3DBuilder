@@ -364,7 +364,7 @@ public final class IBRelight
     //        // The Java process owns the native menu bar and won't relinquish it to Qt
     //        QApplication.setAttribute(ApplicationAttribute.AA_DontUseNativeMenuBar);
 
-            IBRRequestQueue<OpenGLContext> requestQueue = new IBRRequestQueue<>(context, rendererList);
+            IBRRequestQueue<OpenGLContext> requestQueue = new IBRRequestQueue<>(rendererList);
 
             app.addRefreshable(new Refreshable()
             {

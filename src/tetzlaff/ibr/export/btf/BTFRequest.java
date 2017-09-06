@@ -29,13 +29,13 @@ public class BTFRequest implements IBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(
-            ContextType context, IBRRenderable<ContextType> renderable, LoadingMonitor callback)
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
         throws IOException
     {
         try
         {
             IBRResources<ContextType> resources = renderable.getResources();
+            ContextType context = resources.context;
 
             Program<ContextType> btfProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))

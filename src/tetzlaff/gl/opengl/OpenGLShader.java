@@ -57,6 +57,10 @@ class OpenGLShader implements Shader<OpenGLContext>
                         // This won't work of course, but it's a reasonably way to generate an exception in a manner consistent with a non-existent file.
                         includeFile = file.getParentFile();
                     }
+                    else if (parts[1].charAt(0) == '<' && parts[1].charAt(parts[1].length() - 1) == '>')
+                    {
+                        includeFile = new File(parts[1].substring(1, parts[1].length() - 1));
+                    }
                     else
                     {
                         String filename = parts[1].replaceAll("['\"]", ""); // Remove single or double quotes around filename

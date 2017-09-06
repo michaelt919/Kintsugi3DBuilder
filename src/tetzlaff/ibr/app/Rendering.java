@@ -291,7 +291,7 @@ public final class Rendering
                 }
             });
 
-            requestQueue = new IBRRequestQueue<>(context, rendererList);
+            requestQueue = new IBRRequestQueue<>(rendererList);
             requestQueue.setLoadingMonitor(new LoadingMonitor()
             {
                 @Override

@@ -28,10 +28,10 @@ public class ResampleRequest implements IBRRequest
     }
 
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(ContextType context, IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
     {
         ViewSet targetViewSet = ViewSet.loadFromVSETFile(resampleVSETFile);
-        FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(resampleWidth, resampleHeight)
+        FramebufferObject<ContextType> framebuffer = renderable.getResources().context.buildFramebufferObject(resampleWidth, resampleHeight)
                 .addColorAttachment()
                 .addDepthAttachment()
                 .createFramebufferObject();
