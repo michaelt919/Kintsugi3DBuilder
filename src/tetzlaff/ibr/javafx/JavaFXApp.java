@@ -132,10 +132,11 @@ public class JavaFXApp extends Application
         JavaFXCameraModel cameraModel = JavaFXModelAccess.getInstance().getCameraModel();
         JavaFXEnvironmentMapModel environmentMapModel = JavaFXModelAccess.getInstance().getEnvironmentMapModel();
         JavaFXLightingModel lightingModel = JavaFXModelAccess.getInstance().getLightingModel();
+        JavaFXObjectModel objectModel = JavaFXModelAccess.getInstance().getObjectModel();
         JavaFXToolBindingModel toolBindingModel = JavaFXModelAccess.getInstance().getToolModel();
 
         //distribute to controllers
-        sceneController.init(cameraModel, lightingModel, environmentMapModel);
+        sceneController.init(cameraModel, lightingModel, environmentMapModel, objectModel);
         menuBarController.init(menuBarStage.getScene().getWindow(), Rendering.getRequestQueue());
 
         toolBindingModel.setDragTool(new MouseMode(0, ModifierKeys.NONE), DragToolType.ORBIT);
@@ -147,8 +148,12 @@ public class JavaFXApp extends Application
         toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().shift().end()), DragToolType.ROTATE_ENVIRONMENT);
         toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().shift().end()), DragToolType.FOCAL_LENGTH);
         toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().shift().end()), DragToolType.FOCAL_LENGTH);
-        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().control().alt().end()), DragToolType.LOOK_AT_POINT);
-        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().control().alt().end()), DragToolType.LOOK_AT_POINT);
+        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().control().shift().end()), DragToolType.LOOK_AT_POINT);
+        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().control().shift().end()), DragToolType.LOOK_AT_POINT);
+        toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().control().end()), DragToolType.OBJECT_ROTATION);
+        toolBindingModel.setDragTool(new MouseMode(1, ModifierKeysBuilder.begin().control().end()), DragToolType.OBJECT_CENTER);
+        toolBindingModel.setDragTool(new MouseMode(2, ModifierKeysBuilder.begin().control().end()), DragToolType.OBJECT_CENTER);
+        //toolBindingModel.setDragTool(new MouseMode(0, ModifierKeysBuilder.begin().control().alt().end()), DragToolType.OBJECT_TWIST);
 
         toolBindingModel.setKeyPressTool(new KeyPress(Key.UP, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_LARGE);
         toolBindingModel.setKeyPressTool(new KeyPress(Key.DOWN, ModifierKeys.NONE), KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_LARGE);

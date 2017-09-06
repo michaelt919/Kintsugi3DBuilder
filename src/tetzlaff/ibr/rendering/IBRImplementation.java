@@ -645,8 +645,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void setupLight(int lightIndex, int modelInstance)
     {
+        float scale = getScale();
+
         Matrix4 lightMatrix =
-            getLightMatrix(lightIndex).times(this.multiTransformationModel.get(modelInstance));
+            this.multiTransformationModel.get(modelInstance).quickInverse(0.01f)
+                .times(Matrix4.scale(scale))
+                .times(lightingModel.getLightMatrix(lightIndex))
+                .times(this.objectModel.getTransformationMatrix())
+                .times(Matrix4.scale(1.0f / scale))
+                .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
+                .times(Matrix4.translate(this.centroid.negated()));
 
         // lightMatrix can be hardcoded here (comment out previous line)
 
@@ -669,13 +677,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         Vector3 controllerLightIntensity = lightingModel.getLightColor(lightIndex);
         float lightDistance = getLightMatrix(lightIndex).times(this.centroid.asPosition()).getXYZ().length();
 
-        float scale = resources.viewSet.areLightSourcesInfinite() ? 1.0f :
+        float lightScale = resources.viewSet.areLightSourcesInfinite() ? 1.0f :
                 resources.viewSet.getCameraPose(0)
                         .times(resources.geometry.getCentroid().asPosition())
                     .getXYZ().length();
 
         program.setUniform("lightIntensityVirtual[" + lightIndex + ']',
-                controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (scale * scale)));
+                controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (lightScale * lightScale)));
         program.setUniform("lightMatrixVirtual[" + lightIndex + ']', getLightProjection(lightIndex).times(lightMatrix));
     }
 

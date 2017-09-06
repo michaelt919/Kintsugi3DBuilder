@@ -1,10 +1,7 @@
 package tetzlaff.ibr.tools;
 
 import tetzlaff.ibr.core.SettingsModel;
-import tetzlaff.models.EnvironmentMapModel;
-import tetzlaff.models.ExtendedCameraModel;
-import tetzlaff.models.ExtendedLightingModel;
-import tetzlaff.models.SceneViewportModel;
+import tetzlaff.models.*;
 
 interface ToolBuilder<ToolType>
 {
@@ -12,6 +9,7 @@ interface ToolBuilder<ToolType>
     ToolBuilder<ToolType> setCameraModel(ExtendedCameraModel cameraModel);
     ToolBuilder<ToolType> setEnvironmentMapModel(EnvironmentMapModel environmentMapModel);
     ToolBuilder<ToolType> setLightingModel(ExtendedLightingModel lightingModel);
+    ToolBuilder<ToolType> setObjectModel(ExtendedObjectModel lightingModel);
     ToolBuilder<ToolType> setSceneViewportModel(SceneViewportModel sceneViewportModel);
     ToolBuilder<ToolType> setSettingsModel(SettingsModel settingsModel);
     ToolType build();

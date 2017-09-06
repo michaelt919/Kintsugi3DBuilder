@@ -32,6 +32,10 @@ public class RootCameraSceneController implements Initializable
     @FXML
     private Button theRenameButton;
 
+    public RootCameraSceneController()
+    {
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
@@ -104,10 +108,7 @@ public class RootCameraSceneController implements Initializable
         EventHandler<ActionEvent> oldOnAction = theRenameButton.getOnAction();//backup the old on action event for the rename button
 
         //set up two buttons and a text field for name entry
-        listControls.getChildren().iterator().forEachRemaining(n ->
-        {
-            n.setDisable(true);
-        });
+        listControls.getChildren().iterator().forEachRemaining(n -> n.setDisable(true));
         theRenameButton.setDisable(false);
 
         settings.setDisable(true);
@@ -128,38 +129,27 @@ public class RootCameraSceneController implements Initializable
 
         //set up to event handlers, one to return the controls back to their original state,
         //and the other to actually perform the rename
-        EventHandler<ActionEvent> finishRename = new EventHandler<ActionEvent>()
+        EventHandler<ActionEvent> finishRename = event ->
         {
-            @Override
-            public void handle(ActionEvent event)
-            {
-                listControls.getChildren().removeAll(renameTextField, cancelRenameButton);
-                theRenameButton.setOnAction(oldOnAction);
+            listControls.getChildren().removeAll(renameTextField, cancelRenameButton);
+            theRenameButton.setOnAction(oldOnAction);
 
-                listControls.getChildren().iterator().forEachRemaining(n ->
-                {
-                    n.setDisable(false);
-                });
+            listControls.getChildren().iterator().forEachRemaining(n -> n.setDisable(false));
 
-                cameraListView.refresh();
+            cameraListView.refresh();
 
-                settings.setDisable(false);
-            }
+            settings.setDisable(false);
         };
 
-        EventHandler<ActionEvent> doRename = new EventHandler<ActionEvent>()
+        EventHandler<ActionEvent> doRename = event ->
         {
-            @Override
-            public void handle(ActionEvent event)
+            String newName = renameTextField.getText();
+            if (newName != null && !newName.isEmpty())
             {
-                String newName = renameTextField.getText();
-                if (!"".equals(newName))
-                {
-                    getCameraSelectionModel().getSelectedItem().setName(newName);
-                }
-
-                finishRename.handle(event);
+                getCameraSelectionModel().getSelectedItem().setName(newName);
             }
+
+            finishRename.handle(event);
         };
 
         //set the on actions

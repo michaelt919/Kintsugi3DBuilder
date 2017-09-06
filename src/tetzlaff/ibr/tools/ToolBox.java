@@ -12,10 +12,7 @@ import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.listeners.*;
 import tetzlaff.ibr.core.SettingsModel;
 import tetzlaff.ibr.tools.EnvironmentBrightnessTool.Type;
-import tetzlaff.models.EnvironmentMapModel;
-import tetzlaff.models.ExtendedCameraModel;
-import tetzlaff.models.ExtendedLightingModel;
-import tetzlaff.models.SceneViewportModel;
+import tetzlaff.models.*;
 import tetzlaff.util.KeyPress;
 import tetzlaff.util.MouseMode;
 import tetzlaff.util.WindowBasedController;
@@ -160,7 +157,7 @@ public final class ToolBox
 
     //builder
     private ToolBox(ExtendedCameraModel cameraModel, EnvironmentMapModel environmentMapModel, ExtendedLightingModel lightingModel,
-        SettingsModel settingsModel, ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
+        ExtendedObjectModel objectModel, SettingsModel settingsModel, ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
     {
         this.toolBindingModel = toolBindingModel;
 
@@ -174,6 +171,9 @@ public final class ToolBox
         dragToolBuilders.put(DragToolType.PAN, PanTool.getBuilder());
         dragToolBuilders.put(DragToolType.FOCAL_LENGTH, FocalLengthTool.getBuilder());
         dragToolBuilders.put(DragToolType.ROTATE_ENVIRONMENT, RotateEnvironmentTool.getBuilder());
+        dragToolBuilders.put(DragToolType.OBJECT_CENTER, ObjectCenterTool.getBuilder());
+        dragToolBuilders.put(DragToolType.OBJECT_ROTATION, ObjectRotationTool.getBuilder());
+        dragToolBuilders.put(DragToolType.OBJECT_TWIST, ObjectTwistTool.getBuilder());
         dragToolBuilders.put(DragToolType.LOOK_AT_POINT, LookAtPointTool.getBuilder());
 
         for (Entry<DragToolType, ToolBuilder<? extends DragTool>> entries : dragToolBuilders.entrySet())
@@ -183,6 +183,7 @@ public final class ToolBox
                     .setCameraModel(cameraModel)
                     .setEnvironmentMapModel(environmentMapModel)
                     .setLightingModel(lightingModel)
+                    .setObjectModel(objectModel)
                     .setSettingsModel(settingsModel)
                     .setSceneViewportModel(sceneViewportModel)
                     .setToolBindingModel(toolBindingModel)
@@ -206,6 +207,7 @@ public final class ToolBox
                     .setCameraModel(cameraModel)
                     .setEnvironmentMapModel(environmentMapModel)
                     .setLightingModel(lightingModel)
+                    .setObjectModel(objectModel)
                     .setSettingsModel(settingsModel)
                     .setSceneViewportModel(sceneViewportModel)
                     .setToolBindingModel(toolBindingModel)
@@ -216,6 +218,7 @@ public final class ToolBox
             .setCameraModel(cameraModel)
             .setEnvironmentMapModel(environmentMapModel)
             .setLightingModel(lightingModel)
+            .setObjectModel(objectModel)
             .setSettingsModel(settingsModel)
             .setSceneViewportModel(sceneViewportModel)
             .setToolBindingModel(toolBindingModel)
@@ -229,6 +232,7 @@ public final class ToolBox
         private EnvironmentMapModel environmentMapModel;
         private SettingsModel settingsModel;
         private ExtendedLightingModel lightingModel;
+        private ExtendedObjectModel objectModel;
         private SceneViewportModel sceneViewportModel;
 
         public static Builder create()
@@ -258,6 +262,12 @@ public final class ToolBox
             return this;
         }
 
+        public Builder setObjectModel(ExtendedObjectModel objectModel)
+        {
+            this.objectModel = objectModel;
+            return this;
+        }
+
         public Builder setSettingsModel(SettingsModel settingsModel)
         {
             this.settingsModel = settingsModel;
@@ -278,7 +288,7 @@ public final class ToolBox
 
         public WindowBasedController build()
         {
-            return new ToolBox(cameraModel, environmentMapModel, lightingModel, settingsModel, toolModel, sceneViewportModel);
+            return new ToolBox(cameraModel, environmentMapModel, lightingModel, objectModel, settingsModel, toolModel, sceneViewportModel);
         }
     }
 }

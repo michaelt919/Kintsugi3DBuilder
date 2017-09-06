@@ -10,7 +10,6 @@ import tetzlaff.util.OrbitPolarConverter;
 
 public class JavaFXCameraModel implements ExtendedCameraModel
 {
-
     private ObservableValue<CameraSetting> selected;
     private final CameraSetting backup = new CameraSetting(
         0.0,
@@ -68,17 +67,17 @@ public class JavaFXCameraModel implements ExtendedCameraModel
             fromRender = false;
             return orbitCache;
         }
-        Vector3 poler = new Vector3((float) getActiveCameraSetting().getAzimuth(), (float) getActiveCameraSetting().getInclination(), (float) getActiveCameraSetting().getTwist());
-        return OrbitPolarConverter.getInstance().convertToOrbitMatrix(poler);
+        Vector3 polar = new Vector3((float) getActiveCameraSetting().getAzimuth(), (float) getActiveCameraSetting().getInclination(), (float) getActiveCameraSetting().getTwist());
+        return OrbitPolarConverter.getInstance().convertToOrbitMatrix(polar);
     }
 
     @Override
     public void setOrbit(Matrix4 orbit)
     {
-        Vector3 poler = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
-        getActiveCameraSetting().setAzimuth(poler.x);
-        getActiveCameraSetting().setInclination(poler.y);
-        getActiveCameraSetting().setTwist(poler.z);
+        Vector3 polar = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
+        getActiveCameraSetting().setAzimuth(polar.x);
+        getActiveCameraSetting().setInclination(polar.y);
+        getActiveCameraSetting().setTwist(polar.z);
         orbitCache = orbit;
         fromRender = true;
     }
