@@ -964,373 +964,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     fboSize = offscreenFBO.getSize();
                 }
 
-                if (this.settings.isRelightingEnabled() && this.settings.areVisibleLightsEnabled())
-                {
-                    this.context.getState().disableDepthWrite();
-
-                    // Draw lights
-                    for (int i = 0; i < lightingModel.getLightCount(); i++)
-                    {
-                        this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
-                        this.context.getState().enableDepthTest();
-
-                        if (settings.areLightWidgetsEnabled() && lightingModel.getLightWidgetModel(i).areWidgetsEnabled()
-                            && lightingModel.getLightWidgetModel(i).isCenterWidgetVisible())
-                        {
-                            this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Center"));
-
-                            Vector3 lightCenter = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
-
-                            this.lightProgram.setUniform("model_view",
-                                Matrix4.translate(lightCenter)
-                                    .times(Matrix4.scale(
-                                        -lightCenter.z * getVerticalFieldOfView(size) / 64.0f,
-                                        -lightCenter.z * getVerticalFieldOfView(size) / 64.0f,
-                                        1.0f)));
-                            this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
-
-                            this.lightProgram.setTexture("lightTexture", this.lightCenterTexture);
-
-                            this.context.getState().disableDepthTest();
-                            this.lightProgram.setUniform("color",
-                                new Vector3(this.lightingModel.getLightWidgetModel(i).isCenterWidgetSelected() ? 1.0f : 0.5f));
-                            this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-                        }
-
-                        if (lightingModel.isLightVisualizationEnabled(i))
-                        {
-                            this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
-                            this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i));
-                            this.lightProgram.setUniform("color", lightingModel.getLightColor(i));
-
-                            Vector3 lightPosition = view.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3).getXYZ();
-
-                            this.lightProgram.setUniform("model_view",
-                                Matrix4.translate(lightPosition)
-                                    .times(Matrix4.scale(-lightPosition.z / 32.0f, -lightPosition.z / 32.0f, 1.0f)));
-                            this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
-                            this.lightProgram.setTexture("lightTexture", this.lightTexture);
-                            this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-                        }
-
-                        if (settings.areLightWidgetsEnabled() && lightingModel.getLightWidgetModel(i).areWidgetsEnabled())
-                        {
-                            this.solidProgram.setUniform("projection", this.getProjectionMatrix(size));
-
-                            float lightWidgetScale = computeLightWidgetScale(partialViewMatrix, size);
-                            Vector3 lightCenter = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
-                            Matrix4 widgetTransformation = view.times(this.getLightMatrix(i).quickInverse(0.001f));
-                            Vector3 widgetPosition = widgetTransformation.getColumn(3).getXYZ()
-                                .minus(lightCenter)
-                                .normalized()
-                                .times(lightWidgetScale)
-                                .plus(lightCenter);
-                            Vector3 widgetDisplacement = widgetPosition.minus(lightCenter);
-                            float widgetDistance = widgetDisplacement.length();
-
-                            Vector3 distanceWidgetPosition = widgetTransformation.getColumn(3).getXYZ()
-                                .minus(lightCenter)
-                                .times(Math.min(1, computeLightWidgetScale(partialViewMatrix, size) /
-                                                        widgetTransformation.getColumn(3).getXYZ().distance(lightCenter)))
-                                .plus(lightCenter);
-
-                            float perspectiveWidgetScale = -widgetPosition.z * getVerticalFieldOfView(size) / 64;
-
-                            this.context.getState().disableDepthTest();
-                            this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
-
-                            if (lightingModel.getLightWidgetModel(i).isDistanceWidgetVisible() || lightingModel.getLightWidgetModel(i).isCenterWidgetVisible())
-                            {
-                                Vector3 lineEndpoint = widgetPosition.minus(lightCenter)
-                                    .times(0.5f / widgetPosition.getXY().distance(lightCenter.getXY()))
-                                    .minus(lightCenter);
-
-                                try
-                                (
-                                    VertexBuffer<ContextType> line =
-                                        context.createVertexBuffer()
-                                            .setData(NativeVectorBufferFactory.getInstance()
-                                                .createFromFloatArray(3, 2, lineEndpoint.x, lineEndpoint.y, lineEndpoint.z, lightCenter.x, lightCenter.y, lightCenter.z))
-                                )
-                                {
-                                    Drawable<ContextType> lineRenderable = context.createDrawable(this.solidProgram);
-                                    lineRenderable.addVertexBuffer("position", line);
-                                    this.solidProgram.setUniform("model_view", Matrix4.IDENTITY);
-                                    this.solidProgram.setUniform("color",
-                                        new Vector3(lightingModel.getLightWidgetModel(i).isDistanceWidgetSelected()
-                                            || lightingModel.getLightWidgetModel(i).isCenterWidgetSelected() ? 1.0f : 0.5f)
-                                            .asVector4(1));
-                                    this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Distance"));
-                                    lineRenderable.draw(PrimitiveMode.LINES, offscreenFBO);
-                                }
-                            }
-
-                            if (lightingModel.getLightWidgetModel(i).isInclinationWidgetVisible()
-                                && lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected())
-                            {
-                                Vector3 lineEndpoint1 = lightCenter
-                                    .plus(partialViewMatrix.times(new Vector4(0,widgetDistance,0,0)).getXYZ());
-                                Vector3 lineEndpoint2 = lightCenter
-                                    .plus(partialViewMatrix.times(new Vector4(0,-widgetDistance,0,0)).getXYZ());
-
-                                try
-                                (
-                                    VertexBuffer<ContextType> line =
-                                        context.createVertexBuffer()
-                                            .setData(NativeVectorBufferFactory.getInstance()
-                                                .createFromFloatArray(3, 2, lineEndpoint1.x, lineEndpoint1.y, lineEndpoint1.z, lineEndpoint2.x, lineEndpoint2.y, lineEndpoint2.z))
-                                )
-                                {
-                                    Drawable<ContextType> lineRenderable = context.createDrawable(this.solidProgram);
-                                    lineRenderable.addVertexBuffer("position", line);
-                                    this.solidProgram.setUniform("model_view", Matrix4.IDENTITY);
-                                    this.solidProgram.setUniform("color",
-                                        new Vector3(lightingModel.getLightWidgetModel(i).isDistanceWidgetSelected()
-                                            || lightingModel.getLightWidgetModel(i).isCenterWidgetSelected() ? 1.0f : 0.5f)
-                                            .asVector4(1));
-                                    this.solidProgram.setUniform("objectID", 0);
-                                    lineRenderable.draw(PrimitiveMode.LINES, offscreenFBO);
-                                }
-                            }
-
-                            Vector3 azimuthRotationAxis = partialViewMatrix.times(new Vector4(0,1,0,0)).getXYZ();
-
-                            this.circleProgram.setUniform("color", new Vector3(1));
-                            this.circleProgram.setUniform("projection", this.getProjectionMatrix(size));
-                            this.circleProgram.setUniform("width", 1 / 64.0f);
-                            this.circleProgram.setUniform("maxAngle", (float)Math.PI / 4);
-                            this.circleProgram.setUniform("threshold", 0.005f);
-
-                            Vector3 lightDisplacementAtInclination = widgetDisplacement
-                                .minus(azimuthRotationAxis.times(widgetDisplacement.dot(azimuthRotationAxis)));
-                            float lightDistanceAtInclination = lightDisplacementAtInclination.length();
-
-                            context.getState().disableBackFaceCulling();
-
-                            Vector3 lightDisplacementWorld = partialViewMatrix.quickInverse(0.01f)
-                                .times(widgetDisplacement.asDirection()).getXYZ();
-
-                            double azimuth = Math.atan2(lightDisplacementWorld.x, lightDisplacementWorld.z);
-                            double inclination = Math.asin(lightDisplacementWorld.normalized().y);
-
-                            float cosineLightToPole = widgetDisplacement.normalized().dot(azimuthRotationAxis);
-                            double azimuthArrowRotation = Math.min(Math.PI / 4,
-                                8 * perspectiveWidgetScale / (widgetDistance * Math.sqrt(1 - cosineLightToPole * cosineLightToPole)));
-
-                            double inclinationArrowRotation = Math.min(Math.PI / 4, 8 * perspectiveWidgetScale / widgetDistance);
-
-                            if (lightingModel.getLightWidgetModel(i).isAzimuthWidgetVisible() &&
-                                (Math.abs(lightDisplacementWorld.x) > 0.001f || Math.abs(lightDisplacementWorld.z) > 0.001f))
-                            {
-                                // Azimuth circle
-                                this.circleProgram.setUniform("maxAngle",
-                                    (float) (lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ?
-                                        Math.PI : azimuthArrowRotation));
-                                this.circleProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Azimuth"));
-                                this.circleProgram.setUniform("color",
-                                    new Vector3(lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ? 1.0f :0.5f));
-                                this.circleProgram.setUniform("model_view",
-                                    Matrix4.translate(lightCenter.plus(azimuthRotationAxis.times(widgetDisplacement.dot(azimuthRotationAxis))))
-                                        .times(partialViewMatrix.getUpperLeft3x3().asMatrix4())
-                                        .times(Matrix4.scale(2 * lightDistanceAtInclination))
-                                        .times(Matrix4.rotateX(-Math.PI / 2))
-                                        .times(Matrix4.rotateZ(azimuth - Math.PI / 2)));
-                                this.circleDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-                            }
-
-                            if (lightingModel.getLightWidgetModel(i).isInclinationWidgetVisible())
-                            {
-                                // Inclination circle
-                                this.circleProgram.setUniform("maxAngle",
-                                    (float) (lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected() ?
-                                        Math.PI / 2 : inclinationArrowRotation));
-                                this.circleProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Inclination"));
-                                this.circleProgram.setUniform("color",
-                                    new Vector3(lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected() ? 1.0f : 0.5f));
-                                this.circleProgram.setUniform("model_view",
-                                    Matrix4.translate(lightCenter)
-                                        .times(Matrix4.scale(2 * widgetDistance))
-                                        .times(widgetTransformation.getUpperLeft3x3()
-                                                .times(Matrix3.rotateY(-Math.PI / 2))
-                                                .times(lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected() ?
-                                                    Matrix3.rotateZ(-inclination) : Matrix3.IDENTITY)
-                                                .asMatrix4()));
-                                this.circleDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-                            }
-
-                            context.getState().enableBackFaceCulling();
-
-                            Vector3 arrow1PositionR = Matrix3.rotateAxis(azimuthRotationAxis, azimuthArrowRotation)
-                                                        .times(widgetPosition.minus(lightCenter))
-                                                        .plus(lightCenter);
-
-                            Vector3 arrow1PositionL = Matrix3.rotateAxis(azimuthRotationAxis, -azimuthArrowRotation)
-                                                        .times(widgetPosition.minus(lightCenter))
-                                                        .plus(lightCenter);
-
-                            Vector3 arrow2PositionR = widgetTransformation.getUpperLeft3x3()
-                                                            .times(Matrix3.rotateX(-inclinationArrowRotation))
-                                                            .times(widgetTransformation.quickInverse(0.01f).getUpperLeft3x3())
-                                                            .times(widgetPosition.minus(lightCenter))
-                                                        .plus(lightCenter);
-
-                            Vector3 arrow2PositionL = widgetTransformation.getUpperLeft3x3()
-                                                            .times(Matrix3.rotateX(inclinationArrowRotation))
-                                                            .times(widgetTransformation.quickInverse(0.01f).getUpperLeft3x3())
-                                                            .times(widgetPosition.minus(lightCenter))
-                                                        .plus(lightCenter);
-
-                            Vector4 arrow1RDirectionY =  Matrix3.rotateAxis(azimuthRotationAxis, azimuthArrowRotation)
-                                                            .times(widgetTransformation.getUpperLeft3x3())
-                                                            .times(new Vector3(1,0,0))
-                                                            .getXY().normalized().asDirection();
-
-                            Vector4 arrow1LDirectionY =  Matrix3.rotateAxis(azimuthRotationAxis, -azimuthArrowRotation)
-                                                            .times(widgetTransformation.getUpperLeft3x3())
-                                                            .times(new Vector3(1,0,0))
-                                                            .getXY().normalized().asDirection();
-
-                            Vector4 arrow2RDirectionY = widgetTransformation.getUpperLeft3x3()
-                                                            .times(Matrix3.rotateX(-inclinationArrowRotation))
-                                                            .times(new Vector3(0,1,0))
-                                                            .getXY().normalized().asDirection();
-
-                            Vector4 arrow2LDirectionY = widgetTransformation.getUpperLeft3x3()
-                                                            .times(Matrix3.rotateX(inclinationArrowRotation))
-                                                            .times(new Vector3(0,1,0))
-                                                            .getXY().normalized().asDirection();
-
-                            // TODO account for perspective distortion in arrow orientation
-                            Vector4 arrow1RDirectionX = new Vector4(arrow1RDirectionY.y, -arrow1RDirectionY.x, 0, 0).normalized();
-                            Vector4 arrow1LDirectionX = new Vector4(arrow1LDirectionY.y, -arrow1LDirectionY.x, 0, 0).normalized();
-                            Vector4 arrow2RDirectionX = new Vector4(arrow2RDirectionY.y, -arrow2RDirectionY.x, 0, 0).normalized();
-                            Vector4 arrow2LDirectionX = new Vector4(arrow2LDirectionY.y, -arrow2LDirectionY.x, 0, 0).normalized();
-
-
-                            Vector4 arrow3DirectionY = lightCenter.minus(widgetPosition).getXY().normalized().asDirection();
-                            Vector4 arrow3DirectionX = new Vector4(arrow3DirectionY.y, -arrow3DirectionY.x, 0, 0).normalized();
-
-                            Vector3 arrow3PositionR = distanceWidgetPosition.minus(widgetDisplacement.times(0.5f));
-                            Vector3 arrow3PositionL = distanceWidgetPosition.plus(widgetDisplacement.times(0.5f));
-
-//                            Vector3 arrow1PositionR = widgetTransformation.times(new Vector4(1,0,0,1)).getXYZ();
-//                            Vector3 arrow1PositionL = widgetTransformation.times(new Vector4(-1,0,0,1)).getXYZ();
-//                            Vector3 arrow2PositionR = widgetTransformation.times(new Vector4(0,1,0,1)).getXYZ();
-//                            Vector3 arrow2PositionL = widgetTransformation.times(new Vector4(0,-1,0,1)).getXYZ();
-//                            Vector3 arrow3PositionR = widgetTransformation.times(new Vector4(0,0,1,1)).getXYZ();
-//                            Vector3 arrow3PositionL = widgetTransformation.times(new Vector4(0,0,-1,1)).getXYZ();
-
-                            this.context.getState().disableDepthTest();
-                            context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
-
-                            if (lightingModel.getLightWidgetModel(i).isAzimuthWidgetVisible() &&
-                                (Math.abs(lightDisplacementWorld.x) > 0.001f || Math.abs(lightDisplacementWorld.z) > 0.001f))
-                            {
-                                this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Azimuth"));
-
-                                this.solidProgram.setUniform("model_view",
-                                    Matrix4.translate(arrow1PositionR)
-                                        .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
-                                        .times(Matrix4.fromColumns(
-                                            arrow1RDirectionX,
-                                            arrow1RDirectionY,
-                                            new Vector4(0, 0, 1, 0),
-                                            new Vector4(0, 0, 0, 1))));
-
-                                this.solidProgram.setUniform("color",
-                                    new Vector3(lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ? 1.0f : 0.5f)
-                                        .asVector4(1));
-                                this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-
-                                this.solidProgram.setUniform("model_view",
-                                    Matrix4.translate(arrow1PositionL)
-                                        .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
-                                        .times(Matrix4.fromColumns(
-                                            arrow1LDirectionX.negated(),
-                                            arrow1LDirectionY.negated(),
-                                            new Vector4(0, 0, 1, 0),
-                                            new Vector4(0, 0, 0, 1))));
-
-                                this.solidProgram.setUniform("color",
-                                    new Vector3(lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ? 1.0f : 0.5f)
-                                        .asVector4(1));
-                                this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-                            }
-
-                            if (lightingModel.getLightWidgetModel(i).isInclinationWidgetVisible())
-                            {
-                                this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Inclination"));
-
-                                this.solidProgram.setUniform("color",
-                                    new Vector3(lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected() ? 1.0f : 0.5f)
-                                        .asVector4(1));
-
-                                if (Math.PI / 2 - inclination > 0.01f)
-                                {
-                                    this.solidProgram.setUniform("model_view",
-                                        Matrix4.translate(arrow2PositionR)
-                                            .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
-                                            .times(Matrix4.fromColumns(
-                                                arrow2RDirectionX,
-                                                arrow2RDirectionY,
-                                                new Vector4(0, 0, 1, 0),
-                                                new Vector4(0, 0, 0, 1))));
-                                    this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-                                }
-
-                                if (Math.PI / 2 + inclination > 0.01f)
-                                {
-                                    this.solidProgram.setUniform("model_view",
-                                        Matrix4.translate(arrow2PositionL)
-                                            .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
-                                            .times(Matrix4.fromColumns(
-                                                arrow2LDirectionX.negated(),
-                                                arrow2LDirectionY.negated(),
-                                                new Vector4(0, 0, 1, 0),
-                                                new Vector4(0, 0, 0, 1))));
-                                    this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-                                }
-                            }
-
-                            if (lightingModel.getLightWidgetModel(i).isDistanceWidgetVisible())
-                            {
-                                this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Distance"));
-
-                                this.solidProgram.setUniform("color",
-                                    new Vector3(lightingModel.getLightWidgetModel(i).isDistanceWidgetSelected() ? 1.0f : 0.5f)
-                                        .asVector4(1));
-
-                                this.solidProgram.setUniform("model_view",
-                                    Matrix4.translate(arrow3PositionL)
-                                        .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
-                                        .times(Matrix4.fromColumns(
-                                            arrow3DirectionX.negated(),
-                                            arrow3DirectionY.negated(),
-                                            new Vector4(0, 0, 1, 0),
-                                            new Vector4(0, 0, 0, 1))));
-
-                                this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-
-                                if (widgetTransformation.getColumn(3).getXYZ().distance(lightCenter) > 0.01f)
-                                {
-                                    this.solidProgram.setUniform("model_view",
-                                        Matrix4.translate(arrow3PositionR)
-                                            .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
-                                            .times(Matrix4.fromColumns(
-                                                arrow3DirectionX,
-                                                arrow3DirectionY,
-                                                new Vector4(0, 0, 1, 0),
-                                                new Vector4(0, 0, 0, 1))));
-                                    this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
-                                }
-                            }
-                        }
-                    }
-
-                    context.getState().disableAlphaBlending();
-                    context.getState().enableDepthWrite();
-                    this.context.getState().enableDepthTest();
-                }
+                drawLights(framebuffer, view, partialViewMatrix);
 
                 // Finish drawing
                 context.flush();
@@ -1366,6 +1000,379 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             {
                 ((CameraBasedLightingModel)lightingModel).removeCameraPoseOverride();
             }
+        }
+    }
+
+    private void drawLights(Framebuffer<ContextType> framebuffer, Matrix4 viewMatrix, Matrix4 partialViewMatrix)
+    {
+        FramebufferSize size = framebuffer.getSize();
+
+        if (this.settings.isRelightingEnabled() && this.settings.areVisibleLightsEnabled())
+        {
+            this.context.getState().disableDepthWrite();
+
+            // Draw lights
+            for (int i = 0; i < lightingModel.getLightCount(); i++)
+            {
+                this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+                this.context.getState().enableDepthTest();
+
+                if (settings.areLightWidgetsEnabled() && lightingModel.getLightWidgetModel(i).areWidgetsEnabled()
+                    && lightingModel.getLightWidgetModel(i).isCenterWidgetVisible())
+                {
+                    this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Center"));
+
+                    Vector3 lightCenter = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
+
+                    this.lightProgram.setUniform("model_view",
+                        Matrix4.translate(lightCenter)
+                            .times(Matrix4.scale(
+                                -lightCenter.z * getVerticalFieldOfView(size) / 64.0f,
+                                -lightCenter.z * getVerticalFieldOfView(size) / 64.0f,
+                                1.0f)));
+                    this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
+
+                    this.lightProgram.setTexture("lightTexture", this.lightCenterTexture);
+
+                    this.context.getState().disableDepthTest();
+                    this.lightProgram.setUniform("color",
+                        new Vector3(this.lightingModel.getLightWidgetModel(i).isCenterWidgetSelected() ? 1.0f : 0.5f));
+                    this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                }
+
+                if (lightingModel.isLightVisualizationEnabled(i))
+                {
+                    this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+                    this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i));
+                    this.lightProgram.setUniform("color", lightingModel.getLightColor(i));
+
+                    Vector3 lightPosition = viewMatrix.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3).getXYZ();
+
+                    this.lightProgram.setUniform("model_view",
+                        Matrix4.translate(lightPosition)
+                            .times(Matrix4.scale(-lightPosition.z / 32.0f, -lightPosition.z / 32.0f, 1.0f)));
+                    this.lightProgram.setUniform("projection", this.getProjectionMatrix(size));
+                    this.lightProgram.setTexture("lightTexture", this.lightTexture);
+                    this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                }
+
+                if (settings.areLightWidgetsEnabled() && lightingModel.getLightWidgetModel(i).areWidgetsEnabled())
+                {
+                    this.solidProgram.setUniform("projection", this.getProjectionMatrix(size));
+
+                    float lightWidgetScale = computeLightWidgetScale(partialViewMatrix, size);
+                    Vector3 lightCenter = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
+                    Matrix4 widgetTransformation = viewMatrix.times(this.getLightMatrix(i).quickInverse(0.001f));
+                    Vector3 widgetPosition = widgetTransformation.getColumn(3).getXYZ()
+                        .minus(lightCenter)
+                        .normalized()
+                        .times(lightWidgetScale)
+                        .plus(lightCenter);
+                    Vector3 widgetDisplacement = widgetPosition.minus(lightCenter);
+                    float widgetDistance = widgetDisplacement.length();
+
+                    Vector3 distanceWidgetPosition = widgetTransformation.getColumn(3).getXYZ()
+                        .minus(lightCenter)
+                        .times(Math.min(1, computeLightWidgetScale(partialViewMatrix, size) /
+                            widgetTransformation.getColumn(3).getXYZ().distance(lightCenter)))
+                        .plus(lightCenter);
+
+                    float perspectiveWidgetScale = -widgetPosition.z * getVerticalFieldOfView(size) / 64;
+
+                    this.context.getState().disableDepthTest();
+                    this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+
+                    if (lightingModel.getLightWidgetModel(i).isDistanceWidgetVisible() || lightingModel.getLightWidgetModel(i).isCenterWidgetVisible())
+                    {
+                        Vector3 lineEndpoint = widgetPosition.minus(lightCenter)
+                            .times(0.5f / widgetPosition.getXY().distance(lightCenter.getXY()))
+                            .minus(lightCenter);
+
+                        try
+                            (
+                                VertexBuffer<ContextType> line =
+                                    context.createVertexBuffer()
+                                        .setData(NativeVectorBufferFactory.getInstance()
+                                            .createFromFloatArray(3, 2, lineEndpoint.x, lineEndpoint.y, lineEndpoint.z, lightCenter.x, lightCenter.y, lightCenter.z))
+                            )
+                        {
+                            Drawable<ContextType> lineRenderable = context.createDrawable(this.solidProgram);
+                            lineRenderable.addVertexBuffer("position", line);
+                            this.solidProgram.setUniform("model_view", Matrix4.IDENTITY);
+                            this.solidProgram.setUniform("color",
+                                new Vector3(lightingModel.getLightWidgetModel(i).isDistanceWidgetSelected()
+                                    || lightingModel.getLightWidgetModel(i).isCenterWidgetSelected() ? 1.0f : 0.5f)
+                                    .asVector4(1));
+                            this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Distance"));
+                            lineRenderable.draw(PrimitiveMode.LINES, framebuffer);
+                        }
+                    }
+
+                    if (lightingModel.getLightWidgetModel(i).isInclinationWidgetVisible()
+                        && lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected())
+                    {
+                        Vector3 lineEndpoint1 = lightCenter
+                            .plus(partialViewMatrix.times(new Vector4(0,widgetDistance,0,0)).getXYZ());
+                        Vector3 lineEndpoint2 = lightCenter
+                            .plus(partialViewMatrix.times(new Vector4(0,-widgetDistance,0,0)).getXYZ());
+
+                        try
+                            (
+                                VertexBuffer<ContextType> line =
+                                    context.createVertexBuffer()
+                                        .setData(NativeVectorBufferFactory.getInstance()
+                                            .createFromFloatArray(3, 2, lineEndpoint1.x, lineEndpoint1.y, lineEndpoint1.z, lineEndpoint2.x, lineEndpoint2.y, lineEndpoint2.z))
+                            )
+                        {
+                            Drawable<ContextType> lineRenderable = context.createDrawable(this.solidProgram);
+                            lineRenderable.addVertexBuffer("position", line);
+                            this.solidProgram.setUniform("model_view", Matrix4.IDENTITY);
+                            this.solidProgram.setUniform("color",
+                                new Vector3(lightingModel.getLightWidgetModel(i).isDistanceWidgetSelected()
+                                    || lightingModel.getLightWidgetModel(i).isCenterWidgetSelected() ? 1.0f : 0.5f)
+                                    .asVector4(1));
+                            this.solidProgram.setUniform("objectID", 0);
+                            lineRenderable.draw(PrimitiveMode.LINES, framebuffer);
+                        }
+                    }
+
+                    Vector3 azimuthRotationAxis = partialViewMatrix.times(new Vector4(0,1,0,0)).getXYZ();
+
+                    this.circleProgram.setUniform("color", new Vector3(1));
+                    this.circleProgram.setUniform("projection", this.getProjectionMatrix(size));
+                    this.circleProgram.setUniform("width", 1 / 64.0f);
+                    this.circleProgram.setUniform("maxAngle", (float)Math.PI / 4);
+                    this.circleProgram.setUniform("threshold", 0.005f);
+
+                    Vector3 lightDisplacementAtInclination = widgetDisplacement
+                        .minus(azimuthRotationAxis.times(widgetDisplacement.dot(azimuthRotationAxis)));
+                    float lightDistanceAtInclination = lightDisplacementAtInclination.length();
+
+                    context.getState().disableBackFaceCulling();
+
+                    Vector3 lightDisplacementWorld = partialViewMatrix.quickInverse(0.01f)
+                        .times(widgetDisplacement.asDirection()).getXYZ();
+
+                    double azimuth = Math.atan2(lightDisplacementWorld.x, lightDisplacementWorld.z);
+                    double inclination = Math.asin(lightDisplacementWorld.normalized().y);
+
+                    float cosineLightToPole = widgetDisplacement.normalized().dot(azimuthRotationAxis);
+                    double azimuthArrowRotation = Math.min(Math.PI / 4,
+                        8 * perspectiveWidgetScale / (widgetDistance * Math.sqrt(1 - cosineLightToPole * cosineLightToPole)));
+
+                    double inclinationArrowRotation = Math.min(Math.PI / 4, 8 * perspectiveWidgetScale / widgetDistance);
+
+                    if (lightingModel.getLightWidgetModel(i).isAzimuthWidgetVisible() &&
+                        (Math.abs(lightDisplacementWorld.x) > 0.001f || Math.abs(lightDisplacementWorld.z) > 0.001f))
+                    {
+                        // Azimuth circle
+                        this.circleProgram.setUniform("maxAngle",
+                            (float) (lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ?
+                                Math.PI : azimuthArrowRotation));
+                        this.circleProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Azimuth"));
+                        this.circleProgram.setUniform("color",
+                            new Vector3(lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ? 1.0f :0.5f));
+                        this.circleProgram.setUniform("model_view",
+                            Matrix4.translate(lightCenter.plus(azimuthRotationAxis.times(widgetDisplacement.dot(azimuthRotationAxis))))
+                                .times(partialViewMatrix.getUpperLeft3x3().asMatrix4())
+                                .times(Matrix4.scale(2 * lightDistanceAtInclination))
+                                .times(Matrix4.rotateX(-Math.PI / 2))
+                                .times(Matrix4.rotateZ(azimuth - Math.PI / 2)));
+                        this.circleDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                    }
+
+                    if (lightingModel.getLightWidgetModel(i).isInclinationWidgetVisible())
+                    {
+                        // Inclination circle
+                        this.circleProgram.setUniform("maxAngle",
+                            (float) (lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected() ?
+                                Math.PI / 2 : inclinationArrowRotation));
+                        this.circleProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Inclination"));
+                        this.circleProgram.setUniform("color",
+                            new Vector3(lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected() ? 1.0f : 0.5f));
+                        this.circleProgram.setUniform("model_view",
+                            Matrix4.translate(lightCenter)
+                                .times(Matrix4.scale(2 * widgetDistance))
+                                .times(widgetTransformation.getUpperLeft3x3()
+                                    .times(Matrix3.rotateY(-Math.PI / 2))
+                                    .times(lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected() ?
+                                        Matrix3.rotateZ(-inclination) : Matrix3.IDENTITY)
+                                    .asMatrix4()));
+                        this.circleDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                    }
+
+                    context.getState().enableBackFaceCulling();
+
+                    Vector3 arrow1PositionR = Matrix3.rotateAxis(azimuthRotationAxis, azimuthArrowRotation)
+                        .times(widgetPosition.minus(lightCenter))
+                        .plus(lightCenter);
+
+                    Vector3 arrow1PositionL = Matrix3.rotateAxis(azimuthRotationAxis, -azimuthArrowRotation)
+                        .times(widgetPosition.minus(lightCenter))
+                        .plus(lightCenter);
+
+                    Vector3 arrow2PositionR = widgetTransformation.getUpperLeft3x3()
+                        .times(Matrix3.rotateX(-inclinationArrowRotation))
+                        .times(widgetTransformation.quickInverse(0.01f).getUpperLeft3x3())
+                        .times(widgetPosition.minus(lightCenter))
+                        .plus(lightCenter);
+
+                    Vector3 arrow2PositionL = widgetTransformation.getUpperLeft3x3()
+                        .times(Matrix3.rotateX(inclinationArrowRotation))
+                        .times(widgetTransformation.quickInverse(0.01f).getUpperLeft3x3())
+                        .times(widgetPosition.minus(lightCenter))
+                        .plus(lightCenter);
+
+                    Vector4 arrow1RDirectionY =  Matrix3.rotateAxis(azimuthRotationAxis, azimuthArrowRotation)
+                        .times(widgetTransformation.getUpperLeft3x3())
+                        .times(new Vector3(1,0,0))
+                        .getXY().normalized().asDirection();
+
+                    Vector4 arrow1LDirectionY =  Matrix3.rotateAxis(azimuthRotationAxis, -azimuthArrowRotation)
+                        .times(widgetTransformation.getUpperLeft3x3())
+                        .times(new Vector3(1,0,0))
+                        .getXY().normalized().asDirection();
+
+                    Vector4 arrow2RDirectionY = widgetTransformation.getUpperLeft3x3()
+                        .times(Matrix3.rotateX(-inclinationArrowRotation))
+                        .times(new Vector3(0,1,0))
+                        .getXY().normalized().asDirection();
+
+                    Vector4 arrow2LDirectionY = widgetTransformation.getUpperLeft3x3()
+                        .times(Matrix3.rotateX(inclinationArrowRotation))
+                        .times(new Vector3(0,1,0))
+                        .getXY().normalized().asDirection();
+
+                    // TODO account for perspective distortion in arrow orientation
+                    Vector4 arrow1RDirectionX = new Vector4(arrow1RDirectionY.y, -arrow1RDirectionY.x, 0, 0).normalized();
+                    Vector4 arrow1LDirectionX = new Vector4(arrow1LDirectionY.y, -arrow1LDirectionY.x, 0, 0).normalized();
+                    Vector4 arrow2RDirectionX = new Vector4(arrow2RDirectionY.y, -arrow2RDirectionY.x, 0, 0).normalized();
+                    Vector4 arrow2LDirectionX = new Vector4(arrow2LDirectionY.y, -arrow2LDirectionY.x, 0, 0).normalized();
+
+
+                    Vector4 arrow3DirectionY = lightCenter.minus(widgetPosition).getXY().normalized().asDirection();
+                    Vector4 arrow3DirectionX = new Vector4(arrow3DirectionY.y, -arrow3DirectionY.x, 0, 0).normalized();
+
+                    Vector3 arrow3PositionR = distanceWidgetPosition.minus(widgetDisplacement.times(0.5f));
+                    Vector3 arrow3PositionL = distanceWidgetPosition.plus(widgetDisplacement.times(0.5f));
+
+//                            Vector3 arrow1PositionR = widgetTransformation.times(new Vector4(1,0,0,1)).getXYZ();
+//                            Vector3 arrow1PositionL = widgetTransformation.times(new Vector4(-1,0,0,1)).getXYZ();
+//                            Vector3 arrow2PositionR = widgetTransformation.times(new Vector4(0,1,0,1)).getXYZ();
+//                            Vector3 arrow2PositionL = widgetTransformation.times(new Vector4(0,-1,0,1)).getXYZ();
+//                            Vector3 arrow3PositionR = widgetTransformation.times(new Vector4(0,0,1,1)).getXYZ();
+//                            Vector3 arrow3PositionL = widgetTransformation.times(new Vector4(0,0,-1,1)).getXYZ();
+
+                    this.context.getState().disableDepthTest();
+                    context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+
+                    if (lightingModel.getLightWidgetModel(i).isAzimuthWidgetVisible() &&
+                        (Math.abs(lightDisplacementWorld.x) > 0.001f || Math.abs(lightDisplacementWorld.z) > 0.001f))
+                    {
+                        this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Azimuth"));
+
+                        this.solidProgram.setUniform("model_view",
+                            Matrix4.translate(arrow1PositionR)
+                                .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
+                                .times(Matrix4.fromColumns(
+                                    arrow1RDirectionX,
+                                    arrow1RDirectionY,
+                                    new Vector4(0, 0, 1, 0),
+                                    new Vector4(0, 0, 0, 1))));
+
+                        this.solidProgram.setUniform("color",
+                            new Vector3(lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ? 1.0f : 0.5f)
+                                .asVector4(1));
+                        this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+
+                        this.solidProgram.setUniform("model_view",
+                            Matrix4.translate(arrow1PositionL)
+                                .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
+                                .times(Matrix4.fromColumns(
+                                    arrow1LDirectionX.negated(),
+                                    arrow1LDirectionY.negated(),
+                                    new Vector4(0, 0, 1, 0),
+                                    new Vector4(0, 0, 0, 1))));
+
+                        this.solidProgram.setUniform("color",
+                            new Vector3(lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ? 1.0f : 0.5f)
+                                .asVector4(1));
+                        this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                    }
+
+                    if (lightingModel.getLightWidgetModel(i).isInclinationWidgetVisible())
+                    {
+                        this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Inclination"));
+
+                        this.solidProgram.setUniform("color",
+                            new Vector3(lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected() ? 1.0f : 0.5f)
+                                .asVector4(1));
+
+                        if (Math.PI / 2 - inclination > 0.01f)
+                        {
+                            this.solidProgram.setUniform("model_view",
+                                Matrix4.translate(arrow2PositionR)
+                                    .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
+                                    .times(Matrix4.fromColumns(
+                                        arrow2RDirectionX,
+                                        arrow2RDirectionY,
+                                        new Vector4(0, 0, 1, 0),
+                                        new Vector4(0, 0, 0, 1))));
+                            this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                        }
+
+                        if (Math.PI / 2 + inclination > 0.01f)
+                        {
+                            this.solidProgram.setUniform("model_view",
+                                Matrix4.translate(arrow2PositionL)
+                                    .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
+                                    .times(Matrix4.fromColumns(
+                                        arrow2LDirectionX.negated(),
+                                        arrow2LDirectionY.negated(),
+                                        new Vector4(0, 0, 1, 0),
+                                        new Vector4(0, 0, 0, 1))));
+                            this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                        }
+                    }
+
+                    if (lightingModel.getLightWidgetModel(i).isDistanceWidgetVisible())
+                    {
+                        this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Distance"));
+
+                        this.solidProgram.setUniform("color",
+                            new Vector3(lightingModel.getLightWidgetModel(i).isDistanceWidgetSelected() ? 1.0f : 0.5f)
+                                .asVector4(1));
+
+                        this.solidProgram.setUniform("model_view",
+                            Matrix4.translate(arrow3PositionL)
+                                .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
+                                .times(Matrix4.fromColumns(
+                                    arrow3DirectionX.negated(),
+                                    arrow3DirectionY.negated(),
+                                    new Vector4(0, 0, 1, 0),
+                                    new Vector4(0, 0, 0, 1))));
+
+                        this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+
+                        if (widgetTransformation.getColumn(3).getXYZ().distance(lightCenter) > 0.01f)
+                        {
+                            this.solidProgram.setUniform("model_view",
+                                Matrix4.translate(arrow3PositionR)
+                                    .times(Matrix4.scale(perspectiveWidgetScale, perspectiveWidgetScale, 1.0f))
+                                    .times(Matrix4.fromColumns(
+                                        arrow3DirectionX,
+                                        arrow3DirectionY,
+                                        new Vector4(0, 0, 1, 0),
+                                        new Vector4(0, 0, 0, 1))));
+                            this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
+                        }
+                    }
+                }
+            }
+
+            context.getState().disableAlphaBlending();
+            context.getState().enableDepthWrite();
+            this.context.getState().enableDepthTest();
         }
     }
 

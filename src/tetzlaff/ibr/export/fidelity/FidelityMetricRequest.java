@@ -84,9 +84,12 @@ public class FidelityMetricRequest implements IBRRequest
         return sum / sumWeights;
     }
     @Override
-    public <ContextType extends Context<ContextType>> void executeRequest(ContextType context, IBRRenderable<ContextType> renderable, LoadingMonitor callback) throws IOException
+    public <ContextType extends Context<ContextType>>
+        void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
+            throws IOException
     {
         IBRResources<ContextType> resources = renderable.getResources();
+        ContextType context = resources.context;
 
         System.out.println("\nView Importance:");
 

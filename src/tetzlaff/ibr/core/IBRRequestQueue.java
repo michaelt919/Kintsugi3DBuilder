@@ -8,16 +8,15 @@ import tetzlaff.gl.Context;
 public class IBRRequestQueue<ContextType extends Context<ContextType>> 
 {
     private final Queue<Runnable> requestList;
-    private final ContextType context;
     private final IBRRenderableListModel<ContextType> model;
     private LoadingMonitor loadingMonitor;
 
-    public IBRRequestQueue(ContextType context, IBRRenderableListModel<ContextType> model)
+    public IBRRequestQueue(IBRRenderableListModel<ContextType> model)
     {
         this.requestList = new LinkedList<>();
-        this.context = context;
         this.model = model;
     }
+
     public void setLoadingMonitor(LoadingMonitor loadingMonitor)
     {
         this.loadingMonitor = loadingMonitor;
@@ -34,7 +33,7 @@ public class IBRRequestQueue<ContextType extends Context<ContextType>>
         {
             try
             {
-                request.executeRequest(context, model.getSelectedItem(), loadingMonitor);
+                request.executeRequest(model.getSelectedItem(), loadingMonitor);
             }
             catch(Exception e)
             {
@@ -45,7 +44,7 @@ public class IBRRequestQueue<ContextType extends Context<ContextType>>
 
     public void executeQueue()
     {
-        context.makeContextCurrent();
+        model.getSelectedItem().getResources().context.makeContextCurrent();
 
         while(!requestList.isEmpty())
         {

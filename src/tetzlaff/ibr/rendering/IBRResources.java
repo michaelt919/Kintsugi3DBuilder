@@ -23,7 +23,7 @@ import tetzlaff.ibr.core.ViewSet;
 
 public final class IBRResources<ContextType extends Context<ContextType>> implements AutoCloseable
 {
-    public final Context<ContextType> context;
+    public final ContextType context;
     public final ViewSet viewSet;
     public final VertexGeometry geometry;
 
