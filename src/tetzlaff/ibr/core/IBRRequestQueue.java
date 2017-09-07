@@ -44,20 +44,23 @@ public class IBRRequestQueue<ContextType extends Context<ContextType>>
 
     public void executeQueue()
     {
-        model.getSelectedItem().getResources().context.makeContextCurrent();
-
-        while(!requestList.isEmpty())
+        if (model.getSelectedItem() != null)
         {
-            if (loadingMonitor != null)
-            {
-                loadingMonitor.startLoading();
-            }
+            model.getSelectedItem().getResources().context.makeContextCurrent();
 
-            requestList.poll().run();
-
-            if (loadingMonitor != null)
+            while (!requestList.isEmpty())
             {
-                loadingMonitor.loadingComplete();
+                if (loadingMonitor != null)
+                {
+                    loadingMonitor.startLoading();
+                }
+
+                requestList.poll().run();
+
+                if (loadingMonitor != null)
+                {
+                    loadingMonitor.loadingComplete();
+                }
             }
         }
     }

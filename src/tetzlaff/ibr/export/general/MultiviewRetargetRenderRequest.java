@@ -14,7 +14,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 {
     private final File targetViewSetFile;
 
-    MultiviewRetargetRenderRequest(int width, int height, SettingsModel settingsModel,
+    MultiviewRetargetRenderRequest(int width, int height, ReadonlySettingsModel settingsModel,
         File targetViewSet, File vertexShader, File fragmentShader, File outputDirectory)
     {
         super(width, height, settingsModel, vertexShader, fragmentShader, outputDirectory);
@@ -25,7 +25,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
     {
         private final File targetViewSet;
 
-        Builder(File targetViewSet, SettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(File targetViewSet, ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
             super(settingsModel, fragmentShader, outputDirectory);
             this.targetViewSet = targetViewSet;
@@ -51,7 +51,7 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
         Drawable<ContextType> drawable = createDrawable(program, resources);
         Framebuffer<ContextType> framebuffer = createFramebuffer(resources.context);
 
-        for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
+        for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
         {
             program.setUniform("viewIndex", i);
             program.setUniform("model_view", targetViewSet.getCameraPose(i));
@@ -61,7 +61,16 @@ class MultiviewRetargetRenderRequest extends RenderRequestBase
 
             render(drawable, framebuffer);
 
-            File exportFile = new File(getOutputDirectory(), String.format("%04d", i));
+            String fileName = targetViewSet.getImageFileName(i);
+
+            if (!fileName.endsWith(".png"))
+            {
+                String[] parts = fileName.split("\\.");
+                parts[parts.length - 1] = "png";
+                fileName = String.join(".", parts);
+            }
+
+            File exportFile = new File(getOutputDirectory(), fileName);
             getOutputDirectory().mkdirs();
             framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
 

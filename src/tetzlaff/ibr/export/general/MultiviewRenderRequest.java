@@ -10,12 +10,12 @@ import tetzlaff.gl.Program;
 import tetzlaff.ibr.core.IBRRenderable;
 import tetzlaff.ibr.core.IBRRequest;
 import tetzlaff.ibr.core.LoadingMonitor;
-import tetzlaff.ibr.core.SettingsModel;
+import tetzlaff.ibr.core.ReadonlySettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
 
 class MultiviewRenderRequest extends RenderRequestBase
 {
-    MultiviewRenderRequest(int width, int height, SettingsModel settingsModel,
+    MultiviewRenderRequest(int width, int height, ReadonlySettingsModel settingsModel,
         File vertexShader, File fragmentShader, File outputDirectory)
     {
         super(width, height, settingsModel, vertexShader, fragmentShader, outputDirectory);
@@ -23,7 +23,7 @@ class MultiviewRenderRequest extends RenderRequestBase
 
     static class Builder extends BuilderBase
     {
-        Builder(SettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
             super(settingsModel, fragmentShader, outputDirectory);
         }
@@ -58,7 +58,16 @@ class MultiviewRenderRequest extends RenderRequestBase
 
             render(drawable, framebuffer);
 
-            File exportFile = new File(getOutputDirectory(), String.format("%04d", i));
+            String fileName = renderable.getActiveViewSet().getImageFileName(i);
+
+            if (!fileName.endsWith(".png"))
+            {
+                String[] parts = fileName.split("\\.");
+                parts[parts.length - 1] = "png";
+                fileName = String.join(".", parts);
+            }
+
+            File exportFile = new File(getOutputDirectory(), fileName);
             getOutputDirectory().mkdirs();
             framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
 

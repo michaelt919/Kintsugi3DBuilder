@@ -2,18 +2,18 @@ package tetzlaff.ibr.export.general;
 
 import java.io.File;
 
-import tetzlaff.ibr.core.SettingsModel;
+import tetzlaff.ibr.core.ReadonlySettingsModel;
 
 public final class RequestFactoryImplementation implements RequestFactory
 {
-    private final SettingsModel settingsModel;
+    private final ReadonlySettingsModel settingsModel;
 
-    private RequestFactoryImplementation(SettingsModel settingsModel)
+    private RequestFactoryImplementation(ReadonlySettingsModel settingsModel)
     {
         this.settingsModel = settingsModel;
     }
 
-    public static RequestFactoryImplementation create(SettingsModel settingsModel)
+    public static RequestFactoryImplementation create(ReadonlySettingsModel settingsModel)
     {
         return new RequestFactoryImplementation(settingsModel);
     }
