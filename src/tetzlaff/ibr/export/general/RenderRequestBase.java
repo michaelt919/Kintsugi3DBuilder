@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 
 import tetzlaff.gl.*;
 import tetzlaff.ibr.core.IBRRequest;
-import tetzlaff.ibr.core.SettingsModel;
+import tetzlaff.ibr.core.ReadonlySettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
 
 abstract class RenderRequestBase implements IBRRequest
@@ -18,10 +18,10 @@ abstract class RenderRequestBase implements IBRRequest
     private final int height;
     private final File vertexShader;
     private final File fragmentShader;
-    private final SettingsModel settingsModel;
+    private final ReadonlySettingsModel settingsModel;
     private final File outputDirectory;
 
-    RenderRequestBase(int width, int height, SettingsModel settingsModel, File vertexShader, File fragmentShader, File outputDirectory)
+    RenderRequestBase(int width, int height, ReadonlySettingsModel settingsModel, File vertexShader, File fragmentShader, File outputDirectory)
     {
         this.width = width;
         this.height = height;
@@ -33,7 +33,7 @@ abstract class RenderRequestBase implements IBRRequest
 
     abstract static class BuilderBase implements RenderRequestBuilder
     {
-        private final SettingsModel settingsModel;
+        private final ReadonlySettingsModel settingsModel;
         private final File fragmentShader;
         private final File outputDirectory;
 
@@ -41,7 +41,7 @@ abstract class RenderRequestBase implements IBRRequest
         private int height = 1024;
         private File vertexShader = TEX_SPACE_VERTEX_SHADER;
 
-        BuilderBase(SettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        BuilderBase(ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
             this.settingsModel = settingsModel;
             this.fragmentShader = fragmentShader;
@@ -58,7 +58,7 @@ abstract class RenderRequestBase implements IBRRequest
             return height;
         }
 
-        protected SettingsModel getSettingsModel()
+        protected ReadonlySettingsModel getSettingsModel()
         {
             return settingsModel;
         }

@@ -964,7 +964,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     fboSize = offscreenFBO.getSize();
                 }
 
-                drawLights(framebuffer, view, partialViewMatrix);
+                drawLights(offscreenFBO, view, partialViewMatrix);
 
                 // Finish drawing
                 context.flush();
@@ -1712,7 +1712,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 double xRemapped = Math.min(Math.max(x, 0), 1);
                 double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
 
-                int index = 4 * (int)(Math.round(fboSize.height * yRemapped) * fboSize.width + Math.round(fboSize.width * xRemapped));
+                int index = 4 * (int)(Math.round((fboSize.height-1) * yRemapped) * fboSize.width + Math.round((fboSize.width-1) * xRemapped));
                 return sceneObjectNameList.get(pixelObjectIDs[index]);
             }
 
@@ -1734,7 +1734,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 double xRemapped = Math.min(Math.max(x, 0), 1);
                 double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
 
-                int index = (int)(Math.round(fboSize.height * yRemapped) * fboSize.width + Math.round(fboSize.width * xRemapped));
+                int index = (int)(Math.round((fboSize.height-1) * yRemapped) * fboSize.width + Math.round((fboSize.width-1) * xRemapped));
 
                 Matrix4 projectionInverse = getProjectionInverse();
 

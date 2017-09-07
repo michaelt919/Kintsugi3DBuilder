@@ -10,14 +10,14 @@ import tetzlaff.gl.Program;
 import tetzlaff.ibr.core.IBRRenderable;
 import tetzlaff.ibr.core.IBRRequest;
 import tetzlaff.ibr.core.LoadingMonitor;
-import tetzlaff.ibr.core.SettingsModel;
+import tetzlaff.ibr.core.ReadonlySettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
 
 class MultiframeRenderRequest extends RenderRequestBase
 {
     private final int frameCount;
 
-    MultiframeRenderRequest(int width, int height, int frameCount, SettingsModel settingsModel,
+    MultiframeRenderRequest(int width, int height, int frameCount, ReadonlySettingsModel settingsModel,
         File vertexShader, File fragmentShader, File outputDirectory)
     {
         super(width, height, settingsModel, vertexShader, fragmentShader, outputDirectory);
@@ -28,7 +28,7 @@ class MultiframeRenderRequest extends RenderRequestBase
     {
         private final int frameCount;
 
-        Builder(int frameCount, SettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(int frameCount, ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
             super(settingsModel, fragmentShader, outputDirectory);
             this.frameCount = frameCount;
@@ -64,7 +64,7 @@ class MultiframeRenderRequest extends RenderRequestBase
 
             render(drawable, framebuffer);
 
-            File exportFile = new File(getOutputDirectory(), String.format("%04d", i));
+            File exportFile = new File(getOutputDirectory(), String.format("%04d.png", i));
             getOutputDirectory().mkdirs();
             framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
 

@@ -10,14 +10,14 @@ import tetzlaff.gl.Program;
 import tetzlaff.ibr.core.IBRRenderable;
 import tetzlaff.ibr.core.IBRRequest;
 import tetzlaff.ibr.core.LoadingMonitor;
-import tetzlaff.ibr.core.SettingsModel;
+import tetzlaff.ibr.core.ReadonlySettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
 
 class SingleFrameRenderRequest extends RenderRequestBase
 {
     private final String outputImageName;
 
-    SingleFrameRenderRequest(int width, int height, String outputImageName, SettingsModel settingsModel,
+    SingleFrameRenderRequest(int width, int height, String outputImageName, ReadonlySettingsModel settingsModel,
         File vertexShader, File fragmentShader, File outputDirectory)
     {
         super(width, height, settingsModel, vertexShader, fragmentShader, outputDirectory);
@@ -28,7 +28,7 @@ class SingleFrameRenderRequest extends RenderRequestBase
     {
         private final String outputImageName;
 
-        Builder(String outputImageName, SettingsModel settingsModel, File fragmentShader, File outputDirectory)
+        Builder(String outputImageName, ReadonlySettingsModel settingsModel, File fragmentShader, File outputDirectory)
         {
             super(settingsModel, fragmentShader, outputDirectory);
             this.outputImageName = outputImageName;
