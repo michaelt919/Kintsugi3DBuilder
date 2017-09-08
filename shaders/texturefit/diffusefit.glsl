@@ -10,6 +10,8 @@ uniform int iterations;
 uniform float fit1Weight;
 uniform float fit3Weight;
 
+#define SQRT2 1.4142135623730950488016887242097
+
 struct DiffuseFit
 {
     vec3 color;
@@ -42,6 +44,7 @@ DiffuseFit fitDiffuse()
         mat3 b = mat3(0);
         vec4 weightedRadianceSum = vec4(0.0);
         vec3 weightedIrradianceSum = vec3(0.0);
+        vec3 directionSum = vec3(0);
 
         for (int i = 0; i < viewCount; i++)
         {
@@ -75,6 +78,7 @@ DiffuseFit fitDiffuse()
                 b += weight * outerProduct(lightNormalized, color.rgb / attenuatedIncidentRadiance);
                 weightedRadianceSum += weight * vec4(color.rgb, 1.0);
                 weightedIrradianceSum += weight * attenuatedIncidentRadiance * max(0, dot(geometricNormal, lightNormalized));
+                directionSum += lightNormalized;
             }
         }
 
@@ -105,11 +109,36 @@ DiffuseFit fitDiffuse()
             float fit3Quality = clamp(fit3Weight * determinant(a) / weightedRadianceSum.a *
                                     clamp(dot(normalize(solution.xyz), geometricNormal), 0, 1), 0.0, 1.0);
 
+            vec3 geometricNormal = normalize(fNormal);
+
             fit.color = clamp(weightedRadianceSum.rgb / max(max(rgbScale.r, rgbScale.g), rgbScale.b), 0, 1)
                                 * fit3Quality
                             + clamp(weightedRadianceSum.rgb / weightedIrradianceSum, 0, 1)
                                 * clamp(fit1Weight * weightedIrradianceSum, 0, 1 - fit3Quality);
-            fit.normal = normalize(normalize(solution.xyz) * fit3Quality + fNormal * (1 - fit3Quality));
+            vec3 diffuseNormalEstimate = normalize(normalize(solution.xyz) * fit3Quality + geometricNormal * (1 - fit3Quality));
+
+            float directionScale = length(directionSum);
+            vec3 averageDirection = directionSum / max(1, directionScale);
+
+            // sqrt2 / 2 corresponds to 45 degrees between the geometric surface normal and the average view direction.
+            // This is the point at which there is essentially no information that can be obtained about the true surface normal in one dimension
+            // since all of the views are presumably on the same side of the surface normal.
+            float diffuseNormalFidelity = max(0, (dot(averageDirection, geometricNormal) - SQRT2 / 2) / (1 - SQRT2 / 2));
+
+            vec3 certaintyDirectionUnnormalized = cross(averageDirection - diffuseNormalFidelity * geometricNormal, geometricNormal);
+            vec3 certaintyDirection = certaintyDirectionUnnormalized
+                / max(1, length(certaintyDirectionUnnormalized));
+
+            float diffuseNormalCertainty =
+                min(1, directionScale) * dot(diffuseNormalEstimate, certaintyDirection);
+            vec3 scaledCertaintyDirection = diffuseNormalCertainty * certaintyDirection;
+            fit.normal = normalize(
+                scaledCertaintyDirection
+                    + sqrt(1 - diffuseNormalCertainty * diffuseNormalCertainty
+                                * dot(certaintyDirection, certaintyDirection))
+                        * normalize(mix(geometricNormal, normalize(diffuseNormalEstimate - scaledCertaintyDirection),
+                            min(1, directionScale) * diffuseNormalFidelity)));
+
             //debug = vec4(fit3Quality,
             //    clamp(fit1Weight * weightedIrradianceSum, 0, 1 - fit3Quality), 0.0, 1.0);
         }
