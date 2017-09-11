@@ -9,22 +9,25 @@ import tetzlaff.gl.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
-import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.core.ReadonlySettingsModel;
 import tetzlaff.ibr.rendering.IBRResources;
+import tetzlaff.ibr.util.PowerViewWeightGenerator;
+import tetzlaff.ibr.util.ViewWeightGenerator;
 import tetzlaff.util.ShadingParameterMode;
 
 public class IBRFidelityTechnique<ContextType extends Context<ContextType>> implements FidelityEvaluationTechnique<ContextType>
 {
     private IBRResources<ContextType> resources;
     private Drawable<ContextType> drawable;
-    private Framebuffer<ContextType> framebuffer;
+    private FramebufferObject<ContextType> framebuffer;
     private ReadonlySettingsModel settings;
     
     private List<Integer> activeViewIndexList;
 
     private Program<ContextType> fidelityProgram;
     private NativeVectorBuffer viewIndexData;
+
+    private ViewWeightGenerator viewWeightGenerator;
 
     @Override
     public boolean isGuaranteedInterpolating()
@@ -49,6 +52,8 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
     {
         this.resources = resources;
         this.settings = settings;
+
+        this.viewWeightGenerator = new PowerViewWeightGenerator(settings.getWeightExponent());
 
         fidelityProgram = resources.context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
@@ -90,32 +95,6 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
         }
     }
 
-    private NativeVectorBuffer generateViewWeights(IBRResources<?> resources, int targetViewIndex)
-    {
-        float[] viewWeights = new float[resources.viewSet.getCameraPoseCount()];
-        float viewWeightSum = 0.0f;
-
-        for (Integer anActiveViewIndexList : activeViewIndexList)
-        {
-            int viewIndex = anActiveViewIndexList.intValue();
-
-            Vector3 viewDir = resources.viewSet.getCameraPose(viewIndex).times(resources.geometry.getCentroid().asPosition()).getXYZ().negated().normalized();
-            Vector3 targetDir = resources.viewSet.getCameraPose(viewIndex).times(
-                resources.viewSet.getCameraPose(targetViewIndex).quickInverse(0.01f).getColumn(3)
-                    .minus(resources.geometry.getCentroid().asPosition())).getXYZ().normalized();
-
-            viewWeights[viewIndex] = 1.0f / (float) Math.max(0.000001, 1.0 - Math.pow(Math.max(0.0, targetDir.dot(viewDir)), this.settings.getWeightExponent())) - 1.0f;
-            viewWeightSum += viewWeights[viewIndex];
-        }
-
-        for (int i = 0; i < viewWeights.length; i++)
-        {
-            viewWeights[i] /= viewWeightSum;
-        }
-
-        return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
-    }
-
     @Override
     public double evaluateError(int targetViewIndex, File debugFile)
     {
@@ -127,8 +106,10 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
         if (this.settings.getWeightMode() == ShadingParameterMode.UNIFORM)
         {
             drawable.program().setUniform("perPixelWeightsEnabled", false);
+            float[] viewWeights = viewWeightGenerator.generateWeights(resources, activeViewIndexList, resources.viewSet.getCameraPose(targetViewIndex));
+
             weightBuffer = resources.context.createUniformBuffer().setData(
-                /*viewWeightBuffer = */this.generateViewWeights(resources, targetViewIndex));
+                /*viewWeightBuffer = */NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights));
             drawable.program().setUniformBuffer("ViewWeights", weightBuffer);
             drawable.program().setUniform("occlusionEnabled", false);
         }
@@ -224,14 +205,13 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
             weightBuffer.close();
         }
 
-        double renderError = Math.sqrt(sumSqError / sumMask);
-        return renderError;
+        return Math.sqrt(sumSqError / sumMask);
     }
 
     @Override
-    public void close() throws Exception
+    public void close()
     {
-        // TODO Auto-generated method stub
-
+        fidelityProgram.close();
+        framebuffer.close();
     }
 }

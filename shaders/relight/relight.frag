@@ -475,8 +475,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
     }
 }
 
-vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
-    vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
+vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
 {
     float maxLuminance = getMaxLuminance();
 
@@ -514,6 +513,103 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(
         }
     }
     return results;
+}
+
+#define MAX_BUEHLER_SAMPLE_COUNT 5
+
+float computeBuehlerWeight(vec3 targetDirection, vec3 sampleDirection)
+{
+    return 1.0 / (1.0 - max(0.0, dot(sampleDirection, targetDirection))) - 1.0;
+}
+
+float getBuehlerWeight(int index, vec3 targetDirection)
+{
+    return computeBuehlerWeight(mat3(cameraPoses[index]) * targetDirection, -(cameraPoses[index] * vec4(fPosition, 1.0)).xyz);
+}
+
+vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
+{
+    float maxLuminance = getMaxLuminance();
+
+    float weights[MAX_BUEHLER_SAMPLE_COUNT];
+    int indices[MAX_BUEHLER_SAMPLE_COUNT];
+
+    int sampleCount = 5; // TODO change to a parameter
+
+    // Initialization
+    for (int i = 0; i < sampleCount; i++)
+    {
+        weights[i] = -(1.0 / 0.0); // Parentheses needed for AMD cards.
+        indices[i] = -1;
+    }
+
+    // Partial heapsort
+    for (int i = 0; i < viewCount; i++)
+    {
+        float weight = getBuehlerWeight(i, targetDirection);
+        if (weight >= weights[0]) // Decide if the new view goes in the heap
+        {
+            // Replace the min node in the heap with the new one
+            weights[0] = weight;
+            indices[0] = i;
+
+            int currentIndex = 0;
+            int minIndex = -1;
+
+            while (currentIndex != -1)
+            {
+                // The two "children" in the heap
+                int leftIndex = 2*currentIndex+1;
+                int rightIndex = 2*currentIndex+2;
+
+                // Find the smallest of the current node, and its left and right children
+                if (leftIndex < sampleCount && weights[leftIndex] < weights[currentIndex])
+                {
+                    minIndex = leftIndex;
+                }
+                else
+                {
+                    minIndex = currentIndex;
+                }
+
+                if (rightIndex < sampleCount && weights[rightIndex] < weights[minIndex])
+                {
+                    minIndex = rightIndex;
+                }
+
+                // If a child is smaller than the current node, then swap
+                if (minIndex != currentIndex)
+                {
+                    float weightTmp = weights[currentIndex];
+                    int indexTmp = indices[currentIndex];
+                    weights[currentIndex] = weights[minIndex];
+                    indices[currentIndex] = indices[minIndex];
+                    weights[minIndex] = weightTmp;
+                    indices[minIndex] = indexTmp;
+
+                    currentIndex = minIndex;
+                }
+                else
+                {
+                    currentIndex = -1; // Signal to quit
+                }
+            }
+        }
+    }
+
+    // Evaluate the light field
+    // Because of the min-heap property, weights[0] should be the smallest weight
+    vec4 sum = vec4(0.0);
+    for (int i = 1; i < sampleCount; i++)
+    {
+        vec4 computedSample = computeSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance)[0];
+        if (computedSample.a > 0)
+        {
+            sum += (weights[i] - weights[0]) * computedSample / computedSample.a;
+        }
+    }
+
+    return sum / sum.a;
 }
 
 vec3 linearToSRGB(vec3 color)
@@ -801,7 +897,10 @@ void main()
                 vec3 halfDir = normalize(viewDir + lightDir);
                 float hDotV = dot(halfDir, viewDir);
                 float nDotH = useTSOverrides ? halfDir.z : dot(normalDir, halfDir);
-                
+
+                // TODO : this is a hack to use Buehler algorithm for one of the light sources
+                //weightedAverages[0] = computeBuehler(halfDir, diffuseColor, normalDir, specularColor, roughness);
+
                 vec3 mfdFresnel;
 
                 if ((!imageBasedRenderingEnabled || relightingEnabled) && fresnelEnabled)

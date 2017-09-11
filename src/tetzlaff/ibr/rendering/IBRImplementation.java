@@ -3,10 +3,7 @@ package tetzlaff.ibr.rendering;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import tetzlaff.gl.*;
 import tetzlaff.gl.AlphaBlendingFunction.Weight;
@@ -24,6 +21,7 @@ import tetzlaff.ibr.core.LoadingMonitor;
 import tetzlaff.ibr.core.ReadonlySettingsModel;
 import tetzlaff.ibr.core.ViewSet;
 import tetzlaff.ibr.rendering.IBRResources.Builder;
+import tetzlaff.ibr.util.KNNViewWeightGenerator;
 import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.ReadonlyObjectModel;
@@ -766,26 +764,26 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         }
     }
 
-    private NativeVectorBuffer generateViewWeights(Matrix4 view)
+    private NativeVectorBuffer generateViewWeights(Matrix4 targetView)
     {
-        float[] viewWeights = new float[this.resources.viewSet.getCameraPoseCount()];
-        float viewWeightSum = 0.0f;
+        float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
+                                new KNNViewWeightGenerator(4)
+                                    .generateWeights(resources,
+                                        new AbstractList<Integer>()
+                                        {
+                                            @Override
+                                            public Integer get(int index)
+                                            {
+                                                return index;
+                                            }
 
-        for (int i = 0; i < viewWeights.length; i++)
-        {
-            Vector3 viewDir = this.resources.viewSet.getCameraPose(i).times(this.resources.geometry.getCentroid().asPosition()).getXYZ().negated().normalized();
-            Vector3 targetDir = this.resources.viewSet.getCameraPose(i).times(
-                    view.quickInverse(0.01f).getColumn(3)
-                        .minus(this.resources.geometry.getCentroid().asPosition())).getXYZ().normalized();
-
-            viewWeights[i] = 1.0f / (float)Math.max(0.000001, 1.0 - Math.pow(Math.max(0.0, targetDir.dot(viewDir)), this.settings.getWeightExponent())) - 1.0f;
-            viewWeightSum += viewWeights[i];
-        }
-
-        for (int i = 0; i < viewWeights.length; i++)
-        {
-            viewWeights[i] /= Math.max(0.01, viewWeightSum);
-        }
+                                            @Override
+                                            public int size()
+                                            {
+                                                return resources.viewSet.getCameraPoseCount();
+                                            }
+                                        },
+                                        targetView);
 
         return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
     }
