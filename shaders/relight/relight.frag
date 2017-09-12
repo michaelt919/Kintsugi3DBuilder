@@ -519,7 +519,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 no
 
 float computeBuehlerWeight(vec3 targetDirection, vec3 sampleDirection)
 {
-    return 1.0 / (1.0 - max(0.0, dot(sampleDirection, targetDirection)));
+    return 1.0 / (1.0 - clamp(dot(sampleDirection, targetDirection), 0.0, 0.9999));
 }
 
 float getBuehlerWeight(int index, vec3 targetDirection)

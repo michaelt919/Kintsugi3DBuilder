@@ -80,6 +80,7 @@ public class BTFRequest implements IBRRequest
             btfProgram.setUniform("ambientColor", Vector3.ZERO);
 
             btfProgram.setUniform("perPixelWeightsEnabled", true);
+            btfProgram.setUniform("suppressMipmaps", true);
 
             btfProgram.setUniform("useTSOverrides", true);
 
