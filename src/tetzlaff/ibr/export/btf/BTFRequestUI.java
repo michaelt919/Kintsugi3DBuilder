@@ -3,6 +3,8 @@ package tetzlaff.ibr.export.btf;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 import javafx.event.ActionEvent;
@@ -24,6 +26,7 @@ public class BTFRequestUI implements IBRRequestUI
     @FXML private TextField widthTextField;
     @FXML private TextField heightTextField;
     @FXML private TextField exportDirectoryField;
+    @FXML private TextField viewIndicesTextField;
     @FXML private Button runButton;
 
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -91,13 +94,41 @@ public class BTFRequestUI implements IBRRequestUI
         {
             //stage.close();
 
-            requestHandler.accept(
-                new BTFRequest(
-                    Integer.parseInt(widthTextField.getText()),
-                    Integer.parseInt(heightTextField.getText()),
-                    new File(exportDirectoryField.getText()),
-                    modelAccess.getSettingsModel(),
-                    modelAccess.getLightingModel().getLightColor(0)));
+            BTFRequest request = new BTFRequest(
+                Integer.parseInt(widthTextField.getText()),
+                Integer.parseInt(heightTextField.getText()),
+                new File(exportDirectoryField.getText()),
+                modelAccess.getSettingsModel(),
+                modelAccess.getLightingModel().getLightColor(0));
+
+            String[] viewIndexStrings = viewIndicesTextField.getText().split("\\s*,\\s*");
+
+            if (viewIndexStrings.length > 0)
+            {
+                List<Integer> viewIndices = new ArrayList<>(viewIndexStrings.length);
+
+                for (String str : viewIndexStrings)
+                {
+                    if (!str.trim().isEmpty())
+                    {
+                        try
+                        {
+                            viewIndices.add(Integer.parseInt(str));
+                        }
+                        catch(NumberFormatException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                if (!viewIndices.isEmpty())
+                {
+                    request.setViewIndices(viewIndices);
+                }
+            }
+
+            requestHandler.accept(request);
         });
     }
 }

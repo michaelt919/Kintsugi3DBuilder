@@ -1,5 +1,5 @@
-#ifndef COLOR_APPEARANCE_GLSL
-#define COLOR_APPEARANCE_GLSL
+#ifndef COLOR_APPEARANCE_SUBSET_GLSL
+#define COLOR_APPEARANCE_SUBSET_GLSL
 
 #include "linearize.glsl"
 
@@ -13,6 +13,8 @@
 
 uniform int viewCount;
 uniform bool infiniteLightSources;
+
+uniform bool useViewIndices;
 
 layout(std140) uniform ViewIndices
 {
@@ -46,7 +48,14 @@ layout(std140) uniform LightIndices
 
 int getViewIndex(int virtualIndex)
 {
-    return viewIndices[virtualIndex/4][virtualIndex%4];
+    if (useViewIndices)
+    {
+        return viewIndices[virtualIndex/4][virtualIndex%4];
+    }
+    else
+    {
+        return virtualIndex;
+    }
 }
 
 int getLightIndex(int virtualIndex)
@@ -87,4 +96,4 @@ vec4 getLinearColor(int virtualIndex)
     return linearizeColor(getColor(virtualIndex));
 }
 
-#endif // COLOR_APPEARANCE_GLSL
+#endif // COLOR_APPEARANCE_SUBSET_GLSL
