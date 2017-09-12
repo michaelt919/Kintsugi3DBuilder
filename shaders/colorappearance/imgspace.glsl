@@ -15,6 +15,8 @@ uniform bool occlusionEnabled;
 uniform bool shadowTestEnabled;
 uniform float occlusionBias;
 
+uniform bool suppressMipmaps;
+
 layout(std140) uniform CameraProjections
 {
     mat4 cameraProjections[MAX_CAMERA_PROJECTION_COUNT];
@@ -81,8 +83,15 @@ vec4 getColor(int index)
                 }
             }
         }
-        
-        return texture(viewImages, vec3(projTexCoord.xy, index));
+
+        if (suppressMipmaps)
+        {
+            return textureLod(viewImages, vec3(projTexCoord.xy, index), 0);
+        }
+        else
+        {
+            return texture(viewImages, vec3(projTexCoord.xy, index));
+        }
     }
 }
 
