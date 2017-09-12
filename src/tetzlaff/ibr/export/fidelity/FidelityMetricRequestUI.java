@@ -148,7 +148,7 @@ public class FidelityMetricRequestUI implements IBRRequestUI
 
         runButton.setOnAction(event ->
         {
-            stage.close();
+            //stage.close();
 
             requestHandler.accept(
                 new FidelityMetricRequest(
