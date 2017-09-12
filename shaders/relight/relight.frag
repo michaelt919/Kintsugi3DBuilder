@@ -9,8 +9,8 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int fragObjectID;
 
-#include "../colorappearance/colorappearance.glsl"
-#include "../colorappearance/imgspace.glsl"
+#include "../colorappearance/colorappearance_subset.glsl"
+#include "../colorappearance/imgspace_subset.glsl"
 
 #line 16 0
 
