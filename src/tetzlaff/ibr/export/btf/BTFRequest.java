@@ -1,6 +1,7 @@
 package tetzlaff.ibr.export.btf;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import tetzlaff.gl.*;
@@ -69,6 +70,8 @@ public class BTFRequest implements IBRRequest
             btfProgram.setTexture("environmentMap", null);
             btfProgram.setUniform("ambientColor", Vector3.ZERO);
 
+            btfProgram.setUniform("perPixelWeightsEnabled", true);
+
             btfProgram.setUniform("useTSOverrides", true);
 
             ////////////////////////////////
@@ -88,8 +91,8 @@ public class BTFRequest implements IBRRequest
                 double theta = i / 180.0f * Math.PI;
                 btfProgram.setUniform("virtualLightCount", 1);
                 btfProgram.setUniform("lightIntensityVirtual[0]", lightColor);
-                btfProgram.setUniform("lightDirTSOverride", new Vector3(-(float)(Math.sin(theta)*Math.sqrt(0.5)), -(float)(Math.sin(theta)*Math.sqrt(0.5)), (float)Math.cos(theta)));
-                btfProgram.setUniform("viewDirTSOverride", new Vector3((float)(Math.cos(theta)*Math.sqrt(0.5)), (float)(Math.cos(theta)*Math.sqrt(0.5)), (float)Math.sin(theta)));
+                btfProgram.setUniform("lightDirTSOverride", new Vector3(-(float)(Math.sin(theta)*Math.sqrt(0.5)), (float)(Math.sin(theta)*Math.sqrt(0.5)), (float)Math.cos(theta)));
+                btfProgram.setUniform("viewDirTSOverride", new Vector3((float)(Math.cos(theta)*Math.sqrt(0.5)), -(float)(Math.cos(theta)*Math.sqrt(0.5)), (float)Math.sin(theta)));
 //                btfProgram.setUniform("lightDirTSOverride", new Vector3(-(float)Math.sin(theta), 0.0f, (float)Math.cos(theta)));
 //                btfProgram.setUniform("viewDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
 
@@ -110,7 +113,7 @@ public class BTFRequest implements IBRRequest
                 }
             }
         }
-        catch (IOException e)
+        catch (FileNotFoundException e)
         {
             e.printStackTrace();
         }
