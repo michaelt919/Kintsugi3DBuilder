@@ -20,8 +20,6 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
     private Drawable<ContextType> textureFitDrawable;
     private FramebufferObject<ContextType> textureFitFramebuffer;
 
-    private Program<ContextType> textureFitBaselineProgram;
-    private Drawable<ContextType> textureFitBaselineDrawable;
     private FramebufferObject<ContextType> textureFitBaselineFramebuffer;
 
     private Texture2D<ContextType> maskTexture;
@@ -86,44 +84,45 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
         textureFitDrawable.addVertexBuffer("normal", resources.normalBuffer);
         textureFitDrawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
-        textureFitBaselineProgram = resources.context.getShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit_imgspace.frag"))
-            .createProgram();
-
         textureFitBaselineFramebuffer = resources.context.buildFramebufferObject(size, size)
             .addColorAttachments(ColorFormat.RGBA8, 4)
             .createFramebufferObject();
 
-        textureFitBaselineDrawable = resources.context.createDrawable(textureFitBaselineProgram);
-        textureFitBaselineDrawable.addVertexBuffer("position", resources.positionBuffer);
-        textureFitBaselineDrawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
-        textureFitBaselineDrawable.addVertexBuffer("normal", resources.normalBuffer);
-        textureFitBaselineDrawable.addVertexBuffer("tangent", resources.tangentBuffer);
-
-        // Baseline
-        resources.setupShaderProgram(textureFitBaselineDrawable.program(), false);
-
-        textureFitBaselineDrawable.program().setUniform("viewCount", resources.viewSet.getCameraPoseCount());
-
-        if (this.usePerceptuallyLinearError)
+        try(Program<ContextType> textureFitBaselineProgram = resources.context.getShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit_imgspace.frag"))
+            .createProgram())
         {
-            textureFitBaselineDrawable.program().setUniform("fittingGamma", 2.2f);
+            Drawable<ContextType> textureFitBaselineDrawable = resources.context.createDrawable(textureFitBaselineProgram);
+            textureFitBaselineDrawable.addVertexBuffer("position", resources.positionBuffer);
+            textureFitBaselineDrawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
+            textureFitBaselineDrawable.addVertexBuffer("normal", resources.normalBuffer);
+            textureFitBaselineDrawable.addVertexBuffer("tangent", resources.tangentBuffer);
+
+            // Baseline
+            resources.setupShaderProgram(textureFitBaselineDrawable.program(), false);
+
+            textureFitBaselineDrawable.program().setUniform("viewCount", resources.viewSet.getCameraPoseCount());
+
+            if (this.usePerceptuallyLinearError)
+            {
+                textureFitBaselineDrawable.program().setUniform("fittingGamma", 2.2f);
+            }
+            else
+            {
+                textureFitBaselineDrawable.program().setUniform("fittingGamma", 1.0f);
+            }
+
+            textureFitBaselineDrawable.program().setUniform("standaloneMode", true);
+
+            textureFitBaselineFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+            textureFitBaselineFramebuffer.clearColorBuffer(1, 0.5f, 0.5f, 1.0f, 1.0f);
+            textureFitBaselineFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 1.0f);
+            textureFitBaselineFramebuffer.clearColorBuffer(3, 1.0f, 1.0f, 1.0f, 1.0f);
+            textureFitBaselineFramebuffer.clearDepthBuffer();
+
+            textureFitBaselineDrawable.draw(PrimitiveMode.TRIANGLES, textureFitBaselineFramebuffer);
         }
-        else
-        {
-            textureFitBaselineDrawable.program().setUniform("fittingGamma", 1.0f);
-        }
-
-        textureFitBaselineDrawable.program().setUniform("standaloneMode", true);
-
-        textureFitBaselineFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
-        textureFitBaselineFramebuffer.clearColorBuffer(1, 0.5f, 0.5f, 1.0f, 1.0f);
-        textureFitBaselineFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 1.0f);
-        textureFitBaselineFramebuffer.clearColorBuffer(3, 1.0f, 1.0f, 1.0f, 1.0f);
-        textureFitBaselineFramebuffer.clearDepthBuffer();
-
-        textureFitBaselineDrawable.draw(PrimitiveMode.TRIANGLES, textureFitBaselineFramebuffer);
 
         viewIndexData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
     }
@@ -235,8 +234,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
         {
             try
             {
-                fidelityFramebuffer.saveColorBufferToFile(0, "PNG",
-                        new File(debugFile.getParentFile(), debugFile.getName()));
+                fidelityFramebuffer.saveColorBufferToFile(0, "PNG", debugFile);
 
                 textureFitBaselineFramebuffer.saveColorBufferToFile(0, "PNG", new File(debugFile.getParentFile(), "baseline_diffuse.png"));
                 textureFitBaselineFramebuffer.saveColorBufferToFile(1, "PNG", new File(debugFile.getParentFile(), "baseline_normal.png"));
@@ -324,7 +322,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
     }
 
     @Override
-    public void close() throws Exception
+    public void close()
     {
         if (textureFitProgram != null)
         {

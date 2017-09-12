@@ -1,8 +1,6 @@
 #ifndef SPECULARFIT_GLSL
 #define SPECULARFIT_GLSL
 
-#include "../colorappearance/colorappearance.glsl"
-
 #line 7 2004
 
 uniform sampler2D diffuseEstimate;
