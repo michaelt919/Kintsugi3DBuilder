@@ -89,7 +89,7 @@ public class BTFRequestUI implements IBRRequestUI
 
         runButton.setOnAction(event ->
         {
-            stage.close();
+            //stage.close();
 
             requestHandler.accept(
                 new BTFRequest(

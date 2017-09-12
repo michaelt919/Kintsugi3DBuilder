@@ -390,7 +390,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
                 precomputedSample = sampleColor;
             }
             
-            mat3 tangentToObject = mat3(0.0);
+            mat3 tangentToObject = mat3(1.0);
 
             vec3 virtualViewDir;
             if (useTSOverrides)
@@ -519,12 +519,12 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 no
 
 float computeBuehlerWeight(vec3 targetDirection, vec3 sampleDirection)
 {
-    return 1.0 / (1.0 - max(0.0, dot(sampleDirection, targetDirection))) - 1.0;
+    return 1.0 / (1.0 - max(0.0, dot(sampleDirection, targetDirection)));
 }
 
 float getBuehlerWeight(int index, vec3 targetDirection)
 {
-    return computeBuehlerWeight(mat3(cameraPoses[index]) * targetDirection, -(cameraPoses[index] * vec4(fPosition, 1.0)).xyz);
+    return computeBuehlerWeight(mat3(cameraPoses[index]) * targetDirection, -normalize((cameraPoses[index] * vec4(fPosition, 1)).xyz));
 }
 
 vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
@@ -534,7 +534,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     float weights[MAX_BUEHLER_SAMPLE_COUNT];
     int indices[MAX_BUEHLER_SAMPLE_COUNT];
 
-    int sampleCount = 5; // TODO change to a parameter
+    int sampleCount = 3; // TODO change to a parameter
 
     // Initialization
     for (int i = 0; i < sampleCount; i++)
@@ -602,7 +602,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     vec4 sum = vec4(0.0);
     for (int i = 1; i < sampleCount; i++)
     {
-        vec4 computedSample = computeSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance)[0];
+        vec4 computedSample = computeSample(indices[i], diffuseColor, normalDir, specularColor, roughness, maxLuminance)[0];
         if (computedSample.a > 0)
         {
             sum += (weights[i] - weights[0]) * computedSample / computedSample.a;
@@ -737,20 +737,20 @@ void main()
     {
         viewDir = normalize(viewPos - fPosition);
     }
+
+    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
+    vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
+
+    vec3 gNormal = normalize(fNormal);
+    vec3 tangent = normalize(fTangent - dot(gNormal, fTangent));
+    vec3 bitangent = normalize(fBitangent
+        - dot(gNormal, fBitangent) * gNormal
+        - dot(tangent, fBitangent) * tangent);
+    mat3 tangentToObject = mat3(tangent, bitangent, gNormal);
     
     vec3 normalDir;
     if (useNormalTexture)
     {
-        vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
-        vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
-
-        vec3 gNormal = normalize(fNormal);
-        vec3 tangent = normalize(fTangent - dot(gNormal, fTangent));
-        vec3 bitangent = normalize(fBitangent
-            - dot(gNormal, fBitangent) * gNormal
-            - dot(tangent, fBitangent) * tangent);
-        mat3 tangentToObject = mat3(tangent, bitangent, gNormal);
-
         normalDir = tangentToObject * normalDirTS;
         //normalDir = gNormal;
         //normalDir = normalDirTS;
@@ -899,7 +899,9 @@ void main()
                 float nDotH = useTSOverrides ? halfDir.z : dot(normalDir, halfDir);
 
                 // TODO : this is a hack to use Buehler algorithm for one of the light sources
-                //weightedAverages[0] = computeBuehler(halfDir, diffuseColor, normalDir, specularColor, roughness);
+//                weightedAverages[0] = computeBuehler(
+//                    useTSOverrides ? tangentToObject * halfDir : halfDir,
+//                    diffuseColor, normalDir, specularColor, roughness);
 
                 vec3 mfdFresnel;
 
@@ -966,11 +968,11 @@ void main()
             
                 reflectance += (
                     (relightingEnabled || !imageBasedRenderingEnabled ? nDotL * diffuseColor : vec3(0.0)) +
-                    mfdFresnel 
+                    mfdFresnel
                      * ((!imageBasedRenderingEnabled || relightingEnabled) && pbrGeometricAttenuationEnabled
                         ? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV) :
                             vec3(!imageBasedRenderingEnabled || relightingEnabled ? nDotL / 4 : 1.0)))
-                     * ((relightingEnabled || !imageBasedRenderingEnabled) ? 
+                     * ((relightingEnabled || !imageBasedRenderingEnabled) ?
                         (useTSOverrides ? lightIntensityVirtual[i] :
                             lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed))
                         : vec3(1.0));
