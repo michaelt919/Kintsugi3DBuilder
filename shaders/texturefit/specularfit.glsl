@@ -194,12 +194,12 @@ ParameterizedFit fitSpecular()
     }
 
      // Chromatic roughness
-     vec3 roughnessSquared = min(vec3(1.0), roughnessSums[0] /
-             (sqrt(maxResidual.rgb) * roughnessSums[2] - roughnessSums[1]));
+//     vec3 roughnessSquared = min(vec3(1.0), roughnessSums[0] /
+//             (sqrt(maxResidual.rgb) * roughnessSums[2] - roughnessSums[1]));
 
 //    // Monochrome roughness
-//    vec3 roughnessSquared = vec3(min(1.0, getLuminance(roughnessSums[0]) /
-//        (sqrt(maxResidualLuminance) * getLuminance(roughnessSums[2]) - getLuminance(roughnessSums[1]))));
+    vec3 roughnessSquared = vec3(min(1.0, getLuminance(roughnessSums[0]) /
+        (sqrt(maxResidualLuminance) * getLuminance(roughnessSums[2]) - getLuminance(roughnessSums[1]))));
 
     vec3 specularColor = 4 * roughnessSquared * maxResidual.rgb;
 

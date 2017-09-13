@@ -19,7 +19,7 @@ public class FidelityMetricRequest implements IBRRequest
 
     //private final static boolean USE_RENDERER_WEIGHTS = true;
     private static final boolean USE_PERCEPTUALLY_LINEAR_ERROR = false;
-    private static final boolean LITE_MODE = false;
+    private static final boolean LITE_MODE = true;
 
     private final File fidelityExportPath;
     private final File fidelityVSETFile;
@@ -433,9 +433,7 @@ public class FidelityMetricRequest implements IBRRequest
                         out.print(resources.viewSet.getImageFileName(j).split("\\.")[0]
                             + '\t' + baselines[j] + '\t' + slopes[j] + '\t' + peaks[j] + "\tn/a\t");
 
-                        out.print(fidelityTechnique.evaluateError(j,
-                            new File(debugDirectory, "cum_" + activeViewIndexList.size() + '_'
-                                + resources.viewSet.getImageFileName(j))) + "\t");
+                        out.print(fidelityTechnique.evaluateError(j) + "\t");
 
                         activeViewIndexList.add(j);
                         fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
@@ -446,6 +444,14 @@ public class FidelityMetricRequest implements IBRRequest
                             .sum();
 
                         out.println(cumError);
+
+                        // Make debug image
+                        if (DEBUG)
+                        {
+                            fidelityTechnique.evaluateError(j,
+                                new File(debugDirectory, "cum_" + activeViewIndexList.size() + '_'
+                                    + resources.viewSet.getImageFileName(j)));
+                        }
 
                         // Then update the distances for all of the target views
                         for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
@@ -570,6 +576,14 @@ public class FidelityMetricRequest implements IBRRequest
                     targetUsed[nextViewTargetIndex] = true;
                     originalUsed[nextViewOriginalIndex] = true;
                     activeViewIndexList.set(activeViewCount, nextViewOriginalIndex);
+
+                    // Make debug image
+                    if (DEBUG)
+                    {
+                        fidelityTechnique.evaluateError(nextViewOriginalIndex,
+                            new File(debugDirectory, "cum_" + activeViewIndexList.size() + '_'
+                                + resources.viewSet.getImageFileName(nextViewOriginalIndex)));
+                    }
 
                     double expectedTotalError = 0.0;
 
