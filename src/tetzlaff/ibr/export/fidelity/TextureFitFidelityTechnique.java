@@ -74,6 +74,8 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
             .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit_imgspace_subset.frag"))
             .createProgram();
 
+        textureFitProgram.setUniform("useViewIndices", true);
+
         textureFitFramebuffer = resources.context.buildFramebufferObject(size, size)
             .addColorAttachments(ColorFormat.RGBA8, 4)
             .createFramebufferObject();
