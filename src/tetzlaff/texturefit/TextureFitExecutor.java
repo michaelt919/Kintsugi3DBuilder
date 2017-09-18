@@ -115,22 +115,22 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         specularFitProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
-                    "texturefit/debug.frag"))
-                    //param.isImagePreprojectionUseEnabled() ? "texturefit/specularfit_texspace.frag" : "texturefit/specularfit_imgspace.frag"))
+                    //"texturefit/debug.frag"))
+                    param.isImagePreprojectionUseEnabled() ? "texturefit/specularfit_texspace.frag" : "texturefit/specularfit_imgspace.frag"))
                 .createProgram();
 
         adjustFitProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
-                        "texturefit/adjustfit_debug.frag"))
-                    //param.isImagePreprojectionUseEnabled() ? "texturefit/adjustfit_texspace.frag" : "texturefit/adjustfit_imgspace.frag"))
+                        //"texturefit/adjustfit_debug.frag"))
+                    param.isImagePreprojectionUseEnabled() ? "texturefit/adjustfit_texspace.frag" : "texturefit/adjustfit_imgspace.frag"))
                 .createProgram();
 
         errorCalcProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
-                        "texturefit/errorcalc_debug.frag"))
-                    //param.isImagePreprojectionUseEnabled() ? "texturefit/errorcalc_texspace.frag" : "texturefit/errorcalc_imgspace.frag"))
+                        //"texturefit/errorcalc_debug.frag"))
+                    param.isImagePreprojectionUseEnabled() ? "texturefit/errorcalc_texspace.frag" : "texturefit/errorcalc_imgspace.frag"))
                 .createProgram();
 
         diffuseDebugProgram = context.getShaderProgramBuilder()
@@ -1789,6 +1789,18 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                             FramebufferObject<ContextType> tmp = backFramebuffer;
                             backFramebuffer = frontFramebuffer;
                             frontFramebuffer = tmp;
+
+                            int pixelCount = 0;
+                            float[] specularFitData = frontFramebuffer.readFloatingPointColorBufferRGBA(2);
+                            for (int i = 0; i * 4 + 3 < specularFitData.length; i++)
+                            {
+                                if (specularFitData[i * 4 + 3] > 0)
+                                {
+                                    pixelCount++;
+                                }
+                            }
+
+                            System.out.println("Pixel count: " + pixelCount);
 
                             frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-raw.png"));
                             frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-raw.png"));

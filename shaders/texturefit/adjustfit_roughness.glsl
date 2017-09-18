@@ -215,10 +215,10 @@ ParameterizedFit adjustFit()
         else
         {
             float newRoughnessSquared = max(0.0, roughnessSquared + /* shiftFraction * */adjustment);
-            vec3 newSpecularColor = clamp(
+            vec3 newSpecularColor = max(
                 (prevSpecularColor / roughnessSquared + /* shiftFraction * */adjustment)
                     * newRoughnessSquared,
-                vec3(0), vec3(/*1*/1000000));
+                vec3(0));
 
 
             vec3 diffuseAdj =

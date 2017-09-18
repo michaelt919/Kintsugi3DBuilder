@@ -13,7 +13,7 @@ layout(location = 3) out vec4 roughness;
 
 void main()
 {
-    diffuseColor = vec4(vec3(pow(0, 1.0 / 2.2)), 1.0);
+    diffuseColor = vec4(vec3(pow(0.5, 1.0 / 2.2)), 1.0);
     normal = vec4(0.5, 0.5, 1.0, 1.0);
     specularColor = vec4(vec3(pow(fTexCoord.x / 4, 1.0 / 2.2)), 1.0);
     roughness = vec4(vec3(sqrt(fTexCoord.x / 2)), 1.0);
