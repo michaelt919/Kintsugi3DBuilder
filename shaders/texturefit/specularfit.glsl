@@ -193,17 +193,17 @@ ParameterizedFit fitSpecular()
         }
     }
 
-     // Chromatic roughness
+//     // Chromatic roughness
 //     vec3 roughnessSquared = min(vec3(1.0), roughnessSums[0] /
 //             (sqrt(maxResidual.rgb) * roughnessSums[2] - roughnessSums[1]));
 
-//    // Monochrome roughness
+    // Monochrome roughness
     vec3 roughnessSquared = vec3(min(1.0, getLuminance(roughnessSums[0]) /
         (sqrt(maxResidualLuminance) * getLuminance(roughnessSums[2]) - getLuminance(roughnessSums[1]))));
 
     vec3 specularColor = 4 * roughnessSquared * maxResidual.rgb;
 
-    vec3 adjustedDiffuseColor = diffuseColor - specularColor * roughnessSquared / 2;
+    vec3 adjustedDiffuseColor = diffuseColor ;// - specularColor * roughnessSquared / 2;
 
     // Dividing by the sum of weights to get the weighted average.
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified

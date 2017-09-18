@@ -250,10 +250,10 @@ ParameterizedFit adjustFit()
                     // mat3 diffuseDerivsTranspose = transpose(mat3(1) * diffuseDerivs); // Workaround for driver bug
 
                     vec3 diffuseCompensation = vec3(0);//max(vec3(0), sign(prevDiffuseColor));
-                    // mat3 diffuseCompensationMatrix =
-                        // mat3(vec3(diffuseCompensation.r, 0, 0),
-                            // vec3(0, diffuseCompensation.g, 0),
-                            // vec3(0, 0, diffuseCompensation.b));
+//                    mat3 diffuseCompensationMatrix =
+//                        mat3(vec3(diffuseCompensation.r, 0, 0),
+//                             vec3(0, diffuseCompensation.g, 0),
+//                             vec3(0, 0, diffuseCompensation.b));
 
                     // mat3 specularReflectivityDerivs =
                         // roughnessSquared
@@ -270,8 +270,8 @@ ParameterizedFit adjustFit()
                     // mat3x4 specularDerivsTranspose = transpose(mat3(1) * specularDerivs); // Workaround for driver bug
 
                     mat2x3 normalDerivs =
-                        // outerProduct(prevDiffuseColor * outerDeriv,
-                            // lightTS.xy - lightTS.z * shadingNormalTS.xy / shadingNormalTS.z) +
+                        outerProduct(prevDiffuseColor * outerDeriv,
+                            lightTS.xy - lightTS.z * shadingNormalTS.xy / shadingNormalTS.z) +
                         outerProduct(prevSpecularColor * outerDeriv,
                             computeSpecularNormalDerivs(shadingNormalTS, lightTS, viewTS, halfTS,
                                 hDotV, nDotL, nDotV, nDotH, nDotHSquared, roughnessSquared, geom));
@@ -411,15 +411,15 @@ ParameterizedFit adjustFit()
         else
         {
             float newRoughnessSquared = max(0.0, roughnessSquared + /* shiftFraction * */specularAdj.w);
-            vec3 newSpecularColor = clamp(
+            vec3 newSpecularColor = max(
                 (prevSpecularColor / roughnessSquared + /* shiftFraction * */specularAdj.xyz)
                     * newRoughnessSquared,
-                vec3(0), vec3(/*1*/1000000));
+                vec3(0));
 
 
-            // diffuseAdj =
-                // prevSpecularColor * roughnessSquared / 2
-                    // - newSpecularColor * newRoughnessSquared / 2;
+//            diffuseAdj =
+//                prevSpecularColor * roughnessSquared / 2
+//                    - newSpecularColor * newRoughnessSquared / 2;
 
             vec2 newNormalXY = shadingNormalTS.xy + normalAdj;
 

@@ -5,7 +5,7 @@
 
 #line 7 1109
 
-#define DIFFUSE_COLOR vec3(0)
+#define DIFFUSE_COLOR vec3(0.5)
 #define SPECULAR_COLOR vec3(fTexCoord.y / 4)
 #define ROUGHNESS_SQUARED (fTexCoord.y / 2)
 
