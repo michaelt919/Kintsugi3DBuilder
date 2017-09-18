@@ -5,9 +5,9 @@
 
 #line 7 1109
 
-#define DIFFUSE_COLOR vec3(pow(0.5, 2.2))
-#define SPECULAR_COLOR vec3(pow(0.5, 2.2))
-#define ROUGHNESS_SQUARED 0.25
+#define DIFFUSE_COLOR vec3(0)
+#define SPECULAR_COLOR vec3(fTexCoord.y / 4)
+#define ROUGHNESS_SQUARED (fTexCoord.y / 2)
 
 vec4 getColor(int index)
 {
@@ -21,7 +21,7 @@ vec4 getColor(int index)
         - dot(tangent, fBitangent) * tangent);
     mat3 tangentToObject = mat3(tangent, bitangent, normal);
     vec3 shadingNormal =
-        //tangentToObject * normalize(vec3(0.5, 0.0, 1.0));
+        //fNormal;
         tangentToObject * normalize(vec3(0.5 * cos(8 * 3.14 * fTexCoord), 1.0));
 
     if (nDotV > 0)
