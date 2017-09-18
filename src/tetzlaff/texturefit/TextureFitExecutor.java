@@ -115,21 +115,22 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         specularFitProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
-                    param.isImagePreprojectionUseEnabled() ? "texturefit/specularfit_texspace.frag" : "texturefit/specularfit_imgspace.frag"))
+                    "texturefit/debug.frag"))
+                    //param.isImagePreprojectionUseEnabled() ? "texturefit/specularfit_texspace.frag" : "texturefit/specularfit_imgspace.frag"))
                 .createProgram();
 
         adjustFitProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
-                        //"texturefit/adjustfit_debug.frag"))
-                    param.isImagePreprojectionUseEnabled() ? "texturefit/adjustfit_texspace.frag" : "texturefit/adjustfit_imgspace.frag"))
+                        "texturefit/adjustfit_debug.frag"))
+                    //param.isImagePreprojectionUseEnabled() ? "texturefit/adjustfit_texspace.frag" : "texturefit/adjustfit_imgspace.frag"))
                 .createProgram();
 
         errorCalcProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders",
-                        //"texturefit/errorcalc_debug.frag"))
-                    param.isImagePreprojectionUseEnabled() ? "texturefit/errorcalc_texspace.frag" : "texturefit/errorcalc_imgspace.frag"))
+                        "texturefit/errorcalc_debug.frag"))
+                    //param.isImagePreprojectionUseEnabled() ? "texturefit/errorcalc_texspace.frag" : "texturefit/errorcalc_imgspace.frag"))
                 .createProgram();
 
         diffuseDebugProgram = context.getShaderProgramBuilder()
@@ -1599,17 +1600,17 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 (
                     FramebufferObject<ContextType> framebuffer1 =
                         context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                            .addColorAttachments(4)
+                            .addColorAttachments(ColorFormat.RGBA32F, 4)
                             .createFramebufferObject();
 
                     FramebufferObject<ContextType> framebuffer2 =
                             context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                                .addColorAttachments(4)
+                                .addColorAttachments(ColorFormat.RGBA32F, 4)
                                 .createFramebufferObject();
 
                     FramebufferObject<ContextType> framebuffer3 =
                             context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                                .addColorAttachments(4)
+                                .addColorAttachments(ColorFormat.RGBA32F, 4)
                                 .createFramebufferObject()
                 )
                 {
@@ -1877,11 +1878,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                                     System.out.println("Adjusting fit...");
 
                                     boolean saveDebugTextures = false;
-                                    boolean useGlobalDampingFactor = false;
+                                    boolean useGlobalDampingFactor = true;
                                     float globalDampingFactor = 128.0f;
                                     int iteration = 0;
 
-                                    while (globalDampingFactor <= 1048576)
+                                    while (globalDampingFactor <= 0x100000 /* ~ 1 million */)
                                     {
                                         backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                                         backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);

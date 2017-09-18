@@ -385,20 +385,11 @@ ParameterizedFit adjustFit()
                 // + dot(specularAdjLinearized, specularAdjLinearized))));
 
 
-        mat3 mDamped = m + mat3(    vec3(dampingFactor * max(m[0][0], MIN_DIAGONAL), 0, 0),
+        mat3 mDamped = m + mat3(vec3(dampingFactor * max(m[0][0], MIN_DIAGONAL), 0, 0),
                             vec3(0, dampingFactor * max(m[1][1], MIN_DIAGONAL), 0),
                             vec3(0, 0, dampingFactor * max(m[2][2], MIN_DIAGONAL)) );
 
-        vec3 adjustment;
-        if (abs(determinant(mDamped)) < 0.001)
-        {
-            adjustment = vec3(0.0);
-        }
-        else
-        {
-            adjustment = inverse(mDamped) * v
-                / length(dot(v, vec3(1.0 / m[0][0], 1.0 / m[1][1], 1.0 / m[2][2])));
-        }
+        vec3 adjustment = inverse(mDamped) * v;
 
         vec3 diffuseAdj = vec3(0);
         vec4 specularAdj = vec4(0.0, 0.0, 0.0, adjustment[0]);
@@ -423,7 +414,7 @@ ParameterizedFit adjustFit()
             vec3 newSpecularColor = clamp(
                 (prevSpecularColor / roughnessSquared + /* shiftFraction * */specularAdj.xyz)
                     * newRoughnessSquared,
-                vec3(0), vec3(1));
+                vec3(0), vec3(/*1*/1000000));
 
 
             // diffuseAdj =
