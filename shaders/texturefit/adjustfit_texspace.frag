@@ -13,7 +13,7 @@ layout(location = 3) out vec4 roughness;
 
 #include "../colorappearance/colorappearance.glsl"
 #include "../colorappearance/texspace.glsl"
-#include "adjustfit.glsl"
+#include "adjustfit_roughness.glsl"
 
 #line 17 0
 

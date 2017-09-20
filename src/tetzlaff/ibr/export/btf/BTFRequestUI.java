@@ -48,7 +48,7 @@ public class BTFRequestUI implements IBRRequestUI
         btfRequestUI.modelAccess = modelAccess;
 
         btfRequestUI.stage = new Stage();
-        btfRequestUI.stage.setTitle("Fidelity metric request");
+        btfRequestUI.stage.setTitle("BTF request");
         btfRequestUI.stage.setScene(new Scene(parent));
         btfRequestUI.stage.initOwner(window);
 
