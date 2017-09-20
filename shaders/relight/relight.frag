@@ -742,7 +742,7 @@ void main()
     vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
 
     vec3 gNormal = normalize(fNormal);
-    vec3 tangent = normalize(fTangent - dot(gNormal, fTangent));
+    vec3 tangent = normalize(fTangent - dot(gNormal, fTangent) * gNormal);
     vec3 bitangent = normalize(fBitangent
         - dot(gNormal, fBitangent) * gNormal
         - dot(tangent, fBitangent) * tangent);
@@ -970,8 +970,8 @@ void main()
                     (relightingEnabled || !imageBasedRenderingEnabled ? nDotL * diffuseColor : vec3(0.0)) +
                     mfdFresnel
                      * ((!imageBasedRenderingEnabled || relightingEnabled) && pbrGeometricAttenuationEnabled
-                        ? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV) :
-                            vec3(!imageBasedRenderingEnabled || relightingEnabled ? nDotL / 4 : 1.0)))
+                        ? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV * nDotL) :
+                            vec3(!imageBasedRenderingEnabled || relightingEnabled ? 1.0 / 4 : 1.0)))
                      * ((relightingEnabled || !imageBasedRenderingEnabled) ?
                         (useTSOverrides ? lightIntensityVirtual[i] :
                             lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed))
@@ -980,7 +980,7 @@ void main()
         }
     }
 
-    fragColor = tonemap(reflectance, 1.0);
+    fragColor = vec4(vec3(roughness), 1.0);//tonemap(reflectance, 1.0);
 
     fragObjectID = objectID;
 }

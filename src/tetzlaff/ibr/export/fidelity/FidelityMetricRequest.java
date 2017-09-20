@@ -569,8 +569,9 @@ public class FidelityMetricRequest implements IBRRequest
                     }
 
                     // Print the view to the file
-                    out.print(targetViewSet.getImageFileName(nextViewTargetIndex).split("\\.")[0] + '\t' + targetBaselines[nextViewTargetIndex] + '\t' + targetSlopes[nextViewTargetIndex] + '\t' + targetPeaks[nextViewTargetIndex] + '\t' +
-                            targetDistances[nextViewTargetIndex] + '\t' + targetErrors[nextViewTargetIndex] + '\t');
+                    out.print(targetViewSet.getImageFileName(nextViewTargetIndex).split("\\.")[0] + '\t' + targetBaselines[nextViewTargetIndex]
+                        + '\t' + targetSlopes[nextViewTargetIndex] + '\t' + targetPeaks[nextViewTargetIndex]
+                        + '\t' + targetDistances[nextViewTargetIndex] + '\t' + targetErrors[nextViewTargetIndex] + '\t');
 
                     // Flag that its been used
                     targetUsed[nextViewTargetIndex] = true;

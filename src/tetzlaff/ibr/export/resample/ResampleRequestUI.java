@@ -49,7 +49,7 @@ public class ResampleRequestUI implements IBRRequestUI
         resampleRequestUI.modelAccess = modelAccess;
 
         resampleRequestUI.stage = new Stage();
-        resampleRequestUI.stage.setTitle("Fidelity metric request");
+        resampleRequestUI.stage.setTitle("Resample request");
         resampleRequestUI.stage.setScene(new Scene(parent));
         resampleRequestUI.stage.initOwner(window);
 
