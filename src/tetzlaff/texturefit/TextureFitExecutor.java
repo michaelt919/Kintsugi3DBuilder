@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import javax.imageio.ImageIO;
@@ -58,6 +59,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     private Program<ContextType> textureRectProgram;
     private Program<ContextType> holeFillProgram;
     private Program<ContextType> finalizeProgram;
+    private Program<ContextType> peakIntensityProgram;
 
     private VertexBuffer<ContextType> positionBuffer;
     private VertexBuffer<ContextType> texCoordBuffer;
@@ -91,71 +93,76 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         Date timestamp = new Date();
 
         depthRenderingProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "depth.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "common", "depth.frag").toFile())
                 .createProgram();
 
         projTexProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders", "colorappearance/projtex_single.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "colorappearance", "projtex_single.frag").toFile())
                 .createProgram();
 
         lightFitProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders",
-                    param.isImagePreprojectionUseEnabled() ? "texturefit/lightfit_texspace.frag" : "texturefit/lightfit_imgspace.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
+                    param.isImagePreprojectionUseEnabled() ? "lightfit_texspace.frag" : "lightfit_imgspace.frag").toFile())
                 .createProgram();
 
         diffuseFitProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders",
-                    param.isImagePreprojectionUseEnabled() ? "texturefit/diffusefit_texspace.frag" : "texturefit/diffusefit_imgspace.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
+                    param.isImagePreprojectionUseEnabled() ? "diffusefit_texspace.frag" : "diffusefit_imgspace.frag").toFile())
                 .createProgram();
 
         specularFitProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders",
-                    //"texturefit/debug.frag"))
-                    param.isImagePreprojectionUseEnabled() ? "texturefit/specularfit_texspace.frag" : "texturefit/specularfit_imgspace.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
+                    //"debug.frag").toFile())
+                    param.isImagePreprojectionUseEnabled() ? "specularfit_texspace.frag" : "specularfit_imgspace.frag").toFile())
                 .createProgram();
 
         adjustFitProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders",
-                        //"texturefit/adjustfit_debug.frag"))
-                    param.isImagePreprojectionUseEnabled() ? "texturefit/adjustfit_texspace.frag" : "texturefit/adjustfit_imgspace.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit",
+                    //"adjustfit_debug.frag").toFile())
+                    param.isImagePreprojectionUseEnabled() ? "adjustfit_texspace.frag" : "adjustfit_imgspace.frag").toFile())
                 .createProgram();
 
         errorCalcProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders",
-                        //"texturefit/errorcalc_debug.frag"))
-                    param.isImagePreprojectionUseEnabled() ? "texturefit/errorcalc_texspace.frag" : "texturefit/errorcalc_imgspace.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit",
+                    //"errorcalc_debug.frag").toFile())
+                    param.isImagePreprojectionUseEnabled() ? "errorcalc_texspace.frag" : "errorcalc_imgspace.frag").toFile())
                 .createProgram();
 
         diffuseDebugProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders", "colorappearance/projtex_multi.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "colorappearance", "projtex_multi.frag").toFile())
                 .createProgram();
 
         specularDebugProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders", "common/texspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders", "texturefit/specularresid_imgspace.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit", "specularresid_imgspace.frag").toFile())
                 .createProgram();
 
         textureRectProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders", "common/texture.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders", "common/texture.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texture.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "common", "texture.frag").toFile())
                 .createProgram();
 
         holeFillProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders", "common/texture.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders", "texturefit/holefill.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texture.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit", "holefill.frag").toFile())
                 .createProgram();
 
         finalizeProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders", "common/texture.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders", "texturefit/finalize.frag"))
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texture.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit", "finalize.frag").toFile())
+                .createProgram();
+
+        peakIntensityProgram = context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texture.vert").toFile())
+                .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit", "peak.frag").toFile())
                 .createProgram();
 
         System.out.println("Shader compilation completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -883,24 +890,27 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
         void fitImageSpace(Framebuffer<ContextType> framebuffer, Texture<ContextType> viewImages, Texture<ContextType> depthImages, Texture<ContextType> shadowImages,
                 Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, Texture<ContextType> specularEstimate, Texture<ContextType> roughnessEstimate,
-                Texture<ContextType> errorTexture, SubdivisionRenderingCallback callback) throws IOException
+                Texture<ContextType> peakEstimate, Texture<ContextType> errorTexture, SubdivisionRenderingCallback callback) throws IOException
         {
             base.drawable.program().setTexture("diffuseEstimate", diffuseEstimate);
             base.drawable.program().setTexture("normalEstimate", normalEstimate);
             base.drawable.program().setTexture("specularEstimate", specularEstimate);
             base.drawable.program().setTexture("roughnessEstimate", roughnessEstimate);
+            base.drawable.program().setTexture("peakEstimate", peakEstimate);
             base.drawable.program().setTexture("errorTexture", errorTexture);
             base.fitImageSpace(framebuffer, viewImages, depthImages, shadowImages, callback);
         }
 
         void fitTextureSpace(Framebuffer<ContextType> framebuffer, File preprocessDirectory,
-                Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, Texture<ContextType> specularEstimate, Texture<ContextType> roughnessEstimate,
+                Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, Texture<ContextType> specularEstimate,
+                Texture<ContextType> roughnessEstimate, Texture<ContextType> peakEstimate,
                 Texture<ContextType> errorTexture, SubdivisionRenderingCallback callback) throws IOException
         {
             base.drawable.program().setTexture("diffuseEstimate", diffuseEstimate);
             base.drawable.program().setTexture("normalEstimate", normalEstimate);
             base.drawable.program().setTexture("specularEstimate", specularEstimate);
             base.drawable.program().setTexture("roughnessEstimate", roughnessEstimate);
+            base.drawable.program().setTexture("peakEstimate", peakEstimate);
             base.drawable.program().setTexture("errorTexture", errorTexture);
             base.fitTextureSpace(framebuffer, preprocessDirectory, callback);
         }
@@ -1827,9 +1837,24 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                                         context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
                                             .addColorAttachments(ColorFormat.RG32F, 1)
                                             .addColorAttachments(ColorFormat.R8, 1)
+                                            .createFramebufferObject();
+
+                                    FramebufferObject<ContextType> peakIntensityFramebuffer =
+                                        context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
+                                            .addColorAttachments(ColorFormat.RGBA32F, 1)
                                             .createFramebufferObject()
                                 )
                                 {
+                                    peakIntensityProgram.setUniform("gamma", 2.2f);
+                                    peakIntensityProgram.setTexture("specularTexture", frontFramebuffer.getColorAttachmentTexture(2));
+                                    peakIntensityProgram.setTexture("roughnessTexture", frontFramebuffer.getColorAttachmentTexture(3));
+
+                                    Drawable<ContextType> peakIntensityDrawable = context.createDrawable(peakIntensityProgram);
+                                    peakIntensityDrawable.addVertexBuffer("position", rectBuffer);
+                                    peakIntensityDrawable.draw(PrimitiveMode.TRIANGLE_FAN, peakIntensityFramebuffer);
+
+                                    peakIntensityFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "peak.png"));
+
                                     FramebufferObject<ContextType> frontErrorFramebuffer = errorFramebuffer1;
                                     FramebufferObject<ContextType> backErrorFramebuffer = errorFramebuffer2;
 
@@ -1916,6 +1941,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                                                 frontFramebuffer.getColorAttachmentTexture(1),
                                                 frontFramebuffer.getColorAttachmentTexture(2),
                                                 frontFramebuffer.getColorAttachmentTexture(3),
+                                                peakIntensityFramebuffer.getColorAttachmentTexture(0),
                                                 frontErrorFramebuffer.getColorAttachmentTexture(0),
                                                 (row, col) ->
                                                 {
@@ -1938,6 +1964,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                                                 frontFramebuffer.getColorAttachmentTexture(1),
                                                 frontFramebuffer.getColorAttachmentTexture(2),
                                                 frontFramebuffer.getColorAttachmentTexture(3),
+                                                peakIntensityFramebuffer.getColorAttachmentTexture(0),
                                                 frontErrorFramebuffer.getColorAttachmentTexture(0),
                                                 (row, col) ->
                                                 {

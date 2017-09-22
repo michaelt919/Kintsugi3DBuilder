@@ -14,6 +14,7 @@ uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
 uniform sampler2D specularEstimate;
 uniform sampler2D roughnessEstimate;
+uniform sampler2D peakEstimate;
 uniform sampler2D errorTexture;
 
 uniform float fittingGamma;
@@ -411,11 +412,9 @@ ParameterizedFit adjustFit()
         else
         {
             float newRoughnessSquared = max(0.0, roughnessSquared + /* shiftFraction * */specularAdj.w);
-            vec3 newSpecularColor = max(
-                (prevSpecularColor / roughnessSquared + /* shiftFraction * */specularAdj.xyz)
-                    * newRoughnessSquared,
-                vec3(0));
-
+//            vec3 newSpecularColor =
+//                max((prevSpecularColor / roughnessSquared + /* shiftFraction * */specularAdj.xyz) * newRoughnessSquared, vec3(0));
+            vec3 newSpecularColorRGB = pow(texture(peakEstimate, fTexCoord).rgb, vec3(gamma)) * (4 * newRoughnessSquared);
 
 //            diffuseAdj =
 //                prevSpecularColor * roughnessSquared / 2
@@ -427,7 +426,7 @@ ParameterizedFit adjustFit()
                 xyzToRGB(prevDiffuseColor + /* shiftFraction * */diffuseAdj),
                 vec3(newNormalXY, sqrt(max(0.0, 1 - dot(newNormalXY, newNormalXY)))),
                 //xyzToRGB(prevSpecularColor + /* shiftFraction * */specularAdj.xyz),
-                xyzToRGB(newSpecularColor),
+                newSpecularColorRGB,
                 clamp(sqrt(newRoughnessSquared), MIN_ROUGHNESS, MAX_ROUGHNESS));
         }
     }
