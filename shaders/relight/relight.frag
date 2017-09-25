@@ -163,9 +163,9 @@ vec3 computeGeometricAttenuationSmithGGX(vec3 roughness, float nDotV, float nDot
 vec3 geom(vec3 roughness, float nDotH, float nDotV, float nDotL, float hDotV)
 {
     //return nDotV * nDotL;
-    //return computeGeometricAttenuationVCavity(nDotH, nDotV, nDotL, hDotV);
+    return vec3(computeGeometricAttenuationVCavity(nDotH, nDotV, nDotL, hDotV));
     //return computeGeometricAttenuationSmithBeckmann(roughness, nDotV, nDotL);
-    return computeGeometricAttenuationSmithGGX(roughness, nDotV, nDotL);
+    //return computeGeometricAttenuationSmithGGX(roughness, nDotV, nDotL);
 }
 
 vec3 computeMicrofacetDistributionGGX(float nDotH, vec3 roughness)
@@ -965,13 +965,13 @@ void main()
                 }
 
                 vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
-            
+
                 reflectance += (
                     (relightingEnabled || !imageBasedRenderingEnabled ? nDotL * diffuseColor : vec3(0.0)) +
                     mfdFresnel
                      * ((!imageBasedRenderingEnabled || relightingEnabled) && pbrGeometricAttenuationEnabled
-                        ? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV * nDotL) :
-                            vec3(!imageBasedRenderingEnabled || relightingEnabled ? 1.0 / 4 : 1.0)))
+                        ? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV) :
+                            vec3(!imageBasedRenderingEnabled || relightingEnabled ? nDotL / 4 : 1.0)))
                      * ((relightingEnabled || !imageBasedRenderingEnabled) ?
                         (useTSOverrides ? lightIntensityVirtual[i] :
                             lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed))
@@ -980,7 +980,7 @@ void main()
         }
     }
 
-    fragColor = vec4(vec3(roughness), 1.0);//tonemap(reflectance, 1.0);
+    fragColor = tonemap(reflectance, 1.0);
 
     fragObjectID = objectID;
 }

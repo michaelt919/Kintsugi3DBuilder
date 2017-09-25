@@ -285,18 +285,29 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 
         if (debugFile != null)
         {
+            File pngDebugFile;
+
+            if (debugFile.getName().endsWith(".png"))
+            {
+                pngDebugFile = debugFile;
+            }
+            else
+            {
+                pngDebugFile = new File(debugFile + ".png");
+            }
+
             try
             {
-                fidelityFramebuffer.saveColorBufferToFile(0, "PNG", debugFile);
+                fidelityFramebuffer.saveColorBufferToFile(0, "PNG", pngDebugFile);
 
                 textureFitFramebuffer.saveColorBufferToFile(0, "PNG",
-                        new File(debugFile.getParentFile(), "diffuse_" + debugFile.getName()));
+                        new File(pngDebugFile.getParentFile(), "diffuse_" + pngDebugFile.getName()));
                 textureFitFramebuffer.saveColorBufferToFile(1, "PNG",
-                        new File(debugFile.getParentFile(), "normal_" + debugFile.getName()));
+                        new File(pngDebugFile.getParentFile(), "normal_" + pngDebugFile.getName()));
                 textureFitFramebuffer.saveColorBufferToFile(2, "PNG",
-                        new File(debugFile.getParentFile(), "specular_" + debugFile.getName()));
+                        new File(pngDebugFile.getParentFile(), "specular_" + pngDebugFile.getName()));
                 textureFitFramebuffer.saveColorBufferToFile(3, "PNG",
-                        new File(debugFile.getParentFile(), "roughness_" + debugFile.getName()));
+                        new File(pngDebugFile.getParentFile(), "roughness_" + pngDebugFile.getName()));
             }
             catch(IOException e)
             {

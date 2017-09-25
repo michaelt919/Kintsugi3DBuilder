@@ -22,7 +22,8 @@ public class FidelityMetricRequest implements IBRRequest
 
     private static final boolean VIEW_IMPORTANCE_ENABLED = false;
     private static final boolean VIEW_IMPORTANCE_PREDICTION_ENABLED = false;
-    private static final boolean CUMULATIVE_ERROR_CALCULATION_ENABLED = true;
+    private static final boolean CUMULATIVE_ERROR_CALCULATION_ENABLED = false;
+    private static final boolean SECOND_VIEW_ANALYSIS_ENABLED = true;
 
     private final File fidelityExportPath;
     private final File fidelityVSETFile;
@@ -140,6 +141,9 @@ public class FidelityMetricRequest implements IBRRequest
 //                USE_RENDERER_WEIGHTS ? new IBRFidelityTechnique<ContextType>()
 //                    : new LinearSystemFidelityTechnique<ContextType>(USE_PERCEPTUALLY_LINEAR_ERROR, debugDirectory))
         {
+            fidelityTechnique.initialize(resources, settings, 256);
+            fidelityTechnique.setMask(maskFile);
+
             if (VIEW_IMPORTANCE_ENABLED)
             {
                 System.out.println("View Importance:");
@@ -153,9 +157,6 @@ public class FidelityMetricRequest implements IBRRequest
                         viewDistances[i][j] = Math.acos(Math.max(-1.0, Math.min(1.0f, viewDirections[i].dot(viewDirections[j]))));
                     }
                 }
-
-                fidelityTechnique.initialize(resources, settings, 256);
-                fidelityTechnique.setMask(maskFile);
 
                 if (callback != null)
                 {
@@ -364,6 +365,44 @@ public class FidelityMetricRequest implements IBRRequest
                         out.println();
 
                         out.println();
+                    }
+
+                    if (callback != null)
+                    {
+                        callback.setProgress(i);
+                    }
+                }
+            }
+
+            if (SECOND_VIEW_ANALYSIS_ENABLED)
+            {
+                if (callback != null)
+                {
+                    callback.setMaximum(resources.viewSet.getCameraPoseCount());
+                    callback.setProgress(0.0);
+                }
+
+                out.println();
+                out.println("Second view analysis:");
+                out.println();
+
+                for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
+                {
+                    if (i != resources.viewSet.getPrimaryViewIndex())
+                    {
+                        fidelityTechnique.updateActiveViewIndexList(Arrays.asList(resources.viewSet.getPrimaryViewIndex(), i));
+
+                        for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
+                        {
+                            if (i == j)
+                            {
+                                fidelityTechnique.evaluateError(j, new File(debugDirectory, "pairs_" + resources.viewSet.getImageFileName(j)));
+                            }
+                            else
+                            {
+                                fidelityTechnique.evaluateError(j);
+                            }
+                        }
                     }
 
                     if (callback != null)
