@@ -19,13 +19,16 @@ public class FidelityMetricRequest implements IBRRequest
 
     //private final static boolean USE_RENDERER_WEIGHTS = true;
     private static final boolean USE_PERCEPTUALLY_LINEAR_ERROR = false;
-    private static final boolean LITE_MODE = true;
+
+    private static final boolean VIEW_IMPORTANCE_ENABLED = false;
+    private static final boolean VIEW_IMPORTANCE_PREDICTION_ENABLED = false;
+    private static final boolean CUMULATIVE_ERROR_CALCULATION_ENABLED = true;
 
     private final File fidelityExportPath;
     private final File fidelityVSETFile;
     private final File maskFile;
     private final ReadonlySettingsModel settings;
-    
+
     public FidelityMetricRequest(File exportPath, File targetVSETFile, File maskFile, ReadonlySettingsModel settings)
     {
         this.fidelityExportPath = exportPath;
@@ -91,22 +94,22 @@ public class FidelityMetricRequest implements IBRRequest
         IBRResources<ContextType> resources = renderable.getResources();
 
         System.out.println();
-        System.out.println("View Importance:");
 
         Vector3[] viewDirections = IntStream.range(0, resources.viewSet.getCameraPoseCount())
             .mapToObj(i -> resources.viewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
-                            .minus(resources.geometry.getCentroid()).normalized())
+                .minus(resources.geometry.getCentroid()).normalized())
             .toArray(Vector3[]::new);
 
-        double[][] viewDistances = new double[resources.viewSet.getCameraPoseCount()][resources.viewSet.getCameraPoseCount()];
+        double[] slopes = new double[resources.viewSet.getCameraPoseCount()];
+        double[] peaks = new double[resources.viewSet.getCameraPoseCount()];
+        double[] baselines = new double[resources.viewSet.getCameraPoseCount()];
+        CubicHermiteSpline[] errorFunctions = new CubicHermiteSpline[resources.viewSet.getCameraPoseCount()];
 
-        for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
-        {
-            for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
-            {
-                viewDistances[i][j] = Math.acos(Math.max(-1.0, Math.min(1.0f, viewDirections[i].dot(viewDirections[j]))));
-            }
-        }
+        ViewSet targetViewSet = null;
+        Vector3[] targetDirections = null;
+        double[] targetBaselines = null;
+        double[] targetSlopes = null;
+        double[] targetPeaks = null;
 
         File debugDirectory;
         if (DEBUG)
@@ -115,244 +118,266 @@ public class FidelityMetricRequest implements IBRRequest
             debugDirectory.mkdir();
         }
 
-        try
-        (
-            FidelityEvaluationTechnique<ContextType> fidelityTechnique =
-                new TextureFitFidelityTechnique<>(USE_PERCEPTUALLY_LINEAR_ERROR);
-//                USE_RENDERER_WEIGHTS ? new IBRFidelityTechnique<ContextType>()
-//                    : new LinearSystemFidelityTechnique<ContextType>(USE_PERCEPTUALLY_LINEAR_ERROR, debugDirectory);
-
-            PrintStream out = new PrintStream(fidelityExportPath)
-        )
+        if (fidelityVSETFile != null && fidelityVSETFile.exists())
         {
-            fidelityTechnique.initialize(resources, settings, 256);
-            fidelityTechnique.setMask(maskFile);
+            ViewSet fidelityViewSet = ViewSet.loadFromVSETFile(fidelityVSETFile);
 
-            double[] slopes = new double[resources.viewSet.getCameraPoseCount()];
-            double[] peaks = new double[resources.viewSet.getCameraPoseCount()];
-            double[] baselines = new double[resources.viewSet.getCameraPoseCount()];
+            targetViewSet = fidelityViewSet;
+            targetDirections = IntStream.range(0, targetViewSet.getCameraPoseCount())
+                .mapToObj(i -> fidelityViewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
+                    .minus(resources.geometry.getCentroid()).normalized())
+                .toArray(Vector3[]::new);
 
-            if (callback != null)
+            // Determine a function describing the error of each quadratic view by blending the slope and peak parameters from the known views.
+            targetBaselines = new double[targetViewSet.getCameraPoseCount()];
+            targetSlopes = new double[targetViewSet.getCameraPoseCount()];
+            targetPeaks = new double[targetViewSet.getCameraPoseCount()];
+        }
+
+        try (PrintStream out = new PrintStream(fidelityExportPath);
+            FidelityEvaluationTechnique<ContextType> fidelityTechnique =
+                new TextureFitFidelityTechnique<>(USE_PERCEPTUALLY_LINEAR_ERROR))
+//                USE_RENDERER_WEIGHTS ? new IBRFidelityTechnique<ContextType>()
+//                    : new LinearSystemFidelityTechnique<ContextType>(USE_PERCEPTUALLY_LINEAR_ERROR, debugDirectory))
+        {
+            if (VIEW_IMPORTANCE_ENABLED)
             {
-                callback.setMaximum(resources.viewSet.getCameraPoseCount());
-                callback.setProgress(0.0);
-            }
+                System.out.println("View Importance:");
 
-            CubicHermiteSpline[] errorFunctions = new CubicHermiteSpline[resources.viewSet.getCameraPoseCount()];
+                double[][] viewDistances = new double[resources.viewSet.getCameraPoseCount()][resources.viewSet.getCameraPoseCount()];
 
-            out.println("#Name\tBaseline\tSlope\tPeak\tMinDistance\tError\t(CumError)");
-
-            for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
-            {
-                System.out.println(resources.viewSet.getImageFileName(i));
-                out.print(resources.viewSet.getImageFileName(i) + '\t');
-
-                double lastMinDistance = 0.0;
-                double minDistance;
-
-                List<Double> distances = new ArrayList<>(resources.viewSet.getCameraPoseCount());
-                List<Double> errors = new ArrayList<>(resources.viewSet.getCameraPoseCount());
-
-                baselines[i] = fidelityTechnique.evaluateBaselineError(i, DEBUG ?
-                    new File(debugDirectory,"baseline_" + renderable.getActiveViewSet().getImageFileName(i))
-                        : null);
-
-                distances.add(0.0);
-                errors.add(baselines[i]);
-
-                List<Integer> activeViewIndexList;
-
-                do
+                for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
                 {
-                    activeViewIndexList = new ArrayList<>(resources.viewSet.getCameraPoseCount());
-
-                    minDistance = Float.MAX_VALUE;
                     for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
                     {
-                        if (i != j && viewDistances[i][j] > lastMinDistance)
-                        {
-                            minDistance = Math.min(minDistance, viewDistances[i][j]);
-                            activeViewIndexList.add(j);
-                            fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
-                        }
-                    }
-
-                    if (!activeViewIndexList.isEmpty())
-                    {
-                        distances.add(minDistance);
-
-                        errors.add(fidelityTechnique.evaluateError(i,
-                                DEBUG && activeViewIndexList.size() == resources.viewSet.getCameraPoseCount() - 1 ?
-                                        new File(debugDirectory, renderable.getActiveViewSet().getImageFileName(i))
-                                        : null));
-
-                        lastMinDistance = minDistance;
+                        viewDistances[i][j] = Math.acos(Math.max(-1.0, Math.min(1.0f, viewDirections[i].dot(viewDirections[j]))));
                     }
                 }
-                while(!LITE_MODE && Double.isFinite(errors.get(errors.size() - 1)) && !activeViewIndexList.isEmpty() && minDistance < /*0*/ Math.PI / 4);
 
-                double[] errorArray;
-                double[] distanceArray;
-
-                errorArray = errors.stream().mapToDouble(error -> error).toArray();
-                distanceArray = distances.stream().mapToDouble(distance -> distance).toArray();
-
-                errorFunctions[i] = new CubicHermiteSpline(distanceArray, errorArray, true);
-
-                // Fit the error v. distance data to a quadratic with a few constraints.
-                // First, the quadratic must pass through the origin.
-                // Second, the slope at the origin must be positive.
-                // Finally, the "downward" slope of the quadratic will be clamped to the quadratic's maximum value
-                // to ensure that the function is monotonically increasing or constant.
-                // (So only half of the quadratic will actually be used.)
-                double peak = -1.0;
-                double slope = -1.0;
-                double maxDistance = distances.get(distances.size() - 1);
-                double prevMaxDistance;
-
-                // Every time we fit a quadratic, the data that would have been clamped on the downward slope messes up the fit.
-                // So we should keep redoing the fit without that data affecting the initial slope and only affecting the peak value.
-                // This continues until convergence (no new data points are excluded from the quadratic).
-                do
-                {
-                    double sumSquareDistances = 0.0;
-                    double sumCubeDistances = 0.0;
-                    double sumFourthDistances = 0.0;
-                    double sumErrorDistanceProducts = 0.0;
-                    double sumErrorSquareDistanceProducts = 0.0;
-
-                    double sumHighErrorDiffs = 0.0;
-                    int countHighErrorDiffs = 0;
-
-                    for (int k = 0; k < distances.size(); k++)
-                    {
-                        double distance = distances.get(k);
-                        double errorDiff = Math.max(0.0, errors.get(k) - baselines[i]);
-
-                        if (distance < maxDistance)
-                        {
-                            double distanceSq = distance * distance;
-
-                            sumSquareDistances += distanceSq;
-                            sumCubeDistances += distance * distanceSq;
-                            sumFourthDistances += distanceSq * distanceSq;
-                            sumErrorDistanceProducts += errorDiff * distance;
-                            sumErrorSquareDistanceProducts += errorDiff * distanceSq;
-                        }
-                        else
-                        {
-                            sumHighErrorDiffs += errorDiff;
-                            countHighErrorDiffs++;
-                        }
-                    }
-
-                    double prevPeak = peak;
-                    double prevSlope = slope;
-
-                    // Fit error vs. distance to a quadratic using least squares: a*x^2 + slope * x = error
-                    double d = sumCubeDistances * sumCubeDistances - sumFourthDistances * sumSquareDistances;
-                    double a = (sumCubeDistances * sumErrorDistanceProducts - sumSquareDistances * sumErrorSquareDistanceProducts) / d;
-
-                    slope = (sumCubeDistances * sumErrorSquareDistanceProducts - sumFourthDistances * sumErrorDistanceProducts) / d;
-
-                    if (slope <= 0.0 || !Double.isFinite(slope) || countHighErrorDiffs > errors.size() - 5)
-                    {
-                        if (prevSlope < 0.0)
-                        {
-                            // If its the first iteration, use a linear function
-                            // peak=0 is a special case for designating a linear function
-                            peak = 0.0;
-                            slope = sumErrorDistanceProducts / sumSquareDistances;
-                        }
-                        else
-                        {
-                            // Revert to the previous peak and slope
-                            slope = prevSlope;
-                            peak = prevPeak;
-                        }
-                    }
-                    else
-                    {
-                        // Peak can be determined from a and the slope.
-                        double leastSquaresPeak = slope * slope / (-4 * a);
-
-                        if (Double.isFinite(leastSquaresPeak) && leastSquaresPeak > 0.0)
-                        {
-                            if (countHighErrorDiffs == 0)
-                            {
-                                peak = leastSquaresPeak;
-                            }
-                            else
-                            {
-                                // Do a weighted average between the least-squares peak and the average of all the errors that would be on the downward slope of the quadratic,
-                                // but are instead clamped to the maximum of the quadratic.
-                                // Clamp the contribution of the least-squares peak to be no greater than twice the average of the other values.
-                                peak = (Math.min(2 * sumHighErrorDiffs / countHighErrorDiffs, leastSquaresPeak)
-                                            * (errors.size() - countHighErrorDiffs) + sumHighErrorDiffs)
-                                        / errors.size();
-                            }
-                        }
-                        else if (prevPeak < 0.0)
-                        {
-                            // If its the first iteration, use a linear function
-                            // peak=0 is a special case for designating a linear function
-                            peak = 0.0;
-                            slope = sumErrorDistanceProducts / sumSquareDistances;
-                        }
-                        else
-                        {
-                            // Revert to the previous peak and slope
-                            slope = prevSlope;
-                            peak = prevPeak;
-                        }
-                    }
-
-                    // Update the max distance and previous max distance.
-                    prevMaxDistance = maxDistance;
-                    maxDistance = 2 * peak / slope;
-                }
-                while(maxDistance < prevMaxDistance && peak > 0.0);
-
-                if (errors.size() >= 2)
-                {
-                    out.println(baselines[i] + "\t" + slope + '\t' + peak + '\t' + minDistance + '\t' + errors.get(1));
-                }
-
-                System.out.println("Baseline: " + baselines[i]);
-                System.out.println("Slope: " + slope);
-                System.out.println("Peak: " + peak);
-                System.out.println();
-
-                slopes[i] = slope;
-                peaks[i] = peak;
-
-                for (Double distance : distances)
-                {
-                    out.print(distance + "\t");
-                }
-                out.println();
-
-                for (Double error : errors)
-                {
-                    out.print(error + "\t");
-                }
-                out.println();
-
-                out.println();
+                fidelityTechnique.initialize(resources, settings, 256);
+                fidelityTechnique.setMask(maskFile);
 
                 if (callback != null)
                 {
-                    callback.setProgress(i);
+                    callback.setMaximum(resources.viewSet.getCameraPoseCount());
+                    callback.setProgress(0.0);
+                }
+
+                out.println("#Name\tBaseline\tSlope\tPeak\tMinDistance\tError\t(CumError)");
+
+                for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
+                {
+                    System.out.println(resources.viewSet.getImageFileName(i));
+                    out.print(resources.viewSet.getImageFileName(i) + '\t');
+
+                    double lastMinDistance = 0.0;
+                    double minDistance;
+
+                    List<Double> distances = new ArrayList<>(resources.viewSet.getCameraPoseCount());
+                    List<Double> errors = new ArrayList<>(resources.viewSet.getCameraPoseCount());
+
+                    baselines[i] = fidelityTechnique.evaluateBaselineError(i, DEBUG ?
+                        new File(debugDirectory, "baseline_" + renderable.getActiveViewSet().getImageFileName(i))
+                        : null);
+
+                    distances.add(0.0);
+                    errors.add(baselines[i]);
+
+                    List<Integer> activeViewIndexList;
+
+                    do
+                    {
+                        activeViewIndexList = new ArrayList<>(resources.viewSet.getCameraPoseCount());
+
+                        minDistance = Float.MAX_VALUE;
+                        for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
+                        {
+                            if (i != j && viewDistances[i][j] > lastMinDistance)
+                            {
+                                minDistance = Math.min(minDistance, viewDistances[i][j]);
+                                activeViewIndexList.add(j);
+                                fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
+                            }
+                        }
+
+                        if (!activeViewIndexList.isEmpty())
+                        {
+                            distances.add(minDistance);
+
+                            errors.add(fidelityTechnique.evaluateError(i,
+                                DEBUG && activeViewIndexList.size() == resources.viewSet.getCameraPoseCount() - 1 ?
+                                    new File(debugDirectory, renderable.getActiveViewSet().getImageFileName(i))
+                                    : null));
+
+                            lastMinDistance = minDistance;
+                        }
+                    }
+                    while (VIEW_IMPORTANCE_PREDICTION_ENABLED && Double.isFinite(errors.get(errors.size() - 1)) && !activeViewIndexList.isEmpty() && minDistance < /*0*/ Math.PI / 4);
+
+                    if (VIEW_IMPORTANCE_PREDICTION_ENABLED)
+                    {
+                        double[] errorArray;
+                        double[] distanceArray;
+
+                        errorArray = errors.stream().mapToDouble(error -> error).toArray();
+                        distanceArray = distances.stream().mapToDouble(distance -> distance).toArray();
+
+                        errorFunctions[i] = new CubicHermiteSpline(distanceArray, errorArray, true);
+
+                        // Fit the error v. distance data to a quadratic with a few constraints.
+                        // First, the quadratic must pass through the origin.
+                        // Second, the slope at the origin must be positive.
+                        // Finally, the "downward" slope of the quadratic will be clamped to the quadratic's maximum value
+                        // to ensure that the function is monotonically increasing or constant.
+                        // (So only half of the quadratic will actually be used.)
+                        double peak = -1.0;
+                        double slope = -1.0;
+                        double maxDistance = distances.get(distances.size() - 1);
+                        double prevMaxDistance;
+
+                        // Every time we fit a quadratic, the data that would have been clamped on the downward slope messes up the fit.
+                        // So we should keep redoing the fit without that data affecting the initial slope and only affecting the peak value.
+                        // This continues until convergence (no new data points are excluded from the quadratic).
+                        do
+                        {
+                            double sumSquareDistances = 0.0;
+                            double sumCubeDistances = 0.0;
+                            double sumFourthDistances = 0.0;
+                            double sumErrorDistanceProducts = 0.0;
+                            double sumErrorSquareDistanceProducts = 0.0;
+
+                            double sumHighErrorDiffs = 0.0;
+                            int countHighErrorDiffs = 0;
+
+                            for (int k = 0; k < distances.size(); k++)
+                            {
+                                double distance = distances.get(k);
+                                double errorDiff = Math.max(0.0, errors.get(k) - baselines[i]);
+
+                                if (distance < maxDistance)
+                                {
+                                    double distanceSq = distance * distance;
+
+                                    sumSquareDistances += distanceSq;
+                                    sumCubeDistances += distance * distanceSq;
+                                    sumFourthDistances += distanceSq * distanceSq;
+                                    sumErrorDistanceProducts += errorDiff * distance;
+                                    sumErrorSquareDistanceProducts += errorDiff * distanceSq;
+                                }
+                                else
+                                {
+                                    sumHighErrorDiffs += errorDiff;
+                                    countHighErrorDiffs++;
+                                }
+                            }
+
+                            double prevPeak = peak;
+                            double prevSlope = slope;
+
+                            // Fit error vs. distance to a quadratic using least squares: a*x^2 + slope * x = error
+                            double d = sumCubeDistances * sumCubeDistances - sumFourthDistances * sumSquareDistances;
+                            double a = (sumCubeDistances * sumErrorDistanceProducts - sumSquareDistances * sumErrorSquareDistanceProducts) / d;
+
+                            slope = (sumCubeDistances * sumErrorSquareDistanceProducts - sumFourthDistances * sumErrorDistanceProducts) / d;
+
+                            if (slope <= 0.0 || !Double.isFinite(slope) || countHighErrorDiffs > errors.size() - 5)
+                            {
+                                if (prevSlope < 0.0)
+                                {
+                                    // If its the first iteration, use a linear function
+                                    // peak=0 is a special case for designating a linear function
+                                    peak = 0.0;
+                                    slope = sumErrorDistanceProducts / sumSquareDistances;
+                                }
+                                else
+                                {
+                                    // Revert to the previous peak and slope
+                                    slope = prevSlope;
+                                    peak = prevPeak;
+                                }
+                            }
+                            else
+                            {
+                                // Peak can be determined from a and the slope.
+                                double leastSquaresPeak = slope * slope / (-4 * a);
+
+                                if (Double.isFinite(leastSquaresPeak) && leastSquaresPeak > 0.0)
+                                {
+                                    if (countHighErrorDiffs == 0)
+                                    {
+                                        peak = leastSquaresPeak;
+                                    }
+                                    else
+                                    {
+                                        // Do a weighted average between the least-squares peak and the average of all the errors that would be on the downward slope of the quadratic,
+                                        // but are instead clamped to the maximum of the quadratic.
+                                        // Clamp the contribution of the least-squares peak to be no greater than twice the average of the other values.
+                                        peak = (Math.min(2 * sumHighErrorDiffs / countHighErrorDiffs, leastSquaresPeak)
+                                            * (errors.size() - countHighErrorDiffs) + sumHighErrorDiffs)
+                                            / errors.size();
+                                    }
+                                }
+                                else if (prevPeak < 0.0)
+                                {
+                                    // If its the first iteration, use a linear function
+                                    // peak=0 is a special case for designating a linear function
+                                    peak = 0.0;
+                                    slope = sumErrorDistanceProducts / sumSquareDistances;
+                                }
+                                else
+                                {
+                                    // Revert to the previous peak and slope
+                                    slope = prevSlope;
+                                    peak = prevPeak;
+                                }
+                            }
+
+                            // Update the max distance and previous max distance.
+                            prevMaxDistance = maxDistance;
+                            maxDistance = 2 * peak / slope;
+                        }
+                        while (maxDistance < prevMaxDistance && peak > 0.0);
+
+                        if (errors.size() >= 2)
+                        {
+                            out.println(baselines[i] + "\t" + slope + '\t' + peak + '\t' + minDistance + '\t' + errors.get(1));
+                        }
+
+                        System.out.println("Baseline: " + baselines[i]);
+                        System.out.println("Slope: " + slope);
+                        System.out.println("Peak: " + peak);
+                        System.out.println();
+
+                        slopes[i] = slope;
+                        peaks[i] = peak;
+
+                        for (Double distance : distances)
+                        {
+                            out.print(distance + "\t");
+                        }
+                        out.println();
+
+                        for (Double error : errors)
+                        {
+                            out.print(error + "\t");
+                        }
+                        out.println();
+
+                        out.println();
+                    }
+
+                    if (callback != null)
+                    {
+                        callback.setProgress(i);
+                    }
                 }
             }
 
-            if (fidelityVSETFile != null && fidelityVSETFile.exists())
+            if (CUMULATIVE_ERROR_CALCULATION_ENABLED && targetViewSet != null)
             {
                 out.println();
                 out.println("Expected error for views in target view set:");
                 out.println();
-
-                ViewSet targetViewSet = ViewSet.loadFromVSETFile(fidelityVSETFile);
 
                 if (callback != null)
                 {
@@ -360,44 +385,37 @@ public class FidelityMetricRequest implements IBRRequest
                     callback.setProgress(0);
                 }
 
-                Vector3[] targetDirections = IntStream.range(0, targetViewSet.getCameraPoseCount())
-                    .mapToObj(i -> targetViewSet.getCameraPoseInverse(i).getColumn(3).getXYZ()
-                                        .minus(resources.geometry.getCentroid()).normalized())
-                    .toArray(Vector3[]::new);
-
-                // Determine a function describing the error of each quadratic view by blending the slope and peak parameters from the known views.
-                double[] targetBaselines = new double[targetViewSet.getCameraPoseCount()];
-                double[] targetSlopes = new double[targetViewSet.getCameraPoseCount()];
-                double[] targetPeaks = new double[targetViewSet.getCameraPoseCount()];
-
-                for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+                if (VIEW_IMPORTANCE_PREDICTION_ENABLED)
                 {
-                    double weightedBaselineSum = 0.0;
-                    double weightedSlopeSum = 0.0;
-                    double weightSum = 0.0;
-                    double weightedPeakSum = 0.0;
-                    double peakWeightSum = 0.0;
-
-                    for (int k = 0; k < slopes.length; k++)
+                    for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
                     {
-                        double weight = 1 / Math.max(0.000001, 1.0 -
-                                Math.pow(Math.max(0.0, targetDirections[i].dot(viewDirections[k])), this.settings.getWeightExponent()))
-                            - 1.0;
+                        double weightedBaselineSum = 0.0;
+                        double weightedSlopeSum = 0.0;
+                        double weightSum = 0.0;
+                        double weightedPeakSum = 0.0;
+                        double peakWeightSum = 0.0;
 
-                        if (peaks[k] > 0)
+                        for (int k = 0; k < slopes.length; k++)
                         {
-                            weightedPeakSum += weight * peaks[k];
-                            peakWeightSum += weight;
+                            double weight = 1 / Math.max(0.000001, 1.0 -
+                                Math.pow(Math.max(0.0, targetDirections[i].dot(viewDirections[k])), this.settings.getWeightExponent()))
+                                - 1.0;
+
+                            if (peaks[k] > 0)
+                            {
+                                weightedPeakSum += weight * peaks[k];
+                                peakWeightSum += weight;
+                            }
+
+                            weightedBaselineSum += weight * baselines[k];
+                            weightedSlopeSum += weight * slopes[k];
+                            weightSum += weight;
                         }
 
-                        weightedBaselineSum += weight * baselines[k];
-                        weightedSlopeSum += weight * slopes[k];
-                        weightSum += weight;
+                        targetBaselines[i] = weightedBaselineSum / weightSum;
+                        targetSlopes[i] = weightedSlopeSum / weightSum;
+                        targetPeaks[i] = peakWeightSum == 0.0 ? 0.0 : weightedPeakSum / peakWeightSum;
                     }
-
-                    targetBaselines[i] = weightedBaselineSum / weightSum;
-                    targetSlopes[i] = weightedSlopeSum / weightSum;
-                    targetPeaks[i] = peakWeightSum == 0.0 ? 0.0 : weightedPeakSum / peakWeightSum;
                 }
 
                 double[] targetDistances;
@@ -467,16 +485,19 @@ public class FidelityMetricRequest implements IBRRequest
                     }
                 }
 
-                // Now update the errors for all of the target views
-                for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+                if (VIEW_IMPORTANCE_PREDICTION_ENABLED)
                 {
-                    if (fidelityTechnique.isGuaranteedMonotonic())
+                    // Now update the errors for all of the target views
+                    for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
                     {
-                        targetErrors[i] = estimateErrorFromSplines(Arrays.asList(viewDirections), Arrays.asList(errorFunctions), targetDirections[i], targetDistances[i]);
-                    }
-                    else
-                    {
-                        targetErrors[i] = estimateErrorQuadratic(targetBaselines[i], targetSlopes[i], targetPeaks[i], targetDistances[i]);
+                        if (fidelityTechnique.isGuaranteedMonotonic())
+                        {
+                            targetErrors[i] = estimateErrorFromSplines(Arrays.asList(viewDirections), Arrays.asList(errorFunctions), targetDirections[i], targetDistances[i]);
+                        }
+                        else
+                        {
+                            targetErrors[i] = estimateErrorQuadratic(targetBaselines[i], targetSlopes[i], targetPeaks[i], targetDistances[i]);
+                        }
                     }
                 }
 
@@ -488,29 +509,29 @@ public class FidelityMetricRequest implements IBRRequest
 
                 // Views that are in both the target view set and the original view set
                 // Go through these views in order of importance so that when loaded viewset = target viewset, it generates a ground truth ranking.
-                while(unusedOriginalViews > 0)
+                while (unusedOriginalViews > 0)
                 {
-//                    double maxError = -1.0;
+                    //                    double maxError = -1.0;
                     int nextViewTargetIndex = -1;
                     int nextViewOriginalIndex = -1;
 
                     // Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
-//                    for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
-//                    {
-//                        for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
-//                        {
-//                            if (targetViewSet.getImageFileName(i).contains(resources.viewSet.getImageFileName(j).split("\\.")[0]))
-//                            {
-//                                // Can't be previously used and must have more error than any other view
-//                                if (!originalUsed[j] && targetErrors[i] > maxError)
-//                                {
-//                                    maxError = targetErrors[i];
-//                                    nextViewTargetIndex = i;
-//                                    nextViewOriginalIndex = j;
-//                                }
-//                            }
-//                        }
-//                    }
+                    //                    for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+                    //                    {
+                    //                        for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
+                    //                        {
+                    //                            if (targetViewSet.getImageFileName(i).contains(resources.viewSet.getImageFileName(j).split("\\.")[0]))
+                    //                            {
+                    //                                // Can't be previously used and must have more error than any other view
+                    //                                if (!originalUsed[j] && targetErrors[i] > maxError)
+                    //                                {
+                    //                                    maxError = targetErrors[i];
+                    //                                    nextViewTargetIndex = i;
+                    //                                    nextViewOriginalIndex = j;
+                    //                                }
+                    //                            }
+                    //                        }
+                    //                    }
 
                     double minTotalError = Double.MAX_VALUE;
 
@@ -596,19 +617,22 @@ public class FidelityMetricRequest implements IBRRequest
                         {
                             // distance
                             targetDistances[i] = Math.min(targetDistances[i],
-                                    Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[nextViewTargetIndex])))));
+                                Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[nextViewTargetIndex])))));
 
-                            // error
-                            if (fidelityTechnique.isGuaranteedMonotonic())
+                            if (VIEW_IMPORTANCE_PREDICTION_ENABLED)
                             {
-                                targetErrors[i] = estimateErrorFromSplines(Arrays.asList(viewDirections),
-                                    Arrays.asList(errorFunctions), targetDirections[i], targetDistances[i]);
+                                // error
+                                if (fidelityTechnique.isGuaranteedMonotonic())
+                                {
+                                    targetErrors[i] = estimateErrorFromSplines(Arrays.asList(viewDirections),
+                                        Arrays.asList(errorFunctions), targetDirections[i], targetDistances[i]);
+                                }
+                                else
+                                {
+                                    targetErrors[i] = estimateErrorQuadratic(targetBaselines[i], targetSlopes[i], targetPeaks[i], targetDistances[i]);
+                                }
+                                expectedTotalError += targetErrors[i];
                             }
-                            else
-                            {
-                                targetErrors[i] = estimateErrorQuadratic(targetBaselines[i], targetSlopes[i], targetPeaks[i], targetDistances[i]);
-                            }
-                            expectedTotalError += targetErrors[i];
                         }
                     }
 
@@ -626,72 +650,76 @@ public class FidelityMetricRequest implements IBRRequest
                     }
                 }
 
-                // Views that are in the target view set and NOT in the original view set
-                int unused;
-                double maxErrorDiff;
-                do
+                if (VIEW_IMPORTANCE_PREDICTION_ENABLED)
                 {
-                    unused = 0;
-                    maxErrorDiff = -1.0;
-                    int maxErrorIndex = -1;
-
-                    // Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
-                    for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+                    // Views that are in the target view set and NOT in the original view set
+                    int unused;
+                    double maxErrorDiff;
+                    do
                     {
-                        // Can't be previously used and must have more error than any other view
-                        if (!targetUsed[i])
-                        {
-                            // Keep track of number of unused views at the same time
-                            unused++;
+                        unused = 0;
+                        maxErrorDiff = -1.0;
+                        int maxErrorIndex = -1;
 
-                            if (targetErrors[i] - targetBaselines[i] > maxErrorDiff)
-                            {
-                                maxErrorDiff = targetErrors[i] - targetBaselines[i];
-                                maxErrorIndex = i;
-                            }
-                        }
-                    }
-
-                    if (maxErrorIndex >= 0)
-                    {
-                        // Print the view to the file
-                        out.print(targetViewSet.getImageFileName(maxErrorIndex).split("\\.")[0] + '\t' + targetBaselines[maxErrorIndex] + '\t' + targetSlopes[maxErrorIndex] + '\t' + targetPeaks[maxErrorIndex] + '\t' +
-                                targetDistances[maxErrorIndex] + '\t' + targetErrors[maxErrorIndex] + '\t');
-
-                        // Flag that its been used
-                        targetUsed[maxErrorIndex] = true;
-                        unused--;
-
-                        double cumError = 0.0;
-
-                        // Update all of the other target distances and errors
+                        // Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
                         for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
                         {
-                            // Don't update previously used views
+                            // Can't be previously used and must have more error than any other view
                             if (!targetUsed[i])
                             {
-                                // distance
-                                targetDistances[i] = Math.min(targetDistances[i],
-                                        Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[maxErrorIndex])))));
+                                // Keep track of number of unused views at the same time
+                                unused++;
 
-                                // error
-                                if (fidelityTechnique.isGuaranteedMonotonic())
+                                if (targetErrors[i] - targetBaselines[i] > maxErrorDiff)
                                 {
-                                    targetErrors[i] = estimateErrorFromSplines(Arrays.asList(viewDirections),
-                                        Arrays.asList(errorFunctions), targetDirections[i], targetDistances[i]);
+                                    maxErrorDiff = targetErrors[i] - targetBaselines[i];
+                                    maxErrorIndex = i;
                                 }
-                                else
-                                {
-                                    targetErrors[i] = estimateErrorQuadratic(targetBaselines[i], targetSlopes[i], targetPeaks[i], targetDistances[i]);
-                                }
-                                cumError += targetErrors[i];
                             }
                         }
 
-                        out.println(cumError);
+                        if (maxErrorIndex >= 0)
+                        {
+                            // Print the view to the file
+                            out.print(targetViewSet.getImageFileName(maxErrorIndex).split("\\.")[0] + '\t' + targetBaselines[maxErrorIndex] +
+                                '\t' + targetSlopes[maxErrorIndex] + '\t' + targetPeaks[maxErrorIndex] + '\t' +
+                                targetDistances[maxErrorIndex] + '\t' + targetErrors[maxErrorIndex] + '\t');
+
+                            // Flag that its been used
+                            targetUsed[maxErrorIndex] = true;
+                            unused--;
+
+                            double cumError = 0.0;
+
+                            // Update all of the other target distances and errors
+                            for (int i = 0; i < targetViewSet.getCameraPoseCount(); i++)
+                            {
+                                // Don't update previously used views
+                                if (!targetUsed[i])
+                                {
+                                    // distance
+                                    targetDistances[i] = Math.min(targetDistances[i],
+                                        Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[maxErrorIndex])))));
+
+                                    // error
+                                    if (fidelityTechnique.isGuaranteedMonotonic())
+                                    {
+                                        targetErrors[i] = estimateErrorFromSplines(Arrays.asList(viewDirections),
+                                            Arrays.asList(errorFunctions), targetDirections[i], targetDistances[i]);
+                                    }
+                                    else
+                                    {
+                                        targetErrors[i] = estimateErrorQuadratic(targetBaselines[i], targetSlopes[i], targetPeaks[i], targetDistances[i]);
+                                    }
+                                    cumError += targetErrors[i];
+                                }
+                            }
+
+                            out.println(cumError);
+                        }
                     }
+                    while (maxErrorDiff > 0.0 && unused > 0);
                 }
-                while(maxErrorDiff > 0.0 && unused > 0);
             }
         }
         catch (Exception e)
