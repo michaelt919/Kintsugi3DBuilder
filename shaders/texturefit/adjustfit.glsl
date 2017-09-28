@@ -8,7 +8,7 @@
 #define MIN_ALBEDO     0.000005        // ~ 1/256 ^ gamma
 #define MIN_ROUGHNESS  0.00390625    // 1/256
 #define MAX_ROUGHNESS  0.70710678 // sqrt(1/2)
-#define MIN_DIAGONAL  0.000001 
+#define MIN_DIAGONAL  0.000001
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
@@ -132,7 +132,7 @@ struct ParameterizedFit
     vec3 diffuseColor;
     vec3 normal;
     vec3 specularColor;
-    float roughness;
+    vec3 roughness;
 };
 
 ParameterizedFit adjustFit()
@@ -149,9 +149,9 @@ ParameterizedFit adjustFit()
 
         vec3 tangent = normalize(fTangent - dot(normal, fTangent));
         vec3 bitangent = normalize(fBitangent
-            - dot(normal, fBitangent) * normal 
+            - dot(normal, fBitangent) * normal
             - dot(tangent, fBitangent) * tangent);
-            
+
         mat3 tangentToObject = mat3(tangent, bitangent, normal);
         mat3 objectToTangent = transpose(mat3(1) * tangentToObject); // Workaround for driver bug
         vec3 shadingNormalTS = getDiffuseNormalVector();
@@ -211,7 +211,7 @@ ParameterizedFit adjustFit()
                 float nDotH = dot(halfway, shadingNormal);
                 vec3 halfTS = objectToTangent * halfway;
 
-                if (nDotL > 0.0 && nDotH > sqrt(0.5))
+                if (nDotL > 0.0 /* && nDotH > sqrt(0.5)*/)
                 {
                     // An implicit change of variables is done here.
                     // The reflectivity variable being fit is actually the ratio between
@@ -278,7 +278,7 @@ ParameterizedFit adjustFit()
                                 hDotV, nDotL, nDotV, nDotH, nDotHSquared, roughnessSquared, geom));
                     // mat3x2 normalDerivsTranspose = transpose(mat3(1) * normalDerivs);
 
-                    float weight = 1.0;//clamp(1 / (1 - nDotHSquared), 0, 1000000);
+                    float weight = nDotV; //clamp(1 / (1 - nDotHSquared), 0, 1000000);
 
                     // mA += weight * diffuseDerivsTranspose * diffuseDerivs;
                     // mB += weight * diffuseDerivsTranspose * specularDerivs;
@@ -427,7 +427,7 @@ ParameterizedFit adjustFit()
                 vec3(newNormalXY, sqrt(max(0.0, 1 - dot(newNormalXY, newNormalXY)))),
                 //xyzToRGB(prevSpecularColor + /* shiftFraction * */specularAdj.xyz),
                 newSpecularColorRGB,
-                clamp(sqrt(newRoughnessSquared), MIN_ROUGHNESS, MAX_ROUGHNESS));
+                vec3(clamp(sqrt(newRoughnessSquared), MIN_ROUGHNESS, MAX_ROUGHNESS)));
         }
     }
 }

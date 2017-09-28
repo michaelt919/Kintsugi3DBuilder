@@ -5,7 +5,7 @@
 
 #line 7 2006
 
-#define MAX_ERROR 3.402822E38 // Max 32-bit floating-point is 3.4028235E38
+#define MAX_ERROR 1.0 //3.402822E38 // Max 32-bit floating-point is 3.4028235E38
 #define MIN_DAMPING_FACTOR 0.0078125 // 1/256
 #define MAX_DAMPING_FACTOR 1024 // 1048576 // 2^20
 //#define MIN_SHIFT_FRACTION 0.01171875 // 3/256
@@ -18,9 +18,10 @@ uniform sampler2D errorTexture;
 
 uniform float fittingGamma;
 
-vec3 getDiffuseColor()
+vec4 getDiffuseColor()
 {
-    return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
+    vec4 textureLookup = texture(diffuseEstimate, fTexCoord);
+    return vec4(pow(textureLookup.rgb, vec3(gamma)), textureLookup.a);
 }
 
 vec3 getDiffuseNormalVector()
@@ -30,12 +31,13 @@ vec3 getDiffuseNormalVector()
 
 vec3 getSpecularColor()
 {
-    return pow(texture(specularEstimate, fTexCoord).rgb, vec3(gamma));
+    vec3 specularColor = texture(specularEstimate, fTexCoord).rgb;
+    return sign(specularColor) * pow(abs(specularColor), vec3(gamma));
 }
 
-float getRoughness()
+vec3 getRoughness()
 {
-    return texture(roughnessEstimate, fTexCoord).r;
+    return texture(roughnessEstimate, fTexCoord).rgb;
 }
 
 struct ErrorResult
@@ -59,65 +61,69 @@ ErrorResult calculateError()
 
         vec3 tangent = normalize(fTangent - dot(normal, fTangent));
         vec3 bitangent = normalize(fBitangent
-            - dot(normal, fBitangent) * normal 
+            - dot(normal, fBitangent) * normal
             - dot(tangent, fBitangent) * tangent);
-            
+
         mat3 tangentToObject = mat3(tangent, bitangent, normal);
         vec3 shadingNormal = tangentToObject * getDiffuseNormalVector();
 
-        vec3 diffuseColor = rgbToXYZ(getDiffuseColor());
+        vec4 diffuseColorRGBA = getDiffuseColor();
+        float alpha = diffuseColorRGBA.a;
+        vec3 diffuseColor = rgbToXYZ(diffuseColorRGBA.rgb);
         vec3 specularColor = rgbToXYZ(getSpecularColor());
-        float roughness = getRoughness();
-        float roughnessSquared = roughness * roughness;
+        vec3 roughness = getRoughness();
+        vec3 roughnessSquared = roughness * roughness;
         float maxLuminance = getMaxLuminance();
         float fittingGammaInv = 1.0 / fittingGamma;
 
         float sumSqError = 0.0;
+        float sumWeight = 0.0;
 
-        for (int i = 0; i < viewCount; i++)
+        //if (alpha == 1.0)
         {
-            vec3 view = normalize(getViewVector(i));
-            float nDotV = max(0, dot(shadingNormal, view));
-            vec4 color = getLinearColor(i);
-
-            if (color.a > 0 && nDotV > 0 && dot(normal, view) > 0)
+            for (int i = 0; i < viewCount; i++)
             {
-                vec3 lightPreNormalized = getLightVector(i);
-                vec3 attenuatedLightIntensity = infiniteLightSources ?
-                    getLightIntensity(i) :
-                    getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
-                vec3 light = normalize(lightPreNormalized);
-                float nDotL = max(0, dot(light, shadingNormal));
+                vec3 view = normalize(getViewVector(i));
+                float nDotV = max(0, dot(shadingNormal, view));
+                vec4 color = getLinearColor(i);
 
-                vec3 halfway = normalize(view + light);
-                float nDotH = dot(halfway, shadingNormal);
-
-                if (nDotL > 0.0 && nDotH > sqrt(0.5))
+                if (color.a > 0 && nDotV > 0 && dot(normal, view) > 0)
                 {
-                    float nDotHSquared = nDotH * nDotH;
+                    vec3 lightPreNormalized = getLightVector(i);
+                    vec3 attenuatedLightIntensity = infiniteLightSources ?
+                        getLightIntensity(i) :
+                        getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
+                    vec3 light = normalize(lightPreNormalized);
+                    float nDotL = max(0, dot(light, shadingNormal));
 
-                    float q1 = roughnessSquared + (1.0 - nDotHSquared) / nDotHSquared;
-                    float mfdEval = roughnessSquared / (nDotHSquared * nDotHSquared * q1 * q1);
+                    vec3 halfway = normalize(view + light);
+                    float nDotH = dot(halfway, shadingNormal);
 
-                    float hDotV = max(0, dot(halfway, view));
-                    float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
+                    if (nDotL > 0.0 /*&& nDotH > sqrt(0.5)*/)
+                    {
+                        float nDotHSquared = nDotH * nDotH;
 
-                    vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity),
-                        vec3(fittingGammaInv));
-                    vec3 currentFit =
-                        diffuseColor
-                        * nDotL + specularColor * mfdEval * geomRatio;
-                    vec3 colorResidual = colorScaled - pow(currentFit, vec3(fittingGammaInv));
+                        vec3 q1 = roughnessSquared + (1.0 - nDotHSquared) / nDotHSquared;
+                        vec3 mfdEval = roughnessSquared / (nDotHSquared * nDotHSquared * q1 * q1);
 
-                    float weight = 1.0;//clamp(1 / (1 - nDotHSquared), 0, 1000000);
-                    sumSqError += weight * dot(colorResidual, colorResidual);
+                        float hDotV = max(0, dot(halfway, view));
+                        float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
+
+                        vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity), vec3(fittingGammaInv));
+                        vec3 currentFit = diffuseColor * nDotL + min(vec3(1), specularColor) * mfdEval * geomRatio;
+                        vec3 colorResidual = colorScaled - pow(currentFit, vec3(fittingGammaInv));
+
+                        float weight = nDotV; //clamp(1 / (1 - nDotHSquared), 0, 1000000);
+                        sumSqError += weight * dot(colorResidual, colorResidual);
+                        sumWeight += weight * 3;
+                    }
                 }
             }
         }
 
-        sumSqError = min(sumSqError, MAX_ERROR);
+        float meanSqError = min(sumSqError / sumWeight, MAX_ERROR);
 
-        if (sumSqError >= prevErrorResult.y)
+        if (meanSqError >= prevErrorResult.y)
         {
             //return ErrorResult(false, prevErrorResult.x / 2, prevErrorResult.y);
             return ErrorResult(false, prevErrorResult.x * 2, prevErrorResult.y);
@@ -125,7 +131,7 @@ ErrorResult calculateError()
         else
         {
             //return ErrorResult(true, prevErrorResult.x, sumSqError);
-            return ErrorResult(true, prevErrorResult.x / 2, sumSqError);
+            return ErrorResult(true, prevErrorResult.x / 2, meanSqError);
         }
     }
 }
