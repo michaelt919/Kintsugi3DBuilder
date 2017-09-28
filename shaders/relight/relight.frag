@@ -948,8 +948,8 @@ void main()
                     }
                     else
                     {
-                        vec3 mfd = dist(nDotH, roughness);
-                        mfdFresnel = fresnel(specularColor * mfd, vec3(getLuminance(mfd)), hDotV);
+                        vec3 mfdFresnelBaseXYZ = rgbToXYZ(specularColor) * dist(nDotH, roughness);
+                        mfdFresnel = fresnel(xyzToRGB(mfdFresnelBaseXYZ), vec3(mfdFresnelBaseXYZ.y), hDotV);
                     }
                 }
                 else
@@ -960,7 +960,7 @@ void main()
                     }
                     else
                     {
-                        mfdFresnel = specularColor * dist(nDotH, roughness);
+                        mfdFresnel = xyzToRGB(rgbToXYZ(specularColor) * dist(nDotH, roughness));
                     }
                 }
 
