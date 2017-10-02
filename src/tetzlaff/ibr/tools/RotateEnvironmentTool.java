@@ -2,7 +2,7 @@ package tetzlaff.ibr.tools;//Created by alexk on 7/24/2017.
 
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.WindowSize;
-import tetzlaff.models.EnvironmentMapModel;
+import tetzlaff.models.EnvironmentModel;
 
 final class RotateEnvironmentTool implements DragTool
 {
@@ -13,14 +13,14 @@ final class RotateEnvironmentTool implements DragTool
 
     private CursorPosition mouseStart;
 
-    private final EnvironmentMapModel environmentModel;
+    private final EnvironmentModel environmentModel;
 
     private static class Builder extends ToolBuilderBase<RotateEnvironmentTool>
     {
         @Override
         public RotateEnvironmentTool build()
         {
-            return new RotateEnvironmentTool(getEnvironmentMapModel());
+            return new RotateEnvironmentTool(getEnvironmentModel());
         }
     }
 
@@ -29,7 +29,7 @@ final class RotateEnvironmentTool implements DragTool
         return new Builder();
     }
 
-    private RotateEnvironmentTool(EnvironmentMapModel environmentModel)
+    private RotateEnvironmentTool(EnvironmentModel environmentModel)
     {
         this.environmentModel = environmentModel;
     }

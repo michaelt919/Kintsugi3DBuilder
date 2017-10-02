@@ -1,14 +1,14 @@
 package tetzlaff.ibr.javafx.controllers.scene;
 
 import javafx.fxml.FXML;
+import tetzlaff.ibr.javafx.backend.JavaFXCameraModel;
+import tetzlaff.ibr.javafx.backend.JavaFXEnvironmentModel;
+import tetzlaff.ibr.javafx.backend.JavaFXLightingModel;
+import tetzlaff.ibr.javafx.backend.JavaFXObjectModel;
 import tetzlaff.ibr.javafx.controllers.scene.camera.RootCameraSceneController;
-import tetzlaff.ibr.javafx.controllers.scene.environment_map.RootEnvironmentSceneController;
+import tetzlaff.ibr.javafx.controllers.scene.environment.RootEnvironmentSceneController;
 import tetzlaff.ibr.javafx.controllers.scene.lights.RootLightSceneController;
 import tetzlaff.ibr.javafx.controllers.scene.object.RootObjectSceneController;
-import tetzlaff.ibr.javafx.models.JavaFXCameraModel;
-import tetzlaff.ibr.javafx.models.JavaFXEnvironmentMapModel;
-import tetzlaff.ibr.javafx.models.JavaFXLightingModel;
-import tetzlaff.ibr.javafx.models.JavaFXObjectModel;
 
 public class RootSceneController
 {
@@ -21,16 +21,12 @@ public class RootSceneController
     @FXML
     private RootObjectSceneController objectPosesController;
 
-    public RootSceneController()
+    public void init(JavaFXCameraModel cameraModel, JavaFXLightingModel lightingModel, JavaFXEnvironmentModel environmentMapModel,
+        JavaFXObjectModel objectModel, SceneModel sceneModel)
     {
-    }
-
-
-    public void init(JavaFXCameraModel cameraModel, JavaFXLightingModel lightingModel, JavaFXEnvironmentMapModel environmentMapModel, JavaFXObjectModel objectModel)
-    {
-        cameraController.init(cameraModel);
-        lightsController.init(lightingModel);
-        environmentMapController.init(environmentMapModel);
-        objectPosesController.init(objectModel);
+        cameraController.init(cameraModel, sceneModel);
+        lightsController.init(lightingModel, sceneModel);
+        environmentMapController.init(environmentMapModel, sceneModel);
+        objectPosesController.init(objectModel, sceneModel);
     }
 }

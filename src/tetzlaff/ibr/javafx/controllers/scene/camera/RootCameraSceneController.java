@@ -1,25 +1,22 @@
 package tetzlaff.ibr.javafx.controllers.scene.camera;
 
-import java.net.URL;
 import java.util.Collections;
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import tetzlaff.ibr.javafx.models.JavaFXCameraModel;
-import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
+import tetzlaff.ibr.javafx.backend.JavaFXCameraModel;
+import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
 
-public class RootCameraSceneController implements Initializable
+public class RootCameraSceneController
 {
     @FXML
     private VBox settings;
@@ -32,14 +29,13 @@ public class RootCameraSceneController implements Initializable
     @FXML
     private Button theRenameButton;
 
-    public RootCameraSceneController()
-    {
-    }
+    private SceneModel sceneModel;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources)
+    public void init(JavaFXCameraModel cameraModel, SceneModel injectedSceneModel)
     {
-        cameraListView.setItems(JavaFXModelAccess.getInstance().getSceneModel().getCameraList());
+        this.sceneModel = injectedSceneModel;
+
+        cameraListView.setItems(sceneModel.getCameraList());
         cameraListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
         CameraSetting freeCam = new CameraSetting(
@@ -58,7 +54,7 @@ public class RootCameraSceneController implements Initializable
 
         );
 
-        ObservableList<CameraSetting> cameraList = JavaFXModelAccess.getInstance().getSceneModel().getCameraList();
+        ObservableList<CameraSetting> cameraList = sceneModel.getCameraList();
 
         cameraList.add(freeCam);
         cameraListView.getSelectionModel().select(freeCam);
@@ -71,11 +67,8 @@ public class RootCameraSceneController implements Initializable
                 cameraListView.getSelectionModel().select(0);
             }
         });
-    }
 
-    public void init(JavaFXCameraModel cameraModel)
-    {
-        cameraModel.setSelectedCameraSettingProperty(cameraListView.getSelectionModel().selectedItemProperty());
+        cameraModel.setSelectedCameraSetting(cameraListView.getSelectionModel().selectedItemProperty());
     }
 
     private SelectionModel<CameraSetting> getCameraSelectionModel()
@@ -86,9 +79,9 @@ public class RootCameraSceneController implements Initializable
     @FXML
     private void newCameraButton()
     {
-        JavaFXModelAccess.getInstance().getSceneModel().getCameraList()
+        sceneModel.getCameraList()
             .add(getCameraSelectionModel().getSelectedItem().duplicate());
-        getCameraSelectionModel().select(JavaFXModelAccess.getInstance().getSceneModel().getCameraList().size() - 1);
+        getCameraSelectionModel().select(sceneModel.getCameraList().size() - 1);
     }
 
     @FXML
@@ -168,7 +161,7 @@ public class RootCameraSceneController implements Initializable
         int i = getCameraSelectionModel().getSelectedIndex();
         if (i > 1)
         {
-            Collections.swap(JavaFXModelAccess.getInstance().getSceneModel().getCameraList(), i, i - 1);
+            Collections.swap(sceneModel.getCameraList(), i, i - 1);
             getCameraSelectionModel().select(i - 1);
         }
     }
@@ -177,7 +170,7 @@ public class RootCameraSceneController implements Initializable
     void moveDOWNButton()
     {
         int i = getCameraSelectionModel().getSelectedIndex();
-        List<CameraSetting> cameraList = JavaFXModelAccess.getInstance().getSceneModel().getCameraList();
+        List<CameraSetting> cameraList = sceneModel.getCameraList();
         if (i != 0 && i < cameraList.size() - 1)
         {
             Collections.swap(cameraList, i, i + 1);
@@ -207,7 +200,7 @@ public class RootCameraSceneController implements Initializable
         int i = getCameraSelectionModel().getSelectedIndex();
         if (i != 0)
         {
-            JavaFXModelAccess.getInstance().getSceneModel().getCameraList().remove(i);
+            sceneModel.getCameraList().remove(i);
         }
     }
 }

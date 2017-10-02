@@ -18,8 +18,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import tetzlaff.ibr.javafx.models.JavaFXLightingModel;
-import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
+import tetzlaff.ibr.javafx.backend.JavaFXLightingModel;
+import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
 
 public class RootLightSceneController implements Initializable
 {
@@ -33,11 +33,12 @@ public class RootLightSceneController implements Initializable
     private final Property<LightInstanceSetting> selectedLight = new SimpleObjectProperty<>();
     private int lastSelectedIndex = -1;
 
+    private SceneModel sceneModel;
+
     @SuppressWarnings("rawtypes")
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
-        //TABLE SET UP
         //columns
         TableColumn<LightGroupSetting, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(param ->
@@ -104,18 +105,20 @@ public class RootLightSceneController implements Initializable
         });
 
         tableView.setSortPolicy(param -> false);
-
         tableView.setColumnResizePolicy(param -> false);
 
-        ObservableList<LightGroupSetting> lightGroupList = JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList();
+        selectedLight.addListener(settingsController.changeListener);
+    }
+
+    public void init(JavaFXLightingModel lightingModel, SceneModel injectedSceneModel)
+    {
+        this.sceneModel = injectedSceneModel;
+
+        ObservableList<LightGroupSetting> lightGroupList = sceneModel.getLightGroupList();
 
         tableView.setItems(lightGroupList);
 
-        //TABLE SET UP DONE
-
         //lightGroupList.add(new LightGroupSetting("Free Lights"));
-
-        selectedLight.addListener(settingsController.changeListener);
 
         lightGroupList.addListener((ListChangeListener<? super LightGroupSetting>) change ->
         {
@@ -125,10 +128,7 @@ public class RootLightSceneController implements Initializable
                 tableView.getSelectionModel().select(0);
             }
         });
-    }
 
-    public void init(JavaFXLightingModel lightingModel)
-    {
         ObservableValue<LightGroupSetting> observableValue = tableView.getSelectionModel().selectedItemProperty();
         lightingModel.setLightGroupSettingObservableValue(observableValue );
 
@@ -144,7 +144,7 @@ public class RootLightSceneController implements Initializable
         //for now we will create a blank group
         //in the future we may want to duplicate the previous group instead
         LightGroupSetting newGroup = new LightGroupSetting("New Group");
-        List<LightGroupSetting> lightGroupList = JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList();
+        List<LightGroupSetting> lightGroupList = sceneModel.getLightGroupList();
         lightGroupList.add(newGroup);
         tableView.getSelectionModel().select(lightGroupList.size() - 1, tableView.getColumns().get(0));
     }
@@ -226,14 +226,14 @@ public class RootLightSceneController implements Initializable
     {
         if (getRow() > 0)
         {
-            Collections.swap(JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList(), getRow(), getRow() - 1);
+            Collections.swap(sceneModel.getLightGroupList(), getRow(), getRow() - 1);
         }
     }
 
     @FXML
     private void moveDOWNGroup()
     {
-        List<LightGroupSetting> lightGroupList = JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList();
+        List<LightGroupSetting> lightGroupList = sceneModel.getLightGroupList();
         if (getRow() < lightGroupList.size() - 1)
         {
             Collections.swap(lightGroupList, getRow(), getRow() + 1);
@@ -265,7 +265,7 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void deleteGroup()
     {
-        List<LightGroupSetting> lightGroupList = JavaFXModelAccess.getInstance().getSceneModel().getLightGroupList();
+        List<LightGroupSetting> lightGroupList = sceneModel.getLightGroupList();
         if (lightGroupList.size() > getRow() && getRow() >= 0)
         {
             lightGroupList.remove(getRow());

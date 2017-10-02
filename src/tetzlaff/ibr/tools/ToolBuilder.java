@@ -7,7 +7,7 @@ interface ToolBuilder<ToolType>
 {
     ToolBuilder<ToolType> setToolBindingModel(ToolBindingModel toolBindingModel);
     ToolBuilder<ToolType> setCameraModel(ExtendedCameraModel cameraModel);
-    ToolBuilder<ToolType> setEnvironmentMapModel(EnvironmentMapModel environmentMapModel);
+    ToolBuilder<ToolType> setEnvironmentMapModel(EnvironmentModel environmentModel);
     ToolBuilder<ToolType> setLightingModel(ExtendedLightingModel lightingModel);
     ToolBuilder<ToolType> setObjectModel(ExtendedObjectModel lightingModel);
     ToolBuilder<ToolType> setSceneViewportModel(SceneViewportModel sceneViewportModel);

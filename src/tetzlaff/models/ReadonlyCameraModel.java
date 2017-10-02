@@ -13,4 +13,5 @@ public interface ReadonlyCameraModel
         return Vector3.ZERO;
     }
     default float getHorizontalFOV() { return (float)Math.PI / 2; }
+    default boolean isOrthographic() { return false; }
 }

@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="root" prefWidth="370.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.environment_map.SettingsEnvironmentSceneController">
+<VBox fx:id="root" prefWidth="370.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.environment.SettingsEnvironmentSceneController">
     <TitledPane animated="false" text="Environment map">
         <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
             <CheckBox fx:id="envUseImageCheckBox" prefWidth="144.0" text="Use image" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />

@@ -22,14 +22,14 @@ import tetzlaff.ibr.core.IBRRequestQueue;
 import tetzlaff.ibr.core.LoadingModel;
 import tetzlaff.ibr.core.LoadingMonitor;
 import tetzlaff.ibr.core.SettingsModel;
-import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
+import tetzlaff.ibr.javafx.Models;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.tools.ToolBindingModel;
 import tetzlaff.ibr.tools.ToolBox.Builder;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.models.*;
-import tetzlaff.models.impl.BasicCameraModel;
+import tetzlaff.models.impl.SimpleCameraModel;
 import tetzlaff.mvc.old.controllers.impl.FirstPersonController;
 import tetzlaff.util.WindowBasedController;
 
@@ -116,26 +116,26 @@ public final class Rendering
                 throw new IllegalStateException("The shader program could not be initialized.", e);
             }
 
-            CameraModel fpCameraModel = new BasicCameraModel();
+            CameraModel fpCameraModel = new SimpleCameraModel();
 
             FirstPersonController fpController = new FirstPersonController(fpCameraModel);
             fpController.addAsWindowListener(window);
 
             window.addMouseButtonPressListener((win, buttonIndex, mods) -> fpController.setEnabled(false));
 
-            ExtendedLightingModel lightingModel = JavaFXModelAccess.getInstance().getLightingModel();
-            EnvironmentMapModel environmentMapModel = JavaFXModelAccess.getInstance().getEnvironmentMapModel();
-            ExtendedCameraModel cameraModel = JavaFXModelAccess.getInstance().getCameraModel();
-            ExtendedObjectModel objectModel = JavaFXModelAccess.getInstance().getObjectModel();
-            SettingsModel settingsModel = JavaFXModelAccess.getInstance().getSettingsModel();
-            LoadingModel loadingModel = JavaFXModelAccess.getInstance().getLoadingModel();
-            ToolBindingModel toolModel = JavaFXModelAccess.getInstance().getToolModel();
+            ExtendedLightingModel lightingModel = Models.getInstance().getLightingModel();
+            EnvironmentModel environmentModel = Models.getInstance().getEnvironmentModel();
+            ExtendedCameraModel cameraModel = Models.getInstance().getCameraModel();
+            ExtendedObjectModel objectModel = Models.getInstance().getObjectModel();
+            SettingsModel settingsModel = Models.getInstance().getSettingsModel();
+            LoadingModel loadingModel = Models.getInstance().getLoadingModel();
+            ToolBindingModel toolModel = Models.getInstance().getToolModel();
 
             ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<>(context, program);
 
             WindowBasedController windowBasedController = Builder.create()
                 .setCameraModel(cameraModel)
-                .setEnvironmentMapModel(environmentMapModel)
+                .setEnvironmentModel(environmentModel)
                 .setLightingModel(lightingModel)
                 .setObjectModel(objectModel)
                 .setSettingsModel(settingsModel)

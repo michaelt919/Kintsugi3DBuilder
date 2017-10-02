@@ -12,7 +12,7 @@ import tetzlaff.gl.window.listeners.KeyPressListener;
 import tetzlaff.gl.window.listeners.KeyReleaseListener;
 import tetzlaff.models.CameraModel;
 import tetzlaff.models.ReadonlyCameraModel;
-import tetzlaff.models.impl.BasicCameraModel;
+import tetzlaff.models.impl.SimpleCameraModel;
 
 public class FirstPersonController implements KeyPressListener, KeyReleaseListener, CursorPositionListener
 {
@@ -35,7 +35,7 @@ public class FirstPersonController implements KeyPressListener, KeyReleaseListen
 
     public FirstPersonController()
     {
-        this(new BasicCameraModel());
+        this(new SimpleCameraModel());
     }
 
     public FirstPersonController(CameraModel cameraModel)
