@@ -30,7 +30,7 @@ import tetzlaff.models.CameraModel;
 import tetzlaff.models.LightWidgetModel;
 import tetzlaff.models.LightingModel;
 import tetzlaff.models.ReadonlyCameraModel;
-import tetzlaff.models.impl.BasicCameraModel;
+import tetzlaff.models.impl.SimpleCameraModel;
 import tetzlaff.mvc.old.controllers.impl.FirstPersonController;
 import tetzlaff.mvc.old.controllers.impl.TrackballController;
 import tetzlaff.mvc.old.controllers.impl.TrackballLightController;
@@ -231,7 +231,7 @@ public final class IBRelight
             lightController.addAsWindowListener(window);
             metaLightingModel.normalLightingModel = lightController.getLightingModel();
 
-            CameraModel fpCameraModel = new BasicCameraModel();
+            CameraModel fpCameraModel = new SimpleCameraModel();
 
             FirstPersonController fpController = new FirstPersonController(fpCameraModel);
             fpController.addAsWindowListener(window);

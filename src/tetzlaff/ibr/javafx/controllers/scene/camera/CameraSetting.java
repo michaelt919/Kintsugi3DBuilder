@@ -194,7 +194,7 @@ public class CameraSetting implements DOMConvertable
         this.inclination.set(inclination);
     }
 
-    public double getLog10distance()
+    public double getLog10Distance()
     {
         return log10distance.get();
     }
@@ -204,7 +204,7 @@ public class CameraSetting implements DOMConvertable
         return log10distance;
     }
 
-    public void setLog10distance(double log10distance)
+    public void setLog10Distance(double log10distance)
     {
         this.log10distance.set(log10distance);
     }

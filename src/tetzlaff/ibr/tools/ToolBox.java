@@ -156,7 +156,7 @@ public final class ToolBox
     }
 
     //builder
-    private ToolBox(ExtendedCameraModel cameraModel, EnvironmentMapModel environmentMapModel, ExtendedLightingModel lightingModel,
+    private ToolBox(ExtendedCameraModel cameraModel, EnvironmentModel environmentModel, ExtendedLightingModel lightingModel,
         ExtendedObjectModel objectModel, SettingsModel settingsModel, ToolBindingModel toolBindingModel, SceneViewportModel sceneViewportModel)
     {
         this.toolBindingModel = toolBindingModel;
@@ -181,7 +181,7 @@ public final class ToolBox
             dragTools.put(entries.getKey(),
                 entries.getValue()
                     .setCameraModel(cameraModel)
-                    .setEnvironmentMapModel(environmentMapModel)
+                    .setEnvironmentMapModel(environmentModel)
                     .setLightingModel(lightingModel)
                     .setObjectModel(objectModel)
                     .setSettingsModel(settingsModel)
@@ -205,7 +205,7 @@ public final class ToolBox
             keyPressTools.put(entries.getKey(),
                 entries.getValue()
                     .setCameraModel(cameraModel)
-                    .setEnvironmentMapModel(environmentMapModel)
+                    .setEnvironmentMapModel(environmentModel)
                     .setLightingModel(lightingModel)
                     .setObjectModel(objectModel)
                     .setSettingsModel(settingsModel)
@@ -216,7 +216,7 @@ public final class ToolBox
 
         lightTool = LightTool.getBuilder()
             .setCameraModel(cameraModel)
-            .setEnvironmentMapModel(environmentMapModel)
+            .setEnvironmentMapModel(environmentModel)
             .setLightingModel(lightingModel)
             .setObjectModel(objectModel)
             .setSettingsModel(settingsModel)
@@ -229,7 +229,7 @@ public final class ToolBox
     {
         private ToolBindingModel toolModel;
         private ExtendedCameraModel cameraModel;
-        private EnvironmentMapModel environmentMapModel;
+        private EnvironmentModel environmentModel;
         private SettingsModel settingsModel;
         private ExtendedLightingModel lightingModel;
         private ExtendedObjectModel objectModel;
@@ -256,9 +256,9 @@ public final class ToolBox
             return this;
         }
 
-        public Builder setEnvironmentMapModel(EnvironmentMapModel environmentMapModel)
+        public Builder setEnvironmentModel(EnvironmentModel environmentModel)
         {
-            this.environmentMapModel = environmentMapModel;
+            this.environmentModel = environmentModel;
             return this;
         }
 
@@ -288,7 +288,7 @@ public final class ToolBox
 
         public WindowBasedController build()
         {
-            return new ToolBox(cameraModel, environmentMapModel, lightingModel, objectModel, settingsModel, toolModel, sceneViewportModel);
+            return new ToolBox(cameraModel, environmentModel, lightingModel, objectModel, settingsModel, toolModel, sceneViewportModel);
         }
     }
 }

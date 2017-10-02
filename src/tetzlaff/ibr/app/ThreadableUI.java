@@ -1,6 +1,6 @@
 package tetzlaff.ibr.app;//Created by alexk on 7/19/2017.
 
-import tetzlaff.ibr.javafx.JavaFXApp;
+import tetzlaff.ibr.javafx.MainApplication;
 
 public class ThreadableUI implements Runnable 
 {
@@ -18,6 +18,6 @@ public class ThreadableUI implements Runnable
     @Override
     public void run() 
     {
-        JavaFXApp.launchWrapper("");
+        MainApplication.launchWrapper("");
     }
 }

@@ -7,7 +7,7 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
 {
     private ToolBindingModel toolBindingModel;
     private ExtendedCameraModel cameraModel;
-    private EnvironmentMapModel environmentMapModel;
+    private EnvironmentModel environmentModel;
     private ExtendedLightingModel lightingModel;
     private ExtendedObjectModel objectModel;
     private SceneViewportModel sceneViewportModel;
@@ -32,9 +32,9 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
     }
 
     @Override
-    public ToolBuilder<ToolType> setEnvironmentMapModel(EnvironmentMapModel environmentMapModel)
+    public ToolBuilder<ToolType> setEnvironmentMapModel(EnvironmentModel environmentModel)
     {
-        this.environmentMapModel = environmentMapModel;
+        this.environmentModel = environmentModel;
         return this;
     }
 
@@ -76,9 +76,9 @@ abstract class ToolBuilderBase<ToolType> implements ToolBuilder<ToolType>
         return cameraModel;
     }
 
-    EnvironmentMapModel getEnvironmentMapModel()
+    EnvironmentModel getEnvironmentModel()
     {
-        return environmentMapModel;
+        return environmentModel;
     }
 
     ExtendedLightingModel getLightingModel()

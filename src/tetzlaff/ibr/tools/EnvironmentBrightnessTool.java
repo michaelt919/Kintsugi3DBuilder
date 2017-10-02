@@ -1,6 +1,6 @@
 package tetzlaff.ibr.tools;
 
-import tetzlaff.models.EnvironmentMapModel;
+import tetzlaff.models.EnvironmentModel;
 
 public class EnvironmentBrightnessTool implements KeyPressTool
 {
@@ -34,7 +34,7 @@ public class EnvironmentBrightnessTool implements KeyPressTool
         @Override
         public EnvironmentBrightnessTool build()
         {
-            return new EnvironmentBrightnessTool(factor, getEnvironmentMapModel());
+            return new EnvironmentBrightnessTool(factor, getEnvironmentModel());
         }
     }
 
@@ -44,17 +44,17 @@ public class EnvironmentBrightnessTool implements KeyPressTool
     }
 
     private final float factor;
-    private final EnvironmentMapModel environmentMapModel;
+    private final EnvironmentModel environmentModel;
 
-    public EnvironmentBrightnessTool(float factor, EnvironmentMapModel environmentMapModel)
+    public EnvironmentBrightnessTool(float factor, EnvironmentModel environmentModel)
     {
         this.factor = factor;
-        this.environmentMapModel = environmentMapModel;
+        this.environmentModel = environmentModel;
     }
 
     @Override
     public void keyPressed()
     {
-        environmentMapModel.setEnvironmentIntensity(environmentMapModel.getEnvironmentIntensity() * this.factor);
+        environmentModel.setEnvironmentIntensity(environmentModel.getEnvironmentIntensity() * this.factor);
     }
 }

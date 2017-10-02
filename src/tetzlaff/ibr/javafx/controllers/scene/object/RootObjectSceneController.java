@@ -1,25 +1,22 @@
 package tetzlaff.ibr.javafx.controllers.scene.object;
 
-import java.net.URL;
 import java.util.Collections;
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import tetzlaff.ibr.javafx.models.JavaFXModelAccess;
-import tetzlaff.ibr.javafx.models.JavaFXObjectModel;
+import tetzlaff.ibr.javafx.backend.JavaFXObjectModel;
+import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
 
-public class RootObjectSceneController implements Initializable
+public class RootObjectSceneController
 {
     @FXML
     private VBox settings;
@@ -32,10 +29,13 @@ public class RootObjectSceneController implements Initializable
     @FXML
     private Button renameButton;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources)
+    private SceneModel sceneModel;
+
+    public void init(JavaFXObjectModel objectModel, SceneModel injectedSceneModel)
     {
-        objectPoseListView.setItems(JavaFXModelAccess.getInstance().getSceneModel().getObjectPoseList());
+        this.sceneModel = injectedSceneModel;
+
+        objectPoseListView.setItems(sceneModel.getObjectPoseList());
         objectPoseListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
         ObjectPoseSetting defaultPose = new ObjectPoseSetting(
@@ -49,7 +49,7 @@ public class RootObjectSceneController implements Initializable
             "Default Pose"
         );
 
-        ObservableList<ObjectPoseSetting> objectPoseList = JavaFXModelAccess.getInstance().getSceneModel().getObjectPoseList();
+        ObservableList<ObjectPoseSetting> objectPoseList = sceneModel.getObjectPoseList();
 
         objectPoseList.add(defaultPose);
         objectPoseListView.getSelectionModel().select(defaultPose);
@@ -62,11 +62,8 @@ public class RootObjectSceneController implements Initializable
                 objectPoseListView.getSelectionModel().select(0);
             }
         });
-    }
 
-    public void init(JavaFXObjectModel objectModel)
-    {
-        objectModel.setSelectedObjectPoseSettingProperty(objectPoseListView.getSelectionModel().selectedItemProperty());
+        objectModel.setSelectedObjectPoseProperty(objectPoseListView.getSelectionModel().selectedItemProperty());
     }
 
     private SelectionModel<ObjectPoseSetting> getObjectPoseSelectionModel()
@@ -77,9 +74,9 @@ public class RootObjectSceneController implements Initializable
     @FXML
     private void newPoseButton()
     {
-        JavaFXModelAccess.getInstance().getSceneModel().getObjectPoseList()
+        sceneModel.getObjectPoseList()
             .add(getObjectPoseSelectionModel().getSelectedItem().duplicate());
-        getObjectPoseSelectionModel().select(JavaFXModelAccess.getInstance().getSceneModel().getObjectPoseList().size() - 1);
+        getObjectPoseSelectionModel().select(sceneModel.getObjectPoseList().size() - 1);
     }
 
     @FXML
@@ -159,7 +156,7 @@ public class RootObjectSceneController implements Initializable
         int i = getObjectPoseSelectionModel().getSelectedIndex();
         if (i > 1)
         {
-            Collections.swap(JavaFXModelAccess.getInstance().getSceneModel().getCameraList(), i, i - 1);
+            Collections.swap(sceneModel.getCameraList(), i, i - 1);
             getObjectPoseSelectionModel().select(i - 1);
         }
     }
@@ -168,7 +165,7 @@ public class RootObjectSceneController implements Initializable
     void moveDOWNButton()
     {
         int i = getObjectPoseSelectionModel().getSelectedIndex();
-        List<ObjectPoseSetting> objectPoseList = JavaFXModelAccess.getInstance().getSceneModel().getObjectPoseList();
+        List<ObjectPoseSetting> objectPoseList = sceneModel.getObjectPoseList();
         if (i != 0 && i < objectPoseList.size() - 1)
         {
             Collections.swap(objectPoseList, i, i + 1);
@@ -198,7 +195,7 @@ public class RootObjectSceneController implements Initializable
         int i = getObjectPoseSelectionModel().getSelectedIndex();
         if (i != 0)
         {
-            JavaFXModelAccess.getInstance().getSceneModel().getObjectPoseList().remove(i);
+            sceneModel.getObjectPoseList().remove(i);
         }
     }
 }

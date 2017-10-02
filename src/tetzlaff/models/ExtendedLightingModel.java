@@ -4,4 +4,7 @@ public interface ExtendedLightingModel extends LightingModel, ReadonlyExtendedLi
 {
     @Override
     LightInstanceModel getLight(int index);
+
+    @Override
+    EnvironmentModel getEnvironmentModel();
 }
