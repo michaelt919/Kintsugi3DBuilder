@@ -50,8 +50,7 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light,
     vec3 diffuseContrib = diffuseColor * max(0, dot(light, normal)) * attenuatedLightIntensity;
     float cap = maxLuminance - max(diffuseContrib.r, max(diffuseContrib.g, diffuseContrib.b));
     vec3 remainder = clamp(originalColor.rgb - diffuseContrib, 0, cap);
-    return vec4(remainder, 
-        originalColor.a * pow(remainder.r * remainder.g * remainder.b, 1.0 / (3 * fittingGamma)));
+    return vec4(remainder, cap);
 }
 
 ParameterizedFit fitSpecular()
@@ -70,8 +69,8 @@ ParameterizedFit fitSpecular()
     vec3 diffuseColor = getDiffuseColor();
 
     float maxLuminance = getMaxLuminance();
-    vec4 maxResidual = vec4(0);
-    float maxResidualLuminance = 0;
+    vec3 maxResidual = vec3(0);
+    vec2 maxResidualLuminance = vec2(0);
     //vec3 maxResidualDirection = vec3(0);
 
     vec3 directionSum = vec3(0);
@@ -103,11 +102,10 @@ ParameterizedFit fitSpecular()
                 intensityWeightedDirectionSum += halfway * luminance;
             }
 
-            if (luminance * nDotH > maxResidualLuminance * maxResidual.a)
+            if (luminance * nDotH > maxResidualLuminance[0] * maxResidualLuminance[1])
             {
-                maxResidual = vec4(colorRemainder, nDotH);
-                maxResidualLuminance = luminance;
-                //maxResidualDirection = halfway;
+                maxResidualLuminance = vec2(luminance, nDotH);
+                maxResidual = colorRemainder;
             }
         }
     }
@@ -141,6 +139,8 @@ ParameterizedFit fitSpecular()
     roughnessSums[0] = vec3(0);
     roughnessSums[1] = vec3(0);
     roughnessSums[2] = vec3(0);
+
+    vec4 sumResidualXYZGamma = vec4(0.0);
     
     for (int i = 0; i < viewCount; i++)
     {
@@ -184,20 +184,23 @@ ParameterizedFit fitSpecular()
                         * sqrt(colorRemainder * nDotV) * nDotHSquared;
 
                     roughnessSums[2] += nDotV ;// * pow(colorRemainder, vec3(1.0 / fittingGamma));
+
+                    sumResidualXYZGamma += nDotV * vec4(pow(colorRemainder, vec3(1.0 / fittingGamma)), 1.0);
                 }
             }
         }
     }
 
-     // Chromatic roughness
-     vec3 roughnessSquared = min(vec3(MAX_ROUGHNESS), max(vec3(MIN_ROUGHNESS),
-        roughnessSums[0] / max(vec3(0.0), sqrt(rgbToXYZ(maxResidual.rgb)) * roughnessSums[2] - roughnessSums[1])));
+    // Chromatic roughness
+    vec3 roughnessSquared = min(vec3(MAX_ROUGHNESS), max(vec3(MIN_ROUGHNESS),
+        roughnessSums[0] / max(vec3(0.0), sqrt(rgbToXYZ(maxResidual)) * roughnessSums[2] - roughnessSums[1])));
+    vec3 specularColor = 4 * xyzToRGB(roughnessSquared * rgbToXYZ(maxResidual));
 
 //    // Monochrome roughness
-//    vec3 roughnessSquared = vec3(min(1.0, getLuminance(roughnessSums[0]) /
-//        (sqrt(maxResidualLuminance) * getLuminance(roughnessSums[2]) - getLuminance(roughnessSums[1]))));
-
-    vec3 specularColor = 4 * xyzToRGB(roughnessSquared * rgbToXYZ(maxResidual.rgb));
+//    vec3 roughnessSquared = vec3(min(vec3(MAX_ROUGHNESS), max(vec3(MIN_ROUGHNESS),
+//        roughnessSums[0].y / max(vec3(0.0), sqrt(maxResidualLuminance[0]) * roughnessSums[2].y - roughnessSums[1].y))));
+//    vec3 avgResidualXYZ = pow(sumResidualXYZGamma.xyz / sumResidualXYZGamma.w, vec3(fittingGamma));
+//    vec3 specularColor = 4 * xyzToRGB(roughnessSquared * maxResidualLuminance[0] * avgResidualXYZ / avgResidualXYZ.y);
 
 //    Derivation:
 //    maxResidual.rgb = xyzToRGB(rgbToXYZ(specularColor) * 1.0 / roughnessSquared) / 4;
