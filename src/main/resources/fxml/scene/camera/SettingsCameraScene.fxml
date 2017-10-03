@@ -9,13 +9,13 @@
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
-         <Label labelFor="$xCenterTextField" text="X:" GridPane.halignment="RIGHT" />
-         <Label labelFor="$yCenterTextField" text="Y:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-         <Label labelFor="$zCenterTextField" text="Z:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+         <Label text="X:" GridPane.halignment="RIGHT" />
+         <Label text="Y:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+         <Label text="Z:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
          <TextField prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" fx:id="xCenterTextField" />
          <TextField fx:id="yCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          <TextField fx:id="zCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-         <Button fx:id="selectPointButton" mnemonicParsing="false" text="Select point" GridPane.columnIndex="1" GridPane.rowIndex="3">
+         <Button fx:id="selectPointButton" mnemonicParsing="false" text="Select point" visible="false" managed="false" GridPane.columnIndex="1" GridPane.rowIndex="3">
             <GridPane.margin>
                <Insets />
             </GridPane.margin>
@@ -41,10 +41,10 @@
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
-         <Label labelFor="$azimuthTextField" text="Azimuth:" GridPane.halignment="RIGHT" />
-         <Label labelFor="$inclinationTextField" text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-         <Label labelFor="$distanceTextField" text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-         <Label labelFor="$twistTextField" text="Twist:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
+         <Label text="Azimuth:" GridPane.halignment="RIGHT" />
+         <Label text="Inclination:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+         <Label text="Distance:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+         <Label text="Twist:" GridPane.halignment="RIGHT" GridPane.rowIndex="3" />
          <TextField fx:id="azimuthTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" />
          <TextField fx:id="inclinationTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          <TextField fx:id="distanceTextField" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
@@ -71,8 +71,8 @@
          <padding>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </padding>
-         <Label labelFor="$fovTextField" text="Field of view:" GridPane.halignment="RIGHT" />
-         <Label labelFor="$focalLengthTextField" text="Focal length:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
+         <Label text="Field of view:" GridPane.halignment="RIGHT" />
+         <Label text="Focal length:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
          <TextField fx:id="fovTextField" prefHeight="25.0" prefWidth="50.0" GridPane.columnIndex="1" />
          <TextField fx:id="focalLengthTextField" prefHeight="25.0" prefWidth="50.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          <CheckBox fx:id="orthographicCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="99.0" text="Orthographic" GridPane.columnSpan="2" GridPane.rowIndex="2" />

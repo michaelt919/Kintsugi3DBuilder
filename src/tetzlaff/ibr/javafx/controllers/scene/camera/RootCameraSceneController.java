@@ -2,16 +2,15 @@ package tetzlaff.ibr.javafx.controllers.scene.camera;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionModel;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
 import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
 import tetzlaff.ibr.javafx.internal.CameraModelImpl;
@@ -49,7 +48,7 @@ public class RootCameraSceneController
             90.0,
             18.0,
             false,
-            true,
+            false,
             "Free Camera"
 
         );
@@ -197,10 +196,17 @@ public class RootCameraSceneController
     @FXML
     void deleteCameraButton()
     {
-        int i = getCameraSelectionModel().getSelectedIndex();
-        if (i != 0)
+        int selectedIndex = getCameraSelectionModel().getSelectedIndex();
+        if (selectedIndex != 0)
         {
-            sceneModel.getCameraList().remove(i);
+            Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
+            confirmation.setHeaderText("Are you sure you want to delete the following camera: "
+                + sceneModel.getCameraList().get(selectedIndex).getName() + '?');
+            confirmation.setTitle("Delete Confirmation");
+
+            confirmation.showAndWait()
+                .filter(Predicate.isEqual(ButtonType.OK))
+                .ifPresent(response -> sceneModel.getCameraList().remove(selectedIndex));
         }
     }
 }

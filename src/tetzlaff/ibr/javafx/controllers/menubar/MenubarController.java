@@ -1,16 +1,15 @@
 package tetzlaff.ibr.javafx.controllers.menubar;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Scanner;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.TransformerException;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -23,20 +22,12 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import tetzlaff.ibr.app.WindowSynchronization;
 import tetzlaff.ibr.core.*;
 import tetzlaff.ibr.javafx.InternalModels;
 import tetzlaff.ibr.javafx.MultithreadModels;
 import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
-import tetzlaff.ibr.javafx.controllers.scene.camera.CameraSetting;
-import tetzlaff.ibr.javafx.controllers.scene.environment.EnvironmentSetting;
-import tetzlaff.ibr.javafx.controllers.scene.lights.LightGroupSetting;
-import tetzlaff.ibr.javafx.controllers.scene.object.ObjectPoseSetting;
 import tetzlaff.util.Flag;
 
 public class MenubarController
@@ -289,79 +280,9 @@ public class MenubarController
             {
                 try
                 {
-                    Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(projectFile);
-
-                    Node vsetNode = document.getElementsByTagName("ViewSet").item(0);
-                    if (vsetNode instanceof Element)
-                    {
-                        newVsetFile = new File(projectFile.getParent(), ((Element) vsetNode).getAttribute("src"));
-
-                        Node cameraListNode = document.getElementsByTagName("CameraList").item(0);
-                        if (cameraListNode != null)
-                        {
-                            NodeList cameraNodes = cameraListNode.getChildNodes();
-                            sceneModel.getCameraList().clear();
-                            for (int i = 0; i < cameraNodes.getLength(); i++)
-                            {
-                                Node cameraNode = cameraNodes.item(i);
-                                if (cameraNode instanceof Element)
-                                {
-                                    sceneModel.getCameraList().add(CameraSetting.fromDOMElement((Element) cameraNode));
-                                }
-                            }
-                        }
-
-                        Node environmentListNode = document.getElementsByTagName("EnvironmentList").item(0);
-                        if (environmentListNode != null)
-                        {
-                            NodeList environmentNodes = environmentListNode.getChildNodes();
-                            sceneModel.getEnvironmentList().clear();
-                            for (int i = 0; i < environmentNodes.getLength(); i++)
-                            {
-                                Node environmentNode = environmentNodes.item(i);
-                                if (environmentNode instanceof Element)
-                                {
-                                    sceneModel.getEnvironmentList().add(EnvironmentSetting.fromDOMElement((Element) environmentNode));
-                                }
-                            }
-                        }
-
-                        Node lightGroupListNode = document.getElementsByTagName("LightGroupList").item(0);
-                        if (lightGroupListNode != null)
-                        {
-                            NodeList lightGroupNodes = lightGroupListNode.getChildNodes();
-                            sceneModel.getLightGroupList().clear();
-                            for (int i = 0; i < lightGroupNodes.getLength(); i++)
-                            {
-                                Node lightGroupNode = lightGroupNodes.item(i);
-                                if (lightGroupNode instanceof Element)
-                                {
-                                    sceneModel.getLightGroupList().add(LightGroupSetting.fromDOMElement((Element) lightGroupNode));
-                                }
-                            }
-                        }
-
-                        Node objectPoseListNode = document.getElementsByTagName("ObjectPoseList").item(0);
-                        if (objectPoseListNode != null)
-                        {
-                            NodeList objectPoseNodes = objectPoseListNode.getChildNodes();
-                            sceneModel.getObjectPoseList().clear();
-                            for (int i = 0; i < objectPoseNodes.getLength(); i++)
-                            {
-                                Node objectPoseNode = objectPoseNodes.item(i);
-                                if (objectPoseNode instanceof Element)
-                                {
-                                    sceneModel.getObjectPoseList().add(ObjectPoseSetting.fromDOMElement((Element) objectPoseNode));
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        System.err.println("Error while processing the ViewSet element.");
-                    }
+                    newVsetFile = sceneModel.openProjectFile(projectFile);
                 }
-                catch (SAXException|IOException|ParserConfigurationException e)
+                catch (IOException | ParserConfigurationException | SAXException e)
                 {
                     e.printStackTrace();
                 }
@@ -409,64 +330,11 @@ public class MenubarController
                 else
                 {
                     this.vsetFile = new File(projectFile + ".vset");
-
                     MultithreadModels.getInstance().getLoadingModel().saveToVSETFile(vsetFile);
-
-                    Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-                    Element rootElement = document.createElement("Project");
-                    document.appendChild(rootElement);
-
-                    Element vsetElement = document.createElement("ViewSet");
-                    vsetElement.setAttribute("src", projectFile.getParentFile().toPath().relativize(vsetFile.toPath()).toString());
-                    rootElement.appendChild(vsetElement);
-
-                    Element cameraListElement = document.createElement("CameraList");
-                    rootElement.appendChild(cameraListElement);
-
-                    for (CameraSetting camera : sceneModel.getCameraList())
-                    {
-                        cameraListElement.appendChild(camera.toDOMElement(document));
-                    }
-
-                    Element environmentListElement = document.createElement("EnvironmentList");
-                    rootElement.appendChild(environmentListElement);
-
-                    for (EnvironmentSetting environment : sceneModel.getEnvironmentList())
-                    {
-                        environmentListElement.appendChild(environment.toDOMElement(document));
-                    }
-
-                    Element lightGroupListElement = document.createElement("LightGroupList");
-                    rootElement.appendChild(lightGroupListElement);
-
-                    for (LightGroupSetting lightGroup : sceneModel.getLightGroupList())
-                    {
-                        lightGroupListElement.appendChild(lightGroup.toDOMElement(document));
-                    }
-
-                    Element objectPoseListElement = document.createElement("ObjectPoseList");
-                    rootElement.appendChild(objectPoseListElement);
-
-                    for (ObjectPoseSetting objectPose : sceneModel.getObjectPoseList())
-                    {
-                        objectPoseListElement.appendChild(objectPose.toDOMElement(document));
-                    }
-
-                    Transformer transformer = TransformerFactory.newInstance().newTransformer();
-                    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-
-                    try(OutputStream out = new FileOutputStream(projectFile))
-                    {
-                        transformer.transform(new DOMSource(document), new StreamResult(out));
-                    }
-                    catch(FileNotFoundException|TransformerException e)
-                    {
-                        e.printStackTrace();
-                    }
+                    sceneModel.saveProjectFile(projectFile, vsetFile);
                 }
             }
-            catch(ParserConfigurationException|TransformerConfigurationException|IOException e)
+            catch(IOException | TransformerException | ParserConfigurationException e)
             {
                 e.printStackTrace();
             }

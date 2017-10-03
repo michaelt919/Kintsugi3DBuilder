@@ -8,27 +8,27 @@
         <HBox prefHeight="0.0" spacing="2.0">
             <TableView fx:id="tableView" prefHeight="257.0" prefWidth="185.0" />
             <Separator orientation="VERTICAL" prefHeight="200.0" visible="false" />
-            <VBox fx:id="groupControls" alignment="CENTER" spacing="5.0" HBox.hgrow="ALWAYS">
+            <VBox fx:id="groupControls" alignment="CENTER" prefHeight="137.0" prefWidth="75.0" spacing="5.0" HBox.hgrow="ALWAYS">
                 <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Group" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#newGroup" text="New">
                     <tooltip>
                         <Tooltip text="Create a new light set." />
                     </tooltip>
                 </Button>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#saveGroup" text="Save">
+                <Button managed="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#saveGroup" text="Save" visible="false">
                     <tooltip>
                         <Tooltip text="Save the selected camera to the library." />
                     </tooltip>
                 </Button>
                 <Button fx:id="renameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#renameGroup" text="Rename" />
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveUPGroup" text="Move up" />
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveDOWNGroup" text="Move down" />
+                <Button managed="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveUPGroup" text="Move up" visible="false" />
+                <Button managed="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveDOWNGroup" text="Move down" visible="false" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#lockGroup" text="Lock/Unlock">
                     <tooltip>
                         <Tooltip text="Lock the settings for the selected light set so they cannot be changed." />
                     </tooltip>
                 </Button>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#keyframeGroup" text="Keyframe">
+                <Button managed="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#keyframeGroup" text="Keyframe" visible="false">
                     <tooltip>
                         <Tooltip text="Add the selected light set as a keyframe (for animation)." />
                     </tooltip>
@@ -40,14 +40,14 @@
                 </Button>
             </VBox>
             <Separator orientation="VERTICAL" prefHeight="200.0" />
-            <VBox fx:id="lightControls" alignment="TOP_CENTER" spacing="5.0" HBox.hgrow="ALWAYS">
+            <VBox fx:id="lightControls" alignment="TOP_CENTER" prefHeight="136.0" prefWidth="75.0" spacing="5.0" HBox.hgrow="ALWAYS">
                 <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Light" />
                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#newLight" text="New">
                     <tooltip>
                         <Tooltip text="Create a new light with default settings." />
                     </tooltip>
                 </Button>
-                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#saveLight" text="Save">
+                <Button managed="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#saveLight" text="Save" visible="false">
                     <tooltip>
                         <Tooltip text="Save the selected light to the library." />
                     </tooltip>

@@ -15,7 +15,7 @@
             <TextField fx:id="xCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="2" />
             <TextField fx:id="yCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="1" />
             <TextField fx:id="zCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-            <Button mnemonicParsing="false" text="Select point" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="3" />
+            <Button mnemonicParsing="false" text="Select point" visible="false" managed="false" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="3" />
          <Slider blockIncrement="0.1" majorTickUnit="0.25" max="1.0" min="-1.0" prefHeight="38.0" prefWidth="230.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="3" fx:id="xCenterSlider" />
          <Slider fx:id="yCenterSlider" blockIncrement="0.1" majorTickUnit="0.25" max="1.0" min="-1.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="3" GridPane.rowIndex="1" />
          <Slider fx:id="zCenterSlider" blockIncrement="0.1" majorTickUnit="0.25" max="1.0" min="-1.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="3" GridPane.rowIndex="2" />

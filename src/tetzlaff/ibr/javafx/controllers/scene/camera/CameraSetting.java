@@ -13,38 +13,24 @@ public class CameraSetting implements DOMConvertable
     private final DoubleProperty zCenter = new SimpleDoubleProperty();
     private final DoubleProperty azimuth = StaticUtilities.wrap(-180, 180, new SimpleDoubleProperty());
     private final DoubleProperty inclination = StaticUtilities.bound(-90, 90, new SimpleDoubleProperty());
-    private final DoubleProperty log10distance = new SimpleDoubleProperty();
+    private final DoubleProperty log10Distance = new SimpleDoubleProperty();
     private final DoubleProperty twist = StaticUtilities.wrap(-180.0, 180.0, new SimpleDoubleProperty());
-    private final DoubleProperty fOV = new SimpleDoubleProperty(90.0);
-    private final DoubleProperty focalLength = new SimpleDoubleProperty(18.0);
+    private final DoubleProperty fov = new SimpleDoubleProperty(2 * Math.atan(0.36 /* "35 mm" film (actual 36mm horizontal), 50mm lens */));
+    private final DoubleProperty focalLength = new SimpleDoubleProperty(50.0);
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final BooleanProperty orthographic = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
 
-    /*
-    xCenter
-    yCenter
-    zCenter
-    azimuth
-    inclination
-    log10distance
-    twist
-    fOV
-    focalLength
-    locked
-    orthographic
-    name
-     */
-    public CameraSetting(Double xCenter, Double yCenter, Double zCenter, Double azimuth, Double inclination, Double log10distance, Double twist, Double fOV, Double focalLength, Boolean locked, Boolean orthographic, String name)
+    public CameraSetting(Double xCenter, Double yCenter, Double zCenter, Double azimuth, Double inclination, Double log10Distance, Double twist, Double fov, Double focalLength, Boolean locked, Boolean orthographic, String name)
     {
         this.xCenter.setValue(xCenter);
         this.yCenter.setValue(yCenter);
         this.zCenter.setValue(zCenter);
         this.azimuth.setValue(azimuth);
         this.inclination.setValue(inclination);
-        this.log10distance.setValue(log10distance);
+        this.log10Distance.setValue(log10Distance);
         this.twist.setValue(twist);
-        this.fOV.setValue(fOV);
+        this.fov.setValue(fov);
         this.focalLength.setValue(focalLength);
         this.locked.setValue(locked);
         this.orthographic.setValue(orthographic);
@@ -60,9 +46,9 @@ public class CameraSetting implements DOMConvertable
         element.setAttribute("lookAtZ", zCenter.getValue().toString());
         element.setAttribute("azimuth", azimuth.getValue().toString());
         element.setAttribute("inclination", inclination.getValue().toString());
-        element.setAttribute("log10Distance", log10distance.getValue().toString());
+        element.setAttribute("log10Distance", log10Distance.getValue().toString());
         element.setAttribute("twist", twist.getValue().toString());
-        element.setAttribute("fov", fOV.getValue().toString());
+        element.setAttribute("fov", fov.getValue().toString());
         element.setAttribute("focalLength", focalLength.getValue().toString());
         element.setAttribute("locked", locked.getValue().toString());
         element.setAttribute("orthographic", orthographic.getValue().toString());
@@ -109,9 +95,9 @@ public class CameraSetting implements DOMConvertable
             this.zCenter.getValue(),
             this.azimuth.getValue(),
             this.inclination.getValue(),
-            this.log10distance.getValue(),
+            this.log10Distance.getValue(),
             this.twist.getValue(),
-            this.fOV.getValue(),
+            this.fov.getValue(),
             this.focalLength.getValue(),
             this.locked.getValue(),
             this.orthographic.getValue(),
@@ -196,17 +182,17 @@ public class CameraSetting implements DOMConvertable
 
     public double getLog10Distance()
     {
-        return log10distance.get();
+        return log10Distance.get();
     }
 
-    public DoubleProperty log10distanceProperty()
+    public DoubleProperty log10DistanceProperty()
     {
-        return log10distance;
+        return log10Distance;
     }
 
     public void setLog10Distance(double log10distance)
     {
-        this.log10distance.set(log10distance);
+        this.log10Distance.set(log10distance);
     }
 
     public double getTwist()
@@ -226,17 +212,17 @@ public class CameraSetting implements DOMConvertable
 
     public double getFOV()
     {
-        return fOV.get();
+        return fov.get();
     }
 
     public DoubleProperty fovProperty()
     {
-        return fOV;
+        return fov;
     }
 
     public void setFOV(double fOV)
     {
-        this.fOV.set(fOV);
+        this.fov.set(fOV);
     }
 
     public double getFocalLength()
@@ -297,64 +283,5 @@ public class CameraSetting implements DOMConvertable
     public void setName(String name)
     {
         this.name.set(name);
-    }
-
-    // V keep!
-    public static void main(String... args)
-    {
-        String[] things = {
-            "xCenter",
-            "yCenter",
-            "zCenter",
-            "azimuth",
-            "inclination",
-            "log10distance",
-            "twist",
-            "fOV",
-            "focalLength"
-        };
-
-        for (String thing5 : things)
-        {
-            System.out.println("final DoubleProperty " + thing5 + " = new SimpleDoubleProperty();");
-        }
-
-        System.out.print("public CameraSetting(");
-        for (String thing4 : things)
-        {
-            System.out.print("Double " + thing4 + ", ");
-        }
-        System.out.println(") {");
-
-        for (String thing3 : things)
-        {
-            System.out.println("    this." + thing3 + ".setValue(" + thing3 + ");");
-        }
-
-        System.out.println("}");
-
-        System.out.println("public Element toDOMElement() {");
-        System.out.println("    return new Element(\"CameraSetting\")");
-        for (String thing2 : things)
-        {
-            System.out.println("        .setAttribute(\"" + thing2 + "\", " + thing2 + ".getValue().toString())");
-        }
-        System.out.println("    ;\n}");
-
-        System.out.println("public static CameraSetting fromDOMElement(Element element){\n");
-        System.out.println("    return new CameraSetting(");
-        for (String thing1 : things)
-        {
-            System.out.println("        Double.valueOf(element.getAttributeValue(\"" + thing1 + "\")),");
-        }
-        System.out.println("    );\n}");
-
-        System.out.println("public CameraSetting duplicate(){");
-        System.out.println("    return new CameraSetting(");
-        for (String thing : things)
-        {
-            System.out.println("        this." + thing + ".getValue(),");
-        }
-        System.out.println("    );\n}");
     }
 }

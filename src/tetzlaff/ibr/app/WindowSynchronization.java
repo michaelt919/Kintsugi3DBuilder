@@ -29,14 +29,14 @@ public final class WindowSynchronization
         // Make sure that multiple focus-related methods don't run at the same time.
         synchronized (this)
         {
-            if (!inFocusMethod)
+            if (inFocusMethod)
             {
-                alreadyRunning = false;
-                inFocusMethod = true;
+                alreadyRunning = true;
             }
             else
             {
-                alreadyRunning = true;
+                alreadyRunning = false;
+                inFocusMethod = true;
             }
         }
 
@@ -89,14 +89,14 @@ public final class WindowSynchronization
         // Make sure that multiple focus-related methods don't run at the same time.
         synchronized (this)
         {
-            if (!inFocusMethod)
+            if (inFocusMethod)
             {
-                alreadyRunning = false;
-                inFocusMethod = true;
+                alreadyRunning = true;
             }
             else
             {
-                alreadyRunning = true;
+                alreadyRunning = false;
+                inFocusMethod = true;
             }
         }
 
@@ -127,12 +127,22 @@ public final class WindowSynchronization
         }
     }
 
-    public void quit()
+    public boolean quit()
     {
+        for(SynchronizedWindow listener : listeners)
+        {
+            if (!listener.confirmQuit())
+            {
+                return false;
+            }
+        }
+
         for(SynchronizedWindow listener : listeners)
         {
             listener.quit();
         }
+
+        return true;
     }
 
     private WindowSynchronization()

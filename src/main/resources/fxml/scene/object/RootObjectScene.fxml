@@ -13,20 +13,20 @@
                   <Tooltip text="Create a new pose from the current one." />
                </tooltip>
             </Button>
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#savePoseButton" text="Save">
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#savePoseButton" text="Save" visible="false" managed="false">
                <tooltip>
                   <Tooltip text="Save the selected pose to the library." />
                </tooltip>
             </Button>
             <Button fx:id="renameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#renamePoseButton" text="Rename" />
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveUPButton" text="Move up" />
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveDOWNButton" text="Move down" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveUPButton" text="Move up" visible="false" managed="false" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveDOWNButton" text="Move down" visible="false" managed="false" />
             <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#lockPoseButton" text="Lock/Unlock">
                <tooltip>
                   <Tooltip text="Lock the settings for the selected pose so they cannot be changed." />
                </tooltip>
             </Button>
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#keyframePoseButton" text="Keyframe">
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#keyframePoseButton" text="Keyframe" visible="false" managed="false">
                <tooltip>
                   <Tooltip text="Add the selected pose as a keyframe (for animation)." />
                </tooltip>

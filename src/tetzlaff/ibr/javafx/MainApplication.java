@@ -2,6 +2,9 @@ package tetzlaff.ibr.javafx;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.function.Predicate;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -9,6 +12,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import tetzlaff.gl.window.Key;
@@ -57,6 +64,34 @@ public class MainApplication extends Application
         public void quit()
         {
             Platform.runLater(stage::close);
+        }
+
+        @Override
+        public boolean confirmQuit()
+        {
+            // TODO make this not hang up the program when called from the JavaFX thread.
+            FutureTask<Boolean> confirmationTask = new FutureTask<>(() ->
+            {
+                Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "If you click OK, any unsaved changes will be lost.");
+                confirmation.setTitle("Exit Confirmation");
+                confirmation.setHeaderText("Are you sure you want to exit?");
+                return confirmation.showAndWait()
+                    .filter(Predicate.isEqual(ButtonType.OK))
+                    .isPresent();
+            });
+
+            Platform.runLater(confirmationTask);
+
+            try
+            {
+                // Blocks until the user confirms or cancels.
+                return confirmationTask.get();
+            }
+            catch (InterruptedException | ExecutionException e)
+            {
+                e.printStackTrace();
+                return false;
+            }
         }
     }
 
@@ -108,23 +143,21 @@ public class MainApplication extends Application
 
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
 
-        primaryStage.setX(primaryScreenBounds.getMinX());
-        primaryStage.setY(primaryScreenBounds.getMinY());
+        primaryStage.setX(primaryScreenBounds.getMinX() + 10);
+        primaryStage.setY(primaryScreenBounds.getMinY() + 10);
 
         primaryStage.setResizable(false);
 
         primaryStage.show();
 
-        libraryStage.setX(primaryScreenBounds.getMinX());
-        libraryStage.setY(primaryScreenBounds.getMinY());
-        libraryStage.setHeight(primaryScreenBounds.getHeight());
+        libraryStage.setX(primaryScreenBounds.getMinX() + 10);
+        libraryStage.setY(primaryScreenBounds.getMinY() + 50);
         libraryStage.initOwner(primaryStage.getScene().getWindow());
 
         //libraryStage.show();
 
-        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 420);
-        sceneStage.setY(primaryScreenBounds.getMinY());
-        sceneStage.setHeight(primaryScreenBounds.getHeight());
+        sceneStage.setX(primaryScreenBounds.getMinX() + primaryScreenBounds.getWidth() - 430);
+        sceneStage.setY(primaryScreenBounds.getMinY() + 10);
         sceneStage.initOwner(primaryStage.getScene().getWindow());
 
         sceneStage.show();
@@ -176,8 +209,23 @@ public class MainApplication extends Application
         //set up close and focusGained
         WindowSynchronization.getInstance().addListener(menuBarWindow);
 
-        sceneStage.setOnCloseRequest(event -> WindowSynchronization.getInstance().quit());
-        primaryStage.setOnCloseRequest(event -> WindowSynchronization.getInstance().quit());
+        sceneStage.setOnCloseRequest(event ->
+        {
+            boolean closeConfirmed = WindowSynchronization.getInstance().quit();
+            if (!closeConfirmed)
+            {
+                event.consume();
+            }
+        });
+
+        primaryStage.setOnCloseRequest(event ->
+        {
+            boolean closeConfirmed = WindowSynchronization.getInstance().quit();
+            if (!closeConfirmed)
+            {
+                event.consume();
+            }
+        });
 
         // Focus synchronization not working quite right.
 //        sceneStage.focusedProperty().addListener(event ->

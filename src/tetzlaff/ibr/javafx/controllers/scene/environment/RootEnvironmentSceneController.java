@@ -2,15 +2,15 @@ package tetzlaff.ibr.javafx.controllers.scene.environment;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
@@ -227,11 +227,15 @@ public class RootEnvironmentSceneController
     @FXML
     void deleteEnvButton()
     {
-        int i = environmentListView.getSelectionModel().getSelectedIndex();
-        if (USE_STARTING_MAP && i == 0)
+        int selectedIndex = environmentListView.getSelectionModel().getSelectedIndex();
+        if (!USE_STARTING_MAP || selectedIndex != 0)
         {
-            return;
+            new Alert(AlertType.CONFIRMATION,
+                    "Are you sure you want to delete the following environment: "
+                        + sceneModel.getEnvironmentList().get(selectedIndex).getName() + '?')
+                .showAndWait()
+                .filter(Predicate.isEqual(ButtonType.OK))
+                .ifPresent(response -> sceneModel.getEnvironmentList().remove(selectedIndex));
         }
-        sceneModel.getEnvironmentList().remove(i);
     }
 }
