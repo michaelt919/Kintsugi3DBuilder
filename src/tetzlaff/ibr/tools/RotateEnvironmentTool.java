@@ -9,7 +9,7 @@ final class RotateEnvironmentTool implements DragTool
     private static final double ROTATE_SENSITIVITY = Math.PI; //todo: get from gui somehow
     private double rotateSensitivityAdjusted = 1.0;
 
-    private double oldEnvironmentRotation;
+    private float oldEnvironmentRotation;
 
     private CursorPosition mouseStart;
 
@@ -46,6 +46,6 @@ final class RotateEnvironmentTool implements DragTool
     @Override
     public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
     {
-        environmentModel.setEnvironmentRotation(oldEnvironmentRotation + (cursorPosition.x - mouseStart.x) * rotateSensitivityAdjusted);
+        environmentModel.setEnvironmentRotation((float)(oldEnvironmentRotation + (cursorPosition.x - mouseStart.x) * rotateSensitivityAdjusted));
     }
 }

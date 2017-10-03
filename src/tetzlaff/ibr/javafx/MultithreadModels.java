@@ -4,9 +4,7 @@ import tetzlaff.ibr.core.IBRelightModelAccess;
 import tetzlaff.ibr.core.LoadingModel;
 import tetzlaff.ibr.core.ReadonlyLoadOptionsModel;
 import tetzlaff.ibr.core.SettingsModel;
-import tetzlaff.ibr.javafx.models.MultithreadCameraModel;
-import tetzlaff.ibr.javafx.models.MultithreadLightingModel;
-import tetzlaff.ibr.javafx.models.MultithreadObjectModel;
+import tetzlaff.ibr.javafx.multithread.*;
 import tetzlaff.ibr.tools.ToolBindingModel;
 import tetzlaff.ibr.tools.ToolBindingModelImpl;
 import tetzlaff.models.EnvironmentModel;
@@ -14,30 +12,33 @@ import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.ExtendedLightingModel;
 import tetzlaff.models.ExtendedObjectModel;
 
-public final class Models implements IBRelightModelAccess
+public final class MultithreadModels implements IBRelightModelAccess
 {
     private final ExtendedCameraModel cameraModel;
     private final EnvironmentModel environmentModel;
     private final ExtendedLightingModel lightingModel;
     private final ExtendedObjectModel objectModel;
-    private final ReadonlyLoadOptionsModel loadOptionsModel;
     private final SettingsModel settingsModel;
+    private final ReadonlyLoadOptionsModel loadOptionsModel;
     private final ToolBindingModel toolModel;
     private final LoadingModel loadingModel;
 
-    private static final Models INSTANCE = new Models();
+    private static final MultithreadModels INSTANCE = new MultithreadModels();
 
-    public static Models getInstance()
+    public static MultithreadModels getInstance()
     {
         return INSTANCE;
     }
 
-    private Models()
+    private MultithreadModels()
     {
-        cameraModel = new MultithreadCameraModel(BackendModels.getInstance().getCameraModel());
+        cameraModel = new CameraModelWrapper(InternalModels.getInstance().getCameraModel());
+        objectModel = new ObjectModelWrapper(InternalModels.getInstance().getObjectModel());
+        lightingModel = new LightingModelWrapper(InternalModels.getInstance().getLightingModel());
+        environmentModel = new EnvironmentModelWrapper(InternalModels.getInstance().getEnvironmentModel());
+        settingsModel = new SettingsModelWrapper(InternalModels.getInstance().getSettingsModel());
+        loadOptionsModel = InternalModels.getInstance().getLoadOptionsModel();
         toolModel = new ToolBindingModelImpl();
-        objectModel = new MultithreadObjectModel(BackendModels.getInstance().getObjectModel());
-        lightingModel = new MultithreadLightingModel(BackendModels.getInstance().getLightingModel());
         loadingModel = new LoadingModel();
         loadingModel.setLoadOptionsModel(loadOptionsModel);
     }

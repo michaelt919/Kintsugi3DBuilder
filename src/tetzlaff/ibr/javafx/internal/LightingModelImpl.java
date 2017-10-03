@@ -1,18 +1,18 @@
-package tetzlaff.ibr.javafx.backend;//Created by alexk on 7/25/2017.
+package tetzlaff.ibr.javafx.internal;//Created by alexk on 7/25/2017.
 
 import javafx.beans.value.ObservableValue;
 import tetzlaff.ibr.javafx.controllers.scene.lights.LightGroupSetting;
 import tetzlaff.models.EnvironmentModel;
 import tetzlaff.models.impl.ExtendedLightingModelBase;
 
-public class JavaFXLightingModel extends ExtendedLightingModelBase<JavaFXLightInstanceModel>
+public class LightingModelImpl extends ExtendedLightingModelBase<LightInstanceModelImpl>
 {
     private ObservableValue<LightGroupSetting> lightGroupSettingObservableValue;
     private final LightGroupSetting backup = new LightGroupSetting("backup");
 
-    public JavaFXLightingModel(EnvironmentModel envModel)
+    public LightingModelImpl(EnvironmentModel envModel)
     {
-        super(LightGroupSetting.LIGHT_LIMIT, i -> new JavaFXLightInstanceModel(), envModel);
+        super(LightGroupSetting.LIGHT_LIMIT, i -> new LightInstanceModelImpl(), envModel);
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
         {
             getLight(i).setSubLightSettingObservableValue(backup.lightListProperty().valueAt(i));

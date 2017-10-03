@@ -18,8 +18,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import tetzlaff.ibr.javafx.backend.JavaFXLightingModel;
 import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
+import tetzlaff.ibr.javafx.internal.LightingModelImpl;
 
 public class RootLightSceneController implements Initializable
 {
@@ -110,7 +110,7 @@ public class RootLightSceneController implements Initializable
         selectedLight.addListener(settingsController.changeListener);
     }
 
-    public void init(JavaFXLightingModel lightingModel, SceneModel injectedSceneModel)
+    public void init(LightingModelImpl lightingModel, SceneModel injectedSceneModel)
     {
         this.sceneModel = injectedSceneModel;
 

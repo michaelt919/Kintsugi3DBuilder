@@ -13,8 +13,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import tetzlaff.ibr.javafx.backend.JavaFXObjectModel;
 import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
+import tetzlaff.ibr.javafx.internal.ObjectModelImpl;
 
 public class RootObjectSceneController
 {
@@ -31,7 +31,7 @@ public class RootObjectSceneController
 
     private SceneModel sceneModel;
 
-    public void init(JavaFXObjectModel objectModel, SceneModel injectedSceneModel)
+    public void init(ObjectModelImpl objectModel, SceneModel injectedSceneModel)
     {
         this.sceneModel = injectedSceneModel;
 

@@ -2,6 +2,6 @@ package tetzlaff.models;
 
 public interface EnvironmentModel extends ReadonlyEnvironmentModel
 {
-    void setEnvironmentRotation(double environmentRotation);
-    void setEnvironmentIntensity(double environmentIntensity);
+    void setEnvironmentRotation(float environmentRotation);
+    void setEnvironmentIntensity(float environmentIntensity);
 }

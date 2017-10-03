@@ -23,7 +23,7 @@ public abstract class ExtendedObjectModelBase implements ExtendedObjectModel
     public Matrix4 getOrbit()
     {
         // Intentionally swapping y and x components
-        Vector3 polar = new Vector3(getRotationX(), getRotationX(), getRotationZ());
+        Vector3 polar = new Vector3(getRotationY(), getRotationX(), getRotationZ());
         return OrbitPolarConverter.getInstance().convertToOrbitMatrix(polar);
     }
 

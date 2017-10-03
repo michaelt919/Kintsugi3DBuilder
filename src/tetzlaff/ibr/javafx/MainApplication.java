@@ -17,13 +17,13 @@ import tetzlaff.gl.window.ModifierKeysBuilder;
 import tetzlaff.ibr.app.Rendering;
 import tetzlaff.ibr.app.SynchronizedWindow;
 import tetzlaff.ibr.app.WindowSynchronization;
-import tetzlaff.ibr.javafx.backend.JavaFXCameraModel;
-import tetzlaff.ibr.javafx.backend.JavaFXEnvironmentModel;
-import tetzlaff.ibr.javafx.backend.JavaFXLightingModel;
-import tetzlaff.ibr.javafx.backend.JavaFXObjectModel;
 import tetzlaff.ibr.javafx.controllers.menubar.MenubarController;
 import tetzlaff.ibr.javafx.controllers.scene.RootSceneController;
 import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
+import tetzlaff.ibr.javafx.internal.CameraModelImpl;
+import tetzlaff.ibr.javafx.internal.EnvironmentModelImpl;
+import tetzlaff.ibr.javafx.internal.LightingModelImpl;
+import tetzlaff.ibr.javafx.internal.ObjectModelImpl;
 import tetzlaff.ibr.tools.DragToolType;
 import tetzlaff.ibr.tools.KeyPressToolType;
 import tetzlaff.ibr.tools.ToolBindingModel;
@@ -134,19 +134,19 @@ public class MainApplication extends Application
         primaryStage.requestFocus();
 
         //get models
-        JavaFXCameraModel cameraModel = BackendModels.getInstance().getCameraModel();
-        JavaFXEnvironmentModel environmentMapModel = BackendModels.getInstance().getEnvironmentMapModel();
-        JavaFXLightingModel lightingModel = BackendModels.getInstance().getLightingModel();
-        JavaFXObjectModel objectModel = BackendModels.getInstance().getObjectModel();
+        CameraModelImpl cameraModel = InternalModels.getInstance().getCameraModel();
+        EnvironmentModelImpl environmentMapModel = InternalModels.getInstance().getEnvironmentModel();
+        LightingModelImpl lightingModel = InternalModels.getInstance().getLightingModel();
+        ObjectModelImpl objectModel = InternalModels.getInstance().getObjectModel();
 
         SceneModel sceneModel = new SceneModel();
 
         //distribute to controllers
         sceneController.init(cameraModel, lightingModel, environmentMapModel, objectModel, sceneModel);
-        menuBarController.init(primaryStage.getScene().getWindow(), Rendering.getRequestQueue(), BackendModels.getInstance(), sceneModel);
+        menuBarController.init(primaryStage.getScene().getWindow(), Rendering.getRequestQueue(), InternalModels.getInstance(), sceneModel);
 
         // Bind tools
-        ToolBindingModel toolBindingModel = Models.getInstance().getToolModel();
+        ToolBindingModel toolBindingModel = MultithreadModels.getInstance().getToolModel();
 
         toolBindingModel.setDragTool(new MouseMode(0, ModifierKeys.NONE), DragToolType.ORBIT);
         toolBindingModel.setDragTool(new MouseMode(1, ModifierKeys.NONE), DragToolType.PAN);

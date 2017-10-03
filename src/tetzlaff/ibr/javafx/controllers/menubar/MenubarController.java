@@ -30,8 +30,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import tetzlaff.ibr.app.WindowSynchronization;
 import tetzlaff.ibr.core.*;
-import tetzlaff.ibr.javafx.BackendModels;
-import tetzlaff.ibr.javafx.Models;
+import tetzlaff.ibr.javafx.InternalModels;
+import tetzlaff.ibr.javafx.MultithreadModels;
 import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
 import tetzlaff.ibr.javafx.controllers.scene.camera.CameraSetting;
 import tetzlaff.ibr.javafx.controllers.scene.environment.EnvironmentSetting;
@@ -41,7 +41,7 @@ import tetzlaff.util.Flag;
 
 public class MenubarController
 {
-    private BackendModels backendModels;
+    private InternalModels internalModels;
     private SceneModel sceneModel;
 
     //Window open flags
@@ -79,11 +79,11 @@ public class MenubarController
     private File projectFile;
     private File vsetFile;
 
-    public void init(Window injectedParentWindow, IBRRequestQueue<?> requestQueue, BackendModels injectedBackendModels, SceneModel injectedSceneModel)
+    public void init(Window injectedParentWindow, IBRRequestQueue<?> requestQueue, InternalModels injectedInternalModels, SceneModel injectedSceneModel)
     {
         this.parentWindow = injectedParentWindow;
 
-        this.backendModels = injectedBackendModels;
+        this.internalModels = injectedInternalModels;
         this.sceneModel = injectedSceneModel;
 
         projectFileChooser = new FileChooser();
@@ -92,7 +92,7 @@ public class MenubarController
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Full projects", "*.ibr"));
         projectFileChooser.getExtensionFilters().add(new ExtensionFilter("Standalone view sets", "*.vset"));
 
-        Models.getInstance().getLoadingModel().setLoadingMonitor(new LoadingMonitor()
+        MultithreadModels.getInstance().getLoadingModel().setLoadingMonitor(new LoadingMonitor()
         {
             private double maximum = 0.0;
             private double progress = 0.0;
@@ -155,7 +155,7 @@ public class MenubarController
                                 {
                                     try
                                     {
-                                        IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedParentWindow, Models.getInstance());
+                                        IBRRequestUI requestUI = (IBRRequestUI) createMethod.invoke(null, injectedParentWindow, MultithreadModels.getInstance());
                                         requestUI.prompt(requestQueue::addRequest);
                                     }
                                     catch (IllegalAccessException | InvocationTargetException e)
@@ -202,29 +202,29 @@ public class MenubarController
                 switch ((String) n.getUserData())
                 {
                     case "None":
-                        backendModels.getSettingsModel().renderingModeProperty().set(RenderingMode.NONE);
+                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.NONE);
                         break;
                     case "Wireframe":
-                        backendModels.getSettingsModel().renderingModeProperty().set(RenderingMode.WIREFRAME);
+                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.WIREFRAME);
                         break;
                     case "Lambertian shaded":
-                        backendModels.getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_SHADED);
+                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_SHADED);
                         break;
                     case "Specular shaded":
-                        backendModels.getSettingsModel().renderingModeProperty().set(RenderingMode.SPECULAR_SHADED);
+                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.SPECULAR_SHADED);
                         break;
                     case "Solid textured":
-                        backendModels.getSettingsModel().renderingModeProperty().set(RenderingMode.SOLID_TEXTURED);
+                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.SOLID_TEXTURED);
                         break;
                     case "Lambertian textured":
-                        backendModels.getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_DIFFUSE_TEXTURED);
+                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_DIFFUSE_TEXTURED);
                         break;
                     case "Material shaded":
-                        backendModels.getSettingsModel().renderingModeProperty().set(RenderingMode.MATERIAL_SHADED);
+                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.MATERIAL_SHADED);
                         break;
                     case "Image-based rendering":
                     default:
-                        backendModels.getSettingsModel().renderingModeProperty().set(RenderingMode.IMAGE_BASED);
+                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.IMAGE_BASED);
                         break;
                 }
             }
@@ -234,20 +234,20 @@ public class MenubarController
     private void bindCheckMenuItems()
     {
         //value binding
-        d3GridCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().is3DGridEnabledProperty());
-        compassCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().compassEnabledProperty());
-        relightingCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().relightingProperty());
-        shadowsCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().shadowsProperty());
-        visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().visibleLightsProperty());
-        visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().visibleLightWidgetsProperty());
-        visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().visibleCameraPoseProperty());
-        visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().visibleSavedCameraPoseProperty());
+        d3GridCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().is3DGridEnabledProperty());
+        compassCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().compassEnabledProperty());
+        relightingCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().relightingProperty());
+        shadowsCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().shadowsProperty());
+        visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().visibleLightsProperty());
+        visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().visibleLightWidgetsProperty());
+        visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().visibleCameraPoseProperty());
+        visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().visibleSavedCameraPoseProperty());
 
-        phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().pbrGeometricAttenuationProperty());
-        fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().fresnelProperty());
+        phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().pbrGeometricAttenuationProperty());
+        fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().fresnelProperty());
 
-        halfResolutionCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().halfResolutionEnabledProperty());
-        multiSamplingCheckMenuItem.selectedProperty().bindBidirectional(backendModels.getSettingsModel().multisamplingEnabledProperty());
+        halfResolutionCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().halfResolutionEnabledProperty());
+        multiSamplingCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().multisamplingEnabledProperty());
     }
 
     //Menubar->File
@@ -369,7 +369,7 @@ public class MenubarController
 
             if (newVsetFile != null)
             {
-                Models.getInstance().getLoadingModel().unload();
+                MultithreadModels.getInstance().getLoadingModel().unload();
 
                 this.vsetFile = newVsetFile;
                 File vsetFileRef = newVsetFile;
@@ -378,7 +378,7 @@ public class MenubarController
                 {
                     try
                     {
-                        Models.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef);
+                        MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef);
                     }
                     catch (FileNotFoundException e)
                     {
@@ -402,7 +402,7 @@ public class MenubarController
             {
                 if (projectFile.getName().endsWith(".vset"))
                 {
-                    Models.getInstance().getLoadingModel().saveToVSETFile(projectFile);
+                    MultithreadModels.getInstance().getLoadingModel().saveToVSETFile(projectFile);
                     this.vsetFile = projectFile;
                     this.projectFile = null;
                 }
@@ -410,7 +410,7 @@ public class MenubarController
                 {
                     this.vsetFile = new File(projectFile + ".vset");
 
-                    Models.getInstance().getLoadingModel().saveToVSETFile(vsetFile);
+                    MultithreadModels.getInstance().getLoadingModel().saveToVSETFile(vsetFile);
 
                     Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
                     Element rootElement = document.createElement("Project");
@@ -500,7 +500,7 @@ public class MenubarController
         projectFile = null;
         vsetFile = null;
 
-        Models.getInstance().getLoadingModel().unload();
+        MultithreadModels.getInstance().getLoadingModel().unload();
     }
 
     @FXML
@@ -514,7 +514,7 @@ public class MenubarController
         try
         {
             LoadOptionsController loadOptionsController = makeWindow("Load Options", loadOptionsWindowOpen, "fxml/menubar/LoadOptions.fxml");
-            loadOptionsController.bind(backendModels.getLoadOptionsModel());
+            loadOptionsController.bind(internalModels.getLoadOptionsModel());
         }
         catch(IOException e)
         {
@@ -539,7 +539,7 @@ public class MenubarController
         try
         {
             IBROptionsController ibrOptionsController = makeWindow("IBR Settings", ibrOptionsWindowOpen, "fxml/menubar/IBROptions.fxml");
-            ibrOptionsController.bind(backendModels.getSettingsModel());
+            ibrOptionsController.bind(internalModels.getSettingsModel());
         }
         catch(IOException e)
         {

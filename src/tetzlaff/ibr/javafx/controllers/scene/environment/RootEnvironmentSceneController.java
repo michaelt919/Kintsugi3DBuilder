@@ -13,8 +13,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import tetzlaff.ibr.javafx.backend.JavaFXEnvironmentModel;
 import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
+import tetzlaff.ibr.javafx.internal.EnvironmentModelImpl;
 
 public class RootEnvironmentSceneController
 {
@@ -33,7 +33,7 @@ public class RootEnvironmentSceneController
 
     private SceneModel sceneModel;
 
-    public void init(JavaFXEnvironmentModel environmentMapModel, SceneModel injectedSceneModel)
+    public void init(EnvironmentModelImpl environmentMapModel, SceneModel injectedSceneModel)
     {
         this.sceneModel = injectedSceneModel;
 

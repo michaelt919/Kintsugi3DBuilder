@@ -13,8 +13,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import tetzlaff.ibr.javafx.backend.JavaFXCameraModel;
 import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
+import tetzlaff.ibr.javafx.internal.CameraModelImpl;
 
 public class RootCameraSceneController
 {
@@ -31,7 +31,7 @@ public class RootCameraSceneController
 
     private SceneModel sceneModel;
 
-    public void init(JavaFXCameraModel cameraModel, SceneModel injectedSceneModel)
+    public void init(CameraModelImpl cameraModel, SceneModel injectedSceneModel)
     {
         this.sceneModel = injectedSceneModel;
 

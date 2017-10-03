@@ -11,7 +11,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
-import tetzlaff.ibr.javafx.backend.JavaFXLoadOptionsModel;
+import tetzlaff.ibr.javafx.internal.LoadOptionsModelImpl;
 
 public class LoadOptionsController implements Initializable
 {
@@ -82,9 +82,9 @@ public class LoadOptionsController implements Initializable
         });
     }
 
-    private JavaFXLoadOptionsModel loadSettingsCache;
+    private LoadOptionsModelImpl loadSettingsCache;
 
-    public void bind(JavaFXLoadOptionsModel loadSettings)
+    public void bind(LoadOptionsModelImpl loadSettings)
     {
         compressedImages.selectedProperty().bindBidirectional(loadSettings.compression);
         mipmaps.selectedProperty().bindBidirectional(loadSettings.mipmaps);

@@ -22,7 +22,7 @@ import tetzlaff.ibr.core.IBRRequestQueue;
 import tetzlaff.ibr.core.LoadingModel;
 import tetzlaff.ibr.core.LoadingMonitor;
 import tetzlaff.ibr.core.SettingsModel;
-import tetzlaff.ibr.javafx.Models;
+import tetzlaff.ibr.javafx.MultithreadModels;
 import tetzlaff.ibr.rendering.ImageBasedRendererList;
 import tetzlaff.ibr.tools.ToolBindingModel;
 import tetzlaff.ibr.tools.ToolBox.Builder;
@@ -123,13 +123,13 @@ public final class Rendering
 
             window.addMouseButtonPressListener((win, buttonIndex, mods) -> fpController.setEnabled(false));
 
-            ExtendedLightingModel lightingModel = Models.getInstance().getLightingModel();
-            EnvironmentModel environmentModel = Models.getInstance().getEnvironmentModel();
-            ExtendedCameraModel cameraModel = Models.getInstance().getCameraModel();
-            ExtendedObjectModel objectModel = Models.getInstance().getObjectModel();
-            SettingsModel settingsModel = Models.getInstance().getSettingsModel();
-            LoadingModel loadingModel = Models.getInstance().getLoadingModel();
-            ToolBindingModel toolModel = Models.getInstance().getToolModel();
+            ExtendedLightingModel lightingModel = MultithreadModels.getInstance().getLightingModel();
+            EnvironmentModel environmentModel = MultithreadModels.getInstance().getEnvironmentModel();
+            ExtendedCameraModel cameraModel = MultithreadModels.getInstance().getCameraModel();
+            ExtendedObjectModel objectModel = MultithreadModels.getInstance().getObjectModel();
+            SettingsModel settingsModel = MultithreadModels.getInstance().getSettingsModel();
+            LoadingModel loadingModel = MultithreadModels.getInstance().getLoadingModel();
+            ToolBindingModel toolModel = MultithreadModels.getInstance().getToolModel();
 
             ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<>(context, program);
 

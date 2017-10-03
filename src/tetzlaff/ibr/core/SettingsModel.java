@@ -21,6 +21,6 @@ public interface SettingsModel extends ReadonlySettingsModel
     void setLightWidgetsEnabled(boolean lightWidgetsEnabled);
     void setRenderingMode(RenderingMode renderingMode);
     void setWeightMode(ShadingParameterMode weightMode);
-    void setHalfResolutionEnabled(boolean halfResEnabled);
+    void setHalfResolutionEnabled(boolean halfResolutionEnabled);
     void setMultisamplingEnabled(boolean multisamplingEnabled);
 }
