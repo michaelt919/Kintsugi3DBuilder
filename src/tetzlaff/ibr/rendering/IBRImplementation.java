@@ -591,6 +591,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         float scale = getScale();
         return Matrix4.scale(scale)
             .times(lightingModel.getLightMatrix(lightIndex))
+            .times(objectModel.getTransformationMatrix())
             .times(Matrix4.scale(1.0f / scale))
             .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
             .times(Matrix4.translate(this.centroid.negated()));
@@ -601,6 +602,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         float scale = getScale();
         return Matrix4.scale(scale)
             .times(lightingModel.getEnvironmentMapMatrix())
+            .times(objectModel.getTransformationMatrix())
             .times(Matrix4.scale(1.0f / scale))
             .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
             .times(Matrix4.translate(this.centroid.negated()));
@@ -643,16 +645,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void setupLight(int lightIndex, int modelInstance)
     {
-        float scale = getScale();
-
-        Matrix4 lightMatrix =
-            this.multiTransformationModel.get(modelInstance).quickInverse(0.01f)
-                .times(Matrix4.scale(scale))
-                .times(lightingModel.getLightMatrix(lightIndex))
-                .times(this.objectModel.getTransformationMatrix())
-                .times(Matrix4.scale(1.0f / scale))
-                .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
-                .times(Matrix4.translate(this.centroid.negated()));
+        Matrix4 lightMatrix = this.multiTransformationModel.get(modelInstance).quickInverse(0.01f).times(getLightMatrix(lightIndex));
 
         // lightMatrix can be hardcoded here (comment out previous line)
 
@@ -1038,13 +1031,21 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
                 }
 
+                float scale = getScale();
+                Matrix4 widgetTransformation = viewMatrix
+                    .times(Matrix4.translate(this.centroid))
+                    .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().transpose().asMatrix4())
+                    .times(Matrix4.scale(scale))
+                    .times(lightingModel.getLightMatrix(i).quickInverse(0.01f))
+                    .times(Matrix4.scale(1.0f / scale));
+
                 if (lightingModel.isLightVisualizationEnabled(i))
                 {
                     this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
                     this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i));
                     this.lightProgram.setUniform("color", lightingModel.getLightColor(i));
 
-                    Vector3 lightPosition = viewMatrix.times(this.getLightMatrix(i).quickInverse(0.001f)).getColumn(3).getXYZ();
+                    Vector3 lightPosition = widgetTransformation.getColumn(3).getXYZ();
 
                     this.lightProgram.setUniform("model_view",
                         Matrix4.translate(lightPosition)
@@ -1060,7 +1061,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                     float lightWidgetScale = computeLightWidgetScale(partialViewMatrix, size);
                     Vector3 lightCenter = partialViewMatrix.times(this.lightingModel.getLightCenter(i).times(this.getScale()).asPosition()).getXYZ();
-                    Matrix4 widgetTransformation = viewMatrix.times(this.getLightMatrix(i).quickInverse(0.001f));
                     Vector3 widgetPosition = widgetTransformation.getColumn(3).getXYZ()
                         .minus(lightCenter)
                         .normalized()

@@ -2,23 +2,22 @@ package tetzlaff.models.impl;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
+import tetzlaff.models.ExtendedCameraModel;
 import tetzlaff.models.LightInstanceModel;
 
 public abstract class LightInstanceModelBase implements LightInstanceModel
 {
-    private final SimpleExtendedCameraModel lightCameraModel = new SimpleExtendedCameraModel();
-    private Vector3 color = Vector3.ZERO;
+    private final ExtendedCameraModel lightCameraModel;
 
-    @Override
-    public Vector3 getColor()
+    protected LightInstanceModelBase(ExtendedCameraModel lightCameraModel)
     {
-        return this.color;
+        this.lightCameraModel = lightCameraModel;
     }
 
     @Override
-    public void setColor(Vector3 color)
+    public boolean isLocked()
     {
-        this.color = color;
+        return lightCameraModel.isLocked();
     }
 
     @Override

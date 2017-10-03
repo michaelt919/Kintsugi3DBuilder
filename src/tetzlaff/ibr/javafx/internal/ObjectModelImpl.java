@@ -1,4 +1,4 @@
-package tetzlaff.ibr.javafx.backend;//Created by alexk on 7/21/2017.
+package tetzlaff.ibr.javafx.internal;//Created by alexk on 7/21/2017.
 
 import com.sun.istack.internal.NotNull;
 import javafx.beans.value.ObservableValue;
@@ -7,7 +7,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.object.ObjectPoseSetting;
 import tetzlaff.models.impl.ExtendedObjectModelBase;
 
-public class JavaFXObjectModel extends ExtendedObjectModelBase
+public class ObjectModelImpl extends ExtendedObjectModelBase
 {
     private ObservableValue<ObjectPoseSetting> selectedObjectPoseProperty;
     private final ObjectPoseSetting backup = new ObjectPoseSetting(

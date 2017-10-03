@@ -1,4 +1,4 @@
-package tetzlaff.ibr.javafx.backend;//Created by alexk on 7/31/2017.
+package tetzlaff.ibr.javafx.internal;//Created by alexk on 7/31/2017.
 
 import javafx.beans.property.*;
 import tetzlaff.ibr.core.RenderingMode;
@@ -6,7 +6,7 @@ import tetzlaff.ibr.core.SettingsModel;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
 
-public class JavaFXSettingsModel implements SettingsModel
+public class SettingsModelImpl implements SettingsModel
 {
     private final BooleanProperty occlusion = new SimpleBooleanProperty(true);
     private final BooleanProperty fresnel = new SimpleBooleanProperty(false);
@@ -340,9 +340,9 @@ public class JavaFXSettingsModel implements SettingsModel
     }
 
     @Override
-    public void setHalfResolutionEnabled(boolean halfResEnabled)
+    public void setHalfResolutionEnabled(boolean halfResolutionEnabled)
     {
-        this.halfResolutionEnabled.set(halfResEnabled);
+        this.halfResolutionEnabled.set(halfResolutionEnabled);
     }
 
     @Override

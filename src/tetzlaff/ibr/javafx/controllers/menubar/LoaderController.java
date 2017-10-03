@@ -14,7 +14,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import tetzlaff.ibr.javafx.Models;
+import tetzlaff.ibr.javafx.MultithreadModels;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 
 public class LoaderController implements Initializable
@@ -118,7 +118,7 @@ public class LoaderController implements Initializable
             {
                 try
                 {
-                    Models.getInstance().getLoadingModel().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir);
+                    MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir);
                 }
                 catch (FileNotFoundException e)
                 {

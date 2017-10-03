@@ -1,4 +1,4 @@
-package tetzlaff.ibr.javafx.backend;//Created by alexk on 7/21/2017.
+package tetzlaff.ibr.javafx.internal;//Created by alexk on 7/21/2017.
 
 import com.sun.istack.internal.NotNull;
 import javafx.beans.value.ObservableValue;
@@ -6,7 +6,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibr.javafx.controllers.scene.camera.CameraSetting;
 import tetzlaff.models.impl.ExtendedCameraModelBase;
 
-public class JavaFXCameraModel extends ExtendedCameraModelBase
+public class CameraModelImpl extends ExtendedCameraModelBase
 {
     private ObservableValue<CameraSetting> selectedCameraSetting;
     private final CameraSetting backup = new CameraSetting(

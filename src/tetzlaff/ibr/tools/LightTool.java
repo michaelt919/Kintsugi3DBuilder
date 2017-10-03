@@ -1,6 +1,5 @@
 package tetzlaff.ibr.tools;
 
-import java.time.LocalTime;
 import java.util.function.Consumer;
 
 import tetzlaff.gl.vecmath.DoubleVector2;
@@ -298,12 +297,8 @@ final class LightTool implements PickerTool
         }
         else
         {
-            System.out.println("Move: " + LocalTime.now());
-
             WindowSize windowSize = window.getWindowSize();
             updateFunction.accept(new DoubleVector2(xPos / windowSize.width, yPos / windowSize.height));
-
-            System.out.println("Update finished: " + LocalTime.now());
             return true;
         }
     }

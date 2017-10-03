@@ -1,4 +1,4 @@
-package tetzlaff.ibr.javafx.backend;//Created by alexk on 7/28/2017.
+package tetzlaff.ibr.javafx.internal;//Created by alexk on 7/28/2017.
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,11 +9,11 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibr.javafx.Models;
+import tetzlaff.ibr.javafx.MultithreadModels;
 import tetzlaff.ibr.javafx.controllers.scene.environment.EnvironmentSetting;
-import tetzlaff.models.impl.EnvironmentModelBase;
+import tetzlaff.models.EnvironmentModel;
 
-public class JavaFXEnvironmentModel extends EnvironmentModelBase
+public class EnvironmentModelImpl implements EnvironmentModel
 {
     private ObservableValue<EnvironmentSetting> selected;
 
@@ -67,7 +67,7 @@ public class JavaFXEnvironmentModel extends EnvironmentModelBase
                 try
                 {
                     System.out.println("Loading environment map file " + newFile.getName());
-                    Models.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
+                    MultithreadModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
                 }
                 catch (FileNotFoundException e)
                 {
@@ -120,13 +120,13 @@ public class JavaFXEnvironmentModel extends EnvironmentModelBase
     }
 
     @Override
-    public double getEnvironmentRotation()
+    public float getEnvironmentRotation()
     {
-        return doesSelectedExist() ? selected.getValue().getEnvRotation() * Math.PI / 180 : 0.0;
+        return doesSelectedExist() ? (float)(selected.getValue().getEnvRotation() * Math.PI / 180) : 0.0f;
     }
 
     @Override
-    public void setEnvironmentRotation(double environmentRotation)
+    public void setEnvironmentRotation(float environmentRotation)
     {
         if (doesSelectedExist())
         {
@@ -135,13 +135,13 @@ public class JavaFXEnvironmentModel extends EnvironmentModelBase
     }
 
     @Override
-    public double getEnvironmentIntensity()
+    public float getEnvironmentIntensity()
     {
-        return doesSelectedExist() ? selected.getValue().getEnvIntensity() : 0.0;
+        return doesSelectedExist() ? (float)selected.getValue().getEnvIntensity() : 0.0f;
     }
 
     @Override
-    public void setEnvironmentIntensity(double environmentIntensity)
+    public void setEnvironmentIntensity(float environmentIntensity)
     {
         if (doesSelectedExist())
         {

@@ -1,4 +1,4 @@
-package tetzlaff.ibr.javafx.backend;//Created by alexk on 7/25/2017.
+package tetzlaff.ibr.javafx.internal;//Created by alexk on 7/25/2017.
 
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
@@ -10,7 +10,7 @@ import tetzlaff.ibr.javafx.controllers.scene.lights.LightType;
 import tetzlaff.models.LightInstanceModel;
 import tetzlaff.util.OrbitPolarConverter;
 
-public class JavaFXLightInstanceModel implements LightInstanceModel
+public class LightInstanceModelImpl implements LightInstanceModel
 {
     private ObservableValue<LightInstanceSetting> subLightSettingObservableValue;
     private final LightInstanceSetting backup = new LightInstanceSetting(
@@ -90,9 +90,9 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
     }
 
     @Override
-    public void setLog10Distance(float log10distance)
+    public void setLog10Distance(float log10Distance)
     {
-        getLightInstance().setLog10Distance(log10distance);
+        getLightInstance().setLog10Distance(log10Distance);
     }
 
     @Override
@@ -219,9 +219,18 @@ public class JavaFXLightInstanceModel implements LightInstanceModel
     @Override
     public void setColor(Vector3 color)
     {
-        getLightInstance().setColor(
-            new Color(color.x, color.y, color.z, 1)
-        );
+        LightInstanceSetting lightInstance = getLightInstance();
+        double intensity = lightInstance.getIntensity();
+
+        if (intensity > 0.0)
+        {
+            lightInstance.setColor(new Color(color.x / intensity, color.y / intensity, color.z / intensity, 1));
+        }
+        else
+        {
+            lightInstance.setIntensity(1.0);
+            lightInstance.setColor(new Color(color.x, color.y, color.z, 1));
+        }
     }
 
     @Override

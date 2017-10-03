@@ -11,7 +11,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
-import tetzlaff.ibr.javafx.backend.JavaFXSettingsModel;
+import tetzlaff.ibr.javafx.internal.SettingsModelImpl;
 import tetzlaff.ibr.javafx.util.SafeFloatStringConverter;
 import tetzlaff.ibr.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
@@ -30,12 +30,11 @@ public class IBROptionsController implements Initializable
     @FXML private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
     @FXML private GridPane root;
 
-    private JavaFXSettingsModel settingCache;
+    private SettingsModelImpl settingCache;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
-
         weightModeChoiceBox.setConverter(new StringConverter<ShadingParameterMode>()
         {
             @Override
@@ -58,7 +57,7 @@ public class IBROptionsController implements Initializable
         StaticUtilities.bound(0, 0.1, occlusionBiasTextField);
     }
 
-    public void bind(JavaFXSettingsModel ibrSettingsUIImpl)
+    public void bind(SettingsModelImpl ibrSettingsUIImpl)
     {
         occlusionCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.occlusionProperty());
         weightModeChoiceBox.valueProperty().bindBidirectional(ibrSettingsUIImpl.weightModeProperty());
