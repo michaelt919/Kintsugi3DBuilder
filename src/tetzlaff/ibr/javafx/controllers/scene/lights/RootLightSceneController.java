@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.Predicate;
 
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import javafx.beans.property.Property;
@@ -17,6 +18,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
 import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
 import tetzlaff.ibr.javafx.internal.LightingModelImpl;
@@ -52,7 +54,7 @@ public class RootLightSceneController implements Initializable
                 return new SimpleStringProperty( param.getValue().getName());
             }
         });
-        nameCol.setPrefWidth(100);
+        nameCol.setPrefWidth(90);
         tableView.getColumns().add(nameCol);
 
         for (int i = 0; i < LightGroupSetting.LIGHT_LIMIT; i++)
@@ -224,9 +226,9 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void moveUPGroup()
     {
-        if (getRow() > 0)
+        if (getSelectedRow() > 0)
         {
-            Collections.swap(sceneModel.getLightGroupList(), getRow(), getRow() - 1);
+            Collections.swap(sceneModel.getLightGroupList(), getSelectedRow(), getSelectedRow() - 1);
         }
     }
 
@@ -234,9 +236,9 @@ public class RootLightSceneController implements Initializable
     private void moveDOWNGroup()
     {
         List<LightGroupSetting> lightGroupList = sceneModel.getLightGroupList();
-        if (getRow() < lightGroupList.size() - 1)
+        if (getSelectedRow() < lightGroupList.size() - 1)
         {
-            Collections.swap(lightGroupList, getRow(), getRow() + 1);
+            Collections.swap(lightGroupList, getSelectedRow(), getSelectedRow() + 1);
         }
     }
 
@@ -266,9 +268,15 @@ public class RootLightSceneController implements Initializable
     private void deleteGroup()
     {
         List<LightGroupSetting> lightGroupList = sceneModel.getLightGroupList();
-        if (lightGroupList.size() > getRow() && getRow() >= 0)
+        int selectedRow = getSelectedRow();
+
+        if (lightGroupList.size() > selectedRow && selectedRow >= 0)
         {
-            lightGroupList.remove(getRow());
+            new Alert(AlertType.CONFIRMATION,
+                    "Are you sure you want to delete the following light group: " + lightGroupList.get(selectedRow).getName() + '?')
+                .showAndWait()
+                .filter(Predicate.isEqual(ButtonType.OK))
+                .ifPresent(response -> lightGroupList.remove(selectedRow));
         }
     }
 
@@ -299,7 +307,7 @@ public class RootLightSceneController implements Initializable
             settingsController.setDisabled(newValue || selectedLight.getValue().isGroupLocked());
             if (newValue)
             {
-                selectedLight.getValue().setName("(X)");
+                selectedLight.getValue().setName("L");
             }
             else
             {
@@ -314,13 +322,20 @@ public class RootLightSceneController implements Initializable
     {
         if (getSelected() != null)
         {
-            getSelected().removeLight(lastSelectedIndex);
-            tableView.refresh();
-            tableView.getSelectionModel().selectPrevious();
+            new Alert(AlertType.CONFIRMATION,
+                    "Are you sure you want to delete the following light: " + getSelected().getName() + '?')
+                .showAndWait()
+                .filter(Predicate.isEqual(ButtonType.OK))
+                .ifPresent(response ->
+                {
+                    getSelected().removeLight(lastSelectedIndex);
+                    tableView.refresh();
+                    tableView.getSelectionModel().selectPrevious();
+                });
         }
     }
 
-    private int getRow()
+    private int getSelectedRow()
     {
         return tableView.getSelectionModel().getSelectedIndex();
     }

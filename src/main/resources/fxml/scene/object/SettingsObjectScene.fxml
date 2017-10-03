@@ -15,7 +15,7 @@
          <TextField fx:id="xCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" />
          <TextField fx:id="yCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          <TextField fx:id="zCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-         <Button fx:id="selectPointButton" mnemonicParsing="false" text="Select point" GridPane.columnIndex="1" GridPane.rowIndex="3">
+         <Button fx:id="selectPointButton" mnemonicParsing="false" text="Select point" visible="false" managed="false" GridPane.columnIndex="1" GridPane.rowIndex="3">
             <GridPane.margin>
                <Insets />
             </GridPane.margin>

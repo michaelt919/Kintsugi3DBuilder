@@ -12,6 +12,14 @@ public interface ReadonlyCameraModel
     {
         return Vector3.ZERO;
     }
-    default float getHorizontalFOV() { return (float)Math.PI / 2; }
-    default boolean isOrthographic() { return false; }
+
+    default float getHorizontalFOV()
+    {
+        return (float)(360 / Math.PI /* convert and multiply by 2) */ * Math.atan(0.36 /* "35 mm" film (actual 36mm horizontal), 50mm lens */));
+    }
+
+    default boolean isOrthographic()
+    {
+        return false;
+    }
 }

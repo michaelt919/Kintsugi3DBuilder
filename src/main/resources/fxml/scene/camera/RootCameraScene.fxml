@@ -13,20 +13,20 @@
                   <Tooltip text="Create a new camera from the current view." />
                </tooltip>
             </Button>
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#saveCameraButton" text="Save">
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#saveCameraButton" text="Save" visible="false" managed="false">
                <tooltip>
                   <Tooltip text="Save the selected camera to the library." />
                </tooltip>
             </Button>
             <Button fx:id="theRenameButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#renameCameraButton" text="Rename" />
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveUPButton" text="Move up" />
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveDOWNButton" text="Move down" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveUPButton" text="Move up" visible="false" managed="false"/>
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#moveDOWNButton" text="Move down" visible="false" managed="false" />
             <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#lockCameraButton" text="Lock/Unlock">
                <tooltip>
                   <Tooltip text="Lock the settings for the selected camera so they cannot be changed." />
                </tooltip>
             </Button>
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#keyframeCameraButton" text="Keyframe">
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#keyframeCameraButton" text="Keyframe" visible="false" managed="false">
                <tooltip>
                   <Tooltip text="Add the selected camera as a keyframe (for animation)." />
                </tooltip>

@@ -93,7 +93,15 @@ public final class Rendering
 
             WindowSynchronization.getInstance().addListener(glfwSynchronization);
 
-            window.addWindowCloseListener(win -> WindowSynchronization.getInstance().quit());
+            window.addWindowCloseListener(win ->
+            {
+                boolean confirmed = WindowSynchronization.getInstance().quit();
+                if (!confirmed)
+                {
+                    win.cancelWindowClose();
+                }
+            });
+
 //            window.addWindowFocusGainedListener(win -> WindowSynchronization.getInstance().focusGained(glfwSynchronization));
 //            window.addWindowFocusLostListener(win -> WindowSynchronization.getInstance().focusLost(glfwSynchronization));
 

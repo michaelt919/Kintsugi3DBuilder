@@ -92,7 +92,7 @@ public class SettingsCameraSceneController implements Initializable
             @Override
             public Double fromString(String string)
             {
-                return null;
+                throw new UnsupportedOperationException();
             }
         });
     }
@@ -129,7 +129,7 @@ public class SettingsCameraSceneController implements Initializable
         zCenterTextField.textProperty().bindBidirectional(camera.zCenterProperty(), n);
         azimuthTextField.textProperty().bindBidirectional(camera.azimuthProperty(), n);
         inclinationTextField.textProperty().bindBidirectional(camera.inclinationProperty(), n);
-        distanceTextField.textProperty().bindBidirectional(camera.log10distanceProperty(), n10);
+        distanceTextField.textProperty().bindBidirectional(camera.log10DistanceProperty(), n10);
         twistTextField.textProperty().bindBidirectional(camera.twistProperty(), n);
         fovTextField.textProperty().bindBidirectional(camera.fovProperty(), n);
         focalLengthTextField.textProperty().bindBidirectional(camera.focalLengthProperty(), n);
@@ -139,7 +139,7 @@ public class SettingsCameraSceneController implements Initializable
         zCenterSlider.valueProperty().bindBidirectional(camera.zCenterProperty());
         azimuthSlider.valueProperty().bindBidirectional(camera.azimuthProperty());
         inclinationSlider.valueProperty().bindBidirectional(camera.inclinationProperty());
-        distanceSlider.valueProperty().bindBidirectional(camera.log10distanceProperty());
+        distanceSlider.valueProperty().bindBidirectional(camera.log10DistanceProperty());
         twistSlider.valueProperty().bindBidirectional(camera.twistProperty());
         fovSlider.valueProperty().bindBidirectional(camera.fovProperty());
         focalLengthSlider.valueProperty().bindBidirectional(camera.focalLengthProperty());
@@ -158,7 +158,7 @@ public class SettingsCameraSceneController implements Initializable
         zCenterTextField.textProperty().unbindBidirectional(camera.zCenterProperty());
         azimuthTextField.textProperty().unbindBidirectional(camera.azimuthProperty());
         inclinationTextField.textProperty().unbindBidirectional(camera.inclinationProperty());
-        distanceTextField.textProperty().unbindBidirectional(camera.log10distanceProperty());
+        distanceTextField.textProperty().unbindBidirectional(camera.log10DistanceProperty());
         twistTextField.textProperty().unbindBidirectional(camera.twistProperty());
         fovTextField.textProperty().unbindBidirectional(camera.fovProperty());
         focalLengthTextField.textProperty().unbindBidirectional(camera.focalLengthProperty());
@@ -168,7 +168,7 @@ public class SettingsCameraSceneController implements Initializable
         zCenterSlider.valueProperty().unbindBidirectional(camera.zCenterProperty());
         azimuthSlider.valueProperty().unbindBidirectional(camera.azimuthProperty());
         inclinationSlider.valueProperty().unbindBidirectional(camera.inclinationProperty());
-        distanceSlider.valueProperty().unbindBidirectional(camera.log10distanceProperty());
+        distanceSlider.valueProperty().unbindBidirectional(camera.log10DistanceProperty());
         twistSlider.valueProperty().unbindBidirectional(camera.twistProperty());
         fovSlider.valueProperty().unbindBidirectional(camera.fovProperty());
         focalLengthSlider.valueProperty().unbindBidirectional(camera.focalLengthProperty());

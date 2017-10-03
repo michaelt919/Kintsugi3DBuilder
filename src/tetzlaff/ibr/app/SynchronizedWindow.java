@@ -5,4 +5,9 @@ public interface SynchronizedWindow
     boolean isFocused();
     void focus();
     void quit();
+
+    default boolean confirmQuit()
+    {
+        return true;
+    }
 }

@@ -2,16 +2,15 @@ package tetzlaff.ibr.javafx.controllers.scene.object;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionModel;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
 import tetzlaff.ibr.javafx.controllers.scene.SceneModel;
 import tetzlaff.ibr.javafx.internal.ObjectModelImpl;
@@ -156,7 +155,7 @@ public class RootObjectSceneController
         int i = getObjectPoseSelectionModel().getSelectedIndex();
         if (i > 1)
         {
-            Collections.swap(sceneModel.getCameraList(), i, i - 1);
+            Collections.swap(sceneModel.getObjectPoseList(), i, i - 1);
             getObjectPoseSelectionModel().select(i - 1);
         }
     }
@@ -192,10 +191,15 @@ public class RootObjectSceneController
     @FXML
     void deletePoseButton()
     {
-        int i = getObjectPoseSelectionModel().getSelectedIndex();
-        if (i != 0)
+        int selectedIndex = getObjectPoseSelectionModel().getSelectedIndex();
+        if (selectedIndex != 0)
         {
-            sceneModel.getObjectPoseList().remove(i);
+            new Alert(AlertType.CONFIRMATION,
+                    "Are you sure you want to delete the following camera: "
+                        + sceneModel.getObjectPoseList().get(selectedIndex).getName() + '?')
+                .showAndWait()
+                .filter(Predicate.isEqual(ButtonType.OK))
+                .ifPresent(response -> sceneModel.getObjectPoseList().remove(selectedIndex));
         }
     }
 }
