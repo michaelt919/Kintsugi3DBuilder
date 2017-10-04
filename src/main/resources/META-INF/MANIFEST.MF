@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: tetzlaff.ibr.app.IBRelight
+Main-Class: tetzlaff.ibrelight.app.IBRelight
 

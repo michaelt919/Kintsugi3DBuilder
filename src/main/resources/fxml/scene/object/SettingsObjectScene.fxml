@@ -3,7 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.object.SettingsObjectSceneController">
+<VBox fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.scene.object.SettingsObjectSceneController">
    <TitledPane animated="false" text="Center">
       <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>

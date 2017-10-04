@@ -23,7 +23,7 @@
                 <archive>
                     <manifest>
                         <addClasspath>true</addClasspath>
-                        <mainClass>tetzlaff.ibr.app.IBRelight</mainClass>
+                        <mainClass>tetzlaff.ibrelight.app.IBRelight</mainClass>
                     </manifest>
                 </archive>
             </configuration>
