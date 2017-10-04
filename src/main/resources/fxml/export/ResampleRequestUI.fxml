@@ -2,7 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.AnchorPane?>
-<AnchorPane prefHeight="155.0" prefWidth="555.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.export.resample.ResampleRequestUI">
+<AnchorPane prefHeight="155.0" prefWidth="555.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.export.resample.ResampleRequestUI">
    <children>
       <Label layoutX="13.0" layoutY="46.0" text="Target view set file:" />
       <Label layoutX="14.0" layoutY="14.0" text="Export directory:" />

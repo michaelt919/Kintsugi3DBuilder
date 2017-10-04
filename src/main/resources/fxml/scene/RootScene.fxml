@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
-<TabPane prefWidth="410.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.RootSceneController">
+<TabPane prefWidth="410.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.scene.RootSceneController">
 
     <Tab text="Camera">
         <ScrollPane fitToWidth="true">

@@ -3,7 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibr.javafx.controllers.scene.camera.SettingsCameraSceneController">
+<VBox fx:id="root" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.scene.camera.SettingsCameraSceneController">
    <TitledPane animated="false" text="Look at point">
       <GridPane alignment="CENTER_LEFT" hgap="5.0" vgap="10.0">
          <padding>
@@ -15,11 +15,6 @@
          <TextField prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" fx:id="xCenterTextField" />
          <TextField fx:id="yCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          <TextField fx:id="zCenterTextField" prefHeight="25.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-         <Button fx:id="selectPointButton" mnemonicParsing="false" text="Select point" visible="false" managed="false" GridPane.columnIndex="1" GridPane.rowIndex="3">
-            <GridPane.margin>
-               <Insets />
-            </GridPane.margin>
-         </Button>
          <Slider blockIncrement="0.1" majorTickUnit="0.25" max="1.0" min="-1.0" prefHeight="38.0" prefWidth="230.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" GridPane.columnIndex="2" fx:id="xCenterSlider" />
          <Slider fx:id="yCenterSlider" blockIncrement="0.1" majorTickUnit="0.25" max="1.0" min="-1.0" prefHeight="38.0" prefWidth="240.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="1" />
          <Slider fx:id="zCenterSlider" blockIncrement="0.1" majorTickUnit="0.25" max="1.0" min="-1.0" prefHeight="38.0" prefWidth="240.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
@@ -29,7 +24,6 @@
             <ColumnConstraints />
          </columnConstraints>
          <rowConstraints>
-            <RowConstraints />
             <RowConstraints />
             <RowConstraints />
             <RowConstraints />
