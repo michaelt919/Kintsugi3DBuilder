@@ -39,6 +39,22 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         private BufferedImage maskImg;
         private final boolean flipVertical;
 
+        OpenGLTexture2DFromFileBuilder(OpenGLContext context, int textureTarget, BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical)
+        {
+            super(context);
+            this.textureTarget = textureTarget;
+            this.colorImg = colorImg;
+            this.maskImg = maskImg;
+            if (maskImg != null)
+            {
+                if (maskImg.getWidth() != colorImg.getWidth() || maskImg.getHeight() != colorImg.getHeight())
+                {
+                    throw new IllegalArgumentException("Color image and mask image must have the same dimensions.");
+                }
+            }
+            this.flipVertical = flipVertical;
+        }
+
         OpenGLTexture2DFromFileBuilder(OpenGLContext context, int textureTarget, InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
         {
             super(context);

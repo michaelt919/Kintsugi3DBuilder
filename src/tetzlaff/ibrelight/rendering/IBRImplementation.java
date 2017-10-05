@@ -1,9 +1,11 @@
 package tetzlaff.ibrelight.rendering;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
+import javax.imageio.ImageIO;
 
 import tetzlaff.gl.*;
 import tetzlaff.gl.AlphaBlendingFunction.Weight;
@@ -70,8 +72,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     
     private EnvironmentMap newEnvironmentData;
     private boolean environmentMapUnloadRequested = false;
-    private boolean environmentMapEnabled;
     private Cubemap<ContextType> environmentMap;
+
+    private BufferedImage newBackplateData;
+    private boolean backplateUnloadRequested = false;
+    private Texture2D<ContextType> backplateTexture;
 
     private Program<ContextType> environmentBackgroundProgram;
     private Drawable<ContextType> environmentBackgroundDrawable;
@@ -398,6 +403,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.environmentMapUnloadRequested = false;
         }
 
+        if (this.backplateUnloadRequested && this.backplateTexture != null)
+        {
+            this.backplateTexture.close();
+            this.backplateTexture = null;
+            this.backplateUnloadRequested = false;
+        }
+
         if (this.newEnvironmentData != null)
         {
             EnvironmentMap environmentData = this.newEnvironmentData;
@@ -408,17 +420,17 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 float[][] sides = environmentData.getData();
 
                 Cubemap<ContextType> newEnvironmentTexture =
-                        context.buildColorCubemap(environmentData.getSide())
-                            .setInternalFormat(ColorFormat.RGB32F)
-                            .loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
-                            .loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
-                            .loadFace(CubemapFace.POSITIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
-                            .loadFace(CubemapFace.NEGATIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
-                            .loadFace(CubemapFace.POSITIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
-                            .loadFace(CubemapFace.NEGATIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
-                            .setMipmapsEnabled(true)
-                            .setLinearFilteringEnabled(true)
-                            .createTexture();
+                    context.buildColorCubemap(environmentData.getSide())
+                        .setInternalFormat(ColorFormat.RGB32F)
+                        .loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
+                        .loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
+                        .loadFace(CubemapFace.POSITIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
+                        .loadFace(CubemapFace.NEGATIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
+                        .loadFace(CubemapFace.POSITIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
+                        .loadFace(CubemapFace.NEGATIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
+                        .setMipmapsEnabled(true)
+                        .setLinearFilteringEnabled(true)
+                        .createTexture();
 
                 newEnvironmentTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
 
@@ -429,7 +441,33 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 this.environmentMap = newEnvironmentTexture;
             }
-            catch (IOException|RuntimeException e)
+            catch (RuntimeException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        if (this.newBackplateData != null)
+        {
+            BufferedImage backplateData = this.newBackplateData;
+            this.newBackplateData = null;
+
+            try
+            {
+                Texture2D<ContextType> newBackplateTexture = context.build2DColorTextureFromImage(backplateData, true)
+                    .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
+                    .setLinearFilteringEnabled(true)
+                    .setMipmapsEnabled(true)
+                    .createTexture();
+
+                if (this.backplateTexture != null)
+                {
+                    this.backplateTexture.close();
+                }
+
+                this.backplateTexture = newBackplateTexture;
+            }
+            catch (RuntimeException e)
             {
                 e.printStackTrace();
             }
@@ -529,7 +567,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             program.setUniform("useEnvironmentMap", false);
             program.setTexture("environmentMap", null);
-            this.environmentMapEnabled = false;
         }
         else
         {
@@ -541,7 +578,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                 (double)this.environmentMap.getFaceSize() / (double)resources.viewSet.getCameraPoseCount() )
                             / Math.log(2.0)))));
             program.setUniform("diffuseEnvironmentMipMapLevel", this.environmentMap.getMipmapLevelCount() - 1);
-            this.environmentMapEnabled = true;
         }
 
         program.setUniform("virtualLightCount", Math.min(4, lightingModel.getLightCount()));
@@ -811,28 +847,28 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             Matrix4 partialViewMatrix;
 
-            if (!customViewMatrix)
-            {
-                view = this.getViewMatrix();
-                partialViewMatrix = getPartialViewMatrix();
-            }
-            else
+            if (customViewMatrix)
             {
                 partialViewMatrix = getPartialViewMatrix(view);
 
                 if (lightingModel instanceof CameraBasedLightingModel)
                 {
                     float scale = resources.viewSet.getCameraPose(0)
-                            .times(resources.geometry.getCentroid().asPosition())
+                        .times(resources.geometry.getCentroid().asPosition())
                         .getXYZ().length();
 
-                    ((CameraBasedLightingModel)lightingModel).overrideCameraPose(
+                    ((CameraBasedLightingModel) lightingModel).overrideCameraPose(
                         Matrix4.scale(1.0f / scale)
                             .times(view)
                             .times(Matrix4.translate(resources.geometry.getCentroid()))
                             .times(resources.viewSet.getCameraPose(0).transpose().getUpperLeft3x3().asMatrix4())
                             .times(Matrix4.scale(scale)));
                 }
+            }
+            else
+            {
+                view = this.getViewMatrix();
+                partialViewMatrix = getPartialViewMatrix();
             }
 
             FramebufferSize size = framebuffer.getSize();
@@ -850,7 +886,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
 
-            if (environmentMap != null && environmentMapEnabled)
+            if (environmentMap != null && lightingModel.isEnvironmentMappingEnabled())
             {
                 environmentBackgroundProgram.setUniform("objectID", this.sceneObjectIDLookup.get("EnvironmentMap"));
                 environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
@@ -890,7 +926,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 offscreenFBO.clearIntegerColorBuffer(1, 0, 0, 0, 0);
                 offscreenFBO.clearDepthBuffer();
 
-                if (environmentMap != null && environmentMapEnabled)
+                if (environmentMap != null && lightingModel.isEnvironmentMappingEnabled())
                 {
                     context.getState().disableDepthTest();
                     this.environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
@@ -924,7 +960,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.drawReferenceScene(this.program, offscreenFBO, view);
 
                 this.program.setUniform("imageBasedRenderingEnabled", this.settings.getRenderingMode().isImageBased());
-                setupForDraw(view); // changed anything changed when drawing the reference scene.
+                setupForDraw(view); // in case anything changed when drawing the reference scene.
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
 
                 this.program.setUniform("envMapMatrix", envMapMatrix);
@@ -1413,6 +1449,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.environmentMap = null;
         }
 
+        if (this.backplateTexture != null)
+        {
+            this.backplateTexture.close();
+            this.backplateTexture = null;
+        }
+
         if (resources != null)
         {
             resources.close();
@@ -1600,9 +1642,29 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     }
 
     @Override
-    public void loadBackplate(File backplateFile)
+    public void loadBackplate(File backplateFile) throws FileNotFoundException
     {
-        // TODO Auto-generated method stub
+        if (backplateFile == null && this.backplateTexture != null)
+        {
+            this.backplateUnloadRequested = true;
+        }
+        else if (backplateFile != null && backplateFile.exists())
+        {
+            System.out.println("Loading new backplate texture.");
+
+            try
+            {
+                this.newBackplateData = ImageIO.read(backplateFile);
+            }
+            catch (FileNotFoundException e)
+            {
+                throw e;
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override

@@ -1,5 +1,6 @@
 package tetzlaff.gl.opengl;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.ByteBuffer;
 
@@ -169,6 +170,12 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
     public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTextureFromBuffer(int width, int height, NativeVectorBuffer data)
     {
         return new OpenGLTexture2DFromBufferBuilder(this, GL_TEXTURE_2D, width, height, getPixelDataFormatFromDimensions(data.getDimensions()), getDataTypeConstant(data.getDataType()), data.getBuffer());
+    }
+
+    @Override
+    public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTextureFromImageWithMask(BufferedImage colorImage, BufferedImage maskImage, boolean flipVertical)
+    {
+        return new OpenGLTexture2DFromFileBuilder(this, GL_TEXTURE_2D, colorImage, maskImage, flipVertical);
     }
 
     @Override
