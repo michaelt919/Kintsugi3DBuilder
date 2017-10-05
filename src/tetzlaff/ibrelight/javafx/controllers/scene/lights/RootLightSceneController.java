@@ -344,8 +344,6 @@ public class RootLightSceneController implements Initializable
                     new Vector3((float) lastSelectedLight.getTargetX(), (float) lastSelectedLight.getTargetY(), (float) lastSelectedLight.getTargetZ());
                 Vector2 windowPosition = sceneViewport.projectPoint(currentLightTarget);
 
-                System.out.println("Original window position: " + windowPosition);
-
                 Vector2 newWindowPosition;
 
                 if (windowPosition.x > 0.5f)
@@ -367,14 +365,10 @@ public class RootLightSceneController implements Initializable
                 if (cameraCenter.distance(objectLightTarget) < currentDistance)
                 {
                     selectedLightGroup.addLight(lastSelectedIndex, objectLightTarget.x, objectLightTarget.y, objectLightTarget.z);
-
-                    System.out.println("Actual new window position: " + sceneViewport.projectPoint(objectLightTarget));
                 }
                 else
                 {
                     selectedLightGroup.addLight(lastSelectedIndex, equidistantLightTarget.x, equidistantLightTarget.y, equidistantLightTarget.z);
-
-                    System.out.println("Actual new window position: " + sceneViewport.projectPoint(equidistantLightTarget));
                 }
             }
             else

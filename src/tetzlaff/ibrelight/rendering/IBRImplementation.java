@@ -1778,7 +1778,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     .times(getPartialViewMatrix())
                     .times(point.times(getScale()).asPosition());
 
-                return new Vector2(0.5f + projectedPoint.x / (2 * projectedPoint.w), 0.5f + projectedPoint.y / (2 * projectedPoint.w));
+                return new Vector2(0.5f + projectedPoint.x / (2 * projectedPoint.w), 0.5f - projectedPoint.y / (2 * projectedPoint.w));
             }
 
             @Override
