@@ -18,7 +18,7 @@ import tetzlaff.models.SceneViewport;
 
 public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
-    void setLoadingMonitor(LoadingMonitor callback);
+    void setLoadingMonitor(LoadingMonitor loadingMonitor);
 
     ViewSet getActiveViewSet();
     VertexGeometry getActiveGeometry();
@@ -31,7 +31,7 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     void setProgram(Program<ContextType> program);
     void reloadHelperShaders();
 
-    void loadBackplate(File backplateFile);
+    void loadBackplate(File backplateFile) throws FileNotFoundException;
     void loadEnvironmentMap(File environmentFile) throws FileNotFoundException;
 
     void setObjectModel(ReadonlyObjectModel objectModel);

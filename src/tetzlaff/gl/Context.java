@@ -1,5 +1,6 @@
 package tetzlaff.gl;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
 
 import tetzlaff.gl.builders.*;
@@ -55,6 +56,9 @@ public interface Context<ContextType extends Context<ContextType>>
     ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
         build2DColorHDRTextureFromStreamWithMask(BufferedInputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
 
+    ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorTextureFromImageWithMask(BufferedImage colorImage, BufferedImage maskImage, boolean flipVertical);
+
     default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
         build2DColorTextureFromStream(InputStream imageStream, boolean flipVertical) throws IOException
     {
@@ -93,6 +97,12 @@ public interface Context<ContextType extends Context<ContextType>>
         }
     }
 
+    default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorTextureFromImage(BufferedImage colorImage, boolean flipVertical)
+    {
+        return build2DColorTextureFromImageWithMask(colorImage, null, flipVertical);
+    }
+
     ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> build1DColorTexture(NativeVectorBuffer data);
 
     ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> build2DColorTextureFromBuffer(int width, int height, NativeVectorBuffer data);
@@ -108,8 +118,8 @@ public interface Context<ContextType extends Context<ContextType>>
     StencilTextureBuilder<ContextType, ? extends Texture3D<ContextType>> build2DStencilTextureArray(int width, int height, int length);
     DepthStencilTextureBuilder<ContextType, ? extends Texture3D<ContextType>> build2DDepthStencilTextureArray(int width, int height, int length);
 
-    ColorCubemapBuilder<ContextType, ? extends Cubemap<ContextType>> buildColorCubemap(int faceSize) throws IOException;
-    DepthTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildDepthCubemap(int faceSize) throws IOException;
-    StencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildStencilCubemap(int faceSize) throws IOException;
-    DepthStencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildDepthStencilCubemap(int faceSize) throws IOException;
+    ColorCubemapBuilder<ContextType, ? extends Cubemap<ContextType>> buildColorCubemap(int faceSize);
+    DepthTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildDepthCubemap(int faceSize);
+    StencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildStencilCubemap(int faceSize);
+    DepthStencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildDepthStencilCubemap(int faceSize);
 }
