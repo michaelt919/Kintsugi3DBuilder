@@ -1,6 +1,5 @@
 package tetzlaff.ibrelight.tools;
 
-import tetzlaff.ibrelight.core.SettingsModel;
 import tetzlaff.models.*;
 
 interface ToolBuilder<ToolType>

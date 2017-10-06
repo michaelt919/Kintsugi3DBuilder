@@ -2,8 +2,6 @@ package tetzlaff.ibrelight.export.general;
 
 import java.io.File;
 
-import tetzlaff.ibrelight.core.ReadonlySettingsModel;
-
 public final class RequestFactoryImplementation implements RequestFactory
 {
     private final ReadonlySettingsModel settingsModel;

@@ -13,7 +13,6 @@ import org.ejml.simple.SimpleMatrix;
 import tetzlaff.gl.*;
 import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.core.ReadonlySettingsModel;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.util.NonNegativeLeastSquares;
 

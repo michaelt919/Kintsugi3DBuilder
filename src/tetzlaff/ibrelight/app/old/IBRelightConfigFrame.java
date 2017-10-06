@@ -23,6 +23,7 @@ import tetzlaff.ibrelight.app.old.util.FidelityMetricRequestUI;
 import tetzlaff.ibrelight.app.old.util.ResampleRequestUI;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.models.LightingModel;
+import tetzlaff.models.SettingsModel;
 
 /**
  * Swing GUI for managing the settings of a list of ULFRenderer objects.  This is an update of the

@@ -1,6 +1,5 @@
 package tetzlaff.gl.opengl;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import tetzlaff.gl.*;
@@ -67,7 +66,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
         }
 
         @Override
-        public ColorBuilder loadFace(CubemapFace face, NativeVectorBuffer data) throws IOException
+        public ColorBuilder loadFace(CubemapFace face, NativeVectorBuffer data)
         {
             int index = cubemapFaceToIndex(face);
             faces[index].buffer = data.getBuffer();

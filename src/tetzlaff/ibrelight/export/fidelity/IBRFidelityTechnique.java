@@ -9,7 +9,6 @@ import tetzlaff.gl.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
-import tetzlaff.ibrelight.core.ReadonlySettingsModel;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.ibrelight.util.PowerViewWeightGenerator;
 import tetzlaff.ibrelight.util.ViewWeightGenerator;

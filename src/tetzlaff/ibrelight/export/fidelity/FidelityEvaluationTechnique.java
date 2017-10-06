@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.List;
 
 import tetzlaff.gl.Context;
-import tetzlaff.ibrelight.core.ReadonlySettingsModel;
 import tetzlaff.ibrelight.rendering.IBRResources;
 
 public interface FidelityEvaluationTechnique<ContextType extends Context<ContextType>> extends AutoCloseable

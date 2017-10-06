@@ -1,353 +1,338 @@
 package tetzlaff.ibrelight.javafx.internal;//Created by alexk on 7/31/2017.
 
-import javafx.beans.property.*;
-import tetzlaff.ibrelight.core.RenderingMode;
-import tetzlaff.ibrelight.core.SettingsModel;
-import tetzlaff.ibrelight.javafx.util.StaticUtilities;
-import tetzlaff.util.ShadingParameterMode;
+import java.util.*;
+import java.util.Map.Entry;
 
-public class SettingsModelImpl implements SettingsModel
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import tetzlaff.models.impl.SettingsModelBase;
+
+public class SettingsModelImpl extends SettingsModelBase
 {
-    private final BooleanProperty occlusion = new SimpleBooleanProperty(true);
-    private final BooleanProperty fresnel = new SimpleBooleanProperty(false);
-    private final BooleanProperty pbrGeometricAttenuation = new SimpleBooleanProperty(false);
-    private final BooleanProperty relighting = new SimpleBooleanProperty(true);
-    private final BooleanProperty shadows = new SimpleBooleanProperty(false);
-    private final BooleanProperty visibleLights = new SimpleBooleanProperty(true);
-    private final BooleanProperty visibleLightWidgets = new SimpleBooleanProperty(false);
-    private final BooleanProperty visibleCameraPose = new SimpleBooleanProperty(false);
-    private final BooleanProperty visibleSavedCameraPose = new SimpleBooleanProperty(false);
-    private final FloatProperty gamma = StaticUtilities.bound(1, 5, new SimpleFloatProperty(2.2f));
-    private final FloatProperty weightExponent = StaticUtilities.bound(1, 100, new SimpleFloatProperty(16.0f));
-    private final FloatProperty isotropyFactor = StaticUtilities.bound(0, 1, new SimpleFloatProperty(0.0f));
-    private final FloatProperty occlusionBias = StaticUtilities.bound(0, 0.1, new SimpleFloatProperty(0.0025f));
-    private final ObjectProperty<ShadingParameterMode> weightMode = new SimpleObjectProperty<>(ShadingParameterMode.PER_PIXEL);
-    private final ObjectProperty<RenderingMode> renderingMode = new SimpleObjectProperty<>(RenderingMode.IMAGE_BASED);
-    private final BooleanProperty is3DGridEnabled = new SimpleBooleanProperty(false);
-    private final BooleanProperty compassEnabled = new SimpleBooleanProperty(false);
-    private final BooleanProperty multisamplingEnabled = new SimpleBooleanProperty(false);
-    private final BooleanProperty halfResolutionEnabled = new SimpleBooleanProperty(false);
-
-    @Override
-    public boolean areVisibleCameraPosesEnabled()
+    private interface TypedProperty<T> extends Property<T>
     {
-        return visibleCameraPose.get();
+        Class<? extends T> getType();
     }
 
-    public BooleanProperty visibleCameraPoseProperty()
+    private static class TypedPropertyGenericImpl<T> implements TypedProperty<T>
     {
-        return visibleCameraPose;
+        private final Property<T> base;
+        private final Class<T> type;
+
+        TypedPropertyGenericImpl(Class<T> type, Property<T> base)
+        {
+            this.base = base;
+            this.type = type;
+        }
+
+        @Override
+        public Class<T> getType()
+        {
+            return this.type;
+        }
+
+        @Override
+        public void bind(ObservableValue<? extends T> observable)
+        {
+            base.bind(observable);
+        }
+
+        @Override
+        public void unbind()
+        {
+            base.unbind();
+        }
+
+        @Override
+        public boolean isBound()
+        {
+            return base.isBound();
+        }
+
+        @Override
+        public void bindBidirectional(Property<T> other)
+        {
+            base.bindBidirectional(other);
+        }
+
+        @Override
+        public void unbindBidirectional(Property<T> other)
+        {
+            base.unbindBidirectional(other);
+        }
+
+        @Override
+        public Object getBean()
+        {
+            return base.getBean();
+        }
+
+        @Override
+        public String getName()
+        {
+            return base.getName();
+        }
+
+        @Override
+        public void addListener(ChangeListener<? super T> listener)
+        {
+            base.addListener(listener);
+        }
+
+        @Override
+        public void removeListener(ChangeListener<? super T> listener)
+        {
+            base.removeListener(listener);
+        }
+
+        @Override
+        public T getValue()
+        {
+            return base.getValue();
+        }
+
+        @Override
+        public void addListener(InvalidationListener listener)
+        {
+            base.addListener(listener);
+        }
+
+        @Override
+        public void removeListener(InvalidationListener listener)
+        {
+            base.removeListener(listener);
+        }
+
+        @Override
+        public void setValue(T value)
+        {
+            base.setValue(value);
+        }
     }
 
-    @Override
-    public boolean areVisibleSavedCameraPosesEnabled()
+    private static class TypedPropertyNonGenericImpl implements TypedProperty<Object>
     {
-        return visibleSavedCameraPose.get();
+        private final ObjectProperty<Object> base;
+        private final Class<?> type;
+
+        TypedPropertyNonGenericImpl(Object initialValue)
+        {
+            this.base = new SimpleObjectProperty<>(initialValue);
+            this.type = base.getClass();
+        }
+
+        @Override
+        public Class<?> getType()
+        {
+            return this.type;
+        }
+
+        @Override
+        public void bind(ObservableValue<?> observable)
+        {
+            base.bind(observable);
+        }
+
+        @Override
+        public void unbind()
+        {
+            base.unbind();
+        }
+
+        @Override
+        public boolean isBound()
+        {
+            return base.isBound();
+        }
+
+        @Override
+        public void bindBidirectional(Property<Object> other)
+        {
+            base.bindBidirectional(other);
+        }
+
+        @Override
+        public void unbindBidirectional(Property<Object> other)
+        {
+            base.unbindBidirectional(other);
+        }
+
+        @Override
+        public Object getBean()
+        {
+            return base.getBean();
+        }
+
+        @Override
+        public String getName()
+        {
+            return base.getName();
+        }
+
+        @Override
+        public void addListener(ChangeListener<? super Object> listener)
+        {
+            base.addListener(listener);
+        }
+
+        @Override
+        public void removeListener(ChangeListener<? super Object> listener)
+        {
+            base.removeListener(listener);
+        }
+
+        @Override
+        public Object getValue()
+        {
+            return base.getValue();
+        }
+
+        @Override
+        public void addListener(InvalidationListener listener)
+        {
+            base.addListener(listener);
+        }
+
+        @Override
+        public void removeListener(InvalidationListener listener)
+        {
+            base.removeListener(listener);
+        }
+
+        @Override
+        public void setValue(Object value)
+        {
+            base.setValue(value);
+        }
     }
 
-    public BooleanProperty visibleSavedCameraPoseProperty()
-    {
-        return visibleSavedCameraPose;
-    }
+    private final Map<String, TypedProperty<?>> settingsMap = new HashMap<>(32);
 
-    @Override
-    public boolean is3DGridEnabled()
+    private static class SettingImpl implements Setting
     {
-        return is3DGridEnabled.get();
-    }
+        private final Entry<String, TypedProperty<?>> nextEntry;
 
-    public BooleanProperty is3DGridEnabledProperty()
-    {
-        return is3DGridEnabled;
-    }
+        SettingImpl(Entry<String, TypedProperty<?>> nextEntry)
+        {
+            this.nextEntry = nextEntry;
+        }
 
-    @Override
-    public boolean isCompassEnabled()
-    {
-        return compassEnabled.get();
-    }
+        @Override
+        public String getName()
+        {
+            return nextEntry.getKey();
+        }
 
-    public BooleanProperty compassEnabledProperty()
-    {
-        return compassEnabled;
-    }
+        @Override
+        public Class<?> getType()
+        {
+            return nextEntry.getValue().getType();
+        }
 
-    @Override
-    public boolean isOcclusionEnabled()
-    {
-        return occlusion.get();
-    }
-
-    public BooleanProperty occlusionProperty()
-    {
-        return occlusion;
-    }
-
-    @Override
-    public boolean isFresnelEnabled()
-    {
-        return fresnel.get();
-    }
-
-    public BooleanProperty fresnelProperty()
-    {
-        return fresnel;
-    }
-
-    @Override
-    public boolean isPBRGeometricAttenuationEnabled()
-    {
-        return pbrGeometricAttenuation.get();
-    }
-
-    public BooleanProperty pbrGeometricAttenuationProperty()
-    {
-        return pbrGeometricAttenuation;
-    }
-
-    @Override
-    public boolean isRelightingEnabled()
-    {
-        return relighting.get();
-    }
-
-    public BooleanProperty relightingProperty()
-    {
-        return relighting;
-    }
-
-    @Override
-    public boolean areShadowsEnabled()
-    {
-        return shadows.get();
-    }
-
-    public BooleanProperty shadowsProperty()
-    {
-        return shadows;
-    }
-
-    @Override
-    public boolean areVisibleLightsEnabled()
-    {
-        return visibleLights.get();
-    }
-
-    public BooleanProperty visibleLightsProperty()
-    {
-        return visibleLights;
-    }
-
-    @Override
-    public boolean areLightWidgetsEnabled()
-    {
-        return visibleLightWidgets.get();
-    }
-
-    public BooleanProperty visibleLightWidgetsProperty()
-    {
-        return visibleLightWidgets;
-    }
-
-    @Override
-    public float getGamma()
-    {
-        return gamma.get();
-    }
-
-    public FloatProperty gammaProperty()
-    {
-        return gamma;
-    }
-
-    @Override
-    public float getWeightExponent()
-    {
-        return weightExponent.get();
-    }
-
-    public FloatProperty weightExponentProperty()
-    {
-        return weightExponent;
-    }
-
-    @Override
-    public float getIsotropyFactor()
-    {
-        return isotropyFactor.get();
-    }
-
-    public FloatProperty isotropyFactorProperty()
-    {
-        return isotropyFactor;
-    }
-
-    @Override
-    public float getOcclusionBias()
-    {
-        return occlusionBias.get();
-    }
-
-    public FloatProperty occlusionBiasProperty()
-    {
-        return occlusionBias;
-    }
-
-    @Override
-    public ShadingParameterMode getWeightMode()
-    {
-        return weightMode.get();
-    }
-
-    public ObjectProperty<ShadingParameterMode> weightModeProperty()
-    {
-        return weightMode;
-    }
-
-    @Override
-    public RenderingMode getRenderingMode()
-    {
-        return renderingMode.get();
-    }
-
-    public ObjectProperty<RenderingMode> renderingModeProperty()
-    {
-        return renderingMode;
-    }
-
-    @Override
-    public boolean isHalfResolutionEnabled()
-    {
-        return halfResolutionEnabled.get();
-    }
-
-    public BooleanProperty halfResolutionEnabledProperty()
-    {
-        return this.halfResolutionEnabled;
-    }
-
-    @Override
-    public boolean isMultisamplingEnabled()
-    {
-        return multisamplingEnabled.get();
-    }
-
-    public BooleanProperty multisamplingEnabledProperty()
-    {
-        return this.multisamplingEnabled;
-    }
-
-    @Override
-    public void setGamma(float gamma)
-    {
-        this.gamma.set(gamma);
+        @Override
+        public Object getValue()
+        {
+            return nextEntry.getValue().getValue();
+        }
     }
 
     @Override
-    public void setWeightExponent(float weightExponent)
+    protected Object getUnchecked(String name)
     {
-        this.weightExponent.set(weightExponent);
+        return settingsMap.get(name).getValue();
     }
 
     @Override
-    public void setIsotropyFactor(float isotropyFactor)
+    protected void setUnchecked(String name, Object value)
     {
-        this.isotropyFactor.set(isotropyFactor);
+        ((Property<Object>)settingsMap.get(name)).setValue(value);
     }
 
     @Override
-    public void setOcclusionEnabled(boolean occlusionEnabled)
+    public Class<?> getType(String name)
     {
-       this.occlusion.set(occlusionEnabled);
+        if (this.exists(name))
+        {
+            return settingsMap.get(name).getType();
+        }
+        else
+        {
+            throw new NoSuchElementException("No setting called \"" + name + " exists");
+        }
     }
 
     @Override
-    public void setOcclusionBias(float occlusionBias)
+    public boolean exists(String name)
     {
-        this.occlusionBias.set(occlusionBias);
+        return settingsMap.containsKey(name);
     }
 
     @Override
-    public void setFresnelEnabled(boolean fresnelEnabled)
+    public Iterator<Setting> iterator()
     {
-        this.fresnel.set(fresnelEnabled);
+        return new Iterator<Setting>()
+        {
+            private final Iterator<Entry<String, TypedProperty<?>>> innerIterator = settingsMap.entrySet().iterator();
+
+            @Override
+            public boolean hasNext()
+            {
+                return innerIterator.hasNext();
+            }
+
+            @Override
+            public Setting next()
+            {
+                Entry<String, TypedProperty<?>> nextEntry = innerIterator.next();
+
+                return new SettingImpl(nextEntry);
+            }
+        };
     }
 
-    @Override
-    public void setPBRGeometricAttenuationEnabled(boolean pbrGeometricAttenuation)
+    public <T> Property<T> getProperty(String name, Class<T> settingType)
     {
-        this.pbrGeometricAttenuation.set(pbrGeometricAttenuation);
+        if (settingsMap.containsKey(name))
+        {
+            TypedProperty<?> entry = settingsMap.get(name);
+            if (Objects.equals(settingType, entry.getType()))
+            {
+                return (Property<T>) entry;
+            }
+        }
+
+        throw new NoSuchElementException("No setting called \"" + name + " exists of type " + settingType);
     }
 
-    @Override
-    public void setRelightingEnabled(boolean relightingEnabled)
+    public void createSetting(String name, Object initialValue)
     {
-        this.relighting.set(relightingEnabled);
+        if(settingsMap.containsKey(name))
+        {
+            throw new IllegalArgumentException("The setting to be created already exists.");
+        }
+        else
+        {
+            settingsMap.put(name, new TypedPropertyNonGenericImpl(initialValue));
+        }
     }
 
-    @Override
-    public void set3DGridEnabled(boolean is3DGridEnabled)
+    public <T> void createSetting(String name, Class<T> settingType, Property<T> property)
     {
-        this.is3DGridEnabled.set(is3DGridEnabled);
-    }
-
-    @Override
-    public void setCompassEnabled(boolean compassEnabled)
-    {
-        this.compassEnabled.set(compassEnabled);
-    }
-
-    @Override
-    public void setVisibleCameraPosesEnabled(boolean visibleCameraPosesEnabled)
-    {
-        this.visibleCameraPose.set(visibleCameraPosesEnabled);
-    }
-
-    @Override
-    public void setVisibleSavedCameraPosesEnabled(boolean visibleSavedCameraPosesEnabled)
-    {
-        this.visibleSavedCameraPose.set(visibleSavedCameraPosesEnabled);
-    }
-
-    @Override
-    public void setShadowsEnabled(boolean shadowsEnabled)
-    {
-        this.shadows.set(shadowsEnabled);
-    }
-
-    @Override
-    public void setVisibleLightsEnabled(boolean visibleLightsEnabled)
-    {
-        this.visibleLights.set(visibleLightsEnabled);
-    }
-
-    @Override
-    public void setLightWidgetsEnabled(boolean lightWidgetsEnabled)
-    {
-        this.visibleLightWidgets.set(lightWidgetsEnabled);
-    }
-
-    @Override
-    public void setRenderingMode(RenderingMode renderingMode)
-    {
-        this.renderingMode.set(renderingMode);
-    }
-
-    @Override
-    public void setWeightMode(ShadingParameterMode weightMode)
-    {
-        this.weightMode.set(weightMode);
-    }
-
-    @Override
-    public void setHalfResolutionEnabled(boolean halfResolutionEnabled)
-    {
-        this.halfResolutionEnabled.set(halfResolutionEnabled);
-    }
-
-    @Override
-    public void setMultisamplingEnabled(boolean multisamplingEnabled)
-    {
-        this.multisamplingEnabled.set(multisamplingEnabled);
+        if (settingsMap.containsKey(name))
+        {
+            throw new IllegalArgumentException("The setting to be created already exists.");
+        }
+        else if (property == null)
+        {
+            throw new IllegalArgumentException("The parameter \"property\" may not be null.");
+        }
+        else
+        {
+            settingsMap.put(name, new TypedPropertyGenericImpl<>(settingType, property));
+        }
     }
 }

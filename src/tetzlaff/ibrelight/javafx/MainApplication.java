@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleFloatProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -21,9 +22,13 @@ import javafx.stage.Stage;
 import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.app.SynchronizedWindow;
 import tetzlaff.ibrelight.app.WindowSynchronization;
+import tetzlaff.ibrelight.core.RenderingMode;
 import tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController;
 import tetzlaff.ibrelight.javafx.controllers.scene.RootSceneController;
 import tetzlaff.ibrelight.javafx.controllers.scene.SceneModel;
+import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
+import tetzlaff.ibrelight.javafx.util.StaticUtilities;
+import tetzlaff.util.ShadingParameterMode;
 
 public class MainApplication extends Application
 {
@@ -152,6 +157,27 @@ public class MainApplication extends Application
         sceneStage.setMaxWidth(sceneStage.getWidth());
 
         primaryStage.requestFocus();
+
+        SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
+        settingsModel.createSetting("occlusion", true);
+        settingsModel.createSetting("fresnel", false);
+        settingsModel.createSetting("pbrGeometricAttenuation", false);
+        settingsModel.createSetting("relighting", true);
+        settingsModel.createSetting("shadows", false);
+        settingsModel.createSetting("visibleLights", true);
+        settingsModel.createSetting("visibleLightWidgets", false);
+        settingsModel.createSetting("visibleCameraPose", false);
+        settingsModel.createSetting("visibleSavedCameraPose", false);
+        settingsModel.createSetting("gamma", StaticUtilities.clamp(1, 5, new SimpleFloatProperty(2.2f)));
+        settingsModel.createSetting("weightExponent", StaticUtilities.clamp(1, 100, new SimpleFloatProperty(16.0f)));
+        settingsModel.createSetting("isotropyFactor", StaticUtilities.clamp(0, 1, new SimpleFloatProperty(0.0f)));
+        settingsModel.createSetting("occlusionBias", StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)));
+        settingsModel.createSetting("weightMode", ShadingParameterMode.PER_PIXEL);
+        settingsModel.createSetting("renderingMode", RenderingMode.IMAGE_BASED);
+        settingsModel.createSetting("is3DGridEnabled", false);
+        settingsModel.createSetting("compassEnabled", false);
+        settingsModel.createSetting("multisamplingEnabled", false);
+        settingsModel.createSetting("halfResolutionEnabled", false);
 
         SceneModel sceneModel = new SceneModel();
 

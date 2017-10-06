@@ -10,7 +10,6 @@ import tetzlaff.gl.Program;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.core.ReadonlySettingsModel;
 import tetzlaff.ibrelight.rendering.IBRResources;
 
 class MultiframeRenderRequest extends RenderRequestBase

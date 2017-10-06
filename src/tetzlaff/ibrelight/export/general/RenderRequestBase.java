@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 
 import tetzlaff.gl.*;
 import tetzlaff.ibrelight.core.IBRRequest;
-import tetzlaff.ibrelight.core.ReadonlySettingsModel;
 import tetzlaff.ibrelight.rendering.IBRResources;
 
 abstract class RenderRequestBase implements IBRRequest

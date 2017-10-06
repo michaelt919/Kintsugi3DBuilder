@@ -125,8 +125,8 @@ public class SettingsEnvironmentSceneController implements Initializable
     public void initialize(URL location, ResourceBundle resources)
     {
 
-        StaticUtilities.wrap(-180, 180, envRotationTextField);
-        StaticUtilities.bound(0, Double.MAX_VALUE, envIntensityTextField);
+        StaticUtilities.makeWrapAroundNumeric(-180, 180, envRotationTextField);
+        StaticUtilities.makeClampedNumeric(0, Double.MAX_VALUE, envIntensityTextField);
 
         envIntensitySlider.setLabelFormatter(new DoubleStringConverter()
         {
@@ -136,7 +136,7 @@ public class SettingsEnvironmentSceneController implements Initializable
                 return super.toString(Math.pow(10, value));
             }
         });
-        StaticUtilities.powerBind(envIntensitySlider.valueProperty(), trueEnvColorIntes);
+        StaticUtilities.bindLogScaleToLinear(envIntensitySlider.valueProperty(), trueEnvColorIntes);
 
         envImageFileChooser.setTitle("Pick file for environment map");
         bpImageFileChooser.setTitle("pick file for backplate");

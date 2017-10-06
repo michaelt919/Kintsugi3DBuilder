@@ -8,10 +8,14 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.interactive.InteractiveRenderableList;
-import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.core.IBRRenderable;
+import tetzlaff.ibrelight.core.IBRRenderableListModel;
+import tetzlaff.ibrelight.core.LoadingMonitor;
+import tetzlaff.ibrelight.core.ReadonlyLoadOptionsModel;
 import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.ReadonlyObjectModel;
+import tetzlaff.models.ReadonlySettingsModel;
 
 // TODO NEWUI replace this class with one that is JavaFX tailored or general-purpose (not Swing)
 public class ImageBasedRendererList<ContextType extends Context<ContextType>> 

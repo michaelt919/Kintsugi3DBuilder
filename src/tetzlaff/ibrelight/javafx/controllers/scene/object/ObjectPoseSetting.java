@@ -11,9 +11,9 @@ public class ObjectPoseSetting implements DOMConvertable
     private final DoubleProperty centerX = new SimpleDoubleProperty();
     private final DoubleProperty centerY = new SimpleDoubleProperty();
     private final DoubleProperty centerZ = new SimpleDoubleProperty();
-    private final DoubleProperty rotateY = StaticUtilities.wrap(-180, 180, new SimpleDoubleProperty());
-    private final DoubleProperty rotateX = StaticUtilities.bound(-90, 90, new SimpleDoubleProperty());
-    private final DoubleProperty rotateZ = StaticUtilities.wrap(-180.0, 180.0, new SimpleDoubleProperty());
+    private final DoubleProperty rotateY = StaticUtilities.wrapAround(-180, 180, new SimpleDoubleProperty());
+    private final DoubleProperty rotateX = StaticUtilities.clamp(-90, 90, new SimpleDoubleProperty());
+    private final DoubleProperty rotateZ = StaticUtilities.wrapAround(-180.0, 180.0, new SimpleDoubleProperty());
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
 

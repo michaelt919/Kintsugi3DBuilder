@@ -10,12 +10,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
+import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
-import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 
 public class LoaderController implements Initializable
 {
@@ -138,7 +135,8 @@ public class LoaderController implements Initializable
 
     private void close()
     {
-        StaticUtilities.naturalClose(root.getScene().getWindow());
+        Window window = root.getScene().getWindow();
+        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 
     private void setHomeDir(File home)

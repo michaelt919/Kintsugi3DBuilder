@@ -7,8 +7,12 @@ import tetzlaff.gl.Context;
 import tetzlaff.gl.Drawable;
 import tetzlaff.gl.Framebuffer;
 import tetzlaff.gl.Program;
-import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.core.IBRRenderable;
+import tetzlaff.ibrelight.core.IBRRequest;
+import tetzlaff.ibrelight.core.LoadingMonitor;
+import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.models.ReadonlySettingsModel;
 
 class MultiviewRetargetRenderRequest extends RenderRequestBase
 {
