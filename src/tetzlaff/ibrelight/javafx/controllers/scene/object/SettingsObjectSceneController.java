@@ -41,13 +41,13 @@ public class SettingsObjectSceneController implements Initializable
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
-        StaticUtilities.wrap(-180, 180, rotateYTextField);
-        StaticUtilities.bound(-90, 90, rotateXTextField);
-        StaticUtilities.wrap(-180, 180, rotateZTextField);
+        StaticUtilities.makeWrapAroundNumeric(-180, 180, rotateYTextField);
+        StaticUtilities.makeClampedNumeric(-90, 90, rotateXTextField);
+        StaticUtilities.makeWrapAroundNumeric(-180, 180, rotateZTextField);
 
-        StaticUtilities.cleanInput(xCenterTextField);
-        StaticUtilities.cleanInput(yCenterTextField);
-        StaticUtilities.cleanInput(zCenterTextField);
+        StaticUtilities.makeNumeric(xCenterTextField);
+        StaticUtilities.makeNumeric(yCenterTextField);
+        StaticUtilities.makeNumeric(zCenterTextField);
     }
 
     public final ChangeListener<ObjectPoseSetting> changeListener =

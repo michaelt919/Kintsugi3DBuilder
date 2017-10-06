@@ -11,10 +11,7 @@ import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibrelight.rendering.IBRResources;
-import tetzlaff.models.ReadonlyCameraModel;
-import tetzlaff.models.ReadonlyLightingModel;
-import tetzlaff.models.ReadonlyObjectModel;
-import tetzlaff.models.SceneViewport;
+import tetzlaff.models.*;
 
 public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {

@@ -20,14 +20,11 @@ import tetzlaff.gl.vecmath.*;
 import tetzlaff.ibrelight.app.old.IBRSettingsModelImpl;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.core.ReadonlySettingsModel;
+import tetzlaff.ibrelight.core.RenderingMode;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.IBRResources.Builder;
 import tetzlaff.ibrelight.util.KNNViewWeightGenerator;
-import tetzlaff.models.ReadonlyCameraModel;
-import tetzlaff.models.ReadonlyLightingModel;
-import tetzlaff.models.ReadonlyObjectModel;
-import tetzlaff.models.SceneViewport;
+import tetzlaff.models.*;
 import tetzlaff.util.EnvironmentMap;
 import tetzlaff.util.ShadingParameterMode;
 
@@ -528,9 +525,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void setupForDraw(Program<ContextType> program, Matrix4 view)
     {
-        this.resources.setupShaderProgram(program, this.settings.getRenderingMode());
+        this.resources.setupShaderProgram(program, this.settings.get("renderingMode", RenderingMode.class));
 
-        if (!this.settings.isRelightingEnabled() && this.settings.getWeightMode() == ShadingParameterMode.UNIFORM)
+        if (!this.settings.get("relightingEnabled", Boolean.class)
+            && this.settings.get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM)
         {
             program.setUniform("perPixelWeightsEnabled", false);
             if (weightBuffer != null)
@@ -546,20 +544,23 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         else
         {
             program.setUniform("perPixelWeightsEnabled", true);
-            program.setUniform("weightExponent", this.settings.getWeightExponent());
-            program.setUniform("isotropyFactor", this.settings.getIsotropyFactor());
-            program.setUniform("occlusionEnabled", this.resources.depthTextures != null && this.settings.isOcclusionEnabled());
-            program.setUniform("shadowTestEnabled", this.resources.shadowTextures != null && this.settings.isOcclusionEnabled());
-            program.setUniform("occlusionBias", this.settings.getOcclusionBias());
+            program.setUniform("weightExponent", this.settings.get("weightExponent", Number.class).floatValue());
+            program.setUniform("isotropyFactor", this.settings.get("isotropyFactor", Number.class).floatValue());
+            program.setUniform("occlusionEnabled",
+                this.resources.depthTextures != null && this.settings.get("occlusionEnabled", Boolean.class));
+            program.setUniform("shadowTestEnabled",
+                this.resources.shadowTextures != null && this.settings.get("occlusionEnabled", Boolean.class));
+            program.setUniform("occlusionBias", this.settings.get("occlusionBias", Boolean.class));
         }
 
-        program.setUniform("renderGamma", this.settings.getGamma());
+        float gamma = this.settings.get("gamma", Number.class).floatValue();
+        program.setUniform("renderGamma", gamma);
 
-        program.setUniform("imageBasedRenderingEnabled", this.settings.getRenderingMode().isImageBased());
-        program.setUniform("relightingEnabled", this.settings.isRelightingEnabled());
-        program.setUniform("pbrGeometricAttenuationEnabled", this.settings.isPBRGeometricAttenuationEnabled());
-        program.setUniform("fresnelEnabled", this.settings.isFresnelEnabled());
-        program.setUniform("shadowsEnabled", this.settings.areShadowsEnabled());
+        program.setUniform("imageBasedRenderingEnabled", this.settings.get("imageBasedRenderingEnabled", Boolean.class));
+        program.setUniform("relightingEnabled", this.settings.get("relightingEnabled", Boolean.class));
+        program.setUniform("pbrGeometricAttenuationEnabled", this.settings.get("pbrGeometricAttenuationEnabled", Boolean.class));
+        program.setUniform("fresnelEnabled", this.settings.get("fresnelEnabled", Boolean.class));
+        program.setUniform("shadowsEnabled", this.settings.get("shadowsEnabled", Boolean.class));
 
         program.setTexture("shadowMaps", shadowMaps);
 
@@ -585,9 +586,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         program.setUniform("ambientColor", lightingModel.getAmbientLightColor());
 
         this.clearColor = new Vector3(
-                (float)Math.pow(lightingModel.getAmbientLightColor().x, 1.0 / this.settings.getGamma()),
-                (float)Math.pow(lightingModel.getAmbientLightColor().y, 1.0 / this.settings.getGamma()),
-                (float)Math.pow(lightingModel.getAmbientLightColor().z, 1.0 / this.settings.getGamma()));
+                (float)Math.pow(lightingModel.getAmbientLightColor().x, 1.0 / gamma),
+                (float)Math.pow(lightingModel.getAmbientLightColor().y, 1.0 / gamma),
+                (float)Math.pow(lightingModel.getAmbientLightColor().z, 1.0 / gamma));
     }
 
     private void updateCentroidAndRadius()
@@ -832,7 +833,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         try
         {
-            if(this.settings.isMultisamplingEnabled())
+            if(this.settings.get("multisamplingEnabled", Boolean.class))
             {
                 context.getState().enableMultisampling();
             }
@@ -906,7 +907,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             int fboWidth = size.width;
             int fboHeight = size.height;
 
-            if (settings.isHalfResolutionEnabled())
+            if (settings.get("halfResolutionEnabled", Boolean.class))
             {
                 fboWidth /= 2;
                 fboHeight /= 2;
@@ -946,7 +947,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 }
 
                 // Draw grid
-                if (settings.is3DGridEnabled())
+                if (settings.get("is3DGridEnabled", Boolean.class))
                 {
                     this.solidProgram.setUniform("projection", this.getProjectionMatrix(size));
                     this.solidProgram.setUniform("model_view", partialViewMatrix.times(Matrix4.scale(this.getScale())));
@@ -959,7 +960,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
                 this.drawReferenceScene(this.program, offscreenFBO, view);
 
-                this.program.setUniform("imageBasedRenderingEnabled", this.settings.getRenderingMode().isImageBased());
+                this.program.setUniform("imageBasedRenderingEnabled", this.settings.get("renderingMode", RenderingMode.class).isImageBased());
                 setupForDraw(view); // in case anything changed when drawing the reference scene.
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
 
@@ -1034,7 +1035,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         FramebufferSize size = framebuffer.getSize();
 
-        if (this.settings.isRelightingEnabled() && this.settings.areVisibleLightsEnabled())
+        if (this.settings.get("relightingEnabled", Boolean.class) && this.settings.get("visibleLightsEnabled", Boolean.class))
         {
             this.context.getState().disableDepthWrite();
 
@@ -1044,7 +1045,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
                 this.context.getState().enableDepthTest();
 
-                if (settings.areLightWidgetsEnabled() && lightingModel.getLightWidgetModel(i).areWidgetsEnabled()
+                if (settings.get("lightWidgetsEnabled", Boolean.class) && lightingModel.getLightWidgetModel(i).areWidgetsEnabled()
                     && lightingModel.getLightWidgetModel(i).isCenterWidgetVisible())
                 {
                     this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Center"));
@@ -1091,7 +1092,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
                 }
 
-                if (settings.areLightWidgetsEnabled() && lightingModel.getLightWidgetModel(i).areWidgetsEnabled())
+                if (settings.get("lightWidgetsEnabled", Boolean.class) && lightingModel.getLightWidgetModel(i).areWidgetsEnabled())
                 {
                     this.solidProgram.setUniform("projection", this.getProjectionMatrix(size));
 

@@ -11,10 +11,10 @@ public class CameraSetting implements DOMConvertable
     private final DoubleProperty xCenter = new SimpleDoubleProperty();
     private final DoubleProperty yCenter = new SimpleDoubleProperty();
     private final DoubleProperty zCenter = new SimpleDoubleProperty();
-    private final DoubleProperty azimuth = StaticUtilities.wrap(-180, 180, new SimpleDoubleProperty());
-    private final DoubleProperty inclination = StaticUtilities.bound(-90, 90, new SimpleDoubleProperty());
+    private final DoubleProperty azimuth = StaticUtilities.wrapAround(-180, 180, new SimpleDoubleProperty());
+    private final DoubleProperty inclination = StaticUtilities.clamp(-90, 90, new SimpleDoubleProperty());
     private final DoubleProperty log10Distance = new SimpleDoubleProperty();
-    private final DoubleProperty twist = StaticUtilities.wrap(-180.0, 180.0, new SimpleDoubleProperty());
+    private final DoubleProperty twist = StaticUtilities.wrapAround(-180.0, 180.0, new SimpleDoubleProperty());
     private final DoubleProperty fov = new SimpleDoubleProperty(2 * Math.atan(0.36 /* "35 mm" film (actual 36mm horizontal), 50mm lens */));
     private final DoubleProperty focalLength = new SimpleDoubleProperty(50.0);
     private final BooleanProperty locked = new SimpleBooleanProperty();

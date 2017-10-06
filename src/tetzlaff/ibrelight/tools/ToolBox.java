@@ -10,7 +10,6 @@ import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.listeners.*;
-import tetzlaff.ibrelight.core.SettingsModel;
 import tetzlaff.ibrelight.tools.EnvironmentBrightnessTool.Type;
 import tetzlaff.models.*;
 import tetzlaff.util.KeyPress;
@@ -196,9 +195,9 @@ public final class ToolBox
         keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_SMALL, EnvironmentBrightnessTool.getBuilder(Type.UP_SMALL));
         keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_SMALL, EnvironmentBrightnessTool.getBuilder(Type.DOWN_SMALL));
         keyPressToolBuilders.put(KeyPressToolType.TOGGLE_LIGHTS,
-            ToggleSettingTool.getBuilder(model -> model.setVisibleLightsEnabled(!model.areVisibleLightsEnabled())));
+            ToggleSettingTool.getBuilder(model -> model.set("visibleLightsEnabled", !model.get("visibleLightsEnabled", Boolean.class))));
         keyPressToolBuilders.put(KeyPressToolType.TOGGLE_LIGHT_WIDGETS,
-            ToggleSettingTool.getBuilder(model -> model.setLightWidgetsEnabled(!model.areLightWidgetsEnabled())));
+            ToggleSettingTool.getBuilder(model -> model.set("lightWidgetsEnabled", !model.get("lightWidgetsEnabled", Boolean.class))));
 
         for (Entry<KeyPressToolType, ToolBuilder<? extends KeyPressTool>> entries : keyPressToolBuilders.entrySet())
         {

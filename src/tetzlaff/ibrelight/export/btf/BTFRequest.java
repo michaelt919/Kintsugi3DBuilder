@@ -14,7 +14,6 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.core.ReadonlySettingsModel;
 import tetzlaff.ibrelight.rendering.IBRResources;
 
 public class BTFRequest implements IBRRequest

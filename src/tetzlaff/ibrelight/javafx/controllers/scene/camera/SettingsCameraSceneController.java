@@ -54,16 +54,16 @@ public class SettingsCameraSceneController implements Initializable
     @Override
     public void initialize(URL location, ResourceBundle resources)
     {
-        StaticUtilities.wrap(-180, 180, azimuthTextField);
-        StaticUtilities.bound(-90, 90, inclinationTextField);
-        StaticUtilities.wrap(-180, 180, twistTextField);
+        StaticUtilities.makeWrapAroundNumeric(-180, 180, azimuthTextField);
+        StaticUtilities.makeClampedNumeric(-90, 90, inclinationTextField);
+        StaticUtilities.makeWrapAroundNumeric(-180, 180, twistTextField);
 
-        StaticUtilities.cleanInput(xCenterTextField);
-        StaticUtilities.cleanInput(yCenterTextField);
-        StaticUtilities.cleanInput(zCenterTextField);
+        StaticUtilities.makeNumeric(xCenterTextField);
+        StaticUtilities.makeNumeric(yCenterTextField);
+        StaticUtilities.makeNumeric(zCenterTextField);
 
-        StaticUtilities.cleanInput(fovTextField);
-        StaticUtilities.cleanInput(focalLengthTextField);
+        StaticUtilities.makeNumeric(fovTextField);
+        StaticUtilities.makeNumeric(focalLengthTextField);
 
         fov.addListener(change -> focalLength.setValue(18 / Math.tan(fov.getValue() * Math.PI / 360 /* convert and divide by 2 */)));
         focalLength.addListener(change -> fov.setValue(360 / Math.PI /* convert and multiply by 2) */ * Math.atan(18 / focalLength.getValue())));

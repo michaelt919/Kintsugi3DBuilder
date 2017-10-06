@@ -23,7 +23,6 @@ import tetzlaff.gl.window.ModifierKeysBuilder;
 import tetzlaff.ibrelight.core.IBRRequestQueue;
 import tetzlaff.ibrelight.core.LoadingModel;
 import tetzlaff.ibrelight.core.LoadingMonitor;
-import tetzlaff.ibrelight.core.SettingsModel;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.ibrelight.rendering.ImageBasedRendererList;
 import tetzlaff.ibrelight.tools.DragToolType;

@@ -9,8 +9,12 @@ import java.util.stream.IntStream;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.ibrelight.core.*;
+import tetzlaff.ibrelight.core.IBRRenderable;
+import tetzlaff.ibrelight.core.IBRRequest;
+import tetzlaff.ibrelight.core.LoadingMonitor;
+import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.models.ReadonlySettingsModel;
 import tetzlaff.util.CubicHermiteSpline;
 
 public class FidelityMetricRequest implements IBRRequest

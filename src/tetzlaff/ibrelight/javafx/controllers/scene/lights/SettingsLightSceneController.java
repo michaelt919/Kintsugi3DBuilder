@@ -51,17 +51,17 @@ public class SettingsLightSceneController implements Initializable
         distanceSlider.setLabelFormatter(pow10converter);
 
         intensitySlider.setLabelFormatter(pow10converter);
-        StaticUtilities.powerBind(intensitySlider.valueProperty(), trueIntensity);
+        StaticUtilities.bindLogScaleToLinear(intensitySlider.valueProperty(), trueIntensity);
 
-        StaticUtilities.cleanInput(xCenterTextField);
-        StaticUtilities.cleanInput(yCenterTextField);
-        StaticUtilities.cleanInput(zCenterTextField);
+        StaticUtilities.makeNumeric(xCenterTextField);
+        StaticUtilities.makeNumeric(yCenterTextField);
+        StaticUtilities.makeNumeric(zCenterTextField);
 
-        StaticUtilities.bound(0, Double.MAX_VALUE, distanceTextField);
-        StaticUtilities.bound(0, Double.MAX_VALUE, intensityTextField);
+        StaticUtilities.makeClampedNumeric(0, Double.MAX_VALUE, distanceTextField);
+        StaticUtilities.makeClampedNumeric(0, Double.MAX_VALUE, intensityTextField);
 
-        StaticUtilities.wrap(-180, 180, azimuthTextField);
-        StaticUtilities.bound(-90, 90, inclinationTextField);
+        StaticUtilities.makeWrapAroundNumeric(-180, 180, azimuthTextField);
+        StaticUtilities.makeClampedNumeric(-90, 90, inclinationTextField);
     }
 
     @FXML private VBox root;

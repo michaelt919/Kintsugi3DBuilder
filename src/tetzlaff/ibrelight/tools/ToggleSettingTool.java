@@ -2,7 +2,7 @@ package tetzlaff.ibrelight.tools;
 
 import java.util.function.Consumer;
 
-import tetzlaff.ibrelight.core.SettingsModel;
+import tetzlaff.models.SettingsModel;
 
 public class ToggleSettingTool implements KeyPressTool
 {

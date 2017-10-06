@@ -1,7 +1,7 @@
 package tetzlaff.ibrelight.app.old;
 
 import tetzlaff.ibrelight.core.RenderingMode;
-import tetzlaff.ibrelight.core.SettingsModel;
+import tetzlaff.models.SettingsModel;
 import tetzlaff.util.ShadingParameterMode;
 
 public class IBRSettingsModelImpl implements SettingsModel

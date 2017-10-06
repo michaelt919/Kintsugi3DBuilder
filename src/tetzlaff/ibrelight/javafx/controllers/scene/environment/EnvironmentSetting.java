@@ -21,8 +21,8 @@ public class EnvironmentSetting implements DOMConvertable
     private final Property<File> envImageFile = new SimpleObjectProperty<>();
     private final Property<File> bpImageFile = new SimpleObjectProperty<>();
 
-    private final DoubleProperty envColorIntensity = StaticUtilities.bound(0, Double.MAX_VALUE, new SimpleDoubleProperty());
-    private final DoubleProperty envRotation = StaticUtilities.wrap(-180, 180, new SimpleDoubleProperty());
+    private final DoubleProperty envColorIntensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty());
+    private final DoubleProperty envRotation = StaticUtilities.wrapAround(-180, 180, new SimpleDoubleProperty());
     private final Property<Color> envColor = new SimpleObjectProperty<>();
     private final Property<Color> bpColor = new SimpleObjectProperty<>();
     private final StringProperty name = new SimpleStringProperty();

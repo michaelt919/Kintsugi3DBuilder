@@ -3,7 +3,6 @@ package tetzlaff.ibrelight.javafx;//Created by alexk on 7/19/2017.
 import tetzlaff.ibrelight.core.IBRelightModels;
 import tetzlaff.ibrelight.core.LoadingModel;
 import tetzlaff.ibrelight.core.ReadonlyLoadOptionsModel;
-import tetzlaff.ibrelight.core.SettingsModel;
 import tetzlaff.ibrelight.javafx.multithread.*;
 import tetzlaff.models.*;
 import tetzlaff.models.impl.SceneViewportModelImpl;

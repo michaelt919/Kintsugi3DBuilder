@@ -12,10 +12,10 @@ public class LightInstanceSetting implements DOMConvertable
     private final DoubleProperty targetX = new SimpleDoubleProperty();
     private final DoubleProperty targetY = new SimpleDoubleProperty();
     private final DoubleProperty targetZ = new SimpleDoubleProperty();
-    private final DoubleProperty azimuth = StaticUtilities.wrap(-180, 180, new SimpleDoubleProperty());
-    private final DoubleProperty inclination = StaticUtilities.bound(-90, 90, new SimpleDoubleProperty());
+    private final DoubleProperty azimuth = StaticUtilities.wrapAround(-180, 180, new SimpleDoubleProperty());
+    private final DoubleProperty inclination = StaticUtilities.clamp(-90, 90, new SimpleDoubleProperty());
     private final DoubleProperty log10Distance = new SimpleDoubleProperty();
-    private final DoubleProperty intensity = StaticUtilities.bound(0, Double.MAX_VALUE, new SimpleDoubleProperty());
+    private final DoubleProperty intensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty());
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
     private final Property<LightType> lightType = new SimpleObjectProperty<>();

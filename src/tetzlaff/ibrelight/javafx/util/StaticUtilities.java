@@ -1,51 +1,53 @@
 package tetzlaff.ibrelight.javafx.util;//Created by alexk on 7/20/2017.
 
+import java.util.Objects;
+import java.util.regex.Pattern;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.Property;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 
 /*
 I general utilities class.
  */
 public final class StaticUtilities
 {
+    private static final Pattern NUMERIC_REGEX = Pattern.compile("-?(0|([1-9]\\d{0,7}))?(\\.\\d*)?");
+
     private StaticUtilities()
     {
     }
 
     //    this method takes in a double property, and prevents it from reaching outside of its bound.
-    public static <H extends Property<Number>> H wrap(double min, double max, H property)
+    public static <H extends Property<Number>> H wrapAround(double min, double max, H property)
     {
         property.addListener((observable, oldValue, newValue) ->
         {
             if (newValue != null && (newValue.doubleValue() < min || newValue.doubleValue() > max))
             {
-                property.setValue(wrap(min, max, newValue.doubleValue()));
+                property.setValue(wrapAround(min, max, newValue.doubleValue()));
             }
         });
         return property;
     }
 
-    public static <H extends Property<Number>> H bound(double min, double max, H property)
+    public static <H extends Property<Number>> H clamp(double min, double max, H property)
     {
         property.addListener((observable, oldValue, newValue) ->
         {
             if (newValue != null && (newValue.doubleValue() < min || newValue.doubleValue() > max))
             {
-                property.setValue(bound(min, max, newValue.doubleValue()));
+                property.setValue(clamp(min, max, newValue.doubleValue()));
             }
         });
         return property;
     }
 
-    private static final String DOUBLE_REG_EXP = "-?(0|([1-9]\\d{0,7}))?(\\.\\d*)?";
 
-    public static TextField wrap(double min, double max, TextField textField)
+    public static void makeWrapAroundNumeric(double min, double max, TextField textField)
     {
-        cleanInput(textField);
+        makeNumeric(textField);
         textField.focusedProperty().addListener((ob, o, n) ->
         {
             if (o && !n)
@@ -53,8 +55,8 @@ public final class StaticUtilities
                 try
                 {
                     double value = Double.valueOf(textField.getText());
-                    textField.setText(Double.toString(wrap(min, max, value)));
-//                    System.out.println("Set text to " + Double.toString(wrap(min, max, value)));
+                    textField.setText(Double.toString(wrapAround(min, max, value)));
+//                    System.out.println("Set text to " + Double.toString(wrapAround(min, max, value)));
                 }
                 catch (NumberFormatException nfe)
                 {
@@ -62,15 +64,11 @@ public final class StaticUtilities
                 }
             }
         });
-
-        return textField;
     }
 
-    public static TextField bound(double min, double max, TextField textField)
+    public static void makeClampedNumeric(double min, double max, TextField textField)
     {
-
-        cleanInput(textField);
-
+        makeNumeric(textField);
         textField.focusedProperty().addListener((ob, o, n) ->
         {
             if (o && !n)
@@ -78,8 +76,8 @@ public final class StaticUtilities
                 try
                 {
                     double value = Double.valueOf(textField.getText());
-                    textField.setText(Double.toString(bound(min, max, value)));
-//                    System.out.println("Set text to " + Double.toString(wrap(min, max, value)));
+                    textField.setText(Double.toString(clamp(min, max, value)));
+//                    System.out.println("Set text to " + Double.toString(wrapAround(min, max, value)));
                 }
                 catch (NumberFormatException nfe)
                 {
@@ -87,11 +85,9 @@ public final class StaticUtilities
                 }
             }
         });
-
-        return textField;
     }
 
-    public static TextField cleanInput(TextField textField)
+    public static void makeNumeric(TextField textField)
     {
         textField.setTextFormatter(new TextFormatter<Double>(change ->
         {
@@ -100,7 +96,7 @@ public final class StaticUtilities
                 return change;
             }
             String text = change.getControlNewText();
-            if (text.isEmpty() || "-".equals(text) || text.matches(DOUBLE_REG_EXP))
+            if (text.isEmpty() || Objects.equals("-", text) || NUMERIC_REGEX.matcher(text).matches())
             {
                 return change;
             }
@@ -109,10 +105,15 @@ public final class StaticUtilities
                 return null;
             }
         }));
-        return textField;
     }
 
-    private static double wrap(double min, double max, double value)
+    public static void bindLogScaleToLinear(DoubleProperty logScaleProperty, DoubleProperty linearScaleProperty)
+    {
+        logScaleProperty.addListener((b, o, n) -> linearScaleProperty.set(Math.pow(10, n.doubleValue())));
+        linearScaleProperty.addListener((b, o, n) -> logScaleProperty.set(Math.log10(n.doubleValue())));
+    }
+
+    private static double wrapAround(double min, double max, double value)
     {
         double diff = max - min;
         if (diff == 0)
@@ -133,7 +134,7 @@ public final class StaticUtilities
         return sum;
     }
 
-    private static double bound(double min, double max, double value)
+    private static double clamp(double min, double max, double value)
     {
         if (value < min)
         {
@@ -147,17 +148,5 @@ public final class StaticUtilities
         {
             return value;
         }
-    }
-
-    public static void powerBind(DoubleProperty d, DoubleProperty tenToD)
-    {
-
-        d.addListener((b, o, n) -> tenToD.set(Math.pow(10, n.doubleValue())));
-        tenToD.addListener((b, o, n) -> d.set(Math.log10(n.doubleValue())));
-    }
-
-    public static void naturalClose(Window window)
-    {
-        window.fireEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 }

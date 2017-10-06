@@ -287,25 +287,25 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
     }
 
     @Override
-    public ColorCubemapBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildColorCubemap(int faceSize) throws IOException
+    public ColorCubemapBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildColorCubemap(int faceSize)
     {
         return new ColorBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
     @Override
-    public DepthTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildDepthCubemap(int faceSize) throws IOException
+    public DepthTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildDepthCubemap(int faceSize)
     {
         return new DepthBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
     @Override
-    public StencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildStencilCubemap(int faceSize) throws IOException
+    public StencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildStencilCubemap(int faceSize)
     {
         return new StencilBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
     @Override
-    public DepthStencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildDepthStencilCubemap(int faceSize) throws IOException
+    public DepthStencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildDepthStencilCubemap(int faceSize)
     {
         return new DepthStencilBuilder(this, GL_TEXTURE_CUBE_MAP, faceSize);
     }

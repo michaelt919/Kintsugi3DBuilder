@@ -6,7 +6,6 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.ibrelight.app.old.IBRRequestUI;
-import tetzlaff.ibrelight.core.ReadonlySettingsModel;
 import tetzlaff.ibrelight.export.fidelity.FidelityMetricRequest;
 
 public class FidelityMetricRequestUI implements IBRRequestUI

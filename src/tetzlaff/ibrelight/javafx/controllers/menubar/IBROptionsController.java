@@ -51,10 +51,10 @@ public class IBROptionsController implements Initializable
         });
         weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
 
-        StaticUtilities.bound(1, 5, gammaTextField);
-        StaticUtilities.bound(1, 100, weightExponentTextField);
-        StaticUtilities.bound(0, 1, isotropyFactorTextField);
-        StaticUtilities.bound(0, 0.1, occlusionBiasTextField);
+        StaticUtilities.makeClampedNumeric(1, 5, gammaTextField);
+        StaticUtilities.makeClampedNumeric(1, 100, weightExponentTextField);
+        StaticUtilities.makeClampedNumeric(0, 1, isotropyFactorTextField);
+        StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
     }
 
     public void bind(SettingsModelImpl ibrSettingsUIImpl)
