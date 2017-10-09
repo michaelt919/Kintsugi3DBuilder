@@ -159,15 +159,15 @@ public class MainApplication extends Application
         primaryStage.requestFocus();
 
         SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
-        settingsModel.createObjectSetting("occlusionEnabled", true);
-        settingsModel.createObjectSetting("fresnelEnabled", false);
-        settingsModel.createObjectSetting("pbrGeometricAttenuationEnabled", false);
-        settingsModel.createObjectSetting("relightingEnabled", true);
-        settingsModel.createObjectSetting("shadowsEnabled", false);
-        settingsModel.createObjectSetting("visibleLightsEnabled", true);
-        settingsModel.createObjectSetting("lightWidgetsEnabled", false);
-        settingsModel.createObjectSetting("visibleCameraPosesEnabled", false);
-        settingsModel.createObjectSetting("visibleSavedCameraPosesEnabled", false);
+        settingsModel.createBooleanSetting("occlusionEnabled", true);
+        settingsModel.createBooleanSetting("fresnelEnabled", false);
+        settingsModel.createBooleanSetting("pbrGeometricAttenuationEnabled", false);
+        settingsModel.createBooleanSetting("relightingEnabled", true);
+        settingsModel.createBooleanSetting("shadowsEnabled", false);
+        settingsModel.createBooleanSetting("visibleLightsEnabled", true);
+        settingsModel.createBooleanSetting("lightWidgetsEnabled", false);
+        settingsModel.createBooleanSetting("visibleCameraPosesEnabled", false);
+        settingsModel.createBooleanSetting("visibleSavedCameraPosesEnabled", false);
         settingsModel.createSettingFromProperty("gamma", Number.class,
             StaticUtilities.clamp(1, 5, new SimpleFloatProperty(2.2f)));
         settingsModel.createSettingFromProperty("weightExponent", Number.class,
@@ -178,10 +178,11 @@ public class MainApplication extends Application
             StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)));
         settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL);
         settingsModel.createObjectSetting("renderingMode", RenderingMode.IMAGE_BASED);
-        settingsModel.createObjectSetting("is3DGridEnabled", false);
-        settingsModel.createObjectSetting("compassEnabled", false);
-        settingsModel.createObjectSetting("multisamplingEnabled", false);
-        settingsModel.createObjectSetting("halfResolutionEnabled", false);
+        settingsModel.createBooleanSetting("is3DGridEnabled", false);
+        settingsModel.createBooleanSetting("compassEnabled", false);
+        settingsModel.createBooleanSetting("multisamplingEnabled", false);
+        settingsModel.createBooleanSetting("halfResolutionEnabled", false);
+        settingsModel.createBooleanSetting("backplateEnabled", false);
 
         SceneModel sceneModel = new SceneModel();
 
@@ -191,6 +192,7 @@ public class MainApplication extends Application
             InternalModels.getInstance().getLightingModel(),
             InternalModels.getInstance().getEnvironmentModel(),
             InternalModels.getInstance().getObjectModel(),
+            InternalModels.getInstance().getSettingsModel(),
             sceneModel,
             MultithreadModels.getInstance().getSceneViewportModel());
 

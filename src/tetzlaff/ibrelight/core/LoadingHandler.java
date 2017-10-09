@@ -11,6 +11,7 @@ public interface LoadingHandler
         throws FileNotFoundException;
 
     void loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
+    void loadBackplate(File backplateFile) throws FileNotFoundException;
 
     void saveToVSETFile(File vsetFile) throws IOException;
 

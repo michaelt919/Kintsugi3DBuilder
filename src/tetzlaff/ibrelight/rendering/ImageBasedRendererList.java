@@ -1,8 +1,8 @@
 package tetzlaff.ibrelight.rendering;
 
 import java.io.*;
+import java.util.AbstractList;
 import java.util.Objects;
-import javax.swing.*;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
@@ -18,14 +18,14 @@ import tetzlaff.models.ReadonlyObjectModel;
 import tetzlaff.models.ReadonlySettingsModel;
 
 // TODO NEWUI replace this class with one that is JavaFX tailored or general-purpose (not Swing)
-public class ImageBasedRendererList<ContextType extends Context<ContextType>> 
-    extends AbstractListModel<IBRRenderable<ContextType>> implements IBRRenderableListModel<ContextType>
+public class ImageBasedRendererList<ContextType extends Context<ContextType>>
+    extends AbstractList<IBRRenderable<ContextType>>
+    implements IBRRenderableListModel<ContextType>
 {
-    private static final long serialVersionUID = 4167467314632694946L;
-
-    protected final ContextType context;
+    private final ContextType context;
 
     private Program<ContextType> program;
+
     private final InteractiveRenderableList<ContextType, IBRRenderable<ContextType>> renderableList;
     private int effectiveSize;
     private LoadingMonitor loadingMonitor;
@@ -116,7 +116,6 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                 {
                     loadingMonitor.loadingComplete();
                 }
-                fireIntervalAdded(this, renderableList.size() - 1, renderableList.size() - 1);
             }
         });
         renderableList.add(newItem);
@@ -178,19 +177,11 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                 {
                     loadingMonitor.loadingComplete();
                 }
-                fireIntervalAdded(this, renderableList.size() - 1, renderableList.size() - 1);
             }
         });
         renderableList.add(newItem);
     }
 
-    @Override
-    public int getSize()
-    {
-        return this.effectiveSize;
-    }
-
-    @Override
     public IBRRenderable<ContextType> getElementAt(int index)
     {
         return renderableList.get(index);
@@ -219,7 +210,6 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                 }
             }
         }
-        this.fireContentsChanged(this, -1, -1);
     }
 
     @Override
@@ -280,6 +270,12 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     }
 
     @Override
+    public void loadBackplate(File backplateFile) throws FileNotFoundException
+    {
+        this.getSelectedItem().loadBackplate(backplateFile);
+    }
+
+    @Override
     public void saveToVSETFile(File vsetFile) throws IOException
     {
         try (OutputStream stream = new FileOutputStream(vsetFile))
@@ -296,5 +292,29 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
             this.renderableList.remove(this.renderableList.getSelectedIndex());
             this.renderableList.setSelectedItem(null);
         }
+    }
+
+    @Override
+    public int size()
+    {
+        return this.effectiveSize;
+    }
+
+    @Override
+    public IBRRenderable<ContextType> get(int index)
+    {
+        return renderableList.get(index);
+    }
+
+    @Override
+    public int getSelectedIndex()
+    {
+        return renderableList.getSelectedIndex();
+    }
+
+    @Override
+    public void setSelectedIndex(int index)
+    {
+        renderableList.setSelectedIndex(index);
     }
 }

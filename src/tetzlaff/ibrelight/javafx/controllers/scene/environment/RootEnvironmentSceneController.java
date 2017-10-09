@@ -15,6 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import tetzlaff.ibrelight.javafx.controllers.scene.SceneModel;
 import tetzlaff.ibrelight.javafx.internal.EnvironmentModelImpl;
+import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
 
 public class RootEnvironmentSceneController
 {
@@ -33,13 +34,14 @@ public class RootEnvironmentSceneController
 
     private SceneModel sceneModel;
 
-    public void init(EnvironmentModelImpl environmentMapModel, SceneModel injectedSceneModel)
+    public void init(EnvironmentModelImpl environmentMapModel, SceneModel injectedSceneModel, SettingsModelImpl injectedSettingsModel)
     {
         this.sceneModel = injectedSceneModel;
 
         environmentListView.setItems(sceneModel.getEnvironmentList());
-
         environmentListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
+
+        settingsController.setSettingsModel(injectedSettingsModel);
 
         ObservableList<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
 

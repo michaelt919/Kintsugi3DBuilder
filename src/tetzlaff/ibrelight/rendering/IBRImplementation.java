@@ -420,12 +420,18 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 Cubemap<ContextType> newEnvironmentTexture =
                     context.buildColorCubemap(environmentData.getSide())
                         .setInternalFormat(ColorFormat.RGB32F)
-                        .loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
-                        .loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
-                        .loadFace(CubemapFace.POSITIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
-                        .loadFace(CubemapFace.NEGATIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
-                        .loadFace(CubemapFace.POSITIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
-                        .loadFace(CubemapFace.NEGATIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3, sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
+                        .loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                            sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
+                        .loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                            sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
+                        .loadFace(CubemapFace.POSITIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                            sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
+                        .loadFace(CubemapFace.NEGATIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                            sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
+                        .loadFace(CubemapFace.POSITIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                            sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
+                        .loadFace(CubemapFace.NEGATIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                            sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
                         .setMipmapsEnabled(true)
                         .setLinearFilteringEnabled(true)
                         .createTexture();
@@ -798,23 +804,23 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private NativeVectorBuffer generateViewWeights(Matrix4 targetView)
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
-                                new KNNViewWeightGenerator(4)
-                                    .generateWeights(resources,
-                                        new AbstractList<Integer>()
-                                        {
-                                            @Override
-                                            public Integer get(int index)
-                                            {
-                                                return index;
-                                            }
+                new KNNViewWeightGenerator(4)
+                    .generateWeights(resources,
+                        new AbstractList<Integer>()
+                        {
+                            @Override
+                            public Integer get(int index)
+                            {
+                                return index;
+                            }
 
-                                            @Override
-                                            public int size()
-                                            {
-                                                return resources.viewSet.getCameraPoseCount();
-                                            }
-                                        },
-                                        targetView);
+                            @Override
+                            public int size()
+                            {
+                                return resources.viewSet.getCameraPoseCount();
+                            }
+                        },
+                        targetView);
 
         return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
     }
@@ -888,23 +894,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
 
-            if (environmentMap != null && lightingModel.isEnvironmentMappingEnabled())
-            {
-                environmentBackgroundProgram.setUniform("objectID", this.sceneObjectIDLookup.get("EnvironmentMap"));
-                environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
-                environmentBackgroundProgram.setTexture("env", environmentMap);
-                environmentBackgroundProgram.setUniform("model_view", view);
-                environmentBackgroundProgram.setUniform("projection", projection);
-                environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix);
-                environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
-
-
-                environmentBackgroundProgram.setUniform("gamma",
-                        environmentMap.isInternalFormatCompressed() ||
-                        environmentMap.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT
-                        ? 1.0f : 2.2f);
-            }
-
             int fboWidth = size.width;
             int fboHeight = size.height;
 
@@ -928,10 +917,35 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 offscreenFBO.clearIntegerColorBuffer(1, 0, 0, 0, 0);
                 offscreenFBO.clearDepthBuffer();
 
-                if (environmentMap != null && lightingModel.isEnvironmentMappingEnabled())
+                if (backplateTexture != null && settingsModel.getBoolean("backplateEnabled"))
                 {
+                    // Second pass at full resolution to default framebuffer
+                    simpleTexDrawable.program().setTexture("tex", backplateTexture);
+
                     context.getState().disableDepthTest();
-                    this.environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+                    simpleTexDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+                    context.getState().enableDepthTest();
+
+                    // Clear ID buffer again.
+                    offscreenFBO.clearIntegerColorBuffer(1, 0, 0, 0, 0);
+                }
+                else if (environmentMap != null && lightingModel.isEnvironmentMappingEnabled())
+                {
+                    environmentBackgroundProgram.setUniform("objectID", this.sceneObjectIDLookup.get("EnvironmentMap"));
+                    environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
+                    environmentBackgroundProgram.setTexture("env", environmentMap);
+                    environmentBackgroundProgram.setUniform("model_view", view);
+                    environmentBackgroundProgram.setUniform("projection", projection);
+                    environmentBackgroundProgram.setUniform("envMapMatrix", envMapMatrix);
+                    environmentBackgroundProgram.setUniform("envMapIntensity", this.clearColor);
+
+                    environmentBackgroundProgram.setUniform("gamma",
+                        environmentMap.isInternalFormatCompressed() ||
+                            environmentMap.getInternalUncompressedColorFormat().dataType != DataType.FLOATING_POINT
+                            ? 1.0f : 2.2f);
+
+                    context.getState().disableDepthTest();
+                    environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
                     context.getState().enableDepthTest();
                 }
 
@@ -1613,7 +1627,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             {
                 // Use Michael Ludwig's code to convert to a cube map (supports either cross or panorama input)
                 this.newEnvironmentData = EnvironmentMap.createFromHDRFile(environmentFile);
-
 
 //                    // Uncomment to save the panorama as an image (i.e. for a figure in a paper)
 //                    float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
