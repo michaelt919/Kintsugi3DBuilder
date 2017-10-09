@@ -6,6 +6,7 @@ import java.util.List;
 
 import tetzlaff.gl.Context;
 import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.models.ReadonlySettingsModel;
 
 public interface FidelityEvaluationTechnique<ContextType extends Context<ContextType>> extends AutoCloseable
 {

@@ -9,6 +9,7 @@ import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.models.ReadonlySettingsModel;
 
 public class TextureFitFidelityTechnique<ContextType extends Context<ContextType>> implements FidelityEvaluationTechnique<ContextType>
 {

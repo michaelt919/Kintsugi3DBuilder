@@ -13,8 +13,8 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import tetzlaff.ibrelight.javafx.util.SafeLogScaleNumberStringConverter;
 import tetzlaff.ibrelight.javafx.util.SafeNumberStringConverter;
-import tetzlaff.ibrelight.javafx.util.SafeNumberStringConverterPow10;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 
 public class SettingsCameraSceneController implements Initializable
@@ -49,7 +49,7 @@ public class SettingsCameraSceneController implements Initializable
     private final DoubleProperty focalLength = new SimpleDoubleProperty();
 
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
-    private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);
+    private final SafeLogScaleNumberStringConverter n10 = new SafeLogScaleNumberStringConverter(1);
 
     @Override
     public void initialize(URL location, ResourceBundle resources)

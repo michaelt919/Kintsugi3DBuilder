@@ -6,7 +6,9 @@ import java.nio.file.Paths;
 
 import tetzlaff.gl.*;
 import tetzlaff.ibrelight.core.IBRRequest;
+import tetzlaff.ibrelight.core.RenderingMode;
 import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.models.ReadonlySettingsModel;
 
 abstract class RenderRequestBase implements IBRRequest
 {
@@ -121,17 +123,17 @@ abstract class RenderRequestBase implements IBRRequest
             .addShader(ShaderType.FRAGMENT, fragmentShader)
             .createProgram();
 
-        resources.setupShaderProgram(program, this.settingsModel.getRenderingMode());
+        resources.setupShaderProgram(program, this.settingsModel.get("renderingMode", RenderingMode.class));
 
-        program.setUniform("renderGamma", this.settingsModel.getGamma());
-        program.setUniform("weightExponent", this.settingsModel.getWeightExponent());
-        program.setUniform("isotropyFactor", this.settingsModel.getIsotropyFactor());
-        program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.isOcclusionEnabled());
-        program.setUniform("occlusionBias", this.settingsModel.getOcclusionBias());
-        program.setUniform("imageBasedRenderingEnabled", this.settingsModel.getRenderingMode().isImageBased());
-        program.setUniform("relightingEnabled", this.settingsModel.isRelightingEnabled());
-        program.setUniform("pbrGeometricAttenuationEnabled", this.settingsModel.isPBRGeometricAttenuationEnabled());
-        program.setUniform("fresnelEnabled", this.settingsModel.isFresnelEnabled());
+        program.setUniform("renderGamma", this.settingsModel.getFloat("gamma"));
+        program.setUniform("weightExponent", this.settingsModel.getFloat("weightExponent"));
+        program.setUniform("isotropyFactor", this.settingsModel.getFloat("isotropyFactor"));
+        program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
+        program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
+        program.setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
+        program.setUniform("relightingEnabled", this.settingsModel.getBoolean("relightingEnabled"));
+        program.setUniform("pbrGeometricAttenuationEnabled", this.settingsModel.getBoolean("pbrGeometricAttenuationEnabled"));
+        program.setUniform("fresnelEnabled", this.settingsModel.getBoolean("fresnelEnabled"));
 
         return program;
     }

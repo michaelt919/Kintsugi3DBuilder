@@ -14,6 +14,7 @@ import tetzlaff.gl.*;
 import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.rendering.IBRResources;
+import tetzlaff.models.ReadonlySettingsModel;
 import tetzlaff.util.NonNegativeLeastSquares;
 
 import static org.ejml.dense.row.CommonOps_DDRM.multTransA;
@@ -179,13 +180,13 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
             drawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
             resources.setupShaderProgram(projTexProgram, false);
-            if (!this.settings.isOcclusionEnabled())
+            if (!this.settings.getBoolean("occlusionEnabled"))
             {
                 projTexProgram.setUniform("occlusionEnabled", false);
             }
             else
             {
-                projTexProgram.setUniform("occlusionBias", this.settings.getOcclusionBias());
+                projTexProgram.setUniform("occlusionBias", this.settings.getFloat("occlusionBias"));
             }
 
             drawable.program().setUniform("lightIntensityCompensation", true);

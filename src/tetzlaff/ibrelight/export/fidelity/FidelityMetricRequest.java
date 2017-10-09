@@ -441,7 +441,7 @@ public class FidelityMetricRequest implements IBRRequest
                         for (int k = 0; k < slopes.length; k++)
                         {
                             double weight = 1 / Math.max(0.000001, 1.0 -
-                                Math.pow(Math.max(0.0, targetDirections[i].dot(viewDirections[k])), this.settings.getWeightExponent()))
+                                Math.pow(Math.max(0.0, targetDirections[i].dot(viewDirections[k])), this.settings.getFloat("weightExponent")))
                                 - 1.0;
 
                             if (peaks[k] > 0)

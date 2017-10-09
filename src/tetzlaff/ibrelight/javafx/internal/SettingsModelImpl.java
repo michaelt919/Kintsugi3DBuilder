@@ -119,10 +119,15 @@ public class SettingsModelImpl extends SettingsModelBase
         private final ObjectProperty<Object> base;
         private final Class<?> type;
 
-        TypedPropertyNonGenericImpl(Object initialValue)
+        TypedPropertyNonGenericImpl(Class<?> type, Object initialValue)
         {
             this.base = new SimpleObjectProperty<>(initialValue);
-            this.type = base.getClass();
+            this.type = type;
+        }
+
+        TypedPropertyNonGenericImpl(Object initialValue)
+        {
+            this(initialValue.getClass(), initialValue);
         }
 
         @Override
@@ -294,7 +299,17 @@ public class SettingsModelImpl extends SettingsModelBase
         };
     }
 
-    public <T> Property<T> getProperty(String name, Class<T> settingType)
+    public Property<Boolean> getBooleanProperty(String name)
+    {
+        return getObjectProperty(name, Boolean.class);
+    }
+
+    public Property<Number> getNumericProperty(String name)
+    {
+        return getObjectProperty(name, Number.class);
+    }
+
+    public <T> Property<T> getObjectProperty(String name, Class<T> settingType)
     {
         if (settingsMap.containsKey(name))
         {
@@ -308,7 +323,7 @@ public class SettingsModelImpl extends SettingsModelBase
         throw new NoSuchElementException("No setting called \"" + name + " exists of type " + settingType);
     }
 
-    public void createSetting(String name, Object initialValue)
+    private void createObjectSettingInternal(String name, Class<?> settingType, Object initialValue)
     {
         if(settingsMap.containsKey(name))
         {
@@ -316,11 +331,32 @@ public class SettingsModelImpl extends SettingsModelBase
         }
         else
         {
-            settingsMap.put(name, new TypedPropertyNonGenericImpl(initialValue));
+            settingsMap.put(name, new TypedPropertyNonGenericImpl(settingType, initialValue));
         }
     }
 
-    public <T> void createSetting(String name, Class<T> settingType, Property<T> property)
+    public void createBooleanSetting(String name, boolean initialValue)
+    {
+        createObjectSettingInternal(name, Boolean.class, initialValue);
+    }
+
+    public void createNumericSetting(String name, Number initialValue)
+    {
+
+        createObjectSettingInternal(name, Number.class, initialValue);
+    }
+
+    public void createObjectSetting(String name, Object initialValue)
+    {
+        createObjectSettingInternal(name, initialValue.getClass(), initialValue);
+    }
+
+    public <T> void createObjectSetting(String name, Class<T> settingType, T initialValue)
+    {
+        createObjectSettingInternal(name, initialValue.getClass(), initialValue);
+    }
+
+    public <T> void createSettingFromProperty(String name, Class<T> settingType, Property<T> property)
     {
         if (settingsMap.containsKey(name))
         {
