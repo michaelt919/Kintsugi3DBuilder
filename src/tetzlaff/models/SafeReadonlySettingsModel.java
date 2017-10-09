@@ -4,6 +4,11 @@ public interface SafeReadonlySettingsModel
 {
     <T> T get(String name, Class<T> settingType);
 
+    default Object getObject(String name)
+    {
+        return get(name, Object.class);
+    }
+
     default boolean getBoolean(String name)
     {
         return get(name, Boolean.class);

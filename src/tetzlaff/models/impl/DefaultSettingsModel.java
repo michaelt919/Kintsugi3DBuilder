@@ -2,18 +2,10 @@ package tetzlaff.models.impl;
 
 import java.util.Objects;
 
-import tetzlaff.models.ReadonlySettingsModel;
 import tetzlaff.models.SafeReadonlySettingsModel;
 
-public class SafeReadonlySettingsModelImpl implements SafeReadonlySettingsModel
+public class DefaultSettingsModel implements SafeReadonlySettingsModel
 {
-    private final ReadonlySettingsModel base;
-
-    public SafeReadonlySettingsModelImpl(ReadonlySettingsModel base)
-    {
-        this.base = base;
-    }
-
     public static Object getDefault(Class<?> settingType)
     {
         if (Objects.equals(settingType, Boolean.class))
@@ -44,6 +36,10 @@ public class SafeReadonlySettingsModelImpl implements SafeReadonlySettingsModel
         {
             return 0.0;
         }
+        else if (Objects.equals(settingType, Number.class))
+        {
+            return 0;
+        }
         else
         {
             return null;
@@ -53,13 +49,6 @@ public class SafeReadonlySettingsModelImpl implements SafeReadonlySettingsModel
     @Override
     public <T> T get(String name, Class<T> settingType)
     {
-        if (base.exists(name, settingType))
-        {
-            return base.get(name, settingType);
-        }
-        else
-        {
-            return (T)getDefault(settingType);
-        }
+        return (T)getDefault(settingType);
     }
 }

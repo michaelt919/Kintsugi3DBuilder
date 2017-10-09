@@ -10,7 +10,7 @@ public abstract class SettingsModelBase implements SettingsModel
     protected abstract void setUnchecked(String name, Object value);
 
     @Override
-    public Object get(String name)
+    public Object getObject(String name)
     {
         if (this.exists(name))
         {

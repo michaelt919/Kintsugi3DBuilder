@@ -17,7 +17,6 @@ import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.*;
-import tetzlaff.ibrelight.app.old.IBRSettingsModelImpl;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.core.RenderingMode;
@@ -25,6 +24,8 @@ import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.IBRResources.Builder;
 import tetzlaff.ibrelight.util.KNNViewWeightGenerator;
 import tetzlaff.models.*;
+import tetzlaff.models.impl.DefaultSettingsModel;
+import tetzlaff.models.impl.SafeSettingsModelWrapperFactory;
 import tetzlaff.util.EnvironmentMap;
 import tetzlaff.util.ShadingParameterMode;
 
@@ -35,7 +36,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Program<ContextType> shadowProgram;
     private LoadingMonitor loadingMonitor;
     private boolean suppressErrors = false;
-    private ReadonlySettingsModel settings;
+    private SafeReadonlySettingsModel settingsModel;
 
     private final Builder<ContextType> resourceBuilder;
     private IBRResources<ContextType> resources;
@@ -110,7 +111,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         this.clearColor = new Vector3(0.0f);
         this.multiTransformationModel = new ArrayList<>(1);
         this.multiTransformationModel.add(Matrix4.IDENTITY);
-        this.settings = new IBRSettingsModelImpl();
+        this.settingsModel = new DefaultSettingsModel();
 
         this.sceneObjectNameList = new ArrayList<>(64);
         this.sceneObjectIDLookup = new HashMap<>(64);
@@ -525,10 +526,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void setupForDraw(Program<ContextType> program, Matrix4 view)
     {
-        this.resources.setupShaderProgram(program, this.settings.get("renderingMode", RenderingMode.class));
+        this.resources.setupShaderProgram(program, this.settingsModel.get("renderingMode", RenderingMode.class));
 
-        if (!this.settings.get("relightingEnabled", Boolean.class)
-            && this.settings.get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM)
+        if (!this.settingsModel.getBoolean("relightingEnabled")
+            && this.settingsModel.get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM)
         {
             program.setUniform("perPixelWeightsEnabled", false);
             if (weightBuffer != null)
@@ -544,23 +545,23 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         else
         {
             program.setUniform("perPixelWeightsEnabled", true);
-            program.setUniform("weightExponent", this.settings.get("weightExponent", Number.class).floatValue());
-            program.setUniform("isotropyFactor", this.settings.get("isotropyFactor", Number.class).floatValue());
+            program.setUniform("weightExponent", this.settingsModel.getFloat("weightExponent"));
+            program.setUniform("isotropyFactor", this.settingsModel.getFloat("isotropyFactor"));
             program.setUniform("occlusionEnabled",
-                this.resources.depthTextures != null && this.settings.get("occlusionEnabled", Boolean.class));
+                this.resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
             program.setUniform("shadowTestEnabled",
-                this.resources.shadowTextures != null && this.settings.get("occlusionEnabled", Boolean.class));
-            program.setUniform("occlusionBias", this.settings.get("occlusionBias", Boolean.class));
+                this.resources.shadowTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
+            program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
         }
 
-        float gamma = this.settings.get("gamma", Number.class).floatValue();
+        float gamma = this.settingsModel.getFloat("gamma");
         program.setUniform("renderGamma", gamma);
 
-        program.setUniform("imageBasedRenderingEnabled", this.settings.get("imageBasedRenderingEnabled", Boolean.class));
-        program.setUniform("relightingEnabled", this.settings.get("relightingEnabled", Boolean.class));
-        program.setUniform("pbrGeometricAttenuationEnabled", this.settings.get("pbrGeometricAttenuationEnabled", Boolean.class));
-        program.setUniform("fresnelEnabled", this.settings.get("fresnelEnabled", Boolean.class));
-        program.setUniform("shadowsEnabled", this.settings.get("shadowsEnabled", Boolean.class));
+        program.setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
+        program.setUniform("relightingEnabled", this.settingsModel.getBoolean("relightingEnabled"));
+        program.setUniform("pbrGeometricAttenuationEnabled", this.settingsModel.getBoolean("pbrGeometricAttenuationEnabled"));
+        program.setUniform("fresnelEnabled", this.settingsModel.getBoolean("fresnelEnabled"));
+        program.setUniform("shadowsEnabled", this.settingsModel.getBoolean("shadowsEnabled"));
 
         program.setTexture("shadowMaps", shadowMaps);
 
@@ -833,7 +834,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         try
         {
-            if(this.settings.get("multisamplingEnabled", Boolean.class))
+            if(this.settingsModel.getBoolean("multisamplingEnabled"))
             {
                 context.getState().enableMultisampling();
             }
@@ -907,7 +908,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             int fboWidth = size.width;
             int fboHeight = size.height;
 
-            if (settings.get("halfResolutionEnabled", Boolean.class))
+            if (settingsModel.getBoolean("halfResolutionEnabled"))
             {
                 fboWidth /= 2;
                 fboHeight /= 2;
@@ -947,7 +948,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 }
 
                 // Draw grid
-                if (settings.get("is3DGridEnabled", Boolean.class))
+                if (settingsModel.getBoolean("is3DGridEnabled"))
                 {
                     this.solidProgram.setUniform("projection", this.getProjectionMatrix(size));
                     this.solidProgram.setUniform("model_view", partialViewMatrix.times(Matrix4.scale(this.getScale())));
@@ -960,7 +961,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
                 this.drawReferenceScene(this.program, offscreenFBO, view);
 
-                this.program.setUniform("imageBasedRenderingEnabled", this.settings.get("renderingMode", RenderingMode.class).isImageBased());
+                this.program.setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
                 setupForDraw(view); // in case anything changed when drawing the reference scene.
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
 
@@ -1035,7 +1036,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         FramebufferSize size = framebuffer.getSize();
 
-        if (this.settings.get("relightingEnabled", Boolean.class) && this.settings.get("visibleLightsEnabled", Boolean.class))
+        if (this.settingsModel.getBoolean("relightingEnabled") && this.settingsModel.getBoolean("visibleLightsEnabled"))
         {
             this.context.getState().disableDepthWrite();
 
@@ -1045,7 +1046,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
                 this.context.getState().enableDepthTest();
 
-                if (settings.get("lightWidgetsEnabled", Boolean.class) && lightingModel.getLightWidgetModel(i).areWidgetsEnabled()
+                if (settingsModel.getBoolean("lightWidgetsEnabled") && lightingModel.getLightWidgetModel(i).areWidgetsEnabled()
                     && lightingModel.getLightWidgetModel(i).isCenterWidgetVisible())
                 {
                     this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Center"));
@@ -1092,7 +1093,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
                 }
 
-                if (settings.get("lightWidgetsEnabled", Boolean.class) && lightingModel.getLightWidgetModel(i).areWidgetsEnabled())
+                if (settingsModel.getBoolean("lightWidgetsEnabled") && lightingModel.getLightWidgetModel(i).areWidgetsEnabled())
                 {
                     this.solidProgram.setUniform("projection", this.getProjectionMatrix(size));
 
@@ -1560,15 +1561,15 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     }
 
     @Override
-    public ReadonlySettingsModel getSettingsModel()
+    public SafeReadonlySettingsModel getSettingsModel()
     {
-        return this.settings;
+        return this.settingsModel;
     }
 
     @Override
-    public void setSettingsModel(ReadonlySettingsModel settings)
+    public void setSettingsModel(ReadonlySettingsModel settingsModel)
     {
-        this.settings = settings;
+        this.settingsModel = SafeSettingsModelWrapperFactory.getInstance().wrapUnsafeModel(settingsModel);
     }
 
     @Override
