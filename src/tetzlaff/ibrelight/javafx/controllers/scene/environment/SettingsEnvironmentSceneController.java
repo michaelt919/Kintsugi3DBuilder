@@ -18,6 +18,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.converter.DoubleStringConverter;
+import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
 import tetzlaff.ibrelight.javafx.util.SafeNumberStringConverter;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 
@@ -42,7 +43,7 @@ public class SettingsEnvironmentSceneController implements Initializable
     @FXML ImageView envImageView;
     @FXML ImageView bpImageView;
 
-    private final DoubleProperty trueEnvColorIntes = new SimpleDoubleProperty();
+    private final DoubleProperty trueEnvColorIntensity = new SimpleDoubleProperty();
 
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
 
@@ -52,6 +53,8 @@ public class SettingsEnvironmentSceneController implements Initializable
 
     private final FileChooser envImageFileChooser = new FileChooser();
     private final FileChooser bpImageFileChooser = new FileChooser();
+
+    private SettingsModelImpl settingsModel;
 
     ChangeListener<EnvironmentSetting> changeListener =
         (observable, oldValue, newValue) ->
@@ -72,6 +75,11 @@ public class SettingsEnvironmentSceneController implements Initializable
             }
         };
 
+    public void setSettingsModel(SettingsModelImpl injectedSettingsModel)
+    {
+        this.settingsModel = injectedSettingsModel;
+    }
+
     public void setDisabled(boolean value)
     {
         root.setDisable(value);
@@ -79,14 +87,12 @@ public class SettingsEnvironmentSceneController implements Initializable
 
     private void bind(EnvironmentSetting envSetting)
     {
-
         envUseImageCheckBox.selectedProperty().bindBidirectional(envSetting.envUseImageProperty());
         envUseColorCheckBox.selectedProperty().bindBidirectional(envSetting.envUseColorProperty());
-        bpUseImageCheckBox.selectedProperty().bindBidirectional(envSetting.bpUseImageProperty());
+        bpUseImageCheckBox.selectedProperty().bindBidirectional(settingsModel.getBooleanProperty("backplateEnabled"));
         bpUseColorCheckBox.selectedProperty().bindBidirectional(envSetting.bpUseColorProperty());
 
-//        evColorIntensitySlider.valueProperty().bindBidirectional(evSetting.evColorIntensityProperty());
-        trueEnvColorIntes.bindBidirectional(envSetting.envColorIntensityProperty());
+        trueEnvColorIntensity.bindBidirectional(envSetting.envColorIntensityProperty());
 
         envRotationSlider.valueProperty().bindBidirectional(envSetting.envRotationProperty());
         envIntensityTextField.textProperty().bindBidirectional(envSetting.envColorIntensityProperty(), n);
@@ -100,25 +106,23 @@ public class SettingsEnvironmentSceneController implements Initializable
         envUseImageCheckBox.disableProperty().bind(envSetting.firstEnvLoadedProperty().not());
     }
 
-    private void unbind(EnvironmentSetting evSetting)
+    private void unbind(EnvironmentSetting envSetting)
     {
+        envUseImageCheckBox.selectedProperty().unbindBidirectional(envSetting.envUseImageProperty());
+        envUseColorCheckBox.selectedProperty().unbindBidirectional(envSetting.envUseColorProperty());
+        bpUseImageCheckBox.selectedProperty().unbindBidirectional(settingsModel.getBooleanProperty("backplateEnabled"));
+        bpUseColorCheckBox.selectedProperty().unbindBidirectional(envSetting.bpUseColorProperty());
 
-        envUseImageCheckBox.selectedProperty().unbindBidirectional(evSetting.envUseImageProperty());
-        envUseColorCheckBox.selectedProperty().unbindBidirectional(evSetting.envUseColorProperty());
-        bpUseImageCheckBox.selectedProperty().unbindBidirectional(evSetting.bpUseImageProperty());
-        bpUseColorCheckBox.selectedProperty().unbindBidirectional(evSetting.bpUseColorProperty());
+        trueEnvColorIntensity.unbindBidirectional(envSetting.envColorIntensityProperty());
 
-//        evColorIntensitySlider.valueProperty().unbindBidirectional(evSetting.evColorIntensityProperty());
-        trueEnvColorIntes.unbindBidirectional(evSetting.envColorIntensityProperty());
+        envRotationSlider.valueProperty().unbindBidirectional(envSetting.envRotationProperty());
+        envIntensityTextField.textProperty().unbindBidirectional(envSetting.envColorIntensityProperty());
+        envRotationTextField.textProperty().unbindBidirectional(envSetting.envRotationProperty());
+        envColorPicker.valueProperty().unbindBidirectional(envSetting.envColorProperty());
+        bpColorPicker.valueProperty().unbindBidirectional(envSetting.bpColorProperty());
 
-        envRotationSlider.valueProperty().unbindBidirectional(evSetting.envRotationProperty());
-        envIntensityTextField.textProperty().unbindBidirectional(evSetting.envColorIntensityProperty());
-        envRotationTextField.textProperty().unbindBidirectional(evSetting.envRotationProperty());
-        envColorPicker.valueProperty().unbindBidirectional(evSetting.envColorProperty());
-        bpColorPicker.valueProperty().unbindBidirectional(evSetting.bpColorProperty());
-
-        localEnvImageFile.unbindBidirectional(evSetting.envImageFileProperty());
-        localBPImageFile.unbindBidirectional(evSetting.bpImageFileProperty());
+        localEnvImageFile.unbindBidirectional(envSetting.envImageFileProperty());
+        localBPImageFile.unbindBidirectional(envSetting.bpImageFileProperty());
     }
 
     @Override
@@ -136,7 +140,7 @@ public class SettingsEnvironmentSceneController implements Initializable
                 return super.toString(Math.pow(10, value));
             }
         });
-        StaticUtilities.bindLogScaleToLinear(envIntensitySlider.valueProperty(), trueEnvColorIntes);
+        StaticUtilities.bindLogScaleToLinear(envIntensitySlider.valueProperty(), trueEnvColorIntensity);
 
         envImageFileChooser.setTitle("Pick file for environment map");
         bpImageFileChooser.setTitle("pick file for backplate");
@@ -144,19 +148,10 @@ public class SettingsEnvironmentSceneController implements Initializable
         envImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         bpImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 
-        envImageFileChooser.getExtensionFilters().addAll(
-            new ExtensionFilter("HDR", "*.hdr"),
-            new ExtensionFilter("PNG", "*.png"),
-            new ExtensionFilter("JPG", "*.jpg"),
-            new ExtensionFilter("Other", "*.*")
-        );
+        envImageFileChooser.getExtensionFilters().add(new ExtensionFilter("Radiance HDR environment maps", "*.hdr"));
 
-        bpImageFileChooser.getExtensionFilters().addAll(
-            new ExtensionFilter("HDR", "*.hdr"),
-            new ExtensionFilter("PNG", "*.png"),
-            new ExtensionFilter("JPG", "*.jpg"),
-            new ExtensionFilter("Other", "*.*")
-        );
+        bpImageFileChooser.getExtensionFilters().add(
+            new ExtensionFilter("Supported image formats", "*.png", "*.jpeg", "*.jpg", "*.bmp", "*.gif"));
 
         localEnvImageFile.addListener((observable, oldValue, newValue) ->
         {

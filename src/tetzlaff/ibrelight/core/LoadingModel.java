@@ -55,6 +55,11 @@ public class LoadingModel
         this.handler.loadEnvironmentMap(environmentMapFile);
     }
 
+    public void loadBackplate(File backplateFile) throws FileNotFoundException
+    {
+        this.handler.loadBackplate(backplateFile);
+    }
+
     public void saveToVSETFile(File vsetFile) throws IOException
     {
         this.handler.saveToVSETFile(vsetFile);

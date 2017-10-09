@@ -1,18 +1,14 @@
 package tetzlaff.ibrelight.core;
 
-import javax.swing.*;
-
 import tetzlaff.gl.Context;
 import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.ReadonlyObjectModel;
 import tetzlaff.models.ReadonlySettingsModel;
+import tetzlaff.util.SelectableList;
 
-public interface IBRRenderableListModel<ContextType extends Context<ContextType>> extends ComboBoxModel<IBRRenderable<ContextType>>, LoadingHandler
+public interface IBRRenderableListModel<ContextType extends Context<ContextType>> extends LoadingHandler, SelectableList<IBRRenderable<ContextType>>
 {
-    @Override
-    IBRRenderable<ContextType> getSelectedItem();
-
     void setSettingsModel(ReadonlySettingsModel settingsModel);
     void setObjectModel(ReadonlyObjectModel objectModel);
     void setCameraModel(ReadonlyCameraModel cameraModel);

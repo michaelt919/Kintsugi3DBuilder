@@ -11,7 +11,6 @@ import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 
 public class EnvironmentSetting implements DOMConvertable
 {
-
     private final BooleanProperty envUseImage = new SimpleBooleanProperty();
     private final BooleanProperty envUseColor = new SimpleBooleanProperty();
     private final BooleanProperty bpUseImage = new SimpleBooleanProperty();

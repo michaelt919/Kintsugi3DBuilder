@@ -26,15 +26,15 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
 
     public InteractiveRenderableList()
     {
-        renderables = new ArrayList<>();
-        removedRenderables = new ArrayList<>();
-        addedRenderables = new ArrayList<>();
+        renderables = new ArrayList<>(8);
+        removedRenderables = new ArrayList<>(8);
+        addedRenderables = new ArrayList<>(8);
     }
 
-    public InteractiveRenderableList(List<RenderableType> renderables)
+    private InteractiveRenderableList(List<RenderableType> renderables)
     {
         this.renderables = renderables;
-        removedRenderables = new ArrayList<>();
+        removedRenderables = new ArrayList<>(8);
         addedRenderables = new ArrayList<>(renderables);
     }
 
@@ -60,8 +60,8 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
             d.initialize();
         }
 
-        removedRenderables = new ArrayList<>();
-        addedRenderables = new ArrayList<>();
+        removedRenderables = new ArrayList<>(8);
+        addedRenderables = new ArrayList<>(8);
 
         for (InteractiveRenderable<ContextType> d : renderables)
         {
@@ -97,7 +97,7 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
     @Override
     public RenderableType getSelectedItem()
     {
-        if (this.getSelectedIndex() < 0)
+        if (selectedIndex < 0)
         {
             return null;
         }
@@ -118,11 +118,11 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
     {
         if (item == null)
         {
-            this.setSelectedIndex(-1);
+            this.selectedIndex = -1;
         }
         else
         {
-            this.setSelectedIndex(renderables.indexOf(item));
+            this.selectedIndex = renderables.indexOf(item);
         }
     }
 
@@ -232,20 +232,20 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
     @Override
     public boolean removeAll(Collection<?> c)
     {
-        throw new UnsupportedOperationException("removeAll() is not supported by MultiRenderable.");
+        throw new UnsupportedOperationException("removeAll() is not supported by InteractiveRenderableList.");
     }
 
     @Override
     public boolean retainAll(Collection<?> c)
     {
-        throw new UnsupportedOperationException("retainAll() is not supported by MultiRenderable.");
+        throw new UnsupportedOperationException("retainAll() is not supported by InteractiveRenderableList.");
     }
 
     @Override
     public void clear()
     {
         this.removedRenderables = this.renderables;
-        this.renderables = new ArrayList<>();
+        this.renderables = new ArrayList<>(8);
     }
 
     @Override

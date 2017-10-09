@@ -85,17 +85,41 @@ public class EnvironmentModelImpl implements EnvironmentModel
         }
     };
 
+    private final ChangeListener<File> bpFileChange = (observable, oldFile, newFile) ->
+    {
+        if (newFile != null && !Objects.equals(oldFile, newFile))
+        {
+            new Thread(() ->
+            {
+                try
+                {
+                    System.out.println("Loading backplate file " + newFile.getName());
+                    MultithreadModels.getInstance().getLoadingModel().loadBackplate(newFile);
+                }
+                catch (FileNotFoundException e)
+                {
+                    e.printStackTrace();
+                }
+            })
+            .start();
+        }
+    };
+
     private final ChangeListener<EnvironmentSetting> settingChange = (observable, oldSetting, newSetting) ->
     {
         if (newSetting != null)
         {
             newSetting.envImageFileProperty().addListener(envFileChange);
             envFileChange.changed(null, oldSetting == null ? null : oldSetting.getEnvImageFile(), newSetting.getEnvImageFile());
+
+            newSetting.bpImageFileProperty().addListener(bpFileChange);
+            bpFileChange.changed(null, oldSetting == null ? null : oldSetting.getBpImageFile(), newSetting.getBpImageFile());
         }
 
         if (oldSetting != null)
         {
             oldSetting.envImageFileProperty().removeListener(envFileChange);
+            oldSetting.bpImageFileProperty().removeListener(bpFileChange);
         }
     };
 
