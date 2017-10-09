@@ -1,4 +1,4 @@
-package tetzlaff.mvc.old.controllers.impl;
+package tetzlaff.ibrelight.tools;
 
 import tetzlaff.gl.vecmath.Matrix3;
 import tetzlaff.gl.vecmath.Matrix4;
