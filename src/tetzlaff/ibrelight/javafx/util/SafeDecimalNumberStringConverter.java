@@ -3,12 +3,12 @@ package tetzlaff.ibrelight.javafx.util;//Created by alexk on 8/3/2017.
 import javafx.util.StringConverter;
 import javafx.util.converter.FloatStringConverter;
 
-public class SafeFloatStringConverter extends StringConverter<Number>
+public class SafeDecimalNumberStringConverter extends StringConverter<Number>
 {
     private final Float defaultValue;
     private final FloatStringConverter fsc = new FloatStringConverter();
 
-    public SafeFloatStringConverter(Float defaultValue)
+    public SafeDecimalNumberStringConverter(Float defaultValue)
     {
         this.defaultValue = defaultValue;
     }

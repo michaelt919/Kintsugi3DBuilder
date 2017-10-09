@@ -159,25 +159,29 @@ public class MainApplication extends Application
         primaryStage.requestFocus();
 
         SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
-        settingsModel.createSetting("occlusion", true);
-        settingsModel.createSetting("fresnel", false);
-        settingsModel.createSetting("pbrGeometricAttenuation", false);
-        settingsModel.createSetting("relighting", true);
-        settingsModel.createSetting("shadows", false);
-        settingsModel.createSetting("visibleLights", true);
-        settingsModel.createSetting("visibleLightWidgets", false);
-        settingsModel.createSetting("visibleCameraPose", false);
-        settingsModel.createSetting("visibleSavedCameraPose", false);
-        settingsModel.createSetting("gamma", StaticUtilities.clamp(1, 5, new SimpleFloatProperty(2.2f)));
-        settingsModel.createSetting("weightExponent", StaticUtilities.clamp(1, 100, new SimpleFloatProperty(16.0f)));
-        settingsModel.createSetting("isotropyFactor", StaticUtilities.clamp(0, 1, new SimpleFloatProperty(0.0f)));
-        settingsModel.createSetting("occlusionBias", StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)));
-        settingsModel.createSetting("weightMode", ShadingParameterMode.PER_PIXEL);
-        settingsModel.createSetting("renderingMode", RenderingMode.IMAGE_BASED);
-        settingsModel.createSetting("is3DGridEnabled", false);
-        settingsModel.createSetting("compassEnabled", false);
-        settingsModel.createSetting("multisamplingEnabled", false);
-        settingsModel.createSetting("halfResolutionEnabled", false);
+        settingsModel.createObjectSetting("occlusion", true);
+        settingsModel.createObjectSetting("fresnel", false);
+        settingsModel.createObjectSetting("pbrGeometricAttenuation", false);
+        settingsModel.createObjectSetting("relighting", true);
+        settingsModel.createObjectSetting("shadows", false);
+        settingsModel.createObjectSetting("visibleLights", true);
+        settingsModel.createObjectSetting("visibleLightWidgets", false);
+        settingsModel.createObjectSetting("visibleCameraPose", false);
+        settingsModel.createObjectSetting("visibleSavedCameraPose", false);
+        settingsModel.createSettingFromProperty("gamma", Number.class,
+            StaticUtilities.clamp(1, 5, new SimpleFloatProperty(2.2f)));
+        settingsModel.createSettingFromProperty("weightExponent", Number.class,
+            StaticUtilities.clamp(1, 100, new SimpleFloatProperty(16.0f)));
+        settingsModel.createSettingFromProperty("isotropyFactor", Number.class,
+            StaticUtilities.clamp(0, 1, new SimpleFloatProperty(0.0f)));
+        settingsModel.createSettingFromProperty("occlusionBias", Number.class,
+            StaticUtilities.clamp(0, 0.1, new SimpleFloatProperty(0.0025f)));
+        settingsModel.createObjectSetting("weightMode", ShadingParameterMode.PER_PIXEL);
+        settingsModel.createObjectSetting("renderingMode", RenderingMode.IMAGE_BASED);
+        settingsModel.createObjectSetting("is3DGridEnabled", false);
+        settingsModel.createObjectSetting("compassEnabled", false);
+        settingsModel.createObjectSetting("multisamplingEnabled", false);
+        settingsModel.createObjectSetting("halfResolutionEnabled", false);
 
         SceneModel sceneModel = new SceneModel();
 

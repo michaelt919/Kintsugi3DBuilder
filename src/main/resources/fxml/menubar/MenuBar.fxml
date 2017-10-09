@@ -16,7 +16,7 @@
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
       </Menu>
       <Menu mnemonicParsing="false" text="Viewport">
-         <CheckMenuItem fx:id="d3GridCheckMenuItem" mnemonicParsing="false" text="3D grid" />
+         <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" />
          <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass" />
          <CheckMenuItem fx:id="halfResolutionCheckMenuItem" mnemonicParsing="false" selected="true" text="Half resolution" />
          <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling" />

@@ -12,6 +12,7 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.ibrelight.util.PowerViewWeightGenerator;
 import tetzlaff.ibrelight.util.ViewWeightGenerator;
+import tetzlaff.models.ReadonlySettingsModel;
 import tetzlaff.util.ShadingParameterMode;
 
 public class IBRFidelityTechnique<ContextType extends Context<ContextType>> implements FidelityEvaluationTechnique<ContextType>
@@ -52,7 +53,7 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
         this.resources = resources;
         this.settings = settings;
 
-        this.viewWeightGenerator = new PowerViewWeightGenerator(settings.getWeightExponent());
+        this.viewWeightGenerator = new PowerViewWeightGenerator(settings.getFloat("weightExponent"));
 
         fidelityProgram = resources.context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
@@ -102,7 +103,7 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
         //NativeVectorBuffer viewWeightBuffer = null;
         UniformBuffer<ContextType> weightBuffer = null;
 
-        if (this.settings.getWeightMode() == ShadingParameterMode.UNIFORM)
+        if (this.settings.get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM)
         {
             drawable.program().setUniform("perPixelWeightsEnabled", false);
             float[] viewWeights = viewWeightGenerator.generateWeights(resources, activeViewIndexList, resources.viewSet.getCameraPose(targetViewIndex));
@@ -116,9 +117,9 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
         {
             drawable.program().setUniform("perPixelWeightsEnabled", true);
 
-            drawable.program().setUniform("weightExponent", this.settings.getWeightExponent());
-            drawable.program().setUniform("occlusionEnabled", resources.depthTextures != null && this.settings.isOcclusionEnabled());
-            drawable.program().setUniform("occlusionBias", this.settings.getOcclusionBias());
+            drawable.program().setUniform("weightExponent", this.settings.getFloat("weightExponent"));
+            drawable.program().setUniform("occlusionEnabled", resources.depthTextures != null && this.settings.getBoolean("occlusionEnabled"));
+            drawable.program().setUniform("occlusionBias", this.settings.getFloat("occlusionBias"));
         }
 
         drawable.program().setUniform("model_view", resources.viewSet.getCameraPose(targetViewIndex));

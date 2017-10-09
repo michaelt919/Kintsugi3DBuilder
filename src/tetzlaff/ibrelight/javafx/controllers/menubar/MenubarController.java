@@ -46,7 +46,7 @@ public class MenubarController
     @FXML private ToggleGroup renderGroup;
 
     //menu items
-    @FXML private CheckMenuItem d3GridCheckMenuItem;
+    @FXML private CheckMenuItem is3DGridCheckMenuItem;
     @FXML private CheckMenuItem compassCheckMenuItem;
     @FXML private CheckMenuItem halfResolutionCheckMenuItem;
     @FXML private CheckMenuItem multiSamplingCheckMenuItem;
@@ -193,29 +193,29 @@ public class MenubarController
                 switch ((String) n.getUserData())
                 {
                     case "None":
-                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.NONE);
+                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.NONE);
                         break;
                     case "Wireframe":
-                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.WIREFRAME);
+                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.WIREFRAME);
                         break;
                     case "Lambertian shaded":
-                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_SHADED);
+                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.LAMBERTIAN_SHADED);
                         break;
                     case "Specular shaded":
-                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.SPECULAR_SHADED);
+                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.SPECULAR_SHADED);
                         break;
                     case "Solid textured":
-                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.SOLID_TEXTURED);
+                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.SOLID_TEXTURED);
                         break;
                     case "Lambertian textured":
-                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.LAMBERTIAN_DIFFUSE_TEXTURED);
+                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.LAMBERTIAN_DIFFUSE_TEXTURED);
                         break;
                     case "Material shaded":
-                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.MATERIAL_SHADED);
+                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.MATERIAL_SHADED);
                         break;
                     case "Image-based rendering":
                     default:
-                        internalModels.getSettingsModel().renderingModeProperty().set(RenderingMode.IMAGE_BASED);
+                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.IMAGE_BASED);
                         break;
                 }
             }
@@ -225,20 +225,30 @@ public class MenubarController
     private void bindCheckMenuItems()
     {
         //value binding
-        d3GridCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().is3DGridEnabledProperty());
-        compassCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().compassEnabledProperty());
-        relightingCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().relightingProperty());
-        shadowsCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().shadowsProperty());
-        visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().visibleLightsProperty());
-        visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().visibleLightWidgetsProperty());
-        visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().visibleCameraPoseProperty());
-        visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().visibleSavedCameraPoseProperty());
-
-        phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().pbrGeometricAttenuationProperty());
-        fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().fresnelProperty());
-
-        halfResolutionCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().halfResolutionEnabledProperty());
-        multiSamplingCheckMenuItem.selectedProperty().bindBidirectional(internalModels.getSettingsModel().multisamplingEnabledProperty());
+        is3DGridCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("is3DGridEnabled"));
+        compassCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("compassEnabled"));
+        relightingCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("relightingEnabled"));
+        shadowsCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("shadowsEnabled"));
+        visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("visibleLightsEnabled"));
+        visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("visibleLightWidgetsEnabled"));
+        visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("visibleCameraPosesEnabled"));
+        visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("visibleSavedCameraPosesEnabled"));
+        phyMaskingCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("pbrGeometricAttenuationEnabled"));
+        fresnelEffectCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("fresnelEnabled"));
+        halfResolutionCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("halfResolutionEnabled"));
+        multiSamplingCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("multisamplingEnabled"));
     }
 
     //Menubar->File

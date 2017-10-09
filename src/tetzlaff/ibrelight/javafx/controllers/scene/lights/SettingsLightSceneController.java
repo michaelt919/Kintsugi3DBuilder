@@ -14,8 +14,8 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import tetzlaff.ibrelight.javafx.util.SafeLogScaleNumberStringConverter;
 import tetzlaff.ibrelight.javafx.util.SafeNumberStringConverter;
-import tetzlaff.ibrelight.javafx.util.SafeNumberStringConverterPow10;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 
 public class SettingsLightSceneController implements Initializable
@@ -85,7 +85,7 @@ public class SettingsLightSceneController implements Initializable
     private final DoubleProperty trueIntensity = new SimpleDoubleProperty(1);
 
     private final SafeNumberStringConverter n = new SafeNumberStringConverter(0);
-    private final SafeNumberStringConverterPow10 n10 = new SafeNumberStringConverterPow10(1);
+    private final SafeLogScaleNumberStringConverter n10 = new SafeLogScaleNumberStringConverter(1);
 
     public final ChangeListener<LightInstanceSetting> changeListener = (observable, oldValue, newValue) ->
     {

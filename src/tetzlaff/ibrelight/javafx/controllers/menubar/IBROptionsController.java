@@ -12,7 +12,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
-import tetzlaff.ibrelight.javafx.util.SafeFloatStringConverter;
+import tetzlaff.ibrelight.javafx.util.SafeDecimalNumberStringConverter;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
 
@@ -30,7 +30,7 @@ public class IBROptionsController implements Initializable
     @FXML private ChoiceBox<ShadingParameterMode> weightModeChoiceBox;
     @FXML private GridPane root;
 
-    private SettingsModelImpl settingCache;
+    private SettingsModelImpl settingsModel;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -57,46 +57,47 @@ public class IBROptionsController implements Initializable
         StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
     }
 
-    public void bind(SettingsModelImpl ibrSettingsUIImpl)
+    public void bind(SettingsModelImpl injectedSettingsModel)
     {
-        occlusionCheckBox.selectedProperty().bindBidirectional(ibrSettingsUIImpl.occlusionProperty());
-        weightModeChoiceBox.valueProperty().bindBidirectional(ibrSettingsUIImpl.weightModeProperty());
+        occlusionCheckBox.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("occlusionEnabled"));
+        weightModeChoiceBox.valueProperty().bindBidirectional(injectedSettingsModel.getObjectProperty("weightMode", ShadingParameterMode.class));
 
-        gammaSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.gammaProperty());
-        gammaTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.gammaProperty(), new SafeFloatStringConverter(2.2f));
+        gammaSlider.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("gamma"));
+        gammaTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("gamma"),
+            new SafeDecimalNumberStringConverter(2.2f));
 
-        weightExponentSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.weightExponentProperty());
-        weightExponentTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.weightExponentProperty(), new SafeFloatStringConverter(16f));
+        weightExponentSlider.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("weightExponent"));
+        weightExponentTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("weightExponent"),
+            new SafeDecimalNumberStringConverter(16.0f));
 
-        isotropyFactorSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.isotropyFactorProperty());
-        isotropyFactorTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.isotropyFactorProperty(), new SafeFloatStringConverter(0f));
+        isotropyFactorSlider.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("isotropyFactor"));
+        isotropyFactorTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("isotropyFactor"),
+            new SafeDecimalNumberStringConverter(0.0f));
 
-        occlusionBiasSlider.valueProperty().bindBidirectional(ibrSettingsUIImpl.occlusionBiasProperty());
-        occlusionBiasTextField.textProperty().bindBidirectional(ibrSettingsUIImpl.occlusionBiasProperty(), new SafeFloatStringConverter(0.0025f));
+        occlusionBiasSlider.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("occlusionBias"));
+        occlusionBiasTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("occlusionBias"),
+            new SafeDecimalNumberStringConverter(0.0025f));
 
-        settingCache = ibrSettingsUIImpl;
+        this.settingsModel = injectedSettingsModel;
         root.getScene().getWindow().setOnCloseRequest(param -> unbind());
     }
 
     private void unbind()
     {
+        occlusionCheckBox.selectedProperty().unbindBidirectional(settingsModel.getBooleanProperty("occlusionEnabled"));
 
-        System.out.println("unbind");
+        weightModeChoiceBox.valueProperty().unbindBidirectional(settingsModel.getObjectProperty("weightMode", ShadingParameterMode.class));
 
-        occlusionCheckBox.selectedProperty().unbindBidirectional(settingCache.occlusionProperty());
+        gammaSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("gamma"));
+        gammaTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("gamma"));
 
-        weightModeChoiceBox.valueProperty().unbindBidirectional(settingCache.weightModeProperty());
+        weightExponentSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("weightExponent"));
+        weightExponentTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("weightExponent"));
 
-        gammaSlider.valueProperty().unbindBidirectional(settingCache.gammaProperty());
-        gammaTextField.textProperty().unbindBidirectional(settingCache.gammaProperty());
+        isotropyFactorSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("isotropyFactor"));
+        isotropyFactorTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("isotropyFactor"));
 
-        weightExponentSlider.valueProperty().unbindBidirectional(settingCache.weightExponentProperty());
-        weightExponentTextField.textProperty().unbindBidirectional(settingCache.weightExponentProperty());
-
-        isotropyFactorSlider.valueProperty().unbindBidirectional(settingCache.isotropyFactorProperty());
-        isotropyFactorTextField.textProperty().unbindBidirectional(settingCache.occlusionBiasProperty());
-
-        occlusionBiasSlider.valueProperty().unbindBidirectional(settingCache.occlusionBiasProperty());
-        occlusionBiasTextField.textProperty().unbindBidirectional(settingCache.occlusionBiasProperty());
+        occlusionBiasSlider.valueProperty().unbindBidirectional(settingsModel.getNumericProperty("occlusionBias"));
+        occlusionBiasTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("occlusionBias"));
     }
 }
