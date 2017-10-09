@@ -236,7 +236,7 @@ public class MenubarController
         visibleLightsCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("visibleLightsEnabled"));
         visibleLightWidgetsCheckMenuItem.selectedProperty().bindBidirectional(
-            internalModels.getSettingsModel().getBooleanProperty("visibleLightWidgetsEnabled"));
+            internalModels.getSettingsModel().getBooleanProperty("lightWidgetsEnabled"));
         visibleCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("visibleCameraPosesEnabled"));
         visibleSavedCameraPoseCheckMenuItem.selectedProperty().bindBidirectional(

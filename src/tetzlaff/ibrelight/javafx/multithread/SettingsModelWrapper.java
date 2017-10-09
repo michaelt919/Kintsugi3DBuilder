@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javafx.beans.value.WritableValue;
 import tetzlaff.ibrelight.javafx.util.MultithreadValue;
 import tetzlaff.models.SettingsModel;
 import tetzlaff.models.impl.SettingsModelBase;
@@ -18,10 +19,10 @@ public class SettingsModelWrapper extends SettingsModelBase
         this.baseModel = baseModel;
     }
 
-    private MultithreadValue<Object> initSetting(String name)
+    private WritableValue<Object> initSetting(String name)
     {
         MultithreadValue<Object> multithreadValue =
-            MultithreadValue.createFromFunctions(() -> baseModel.get(name),  value -> baseModel.set(name, value));
+            MultithreadValue.createFromFunctions(() -> baseModel.getObject(name),  value -> baseModel.set(name, value));
         settings.put(name, multithreadValue);
         return multithreadValue;
     }
@@ -83,7 +84,7 @@ public class SettingsModelWrapper extends SettingsModelBase
             @Override
             public Object getValue()
             {
-                return get(settingName);
+                return getObject(settingName);
             }
         };
     }

@@ -106,6 +106,5 @@ public class LoadOptionsController implements Initializable
             w.bindBidirectional(loadSettingsCache.depthWidth);
             h.bindBidirectional(loadSettingsCache.depthHeight);
         }
-        System.out.println("unbind");
     }
 }

@@ -1,7 +1,6 @@
 package tetzlaff.models;
 
 import java.util.Iterator;
-import java.util.Objects;
 
 public interface ReadonlySettingsModel
 {
@@ -12,15 +11,20 @@ public interface ReadonlySettingsModel
         Object getValue();
     }
 
-    Object get(String name);
+    Object getObject(String name);
     <T> T get(String name, Class<T> settingType);
     Class<?> getType(String name);
     boolean exists(String name);
     Iterator<Setting> iterator();
 
-    default boolean exists(String name, Class<?> settingType)
+    default boolean existsForGet(String name, Class<?> settingType)
     {
-        return exists(name) && Objects.equals(settingType, getType(name));
+        return exists(name) && settingType.isAssignableFrom(getType(name));
+    }
+
+    default boolean existsForSet(String name, Class<?> settingType)
+    {
+        return exists(name) && getType(name).isAssignableFrom(settingType);
     }
 
     default boolean getBoolean(String name)

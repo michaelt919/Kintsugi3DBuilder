@@ -70,7 +70,7 @@ public class BTFRequest implements IBRRequest
             btfProgram.setUniform("isotropyFactor", this.settings.getFloat("isotropyFactor"));
             btfProgram.setUniform("occlusionEnabled", resources.depthTextures != null && this.settings.getBoolean("occlusionEnabled"));
             btfProgram.setUniform("occlusionBias", this.settings.getFloat("occlusionBias"));
-            btfProgram.setUniform("imageBasedRenderingEnabled", this.settings.getBoolean("imageBasedRenderingEnabled"));
+            btfProgram.setUniform("imageBasedRenderingEnabled", this.settings.get("renderingMode", RenderingMode.class).isImageBased());
             btfProgram.setUniform("relightingEnabled", this.settings.getBoolean("relightingEnabled"));
             btfProgram.setUniform("pbrGeometricAttenuationEnabled", this.settings.getBoolean("pbrGeometricAttenuationEnabled"));
             btfProgram.setUniform("fresnelEnabled", this.settings.getBoolean("fresnelEnabled"));

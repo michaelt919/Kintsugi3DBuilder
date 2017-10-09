@@ -159,15 +159,15 @@ public class MainApplication extends Application
         primaryStage.requestFocus();
 
         SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
-        settingsModel.createObjectSetting("occlusion", true);
-        settingsModel.createObjectSetting("fresnel", false);
-        settingsModel.createObjectSetting("pbrGeometricAttenuation", false);
-        settingsModel.createObjectSetting("relighting", true);
-        settingsModel.createObjectSetting("shadows", false);
-        settingsModel.createObjectSetting("visibleLights", true);
-        settingsModel.createObjectSetting("visibleLightWidgets", false);
-        settingsModel.createObjectSetting("visibleCameraPose", false);
-        settingsModel.createObjectSetting("visibleSavedCameraPose", false);
+        settingsModel.createObjectSetting("occlusionEnabled", true);
+        settingsModel.createObjectSetting("fresnelEnabled", false);
+        settingsModel.createObjectSetting("pbrGeometricAttenuationEnabled", false);
+        settingsModel.createObjectSetting("relightingEnabled", true);
+        settingsModel.createObjectSetting("shadowsEnabled", false);
+        settingsModel.createObjectSetting("visibleLightsEnabled", true);
+        settingsModel.createObjectSetting("lightWidgetsEnabled", false);
+        settingsModel.createObjectSetting("visibleCameraPosesEnabled", false);
+        settingsModel.createObjectSetting("visibleSavedCameraPosesEnabled", false);
         settingsModel.createSettingFromProperty("gamma", Number.class,
             StaticUtilities.clamp(1, 5, new SimpleFloatProperty(2.2f)));
         settingsModel.createSettingFromProperty("weightExponent", Number.class,

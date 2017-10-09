@@ -125,11 +125,6 @@ public class SettingsModelImpl extends SettingsModelBase
             this.type = type;
         }
 
-        TypedPropertyNonGenericImpl(Object initialValue)
-        {
-            this(initialValue.getClass(), initialValue);
-        }
-
         @Override
         public Class<?> getType()
         {
@@ -342,7 +337,6 @@ public class SettingsModelImpl extends SettingsModelBase
 
     public void createNumericSetting(String name, Number initialValue)
     {
-
         createObjectSettingInternal(name, Number.class, initialValue);
     }
 
@@ -353,7 +347,7 @@ public class SettingsModelImpl extends SettingsModelBase
 
     public <T> void createObjectSetting(String name, Class<T> settingType, T initialValue)
     {
-        createObjectSettingInternal(name, initialValue.getClass(), initialValue);
+        createObjectSettingInternal(name, settingType, initialValue);
     }
 
     public <T> void createSettingFromProperty(String name, Class<T> settingType, Property<T> property)
