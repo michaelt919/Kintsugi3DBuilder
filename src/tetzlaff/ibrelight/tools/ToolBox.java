@@ -10,7 +10,7 @@ import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
 import tetzlaff.gl.window.listeners.*;
-import tetzlaff.ibrelight.tools.EnvironmentBrightnessTool.Type;
+import tetzlaff.ibrelight.tools.MultiplierTool.Type;
 import tetzlaff.models.*;
 import tetzlaff.util.KeyPress;
 import tetzlaff.util.MouseMode;
@@ -190,14 +190,43 @@ public final class ToolBox
         }
 
         Map<KeyPressToolType, ToolBuilder<? extends KeyPressTool>> keyPressToolBuilders = new EnumMap<>(KeyPressToolType.class);
-        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_LARGE, EnvironmentBrightnessTool.getBuilder(Type.UP_LARGE));
-        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_LARGE, EnvironmentBrightnessTool.getBuilder(Type.DOWN_LARGE));
-        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_SMALL, EnvironmentBrightnessTool.getBuilder(Type.UP_SMALL));
-        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_SMALL, EnvironmentBrightnessTool.getBuilder(Type.DOWN_SMALL));
-        keyPressToolBuilders.put(KeyPressToolType.TOGGLE_LIGHTS,
-            ToggleSettingTool.getBuilder(model -> model.set("visibleLightsEnabled", !model.get("visibleLightsEnabled", Boolean.class))));
-        keyPressToolBuilders.put(KeyPressToolType.TOGGLE_LIGHT_WIDGETS,
-            ToggleSettingTool.getBuilder(model -> model.set("lightWidgetsEnabled", !model.get("lightWidgetsEnabled", Boolean.class))));
+
+        keyPressToolBuilders.put(KeyPressToolType.BACKGROUND_BRIGHTNESS_UP_LARGE, MultiplierTool.getBuilder(
+                environmentModel::getBackgroundIntensity,
+                intensity -> environmentModel.setBackgroundIntensity((float)intensity),
+                Type.UP_LARGE));
+        keyPressToolBuilders.put(KeyPressToolType.BACKGROUND_BRIGHTNESS_DOWN_LARGE, MultiplierTool.getBuilder(
+            environmentModel::getBackgroundIntensity,
+            intensity -> environmentModel.setBackgroundIntensity((float)intensity),
+            Type.DOWN_LARGE));
+        keyPressToolBuilders.put(KeyPressToolType.BACKGROUND_BRIGHTNESS_UP_SMALL, MultiplierTool.getBuilder(
+            environmentModel::getBackgroundIntensity,
+            intensity -> environmentModel.setBackgroundIntensity((float)intensity),
+            Type.UP_SMALL));
+        keyPressToolBuilders.put(KeyPressToolType.BACKGROUND_BRIGHTNESS_DOWN_SMALL, MultiplierTool.getBuilder(
+            environmentModel::getBackgroundIntensity,
+            intensity -> environmentModel.setBackgroundIntensity((float)intensity),
+            Type.DOWN_LARGE));
+
+        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_LARGE, MultiplierTool.getBuilder(
+            environmentModel::getEnvironmentIntensity,
+            intensity -> environmentModel.setEnvironmentIntensity((float)intensity),
+            Type.UP_LARGE));
+        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_LARGE, MultiplierTool.getBuilder(
+            environmentModel::getEnvironmentIntensity,
+            intensity -> environmentModel.setEnvironmentIntensity((float)intensity),
+            Type.DOWN_LARGE));
+        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_SMALL, MultiplierTool.getBuilder(
+            environmentModel::getEnvironmentIntensity,
+            intensity -> environmentModel.setEnvironmentIntensity((float)intensity),
+            Type.UP_SMALL));
+        keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_DOWN_SMALL, MultiplierTool.getBuilder(
+            environmentModel::getEnvironmentIntensity,
+            intensity -> environmentModel.setEnvironmentIntensity((float)intensity),
+            Type.DOWN_SMALL));
+
+        keyPressToolBuilders.put(KeyPressToolType.TOGGLE_LIGHTS, ToggleSettingTool.getBuilder("visibleLightsEnabled"));
+        keyPressToolBuilders.put(KeyPressToolType.TOGGLE_LIGHT_WIDGETS, ToggleSettingTool.getBuilder("lightWidgetsEnabled"));
 
         for (Entry<KeyPressToolType, ToolBuilder<? extends KeyPressTool>> entries : keyPressToolBuilders.entrySet())
         {

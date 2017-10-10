@@ -20,31 +20,16 @@ public class EnvironmentSetting implements DOMConvertable
     private final Property<File> envImageFile = new SimpleObjectProperty<>();
     private final Property<File> bpImageFile = new SimpleObjectProperty<>();
 
-    private final DoubleProperty envColorIntensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty());
+    private final DoubleProperty envColorIntensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty(1.0));
+    private final DoubleProperty backgroundIntensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty(1.0));
     private final DoubleProperty envRotation = StaticUtilities.wrapAround(-180, 180, new SimpleDoubleProperty());
-    private final Property<Color> envColor = new SimpleObjectProperty<>();
-    private final Property<Color> bpColor = new SimpleObjectProperty<>();
-    private final StringProperty name = new SimpleStringProperty();
+    private final Property<Color> envColor = new SimpleObjectProperty<>(Color.WHITE);
+    private final Property<Color> bpColor = new SimpleObjectProperty<>(Color.WHITE);
+    private final StringProperty name = new SimpleStringProperty("New Environment Map");
     private final BooleanProperty locked = new SimpleBooleanProperty();
-    private final BooleanProperty firstEnvLoaded = new SimpleBooleanProperty();
+    private final BooleanProperty envLoaded = new SimpleBooleanProperty();
+    private final BooleanProperty bpLoaded = new SimpleBooleanProperty();
 
-    public EnvironmentSetting(Boolean envUseImage, Boolean envUseColor, Boolean bpUseImage, Boolean bpUseColor, Boolean imagePathsRelative, File envImageFile, File bpImageFile, Double envColorIntensity, Double envRotation, Color envColor, Color bpColor, String name, Boolean locked, Boolean firstEnvLoaded)
-    {
-        this.envUseImage.setValue(envUseImage);
-        this.envUseColor.setValue(envUseColor);
-        this.bpUseImage.setValue(bpUseImage);
-        this.bpUseColor.setValue(bpUseColor);
-        this.imagePathsRelative.setValue(imagePathsRelative);
-        this.envImageFile.setValue(envImageFile);
-        this.bpImageFile.setValue(bpImageFile);
-        this.envColorIntensity.setValue(envColorIntensity);
-        this.envRotation.setValue(envRotation);
-        this.envColor.setValue(envColor);
-        this.bpColor.setValue(bpColor);
-        this.name.setValue(name);
-        this.locked.setValue(locked);
-        this.firstEnvLoaded.setValue(firstEnvLoaded);
-    }
 
     @Override
     public Element toDOMElement(Document document)
@@ -63,36 +48,38 @@ public class EnvironmentSetting implements DOMConvertable
         {
             element.setAttribute("bpImageFile", bpImageFile.getValue().getPath());
         }
+        element.setAttribute("backgroundIntensity", backgroundIntensity.getValue().toString());
         element.setAttribute("envColorIntensity", envColorIntensity.getValue().toString());
         element.setAttribute("envRotation", envRotation.getValue().toString());
         element.setAttribute("envColor", envColor.getValue().toString());
         element.setAttribute("bpColor", bpColor.getValue().toString());
         element.setAttribute("name", name.getValue());
         element.setAttribute("locked", locked.getValue().toString());
-        element.setAttribute("firstEnvLoaded", firstEnvLoaded.getValue().toString());
+        element.setAttribute("envLoaded", envLoaded.getValue().toString());
+        element.setAttribute("bpLoaded", bpLoaded.getValue().toString());
         return element;
     }
 
     public static EnvironmentSetting fromDOMElement(Element element)
     {
-        return new EnvironmentSetting(
-            Boolean.valueOf(element.getAttribute("envUseImage")),
-            Boolean.valueOf(element.getAttribute("envUseColor")),
-            Boolean.valueOf(element.getAttribute("bpUseImage")),
-            Boolean.valueOf(element.getAttribute("bpUseColor")),
-            Boolean.valueOf(element.getAttribute("imagePathsRelative")),
-
-            new File(element.getAttribute("envImageFile")),
-            new File(element.getAttribute("bpImageFile")),
-
-            Double.valueOf(element.getAttribute("envColorIntensity")),
-            Double.valueOf(element.getAttribute("envRotation")),
-            Color.valueOf(element.getAttribute("envColor")),
-            Color.valueOf(element.getAttribute("bpColor")),
-            String.valueOf(element.getAttribute("name")),
-            Boolean.valueOf(element.getAttribute("locked")),
-            Boolean.valueOf(element.getAttribute("firstEnvLoaded"))
-        );
+        EnvironmentSetting newEnvironment = new EnvironmentSetting();
+        newEnvironment.envUseImage.setValue(Boolean.valueOf(element.getAttribute("envUseImage")));
+        newEnvironment.envUseColor.setValue(Boolean.valueOf(element.getAttribute("envUseColor")));
+        newEnvironment.bpUseImage.setValue(Boolean.valueOf(element.getAttribute("bpUseImage")));
+        newEnvironment.bpUseColor.setValue(Boolean.valueOf(element.getAttribute("bpUseColor")));
+        newEnvironment.imagePathsRelative.setValue(Boolean.valueOf(element.getAttribute("imagePathsRelative")));
+        newEnvironment.envImageFile.setValue(new File(element.getAttribute("envImageFile")));
+        newEnvironment.bpImageFile.setValue(new File(element.getAttribute("bpImageFile")));
+        newEnvironment.backgroundIntensity.setValue(Double.valueOf(element.getAttribute("backgroundIntensity")));
+        newEnvironment.envColorIntensity.setValue(Double.valueOf(element.getAttribute("envColorIntensity")));
+        newEnvironment.envRotation.setValue(Double.valueOf(element.getAttribute("envRotation")));
+        newEnvironment.envColor.setValue(Color.valueOf(element.getAttribute("envColor")));
+        newEnvironment.bpColor.setValue(Color.valueOf(element.getAttribute("bpColor")));
+        newEnvironment.name.setValue(String.valueOf(element.getAttribute("name")));
+        newEnvironment.locked.setValue(Boolean.valueOf(element.getAttribute("locked")));
+        newEnvironment.envLoaded.setValue(Boolean.valueOf(element.getAttribute("envLoaded")));
+        newEnvironment.bpLoaded.setValue(Boolean.valueOf(element.getAttribute("bpLoaded")));
+        return newEnvironment;
     }
 
     @Override
@@ -110,22 +97,24 @@ public class EnvironmentSetting implements DOMConvertable
 
     public EnvironmentSetting duplicate()
     {
-        return new EnvironmentSetting(
-            envUseImage.getValue(),
-            envUseColor.getValue(),
-            bpUseImage.getValue(),
-            bpUseColor.getValue(),
-            imagePathsRelative.getValue(),
-            envImageFile.getValue(),
-            bpImageFile.getValue(),
-            envColorIntensity.getValue(),
-            envRotation.getValue(),
-            envColor.getValue(),
-            bpColor.getValue(),
-            name.getValue() + " copy",
-            locked.getValue(),
-            firstEnvLoaded.getValue()
-        );
+        EnvironmentSetting newEnvironment = new EnvironmentSetting();
+        newEnvironment.envUseImage.setValue(envUseImage.getValue());
+        newEnvironment.envUseColor.setValue(envUseColor.getValue());
+        newEnvironment.bpUseImage.setValue(bpUseImage.getValue());
+        newEnvironment.bpUseColor.setValue(bpUseColor.getValue());
+        newEnvironment.imagePathsRelative.setValue(imagePathsRelative.getValue());
+        newEnvironment.envImageFile.setValue(envImageFile.getValue());
+        newEnvironment.bpImageFile.setValue(bpImageFile.getValue());
+        newEnvironment.backgroundIntensity.setValue(backgroundIntensity.getValue());
+        newEnvironment.envColorIntensity.setValue(envColorIntensity.getValue());
+        newEnvironment.envRotation.setValue(envRotation.getValue());
+        newEnvironment.envColor.setValue(envColor.getValue());
+        newEnvironment.bpColor.setValue(bpColor.getValue());
+        newEnvironment.name.setValue(name.getValue() + " copy");
+        newEnvironment.locked.setValue(locked.getValue());
+        newEnvironment.envLoaded.setValue(envLoaded.getValue());
+        newEnvironment.bpLoaded.setValue(bpLoaded.getValue());
+        return newEnvironment;
     }
 
     public boolean isEnvUseImageEnabled()
@@ -158,7 +147,7 @@ public class EnvironmentSetting implements DOMConvertable
         this.envUseColor.set(envUseColor);
     }
 
-    public boolean isBpUseImageEnabled()
+    public boolean isBPUseImageEnabled()
     {
         return bpUseImage.get();
     }
@@ -173,7 +162,7 @@ public class EnvironmentSetting implements DOMConvertable
         this.bpUseImage.set(bpUseImage);
     }
 
-    public boolean isBpUseColorEnabled()
+    public boolean isBPUseColorEnabled()
     {
         return bpUseColor.get();
     }
@@ -231,6 +220,21 @@ public class EnvironmentSetting implements DOMConvertable
     public void setBpImageFile(File bpImageFile)
     {
         this.bpImageFile.setValue(bpImageFile);
+    }
+
+    public double getBackgroundIntensity()
+    {
+        return backgroundIntensity.get();
+    }
+
+    public DoubleProperty backgroundIntensityProperty()
+    {
+        return backgroundIntensity;
+    }
+
+    public void setBackgroundIntensity(double backgroundIntensity)
+    {
+        this.backgroundIntensity.set(backgroundIntensity);
     }
 
     public double getEnvIntensity()
@@ -323,18 +327,33 @@ public class EnvironmentSetting implements DOMConvertable
         this.locked.set(locked);
     }
 
-    public boolean isFirstEnvLoaded()
+    public boolean isEnvLoaded()
     {
-        return firstEnvLoaded.get();
+        return envLoaded.get();
     }
 
-    public BooleanProperty firstEnvLoadedProperty()
+    public BooleanProperty envLoadedProperty()
     {
-        return firstEnvLoaded;
+        return envLoaded;
     }
 
-    public void setFirstEnvLoaded(boolean firstEnvLoaded)
+    public void setEnvLoaded(boolean envLoaded)
     {
-        this.firstEnvLoaded.set(firstEnvLoaded);
+        this.envLoaded.set(envLoaded);
+    }
+
+    public boolean isBPLoaded()
+    {
+        return bpLoaded.get();
+    }
+
+    public BooleanProperty bpLoadedProperty()
+    {
+        return bpLoaded;
+    }
+
+    public void setBPLoaded(boolean bpLoaded)
+    {
+        this.bpLoaded.set(bpLoaded);
     }
 }

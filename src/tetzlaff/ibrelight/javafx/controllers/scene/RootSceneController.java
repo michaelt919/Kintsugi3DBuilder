@@ -24,7 +24,7 @@ public class RootSceneController
     {
         cameraController.init(cameraModel, sceneModel);
         lightsController.init(lightingModel, sceneModel, sceneViewportModel);
-        environmentMapController.init(environmentMapModel, sceneModel, settingsModel);
+        environmentMapController.init(environmentMapModel, sceneModel);
         objectPosesController.init(objectModel, sceneModel);
     }
 }

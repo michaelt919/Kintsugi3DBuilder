@@ -182,7 +182,6 @@ public class MainApplication extends Application
         settingsModel.createBooleanSetting("compassEnabled", false);
         settingsModel.createBooleanSetting("multisamplingEnabled", false);
         settingsModel.createBooleanSetting("halfResolutionEnabled", false);
-        settingsModel.createBooleanSetting("backplateEnabled", false);
 
         SceneModel sceneModel = new SceneModel();
 

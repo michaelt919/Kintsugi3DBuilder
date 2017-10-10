@@ -8,6 +8,8 @@ public interface LightingModel extends ReadonlyLightingModel
     @Override
     LightWidgetModel getLightWidgetModel(int index);
 
+    void setLightWidgetsEthereal(boolean lightWidgetsEthereal);
+
     void setAmbientLightColor(Vector3 ambientLightColor);
     void setEnvironmentMappingEnabled(boolean enabled);
     void setEnvironmentMapMatrix(Matrix4 environmentMapMatrix);
@@ -15,5 +17,7 @@ public interface LightingModel extends ReadonlyLightingModel
     void setLightColor(int i, Vector3 lightColor);
     void setLightMatrix(int i, Matrix4 lightMatrix);
     void setLightCenter(int i, Vector3 lightCenter);
-    void setLightWidgetsEthereal(boolean lightWidgetsEthereal);
+
+    void setBackgroundColor(Vector3 backgroundColor);
+    void setBackgroundMode(BackgroundMode backgroundMode);
 }
