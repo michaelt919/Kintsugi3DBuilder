@@ -6,10 +6,7 @@ import java.util.function.IntFunction;
 
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
-import tetzlaff.models.EnvironmentModel;
-import tetzlaff.models.ExtendedLightingModel;
-import tetzlaff.models.LightInstanceModel;
-import tetzlaff.models.LightWidgetModel;
+import tetzlaff.models.*;
 
 public abstract class ExtendedLightingModelBase<LightInstanceType extends LightInstanceModel> implements ExtendedLightingModel
 {
@@ -150,6 +147,30 @@ public abstract class ExtendedLightingModelBase<LightInstanceType extends LightI
         }
 
         this.environmentModel = environmentModel;
+    }
+
+    @Override
+    public final Vector3 getBackgroundColor()
+    {
+        return environmentModel.getBackgroundColor();
+    }
+
+    @Override
+    public final void setBackgroundColor(Vector3 backgroundColor)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BackgroundMode getBackgroundMode()
+    {
+        return environmentModel.getBackgroundMode();
+    }
+
+    @Override
+    public void setBackgroundMode(BackgroundMode backgroundMode)
+    {
+        throw new UnsupportedOperationException();
     }
 
     @Override

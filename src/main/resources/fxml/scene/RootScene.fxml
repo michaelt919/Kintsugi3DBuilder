@@ -11,7 +11,7 @@
 
     <Tab text="Environment">
         <ScrollPane fitToWidth="true">
-            <fx:include fx:id="environmentMap" source="environment_map/RootEnvironmentMapScene.fxml" />
+            <fx:include fx:id="environmentMap" source="environment/RootEnvironmentMapScene.fxml" />
         </ScrollPane>
     </Tab>
 

@@ -1,44 +1,42 @@
 package tetzlaff.ibrelight.tools;
 
-import java.util.function.Consumer;
-
 import tetzlaff.models.SettingsModel;
 
 public class ToggleSettingTool implements KeyPressTool
 {
     private static class Builder extends ToolBuilderBase<ToggleSettingTool>
     {
-        private final Consumer<SettingsModel> toggleFunction;
+        private final String settingName;
 
-        Builder(Consumer<SettingsModel> toggleFunction)
+        Builder(String settingName)
         {
-            this.toggleFunction = toggleFunction;
+            this.settingName = settingName;
         }
 
         @Override
         public ToggleSettingTool build()
         {
-            return new ToggleSettingTool(toggleFunction, getSettingsModel());
+            return new ToggleSettingTool(settingName, getSettingsModel());
         }
     }
 
-    static ToolBuilder<ToggleSettingTool> getBuilder(Consumer<SettingsModel> toggleFunction)
+    static ToolBuilder<ToggleSettingTool> getBuilder(String settingName)
     {
-        return new Builder(toggleFunction);
+        return new Builder(settingName);
     }
 
-    private final Consumer<SettingsModel> toggleFunction;
+    private final String settingName;
     private final SettingsModel settingsModel;
 
-    public ToggleSettingTool(Consumer<SettingsModel> toggleFunction, SettingsModel settingsModel)
+    public ToggleSettingTool(String settingName, SettingsModel settingsModel)
     {
-        this.toggleFunction = toggleFunction;
+        this.settingName = settingName;
         this.settingsModel = settingsModel;
     }
 
     @Override
     public void keyPressed()
     {
-        toggleFunction.accept(settingsModel);
+        settingsModel.set(settingName, !settingsModel.getBoolean(settingName));
     }
 }

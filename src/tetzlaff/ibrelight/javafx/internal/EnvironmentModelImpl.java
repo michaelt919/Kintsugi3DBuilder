@@ -11,6 +11,7 @@ import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.ibrelight.javafx.controllers.scene.environment.EnvironmentSetting;
+import tetzlaff.models.BackgroundMode;
 import tetzlaff.models.EnvironmentModel;
 
 public class EnvironmentModelImpl implements EnvironmentModel
@@ -18,6 +19,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
     private ObservableValue<EnvironmentSetting> selected;
 
     private boolean environmentMapLoaded = false;
+    private boolean backplateLoaded = false;
 
     public void setSelected(ObservableValue<EnvironmentSetting> selected)
     {
@@ -35,15 +37,54 @@ public class EnvironmentModelImpl implements EnvironmentModel
     {
         if (doesSelectedExist())
         {
-            if (selected.getValue().isEnvUseColorEnabled())
+            EnvironmentSetting selectedEnvironment = selected.getValue();
+            if (selectedEnvironment.isEnvUseColorEnabled() && (environmentMapLoaded || !selectedEnvironment.isEnvUseImageEnabled()))
             {
-                Color color = selected.getValue().getEnvColor();
+                Color color = selectedEnvironment.getEnvColor();
                 return new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue())
-                    .times((float)selected.getValue().getEnvIntensity());
+                    .times((float) selectedEnvironment.getEnvIntensity());
             }
-            else  if (selected.getValue().isEnvUseImageEnabled())
+            else if (selectedEnvironment.isEnvUseImageEnabled() && environmentMapLoaded)
             {
-                return new Vector3((float)selected.getValue().getEnvIntensity());
+                return new Vector3((float) selectedEnvironment.getEnvIntensity());
+            }
+            else
+            {
+                return Vector3.ZERO;
+            }
+        }
+        else
+        {
+            return Vector3.ZERO;
+        }
+    }
+
+    @Override
+    public Vector3 getBackgroundColor()
+    {
+        if (doesSelectedExist())
+        {
+            EnvironmentSetting selectedEnvironment = selected.getValue();
+
+            if (selectedEnvironment.isBPUseColorEnabled() && (backplateLoaded || !selectedEnvironment.isBPUseImageEnabled()))
+            {
+                Color color = selectedEnvironment.getBpColor();
+                return new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue())
+                    .times((float) selectedEnvironment.getBackgroundIntensity());
+            }
+            else if (selectedEnvironment.isBPUseImageEnabled() && backplateLoaded)
+            {
+                return new Vector3((float) selectedEnvironment.getBackgroundIntensity());
+            }
+            else if (selectedEnvironment.isEnvUseColorEnabled() && (environmentMapLoaded || !selectedEnvironment.isEnvUseImageEnabled()))
+            {
+                Color color = selectedEnvironment.getEnvColor();
+                return new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue())
+                    .times((float)(selectedEnvironment.getBackgroundIntensity() * selectedEnvironment.getEnvIntensity()));
+            }
+            else if (selectedEnvironment.isEnvUseImageEnabled() && environmentMapLoaded)
+            {
+                return new Vector3((float)(selectedEnvironment.getBackgroundIntensity() * selectedEnvironment.getEnvIntensity()));
             }
             else
             {
@@ -76,7 +117,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
 
                 if (doesSelectedExist())
                 {
-                    selected.getValue().setFirstEnvLoaded(true);
+                    selected.getValue().setEnvLoaded(true);
                 }
 
                 environmentMapLoaded = true;
@@ -89,6 +130,8 @@ public class EnvironmentModelImpl implements EnvironmentModel
     {
         if (newFile != null && !Objects.equals(oldFile, newFile))
         {
+            backplateLoaded = false;
+
             new Thread(() ->
             {
                 try
@@ -100,8 +143,15 @@ public class EnvironmentModelImpl implements EnvironmentModel
                 {
                     e.printStackTrace();
                 }
+
+                if (doesSelectedExist())
+                {
+                    selected.getValue().setBPLoaded(true);
+                }
             })
             .start();
+
+            backplateLoaded = true;
         }
     };
 
@@ -122,6 +172,28 @@ public class EnvironmentModelImpl implements EnvironmentModel
             oldSetting.bpImageFileProperty().removeListener(bpFileChange);
         }
     };
+
+    @Override
+    public BackgroundMode getBackgroundMode()
+    {
+        EnvironmentSetting selectedEnvironment = selected.getValue();
+        if (this.backplateLoaded && doesSelectedExist() && selectedEnvironment.isBPUseImageEnabled())
+        {
+            return BackgroundMode.IMAGE;
+        }
+        else if (selectedEnvironment.isBPUseColorEnabled())
+        {
+            return BackgroundMode.COLOR;
+        }
+        else if (isEnvironmentMappingEnabled())
+        {
+            return BackgroundMode.ENVIRONMENT_MAP;
+        }
+        else
+        {
+            return BackgroundMode.NONE;
+        }
+    }
 
     @Override
     public boolean isEnvironmentMappingEnabled()
@@ -170,6 +242,21 @@ public class EnvironmentModelImpl implements EnvironmentModel
         if (doesSelectedExist())
         {
             selected.getValue().setEnvIntensity(environmentIntensity);
+        }
+    }
+
+    @Override
+    public float getBackgroundIntensity()
+    {
+        return doesSelectedExist() ? (float)selected.getValue().getBackgroundIntensity() : 0.0f;
+    }
+
+    @Override
+    public void setBackgroundIntensity(float backgroundIntensity)
+    {
+        if (doesSelectedExist())
+        {
+            selected.getValue().setBackgroundIntensity(backgroundIntensity);
         }
     }
 }

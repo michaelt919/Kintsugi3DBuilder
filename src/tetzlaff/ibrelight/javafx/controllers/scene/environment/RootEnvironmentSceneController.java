@@ -12,10 +12,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import tetzlaff.ibrelight.javafx.controllers.scene.SceneModel;
 import tetzlaff.ibrelight.javafx.internal.EnvironmentModelImpl;
-import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
 
 public class RootEnvironmentSceneController
 {
@@ -34,36 +32,19 @@ public class RootEnvironmentSceneController
 
     private SceneModel sceneModel;
 
-    public void init(EnvironmentModelImpl environmentMapModel, SceneModel injectedSceneModel, SettingsModelImpl injectedSettingsModel)
+    public void init(EnvironmentModelImpl environmentMapModel, SceneModel injectedSceneModel)
     {
         this.sceneModel = injectedSceneModel;
 
         environmentListView.setItems(sceneModel.getEnvironmentList());
         environmentListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
-        settingsController.setSettingsModel(injectedSettingsModel);
-
         ObservableList<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
 
         if (USE_STARTING_MAP)
         {
-            EnvironmentSetting startingMap = new EnvironmentSetting(
-                false,
-                false,
-                false,
-                false,
-                false,
-                null,
-                null,
-                1.0,
-                0.0,
-                Color.WHITE,
-                Color.BLACK,
-                "Free Environment Map",
-                false,
-                false
-            );
-
+            EnvironmentSetting startingMap = new EnvironmentSetting();
+            startingMap.setName("Free Environment Map");
             sceneModel.getEnvironmentList().add(startingMap);
             environmentListView.getSelectionModel().select(0);
         }
@@ -85,25 +66,7 @@ public class RootEnvironmentSceneController
     {
         if (environmentListView.getSelectionModel().getSelectedItem() == null)
         {
-
-            sceneModel.getEnvironmentList().add(
-                new EnvironmentSetting(
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    null,
-                    null,
-                    1.0,
-                    0.0,
-                    Color.WHITE,
-                    Color.BLACK,
-                    "New Environment",
-                    false,
-                    false
-                )
-            );
+            sceneModel.getEnvironmentList().add(new EnvironmentSetting());
         }
         else
         {

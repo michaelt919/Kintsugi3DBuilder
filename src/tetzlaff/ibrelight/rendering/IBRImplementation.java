@@ -67,14 +67,22 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Vector3 clearColor;
     private Program<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
-    
+
+    private boolean newEnvironmentDataAvailable;
     private EnvironmentMap newEnvironmentData;
     private boolean environmentMapUnloadRequested = false;
     private Cubemap<ContextType> environmentMap;
+    private File currentEnvironmentFile;
+    private volatile File desiredEnvironmentFile;
+    private final Object loadEnvironmentLock = new Object();
 
+    private boolean newBackplateDataAvailable;
     private BufferedImage newBackplateData;
     private boolean backplateUnloadRequested = false;
     private Texture2D<ContextType> backplateTexture;
+    private File currentBackplateFile;
+    private File desiredBackplateFile;
+    private final Object loadBackplateLock = new Object();
 
     private Program<ContextType> environmentBackgroundProgram;
     private Drawable<ContextType> environmentBackgroundDrawable;
@@ -408,42 +416,52 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.backplateUnloadRequested = false;
         }
 
-        if (this.newEnvironmentData != null)
+        if (this.newEnvironmentDataAvailable)
         {
-            EnvironmentMap environmentData = this.newEnvironmentData;
-            this.newEnvironmentData = null;
-
             try
             {
-                float[][] sides = environmentData.getData();
+                Cubemap<ContextType> newEnvironmentTexture = null;
 
-                Cubemap<ContextType> newEnvironmentTexture =
-                    context.buildColorCubemap(environmentData.getSide())
-                        .setInternalFormat(ColorFormat.RGB32F)
-                        .loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
-                            sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
-                        .loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
-                            sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
-                        .loadFace(CubemapFace.POSITIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
-                            sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
-                        .loadFace(CubemapFace.NEGATIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
-                            sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
-                        .loadFace(CubemapFace.POSITIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
-                            sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
-                        .loadFace(CubemapFace.NEGATIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
-                            sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
-                        .setMipmapsEnabled(true)
-                        .setLinearFilteringEnabled(true)
-                        .createTexture();
-
-                newEnvironmentTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
-
-                if (this.environmentMap != null)
+                synchronized(loadEnvironmentLock)
                 {
-                    this.environmentMap.close();
+                    if (this.newEnvironmentData != null)
+                    {
+                        EnvironmentMap environmentData = this.newEnvironmentData;
+                        this.newEnvironmentData = null;
+
+                        float[][] sides = environmentData.getData();
+
+                        newEnvironmentTexture = context.buildColorCubemap(environmentData.getSide())
+                            .loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                                sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
+                            .loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                                sides[EnvironmentMap.NX].length / 3, sides[EnvironmentMap.NX]))
+                            .loadFace(CubemapFace.POSITIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                                sides[EnvironmentMap.PY].length / 3, sides[EnvironmentMap.PY]))
+                            .loadFace(CubemapFace.NEGATIVE_Y, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                                sides[EnvironmentMap.NY].length / 3, sides[EnvironmentMap.NY]))
+                            .loadFace(CubemapFace.POSITIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                                sides[EnvironmentMap.PZ].length / 3, sides[EnvironmentMap.PZ]))
+                            .loadFace(CubemapFace.NEGATIVE_Z, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
+                                sides[EnvironmentMap.NZ].length / 3, sides[EnvironmentMap.NZ]))
+                            .setInternalFormat(ColorFormat.RGB32F)
+                            .setMipmapsEnabled(true)
+                            .setLinearFilteringEnabled(true)
+                            .createTexture();
+
+                        newEnvironmentTexture.setTextureWrap(TextureWrapMode.Repeat, TextureWrapMode.None);
+                    }
                 }
 
-                this.environmentMap = newEnvironmentTexture;
+                if (newEnvironmentTexture != null)
+                {
+                    if (this.environmentMap != null)
+                    {
+                        this.environmentMap.close();
+                    }
+
+                    this.environmentMap = newEnvironmentTexture;
+                }
             }
             catch (RuntimeException e)
             {
@@ -451,25 +469,36 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
         }
 
-        if (this.newBackplateData != null)
+        if (this.newBackplateDataAvailable)
         {
-            BufferedImage backplateData = this.newBackplateData;
-            this.newBackplateData = null;
-
             try
             {
-                Texture2D<ContextType> newBackplateTexture = context.build2DColorTextureFromImage(backplateData, true)
-                    .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
-                    .setLinearFilteringEnabled(true)
-                    .setMipmapsEnabled(true)
-                    .createTexture();
+                Texture2D<ContextType> newBackplateTexture = null;
 
-                if (this.backplateTexture != null)
+                synchronized(loadBackplateLock)
                 {
-                    this.backplateTexture.close();
+                    if (this.newBackplateData != null)
+                    {
+                        BufferedImage backplateData = this.newBackplateData;
+                        this.newBackplateData = null;
+
+                        newBackplateTexture = context.build2DColorTextureFromImage(backplateData, true)
+                            .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
+                            .setLinearFilteringEnabled(true)
+                            .setMipmapsEnabled(true)
+                            .createTexture();
+                    }
                 }
 
-                this.backplateTexture = newBackplateTexture;
+                if (newBackplateTexture != null)
+                {
+                    if (this.backplateTexture != null)
+                    {
+                        this.backplateTexture.close();
+                    }
+
+                    this.backplateTexture = newBackplateTexture;
+                }
             }
             catch (RuntimeException e)
             {
@@ -593,9 +622,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         program.setUniform("ambientColor", lightingModel.getAmbientLightColor());
 
         this.clearColor = new Vector3(
-                (float)Math.pow(lightingModel.getAmbientLightColor().x, 1.0 / gamma),
-                (float)Math.pow(lightingModel.getAmbientLightColor().y, 1.0 / gamma),
-                (float)Math.pow(lightingModel.getAmbientLightColor().z, 1.0 / gamma));
+                (float)Math.pow(lightingModel.getBackgroundColor().x, 1.0 / gamma),
+                (float)Math.pow(lightingModel.getBackgroundColor().y, 1.0 / gamma),
+                (float)Math.pow(lightingModel.getBackgroundColor().z, 1.0 / gamma));
     }
 
     private void updateCentroidAndRadius()
@@ -775,7 +804,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 0.01f * scale, 100.0f * scale);
     }
 
-    private void drawReferenceScene(Program<ContextType> program, Framebuffer<ContextType> framebuffer, Matrix4 view)
+    private void drawReferenceScene(Framebuffer<ContextType> framebuffer, Matrix4 view)
     {
         if (referenceScene != null && refScenePositions != null && refSceneNormals != null)
         {
@@ -804,23 +833,23 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private NativeVectorBuffer generateViewWeights(Matrix4 targetView)
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
-                new KNNViewWeightGenerator(4)
-                    .generateWeights(resources,
-                        new AbstractList<Integer>()
+            new KNNViewWeightGenerator(4)
+                .generateWeights(resources,
+                    new AbstractList<Integer>()
+                    {
+                        @Override
+                        public Integer get(int index)
                         {
-                            @Override
-                            public Integer get(int index)
-                            {
-                                return index;
-                            }
+                            return index;
+                        }
 
-                            @Override
-                            public int size()
-                            {
-                                return resources.viewSet.getCameraPoseCount();
-                            }
-                        },
-                        targetView);
+                        @Override
+                        public int size()
+                        {
+                            return resources.viewSet.getCameraPoseCount();
+                        }
+                    },
+                    targetView);
 
         return NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights);
     }
@@ -892,8 +921,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             mainDrawable.program().setUniform("projection", projection);
 
-            Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
-
             int fboWidth = size.width;
             int fboHeight = size.height;
 
@@ -913,11 +940,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         .createFramebufferObject()
             )
             {
-                offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
                 offscreenFBO.clearIntegerColorBuffer(1, 0, 0, 0, 0);
                 offscreenFBO.clearDepthBuffer();
 
-                if (backplateTexture != null && settingsModel.getBoolean("backplateEnabled"))
+                if (backplateTexture != null && lightingModel.getBackgroundMode() == BackgroundMode.IMAGE)
                 {
                     // Second pass at full resolution to default framebuffer
                     simpleTexDrawable.program().setTexture("tex", backplateTexture);
@@ -929,8 +955,15 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     // Clear ID buffer again.
                     offscreenFBO.clearIntegerColorBuffer(1, 0, 0, 0, 0);
                 }
-                else if (environmentMap != null && lightingModel.isEnvironmentMappingEnabled())
+                else if (environmentMap != null && lightingModel.getBackgroundMode() == BackgroundMode.ENVIRONMENT_MAP)
                 {
+                    float scale = getScale();
+                    Matrix4 envMapMatrix = Matrix4.scale(scale)
+                        .times(lightingModel.getEnvironmentMapMatrix())
+                        .times(Matrix4.scale(1.0f / scale))
+                        .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
+                        .times(Matrix4.translate(this.centroid.negated()));
+
                     environmentBackgroundProgram.setUniform("objectID", this.sceneObjectIDLookup.get("EnvironmentMap"));
                     environmentBackgroundProgram.setUniform("useEnvironmentTexture", true);
                     environmentBackgroundProgram.setTexture("env", environmentMap);
@@ -947,6 +980,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     context.getState().disableDepthTest();
                     environmentBackgroundDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
                     context.getState().enableDepthTest();
+                }
+                else
+                {
+                    offscreenFBO.clearColorBuffer(0, clearColor.x, clearColor.y, clearColor.z, 1.0f);
                 }
 
                 if (shadowMaps.getDepth() < lightingModel.getLightCount())
@@ -973,12 +1010,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 this.program.setUniform("imageBasedRenderingEnabled", false);
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
-                this.drawReferenceScene(this.program, offscreenFBO, view);
+                this.drawReferenceScene(offscreenFBO, view);
 
                 this.program.setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
                 setupForDraw(view); // in case anything changed when drawing the reference scene.
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
 
+                Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
                 this.program.setUniform("envMapMatrix", envMapMatrix);
 
                 for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
@@ -1623,36 +1661,49 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             System.out.println("Loading new environment texture.");
 
-            try
-            {
-                // Use Michael Ludwig's code to convert to a cube map (supports either cross or panorama input)
-                this.newEnvironmentData = EnvironmentMap.createFromHDRFile(environmentFile);
+            this.desiredEnvironmentFile = environmentFile;
+            boolean readCompleted = false;
 
-//                    // Uncomment to save the panorama as an image (i.e. for a figure in a paper)
-//                    float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
-//                    BufferedImage img = new BufferedImage(envMap.getSide() * 4, envMap.getSide() * 2, BufferedImage.TYPE_3BYTE_BGR);
-//                    int k = 0;
+            synchronized(loadEnvironmentLock)
+            {
+                if (Objects.equals(environmentFile, desiredEnvironmentFile) && !Objects.equals(environmentFile, currentEnvironmentFile))
+                {
+                    try
+                    {
+                        // Use Michael Ludwig's code to convert to a cube map (supports either cross or panorama input)
+                        this.newEnvironmentData = EnvironmentMap.createFromHDRFile(environmentFile);
+                        this.currentEnvironmentFile = environmentFile;
+                        readCompleted = true;
+
+//                        // Uncomment to save the panorama as an image (i.e. for a figure in a paper)
+//                        float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
+//                        BufferedImage img = new BufferedImage(envMap.getSide() * 4, envMap.getSide() * 2, BufferedImage.TYPE_3BYTE_BGR);
+//                        int k = 0;
 //
-//                    for (int j = 0; j < envMap.getSide() * 2; j++)
-//                    {
-//                        for (int i = 0; i < envMap.getSide() * 4; i++)
+//                        for (int j = 0; j < envMap.getSide() * 2; j++)
 //                        {
-//                            img.setRGB(i,  j, ((int)(Math.pow(pixels[3 * k + 0], 1.0 / 2.2) * 255) << 16)
-//                                    | ((int)(Math.pow(pixels[3 * k + 1], 1.0 / 2.2) * 255) << 8)
-//                                    | (int)(Math.pow(pixels[3 * k + 2], 1.0 / 2.2) * 255));
-//                            k++;
+//                            for (int i = 0; i < envMap.getSide() * 4; i++)
+//                            {
+//                                img.setRGB(i,  j, ((int)(Math.pow(pixels[3 * k + 0], 1.0 / 2.2) * 255) << 16)
+//                                        | ((int)(Math.pow(pixels[3 * k + 1], 1.0 / 2.2) * 255) << 8)
+//                                        | (int)(Math.pow(pixels[3 * k + 2], 1.0 / 2.2) * 255));
+//                                k++;
+//                            }
 //                        }
-//                    }
-//                    ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_IBRelight_pan.hdr")));
+//                        ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_IBRelight_pan.hdr")));
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        throw e;
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
             }
-            catch (FileNotFoundException e)
-            {
-                throw e;
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+
+            this.newEnvironmentDataAvailable = this.newEnvironmentDataAvailable || readCompleted;
         }
     }
 
@@ -1667,18 +1718,31 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             System.out.println("Loading new backplate texture.");
 
-            try
+            this.desiredBackplateFile = backplateFile;
+            boolean readCompleted = false;
+
+            synchronized(loadBackplateLock)
             {
-                this.newBackplateData = ImageIO.read(backplateFile);
+                if (Objects.equals(backplateFile, desiredBackplateFile) && !Objects.equals(backplateFile, currentBackplateFile))
+                {
+                    try
+                    {
+                        this.newBackplateData = ImageIO.read(backplateFile);
+                        this.currentBackplateFile = backplateFile;
+                        readCompleted = true;
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        throw e;
+                    }
+                    catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
             }
-            catch (FileNotFoundException e)
-            {
-                throw e;
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+
+            this.newBackplateDataAvailable = this.newBackplateDataAvailable || readCompleted;
         }
     }
 
