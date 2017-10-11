@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Objects;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
@@ -86,6 +87,8 @@ public class SceneModel
             {
                 NodeList environmentNodes = environmentListNode.getChildNodes();
                 this.environmentList.clear();
+                this.environmentList.add(EnvironmentSetting.NO_ENVIRONMENT);
+
                 for (int i = 0; i < environmentNodes.getLength(); i++)
                 {
                     Node environmentNode = environmentNodes.item(i);
@@ -157,7 +160,10 @@ public class SceneModel
 
         for (EnvironmentSetting environment : this.environmentList)
         {
-            environmentListElement.appendChild(environment.toDOMElement(document));
+            if (!Objects.equals(environment, EnvironmentSetting.NO_ENVIRONMENT))
+            {
+                environmentListElement.appendChild(environment.toDOMElement(document));
+            }
         }
 
         Element lightGroupListElement = document.createElement("LightGroupList");

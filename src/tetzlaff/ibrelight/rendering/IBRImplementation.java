@@ -26,6 +26,8 @@ import tetzlaff.ibrelight.util.KNNViewWeightGenerator;
 import tetzlaff.models.*;
 import tetzlaff.models.impl.DefaultSettingsModel;
 import tetzlaff.models.impl.SafeSettingsModelWrapperFactory;
+import tetzlaff.util.AbstractImage;
+import tetzlaff.util.ArrayBackedImage;
 import tetzlaff.util.EnvironmentMap;
 import tetzlaff.util.ShadingParameterMode;
 
@@ -67,22 +69,28 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Vector3 clearColor;
     private Program<ContextType> simpleTexProgram;
     private Drawable<ContextType> simpleTexDrawable;
+    private Program<ContextType> tintedTexProgram;
+    private Drawable<ContextType> tintedTexDrawable;
 
     private boolean newEnvironmentDataAvailable;
     private EnvironmentMap newEnvironmentData;
     private boolean environmentMapUnloadRequested = false;
     private Cubemap<ContextType> environmentMap;
     private File currentEnvironmentFile;
-    private volatile File desiredEnvironmentFile;
     private final Object loadEnvironmentLock = new Object();
+
+    @SuppressWarnings("FieldCanBeLocal")
+    private volatile File desiredEnvironmentFile;
 
     private boolean newBackplateDataAvailable;
     private BufferedImage newBackplateData;
     private boolean backplateUnloadRequested = false;
     private Texture2D<ContextType> backplateTexture;
     private File currentBackplateFile;
-    private File desiredBackplateFile;
     private final Object loadBackplateLock = new Object();
+
+    @SuppressWarnings("FieldCanBeLocal")
+    private volatile File desiredBackplateFile;
 
     private Program<ContextType> environmentBackgroundProgram;
     private Drawable<ContextType> environmentBackgroundDrawable;
@@ -202,6 +210,19 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         try
         {
+            this.tintedTexProgram = context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture_tint.frag"))
+                .createProgram();
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+
+        try
+        {
             this.environmentBackgroundProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
@@ -211,6 +232,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             e.printStackTrace();
         }
+
+        this.rectangleVertices = context.createRectangle();
 
         try
         {
@@ -235,10 +258,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
 
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
-            this.simpleTexDrawable.addVertexBuffer("position", context.createRectangle());
+            this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
+
+            this.tintedTexDrawable = context.createDrawable(tintedTexProgram);
+            this.tintedTexDrawable.addVertexBuffer("position", this.rectangleVertices);
 
             this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
-            this.environmentBackgroundDrawable.addVertexBuffer("position", context.createRectangle());
+            this.environmentBackgroundDrawable.addVertexBuffer("position", this.rectangleVertices);
 
             context.flush();
 
@@ -311,8 +337,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             e.printStackTrace();
         }
-
-        this.rectangleVertices = context.createRectangle();
 
         try
         {
@@ -945,11 +969,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 if (backplateTexture != null && lightingModel.getBackgroundMode() == BackgroundMode.IMAGE)
                 {
-                    // Second pass at full resolution to default framebuffer
-                    simpleTexDrawable.program().setTexture("tex", backplateTexture);
+                    tintedTexDrawable.program().setTexture("tex", backplateTexture);
+                    tintedTexDrawable.program().setUniform("color", clearColor);
 
                     context.getState().disableDepthTest();
-                    simpleTexDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
+                    tintedTexDrawable.draw(PrimitiveMode.TRIANGLE_FAN, offscreenFBO);
                     context.getState().enableDepthTest();
 
                     // Clear ID buffer again.
@@ -1650,19 +1674,31 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         suppressErrors = false;
     }
 
+    private AbstractImage currentEnvironmentMap;
+
     @Override
-    public void loadEnvironmentMap(File environmentFile) throws FileNotFoundException
+    public Optional<AbstractImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException
     {
-        if (environmentFile == null && this.environmentMap != null)
+        if (environmentFile == null)
         {
-            this.environmentMapUnloadRequested = true;
+            if (this.environmentMap != null)
+            {
+                this.environmentMapUnloadRequested = true;
+            }
+
+            currentEnvironmentMap = null;
+            return Optional.empty();
         }
-        else if (environmentFile != null && environmentFile.exists())
+        else if (environmentFile.exists())
         {
             System.out.println("Loading new environment texture.");
 
             this.desiredEnvironmentFile = environmentFile;
             boolean readCompleted = false;
+
+            int width = 0;
+            int height = 0;
+            float[] pixels = null;
 
             synchronized(loadEnvironmentLock)
             {
@@ -1673,24 +1709,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         // Use Michael Ludwig's code to convert to a cube map (supports either cross or panorama input)
                         this.newEnvironmentData = EnvironmentMap.createFromHDRFile(environmentFile);
                         this.currentEnvironmentFile = environmentFile;
+                        width = newEnvironmentData.getSide() * 4;
+                        height = newEnvironmentData.getSide() * 2;
+                        pixels = EnvironmentMap.toPanorama(newEnvironmentData.getData(), newEnvironmentData.getSide(), width, height);
                         readCompleted = true;
-
-//                        // Uncomment to save the panorama as an image (i.e. for a figure in a paper)
-//                        float[] pixels = EnvironmentMap.toPanorama(envMap.getData(), envMap.getSide(), envMap.getSide() * 4, envMap.getSide() * 2);
-//                        BufferedImage img = new BufferedImage(envMap.getSide() * 4, envMap.getSide() * 2, BufferedImage.TYPE_3BYTE_BGR);
-//                        int k = 0;
-//
-//                        for (int j = 0; j < envMap.getSide() * 2; j++)
-//                        {
-//                            for (int i = 0; i < envMap.getSide() * 4; i++)
-//                            {
-//                                img.setRGB(i,  j, ((int)(Math.pow(pixels[3 * k + 0], 1.0 / 2.2) * 255) << 16)
-//                                        | ((int)(Math.pow(pixels[3 * k + 1], 1.0 / 2.2) * 255) << 8)
-//                                        | (int)(Math.pow(pixels[3 * k + 2], 1.0 / 2.2) * 255));
-//                                k++;
-//                            }
-//                        }
-//                        ImageIO.write(img, "PNG", new File(environmentFile.getParentFile(), environmentFile.getName().replace("_zvc.hdr", "_IBRelight_pan.hdr")));
                     }
                     catch (FileNotFoundException e)
                     {
@@ -1704,6 +1726,17 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
 
             this.newEnvironmentDataAvailable = this.newEnvironmentDataAvailable || readCompleted;
+
+            if (readCompleted)
+            {
+                currentEnvironmentMap = new ArrayBackedImage(width, height, pixels);
+            }
+
+            return Optional.ofNullable(currentEnvironmentMap);
+        }
+        else
+        {
+            throw new FileNotFoundException(environmentFile.getPath());
         }
     }
 
@@ -1744,6 +1777,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             this.newBackplateDataAvailable = this.newBackplateDataAvailable || readCompleted;
         }
+        else
+        {
+            throw new FileNotFoundException(backplateFile.getPath());
+        }
     }
 
     @Override
@@ -1771,7 +1808,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             this.environmentBackgroundProgram = newEnvironmentBackgroundProgram;
             this.environmentBackgroundDrawable = context.createDrawable(environmentBackgroundProgram);
-            this.environmentBackgroundDrawable.addVertexBuffer("position", context.createRectangle());
+            this.environmentBackgroundDrawable.addVertexBuffer("position", rectangleVertices);
 
 
             Program<ContextType> newLightProgram = context.getShaderProgramBuilder()

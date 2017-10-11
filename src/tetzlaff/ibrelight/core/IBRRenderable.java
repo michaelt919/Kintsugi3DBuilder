@@ -3,6 +3,7 @@ package tetzlaff.ibrelight.core;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Optional;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Framebuffer;
@@ -12,6 +13,7 @@ import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.models.*;
+import tetzlaff.util.AbstractImage;
 
 public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
@@ -29,7 +31,7 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     void reloadHelperShaders();
 
     void loadBackplate(File backplateFile) throws FileNotFoundException;
-    void loadEnvironmentMap(File environmentFile) throws FileNotFoundException;
+    Optional<AbstractImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException;
 
     void setObjectModel(ReadonlyObjectModel objectModel);
     void setCameraModel(ReadonlyCameraModel cameraModel);

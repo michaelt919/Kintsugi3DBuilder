@@ -30,6 +30,14 @@ public class EnvironmentSetting implements DOMConvertable
     private final BooleanProperty envLoaded = new SimpleBooleanProperty();
     private final BooleanProperty bpLoaded = new SimpleBooleanProperty();
 
+    public static final EnvironmentSetting NO_ENVIRONMENT;
+
+    static
+    {
+        NO_ENVIRONMENT = new EnvironmentSetting();
+        NO_ENVIRONMENT.setName("No Environment");
+        NO_ENVIRONMENT.setLocked(true);
+    }
 
     @Override
     public Element toDOMElement(Document document)
@@ -85,7 +93,7 @@ public class EnvironmentSetting implements DOMConvertable
     @Override
     public String toString()
     {
-        if (locked.getValue())
+        if (!this.equals(NO_ENVIRONMENT) && locked.getValue())
         {
             return "(L) " + this.name.getValue();
         }
