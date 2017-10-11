@@ -3,6 +3,7 @@ package tetzlaff.ibrelight.rendering;
 import java.io.*;
 import java.util.AbstractList;
 import java.util.Objects;
+import java.util.Optional;
 
 import tetzlaff.gl.Context;
 import tetzlaff.gl.Program;
@@ -16,6 +17,7 @@ import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.ReadonlyObjectModel;
 import tetzlaff.models.ReadonlySettingsModel;
+import tetzlaff.util.AbstractImage;
 
 // TODO NEWUI replace this class with one that is JavaFX tailored or general-purpose (not Swing)
 public class ImageBasedRendererList<ContextType extends Context<ContextType>>
@@ -264,9 +266,9 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
+    public Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
-        this.getSelectedItem().loadEnvironmentMap(environmentMapFile);
+        return this.getSelectedItem().loadEnvironmentMap(environmentMapFile);
     }
 
     @Override

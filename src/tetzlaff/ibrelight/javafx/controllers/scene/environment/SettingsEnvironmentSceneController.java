@@ -18,8 +18,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.converter.DoubleStringConverter;
+import tetzlaff.ibrelight.javafx.util.ImageFactory;
 import tetzlaff.ibrelight.javafx.util.SafeNumberStringConverter;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
+import tetzlaff.util.AbstractImage;
 
 public class SettingsEnvironmentSceneController implements Initializable
 {
@@ -148,8 +150,8 @@ public class SettingsEnvironmentSceneController implements Initializable
         envImageFileChooser.setTitle("Select an environment map");
         bpImageFileChooser.setTitle("Select a backplate image");
 
-        envImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-        bpImageFileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        File userHome = new File(System.getProperty("user.home"));
+        // TODO
 
         envImageFileChooser.getExtensionFilters().add(new ExtensionFilter("Radiance HDR environment maps", "*.hdr"));
 
@@ -162,8 +164,6 @@ public class SettingsEnvironmentSceneController implements Initializable
             {
                 envFileNameText.setVisible(true);
                 envFileNameText.setText(newValue.getName());
-
-                envImageView.setImage(new Image(newValue.toURI().toString()));
             }
             else
             {
@@ -192,6 +192,18 @@ public class SettingsEnvironmentSceneController implements Initializable
         });
 
         setDisabled(true);
+    }
+
+    void updateEnvironmentMapImage(AbstractImage environmentMapImage)
+    {
+        if (environmentMapImage == null)
+        {
+            envImageView.setImage(null);
+        }
+        else
+        {
+            envImageView.setImage(ImageFactory.createFromAbstractImage(environmentMapImage));
+        }
     }
 
     @FXML

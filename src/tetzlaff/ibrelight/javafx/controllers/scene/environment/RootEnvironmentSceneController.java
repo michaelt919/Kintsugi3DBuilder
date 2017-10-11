@@ -2,6 +2,7 @@ package tetzlaff.ibrelight.javafx.controllers.scene.environment;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import javafx.collections.ListChangeListener;
@@ -41,11 +42,17 @@ public class RootEnvironmentSceneController
 
         ObservableList<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
 
+        sceneModel.getEnvironmentList().add(EnvironmentSetting.NO_ENVIRONMENT);
+
         if (USE_STARTING_MAP)
         {
             EnvironmentSetting startingMap = new EnvironmentSetting();
-            startingMap.setName("Free Environment Map");
+            startingMap.setName("Environment 1");
             sceneModel.getEnvironmentList().add(startingMap);
+            environmentListView.getSelectionModel().select(1);
+        }
+        else
+        {
             environmentListView.getSelectionModel().select(0);
         }
 
@@ -58,22 +65,26 @@ public class RootEnvironmentSceneController
             }
         });
 
+        environmentMapModel.loadedEnvironmentMapImageProperty().addListener(
+            (observable, oldValue, newValue) -> settingsController.updateEnvironmentMapImage(newValue));
+
         environmentMapModel.setSelected(environmentListView.getSelectionModel().selectedItemProperty());
     }
 
     @FXML
     private void newEnvButton()
     {
-        if (environmentListView.getSelectionModel().getSelectedItem() == null)
+        MultipleSelectionModel<EnvironmentSetting> selectionModel = environmentListView.getSelectionModel();
+        EnvironmentSetting selectedEnvironment = selectionModel.getSelectedItem();
+        if (selectedEnvironment == null || Objects.equals(selectedEnvironment, EnvironmentSetting.NO_ENVIRONMENT))
         {
             sceneModel.getEnvironmentList().add(new EnvironmentSetting());
         }
         else
         {
-
             List<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
-            environmentList.add(environmentListView.getSelectionModel().getSelectedItem().duplicate());
-            environmentListView.getSelectionModel().select(environmentList.size() - 1);
+            environmentList.add(selectedEnvironment.duplicate());
+            selectionModel.select(environmentList.size() - 1);
         }
     }
 
@@ -86,123 +97,112 @@ public class RootEnvironmentSceneController
     @FXML
     private void renameEnvButton()
     {
-        if (USE_STARTING_MAP && environmentListView.getSelectionModel().getSelectedIndex() == 0)
+        if (!Objects.equals(environmentListView.getSelectionModel().getSelectedItem(), EnvironmentSetting.NO_ENVIRONMENT))
         {
-            return;
-        }
+            EventHandler<ActionEvent> oldOnAction = theRenameButton.getOnAction();//backup the old on action event for the rename button
 
-        EventHandler<ActionEvent> oldOnAction = theRenameButton.getOnAction();//backup the old on action event for the rename button
+            //set up two buttons and a text field for name entry
+            listControls.getChildren().iterator().forEachRemaining(n -> n.setDisable(true));
+            settings.setDisable(true);
+            theRenameButton.setDisable(false);
 
-        //set up two buttons and a text field for name entry
-        listControls.getChildren().iterator().forEachRemaining(n -> n.setDisable(true));
-        settings.setDisable(true);
+            int renameIndex = listControls.getChildren().indexOf(theRenameButton);
+            TextField renameTextField = new TextField();
+            listControls.getChildren().add(renameIndex + 1, renameTextField);
+            Button cancelRenameButton = new Button("Cancel");
+            listControls.getChildren().add(renameIndex + 2, cancelRenameButton);
+            renameTextField.setMaxWidth(Double.MAX_VALUE);
+            cancelRenameButton.setMaxWidth(Double.MAX_VALUE);
 
-        theRenameButton.setDisable(false);
-
-        int renameIndex = listControls.getChildren().indexOf(theRenameButton);
-
-        TextField renameTextField = new TextField();
-
-        listControls.getChildren().add(renameIndex + 1, renameTextField);
-
-        Button cancelRenameButton = new Button("Cancel");
-
-        listControls.getChildren().add(renameIndex + 2, cancelRenameButton);
-
-        renameTextField.setMaxWidth(Double.MAX_VALUE);
-
-        cancelRenameButton.setMaxWidth(Double.MAX_VALUE);
-
-        //set up to event handlers, one to return the controls back to their original state,
-        // and the other to actually perform the rename
-        EventHandler<ActionEvent> finishRename = event ->
-        {
-            listControls.getChildren().removeAll(renameTextField, cancelRenameButton);
-            theRenameButton.setOnAction(oldOnAction);
-
-            listControls.getChildren().iterator().forEachRemaining(n -> n.setDisable(false));
-
-            environmentListView.refresh();
-
-            settings.setDisable(false);
-        };
-
-        EventHandler<ActionEvent> doRename = event ->
-        {
-            String newName = renameTextField.getText();
-            if (newName != null && !newName.isEmpty())
+            //set up to event handlers, one to return the controls back to their original state,
+            // and the other to actually perform the rename
+            EventHandler<ActionEvent> finishRename = event ->
             {
-                environmentListView.getSelectionModel().getSelectedItem().setName(newName);
-            }
+                listControls.getChildren().removeAll(renameTextField, cancelRenameButton);
+                theRenameButton.setOnAction(oldOnAction);
 
-            finishRename.handle(event);
-        };
+                listControls.getChildren().iterator().forEachRemaining(n -> n.setDisable(false));
 
-        //set the on actions
-        theRenameButton.setOnAction(doRename);
-        cancelRenameButton.setOnAction(finishRename);
-        renameTextField.setOnAction(doRename);
+                environmentListView.refresh();
+                settings.setDisable(false);
+            };
 
-        renameTextField.setText(environmentListView.getSelectionModel().getSelectedItem().getName());
-        renameTextField.requestFocus();
-        renameTextField.selectAll();
+            EventHandler<ActionEvent> doRename = event ->
+            {
+                String newName = renameTextField.getText();
+                if (newName != null && !newName.isEmpty())
+                {
+                    environmentListView.getSelectionModel().getSelectedItem().setName(newName);
+                }
+
+                finishRename.handle(event);
+            };
+
+            //set the on actions
+            theRenameButton.setOnAction(doRename);
+            cancelRenameButton.setOnAction(finishRename);
+            renameTextField.setOnAction(doRename);
+
+            renameTextField.setText(environmentListView.getSelectionModel().getSelectedItem().getName());
+            renameTextField.requestFocus();
+            renameTextField.selectAll();
+        }
     }
 
     @FXML
     private void moveUPButton()
     {
-        int i = environmentListView.getSelectionModel().getSelectedIndex();
-        if (USE_STARTING_MAP && i == 1)
+        int selectedIndex = environmentListView.getSelectionModel().getSelectedIndex();
+        if (selectedIndex > 1)
         {
-            return;
-        }
-        if (i > 0)
-        {
-            Collections.swap(sceneModel.getEnvironmentList(), i, i - 1);
-            environmentListView.getSelectionModel().select(i - 1);
+            Collections.swap(sceneModel.getEnvironmentList(), selectedIndex, selectedIndex - 1);
+            environmentListView.getSelectionModel().select(selectedIndex - 1);
         }
     }
 
     @FXML
     void moveDOWNButton()
     {
-        int i = environmentListView.getSelectionModel().getSelectedIndex();
-        if (USE_STARTING_MAP && i == 0)
+        int selectedIndex = environmentListView.getSelectionModel().getSelectedIndex();
+        if (selectedIndex != 0)
         {
-            return;
-        }
-
-        List<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
-        if (i < environmentList.size() - 1)
-        {
-            Collections.swap(environmentList, i, i + 1);
-            environmentListView.getSelectionModel().select(i + 1);
+            List<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
+            if (selectedIndex < environmentList.size() - 1)
+            {
+                Collections.swap(environmentList, selectedIndex, selectedIndex + 1);
+                environmentListView.getSelectionModel().select(selectedIndex + 1);
+            }
         }
     }
 
     @FXML
     void lockEnvButton()
     {
-        Boolean newValue = !environmentListView.getSelectionModel().getSelectedItem().isLocked();
-        environmentListView.getSelectionModel().getSelectedItem().setLocked(newValue);
-        settingsController.setDisabled(newValue);
-        environmentListView.refresh();
+        EnvironmentSetting selectedEnvironment = environmentListView.getSelectionModel().getSelectedItem();
+        if (!Objects.equals(selectedEnvironment, EnvironmentSetting.NO_ENVIRONMENT))
+        {
+            Boolean newValue = !selectedEnvironment.isLocked();
+            selectedEnvironment.setLocked(newValue);
+            settingsController.setDisabled(newValue);
+            environmentListView.refresh();
+        }
     }
 
     @FXML
     void deleteEnvButton()
     {
-        int selectedIndex = environmentListView.getSelectionModel().getSelectedIndex();
-        if (!USE_STARTING_MAP || selectedIndex != 0)
+        MultipleSelectionModel<EnvironmentSetting> selectionModel = environmentListView.getSelectionModel();
+        EnvironmentSetting selectedEnvironment = selectionModel.getSelectedItem();
+
+        if (!Objects.equals(selectedEnvironment, EnvironmentSetting.NO_ENVIRONMENT))
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
-            confirmation.setHeaderText("Are you sure you want to delete the following environment: "
-                + sceneModel.getEnvironmentList().get(selectedIndex).getName() + '?');
+            confirmation.setHeaderText("Are you sure you want to delete the following environment: " + selectedEnvironment.getName() + '?');
             confirmation.setTitle("Delete Confirmation");
 
             confirmation.showAndWait()
                 .filter(Predicate.isEqual(ButtonType.OK))
-                .ifPresent(response -> sceneModel.getEnvironmentList().remove(selectedIndex));
+                .ifPresent(response -> sceneModel.getEnvironmentList().remove(selectionModel.getSelectedIndex()));
         }
     }
 }

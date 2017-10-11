@@ -3,7 +3,10 @@ package tetzlaff.ibrelight.javafx.internal;//Created by alexk on 7/28/2017.
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Objects;
+import java.util.Optional;
 
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.paint.Color;
@@ -13,6 +16,7 @@ import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.ibrelight.javafx.controllers.scene.environment.EnvironmentSetting;
 import tetzlaff.models.BackgroundMode;
 import tetzlaff.models.EnvironmentModel;
+import tetzlaff.util.AbstractImage;
 
 public class EnvironmentModelImpl implements EnvironmentModel
 {
@@ -20,6 +24,8 @@ public class EnvironmentModelImpl implements EnvironmentModel
 
     private boolean environmentMapLoaded = false;
     private boolean backplateLoaded = false;
+
+    private final Property<AbstractImage> loadedEnvironmentMapImage = new SimpleObjectProperty<>();
 
     public void setSelected(ObservableValue<EnvironmentSetting> selected)
     {
@@ -30,6 +36,11 @@ public class EnvironmentModelImpl implements EnvironmentModel
     private boolean doesSelectedExist()
     {
         return selected != null && selected.getValue() != null;
+    }
+
+    public ObservableValue<AbstractImage> loadedEnvironmentMapImageProperty()
+    {
+        return loadedEnvironmentMapImage;
     }
 
     @Override
@@ -99,7 +110,11 @@ public class EnvironmentModelImpl implements EnvironmentModel
 
     private final ChangeListener<File> envFileChange = (observable, oldFile, newFile) ->
     {
-        if (newFile != null && !Objects.equals(oldFile, newFile))
+        if (newFile == null)
+        {
+            loadedEnvironmentMapImage.setValue(null);
+        }
+        else if (!Objects.equals(oldFile, newFile))
         {
             environmentMapLoaded = false;
 
@@ -108,7 +123,8 @@ public class EnvironmentModelImpl implements EnvironmentModel
                 try
                 {
                     System.out.println("Loading environment map file " + newFile.getName());
-                    MultithreadModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
+                    Optional<AbstractImage> environmentMapImage = MultithreadModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
+                    loadedEnvironmentMapImage.setValue(environmentMapImage.orElse(null));
                 }
                 catch (FileNotFoundException e)
                 {

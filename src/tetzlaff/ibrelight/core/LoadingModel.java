@@ -3,6 +3,9 @@ package tetzlaff.ibrelight.core;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Optional;
+
+import tetzlaff.util.AbstractImage;
 
 public class LoadingModel 
 {
@@ -50,9 +53,9 @@ public class LoadingModel
         this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, loadOptionsModel);
     }
 
-    public void loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
+    public Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
     {
-        this.handler.loadEnvironmentMap(environmentMapFile);
+        return this.handler.loadEnvironmentMap(environmentMapFile);
     }
 
     public void loadBackplate(File backplateFile) throws FileNotFoundException
