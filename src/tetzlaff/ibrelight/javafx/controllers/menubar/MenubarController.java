@@ -102,7 +102,7 @@ public class MenubarController
             public void setMaximum(double maximum)
             {
                 this.maximum = maximum;
-                Platform.runLater(() -> progressBar.setProgress(progress / maximum));
+                Platform.runLater(() -> progressBar.setProgress(maximum == 0.0 ? ProgressIndicator.INDETERMINATE_PROGRESS : progress / maximum));
             }
 
             @Override

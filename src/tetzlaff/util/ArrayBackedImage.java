@@ -31,7 +31,7 @@ public class ArrayBackedImage implements AbstractImage
     @Override
     public DoubleVector4 getRGBA(int x, int y)
     {
-        int k = y * width + x;
+        int k = (height - 1 - y) * width + x;
         return new DoubleVector4(
             Math.pow(pixels[3 * k    ], 1.0 / 2.2),
             Math.pow(pixels[3 * k + 1], 1.0 / 2.2),

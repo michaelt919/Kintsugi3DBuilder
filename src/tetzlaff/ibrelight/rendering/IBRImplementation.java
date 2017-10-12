@@ -491,6 +491,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             {
                 e.printStackTrace();
             }
+            finally
+            {
+                this.newEnvironmentDataAvailable = false;
+                this.loadingMonitor.loadingComplete();
+            }
         }
 
         if (this.newBackplateDataAvailable)
@@ -527,6 +532,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             catch (RuntimeException e)
             {
                 e.printStackTrace();
+            }
+            finally
+            {
+                this.newBackplateDataAvailable = false;
             }
         }
 
@@ -1189,7 +1198,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             widgetTransformation.getColumn(3).getXYZ().distance(lightCenter)))
                         .plus(lightCenter);
 
-                    float perspectiveWidgetScale = -widgetPosition.z * getVerticalFieldOfView(size) / 64;
+                    float perspectiveWidgetScale = -widgetPosition.z * getVerticalFieldOfView(size) / 128;
 
                     this.context.getState().disableDepthTest();
                     this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
@@ -1252,7 +1261,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                     this.circleProgram.setUniform("color", new Vector3(1));
                     this.circleProgram.setUniform("projection", this.getProjectionMatrix(size));
-                    this.circleProgram.setUniform("width", 1 / 64.0f);
+                    this.circleProgram.setUniform("width", 1 / 128.0f);
                     this.circleProgram.setUniform("maxAngle", (float)Math.PI / 4);
                     this.circleProgram.setUniform("threshold", 0.005f);
 
@@ -1270,9 +1279,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                     float cosineLightToPole = widgetDisplacement.normalized().dot(azimuthRotationAxis);
                     double azimuthArrowRotation = Math.min(Math.PI / 4,
-                        8 * perspectiveWidgetScale / (widgetDistance * Math.sqrt(1 - cosineLightToPole * cosineLightToPole)));
+                        16 * perspectiveWidgetScale / (widgetDistance * Math.sqrt(1 - cosineLightToPole * cosineLightToPole)));
 
-                    double inclinationArrowRotation = Math.min(Math.PI / 4, 8 * perspectiveWidgetScale / widgetDistance);
+                    double inclinationArrowRotation = Math.min(Math.PI / 4, 16 * perspectiveWidgetScale / widgetDistance);
 
                     if (lightingModel.getLightWidgetModel(i).isAzimuthWidgetVisible() &&
                         (Math.abs(lightDisplacementWorld.x) > 0.001f || Math.abs(lightDisplacementWorld.z) > 0.001f))
@@ -1376,7 +1385,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 //                            Vector3 arrow3PositionL = widgetTransformation.times(new Vector4(0,0,-1,1)).getXYZ();
 
                     this.context.getState().disableDepthTest();
-                    context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
+                    this.context.getState().disableAlphaBlending();
+                    this.solidProgram.setUniform("color", new Vector4(1));
 
                     if (lightingModel.getLightWidgetModel(i).isAzimuthWidgetVisible() &&
                         (Math.abs(lightDisplacementWorld.x) > 0.001f || Math.abs(lightDisplacementWorld.z) > 0.001f))
@@ -1392,9 +1402,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                     new Vector4(0, 0, 1, 0),
                                     new Vector4(0, 0, 0, 1))));
 
-                        this.solidProgram.setUniform("color",
-                            new Vector3(lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ? 1.0f : 0.5f)
-                                .asVector4(1));
                         this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
 
                         this.solidProgram.setUniform("model_view",
@@ -1406,19 +1413,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                     new Vector4(0, 0, 1, 0),
                                     new Vector4(0, 0, 0, 1))));
 
-                        this.solidProgram.setUniform("color",
-                            new Vector3(lightingModel.getLightWidgetModel(i).isAzimuthWidgetSelected() ? 1.0f : 0.5f)
-                                .asVector4(1));
                         this.widgetDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
                     }
 
                     if (lightingModel.getLightWidgetModel(i).isInclinationWidgetVisible())
                     {
                         this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Inclination"));
-
-                        this.solidProgram.setUniform("color",
-                            new Vector3(lightingModel.getLightWidgetModel(i).isInclinationWidgetSelected() ? 1.0f : 0.5f)
-                                .asVector4(1));
 
                         if (Math.PI / 2 - inclination > 0.01f)
                         {
@@ -1450,10 +1450,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     if (lightingModel.getLightWidgetModel(i).isDistanceWidgetVisible())
                     {
                         this.solidProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Distance"));
-
-                        this.solidProgram.setUniform("color",
-                            new Vector3(lightingModel.getLightWidgetModel(i).isDistanceWidgetSelected() ? 1.0f : 0.5f)
-                                .asVector4(1));
 
                         this.solidProgram.setUniform("model_view",
                             Matrix4.translate(arrow3PositionL)
@@ -1681,6 +1677,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         if (environmentFile == null)
         {
+            //noinspection VariableNotUsedInsideIf
             if (this.environmentMap != null)
             {
                 this.environmentMapUnloadRequested = true;
@@ -1704,6 +1701,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             {
                 if (Objects.equals(environmentFile, desiredEnvironmentFile) && !Objects.equals(environmentFile, currentEnvironmentFile))
                 {
+                    this.loadingMonitor.startLoading();
+                    this.loadingMonitor.setMaximum(0.0);
+
                     try
                     {
                         // Use Michael Ludwig's code to convert to a cube map (supports either cross or panorama input)
@@ -1777,7 +1777,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             this.newBackplateDataAvailable = this.newBackplateDataAvailable || readCompleted;
         }
-        else
+        else if (backplateFile != null)
         {
             throw new FileNotFoundException(backplateFile.getPath());
         }
