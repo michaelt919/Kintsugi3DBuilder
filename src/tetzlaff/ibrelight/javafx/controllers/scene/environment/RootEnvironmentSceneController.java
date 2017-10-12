@@ -76,16 +76,18 @@ public class RootEnvironmentSceneController
     {
         MultipleSelectionModel<EnvironmentSetting> selectionModel = environmentListView.getSelectionModel();
         EnvironmentSetting selectedEnvironment = selectionModel.getSelectedItem();
+        List<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
+
         if (selectedEnvironment == null || Objects.equals(selectedEnvironment, EnvironmentSetting.NO_ENVIRONMENT))
         {
-            sceneModel.getEnvironmentList().add(new EnvironmentSetting());
+            environmentList.add(new EnvironmentSetting());
         }
         else
         {
-            List<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
             environmentList.add(selectedEnvironment.duplicate());
-            selectionModel.select(environmentList.size() - 1);
         }
+
+        selectionModel.select(environmentList.size() - 1);
     }
 
     @FXML

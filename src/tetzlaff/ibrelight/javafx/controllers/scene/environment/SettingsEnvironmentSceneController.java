@@ -108,7 +108,7 @@ public class SettingsEnvironmentSceneController implements Initializable
     {
         envUseImageCheckBox.selectedProperty().unbindBidirectional(envSetting.envUseImageProperty());
         envUseColorCheckBox.selectedProperty().unbindBidirectional(envSetting.envUseColorProperty());
-        bpUseImageCheckBox.selectedProperty().unbindBidirectional(envSetting.envUseImageProperty());
+        bpUseImageCheckBox.selectedProperty().unbindBidirectional(envSetting.bpUseImageProperty());
         bpUseColorCheckBox.selectedProperty().unbindBidirectional(envSetting.bpUseColorProperty());
 
         trueEnvColorIntensity.unbindBidirectional(envSetting.envColorIntensityProperty());
@@ -151,7 +151,9 @@ public class SettingsEnvironmentSceneController implements Initializable
         bpImageFileChooser.setTitle("Select a backplate image");
 
         File userHome = new File(System.getProperty("user.home"));
-        // TODO
+
+        envImageFileChooser.initialDirectoryProperty().set(userHome);
+        bpImageFileChooser.initialDirectoryProperty().set(userHome);
 
         envImageFileChooser.getExtensionFilters().add(new ExtensionFilter("Radiance HDR environment maps", "*.hdr"));
 
@@ -214,6 +216,8 @@ public class SettingsEnvironmentSceneController implements Initializable
         {
             localEnvImageFile.setValue(newFile);
             envUseImageCheckBox.setSelected(true);
+            envImageFileChooser.initialDirectoryProperty().set(newFile.getParentFile());
+            envImageFileChooser.initialFileNameProperty().set(newFile.getName());
         }
     }
 
@@ -225,6 +229,8 @@ public class SettingsEnvironmentSceneController implements Initializable
         {
             localBPImageFile.setValue(newFile);
             bpUseImageCheckBox.setSelected(true);
+            bpImageFileChooser.initialDirectoryProperty().set(newFile.getParentFile());
+            bpImageFileChooser.initialFileNameProperty().set(newFile.getName());
         }
     }
 }

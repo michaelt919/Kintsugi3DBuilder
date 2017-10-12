@@ -192,9 +192,9 @@ public final class ToolBox
         Map<KeyPressToolType, ToolBuilder<? extends KeyPressTool>> keyPressToolBuilders = new EnumMap<>(KeyPressToolType.class);
 
         keyPressToolBuilders.put(KeyPressToolType.BACKGROUND_BRIGHTNESS_UP_LARGE, MultiplierTool.getBuilder(
-                environmentModel::getBackgroundIntensity,
-                intensity -> environmentModel.setBackgroundIntensity((float)intensity),
-                Type.UP_LARGE));
+            environmentModel::getBackgroundIntensity,
+            intensity -> environmentModel.setBackgroundIntensity((float)intensity),
+            Type.UP_LARGE));
         keyPressToolBuilders.put(KeyPressToolType.BACKGROUND_BRIGHTNESS_DOWN_LARGE, MultiplierTool.getBuilder(
             environmentModel::getBackgroundIntensity,
             intensity -> environmentModel.setBackgroundIntensity((float)intensity),
@@ -206,7 +206,7 @@ public final class ToolBox
         keyPressToolBuilders.put(KeyPressToolType.BACKGROUND_BRIGHTNESS_DOWN_SMALL, MultiplierTool.getBuilder(
             environmentModel::getBackgroundIntensity,
             intensity -> environmentModel.setBackgroundIntensity((float)intensity),
-            Type.DOWN_LARGE));
+            Type.DOWN_SMALL));
 
         keyPressToolBuilders.put(KeyPressToolType.ENVIRONMENT_BRIGHTNESS_UP_LARGE, MultiplierTool.getBuilder(
             environmentModel::getEnvironmentIntensity,
