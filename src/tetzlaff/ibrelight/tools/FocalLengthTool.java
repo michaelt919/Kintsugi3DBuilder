@@ -6,7 +6,7 @@ import tetzlaff.models.ExtendedCameraModel;
 
 final class FocalLengthTool implements DragTool
 {
-    private static final double FOCAL_LENGTH_SENSITIVITY = 0.1;
+    private static final double FOCAL_LENGTH_SENSITIVITY = 0.0625;
     private double focalLengthSensitivityAdjusted;
 
     private double oldLog10FocalLength;
@@ -46,9 +46,6 @@ final class FocalLengthTool implements DragTool
     public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
     {
         cameraModel.setFocalLength((float)Math.pow(10,
-            oldLog10FocalLength
-                + (float) Math.toDegrees((Math.abs(cursorPosition.x - windowSize.width * 0.5)
-                            - Math.abs(this.mouseStart.x - windowSize.width * 0.5))
-                * focalLengthSensitivityAdjusted)));
+            oldLog10FocalLength - (float) Math.toDegrees((cursorPosition.y - this.mouseStart.y) * 0.5 * focalLengthSensitivityAdjusted)));
     }
 }

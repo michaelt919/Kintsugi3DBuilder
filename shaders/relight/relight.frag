@@ -767,7 +767,7 @@ void main()
     }
     else if (!imageBasedRenderingEnabled && !useSpecularTexture)
     {
-        diffuseColor = vec3(0.5);
+        diffuseColor = vec3(0.125);
     }
     else
     {
@@ -785,7 +785,7 @@ void main()
     }
     else
     {
-        specularColor = vec3(0.5); // TODO pass in a default?
+        specularColor = vec3(0.03125); // TODO pass in a default?
     }
     
     vec3 roughness;

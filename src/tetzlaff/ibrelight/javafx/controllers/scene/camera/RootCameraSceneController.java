@@ -37,21 +37,8 @@ public class RootCameraSceneController
         cameraListView.setItems(sceneModel.getCameraList());
         cameraListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
-        CameraSetting freeCam = new CameraSetting(
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            360 / Math.PI /* convert and multiply by 2) */ * Math.atan(0.36 /* "35 mm" film (actual 36mm horizontal), 50mm lens */),
-            50.0,
-            false,
-            false,
-            "Free Camera"
-
-        );
+        CameraSetting freeCam = new CameraSetting();
+        freeCam.setName("Free Camera");
 
         ObservableList<CameraSetting> cameraList = sceneModel.getCameraList();
 

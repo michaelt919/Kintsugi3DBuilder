@@ -79,34 +79,33 @@ public class RootLightSceneController implements Initializable
         //noinspection rawtypes
         tableView.getSelectionModel().getSelectedCells().addListener((ListChangeListener<TablePosition>) change ->
         {
-            while (change.next())
+            ObservableList<TablePosition> selectedCells = tableView.getSelectionModel().getSelectedCells();
+
+            if (!selectedCells.isEmpty())
             {
-                if (change.wasAdded())
+                //new cell selected
+                assert change.getAddedSize() == 1;
+                TablePosition<?, ?> tablePosition = tableView.getSelectionModel().getSelectedCells().get(0);
+                ObservableValue<?> selectedCell = tablePosition.getTableColumn().getCellObservableValue(tablePosition.getRow());
+                LightGroupSetting selectedLightGroup = getSelectedLightGroup();
+
+                if (selectedCell != null && selectedCell.getValue() instanceof LightInstanceSetting)
                 {
-                    //new cell selected
-                    assert change.getAddedSize() == 1;
-                    TablePosition<?, ?> tablePosition = change.getAddedSubList().get(0);
-                    ObservableValue<?> selectedCell = tablePosition.getTableColumn().getCellObservableValue(tablePosition.getRow());
-                    LightGroupSetting selectedLightGroup = getSelectedLightGroup();
-
-                    if (selectedCell != null && selectedCell.getValue() instanceof LightInstanceSetting)
+                    selectedLight.setValue((LightInstanceSetting) selectedCell.getValue());
+                    lastSelectedIndex = tablePosition.getColumn() - 1;
+                    if (selectedLightGroup != null)
                     {
-                        selectedLight.setValue((LightInstanceSetting) selectedCell.getValue());
-                        lastSelectedIndex = tablePosition.getColumn() - 1;
-                        if (selectedLightGroup != null)
-                        {
-                            selectedLightGroup.setSelectedLightIndex(lastSelectedIndex);
-                        }
-
+                        selectedLightGroup.setSelectedLightIndex(lastSelectedIndex);
                     }
-                    else
+
+                }
+                else
+                {
+                    selectedLight.setValue(null);
+                    lastSelectedIndex = -1;
+                    if (selectedLightGroup != null)
                     {
-                        selectedLight.setValue(null);
-                        lastSelectedIndex = -1;
-                        if (selectedLightGroup != null)
-                        {
-                            selectedLightGroup.setSelectedLightIndex(-1);
-                        }
+                        selectedLightGroup.setSelectedLightIndex(-1);
                     }
                 }
             }
@@ -194,7 +193,7 @@ public class RootLightSceneController implements Initializable
         lightGroupList.add(newGroup);
 
         int newRowIndex = lightGroupList.size() - 1;
-        tableView.getSelectionModel().select(newRowIndex, tableView.getColumns().get(0));
+        tableView.getSelectionModel().clearAndSelect(newRowIndex, tableView.getColumns().get(0));
     }
 
     @FXML
@@ -206,28 +205,24 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void renameGroup()
     {
-
         EventHandler<ActionEvent> oldOnAction = renameButton.getOnAction();//backup the old on action event for the rename button
 
         //disable all
         groupControls.getChildren().iterator().forEachRemaining(node -> node.setDisable(true));
         lightControls.getChildren().iterator().forEachRemaining(node -> node.setDisable(true));
-        settings.setDisable(true);
 
+        settings.setDisable(true);
         renameButton.setDisable(false);
 
         int renameIndex = groupControls.getChildren().indexOf(renameButton);
 
         TextField renameTextField = new TextField();
-
         groupControls.getChildren().add(renameIndex + 1, renameTextField);
 
         Button cancelRenameButton = new Button("Cancel");
-
         groupControls.getChildren().add(renameIndex + 2, cancelRenameButton);
 
         renameTextField.setMaxWidth(Double.MAX_VALUE);
-
         cancelRenameButton.setMaxWidth(Double.MAX_VALUE);
 
         //set up to event handlers, one to return the controls back to their original state,
@@ -238,13 +233,9 @@ public class RootLightSceneController implements Initializable
             renameButton.setOnAction(oldOnAction);
 
             groupControls.getChildren().iterator().forEachRemaining(n -> n.setDisable(false));
-
             lightControls.getChildren().iterator().forEachRemaining(n -> n.setDisable(false));
 
-//                tableView.refresh();
-
             settings.setDisable(false);
-
             tableView.refresh();
         };
 
@@ -375,9 +366,11 @@ public class RootLightSceneController implements Initializable
             {
                 selectedLightGroup.addLight();
             }
+
+            tableView.refresh();
+            tableView.getSelectionModel().clearAndSelect(tableView.getSelectionModel().getSelectedIndex(),
+                tableView.getColumns().get(selectedLightGroup.getLightCount()));
         }
-        tableView.refresh();
-        tableView.getSelectionModel().selectRightCell();
     }
 
     @FXML
@@ -409,18 +402,19 @@ public class RootLightSceneController implements Initializable
     @FXML
     private void deleteLight()
     {
-        if (getSelectedLightGroup() != null)
+        LightGroupSetting selectedLightGroup = getSelectedLightGroup();
+        if (selectedLightGroup != null && lastSelectedIndex >= 0 && lastSelectedIndex < selectedLightGroup.getLightCount())
         {
             Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "This action cannot be reversed.");
             confirmation.setHeaderText("Are you sure you want to delete light " + (lastSelectedIndex + 1) + " from the following group: "
-                + getSelectedLightGroup().getName() + '?');
+                + selectedLightGroup.getName() + '?');
             confirmation.setTitle("Delete Confirmation");
 
             confirmation.showAndWait()
                 .filter(Predicate.isEqual(ButtonType.OK))
                 .ifPresent(response ->
                 {
-                    getSelectedLightGroup().removeLight(lastSelectedIndex);
+                    selectedLightGroup.removeLight(lastSelectedIndex);
                     tableView.refresh();
                     tableView.getSelectionModel().selectPrevious();
                 });

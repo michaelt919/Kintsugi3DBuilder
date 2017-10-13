@@ -45,6 +45,6 @@ final class DollyTool implements DragTool
     @Override
     public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
     {
-        cameraModel.setLog10Distance((float) (oldLog10Distance + 0.5 * dollySensitivityAdjusted * (this.mouseStart.y - cursorPosition.y)));
+        cameraModel.setLog10Distance((float) (oldLog10Distance - 0.5 * dollySensitivityAdjusted * (this.mouseStart.y - cursorPosition.y)));
     }
 }

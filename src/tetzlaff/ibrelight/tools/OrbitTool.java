@@ -11,6 +11,7 @@ final class OrbitTool implements DragTool
     private static final double ORBIT_SENSITIVITY = 1.0 * Math.PI; //todo: get from gui somehow
     private double orbitSensitivityAdjusted = 1.0;
 
+    private float oldTwist;
     private Matrix4 oldOrbitMatrix;
 
     private CursorPosition mouseStart;
@@ -42,6 +43,7 @@ final class OrbitTool implements DragTool
         this.mouseStart = cursorPosition;
 
         oldOrbitMatrix = cameraModel.getOrbit();
+        oldTwist = cameraModel.getTwist();
         orbitSensitivityAdjusted = ORBIT_SENSITIVITY / Math.min(windowSize.width, windowSize.height);
     }
 
@@ -58,6 +60,8 @@ final class OrbitTool implements DragTool
             cameraModel.setOrbit(
                 Matrix4.rotateAxis(rotationVector.normalized(), rotationVector.length() * orbitSensitivityAdjusted)
                     .times(oldOrbitMatrix));
+
+            cameraModel.setTwist(oldTwist);
         }
     }
 }

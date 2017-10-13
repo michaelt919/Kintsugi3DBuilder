@@ -284,13 +284,7 @@ final class LightTool implements PickerTool
         SceneViewport sceneViewport = sceneViewportModel.getSceneViewport();
         if ("IBRObject".equals(sceneViewport.getObjectAtCoordinates(normalizedPosition.x, normalizedPosition.y)))
         {
-            System.out.println("Valid object");
-
             lightingModel.setLightCenter(lightIndex, sceneViewport.get3DPositionAtCoordinates(normalizedPosition.x, normalizedPosition.y));
-        }
-        else
-        {
-            System.out.println("INVALID OBJECT");
         }
     }
 

@@ -13,30 +13,16 @@ public class CameraSetting implements DOMConvertable
     private final DoubleProperty zCenter = new SimpleDoubleProperty();
     private final DoubleProperty azimuth = StaticUtilities.wrapAround(-180, 180, new SimpleDoubleProperty());
     private final DoubleProperty inclination = StaticUtilities.clamp(-90, 90, new SimpleDoubleProperty());
-    private final DoubleProperty log10Distance = new SimpleDoubleProperty();
+    private final DoubleProperty log10Distance = new SimpleDoubleProperty(Math.log10(25.0 / 18.0));
     private final DoubleProperty twist = StaticUtilities.wrapAround(-180.0, 180.0, new SimpleDoubleProperty());
-    private final DoubleProperty fov = new SimpleDoubleProperty(2 * Math.atan(0.36 /* "35 mm" film (actual 36mm horizontal), 50mm lens */));
+    private final DoubleProperty fov = new SimpleDoubleProperty(
+        360 / Math.PI /* convert and multiply by 2) */ * Math.atan(0.36 /* "35 mm" film (actual 36mm horizontal), 50mm lens */));
     private final DoubleProperty focalLength = new SimpleDoubleProperty(50.0);
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final BooleanProperty orthographic = new SimpleBooleanProperty();
-    private final StringProperty name = new SimpleStringProperty();
+    private final StringProperty name = new SimpleStringProperty("New Camera");
 
     // TODO FOV and focal length shouldn't both be set.  In fact, this constructor could probably be replaced with the default and setters used to initialize it instead.
-    public CameraSetting(Double xCenter, Double yCenter, Double zCenter, Double azimuth, Double inclination, Double log10Distance, Double twist, Double fov, Double focalLength, Boolean locked, Boolean orthographic, String name)
-    {
-        this.xCenter.setValue(xCenter);
-        this.yCenter.setValue(yCenter);
-        this.zCenter.setValue(zCenter);
-        this.azimuth.setValue(azimuth);
-        this.inclination.setValue(inclination);
-        this.log10Distance.setValue(log10Distance);
-        this.twist.setValue(twist);
-        this.fov.setValue(fov);
-        this.focalLength.setValue(focalLength);
-        this.locked.setValue(locked);
-        this.orthographic.setValue(orthographic);
-        this.name.setValue(name);
-    }
 
     @Override
     public Element toDOMElement(Document document)
@@ -50,7 +36,6 @@ public class CameraSetting implements DOMConvertable
         element.setAttribute("log10Distance", log10Distance.getValue().toString());
         element.setAttribute("twist", twist.getValue().toString());
         element.setAttribute("fov", fov.getValue().toString());
-        element.setAttribute("focalLength", focalLength.getValue().toString());
         element.setAttribute("locked", locked.getValue().toString());
         element.setAttribute("orthographic", orthographic.getValue().toString());
         element.setAttribute("name", name.getValue());
@@ -59,20 +44,19 @@ public class CameraSetting implements DOMConvertable
 
     public static CameraSetting fromDOMElement(Element element)
     {
-        return new CameraSetting(
-            Double.valueOf(element.getAttribute("lookAtX")),
-            Double.valueOf(element.getAttribute("lookAtY")),
-            Double.valueOf(element.getAttribute("lookAtZ")),
-            Double.valueOf(element.getAttribute("azimuth")),
-            Double.valueOf(element.getAttribute("inclination")),
-            Double.valueOf(element.getAttribute("log10Distance")),
-            Double.valueOf(element.getAttribute("twist")),
-            Double.valueOf(element.getAttribute("fov")),
-            Double.valueOf(element.getAttribute("focalLength")),
-            Boolean.valueOf(element.getAttribute("locked")),
-            Boolean.valueOf(element.getAttribute("orthographic")),
-            element.getAttribute("name")
-        );
+        CameraSetting newCamera = new CameraSetting();
+        newCamera.setXCenter(Double.valueOf(element.getAttribute("lookAtX")));
+        newCamera.setYCenter(Double.valueOf(element.getAttribute("lookAtY")));
+        newCamera.setZCenter(Double.valueOf(element.getAttribute("lookAtZ")));
+        newCamera.setAzimuth(Double.valueOf(element.getAttribute("azimuth")));
+        newCamera.setInclination(Double.valueOf(element.getAttribute("inclination")));
+        newCamera.setLog10Distance(Double.valueOf(element.getAttribute("log10Distance")));
+        newCamera.setTwist(Double.valueOf(element.getAttribute("twist")));
+        newCamera.setFOV(Double.valueOf(element.getAttribute("fov")));
+        newCamera.setLocked(Boolean.valueOf(element.getAttribute("locked")));
+        newCamera.setOrthographic(Boolean.valueOf(element.getAttribute("orthographic")));
+        newCamera.setName(element.getAttribute("name"));
+        return newCamera;
     }
 
     @Override
@@ -90,23 +74,22 @@ public class CameraSetting implements DOMConvertable
 
     public CameraSetting duplicate()
     {
-        return new CameraSetting(
-            this.xCenter.getValue(),
-            this.yCenter.getValue(),
-            this.zCenter.getValue(),
-            this.azimuth.getValue(),
-            this.inclination.getValue(),
-            this.log10Distance.getValue(),
-            this.twist.getValue(),
-            this.fov.getValue(),
-            this.focalLength.getValue(),
-            this.locked.getValue(),
-            this.orthographic.getValue(),
-            this.name.getValue() + " copy"
-        );
+        CameraSetting newCamera = new CameraSetting();
+        newCamera.setXCenter(this.xCenter.getValue());
+        newCamera.setYCenter(this.yCenter.getValue());
+        newCamera.setZCenter(this.zCenter.getValue());
+        newCamera.setAzimuth(this.azimuth.getValue());
+        newCamera.setInclination(this.inclination.getValue());
+        newCamera.setLog10Distance(this.log10Distance.getValue());
+        newCamera.setTwist(this.twist.getValue());
+        newCamera.setFOV(this.fov.getValue());
+        newCamera.setLocked(this.locked.getValue());
+        newCamera.setOrthographic(this.orthographic.getValue());
+        newCamera.setName(this.name.getValue() + " copy");
+        return newCamera;
     }
 
-    public double getxCenter()
+    public double getXCenter()
     {
         return xCenter.get();
     }
@@ -116,12 +99,12 @@ public class CameraSetting implements DOMConvertable
         return xCenter;
     }
 
-    public void setxCenter(double xCenter)
+    public void setXCenter(double xCenter)
     {
         this.xCenter.set(xCenter);
     }
 
-    public double getyCenter()
+    public double getYCenter()
     {
         return yCenter.get();
     }
@@ -131,12 +114,12 @@ public class CameraSetting implements DOMConvertable
         return yCenter;
     }
 
-    public void setyCenter(double yCenter)
+    public void setYCenter(double yCenter)
     {
         this.yCenter.set(yCenter);
     }
 
-    public double getzCenter()
+    public double getZCenter()
     {
         return zCenter.get();
     }
@@ -146,7 +129,7 @@ public class CameraSetting implements DOMConvertable
         return zCenter;
     }
 
-    public void setzCenter(double zCenter)
+    public void setZCenter(double zCenter)
     {
         this.zCenter.set(zCenter);
     }

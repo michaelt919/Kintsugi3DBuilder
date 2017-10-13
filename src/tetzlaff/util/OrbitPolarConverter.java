@@ -16,12 +16,9 @@ public class OrbitPolarConverter
     {
         Vector3 polarCoordinatesRadians = polarCoordinatesDegrees.applyOperator(Math::toRadians);
 
-        return Matrix4.rotateZ(polarCoordinatesRadians.z).times(
-                Matrix4.rotateX(polarCoordinatesRadians.y).times(
-                        Matrix4.rotateY(polarCoordinatesRadians.x)
-                )
-        );
-
+        return Matrix4.rotateZ(polarCoordinatesRadians.z)
+                .times(Matrix4.rotateX(polarCoordinatesRadians.y)
+                .times(Matrix4.rotateY(polarCoordinatesRadians.x)));
     }
     
     public Vector3 convertToPolarCoordinates(Matrix4 orbitMatrix) 
