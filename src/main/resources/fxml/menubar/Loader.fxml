@@ -8,7 +8,7 @@
     <bottom>
         <HBox alignment="CENTER" BorderPane.alignment="CENTER">
             <children>
-            <HBox alignment="CENTER_LEFT" spacing="30.0" HBox.hgrow="ALWAYS">
+            <HBox alignment="CENTER_LEFT" spacing="30.0" HBox.hgrow="ALWAYS" visible="false">
                <children>
                   <Button mnemonicParsing="false" onAction="#quickLoad" text="Quick Load">
                      <font>

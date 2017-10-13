@@ -1,5 +1,6 @@
 package tetzlaff.ibrelight.tools;//Created by alexk on 7/24/2017.
 
+import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.window.CursorPosition;
 import tetzlaff.gl.window.WindowSize;
 import tetzlaff.models.ExtendedCameraModel;
@@ -7,10 +8,11 @@ import tetzlaff.models.ExtendedObjectModel;
 
 final class ObjectTwistTool implements DragTool
 {
-    private static final double TWIST_SENSITIVITY = Math.PI;
-    private double twistSensitivityAdjusted;
+    private static final double ORBIT_SENSITIVITY = 1.0 * Math.PI; //todo: get from gui somehow
+    private double orbitSensitivityAdjusted = 1.0;
 
-    private float oldTwist;
+    private Matrix4 oldOrbitMatrix;
+    private Matrix4 cameraOrbitMatrix;
 
     private CursorPosition mouseStart;
 
@@ -41,13 +43,22 @@ final class ObjectTwistTool implements DragTool
     public void mouseButtonPressed(CursorPosition cursorPosition, WindowSize windowSize)
     {
         this.mouseStart = cursorPosition;
-        oldTwist = objectModel.getRotationZ();
-        twistSensitivityAdjusted = TWIST_SENSITIVITY / windowSize.width;
+
+        oldOrbitMatrix = objectModel.getOrbit();
+        cameraOrbitMatrix = cameraModel.getOrbit();
+        orbitSensitivityAdjusted = ORBIT_SENSITIVITY / Math.min(windowSize.width, windowSize.height);
     }
 
     @Override
     public void cursorDragged(CursorPosition cursorPosition, WindowSize windowSize)
     {
-        objectModel.setRotationZ(oldTwist + (float) Math.toDegrees((cursorPosition.x - this.mouseStart.x) * twistSensitivityAdjusted));
+        if (cursorPosition.x != mouseStart.x)
+        {
+            objectModel.setOrbit(
+                cameraOrbitMatrix.transpose()
+                    .times(Matrix4.rotateZ((cursorPosition.x - mouseStart.x) * orbitSensitivityAdjusted))
+                    .times(cameraOrbitMatrix)
+                    .times(oldOrbitMatrix));
+        }
     }
 }

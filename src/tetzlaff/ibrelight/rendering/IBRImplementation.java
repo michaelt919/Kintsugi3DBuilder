@@ -686,10 +686,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private float getScale()
     {
-         return resources.viewSet.getCameraPose(0)
-                 .times(resources.geometry.getCentroid().asPosition())
-             .getXYZ().length()
-             * this.boundingRadius / this.resources.geometry.getBoundingRadius();
+        return this.boundingRadius * 2;
+//         return resources.viewSet.getCameraPose(0)
+//                 .times(resources.geometry.getCentroid().asPosition())
+//             .getXYZ().length()
+//             * this.boundingRadius / this.resources.geometry.getBoundingRadius();
     }
 
     private Matrix4 getLightMatrix(int lightIndex)
@@ -718,16 +719,21 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         Matrix4 lightMatrix = getLightMatrix(lightIndex);
 
-        float lightDist = lightMatrix.times(this.centroid.asPosition()).getXYZ().length();
+        Vector4 lightDisplacement = lightMatrix.times(this.centroid.asPosition());
+        float lightDist = lightDisplacement.getXYZ().length();
+        float lookAtDist = lightDisplacement.getXY().length();
 
         float radius = (float)
             (resources.viewSet.getCameraPose(0).getUpperLeft3x3()
                 .times(new Vector3(this.boundingRadius))
                 .length() / Math.sqrt(3));
 
-        return Matrix4.perspective(2.0f * (float)Math.atan(radius / lightDist) /*1.5f*/, 1.0f,
-                lightDist - radius,
-                lightDist + radius);
+        float fov = 2.0f * (float)Math.asin(Math.min(0.99, (radius + lookAtDist) / lightDist));
+
+        float farPlane = lightDist + radius;
+        float nearPlane = Math.max(farPlane / 1024.0f, lightDist - radius);
+
+        return Matrix4.perspective(fov, 1.0f, nearPlane, farPlane);
     }
 
     private void generateShadowMaps(int lightIndex)

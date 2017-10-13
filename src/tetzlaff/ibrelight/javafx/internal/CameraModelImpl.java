@@ -9,20 +9,13 @@ import tetzlaff.models.impl.ExtendedCameraModelBase;
 public class CameraModelImpl extends ExtendedCameraModelBase
 {
     private ObservableValue<CameraSetting> selectedCameraSetting;
-    private final CameraSetting sentinel = new CameraSetting(
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        1.0,
-        0.0,
-        90.0,
-        18.0,
-        true,
-        false,
-        "sentinel"
-    );
+    private final CameraSetting sentinel = new CameraSetting();
+
+    public CameraModelImpl()
+    {
+        sentinel.setLocked(true);
+        sentinel.setName("sentinel");
+    }
 
     public void setSelectedCameraSetting(ObservableValue<CameraSetting> selectedCameraSetting)
     {
@@ -57,17 +50,17 @@ public class CameraModelImpl extends ExtendedCameraModelBase
     @Override
     public Vector3 getTarget()
     {
-        return new Vector3((float) getActiveCameraSetting().getxCenter(),
-            (float) getActiveCameraSetting().getyCenter(),
-            (float) getActiveCameraSetting().getzCenter());
+        return new Vector3((float) getActiveCameraSetting().getXCenter(),
+            (float) getActiveCameraSetting().getYCenter(),
+            (float) getActiveCameraSetting().getZCenter());
     }
 
     @Override
     public void setTarget(Vector3 target)
     {
-        getActiveCameraSetting().setxCenter(target.x);
-        getActiveCameraSetting().setyCenter(target.y);
-        getActiveCameraSetting().setzCenter(target.z);
+        getActiveCameraSetting().setXCenter(target.x);
+        getActiveCameraSetting().setYCenter(target.y);
+        getActiveCameraSetting().setZCenter(target.z);
     }
 
     @Override

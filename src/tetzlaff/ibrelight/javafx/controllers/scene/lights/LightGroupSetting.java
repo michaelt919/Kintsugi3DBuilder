@@ -85,10 +85,6 @@ public class LightGroupSetting implements DOMConvertable
             {
                 lightList.remove(index);
             }
-            else
-            {
-                removeLight();
-            }
         }
     }
 
