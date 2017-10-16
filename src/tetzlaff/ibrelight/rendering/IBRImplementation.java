@@ -742,8 +742,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         shadowProgram.setUniform("projection", lightProj);
 
-
-        FramebufferAttachment<ContextType> attachment =shadowMaps.getLayerAsFramebufferAttachment(lightIndex);
+        FramebufferAttachment<ContextType> attachment = shadowMaps.getLayerAsFramebufferAttachment(lightIndex);
 
         shadowFramebuffer.setDepthAttachment(attachment);
         shadowFramebuffer.clearDepthBuffer();

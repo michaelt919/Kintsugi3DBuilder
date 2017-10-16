@@ -76,8 +76,10 @@ public class EnvironmentSetting implements DOMConvertable
         newEnvironment.bpUseImage.setValue(Boolean.valueOf(element.getAttribute("bpUseImage")));
         newEnvironment.bpUseColor.setValue(Boolean.valueOf(element.getAttribute("bpUseColor")));
         newEnvironment.imagePathsRelative.setValue(Boolean.valueOf(element.getAttribute("imagePathsRelative")));
-        newEnvironment.envImageFile.setValue(new File(element.getAttribute("envImageFile")));
-        newEnvironment.bpImageFile.setValue(new File(element.getAttribute("bpImageFile")));
+        newEnvironment.envImageFile.setValue(element.hasAttribute("envImageFile") ?
+            new File(element.getAttribute("envImageFile")) : null);
+        newEnvironment.bpImageFile.setValue(element.hasAttribute("bpImageFile") ?
+            new File(element.getAttribute("bpImageFile")) : null);
         newEnvironment.backgroundIntensity.setValue(Double.valueOf(element.getAttribute("backgroundIntensity")));
         newEnvironment.envColorIntensity.setValue(Double.valueOf(element.getAttribute("envColorIntensity")));
         newEnvironment.envRotation.setValue(Double.valueOf(element.getAttribute("envRotation")));
