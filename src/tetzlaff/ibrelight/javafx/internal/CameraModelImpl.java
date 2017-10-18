@@ -44,7 +44,10 @@ public class CameraModelImpl extends ExtendedCameraModelBase
     @Override
     public void setLog10Distance(float log10Distance)
     {
-        getActiveCameraSetting().setLog10Distance(log10Distance);
+        if (!getActiveCameraSetting().isLocked())
+        {
+            getActiveCameraSetting().setLog10Distance(log10Distance);
+        }
     }
 
     @Override
@@ -58,9 +61,12 @@ public class CameraModelImpl extends ExtendedCameraModelBase
     @Override
     public void setTarget(Vector3 target)
     {
-        getActiveCameraSetting().setXCenter(target.x);
-        getActiveCameraSetting().setYCenter(target.y);
-        getActiveCameraSetting().setZCenter(target.z);
+        if (!getActiveCameraSetting().isLocked())
+        {
+            getActiveCameraSetting().setXCenter(target.x);
+            getActiveCameraSetting().setYCenter(target.y);
+            getActiveCameraSetting().setZCenter(target.z);
+        }
     }
 
     @Override
@@ -72,7 +78,10 @@ public class CameraModelImpl extends ExtendedCameraModelBase
     @Override
     public void setTwist(float twist)
     {
-        getActiveCameraSetting().setTwist(twist);
+        if (!getActiveCameraSetting().isLocked())
+        {
+            getActiveCameraSetting().setTwist(twist);
+        }
     }
 
     @Override
@@ -84,7 +93,10 @@ public class CameraModelImpl extends ExtendedCameraModelBase
     @Override
     public void setAzimuth(float azimuth)
     {
-        getActiveCameraSetting().setAzimuth(azimuth);
+        if (!getActiveCameraSetting().isLocked())
+        {
+            getActiveCameraSetting().setAzimuth(azimuth);
+        }
     }
 
     @Override
@@ -96,7 +108,10 @@ public class CameraModelImpl extends ExtendedCameraModelBase
     @Override
     public void setInclination(float inclination)
     {
-        getActiveCameraSetting().setInclination(inclination);
+        if (!getActiveCameraSetting().isLocked())
+        {
+            getActiveCameraSetting().setInclination(inclination);
+        }
     }
 
     /**
@@ -121,7 +136,10 @@ public class CameraModelImpl extends ExtendedCameraModelBase
     @Override
     public void setHorizontalFOV(float fov)
     {
-        getActiveCameraSetting().setFOV(fov * 180 / Math.PI);
+        if (!getActiveCameraSetting().isLocked())
+        {
+            getActiveCameraSetting().setFOV(fov * 180 / Math.PI);
+        }
     }
 
     @Override
@@ -133,7 +151,10 @@ public class CameraModelImpl extends ExtendedCameraModelBase
     @Override
     public void setFocalLength(float focalLength)
     {
-        getActiveCameraSetting().setFocalLength(focalLength);
+        if (!getActiveCameraSetting().isLocked())
+        {
+            getActiveCameraSetting().setFocalLength(focalLength);
+        }
     }
 
     @Override
@@ -145,6 +166,9 @@ public class CameraModelImpl extends ExtendedCameraModelBase
     @Override
     public void setOrthographic(boolean orthographic)
     {
-        this.getActiveCameraSetting().setOrthographic(orthographic);
+        if (!getActiveCameraSetting().isLocked())
+        {
+            this.getActiveCameraSetting().setOrthographic(orthographic);
+        }
     }
 }

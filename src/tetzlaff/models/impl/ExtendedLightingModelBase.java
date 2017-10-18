@@ -260,19 +260,28 @@ public abstract class ExtendedLightingModelBase<LightInstanceType extends LightI
     @Override
     public void setLightColor(int i, Vector3 lightColor)
     {
-        this.lightInstanceModels.get(i).setColor(lightColor);
+        if (this.isLightWidgetEnabled(i))
+        {
+            this.lightInstanceModels.get(i).setColor(lightColor);
+        }
     }
 
     @Override
     public void setLightMatrix(int i, Matrix4 lightMatrix)
     {
-        this.lightInstanceModels.get(i).setLookMatrix(lightMatrix);
+        if (this.isLightWidgetEnabled(i))
+        {
+            this.lightInstanceModels.get(i).setLookMatrix(lightMatrix);
+        }
     }
 
     @Override
     public void setLightCenter(int i, Vector3 lightCenter)
     {
-        this.lightInstanceModels.get(i).setTarget(lightCenter);
+        if (this.isLightWidgetEnabled(i))
+        {
+            this.lightInstanceModels.get(i).setTarget(lightCenter);
+        }
     }
 
     @Override

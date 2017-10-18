@@ -32,7 +32,7 @@ public class LoaderController implements Initializable
     private File objFile;
     private File photoDir;
 
-    private Runnable unloadFunction;
+    private Runnable callback;
 
     @Override
     public void initialize(URL location, ResourceBundle resources)
@@ -53,9 +53,9 @@ public class LoaderController implements Initializable
         photoDirectoryChooser.setTitle("Select undistorted photo directory");
     }
 
-    public void setUnloadFunction(Runnable unloadFunction)
+    public void setCallback(Runnable callback)
     {
-        this.unloadFunction = unloadFunction;
+        this.callback = callback;
     }
 
     @FXML
@@ -106,9 +106,9 @@ public class LoaderController implements Initializable
     @FXML
     private void okButtonPress()
     {
-        if ((cameraFile != null) & (objFile != null) & (photoDir != null))
+        if ((cameraFile != null) && (objFile != null) && (photoDir != null))
         {
-            unloadFunction.run();
+            callback.run();
 
             //ok!
             new Thread(() ->
@@ -157,16 +157,16 @@ public class LoaderController implements Initializable
         return thisStage;
     }
 
-    private final String quickFilename = "quickSaveLoadConfig.txt";
+    private static final String QUICK_FILENAME = "quickSaveLoadConfig.txt";
 
     @FXML
     private void quickSave()
     {
-        if ((cameraFile != null) & (objFile != null) & (photoDir != null))
+        if ((cameraFile != null) && (objFile != null) && (photoDir != null))
         {
             System.out.println("Quick save");
 
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(quickFilename)))
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(QUICK_FILENAME)))
             {
 
                 String toWrite =
@@ -190,7 +190,7 @@ public class LoaderController implements Initializable
     {
         System.out.println("Quick load");
 
-        try (BufferedReader br = new BufferedReader(new FileReader(quickFilename)))
+        try (BufferedReader br = new BufferedReader(new FileReader(QUICK_FILENAME)))
         {
 
             Stream<String> lineStream = br.lines();
@@ -201,7 +201,7 @@ public class LoaderController implements Initializable
             File newObj = new File(lineArray[1]);
             File newPhoto = new File(lineArray[2]);
 
-            if ((newCam != null) & (newObj != null) & (newPhoto != null))
+            if ((newCam != null) && (newObj != null) && (newPhoto != null))
             {
                 System.out.println("Loaded");
                 cameraFile = newCam;

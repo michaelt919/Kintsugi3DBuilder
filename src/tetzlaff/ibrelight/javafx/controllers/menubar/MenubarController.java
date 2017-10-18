@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Scanner;
+import java.util.function.Predicate;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -17,6 +18,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
@@ -69,6 +71,7 @@ public class MenubarController
 
     private File projectFile;
     private File vsetFile;
+    private boolean projectLoaded;
 
     public void init(Window injectedParentWindow, IBRRequestQueue<?> requestQueue, InternalModels injectedInternalModels, SceneModel injectedSceneModel)
     {
@@ -261,61 +264,90 @@ public class MenubarController
             return;
         }
 
-        try
+        if (confirmClose("Are you sure you want to create a new project?"))
         {
-            LoaderController loaderController = makeWindow("Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
-            loaderController.setUnloadFunction(this::file_closeProject);
-        }
-        catch(IOException e)
-        {
-            e.printStackTrace();
+            try
+            {
+                LoaderController loaderController = makeWindow("Load Files", loaderWindowOpen, 750, 330, "fxml/menubar/Loader.fxml");
+                loaderController.setCallback(() ->
+                {
+                    this.file_closeProject();
+                    projectLoaded = true;
+                });
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
+    private boolean confirmClose(String text)
+    {
+        if (projectLoaded)
+        {
+            Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION,
+                    "If you click OK, any unsaved changes to the current project will be lost.");
+            confirmation.setTitle("Close Project Confirmation");
+            confirmation.setHeaderText(text);
+            return confirmation.showAndWait()
+                .filter(Predicate.isEqual(ButtonType.OK))
+                .isPresent();
+        }
+        else
+        {
+            return true;
+        }
+    }
     @FXML
     private void file_openProject()
     {
-        projectFileChooser.setTitle("Open project");
-        File selectedFile = projectFileChooser.showOpenDialog(parentWindow);
-        if (selectedFile != null)
+        if (confirmClose("Are you sure you want to open another project?"))
         {
-            this.projectFile = selectedFile;
-            File newVsetFile = null;
+            projectFileChooser.setTitle("Open project");
+            File selectedFile = projectFileChooser.showOpenDialog(parentWindow);
+            if (selectedFile != null)
+            {
+                this.projectFile = selectedFile;
+                File newVsetFile = null;
 
-            if (projectFile.getName().endsWith(".vset"))
-            {
-                newVsetFile = projectFile;
-            }
-            else
-            {
-                try
+                if (projectFile.getName().endsWith(".vset"))
                 {
-                    newVsetFile = sceneModel.openProjectFile(projectFile);
+                    newVsetFile = projectFile;
                 }
-                catch (IOException | ParserConfigurationException | SAXException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-
-            if (newVsetFile != null)
-            {
-                MultithreadModels.getInstance().getLoadingModel().unload();
-
-                this.vsetFile = newVsetFile;
-                File vsetFileRef = newVsetFile;
-
-                new Thread(() ->
+                else
                 {
                     try
                     {
-                        MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef);
+                        newVsetFile = sceneModel.openProjectFile(projectFile);
                     }
-                    catch (FileNotFoundException e)
+                    catch (IOException | ParserConfigurationException | SAXException e)
                     {
                         e.printStackTrace();
                     }
-                }).start();
+                }
+
+                if (newVsetFile != null)
+                {
+                    MultithreadModels.getInstance().getLoadingModel().unload();
+
+                    this.vsetFile = newVsetFile;
+                    File vsetFileRef = newVsetFile;
+
+                    projectLoaded = true;
+
+                    new Thread(() ->
+                    {
+                        try
+                        {
+                            MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef);
+                        }
+                        catch (FileNotFoundException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                }
             }
         }
     }
@@ -375,10 +407,14 @@ public class MenubarController
     @FXML
     private void file_closeProject()
     {
-        projectFile = null;
-        vsetFile = null;
+        if (confirmClose("Are you sure you want to close the current project?"))
+        {
+            projectFile = null;
+            vsetFile = null;
 
-        MultithreadModels.getInstance().getLoadingModel().unload();
+            MultithreadModels.getInstance().getLoadingModel().unload();
+            projectLoaded = false;
+        }
     }
 
     @FXML

@@ -36,18 +36,13 @@ public class LightInstanceModelImpl implements LightInstanceModel
     {
         if (subLightSettingObservableValue == null || subLightSettingObservableValue.getValue() == null)
         {
-//            System.out.println("Using SubLight Backup");
             return sentinel;
         }
         else
         {
-//            System.out.println("Win");
             return subLightSettingObservableValue.getValue();
         }
     }
-
-    private Matrix4 orbitCache;
-    private boolean fromRender = false;
 
     @Override
     public Matrix4 getLookMatrix()
@@ -64,11 +59,6 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public Matrix4 getOrbit()
     {
-        if (fromRender)
-        {
-            fromRender = false;
-            return orbitCache;
-        }
         Vector3 polar = new Vector3((float) getLightInstance().getAzimuth(), (float) getLightInstance().getInclination(), 0);
         return OrbitPolarConverter.getInstance().convertToOrbitMatrix(polar);
     }
@@ -76,11 +66,12 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public void setOrbit(Matrix4 orbit)
     {
-        Vector3 polar = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
-        getLightInstance().setAzimuth(polar.x);
-        getLightInstance().setInclination(polar.y);
-        orbitCache = orbit;
-        fromRender = true;
+        if (!this.isLocked())
+        {
+            Vector3 polar = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
+            getLightInstance().setAzimuth(polar.x);
+            getLightInstance().setInclination(polar.y);
+        }
     }
 
     @Override
@@ -92,7 +83,10 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public void setLog10Distance(float log10Distance)
     {
-        getLightInstance().setLog10Distance(log10Distance);
+        if (!this.isLocked())
+        {
+            getLightInstance().setLog10Distance(log10Distance);
+        }
     }
 
     @Override
@@ -104,7 +98,7 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public void setDistance(float distance)
     {
-        setLog10Distance((float) Math.log10(distance));
+        this.setLog10Distance((float) Math.log10(distance));
     }
 
     @Override
@@ -118,9 +112,12 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public void setTarget(Vector3 target)
     {
-        getLightInstance().setTargetX(target.x);
-        getLightInstance().setTargetY(target.y);
-        getLightInstance().setTargetZ(target.z);
+        if (!this.isLocked())
+        {
+            getLightInstance().setTargetX(target.x);
+            getLightInstance().setTargetY(target.y);
+            getLightInstance().setTargetZ(target.z);
+        }
     }
 
     @Override
@@ -143,7 +140,10 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public void setAzimuth(float azimuth)
     {
-        getLightInstance().setAzimuth(azimuth);
+        if (!this.isLocked())
+        {
+            getLightInstance().setAzimuth(azimuth);
+        }
     }
 
     @Override
@@ -167,7 +167,10 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public void setInclination(float inclination)
     {
-        getLightInstance().setInclination(inclination);
+        if (!this.isLocked())
+        {
+            getLightInstance().setInclination(inclination);
+        }
     }
 
     @Override
@@ -219,17 +222,20 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public void setColor(Vector3 color)
     {
-        LightInstanceSetting lightInstance = getLightInstance();
-        double intensity = lightInstance.getIntensity();
+        if (!this.isLocked())
+        {
+            LightInstanceSetting lightInstance = getLightInstance();
+            double intensity = lightInstance.getIntensity();
 
-        if (intensity > 0.0)
-        {
-            lightInstance.setColor(new Color(color.x / intensity, color.y / intensity, color.z / intensity, 1));
-        }
-        else
-        {
-            lightInstance.setIntensity(1.0);
-            lightInstance.setColor(new Color(color.x, color.y, color.z, 1));
+            if (intensity > 0.0)
+            {
+                lightInstance.setColor(new Color(color.x / intensity, color.y / intensity, color.z / intensity, 1));
+            }
+            else
+            {
+                lightInstance.setIntensity(1.0);
+                lightInstance.setColor(new Color(color.x, color.y, color.z, 1));
+            }
         }
     }
 

@@ -61,6 +61,13 @@ public class LightingModelImpl extends ExtendedLightingModelBase<LightInstanceMo
     }
 
     @Override
+    public boolean isLightWidgetEnabled(int index)
+    {
+        LightGroupSetting activeLightGroup = getActiveLightGroupSetting();
+        return !activeLightGroup.isLocked() && !activeLightGroup.getLightList().get(index).isLocked();
+    }
+
+    @Override
     public int getSelectedLightIndex()
     {
         return getActiveLightGroupSetting().getSelectedLightIndex();

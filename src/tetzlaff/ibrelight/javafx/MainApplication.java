@@ -62,7 +62,6 @@ public class MainApplication extends Application
         @Override
         public boolean confirmQuit()
         {
-            // TODO make this not hang up the program when called from the JavaFX thread.
             FutureTask<Boolean> confirmationTask = new FutureTask<>(() ->
             {
                 Dialog<ButtonType> confirmation = new Alert(AlertType.CONFIRMATION, "If you click OK, any unsaved changes will be lost.");
