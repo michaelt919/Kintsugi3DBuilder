@@ -194,7 +194,8 @@ public class MainApplication extends Application
             sceneModel,
             MultithreadModels.getInstance().getSceneViewportModel());
 
-        menuBarController.init(primaryStage.getScene().getWindow(), Rendering.getRequestQueue(), InternalModels.getInstance(), sceneModel);
+        menuBarController.init(primaryStage.getScene().getWindow(), Rendering.getRequestQueue(), InternalModels.getInstance(), sceneModel,
+            () -> getHostServices().showDocument("https://docs.google.com/document/d/1jM4sr359-oacpom0TrGLYSqCUdHFEprnvsCn5oVwTEI/edit?usp=sharing"));
 
         SynchronizedWindow menuBarWindow = new StageSynchronization(primaryStage);
 

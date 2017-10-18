@@ -16,30 +16,33 @@
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
       </Menu>
       <Menu mnemonicParsing="false" text="Viewport">
-         <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid"/>
-         <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass" visible="false"/>
+         <CheckMenuItem fx:id="is3DGridCheckMenuItem" mnemonicParsing="false" text="3D grid" />
+         <CheckMenuItem fx:id="compassCheckMenuItem" mnemonicParsing="false" text="Compass" visible="false" />
          <CheckMenuItem fx:id="halfResolutionCheckMenuItem" mnemonicParsing="false" selected="true" text="Half resolution" />
-         <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling" visible="false"/>
+         <CheckMenuItem fx:id="multiSamplingCheckMenuItem" mnemonicParsing="false" text="Multi-sampling" visible="false" />
       </Menu>
       <Menu mnemonicParsing="false" text="Lighting">
          <CheckMenuItem fx:id="relightingCheckMenuItem" mnemonicParsing="false" selected="true" text="Relighting" />
-         <CheckMenuItem fx:id="environmentMappingCheckMenuItem" mnemonicParsing="false" selected="true" text="Environment mapping" visible="false"/>
+         <CheckMenuItem fx:id="environmentMappingCheckMenuItem" mnemonicParsing="false" selected="true" text="Environment mapping" visible="false" />
          <CheckMenuItem fx:id="shadowsCheckMenuItem" mnemonicParsing="false" text="Shadows" />
          <CheckMenuItem fx:id="visibleLightsCheckMenuItem" mnemonicParsing="false" selected="true" text="Show light sources" />
           <CheckMenuItem fx:id="visibleLightWidgetsCheckMenuItem" mnemonicParsing="false" text="Show light widgets" />
-         <CheckMenuItem fx:id="visibleCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show camera poses for photographs" visible="false"/>
-         <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show saved camera poses" visible="false"/>
+         <CheckMenuItem fx:id="visibleCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show camera poses for photographs" visible="false" />
+         <CheckMenuItem fx:id="visibleSavedCameraPoseCheckMenuItem" mnemonicParsing="false" text="Show saved camera poses" visible="false" />
       </Menu>
       <Menu mnemonicParsing="false" text="Shading">
          <fx:define>
             <ToggleGroup fx:id="renderGroup" />
          </fx:define>
-         <RadioMenuItem mnemonicParsing="false" text="None" toggleGroup="$renderGroup" userData="None" visible="false"/>
-         <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" userData="Wireframe" visible="false"/>
-         <RadioMenuItem mnemonicParsing="false" text="Lambertian shaded" toggleGroup="$renderGroup" userData="Lambertian shaded" visible="false"/>
+         <RadioMenuItem mnemonicParsing="false" text="None" userData="None" visible="false">
+            <toggleGroup>
+               <ToggleGroup fx:id="renderGroup" />
+            </toggleGroup></RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" userData="Wireframe" visible="false" />
+         <RadioMenuItem mnemonicParsing="false" text="Lambertian shaded" toggleGroup="$renderGroup" userData="Lambertian shaded" visible="false" />
          <RadioMenuItem mnemonicParsing="false" text="Specular shaded" toggleGroup="$renderGroup" userData="Specular shaded" />
-         <RadioMenuItem mnemonicParsing="false" text="Solid textured" toggleGroup="$renderGroup" userData="Solid textured" visible="false"/>
-         <RadioMenuItem mnemonicParsing="false" text="Lambertian textured" toggleGroup="$renderGroup" userData="Lambertian textured" visible="false"/>
+         <RadioMenuItem mnemonicParsing="false" text="Solid textured" toggleGroup="$renderGroup" userData="Solid textured" visible="false" />
+         <RadioMenuItem mnemonicParsing="false" text="Lambertian textured" toggleGroup="$renderGroup" userData="Lambertian textured" visible="false" />
          <RadioMenuItem mnemonicParsing="false" text="Material shaded" toggleGroup="$renderGroup" userData="Material shaded" />
          <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based rendering" toggleGroup="$renderGroup" userData="Image-based rendering" />
          <SeparatorMenuItem mnemonicParsing="false" />
@@ -54,11 +57,11 @@
          <CheckMenuItem mnemonicParsing="false" text="Separate render window" />
       </Menu>
       <Menu mnemonicParsing="false" text="Help">
-          <MenuItem mnemonicParsing="false" text="User Manual" />
+          <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="User Manual" />
           <MenuItem mnemonicParsing="false" text="About" />
       </Menu>
    </MenuBar>
-   <ProgressBar fx:id="progressBar" prefWidth="410.0" progress="0.0" VBox.vgrow="ALWAYS" visible="false">
+   <ProgressBar fx:id="progressBar" prefWidth="410.0" progress="0.0" visible="false" VBox.vgrow="ALWAYS">
        <VBox.margin>
            <Insets>
                <right>-10</right>
