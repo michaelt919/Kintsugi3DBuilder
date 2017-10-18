@@ -2,8 +2,6 @@ package tetzlaff.models;
 
 public interface LightWidgetModel extends ReadonlyLightWidgetModel
 {
-    void setWidgetsEnabled(boolean widgetsEnabled);
-
     void setAzimuthWidgetVisible(boolean azimuthWidgetVisible);
     void setAzimuthWidgetSelected(boolean azimuthWidgetSelected);
 
