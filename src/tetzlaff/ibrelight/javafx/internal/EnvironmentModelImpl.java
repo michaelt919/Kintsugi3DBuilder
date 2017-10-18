@@ -240,7 +240,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
     @Override
     public void setEnvironmentRotation(float environmentRotation)
     {
-        if (doesSelectedExist())
+        if (doesSelectedExist() && !selected.getValue().isLocked())
         {
             selected.getValue().setEnvRotation(environmentRotation * 180 / Math.PI);
         }
@@ -255,7 +255,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
     @Override
     public void setEnvironmentIntensity(float environmentIntensity)
     {
-        if (doesSelectedExist())
+        if (doesSelectedExist() && !selected.getValue().isLocked())
         {
             selected.getValue().setEnvIntensity(environmentIntensity);
         }
@@ -270,7 +270,7 @@ public class EnvironmentModelImpl implements EnvironmentModel
     @Override
     public void setBackgroundIntensity(float backgroundIntensity)
     {
-        if (doesSelectedExist())
+        if (doesSelectedExist() && !selected.getValue().isLocked())
         {
             selected.getValue().setBackgroundIntensity(backgroundIntensity);
         }

@@ -7,7 +7,7 @@ import tetzlaff.models.impl.ExtendedLightingModelBase;
 
 public class LightingModelWrapper extends ExtendedLightingModelBase<LightInstanceModelWrapper>
 {
-    private final ExtendedLightingModel baseModel;
+   private final ExtendedLightingModel baseModel;
     private final MultithreadValue<Integer> selectedLightIndex;
 
     public LightingModelWrapper(ExtendedLightingModel baseModel)
@@ -23,6 +23,12 @@ public class LightingModelWrapper extends ExtendedLightingModelBase<LightInstanc
     public int getLightCount()
     {
         return baseModel.getLightCount();
+    }
+
+    @Override
+    public boolean isLightWidgetEnabled(int index)
+    {
+        return baseModel.isLightWidgetEnabled(index);
     }
 
     @Override

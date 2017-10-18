@@ -56,9 +56,12 @@ public class ObjectModelImpl extends ExtendedObjectModelBase
     @Override
     public void setCenter(Vector3 center)
     {
-        getActiveObjectPose().setCenterX(center.x);
-        getActiveObjectPose().setCenterY(center.y);
-        getActiveObjectPose().setCenterZ(center.z);
+        if (!getActiveObjectPose().isLocked())
+        {
+            getActiveObjectPose().setCenterX(center.x);
+            getActiveObjectPose().setCenterY(center.y);
+            getActiveObjectPose().setCenterZ(center.z);
+        }
     }
 
     @Override
@@ -70,7 +73,10 @@ public class ObjectModelImpl extends ExtendedObjectModelBase
     @Override
     public void setRotationZ(float rotationZ)
     {
-        getActiveObjectPose().setRotateZ(rotationZ);
+        if (!getActiveObjectPose().isLocked())
+        {
+            getActiveObjectPose().setRotateZ(rotationZ);
+        }
     }
 
     @Override
@@ -82,7 +88,10 @@ public class ObjectModelImpl extends ExtendedObjectModelBase
     @Override
     public void setRotationY(float rotationY)
     {
-        getActiveObjectPose().setRotateY(rotationY);
+        if (!getActiveObjectPose().isLocked())
+        {
+            getActiveObjectPose().setRotateY(rotationY);
+        }
     }
 
     @Override
@@ -94,7 +103,10 @@ public class ObjectModelImpl extends ExtendedObjectModelBase
     @Override
     public void setRotationX(float rotationX)
     {
-        getActiveObjectPose().setRotateX(rotationX);
+        if (!getActiveObjectPose().isLocked())
+        {
+            getActiveObjectPose().setRotateX(rotationX);
+        }
     }
 
     /**

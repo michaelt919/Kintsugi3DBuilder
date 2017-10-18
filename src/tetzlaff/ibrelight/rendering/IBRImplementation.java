@@ -897,7 +897,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         float cameraDistance = partialViewMatrix
             .times(this.cameraModel.getTarget().times(this.getScale()).asPosition())
             .getXYZ().length();
-        return cameraDistance * getVerticalFieldOfView(size) / 4;
+        return cameraDistance * Math.min(cameraModel.getHorizontalFOV(), getVerticalFieldOfView(size)) / 4;
     }
 
     @Override

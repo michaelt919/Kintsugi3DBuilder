@@ -9,6 +9,7 @@ public interface ReadonlyLightingModel
 
     int getLightCount();
     boolean isLightVisualizationEnabled(int index);
+    boolean isLightWidgetEnabled(int index);
     boolean areLightWidgetsEthereal();
 
     Vector3 getAmbientLightColor();
