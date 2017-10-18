@@ -73,12 +73,15 @@ public class MenubarController
     private File vsetFile;
     private boolean projectLoaded;
 
-    public void init(Window injectedParentWindow, IBRRequestQueue<?> requestQueue, InternalModels injectedInternalModels, SceneModel injectedSceneModel)
+    private Runnable userDocumentationHandler;
+
+    public void init(Window injectedParentWindow, IBRRequestQueue<?> requestQueue, InternalModels injectedInternalModels, SceneModel injectedSceneModel,
+        Runnable injectedUserDocumentationHandler)
     {
         this.parentWindow = injectedParentWindow;
-
         this.internalModels = injectedInternalModels;
         this.sceneModel = injectedSceneModel;
+        this.userDocumentationHandler = injectedUserDocumentationHandler;
 
         projectFileChooser = new FileChooser();
 
@@ -440,6 +443,12 @@ public class MenubarController
     private void file_exit()
     {
         WindowSynchronization.getInstance().quit();
+    }
+
+    @FXML
+    private void help_userManual()
+    {
+        userDocumentationHandler.run();
     }
 
     @FXML
