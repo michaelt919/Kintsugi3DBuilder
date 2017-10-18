@@ -17,7 +17,6 @@ public abstract class ExtendedLightingModelBase<LightInstanceType extends LightI
 
     private static class LightWidgetModelImpl implements LightWidgetModel
     {
-        private boolean widgetsEnabled = true;
         private boolean azimuthWidgetVisible = true;
         private boolean azimuthWidgetSelected = false;
         private boolean inclinationWidgetVisible = true;
@@ -26,12 +25,6 @@ public abstract class ExtendedLightingModelBase<LightInstanceType extends LightI
         private boolean distanceWidgetSelected = false;
         private boolean centerWidgetVisible = true;
         private boolean centerWidgetSelected = false;
-
-        @Override
-        public boolean areWidgetsEnabled()
-        {
-            return widgetsEnabled;
-        }
 
         @Override
         public boolean isAzimuthWidgetVisible()
@@ -79,12 +72,6 @@ public abstract class ExtendedLightingModelBase<LightInstanceType extends LightI
         public boolean isCenterWidgetSelected()
         {
             return centerWidgetSelected;
-        }
-
-        @Override
-        public void setWidgetsEnabled(boolean widgetsEnabled)
-        {
-            this.widgetsEnabled = widgetsEnabled;
         }
 
         @Override

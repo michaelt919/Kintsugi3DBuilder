@@ -1136,7 +1136,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
                 this.context.getState().enableDepthTest();
 
-                if (settingsModel.getBoolean("lightWidgetsEnabled") && lightingModel.getLightWidgetModel(i).areWidgetsEnabled()
+                if (settingsModel.getBoolean("lightWidgetsEnabled") && lightingModel.isLightWidgetEnabled(i)
                     && lightingModel.getLightWidgetModel(i).isCenterWidgetVisible())
                 {
                     this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i + ".Center"));
@@ -1183,7 +1183,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     this.lightDrawable.draw(PrimitiveMode.TRIANGLE_FAN, framebuffer);
                 }
 
-                if (settingsModel.getBoolean("lightWidgetsEnabled") && lightingModel.getLightWidgetModel(i).areWidgetsEnabled())
+                if (settingsModel.getBoolean("lightWidgetsEnabled") && lightingModel.isLightWidgetEnabled(i))
                 {
                     this.solidProgram.setUniform("projection", this.getProjectionMatrix(size));
 

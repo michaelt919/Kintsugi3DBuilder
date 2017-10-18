@@ -2,8 +2,6 @@ package tetzlaff.models;
 
 public interface ReadonlyLightWidgetModel
 {
-    boolean areWidgetsEnabled();
-
     boolean isAzimuthWidgetVisible();
     boolean isAzimuthWidgetSelected();
 
