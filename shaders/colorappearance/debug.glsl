@@ -5,9 +5,13 @@
 
 #line 7 1109
 
+//vec3 getSpecularColor();
+//vec3 getRoughness();
+
 #define DIFFUSE_COLOR vec3(0)
-#define SPECULAR_COLOR (sqrt(rgbToXYZ(fTexCoord.yxy)) / 4)
 #define ROUGHNESS_SQUARED (sqrt(rgbToXYZ(fTexCoord.yxy)) / 2)
+#define SPECULAR_COLOR (ROUGHNESS_SQUARED * 0.5)
+//#define SPECULAR_COLOR (ROUGHNESS_SQUARED * rgbToXYZ(getSpecularColor()) / pow(getRoughness(), vec3(2)))
 
 vec4 getColor(int index)
 {
