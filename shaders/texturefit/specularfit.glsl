@@ -1,7 +1,7 @@
 #ifndef SPECULARFIT_GLSL
 #define SPECULARFIT_GLSL
 
-#line 7 2004
+#line 5 2004
 
 #define MIN_ROUGHNESS  0.00390625    // 1/256
 #define MAX_ROUGHNESS  0.70710678 // sqrt(1/2)
@@ -192,7 +192,7 @@ ParameterizedFit fitSpecular()
     }
 
     // Chromatic roughness
-    vec3 roughnessSquared = min(vec3(MAX_ROUGHNESS), max(vec3(MIN_ROUGHNESS),
+    vec3 roughnessSquared = min(vec3(MAX_ROUGHNESS * MAX_ROUGHNESS), max(vec3(MIN_ROUGHNESS * MIN_ROUGHNESS),
         roughnessSums[0] / max(vec3(0.0), sqrt(rgbToXYZ(maxResidual)) * roughnessSums[2] - roughnessSums[1])));
     vec3 specularColor = 4 * xyzToRGB(roughnessSquared * rgbToXYZ(maxResidual));
 
@@ -201,6 +201,9 @@ ParameterizedFit fitSpecular()
 //        roughnessSums[0].y / max(vec3(0.0), sqrt(maxResidualLuminance[0]) * roughnessSums[2].y - roughnessSums[1].y))));
 //    vec3 avgResidualXYZ = pow(sumResidualXYZGamma.xyz / sumResidualXYZGamma.w, vec3(fittingGamma));
 //    vec3 specularColor = 4 * xyzToRGB(roughnessSquared * maxResidualLuminance[0] * avgResidualXYZ / avgResidualXYZ.y);
+//
+//    // Monochrome roughness and reflectivity (for debugging)
+//    // vec3 specularColor = 4 * roughnessSquared * maxResidualLuminance[0];
 
 //    Derivation:
 //    maxResidual.rgb = xyzToRGB(rgbToXYZ(specularColor) * 1.0 / roughnessSquared) / 4;
