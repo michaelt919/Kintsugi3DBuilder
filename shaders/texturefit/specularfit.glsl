@@ -177,23 +177,33 @@ ParameterizedFit fitSpecular()
 
                 //if (nDotV * (1 + nDotHSquared) * (1 + nDotHSquared) > 1.0)
                 {
-                    roughnessSums[0] += nDotV // * pow(colorRemainder, vec3(1.0 / fittingGamma))
-                        * sqrt(colorRemainder * nDotV) * (1 - nDotHSquared);
+                    vec3 sqrtRemainder = sqrt(colorRemainder * nDotV);
+                    vec3 sqrtRemainderPseudoLab = vec3(sqrtRemainder.y, sqrtRemainder.x - sqrtRemainder.y, sqrtRemainder.y - sqrtRemainder.z);
 
-                    roughnessSums[1] += nDotV // * pow(colorRemainder, vec3(1.0 / fittingGamma))
-                        * sqrt(colorRemainder * nDotV) * nDotHSquared;
+                    vec3 colorRemainderGammaCorrected = pow(colorRemainder, vec3(1.0 / fittingGamma));
+                    vec3 weights = vec3(colorRemainderGammaCorrected.y,
+                        colorRemainderGammaCorrected.x - colorRemainderGammaCorrected.y,
+                        colorRemainderGammaCorrected.y - colorRemainderGammaCorrected.z);
 
-                    roughnessSums[2] += nDotV ;// * pow(colorRemainder, vec3(1.0 / fittingGamma));
+                    roughnessSums[0] += nDotV * weights * sqrtRemainderPseudoLab * (1 - nDotHSquared);
+                    roughnessSums[1] += nDotV * weights * sqrtRemainderPseudoLab * nDotHSquared;
+                    roughnessSums[2] += nDotV * weights;
 
-                    sumResidualXYZGamma += nDotV * vec4(pow(colorRemainder, vec3(1.0 / fittingGamma)), 1.0);
+                    sumResidualXYZGamma += nDotV * vec4(colorRemainderGammaCorrected, 1.0);
                 }
             }
         }
     }
 
+    vec3 roughnessAverages0 = roughnessSums[0] / roughnessSums[2];
+    vec3 roughnessAverages1 = roughnessSums[1] / roughnessSums[2];
+
+    vec3 roughnessSums0XYZ = vec3(roughnessAverages0[0] + roughnessAverages0[1], roughnessAverages0[0], roughnessAverages0[0] - roughnessAverages0[2]);
+    vec3 roughnessSums1XYZ = vec3(roughnessAverages1[0] + roughnessAverages1[1], roughnessAverages1[0], roughnessAverages1[0] - roughnessAverages1[2]);
+
     // Chromatic roughness
     vec3 roughnessSquared = min(vec3(MAX_ROUGHNESS * MAX_ROUGHNESS), max(vec3(MIN_ROUGHNESS * MIN_ROUGHNESS),
-        roughnessSums[0] / max(vec3(0.0), sqrt(rgbToXYZ(maxResidual)) * roughnessSums[2] - roughnessSums[1])));
+        roughnessSums0XYZ / max(vec3(0.0), sqrt(rgbToXYZ(maxResidual)) - roughnessSums1XYZ)));
     vec3 specularColor = 4 * xyzToRGB(roughnessSquared * rgbToXYZ(maxResidual));
 
 //    // Monochrome roughness
@@ -201,7 +211,7 @@ ParameterizedFit fitSpecular()
 //        roughnessSums[0].y / max(vec3(0.0), sqrt(maxResidualLuminance[0]) * roughnessSums[2].y - roughnessSums[1].y))));
 //    vec3 avgResidualXYZ = pow(sumResidualXYZGamma.xyz / sumResidualXYZGamma.w, vec3(fittingGamma));
 //    vec3 specularColor = 4 * xyzToRGB(roughnessSquared * maxResidualLuminance[0] * avgResidualXYZ / avgResidualXYZ.y);
-//
+
 //    // Monochrome roughness and reflectivity (for debugging)
 //    // vec3 specularColor = 4 * roughnessSquared * maxResidualLuminance[0];
 
