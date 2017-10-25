@@ -2,6 +2,7 @@ package tetzlaff.ibrelight.rendering;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.stream.IntStream;
@@ -145,13 +146,16 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws FileNotFoundException
         {
             this.viewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
+            Path parentDirectory = cameraFile.getParentFile().toPath();
             if (geometryFile != null)
             {
                 this.geometry = VertexGeometry.createFromOBJFile(geometryFile);
+                this.viewSet.setGeometryFileName(parentDirectory.relativize(geometryFile.toPath()).toString());
             }
             if (undistortedImageDirectory != null)
             {
                 this.imageDirectoryOverride = undistortedImageDirectory;
+                this.viewSet.setRelativeImagePathName(parentDirectory.relativize(undistortedImageDirectory.toPath()).toString());
             }
             return this;
         }

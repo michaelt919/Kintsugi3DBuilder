@@ -1569,7 +1569,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         }
 
         context.getState().enableDepthTest();
-        //context.enableBackFaceCulling();
+        context.getState().disableBackFaceCulling();
 
         try
         {
