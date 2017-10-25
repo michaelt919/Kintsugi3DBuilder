@@ -393,7 +393,7 @@ public class MenubarController
         projectFileChooser.setSelectedExtensionFilter(projectFileChooser.getExtensionFilters().get(0));
         if (projectFile != null)
         {
-            projectFileChooser.setInitialFileName(projectFile.toString());
+            projectFileChooser.setInitialFileName(projectFile.getName());
         }
         else if (vsetFile != null)
         {
