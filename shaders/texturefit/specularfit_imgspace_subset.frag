@@ -20,8 +20,8 @@ layout(location = 3) out vec4 roughness;
 void main()
 {
     ParameterizedFit fit = fitSpecular();
-    diffuseColor = vec4(pow(fit.diffuseColor, vec3(1 / gamma)), 1.0);
-    normal = vec4(fit.normal * 0.5 + vec3(0.5), 1.0);
-    specularColor = vec4(pow(fit.specularColor, vec3(1 / gamma)), 1.0);
-    roughness = vec4(vec3(fit.roughness), 1.0);
+    diffuseColor = vec4(pow(fit.diffuseColor.rgb, vec3(1 / gamma)), fit.diffuseColor.a);
+    normal = vec4(fit.normal.xyz * 0.5 + vec3(0.5), fit.normal.w);
+    specularColor = vec4(pow(fit.specularColor.rgb, vec3(1 / gamma)), fit.specularColor.a);
+    roughness = vec4(vec3(fit.roughness.xyz), fit.roughness.w);
 }
