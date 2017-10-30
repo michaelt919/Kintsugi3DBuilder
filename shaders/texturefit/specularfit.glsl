@@ -6,24 +6,27 @@
 #define MIN_ROUGHNESS  0.00390625    // 1/256
 #define MAX_ROUGHNESS  0.70710678 // sqrt(1/2)
 
+#define MIN_SPECULAR_REFLECTIVITY 0.04 // corresponds to dielectric with index of refraction = 1.5
+
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
 
 uniform float fittingGamma;
 uniform bool standaloneMode;
 
-#define chromaticRoughness true
-#define chromaticSpecular true
+#define chromaticRoughness false
+#define chromaticSpecular false
 
-vec3 getDiffuseColor()
+vec4 getDiffuseColor()
 {
     if (standaloneMode)
     {
-        return vec3(0);
+        return vec4(0, 0, 0, 1);
     }
     else
     {
-        return pow(texture(diffuseEstimate, fTexCoord).rgb, vec3(gamma));
+        vec4 textureResult = texture(diffuseEstimate, fTexCoord);
+        return vec4(pow(textureResult.rgb, vec3(gamma)), textureResult.a);
     }
 }
 
@@ -41,13 +44,13 @@ vec3 getDiffuseNormalVector()
 
 struct ParameterizedFit
 {
-    vec3 diffuseColor;
-    vec3 normal;
-    vec3 specularColor;
-    vec3 roughness;
+    vec4 diffuseColor;
+    vec4 normal;
+    vec4 specularColor;
+    vec4 roughness;
 };
 
-vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light, 
+vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light,
                     vec3 attenuatedLightIntensity, vec3 normal, float maxLuminance)
 {
     vec3 diffuseContrib = diffuseColor * max(0, dot(light, normal)) * attenuatedLightIntensity;
@@ -79,7 +82,7 @@ ParameterizedFit fitSpecular()
     vec3 shadingNormalTS = getDiffuseNormalVector();
     vec3 shadingNormal = tangentToObject * shadingNormalTS;
 
-    vec3 diffuseColor = getDiffuseColor();
+    vec4 diffuseColor = getDiffuseColor();
 
     float maxLuminance = getMaxLuminance();
     vec3 maxResidual = vec3(0);
@@ -103,7 +106,7 @@ ParameterizedFit fitSpecular()
             vec3 light = normalize(lightPreNormalized);
 
             vec3 colorRemainder =
-                removeDiffuse(color, diffuseColor, light, attenuatedLightIntensity, shadingNormal, maxLuminance).rgb / attenuatedLightIntensity;
+                removeDiffuse(color, diffuseColor.rgb, light, attenuatedLightIntensity, shadingNormal, maxLuminance).rgb / attenuatedLightIntensity;
             float luminance = getLuminance(colorRemainder);
 
             vec3 halfway = normalize(view + light);
@@ -155,12 +158,10 @@ ParameterizedFit fitSpecular()
 
     vec4 sumResidualXYZGamma = vec4(0.0);
 
-    vec4 sumDiffuse = vec4(0.0);
-    
     for (int i = 0; i < viewCount; i++)
     {
         vec3 view = normalize(getViewVector(i));
-        
+
         // Values of 1.0 for this color would correspond to the expected reflectance
         // for an ideal diffuse reflector (diffuse albedo of 1), which is a reflectance of 1 / pi.
         // Hence, this color corresponds to the reflectance times pi.
@@ -172,28 +173,23 @@ ParameterizedFit fitSpecular()
         if (color.a * dot(view, normal) > 0)
         {
             vec3 lightPreNormalized = getLightVector(i);
-            vec3 attenuatedLightIntensity = infiniteLightSources ? 
-                getLightIntensity(i) : 
+            vec3 attenuatedLightIntensity = infiniteLightSources ?
+                getLightIntensity(i) :
                 getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
             vec3 light = normalize(lightPreNormalized);
             float nDotL = max(0, dot(light, specularNormal));
             float nDotV = max(0, dot(specularNormal, view));
-            
+
             vec3 halfway = normalize(view + light);
             float nDotH = dot(halfway, specularNormal);
             float nDotHSquared = nDotH * nDotH;
-            
+
             if (nDotV > 0 /*&& nDotHSquared > 0.5*/)
             {
                 float hDotV = max(0, dot(halfway, view));
 
                 vec3 colorRemainderRGB =
-                    removeDiffuse(color, diffuseColor, light, attenuatedLightIntensity, normal, maxLuminance).rgb / attenuatedLightIntensity;
-
-                if (diffuseColor != vec3(0.0))
-                {
-                    sumDiffuse += vec4(max(vec3(0.0), nDotL * (color.rgb / attenuatedLightIntensity - colorRemainderRGB)), nDotL * nDotL);
-                }
+                    removeDiffuse(color, diffuseColor.rgb, light, attenuatedLightIntensity, normal, maxLuminance).rgb / attenuatedLightIntensity;
 
                 vec3 colorRemainder = rgbToXYZ(colorRemainderRGB);
 
@@ -215,11 +211,14 @@ ParameterizedFit fitSpecular()
 
     if (roughnessSums[2] == vec3(0.0) || sumResidualXYZGamma.w == 0.0)
     {
-        discard;
+        return ParameterizedFit(diffuseColor, vec4(normalize(transpose(tangentToObject) * shadingNormal), 1), vec4(0), vec4(0));
     }
 
+    vec3 maxResidualXYZ = rgbToXYZ(maxResidual);
+
+    // Estimate the roughness and specular reflectivity (in an XYZ color space) from the previous computations.
     vec3 roughnessSquared;
-    vec3 specularColor;
+    vec3 specularColorXYZEstimate;
 
     //    Derivation:
     //    maxResidual.rgb = xyzToRGB(rgbToXYZ(specularColor) * 1.0 / roughnessSquared) / 4;
@@ -229,36 +228,147 @@ ParameterizedFit fitSpecular()
     //    4 * xyzToRGB * roughnessSquared * rgbToXYZ * maxResidual.rgb = specularColor;
     if (chromaticRoughness)
     {
-        roughnessSquared = min(vec3(MAX_ROUGHNESS * MAX_ROUGHNESS), max(vec3(MIN_ROUGHNESS * MIN_ROUGHNESS),
-            roughnessSums[0] / max(vec3(0.0), sqrt(rgbToXYZ(maxResidual)) * roughnessSums[2] - roughnessSums[1])));
-        specularColor = 4 * xyzToRGB(roughnessSquared * rgbToXYZ(maxResidual));
+        roughnessSquared = clamp(roughnessSums[0] / max(vec3(0.0), sqrt(maxResidualXYZ) * roughnessSums[2] - roughnessSums[1]),
+            vec3(MIN_ROUGHNESS * MIN_ROUGHNESS), vec3(MAX_ROUGHNESS * MAX_ROUGHNESS));
+        specularColorXYZEstimate = 4 * roughnessSquared * maxResidualXYZ;
     }
     else
     {
-         roughnessSquared = vec3(min(vec3(MAX_ROUGHNESS), max(vec3(MIN_ROUGHNESS),
-             roughnessSums[0].y / max(vec3(0.0), sqrt(maxResidualLuminance[0]) * roughnessSums[2].y - roughnessSums[1].y))));
+         roughnessSquared = vec3(clamp(roughnessSums[0].y / max(0.0, sqrt(maxResidualLuminance[0]) * roughnessSums[2].y - roughnessSums[1].y),
+             MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS));
          vec3 avgResidualXYZ = pow(sumResidualXYZGamma.xyz / sumResidualXYZGamma.w, vec3(fittingGamma));
-         specularColor = 4 * xyzToRGB(roughnessSquared * maxResidualLuminance[0] * avgResidualXYZ / avgResidualXYZ.y);
+         specularColorXYZEstimate = 4 * roughnessSquared * maxResidualLuminance[0] * avgResidualXYZ / avgResidualXYZ.y;
 
 //        // Force monochrome roughness and reflectivity (for debugging)
 //        vec3 specularColor = 4 * roughnessSquared * maxResidualLuminance[0];
     }
 
-    vec3 adjustedDiffuseColor;
-    if (diffuseColor != vec3(0.0) && sumDiffuse.a > 0.0)
+    // Convert the XYZ specular color to RGB, enforce monochrome constraints, and ensure a minimum specular reflectivity in cases where there may be
+    // ambiguity between the specular and diffuse terms.
+    // The roughness estimate may be updated as necessary for consistency.
+    vec3 specularColor;
+
+    if (diffuseColor.rgb != vec3(0.0) && specularColorXYZEstimate.y < MIN_SPECULAR_REFLECTIVITY)
     {
-        adjustedDiffuseColor = sumDiffuse.rgb / sumDiffuse.a;
+        vec3 diffuseXYZ = rgbToXYZ(diffuseColor.rgb);
+
+        if (chromaticRoughness)
+        {
+            vec3 specularColorBounded = max(specularColorXYZEstimate,
+                min(min(MAX_ROUGHNESS * MAX_ROUGHNESS * (4 * maxResidualXYZ),
+                        16 * diffuseXYZ * maxResidualXYZ + specularColorXYZEstimate),
+                        vec3(MIN_SPECULAR_REFLECTIVITY)));
+
+            roughnessSquared = clamp(specularColorBounded / (4 * maxResidualXYZ),
+                vec3(MIN_ROUGHNESS * MIN_ROUGHNESS), vec3(MAX_ROUGHNESS * MAX_ROUGHNESS));
+
+            specularColor = xyzToRGB(specularColorBounded);
+        }
+        else
+        {
+            if (chromaticSpecular)
+            {
+                vec3 specularColorBounded = max(specularColorXYZEstimate,
+                    min(min(MAX_ROUGHNESS * MAX_ROUGHNESS * (4 * maxResidualXYZ),
+                            16 * diffuseXYZ * maxResidualXYZ + specularColorXYZEstimate),
+                            vec3(MIN_SPECULAR_REFLECTIVITY)));
+
+                roughnessSquared = vec3(clamp(specularColorBounded.y / (4 * maxResidualLuminance[0]),
+                    MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS));
+
+                specularColor = xyzToRGB(specularColorBounded);
+            }
+            else
+            {
+                specularColor = vec3(max(specularColorXYZEstimate.y,
+                    min(min(MAX_ROUGHNESS * MAX_ROUGHNESS * (4 * maxResidualLuminance[0]),
+                            16 * diffuseXYZ.y * maxResidualLuminance[0] + specularColorXYZEstimate.y),
+                            MIN_SPECULAR_REFLECTIVITY)));
+
+                roughnessSquared = vec3(clamp(specularColor.g / (4 * maxResidualLuminance[0]),
+                    MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS));
+            }
+        }
     }
     else
     {
-        adjustedDiffuseColor = diffuseColor;
+        if (chromaticSpecular)
+        {
+            specularColor = xyzToRGB(specularColorXYZEstimate);
+        }
+        else
+        {
+            specularColor = vec3(specularColorXYZEstimate.y);
+        }
+    }
+
+    // Refit the diffuse color using a simple linear regression after subtracting the final specular estimate.
+    vec4 adjustedDiffuseColor;
+
+    if (diffuseColor != vec4(0, 0, 0, 1))
+    {
+        vec4 sumDiffuse = vec4(0.0);
+
+        for (int i = 0; i < viewCount; i++)
+        {
+            vec3 view = normalize(getViewVector(i));
+
+            // Values of 1.0 for this color would correspond to the expected reflectance
+            // for an ideal diffuse reflector (diffuse albedo of 1), which is a reflectance of 1 / pi.
+            // Hence, this color corresponds to the reflectance times pi.
+            // Both the Phong model and the Cook Torrance with a Beckmann distribution also have a 1/pi factor.
+            // By adopting the convention that all reflectance values are scaled by pi in this shader,
+            // We can avoid division by pi here as well as the 1/pi factors in the parameterized models.
+            vec4 color = getLinearColor(i);
+
+            if (color.a * dot(view, normal) > 0)
+            {
+                vec3 lightPreNormalized = getLightVector(i);
+                vec3 attenuatedLightIntensity = infiniteLightSources ?
+                    getLightIntensity(i) :
+                    getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
+                vec3 light = normalize(lightPreNormalized);
+                float nDotL = max(0, dot(light, specularNormal));
+                float nDotV = max(0, dot(specularNormal, view));
+
+                vec3 halfway = normalize(view + light);
+                float nDotH = dot(halfway, specularNormal);
+                float nDotHSquared = nDotH * nDotH;
+
+                if (nDotV > 0 /*&& nDotHSquared > 0.5*/)
+                {
+                    vec3 q1 = roughnessSquared + (1.0 - nDotHSquared) / nDotHSquared;
+                    vec3 mfdEval = roughnessSquared / (nDotHSquared * nDotHSquared * q1 * q1);
+
+                    float hDotV = max(0, dot(halfway, view));
+                    float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
+
+                    vec3 specularTerm = min(vec3(1), rgbToXYZ(specularColor)) * mfdEval * geomRatio;
+                    sumDiffuse += vec4(max(vec3(0.0), nDotL * (color.rgb / attenuatedLightIntensity - xyzToRGB(specularTerm))), nDotL * nDotL);
+                }
+            }
+        }
+
+        if (sumDiffuse.a > 0.0)
+        {
+            adjustedDiffuseColor = vec4(sumDiffuse.rgb / sumDiffuse.a, 1);
+        }
+        else
+        {
+            // Discard and hole fill
+            adjustedDiffuseColor = vec4(0.0);
+        }
+    }
+    else
+    {
+        adjustedDiffuseColor = vec4(0, 0, 0, 1);
     }
 
     // Dividing by the sum of weights to get the weighted average.
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
     // for texels where there isn't enough information at the specular peak.
-    return ParameterizedFit(adjustedDiffuseColor,
-        normalize(transpose(tangentToObject) * specularNormal), specularColor, sqrt(roughnessSquared));
+    return ParameterizedFit(adjustedDiffuseColor, vec4(normalize(transpose(tangentToObject) * specularNormal), 1),
+        vec4(specularColor, 1), vec4(sqrt(roughnessSquared), 1));
 }
 
 #endif // SPECULARFIT_GLSL

@@ -1171,7 +1171,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 {
                     this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
                     this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i));
-                    this.lightProgram.setUniform("color", lightingModel.getLightColor(i));
+                    this.lightProgram.setUniform("color", lightingModel.getLightColor(i).times((float)Math.PI));
 
                     Vector3 lightPosition = widgetTransformation.getColumn(3).getXYZ();
 
