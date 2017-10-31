@@ -14,8 +14,8 @@ uniform sampler2D normalEstimate;
 uniform float fittingGamma;
 uniform bool standaloneMode;
 
-#define chromaticRoughness false
-#define chromaticSpecular false
+#define chromaticRoughness true
+#define chromaticSpecular true
 
 vec4 getDiffuseColor()
 {
@@ -237,7 +237,7 @@ ParameterizedFit fitSpecular()
          roughnessSquared = vec3(clamp(roughnessSums[0].y / max(0.0, sqrt(maxResidualLuminance[0]) * roughnessSums[2].y - roughnessSums[1].y),
              MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS));
          vec3 avgResidualXYZ = pow(sumResidualXYZGamma.xyz / sumResidualXYZGamma.w, vec3(fittingGamma));
-         specularColorXYZEstimate = 4 * roughnessSquared * maxResidualLuminance[0] * avgResidualXYZ / avgResidualXYZ.y;
+         specularColorXYZEstimate = 4 * roughnessSquared * maxResidualLuminance[0] * avgResidualXYZ / max(0.001, avgResidualXYZ.y);
 
 //        // Force monochrome roughness and reflectivity (for debugging)
 //        vec3 specularColor = 4 * roughnessSquared * maxResidualLuminance[0];
