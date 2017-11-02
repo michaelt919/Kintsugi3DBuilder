@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.VBox?>
+<?import tetzlaff.ibrelight.core.*?>
 <VBox xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.MenubarController">
 <MenuBar>
       <Menu mnemonicParsing="false" text="File">
@@ -34,17 +35,51 @@
          <fx:define>
             <ToggleGroup fx:id="renderGroup" />
          </fx:define>
-         <RadioMenuItem mnemonicParsing="false" text="None" userData="None" visible="false">
-            <toggleGroup>
-               <ToggleGroup fx:id="renderGroup" />
-            </toggleGroup></RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" userData="Wireframe" visible="false" />
-         <RadioMenuItem mnemonicParsing="false" text="Lambertian shaded" toggleGroup="$renderGroup" userData="Lambertian shaded" visible="false" />
-         <RadioMenuItem mnemonicParsing="false" text="Specular shaded" toggleGroup="$renderGroup" userData="Specular shaded" />
-         <RadioMenuItem mnemonicParsing="false" text="Solid textured" toggleGroup="$renderGroup" userData="Solid textured" visible="false" />
-         <RadioMenuItem mnemonicParsing="false" text="Lambertian textured" toggleGroup="$renderGroup" userData="Lambertian textured" visible="false" />
-         <RadioMenuItem mnemonicParsing="false" text="Material shaded" toggleGroup="$renderGroup" userData="Material shaded" />
-         <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based rendering" toggleGroup="$renderGroup" userData="Image-based rendering" />
+         <RadioMenuItem mnemonicParsing="false" text="None" userData="None" toggleGroup="$renderGroup" visible="false">
+             <userData>
+                 <RenderingMode fx:value="NONE" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Wireframe" toggleGroup="$renderGroup" visible="false">
+             <userData>
+                 <RenderingMode fx:value="WIREFRAME" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Lambertian shaded" toggleGroup="$renderGroup" visible="false">
+             <userData>
+                 <RenderingMode fx:value="LAMBERTIAN_SHADED" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Specular shaded" toggleGroup="$renderGroup">
+             <userData>
+                 <RenderingMode fx:value="SPECULAR_SHADED" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Solid textured" toggleGroup="$renderGroup" visible="false">
+             <userData>
+                 <RenderingMode fx:value="SOLID_TEXTURED" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Lambertian textured" toggleGroup="$renderGroup" visible="false">
+             <userData>
+                 <RenderingMode fx:value="LAMBERTIAN_DIFFUSE_TEXTURED" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Material shaded" toggleGroup="$renderGroup">
+             <userData>
+                 <RenderingMode fx:value="MATERIAL_SHADED" />
+             </userData>
+         </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" selected="true" text="Image-based rendering (IBR)" toggleGroup="$renderGroup">
+             <userData>
+                 <RenderingMode fx:value="IMAGE_BASED" />
+             </userData>
+         </RadioMenuItem>
+          <RadioMenuItem mnemonicParsing="false" selected="true" text="IBR with material" toggleGroup="$renderGroup">
+              <userData>
+                  <RenderingMode fx:value="IMAGE_BASED_WITH_MATERIALS" />
+              </userData>
+          </RadioMenuItem>
          <SeparatorMenuItem mnemonicParsing="false" />
          <MenuItem mnemonicParsing="false" onAction="#shading_IBRSettings" text="IBR settings…" />
          <CheckMenuItem fx:id="phyMaskingCheckMenuItem" mnemonicParsing="false" text="Physically based masking/shadowing" />
