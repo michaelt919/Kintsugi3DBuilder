@@ -17,6 +17,7 @@ import tetzlaff.util.AbstractImage;
 
 public interface IBRRenderable<ContextType extends Context<ContextType>> extends InteractiveRenderable<ContextType>
 {
+    void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride, int subdivWidth, int subdivHeight);
     void setLoadingMonitor(LoadingMonitor loadingMonitor);
 
     ViewSet getActiveViewSet();
@@ -33,6 +34,10 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     void loadBackplate(File backplateFile) throws FileNotFoundException;
     Optional<AbstractImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException;
 
+    ReadonlyObjectModel getObjectModel();
+    ReadonlyCameraModel getCameraModel();
+    ReadonlyLightingModel getLightingModel();
+
     void setObjectModel(ReadonlyObjectModel objectModel);
     void setCameraModel(ReadonlyCameraModel cameraModel);
     void setLightingModel(ReadonlyLightingModel lightingModel);
@@ -42,7 +47,9 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
 
     IBRResources<ContextType> getResources();
 
-    void draw(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 projection);
+    Matrix4 getAbsoluteViewMatrix(Matrix4 relativeViewMatrix);
+
+    void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride);
 
     @Override
     default void draw(Framebuffer<ContextType> framebuffer)

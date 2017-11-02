@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<AnchorPane prefHeight="120.0" prefWidth="555.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.export.simpleanimation.SimpleAnimationUI">
+   <children>
+      <Label layoutX="250.0" layoutY="48.0" prefHeight="17.0" prefWidth="76.0" text="Frame count:" />
+      <Label layoutX="14.0" layoutY="14.0" text="Export directory:" />
+      <TextField fx:id="exportDirectoryField" layoutX="122.0" layoutY="10.0" prefHeight="25.0" prefWidth="300.0" />
+      <TextField fx:id="frameCountTextField" layoutX="326.0" layoutY="44.0" prefHeight="25.0" prefWidth="56.0" />
+      <Button layoutX="428.0" layoutY="10.0" mnemonicParsing="false" onAction="#exportDirectoryButtonAction" text="Choose directory..." />
+      <Button fx:id="runButton" layoutX="19.0" layoutY="78.0" mnemonicParsing="false" text="Run" />
+      <Label layoutX="14.0" layoutY="48.0" prefHeight="17.0" prefWidth="46.0" text="Width:" />
+      <TextField fx:id="widthTextField" layoutX="58.0" layoutY="44.0" prefWidth="56.0" />
+      <Label layoutX="130.0" layoutY="48.0" prefHeight="17.0" prefWidth="46.0" text="Height:" />
+      <TextField fx:id="heightTextField" layoutX="176.0" layoutY="44.0" prefHeight="25.0" prefWidth="56.0" />
+      <Button layoutX="60.0" layoutY="78.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" />
+   </children>
+</AnchorPane>

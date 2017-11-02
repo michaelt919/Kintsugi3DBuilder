@@ -36,7 +36,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private final ContextType context;
     private Program<ContextType> program;
     private Program<ContextType> shadowProgram;
-    private LoadingMonitor loadingMonitor;
+    private volatile LoadingMonitor loadingMonitor;
     private boolean suppressErrors = false;
     private SafeReadonlySettingsModel settingsModel;
 
@@ -798,18 +798,30 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 .times(Matrix4.scale(1.0f / scale));
     }
 
-    private Matrix4 getPartialViewMatrix(Matrix4 viewMatrix)
+    private Matrix4 getPartialViewMatrix(Matrix4 absoluteViewMatrix)
     {
-        return viewMatrix
+        return absoluteViewMatrix
                 .times(Matrix4.translate(this.centroid))
                 .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().transpose().asMatrix4());
     }
 
-    private Matrix4 getViewMatrix()
+    private Matrix4 getAbsoluteViewMatrix()
     {
         return getPartialViewMatrix()
                 .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
                 .times(Matrix4.translate(this.centroid.negated()));
+    }
+
+    @Override
+    public Matrix4 getAbsoluteViewMatrix(Matrix4 relativeViewMatrix)
+    {
+        float scale = getScale();
+
+        return Matrix4.scale(scale)
+            .times(relativeViewMatrix)
+            .times(Matrix4.scale(1.0f / scale))
+            .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
+            .times(Matrix4.translate(this.centroid.negated()));
     }
 
     private Matrix4 getModelViewMatrix(Matrix4 partialViewMatrix, int modelInstance)
@@ -901,9 +913,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     }
 
     @Override
-    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewParam, Matrix4 projectionParam)
+    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride)
     {
-        boolean customViewMatrix = viewParam != null;
+        FramebufferSize size = framebuffer.getSize();
+        this.draw(framebuffer, viewOverride, projectionOverride, size.width, size.height);
+    }
+
+    @Override
+    public void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride, int subdivWidth, int subdivHeight)
+    {
+        boolean overriddenViewMatrix = viewOverride != null;
 
         try
         {
@@ -918,11 +937,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             context.getState().enableBackFaceCulling();
 
-            Matrix4 view = viewParam;
+            Matrix4 view = viewOverride;
 
             Matrix4 partialViewMatrix;
 
-            if (customViewMatrix)
+            if (overriddenViewMatrix)
             {
                 partialViewMatrix = getPartialViewMatrix(view);
 
@@ -942,13 +961,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
             else
             {
-                view = this.getViewMatrix();
+                view = this.getAbsoluteViewMatrix();
                 partialViewMatrix = getPartialViewMatrix();
             }
 
             FramebufferSize size = framebuffer.getSize();
 
-            Matrix4 projection = projectionParam;
+            Matrix4 projection = projectionOverride;
 
             if (projection == null)
             {
@@ -1069,8 +1088,33 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     this.program.setUniform("model_view", modelView);
                     this.program.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
 
-                    // Render to off-screen buffer
-                    mainDrawable.draw(PrimitiveMode.TRIANGLES, offscreenFBO);
+                    FramebufferSize fullFBOSize = offscreenFBO.getSize();
+
+                    // Optionally render in subdivisions to prevent GPU timeout
+                    for (int x = 0; x < fullFBOSize.width; x += subdivWidth)
+                    {
+                        for (int y = 0; y < fullFBOSize.height; y += subdivHeight)
+                        {
+                            int effectiveWidth = Math.min(subdivWidth, fullFBOSize.width - x);
+                            int effectiveHeight = Math.min(subdivHeight, fullFBOSize.height - y);
+
+                            float scaleX = (float)fullFBOSize.width / (float)effectiveWidth;
+                            float scaleY = (float)fullFBOSize.height / (float)effectiveHeight;
+                            float centerX = (2 * x + effectiveWidth - fullFBOSize.width) / (float)fullFBOSize.width;
+                            float centerY = (2 * y + effectiveHeight - fullFBOSize.height) / (float)fullFBOSize.height;
+
+                            mainDrawable.program().setUniform("projection",
+                                Matrix4.scale(scaleX, scaleY, 1.0f)
+                                    .times(Matrix4.translate(-centerX, -centerY, 0))
+                                    .times(projection));
+
+                            // Render to off-screen buffer
+                            mainDrawable.draw(PrimitiveMode.TRIANGLES, offscreenFBO, x, y, effectiveWidth, effectiveHeight);
+
+                            // Flush to prevent timeout
+                            context.flush();
+                        }
+                    }
                 }
 
                 if (!lightingModel.areLightWidgetsEthereal())
@@ -1115,7 +1159,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         }
         finally
         {
-            if (customViewMatrix && lightingModel instanceof CameraBasedLightingModel)
+            if (overriddenViewMatrix && lightingModel instanceof CameraBasedLightingModel)
             {
                 ((CameraBasedLightingModel)lightingModel).removeCameraPoseOverride();
             }
@@ -1970,6 +2014,24 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 return computeLightWidgetScale(getPartialViewMatrix(), fboSize) / getScale();
             }
         };
+    }
+
+    @Override
+    public ReadonlyObjectModel getObjectModel()
+    {
+        return objectModel;
+    }
+
+    @Override
+    public ReadonlyCameraModel getCameraModel()
+    {
+        return cameraModel;
+    }
+
+    @Override
+    public ReadonlyLightingModel getLightingModel()
+    {
+        return lightingModel;
     }
 
     @Override

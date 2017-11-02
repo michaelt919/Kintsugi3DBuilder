@@ -52,7 +52,7 @@ public class IBROptionsController implements Initializable
         weightModeChoiceBox.getItems().addAll(ShadingParameterMode.values());
 
         StaticUtilities.makeClampedNumeric(1, 5, gammaTextField);
-        StaticUtilities.makeClampedNumeric(1, 100, weightExponentTextField);
+        StaticUtilities.makeClampedNumeric(1, 1000000, weightExponentTextField);
         StaticUtilities.makeClampedNumeric(0, 1, isotropyFactorTextField);
         StaticUtilities.makeClampedNumeric(0, 0.1, occlusionBiasTextField);
     }
