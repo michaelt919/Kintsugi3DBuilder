@@ -55,6 +55,7 @@ class MultiframeRenderRequest extends RenderRequestBase
         for (int i = 0; i < frameCount; i++)
         {
             program.setUniform("frame", i);
+            program.setUniform("frameCount", frameCount);
             program.setUniform("model_view", renderable.getActiveViewSet().getCameraPose(0));
             program.setUniform("projection",
                 renderable.getActiveViewSet().getCameraProjection(

@@ -32,7 +32,6 @@ public class ResampleRequestUI implements IBRRequestUI
     private final FileChooser fileChooser = new FileChooser();
     private final DirectoryChooser directoryChooser = new DirectoryChooser();
 
-    private IBRelightModels modelAccess;
     private Stage stage;
 
     private File lastDirectory;
@@ -46,7 +45,6 @@ public class ResampleRequestUI implements IBRRequestUI
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent parent = fxmlLoader.load();
         ResampleRequestUI resampleRequestUI = fxmlLoader.getController();
-        resampleRequestUI.modelAccess = modelAccess;
 
         resampleRequestUI.stage = new Stage();
         resampleRequestUI.stage.setTitle("Resample request");
