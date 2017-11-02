@@ -194,36 +194,9 @@ public class MenubarController
     {
         renderGroup.selectedToggleProperty().addListener((ob, o, n) ->
         {
-            if (n != null && n.getUserData() != null)
+            if (n != null && n.getUserData() instanceof RenderingMode)
             {
-                switch ((String) n.getUserData())
-                {
-                    case "None":
-                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.NONE);
-                        break;
-                    case "Wireframe":
-                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.WIREFRAME);
-                        break;
-                    case "Lambertian shaded":
-                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.LAMBERTIAN_SHADED);
-                        break;
-                    case "Specular shaded":
-                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.SPECULAR_SHADED);
-                        break;
-                    case "Solid textured":
-                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.SOLID_TEXTURED);
-                        break;
-                    case "Lambertian textured":
-                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.LAMBERTIAN_DIFFUSE_TEXTURED);
-                        break;
-                    case "Material shaded":
-                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.MATERIAL_SHADED);
-                        break;
-                    case "Image-based rendering":
-                    default:
-                        internalModels.getSettingsModel().set("renderingMode", RenderingMode.IMAGE_BASED);
-                        break;
-                }
+                internalModels.getSettingsModel().set("renderingMode", n.getUserData());
             }
         });
     }
