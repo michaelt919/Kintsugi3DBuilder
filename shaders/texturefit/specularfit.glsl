@@ -7,7 +7,7 @@
 #define MAX_ROUGHNESS  0.70710678 // sqrt(1/2)
 
 #define MIN_SPECULAR_REFLECTIVITY 0.04 // corresponds to dielectric with index of refraction = 1.5
-#define MAX_ROUGHNESS_WHEN_CLAMPING 0.25
+#define MAX_ROUGHNESS_WHEN_CLAMPING MAX_ROUGHNESS
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
