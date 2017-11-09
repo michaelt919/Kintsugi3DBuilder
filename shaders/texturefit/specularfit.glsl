@@ -7,7 +7,7 @@
 #define MAX_ROUGHNESS  0.70710678 // sqrt(1/2)
 
 #define MIN_SPECULAR_REFLECTIVITY 0.04 // corresponds to dielectric with index of refraction = 1.5
-#define MAX_ROUGHNESS_WHEN_CLAMPING MAX_ROUGHNESS
+#define MAX_ROUGHNESS_WHEN_CLAMPING 0.25
 
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
@@ -203,22 +203,21 @@ ParameterizedFit fitSpecular()
                 vec3 sqrtFactor = sqrt(colorRemainderXYZ * nDotV);
                 vec3 roughnessEstimate = sqrtFactor * (1 - nDotHSquared) / (sqrt(maxResidualXYZ) - sqrtFactor * nDotHSquared);
                 vec3 clampedRoughnessSq = clamp(max(roughnessEstimate * roughnessEstimate, MIN_SPECULAR_REFLECTIVITY / (4 * maxResidualXYZ)),
-                    MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS);
+                    MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS_WHEN_CLAMPING * MAX_ROUGHNESS_WHEN_CLAMPING);
                 vec3 adjustedMFDDenominatorRoot = (1 - nDotHSquared * (1 - clampedRoughnessSq));
-                vec3 adjustedFactor = clampedRoughnessSq * clampedRoughnessSq * (4 * maxResidualXYZ)
+                vec3 adjustedFactor = clampedRoughnessSq * clampedRoughnessSq * maxResidualXYZ
                     / (adjustedMFDDenominatorRoot * adjustedMFDDenominatorRoot);
 
                 vec3 colorXYZ = rgbToXYZ(color.rgb);
                 vec3 adjustedColorRemainder = clamp(adjustedFactor / nDotV, colorRemainderXYZ, colorXYZ);
-                vec3 adjustedFactorClamped = adjustedColorRemainder * nDotV;
 
                 if (nDotL > 0)
                 {
                     adjustedDiffuseColorXYZ += color.a * nDotL *
-                        vec4(clamp(colorXYZ - adjustedFactorClamped / nDotV, vec3(0), diffuseColorXYZ * nDotL), nDotL);
+                        vec4(clamp(colorXYZ - adjustedColorRemainder, vec3(0), diffuseColorXYZ * nDotL), nDotL);
                 }
 
-                vec3 adjustedSqrtFactor = sqrt(adjustedFactorClamped);
+                vec3 adjustedSqrtFactor = sqrt(adjustedColorRemainder * nDotV);
 
                 roughnessSums[0] += nDotV // * pow(adjustedColorRemainder, vec3(1.0 / fittingGamma))
                     * adjustedSqrtFactor * (1 - nDotHSquared);
