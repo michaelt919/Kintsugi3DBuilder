@@ -45,12 +45,12 @@
                  <RenderingMode fx:value="WIREFRAME" />
              </userData>
          </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Lambertian shaded" toggleGroup="$renderGroup" visible="false">
+         <RadioMenuItem mnemonicParsing="false" text="Simple Lambertian" toggleGroup="$renderGroup" visible="false">
              <userData>
                  <RenderingMode fx:value="LAMBERTIAN_SHADED" />
              </userData>
          </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Specular shaded" toggleGroup="$renderGroup">
+         <RadioMenuItem mnemonicParsing="false" text="Simple specular" toggleGroup="$renderGroup">
              <userData>
                  <RenderingMode fx:value="SPECULAR_SHADED" />
              </userData>
@@ -60,12 +60,17 @@
                  <RenderingMode fx:value="SOLID_TEXTURED" />
              </userData>
          </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Lambertian textured" toggleGroup="$renderGroup" visible="false">
+          <RadioMenuItem mnemonicParsing="false" text="Normal mapped" toggleGroup="$renderGroup">
+              <userData>
+                  <RenderingMode fx:value="SPECULAR_NORMAL_TEXTURED" />
+              </userData>
+          </RadioMenuItem>
+         <RadioMenuItem mnemonicParsing="false" text="Textured Lambertian" toggleGroup="$renderGroup">
              <userData>
                  <RenderingMode fx:value="LAMBERTIAN_DIFFUSE_TEXTURED" />
              </userData>
          </RadioMenuItem>
-         <RadioMenuItem mnemonicParsing="false" text="Material shaded" toggleGroup="$renderGroup">
+         <RadioMenuItem mnemonicParsing="false" text="Textured material" toggleGroup="$renderGroup">
              <userData>
                  <RenderingMode fx:value="MATERIAL_SHADED" />
              </userData>
@@ -75,7 +80,7 @@
                  <RenderingMode fx:value="IMAGE_BASED" />
              </userData>
          </RadioMenuItem>
-          <RadioMenuItem mnemonicParsing="false" selected="true" text="IBR with material" toggleGroup="$renderGroup">
+          <RadioMenuItem mnemonicParsing="false" text="IBR with textures" toggleGroup="$renderGroup">
               <userData>
                   <RenderingMode fx:value="IMAGE_BASED_WITH_MATERIALS" />
               </userData>
