@@ -7,9 +7,8 @@ public enum RenderingMode
     LAMBERTIAN_SHADED(true, false, false, false, false, false),
     SPECULAR_SHADED(true, true, false, false, false, false),
     SOLID_TEXTURED(false, false, true, false, false, false),
-    LAMBERTIAN_DIFFUSE_TEXTURED(true, false, true, false, false, false),
-    LAMBERTIAN_NORMAL_TEXTURED(true, false, true, false, false, false),
-    LAMBERTIAN_DIFFUSE_NORMAL_TEXTURED(true, false, true, false, false, false),
+    SPECULAR_NORMAL_TEXTURED(true, true, false, true, false, false),
+    LAMBERTIAN_DIFFUSE_TEXTURED(true, false, true, true, false, false),
     MATERIAL_SHADED(true, true, true, true, true, false),
     IMAGE_BASED(true, true, false, false, false, true),
     IMAGE_BASED_WITH_MATERIALS(true, true, true, true, true, true);

@@ -615,15 +615,12 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 System.out.println("Specular texture found.");
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> specularTextureBuilder =
                     context.build2DColorTextureFromFile(specularFile, true);
-                if (loadOptions.isCompressionRequested())
-                {
-                    specularTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-                }
-                else
-                {
-                    specularTextureBuilder.setInternalFormat(ColorFormat.RGB8);
-                }
-
+//                if (loadOptions.isCompressionRequested())
+//                {
+//                    specularTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+//                }
+//                else
+                specularTextureBuilder.setInternalFormat(ColorFormat.RGB8);
 
                 specularTexture = specularTextureBuilder
                         .setMipmapsEnabled(loadOptions.areMipmapsRequested())
@@ -641,14 +638,12 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder =
                     context.build2DColorTextureFromFile(roughnessFile, true);
 
-                if (loadOptions.isCompressionRequested())
-                {
-                    roughnessTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-                }
-                else
-                {
-                    roughnessTextureBuilder.setInternalFormat(ColorFormat.RGB8);
-                }
+//                if (loadOptions.isCompressionRequested())
+//                {
+//                    roughnessTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+//                }
+//                else
+                roughnessTextureBuilder.setInternalFormat(ColorFormat.RGB8);
 
                 roughnessTexture = roughnessTextureBuilder
                         .setMipmapsEnabled(loadOptions.areMipmapsRequested())
@@ -919,7 +914,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
         else
         {
-            throw new IllegalStateException("Camera weights are unvailable.");
+            throw new IllegalStateException("Camera weights are unavailable.");
         }
     }
 
