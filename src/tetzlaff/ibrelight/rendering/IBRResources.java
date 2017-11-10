@@ -187,8 +187,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
             if (imageDirectoryOverride != null)
             {
-                viewSet.setRootDirectory(imageDirectoryOverride);
-                viewSet.setRelativeImagePathName("");
+                viewSet.setRelativeImagePathName(viewSet.getRootDirectory().toPath().relativize(imageDirectoryOverride.toPath()).toString());
             }
 
             return new IBRResources<>(context, viewSet, geometry, loadOptions, loadingMonitor);
