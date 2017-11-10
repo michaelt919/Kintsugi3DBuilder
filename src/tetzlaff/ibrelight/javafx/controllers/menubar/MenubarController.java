@@ -367,9 +367,11 @@ public class MenubarController
         if (projectFile != null)
         {
             projectFileChooser.setInitialFileName(projectFile.getName());
+            projectFileChooser.setInitialDirectory(projectFile.getParentFile());
         }
         else if (vsetFile != null)
         {
+            projectFileChooser.setInitialFileName("");
             projectFileChooser.setInitialDirectory(vsetFile.getParentFile());
         }
         File selectedFile = projectFileChooser.showSaveDialog(parentWindow);
