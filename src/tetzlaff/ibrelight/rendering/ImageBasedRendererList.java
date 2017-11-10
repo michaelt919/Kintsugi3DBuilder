@@ -282,7 +282,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     {
         try (OutputStream stream = new FileOutputStream(vsetFile))
         {
-            this.getSelectedItem().getActiveViewSet().writeVSETFileToStream(stream);
+            this.getSelectedItem().getActiveViewSet().writeVSETFileToStream(stream, vsetFile.getParentFile().toPath());
         }
     }
 

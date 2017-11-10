@@ -1,6 +1,7 @@
 package tetzlaff.ibrelight.core;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.*;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -1097,13 +1098,18 @@ public final class ViewSet
 
     public void writeVSETFileToStream(OutputStream outputStream)
     {
+        writeVSETFileToStream(outputStream, null);
+    }
+
+    public void writeVSETFileToStream(OutputStream outputStream, Path parentDirectory)
+    {
         PrintStream out = new PrintStream(outputStream);
         out.println("# Created by ULF Renderer from PhotoScan XML file");
 
         out.println("\n# Geometry file name (mesh)");
-        out.println("m " + geometryFileName);
+        out.println("m " + (parentDirectory == null ? geometryFileName : parentDirectory.relativize(getGeometryFile().toPath())));
         out.println("\n# Image file path");
-        out.println("i " + relativeImagePath);
+        out.println("i " + (parentDirectory == null ? relativeImagePath : parentDirectory.relativize(getImageFilePath().toPath())));
 
         out.println("\n# Estimated near and far planes");
         out.printf("c\t%.8f\t%.8f\n", recommendedNearPlane, recommendedFarPlane);
