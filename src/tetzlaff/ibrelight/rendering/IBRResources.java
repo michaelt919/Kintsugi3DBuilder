@@ -88,6 +88,8 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
     public final UniformBuffer<ContextType> shadowMatrixBuffer;
     public final UniformBuffer<ContextType> cameraWeightBuffer;
 
+    private final double primaryViewDistance;
+
     private final float[] cameraWeights;
 
     public static final class Builder<ContextType extends Context<ContextType>>
@@ -431,29 +433,31 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             this.positionBuffer = null;
         }
 
-        if (loadOptions.areDepthImagesRequested())
+        try
+        (
+            // Don't automatically generate any texture attachments for this framebuffer object
+            FramebufferObject<ContextType> depthRenderingFBO =
+            context.buildFramebufferObject(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
+                .createFramebufferObject();
+
+            // Load the program
+            Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
+                .createProgram()
+        )
         {
-            // Build depth textures for each view
-            this.depthTextures =
-                context.build2DDepthTextureArray(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCameraPoseCount())
-                    .createTexture();
+            Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
+            depthDrawable.addVertexBuffer("position", positionBuffer);
 
-            try
-            (
-                // Don't automatically generate any texture attachments for this framebuffer object
-                FramebufferObject<ContextType> depthRenderingFBO =
-                context.buildFramebufferObject(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
-                    .createFramebufferObject();
+            double minDepth = viewSet.getRecommendedFarPlane();
 
-                // Load the program
-                Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
-                    .createProgram()
-            )
+            if (loadOptions.areDepthImagesRequested())
             {
-                Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
-                depthDrawable.addVertexBuffer("position", positionBuffer);
+                // Build depth textures for each view
+                this.depthTextures =
+                    context.build2DDepthTextureArray(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCameraPoseCount())
+                        .createTexture();
 
                 // Render each depth texture
                 for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
@@ -471,12 +475,51 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                     );
 
                     depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+
+                    if (i == viewSet.getPrimaryViewIndex())
+                    {
+                        short[] depthBufferData = depthRenderingFBO.readDepthBuffer();
+                        for (short encodedDepth : depthBufferData)
+                        {
+                            int nonlinearDepth = 0xFFFF & (int) encodedDepth;
+                            minDepth = Math.min(minDepth, getLinearDepth((double) nonlinearDepth / 0xFFFF,
+                                viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+                        }
+                    }
                 }
             }
-        }
-        else
-        {
-            this.depthTextures = null;
+            else
+            {
+                this.depthTextures = null;
+
+                Texture2D<ContextType> depthAttachment =
+                    context.build2DDepthTexture(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
+                        .createTexture();
+                depthRenderingFBO.setDepthAttachment(depthAttachment);
+
+                depthRenderingFBO.clearDepthBuffer();
+
+                depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(viewSet.getPrimaryViewIndex()));
+                depthRenderingProgram.setUniform("projection",
+                    viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewSet.getPrimaryViewIndex()))
+                        .getProjectionMatrix(
+                            viewSet.getRecommendedNearPlane(),
+                            viewSet.getRecommendedFarPlane()
+                        )
+                );
+
+                depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+
+                short[] depthBufferData = depthRenderingFBO.readDepthBuffer();
+                for (short encodedDepth : depthBufferData)
+                {
+                    int nonlinearDepth = 0xFFFF & (int) encodedDepth;
+                    minDepth = Math.min(minDepth, getLinearDepth((double) nonlinearDepth / 0xFFFF,
+                        viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+                }
+            }
+
+            primaryViewDistance = minDepth;
         }
 
         if (geometry != null && geometry.hasTexCoords())
@@ -742,6 +785,11 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
+    private static double getLinearDepth(double nonLinearDepth, double nearPlane, double farPlane)
+    {
+        return 2 * nearPlane * farPlane / (farPlane + nearPlane - nonLinearDepth * (farPlane - nearPlane));
+    }
+
     private void setupCommon(Program<ContextType> program)
     {
         program.setTexture("viewImages", this.colorTextures);
@@ -903,6 +951,11 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             program.setUniform("useRoughnessTexture", renderingMode.useSpecularTextures());
             program.setTexture("roughnessMap", this.roughnessTexture);
         }
+    }
+
+    public double getPrimaryViewDistance()
+    {
+        return primaryViewDistance;
     }
 
     public float getCameraWeight(int index)

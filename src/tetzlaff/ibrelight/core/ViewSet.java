@@ -977,19 +977,19 @@ public final class ViewSet
         Camera[] cameras = cameraSet.toArray(new Camera[0]);
         
         // Fill out the camera pose, projection index, and light index lists
-        for (Camera camera1 : cameras)
+        for (Camera cam : cameras)
         {
             // Apply the global transform to each camera
-            Matrix4 m1 = camera1.transform;
+            Matrix4 m1 = cam.transform;
             Vector3 displacement = m1.getColumn(3).getXYZ();
             m1 = Matrix4.translate(displacement.times(1.0f / globalScale).minus(displacement)).times(m1);
 
             // TODO: Figure out the right way to integrate the global transforms
-            camera1.transform = m1.times(globalRotation)
+            cam.transform = m1.times(globalRotation)
                 .times(Matrix4.translate(globalTranslate))
             ;//     .times(Matrix4.scale(globalScale));
 
-            params.cameraPoseList.add(camera1.transform);
+            params.cameraPoseList.add(cam.transform);
 
             // Compute inverse by just reversing steps to build transformation
             Matrix4 cameraPoseInv = //Matrix4.scale(1.0f / globalScale)
@@ -999,7 +999,7 @@ public final class ViewSet
                 .times(Matrix4.translate(m1.getColumn(3).getXYZ().negated()));
             params.cameraPoseInvList.add(cameraPoseInv);
 
-            Matrix4 expectedIdentity = cameraPoseInv.times(camera1.transform);
+            Matrix4 expectedIdentity = cameraPoseInv.times(cam.transform);
             boolean error = false;
             for (int r = 0; r < 4; r++)
             {
@@ -1040,9 +1040,9 @@ public final class ViewSet
                 }
             }
 
-            params.cameraProjectionIndexList.add(camera1.sensor.index);
-            params.lightIndexList.add(camera1.lightIndex);
-            params.imageFileNames.add(camera1.filename);
+            params.cameraProjectionIndexList.add(cam.sensor.index);
+            params.lightIndexList.add(cam.lightIndex);
+            params.imageFileNames.add(cam.filename);
         }
         
         for (int i = 0; i < nextLightIndex; i++)
@@ -1055,9 +1055,23 @@ public final class ViewSet
         params.recommendedFarPlane = findFarPlane(params.cameraPoseInvList);
         params.recommendedNearPlane = params.recommendedFarPlane / 32.0f;
         System.out.println("Near and far planes: " + params.recommendedNearPlane + ", " + params.recommendedFarPlane);
+
+        int primaryViewIndex = 0;
+        String primaryViewName = cameras[0].filename;
+        for (int i = 1; i < cameras.length; i++)
+        {
+            if (cameras[i].filename.compareTo(primaryViewName) < 0)
+            {
+                primaryViewName = cameras[i].filename;
+                primaryViewIndex = i;
+            }
+        }
         
         params.directory = file.getParentFile();
-        return new ViewSet(params);
+
+        ViewSet returnValue = new ViewSet(params);
+        returnValue.primaryViewIndex = primaryViewIndex;
+        return returnValue;
     }
 
     /**

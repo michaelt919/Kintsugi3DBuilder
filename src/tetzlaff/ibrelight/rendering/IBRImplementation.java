@@ -684,10 +684,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         }
     }
 
+    private Matrix4 getDefaultCameraPose()
+    {
+        return resources.viewSet.getCameraPose(resources.viewSet.getPrimaryViewIndex());
+    }
+
+
     private float getScale()
     {
         return this.boundingRadius * 2;
-//         return resources.viewSet.getCameraPose(0)
+//         return getDefaultCameraPose()
 //                 .times(resources.geometry.getCentroid().asPosition())
 //             .getXYZ().length()
 //             * this.boundingRadius / this.resources.geometry.getBoundingRadius();
@@ -700,7 +706,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             .times(lightingModel.getLightMatrix(lightIndex))
             .times(objectModel.getTransformationMatrix())
             .times(Matrix4.scale(1.0f / scale))
-            .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
+            .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4())
             .times(Matrix4.translate(this.centroid.negated()));
     }
 
@@ -711,7 +717,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             .times(lightingModel.getEnvironmentMapMatrix())
             .times(objectModel.getTransformationMatrix())
             .times(Matrix4.scale(1.0f / scale))
-            .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
+            .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4())
             .times(Matrix4.translate(this.centroid.negated()));
     }
 
@@ -724,7 +730,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         float lookAtDist = lightDisplacement.getXY().length();
 
         float radius = (float)
-            (resources.viewSet.getCameraPose(0).getUpperLeft3x3()
+            (getDefaultCameraPose().getUpperLeft3x3()
                 .times(new Vector3(this.boundingRadius))
                 .length() / Math.sqrt(3));
 
@@ -770,7 +776,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             //Matrix4.rotateY(5 * Math.PI / 4).times(Matrix4.rotateX(-Math.PI / 4))
 
             // Always end with this when hardcoding:
-            //    .times(new Matrix4(new Matrix3(resources.viewSet.getCameraPose(0))));
+            //    .times(new Matrix4(new Matrix3(getDefaultCameraPose())));
 
         Vector3 lightPos = lightMatrix.quickInverse(0.001f).times(Vector4.ORIGIN).getXYZ();
 
@@ -780,7 +786,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         float lightDistance = getLightMatrix(lightIndex).times(this.centroid.asPosition()).getXYZ().length();
 
         float lightScale = resources.viewSet.areLightSourcesInfinite() ? 1.0f :
-                resources.viewSet.getCameraPose(0)
+                getDefaultCameraPose()
                         .times(resources.geometry.getCentroid().asPosition())
                     .getXYZ().length();
 
@@ -802,13 +808,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         return absoluteViewMatrix
                 .times(Matrix4.translate(this.centroid))
-                .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().transpose().asMatrix4());
+                .times(getDefaultCameraPose().getUpperLeft3x3().transpose().asMatrix4());
     }
 
     private Matrix4 getAbsoluteViewMatrix()
     {
         return getPartialViewMatrix()
-                .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
+                .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4())
                 .times(Matrix4.translate(this.centroid.negated()));
     }
 
@@ -820,7 +826,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         return Matrix4.scale(scale)
             .times(relativeViewMatrix)
             .times(Matrix4.scale(1.0f / scale))
-            .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
+            .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4())
             .times(Matrix4.translate(this.centroid.negated()));
     }
 
@@ -832,7 +838,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 .times(Matrix4.scale(scale))
                 .times(this.objectModel.getTransformationMatrix())
                 .times(Matrix4.scale(1.0f / scale))
-                .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
+                .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4())
                 .times(Matrix4.translate(this.centroid.negated()))
                 .times(multiTransformationModel.get(modelInstance));
     }
@@ -947,7 +953,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 if (lightingModel instanceof CameraBasedLightingModel)
                 {
-                    float scale = resources.viewSet.getCameraPose(0)
+                    float scale = getDefaultCameraPose()
                         .times(resources.geometry.getCentroid().asPosition())
                         .getXYZ().length();
 
@@ -955,7 +961,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         Matrix4.scale(1.0f / scale)
                             .times(view)
                             .times(Matrix4.translate(resources.geometry.getCentroid()))
-                            .times(resources.viewSet.getCameraPose(0).transpose().getUpperLeft3x3().asMatrix4())
+                            .times(getDefaultCameraPose().transpose().getUpperLeft3x3().asMatrix4())
                             .times(Matrix4.scale(scale)));
                 }
             }
@@ -1018,7 +1024,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     Matrix4 envMapMatrix = Matrix4.scale(scale)
                         .times(lightingModel.getEnvironmentMapMatrix())
                         .times(Matrix4.scale(1.0f / scale))
-                        .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().asMatrix4())
+                        .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4())
                         .times(Matrix4.translate(this.centroid.negated()));
 
                     environmentBackgroundProgram.setUniform("objectID", this.sceneObjectIDLookup.get("EnvironmentMap"));
@@ -1206,7 +1212,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 float scale = getScale();
                 Matrix4 widgetTransformation = viewMatrix
                     .times(Matrix4.translate(this.centroid))
-                    .times(resources.viewSet.getCameraPose(0).getUpperLeft3x3().transpose().asMatrix4())
+                    .times(getDefaultCameraPose().getUpperLeft3x3().transpose().asMatrix4())
                     .times(Matrix4.scale(scale))
                     .times(lightingModel.getLightMatrix(i).quickInverse(0.01f))
                     .times(Matrix4.scale(1.0f / scale));
