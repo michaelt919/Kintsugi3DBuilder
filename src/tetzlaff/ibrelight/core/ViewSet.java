@@ -1118,7 +1118,7 @@ public final class ViewSet
     public void writeVSETFileToStream(OutputStream outputStream, Path parentDirectory)
     {
         PrintStream out = new PrintStream(outputStream);
-        out.println("# Created by ULF Renderer from PhotoScan XML file");
+        out.println("# Created by IBRelight");
 
         out.println("\n# Geometry file name (mesh)");
         out.println("m " + (parentDirectory == null ? geometryFileName : parentDirectory.relativize(getGeometryFile().toPath())));

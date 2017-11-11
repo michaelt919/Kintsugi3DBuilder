@@ -111,17 +111,18 @@ ParameterizedFit fitSpecular()
             float luminance = getLuminance(colorRemainder);
 
             vec3 halfway = normalize(view + light);
-            float nDotH = dot(normal, halfway);
+            float nDotH = max(0, dot(normal, halfway));
+            float nDotHSq = nDotH * nDotH;
 
-            if (nDotH * nDotH > 0.5)
+            if (nDotHSq > 0.5)
             {
                 directionSum += halfway;
                 intensityWeightedDirectionSum += halfway * luminance;
             }
 
-            if (luminance * nDotH > maxResidualLuminance[0] * maxResidualLuminance[1])
+            if (luminance * max(0, nDotHSq - 0.5) > maxResidualLuminance[0] * maxResidualLuminance[1])
             {
-                maxResidualLuminance = vec2(luminance, nDotH);
+                maxResidualLuminance = vec2(luminance, max(0, nDotHSq - 0.5));
                 maxResidual = colorRemainder;
             }
         }
