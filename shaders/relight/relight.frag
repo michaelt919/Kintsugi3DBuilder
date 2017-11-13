@@ -62,6 +62,8 @@ uniform bool fresnelEnabled;
 
 uniform bool perPixelWeightsEnabled;
 
+#define interpolateRoughness true
+
 layout(std140) uniform ViewWeights
 {
     vec4 viewWeights[MAX_CAMERA_POSE_COUNT_DIV_4];
@@ -118,13 +120,13 @@ vec3 computeFresnelReflectivityActual(vec3 specularColor, vec3 grazingColor, flo
     float g = sqrt(ior*ior + hDotV * hDotV - 1);
     float fresnel = 0.5 * pow(g - hDotV, 2) / pow(g + hDotV, 2)
         * (1 + pow(hDotV * (g + hDotV) - 1, 2) / pow(hDotV * (g - hDotV) + 1, 2));
-        
+
     return specularColor + (grazingColor - specularColor) * max(0, fresnel - f0) / (1.0 - f0);
 }
 
 vec3 computeFresnelReflectivitySchlick(vec3 specularColor, vec3 grazingColor, float hDotV)
 {
-    return max(specularColor, 
+    return max(specularColor,
         specularColor + (grazingColor - specularColor) * pow(max(0.0, 1.0 - hDotV), 5.0));
 }
 
@@ -182,9 +184,9 @@ vec3 computeMicrofacetDistributionBeckmann(float nDotH, vec3 roughness)
 {
     float nDotHSquared = nDotH * nDotH;
     vec3 roughnessSquared = roughness * roughness;
-    
+
     // Assume scaling by pi
-    return exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared)) 
+    return exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared))
             / (nDotHSquared * nDotHSquared * roughnessSquared);
 }
 
@@ -192,7 +194,7 @@ vec3 computeMicrofacetDistributionPhong(float nDotH, vec3 roughness)
 {
     float nDotHSquared = nDotH * nDotH;
     vec3 roughnessSquared = roughness * roughness;
-    
+
     // Assume scaling by pi
     return max(vec3(0.0), pow(vec3(nDotH), 2 / roughnessSquared - 2) / (roughnessSquared));
 }
@@ -223,7 +225,7 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
     }
 }
 
-vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir, 
+vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
     vec3 specularColor, vec3 roughness, float maxLuminance)
 {
     vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
@@ -318,12 +320,12 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
     float maxLuminance = getMaxLuminance();
 
     vec4 sum = vec4(0.0);
-    
+
     for (int i = 0; i < viewCount; i++)
     {
         sum += computeEnvironmentSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
     }
-    
+
     if (sum.y > 0.0)
     {
         return sum.rgb
@@ -336,14 +338,14 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
     }
 }
 
-vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 normalDir, 
+vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 normalDir,
     vec3 specularColor, vec3 roughness, float maxLuminance)
 {
     vec4 sampleColor = getLinearColor(index);
     if (sampleColor.a > 0.0)
     {
         vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
-        
+
         // All in camera space
         vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
         vec3 sampleViewDir = normalize(-fragmentPos);
@@ -353,15 +355,15 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
         vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
         vec3 normalDirCameraSpace = normalize((cameraPoses[index] * vec4(normalDir, 0.0)).xyz);
         vec3 lightIntensity = getLightIntensity(index);
-        
+
         float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
         float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
         float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
         float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
-    
-        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity 
+
+        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
             / (infiniteLightSources ? 1.0 : lightDistSquared);
-        
+
         vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
         if (!relightingEnabled || geomAtten != vec3(0))
         {
@@ -389,7 +391,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
             {
                 precomputedSample = sampleColor;
             }
-            
+
             mat3 tangentToObject = mat3(1.0);
 
             vec3 virtualViewDir;
@@ -408,7 +410,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
             {
                 virtualViewDir = normalize((cameraPoses[index] * vec4(viewPos, 1.0)).xyz - fragmentPos);
             }
-            
+
             for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
             {
                 if (perPixelWeightsEnabled)
@@ -461,7 +463,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
                 result[lightPass] = vec4(0.0);
             }
         }
-        
+
         return result;
     }
     else
@@ -470,6 +472,160 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
         for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
         {
             result[lightPass] = vec4(0.0);
+        }
+        return result;
+    }
+}
+
+struct RoughnessSample
+{
+    vec3 weightedSqrtRoughness;
+    vec3 weight;
+};
+
+RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int index, vec3 diffuseColor, vec3 normalDir,
+    vec3 specularColor, vec3 roughness, float maxLuminance)
+{
+    vec4 sampleColor = getLinearColor(index);
+    if (sampleColor.a > 0.0)
+    {
+        RoughnessSample result[MAX_VIRTUAL_LIGHT_COUNT];
+
+        // All in camera space
+        vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
+        vec3 sampleViewDir = normalize(-fragmentPos);
+        vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(index)].xyz - fragmentPos;
+        float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
+        vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
+        vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
+        vec3 normalDirCameraSpace = normalize((cameraPoses[index] * vec4(normalDir, 0.0)).xyz);
+        vec3 lightIntensity = getLightIntensity(index);
+
+        float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
+        float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
+        float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
+        float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
+
+        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
+            / (infiniteLightSources ? 1.0 : lightDistSquared);
+
+        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+        if (!relightingEnabled || geomAtten != vec3(0))
+        {
+            vec4 mfdFresnelSample;
+
+            if (relightingEnabled)
+            {
+                vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
+
+                if(pbrGeometricAttenuationEnabled)
+                {
+                    mfdFresnelSample = vec4(specularResid.rgb
+                        * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared),
+                        sampleColor.a * geomAtten);
+                }
+                else
+                {
+                    mfdFresnelSample =
+                        vec4(specularResid.rgb * 4 / lightIntensity
+                            * (infiniteLightSources ? 1.0 : lightDistSquared),
+                            sampleColor.a * nDotL);
+                }
+            }
+            else
+            {
+                mfdFresnelSample = sampleColor;
+            }
+
+            float nDotHSq = nDotH * nDotH;
+            vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * mfdFresnelSample.a) / roughness
+                                   - sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(nDotHSq));
+            RoughnessSample precomputedSample = RoughnessSample(
+                sqrt(sqrt(sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(1 - nDotHSq) * denominator) * denominator),
+                denominator);
+
+            precomputedSample.weightedSqrtRoughness = clamp(precomputedSample.weightedSqrtRoughness, vec3(0), sqrt(0.5) * precomputedSample.weight);
+
+            mat3 tangentToObject = mat3(1.0);
+
+            vec3 virtualViewDir;
+            if (useTSOverrides)
+            {
+                vec3 gNormal = normalize(fNormal);
+                vec3 tangent = normalize(fTangent - dot(gNormal, fTangent));
+                vec3 bitangent = normalize(fBitangent
+                    - dot(gNormal, fBitangent) * gNormal
+                    - dot(tangent, fBitangent) * tangent);
+                tangentToObject = mat3(tangent, bitangent, gNormal);
+
+                virtualViewDir = normalize(mat3(cameraPoses[index]) * tangentToObject * viewDirTSOverride);
+            }
+            else
+            {
+                virtualViewDir = normalize((cameraPoses[index] * vec4(viewPos, 1.0)).xyz - fragmentPos);
+            }
+
+            for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
+            {
+//                if (perPixelWeightsEnabled)
+                {
+                    vec3 virtualLightDir;
+                    if (useTSOverrides)
+                    {
+                        virtualLightDir =
+                            normalize(mat3(cameraPoses[index]) * tangentToObject * lightDirTSOverride);
+                    }
+                    else if (relightingEnabled)
+                    {
+                        virtualLightDir = normalize((cameraPoses[index] *
+                            vec4(lightPosVirtual[lightPass], 1.0)).xyz - fragmentPos);
+                    }
+                    else
+                    {
+                        virtualLightDir = virtualViewDir;
+                    }
+
+                    // Compute sample weight
+                    vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
+                    float virtualNdotH = max(0, dot(normalDirCameraSpace, virtualHalfDir));
+                    float weight = computeSampleWeight(
+                        isotropyFactor * (1.0 - (nDotH - virtualNdotH) * (nDotH - virtualNdotH)) +
+                        (1 - isotropyFactor) * dot(virtualHalfDir, sampleHalfDir));
+
+                    // float weight = computeSampleWeight(
+                        // normalize(vec3(1,1,10) * (transpose(tangentToObject) * virtualHalfDir)),
+                        // normalize(vec3(1,1,10) * (transpose(tangentToObject) * sampleHalfDir)));
+
+                    // float virtualNDotH = dot(normalDirCameraSpace, virtualHalfDir);
+                    // float sampleNDotH = dot(normalDirCameraSpace, sampleHalfDir);
+                    // float weight = computeSampleWeight(
+                        // vec3(virtualNDotH, sqrt(1.0 - virtualNDotH * virtualNDotH), 0.0),
+                        // vec3(sampleNDotH, sqrt(1.0 - sampleNDotH * sampleNDotH), 0.0));
+                    // float weight = 1.0 / abs(virtualNDotH - sampleNDotH);
+                    result[lightPass] = RoughnessSample(weight * precomputedSample.weightedSqrtRoughness, weight * precomputedSample.weight);
+                }
+//                else
+//                {
+//                    result[lightPass] = getViewWeight(index) * precomputedSample;
+//                }
+            }
+        }
+        else
+        {
+            for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
+            {
+                result[lightPass] = RoughnessSample(vec3(0), vec3(0));
+            }
+        }
+
+        return result;
+    }
+    else
+    {
+        RoughnessSample result[MAX_VIRTUAL_LIGHT_COUNT];
+        for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
+        {
+            result[lightPass] = RoughnessSample(vec3(0), vec3(0));
         }
         return result;
     }
@@ -484,7 +640,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 no
     {
         sums[i] = vec4(0.0);
     }
-    
+
     for (int i = 0; i < viewCount; i++)
     {
         vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample =
@@ -495,7 +651,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 no
             sums[j] += microfacetSample[j];
         }
     }
-    
+
     vec4[MAX_VIRTUAL_LIGHT_COUNT] results;
     for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
     {
@@ -510,6 +666,46 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 no
         else
         {
             results[i] = vec4(0.0);
+        }
+    }
+    return results;
+}
+
+vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedRoughnessAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
+{
+    float maxLuminance = getMaxLuminance();
+
+    RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] sums;
+    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
+    {
+        sums[i] = RoughnessSample(vec3(0), vec3(0));
+    }
+
+    for (int i = 0; i < viewCount; i++)
+    {
+        RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample =
+            computeRoughnessSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
+
+        for (int j = 0; j < MAX_VIRTUAL_LIGHT_COUNT; j++)
+        {
+            sums[j].weightedSqrtRoughness += microfacetSample[j].weightedSqrtRoughness;
+            sums[j].weight += microfacetSample[j].weight;
+        }
+    }
+
+    vec3 sqrtRoughness = sqrt(roughness);
+
+    vec4[MAX_VIRTUAL_LIGHT_COUNT] results;
+    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
+    {
+//        if (!perPixelWeightsEnabled)
+//        {
+//            results[i] = sums[i];
+//        }
+//        else
+        {
+            vec3 sqrtLocalRoughness = (sums[i].weightedSqrtRoughness /*+ max(vec3(0), 1 - sums[i].weight) * sqrtRoughness*/) / /*max(vec3(1), */sums[i].weight/*)*/;
+            results[i] = vec4(sqrtLocalRoughness * sqrtLocalRoughness, 1);
         }
     }
     return results;
@@ -747,7 +943,7 @@ void main()
         - dot(gNormal, fBitangent) * gNormal
         - dot(tangent, fBitangent) * tangent);
     mat3 tangentToObject = mat3(tangent, bitangent, gNormal);
-    
+
     vec3 normalDir;
     if (useNormalTexture)
     {
@@ -759,7 +955,7 @@ void main()
     {
         normalDir = normalize(fNormal);
     }
-    
+
     vec3 diffuseColor;
     if (useDiffuseTexture)
     {
@@ -773,7 +969,7 @@ void main()
     {
         diffuseColor = vec3(0.0);
     }
-    
+
     vec3 specularColor;
     if (useSpecularTexture)
     {
@@ -787,7 +983,9 @@ void main()
     {
         specularColor = vec3(0.03125); // TODO pass in a default?
     }
-    
+
+    vec3 specularColorXYZ = rgbToXYZ(specularColor);
+
     vec3 roughness;
     if (useRoughnessTexture)
     {
@@ -797,7 +995,9 @@ void main()
     {
         roughness = vec3(0.25); // TODO pass in a default?
     }
-    
+
+    vec3 roughnessSq = roughness * roughness;
+
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
     vec3 reflectance = vec3(0.0);
 
@@ -805,7 +1005,10 @@ void main()
 
     if (imageBasedRenderingEnabled)
     {
-        weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
+        weightedAverages = interpolateRoughness ?
+            computeWeightedRoughnessAverages(diffuseColor, normalDir, specularColor, roughness) :
+            computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
+
     }
 
     if (relightingEnabled || !imageBasedRenderingEnabled)
@@ -854,8 +1057,8 @@ void main()
         //reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
         //reflectance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
     }
-    
-    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && 
+
+    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT &&
         i < (relightingEnabled || !imageBasedRenderingEnabled ? virtualLightCount : 1); i++)
     {
         vec3 lightDirUnNorm;
@@ -877,7 +1080,7 @@ void main()
             lightDirUnNorm = lightDir = viewDir;
             nDotL = max(0.0, dot(normalDir, viewDir));
         }
-        
+
         if (nDotL > 0.0)
         {
             bool shadow = false;
@@ -891,17 +1094,35 @@ void main()
                     && projTexCoord.z >= 0 && projTexCoord.z <= 1
                     && texture(shadowMaps, vec3(projTexCoord.xy, i)).r - projTexCoord.z >= -0.01);
             }
-            
+
             if (!shadow)
             {
                 vec3 halfDir = normalize(viewDir + lightDir);
                 float hDotV = dot(halfDir, viewDir);
                 float nDotH = useTSOverrides ? halfDir.z : dot(normalDir, halfDir);
 
-                // TODO : this is a hack to use Buehler algorithm for one of the light sources
+                float nDotHSq = max(0, nDotH) * max(0, nDotH);
+
+                // This is a hack to use Buehler algorithm for one of the light sources
 //                weightedAverages[0] = computeBuehler(
 //                    useTSOverrides ? tangentToObject * halfDir : halfDir,
 //                    diffuseColor, normalDir, specularColor, roughness);
+
+                vec4 predictedMFD;
+                if (imageBasedRenderingEnabled)
+                {
+                    if (interpolateRoughness)
+                    {
+                        vec3 localRoughnessSq = weightedAverages[i].xyz * weightedAverages[i].xyz;
+                        vec3 mfdDenominatorRoot = 1 - nDotHSq * (1 - localRoughnessSq);
+                        predictedMFD = vec4(max(vec3(0), xyzToRGB(localRoughnessSq * localRoughnessSq * specularColorXYZ
+                            / (roughnessSq * mfdDenominatorRoot * mfdDenominatorRoot))), 25.0);
+                    }
+                    else
+                    {
+                        predictedMFD = weightedAverages[i];
+                    }
+                }
 
                 vec3 mfdFresnel;
 
@@ -909,8 +1130,8 @@ void main()
                 {
                     if (imageBasedRenderingEnabled)
                     {
-                        float grazingIntensity = getLuminance(weightedAverages[i].rgb
-                            / max(vec3(1 / weightedAverages[i].a), specularColor));
+                        float grazingIntensity = getLuminance(predictedMFD.rgb
+                            / max(vec3(1 / predictedMFD.a), specularColor));
 
                         if (grazingIntensity <= 0.0)
                         {
@@ -919,9 +1140,15 @@ void main()
                         else
                         {
                             mfdFresnel = max(vec3(0.0),
-                                fresnel(weightedAverages[i].rgb, vec3(grazingIntensity), hDotV));
+                                fresnel(predictedMFD.rgb, vec3(grazingIntensity), hDotV));
                                 // fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
                         }
+
+//                        // DEBUG code:
+//                        vec3 mfdFresnelBaseXYZ = rgbToXYZ(specularColor) * dist(nDotH, roughness);
+//                        mfdFresnel = abs(mfdFresnel - fresnel(xyzToRGB(mfdFresnelBaseXYZ), vec3(mfdFresnelBaseXYZ.y), hDotV));
+
+                        //reflectance = abs(pow(weightedAverages[i].xyz - roughness, vec3(2))); break;
 
                         // The following debug code is for visualizing differences between reference
                         // and fitted in perceptually linear color space
@@ -956,7 +1183,7 @@ void main()
                 {
                     if (imageBasedRenderingEnabled)
                     {
-                        mfdFresnel = max(vec3(0.0), weightedAverages[i].rgb);
+                        mfdFresnel = max(vec3(0.0), predictedMFD.rgb);
                     }
                     else
                     {
