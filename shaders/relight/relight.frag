@@ -62,7 +62,8 @@ uniform bool fresnelEnabled;
 
 uniform bool perPixelWeightsEnabled;
 
-#define interpolateRoughness true
+#define interpolateRoughness false
+#define residualImages false
 
 layout(std140) uniform ViewWeights
 {
@@ -392,6 +393,12 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
                 precomputedSample = sampleColor;
             }
 
+            // TODO experiment
+            if (residualImages)
+            {
+                precomputedSample.rgb -= xyzToRGB(dist(nDotH, roughness) * geomAtten * rgbToXYZ(specularColor));
+            }
+
             mat3 tangentToObject = mat3(1.0);
 
             vec3 virtualViewDir;
@@ -486,7 +493,8 @@ struct RoughnessSample
 RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int index, vec3 diffuseColor, vec3 normalDir,
     vec3 specularColor, vec3 roughness, float maxLuminance)
 {
-    vec4 sampleColor = getLinearColor(index);
+    vec4 sampleColor = getColor(index);
+
     if (sampleColor.a > 0.0)
     {
         RoughnessSample result[MAX_VIRTUAL_LIGHT_COUNT];
@@ -509,14 +517,24 @@ RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int index, vec3 
         vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
             / (infiniteLightSources ? 1.0 : lightDistSquared);
 
-        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+        vec3 geomAtten = pbrGeometricAttenuationEnabled ? geom(roughness, nDotH, nDotV, nDotL, hDotV) : vec3(nDotL * nDotV);
+
         if (!relightingEnabled || geomAtten != vec3(0))
         {
-            vec4 mfdFresnelSample;
+            float nDotHSq = nDotH * nDotH;
+            RoughnessSample precomputedSample;
 
-            if (relightingEnabled)
+            if (residualImages)
             {
-                vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
+                vec3 sqrtRoughnessEstimate = sqrt(roughness) + sampleColor.xyz - vec3(0.5);
+                vec3 mfdFresnelEstimate = dist(nDotH, roughness) * rgbToXYZ(fresnel(specularColor, vec3(1), hDotV));
+                vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * geomAtten) / roughness - sqrt(mfdFresnelEstimate) * vec3(nDotHSq));
+                precomputedSample = RoughnessSample(denominator * sqrtRoughnessEstimate, denominator);
+            }
+            else
+            {
+                vec4 mfdFresnelSample;
+                vec4 specularResid = removeDiffuse(linearizeColor(sampleColor), diffuseContrib, nDotL, maxLuminance);
 
                 if(pbrGeometricAttenuationEnabled)
                 {
@@ -531,18 +549,13 @@ RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int index, vec3 
                             * (infiniteLightSources ? 1.0 : lightDistSquared),
                             sampleColor.a * nDotL);
                 }
-            }
-            else
-            {
-                mfdFresnelSample = sampleColor;
-            }
 
-            float nDotHSq = nDotH * nDotH;
-            vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * mfdFresnelSample.a) / roughness
-                                   - sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(nDotHSq));
-            RoughnessSample precomputedSample = RoughnessSample(
-                sqrt(sqrt(sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(1 - nDotHSq) * denominator) * denominator),
-                denominator);
+                vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * mfdFresnelSample.a) / roughness
+                                       - sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(nDotHSq));
+                precomputedSample = RoughnessSample(
+                    sqrt(sqrt(sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(1 - nDotHSq) * denominator) * denominator),
+                    denominator);
+            }
 
             precomputedSample.weightedSqrtRoughness = clamp(precomputedSample.weightedSqrtRoughness, vec3(0), sqrt(0.5) * precomputedSample.weight);
 
@@ -671,6 +684,8 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 no
     return results;
 }
 
+#define MIN_ROUGHNESS_WEIGHT 0.1
+
 vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedRoughnessAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
 {
     float maxLuminance = getMaxLuminance();
@@ -704,7 +719,9 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedRoughnessAverages(vec3 diffuseColor
 //        }
 //        else
         {
-            vec3 sqrtLocalRoughness = (sums[i].weightedSqrtRoughness /*+ max(vec3(0), 1 - sums[i].weight) * sqrtRoughness*/) / /*max(vec3(1), */sums[i].weight/*)*/;
+
+            vec3 sqrtLocalRoughness = (sums[i].weightedSqrtRoughness
+                + max(vec3(0), MIN_ROUGHNESS_WEIGHT - sums[i].weight) * sqrtRoughness) / max(vec3(MIN_ROUGHNESS_WEIGHT), sums[i].weight);
             results[i] = vec4(sqrtLocalRoughness * sqrtLocalRoughness, 1);
         }
     }
@@ -1120,7 +1137,8 @@ void main()
                     }
                     else
                     {
-                        predictedMFD = weightedAverages[i];
+                        predictedMFD = weightedAverages[i]
+                            + (residualImages ? vec4(xyzToRGB(rgbToXYZ(specularColor) * dist(nDotH, roughness)), 0) : vec4(0));
                     }
                 }
 

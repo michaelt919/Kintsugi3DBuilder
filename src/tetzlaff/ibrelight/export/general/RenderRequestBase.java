@@ -142,6 +142,7 @@ abstract class RenderRequestBase implements IBRRequest
     {
         return context.buildFramebufferObject(width, height)
             .addColorAttachment()
+            .addDepthAttachment()
             .createFramebufferObject();
     }
 
@@ -160,6 +161,7 @@ abstract class RenderRequestBase implements IBRRequest
     {
         drawable.getContext().getState().disableBackFaceCulling();
         framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+        framebuffer.clearDepthBuffer();
         drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
     }
 
