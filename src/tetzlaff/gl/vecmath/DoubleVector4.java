@@ -66,6 +66,16 @@ public class DoubleVector4
         return new DoubleVector3(this.x, this.y, this.z);
     }
 
+    public IntVector4 rounded()
+    {
+        return new IntVector4((int)Math.round(this.x), (int)Math.round(this.y), (int)Math.round(this.z), (int)Math.round(this.w));
+    }
+
+    public IntVector4 truncated()
+    {
+        return new IntVector4((int)this.x, (int)this.y, (int)this.z, (int)this.w);
+    }
+
     public DoubleVector4 plus(DoubleVector4 other)
     {
         return new DoubleVector4(

@@ -70,6 +70,17 @@ public class DoubleVector3
         return new DoubleVector2(this.x, this.y);
     }
 
+    public IntVector3 rounded()
+    {
+        return new IntVector3((int)Math.round(this.x), (int)Math.round(this.y), (int)Math.round(this.z));
+    }
+
+    public IntVector3 truncated()
+    {
+        return new IntVector3((int)this.x, (int)this.y, (int)this.z);
+    }
+
+
     public DoubleVector3 plus(DoubleVector3 other)
     {
         return new DoubleVector3(
