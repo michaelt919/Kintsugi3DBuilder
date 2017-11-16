@@ -67,17 +67,43 @@ public class Vector3
         return new Vector2(this.x, this.y);
     }
 
-    @Override
-    public boolean equals(Object o)
+    public IntVector3 rounded()
     {
-        if (o instanceof Vector3)
+        return new IntVector3(Math.round(this.x), Math.round(this.y), Math.round(this.z));
+    }
+
+    public IntVector3 truncated()
+    {
+        return new IntVector3((int)this.x, (int)this.y, (int)this.z);
+    }
+
+    @Override
+    @SuppressWarnings("FloatingPointEquality")
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof Vector3)
         {
-            Vector3 other = (Vector3)o;
+            Vector3 other = (Vector3) obj;
             return other.x == this.x && other.y == this.y && other.z == this.z;
         }
         else
         {
             return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        if (this.equals(ZERO))
+        {
+            return 0;
+        }
+        else
+        {
+            int result = Float.floatToIntBits(x);
+            result = 31 * result + Float.floatToIntBits(y);
+            return 31 * result + Float.floatToIntBits(z);
         }
     }
 

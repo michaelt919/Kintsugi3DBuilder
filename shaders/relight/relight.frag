@@ -62,7 +62,7 @@ uniform bool fresnelEnabled;
 
 uniform bool perPixelWeightsEnabled;
 
-#define interpolateRoughness false
+#define interpolateRoughness true
 #define residualImages false
 
 layout(std140) uniform ViewWeights
@@ -393,7 +393,6 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
                 precomputedSample = sampleColor;
             }
 
-            // TODO experiment
             if (residualImages)
             {
                 precomputedSample.rgb -= xyzToRGB(dist(nDotH, roughness) * geomAtten * rgbToXYZ(specularColor));
@@ -524,10 +523,11 @@ RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int index, vec3 
             float nDotHSq = nDotH * nDotH;
             RoughnessSample precomputedSample;
 
+            vec3 mfdFresnelEstimate = dist(nDotH, roughness) * rgbToXYZ(fresnel(specularColor, vec3(1), hDotV));
+
             if (residualImages)
             {
                 vec3 sqrtRoughnessEstimate = sqrt(roughness) + sampleColor.xyz - vec3(0.5);
-                vec3 mfdFresnelEstimate = dist(nDotH, roughness) * rgbToXYZ(fresnel(specularColor, vec3(1), hDotV));
                 vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * geomAtten) / roughness - sqrt(mfdFresnelEstimate) * vec3(nDotHSq));
                 precomputedSample = RoughnessSample(denominator * sqrtRoughnessEstimate, denominator);
             }
@@ -552,9 +552,13 @@ RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int index, vec3 
 
                 vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * mfdFresnelSample.a) / roughness
                                        - sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(nDotHSq));
+
+                vec3 weight = max(vec3(0), sqrt(rgbToXYZ(specularColor) * mfdFresnelSample.a) / roughness
+                                    - sqrt(mfdFresnelEstimate) * vec3(nDotHSq));
+
                 precomputedSample = RoughnessSample(
-                    sqrt(sqrt(sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(1 - nDotHSq) * denominator) * denominator),
-                    denominator);
+                    sqrt(sqrt(sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(1 - nDotHSq) / denominator)) * weight,
+                    weight);
             }
 
             precomputedSample.weightedSqrtRoughness = clamp(precomputedSample.weightedSqrtRoughness, vec3(0), sqrt(0.5) * precomputedSample.weight);

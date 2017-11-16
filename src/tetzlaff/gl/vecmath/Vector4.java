@@ -61,17 +61,44 @@ public class Vector4
         return new Vector3(this.x, this.y, this.z);
     }
 
-    @Override
-    public boolean equals(Object o)
+    public IntVector4 rounded()
     {
-        if (o instanceof Vector4)
+        return new IntVector4(Math.round(this.x), Math.round(this.y), Math.round(this.z), Math.round(this.w));
+    }
+
+    public IntVector4 truncated()
+    {
+        return new IntVector4((int)this.x, (int)this.y, (int)this.z, (int)this.w);
+    }
+
+    @Override
+    @SuppressWarnings("FloatingPointEquality")
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof Vector4)
         {
-            Vector4 other = (Vector4)o;
+            Vector4 other = (Vector4) obj;
             return other.x == this.x && other.y == this.y && other.z == this.z && other.w == this.w;
         }
         else
         {
             return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        if (this.equals(ZERO))
+        {
+            return 0;
+        }
+        else
+        {
+            int result = Float.floatToIntBits(x);
+            result = 31 * result + Float.floatToIntBits(y);
+            result = 31 * result + Float.floatToIntBits(z);
+            return 31 * result + Float.floatToIntBits(w);
         }
     }
 
@@ -198,11 +225,11 @@ public class Vector4
     @Override
     public String toString()
     {
-        return '[' +
-                "" + x +
-            '\t' + y +
-            '\t' + z +
-            '\t' + w +
-                ']';
+        return "Vector4{" +
+            "x=" + x +
+            ", y=" + y +
+            ", z=" + z +
+            ", w=" + w +
+            '}';
     }
 }
