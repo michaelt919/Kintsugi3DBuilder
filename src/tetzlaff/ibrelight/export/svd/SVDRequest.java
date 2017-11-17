@@ -26,9 +26,6 @@ public class SVDRequest implements IBRRequest
     private final File exportPath;
     private final ReadonlySettingsModel settings;
 
-    private byte[][] images;
-//    private byte[][] weights;
-
     public SVDRequest(int texWidth, int texHeight, File exportPath, ReadonlySettingsModel settings)
     {
         this.exportPath = exportPath;
@@ -41,8 +38,7 @@ public class SVDRequest implements IBRRequest
     public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
         throws IOException
     {
-        initialize(renderable.getResources());
-        SimpleMatrix matrix = getMatrix();
+        SimpleMatrix matrix = getMatrix(renderable.getResources());
         SimpleSVD<SimpleMatrix> svd = matrix.svd(true);
         double[] singularValues = svd.getSingularValues();
 
@@ -61,11 +57,11 @@ public class SVDRequest implements IBRRequest
 
             for (int j = 0; j < renderable.getActiveViewSet().getCameraPoseCount(); j++)
             {
-                writer.print(renderable.getActiveViewSet().getCameraPose(j));
+                writer.print(renderable.getActiveViewSet().getImageFileName(j));
 
                 for (int i = 0; i < singularValues.length; i++)
                 {
-                    writer.print(vMatrix.get(i, j));
+                    writer.print("\t" + vMatrix.get(i, j));
                 }
 
                 writer.println();
@@ -82,7 +78,7 @@ public class SVDRequest implements IBRRequest
 
             for (int i = 0; i < texWidth * texHeight; i++)
             {
-                long convertedValue = Math.max(0, Math.min(255, Math.round((uMatrix.get(i, j) * 0.5 - 0.5) * 255)));
+                int convertedValue = (int)Math.max(0, Math.min(255, Math.round((uMatrix.get(i, j) * 0.5 + 0.5) * 255)));
                 data[i] = new Color(convertedValue, convertedValue, convertedValue).getRGB();
             }
 
@@ -92,12 +88,9 @@ public class SVDRequest implements IBRRequest
         }
     }
 
-    private <ContextType extends Context<ContextType>> void initialize(IBRResources<ContextType> resources)
+    private <ContextType extends Context<ContextType>> SimpleMatrix getMatrix(IBRResources<ContextType> resources)
         throws FileNotFoundException
     {
-        images = new byte[resources.viewSet.getCameraPoseCount() * 3][texWidth * texHeight];
-//        weights = new byte[resources.viewSet.getCameraPoseCount() * 3][texWidth * texHeight];
-
         try
         (
             Program<ContextType> projTexProgram = resources.context.getShaderProgramBuilder()
@@ -132,21 +125,26 @@ public class SVDRequest implements IBRRequest
 
             resources.context.getState().disableBackFaceCulling();
 
-            for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
+            SimpleMatrix result = new SimpleMatrix(texWidth * texHeight, resources.viewSet.getCameraPoseCount() * 3);
+
+            for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
             {
                 framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
 //                framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
 
-                projTexProgram.setUniform("viewIndex", i);
+                projTexProgram.setUniform("viewIndex", k);
 
                 drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
                 int[] colors = framebuffer.readColorBufferARGB(0);
-                for (int j = 0; j < colors.length; j++)
+                for (int i = 0; i < colors.length; i++)
                 {
-                    Color color = new Color(colors[j], true);
-                    images[3 * i][j] = (byte)color.getRed();
-                    images[3 * i + 1][j] = (byte)color.getGreen();
-                    images[3 * i + 2][j] = (byte)color.getBlue();
+                    Color color = new Color(colors[i], true);
+                    if (color.getAlpha() > 0)
+                    {
+                        result.set(i, 3 * k, (0x000000FF & color.getRed()) / 255.0f - 0.5f);
+                        result.set(i, 3 * k + 1, (0x000000FF & color.getGreen()) / 255.0f - 0.5f);
+                        result.set(i, 3 * k + 2, (0x000000FF & color.getBlue()) / 255.0f - 0.5f);
+                    }
                 }
 
                 if (DEBUG)
@@ -154,7 +152,7 @@ public class SVDRequest implements IBRRequest
                     try
                     {
                         framebuffer.saveColorBufferToFile(0, "PNG",
-                                new File(exportPath, resources.viewSet.getImageFileName(i).split("\\.")[0] + ".png"));
+                                new File(exportPath, resources.viewSet.getImageFileName(k).split("\\.")[0] + ".png"));
 
 //                        framebuffer.saveColorBufferToFile(1, "PNG",
 //                                new File(exportPath, resources.viewSet.getImageFileName(i).split("\\.")[0] + "_weights.png"));
@@ -164,35 +162,9 @@ public class SVDRequest implements IBRRequest
                         e.printStackTrace();
                     }
                 }
-
-//                int[] weightData = framebuffer.readColorBufferARGB(1);
-//                for (int j = 0; j < weightData.length; j++)
-//                {
-//                    Color weight = new Color(weightData[j], true);
-//                    this.weights[3 * i][j] = (byte)weight.getRed();
-//                    this.weights[3 * i + 1][j] = (byte)weight.getGreen();
-//                    this.weights[3 * i + 2][j] = (byte)weight.getBlue();
-//                }
             }
+
+            return result;
         }
-    }
-
-    private SimpleMatrix getMatrix()
-    {
-        int pixelCount = texWidth * texHeight;
-        SimpleMatrix result = new SimpleMatrix(texWidth * texHeight, images.length);
-
-        for (int i = 0; i < pixelCount; i++)
-        {
-            for (int j = 0; j < images.length; j++)
-            {
-//                double weight = (0x000000FF & weights[j][i]) / 255.0;
-                double roughness = (0x000000FF & images[j][i]) / 255.0f - 0.5f;
-
-                result.set(i, j, /*weight * */roughness);
-            }
-        }
-
-        return result;
     }
 }
