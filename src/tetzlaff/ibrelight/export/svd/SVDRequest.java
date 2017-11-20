@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import javax.imageio.ImageIO;
 
+import org.ejml.data.FMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.ejml.simple.SimpleSVD;
 import tetzlaff.gl.*;
@@ -41,6 +42,9 @@ public class SVDRequest implements IBRRequest
         SimpleMatrix matrix = getMatrix(renderable.getResources());
         SimpleSVD<SimpleMatrix> svd = matrix.svd(true);
         double[] singularValues = svd.getSingularValues();
+        double[] scale = new double[singularValues.length];
+
+        SimpleMatrix uMatrix;
 
         try (PrintStream writer = new PrintStream(new File(exportPath, "svd.txt")))
         {
@@ -48,27 +52,61 @@ public class SVDRequest implements IBRRequest
 
             for (double sv : singularValues)
             {
-                writer.print("\t" + sv);
+                writer.print(String.format("\t%.6f", sv));
+            }
+
+            writer.println();
+
+            uMatrix = svd.getU();
+
+            writer.print("scale");
+
+            for (int j = 0; j < singularValues.length; j++)
+            {
+                double maxAbsValue = 0.0;
+                for (int i = 0; i < texWidth * texHeight; i++)
+                {
+                    maxAbsValue = Math.max(maxAbsValue, Math.abs(uMatrix.get(i, j)));
+                }
+
+                scale[j] = 1.0 / maxAbsValue;
+                writer.print(String.format("\t%.6f", scale[j]));
             }
 
             writer.println();
 
             SimpleMatrix vMatrix = svd.getV();
 
-            for (int j = 0; j < renderable.getActiveViewSet().getCameraPoseCount(); j++)
+            for (int k = 0; k < renderable.getActiveViewSet().getCameraPoseCount(); k++)
             {
-                writer.print(renderable.getActiveViewSet().getImageFileName(j));
+                writer.print(renderable.getActiveViewSet().getImageFileName(k) + ".x");
 
                 for (int i = 0; i < singularValues.length; i++)
                 {
-                    writer.print("\t" + vMatrix.get(i, j));
+                    writer.print(String.format("\t%.6f", vMatrix.get(i, 3 * k)));
+                }
+
+                writer.println();
+
+                writer.print(renderable.getActiveViewSet().getImageFileName(k) + ".y");
+
+                for (int i = 0; i < singularValues.length; i++)
+                {
+                    writer.print(String.format("\t%.6f",  vMatrix.get(i, 3 * k + 1)));
+                }
+
+                writer.println();
+
+                writer.print(renderable.getActiveViewSet().getImageFileName(k) + ".z");
+
+                for (int i = 0; i < singularValues.length; i++)
+                {
+                    writer.print(String.format("\t%.6f", vMatrix.get(i, 3 * k + 2)));
                 }
 
                 writer.println();
             }
         }
-
-        SimpleMatrix uMatrix = svd.getU();
 
         for (int j = 0; j < singularValues.length; j++)
         {
@@ -78,7 +116,7 @@ public class SVDRequest implements IBRRequest
 
             for (int i = 0; i < texWidth * texHeight; i++)
             {
-                int convertedValue = (int)Math.max(0, Math.min(255, Math.round((uMatrix.get(i, j) * 0.5 + 0.5) * 255)));
+                int convertedValue = (int)Math.max(0, Math.min(255, Math.round((uMatrix.get(i, j) * 0.5 * scale[j] + 0.5) * 255)));
                 data[i] = new Color(convertedValue, convertedValue, convertedValue).getRGB();
             }
 
@@ -99,7 +137,7 @@ public class SVDRequest implements IBRRequest
                 .createProgram();
 
             FramebufferObject<ContextType> framebuffer = resources.context.buildFramebufferObject(texWidth, texHeight)
-                .addColorAttachment(ColorFormat.RGB8)
+                .addColorAttachment(ColorFormat.RGBA8)
 //                .addColorAttachment(ColorFormat.RGBA8)
                 .createFramebufferObject()
         )
@@ -125,7 +163,8 @@ public class SVDRequest implements IBRRequest
 
             resources.context.getState().disableBackFaceCulling();
 
-            SimpleMatrix result = new SimpleMatrix(texWidth * texHeight, resources.viewSet.getCameraPoseCount() * 3);
+            // Use single-precision floating point to save memory
+            SimpleMatrix result = new SimpleMatrix(texWidth * texHeight, resources.viewSet.getCameraPoseCount() * 3, FMatrixRMaj.class);
 
             for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
             {
