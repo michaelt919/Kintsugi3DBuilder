@@ -1056,7 +1056,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
     private static double getLinearDepth(double nonLinearDepth, double nearPlane, double farPlane)
     {
-        return 2 * nearPlane * farPlane / (farPlane + nearPlane - nonLinearDepth * (farPlane - nearPlane));
+        return 2 * nearPlane * farPlane / (farPlane + nearPlane - (2 * nonLinearDepth - 1) * (farPlane - nearPlane));
     }
 
     private double loadTextures() throws IOException

@@ -62,8 +62,9 @@ uniform bool fresnelEnabled;
 
 uniform bool perPixelWeightsEnabled;
 
-#define interpolateRoughness true
+#define interpolateRoughness false
 #define residualImages false
+#define brdfMode true
 
 layout(std140) uniform ViewWeights
 {
@@ -441,7 +442,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
                     vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
                     float virtualNdotH = max(0, dot(normalDirCameraSpace, virtualHalfDir));
                     float weight = computeSampleWeight(
-                        isotropyFactor * (1.0 - (nDotH - virtualNdotH) * (nDotH - virtualNdotH)) +
+                        isotropyFactor * (nDotH * virtualNdotH + sqrt(1 - nDotH*nDotH) * sqrt(1 - virtualNdotH*virtualNdotH)) +
                         (1 - isotropyFactor) * dot(virtualHalfDir, sampleHalfDir));
 
                     // float weight = computeSampleWeight(
@@ -1224,7 +1225,8 @@ void main()
                      * ((relightingEnabled || !imageBasedRenderingEnabled) ?
                         (useTSOverrides ? lightIntensityVirtual[i] :
                             lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed))
-                        : vec3(1.0));
+                        : vec3(1.0))
+                     / (brdfMode ? nDotL : 1.0);
             }
         }
     }

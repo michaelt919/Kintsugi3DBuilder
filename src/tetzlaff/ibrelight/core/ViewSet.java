@@ -662,7 +662,8 @@ public final class ViewSet
                                 }
                                 else
                                 {
-                                    if ("true".equals(reader.getAttributeValue(null, "enabled")))
+                                    if (Objects.equals(reader.getAttributeValue(null, "enabled"), "true") ||
+                                        Objects.equals(reader.getAttributeValue(null, "enabled"), "1"))
                                     {
                                         if (lightIndex < 0)
                                         {
@@ -974,7 +975,7 @@ public final class ViewSet
             ));
         }
                 
-        Camera[] cameras = cameraSet.toArray(new Camera[0]);
+        Camera[] cameras = cameraSet.toArray(new Camera[cameraSet.size()]);
         
         // Fill out the camera pose, projection index, and light index lists
         for (Camera cam : cameras)
@@ -1450,7 +1451,7 @@ public final class ViewSet
     {
         if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
         {
-            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues);
+            return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues, gamma);
         }
         else
         {
