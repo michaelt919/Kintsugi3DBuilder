@@ -62,14 +62,14 @@ vec4 getColor(int virtualIndex)
                 return vec4(0);
             }
         }
-        
+
         if (shadowTestEnabled)
         {
             vec4 shadowTexCoord = shadowMatrices[viewIndex] * vec4(fPosition, 1.0);
             shadowTexCoord /= shadowTexCoord.w;
             shadowTexCoord = (shadowTexCoord + vec4(1)) / 2;
-            
-            if (shadowTexCoord.x < 0 || shadowTexCoord.x > 1 || 
+
+            if (shadowTexCoord.x < 0 || shadowTexCoord.x > 1 ||
                 shadowTexCoord.y < 0 || shadowTexCoord.y > 1 ||
                 shadowTexCoord.z < 0 || shadowTexCoord.z > 1)
             {

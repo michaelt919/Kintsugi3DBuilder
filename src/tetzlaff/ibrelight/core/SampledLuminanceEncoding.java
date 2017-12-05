@@ -21,7 +21,7 @@ public class SampledLuminanceEncoding
         this.encodeFunction = decoded -> Math.pow(decoded, 1.0 / gamma) * 255.0;
     }
 
-    public SampledLuminanceEncoding(double[] linear, byte[] encoded)
+    public SampledLuminanceEncoding(double[] linear, byte[] encoded, float gamma)
     {
         if (linear.length != encoded.length)
         {
@@ -29,7 +29,7 @@ public class SampledLuminanceEncoding
         }
 
         double[] x = new double[encoded.length + 2];
-        x[0] = 0;
+        x[0] = 0.0;
         for (int k = 1; k < x.length-1; k++)
         {
             x[k] = (double)(0xFF & (int)encoded[k-1]);
@@ -37,15 +37,18 @@ public class SampledLuminanceEncoding
         x[x.length-1] = 255.0;
 
         double[] y = new double[linear.length + 2];
-        y[0] = 0;
+        y[0] = 0.0;
         for (int k = 1; k < y.length-1; k++)
         {
-            y[k] = linear[k-1];
+            y[k] = Math.pow(linear[k-1], 1.0 / gamma);
         }
-        y[y.length-1] = 255.0 * y[y.length-2] / x[x.length-2];
+        y[y.length-1] = y[y.length-2] * 255.0 / x[x.length-2]; // Extrapolate linearly in gamma-corrected color space
 
-        this.decodeFunction = new CubicHermiteSpline(x, y, true);
-        this.encodeFunction = new CubicHermiteSpline(y, x, true);
+        this.decodeFunction = new CubicHermiteSpline(x, y, true)
+            .andThen(gammaCorrected -> Math.pow(gammaCorrected, gamma));
+
+        this.encodeFunction = new CubicHermiteSpline(y, x, true)
+            .compose(physicallyLinear -> Math.pow(physicallyLinear, 1.0 / gamma));
     }
 
     public SampledLuminanceEncoding(DoubleUnaryOperator decodeFunction, DoubleUnaryOperator encodeFunction)

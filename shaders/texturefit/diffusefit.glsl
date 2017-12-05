@@ -76,8 +76,11 @@ DiffuseFit fitDiffuse()
                 a += weight * outerProduct(lightNormalized, lightNormalized);
                 //b += weight * outerProduct(lightNormalized, vec4(color.rgb / attenuatedIncidentRadiance, 0.0));
                 b += weight * outerProduct(lightNormalized, color.rgb / attenuatedIncidentRadiance);
-                weightedRadianceSum += weight * vec4(color.rgb, 1.0);
-                weightedIrradianceSum += weight * attenuatedIncidentRadiance * max(0, dot(geometricNormal, lightNormalized));
+
+                float nDotL = max(0, dot(geometricNormal, lightNormalized));
+                weightedRadianceSum += weight * vec4(color.rgb, 1.0) * nDotL;
+                weightedIrradianceSum += weight * attenuatedIncidentRadiance * nDotL * nDotL;
+
                 directionSum += lightNormalized;
             }
         }

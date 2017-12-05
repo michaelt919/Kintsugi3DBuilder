@@ -610,14 +610,12 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> diffuseTextureBuilder =
                     context.build2DColorTextureFromFile(diffuseFile, true);
 
-                if (loadOptions.isCompressionRequested())
-                {
-                    diffuseTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-                }
-                else
-                {
-                    diffuseTextureBuilder.setInternalFormat(ColorFormat.RGB8);
-                }
+//                if (loadOptions.isCompressionRequested())
+//                {
+//                    diffuseTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+//                }
+//                else
+                diffuseTextureBuilder.setInternalFormat(ColorFormat.RGB8);
 
                 diffuseTexture = diffuseTextureBuilder
                         .setMipmapsEnabled(loadOptions.areMipmapsRequested())
@@ -635,14 +633,12 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> normalTextureBuilder =
                     context.build2DColorTextureFromFile(normalFile, true);
 
-                if (loadOptions.isCompressionRequested())
-                {
-                    normalTextureBuilder.setInternalFormat(CompressionFormat.RED_4BPP_GREEN_4BPP);
-                }
-                else
-                {
-                    normalTextureBuilder.setInternalFormat(ColorFormat.RG8);
-                }
+//                if (loadOptions.isCompressionRequested())
+//                {
+//                    normalTextureBuilder.setInternalFormat(CompressionFormat.RED_4BPP_GREEN_4BPP);
+//                }
+//                else
+                normalTextureBuilder.setInternalFormat(ColorFormat.RG8);
 
                 normalTexture = normalTextureBuilder
                         .setMipmapsEnabled(loadOptions.areMipmapsRequested())

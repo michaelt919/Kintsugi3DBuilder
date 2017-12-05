@@ -15,8 +15,12 @@ uniform sampler2D normalEstimate;
 uniform float fittingGamma;
 uniform bool standaloneMode;
 
+#define fitNearSpecularOnly true // should be true for DARPA stuff (at least when comparing with Joey), false for cultural heritage
 #define chromaticRoughness false
-#define chromaticSpecular true
+#define chromaticSpecular false
+#define aggressiveNormal false
+#define USE_INFINITE_LIGHT_SOURCES infiniteLightSources
+#define USE_LIGHT_INTENSITIES true
 
 vec4 getDiffuseColor()
 {
@@ -101,8 +105,8 @@ ParameterizedFit fitSpecular()
         if (color.a * dot(view, normal) > 0)
         {
             vec3 lightPreNormalized = getLightVector(i);
-            vec3 attenuatedLightIntensity = infiniteLightSources ?
-                getLightIntensity(i) :
+            vec3 attenuatedLightIntensity = USE_INFINITE_LIGHT_SOURCES ?
+                (USE_LIGHT_INTENSITIES ? getLightIntensity(i) : vec3(1.0)) :
                 getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
             vec3 light = normalize(lightPreNormalized);
 
@@ -132,28 +136,35 @@ ParameterizedFit fitSpecular()
 
     vec3 specularNormal;
 
-    if (dot(intensityWeightedDirectionSum, intensityWeightedDirectionSum) < 1.0)
+    if (aggressiveNormal)
     {
-        intensityWeightedDirectionSum += (1 - length(intensityWeightedDirectionSum)) * shadingNormal;
+        specularNormal = normalize(intensityWeightedDirectionSum);
     }
+    else
+    {
+        if (dot(intensityWeightedDirectionSum, intensityWeightedDirectionSum) < 1.0)
+        {
+            intensityWeightedDirectionSum += (1 - length(intensityWeightedDirectionSum)) * shadingNormal;
+        }
 
-    float directionScale = length(directionSum);
-    vec3 averageDirection = directionSum / max(1, directionScale);
-    float specularNormalFidelity = dot(averageDirection, normal);
-    vec3 certaintyDirectionUnnormalized = cross(averageDirection - specularNormalFidelity * normal, normal);
-    vec3 certaintyDirection = certaintyDirectionUnnormalized
-        / max(1, length(certaintyDirectionUnnormalized));
+        float directionScale = length(directionSum);
+        vec3 averageDirection = directionSum / max(1, directionScale);
+        float specularNormalFidelity = dot(averageDirection, normal);
+        vec3 certaintyDirectionUnnormalized = cross(averageDirection - specularNormalFidelity * normal, normal);
+        vec3 certaintyDirection = certaintyDirectionUnnormalized
+            / max(1, length(certaintyDirectionUnnormalized));
 
-    vec3 specularNormalEstimate = normalize(intensityWeightedDirectionSum);
-    float specularNormalCertainty =
-        min(1, directionScale) * dot(specularNormalEstimate, certaintyDirection);
-    vec3 scaledCertaintyDirection = specularNormalCertainty * certaintyDirection;
-    specularNormal = normalize(
-        scaledCertaintyDirection
-            + sqrt(1 - specularNormalCertainty * specularNormalCertainty
-                        * dot(certaintyDirection, certaintyDirection))
-                * normalize(mix(normal, normalize(specularNormalEstimate - scaledCertaintyDirection),
-                    min(1, directionScale) * specularNormalFidelity)));
+        vec3 specularNormalEstimate = normalize(intensityWeightedDirectionSum);
+        float specularNormalCertainty =
+            min(1, directionScale) * dot(specularNormalEstimate, certaintyDirection);
+        vec3 scaledCertaintyDirection = specularNormalCertainty * certaintyDirection;
+        specularNormal = normalize(
+            scaledCertaintyDirection
+                + sqrt(1 - specularNormalCertainty * specularNormalCertainty
+                            * dot(certaintyDirection, certaintyDirection))
+                    * normalize(mix(normal, normalize(specularNormalEstimate - scaledCertaintyDirection),
+                        min(1, directionScale) * specularNormalFidelity)));
+    }
 
     vec3 roughnessSums[3];
     roughnessSums[0] = vec3(0);
@@ -177,8 +188,8 @@ ParameterizedFit fitSpecular()
         if (color.a * dot(view, normal) > 0)
         {
             vec3 lightPreNormalized = getLightVector(i);
-            vec3 attenuatedLightIntensity = infiniteLightSources ?
-                getLightIntensity(i) :
+            vec3 attenuatedLightIntensity = USE_INFINITE_LIGHT_SOURCES ?
+                (USE_LIGHT_INTENSITIES ? getLightIntensity(i) : vec3(1.0)) :
                 getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
             vec3 light = normalize(lightPreNormalized);
             float nDotL = max(0, dot(light, specularNormal));
@@ -192,17 +203,26 @@ ParameterizedFit fitSpecular()
                 removeDiffuse(color, diffuseColor.rgb, light, attenuatedLightIntensity, normal, maxLuminance).rgb / attenuatedLightIntensity;
             vec3 colorRemainderXYZ = rgbToXYZ(colorRemainderRGB);
 
-            if (nDotV > 0 /*&& nDotHSquared > 0.5 && nDotV * (1 + nDotHSquared) * (1 + nDotHSquared) > 1.0*/)
+            if (nDotV > 0 && (!fitNearSpecularOnly || nDotHSquared > 0.5) /* && nDotV * (1 + nDotHSquared) * (1 + nDotHSquared) > 1.0*/)
             {
                 float hDotV = max(0, dot(halfway, view));
 
-                roughnessSums[0] += nDotV // * pow(colorRemainderXYZ, vec3(1.0 / fittingGamma))
+                roughnessSums[0] += nDotV
+//                    * sqrt(1 - nDotHSquared)
+                    // * pow(colorRemainderXYZ, vec3(1.0 / fittingGamma))
+                    //* colorRemainderXYZ
                     * sqrt(colorRemainderXYZ * nDotV) * (1 - nDotHSquared);
 
-                roughnessSums[1] += nDotV // * pow(colorRemainderXYZ, vec3(1.0 / fittingGamma))
+                roughnessSums[1] += nDotV
+//                    * sqrt(1 - nDotHSquared)
+                    // * pow(colorRemainderXYZ, vec3(1.0 / fittingGamma))
+                    //* colorRemainderXYZ
                     * sqrt(colorRemainderXYZ * nDotV) * nDotHSquared;
 
-                roughnessSums[2] += nDotV ;// * pow(colorRemainderXYZ, vec3(1.0 / fittingGamma));
+                roughnessSums[2] += nDotV;
+//                    * sqrt(1 - nDotHSquared);
+                    // * pow(colorRemainderXYZ, vec3(1.0 / fittingGamma));
+                    //* colorRemainderXYZ;
 
                 sumResidualXYZGamma += nDotV * vec4(pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)), 1.0);
             }
@@ -322,8 +342,8 @@ ParameterizedFit fitSpecular()
             if (color.a * dot(view, normal) > 0)
             {
                 vec3 lightPreNormalized = getLightVector(i);
-                vec3 attenuatedLightIntensity = infiniteLightSources ?
-                    getLightIntensity(i) :
+                vec3 attenuatedLightIntensity = USE_INFINITE_LIGHT_SOURCES ?
+                    (USE_LIGHT_INTENSITIES ? getLightIntensity(i) : vec3(1.0)) :
                     getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
                 vec3 light = normalize(lightPreNormalized);
                 float nDotL = max(0, dot(light, specularNormal));
