@@ -213,19 +213,19 @@ ParameterizedFit fitSpecular()
                 roughnessSums[0] += nDotV
 //                    * sqrt(1 - nDotHSquared)
                     * (LINEAR_WEIGHT_MODE ? colorRemainderXYZ :
-                        (PERCEPTUAL_WEIGHT_MODE ? pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)) : 1.0))
+                        (PERCEPTUAL_WEIGHT_MODE ? pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)) : vec3(1.0)))
                     * sqrt(colorRemainderXYZ * nDotV) * (1 - nDotHSquared);
 
                 roughnessSums[1] += nDotV
 //                    * sqrt(1 - nDotHSquared)
                     * (LINEAR_WEIGHT_MODE ? colorRemainderXYZ :
-                        (PERCEPTUAL_WEIGHT_MODE ? pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)) : 1.0))
+                        (PERCEPTUAL_WEIGHT_MODE ? pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)) : vec3(1.0)))
                     * sqrt(colorRemainderXYZ * nDotV) * nDotHSquared;
 
                 roughnessSums[2] += nDotV
 //                    * sqrt(1 - nDotHSquared);
                     * (LINEAR_WEIGHT_MODE ? colorRemainderXYZ :
-                        (PERCEPTUAL_WEIGHT_MODE ? pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)) : 1.0))
+                        (PERCEPTUAL_WEIGHT_MODE ? pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)) : vec3(1.0)))
                     * colorRemainderXYZ;
 
                 sumResidualXYZGamma += nDotV * vec4(pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)), 1.0);
