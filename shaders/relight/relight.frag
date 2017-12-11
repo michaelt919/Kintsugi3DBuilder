@@ -737,7 +737,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedRoughnessAverages(vec3 diffuseColor
 
 float computeBuehlerWeight(vec3 targetDirection, vec3 sampleDirection)
 {
-    return 1.0 / (1.0 - clamp(dot(sampleDirection, targetDirection), 0.0, 0.9999));
+    return 1.0 / (1.0 - clamp(dot(sampleDirection, targetDirection), 0.0, 0.99999));
 }
 
 float getBuehlerWeight(int index, vec3 targetDirection)
@@ -752,7 +752,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     float weights[MAX_BUEHLER_SAMPLE_COUNT];
     int indices[MAX_BUEHLER_SAMPLE_COUNT];
 
-    int sampleCount = 3; // TODO change to a parameter
+    int sampleCount = 5; // TODO change to a parameter
 
     // Initialization
     for (int i = 0; i < sampleCount; i++)
@@ -1125,10 +1125,10 @@ void main()
 
                 float nDotHSq = max(0, nDotH) * max(0, nDotH);
 
-                // This is a hack to use Buehler algorithm for one of the light sources
-//                weightedAverages[0] = computeBuehler(
-//                    useTSOverrides ? tangentToObject * halfDir : halfDir,
-//                    diffuseColor, normalDir, specularColor, roughness);
+                // This is a hack to use Buehler algorithm for the light source
+                weightedAverages[i] = computeBuehler(
+                    useTSOverrides ? tangentToObject * halfDir : halfDir,
+                    diffuseColor, normalDir, specularColor, roughness);
 
                 vec4 predictedMFD;
                 if (imageBasedRenderingEnabled)

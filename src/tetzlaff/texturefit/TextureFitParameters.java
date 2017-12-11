@@ -18,8 +18,8 @@ public class TextureFitParameters
     private boolean areLightSourcesInfinite;
 
     // Diffuse fitting parameters
-    private float diffuseDelta = 0.1f;
-    private int diffuseIterations = 16;
+    private float diffuseDelta = 0.25f;
+    private int diffuseIterations = 64;
     private float diffuseComputedNormalWeight = 0.0f;
     private float diffuseInputNormalWeight = Float.MAX_VALUE;
 
