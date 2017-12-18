@@ -15,15 +15,15 @@ uniform sampler2D normalEstimate;
 uniform float fittingGamma;
 uniform bool standaloneMode;
 
-#define fitNearSpecularOnly true // should be true for DARPA stuff (at least when comparing with Joey), false for cultural heritage
+#define fitNearSpecularOnly false // should be true for DARPA stuff (at least when comparing with Joey), false for cultural heritage
 #define chromaticRoughness false
 #define chromaticSpecular false
 #define aggressiveNormal false
 #define USE_INFINITE_LIGHT_SOURCES infiniteLightSources
 #define USE_LIGHT_INTENSITIES true
 
-#define LINEAR_WEIGHT_MODE true
-#define PERCEPTUAL_WEIGHT_MODE false
+#define LINEAR_WEIGHT_MODE false
+#define PERCEPTUAL_WEIGHT_MODE true
 
 vec4 getDiffuseColor()
 {

@@ -10,7 +10,7 @@ public class TextureFitParameters
     private int imageWidth = 1024;
     private int imageHeight = 1024;
     private int textureSize = 2048;
-    private int textureSubdivision = 8;
+    private int textureSubdivision = 16;
     private boolean imageRescalingEnabled = false;
     private boolean imagePreprojectionUseEnabled = false;
     private boolean imagePreprojectionGenerationEnabled = false;
@@ -18,7 +18,7 @@ public class TextureFitParameters
     private boolean areLightSourcesInfinite;
 
     // Diffuse fitting parameters
-    private float diffuseDelta = 0.25f;
+    private float diffuseDelta = 1.0f;
     private int diffuseIterations = 64;
     private float diffuseComputedNormalWeight = 0.0f;
     private float diffuseInputNormalWeight = Float.MAX_VALUE;
