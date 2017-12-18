@@ -64,7 +64,7 @@ uniform bool perPixelWeightsEnabled;
 
 #define interpolateRoughness false
 #define residualImages false
-#define brdfMode true
+#define brdfMode false
 
 layout(std140) uniform ViewWeights
 {
@@ -1011,7 +1011,8 @@ void main()
     vec3 roughness;
     if (useRoughnessTexture)
     {
-        roughness = texture(roughnessMap, fTexCoord).rgb;
+        vec3 sqrtRoughness = texture(roughnessMap, fTexCoord).rgb;
+        roughness = sqrtRoughness * sqrtRoughness;
     }
     else
     {
@@ -1125,10 +1126,10 @@ void main()
 
                 float nDotHSq = max(0, nDotH) * max(0, nDotH);
 
-                // This is a hack to use Buehler algorithm for the light source
-                weightedAverages[i] = computeBuehler(
-                    useTSOverrides ? tangentToObject * halfDir : halfDir,
-                    diffuseColor, normalDir, specularColor, roughness);
+//                // This is a hack to use Buehler algorithm for the light source
+//                weightedAverages[i] = computeBuehler(
+//                    useTSOverrides ? tangentToObject * halfDir : halfDir,
+//                    diffuseColor, normalDir, specularColor, roughness);
 
                 vec4 predictedMFD;
                 if (imageBasedRenderingEnabled)

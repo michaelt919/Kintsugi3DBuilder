@@ -690,7 +690,7 @@ public class TextureFitUserInterface extends JFrame
         gbc_textureBlockSizeLabel.gridx = 0;
         gbc_textureBlockSizeLabel.gridy = 3;
         advancedSettingsPanel.add(textureBlockSizeLabel, gbc_textureBlockSizeLabel);
-        textureBlockSizeSpinner = new JSpinner(new SpinnerNumberModel(256.0, 1.0, 8192.0, 1.0));
+        textureBlockSizeSpinner = new JSpinner(new SpinnerNumberModel(128.0, 1.0, 8192.0, 1.0));
         GridBagConstraints gbc_textureBlockSizeSpinner = new GridBagConstraints();
         gbc_textureBlockSizeSpinner.insets = new Insets(0, 0, 5, 5);
         gbc_textureBlockSizeSpinner.gridx = 1;

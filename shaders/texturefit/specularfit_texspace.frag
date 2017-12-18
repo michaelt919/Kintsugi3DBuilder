@@ -23,5 +23,5 @@ void main()
     diffuseColor = vec4(pow(fit.diffuseColor.rgb, vec3(1 / gamma)), fit.diffuseColor.a);
     normal = vec4(fit.normal.xyz * 0.5 + vec3(0.5), fit.normal.w);
     specularColor = vec4(pow(fit.specularColor.rgb, vec3(1 / gamma)), fit.specularColor.a);
-    roughness = vec4(vec3(fit.roughness.xyz), fit.roughness.w);
+    roughness = vec4(sqrt(fit.roughness.xyz), fit.roughness.w);
 }

@@ -1859,6 +1859,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             if (this.environmentBackgroundProgram != null)
             {
                 this.environmentBackgroundProgram.close();
+                this.environmentBackgroundProgram = null;
             }
 
             this.environmentBackgroundProgram = newEnvironmentBackgroundProgram;
@@ -1874,6 +1875,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             if (this.lightProgram != null)
             {
                 this.lightProgram.close();
+                this.lightProgram = null;
             }
 
             this.lightProgram = newLightProgram;
@@ -1888,12 +1890,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             if (this.solidProgram != null)
             {
                 this.solidProgram.close();
+                this.solidProgram = null;
             }
 
             this.solidProgram = newWidgetProgram;
 
             this.widgetDrawable = context.createDrawable(this.solidProgram);
             this.widgetDrawable.addVertexBuffer("position", widgetVertices);
+
+            this.gridDrawable = context.createDrawable(this.solidProgram);
+            this.gridDrawable.addVertexBuffer("position", gridVertices);
 
             Program<ContextType> newCircleProgram = context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
@@ -1903,6 +1909,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             if (this.circleProgram != null)
             {
                 this.circleProgram.close();
+                this.circleProgram = null;
             }
 
             this.circleProgram = newCircleProgram;
