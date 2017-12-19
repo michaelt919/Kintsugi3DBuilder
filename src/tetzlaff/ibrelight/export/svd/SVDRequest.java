@@ -3,15 +3,13 @@ package tetzlaff.ibrelight.export.svd;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintStream;
 import javax.imageio.ImageIO;
 
-import org.ejml.data.FMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.ejml.simple.SimpleSVD;
 import tetzlaff.gl.*;
+import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
@@ -20,7 +18,10 @@ import tetzlaff.models.ReadonlySettingsModel;
 
 public class SVDRequest implements IBRRequest
 {
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
+
+    private static final int BLOCK_SIZE = 64;
+    private static final int SAVED_SINGULAR_VALUES = 16;
 
     private final int texWidth;
     private final int texHeight;
@@ -35,175 +36,217 @@ public class SVDRequest implements IBRRequest
         this.settings = settings;
     }
 
+    private static int convertToFixedPoint(double value)
+    {
+        return (int) Math.max(1, Math.min(255, Math.round(value * 127 + 128)));
+    }
+
     @Override
     public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
         throws IOException
     {
-        SimpleMatrix matrix = getMatrix(renderable.getResources());
-        SimpleSVD<SimpleMatrix> svd = matrix.svd(true);
-        double[] singularValues = svd.getSingularValues();
-        double[] scale = new double[singularValues.length];
+        IBRResources<ContextType> resources = renderable.getResources();
 
-        SimpleMatrix uMatrix;
+        int blockCountX = (texWidth - 1) / BLOCK_SIZE + 1; // should equal ceil(texWidth / BLOCK_SIZE)
+        int blockCountY = (texHeight - 1) / BLOCK_SIZE + 1; // should equal ceil(texHeight / BLOCK_SIZE)
 
-        try (PrintStream writer = new PrintStream(new File(exportPath, "svd.txt")))
-        {
-            writer.print("svd");
+        int svLayoutWidth = (int)Math.ceil(Math.sqrt(SAVED_SINGULAR_VALUES));
+        int svLayoutHeight = (SAVED_SINGULAR_VALUES - 1) / svLayoutWidth + 1; // should equal ceil(SAVED_SINGULAR_VALUES / svLayoutWidth)
 
-            for (double sv : singularValues)
-            {
-                writer.print(String.format("\t%.6f", sv));
-            }
+        System.out.println("SV Layout width: " + svLayoutWidth);
+        System.out.println("SV Layout height: " + svLayoutHeight);
 
-            writer.println();
+        int[][] textureData = new int[SAVED_SINGULAR_VALUES][texWidth * texHeight];
+        int[][] viewData = new int[resources.viewSet.getCameraPoseCount()][blockCountX * blockCountY * svLayoutWidth * svLayoutHeight];
 
-            uMatrix = svd.getU();
-
-            writer.print("scale");
-
-            for (int j = 0; j < singularValues.length; j++)
-            {
-                double maxAbsValue = 0.0;
-                for (int i = 0; i < texWidth * texHeight; i++)
-                {
-                    maxAbsValue = Math.max(maxAbsValue, Math.abs(uMatrix.get(i, j)));
-                }
-
-                scale[j] = 1.0 / maxAbsValue;
-                writer.print(String.format("\t%.6f", scale[j]));
-            }
-
-            writer.println();
-
-            SimpleMatrix vMatrix = svd.getV();
-
-            for (int k = 0; k < renderable.getActiveViewSet().getCameraPoseCount(); k++)
-            {
-                writer.print(renderable.getActiveViewSet().getImageFileName(k) + ".x");
-
-                for (int i = 0; i < singularValues.length; i++)
-                {
-                    writer.print(String.format("\t%.6f", vMatrix.get(i, 3 * k)));
-                }
-
-                writer.println();
-
-                writer.print(renderable.getActiveViewSet().getImageFileName(k) + ".y");
-
-                for (int i = 0; i < singularValues.length; i++)
-                {
-                    writer.print(String.format("\t%.6f",  vMatrix.get(i, 3 * k + 1)));
-                }
-
-                writer.println();
-
-                writer.print(renderable.getActiveViewSet().getImageFileName(k) + ".z");
-
-                for (int i = 0; i < singularValues.length; i++)
-                {
-                    writer.print(String.format("\t%.6f", vMatrix.get(i, 3 * k + 2)));
-                }
-
-                writer.println();
-            }
-        }
-
-        for (int j = 0; j < singularValues.length; j++)
-        {
-            BufferedImage outImg = new BufferedImage(texWidth, texHeight, BufferedImage.TYPE_INT_ARGB);
-
-            int[] data = new int[uMatrix.numRows()];
-
-            for (int i = 0; i < texWidth * texHeight; i++)
-            {
-                int convertedValue = (int)Math.max(0, Math.min(255, Math.round((uMatrix.get(i, j) * 0.5 * scale[j] + 0.5) * 255)));
-                data[i] = new Color(convertedValue, convertedValue, convertedValue).getRGB();
-            }
-
-            outImg.setRGB(0, 0, texWidth, texHeight, data, 0, texWidth);
-
-            ImageIO.write(outImg, "PNG", new File(exportPath, String.format("%04d.png", j)));
-        }
-    }
-
-    private <ContextType extends Context<ContextType>> SimpleMatrix getMatrix(IBRResources<ContextType> resources)
-        throws FileNotFoundException
-    {
         try
         (
             Program<ContextType> projTexProgram = resources.context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_multi.frag"))
+                .addShader(ShaderType.VERTEX, new File("shaders/common/texspace.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/relight/roughnessresid.frag"))
                 .createProgram();
 
-            FramebufferObject<ContextType> framebuffer = resources.context.buildFramebufferObject(texWidth, texHeight)
-                .addColorAttachment(ColorFormat.RGBA8)
-//                .addColorAttachment(ColorFormat.RGBA8)
+            FramebufferObject<ContextType> framebuffer = resources.context.buildFramebufferObject(BLOCK_SIZE, BLOCK_SIZE)
+                .addColorAttachment(ColorFormat.RGBA32F)
                 .createFramebufferObject()
         )
         {
-            Drawable<ContextType> drawable = resources.context.createDrawable(projTexProgram);
-            drawable.addVertexBuffer("position", resources.positionBuffer);
-            drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
-            drawable.addVertexBuffer("normal", resources.normalBuffer);
-            drawable.addVertexBuffer("tangent", resources.tangentBuffer);
+            double[] weights = new double[resources.viewSet.getCameraPoseCount()];
 
-            resources.setupShaderProgram(projTexProgram, false);
-            if (settings.getBoolean("occlusionEnabled"))
+            for (int blockY = 0; blockY < blockCountY; blockY++)
             {
-                projTexProgram.setUniform("occlusionBias", settings.getFloat("occlusionBias"));
-            }
-            else
-            {
-                projTexProgram.setUniform("occlusionEnabled", false);
-            }
-
-            // Want to use raw pixel values since they represents roughness, not intensity
-            drawable.program().setUniform("lightIntensityCompensation", false);
-
-            resources.context.getState().disableBackFaceCulling();
-
-            // Use single-precision floating point to save memory
-            SimpleMatrix result = new SimpleMatrix(texWidth * texHeight, resources.viewSet.getCameraPoseCount() * 3, FMatrixRMaj.class);
-
-            for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
-            {
-                framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//                framebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-
-                projTexProgram.setUniform("viewIndex", k);
-
-                drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-                int[] colors = framebuffer.readColorBufferARGB(0);
-                for (int i = 0; i < colors.length; i++)
+                for (int blockX = 0; blockX < blockCountX; blockX++)
                 {
-                    Color color = new Color(colors[i], true);
-                    if (color.getAlpha() > 0)
+                    System.out.println("Starting block " + blockX + ", " + blockY + "...");
+
+                    Vector2 minTexCoords = new Vector2(
+                        blockX * BLOCK_SIZE * 1.0f / texWidth,
+                        blockY * BLOCK_SIZE * 1.0f / texHeight);
+
+                    Vector2 maxTexCoords = new Vector2(
+                        Math.min(1.0f, (blockX + 1) * BLOCK_SIZE * 1.0f / texWidth),
+                        Math.min(1.0f, (blockY + 1) * BLOCK_SIZE * 1.0f / texHeight));
+
+                    SimpleMatrix matrix = getMatrix(resources, projTexProgram, framebuffer, minTexCoords, maxTexCoords, weights);
+                    SimpleSVD<SimpleMatrix> svd = matrix.svd(true);
+                    double[] singularValues = svd.getSingularValues();
+                    int effectiveSingularValues = Math.min(SAVED_SINGULAR_VALUES, singularValues.length);
+                    double[] scale = new double[effectiveSingularValues];
+
+                    SimpleMatrix uMatrix = svd.getU();
+                    SimpleMatrix vMatrix = svd.getV();
+
+                    for (int i = 0; i < effectiveSingularValues; i++)
                     {
-                        result.set(i, 3 * k, (0x000000FF & color.getRed()) / 255.0f - 0.5f);
-                        result.set(i, 3 * k + 1, (0x000000FF & color.getGreen()) / 255.0f - 0.5f);
-                        result.set(i, 3 * k + 2, (0x000000FF & color.getBlue()) / 255.0f - 0.5f);
+                        double maxAbsValue = 0.0;
+                        for (int j = 0; j < vMatrix.numCols(); j++)
+                        {
+                            maxAbsValue = Math.max(maxAbsValue, Math.abs(vMatrix.get(i, j)));
+                        }
+
+                        scale[i] = maxAbsValue;
+                    }
+
+                    for (int k = 0; k < renderable.getActiveViewSet().getCameraPoseCount(); k++)
+                    {
+                        if (weights[k] > 0)
+                        {
+                            for (int i = 0; i < svLayoutHeight; i++)
+                            {
+                                for (int j = 0; j < svLayoutWidth; j++)
+                                {
+                                    int svIndex = i * svLayoutWidth + j;
+                                    if (svIndex < effectiveSingularValues && scale[svIndex] > 0)
+                                    {
+                                        double yValue = vMatrix.get(svIndex, 3 * k + 1) / (scale[svIndex] * weights[k]);
+
+                                        viewData[k][((blockY * svLayoutHeight + i) * blockCountX + blockX) * svLayoutWidth + j]
+                                            = new Color(
+                                                convertToFixedPoint(vMatrix.get(svIndex, 3 * k) / (scale[svIndex] * weights[k]) - yValue),
+                                                convertToFixedPoint(yValue),
+                                                convertToFixedPoint(vMatrix.get(svIndex, 3 * k + 2) / (scale[svIndex] * weights[k]) - yValue))
+                                            .getRGB();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    for (int i = 0; i < effectiveSingularValues; i++)
+                    {
+                        for (int y = 0; y < BLOCK_SIZE; y++)
+                        {
+                            for (int x = 0; x < BLOCK_SIZE; x++)
+                            {
+                                int blockPixelIndex = y * BLOCK_SIZE + x;
+                                int texturePixelIndex = (blockY * BLOCK_SIZE + y) * texWidth + blockX * BLOCK_SIZE + x;
+
+                                int convertedValue = convertToFixedPoint(uMatrix.get(blockPixelIndex, i) * scale[i] * singularValues[i]);
+                                textureData[i][texturePixelIndex] = new Color(convertedValue, convertedValue, convertedValue).getRGB();
+                            }
+                        }
                     }
                 }
-
-                if (DEBUG)
-                {
-                    try
-                    {
-                        framebuffer.saveColorBufferToFile(0, "PNG",
-                                new File(exportPath, resources.viewSet.getImageFileName(k).split("\\.")[0] + ".png"));
-
-//                        framebuffer.saveColorBufferToFile(1, "PNG",
-//                                new File(exportPath, resources.viewSet.getImageFileName(i).split("\\.")[0] + "_weights.png"));
-                    }
-                    catch (IOException e)
-                    {
-                        e.printStackTrace();
-                    }
-                }
             }
-
-            return result;
         }
+
+        for (int i = 0; i < svLayoutHeight; i++)
+        {
+            for (int j = 0; j < svLayoutWidth; j++)
+            {
+                int svIndex = i * svLayoutWidth + j;
+                if (svIndex < SAVED_SINGULAR_VALUES)
+                {
+                    BufferedImage textureImg = new BufferedImage(texWidth, texHeight, BufferedImage.TYPE_INT_ARGB);
+                    textureImg.setRGB(0, 0, texWidth, texHeight, textureData[svIndex], 0, texWidth);
+                    ImageIO.write(textureImg, "PNG", new File(exportPath, String.format("sv_%04d_%02d_%02d.png", svIndex, i, j)));
+                }
+            }
+        }
+
+        for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
+        {
+            BufferedImage viewImg = new BufferedImage(blockCountX * svLayoutWidth, blockCountY * svLayoutHeight, BufferedImage.TYPE_INT_ARGB);
+            viewImg.setRGB(0, 0, viewImg.getWidth(), viewImg.getHeight(), viewData[k], 0, viewImg.getWidth());
+            ImageIO.write(viewImg, "PNG", new File(exportPath, resources.viewSet.getImageFileName(k)));
+        }
+    }
+
+    private <ContextType extends Context<ContextType>> SimpleMatrix getMatrix(
+        IBRResources<ContextType> resources, Program<ContextType> projTexProgram, Framebuffer<ContextType> framebuffer,
+        Vector2 minTexCoord, Vector2 maxTexCoord, double[] weightStorage)
+    {
+        Drawable<ContextType> drawable = resources.context.createDrawable(projTexProgram);
+        drawable.addVertexBuffer("position", resources.positionBuffer);
+        drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
+        drawable.addVertexBuffer("normal", resources.normalBuffer);
+        drawable.addVertexBuffer("tangent", resources.tangentBuffer);
+
+        projTexProgram.setUniform("minTexCoord", minTexCoord);
+        projTexProgram.setUniform("maxTexCoord", maxTexCoord);
+
+        resources.setupShaderProgram(projTexProgram, false);
+        if (settings.getBoolean("occlusionEnabled"))
+        {
+            projTexProgram.setUniform("occlusionBias", settings.getFloat("occlusionBias"));
+        }
+        else
+        {
+            projTexProgram.setUniform("occlusionEnabled", false);
+        }
+
+        // Want to use raw pixel values since they represents roughness, not intensity
+        drawable.program().setUniform("lightIntensityCompensation", false);
+
+        resources.context.getState().disableBackFaceCulling();
+
+        SimpleMatrix result = new SimpleMatrix(BLOCK_SIZE * BLOCK_SIZE, resources.viewSet.getCameraPoseCount() * 3);
+
+        for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
+        {
+            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+
+            projTexProgram.setUniform("viewIndex", k);
+
+            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+
+            float[] colors = framebuffer.readFloatingPointColorBufferRGBA(0);
+
+            double alphaSum = 0.0;
+            for (int i = 3; i < colors.length; i += 4)
+            {
+                if (!Double.isNaN(colors[i]))
+                {
+                    alphaSum += colors[i];
+                }
+            }
+            double weightAvg = alphaSum / colors.length;
+            weightStorage[k] = weightAvg;
+
+            for (int i = 0; 4 * i + 3 < colors.length; i++)
+            {
+                if (colors[4 * i + 3] > 0.0 && !Double.isNaN(colors[4 * i]) && !Double.isNaN(colors[4 * i + 1]) && !Double.isNaN(colors[4 * i + 2]))
+                {
+                    result.set(i, 3 * k, colors[4 * i] * weightAvg);
+                    result.set(i, 3 * k + 1, colors[4 * i + 1] * weightAvg);
+                    result.set(i, 3 * k + 2, colors[4 * i + 2] * weightAvg);
+                }
+            }
+
+            if (DEBUG)
+            {
+                try
+                {
+                    framebuffer.saveColorBufferToFile(0, "PNG",
+                            new File(exportPath, resources.viewSet.getImageFileName(k).split("\\.")[0] + ".png"));
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return result;
     }
 }
