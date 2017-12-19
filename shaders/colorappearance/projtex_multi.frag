@@ -25,8 +25,7 @@ void main()
     vec3 light = normalize(lightPreNormalized);
     vec3 halfway = normalize(light + view);
     vec3 normal = normalize(fNormal);
-    shadingInfo = vec4(dot(normal, light), dot(normal, view), dot(normal, halfway),
-        dot(halfway, view));
+    shadingInfo = vec4(dot(normal, light), dot(normal, view), dot(normal, halfway), dot(halfway, view));
 
     if (lightIntensityCompensation)
     {
