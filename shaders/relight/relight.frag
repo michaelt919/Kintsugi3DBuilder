@@ -528,7 +528,8 @@ RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int index, vec3 
 
             if (residualImages)
             {
-                vec3 sqrtRoughnessEstimate = sqrt(roughness) + sampleColor.xyz - vec3(0.5);
+                vec3 sqrtRoughnessEstimate = sqrt(roughness) + sampleColor.xyz - vec3(32.0 / 63.0)
+                    + vec3(sampleColor.y - 16.0 / 31.0, 0.0, sampleColor.y - 16.0 / 31.0);
                 vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * geomAtten) / roughness - sqrt(mfdFresnelEstimate) * vec3(nDotHSq));
                 precomputedSample = RoughnessSample(denominator * sqrtRoughnessEstimate, denominator);
             }

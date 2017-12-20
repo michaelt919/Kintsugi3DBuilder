@@ -4,8 +4,11 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import javax.imageio.ImageIO;
 
+import org.ejml.data.FMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.ejml.simple.SimpleSVD;
 import tetzlaff.gl.*;
@@ -28,6 +31,9 @@ public class SVDRequest implements IBRRequest
     private final File exportPath;
     private final ReadonlySettingsModel settings;
 
+    private int activeBlockCount = 0;
+    private final Object activeBlockCountChangeHandle = new Object();
+
     public SVDRequest(int texWidth, int texHeight, File exportPath, ReadonlySettingsModel settings)
     {
         this.exportPath = exportPath;
@@ -45,6 +51,9 @@ public class SVDRequest implements IBRRequest
     public <ContextType extends Context<ContextType>> void executeRequest(IBRRenderable<ContextType> renderable, LoadingMonitor callback)
         throws IOException
     {
+        System.out.println("Starting SVD...");
+        Instant start = Instant.now();
+
         IBRResources<ContextType> resources = renderable.getResources();
 
         int blockCountX = (texWidth - 1) / BLOCK_SIZE + 1; // should equal ceil(texWidth / BLOCK_SIZE)
@@ -56,8 +65,8 @@ public class SVDRequest implements IBRRequest
         System.out.println("SV Layout width: " + svLayoutWidth);
         System.out.println("SV Layout height: " + svLayoutHeight);
 
-        int[][] textureData = new int[SAVED_SINGULAR_VALUES][texWidth * texHeight];
-        int[][] viewData = new int[resources.viewSet.getCameraPoseCount()][blockCountX * blockCountY * svLayoutWidth * svLayoutHeight];
+        float[][] textureData = new float[SAVED_SINGULAR_VALUES][texWidth * texHeight];
+        float[][][] viewData = new float[resources.viewSet.getCameraPoseCount()][blockCountX * blockCountY * svLayoutWidth * svLayoutHeight][3];
 
         try
         (
@@ -71,12 +80,35 @@ public class SVDRequest implements IBRRequest
                 .createFramebufferObject()
         )
         {
-            double[] weights = new double[resources.viewSet.getCameraPoseCount()];
 
             for (int blockY = 0; blockY < blockCountY; blockY++)
             {
                 for (int blockX = 0; blockX < blockCountX; blockX++)
                 {
+                    boolean proceed = false;
+                    while (!proceed)
+                    {
+                        synchronized (activeBlockCountChangeHandle)
+                        {
+                            if (activeBlockCount < 8)
+                            {
+                                proceed = true;
+                                activeBlockCount++;
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    activeBlockCountChangeHandle.wait(30000); // Double check every 30 seconds if notify() was not called
+                                }
+                                catch (InterruptedException e)
+                                {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+
                     System.out.println("Starting block " + blockX + ", " + blockY + "...");
 
                     Vector2 minTexCoords = new Vector2(
@@ -87,68 +119,137 @@ public class SVDRequest implements IBRRequest
                         Math.min(1.0f, (blockX + 1) * BLOCK_SIZE * 1.0f / texWidth),
                         Math.min(1.0f, (blockY + 1) * BLOCK_SIZE * 1.0f / texHeight));
 
-                    SimpleMatrix matrix = getMatrix(resources, projTexProgram, framebuffer, minTexCoords, maxTexCoords, weights);
-                    SimpleSVD<SimpleMatrix> svd = matrix.svd(true);
-                    double[] singularValues = svd.getSingularValues();
-                    int effectiveSingularValues = Math.min(SAVED_SINGULAR_VALUES, singularValues.length);
-                    double[] scale = new double[effectiveSingularValues];
+                    SimpleMatrix matrix = getMatrix(resources, projTexProgram, framebuffer, minTexCoords, maxTexCoords);
 
-                    SimpleMatrix uMatrix = svd.getU();
-                    SimpleMatrix vMatrix = svd.getV();
+                    int currentBlockX = blockX;
+                    int currentBlockY = blockY;
 
-                    for (int i = 0; i < effectiveSingularValues; i++)
+                    Thread svdThread = new Thread(() ->
                     {
-                        double maxAbsValue = 0.0;
-                        for (int j = 0; j < vMatrix.numCols(); j++)
+                        try
                         {
-                            maxAbsValue = Math.max(maxAbsValue, Math.abs(vMatrix.get(i, j)));
-                        }
+                            SimpleSVD<SimpleMatrix> svd = matrix.svd(true);
+                            double[] singularValues = svd.getSingularValues();
+                            int effectiveSingularValues = Math.min(SAVED_SINGULAR_VALUES, singularValues.length);
 
-                        scale[i] = maxAbsValue;
-                    }
+                            SimpleMatrix uMatrix = svd.getU();
+                            SimpleMatrix vMatrix = svd.getV();
 
-                    for (int k = 0; k < renderable.getActiveViewSet().getCameraPoseCount(); k++)
-                    {
-                        if (weights[k] > 0)
-                        {
-                            for (int i = 0; i < svLayoutHeight; i++)
+                            double[] signs = new double[effectiveSingularValues];
+                            for (int i = 0; i < effectiveSingularValues; i++)
                             {
-                                for (int j = 0; j < svLayoutWidth; j++)
+                                double sumEntries = 0.0;
+                                for (int k = 0; k < uMatrix.numRows(); k++)
                                 {
-                                    int svIndex = i * svLayoutWidth + j;
-                                    if (svIndex < effectiveSingularValues && scale[svIndex] > 0)
-                                    {
-                                        double yValue = vMatrix.get(svIndex, 3 * k + 1) / (scale[svIndex] * weights[k]);
+                                    sumEntries += uMatrix.get(k, i);
+                                }
 
-                                        viewData[k][((blockY * svLayoutHeight + i) * blockCountX + blockX) * svLayoutWidth + j]
-                                            = new Color(
-                                                convertToFixedPoint(vMatrix.get(svIndex, 3 * k) / (scale[svIndex] * weights[k]) - yValue),
-                                                convertToFixedPoint(yValue),
-                                                convertToFixedPoint(vMatrix.get(svIndex, 3 * k + 2) / (scale[svIndex] * weights[k]) - yValue))
-                                            .getRGB();
+                                signs[i] = Math.signum(sumEntries);
+                            }
+
+                            for (int k = 0; k < renderable.getActiveViewSet().getCameraPoseCount(); k++)
+                            {
+                                for (int i = 0; i < svLayoutHeight; i++)
+                                {
+                                    for (int j = 0; j < svLayoutWidth; j++)
+                                    {
+                                        int svIndex = i * svLayoutWidth + j;
+                                        if (svIndex < effectiveSingularValues)
+                                        {
+                                            int texturePixelIndex =
+                                                ((svLayoutHeight * (blockCountY - currentBlockY) - i - 1) * blockCountX + currentBlockX)
+                                                    * svLayoutWidth + j;
+
+                                            viewData[k][texturePixelIndex] = new float[3];
+                                            viewData[k][texturePixelIndex][0] =
+                                                (float)(vMatrix.get(svIndex, 3 * k) * signs[svIndex] * singularValues[svIndex]);
+                                            viewData[k][texturePixelIndex][1] =
+                                                (float)(vMatrix.get(svIndex, 3 * k + 1) * signs[svIndex] * singularValues[svIndex]);
+                                            viewData[k][texturePixelIndex][2] =
+                                                (float)(vMatrix.get(svIndex, 3 * k + 2) * signs[svIndex] * singularValues[svIndex]);
+                                        }
                                     }
                                 }
                             }
-                        }
-                    }
 
-                    for (int i = 0; i < effectiveSingularValues; i++)
-                    {
-                        for (int y = 0; y < BLOCK_SIZE; y++)
-                        {
-                            for (int x = 0; x < BLOCK_SIZE; x++)
+                            for (int svIndex = 0; svIndex < effectiveSingularValues; svIndex++)
                             {
-                                int blockPixelIndex = y * BLOCK_SIZE + x;
-                                int texturePixelIndex = (blockY * BLOCK_SIZE + y) * texWidth + blockX * BLOCK_SIZE + x;
+                                for (int y = 0; y < BLOCK_SIZE; y++)
+                                {
+                                    for (int x = 0; x < BLOCK_SIZE; x++)
+                                    {
+                                        int blockPixelIndex = y * BLOCK_SIZE + x;
+                                        int texturePixelIndex =
+                                            (texHeight - currentBlockY * BLOCK_SIZE - y - 1) * texWidth + currentBlockX * BLOCK_SIZE + x;
 
-                                int convertedValue = convertToFixedPoint(uMatrix.get(blockPixelIndex, i) * scale[i] * singularValues[i]);
-                                textureData[i][texturePixelIndex] = new Color(convertedValue, convertedValue, convertedValue).getRGB();
+                                        textureData[svIndex][texturePixelIndex] = (float)(uMatrix.get(blockPixelIndex, svIndex) * signs[svIndex]);
+                                    }
+                                }
+                            }
+
+                            System.out.println("Finished block " + currentBlockX + ", " + currentBlockY + '.');
+                        }
+                        catch(RuntimeException e)
+                        {
+                            System.err.println("Block " + currentBlockX + ", " + currentBlockY + " failed.");
+                            e.printStackTrace();
+                        }
+                        finally
+                        {
+                            synchronized (activeBlockCountChangeHandle)
+                            {
+                                activeBlockCount--;
+                                activeBlockCountChangeHandle.notifyAll();
                             }
                         }
+                    });
+
+                    svdThread.start();
+                }
+            }
+        }
+
+        // Wait for all threads to finish
+        boolean proceed = false;
+        while (!proceed)
+        {
+            synchronized (activeBlockCountChangeHandle)
+            {
+                if (activeBlockCount == 0)
+                {
+                    proceed = true;
+                }
+                else
+                {
+                    try
+                    {
+                        activeBlockCountChangeHandle.wait(30000); // Double check every 30 seconds if notify() was not called
+                    }
+                    catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
                     }
                 }
             }
         }
+
+        double sumValues = 0.0;
+        int count = 0;
+        for (float[] singleTexture : textureData)
+        {
+            for (float textureValue : singleTexture)
+            {
+                if (textureValue > 0.0)
+                {
+                    sumValues += Math.abs(textureValue);
+                    count++;
+                }
+            }
+        }
+        double scale = 2 * sumValues / count;
+
+        Duration duration = Duration.between(start, Instant.now());
+        System.out.println("SVD finished in " + (duration.getSeconds() + duration.getNano() * 1.0e-9) + " seconds.");
 
         for (int i = 0; i < svLayoutHeight; i++)
         {
@@ -158,7 +259,13 @@ public class SVDRequest implements IBRRequest
                 if (svIndex < SAVED_SINGULAR_VALUES)
                 {
                     BufferedImage textureImg = new BufferedImage(texWidth, texHeight, BufferedImage.TYPE_INT_ARGB);
-                    textureImg.setRGB(0, 0, texWidth, texHeight, textureData[svIndex], 0, texWidth);
+                    int[] textureDataPacked = new int[textureData[svIndex].length];
+                    for (int pixelIndex = 0; pixelIndex < textureData[svIndex].length; pixelIndex++)
+                    {
+                        int fixedPointValue = convertToFixedPoint(textureData[svIndex][pixelIndex] / scale);
+                        textureDataPacked[pixelIndex] = new Color(fixedPointValue, fixedPointValue, fixedPointValue).getRGB();
+                    }
+                    textureImg.setRGB(0, 0, texWidth, texHeight, textureDataPacked, 0, texWidth);
                     ImageIO.write(textureImg, "PNG", new File(exportPath, String.format("sv_%04d_%02d_%02d.png", svIndex, i, j)));
                 }
             }
@@ -167,14 +274,22 @@ public class SVDRequest implements IBRRequest
         for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
         {
             BufferedImage viewImg = new BufferedImage(blockCountX * svLayoutWidth, blockCountY * svLayoutHeight, BufferedImage.TYPE_INT_ARGB);
-            viewImg.setRGB(0, 0, viewImg.getWidth(), viewImg.getHeight(), viewData[k], 0, viewImg.getWidth());
+            int[] viewDataPacked = new int[viewData[k].length];
+            for (int pixelIndex = 0; pixelIndex < viewData[k].length; pixelIndex++)
+            {
+                viewDataPacked[pixelIndex] = new Color(
+                    convertToFixedPoint(viewData[k][pixelIndex][0] * scale),
+                    convertToFixedPoint(viewData[k][pixelIndex][1] * scale),
+                    convertToFixedPoint(viewData[k][pixelIndex][2] * scale)).getRGB();
+            }
+            viewImg.setRGB(0, 0, viewImg.getWidth(), viewImg.getHeight(), viewDataPacked, 0, viewImg.getWidth());
             ImageIO.write(viewImg, "PNG", new File(exportPath, resources.viewSet.getImageFileName(k)));
         }
     }
 
     private <ContextType extends Context<ContextType>> SimpleMatrix getMatrix(
         IBRResources<ContextType> resources, Program<ContextType> projTexProgram, Framebuffer<ContextType> framebuffer,
-        Vector2 minTexCoord, Vector2 maxTexCoord, double[] weightStorage)
+        Vector2 minTexCoord, Vector2 maxTexCoord)
     {
         Drawable<ContextType> drawable = resources.context.createDrawable(projTexProgram);
         drawable.addVertexBuffer("position", resources.positionBuffer);
@@ -200,7 +315,7 @@ public class SVDRequest implements IBRRequest
 
         resources.context.getState().disableBackFaceCulling();
 
-        SimpleMatrix result = new SimpleMatrix(BLOCK_SIZE * BLOCK_SIZE, resources.viewSet.getCameraPoseCount() * 3);
+        SimpleMatrix result = new SimpleMatrix(BLOCK_SIZE * BLOCK_SIZE, resources.viewSet.getCameraPoseCount() * 3, FMatrixRMaj.class);
 
         for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
         {
@@ -212,24 +327,13 @@ public class SVDRequest implements IBRRequest
 
             float[] colors = framebuffer.readFloatingPointColorBufferRGBA(0);
 
-            double alphaSum = 0.0;
-            for (int i = 3; i < colors.length; i += 4)
-            {
-                if (!Double.isNaN(colors[i]))
-                {
-                    alphaSum += colors[i];
-                }
-            }
-            double weightAvg = alphaSum / colors.length;
-            weightStorage[k] = weightAvg;
-
             for (int i = 0; 4 * i + 3 < colors.length; i++)
             {
                 if (colors[4 * i + 3] > 0.0 && !Double.isNaN(colors[4 * i]) && !Double.isNaN(colors[4 * i + 1]) && !Double.isNaN(colors[4 * i + 2]))
                 {
-                    result.set(i, 3 * k, colors[4 * i] * weightAvg);
-                    result.set(i, 3 * k + 1, colors[4 * i + 1] * weightAvg);
-                    result.set(i, 3 * k + 2, colors[4 * i + 2] * weightAvg);
+                    result.set(i, 3 * k, colors[4 * i]);
+                    result.set(i, 3 * k + 1, colors[4 * i + 1]);
+                    result.set(i, 3 * k + 2, colors[4 * i + 2]);
                 }
             }
 
