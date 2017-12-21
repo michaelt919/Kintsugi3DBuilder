@@ -391,13 +391,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
         }
 
-        this.lightTexture = context.build2DColorTextureFromBuffer(64, 64, lightTextureData)
+        this.lightTexture = context.getTextureFactory().build2DColorTextureFromBuffer(64, 64, lightTextureData)
                 .setInternalFormat(ColorFormat.R8)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(true)
                 .createTexture();
 
-        this.lightCenterTexture = context.build2DColorTextureFromBuffer(64, 64, lightCenterTextureData)
+        this.lightCenterTexture = context.getTextureFactory().build2DColorTextureFromBuffer(64, 64, lightCenterTextureData)
                 .setInternalFormat(ColorFormat.R8)
                 .setLinearFilteringEnabled(true)
                 .setMipmapsEnabled(true)
@@ -405,7 +405,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
 
-        shadowMaps = context.build2DDepthTextureArray(2048, 2048, lightingModel.getLightCount()).createTexture();
+        shadowMaps = context.getTextureFactory().build2DDepthTextureArray(2048, 2048, lightingModel.getLightCount()).createTexture();
         shadowFramebuffer = context.buildFramebufferObject(2048, 2048)
             .addDepthAttachment()
             .createFramebufferObject();
@@ -455,7 +455,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                         float[][] sides = environmentData.getData();
 
-                        newEnvironmentTexture = context.buildColorCubemap(environmentData.getSide())
+                        newEnvironmentTexture = context.getTextureFactory().buildColorCubemap(environmentData.getSide())
                             .loadFace(CubemapFace.POSITIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
                                 sides[EnvironmentMap.PX].length / 3, sides[EnvironmentMap.PX]))
                             .loadFace(CubemapFace.NEGATIVE_X, NativeVectorBufferFactory.getInstance().createFromFloatArray(3,
@@ -511,7 +511,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         BufferedImage backplateData = this.newBackplateData;
                         this.newBackplateData = null;
 
-                        newBackplateTexture = context.build2DColorTextureFromImage(backplateData, true)
+                        newBackplateTexture = context.getTextureFactory().build2DColorTextureFromImage(backplateData, true)
                             .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
                             .setLinearFilteringEnabled(true)
                             .setMipmapsEnabled(true)
@@ -574,7 +574,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.refScenePositions = context.createVertexBuffer().setData(referenceScene.getVertices());
                 this.refSceneTexCoords = context.createVertexBuffer().setData(referenceScene.getTexCoords());
                 this.refSceneNormals = context.createVertexBuffer().setData(referenceScene.getNormals());
-                this.refSceneTexture = context.build2DColorTextureFromFile(
+                this.refSceneTexture = context.getTextureFactory().build2DColorTextureFromFile(
                         new File(referenceScene.getFilename().getParentFile(), referenceScene.getMaterial().getDiffuseMap().getMapName()), true)
                     .setMipmapsEnabled(true)
                     .setLinearFilteringEnabled(true)
@@ -1053,7 +1053,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 {
                     shadowMaps.close();
                     shadowMaps = null;
-                    shadowMaps = context.build2DDepthTextureArray(2048, 2048, lightingModel.getLightCount()).createTexture();
+                    shadowMaps = context.getTextureFactory().build2DDepthTextureArray(2048, 2048, lightingModel.getLightCount()).createTexture();
                 }
 
                 for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)

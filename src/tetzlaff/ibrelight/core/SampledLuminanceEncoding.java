@@ -81,7 +81,7 @@ public class SampledLuminanceEncoding
 
     public <ContextType extends Context<ContextType>> Texture1D<ContextType> createLuminanceMap(ContextType context)
     {
-        return context.build1DColorTexture(sampleDecodeFunction())
+        return context.getTextureFactory().build1DColorTexture(sampleDecodeFunction())
                 .setInternalFormat(ColorFormat.R32F)
                 .setLinearFilteringEnabled(true)
                 .createTexture();
@@ -89,7 +89,7 @@ public class SampledLuminanceEncoding
 
     public <ContextType extends Context<ContextType>> Texture1D<ContextType> createInverseLuminanceMap(ContextType context)
     {
-        return context.build1DColorTexture(sampleEncodeFunction())
+        return context.getTextureFactory().build1DColorTexture(sampleEncodeFunction())
                 .setInternalFormat(ColorFormat.R32F)
                 .setLinearFilteringEnabled(true)
                 .createTexture();

@@ -140,7 +140,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 
         if (maskFile != null)
         {
-            this.maskTexture = resources.context.build2DColorTextureFromFile(maskFile, true)
+            this.maskTexture = resources.context.getTextureFactory().build2DColorTextureFromFile(maskFile, true)
                     .setInternalFormat(ColorFormat.R8)
                     .setLinearFilteringEnabled(false)
                     .setMipmapsEnabled(false)

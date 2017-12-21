@@ -343,7 +343,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             }
 
             ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder =
-                    context.build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount());
+                    context.getTextureFactory().build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount());
 
             if (loadOptions.isCompressionRequested())
             {
@@ -451,7 +451,8 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 {
                     // Build depth textures for each view
                     this.depthTextures =
-                        context.build2DDepthTextureArray(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCameraPoseCount())
+                        context.getTextureFactory().build2DDepthTextureArray(
+                                loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight(), viewSet.getCameraPoseCount())
                             .createTexture();
 
                     // Render each depth texture
@@ -488,7 +489,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                     this.depthTextures = null;
 
                     Texture2D<ContextType> depthAttachment =
-                        context.build2DDepthTexture(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
+                        context.getTextureFactory().build2DDepthTexture(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
                             .createTexture();
                     depthRenderingFBO.setDepthAttachment(depthAttachment);
 
@@ -608,7 +609,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             {
                 System.out.println("Diffuse texture found.");
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> diffuseTextureBuilder =
-                    context.build2DColorTextureFromFile(diffuseFile, true);
+                    context.getTextureFactory().build2DColorTextureFromFile(diffuseFile, true);
 
 //                if (loadOptions.isCompressionRequested())
 //                {
@@ -631,7 +632,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             {
                 System.out.println("Normal texture found.");
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> normalTextureBuilder =
-                    context.build2DColorTextureFromFile(normalFile, true);
+                    context.getTextureFactory().build2DColorTextureFromFile(normalFile, true);
 
 //                if (loadOptions.isCompressionRequested())
 //                {
@@ -654,7 +655,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             {
                 System.out.println("Specular texture found.");
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> specularTextureBuilder =
-                    context.build2DColorTextureFromFile(specularFile, true);
+                    context.getTextureFactory().build2DColorTextureFromFile(specularFile, true);
 //                if (loadOptions.isCompressionRequested())
 //                {
 //                    specularTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
@@ -676,7 +677,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             {
                 System.out.println("Roughness texture found.");
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder =
-                    context.build2DColorTextureFromFile(roughnessFile, true);
+                    context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true);
 
 //                if (loadOptions.isCompressionRequested())
 //                {
@@ -706,7 +707,8 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.depthTextures != null)
         {
             shadowTextures =
-                context.build2DDepthTextureArray(this.depthTextures.getWidth(), this.depthTextures.getHeight(), this.viewSet.getCameraPoseCount())
+                context.getTextureFactory()
+                    .build2DDepthTextureArray(this.depthTextures.getWidth(), this.depthTextures.getHeight(), this.viewSet.getCameraPoseCount())
                     .createTexture();
 
             try

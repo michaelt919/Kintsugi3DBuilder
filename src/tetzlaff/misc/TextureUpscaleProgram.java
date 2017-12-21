@@ -38,7 +38,7 @@ public final class TextureUpscaleProgram
                         .addShader(ShaderType.VERTEX, new File("shaders", "common/texture.vert"))
                         .addShader(ShaderType.FRAGMENT, new File("shaders", "misc/perlintex.frag"))
                         .createProgram();
-                Texture2D<OpenGLContext> permTexture = context.buildPerlinNoiseTexture().createTexture();
+                Texture2D<OpenGLContext> permTexture = context.getTextureFactory().buildPerlinNoiseTexture().createTexture();
                 perlinNoiseProgram.setTexture("permTexture", permTexture);
 
                 JFileChooser fileChooser = new JFileChooser(new File("").getAbsolutePath());
@@ -48,11 +48,11 @@ public final class TextureUpscaleProgram
                 if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
                 {
                     File imageFile = fileChooser.getSelectedFile();
-                    Texture2D<OpenGLContext> imageTexture = context.build2DColorTextureFromFile(imageFile, true)
+                    Texture2D<OpenGLContext> imageTexture = context.getTextureFactory().build2DColorTextureFromFile(imageFile, true)
                                                     .setLinearFilteringEnabled(true)
                                                     .setMipmapsEnabled(true)
                                                     .createTexture();
-                    Texture2D<OpenGLContext> segmentTexture = context.build2DColorTextureFromFile(new File(new File(imageFile.getParent(), "segment"), imageFile.getName()), true).createTexture();
+                    Texture2D<OpenGLContext> segmentTexture = context.getTextureFactory().build2DColorTextureFromFile(new File(new File(imageFile.getParent(), "segment"), imageFile.getName()), true).createTexture();
                     perlinNoiseProgram.setTexture("imageTexture", imageTexture);
                     perlinNoiseProgram.setTexture("segmentTexture", segmentTexture);
                     int targetWidth = imageTexture.getWidth() * SCALE_FACTOR;
