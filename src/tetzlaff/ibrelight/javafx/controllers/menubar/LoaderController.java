@@ -39,14 +39,8 @@ public class LoaderController implements Initializable
     {
 
         setHomeDir(new File(System.getProperty("user.home")));
-        camFileChooser.getExtensionFilters().addAll(
-            new ExtensionFilter("Agisoft Photoscan XML file", "*.xml"),
-            new ExtensionFilter("All Files", "*.*")
-        );
-        objFileChooser.getExtensionFilters().addAll(
-            new ExtensionFilter("Wavefront OBJ file", "*.obj"),
-            new ExtensionFilter("All Files", "*.*")
-        );
+        camFileChooser.getExtensionFilters().add(new ExtensionFilter("Agisoft Photoscan XML file", "*.xml"));
+        objFileChooser.getExtensionFilters().add(new ExtensionFilter("Wavefront OBJ file", "*.obj"));
 
         camFileChooser.setTitle("Select camera positions file");
         objFileChooser.setTitle("Select object file");

@@ -275,6 +275,7 @@ public class MenubarController
             return true;
         }
     }
+
     @FXML
     private void file_openProject()
     {
