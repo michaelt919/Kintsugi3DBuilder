@@ -1,4 +1,4 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
 /**
  * Enumerates the possible hardware compression schemes that can be requested from the GL.

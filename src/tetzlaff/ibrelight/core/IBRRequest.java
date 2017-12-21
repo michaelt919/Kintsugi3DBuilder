@@ -1,6 +1,6 @@
 package tetzlaff.ibrelight.core;
 
-import tetzlaff.gl.Context;
+import tetzlaff.gl.core.Context;
 
 public interface IBRRequest 
 {

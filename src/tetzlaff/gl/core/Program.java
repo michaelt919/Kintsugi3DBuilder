@@ -1,4 +1,4 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
 import tetzlaff.gl.vecmath.*;
 

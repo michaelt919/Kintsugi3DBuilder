@@ -1,4 +1,4 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
 /**
  * A simple interface for a type that is associated with a Context implementation.

@@ -139,10 +139,4 @@ class NativeDoubleVectorBuffer implements NativeVectorBuffer
     {
         return NativeDataType.DOUBLE;
     }
-
-    @Override
-    public int getElementSizeInBytes()
-    {
-        return 8;
-    }
 }

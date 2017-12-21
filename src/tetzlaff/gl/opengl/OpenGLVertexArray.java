@@ -1,7 +1,7 @@
 package tetzlaff.gl.opengl;
 
-import tetzlaff.gl.Resource;
-import tetzlaff.gl.VertexBuffer;
+import tetzlaff.gl.core.Resource;
+import tetzlaff.gl.core.VertexBuffer;
 import tetzlaff.gl.exceptions.NoSpecifiedVertexBuffersException;
 
 import static org.lwjgl.opengl.GL11.*;

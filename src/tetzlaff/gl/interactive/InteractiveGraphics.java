@@ -1,6 +1,6 @@
 package tetzlaff.gl.interactive;
 
-import tetzlaff.gl.Context;
+import tetzlaff.gl.core.Context;
 import tetzlaff.interactive.EventPollable;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;

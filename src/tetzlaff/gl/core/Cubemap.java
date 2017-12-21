@@ -1,4 +1,4 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
 public interface Cubemap <ContextType extends Context<ContextType>> extends Texture<ContextType>
 {

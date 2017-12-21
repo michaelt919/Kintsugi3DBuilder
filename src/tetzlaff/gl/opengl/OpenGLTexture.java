@@ -1,13 +1,16 @@
 package tetzlaff.gl.opengl;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.lwjgl.*;
-import tetzlaff.gl.*;
-import tetzlaff.gl.ColorFormat.DataType;
+import tetzlaff.gl.core.*;
+import tetzlaff.gl.core.ColorFormat.DataType;
 import tetzlaff.util.RadianceImageLoader.Image;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -251,6 +254,64 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
                     {
                         // Use green channel of the mask image for alpha
                         intBuffer.put((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16));
+                    }
+                }
+            }
+        }
+
+        return buffer;
+    }
+
+    static ByteBuffer bufferedImageToNativeBuffer(BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical,
+        Function<ByteBuffer, Consumer<Color>> bufferWrapperFunction, int mappedColorLength)
+    {
+        ByteBuffer buffer = BufferUtils.createByteBuffer(colorImg.getWidth() * colorImg.getHeight() * mappedColorLength);
+        Consumer<Color> wrappedBuffer = bufferWrapperFunction.apply(buffer);
+
+        if (maskImg == null)
+        {
+            if (flipVertical)
+            {
+                for (int y = colorImg.getHeight() - 1; y >= 0; y--)
+                {
+                    for (int x = 0; x < colorImg.getWidth(); x++)
+                    {
+                        wrappedBuffer.accept(new Color(colorImg.getRGB(x, y)));
+                    }
+                }
+            }
+            else
+            {
+                for (int y = 0; y < colorImg.getHeight(); y++)
+                {
+                    for (int x = 0; x < colorImg.getWidth(); x++)
+                    {
+                        wrappedBuffer.accept(new Color(colorImg.getRGB(x, y)));
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (flipVertical)
+            {
+                for (int y = colorImg.getHeight() - 1; y >= 0; y--)
+                {
+                    for (int x = 0; x < colorImg.getWidth(); x++)
+                    {
+                        // Use green channel of the mask image for alpha
+                        wrappedBuffer.accept(new Color((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16), true));
+                    }
+                }
+            }
+            else
+            {
+                for (int y = 0; y < colorImg.getHeight(); y++)
+                {
+                    for (int x = 0; x < colorImg.getWidth(); x++)
+                    {
+                        // Use green channel of the mask image for alpha
+                        wrappedBuffer.accept(new Color((colorImg.getRGB(x, y) & 0x00ffffff) | ((maskImg.getRGB(x, y) & 0x0000ff00) << 16), true));
                     }
                 }
             }

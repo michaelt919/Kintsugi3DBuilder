@@ -1,8 +1,8 @@
 package tetzlaff.gl.builders.base;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Texture;
 import tetzlaff.gl.builders.StencilTextureBuilder;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Texture;
 
 public abstract class StencilTextureBuilderBase<ContextType extends Context<ContextType>, TextureType extends Texture<ContextType>> 
     extends TextureBuilderBase<ContextType, TextureType> implements StencilTextureBuilder<ContextType, TextureType>

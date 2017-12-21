@@ -139,10 +139,4 @@ class NativeUnsignedShortVectorBuffer implements NativeVectorBuffer
     {
         return NativeDataType.UNSIGNED_SHORT;
     }
-
-    @Override
-    public int getElementSizeInBytes()
-    {
-        return 2;
-    }
 }

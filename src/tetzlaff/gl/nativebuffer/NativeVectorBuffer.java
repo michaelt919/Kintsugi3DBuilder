@@ -12,5 +12,4 @@ public interface NativeVectorBuffer
 
     ByteBuffer getBuffer();
     NativeDataType getDataType();
-    int getElementSizeInBytes();
 }

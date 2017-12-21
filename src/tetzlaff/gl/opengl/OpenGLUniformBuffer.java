@@ -2,7 +2,7 @@ package tetzlaff.gl.opengl;
 
 import java.nio.ByteBuffer;
 
-import tetzlaff.gl.UniformBuffer;
+import tetzlaff.gl.core.UniformBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 
 import static org.lwjgl.opengl.GL15.*;

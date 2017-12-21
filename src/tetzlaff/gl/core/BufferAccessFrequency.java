@@ -1,4 +1,4 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
 /**
  * Enumerates the possibly modes of frequency with which a buffer may be accessed.

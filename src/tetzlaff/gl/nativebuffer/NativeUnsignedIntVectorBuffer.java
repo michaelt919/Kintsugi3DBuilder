@@ -139,10 +139,4 @@ class NativeUnsignedIntVectorBuffer implements NativeVectorBuffer
     {
         return NativeDataType.UNSIGNED_INT;
     }
-
-    @Override
-    public int getElementSizeInBytes()
-    {
-        return 4;
-    }
 }

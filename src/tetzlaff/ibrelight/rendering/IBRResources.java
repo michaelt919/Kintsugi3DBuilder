@@ -8,8 +8,8 @@ import java.util.Date;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
-import tetzlaff.gl.*;
 import tetzlaff.gl.builders.ColorTextureBuilder;
+import tetzlaff.gl.core.*;
 import tetzlaff.gl.material.Material;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;

@@ -11,7 +11,7 @@ import javax.imageio.ImageIO;
 import org.ejml.data.FMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.ejml.simple.SimpleSVD;
-import tetzlaff.gl.*;
+import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
@@ -135,16 +135,13 @@ public class SVDRequest implements IBRRequest
                             SimpleMatrix uMatrix = svd.getU();
                             SimpleMatrix vMatrix = svd.getV();
 
-                            double[] signs = new double[effectiveSingularValues];
+                            double[] scale = new double[effectiveSingularValues];
                             for (int i = 0; i < effectiveSingularValues; i++)
                             {
-                                double sumEntries = 0.0;
                                 for (int k = 0; k < uMatrix.numRows(); k++)
                                 {
-                                    sumEntries += uMatrix.get(k, i);
+                                    scale[i] = Math.max(scale[i], Math.abs(uMatrix.get(k, i)));
                                 }
-
-                                signs[i] = Math.signum(sumEntries);
                             }
 
                             for (int k = 0; k < renderable.getActiveViewSet().getCameraPoseCount(); k++)
@@ -162,11 +159,11 @@ public class SVDRequest implements IBRRequest
 
                                             viewData[k][texturePixelIndex] = new float[3];
                                             viewData[k][texturePixelIndex][0] =
-                                                (float)(vMatrix.get(svIndex, 3 * k) * signs[svIndex] * singularValues[svIndex]);
+                                                (float)(vMatrix.get(svIndex, 3 * k) * scale[svIndex] * singularValues[svIndex]);
                                             viewData[k][texturePixelIndex][1] =
-                                                (float)(vMatrix.get(svIndex, 3 * k + 1) * signs[svIndex] * singularValues[svIndex]);
+                                                (float)(vMatrix.get(svIndex, 3 * k + 1) * scale[svIndex] * singularValues[svIndex]);
                                             viewData[k][texturePixelIndex][2] =
-                                                (float)(vMatrix.get(svIndex, 3 * k + 2) * signs[svIndex] * singularValues[svIndex]);
+                                                (float)(vMatrix.get(svIndex, 3 * k + 2) * scale[svIndex] * singularValues[svIndex]);
                                         }
                                     }
                                 }
@@ -182,7 +179,7 @@ public class SVDRequest implements IBRRequest
                                         int texturePixelIndex =
                                             (texHeight - currentBlockY * BLOCK_SIZE - y - 1) * texWidth + currentBlockX * BLOCK_SIZE + x;
 
-                                        textureData[svIndex][texturePixelIndex] = (float)(uMatrix.get(blockPixelIndex, svIndex) * signs[svIndex]);
+                                        textureData[svIndex][texturePixelIndex] = (float)(uMatrix.get(blockPixelIndex, svIndex) / scale[svIndex]);
                                     }
                                 }
                             }
@@ -233,21 +230,6 @@ public class SVDRequest implements IBRRequest
             }
         }
 
-        double sumValues = 0.0;
-        int count = 0;
-        for (float[] singleTexture : textureData)
-        {
-            for (float textureValue : singleTexture)
-            {
-                if (textureValue > 0.0)
-                {
-                    sumValues += Math.abs(textureValue);
-                    count++;
-                }
-            }
-        }
-        double scale = 2 * sumValues / count;
-
         Duration duration = Duration.between(start, Instant.now());
         System.out.println("SVD finished in " + (duration.getSeconds() + duration.getNano() * 1.0e-9) + " seconds.");
 
@@ -262,7 +244,7 @@ public class SVDRequest implements IBRRequest
                     int[] textureDataPacked = new int[textureData[svIndex].length];
                     for (int pixelIndex = 0; pixelIndex < textureData[svIndex].length; pixelIndex++)
                     {
-                        int fixedPointValue = convertToFixedPoint(textureData[svIndex][pixelIndex] / scale);
+                        int fixedPointValue = convertToFixedPoint(textureData[svIndex][pixelIndex]);
                         textureDataPacked[pixelIndex] = new Color(fixedPointValue, fixedPointValue, fixedPointValue).getRGB();
                     }
                     textureImg.setRGB(0, 0, texWidth, texHeight, textureDataPacked, 0, texWidth);
@@ -278,9 +260,9 @@ public class SVDRequest implements IBRRequest
             for (int pixelIndex = 0; pixelIndex < viewData[k].length; pixelIndex++)
             {
                 viewDataPacked[pixelIndex] = new Color(
-                    convertToFixedPoint(viewData[k][pixelIndex][0] * scale),
-                    convertToFixedPoint(viewData[k][pixelIndex][1] * scale),
-                    convertToFixedPoint(viewData[k][pixelIndex][2] * scale)).getRGB();
+                    convertToFixedPoint(viewData[k][pixelIndex][0]),
+                    convertToFixedPoint(viewData[k][pixelIndex][1]),
+                    convertToFixedPoint(viewData[k][pixelIndex][2])).getRGB();
             }
             viewImg.setRGB(0, 0, viewImg.getWidth(), viewImg.getHeight(), viewDataPacked, 0, viewImg.getWidth());
             ImageIO.write(viewImg, "PNG", new File(exportPath, resources.viewSet.getImageFileName(k)));

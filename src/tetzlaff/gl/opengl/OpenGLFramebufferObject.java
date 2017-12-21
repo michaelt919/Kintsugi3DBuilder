@@ -5,11 +5,11 @@ import java.util.AbstractCollection;
 import java.util.ArrayList;
 
 import org.lwjgl.*;
-import tetzlaff.gl.FramebufferAttachment;
-import tetzlaff.gl.FramebufferObject;
-import tetzlaff.gl.FramebufferSize;
-import tetzlaff.gl.Resource;
 import tetzlaff.gl.builders.base.FramebufferObjectBuilderBase;
+import tetzlaff.gl.core.FramebufferAttachment;
+import tetzlaff.gl.core.FramebufferObject;
+import tetzlaff.gl.core.FramebufferSize;
+import tetzlaff.gl.core.Resource;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;

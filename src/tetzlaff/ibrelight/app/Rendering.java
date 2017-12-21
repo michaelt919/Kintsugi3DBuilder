@@ -8,8 +8,8 @@ import java.util.HashSet;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
-import tetzlaff.gl.Program;
-import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.core.Program;
+import tetzlaff.gl.core.ShaderType;
 import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;

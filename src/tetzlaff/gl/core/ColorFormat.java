@@ -1,4 +1,4 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
 /**
  * Represents an internal color format to be used by a framebuffer or texture.

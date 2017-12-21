@@ -1,12 +1,14 @@
 package tetzlaff.gl.opengl;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.function.Function;
 
-import tetzlaff.gl.*;
 import tetzlaff.gl.builders.*;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
+import tetzlaff.gl.core.*;
 import tetzlaff.gl.exceptions.*;
 import tetzlaff.gl.glfw.GLFWWindowContextBase;
 import tetzlaff.gl.nativebuffer.NativeDataType;
@@ -23,6 +25,7 @@ import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DColorBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthStencilBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DStencilBuilder;
+import tetzlaff.gl.types.AbstractDataType;
 
 import static org.lwjgl.opengl.EXTTextureCompressionS3TC.*;
 import static org.lwjgl.opengl.EXTTextureSRGB.*;
@@ -182,6 +185,22 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
     public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTextureFromStreamWithMask(InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
     {
         return new OpenGLTexture2DFromFileBuilder(this, GL_TEXTURE_2D, imageStream, maskStream, flipVertical);
+    }
+
+    @Override
+    public <MappedType> ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTextureFromImageWithMask(
+        BufferedImage colorImage, BufferedImage maskImage, boolean flipVertical,
+        AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction)
+    {
+        return new OpenGLTexture2DMappedFromFileBuilder<MappedType>(this, GL_TEXTURE_2D, colorImage, maskImage, flipVertical, mappedType, mappingFunction);
+    }
+
+    @Override
+    public <MappedType> ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTextureFromStreamWithMask(
+        InputStream imageStream, InputStream maskStream, boolean flipVertical,
+        AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
+    {
+        return new OpenGLTexture2DMappedFromFileBuilder<MappedType>(this, GL_TEXTURE_2D, imageStream, maskStream, flipVertical, mappedType, mappingFunction);
     }
 
     @Override

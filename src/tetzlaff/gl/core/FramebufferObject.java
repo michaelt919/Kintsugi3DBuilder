@@ -1,4 +1,4 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
 /**
  * An interface for a framebuffer object (FBO) that has been created by a GL context.

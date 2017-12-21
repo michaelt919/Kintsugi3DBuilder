@@ -1,6 +1,6 @@
 package tetzlaff.gl.builders.framebuffer;
 
-import tetzlaff.gl.ColorFormat;
+import tetzlaff.gl.core.ColorFormat;
 
 public final class ColorAttachmentSpec extends AttachmentSpec
 {

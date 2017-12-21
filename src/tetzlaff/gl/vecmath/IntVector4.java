@@ -1,5 +1,8 @@
 package tetzlaff.gl.vecmath;
 
+import java.util.Arrays;
+import java.util.Iterator;
+
 /**
  * A vector of four dimensions (for linear algebra calculations) backed by 
  * 32-bit integers.
@@ -9,7 +12,7 @@ package tetzlaff.gl.vecmath;
  * @see Vector4
  * @author Michael Tetzlaff
  */
-public class IntVector4 
+public class IntVector4 implements Iterable<Integer>
 {
     public final int x;
     public final int y;
@@ -97,5 +100,11 @@ public class IntVector4
     public double distance(IntVector4 other)
     {
         return this.minus(other).length();
+    }
+
+    @Override
+    public Iterator<Integer> iterator()
+    {
+        return Arrays.asList(x, y, z, w).iterator();
     }
 }

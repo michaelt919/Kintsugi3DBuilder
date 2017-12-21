@@ -1,7 +1,7 @@
 package tetzlaff.gl.interactive;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Framebuffer;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Framebuffer;
 
 /**
  * An interface used with the InteractiveGraphics object to coordinate the initialization,

@@ -1,8 +1,8 @@
 package tetzlaff.gl.builders.base;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Texture;
 import tetzlaff.gl.builders.TextureBuilder;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Texture;
 
 public abstract class TextureBuilderBase<ContextType extends Context<ContextType>, TextureType extends Texture<ContextType>> implements TextureBuilder<ContextType, TextureType>
 {

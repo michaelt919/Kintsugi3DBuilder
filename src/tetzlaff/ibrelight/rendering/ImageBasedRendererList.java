@@ -5,8 +5,8 @@ import java.util.AbstractList;
 import java.util.Objects;
 import java.util.Optional;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Program;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.interactive.InteractiveRenderableList;
 import tetzlaff.gl.nativebuffer.NativeDataType;

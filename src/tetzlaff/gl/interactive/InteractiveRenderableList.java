@@ -2,8 +2,8 @@ package tetzlaff.gl.interactive;
 
 import java.util.*;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Framebuffer;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Framebuffer;
 import tetzlaff.util.SelectableList;
 
 /**

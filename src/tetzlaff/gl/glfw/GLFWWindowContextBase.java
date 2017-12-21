@@ -4,8 +4,8 @@ import java.nio.IntBuffer;
 
 import org.lwjgl.*;
 import org.lwjgl.opengl.*;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.FramebufferSize;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.FramebufferSize;
 
 import static org.lwjgl.glfw.GLFW.*;
 

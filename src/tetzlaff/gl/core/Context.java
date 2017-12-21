@@ -1,12 +1,15 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.function.Function;
 
 import tetzlaff.gl.builders.*;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.gl.types.AbstractDataType;
 
 /**
  * An interface for any OpenGL-like graphics context.
@@ -53,16 +56,35 @@ public interface Context<ContextType extends Context<ContextType>>
 
     ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
         build2DColorTextureFromStreamWithMask(InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
+
+    <MappedType> ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorTextureFromStreamWithMask(
+            InputStream imageStream, InputStream maskStream, boolean flipVertical,
+            AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException;
+
     ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
         build2DColorHDRTextureFromStreamWithMask(BufferedInputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException;
 
     ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
         build2DColorTextureFromImageWithMask(BufferedImage colorImage, BufferedImage maskImage, boolean flipVertical);
 
+    <MappedType> ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorTextureFromImageWithMask(
+            BufferedImage colorImage, BufferedImage maskImage, boolean flipVertical,
+            AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction);
+
     default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
         build2DColorTextureFromStream(InputStream imageStream, boolean flipVertical) throws IOException
     {
         return build2DColorTextureFromStreamWithMask(imageStream, null, flipVertical);
+    }
+
+    default <MappedType> ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorTextureFromStream(
+            InputStream imageStream, boolean flipVertical,
+            AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
+    {
+        return build2DColorTextureFromStreamWithMask(imageStream, null, flipVertical, mappedType, mappingFunction);
     }
 
     default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
@@ -76,6 +98,15 @@ public interface Context<ContextType extends Context<ContextType>>
         {
             return build2DColorTextureFromStreamWithMask(new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical);
         }
+    }
+
+    default <MappedType> ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorTextureFromFileWithMask(
+            File imageFile, File maskFile, boolean flipVertical,
+            AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
+    {
+        return build2DColorTextureFromStreamWithMask(new FileInputStream(imageFile), new FileInputStream(maskFile), flipVertical,
+            mappedType, mappingFunction);
     }
 
     default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
@@ -97,10 +128,25 @@ public interface Context<ContextType extends Context<ContextType>>
         }
     }
 
+    default <MappedType> ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+        build2DColorTextureFromFile(File imageFile, boolean flipVertical,
+            AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
+    {
+        return build2DColorTextureFromStream(new FileInputStream(imageFile), flipVertical, mappedType, mappingFunction);
+    }
+
     default ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
         build2DColorTextureFromImage(BufferedImage colorImage, boolean flipVertical)
     {
         return build2DColorTextureFromImageWithMask(colorImage, null, flipVertical);
+    }
+
+    default <MappedType> ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>>
+     build2DColorTextureFromImage(
+         BufferedImage colorImage, boolean flipVertical,
+        AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction)
+    {
+        return build2DColorTextureFromImageWithMask(colorImage, null, flipVertical, mappedType, mappingFunction);
     }
 
     ColorTextureBuilder<ContextType, ? extends Texture1D<ContextType>> build1DColorTexture(NativeVectorBuffer data);

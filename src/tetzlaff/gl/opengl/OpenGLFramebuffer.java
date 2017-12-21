@@ -9,8 +9,8 @@ import java.nio.IntBuffer;
 import javax.imageio.ImageIO;
 
 import org.lwjgl.*;
-import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.FramebufferSize;
+import tetzlaff.gl.core.Framebuffer;
+import tetzlaff.gl.core.FramebufferSize;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;

@@ -7,7 +7,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 import java.util.stream.IntStream;
 
-import tetzlaff.gl.Context;
+import tetzlaff.gl.core.Context;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;

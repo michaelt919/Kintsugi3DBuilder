@@ -10,7 +10,7 @@ import java.util.function.Function;
 import javax.imageio.ImageIO;
 
 import org.ejml.simple.SimpleMatrix;
-import tetzlaff.gl.*;
+import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.rendering.IBRResources;

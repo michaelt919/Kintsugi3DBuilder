@@ -3,10 +3,10 @@ package tetzlaff.gl.builders;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Program;
-import tetzlaff.gl.Shader;
-import tetzlaff.gl.ShaderType;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Program;
+import tetzlaff.gl.core.Shader;
+import tetzlaff.gl.core.ShaderType;
 
 public interface ProgramBuilder<ContextType extends Context<ContextType>>
 {

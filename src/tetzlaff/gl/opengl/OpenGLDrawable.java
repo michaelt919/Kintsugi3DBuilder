@@ -3,10 +3,10 @@ package tetzlaff.gl.opengl;
 import java.util.Map;
 import java.util.TreeMap;
 
-import tetzlaff.gl.Drawable;
-import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.PrimitiveMode;
-import tetzlaff.gl.VertexBuffer;
+import tetzlaff.gl.core.Drawable;
+import tetzlaff.gl.core.Framebuffer;
+import tetzlaff.gl.core.PrimitiveMode;
+import tetzlaff.gl.core.VertexBuffer;
 import tetzlaff.gl.exceptions.UnrecognizedPrimitiveModeException;
 import tetzlaff.gl.vecmath.*;
 

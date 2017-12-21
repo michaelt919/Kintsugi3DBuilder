@@ -1,8 +1,8 @@
 package tetzlaff.gl.builders.framebuffer;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.FramebufferObject;
+import tetzlaff.gl.core.ColorFormat;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.FramebufferObject;
 
 public interface FramebufferObjectBuilder<ContextType extends Context<ContextType>> 
 {
