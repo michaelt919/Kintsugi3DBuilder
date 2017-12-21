@@ -139,10 +139,4 @@ class NativeIntVectorBuffer implements NativeVectorBuffer
     {
         return NativeDataType.INT;
     }
-
-    @Override
-    public int getElementSizeInBytes()
-    {
-        return 4;
-    }
 }

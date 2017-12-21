@@ -1,18 +1,22 @@
 package tetzlaff.gl.opengl;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.imageio.ImageIO;
 
-import tetzlaff.gl.*;
-import tetzlaff.gl.ColorFormat.DataType;
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
+import tetzlaff.gl.core.*;
+import tetzlaff.gl.core.ColorFormat.DataType;
+import tetzlaff.gl.types.AbstractDataType;
 import tetzlaff.util.RadianceImageLoader;
 import tetzlaff.util.RadianceImageLoader.Image;
 
@@ -107,6 +111,105 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
                         this.getMaxAnisotropy());
+            }
+        }
+    }
+
+    static class OpenGLTexture2DMappedFromFileBuilder<MappedType> extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
+    {
+        private final int textureTarget;
+        private final BufferedImage colorImg;
+        private BufferedImage maskImg;
+        private final boolean flipVertical;
+        private final AbstractDataType<? super MappedType> mappedType;
+        private final Function<Color, MappedType> mappingFunction;
+
+        OpenGLTexture2DMappedFromFileBuilder(OpenGLContext context, int textureTarget, BufferedImage colorImg, BufferedImage maskImg, boolean flipVertical,
+            AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction)
+        {
+            super(context);
+            this.textureTarget = textureTarget;
+            this.colorImg = colorImg;
+            this.maskImg = maskImg;
+            if (maskImg != null)
+            {
+                if (maskImg.getWidth() != colorImg.getWidth() || maskImg.getHeight() != colorImg.getHeight())
+                {
+                    throw new IllegalArgumentException("Color image and mask image must have the same dimensions.");
+                }
+            }
+            this.flipVertical = flipVertical;
+            this.mappedType = mappedType;
+            this.mappingFunction = mappingFunction;
+        }
+
+        OpenGLTexture2DMappedFromFileBuilder(OpenGLContext context, int textureTarget, InputStream imageStream, InputStream maskStream, boolean flipVertical,
+            AbstractDataType<? super MappedType> mappedType, Function<Color, MappedType> mappingFunction) throws IOException
+        {
+            super(context);
+            this.textureTarget = textureTarget;
+            this.colorImg = ImageIO.read(imageStream);
+            if (maskStream != null)
+            {
+                this.maskImg = ImageIO.read(maskStream);
+                if (maskImg.getWidth() != colorImg.getWidth() || maskImg.getHeight() != colorImg.getHeight())
+                {
+                    throw new IllegalArgumentException("Color image and mask image must have the same dimensions.");
+                }
+            }
+            this.flipVertical = flipVertical;
+            this.mappedType = mappedType;
+            this.mappingFunction = mappingFunction;
+        }
+
+        @Override
+        public OpenGLTexture2D createTexture()
+        {
+            int width = colorImg.getWidth();
+            int height = colorImg.getHeight();
+
+            int format = this.context.getPixelDataFormatFromDimensions(mappedType.getComponentCount());
+            int type = this.context.getDataTypeConstant(mappedType.getNativeDataType());
+            Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
+            int mappedColorLength = mappedType.getSizeInBytes();
+
+            Function<ByteBuffer, Consumer<Color>> bufferWrapperFunctionFull = byteBuffer ->
+            {
+                Consumer<? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
+                return color -> partiallyWrappedBuffer.accept(mappingFunction.apply(color));
+            };
+
+            ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(colorImg, maskImg, flipVertical, bufferWrapperFunctionFull, mappedColorLength);
+
+            if (this.isInternalFormatCompressed())
+            {
+                return new OpenGLTexture2D(
+                    this.context,
+                    this.textureTarget,
+                    this.getInternalCompressionFormat(),
+                    width,
+                    height,
+                    format,
+                    type,
+                    buffer,
+                    this.isLinearFilteringEnabled(),
+                    this.areMipmapsEnabled(),
+                    this.getMaxAnisotropy());
+            }
+            else
+            {
+                return new OpenGLTexture2D(
+                    this.context,
+                    this.textureTarget,
+                    this.getInternalColorFormat(),
+                    width,
+                    height,
+                    GL_BGRA,
+                    GL_UNSIGNED_BYTE,
+                    buffer,
+                    this.isLinearFilteringEnabled(),
+                    this.areMipmapsEnabled(),
+                    this.getMaxAnisotropy());
             }
         }
     }

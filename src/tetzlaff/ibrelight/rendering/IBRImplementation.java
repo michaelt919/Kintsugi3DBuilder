@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.util.*;
 import javax.imageio.ImageIO;
 
-import tetzlaff.gl.*;
-import tetzlaff.gl.AlphaBlendingFunction.Weight;
-import tetzlaff.gl.ColorFormat.DataType;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
+import tetzlaff.gl.core.*;
+import tetzlaff.gl.core.AlphaBlendingFunction.Weight;
+import tetzlaff.gl.core.ColorFormat.DataType;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;

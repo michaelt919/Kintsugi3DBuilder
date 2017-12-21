@@ -1,10 +1,10 @@
 package tetzlaff.gl.builders.base;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Texture;
 import tetzlaff.gl.builders.ColorTextureBuilder;
+import tetzlaff.gl.core.ColorFormat;
+import tetzlaff.gl.core.CompressionFormat;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Texture;
 
 public abstract class ColorTextureBuilderBase<ContextType extends Context<ContextType>, TextureType extends Texture<ContextType>> 
     extends TextureBuilderBase<ContextType, TextureType> implements ColorTextureBuilder<ContextType, TextureType>

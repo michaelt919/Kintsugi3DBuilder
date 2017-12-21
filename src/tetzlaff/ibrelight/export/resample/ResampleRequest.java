@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.FramebufferObject;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;

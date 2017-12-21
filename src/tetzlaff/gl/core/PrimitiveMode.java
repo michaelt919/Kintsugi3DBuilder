@@ -1,4 +1,4 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
 /**
  * Enumerates the possible primitive modes which can be used for a drawing operation.

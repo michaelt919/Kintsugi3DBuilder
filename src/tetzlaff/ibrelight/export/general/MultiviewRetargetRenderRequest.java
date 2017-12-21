@@ -3,10 +3,10 @@ package tetzlaff.ibrelight.export.general;
 import java.io.File;
 import java.io.IOException;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Drawable;
-import tetzlaff.gl.Framebuffer;
-import tetzlaff.gl.Program;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Drawable;
+import tetzlaff.gl.core.Framebuffer;
+import tetzlaff.gl.core.Program;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;

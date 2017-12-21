@@ -3,8 +3,8 @@ package tetzlaff.ibrelight.export.simpleanimation;
 import java.io.File;
 import java.io.IOException;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.FramebufferObject;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.FramebufferObject;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;

@@ -139,10 +139,4 @@ class NativeFloatVectorBuffer implements NativeVectorBuffer
     {
         return NativeDataType.FLOAT;
     }
-
-    @Override
-    public int getElementSizeInBytes()
-    {
-        return 4;
-    }
 }

@@ -139,10 +139,4 @@ class NativeShortVectorBuffer implements NativeVectorBuffer
     {
         return NativeDataType.SHORT;
     }
-
-    @Override
-    public int getElementSizeInBytes()
-    {
-        return 2;
-    }
 }

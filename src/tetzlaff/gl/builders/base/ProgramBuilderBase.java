@@ -5,10 +5,10 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Shader;
-import tetzlaff.gl.ShaderType;
 import tetzlaff.gl.builders.ProgramBuilder;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Shader;
+import tetzlaff.gl.core.ShaderType;
 
 public abstract class ProgramBuilderBase<ContextType extends Context<ContextType>> implements ProgramBuilder<ContextType> 
 {

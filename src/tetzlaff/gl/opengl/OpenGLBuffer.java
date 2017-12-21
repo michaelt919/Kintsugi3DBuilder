@@ -2,8 +2,8 @@ package tetzlaff.gl.opengl;
 
 import java.nio.ByteBuffer;
 
-import tetzlaff.gl.Contextual;
-import tetzlaff.gl.Resource;
+import tetzlaff.gl.core.Contextual;
+import tetzlaff.gl.core.Resource;
 
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL30.*;

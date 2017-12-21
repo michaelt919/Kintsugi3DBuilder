@@ -1,5 +1,8 @@
 package tetzlaff.gl.vecmath;
 
+import java.util.Arrays;
+import java.util.Iterator;
+
 /**
  * A vector of two dimensions (for linear algebra calculations) backed by 
  * 32-bit integers.
@@ -9,7 +12,7 @@ package tetzlaff.gl.vecmath;
  * @see Vector2
  * @author Michael Tetzlaff
  */
-public class IntVector2 
+public class IntVector2 implements Iterable<Integer>
 {
     public final int x;
     public final int y;
@@ -93,5 +96,11 @@ public class IntVector2
     public double distance(IntVector2 other)
     {
         return this.minus(other).length();
+    }
+
+    @Override
+    public Iterator<Integer> iterator()
+    {
+        return Arrays.asList(x, y).iterator();
     }
 }

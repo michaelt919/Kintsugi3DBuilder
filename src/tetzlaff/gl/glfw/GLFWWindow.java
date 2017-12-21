@@ -6,7 +6,7 @@ import org.lwjgl.*;
 import org.lwjgl.Version.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
-import tetzlaff.gl.FramebufferSize;
+import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;
 import tetzlaff.gl.window.*;
 import tetzlaff.gl.window.listeners.*;

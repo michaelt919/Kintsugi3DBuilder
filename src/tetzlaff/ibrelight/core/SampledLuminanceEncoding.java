@@ -2,9 +2,9 @@ package tetzlaff.ibrelight.core;
 
 import java.util.function.DoubleUnaryOperator;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Texture1D;
+import tetzlaff.gl.core.ColorFormat;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Texture1D;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;

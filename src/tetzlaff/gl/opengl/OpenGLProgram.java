@@ -3,11 +3,11 @@ package tetzlaff.gl.opengl;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 
-import tetzlaff.gl.Program;
-import tetzlaff.gl.Shader;
-import tetzlaff.gl.Texture;
-import tetzlaff.gl.UniformBuffer;
 import tetzlaff.gl.builders.base.ProgramBuilderBase;
+import tetzlaff.gl.core.Program;
+import tetzlaff.gl.core.Shader;
+import tetzlaff.gl.core.Texture;
+import tetzlaff.gl.core.UniformBuffer;
 import tetzlaff.gl.exceptions.InvalidProgramException;
 import tetzlaff.gl.exceptions.ProgramLinkFailureException;
 import tetzlaff.gl.exceptions.UnlinkedProgramException;

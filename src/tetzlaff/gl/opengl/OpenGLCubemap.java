@@ -2,12 +2,12 @@ package tetzlaff.gl.opengl;
 
 import java.nio.ByteBuffer;
 
-import tetzlaff.gl.*;
-import tetzlaff.gl.ColorFormat.DataType;
 import tetzlaff.gl.builders.base.ColorCubemapBuilderBase;
 import tetzlaff.gl.builders.base.DepthStencilTextureBuilderBase;
 import tetzlaff.gl.builders.base.DepthTextureBuilderBase;
 import tetzlaff.gl.builders.base.StencilTextureBuilderBase;
+import tetzlaff.gl.core.*;
+import tetzlaff.gl.core.ColorFormat.DataType;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 

@@ -1,4 +1,4 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
 public interface ContextState<ContextType extends Context<ContextType>>
 {

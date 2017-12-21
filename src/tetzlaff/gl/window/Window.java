@@ -1,6 +1,6 @@
 package tetzlaff.gl.window;
 
-import tetzlaff.gl.Context;
+import tetzlaff.gl.core.Context;
 
 public interface Window<ContextType extends Context<ContextType>> extends WindowListenerManager, AutoCloseable
 {

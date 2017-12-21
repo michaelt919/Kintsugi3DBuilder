@@ -1,4 +1,4 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
 /**
  * An interface for an object that can serve as a shader, one of possibly many components of a program.

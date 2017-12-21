@@ -3,7 +3,7 @@ package tetzlaff.ibrelight.core;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import tetzlaff.gl.Context;
+import tetzlaff.gl.core.Context;
 
 public class IBRRequestQueue<ContextType extends Context<ContextType>> 
 {

@@ -1,5 +1,7 @@
 package tetzlaff.gl.vecmath;
 
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.function.DoubleUnaryOperator;
 
 /**
@@ -8,7 +10,7 @@ import java.util.function.DoubleUnaryOperator;
  *
  * @author Michael Tetzlaff
  */
-public class Vector2 
+public class Vector2 implements Iterable<Float>
 {
     public static final Vector2 ZERO = new Vector2(0.0f);
 
@@ -212,5 +214,11 @@ public class Vector2
                 "x=" + x +
                 ", y=" + y +
                 '}';
+    }
+
+    @Override
+    public Iterator<Float> iterator()
+    {
+        return Arrays.asList(x, y).iterator();
     }
 }

@@ -133,10 +133,4 @@ public class NativeByteVectorBuffer implements NativeVectorBuffer
     {
         return NativeDataType.BYTE;
     }
-
-    @Override
-    public int getElementSizeInBytes()
-    {
-        return 1;
-    }
 }

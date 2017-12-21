@@ -1,8 +1,8 @@
 package tetzlaff.gl.opengl;
 
-import tetzlaff.gl.AlphaBlendingFunction;
-import tetzlaff.gl.AlphaBlendingFunction.Weight;
-import tetzlaff.gl.ContextState;
+import tetzlaff.gl.core.AlphaBlendingFunction;
+import tetzlaff.gl.core.AlphaBlendingFunction.Weight;
+import tetzlaff.gl.core.ContextState;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;

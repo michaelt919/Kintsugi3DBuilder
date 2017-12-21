@@ -1,9 +1,9 @@
 package tetzlaff.gl.builders;
 
-import tetzlaff.gl.*;
+import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 
-public interface ColorCubemapBuilder <ContextType extends Context<ContextType>, TextureType extends Cubemap<ContextType>> 
+public interface ColorCubemapBuilder <ContextType extends Context<ContextType>, TextureType extends Cubemap<ContextType>>
 extends ColorTextureBuilder<ContextType, TextureType>
 {
     ColorCubemapBuilder<ContextType, TextureType> loadFace(CubemapFace face, NativeVectorBuffer data);

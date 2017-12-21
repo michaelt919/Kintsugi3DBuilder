@@ -9,10 +9,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import javax.imageio.ImageIO;
 
-import tetzlaff.gl.*;
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.TextureBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
+import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;

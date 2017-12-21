@@ -1,6 +1,6 @@
 package tetzlaff.gl.opengl;
 
-import tetzlaff.gl.VertexBuffer;
+import tetzlaff.gl.core.VertexBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 
 import static org.lwjgl.opengl.GL11.*;

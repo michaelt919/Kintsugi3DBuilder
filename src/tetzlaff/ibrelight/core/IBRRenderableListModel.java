@@ -1,6 +1,6 @@
 package tetzlaff.ibrelight.core;
 
-import tetzlaff.gl.Context;
+import tetzlaff.gl.core.Context;
 import tetzlaff.models.ReadonlyCameraModel;
 import tetzlaff.models.ReadonlyLightingModel;
 import tetzlaff.models.ReadonlyObjectModel;

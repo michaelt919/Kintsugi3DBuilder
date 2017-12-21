@@ -2,11 +2,11 @@ package tetzlaff.gl.opengl;
 
 import java.nio.ByteBuffer;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Texture1D;
-import tetzlaff.gl.TextureWrapMode;
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
+import tetzlaff.gl.core.ColorFormat;
+import tetzlaff.gl.core.CompressionFormat;
+import tetzlaff.gl.core.Texture1D;
+import tetzlaff.gl.core.TextureWrapMode;
 
 import static org.lwjgl.opengl.EXTTextureFilterAnisotropic.*;
 import static org.lwjgl.opengl.GL11.*;

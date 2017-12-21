@@ -1,4 +1,4 @@
-package tetzlaff.gl;
+package tetzlaff.gl.core;
 
 /**
  * A simple interface for a GL resource which needs to be memory-managed manually.

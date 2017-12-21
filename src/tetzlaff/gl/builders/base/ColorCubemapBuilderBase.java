@@ -1,10 +1,10 @@
 package tetzlaff.gl.builders.base;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.CompressionFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Cubemap;
 import tetzlaff.gl.builders.ColorCubemapBuilder;
+import tetzlaff.gl.core.ColorFormat;
+import tetzlaff.gl.core.CompressionFormat;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Cubemap;
 
 public abstract class ColorCubemapBuilderBase <ContextType extends Context<ContextType>, TextureType extends Cubemap<ContextType>> 
     extends ColorTextureBuilderBase<ContextType, TextureType>

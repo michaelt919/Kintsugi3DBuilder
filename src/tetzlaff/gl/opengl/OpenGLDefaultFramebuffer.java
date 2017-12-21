@@ -1,6 +1,6 @@
 package tetzlaff.gl.opengl;
 
-import tetzlaff.gl.FramebufferSize;
+import tetzlaff.gl.core.FramebufferSize;
 
 import static org.lwjgl.opengl.GL11.*;
 

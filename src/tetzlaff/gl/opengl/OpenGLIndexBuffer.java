@@ -3,7 +3,7 @@ package tetzlaff.gl.opengl;
 import java.nio.ByteBuffer;
 
 import org.lwjgl.*;
-import tetzlaff.gl.IndexBuffer;
+import tetzlaff.gl.core.IndexBuffer;
 
 import static org.lwjgl.opengl.GL15.*;
 

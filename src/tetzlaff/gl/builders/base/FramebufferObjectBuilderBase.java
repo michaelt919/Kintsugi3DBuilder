@@ -3,11 +3,11 @@ package tetzlaff.gl.builders.base;
 import java.util.ArrayList;
 import java.util.List;
 
-import tetzlaff.gl.ColorFormat;
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Texture2D;
 import tetzlaff.gl.builders.TextureBuilder;
 import tetzlaff.gl.builders.framebuffer.*;
+import tetzlaff.gl.core.ColorFormat;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Texture2D;
 
 public abstract class FramebufferObjectBuilderBase<ContextType extends Context<ContextType>> implements FramebufferObjectBuilder<ContextType>
 {

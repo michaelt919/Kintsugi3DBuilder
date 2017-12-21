@@ -1,7 +1,7 @@
 package tetzlaff.gl.builders;
 
-import tetzlaff.gl.Context;
-import tetzlaff.gl.Texture;
+import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.Texture;
 
 public interface DepthTextureBuilder<ContextType extends Context<ContextType>, TextureType extends Texture<ContextType>> extends TextureBuilder<ContextType, TextureType>
 {

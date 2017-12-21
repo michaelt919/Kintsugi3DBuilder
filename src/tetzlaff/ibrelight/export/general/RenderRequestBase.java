@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 
-import tetzlaff.gl.*;
+import tetzlaff.gl.core.*;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.RenderingMode;
 import tetzlaff.ibrelight.rendering.IBRResources;
@@ -116,7 +116,7 @@ abstract class RenderRequestBase implements IBRRequest
     }
 
     protected <ContextType extends Context<ContextType>>
-        Program<ContextType> createProgram(IBRResources<ContextType> resources) throws FileNotFoundException
+    Program<ContextType> createProgram(IBRResources<ContextType> resources) throws FileNotFoundException
     {
         Program<ContextType> program = resources.context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, vertexShader)
