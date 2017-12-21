@@ -275,7 +275,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                 if (maskDir == null)
                 {
-                    textureBuilder = context.build2DColorTextureFromFile(imageFile, true);
+                    textureBuilder = context.getTextureFactory().build2DColorTextureFromFile(imageFile, true);
                 }
                 else
                 {
@@ -288,7 +288,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                         maskFile = new File(maskDir, pngFileName);
                     }
 
-                    textureBuilder = context.build2DColorTextureFromFileWithMask(imageFile, maskFile, true);
+                    textureBuilder = context.getTextureFactory().build2DColorTextureFromFileWithMask(imageFile, maskFile, true);
                 }
 
                 try(Texture2D<ContextType> viewTexture = textureBuilder
@@ -564,7 +564,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             {
                 for (int col = 0; col < framebufferSubdiv; col++)
                 {
-                    Texture3D<ContextType> preprojectedViews = drawable.getContext().build2DColorTextureArray(subdivSize, subdivSize, preprojCount).createTexture();
+                    Texture3D<ContextType> preprojectedViews = drawable.getContext().getTextureFactory()
+                        .build2DColorTextureArray(subdivSize, subdivSize, preprojCount).createTexture();
 
                     for (int i = 0; i < preprojCount; i++)
                     {
@@ -775,7 +776,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             if (this.subdiv == 1)
             {
                 try(Texture3D<ContextType> preprojectedViews =
-                    drawable.getContext().build2DColorTextureArray(subdivWidth, subdivHeight, viewCount).createTexture())
+                    drawable.getContext().getTextureFactory().build2DColorTextureArray(subdivWidth, subdivHeight, viewCount).createTexture())
                 {
                     for (int i = 0; i < this.viewCount; i++)
                     {
@@ -793,7 +794,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     for (int col = 0; col < this.subdiv; col++)
                     {
                         try(Texture3D<ContextType> preprojectedViews =
-                            drawable.getContext().build2DColorTextureArray(subdivWidth, subdivHeight, viewCount).createTexture())
+                            drawable.getContext().getTextureFactory().build2DColorTextureArray(subdivWidth, subdivHeight, viewCount).createTexture())
                         {
                             for (int i = 0; i < this.viewCount; i++)
                             {
@@ -1147,7 +1148,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                         if (maskDir == null)
                         {
-                            fullSizeImageBuilder = context.build2DColorTextureFromFile(imageFile, true);
+                            fullSizeImageBuilder = context.getTextureFactory().build2DColorTextureFromFile(imageFile, true);
                         }
                         else
                         {
@@ -1160,7 +1161,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                                 maskFile = new File(maskDir, pngFileName);
                             }
 
-                            fullSizeImageBuilder = context.build2DColorTextureFromFileWithMask(imageFile, maskFile, true);
+                            fullSizeImageBuilder = context.getTextureFactory().build2DColorTextureFromFileWithMask(imageFile, maskFile, true);
                         }
 
                         try(Texture2D<ContextType> fullSizeImage = fullSizeImageBuilder
@@ -1209,7 +1210,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 imageFile = new File(imageDir, pngFileName);
             }
             BufferedImage img = ImageIO.read(new FileInputStream(imageFile));
-            viewTextures = context.build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount())
+            viewTextures = context.getTextureFactory().build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount())
                             .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
                             .setLinearFilteringEnabled(true)
                             .setMipmapsEnabled(true)
@@ -1255,7 +1256,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             // Build depth textures for each view
             int width = viewTextures.getWidth() / 2;
             int height = viewTextures.getHeight() / 2;
-            depthTextures = context.build2DDepthTextureArray(width, height, viewSet.getCameraPoseCount()).createTexture();
+            depthTextures = context.getTextureFactory().build2DDepthTextureArray(width, height, viewSet.getCameraPoseCount()).createTexture();
 
             // Don't automatically generate any texture attachments for this framebuffer object
             try(FramebufferObject<ContextType> depthRenderingFBO = context.buildFramebufferObject(width, height).createFramebufferObject())

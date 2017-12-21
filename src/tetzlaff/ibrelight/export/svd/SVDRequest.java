@@ -136,11 +136,11 @@ public class SVDRequest implements IBRRequest
                             SimpleMatrix vMatrix = svd.getV();
 
                             double[] scale = new double[effectiveSingularValues];
-                            for (int i = 0; i < effectiveSingularValues; i++)
+                            for (int svIndex = 0; svIndex < effectiveSingularValues; svIndex++)
                             {
                                 for (int k = 0; k < uMatrix.numRows(); k++)
                                 {
-                                    scale[i] = Math.max(scale[i], Math.abs(uMatrix.get(k, i)));
+                                    scale[svIndex] = Math.max(scale[svIndex], Math.abs(uMatrix.get(k, svIndex)));
                                 }
                             }
 
