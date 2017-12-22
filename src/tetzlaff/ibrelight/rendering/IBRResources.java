@@ -345,30 +345,30 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder =
                     context.getTextureFactory().build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount());
 
-//            if (loadOptions.isCompressionRequested())
-//            {
-//                textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
-//            }
-//            else
-//            {
-//                textureArrayBuilder.setInternalFormat(ColorFormat.RGBA8);
-//            }
-//
-//            if (loadOptions.areMipmapsRequested())
-//            {
-//                textureArrayBuilder.setMipmapsEnabled(true);
-//            }
-//            else
-//            {
-//                textureArrayBuilder.setMipmapsEnabled(false);
-//            }
-//
-//            textureArrayBuilder.setLinearFilteringEnabled(true);
-//            textureArrayBuilder.setMaxAnisotropy(16.0f);
+            if (loadOptions.isCompressionRequested())
+            {
+                textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
+            }
+            else
+            {
+                textureArrayBuilder.setInternalFormat(ColorFormat.RGBA8);
+            }
 
-            textureArrayBuilder.setInternalFormat(ColorFormat.R16UI);
-            textureArrayBuilder.setMipmapsEnabled(false);
-            textureArrayBuilder.setLinearFilteringEnabled(false);
+            if (loadOptions.areMipmapsRequested())
+            {
+                textureArrayBuilder.setMipmapsEnabled(true);
+            }
+            else
+            {
+                textureArrayBuilder.setMipmapsEnabled(false);
+            }
+
+            textureArrayBuilder.setLinearFilteringEnabled(true);
+            textureArrayBuilder.setMaxAnisotropy(16.0f);
+
+//            textureArrayBuilder.setInternalFormat(ColorFormat.R16UI);
+//            textureArrayBuilder.setMipmapsEnabled(false);
+//            textureArrayBuilder.setLinearFilteringEnabled(false);
 
             colorTextures = textureArrayBuilder.createTexture();
 
