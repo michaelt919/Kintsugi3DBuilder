@@ -71,7 +71,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
             int index = cubemapFaceToIndex(face);
             faces[index].buffer = data.getBuffer();
             faces[index].dataType = data.getDataType();
-            faces[index].format = context.getPixelDataFormatFromDimensions(data.getDimensions());
+            faces[index].format = OpenGLContext.getPixelDataFormatFromDimensions(data.getDimensions());
             return this;
         }
 
@@ -249,14 +249,14 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, colorFormat);
-        init(textureTarget, context.getOpenGLInternalColorFormat(colorFormat), faceSize, opt);
+        init(textureTarget, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), faceSize, opt);
     }
 
     private OpenGLCubemap(OpenGLContext context, int textureTarget, CompressionFormat compressionFormat, int faceSize, OptionalParameters opt)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, compressionFormat);
-        init(textureTarget, context.getOpenGLCompressionFormat(compressionFormat), faceSize, opt);
+        init(textureTarget, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), faceSize, opt);
     }
 
     private OpenGLCubemap(OpenGLContext context, int textureTarget, TextureType textureType, int precision, int faceSize, OptionalParameters opt)
@@ -276,97 +276,97 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
         if (opt.positiveX.buffer == null)
         {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, faceSize, faceSize, 0, opt.positiveX.format, GL_UNSIGNED_BYTE, 0);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
         else
         {
-            int dataTypeConstant = context.getDataTypeConstant(opt.positiveX.dataType);
+            int dataTypeConstant = OpenGLContext.getDataTypeConstant(opt.positiveX.dataType);
 
             glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.positiveX.format, dataTypeConstant));
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
 
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, faceSize, faceSize, 0, opt.positiveX.format, dataTypeConstant, opt.positiveX.buffer);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
 
         if (opt.negativeX.buffer == null)
         {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, faceSize, faceSize, 0, opt.negativeX.format, GL_UNSIGNED_BYTE, 0);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
         else
         {
-            int dataTypeConstant = context.getDataTypeConstant(opt.negativeX.dataType);
+            int dataTypeConstant = OpenGLContext.getDataTypeConstant(opt.negativeX.dataType);
 
 //            glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.negativeX.format, dataTypeConstant));
-//            this.context.openGLErrorCheck();
+//            OpenGLContext.errorCheck();
 
             glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, faceSize, faceSize, 0, opt.negativeX.format, dataTypeConstant, opt.negativeX.buffer);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
 
         if (opt.positiveY.buffer == null)
         {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, faceSize, faceSize, 0, opt.positiveY.format, GL_UNSIGNED_BYTE, 0);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
         else
         {
-            int dataTypeConstant = context.getDataTypeConstant(opt.positiveY.dataType);
+            int dataTypeConstant = OpenGLContext.getDataTypeConstant(opt.positiveY.dataType);
 
 //            glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.positiveY.format, dataTypeConstant));
-//            this.context.openGLErrorCheck();
+//            OpenGLContext.errorCheck();
 
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, faceSize, faceSize, 0, opt.positiveY.format, dataTypeConstant, opt.positiveY.buffer);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
 
         if (opt.negativeY.buffer == null)
         {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, faceSize, faceSize, 0, opt.negativeY.format, GL_UNSIGNED_BYTE, 0);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
         else
         {
-            int dataTypeConstant = context.getDataTypeConstant(opt.negativeY.dataType);
+            int dataTypeConstant = OpenGLContext.getDataTypeConstant(opt.negativeY.dataType);
 
 //            glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.negativeY.format, dataTypeConstant));
-//            this.context.openGLErrorCheck();
+//            OpenGLContext.errorCheck();
 
             glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, faceSize, faceSize, 0, opt.negativeY.format, dataTypeConstant, opt.negativeY.buffer);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
 
         if (opt.positiveZ.buffer == null)
         {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, faceSize, faceSize, 0, opt.positiveZ.format, GL_UNSIGNED_BYTE, 0);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
         else
         {
-            int dataTypeConstant = context.getDataTypeConstant(opt.positiveZ.dataType);
+            int dataTypeConstant = OpenGLContext.getDataTypeConstant(opt.positiveZ.dataType);
 
 //            glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.positiveZ.format, dataTypeConstant));
-//            this.context.openGLErrorCheck();
+//            OpenGLContext.errorCheck();
 
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, faceSize, faceSize, 0, opt.positiveZ.format, dataTypeConstant, opt.positiveZ.buffer);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
 
         if (opt.negativeZ.buffer == null)
         {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, faceSize, faceSize, 0, opt.negativeZ.format, GL_UNSIGNED_BYTE, 0);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
         else
         {
-            int dataTypeConstant = context.getDataTypeConstant(opt.negativeZ.dataType);
+            int dataTypeConstant = OpenGLContext.getDataTypeConstant(opt.negativeZ.dataType);
 
 //            glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(opt.negativeZ.format, dataTypeConstant));
-//            this.context.openGLErrorCheck();
+//            OpenGLContext.errorCheck();
 
             glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, faceSize, faceSize, 0, opt.negativeZ.format, dataTypeConstant, opt.negativeZ.buffer);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
 
         this.initFilteringAndMipmaps(opt.useLinearFiltering, opt.useMipmaps);
@@ -374,7 +374,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
         if (opt.maxAnisotropy > 1.0f)
         {
             glTexParameterf(textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, opt.maxAnisotropy);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
     }
 
@@ -401,13 +401,13 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
         }
 
         glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
         
         glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
         
         glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
@@ -443,13 +443,13 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
         if (numericWrapS != 0)
         {
             glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, numericWrapS);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
 
         if (numericWrapT != 0)
         {
             glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, numericWrapT);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
     }
 
@@ -484,14 +484,14 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
             public void attachToDrawFramebuffer(int attachment, int level)
             {
                 glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, attachment, textureId, level, layerIndex);
-                context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             }
 
             @Override
             public void attachToReadFramebuffer(int attachment, int level)
             {
                 glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, attachment, textureId, level, layerIndex);
-                context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             }
 
         };

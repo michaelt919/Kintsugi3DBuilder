@@ -23,56 +23,56 @@ public class OpenGLContextState implements ContextState<OpenGLContext>
     public void enableDepthTest()
     {
         glEnable(GL_DEPTH_TEST);
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
     public void disableDepthTest()
     {
         glDisable(GL_DEPTH_TEST);
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
     public void enableDepthWrite()
     {
         glDepthMask(true);
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
     public void disableDepthWrite()
     {
         glDepthMask(false);
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
     public void enableMultisampling()
     {
         glEnable(GL_MULTISAMPLE);
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
     public void disableMultisampling()
     {
         glDisable(GL_MULTISAMPLE);
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
     public void enableBackFaceCulling()
     {
         glEnable(GL_CULL_FACE);
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
     public void disableBackFaceCulling()
     {
         glDisable(GL_CULL_FACE);
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     private int blendFuncEnumToInt(Weight func)
@@ -97,22 +97,22 @@ public class OpenGLContextState implements ContextState<OpenGLContext>
     public void setAlphaBlendingFunction(AlphaBlendingFunction func)
     {
         glEnable(GL_BLEND);
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
         glBlendFunc(blendFuncEnumToInt(func.sourceWeightFunction), blendFuncEnumToInt(func.destinationWeightFunction));
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
     public void disableAlphaBlending()
     {
         glDisable(GL_BLEND);
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     private int getInteger(int queryId)
     {
         int queryResult = glGetInteger(queryId);
-        context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
         return queryResult;
     }
 
