@@ -11,16 +11,12 @@ import java.util.function.Function;
 import tetzlaff.gl.builders.*;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
-import tetzlaff.gl.opengl.OpenGLCubemap.ColorBuilder;
-import tetzlaff.gl.opengl.OpenGLCubemap.DepthBuilder;
-import tetzlaff.gl.opengl.OpenGLCubemap.DepthStencilBuilder;
-import tetzlaff.gl.opengl.OpenGLCubemap.StencilBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture1D.OpenGLTexture1DFromBufferBuilder;
 import tetzlaff.gl.opengl.OpenGLTexture2D.*;
-import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DColorBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DDepthStencilBuilder;
-import tetzlaff.gl.opengl.OpenGLTexture3D.OpenGLTexture3DStencilBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture3D.ColorBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture3D.DepthBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture3D.DepthStencilBuilder;
+import tetzlaff.gl.opengl.OpenGLTexture3D.StencilBuilder;
 import tetzlaff.gl.types.AbstractDataType;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -164,49 +160,49 @@ class OpenGLTextureFactory implements TextureFactory<OpenGLContext>
     @Override
     public ColorTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> build2DColorTextureArray(int width, int height, int length)
     {
-        return new OpenGLTexture3DColorBuilder(context, GL_TEXTURE_2D_ARRAY, width, height, length);
+        return new ColorBuilder(context, GL_TEXTURE_2D_ARRAY, width, height, length);
     }
 
     @Override
     public DepthTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> build2DDepthTextureArray(int width, int height, int length)
     {
-        return new OpenGLTexture3DDepthBuilder(context, GL_TEXTURE_2D_ARRAY, width, height, length);
+        return new DepthBuilder(context, GL_TEXTURE_2D_ARRAY, width, height, length);
     }
 
     @Override
     public StencilTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> build2DStencilTextureArray(int width, int height, int length)
     {
-        return new OpenGLTexture3DStencilBuilder(context, GL_TEXTURE_2D_ARRAY, width, height, length);
+        return new StencilBuilder(context, GL_TEXTURE_2D_ARRAY, width, height, length);
     }
 
     @Override
     public DepthStencilTextureBuilder<OpenGLContext, ? extends Texture3D<OpenGLContext>> build2DDepthStencilTextureArray(int width, int height, int length)
     {
-        return new OpenGLTexture3DDepthStencilBuilder(context, GL_TEXTURE_2D_ARRAY, width, height, length);
+        return new DepthStencilBuilder(context, GL_TEXTURE_2D_ARRAY, width, height, length);
     }
 
     @Override
     public ColorCubemapBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildColorCubemap(int faceSize)
     {
-        return new ColorBuilder(context, GL_TEXTURE_CUBE_MAP, faceSize);
+        return new OpenGLCubemap.ColorBuilder(context, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
     @Override
     public DepthTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildDepthCubemap(int faceSize)
     {
-        return new DepthBuilder(context, GL_TEXTURE_CUBE_MAP, faceSize);
+        return new OpenGLCubemap.DepthBuilder(context, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
     @Override
     public StencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildStencilCubemap(int faceSize)
     {
-        return new StencilBuilder(context, GL_TEXTURE_CUBE_MAP, faceSize);
+        return new OpenGLCubemap.StencilBuilder(context, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
     @Override
     public DepthStencilTextureBuilder<OpenGLContext, ? extends Cubemap<OpenGLContext>> buildDepthStencilCubemap(int faceSize)
     {
-        return new DepthStencilBuilder(context, GL_TEXTURE_CUBE_MAP, faceSize);
+        return new OpenGLCubemap.DepthStencilBuilder(context, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
 }

@@ -168,8 +168,8 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             int width = colorImg.getWidth();
             int height = colorImg.getHeight();
 
-            int format = this.context.getPixelDataFormatFromDimensions(mappedType.getComponentCount());
-            int type = this.context.getDataTypeConstant(mappedType.getNativeDataType());
+            int format = OpenGLContext.getPixelDataFormatFromDimensions(mappedType.getComponentCount());
+            int type = OpenGLContext.getDataTypeConstant(mappedType.getNativeDataType());
             Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
             int mappedColorLength = mappedType.getSizeInBytes();
 
@@ -488,7 +488,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, colorFormat);
-        init(context, textureTarget, context.getOpenGLInternalColorFormat(colorFormat), width, height, format, type, buffer,
+        init(context, textureTarget, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, height, format, type, buffer,
                 useLinearFiltering, useMipmaps, maxAnisotropy);
     }
 
@@ -497,7 +497,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, compressionFormat);
-        init(context, textureTarget, context.getOpenGLCompressionFormat(compressionFormat), width, height, format, type, buffer,
+        init(context, textureTarget, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, height, format, type, buffer,
                 useLinearFiltering, useMipmaps, maxAnisotropy);
     }
 
@@ -506,7 +506,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, colorFormat);
-        init(context, textureTarget, multisamples, context.getOpenGLInternalColorFormat(colorFormat), width, height, format,
+        init(context, textureTarget, multisamples, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, height, format,
                 fixedMultisampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
     }
 
@@ -515,7 +515,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, compressionFormat);
-        init(context, textureTarget, multisamples, context.getOpenGLCompressionFormat(compressionFormat), width, height, format,
+        init(context, textureTarget, multisamples, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, height, format,
                 fixedMultisampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
     }
 
@@ -541,7 +541,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             this.textureTarget = GL_TEXTURE_2D_MULTISAMPLE;
             this.levelCount = 1;
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, multisamples, internalFormat, width, height, fixedMultisampleLocations);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
             this.initFilteringAndMipmaps(false, false);  // linear filtering and mipmaps not allowed with multisampling
             // TODO: multisample textures don't seem to work correctly
         }
@@ -549,14 +549,14 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         {
             // Last four parameters are essentially meaningless, but are subject to certain validation conditions
             glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, 0);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
             this.initFilteringAndMipmaps(useLinearFiltering, useMipmaps);
         }
 
         if (maxAnisotropy > 1.0f)
         {
             glTexParameterf(textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
     }
 
@@ -569,16 +569,16 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         this.height = height;
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, OpenGLTexture.getUnpackAlignment(format, type));
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, type, buffer);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
         this.initFilteringAndMipmaps(useLinearFiltering, useMipmaps);
 
         if (maxAnisotropy > 1.0f)
         {
             glTexParameterf(textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
     }
 
@@ -605,10 +605,10 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         }
 
         glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
         
         glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
@@ -650,13 +650,13 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         if (numericWrapS != 0)
         {
             glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, numericWrapS);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
 
         if (numericWrapT != 0)
         {
             glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, numericWrapT);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
     }
 }

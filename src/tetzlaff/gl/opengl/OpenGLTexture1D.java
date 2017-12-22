@@ -81,7 +81,7 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, colorFormat);
 
-        init(context, textureTarget, context.getOpenGLInternalColorFormat(colorFormat), width, format, type, buffer, useLinearFiltering, useMipmaps, maxAnisotropy);
+        init(context, textureTarget, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, format, type, buffer, useLinearFiltering, useMipmaps, maxAnisotropy);
     }
 
     private OpenGLTexture1D(OpenGLContext context, int textureTarget, CompressionFormat compressionFormat, int width, int format, int type, ByteBuffer buffer,
@@ -90,7 +90,7 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, compressionFormat);
 
-        init(context, textureTarget, context.getOpenGLCompressionFormat(compressionFormat), width, format, type, buffer, useLinearFiltering, useMipmaps, maxAnisotropy);
+        init(context, textureTarget, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, format, type, buffer, useLinearFiltering, useMipmaps, maxAnisotropy);
     }
 
     private void init(OpenGLContext context, int textureTarget, int internalFormat, int width, int format, int type, ByteBuffer buffer,
@@ -104,33 +104,33 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
                  type == GL_UNSIGNED_SHORT_4_4_4_4_REV || type == GL_UNSIGNED_SHORT_5_5_5_1 || type == GL_UNSIGNED_SHORT_1_5_5_5_REV)
         {
             glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
         else if (format == GL_RGBA || format == GL_BGRA || format == GL_RGBA_INTEGER || format == GL_RGBA_INTEGER || type == GL_UNSIGNED_INT || type == GL_INT || type == GL_FLOAT ||
                 type == GL_UNSIGNED_INT_8_8_8_8 || type == GL_UNSIGNED_INT_8_8_8_8_REV || type == GL_UNSIGNED_INT_10_10_10_2 || type == GL_UNSIGNED_INT_2_10_10_10_REV)
         {
             glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
         else if (type == GL_UNSIGNED_SHORT || type == GL_SHORT)
         {
             glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
         else
         {
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
 
         glTexImage1D(textureTarget, 0, internalFormat, width, 0, format, type, buffer);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         if (useMipmaps)
         {
             // Create mipmaps
             glGenerateMipmap(textureTarget);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
 
             // Calculate the number of mipmap levels
             this.levelCount = 0;
@@ -144,16 +144,16 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
             if (useLinearFiltering)
             {
                 glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
                 glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             }
             else
             {
                 glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
                 glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             }
         }
         else
@@ -164,26 +164,26 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
             if (useLinearFiltering)
             {
                 glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
                 glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             }
             else
             {
                 glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
                 glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             }
         }
 
         glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         if (maxAnisotropy > 1.0f)
         {
             glTexParameterf(textureTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
     }
 
@@ -213,19 +213,19 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
         {
         case None:
             glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
             break;
         case MirrorOnce:
             glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_MIRROR_CLAMP_TO_EDGE);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
             break;
         case Repeat:
             glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
             break;
         case MirroredRepeat:
             glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
             break;
         }
     }

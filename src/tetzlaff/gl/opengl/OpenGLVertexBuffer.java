@@ -44,7 +44,7 @@ class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLCont
         super.setData(data.getBuffer());
         this.count = data.getCount();
         this.vertexSize = data.getDimensions();
-        this.vertexType = context.getDataTypeConstant(data.getDataType());
+        this.vertexType = OpenGLContext.getDataTypeConstant(data.getDataType());
         this.normalize = normalize;
         return this;
     }
@@ -53,16 +53,16 @@ class OpenGLVertexBuffer extends OpenGLBuffer implements VertexBuffer<OpenGLCont
     {
         this.bind();
         glEnableVertexAttribArray(attribIndex);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
         if (this.vertexType == GL_FLOAT || this.vertexType == GL_DOUBLE)
         {
             glVertexAttribPointer(attribIndex, this.vertexSize, this.vertexType, this.normalize, 0, 0);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
         else
         {
             glVertexAttribIPointer(attribIndex, this.vertexSize, this.vertexType, 0, 0);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
     }
 }

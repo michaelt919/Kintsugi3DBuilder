@@ -106,13 +106,13 @@ class OpenGLShader implements Shader<OpenGLContext>
     private void init(int shaderType, String source)
     {
         shaderId = glCreateShader(shaderType);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
         glShaderSource(shaderId, source);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
         glCompileShader(shaderId);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
         int compiled = glGetShaderi(shaderId, GL_COMPILE_STATUS);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
         if (compiled == GL_FALSE)
         {
             throw new ShaderCompileFailureException(glGetShaderInfoLog(shaderId));
@@ -128,6 +128,6 @@ class OpenGLShader implements Shader<OpenGLContext>
     public void close()
     {
         glDeleteShader(shaderId);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 }

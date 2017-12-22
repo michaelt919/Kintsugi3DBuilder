@@ -36,16 +36,16 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     void bindForDraw(int x, int y, int width, int height)
     {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            this.context.throwInvalidFramebufferOperationException();
+            OpenGLContext.throwInvalidFramebufferOperationException();
         }
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         glViewport(x, y, width, height);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     void bindForDraw()
@@ -59,13 +59,13 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     void bindForRead(int attachmentIndex)
     {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, this.getId());
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            this.context.throwInvalidFramebufferOperationException();
+            OpenGLContext.throwInvalidFramebufferOperationException();
         }
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         selectColorSourceForRead(attachmentIndex);
     }
@@ -77,11 +77,11 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(width * height * 4);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         // use BGRA because due to byte order differences it ends up being ARGB
         glReadPixels(x, y, width, height, GL_BGRA, GL_UNSIGNED_BYTE, pixelBuffer);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         int[] pixelArray = new int[width * height];
         pixelBuffer.asIntBuffer().get(pixelArray);
@@ -102,10 +102,10 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         FloatBuffer pixelBuffer = BufferUtils.createFloatBuffer(width * height * 4);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         glReadPixels(x, y, width, height, GL_RGBA, GL_FLOAT, pixelBuffer);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         float[] pixelArray = new float[width * height * 4];
         pixelBuffer.get(pixelArray);
@@ -126,10 +126,10 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         IntBuffer pixelBuffer = BufferUtils.createIntBuffer(width * height * 4);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         glReadPixels(x, y, width, height, GL_RGBA_INTEGER, GL_INT, pixelBuffer);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         int[] pixelArray = new int[width * height * 4];
         pixelBuffer.get(pixelArray);
@@ -195,10 +195,10 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(width * height * 2);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 2);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         glReadPixels(x, y, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, pixelBuffer);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         short[] pixelArray = new short[width * height];
         pixelBuffer.asShortBuffer().get(pixelArray);
@@ -216,13 +216,13 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     public void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a)
     {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            this.context.throwInvalidFramebufferOperationException();
+            OpenGLContext.throwInvalidFramebufferOperationException();
         }
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         FloatBuffer buffer = BufferUtils.createFloatBuffer(4);
         buffer.put(r);
@@ -231,20 +231,20 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         buffer.put(a);
         buffer.flip();
         glClearBufferfv(GL_COLOR, attachmentIndex, buffer);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
     public void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a)
     {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            this.context.throwInvalidFramebufferOperationException();
+            OpenGLContext.throwInvalidFramebufferOperationException();
         }
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         IntBuffer buffer = BufferUtils.createIntBuffer(4);
         buffer.put(r);
@@ -253,26 +253,26 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         buffer.put(a);
         buffer.flip();
         glClearBufferiv(GL_COLOR, attachmentIndex, buffer);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
     public void clearDepthBuffer(float depth)
     {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            this.context.throwInvalidFramebufferOperationException();
+            OpenGLContext.throwInvalidFramebufferOperationException();
         }
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         FloatBuffer buffer = BufferUtils.createFloatBuffer(1);
         buffer.put(depth);
         buffer.flip();
         glClearBufferfv(GL_DEPTH, 0, buffer);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     @Override
@@ -285,18 +285,18 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     public void clearStencilBuffer(int stencilIndex)
     {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getId());
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            this.context.throwInvalidFramebufferOperationException();
+            OpenGLContext.throwInvalidFramebufferOperationException();
         }
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
 
         IntBuffer buffer = BufferUtils.createIntBuffer(1);
         buffer.put(stencilIndex);
         buffer.flip();
         glClearBufferiv(GL_STENCIL, 0, buffer);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 }

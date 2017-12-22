@@ -170,7 +170,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttribI1i(location, value);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }
@@ -188,7 +188,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttribI2i(location, value.x, value.y);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }
@@ -206,7 +206,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttribI3i(location, value.x, value.y, value.z);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }
@@ -224,7 +224,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttribI4i(location, value.x, value.y, value.z, value.w);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }
@@ -242,7 +242,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttrib1f(location, value);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }
@@ -260,7 +260,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttrib2f(location, value.x, value.y);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }
@@ -278,7 +278,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttrib3f(location, value.x, value.y, value.z);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }
@@ -296,7 +296,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttrib4f(location, value.x, value.y, value.z, value.w);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }
@@ -314,7 +314,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttrib1d(location, value);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }
@@ -332,7 +332,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttrib2d(location, value.x, value.y);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }
@@ -350,7 +350,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttrib3d(location, value.x, value.y, value.z);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }
@@ -368,7 +368,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
             settings.put(location, () ->
             {
                 glVertexAttrib4d(location, value.x, value.y, value.z, value.w);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             });
             return true;
         }

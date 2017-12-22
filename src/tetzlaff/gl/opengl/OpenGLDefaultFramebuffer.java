@@ -33,7 +33,7 @@ class OpenGLDefaultFramebuffer extends OpenGLFramebuffer
         else
         {
             glReadBuffer(GL_BACK);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
         }
     }
 }

@@ -45,14 +45,14 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
     public void flush()
     {
         glFlush();
-        openGLErrorCheck();
+        errorCheck();
     }
 
     @Override
     public void finish()
     {
         glFinish();
-        openGLErrorCheck();
+        errorCheck();
     }
 
     @Override
@@ -159,7 +159,7 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
     static void unbindBuffer(int bufferTarget, int index)
     {
         glBindBufferBase(bufferTarget, index, 0);
-        openGLErrorCheck();
+        errorCheck();
     }
 
     void unbindTextureUnit(int textureUnitIndex)
@@ -174,29 +174,29 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
                     (state.getMaxCombinedTextureImageUnits()-1) + ").");
         }
         glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
-        openGLErrorCheck();
+        errorCheck();
         glBindTexture(GL_TEXTURE_1D, 0);
-        openGLErrorCheck();
+        errorCheck();
         glBindTexture(GL_TEXTURE_2D, 0);
-        openGLErrorCheck();
+        errorCheck();
         glBindTexture(GL_TEXTURE_3D, 0);
-        openGLErrorCheck();
+        errorCheck();
         glBindTexture(GL_TEXTURE_1D_ARRAY, 0);
-        openGLErrorCheck();
+        errorCheck();
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-        openGLErrorCheck();
+        errorCheck();
         glBindTexture(GL_TEXTURE_RECTANGLE, 0);
-        openGLErrorCheck();
+        errorCheck();
         glBindTexture(GL_TEXTURE_BUFFER, 0);
-        openGLErrorCheck();
+        errorCheck();
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-        openGLErrorCheck();
+        errorCheck();
         glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
-        openGLErrorCheck();
+        errorCheck();
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-        openGLErrorCheck();
+        errorCheck();
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 0);
-        openGLErrorCheck();
+        errorCheck();
     }
 
     protected static int getOpenGLInternalColorFormat(ColorFormat format)
@@ -631,9 +631,9 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
     /**
      * Should always be called after any OpenGL function
      * Search for missing calls to this using this regex:
-     * gl[A-Z].*\(.*\);\s*[^\s(this.openGLErrorCheck\(\);)]
+     * gl[A-Z].*\(.*\);\s*[^\s(OpenGLContext.errorCheck\(\);)]
      */
-    protected static void openGLErrorCheck()
+    protected static void errorCheck()
     {
         int error = glGetError();
         switch (error)

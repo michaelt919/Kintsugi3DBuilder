@@ -20,13 +20,13 @@ class OpenGLVertexArray implements Resource
     {
         this.context = context;
         this.vaoId = glGenVertexArrays();
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     void bind()
     {
         glBindVertexArray(this.vaoId);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 
     void addVertexBuffer(int attributeIndex, VertexBuffer<OpenGLContext> buffer)
@@ -40,9 +40,9 @@ class OpenGLVertexArray implements Resource
             else
             {
                 glBindVertexArray(this.vaoId);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
                 ((OpenGLVertexBuffer)buffer).useAsVertexAttribute(attributeIndex);
                 this.count = Math.min(this.count, buffer.count());
             }
@@ -62,16 +62,16 @@ class OpenGLVertexArray implements Resource
         else
         {
             glBindVertexArray(this.vaoId);
-            this.context.openGLErrorCheck();
+            OpenGLContext.errorCheck();
             if (usesIndexing)
             {
                 glDrawElements(primitiveMode, this.count, GL_UNSIGNED_INT, 0);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             }
             else
             {
                 glDrawArrays(primitiveMode, 0, this.count);
-                this.context.openGLErrorCheck();
+                OpenGLContext.errorCheck();
             }
         }
     }
@@ -80,6 +80,6 @@ class OpenGLVertexArray implements Resource
     public void close()
     {
         glDeleteVertexArrays(this.vaoId);
-        this.context.openGLErrorCheck();
+        OpenGLContext.errorCheck();
     }
 }
