@@ -1071,6 +1071,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     this.gridDrawable.draw(PrimitiveMode.LINES, offscreenFBO);
                 }
 
+                context.getState().disableBackFaceCulling();
+
                 this.program.setUniform("imageBasedRenderingEnabled", false);
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
                 this.drawReferenceScene(offscreenFBO, view);
@@ -1122,6 +1124,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         }
                     }
                 }
+
+                context.getState().enableBackFaceCulling();
 
                 if (!lightingModel.areLightWidgetsEthereal())
                 {
