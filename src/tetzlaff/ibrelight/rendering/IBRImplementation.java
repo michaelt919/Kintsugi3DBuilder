@@ -921,8 +921,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @Override
     public void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride)
     {
-        FramebufferSize size = framebuffer.getSize();
-        this.draw(framebuffer, viewOverride, projectionOverride, size.width, size.height);
+        this.draw(framebuffer, viewOverride, projectionOverride, 64, 64);
     }
 
     @Override

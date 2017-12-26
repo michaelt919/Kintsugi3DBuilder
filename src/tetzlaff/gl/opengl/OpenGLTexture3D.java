@@ -66,9 +66,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
                         this.width,
                         this.height,
                         this.depth,
-                        (!this.isInternalFormatCompressed() &&
-                            (this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER ||
-                                this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER)) ? GL_RGBA_INTEGER : GL_RGBA,
+                        GL_RGBA,
                         this.areMultisampleLocationsFixed(),
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
@@ -84,9 +82,8 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
                         this.width,
                         this.height,
                         this.depth,
-                        (!this.isInternalFormatCompressed() &&
-                            (this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER ||
-                                this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER)) ? GL_RGBA_INTEGER : GL_RGBA,
+                        (this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER ||
+                            this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER) ? GL_RGBA_INTEGER : GL_RGBA,
                         this.areMultisampleLocationsFixed(),
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
@@ -401,7 +398,12 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         this.width = img.getWidth();
         this.height = img.getHeight();
 
-        int format = OpenGLContext.getPixelDataFormatFromDimensions(mappedType.getComponentCount());
+        int format = OpenGLContext.getPixelDataFormatFromDimensions(
+            mappedType.getComponentCount(),
+            !this.isInternalFormatCompressed() &&
+                (this.getInternalUncompressedColorFormat().dataType == DataType.SIGNED_INTEGER
+                    || this.getInternalUncompressedColorFormat().dataType == DataType.UNSIGNED_INTEGER));
+
         int type = OpenGLContext.getDataTypeConstant(mappedType.getNativeDataType());
         Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
         int mappedColorLength = mappedType.getSizeInBytes();
@@ -414,7 +416,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
 
         ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(img, null, flipVertical, bufferWrapperFunctionFull, mappedColorLength);
 
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, OpenGLTexture.getUnpackAlignment(format, type));
         OpenGLContext.errorCheck();
 
         glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, img.getWidth(), img.getHeight(), 1,
@@ -510,7 +512,11 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         this.width = colorImg.getWidth();
         this.height = colorImg.getHeight();
 
-        int format = OpenGLContext.getPixelDataFormatFromDimensions(mappedType.getComponentCount());
+        int format = OpenGLContext.getPixelDataFormatFromDimensions(
+            mappedType.getComponentCount(),
+            !this.isInternalFormatCompressed() &&
+                (this.getInternalUncompressedColorFormat().dataType == DataType.SIGNED_INTEGER
+                    || this.getInternalUncompressedColorFormat().dataType == DataType.UNSIGNED_INTEGER));
         int type = OpenGLContext.getDataTypeConstant(mappedType.getNativeDataType());
         Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
         int mappedColorLength = mappedType.getSizeInBytes();
@@ -524,7 +530,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(colorImg, maskImg, flipVertical, bufferWrapperFunctionFull, mappedColorLength);
 
 
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, OpenGLTexture.getUnpackAlignment(format, type));
         OpenGLContext.errorCheck();
 
         glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, colorImg.getWidth(), colorImg.getHeight(), 1,

@@ -32,6 +32,18 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
         int format;
     }
 
+    private static int getIntegerFormat(int format)
+    {
+        switch(format)
+        {
+            case GL_RED:  return GL_RED_INTEGER;
+            case GL_RG:   return GL_RG_INTEGER;
+            case GL_RGB:  return GL_RGB_INTEGER;
+            case GL_RGBA: return GL_RGBA_INTEGER;
+            default:      throw new IllegalArgumentException("Unrecognized format.");
+        }
+    }
+
     static class ColorBuilder extends ColorCubemapBuilderBase<OpenGLContext, OpenGLCubemap>
     {
         private final int textureTarget;
@@ -71,7 +83,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
             int index = cubemapFaceToIndex(face);
             faces[index].buffer = data.getBuffer();
             faces[index].dataType = data.getDataType();
-            faces[index].format = OpenGLContext.getPixelDataFormatFromDimensions(data.getDimensions());
+            faces[index].format = OpenGLContext.getPixelDataFormatFromDimensions(data.getDimensions(), false);
             return this;
         }
 
@@ -80,15 +92,22 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
         {
             for (int i = 0; i < 6; i++)
             {
-                if (faces[i].format == 0)
+                if(!this.isInternalFormatCompressed() &&
+                        (this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER
+                            || this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER))
                 {
-                    if(!this.isInternalFormatCompressed() &&
-                            (this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER
-                                || this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER))
+                    if (faces[i].format == 0)
                     {
                         faces[i].format = GL_RGBA_INTEGER;
                     }
                     else
+                    {
+                        faces[i].format = getIntegerFormat(faces[i].format);
+                    }
+                }
+                else
+                {
+                    if (faces[i].format == 0)
                     {
                         faces[i].format = GL_RGBA;
                     }
