@@ -10,7 +10,8 @@ layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int fragObjectID;
 
 #include "../colorappearance/colorappearance_subset.glsl"
-#include "../colorappearance/imgspace_subset.glsl"
+//#include "../colorappearance/imgspace_subset.glsl"
+#include "../colorappearance/svd_unpack_subset.glsl"
 
 #line 16 0
 
@@ -62,8 +63,8 @@ uniform bool fresnelEnabled;
 
 uniform bool perPixelWeightsEnabled;
 
-#define interpolateRoughness false
-#define residualImages false
+#define interpolateRoughness true
+#define residualImages true
 #define brdfMode false
 
 layout(std140) uniform ViewWeights

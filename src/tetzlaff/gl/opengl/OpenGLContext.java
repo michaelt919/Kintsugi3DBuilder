@@ -128,15 +128,39 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
         return this.textureFactory;
     }
 
-    static int getPixelDataFormatFromDimensions(int dimensions)
+    static int getPixelDataFormatFromDimensions(int dimensions, boolean integer)
     {
-        switch(dimensions)
+        if (integer)
         {
-        case 1: return GL_RED;
-        case 2: return GL_RG;
-        case 3: return GL_RGB;
-        case 4: return GL_RGBA;
-        default: throw new IllegalArgumentException("Data must be a vertex list of no more than 4 dimensions.");
+            switch (dimensions)
+            {
+                case 1:
+                    return GL_RED_INTEGER;
+                case 2:
+                    return GL_RG_INTEGER;
+                case 3:
+                    return GL_RGB_INTEGER;
+                case 4:
+                    return GL_RGBA_INTEGER;
+                default:
+                    throw new IllegalArgumentException("Data must be a vertex list of no more than 4 dimensions.");
+            }
+        }
+        else
+        {
+            switch (dimensions)
+            {
+                case 1:
+                    return GL_RED;
+                case 2:
+                    return GL_RG;
+                case 3:
+                    return GL_RGB;
+                case 4:
+                    return GL_RGBA;
+                default:
+                    throw new IllegalArgumentException("Data must be a vertex list of no more than 4 dimensions.");
+            }
         }
     }
 

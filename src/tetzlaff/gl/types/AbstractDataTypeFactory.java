@@ -19,6 +19,31 @@ public final class AbstractDataTypeFactory
     {
     }
 
+    private static Consumer<Number> wrapByteBuffer(ByteBuffer baseBuffer, NativeDataType nativeDataType)
+    {
+        switch(nativeDataType)
+        {
+            case UNSIGNED_BYTE:
+                return component -> baseBuffer.put(component.byteValue());
+            case BYTE:
+                return component -> baseBuffer.put(component.byteValue());
+            case UNSIGNED_SHORT:
+                return component -> baseBuffer.asShortBuffer().put(component.shortValue());
+            case SHORT:
+                return component -> baseBuffer.asShortBuffer().put(component.shortValue());
+            case UNSIGNED_INT:
+                return component -> baseBuffer.asIntBuffer().put(component.intValue());
+            case INT:
+                return component -> baseBuffer.asIntBuffer().put(component.intValue());
+            case FLOAT:
+                return component -> baseBuffer.asFloatBuffer().put(component.floatValue());
+            case DOUBLE:
+                return component -> baseBuffer.asDoubleBuffer().put(component.doubleValue());
+            default:
+                throw new UnsupportedOperationException("Unrecognized component data type.");
+        }
+    }
+
     private static final class MultiComponentDataType implements AbstractDataType<Iterable<Number>>
     {
         private final NativeDataType nativeDataType;
@@ -51,37 +76,7 @@ public final class AbstractDataTypeFactory
         @Override
         public Consumer<Iterable<Number>> wrapByteBuffer(ByteBuffer baseBuffer)
         {
-            Consumer<Number> componentConsumer;
-
-            switch(nativeDataType)
-            {
-                case UNSIGNED_BYTE:
-                    componentConsumer = component -> baseBuffer.put(component.byteValue());
-                    break;
-                case BYTE:
-                    componentConsumer = component -> baseBuffer.put(component.byteValue());
-                    break;
-                case UNSIGNED_SHORT:
-                    componentConsumer = component -> baseBuffer.asShortBuffer().put(component.shortValue());
-                    break;
-                case SHORT:
-                    componentConsumer = component -> baseBuffer.asShortBuffer().put(component.shortValue());
-                    break;
-                case UNSIGNED_INT:
-                    componentConsumer = component -> baseBuffer.asIntBuffer().put(component.intValue());
-                    break;
-                case INT:
-                    componentConsumer = component -> baseBuffer.asIntBuffer().put(component.intValue());
-                    break;
-                case FLOAT:
-                    componentConsumer = component -> baseBuffer.asFloatBuffer().put(component.floatValue());
-                    break;
-                case DOUBLE:
-                    componentConsumer = component -> baseBuffer.asDoubleBuffer().put(component.doubleValue());
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unrecognized component data type.");
-            }
+            Consumer<Number> componentConsumer = AbstractDataTypeFactory.wrapByteBuffer(baseBuffer, nativeDataType);
 
             return highLevelValue ->
             {
@@ -132,27 +127,7 @@ public final class AbstractDataTypeFactory
         @Override
         public Consumer<Number> wrapByteBuffer(ByteBuffer baseBuffer)
         {
-            switch(nativeDataType)
-            {
-                case UNSIGNED_BYTE:
-                    return component -> baseBuffer.put(component.byteValue());
-                case BYTE:
-                    return component -> baseBuffer.put(component.byteValue());
-                case UNSIGNED_SHORT:
-                    return component -> baseBuffer.asShortBuffer().put(component.shortValue());
-                case SHORT:
-                    return component -> baseBuffer.asShortBuffer().put(component.shortValue());
-                case UNSIGNED_INT:
-                    return component -> baseBuffer.asIntBuffer().put(component.intValue());
-                case INT:
-                    return component -> baseBuffer.asIntBuffer().put(component.intValue());
-                case FLOAT:
-                    return component -> baseBuffer.asFloatBuffer().put(component.floatValue());
-                case DOUBLE:
-                    return component -> baseBuffer.asDoubleBuffer().put(component.doubleValue());
-                default:
-                    throw new UnsupportedOperationException("Unrecognized component data type.");
-            }
+            return AbstractDataTypeFactory.wrapByteBuffer(baseBuffer, nativeDataType);
         }
     }
 

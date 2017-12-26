@@ -168,7 +168,11 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             int width = colorImg.getWidth();
             int height = colorImg.getHeight();
 
-            int format = OpenGLContext.getPixelDataFormatFromDimensions(mappedType.getComponentCount());
+            int format = OpenGLContext.getPixelDataFormatFromDimensions(
+                mappedType.getComponentCount(),
+                !this.isInternalFormatCompressed() &&
+                    (this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER
+                        || this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER));
             int type = OpenGLContext.getDataTypeConstant(mappedType.getNativeDataType());
             Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
             int mappedColorLength = mappedType.getSizeInBytes();
@@ -281,17 +285,17 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         private final int textureTarget;
         private final int width;
         private final int height;
-        private final int format;
+        private final int dimensions;
         private final int type;
         private final ByteBuffer buffer;
 
-        OpenGLTexture2DFromBufferBuilder(OpenGLContext context, int textureTarget, int width, int height, int format, int type, ByteBuffer buffer)
+        OpenGLTexture2DFromBufferBuilder(OpenGLContext context, int textureTarget, int width, int height, int dimensions, int type, ByteBuffer buffer)
         {
             super(context);
             this.textureTarget = textureTarget;
             this.width = width;
             this.height = height;
-            this.format = format;
+            this.dimensions = dimensions;
             this.type = type;
             this.buffer = buffer;
         }
@@ -307,7 +311,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                         this.getInternalCompressionFormat(),
                         this.width,
                         this.height,
-                        this.format,
+                        OpenGLContext.getPixelDataFormatFromDimensions(this.dimensions, false),
                         this.type,
                         this.buffer,
                         this.isLinearFilteringEnabled(),
@@ -322,7 +326,10 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                         this.getInternalColorFormat(),
                         this.width,
                         this.height,
-                        this.format,
+                        OpenGLContext.getPixelDataFormatFromDimensions(
+                            this.dimensions,
+                            this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER
+                                || this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER),
                         this.type,
                         this.buffer,
                         this.isLinearFilteringEnabled(),

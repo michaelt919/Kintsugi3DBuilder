@@ -35,17 +35,15 @@ class OpenGLTextureFactory implements TextureFactory<OpenGLContext>
     @Override
     public ColorTextureBuilder<OpenGLContext, ? extends Texture1D<OpenGLContext>> build1DColorTexture(NativeVectorBuffer data)
     {
-        return new OpenGLTexture1DFromBufferBuilder(context, GL_TEXTURE_1D, data.getCount(),
-            OpenGLContext.getPixelDataFormatFromDimensions(data.getDimensions()), OpenGLContext.getDataTypeConstant(data.getDataType()),
-            data.getBuffer());
+        return new OpenGLTexture1DFromBufferBuilder(context, GL_TEXTURE_1D, data.getCount(), data.getDimensions(),
+            OpenGLContext.getDataTypeConstant(data.getDataType()), data.getBuffer());
     }
 
     @Override
     public ColorTextureBuilder<OpenGLContext, ? extends Texture2D<OpenGLContext>> build2DColorTextureFromBuffer(int width, int height, NativeVectorBuffer data)
     {
-        return new OpenGLTexture2DFromBufferBuilder(context, GL_TEXTURE_2D, width, height,
-            OpenGLContext.getPixelDataFormatFromDimensions(data.getDimensions()), OpenGLContext.getDataTypeConstant(data.getDataType()),
-            data.getBuffer());
+        return new OpenGLTexture2DFromBufferBuilder(context, GL_TEXTURE_2D, width, height, data.getDimensions(),
+            OpenGLContext.getDataTypeConstant(data.getDataType()), data.getBuffer());
     }
 
     @Override
@@ -151,7 +149,7 @@ class OpenGLTextureFactory implements TextureFactory<OpenGLContext>
                 pixels.put(offset+3, value);                     // Permuted index
             }
         }
-        return new OpenGLTexture2DFromBufferBuilder(context, GL_TEXTURE_2D, 256, 256, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        return new OpenGLTexture2DFromBufferBuilder(context, GL_TEXTURE_2D, 256, 256, 4, GL_UNSIGNED_BYTE, pixels);
     }
 
     // End of supporting code

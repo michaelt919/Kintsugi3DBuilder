@@ -478,7 +478,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 else
                 {
                     this.colorTextures.loadLayer(i, imageFile, true,
-                        AbstractDataTypeFactory.getInstance().getSingleComponentDataType(NativeDataType.SHORT),
+                        AbstractDataTypeFactory.getInstance().getSingleComponentDataType(NativeDataType.UNSIGNED_SHORT),
                         color -> ((0x1F & (Math.round(Math.max(-1.0, (color.getRed() - 128) * 1.0 / 127.0) * 15) + 16)) << 11)
                             | ((0x3F & (Math.round(Math.max(-1.0, (color.getGreen() - 128) * 1.0 / 127.0) * 31) + 32)) << 5)
                             | (0x1F & (Math.round(Math.max(-1.0, (color.getBlue() - 128) * 1.0 / 127.0) * 15) + 16)));
