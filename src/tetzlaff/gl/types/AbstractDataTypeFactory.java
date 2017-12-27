@@ -1,6 +1,6 @@
 package tetzlaff.gl.types;
 
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
@@ -24,21 +24,29 @@ public final class AbstractDataTypeFactory
         switch(nativeDataType)
         {
             case UNSIGNED_BYTE:
-                return component -> baseBuffer.put(component.byteValue());
+                ByteBuffer ubyteBuffer = baseBuffer.slice();
+                return component -> ubyteBuffer.put(component.byteValue());
             case BYTE:
-                return component -> baseBuffer.put(component.byteValue());
+                ByteBuffer byteBuffer = baseBuffer.slice();
+                return component -> byteBuffer.put(component.byteValue());
             case UNSIGNED_SHORT:
-                return component -> baseBuffer.asShortBuffer().put(component.shortValue());
+                ShortBuffer ushortBuffer = baseBuffer.asShortBuffer();
+                return component -> ushortBuffer.put(component.shortValue());
             case SHORT:
-                return component -> baseBuffer.asShortBuffer().put(component.shortValue());
+                ShortBuffer shortBuffer = baseBuffer.asShortBuffer();
+                return component -> shortBuffer.put(component.shortValue());
             case UNSIGNED_INT:
-                return component -> baseBuffer.asIntBuffer().put(component.intValue());
+                IntBuffer uintBuffer = baseBuffer.asIntBuffer();
+                return component -> uintBuffer.put(component.intValue());
             case INT:
-                return component -> baseBuffer.asIntBuffer().put(component.intValue());
+                IntBuffer intBuffer = baseBuffer.asIntBuffer();
+                return component -> intBuffer.put(component.intValue());
             case FLOAT:
-                return component -> baseBuffer.asFloatBuffer().put(component.floatValue());
+                FloatBuffer floatBuffer = baseBuffer.asFloatBuffer();
+                return component -> floatBuffer.put(component.floatValue());
             case DOUBLE:
-                return component -> baseBuffer.asDoubleBuffer().put(component.doubleValue());
+                DoubleBuffer doubleBuffer = baseBuffer.asDoubleBuffer();
+                return component -> doubleBuffer.put(component.doubleValue());
             default:
                 throw new UnsupportedOperationException("Unrecognized component data type.");
         }

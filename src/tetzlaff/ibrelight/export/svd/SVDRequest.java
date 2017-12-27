@@ -138,9 +138,14 @@ public class SVDRequest implements IBRRequest
                             double[] scale = new double[effectiveSingularValues];
                             for (int svIndex = 0; svIndex < effectiveSingularValues; svIndex++)
                             {
+                                for (int k = 0; k < vMatrix.numRows(); k++)
+                                {
+                                    scale[svIndex] = Math.max(scale[svIndex], Math.abs(vMatrix.get(k, svIndex)));
+                                }
+
                                 for (int k = 0; k < uMatrix.numRows(); k++)
                                 {
-                                    scale[svIndex] = Math.max(scale[svIndex], Math.abs(uMatrix.get(k, svIndex)));
+                                    scale[svIndex] = Math.min(scale[svIndex], 1.0 / (singularValues[svIndex] * Math.abs(uMatrix.get(k, svIndex))));
                                 }
                             }
 
@@ -159,11 +164,11 @@ public class SVDRequest implements IBRRequest
 
                                             viewData[k][texturePixelIndex] = new float[3];
                                             viewData[k][texturePixelIndex][0] =
-                                                (float)(vMatrix.get(svIndex, 3 * k) * scale[svIndex] * singularValues[svIndex]);
+                                                (float)(vMatrix.get(3 * k, svIndex) / scale[svIndex]);
                                             viewData[k][texturePixelIndex][1] =
-                                                (float)(vMatrix.get(svIndex, 3 * k + 1) * scale[svIndex] * singularValues[svIndex]);
+                                                (float)(vMatrix.get(3 * k + 1, svIndex) / scale[svIndex]);
                                             viewData[k][texturePixelIndex][2] =
-                                                (float)(vMatrix.get(svIndex, 3 * k + 2) * scale[svIndex] * singularValues[svIndex]);
+                                                (float)(vMatrix.get(3 * k + 2, svIndex) / scale[svIndex]);
                                         }
                                     }
                                 }
@@ -179,7 +184,8 @@ public class SVDRequest implements IBRRequest
                                         int texturePixelIndex =
                                             (texHeight - currentBlockY * BLOCK_SIZE - y - 1) * texWidth + currentBlockX * BLOCK_SIZE + x;
 
-                                        textureData[svIndex][texturePixelIndex] = (float)(uMatrix.get(blockPixelIndex, svIndex) / scale[svIndex]);
+                                        textureData[svIndex][texturePixelIndex] = (float)(uMatrix.get(blockPixelIndex, svIndex)
+                                                                                            * scale[svIndex] * singularValues[svIndex]);
                                     }
                                 }
                             }
