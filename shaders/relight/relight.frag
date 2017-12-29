@@ -483,6 +483,90 @@ struct RoughnessSample
     vec3 weight;
 };
 
+RoughnessSample computeRoughnessSampleSingle(int index, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness, float maxLuminance)
+{
+    vec4 sampleColor = getColor(index);
+
+    if (sampleColor.a > 0.0)
+    {
+        // All in camera space
+        vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
+        vec3 sampleViewDir = normalize(-fragmentPos);
+        vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(index)].xyz - fragmentPos;
+        float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
+        vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
+        vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
+        vec3 normalDirCameraSpace = normalize((cameraPoses[index] * vec4(normalDir, 0.0)).xyz);
+        vec3 lightIntensity = getLightIntensity(index);
+
+        float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
+        float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
+        float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
+        float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
+
+        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
+            / (infiniteLightSources ? 1.0 : lightDistSquared);
+
+        vec3 geomAtten = pbrGeometricAttenuationEnabled ? geom(roughness, nDotH, nDotV, nDotL, hDotV) : vec3(nDotL * nDotV);
+
+        if (geomAtten != vec3(0))
+        {
+            float nDotHSq = nDotH * nDotH;
+            RoughnessSample roughnessSample;
+
+            vec3 mfdFresnelEstimate = dist(nDotH, roughness) * rgbToXYZ(fresnel(specularColor, vec3(1), hDotV));
+
+            if (residualImages)
+            {
+                vec3 sqrtRoughnessEstimate = sqrt(roughness) + sampleColor.xyz - vec3(0.5);
+                vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * geomAtten) / roughness - sqrt(mfdFresnelEstimate) * vec3(nDotHSq));
+                roughnessSample = RoughnessSample(denominator * sqrtRoughnessEstimate, denominator);
+            }
+            else
+            {
+                vec4 mfdFresnelSample;
+                vec4 specularResid = removeDiffuse(linearizeColor(sampleColor), diffuseContrib, nDotL, maxLuminance);
+
+                if(pbrGeometricAttenuationEnabled)
+                {
+                    mfdFresnelSample = vec4(specularResid.rgb
+                        * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared),
+                        sampleColor.a * geomAtten);
+                }
+                else
+                {
+                    mfdFresnelSample =
+                        vec4(specularResid.rgb * 4 / lightIntensity
+                            * (infiniteLightSources ? 1.0 : lightDistSquared),
+                            sampleColor.a * nDotL);
+                }
+
+                vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * mfdFresnelSample.a) / roughness
+                                       - sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(nDotHSq));
+
+                vec3 weight = max(vec3(0), sqrt(rgbToXYZ(specularColor) * mfdFresnelSample.a) / roughness
+                                    - sqrt(mfdFresnelEstimate) * vec3(nDotHSq));
+
+                roughnessSample = RoughnessSample(
+                    sqrt(sqrt(sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(1 - nDotHSq) / denominator)) * weight,
+                    weight);
+            }
+
+            roughnessSample.weightedSqrtRoughness = clamp(roughnessSample.weightedSqrtRoughness, vec3(0), roughnessSample.weight);
+
+            return roughnessSample;
+        }
+        else
+        {
+            return RoughnessSample(vec3(0), vec3(0));
+        }
+    }
+    else
+    {
+        return RoughnessSample(vec3(0), vec3(0));
+    }
+}
+
 RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int index, vec3 diffuseColor, vec3 normalDir,
     vec3 specularColor, vec3 roughness, float maxLuminance)
 {
@@ -738,15 +822,8 @@ float getBuehlerWeight(int index, vec3 targetDirection)
     return computeBuehlerWeight(mat3(cameraPoses[index]) * targetDirection, -normalize((cameraPoses[index] * vec4(fPosition, 1)).xyz));
 }
 
-vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
+void sort(int sampleCount, vec3 targetDirection, out float[MAX_BUEHLER_SAMPLE_COUNT] weights, out int[MAX_BUEHLER_SAMPLE_COUNT] indices)
 {
-    float maxLuminance = getMaxLuminance();
-
-    float weights[MAX_BUEHLER_SAMPLE_COUNT];
-    int indices[MAX_BUEHLER_SAMPLE_COUNT];
-
-    int sampleCount = 5; // TODO change to a parameter
-
     // Initialization
     for (int i = 0; i < sampleCount; i++)
     {
@@ -807,6 +884,18 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
             }
         }
     }
+}
+
+vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
+{
+    float maxLuminance = getMaxLuminance();
+
+    float weights[MAX_BUEHLER_SAMPLE_COUNT];
+    int indices[MAX_BUEHLER_SAMPLE_COUNT];
+
+    int sampleCount = 5; // TODO change to a parameter
+
+    sort(sampleCount, targetDirection, weights, indices);
 
     // Evaluate the light field
     // Because of the min-heap property, weights[0] should be the smallest weight
@@ -821,6 +910,33 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     }
 
     return sum / sum.a;
+}
+
+vec3 computeRoughnessBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
+{
+    float maxLuminance = getMaxLuminance();
+
+    float weights[MAX_BUEHLER_SAMPLE_COUNT];
+    int indices[MAX_BUEHLER_SAMPLE_COUNT];
+
+    int sampleCount = 5; // TODO change to a parameter
+
+    sort(sampleCount, targetDirection, weights, indices);
+
+    // Evaluate the light field
+    // Because of the min-heap property, weights[0] should be the smallest weight
+    vec4 sum = vec4(0.0);
+    for (int i = 1; i < sampleCount; i++)
+    {
+        RoughnessSample computedSample = computeRoughnessSampleSingle(indices[i], diffuseColor, normalDir, specularColor, roughness, maxLuminance);
+        if (computedSample.weight != vec3(0))
+        {
+            sum += (weights[i] - weights[0]) * vec4(computedSample.weightedSqrtRoughness / computedSample.weight, 1.0);
+        }
+    }
+
+    vec3 avg = sum.rgb / sum.a;
+    return avg * avg;
 }
 
 vec3 linearToSRGB(vec3 color)
@@ -1006,7 +1122,11 @@ void main()
     vec3 roughness;
     if (useRoughnessTexture)
     {
-        vec3 sqrtRoughness = texture(roughnessMap, fTexCoord).rgb;
+        vec3 roughnessLookup = texture(roughnessMap, fTexCoord).rgb;
+        vec3 sqrtRoughness = vec3(
+            roughnessLookup.y + roughnessLookup.x - 16.0 / 31.0,
+            roughnessLookup.y,
+            roughnessLookup.y + roughnessLookup.z - 16.0 / 31.0);
         roughness = sqrtRoughness * sqrtRoughness;
     }
     else
@@ -1019,15 +1139,14 @@ void main()
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
     vec3 reflectance = vec3(0.0);
 
-    vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
-
-    if (imageBasedRenderingEnabled)
-    {
-        weightedAverages = interpolateRoughness ?
-            computeWeightedRoughnessAverages(diffuseColor, normalDir, specularColor, roughness) :
-            computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
-
-    }
+//    vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
+//
+//    if (imageBasedRenderingEnabled)
+//    {
+//        weightedAverages = interpolateRoughness ?
+//            computeWeightedRoughnessAverages(diffuseColor, normalDir, specularColor, roughness) :
+//            computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
+//    }
 
     if (relightingEnabled)
     {
@@ -1123,24 +1242,31 @@ void main()
 
                 float nDotHSq = max(0, nDotH) * max(0, nDotH);
 
-//                // This is a hack to use Buehler algorithm for the light source
-//                weightedAverages[i] = computeBuehler(
-//                    useTSOverrides ? tangentToObject * halfDir : halfDir,
-//                    diffuseColor, normalDir, specularColor, roughness);
-
                 vec4 predictedMFD;
                 if (imageBasedRenderingEnabled)
                 {
                     if (interpolateRoughness)
                     {
-                        vec3 localRoughnessSq = weightedAverages[i].xyz * weightedAverages[i].xyz;
+                        // Use Buehler algorithm
+                        vec3 weightedAverage = computeRoughnessBuehler(
+                            useTSOverrides ? tangentToObject * halfDir : halfDir,
+                            diffuseColor, normalDir, specularColor, roughness);
+                        // vec3 weightedAverage = weightedAverages[i].xyz;
+
+                        vec3 localRoughnessSq = weightedAverage * weightedAverage;
                         vec3 mfdDenominatorRoot = 1 - nDotHSq * (1 - localRoughnessSq);
                         predictedMFD = vec4(max(vec3(0), xyzToRGB(localRoughnessSq * localRoughnessSq * specularColorXYZ
                             / (roughnessSq * mfdDenominatorRoot * mfdDenominatorRoot))), 25.0);
                     }
                     else
                     {
-                        predictedMFD = weightedAverages[i]
+                        // Use Buehler algorithm
+                        vec4 weightedAverage = computeBuehler(
+                            useTSOverrides ? tangentToObject * halfDir : halfDir,
+                            diffuseColor, normalDir, specularColor, roughness);
+                        // vec4 weightedAverage = weightedAverages[i];
+
+                        predictedMFD = weightedAverage
                             + (residualImages ? vec4(xyzToRGB(rgbToXYZ(specularColor) * dist(nDotH, roughness)), 0) : vec4(0));
                     }
                 }

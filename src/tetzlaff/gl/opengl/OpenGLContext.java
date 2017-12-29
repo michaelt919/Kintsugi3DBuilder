@@ -11,6 +11,8 @@ import tetzlaff.gl.glfw.GLFWWindowContextBase;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
 import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
+import tetzlaff.gl.types.AbstractDataType;
+import tetzlaff.gl.types.PackedDataType;
 
 import static org.lwjgl.opengl.EXTTextureCompressionS3TC.*;
 import static org.lwjgl.opengl.EXTTextureSRGB.*;
@@ -176,7 +178,34 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
         case INT: return GL_INT;
         case FLOAT: return GL_FLOAT;
         case DOUBLE: return GL_DOUBLE;
-        default: throw new IllegalArgumentException("Unrecognized data type."); // Shouldn't ever happen
+        case PACKED_BYTE:
+        case PACKED_SHORT:
+        case PACKED_INT:
+            throw new IllegalArgumentException("Packed native data type specified outside the context of a packing scheme.");
+        default:
+            throw new IllegalArgumentException("Unrecognized data type."); // Shouldn't ever happen
+        }
+    }
+
+    static int getDataTypeConstant(AbstractDataType<?> dataType)
+    {
+        if (dataType instanceof PackedDataType)
+        {
+            switch((PackedDataType)dataType)
+            {
+                case BYTE_3_3_2:        return GL_UNSIGNED_BYTE_3_3_2;
+                case SHORT_5_6_5:       return GL_UNSIGNED_SHORT_5_6_5;
+                case SHORT_5_5_5_1:     return GL_UNSIGNED_SHORT_5_5_5_1;
+                case SHORT_4_4_4_4:     return GL_UNSIGNED_SHORT_4_4_4_4;
+                case INT_10_10_10_2:    return GL_UNSIGNED_INT_10_10_10_2;
+                case INT_8_8_8_8:       return GL_UNSIGNED_INT_8_8_8_8;
+                default:
+                    throw new IllegalArgumentException("Unrecognized packed data type."); // Shouldn't ever happen
+            }
+        }
+        else
+        {
+            return getDataTypeConstant(dataType.getNativeDataType());
         }
     }
 

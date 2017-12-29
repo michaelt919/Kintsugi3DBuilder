@@ -404,7 +404,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
                 (this.getInternalUncompressedColorFormat().dataType == DataType.SIGNED_INTEGER
                     || this.getInternalUncompressedColorFormat().dataType == DataType.UNSIGNED_INTEGER));
 
-        int type = OpenGLContext.getDataTypeConstant(mappedType.getNativeDataType());
+        int type = OpenGLContext.getDataTypeConstant(mappedType);
         Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
         int mappedColorLength = mappedType.getSizeInBytes();
 
@@ -517,7 +517,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
             !this.isInternalFormatCompressed() &&
                 (this.getInternalUncompressedColorFormat().dataType == DataType.SIGNED_INTEGER
                     || this.getInternalUncompressedColorFormat().dataType == DataType.UNSIGNED_INTEGER));
-        int type = OpenGLContext.getDataTypeConstant(mappedType.getNativeDataType());
+        int type = OpenGLContext.getDataTypeConstant(mappedType);
         Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
         int mappedColorLength = mappedType.getSizeInBytes();
 

@@ -20,6 +20,7 @@ import tetzlaff.gl.types.AbstractDataType;
 import tetzlaff.gl.types.AbstractDataTypeFactory;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.IntVector2;
+import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.LoadingMonitor;
@@ -716,17 +717,19 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> diffuseTextureBuilder =
                     context.getTextureFactory().build2DColorTextureFromFile(diffuseFile, true);
 
-//                if (loadOptions.isCompressionRequested())
-//                {
-//                    diffuseTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-//                }
-//                else
-                diffuseTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                if (loadOptions.isCompressionRequested())
+                {
+                    diffuseTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+                }
+                else
+                {
+                    diffuseTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                }
 
                 diffuseTexture = diffuseTextureBuilder
-                        .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                        .setLinearFilteringEnabled(true)
-                        .createTexture();
+                    .setMipmapsEnabled(loadOptions.areMipmapsRequested())
+                    .setLinearFilteringEnabled(true)
+                    .createTexture();
             }
             else
             {
@@ -739,17 +742,19 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> normalTextureBuilder =
                     context.getTextureFactory().build2DColorTextureFromFile(normalFile, true);
 
-//                if (loadOptions.isCompressionRequested())
-//                {
-//                    normalTextureBuilder.setInternalFormat(CompressionFormat.RED_4BPP_GREEN_4BPP);
-//                }
-//                else
-                normalTextureBuilder.setInternalFormat(ColorFormat.RG8);
+                if (loadOptions.isCompressionRequested())
+                {
+                    normalTextureBuilder.setInternalFormat(CompressionFormat.RED_4BPP_GREEN_4BPP);
+                }
+                else
+                {
+                    normalTextureBuilder.setInternalFormat(ColorFormat.RG8);
+                }
 
                 normalTexture = normalTextureBuilder
-                        .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                        .setLinearFilteringEnabled(true)
-                        .createTexture();
+                    .setMipmapsEnabled(loadOptions.areMipmapsRequested())
+                    .setLinearFilteringEnabled(true)
+                    .createTexture();
             }
             else
             {
@@ -761,17 +766,19 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 System.out.println("Specular texture found.");
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> specularTextureBuilder =
                     context.getTextureFactory().build2DColorTextureFromFile(specularFile, true);
-//                if (loadOptions.isCompressionRequested())
-//                {
-//                    specularTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-//                }
-//                else
-                specularTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                if (loadOptions.isCompressionRequested())
+                {
+                    specularTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+                }
+                else
+                {
+                    specularTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                }
 
                 specularTexture = specularTextureBuilder
-                        .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                        .setLinearFilteringEnabled(true)
-                        .createTexture();
+                    .setMipmapsEnabled(loadOptions.areMipmapsRequested())
+                    .setLinearFilteringEnabled(true)
+                    .createTexture();
             }
             else
             {
@@ -781,15 +788,35 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             if (roughnessFile != null && roughnessFile.exists())
             {
                 System.out.println("Roughness texture found.");
-                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder =
-                    context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true);
+                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder;
 
-//                if (loadOptions.isCompressionRequested())
-//                {
-//                    roughnessTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-//                }
-//                else
-                roughnessTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                if (loadOptions.isCompressionRequested())
+                {
+                    // Use 16 bits to give the built-in compression algorithm extra precision to work with.
+                    roughnessTextureBuilder =
+                        context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true,
+                            AbstractDataTypeFactory.getInstance().getMultiComponentDataType(NativeDataType.UNSIGNED_SHORT, 3),
+                            color -> new IntVector3(
+                                (int)Math.max(0, Math.min(0xFFFF, Math.round(
+                                    (Math.max(-15.0, Math.min(15.0, (color.getRed() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 0xFFFF / 31.0))),
+                                (int)Math.max(0, Math.min(0xFFFF, Math.round(color.getGreen() * 0xFFFF / 255.0))),
+                                (int)Math.max(0, Math.min(0xFFFF, Math.round(
+                                    (Math.max(-15.0, Math.min(15.0, (color.getBlue() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 0xFFFF / 31.0)))));
+                    roughnessTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+                }
+                else
+                {
+                    roughnessTextureBuilder =
+                        context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true,
+                            AbstractDataTypeFactory.getInstance().getMultiComponentDataType(NativeDataType.UNSIGNED_BYTE, 3),
+                            color -> new IntVector3(
+                                (int)Math.max(0, Math.min(255, Math.round(
+                                    (Math.max(-15.0, Math.min(15.0, (color.getRed() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 255.0 / 31.0))),
+                                color.getGreen(),
+                                (int)Math.max(0, Math.min(255, Math.round(
+                                    (Math.max(-15.0, Math.min(15.0, (color.getBlue() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 255.0 / 31.0)))));
+                    roughnessTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                }
 
                 roughnessTexture = roughnessTextureBuilder
                         .setMipmapsEnabled(loadOptions.areMipmapsRequested())

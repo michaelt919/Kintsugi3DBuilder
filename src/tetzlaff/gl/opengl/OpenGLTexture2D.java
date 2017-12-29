@@ -173,7 +173,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                 !this.isInternalFormatCompressed() &&
                     (this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER
                         || this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER));
-            int type = OpenGLContext.getDataTypeConstant(mappedType.getNativeDataType());
+            int type = OpenGLContext.getDataTypeConstant(mappedType);
             Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
             int mappedColorLength = mappedType.getSizeInBytes();
 
