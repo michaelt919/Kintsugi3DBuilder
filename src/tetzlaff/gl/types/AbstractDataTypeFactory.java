@@ -19,26 +19,23 @@ public final class AbstractDataTypeFactory
     {
     }
 
-    private static Consumer<Number> wrapByteBuffer(ByteBuffer baseBuffer, NativeDataType nativeDataType)
+    static Consumer<Number> wrapByteBuffer(ByteBuffer baseBuffer, NativeDataType nativeDataType)
     {
         switch(nativeDataType)
         {
             case UNSIGNED_BYTE:
-                ByteBuffer ubyteBuffer = baseBuffer.slice();
-                return component -> ubyteBuffer.put(component.byteValue());
             case BYTE:
+            case PACKED_BYTE:
                 ByteBuffer byteBuffer = baseBuffer.slice();
                 return component -> byteBuffer.put(component.byteValue());
             case UNSIGNED_SHORT:
-                ShortBuffer ushortBuffer = baseBuffer.asShortBuffer();
-                return component -> ushortBuffer.put(component.shortValue());
             case SHORT:
+            case PACKED_SHORT:
                 ShortBuffer shortBuffer = baseBuffer.asShortBuffer();
                 return component -> shortBuffer.put(component.shortValue());
             case UNSIGNED_INT:
-                IntBuffer uintBuffer = baseBuffer.asIntBuffer();
-                return component -> uintBuffer.put(component.intValue());
             case INT:
+            case PACKED_INT:
                 IntBuffer intBuffer = baseBuffer.asIntBuffer();
                 return component -> intBuffer.put(component.intValue());
             case FLOAT:
@@ -52,7 +49,7 @@ public final class AbstractDataTypeFactory
         }
     }
 
-    private static final class MultiComponentDataType implements AbstractDataType<Iterable<Number>>
+    private static final class MultiComponentDataType implements AbstractDataType<Iterable<? extends Number>>
     {
         private final NativeDataType nativeDataType;
         private final int componentCount;
@@ -82,14 +79,14 @@ public final class AbstractDataTypeFactory
         }
 
         @Override
-        public Consumer<Iterable<Number>> wrapByteBuffer(ByteBuffer baseBuffer)
+        public Consumer<Iterable<? extends Number>> wrapByteBuffer(ByteBuffer baseBuffer)
         {
             Consumer<Number> componentConsumer = AbstractDataTypeFactory.wrapByteBuffer(baseBuffer, nativeDataType);
 
             return highLevelValue ->
             {
                 int componentIndex = 0;
-                Iterator<Number> iterator = highLevelValue.iterator();
+                Iterator<? extends Number> iterator = highLevelValue.iterator();
                 while (iterator.hasNext() && componentIndex < this.componentCount)
                 {
                     componentConsumer.accept(iterator.next());
@@ -144,7 +141,7 @@ public final class AbstractDataTypeFactory
         return new SingleComponentDataType(nativeType);
     }
 
-    public AbstractDataType<Iterable<Number>> getMultiComponentDataType(NativeDataType nativeType, int componentCount)
+    public AbstractDataType<Iterable<? extends Number>> getMultiComponentDataType(NativeDataType nativeType, int componentCount)
     {
         return new MultiComponentDataType(nativeType, componentCount);
     }

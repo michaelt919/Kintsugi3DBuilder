@@ -31,7 +31,11 @@ vec3 getSpecularColor()
 
 vec3 getSqrtRoughness()
 {
-    return texture(roughnessMap, fTexCoord).rgb;
+    vec3 roughnessLookup = texture(roughnessMap, fTexCoord).rgb;
+    return vec3(
+            roughnessLookup.y + roughnessLookup.x - 16.0 / 31.0,
+            roughnessLookup.y,
+            roughnessLookup.y + roughnessLookup.z - 16.0 / 31.0);
 }
 
 vec4 computeRoughnessResidual()
