@@ -368,31 +368,23 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 n
             / (infiniteLightSources ? 1.0 : lightDistSquared);
 
         vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-        if (!relightingEnabled || geomAtten != vec3(0))
+        if (geomAtten != vec3(0))
         {
             vec4 precomputedSample;
+            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
 
-            if (relightingEnabled)
+            if(pbrGeometricAttenuationEnabled)
             {
-                vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-
-                if(pbrGeometricAttenuationEnabled)
-                {
-                    precomputedSample = vec4(specularResid.rgb
-                        * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared),
-                        sampleColor.a * geomAtten);
-                }
-                else
-                {
-                    precomputedSample =
-                        vec4(specularResid.rgb * 4 / lightIntensity
-                            * (infiniteLightSources ? 1.0 : lightDistSquared),
-                            sampleColor.a * nDotL);
-                }
+                precomputedSample = vec4(specularResid.rgb
+                    * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared),
+                    sampleColor.a * geomAtten);
             }
             else
             {
-                precomputedSample = sampleColor;
+                precomputedSample =
+                    vec4(specularResid.rgb * 4 / lightIntensity
+                        * (infiniteLightSources ? 1.0 : lightDistSquared),
+                        sampleColor.a * nDotL);
             }
 
             if (residualImages)
@@ -520,7 +512,7 @@ RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int index, vec3 
 
         vec3 geomAtten = pbrGeometricAttenuationEnabled ? geom(roughness, nDotH, nDotV, nDotL, hDotV) : vec3(nDotL * nDotV);
 
-        if (!relightingEnabled || geomAtten != vec3(0))
+        if (geomAtten != vec3(0))
         {
             float nDotHSq = nDotH * nDotH;
             RoughnessSample precomputedSample;
@@ -563,7 +555,7 @@ RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int index, vec3 
                     weight);
             }
 
-            precomputedSample.weightedSqrtRoughness = clamp(precomputedSample.weightedSqrtRoughness, vec3(0), sqrt(0.5) * precomputedSample.weight);
+            precomputedSample.weightedSqrtRoughness = clamp(precomputedSample.weightedSqrtRoughness, vec3(0), sqrt(sqrt(0.5)) * precomputedSample.weight);
 
             mat3 tangentToObject = mat3(1.0);
 
@@ -833,41 +825,43 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
 
 vec3 linearToSRGB(vec3 color)
 {
-    vec3 sRGBColor;
+    return pow(color, vec3(1.0 / 2.2));
 
-    if(color.r <= 0.0031308)
-    {
-        sRGBColor.r = 12.92 * color.r;
-    }
-    else
-    {
-        sRGBColor.r = (1.055) * pow(color.r, 1.0/2.4) - 0.055;
-    }
-
-    if(color.g <= 0.0031308)
-    {
-        sRGBColor.g = 12.92 * color.g;
-    }
-    else
-    {
-        sRGBColor.g = (1.055) * pow(color.g, 1.0/2.4) - 0.055;
-    }
-
-    if(color.b <= 0.0031308)
-    {
-        sRGBColor.b = 12.92 * color.b;
-    }
-    else
-    {
-        sRGBColor.b = (1.055) * pow(color.b, 1.0/2.4) - 0.055;
-    }
-
-    return sRGBColor;
+//    vec3 sRGBColor;
+//
+//    if(color.r <= 0.0031308)
+//    {
+//        sRGBColor.r = 12.92 * color.r;
+//    }
+//    else
+//    {
+//        sRGBColor.r = (1.055) * pow(color.r, 1.0/2.4) - 0.055;
+//    }
+//
+//    if(color.g <= 0.0031308)
+//    {
+//        sRGBColor.g = 12.92 * color.g;
+//    }
+//    else
+//    {
+//        sRGBColor.g = (1.055) * pow(color.g, 1.0/2.4) - 0.055;
+//    }
+//
+//    if(color.b <= 0.0031308)
+//    {
+//        sRGBColor.b = 12.92 * color.b;
+//    }
+//    else
+//    {
+//        sRGBColor.b = (1.055) * pow(color.b, 1.0/2.4) - 0.055;
+//    }
+//
+//    return sRGBColor;
 }
 
-// vec3 sRGBToLinear(vec3 sRGBColor)
-// {
-    // //return pow(sRGBColor, vec3(2.2));
+vec3 sRGBToLinear(vec3 sRGBColor)
+{
+    return pow(sRGBColor, vec3(2.2));
 
     // vec3 linearColor;
 
@@ -899,50 +893,50 @@ vec3 linearToSRGB(vec3 color)
     // }
 
     // return linearColor;
-// }
+}
 
 vec4 tonemap(vec3 color, float alpha)
 {
-    // if (useInverseLuminanceMap)
-    // {
-        // if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
-        // {
-            // return vec4(0.0, 0.0, 0.0, 1.0);
-        // }
-        // else
-        // {
-            // // Step 1: convert to CIE luminance
-            // // Clamp to 1 so that the ratio computed in step 3 is well defined
-            // // if the luminance value somehow exceeds 1.0
-            // float luminance = getLuminance(color);
-            // float maxLuminance = getMaxLuminance();
-            // if (luminance >= maxLuminance)
-            // {
-                // return vec4(linearToSRGB(color / maxLuminance), alpha);
-            // }
-            // else
-            // {
-                // float scaledLuminance = min(1.0, luminance / maxLuminance);
-
-                // // Step 2: determine the ratio between the tonemapped and linear luminance
-                // // Remove implicit gamma correction from the lookup table
-                // float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
-                // float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
-                // float scale = tonemappedNoGamma / luminance;
-
-                // // Step 3: return the color, scaled to have the correct luminance,
-                // // but the original saturation and hue.
-                // // Step 4: apply gamma correction
-                // vec3 colorScaled = color * scale;
-                // return vec4(linearToSRGB(colorScaled), alpha);
-            // }
-        // }
-    // }
-    // else
-    {
-        //return vec4(linearToSRGB(color), alpha);
-        return vec4(pow(color, vec3(1.0 / renderGamma)), alpha);
-    }
+//     if (useInverseLuminanceMap)
+//     {
+//         if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
+//         {
+//             return vec4(0.0, 0.0, 0.0, 1.0);
+//         }
+//         else
+//         {
+//             // Step 1: convert to CIE luminance
+//             // Clamp to 1 so that the ratio computed in step 3 is well defined
+//             // if the luminance value somehow exceeds 1.0
+//             float luminance = getLuminance(color);
+//             float maxLuminance = getMaxLuminance();
+//             if (luminance >= maxLuminance)
+//             {
+//                 return vec4(linearToSRGB(color / maxLuminance), alpha);
+//             }
+//             else
+//             {
+//                 float scaledLuminance = min(1.0, luminance / maxLuminance);
+//
+//                 // Step 2: determine the ratio between the tonemapped and linear luminance
+//                 // Remove implicit gamma correction from the lookup table
+//                 float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
+//                 float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
+//                 float scale = tonemappedNoGamma / luminance;
+//
+//                 // Step 3: return the color, scaled to have the correct luminance,
+//                 // but the original saturation and hue.
+//                 // Step 4: apply gamma correction
+//                 vec3 colorScaled = color * scale;
+//                 return vec4(linearToSRGB(colorScaled), alpha);
+//             }
+//         }
+//     }
+//     else
+//    {
+//        return vec4(linearToSRGB(color), alpha);
+        return vec4(pow(color / getMaxLuminance(), vec3(1.0 / renderGamma)), alpha);
+//    }
 }
 
 void main()
@@ -1035,7 +1029,7 @@ void main()
 
     }
 
-    if (relightingEnabled || !imageBasedRenderingEnabled)
+    if (relightingEnabled)
     {
         reflectance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 
@@ -1082,8 +1076,9 @@ void main()
         //reflectance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
     }
 
-    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT &&
-        i < (relightingEnabled || !imageBasedRenderingEnabled ? virtualLightCount : 1); i++)
+    int effectiveLightCount = (relightingEnabled ? virtualLightCount : 1);
+
+    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < effectiveLightCount; i++)
     {
         vec3 lightDirUnNorm;
         vec3 lightDir;
@@ -1093,7 +1088,7 @@ void main()
             lightDirUnNorm = lightDir = lightDirTSOverride;
             nDotL = max(0.0, lightDir.z);
         }
-        else if (!imageBasedRenderingEnabled || relightingEnabled)
+        else if (relightingEnabled)
         {
             lightDirUnNorm = lightPosVirtual[i] - fPosition;
             lightDir = normalize(lightDirUnNorm);
@@ -1101,7 +1096,8 @@ void main()
         }
         else
         {
-            lightDirUnNorm = lightDir = viewDir;
+            lightDirUnNorm = viewPos - fPosition;
+            lightDir = viewDir;
             nDotL = max(0.0, dot(normalDir, viewDir));
         }
 
@@ -1151,7 +1147,7 @@ void main()
 
                 vec3 mfdFresnel;
 
-                if ((!imageBasedRenderingEnabled || relightingEnabled) && fresnelEnabled)
+                if (relightingEnabled && fresnelEnabled)
                 {
                     if (imageBasedRenderingEnabled)
                     {
@@ -1219,15 +1215,12 @@ void main()
                 vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
 
                 reflectance += (
-                    (relightingEnabled || !imageBasedRenderingEnabled ? nDotL * diffuseColor : vec3(0.0)) +
+                    nDotL * diffuseColor +
                     mfdFresnel
-                     * ((!imageBasedRenderingEnabled || relightingEnabled) && pbrGeometricAttenuationEnabled
-                        ? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV) :
-                            vec3(!imageBasedRenderingEnabled || relightingEnabled ? nDotL / 4 : 1.0)))
-                     * ((relightingEnabled || !imageBasedRenderingEnabled) ?
-                        (useTSOverrides ? lightIntensityVirtual[i] :
-                            lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed))
-                        : vec3(1.0))
+                     * (pbrGeometricAttenuationEnabled
+                        ? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV) : vec3(nDotL / 4))
+                     * (useTSOverrides ? lightIntensityVirtual[i] :
+                            lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed)))
                      / (brdfMode ? nDotL : 1.0);
             }
         }
