@@ -8,7 +8,6 @@ import java.time.Duration;
 import java.time.Instant;
 import javax.imageio.ImageIO;
 
-import org.ejml.data.FMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 import org.ejml.simple.SimpleSVD;
 import tetzlaff.gl.core.*;
@@ -303,7 +302,7 @@ public class SVDRequest implements IBRRequest
 
         resources.context.getState().disableBackFaceCulling();
 
-        SimpleMatrix result = new SimpleMatrix(BLOCK_SIZE * BLOCK_SIZE, resources.viewSet.getCameraPoseCount() * 3, FMatrixRMaj.class);
+        SimpleMatrix result = new SimpleMatrix(BLOCK_SIZE * BLOCK_SIZE, resources.viewSet.getCameraPoseCount() * 3/*, FMatrixRMaj.class*/);
 
         for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
         {

@@ -505,9 +505,9 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 {
                     this.colorTextures.loadLayer(i, imageFile, true,
                         AbstractDataTypeFactory.getInstance().getSingleComponentDataType(NativeDataType.UNSIGNED_SHORT),
-                        color -> ((0x1F & (Math.round(Math.max(-1.0, (color.getRed() - 128) * 1.0 / 127.0) * 15) + 16)) << 11)
-                            | ((0x3F & (Math.round(Math.max(-1.0, (color.getGreen() - 128) * 1.0 / 127.0) * 31) + 32)) << 5)
-                            | (0x1F & (Math.round(Math.max(-1.0, (color.getBlue() - 128) * 1.0 / 127.0) * 15) + 16)));
+                        color -> ((0x7F & (Math.max(-63, Math.min(63, Math.round((color.getGreen() - 128) * 63.0 / 127.0))) + 64)) << 9)
+                            | ((0x1F & (Math.max(-15, Math.min(15, Math.round((color.getBlue() - color.getGreen()) * 31.5 / 127.0))) + 16)) << 4)
+                            | (0x0F & (Math.max(-7, Math.min(7, Math.round((color.getRed() - color.getGreen()) * 31.5 / 127.0))) + 8)));
                 }
 
                 if(loadingMonitor != null)
@@ -900,7 +900,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         program.setTexture("eigentextures", this.eigentextures);
         program.setTexture("viewWeightTextures", this.colorTextures);
         program.setUniform("blockSize", new IntVector2(64, 64));
-        program.setUniform("viewWeightPacking", new IntVector2(4, 4));
 
 
         program.setTexture("viewImages", this.colorTextures);
