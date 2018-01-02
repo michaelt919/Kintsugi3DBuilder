@@ -34,7 +34,7 @@ vec4 getColor(int virtualIndex)
             color += vec3(int(unpackedViewWeights[2] * 2u + unpackedViewWeights[0]) - 80,
                           int(unpackedViewWeights[0]) - 64,
                           int(unpackedViewWeights[1] * 2u + unpackedViewWeights[0]) - 96) / 63.0
-                      * vec3(textureLod(eigentextures, vec3(fTexCoord, k), 0)[0]);
+                     * ((vec3(texture(eigentextures, vec3(fTexCoord, k))[0]) * 255 - 127) / 127.0);
         }
     }
 
