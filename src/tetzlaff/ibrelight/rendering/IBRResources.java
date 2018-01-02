@@ -333,9 +333,10 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 {
                     eigentexturesTemp = context.getTextureFactory()
                         .build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount())
-                        .setInternalFormat(CompressionFormat.SIGNED_RED_4BPP)
+                        .setInternalFormat(CompressionFormat.RED_4BPP)
                         .setMipmapsEnabled(true)
-                        .setLinearFilteringEnabled(true)
+                        .setMaxMipmapLevel(6) // = log2(blockSize) = log2(64)  TODO: make this configurable
+                        //.setLinearFilteringEnabled(true)
                         .setMaxAnisotropy(16.0f)
                         .createTexture();
 
@@ -344,37 +345,37 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
                     // TODO don't hardcode
                     eigentexturesTemp.loadLayer(0, new File(viewSet.getImageFilePath(), "sv_0000_00_00.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(1, new File(viewSet.getImageFilePath(), "sv_0001_00_01.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(2, new File(viewSet.getImageFilePath(), "sv_0002_00_02.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(3, new File(viewSet.getImageFilePath(), "sv_0003_00_03.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(4, new File(viewSet.getImageFilePath(), "sv_0004_01_00.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(5, new File(viewSet.getImageFilePath(), "sv_0005_01_01.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(6, new File(viewSet.getImageFilePath(), "sv_0006_01_02.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(7, new File(viewSet.getImageFilePath(), "sv_0007_01_03.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(8, new File(viewSet.getImageFilePath(), "sv_0008_02_00.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(9, new File(viewSet.getImageFilePath(), "sv_0009_02_01.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(10, new File(viewSet.getImageFilePath(), "sv_0010_02_02.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(11, new File(viewSet.getImageFilePath(), "sv_0011_02_03.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(12, new File(viewSet.getImageFilePath(), "sv_0012_03_00.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(13, new File(viewSet.getImageFilePath(), "sv_0013_03_01.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(14, new File(viewSet.getImageFilePath(), "sv_0014_03_02.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                     eigentexturesTemp.loadLayer(15, new File(viewSet.getImageFilePath(), "sv_0015_03_03.png"),
-                        true, signedByteType, unsignedToSignedConversion);
+                        true);//, signedByteType, unsignedToSignedConversion);
                 }
                 catch (IOException e)
                 {
@@ -594,30 +595,32 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 {
                     this.depthTextures = null;
 
-                    Texture2D<ContextType> depthAttachment =
-                        context.getTextureFactory().build2DDepthTexture(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
-                            .createTexture();
-                    depthRenderingFBO.setDepthAttachment(depthAttachment);
-
-                    depthRenderingFBO.clearDepthBuffer();
-
-                    depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(viewSet.getPrimaryViewIndex()));
-                    depthRenderingProgram.setUniform("projection",
-                        viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewSet.getPrimaryViewIndex()))
-                            .getProjectionMatrix(
-                                viewSet.getRecommendedNearPlane(),
-                                viewSet.getRecommendedFarPlane()
-                            )
-                    );
-
-                    depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
-
-                    short[] depthBufferData = depthRenderingFBO.readDepthBuffer();
-                    for (short encodedDepth : depthBufferData)
+                    try(Texture2D<ContextType> depthAttachment = context.getTextureFactory()
+                            .build2DDepthTexture(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
+                            .createTexture())
                     {
-                        int nonlinearDepth = 0xFFFF & (int) encodedDepth;
-                        minDepth = Math.min(minDepth, getLinearDepth((double) nonlinearDepth / 0xFFFF,
-                            viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+                        depthRenderingFBO.setDepthAttachment(depthAttachment);
+
+                        depthRenderingFBO.clearDepthBuffer();
+
+                        depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(viewSet.getPrimaryViewIndex()));
+                        depthRenderingProgram.setUniform("projection",
+                            viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewSet.getPrimaryViewIndex()))
+                                .getProjectionMatrix(
+                                    viewSet.getRecommendedNearPlane(),
+                                    viewSet.getRecommendedFarPlane()
+                                )
+                        );
+
+                        depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+
+                        short[] depthBufferData = depthRenderingFBO.readDepthBuffer();
+                        for (short encodedDepth : depthBufferData)
+                        {
+                            int nonlinearDepth = 0xFFFF & (int) encodedDepth;
+                            minDepth = Math.min(minDepth, getLinearDepth((double) nonlinearDepth / 0xFFFF,
+                                viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+                        }
                     }
                 }
 

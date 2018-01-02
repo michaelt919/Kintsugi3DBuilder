@@ -110,13 +110,28 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         this.bind();
     }
 
-    void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps)
+    void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel)
+    {
+        initFilteringAndMipmaps(useLinearFiltering, useMipmaps, maxMipmapLevel, true);
+    }
+
+    void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, boolean generateMipmaps)
     {
         if (useMipmaps)
         {
-            // Create mipmaps
-            glGenerateMipmap(this.getOpenGLTextureTarget());
-            OpenGLContext.errorCheck();
+            if (maxMipmapLevel < Integer.MAX_VALUE)
+            {
+                glTexParameteri(this.getOpenGLTextureTarget(), GL_TEXTURE_MAX_LEVEL, maxMipmapLevel);
+                OpenGLContext.errorCheck();
+            }
+
+            if (generateMipmaps)
+            {
+                // TODO use GL_GENERATE_MIPMAP texture parameter instead?
+                // Create mipmaps
+                glGenerateMipmap(this.getOpenGLTextureTarget());
+                OpenGLContext.errorCheck();
+            }
 
             if (useLinearFiltering)
             {

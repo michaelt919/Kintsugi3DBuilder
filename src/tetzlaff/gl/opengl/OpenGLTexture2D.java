@@ -30,11 +30,10 @@ import static org.lwjgl.opengl.GL32.*;
 
 final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLContext>
 {
-    private int textureTarget;
+    private int openGLTextureTarget;
     private int width;
     private int height;
-    private int multisamples;
-    private int levelCount;
+    private int mipmapLevelCount;
 
     static class OpenGLTexture2DFromFileBuilder extends ColorTextureBuilderBase<OpenGLContext, OpenGLTexture2D>
     {
@@ -95,6 +94,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                         buffer,
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
+                        this.getMaxMipmapLevel(),
                         this.getMaxAnisotropy());
             }
             else
@@ -110,6 +110,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                         buffer,
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
+                        this.getMaxMipmapLevel(),
                         this.getMaxAnisotropy());
             }
         }
@@ -198,6 +199,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                     buffer,
                     this.isLinearFilteringEnabled(),
                     this.areMipmapsEnabled(),
+                    this.getMaxMipmapLevel(),
                     this.getMaxAnisotropy());
             }
             else
@@ -213,6 +215,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                     buffer,
                     this.isLinearFilteringEnabled(),
                     this.areMipmapsEnabled(),
+                    this.getMaxMipmapLevel(),
                     this.getMaxAnisotropy());
             }
         }
@@ -260,6 +263,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                         buffer,
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
+                        this.getMaxMipmapLevel(),
                         this.getMaxAnisotropy());
             }
             else
@@ -275,6 +279,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                         buffer,
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
+                        this.getMaxMipmapLevel(),
                         this.getMaxAnisotropy());
             }
         }
@@ -316,6 +321,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                         this.buffer,
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
+                        this.getMaxMipmapLevel(),
                         this.getMaxAnisotropy());
             }
             else
@@ -334,6 +340,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                         this.buffer,
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
+                        this.getMaxMipmapLevel(),
                         this.getMaxAnisotropy());
             }
         }
@@ -369,6 +376,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                         this.areMultisampleLocationsFixed(),
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
+                        this.getMaxMipmapLevel(),
                         this.getMaxAnisotropy());
             }
             else
@@ -386,6 +394,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                         this.areMultisampleLocationsFixed(),
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
+                        this.getMaxMipmapLevel(),
                         this.getMaxAnisotropy());
             }
         }
@@ -420,6 +429,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                     this.areMultisampleLocationsFixed(),
                     this.isLinearFilteringEnabled(),
                     this.areMipmapsEnabled(),
+                    this.getMaxMipmapLevel(),
                     this.getMaxAnisotropy());
         }
     }
@@ -453,6 +463,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                     this.areMultisampleLocationsFixed(),
                     this.isLinearFilteringEnabled(),
                     this.areMipmapsEnabled(),
+                    this.getMaxMipmapLevel(),
                     this.getMaxAnisotropy());
         }
     }
@@ -486,70 +497,72 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
                     this.areMultisampleLocationsFixed(),
                     this.isLinearFilteringEnabled(),
                     this.areMipmapsEnabled(),
+                    this.getMaxMipmapLevel(),
                     this.getMaxAnisotropy());
         }
     }
 
-    private OpenGLTexture2D(OpenGLContext context, int textureTarget, ColorFormat colorFormat, int width, int height, int format, int type, ByteBuffer buffer,
-            boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
+    private OpenGLTexture2D(OpenGLContext context, int openGLTextureTarget, ColorFormat colorFormat, int width, int height, int format, int type, ByteBuffer buffer,
+            boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, colorFormat);
-        init(context, textureTarget, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, height, format, type, buffer,
-                useLinearFiltering, useMipmaps, maxAnisotropy);
+        init(openGLTextureTarget, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, height, format, type, buffer,
+                useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
     }
 
-    private OpenGLTexture2D(OpenGLContext context, int textureTarget, CompressionFormat compressionFormat, int width, int height, int format, int type, ByteBuffer buffer,
-            boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
+    private OpenGLTexture2D(OpenGLContext context, int openGLTextureTarget, CompressionFormat compressionFormat, int width, int height, int format, int type, ByteBuffer buffer,
+            boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, compressionFormat);
-        init(context, textureTarget, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, height, format, type, buffer,
-                useLinearFiltering, useMipmaps, maxAnisotropy);
+        init(openGLTextureTarget, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, height, format, type, buffer,
+                useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
     }
 
-    private OpenGLTexture2D(OpenGLContext context, int textureTarget, int multisamples, ColorFormat colorFormat, int width, int height, int format,
-            boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
+    private OpenGLTexture2D(OpenGLContext context, int openGLTextureTarget, int multisamples, ColorFormat colorFormat, int width, int height, int format,
+            boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, colorFormat);
-        init(context, textureTarget, multisamples, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, height, format,
-                fixedMultisampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
+        init(openGLTextureTarget, multisamples, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, height, format,
+                fixedMultisampleLocations, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
     }
 
-    private OpenGLTexture2D(OpenGLContext context, int textureTarget, int multisamples, CompressionFormat compressionFormat, int width, int height, int format,
-            boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
+    private OpenGLTexture2D(OpenGLContext context, int openGLTextureTarget, int multisamples, CompressionFormat compressionFormat, int width, int height, int format,
+            boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, compressionFormat);
-        init(context, textureTarget, multisamples, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, height, format,
-                fixedMultisampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
+        init(openGLTextureTarget, multisamples, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, height, format,
+                fixedMultisampleLocations, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
     }
 
-    private OpenGLTexture2D(OpenGLContext context, int textureTarget, int multisamples, TextureType textureType, int precision, int width, int height, int format,
-            boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
+    // TODO way too many parameters and too much repeated code across various texture subtypes
+    private OpenGLTexture2D(OpenGLContext context, int openGLTextureTarget, int multisamples, TextureType textureType, int precision, int width, int height, int format,
+            boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, textureType);
-        init(context, textureTarget, multisamples, getSpecialInternalFormat(context, textureType, precision), width, height, format,
-                fixedMultisampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
+        init(openGLTextureTarget, multisamples, getSpecialInternalFormat(context, textureType, precision), width, height, format,
+                fixedMultisampleLocations, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
     }
 
-    private void init(OpenGLContext context, int textureTarget, int multisamples, int internalFormat, int width, int height, int format,
-            boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
+    private void init(int textureTarget, int multisamples, int internalFormat, int width, int height, int format,
+            boolean fixedMultisampleLocations, boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
-        this.textureTarget = textureTarget;
+        this.openGLTextureTarget = textureTarget;
         this.bind();
         this.width = width;
         this.height = height;
         if (textureTarget == GL_TEXTURE_2D && multisamples > 1)
         {
-            this.textureTarget = GL_TEXTURE_2D_MULTISAMPLE;
-            this.levelCount = 1;
+            this.openGLTextureTarget = GL_TEXTURE_2D_MULTISAMPLE;
+            this.mipmapLevelCount = 1;
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, multisamples, internalFormat, width, height, fixedMultisampleLocations);
             OpenGLContext.errorCheck();
-            this.initFilteringAndMipmaps(false, false);  // linear filtering and mipmaps not allowed with multisampling
+            this.initFilteringAndMipmaps(false, false, 0); // linear filtering and mipmaps not allowed with multisampling
             // TODO: multisample textures don't seem to work correctly
         }
         else
@@ -557,7 +570,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             // Last four parameters are essentially meaningless, but are subject to certain validation conditions
             glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, 0);
             OpenGLContext.errorCheck();
-            this.initFilteringAndMipmaps(useLinearFiltering, useMipmaps);
+            this.initFilteringAndMipmaps(useLinearFiltering, useMipmaps, maxMipmapLevel);
         }
 
         if (maxAnisotropy > 1.0f)
@@ -567,10 +580,10 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         }
     }
 
-    private void init(OpenGLContext context, int textureTarget, int internalFormat, int width, int height, int format, int type, ByteBuffer buffer,
-            boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
+    private void init(int textureTarget, int internalFormat, int width, int height, int format, int type, ByteBuffer buffer,
+            boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
-        this.textureTarget = textureTarget;
+        this.openGLTextureTarget = textureTarget;
         this.bind();
         this.width = width;
         this.height = height;
@@ -580,7 +593,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
 
         glTexImage2D(textureTarget, 0, internalFormat, width, height, 0, format, type, buffer);
         OpenGLContext.errorCheck();
-        this.initFilteringAndMipmaps(useLinearFiltering, useMipmaps);
+        this.initFilteringAndMipmaps(useLinearFiltering, useMipmaps, maxMipmapLevel);
 
         if (maxAnisotropy > 1.0f)
         {
@@ -590,31 +603,31 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     }
 
     @Override
-    void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps)
+    void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, boolean generateMipmaps)
     {
-        super.initFilteringAndMipmaps(useLinearFiltering, useMipmaps);
+        super.initFilteringAndMipmaps(useLinearFiltering, useMipmaps, maxMipmapLevel, generateMipmaps);
 
         if (useMipmaps)
         {
             // Calculate the number of mipmap levels
-            this.levelCount = 0;
+            this.mipmapLevelCount = 0;
             int dim = Math.max(width, height);
-            while (dim > 1)
+            while (dim > 1 && this.mipmapLevelCount < maxMipmapLevel)
             {
-                this.levelCount++;
+                this.mipmapLevelCount++;
                 dim /= 2;
             }
         }
         else
         {
             // No mipmaps
-            this.levelCount = 1;
+            this.mipmapLevelCount = 1;
         }
 
-        glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(openGLTextureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         OpenGLContext.errorCheck();
         
-        glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(openGLTextureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         OpenGLContext.errorCheck();
     }
 
@@ -630,21 +643,16 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
         return this.height;
     }
 
-    public int getMultisamples()
-    {
-        return this.multisamples;
-    }
-
     @Override
     protected int getOpenGLTextureTarget()
     {
-        return this.textureTarget;
+        return this.openGLTextureTarget;
     }
 
     @Override
     public int getMipmapLevelCount()
     {
-        return this.levelCount;
+        return this.mipmapLevelCount;
     }
 
     @Override
@@ -656,13 +664,13 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
 
         if (numericWrapS != 0)
         {
-            glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, numericWrapS);
+            glTexParameteri(openGLTextureTarget, GL_TEXTURE_WRAP_S, numericWrapS);
             OpenGLContext.errorCheck();
         }
 
         if (numericWrapT != 0)
         {
-            glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, numericWrapT);
+            glTexParameteri(openGLTextureTarget, GL_TEXTURE_WRAP_T, numericWrapT);
             OpenGLContext.errorCheck();
         }
     }

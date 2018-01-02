@@ -10,6 +10,7 @@ public abstract class TextureBuilderBase<ContextType extends Context<ContextType
     private int multisamples = 1;
     private boolean fixedMultisampleLocations = true;
     private boolean mipmapsEnabled = false;
+    private int maxMipmapLevel = Integer.MAX_VALUE;
     private boolean linearFilteringEnabled = false;
     private float maxAnisotropy = 1.0f;
 
@@ -26,6 +27,11 @@ public abstract class TextureBuilderBase<ContextType extends Context<ContextType
     protected boolean areMipmapsEnabled()
     {
         return mipmapsEnabled;
+    }
+
+    protected int getMaxMipmapLevel()
+    {
+        return maxMipmapLevel;
     }
 
     protected boolean isLinearFilteringEnabled()
@@ -55,6 +61,13 @@ public abstract class TextureBuilderBase<ContextType extends Context<ContextType
     public TextureBuilder<ContextType, TextureType> setMipmapsEnabled(boolean enabled)
     {
         mipmapsEnabled = enabled;
+        return this;
+    }
+
+    @Override
+    public TextureBuilder<ContextType, TextureType> setMaxMipmapLevel(int maxMipmapLevel)
+    {
+        this.maxMipmapLevel = maxMipmapLevel;
         return this;
     }
 

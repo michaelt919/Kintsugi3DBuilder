@@ -13,7 +13,7 @@ layout(location = 1) out int fragObjectID;
 //#include "../colorappearance/imgspace_subset.glsl"
 #include "../colorappearance/svd_unpack_subset.glsl"
 
-#line 16 0
+#line 17 0
 
 uniform int objectID;
 
@@ -176,11 +176,10 @@ vec3 geom(vec3 roughness, float nDotH, float nDotV, float nDotL, float hDotV)
 vec3 computeMicrofacetDistributionGGX(float nDotH, vec3 roughness)
 {
     vec3 roughnessSquared = roughness * roughness;
-    float nDotHSquared = nDotH * nDotH;
-    vec3 q = roughnessSquared + (1 - nDotHSquared) / nDotHSquared;
+    vec3 sqrtDenominator = (roughnessSquared - 1) * nDotH * nDotH + 1;
 
     // Assume scaling by pi
-    return roughnessSquared / (nDotHSquared * nDotHSquared * q * q);
+    return roughnessSquared / (sqrtDenominator * sqrtDenominator);
 }
 
 vec3 computeMicrofacetDistributionBeckmann(float nDotH, vec3 roughness)
@@ -825,14 +824,14 @@ float getBuehlerWeight(int index, vec3 targetDirection)
 void sort(int sampleCount, vec3 targetDirection, out float[MAX_BUEHLER_SAMPLE_COUNT] weights, out int[MAX_BUEHLER_SAMPLE_COUNT] indices)
 {
     // Initialization
-    for (int i = 0; i < sampleCount; i++)
+    for (int i = 0; i < MAX_BUEHLER_SAMPLE_COUNT && i < sampleCount; i++)
     {
         weights[i] = -(1.0 / 0.0); // Parentheses needed for AMD cards.
         indices[i] = -1;
     }
 
     // Partial heapsort
-    for (int i = 0; i < viewCount; i++)
+    for (int i = 0; i < MAX_CAMERA_POSE_COUNT && i < viewCount; i++)
     {
         float weight = getBuehlerWeight(i, targetDirection);
         if (weight >= weights[0]) // Decide if the new view goes in the heap
@@ -886,6 +885,46 @@ void sort(int sampleCount, vec3 targetDirection, out float[MAX_BUEHLER_SAMPLE_CO
     }
 }
 
+void sortFast(vec3 targetDirection, out float[MAX_BUEHLER_SAMPLE_COUNT] weights, out int[MAX_BUEHLER_SAMPLE_COUNT] indices)
+{
+    float indicesFP[MAX_BUEHLER_SAMPLE_COUNT];
+
+    // Initialization
+    for (int i = 0; i < MAX_BUEHLER_SAMPLE_COUNT; i++)
+    {
+        weights[i] = 0.0;
+        indicesFP[i] = -1;
+    }
+
+    // Partial insertion sort
+    for (int i = 0; i < MAX_CAMERA_POSE_COUNT && i < viewCount; i++)
+    {
+        float weight = getBuehlerWeight(i, targetDirection);
+
+        vec2 newValues = mix(vec2(weights[0], indicesFP[0]), vec2(weight, float(i)), max(0, sign(weight - weights[0])));
+        weights[0] = newValues[0];
+        indicesFP[0] = newValues[1];
+
+        for (int j = 1; j < MAX_BUEHLER_SAMPLE_COUNT; j++)
+        {
+            vec4 reorderedValues = mix(
+                vec4(weights[j-1], weights[j], indicesFP[j-1], indicesFP[j]),
+                vec4(weights[j], weights[j-1], indicesFP[j], indicesFP[j-1]),
+                max(0, sign(weights[j-1] - weights[j])));  // 1 if a swap is necessary, 0, otherwise
+
+            weights[j-1] = reorderedValues[0];
+            weights[j] = reorderedValues[1];
+            indicesFP[j-1] = reorderedValues[2];
+            indicesFP[j] = reorderedValues[3];
+        }
+    }
+
+    for (int i = 0; i < MAX_BUEHLER_SAMPLE_COUNT; i++)
+    {
+        indices[i] = int(round(indicesFP[i]));
+    }
+}
+
 vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
 {
     float maxLuminance = getMaxLuminance();
@@ -921,7 +960,7 @@ vec3 computeRoughnessBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 norma
 
     int sampleCount = 5; // TODO change to a parameter
 
-    sort(sampleCount, targetDirection, weights, indices);
+    sortFast(targetDirection, weights, indices);
 
     // Evaluate the light field
     // Because of the min-heap property, weights[0] should be the smallest weight
@@ -1148,52 +1187,52 @@ void main()
 //            computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
 //    }
 
-    if (relightingEnabled)
-    {
-        reflectance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
-
-        if (imageBasedRenderingEnabled)
-        {
-            // Old fresnel implementation
-            // if (fresnelEnabled)
-            // {
-                // reflectance +=
-                    // fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
-                        // getEnvironmentFresnel(
-                            // (envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz,
-                                // pow(1 - nDotV, 5)), nDotV);
-            // }
-            // else
-            {
-                reflectance += getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
-            }
-        }
-        else
-        {
-            vec3 reflectivity;
-            if (useSpecularTexture)
-            {
-                reflectivity = min(vec3(1.0), diffuseColor + specularColor);
-            }
-            else
-            {
-                reflectivity = diffuseColor;
-            }
-
-            if (fresnelEnabled)
-            {
-                reflectance += fresnel(ambientColor * reflectivity, ambientColor, nDotV);
-            }
-            else
-            {
-                reflectance += ambientColor * reflectivity;
-            }
-        }
-
-        // For debugging environment mapping:
-        //reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
-        //reflectance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
-    }
+//    if (relightingEnabled)
+//    {
+//        reflectance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+//
+//        if (imageBasedRenderingEnabled)
+//        {
+//            // Old fresnel implementation
+//            // if (fresnelEnabled)
+//            // {
+//                // reflectance +=
+//                    // fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
+//                        // getEnvironmentFresnel(
+//                            // (envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz,
+//                                // pow(1 - nDotV, 5)), nDotV);
+//            // }
+//            // else
+//            {
+//                reflectance += getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
+//            }
+//        }
+//        else
+//        {
+//            vec3 reflectivity;
+//            if (useSpecularTexture)
+//            {
+//                reflectivity = min(vec3(1.0), diffuseColor + specularColor);
+//            }
+//            else
+//            {
+//                reflectivity = diffuseColor;
+//            }
+//
+//            if (fresnelEnabled)
+//            {
+//                reflectance += fresnel(ambientColor * reflectivity, ambientColor, nDotV);
+//            }
+//            else
+//            {
+//                reflectance += ambientColor * reflectivity;
+//            }
+//        }
+//
+//        // For debugging environment mapping:
+//        //reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
+//        //reflectance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+//    }
 
     int effectiveLightCount = (relightingEnabled ? virtualLightCount : 1);
 
@@ -1267,7 +1306,7 @@ void main()
                         // vec4 weightedAverage = weightedAverages[i];
 
                         predictedMFD = weightedAverage
-                            + (residualImages ? vec4(xyzToRGB(rgbToXYZ(specularColor) * dist(nDotH, roughness)), 0) : vec4(0));
+                            + (residualImages ? vec4(xyzToRGB(specularColorXYZ * dist(nDotH, roughness)), 0) : vec4(0));
                     }
                 }
 
@@ -1322,7 +1361,7 @@ void main()
                     }
                     else
                     {
-                        vec3 mfdFresnelBaseXYZ = rgbToXYZ(specularColor) * dist(nDotH, roughness);
+                        vec3 mfdFresnelBaseXYZ = specularColorXYZ * dist(nDotH, roughness);
                         mfdFresnel = fresnel(xyzToRGB(mfdFresnelBaseXYZ), vec3(mfdFresnelBaseXYZ.y), hDotV);
                     }
                 }
@@ -1334,7 +1373,7 @@ void main()
                     }
                     else
                     {
-                        mfdFresnel = xyzToRGB(rgbToXYZ(specularColor) * dist(nDotH, roughness));
+                        mfdFresnel = xyzToRGB(specularColorXYZ * dist(nDotH, roughness));
                     }
                 }
 

@@ -117,6 +117,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
             OptionalParameters opt = new OptionalParameters();
             opt.useLinearFiltering = this.isLinearFilteringEnabled();
             opt.useMipmaps = this.areMipmapsEnabled();
+            opt.maxMipmapLevel = this.getMaxMipmapLevel();
             opt.maxAnisotropy = this.getMaxAnisotropy();
             opt.positiveX = faces[0];
             opt.negativeX = faces[1];
@@ -164,6 +165,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
             OptionalParameters opt = new OptionalParameters(GL_DEPTH_COMPONENT);
             opt.useLinearFiltering = this.isLinearFilteringEnabled();
             opt.useMipmaps = this.areMipmapsEnabled();
+            opt.maxMipmapLevel = this.getMaxMipmapLevel();
             opt.maxAnisotropy = this.getMaxAnisotropy();
 
             return new OpenGLCubemap(
@@ -194,6 +196,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
             OptionalParameters opt = new OptionalParameters(GL_STENCIL_INDEX);
             opt.useLinearFiltering = this.isLinearFilteringEnabled();
             opt.useMipmaps = this.areMipmapsEnabled();
+            opt.maxMipmapLevel = this.getMaxMipmapLevel();
             opt.maxAnisotropy = this.getMaxAnisotropy();
 
             return new OpenGLCubemap(
@@ -224,6 +227,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
             OptionalParameters opt = new OptionalParameters(GL_DEPTH_STENCIL);
             opt.useLinearFiltering = this.isLinearFilteringEnabled();
             opt.useMipmaps = this.areMipmapsEnabled();
+            opt.maxMipmapLevel = this.getMaxMipmapLevel();
             opt.maxAnisotropy = this.getMaxAnisotropy();
 
             return new OpenGLCubemap(
@@ -247,6 +251,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
 
         boolean useLinearFiltering = false;
         boolean useMipmaps = false;
+        int maxMipmapLevel = Integer.MAX_VALUE;
         float maxAnisotropy = 1.0f;
 
         OptionalParameters()
@@ -388,7 +393,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
             OpenGLContext.errorCheck();
         }
 
-        this.initFilteringAndMipmaps(opt.useLinearFiltering, opt.useMipmaps);
+        this.initFilteringAndMipmaps(opt.useLinearFiltering, opt.useMipmaps, opt.maxMipmapLevel);
 
         if (opt.maxAnisotropy > 1.0f)
         {
@@ -398,9 +403,9 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
     }
 
     @Override
-    void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps)
+    void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, boolean generateMipmaps)
     {
-        super.initFilteringAndMipmaps(useLinearFiltering, useMipmaps);
+        super.initFilteringAndMipmaps(useLinearFiltering, useMipmaps, maxMipmapLevel, generateMipmaps);
 
         if (useMipmaps)
         {

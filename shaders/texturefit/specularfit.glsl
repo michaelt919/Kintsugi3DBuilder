@@ -16,8 +16,8 @@ uniform float fittingGamma;
 uniform bool standaloneMode;
 
 #define fitNearSpecularOnly false // should be true for DARPA stuff (at least when comparing with Joey), false for cultural heritage
-#define chromaticRoughness false
-#define chromaticSpecular false
+#define chromaticRoughness true
+#define chromaticSpecular true
 #define aggressiveNormal false
 #define USE_INFINITE_LIGHT_SOURCES infiniteLightSources
 #define USE_LIGHT_INTENSITIES true
