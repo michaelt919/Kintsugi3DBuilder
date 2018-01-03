@@ -1,4 +1,5 @@
 #version 330
+#extension GL_ARB_texture_query_lod : enable
 
 in vec3 fPosition;
 in vec2 fTexCoord;
@@ -13,7 +14,7 @@ layout(location = 1) out int fragObjectID;
 //#include "../colorappearance/imgspace_subset.glsl"
 #include "../colorappearance/svd_unpack_subset.glsl"
 
-#line 17 0
+#line 18 0
 
 uniform int objectID;
 

@@ -108,7 +108,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private VertexBuffer<ContextType> refSceneNormals;
     private Texture2D<ContextType> refSceneTexture;
     
-    private final List<String> sceneObjectNameList;
+    private final String[] sceneObjectNameList;
     private final Map<String, Integer> sceneObjectIDLookup;
     private int[] pixelObjectIDs;
     private short[] pixelDepths;
@@ -129,44 +129,41 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         this.multiTransformationModel.add(Matrix4.IDENTITY);
         this.settingsModel = new DefaultSettingsModel();
 
-        this.sceneObjectNameList = new ArrayList<>(64);
-        this.sceneObjectIDLookup = new HashMap<>(64);
+        this.sceneObjectNameList = new String[256];
+        this.sceneObjectIDLookup = new HashMap<>(256);
 
-        this.sceneObjectNameList.add(null);
+        this.sceneObjectNameList[0] = null;
 
-        int k = 1;
+        this.sceneObjectNameList[1] = "IBRObject";
+        this.sceneObjectIDLookup.put("IBRObject", 1);
 
-        this.sceneObjectNameList.add("IBRObject");
-        this.sceneObjectIDLookup.put("IBRObject", k);
-        k++;
+        this.sceneObjectNameList[2] = "EnvironmentMap";
+        this.sceneObjectIDLookup.put("EnvironmentMap", 2);
 
-        this.sceneObjectNameList.add("EnvironmentMap");
-        this.sceneObjectIDLookup.put("EnvironmentMap", k);
-        k++;
+        this.sceneObjectNameList[3] = "SceneObject";
+        this.sceneObjectIDLookup.put("SceneObject", 3);
 
-        this.sceneObjectNameList.add("SceneObject");
-        this.sceneObjectIDLookup.put("SceneObject", k);
-        k++;
+        int k = 4;
 
         for (int i = 0; i < 4; i++)
         {
-            this.sceneObjectNameList.add("Light." + i);
+            this.sceneObjectNameList[k] = "Light." + i;
             this.sceneObjectIDLookup.put("Light." + i, k);
             k++;
 
-            this.sceneObjectNameList.add("Light." + i + ".Center");
+            this.sceneObjectNameList[k] = "Light." + i + ".Center";
             this.sceneObjectIDLookup.put("Light." + i + ".Center", k);
             k++;
 
-            this.sceneObjectNameList.add("Light." + i + ".Azimuth");
+            this.sceneObjectNameList[k] = "Light." + i + ".Azimuth";
             this.sceneObjectIDLookup.put("Light." + i + ".Azimuth", k);
             k++;
 
-            this.sceneObjectNameList.add("Light." + i + ".Inclination");
+            this.sceneObjectNameList[k] = "Light." + i + ".Inclination";
             this.sceneObjectIDLookup.put("Light." + i + ".Inclination", k);
             k++;
 
-            this.sceneObjectNameList.add("Light." + i + ".Distance");
+            this.sceneObjectNameList[k] = "Light." + i + ".Distance";
             this.sceneObjectIDLookup.put("Light." + i + ".Distance", k);
             k++;
         }
@@ -998,8 +995,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 FramebufferObject<ContextType> offscreenFBO = context.buildFramebufferObject(fboWidth, fboHeight)
                         .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB8)
                             .setLinearFilteringEnabled(true))
-                        .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.R32I))
-                        .addDepthAttachment(DepthAttachmentSpec.createFixedPointWithPrecision(32))
+                        .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.R8UI))
+                        .addDepthAttachment(DepthAttachmentSpec.createFixedPointWithPrecision(24))
                         .createFramebufferObject()
             )
             {
@@ -1671,6 +1668,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             gridVertices.close();
             gridVertices = null;
         }
+
+        if (tintedTexProgram != null)
+        {
+            tintedTexProgram.close();
+            tintedTexProgram = null;
+        }
     }
 
     @Override
@@ -1955,7 +1958,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
 
                 int index = 4 * (int)(Math.round((fboSize.height-1) * yRemapped) * fboSize.width + Math.round((fboSize.width-1) * xRemapped));
-                return sceneObjectNameList.get(pixelObjectIDs[index]);
+                return sceneObjectNameList[pixelObjectIDs[index]];
             }
 
 
