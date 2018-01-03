@@ -149,9 +149,19 @@ final class OpenGLProgram implements Program<OpenGLContext>
             }
 
             glValidateProgram(programId);
+            OpenGLContext.errorCheck();
             if (glGetProgrami(programId, GL_VALIDATE_STATUS) == GL_FALSE)
             {
-                throw new InvalidProgramException("The OpenGL program to be used failed validation.");
+                OpenGLContext.errorCheck();
+
+                String programInfoLog = glGetProgramInfoLog(programId);
+                OpenGLContext.errorCheck();
+
+                throw new InvalidProgramException(programInfoLog);
+            }
+            else
+            {
+                OpenGLContext.errorCheck();
             }
 
             glUseProgram(programId);

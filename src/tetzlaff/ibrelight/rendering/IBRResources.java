@@ -332,12 +332,12 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 try
                 {
                     eigentexturesTemp = context.getTextureFactory()
-                        .build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount())
+                        .build2DColorTextureArray(img.getWidth(), img.getHeight(), 16)
                         .setInternalFormat(CompressionFormat.RED_4BPP)
                         .setMipmapsEnabled(true)
                         .setMaxMipmapLevel(6) // = log2(blockSize) = log2(64)  TODO: make this configurable
                         //.setLinearFilteringEnabled(true)
-                        .setMaxAnisotropy(16.0f)
+                        //.setMaxAnisotropy(16.0f)
                         .createTexture();
 
                     AbstractDataType<Number> signedByteType = AbstractDataTypeFactory.getInstance().getSingleComponentDataType(NativeDataType.BYTE);
@@ -554,7 +554,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
                 double minDepth = viewSet.getRecommendedFarPlane();
 
-                if (loadOptions.areDepthImagesRequested())
+                if (loadOptions.areDepthImagesRequested() && this.eigentextures == null)
                 {
                     // Build depth textures for each view
                     this.depthTextures =
@@ -927,12 +927,17 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
     private void setupCommon(Program<ContextType> program)
     {
-        program.setTexture("eigentextures", this.eigentextures);
-        program.setTexture("viewWeightTextures", this.colorTextures);
-        program.setUniform("blockSize", new IntVector2(64, 64));
+        if (this.eigentextures != null)
+        {
+            program.setTexture("eigentextures", this.eigentextures);
+            program.setTexture("viewWeightTextures", this.colorTextures);
+            program.setUniform("blockSize", new IntVector2(64, 64));
+        }
+        else
+        {
+            program.setTexture("viewImages", this.colorTextures);
+        }
 
-
-        program.setTexture("viewImages", this.colorTextures);
         program.setUniformBuffer("CameraWeights", this.cameraWeightBuffer);
         program.setUniformBuffer("CameraPoses", this.cameraPoseBuffer);
         program.setUniformBuffer("CameraProjections", this.cameraProjectionBuffer);
@@ -1242,6 +1247,11 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             this.normalBuffer.close();
         }
 
+        if (this.tangentBuffer != null)
+        {
+            this.tangentBuffer.close();
+        }
+
         if (this.colorTextures != null)
         {
             this.colorTextures.close();
@@ -1285,6 +1295,16 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (shadowMatrixBuffer != null)
         {
             shadowMatrixBuffer.close();
+        }
+
+        if (luminanceMap != null)
+        {
+            luminanceMap.close();
+        }
+
+        if (inverseLuminanceMap != null)
+        {
+            inverseLuminanceMap.close();
         }
     }
 }
