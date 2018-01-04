@@ -104,6 +104,7 @@ ParameterizedFit fitSpecular()
     {
         vec4 color = getLinearColor(i);
         vec3 view = normalize(getViewVector(i));
+        float nDotV = dot(view, normal);
 
         if (color.a * dot(view, normal) > 0)
         {
@@ -118,18 +119,15 @@ ParameterizedFit fitSpecular()
             float luminance = getLuminance(colorRemainder);
 
             vec3 halfway = normalize(view + light);
-            float nDotH = max(0, dot(normal, halfway));
-            float nDotHSq = nDotH * nDotH;
 
-            if (nDotHSq > 0.5)
-            {
-                directionSum += halfway;
-                intensityWeightedDirectionSum += halfway * luminance;
-            }
+            float weight = clamp(2 * nDotV, 0, 1);
 
-            if (luminance * max(0, nDotHSq - 0.5) > maxResidualLuminance[0] * maxResidualLuminance[1])
+            directionSum += weight * halfway;
+            intensityWeightedDirectionSum += weight * halfway * luminance;
+
+            if (luminance * weight > maxResidualLuminance[0] * maxResidualLuminance[1])
             {
-                maxResidualLuminance = vec2(luminance, max(0, nDotHSq - 0.5));
+                maxResidualLuminance = vec2(luminance, weight);
                 maxResidual = colorRemainder;
             }
         }
@@ -250,13 +248,13 @@ ParameterizedFit fitSpecular()
     if (chromaticRoughness)
     {
         roughnessSquared = clamp(roughnessSums[0] / max(vec3(0.0), sqrt(maxResidualXYZ) * roughnessSums[2] - roughnessSums[1]),
-            vec3(MIN_ROUGHNESS * MIN_ROUGHNESS), vec3(MAX_ROUGHNESS * MAX_ROUGHNESS));
+            vec3(MIN_ROUGHNESS * MIN_ROUGHNESS), min(0.25 / maxResidualXYZ, vec3(MAX_ROUGHNESS * MAX_ROUGHNESS)));
         specularColorXYZEstimate = 4 * roughnessSquared * maxResidualXYZ;
     }
     else
     {
          roughnessSquared = vec3(clamp(roughnessSums[0].y / max(0.0, sqrt(maxResidualLuminance[0]) * roughnessSums[2].y - roughnessSums[1].y),
-             MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS));
+             MIN_ROUGHNESS * MIN_ROUGHNESS, min(0.25 / maxResidualLuminance[0], MAX_ROUGHNESS * MAX_ROUGHNESS)));
          vec3 avgResidualXYZ = pow(sumResidualXYZGamma.xyz / sumResidualXYZGamma.w, vec3(fittingGamma));
          specularColorXYZEstimate = 4 * roughnessSquared * maxResidualLuminance[0] * avgResidualXYZ / max(0.001, avgResidualXYZ.y);
 

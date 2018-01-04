@@ -25,9 +25,12 @@ vec3 computeSVDViewWeights(ivec3 blockStart, int k)
     uvec3 unpackedViewWeights = uvec3((packedViewWeights >> 9) & 0x7Fu, (packedViewWeights >> 4) & 0x1Fu, packedViewWeights & 0x0Fu);
     if (unpackedViewWeights[0] != 0u)
     {
-        return vec3(int(unpackedViewWeights[2] * 2u + unpackedViewWeights[0]) - 80,
-                    int(unpackedViewWeights[0]) - 64,
-                    int(unpackedViewWeights[1] * 2u + unpackedViewWeights[0]) - 96) / 63.0;
+        vec3 unscaledWeights = vec3(
+            int(unpackedViewWeights[2] * 2u + unpackedViewWeights[0]) - 80,
+            int(unpackedViewWeights[0]) - 64,
+            int(unpackedViewWeights[1] * 2u + unpackedViewWeights[0]) - 96);
+
+        return unscaledWeights / 63.0;
     }
     else
     {
@@ -37,7 +40,15 @@ vec3 computeSVDViewWeights(ivec3 blockStart, int k)
 
 float getSignedTexel(ivec3 coords, int mipmapLevel)
 {
-    return (texelFetch(eigentextures, coords, mipmapLevel)[0] * 255 - 127) / 127.0;
+    float scaledTexel = texelFetch(eigentextures, coords, mipmapLevel)[0] * 255;
+    if (scaledTexel > 0.5)
+    {
+        return (scaledTexel - 127) / 127.0;
+    }
+    else
+    {
+        return 0.0;
+    }
 }
 
 vec4 getColor(int virtualIndex)
