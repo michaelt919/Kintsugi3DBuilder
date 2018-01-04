@@ -226,82 +226,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             this.cameraWeightBuffer = null;
         }
 
-        // Store the poses in a uniform buffer
-        if (viewSet.getCameraPoseData() != null)
-        {
-            // Create the uniform buffer
-            cameraPoseBuffer = context.createUniformBuffer().setData(viewSet.getCameraPoseData());
-        }
-        else
-        {
-            cameraPoseBuffer = null;
-        }
-
-        // Store the camera projections in a uniform buffer
-        if (viewSet.getCameraProjectionData() != null)
-        {
-            // Create the uniform buffer
-            cameraProjectionBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionData());
-        }
-        else
-        {
-            cameraProjectionBuffer = null;
-        }
-
-        // Store the camera projection indices in a uniform buffer
-        if (viewSet.getCameraProjectionIndexData() != null)
-        {
-            cameraProjectionIndexBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionIndexData());
-        }
-        else
-        {
-            cameraProjectionIndexBuffer = null;
-        }
-
-        // Store the light positions in a uniform buffer
-        if (viewSet.getLightPositionData() != null)
-        {
-            // Create the uniform buffer
-            lightPositionBuffer = context.createUniformBuffer().setData(viewSet.getLightPositionData());
-        }
-        else
-        {
-            lightPositionBuffer = null;
-        }
-
-        // Store the light positions in a uniform buffer
-        if (viewSet.getLightIntensityData() != null)
-        {
-            // Create the uniform buffer
-            lightIntensityBuffer = context.createUniformBuffer().setData(viewSet.getLightIntensityData());
-        }
-        else
-        {
-            lightIntensityBuffer = null;
-        }
-
-        // Store the light indices indices in a uniform buffer
-        if (viewSet.getLightIndexData() != null)
-        {
-            lightIndexBuffer = context.createUniformBuffer().setData(viewSet.getLightIndexData());
-        }
-        else
-        {
-            lightIndexBuffer = null;
-        }
-
-        // Luminance map texture
-        if (viewSet.getLuminanceEncoding() != null)
-        {
-            luminanceMap = viewSet.getLuminanceEncoding().createLuminanceMap(context);
-            inverseLuminanceMap = viewSet.getLuminanceEncoding().createInverseLuminanceMap(context);
-        }
-        else
-        {
-            luminanceMap = null;
-            inverseLuminanceMap = null;
-        }
-
         // Read the images from a file
         if (loadOptions != null && loadOptions.areColorImagesRequested() && viewSet.getImageFilePath() != null && viewSet.getCameraPoseCount() > 0)
         {
@@ -529,6 +453,82 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (loadingMonitor != null)
         {
             loadingMonitor.setMaximum(0.0);
+        }
+
+        // Store the poses in a uniform buffer
+        if (viewSet.getCameraPoseData() != null)
+        {
+            // Create the uniform buffer
+            cameraPoseBuffer = context.createUniformBuffer().setData(viewSet.getCameraPoseData());
+        }
+        else
+        {
+            cameraPoseBuffer = null;
+        }
+
+        // Store the camera projections in a uniform buffer
+        if (viewSet.getCameraProjectionData() != null && this.eigentextures == null)
+        {
+            // Create the uniform buffer
+            cameraProjectionBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionData());
+        }
+        else
+        {
+            cameraProjectionBuffer = null;
+        }
+
+        // Store the camera projection indices in a uniform buffer
+        if (viewSet.getCameraProjectionIndexData() != null && this.eigentextures == null)
+        {
+            cameraProjectionIndexBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionIndexData());
+        }
+        else
+        {
+            cameraProjectionIndexBuffer = null;
+        }
+
+        // Store the light positions in a uniform buffer
+        if (viewSet.getLightPositionData() != null)
+        {
+            // Create the uniform buffer
+            lightPositionBuffer = context.createUniformBuffer().setData(viewSet.getLightPositionData());
+        }
+        else
+        {
+            lightPositionBuffer = null;
+        }
+
+        // Store the light positions in a uniform buffer
+        if (viewSet.getLightIntensityData() != null)
+        {
+            // Create the uniform buffer
+            lightIntensityBuffer = context.createUniformBuffer().setData(viewSet.getLightIntensityData());
+        }
+        else
+        {
+            lightIntensityBuffer = null;
+        }
+
+        // Store the light indices indices in a uniform buffer
+        if (viewSet.getLightIndexData() != null)
+        {
+            lightIndexBuffer = context.createUniformBuffer().setData(viewSet.getLightIndexData());
+        }
+        else
+        {
+            lightIndexBuffer = null;
+        }
+
+        // Luminance map texture
+        if (viewSet.getLuminanceEncoding() != null)
+        {
+            luminanceMap = viewSet.getLuminanceEncoding().createLuminanceMap(context);
+            inverseLuminanceMap = viewSet.getLuminanceEncoding().createInverseLuminanceMap(context);
+        }
+        else
+        {
+            luminanceMap = null;
+            inverseLuminanceMap = null;
         }
 
         if (geometry != null)
@@ -940,8 +940,13 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
         program.setUniformBuffer("CameraWeights", this.cameraWeightBuffer);
         program.setUniformBuffer("CameraPoses", this.cameraPoseBuffer);
-        program.setUniformBuffer("CameraProjections", this.cameraProjectionBuffer);
-        program.setUniformBuffer("CameraProjectionIndices", this.cameraProjectionIndexBuffer);
+
+        if (this.cameraProjectionBuffer != null && this.cameraProjectionIndexBuffer != null)
+        {
+            program.setUniformBuffer("CameraProjections", this.cameraProjectionBuffer);
+            program.setUniformBuffer("CameraProjectionIndices", this.cameraProjectionIndexBuffer);
+        }
+
         if (this.lightPositionBuffer != null && this.lightIntensityBuffer != null && this.lightIndexBuffer != null)
         {
             program.setUniformBuffer("LightPositions", this.lightPositionBuffer);
