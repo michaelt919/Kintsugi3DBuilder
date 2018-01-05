@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
 import javax.imageio.ImageIO;
@@ -23,7 +24,7 @@ public class SVDRequest implements IBRRequest
     private static final boolean DEBUG = false;
 
     private static final int BLOCK_SIZE = 64;
-    private static final int SAVED_SINGULAR_VALUES = 16;
+    private static final int SAVED_SINGULAR_VALUES = 4;
 
     private final int texWidth;
     private final int texHeight;
@@ -66,6 +67,9 @@ public class SVDRequest implements IBRRequest
 
         float[][] textureData = new float[SAVED_SINGULAR_VALUES][texWidth * texHeight];
         float[][][] viewData = new float[resources.viewSet.getCameraPoseCount()][blockCountX * blockCountY * svLayoutWidth * svLayoutHeight][3];
+
+        double[] viewImportance = new double[resources.viewSet.getCameraPoseCount()];
+        double[][] viewImportanceBySingularValues = new double[resources.viewSet.getCameraPoseCount()][SAVED_SINGULAR_VALUES];
 
         try
         (
@@ -168,6 +172,13 @@ public class SVDRequest implements IBRRequest
                                                 (float)(vMatrix.get(3 * k + 1, svIndex) / scale[svIndex]);
                                             viewData[k][texturePixelIndex][2] =
                                                 (float)(vMatrix.get(3 * k + 2, svIndex) / scale[svIndex]);
+
+                                            viewImportanceBySingularValues[k][svIndex] = singularValues[svIndex] * singularValues[svIndex]
+                                                * (vMatrix.get(3 * k, svIndex) * vMatrix.get(3 * k, svIndex)
+                                                + vMatrix.get(3 * k + 1, svIndex) * vMatrix.get(3 * k + 1, svIndex)
+                                                + vMatrix.get(3 * k + 2, svIndex) * vMatrix.get(3 * k + 2, svIndex));
+
+                                            viewImportance[k] += viewImportanceBySingularValues[k][svIndex];
                                         }
                                     }
                                 }
@@ -237,6 +248,24 @@ public class SVDRequest implements IBRRequest
 
         Duration duration = Duration.between(start, Instant.now());
         System.out.println("SVD finished in " + (duration.getSeconds() + duration.getNano() * 1.0e-9) + " seconds.");
+
+        try(PrintStream importanceFilePrintStream = new PrintStream(new File(exportPath, "importance.txt")))
+        {
+            for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
+            {
+                importanceFilePrintStream.print(resources.viewSet.getImageFileName(i));
+                importanceFilePrintStream.print('\t');
+                importanceFilePrintStream.print(viewImportance[i]);
+
+                for (int j = 0; j < SAVED_SINGULAR_VALUES; j++)
+                {
+                    importanceFilePrintStream.print('\t');
+                    importanceFilePrintStream.print(viewImportanceBySingularValues[i][j]);
+                }
+
+                importanceFilePrintStream.println();
+            }
+        }
 
         for (int i = 0; i < svLayoutHeight; i++)
         {
