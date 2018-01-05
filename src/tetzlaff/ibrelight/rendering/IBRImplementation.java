@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.Time;
 import java.util.*;
 import javax.imageio.ImageIO;
 
@@ -116,6 +117,26 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private Program<ContextType> circleProgram;
     private Drawable<ContextType> circleDrawable;
+
+    private static final int SHADING_FRAMEBUFFER_COUNT = 6;
+    private List<FramebufferObject<ContextType>> shadingFramebuffers;
+
+    private static class ShadedFrame<ContextType extends Context<ContextType>>
+    {
+        Matrix4 modelView;
+        Matrix4 projection;
+        Framebuffer<ContextType> framebuffer;
+    }
+
+    private List<ShadedFrame<ContextType>> shadedFrames;
+
+    private int shadingX;
+    private int shadingY;
+    private int shadingWidth;
+    private int shadingHeight;
+    private Time lastFrameTime;
+
+    private static final int TARGET_FPS = 24;
 
     IBRImplementation(String id, ContextType context, Program<ContextType> program, Builder<ContextType> resourceBuilder)
     {
@@ -408,6 +429,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             .createFramebufferObject();
 
         this.updateCentroidAndRadius();
+
+        this.shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
+        this.shadedFrames = new LinkedList<>();
 
         // Make sure that everything is loaded onto the graphics card before announcing that loading is complete.
         this.draw(context.getDefaultFramebuffer());
@@ -857,32 +881,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 0.01f * scale, 100.0f * scale);
     }
 
-    private void drawReferenceScene(Framebuffer<ContextType> framebuffer, Matrix4 view)
-    {
-        if (referenceScene != null && refScenePositions != null && refSceneNormals != null)
-        {
-            Drawable<ContextType> drawable = context.createDrawable(program);
-            drawable.addVertexBuffer("position", refScenePositions);
-            drawable.addVertexBuffer("normal", refSceneNormals);
-
-            if (refSceneTexture != null && refSceneTexCoords != null)
-            {
-                drawable.addVertexBuffer("texCoord", refSceneTexCoords);
-                program.setTexture("diffuseMap", refSceneTexture);
-                program.setUniform("useDiffuseTexture", true);
-            }
-            else
-            {
-                program.setUniform("useDiffuseTexture", false);
-            }
-            program.setUniform("model_view", view);
-            program.setUniform("viewPos", view.quickInverse(0.01f).getColumn(3).getXYZ());
-
-            // Do first pass at half resolution to off-screen buffer
-            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-        }
-    }
-
     private NativeVectorBuffer generateViewWeights(Matrix4 targetView)
     {
         float[] viewWeights = //new PowerViewWeightGenerator(settings.getWeightExponent())
@@ -915,6 +913,86 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         return cameraDistance * Math.min(cameraModel.getHorizontalFOV(), getVerticalFieldOfView(size)) / 4;
     }
 
+    private void drawModel(Framebuffer<ContextType> framebuffer, int x, int y, int width, int height, Matrix4 view, Matrix4 projection)
+    {
+        this.program.setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
+        setupForDraw(view); // in case anything changed when drawing the reference scene.
+
+        Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
+        this.program.setUniform("envMapMatrix", envMapMatrix);
+
+        Matrix4 partialViewMatrix = getPartialViewMatrix(view);
+
+        for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
+        {
+            for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
+            {
+                setupLight(lightIndex, modelInstance);
+            }
+
+            // Draw instance
+            Matrix4 modelView = getModelViewMatrix(partialViewMatrix, modelInstance);
+            this.program.setUniform("model_view", modelView);
+            this.program.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
+
+            FramebufferSize fullFBOSize = framebuffer.getSize();
+            float scaleX = (float)fullFBOSize.width / (float)width;
+            float scaleY = (float)fullFBOSize.height / (float)height;
+            float centerX = (2 * x + width - fullFBOSize.width) / (float)fullFBOSize.width;
+            float centerY = (2 * y + height - fullFBOSize.height) / (float)fullFBOSize.height;
+
+            mainDrawable.program().setUniform("projection",
+                Matrix4.scale(scaleX, scaleY, 1.0f)
+                    .times(Matrix4.translate(-centerX, -centerY, 0))
+                    .times(projection));
+
+            // Render to off-screen buffer
+            mainDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer, x, y, width, height);
+
+            // Flush to prevent timeout
+            context.flush();
+        }
+    }
+
+    private void drawReferenceScene(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 projection)
+    {
+        setupForDraw(view);
+        program.setUniform("projection", projection);
+        program.setUniform("imageBasedRenderingEnabled", false);
+        program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
+
+        if (referenceScene != null && refScenePositions != null && refSceneNormals != null)
+        {
+            Drawable<ContextType> drawable = context.createDrawable(program);
+            drawable.addVertexBuffer("position", refScenePositions);
+            drawable.addVertexBuffer("normal", refSceneNormals);
+
+            if (refSceneTexture != null && refSceneTexCoords != null)
+            {
+                drawable.addVertexBuffer("texCoord", refSceneTexCoords);
+                program.setTexture("diffuseMap", refSceneTexture);
+                program.setUniform("useDiffuseTexture", true);
+            }
+            else
+            {
+                program.setUniform("useDiffuseTexture", false);
+            }
+            program.setUniform("model_view", view);
+            program.setUniform("viewPos", view.quickInverse(0.01f).getColumn(3).getXYZ());
+
+            // Do first pass at half resolution to off-screen buffer
+            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
+        }
+    }
+
+    @Override
+    public void draw(Framebuffer<ContextType> framebuffer)
+    {
+        FramebufferSize framebufferSize = framebuffer.getSize();
+        draw(framebuffer, null, null, framebufferSize.width, framebufferSize.height,
+            true, true);
+    }
+
     @Override
     public void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride)
     {
@@ -922,8 +1000,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         this.draw(framebuffer, viewOverride, projectionOverride, framebufferSize.width, framebufferSize.height);
     }
 
+
     @Override
     public void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride, int subdivWidth, int subdivHeight)
+    {
+        this.draw(framebuffer, viewOverride, projectionOverride, subdivWidth, subdivHeight,
+            false, false);
+    }
+
+    private void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride,
+        int subdivWidth, int subdivHeight, boolean useShadingFramebuffers, boolean progressShadingFramebuffers)
     {
         boolean overriddenViewMatrix = viewOverride != null;
 
@@ -976,10 +1062,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             {
                 projection = this.getProjectionMatrix(size);
             }
-
-            this.setupForDraw(view);
-
-            mainDrawable.program().setUniform("projection", projection);
 
             int fboWidth = size.width;
             int fboHeight = size.height;
@@ -1070,29 +1152,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 context.getState().disableBackFaceCulling();
 
-                this.program.setUniform("imageBasedRenderingEnabled", false);
-                this.program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
-                this.drawReferenceScene(offscreenFBO, view);
+                drawReferenceScene(offscreenFBO, view, projection);
 
-                this.program.setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
-                setupForDraw(view); // in case anything changed when drawing the reference scene.
                 this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
-
-                Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
-                this.program.setUniform("envMapMatrix", envMapMatrix);
 
                 for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
                 {
-                    for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
-                    {
-                        setupLight(lightIndex, modelInstance);
-                    }
-
-                    // Draw instance
-                    Matrix4 modelView = getModelViewMatrix(partialViewMatrix, modelInstance);
-                    this.program.setUniform("model_view", modelView);
-                    this.program.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
-
                     FramebufferSize fullFBOSize = offscreenFBO.getSize();
 
                     // Optionally render in subdivisions to prevent GPU timeout
@@ -1103,21 +1168,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             int effectiveWidth = Math.min(subdivWidth, fullFBOSize.width - x);
                             int effectiveHeight = Math.min(subdivHeight, fullFBOSize.height - y);
 
-                            float scaleX = (float)fullFBOSize.width / (float)effectiveWidth;
-                            float scaleY = (float)fullFBOSize.height / (float)effectiveHeight;
-                            float centerX = (2 * x + effectiveWidth - fullFBOSize.width) / (float)fullFBOSize.width;
-                            float centerY = (2 * y + effectiveHeight - fullFBOSize.height) / (float)fullFBOSize.height;
-
-                            mainDrawable.program().setUniform("projection",
-                                Matrix4.scale(scaleX, scaleY, 1.0f)
-                                    .times(Matrix4.translate(-centerX, -centerY, 0))
-                                    .times(projection));
-
-                            // Render to off-screen buffer
-                            mainDrawable.draw(PrimitiveMode.TRIANGLES, offscreenFBO, x, y, effectiveWidth, effectiveHeight);
-
-                            // Flush to prevent timeout
-                            context.flush();
+                            drawModel(offscreenFBO, x, y, effectiveWidth, effectiveHeight, view, projection);
                         }
                     }
                 }

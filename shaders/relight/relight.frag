@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_texture_query_lod : enable
 
-#define SVD_MODE
+//#define SVD_MODE
 
 in vec3 fPosition;
 in vec2 fTexCoord;
@@ -12,7 +12,15 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int fragObjectID;
 
+
 #include "../colorappearance/colorappearance_subset.glsl"
+#define MAX_SORTING_SAMPLE_COUNT 5
+#define MAX_SORTING_TOTAL_COUNT MAX_CAMERA_POSE_COUNT
+
+#include "reflectanceequations.glsl"
+#include "environment.glsl"
+#include "sort.glsl"
+#include "tonemap.glsl"
 
 #ifdef SVD_MODE
 #include "../colorappearance/svd_unpack_subset.glsl"
@@ -20,7 +28,7 @@ layout(location = 1) out int fragObjectID;
 #include "../colorappearance/imgspace_subset.glsl"
 #endif
 
-#line 24 0
+#line 32 0
 
 uniform int objectID;
 
@@ -33,9 +41,7 @@ uniform vec3 lightIntensityVirtual[MAX_VIRTUAL_LIGHT_COUNT];
 uniform vec3 lightPosVirtual[MAX_VIRTUAL_LIGHT_COUNT];
 uniform mat4 lightMatrixVirtual[MAX_VIRTUAL_LIGHT_COUNT];
 uniform int virtualLightCount;
-uniform vec3 ambientColor;
 
-uniform float renderGamma;
 uniform float weightExponent;
 uniform float isotropyFactor;
 
@@ -43,18 +49,11 @@ uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 uniform sampler2D roughnessMap;
-uniform samplerCube environmentMap;
-uniform int environmentMipMapLevel;
-uniform int diffuseEnvironmentMipMapLevel;
 
 uniform bool useDiffuseTexture;
 uniform bool useNormalTexture;
 uniform bool useSpecularTexture;
 uniform bool useRoughnessTexture;
-uniform bool useEnvironmentMap;
-
-uniform bool useInverseLuminanceMap;
-uniform sampler1D inverseLuminanceMap;
 
 uniform sampler2DArray shadowMaps;
 uniform bool shadowsEnabled;
@@ -87,137 +86,6 @@ layout(std140) uniform ViewWeights
 float getViewWeight(int viewIndex)
 {
     return viewWeights[viewIndex/4][viewIndex%4];
-}
-
-vec3 getEnvironmentFresnel(vec3 lightDirection, float fresnelFactor)
-{
-    if (useEnvironmentMap)
-    {
-        return ambientColor * textureLod(environmentMap, lightDirection,
-            mix(environmentMipMapLevel, 0, fresnelFactor)).rgb;
-    }
-    else
-    {
-        return ambientColor;
-    }
-}
-
-vec3 getEnvironment(vec3 lightDirection)
-{
-    if (useEnvironmentMap)
-    {
-        return ambientColor * textureLod(environmentMap, lightDirection, environmentMipMapLevel).rgb;
-    }
-    else
-    {
-        return ambientColor;
-    }
-}
-
-vec3 getEnvironmentDiffuse(vec3 normalDirection)
-{
-    if (useEnvironmentMap)
-    {
-        return ambientColor * textureLod(environmentMap, normalDirection, diffuseEnvironmentMipMapLevel).rgb / 2;
-    }
-    else
-    {
-        return ambientColor;
-    }
-}
-
-vec3 computeFresnelReflectivityActual(vec3 specularColor, vec3 grazingColor, float hDotV)
-{
-    float maxLuminance = dot(grazingColor, vec3(0.2126, 0.7152, 0.0722));
-    float f0 = clamp(dot(specularColor, vec3(0.2126, 0.7152, 0.0722)) / maxLuminance, 0.001, 0.999);
-    float sqrtF0 = sqrt(f0);
-    float ior = (1 + sqrtF0) / (1 - sqrtF0);
-    float g = sqrt(ior*ior + hDotV * hDotV - 1);
-    float fresnel = 0.5 * pow(g - hDotV, 2) / pow(g + hDotV, 2)
-        * (1 + pow(hDotV * (g + hDotV) - 1, 2) / pow(hDotV * (g - hDotV) + 1, 2));
-
-    return specularColor + (grazingColor - specularColor) * max(0, fresnel - f0) / (1.0 - f0);
-}
-
-vec3 computeFresnelReflectivitySchlick(vec3 specularColor, vec3 grazingColor, float hDotV)
-{
-    return max(specularColor,
-        specularColor + (grazingColor - specularColor) * pow(max(0.0, 1.0 - hDotV), 5.0));
-}
-
-vec3 fresnel(vec3 specularColor, vec3 grazingColor, float hDotV)
-{
-    //return specularColor;
-    //return computeFresnelReflectivityActual(specularColor, grazingColor, hDotV);
-    return computeFresnelReflectivitySchlick(specularColor, grazingColor, hDotV);
-}
-
-float computeGeometricAttenuationVCavity(float nDotH, float nDotV, float nDotL, float hDotV)
-{
-    return min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
-}
-
-//vec3 computeGeometricAttenuationSmithBeckmann(vec3 roughness, float nDotV, float nDotL)
-//{
-//    vec3 aV = 1.0 / (roughness * sqrt(1.0 - nDotV * nDotV) / nDotV);
-//    vec3 aVSq = aV * aV;
-//    vec3 aL = 1.0 / (roughness * sqrt(1.0 - nDotL * nDotL) / nDotL);
-//    vec3 aLSq = aL * aL;
-//
-//    return (aV < 1.6 ? (3.535 * aV + 2.181 * aVSq) / (1 + 2.276 * aV + 2.577 * aVSq) : 1.0)
-//            * (aL < 1.6 ? (3.535 * aL + 2.181 * aLSq) / (1 + 2.276 * aL + 2.577 * aLSq) : 1.0);
-//        // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
-//        // for this formula
-//}
-
-vec3 computeGeometricAttenuationSmithGGX(vec3 roughness, float nDotV, float nDotL)
-{
-    vec3 roughnessSq = roughness * roughness;
-    return 4 / (1 + sqrt(1 + roughnessSq * (1 / (nDotV * nDotV) - 1.0)))
-             / (1 + sqrt(1 + roughnessSq * (1 / (nDotL * nDotL) - 1.0)));
-}
-
-vec3 geom(vec3 roughness, float nDotH, float nDotV, float nDotL, float hDotV)
-{
-    //return nDotV * nDotL;
-    return vec3(computeGeometricAttenuationVCavity(nDotH, nDotV, nDotL, hDotV));
-    //return computeGeometricAttenuationSmithBeckmann(roughness, nDotV, nDotL);
-    //return computeGeometricAttenuationSmithGGX(roughness, nDotV, nDotL);
-}
-
-vec3 computeMicrofacetDistributionGGX(float nDotH, vec3 roughness)
-{
-    vec3 roughnessSquared = roughness * roughness;
-    vec3 sqrtDenominator = (roughnessSquared - 1) * nDotH * nDotH + 1;
-
-    // Assume scaling by pi
-    return roughnessSquared / (sqrtDenominator * sqrtDenominator);
-}
-
-vec3 computeMicrofacetDistributionBeckmann(float nDotH, vec3 roughness)
-{
-    float nDotHSquared = nDotH * nDotH;
-    vec3 roughnessSquared = roughness * roughness;
-
-    // Assume scaling by pi
-    return exp((nDotHSquared - 1.0) / (nDotHSquared * roughnessSquared))
-            / (nDotHSquared * nDotHSquared * roughnessSquared);
-}
-
-vec3 computeMicrofacetDistributionPhong(float nDotH, vec3 roughness)
-{
-    float nDotHSquared = nDotH * nDotH;
-    vec3 roughnessSquared = roughness * roughness;
-
-    // Assume scaling by pi
-    return max(vec3(0.0), pow(vec3(nDotH), 2 / roughnessSquared - 2) / (roughnessSquared));
-}
-
-vec3 dist(float nDotH, vec3 roughness)
-{
-    return computeMicrofacetDistributionGGX(nDotH, roughness);
-    //return computeMicrofacetDistributionBeckmann(nDotH, roughness);
-    //return computeMicrofacetDistributionPhong(nDotH, roughness);
 }
 
 float computeSampleWeight(float correlation)
@@ -821,135 +689,29 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedRoughnessAverages(vec3 diffuseColor
     return results;
 }
 
-#define MAX_BUEHLER_SAMPLE_COUNT 5
-
 float computeBuehlerWeight(vec3 targetDirection, vec3 sampleDirection)
 {
     return 1.0 / (1.0 - clamp(dot(sampleDirection, targetDirection), 0.0, 0.99999));
 }
 
-float getBuehlerWeight(int index, vec3 targetDirection)
+float getSortingWeight(int index, vec3 targetDirection)
 {
     return computeBuehlerWeight(mat3(cameraPoses[index]) * targetDirection, -normalize((cameraPoses[index] * vec4(fPosition, 1)).xyz));
-}
-
-void sort(int sampleCount, vec3 targetDirection, out float[MAX_BUEHLER_SAMPLE_COUNT] weights, out int[MAX_BUEHLER_SAMPLE_COUNT] indices)
-{
-    // Initialization
-    for (int i = 0; i < MAX_BUEHLER_SAMPLE_COUNT && i < sampleCount; i++)
-    {
-        weights[i] = -(1.0 / 0.0); // Parentheses needed for AMD cards.
-        indices[i] = -1;
-    }
-
-    // Partial heapsort
-    for (int i = 0; i < MAX_CAMERA_POSE_COUNT && i < viewCount; i++)
-    {
-        float weight = getBuehlerWeight(i, targetDirection);
-        if (weight >= weights[0]) // Decide if the new view goes in the heap
-        {
-            // Replace the min node in the heap with the new one
-            weights[0] = weight;
-            indices[0] = i;
-
-            int currentIndex = 0;
-            int minIndex = -1;
-
-            while (currentIndex != -1)
-            {
-                // The two "children" in the heap
-                int leftIndex = 2*currentIndex+1;
-                int rightIndex = 2*currentIndex+2;
-
-                // Find the smallest of the current node, and its left and right children
-                if (leftIndex < sampleCount && weights[leftIndex] < weights[currentIndex])
-                {
-                    minIndex = leftIndex;
-                }
-                else
-                {
-                    minIndex = currentIndex;
-                }
-
-                if (rightIndex < sampleCount && weights[rightIndex] < weights[minIndex])
-                {
-                    minIndex = rightIndex;
-                }
-
-                // If a child is smaller than the current node, then swap
-                if (minIndex != currentIndex)
-                {
-                    float weightTmp = weights[currentIndex];
-                    int indexTmp = indices[currentIndex];
-                    weights[currentIndex] = weights[minIndex];
-                    indices[currentIndex] = indices[minIndex];
-                    weights[minIndex] = weightTmp;
-                    indices[minIndex] = indexTmp;
-
-                    currentIndex = minIndex;
-                }
-                else
-                {
-                    currentIndex = -1; // Signal to quit
-                }
-            }
-        }
-    }
-}
-
-void sortFast(vec3 targetDirection, out float[MAX_BUEHLER_SAMPLE_COUNT] weights, out int[MAX_BUEHLER_SAMPLE_COUNT] indices)
-{
-    float indicesFP[MAX_BUEHLER_SAMPLE_COUNT];
-
-    // Initialization
-    for (int i = 0; i < MAX_BUEHLER_SAMPLE_COUNT; i++)
-    {
-        weights[i] = 0.0;
-        indicesFP[i] = -1;
-    }
-
-    // Partial insertion sort
-    for (int i = 0; i < MAX_CAMERA_POSE_COUNT && i < viewCount; i++)
-    {
-        float weight = getBuehlerWeight(i, targetDirection);
-
-        vec2 newValues = mix(vec2(weights[0], indicesFP[0]), vec2(weight, float(i)), max(0, sign(weight - weights[0])));
-        weights[0] = newValues[0];
-        indicesFP[0] = newValues[1];
-
-        for (int j = 1; j < MAX_BUEHLER_SAMPLE_COUNT; j++)
-        {
-            vec4 reorderedValues = mix(
-                vec4(weights[j-1], weights[j], indicesFP[j-1], indicesFP[j]),
-                vec4(weights[j], weights[j-1], indicesFP[j], indicesFP[j-1]),
-                max(0, sign(weights[j-1] - weights[j])));  // 1 if a swap is necessary, 0, otherwise
-
-            weights[j-1] = reorderedValues[0];
-            weights[j] = reorderedValues[1];
-            indicesFP[j-1] = reorderedValues[2];
-            indicesFP[j] = reorderedValues[3];
-        }
-    }
-
-    for (int i = 0; i < MAX_BUEHLER_SAMPLE_COUNT; i++)
-    {
-        indices[i] = int(round(indicesFP[i]));
-    }
 }
 
 vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
 {
     float maxLuminance = getMaxLuminance();
 
-    float weights[MAX_BUEHLER_SAMPLE_COUNT];
-    int indices[MAX_BUEHLER_SAMPLE_COUNT];
+    float weights[MAX_SORTING_SAMPLE_COUNT];
+    int indices[MAX_SORTING_SAMPLE_COUNT];
 
     int sampleCount = 5; // TODO change to a parameter
 
-    sort(sampleCount, targetDirection, weights, indices);
+    sort(sampleCount, viewCount, targetDirection, weights, indices);
 
     // Evaluate the light field
-    // Because of the min-heap property, weights[0] should be the smallest weight
+    // weights[0] should be the smallest weight
     vec4 sum = vec4(0.0);
     for (int i = 1; i < sampleCount; i++)
     {
@@ -967,15 +729,15 @@ vec3 computeRoughnessBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 norma
 {
     float maxLuminance = getMaxLuminance();
 
-    float weights[MAX_BUEHLER_SAMPLE_COUNT];
-    int indices[MAX_BUEHLER_SAMPLE_COUNT];
+    float weights[MAX_SORTING_SAMPLE_COUNT];
+    int indices[MAX_SORTING_SAMPLE_COUNT];
 
     int sampleCount = 5; // TODO change to a parameter
 
-    sortFast(targetDirection, weights, indices);
+    sortFast(viewCount, targetDirection, weights, indices);
 
     // Evaluate the light field
-    // Because of the min-heap property, weights[0] should be the smallest weight
+    // weights[0] should be the smallest weight
     vec4 sum = vec4(0.0);
     for (int i = 1; i < sampleCount; i++)
     {
@@ -985,122 +747,6 @@ vec3 computeRoughnessBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 norma
 
     vec3 avg = sum.rgb / sum.a;
     return avg * avg;
-}
-
-vec3 linearToSRGB(vec3 color)
-{
-    return pow(color, vec3(1.0 / 2.2));
-
-//    vec3 sRGBColor;
-//
-//    if(color.r <= 0.0031308)
-//    {
-//        sRGBColor.r = 12.92 * color.r;
-//    }
-//    else
-//    {
-//        sRGBColor.r = (1.055) * pow(color.r, 1.0/2.4) - 0.055;
-//    }
-//
-//    if(color.g <= 0.0031308)
-//    {
-//        sRGBColor.g = 12.92 * color.g;
-//    }
-//    else
-//    {
-//        sRGBColor.g = (1.055) * pow(color.g, 1.0/2.4) - 0.055;
-//    }
-//
-//    if(color.b <= 0.0031308)
-//    {
-//        sRGBColor.b = 12.92 * color.b;
-//    }
-//    else
-//    {
-//        sRGBColor.b = (1.055) * pow(color.b, 1.0/2.4) - 0.055;
-//    }
-//
-//    return sRGBColor;
-}
-
-vec3 sRGBToLinear(vec3 sRGBColor)
-{
-    return pow(sRGBColor, vec3(2.2));
-
-    // vec3 linearColor;
-
-    // if(sRGBColor.r <= 0.04045)
-    // {
-        // linearColor.r = sRGBColor.r / 12.92;
-    // }
-    // else
-    // {
-        // linearColor.r = pow((sRGBColor.r + 0.055) / 1.055, 2.4);
-    // }
-
-    // if(sRGBColor.g <= 0.04045)
-    // {
-        // linearColor.g = sRGBColor.g / 12.92;
-    // }
-    // else
-    // {
-        // linearColor.g = pow((sRGBColor.g + 0.055) / 1.055, 2.4);
-    // }
-
-    // if(sRGBColor.b <= 0.04045)
-    // {
-        // linearColor.b = sRGBColor.b / 12.92;
-    // }
-    // else
-    // {
-        // linearColor.b = pow((sRGBColor.b + 0.055) / 1.055, 2.4);
-    // }
-
-    // return linearColor;
-}
-
-vec4 tonemap(vec3 color, float alpha)
-{
-//     if (useInverseLuminanceMap)
-//     {
-//         if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
-//         {
-//             return vec4(0.0, 0.0, 0.0, 1.0);
-//         }
-//         else
-//         {
-//             // Step 1: convert to CIE luminance
-//             // Clamp to 1 so that the ratio computed in step 3 is well defined
-//             // if the luminance value somehow exceeds 1.0
-//             float luminance = getLuminance(color);
-//             float maxLuminance = getMaxLuminance();
-//             if (luminance >= maxLuminance)
-//             {
-//                 return vec4(linearToSRGB(color / maxLuminance), alpha);
-//             }
-//             else
-//             {
-//                 float scaledLuminance = min(1.0, luminance / maxLuminance);
-//
-//                 // Step 2: determine the ratio between the tonemapped and linear luminance
-//                 // Remove implicit gamma correction from the lookup table
-//                 float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
-//                 float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
-//                 float scale = tonemappedNoGamma / luminance;
-//
-//                 // Step 3: return the color, scaled to have the correct luminance,
-//                 // but the original saturation and hue.
-//                 // Step 4: apply gamma correction
-//                 vec3 colorScaled = color * scale;
-//                 return vec4(linearToSRGB(colorScaled), alpha);
-//             }
-//         }
-//     }
-//     else
-//    {
-//        return vec4(linearToSRGB(color), alpha);
-        return vec4(pow(color / getMaxLuminance(), vec3(1.0 / renderGamma)), alpha);
-//    }
 }
 
 void main()
