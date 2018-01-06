@@ -429,10 +429,12 @@ vec4 computeRoughnessSampleSingle(int index, vec3 diffuseColor, vec3 normalDir, 
                 vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * mfdFresnelSample.a) / roughness
                                        - sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(nDotHSq));
 
-                roughnessSample = vec4(sqrt(sqrt(sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(1 - nDotHSq) / denominator)), 1.0);
+                roughnessSample = vec4(
+                    sqrt(sqrt(sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(1 - nDotHSq) * denominator.y / denominator)),
+                    sqrt(sqrt(denominator.y)));
             }
 
-            roughnessSample.xyz = clamp(roughnessSample.xyz, vec3(0), vec3(1.0));
+            roughnessSample.xyz = clamp(roughnessSample.xyz, vec3(0), vec3(roughnessSample.w));
             return roughnessSample;
         }
         else
@@ -518,7 +520,7 @@ RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int index, vec3 
                     weight);
             }
 
-            precomputedSample.weightedSqrtRoughness = clamp(precomputedSample.weightedSqrtRoughness, vec3(0), sqrt(sqrt(0.5)) * precomputedSample.weight);
+            precomputedSample.weightedSqrtRoughness = clamp(precomputedSample.weightedSqrtRoughness, vec3(0), precomputedSample.weight);
 
             mat3 tangentToObject = mat3(1.0);
 
@@ -833,14 +835,14 @@ void main()
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
     vec3 reflectance = vec3(0.0);
 
-    vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
-
-    if (imageBasedRenderingEnabled)
-    {
-        weightedAverages = interpolateRoughness ?
-            computeWeightedRoughnessAverages(diffuseColor, normalDir, specularColor, roughness) :
-            computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
-    }
+//    vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
+//
+//    if (imageBasedRenderingEnabled)
+//    {
+//        weightedAverages = interpolateRoughness ?
+//            computeWeightedRoughnessAverages(diffuseColor, normalDir, specularColor, roughness) :
+//            computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
+//    }
 
     if (relightingEnabled)
     {

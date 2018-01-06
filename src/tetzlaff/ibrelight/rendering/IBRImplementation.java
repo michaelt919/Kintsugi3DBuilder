@@ -4,7 +4,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.Time;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import javax.imageio.ImageIO;
 
@@ -118,25 +119,40 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Program<ContextType> circleProgram;
     private Drawable<ContextType> circleDrawable;
 
-    private static final int SHADING_FRAMEBUFFER_COUNT = 6;
+    private Program<ContextType> reprojectProgram;
+    private Drawable<ContextType> reprojectDrawable;
+
+    private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private List<FramebufferObject<ContextType>> shadingFramebuffers;
+
+    private Deque<ShadedFrame<ContextType>> shadedFrames;
+
+    ShadedFrame<ContextType> frameInProgress;
+
+    private int shadingX = 0;
+    private int shadingY = 0;
+    private double shadingWidth = 256;
+    private double shadingHeight = 256;
+    private Instant lastFrameStart;
+    private Instant lastShadingFrameStart;
+
+    private static final int MIN_SHADING_DIMENSION = 256;
+    private static final int MAX_SHADING_DIMENSION = 4096;
+    private static final int TARGET_FPS = 5;
 
     private static class ShadedFrame<ContextType extends Context<ContextType>>
     {
-        Matrix4 modelView;
-        Matrix4 projection;
-        Framebuffer<ContextType> framebuffer;
+        final FramebufferObject<ContextType> framebuffer;
+        final Matrix4 modelView;
+        final Matrix4 projection;
+
+        ShadedFrame(FramebufferObject<ContextType> framebuffer, Matrix4 modelView, Matrix4 projection)
+        {
+            this.framebuffer = framebuffer;
+            this.modelView = modelView;
+            this.projection = projection;
+        }
     }
-
-    private List<ShadedFrame<ContextType>> shadedFrames;
-
-    private int shadingX;
-    private int shadingY;
-    private int shadingWidth;
-    private int shadingHeight;
-    private Time lastFrameTime;
-
-    private static final int TARGET_FPS = 24;
 
     IBRImplementation(String id, ContextType context, Program<ContextType> program, Builder<ContextType> resourceBuilder)
     {
@@ -216,6 +232,18 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         try
         {
+            this.reprojectProgram = context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "reproject.frag"))
+                .createProgram();
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+        try
+        {
             this.simpleTexProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture.frag"))
@@ -260,20 +288,27 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.mainDrawable = context.createDrawable(program);
             this.mainDrawable.addVertexBuffer("position", this.resources.positionBuffer);
 
+            this.reprojectDrawable = context.createDrawable(reprojectProgram);
+            this.reprojectDrawable.addVertexBuffer("position", this.resources.positionBuffer);
+
             if (this.resources.normalBuffer != null)
             {
                 this.mainDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
+                this.reprojectDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
             }
 
             if (this.resources.texCoordBuffer != null)
             {
                 this.mainDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+                this.reprojectDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
             }
 
             if (this.resources.tangentBuffer != null)
             {
                 this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+                this.reprojectDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
             }
+
 
             this.simpleTexDrawable = context.createDrawable(simpleTexProgram);
             this.simpleTexDrawable.addVertexBuffer("position", this.rectangleVertices);
@@ -433,8 +468,26 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         this.shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
         this.shadedFrames = new LinkedList<>();
 
-        // Make sure that everything is loaded onto the graphics card before announcing that loading is complete.
-        this.draw(context.getDefaultFramebuffer());
+        FramebufferSize windowSize = context.getFramebufferSize();
+        FramebufferObject<ContextType> firstShadingFBO =
+            context.buildFramebufferObject(windowSize.width, windowSize.height)
+                .addColorAttachment(
+                    ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB8)
+                        .setLinearFilteringEnabled(true))
+                .addDepthAttachment()
+                .createFramebufferObject();
+
+        shadingFramebuffers.add(firstShadingFBO);
+
+        // Shade the entire first frame.
+        Matrix4 modelView = this.getModelViewMatrix(this.getPartialViewMatrix(), 0);
+        Matrix4 projection = this.getProjectionMatrix(windowSize);
+        // TODO break this into blocks just in case there's a GPU timeout?
+        this.drawModel(firstShadingFBO, 0, 0, windowSize.width, windowSize.height, modelView, projection);
+        this.shadedFrames.add(new ShadedFrame<>(firstShadingFBO, modelView, projection));
+
+//        // Make sure that everything is loaded onto the graphics card before announcing that loading is complete.
+//        this.draw(context.getDefaultFramebuffer());
 
         if (this.loadingMonitor != null)
         {
@@ -783,6 +836,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void setupLight(int lightIndex, int modelInstance)
     {
+        setupLight(this.program, lightIndex, modelInstance);
+    }
+
+    private void setupLight(Program<ContextType> program, int lightIndex, int modelInstance)
+    {
         Matrix4 lightMatrix = this.multiTransformationModel.get(modelInstance).quickInverse(0.01f).times(getLightMatrix(lightIndex));
 
         // lightMatrix can be hardcoded here (comment out previous line)
@@ -913,27 +971,41 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         return cameraDistance * Math.min(cameraModel.getHorizontalFOV(), getVerticalFieldOfView(size)) / 4;
     }
 
-    private void drawModel(Framebuffer<ContextType> framebuffer, int x, int y, int width, int height, Matrix4 view, Matrix4 projection)
+
+    private Matrix4 drawModel(Framebuffer<ContextType> framebuffer, int x, int y, int width, int height, Matrix4 view, Matrix4 projection)
     {
-        this.program.setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
-        setupForDraw(view); // in case anything changed when drawing the reference scene.
+        return drawModel(this.mainDrawable, framebuffer, x, y, width, height, view, projection, false);
+    }
+
+    private Matrix4 drawModel(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int x, int y, int width, int height,
+        Matrix4 view, Matrix4 projection, boolean interpretViewAsModelView)
+    {
+        drawable.program().setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
+        setupForDraw(drawable.program(), view); // in case anything changed when drawing the reference scene.
 
         Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
-        this.program.setUniform("envMapMatrix", envMapMatrix);
+        drawable.program().setUniform("envMapMatrix", envMapMatrix);
 
         Matrix4 partialViewMatrix = getPartialViewMatrix(view);
+        Matrix4 primaryModelView = null;
 
-        for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
+        for (int modelInstance = 0; modelInstance < (interpretViewAsModelView ? 1 : multiTransformationModel.size()); modelInstance++)
         {
             for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
             {
-                setupLight(lightIndex, modelInstance);
+                setupLight(drawable.program(), lightIndex, modelInstance);
             }
 
             // Draw instance
-            Matrix4 modelView = getModelViewMatrix(partialViewMatrix, modelInstance);
-            this.program.setUniform("model_view", modelView);
-            this.program.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
+            Matrix4 modelView = interpretViewAsModelView ? view : getModelViewMatrix(partialViewMatrix, modelInstance);
+
+            if (modelInstance == 0)
+            {
+                primaryModelView = modelView;
+            }
+
+            drawable.program().setUniform("model_view", modelView);
+            drawable.program().setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
 
             FramebufferSize fullFBOSize = framebuffer.getSize();
             float scaleX = (float)fullFBOSize.width / (float)width;
@@ -941,17 +1013,19 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             float centerX = (2 * x + width - fullFBOSize.width) / (float)fullFBOSize.width;
             float centerY = (2 * y + height - fullFBOSize.height) / (float)fullFBOSize.height;
 
-            mainDrawable.program().setUniform("projection",
+            drawable.program().setUniform("projection",
                 Matrix4.scale(scaleX, scaleY, 1.0f)
                     .times(Matrix4.translate(-centerX, -centerY, 0))
                     .times(projection));
 
             // Render to off-screen buffer
-            mainDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer, x, y, width, height);
+            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer, x, y, width, height);
 
             // Flush to prevent timeout
             context.flush();
         }
+
+        return primaryModelView;
     }
 
     private void drawReferenceScene(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 projection)
@@ -1011,6 +1085,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride,
         int subdivWidth, int subdivHeight, boolean useShadingFramebuffers, boolean progressShadingFramebuffers)
     {
+        Instant frameStart = Instant.now();
+
         boolean overriddenViewMatrix = viewOverride != null;
 
         try
@@ -1154,21 +1230,157 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 drawReferenceScene(offscreenFBO, view, projection);
 
-                this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
-
-                for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
+                if (useShadingFramebuffers && multiTransformationModel.size() == 1)
                 {
-                    FramebufferSize fullFBOSize = offscreenFBO.getSize();
-
-                    // Optionally render in subdivisions to prevent GPU timeout
-                    for (int x = 0; x < fullFBOSize.width; x += subdivWidth)
+                    if (progressShadingFramebuffers)
                     {
-                        for (int y = 0; y < fullFBOSize.height; y += subdivHeight)
+                        if (frameInProgress == null)
                         {
-                            int effectiveWidth = Math.min(subdivWidth, fullFBOSize.width - x);
-                            int effectiveHeight = Math.min(subdivHeight, fullFBOSize.height - y);
+                            FramebufferObject<ContextType> fboToUse = null;
 
-                            drawModel(offscreenFBO, x, y, effectiveWidth, effectiveHeight, view, projection);
+                            if (shadedFrames.size() == SHADING_FRAMEBUFFER_COUNT)
+                            {
+                                ShadedFrame<ContextType> frameToDiscard = shadedFrames.poll();
+                                fboToUse = frameToDiscard.framebuffer;
+
+                                if (!Objects.equals(fboToUse.getSize(), size))
+                                {
+                                    shadingFramebuffers.remove(fboToUse);
+                                    fboToUse.close();
+                                    fboToUse = null;
+                                }
+                            }
+
+                            if (fboToUse == null)
+                            {
+                                fboToUse =
+                                    context.buildFramebufferObject(size.width, size.height)
+                                        .addColorAttachment(
+                                            ColorAttachmentSpec.createWithInternalFormat(ColorFormat.RGB8)
+                                                .setLinearFilteringEnabled(true))
+                                        .addDepthAttachment()
+                                        .createFramebufferObject();
+
+                                shadingFramebuffers.add(fboToUse);
+                            }
+
+                            Matrix4 modelView = getModelViewMatrix(partialViewMatrix, 0);
+
+                            float distance = modelView.times(resources.geometry.getCentroid().asPosition()).getXYZ().length();
+
+                            float radius = modelView.times(new Vector3(1).normalized()
+                                .times(resources.geometry.getBoundingRadius()).asDirection())
+                                .getXYZ().length();
+
+                            Matrix4 shadingProjection = Matrix4.perspective(getVerticalFieldOfView(size),
+                                (float) size.width / (float) size.height,
+                                distance - radius, distance + radius);
+
+                            frameInProgress = new ShadedFrame<>(fboToUse, modelView, shadingProjection); // TODO predict future view matrix
+
+                            fboToUse.clearColorBuffer(0, 0, 0, 0, 0);
+                            fboToUse.clearDepthBuffer();
+
+                            shadingX = 0;
+                            shadingY = 0;
+
+                            Instant currentTime = Instant.now();
+
+                            int currentSubdivCount = (int)(Math.ceil((float)size.width / Math.round(shadingWidth))
+                                                            * Math.ceil((float)size.height / Math.round(shadingHeight)));
+
+                            if (lastShadingFrameStart != null &&
+                                Duration.between(lastShadingFrameStart, currentTime)
+                                    .compareTo(Duration.ofMillis(1000L * currentSubdivCount / (4 * TARGET_FPS))) < 0)
+                            {
+                                // Bump up the block size
+                                shadingWidth *= 2;
+                                shadingHeight *= 2;
+
+                                if (shadingWidth > MAX_SHADING_DIMENSION)
+                                {
+                                    shadingWidth = MAX_SHADING_DIMENSION;
+                                }
+
+                                if (shadingHeight > MAX_SHADING_DIMENSION)
+                                {
+                                    shadingHeight = MAX_SHADING_DIMENSION;
+                                }
+                            }
+
+                            System.out.println(shadingWidth + "x" + shadingHeight);
+
+                            lastShadingFrameStart = currentTime;
+                        }
+                        else if (lastFrameStart != null &&
+                            Duration.between(lastFrameStart, frameStart).compareTo(Duration.ofMillis(1000 / TARGET_FPS)) > 0)
+                        {
+                            // Emergency block size reduction
+                            shadingWidth /= 2;
+                            shadingHeight /= 2;
+
+                            if (shadingWidth < MIN_SHADING_DIMENSION)
+                            {
+                                shadingWidth = MIN_SHADING_DIMENSION;
+                            }
+
+                            if (shadingHeight < MIN_SHADING_DIMENSION)
+                            {
+                                shadingHeight = MIN_SHADING_DIMENSION;
+                            }
+
+                            //System.out.println(shadingWidth + "x" + shadingHeight);
+                        }
+
+                        drawModel(mainDrawable, frameInProgress.framebuffer, shadingX, shadingY, (int) Math.round(shadingWidth),
+                            (int) Math.round(shadingHeight), frameInProgress.modelView, frameInProgress.projection, true);
+
+                        FramebufferSize sizeInProgress = frameInProgress.framebuffer.getSize();
+                        shadingX += Math.round(shadingWidth);
+                        if (shadingX >= sizeInProgress.width)
+                        {
+                            shadingX = 0;
+                            shadingY += Math.round(shadingHeight);
+                        }
+
+                        if (shadingY >= sizeInProgress.height)
+                        {
+                            shadedFrames.add(frameInProgress);
+                            frameInProgress = null;
+                        }
+                    }
+
+                    ShadedFrame<ContextType> primaryFrame = shadedFrames.peekLast();
+
+                    this.reprojectProgram.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
+                    this.reprojectProgram.setUniform("depthTestingEnabled", true);
+                    this.reprojectProgram.setUniform("depthTestBias", 0.0025f);
+                    this.reprojectProgram.setUniform("prerenderedSecondaryWeight", 0.0f); // For now, TODO use secondary image?
+                    this.reprojectProgram.setUniform("prerenderedModelViewPrimary", primaryFrame.modelView);
+                    this.reprojectProgram.setUniform("prerenderedProjectionPrimary", primaryFrame.projection);
+                    this.reprojectProgram.setTexture("prerenderedImagePrimary", primaryFrame.framebuffer.getColorAttachmentTexture(0));
+                    this.reprojectProgram.setTexture("prerenderedDepthImagePrimary", primaryFrame.framebuffer.getDepthAttachmentTexture());
+
+                    drawModel(this.reprojectDrawable, offscreenFBO, 0, 0, fboWidth, fboHeight, view, projection, false);
+                }
+                else
+                {
+                    this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
+
+                    for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
+                    {
+                        FramebufferSize fullFBOSize = offscreenFBO.getSize();
+
+                        // Optionally render in subdivisions to prevent GPU timeout
+                        for (int x = 0; x < fullFBOSize.width; x += subdivWidth)
+                        {
+                            for (int y = 0; y < fullFBOSize.height; y += subdivHeight)
+                            {
+                                int effectiveWidth = Math.min(subdivWidth, fullFBOSize.width - x);
+                                int effectiveHeight = Math.min(subdivHeight, fullFBOSize.height - y);
+
+                                drawModel(offscreenFBO, x, y, effectiveWidth, effectiveHeight, view, projection);
+                            }
                         }
                     }
                 }
@@ -1221,6 +1433,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             {
                 ((CameraBasedLightingModel)lightingModel).removeCameraPoseOverride();
             }
+
+            lastFrameStart = frameStart;
         }
     }
 
@@ -1725,6 +1939,19 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             tintedTexProgram.close();
             tintedTexProgram = null;
         }
+
+        if (reprojectProgram != null)
+        {
+            reprojectProgram.close();
+            reprojectProgram = null;
+        }
+
+        for (FramebufferObject<ContextType> fbo : shadingFramebuffers)
+        {
+            fbo.close();
+        }
+
+        shadingFramebuffers.clear();
     }
 
     @Override
@@ -1909,6 +2136,36 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         try
         {
+            Program<ContextType> newReprojectProgram = context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "reproject.frag"))
+                .createProgram();
+
+            if (this.reprojectProgram != null)
+            {
+                this.reprojectProgram.close();
+                this.reprojectProgram = null;
+            }
+
+            this.reprojectProgram = newReprojectProgram;
+            this.reprojectDrawable = context.createDrawable(reprojectProgram);
+            this.reprojectDrawable.addVertexBuffer("position", this.resources.positionBuffer);
+
+            if (this.resources.normalBuffer != null)
+            {
+                this.reprojectDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
+            }
+
+            if (this.resources.texCoordBuffer != null)
+            {
+                this.reprojectDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+            }
+
+            if (this.resources.tangentBuffer != null)
+            {
+                this.reprojectDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+            }
+
             Program<ContextType> newEnvironmentBackgroundProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))

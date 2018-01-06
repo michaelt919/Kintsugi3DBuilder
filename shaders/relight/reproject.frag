@@ -13,7 +13,7 @@ layout(location = 1) out int fragObjectID;
 #include "tonemap.glsl"
 #include "environment.glsl"
 
-#line 16 0
+#line 17 0
 
 uniform int objectID;
 
@@ -44,8 +44,9 @@ uniform bool relightingEnabled;
 uniform bool pbrGeometricAttenuationEnabled;
 uniform bool fresnelEnabled;
 
-uniform bool occlusionEnabled;
-uniform float occlusionBias;
+uniform bool imageBasedRenderingEnabled;
+uniform bool depthTestingEnabled;
+uniform float depthTestBias;
 
 uniform mat4 prerenderedModelViewPrimary;
 uniform mat4 prerenderedModelViewSecondary;
@@ -90,17 +91,17 @@ vec4 reproject(sampler2D colorImage, sampler2D depthImage, mat4 projection, mat4
     }
     else
     {
-        if (occlusionEnabled)
+        if (depthTestingEnabled)
         {
-            float imageDepth = texture(depthImage, vec3(projTexCoord.xy, i)).r;
-            if (abs(projTexCoord.z - imageDepth) > occlusionBias)
+            float imageDepth = texture(depthImage, projTexCoord.xy).r;
+            if (abs(projTexCoord.z - imageDepth) > depthTestBias)
             {
                 // Occluded
                 return vec4(0);
             }
         }
 
-        return min(1, 2 * nDotVPrerendered / nDotVCurrent) * texture(colorImage, vec3(projTexCoord.xy, i));
+        return clamp(2 * nDotVPrerendered / nDotVCurrent, 0.0, 1.0) * texture(colorImage, projTexCoord.xy);
     }
 }
 
@@ -233,17 +234,22 @@ void main()
 
     vec3 roughnessSq = roughness * roughness;
 
-    float nDotV = dot(normalDir, viewDir);
-    //vec4 reprojectedColor = computeBuehler(viewDir, normalDir);
-    vec4 reprojectedColor = mix(
-        reproject(prerenderedImagePrimary, prerenderedDepthImagePrimary,
-            prerenderedProjectionPrimary, prerenderedModelViewPrimary, viewDir, normalDir),
-        reproject(prerenderedImageSecondary, prerenderedDepthImageSecondary,
-            prerenderedProjectionSecondary, prerenderedModelViewSecondary, viewDir, normalDir),
-        prerenderedSecondaryWeight);
+    vec4 reprojectedColor = vec4(0);
 
-    if (reprojectedColor.a < 1.0)
+    if (imageBasedRenderingEnabled)
     {
+        //reprojectedColor = computeBuehler(viewDir, normalDir);
+        reprojectedColor = //mix(
+            reproject(prerenderedImagePrimary, prerenderedDepthImagePrimary,
+                prerenderedProjectionPrimary, prerenderedModelViewPrimary, viewDir, normalDir)//,
+        //    reproject(prerenderedImageSecondary, prerenderedDepthImageSecondary,
+        //        prerenderedProjectionSecondary, prerenderedModelViewSecondary, viewDir, normalDir),
+        ;//    prerenderedSecondaryWeight);
+    }
+
+    //if (reprojectedColor.a < 1.0)
+    {
+        float nDotV = dot(normalDir, viewDir);
         vec3 reflectance = vec3(0.0);
 
         if (relightingEnabled)
@@ -338,8 +344,10 @@ void main()
 
         fragColor = reprojectedColor + (1.0 - reprojectedColor.a) * tonemap(reflectance, 1.0);
     }
-
-    fragColor = tonemap(reflectance, 1.0);
+//    else
+//    {
+//        fragColor = reprojectedColor;
+//    }
 
     fragObjectID = objectID;
 }
