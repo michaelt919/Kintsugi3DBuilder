@@ -1500,7 +1500,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 materialStream.println("Ks 0 0 0");
             }
 
-            if (param.isNormalTextureEnabled())
+            if ((param.isDiffuseTextureEnabled() && param.isNormalTextureEnabled()) || param.isSpecularTextureEnabled())
             {
                 materialStream.println("norm " + materialName + "_norm.png");
             }

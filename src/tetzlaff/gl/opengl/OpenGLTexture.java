@@ -291,7 +291,7 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
                 {
                     for (int x = 0; x < colorImg.getWidth(); x++)
                     {
-                        wrappedBuffer.accept(new Color(colorImg.getRGB(x, y)));
+                        wrappedBuffer.accept(new Color(colorImg.getRGB(x, y), true));
                     }
                 }
             }
@@ -301,7 +301,7 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
                 {
                     for (int x = 0; x < colorImg.getWidth(); x++)
                     {
-                        wrappedBuffer.accept(new Color(colorImg.getRGB(x, y)));
+                        wrappedBuffer.accept(new Color(colorImg.getRGB(x, y), true));
                     }
                 }
             }

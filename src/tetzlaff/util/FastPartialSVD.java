@@ -4,6 +4,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Random;
 
+import org.ejml.data.DMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 
 import static org.ejml.dense.row.CommonOps_DDRM.*;
@@ -14,25 +15,25 @@ import static org.ejml.dense.row.CommonOps_DDRM.*;
  */
 public final class FastPartialSVD
 {
-    private SimpleMatrix matrix;
+    private final SimpleMatrix matrix;
     private int singularValueCount;
     private final double tolerance;
     private final int maxIterations;
+    private final int maxAttempts;
 
     private final boolean transpose;
     private final SimpleMatrix u;
     private final SimpleMatrix v;
     private final double[] singularValues;
 
-
     public static FastPartialSVD compute(SimpleMatrix matrix, int singularValueCount)
     {
-        return compute(matrix, singularValueCount, Math.ulp(1.0), 1000);
+        return compute(matrix, singularValueCount, Math.ulp(1.0), 1000, 3);
     }
 
-    public static FastPartialSVD compute(SimpleMatrix matrix, int singularValueCount, double tolerance, int maxIterations)
+    public static FastPartialSVD compute(SimpleMatrix matrix, int singularValueCount, double tolerance, int maxIterations, int maxAttempts)
     {
-        FastPartialSVD svd = new FastPartialSVD(matrix, singularValueCount, tolerance, maxIterations);
+        FastPartialSVD svd = new FastPartialSVD(matrix, singularValueCount, tolerance, maxIterations, maxAttempts);
         svd.compute();
         return svd;
     }
@@ -47,12 +48,17 @@ public final class FastPartialSVD
         return transpose ? u : v;
     }
 
+    public SimpleMatrix getError()
+    {
+        return this.matrix;
+    }
+
     public double[] getSingularValues()
     {
         return Arrays.copyOf(singularValues, singularValueCount);
     }
 
-    private FastPartialSVD(SimpleMatrix matrix, int singularValueCount, double tolerance, int maxIterations)
+    private FastPartialSVD(SimpleMatrix matrix, int singularValueCount, double tolerance, int maxIterations, int maxAttempts)
     {
         if (matrix.numCols() > matrix.numRows())
         {
@@ -68,6 +74,7 @@ public final class FastPartialSVD
         this.singularValueCount = singularValueCount;
         this.tolerance = tolerance;
         this.maxIterations = maxIterations;
+        this.maxAttempts = maxAttempts;
 
         this.u = new SimpleMatrix(this.matrix.numRows(), singularValueCount);
         this.v = new SimpleMatrix(this.matrix.numCols(), singularValueCount);
@@ -79,57 +86,80 @@ public final class FastPartialSVD
         if (this.matrix != null)
         {
             Random random = new SecureRandom();
+            //SimpleMatrix a = new SimpleMatrix(this.matrix.numCols(), this.matrix.numCols());
+            double toleranceSq = tolerance * tolerance;
+
+            // Use procedural framework to save memory for this step.
+//            multInner(this.matrix.getMatrix(), a.getMatrix());
+
             for (int k = 0; k < singularValueCount; k++)
             {
-                SimpleMatrix a = new SimpleMatrix(this.matrix.numCols(), this.matrix.numCols());
-
-                // Use procedural framework to save memory for this step.
-                multInner(this.matrix.getMatrix(), a.getMatrix());
-
                 SimpleMatrix vk = SimpleMatrix.random64(this.matrix.numCols(), 1, -1, 1, random);
                 vk = vk.divide(vk.normF());
 
-                SimpleMatrix vkLast;
-                double lambda;
-                int numIterations = 0;
+                double ev;
+                double sqError;
+                int numIterations;
+                int numAttempts = 0;
 
                 do
                 {
-                    vkLast = vk;
-                    vk = a.mult(vkLast);
-                    lambda = vk.normF();
-                    divide(vk.getMatrix(), lambda); // Procedural framework: in place divide for efficiency
-                    numIterations++;
-                }
-                while (lambda > 0.0 && dot(vkLast.getMatrix(), vk.getMatrix()) < 1.0 - tolerance && numIterations < maxIterations);
+                    SimpleMatrix diff;
+                    numIterations = 0;
 
-                if (numIterations == maxIterations)
-                {
-                    throw new RuntimeException("Max iterations exceeded. (Convergence: " + dot(vkLast.getMatrix(), vk.getMatrix()) + ')');
+                    do
+                    {
+                        SimpleMatrix vkLast = vk;
+
+                        vk = new SimpleMatrix(this.matrix.numCols(), 1);
+                        multTransA(this.matrix.getMatrix(), this.matrix.mult(vkLast).getMatrix(), vk.getMatrix());
+
+                        //vk = a.mult(vkLast);
+
+                        ev = vk.normF();
+                        divide(vk.getMatrix(), ev); // Procedural framework: in place divide for efficiency
+                        diff = vk.minus(vkLast);
+                        numIterations++;
+
+                        sqError = dot(diff.getMatrix(), diff.getMatrix());
+                    }
+                    while (ev > 0.0 && sqError > toleranceSq && numIterations < maxIterations);
+
+                    numAttempts++;
                 }
-                else if (lambda == 0.0)
+                while(numIterations == maxIterations && numAttempts < maxAttempts);
+
+                if (ev == 0.0)
                 {
                     u.reshape(u.numRows(), k);
                     v.reshape(v.numRows(), k);
                     singularValueCount = k;
                 }
+                else if (sqError > toleranceSq)
+                {
+                    throw new RuntimeException("Max iterations exceeded. (Squared error: " + sqError + ')');
+                }
                 else
                 {
-                    singularValues[k] = lambda;
-                    u.setColumn(k, 0, matrix.mult(vk.divide(lambda)).matrix_F64().data);
+                    double sv = Math.sqrt(ev);
+                    singularValues[k] = sv;
+                    SimpleMatrix uk = matrix.mult(vk);
+                    divide(uk.getMatrix(), uk.normF()); // Procedural framework: in place divide for efficiency
+                    u.setColumn(k, 0, uk.matrix_F64().data);
                     v.setColumn(k, 0, vk.matrix_F64().data);
 
-                    for (int i = 0; i < this.matrix.numRows(); i++)
-                    {
-                        for (int j = 0; j < this.matrix.numCols(); j++)
-                        {
-                            this.matrix.set(i, j, this.matrix.get(i, j) - this.u.get(i, k) * this.v.get(j, k));
-                        }
-                    }
+                    DMatrixRMaj matrixTransposeTimesUk = new DMatrixRMaj(matrix.numCols(), 1);
+                    multTransA(matrix.getMatrix(), uk.getMatrix(), matrixTransposeTimesUk);
+
+//                    // Update matrix A = M'M (using procedural framework for efficiency)
+//                    multAddTransB(-sv, matrixTransposeTimesUk, vk.getMatrix(), a.getMatrix());
+//                    multAddTransB(-sv, vk.getMatrix(), matrixTransposeTimesUk, a.getMatrix());
+//                    multAddTransB(ev, vk.getMatrix(), vk.getMatrix(), a.getMatrix());
+
+                    // Update original matrix M (using procedural framework for efficiency)
+                    multAddTransB(-sv, uk.getMatrix(), vk.getMatrix(), matrix.getMatrix());
                 }
             }
         }
-
-        this.matrix = null;
     }
 }

@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 
 import tetzlaff.gl.nativebuffer.NativeDataType;
 
-public enum PackedDataType implements AbstractDataType<Iterable<Number>>
+public enum PackedDataType implements AbstractDataType<Iterable<? extends Number>>
 {
     BYTE_3_3_2(NativeDataType.PACKED_BYTE, 3, 3, 3, 2, 0),
     SHORT_5_6_5(NativeDataType.PACKED_SHORT, 3, 5, 6, 5, 0),
@@ -51,13 +51,13 @@ public enum PackedDataType implements AbstractDataType<Iterable<Number>>
     }
 
     @Override
-    public Consumer<Iterable<Number>> wrapByteBuffer(ByteBuffer baseBuffer)
+    public Consumer<Iterable<? extends Number>> wrapByteBuffer(ByteBuffer baseBuffer)
     {
+        Consumer<Number> packedConsumer = AbstractDataTypeFactory.wrapByteBuffer(baseBuffer, nativeDataType);
+
         return components ->
         {
-            Consumer<Number> packedConsumer = AbstractDataTypeFactory.wrapByteBuffer(baseBuffer, nativeDataType);
-
-            Iterator<Number> componentIterator = components.iterator();
+            Iterator<? extends Number> componentIterator = components.iterator();
             int packedValue = ((1 << redBits) - 1) & componentIterator.next().intValue();
             if (componentCount >= 2)
             {

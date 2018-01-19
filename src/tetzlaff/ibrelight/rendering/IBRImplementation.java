@@ -1230,7 +1230,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 drawReferenceScene(offscreenFBO, view, projection);
 
-                if (useShadingFramebuffers && multiTransformationModel.size() == 1)
+                if (false && useShadingFramebuffers && multiTransformationModel.size() == 1)
                 {
                     if (progressShadingFramebuffers)
                     {
