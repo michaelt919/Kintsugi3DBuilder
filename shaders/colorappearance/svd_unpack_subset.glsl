@@ -19,8 +19,19 @@ ivec2 computeBlockStart(vec2 texCoords, ivec2 textureSize)
             * ivec2(VIEW_WEIGHT_PACKING_X, VIEW_WEIGHT_PACKING_Y);
 }
 
-vec3 computeSVDViewWeights(ivec3 blockStart, int k)
+vec4 computeSVDViewWeights(ivec3 blockStart, int k)
 {
+//    vec3 viewWeights = texelFetch(viewWeightTextures, blockStart + ivec3(k % VIEW_WEIGHT_PACKING_X, k / VIEW_WEIGHT_PACKING_X, 0), 0).xyz;
+//    if (viewWeights.y > 0)
+//    {
+//        return vec4((viewWeights * 255 - vec3(128.0)) / 127.0, 1.0);
+//    }
+//    else
+//    {
+//        return vec4(0.0);
+//    }
+
+
     uint packedViewWeights = texelFetch(viewWeightTextures, blockStart + ivec3(k % VIEW_WEIGHT_PACKING_X, k / VIEW_WEIGHT_PACKING_X, 0), 0)[0];
     uvec3 unpackedViewWeights = uvec3((packedViewWeights >> 9) & 0x7Fu, (packedViewWeights >> 4) & 0x1Fu, packedViewWeights & 0x0Fu);
     if (unpackedViewWeights[0] != 0u)
@@ -30,24 +41,24 @@ vec3 computeSVDViewWeights(ivec3 blockStart, int k)
             int(unpackedViewWeights[0]) - 64,
             int(unpackedViewWeights[1] * 2u + unpackedViewWeights[0]) - 96);
 
-        return unscaledWeights / 63.0;
+        return vec4(unscaledWeights / 63.0, 1.0);
     }
     else
     {
-        return vec3(0);
+        return vec4(0.0);
     }
 }
 
-float getSignedTexel(ivec3 coords, int mipmapLevel)
+vec4 getSignedTexel(ivec3 coords, int mipmapLevel)
 {
-    float scaledTexel = texelFetch(eigentextures, coords, mipmapLevel)[0] * 255;
-    if (scaledTexel > 0.5)
+    vec3 scaledTexel = vec3(texelFetch(eigentextures, coords, mipmapLevel)[0]) * 255;
+    if (scaledTexel.y > 0.5)
     {
-        return (scaledTexel - 127) / 127.0;
+        return vec4((scaledTexel - 128) / 127.0, 1.0);
     }
     else
     {
-        return 0.0;
+        return vec4(0.0);
     }
 }
 
@@ -97,32 +108,45 @@ vec4 getColor(int virtualIndex)
 
     for (int k = 0; k < MAX_EIGENTEXTURES; k++)
     {
-        vec3 weights000 = computeSVDViewWeights(blockStart000, k);
-        vec3 weights001 = computeSVDViewWeights(blockStart001, k);
-        vec3 weights010 = computeSVDViewWeights(blockStart010, k);
-        vec3 weights011 = computeSVDViewWeights(blockStart011, k);
-        vec3 weights100 = computeSVDViewWeights(blockStart100, k);
-        vec3 weights101 = computeSVDViewWeights(blockStart101, k);
-        vec3 weights110 = computeSVDViewWeights(blockStart110, k);
-        vec3 weights111 = computeSVDViewWeights(blockStart111, k);
+        vec4 weights000 = computeSVDViewWeights(blockStart000, k);
+        vec4 weights001 = computeSVDViewWeights(blockStart001, k);
+        vec4 weights010 = computeSVDViewWeights(blockStart010, k);
+        vec4 weights011 = computeSVDViewWeights(blockStart011, k);
+        vec4 weights100 = computeSVDViewWeights(blockStart100, k);
+        vec4 weights101 = computeSVDViewWeights(blockStart101, k);
+        vec4 weights110 = computeSVDViewWeights(blockStart110, k);
+        vec4 weights111 = computeSVDViewWeights(blockStart111, k);
 
-        float tex000 = getSignedTexel(ivec3(coords000, k), mipmapLevelFloor);
-        float tex001 = getSignedTexel(ivec3(coords001, k), mipmapLevelCeil);
-        float tex010 = getSignedTexel(ivec3(coords010, k), mipmapLevelFloor);
-        float tex011 = getSignedTexel(ivec3(coords011, k), mipmapLevelCeil);
-        float tex100 = getSignedTexel(ivec3(coords100, k), mipmapLevelFloor);
-        float tex101 = getSignedTexel(ivec3(coords101, k), mipmapLevelCeil);
-        float tex110 = getSignedTexel(ivec3(coords110, k), mipmapLevelFloor);
-        float tex111 = getSignedTexel(ivec3(coords111, k), mipmapLevelCeil);
+        vec4 tex000 = getSignedTexel(ivec3(coords000, k), mipmapLevelFloor);
+        vec4 tex001 = getSignedTexel(ivec3(coords001, k), mipmapLevelCeil);
+        vec4 tex010 = getSignedTexel(ivec3(coords010, k), mipmapLevelFloor);
+        vec4 tex011 = getSignedTexel(ivec3(coords011, k), mipmapLevelCeil);
+        vec4 tex100 = getSignedTexel(ivec3(coords100, k), mipmapLevelFloor);
+        vec4 tex101 = getSignedTexel(ivec3(coords101, k), mipmapLevelCeil);
+        vec4 tex110 = getSignedTexel(ivec3(coords110, k), mipmapLevelFloor);
+        vec4 tex111 = getSignedTexel(ivec3(coords111, k), mipmapLevelCeil);
 
-        color +=
-            mix(mix(mix(weights000 * tex000, weights100 * tex100, interpolantsFloorLevel.x),
-                mix(weights010 * tex010, weights110 * tex110, interpolantsFloorLevel.x),
-                interpolantsFloorLevel.y),
-            mix(mix(weights001 * tex001, weights101 * tex101, interpolantsCeilLevel.x),
-                mix(weights011 * tex011, weights111 * tex111, interpolantsCeilLevel.x),
-                interpolantsCeilLevel.y),
-            mipmapLevelInterpolant);
+        vec4 blendedColor =
+            mix(mix(mix(weights000 * tex000,
+                        weights100 * tex100,
+                        interpolantsFloorLevel.x),
+                    mix(weights010 * tex010,
+                        weights110 * tex110,
+                        interpolantsFloorLevel.x),
+                    interpolantsFloorLevel.y),
+                mix(mix(weights001 * tex001,
+                        weights101 * tex101,
+                        interpolantsCeilLevel.x),
+                    mix(weights011 * tex011,
+                        weights111 * tex111,
+                        interpolantsCeilLevel.x),
+                    interpolantsCeilLevel.y),
+                mipmapLevelInterpolant);
+
+        if (blendedColor.w > 0)
+        {
+            color += blendedColor.xyz / blendedColor.w;
+        }
     }
 
     return vec4(color + vec3(0.5), 1.0);
