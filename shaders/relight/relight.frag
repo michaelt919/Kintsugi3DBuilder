@@ -69,7 +69,7 @@ uniform bool fresnelEnabled;
 
 uniform bool perPixelWeightsEnabled;
 
-#define interpolateRoughness true
+#define interpolateRoughness false
 #define brdfMode false
 
 #ifdef SVD_MODE
@@ -159,7 +159,7 @@ vec4 computeEnvironmentSample(int index, vec3 diffuseColor, vec3 normalDir,
             vec3 adjustedRoughness = sqrtAdjustedRoughness * sqrtAdjustedRoughness;
             vec3 mfd = dist(nDotH, adjustedRoughness) / PI;
             mfdMono = mfd.y;
-            mfdFresnel = xyzToRGB(mfd * rgbToXYZ(specularColor));
+            mfdFresnel = xyzToRGB(mfd * rgbToXYZ(specularColor) * adjustedRoughness * adjustedRoughness / (roughness * roughness));
 #else
             vec4 sampleColor = getLinearColor(index);
             if (sampleColor.a == 0.0)
@@ -232,123 +232,148 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int index, vec3 diffuseColor, vec3 normalDir,
     vec3 specularColor, vec3 roughness, float maxLuminance)
 {
-    vec4 sampleColor = getLinearColor(index);
-    if (sampleColor.a > 0.0)
+    // All in camera space
+    vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
+    vec3 sampleViewDir = normalize(-fragmentPos);
+    vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(index)].xyz - fragmentPos;
+    float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
+    vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
+    vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
+    vec3 normalDirCameraSpace = normalize((cameraPoses[index] * vec4(normalDir, 0.0)).xyz);
+    float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
+    float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
+    float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
+    float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
+
+
+    vec4 precomputedSample = vec4(0);
+
+    if (residualImages)
     {
-        vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
+//        vec4 roughnessResid = getColor(index);
+//        if (roughnessResid.w > 0)
+//        {
+//            vec3 sqrtAdjustedRoughness = sqrt(roughness) + roughnessResid.xyz - vec3(0.5);
+//            vec3 adjustedRoughness = sqrtAdjustedRoughness * sqrtAdjustedRoughness;
+//            precomputedSample = vec4(xyzToRGB(dist(nDotH, adjustedRoughness)
+//                * rgbToXYZ(specularColor) * adjustedRoughness * adjustedRoughness / (roughness * roughness)), 1.0);
+//        }
 
-        // All in camera space
-        vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
-        vec3 sampleViewDir = normalize(-fragmentPos);
-        vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(index)].xyz - fragmentPos;
-        float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
-        vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
-        vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
-        vec3 normalDirCameraSpace = normalize((cameraPoses[index] * vec4(normalDir, 0.0)).xyz);
-        vec3 lightIntensity = getLightIntensity(index);
-
-        float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
-        float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
-        float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
-        float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
-
-        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
-            / (infiniteLightSources ? 1.0 : lightDistSquared);
-
-        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-        if (geomAtten != vec3(0))
+        vec4 residual = getColor(index);
+        if (residual.w > 0)
         {
-            vec4 precomputedSample;
-            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
+            vec3 roughnessSquared = roughness * roughness;
+            precomputedSample = vec4(xyzToRGB(
 
-            if(pbrGeometricAttenuationEnabled)
-            {
-                precomputedSample = vec4(specularResid.rgb
-                    * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared),
-                    sampleColor.a * geomAtten);
-            }
-            else
-            {
-                precomputedSample =
-                    vec4(specularResid.rgb * 4 / lightIntensity
-                        * (infiniteLightSources ? 1.0 : lightDistSquared),
-                        sampleColor.a * nDotL);
-            }
+                pow(max(vec3(0),
 
-            if (residualImages)
-            {
-                precomputedSample.rgb -= xyzToRGB(dist(nDotH, roughness) * geomAtten * rgbToXYZ(specularColor));
-            }
+                    pow(dist(nDotH, roughness) * roughnessSquared, vec3(1.0 / gamma))
+//                    pow(rgbToXYZ(pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma))) * roughnessSquared / rgbToXYZ(specularColor) * 4 * nDotL * nDotV / geom(roughness, nDotH, nDotV, nDotL, hDotV), vec3(1 / gamma))
 
-            mat3 tangentToObject = mat3(1.0);
+                    + (residual.xyz - vec3(0.5))
 
-            vec3 virtualViewDir;
-            if (useTSOverrides)
-            {
-                vec3 gNormal = normalize(fNormal);
-                vec3 tangent = normalize(fTangent - dot(gNormal, fTangent));
-                vec3 bitangent = normalize(fBitangent
-                    - dot(gNormal, fBitangent) * gNormal
-                    - dot(tangent, fBitangent) * tangent);
-                tangentToObject = mat3(tangent, bitangent, gNormal);
+                ), vec3(gamma))
 
-                virtualViewDir = normalize(mat3(cameraPoses[index]) * tangentToObject * viewDirTSOverride);
-            }
-            else
-            {
-                virtualViewDir = normalize((cameraPoses[index] * vec4(viewPos, 1.0)).xyz - fragmentPos);
-            }
+                    * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
+        }
+    }
+    else
+    {
+        vec4 sampleColor = getLinearColor(index);
+        if (sampleColor.a > 0.0)
+        {
+            vec3 lightIntensity = getLightIntensity(index);
 
-            for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
+            vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
+                / (infiniteLightSources ? 1.0 : lightDistSquared);
+
+            vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+            if (geomAtten != vec3(0))
             {
-                if (perPixelWeightsEnabled)
+                vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
+
+                if(pbrGeometricAttenuationEnabled)
                 {
-                    vec3 virtualLightDir;
-                    if (useTSOverrides)
-                    {
-                        virtualLightDir =
-                            normalize(mat3(cameraPoses[index]) * tangentToObject * lightDirTSOverride);
-                    }
-                    else if (relightingEnabled)
-                    {
-                        virtualLightDir = normalize((cameraPoses[index] *
-                            vec4(lightPosVirtual[lightPass], 1.0)).xyz - fragmentPos);
-                    }
-                    else
-                    {
-                        virtualLightDir = virtualViewDir;
-                    }
-
-                    // Compute sample weight
-                    vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
-                    float virtualNdotH = max(0, dot(normalDirCameraSpace, virtualHalfDir));
-                    float weight = computeSampleWeight(
-                        isotropyFactor * (nDotH * virtualNdotH + sqrt(1 - nDotH*nDotH) * sqrt(1 - virtualNdotH*virtualNdotH)) +
-                        (1 - isotropyFactor) * dot(virtualHalfDir, sampleHalfDir));
-
-                    // float weight = computeSampleWeight(
-                        // normalize(vec3(1,1,10) * (transpose(tangentToObject) * virtualHalfDir)),
-                        // normalize(vec3(1,1,10) * (transpose(tangentToObject) * sampleHalfDir)));
-
-                    // float virtualNDotH = dot(normalDirCameraSpace, virtualHalfDir);
-                    // float sampleNDotH = dot(normalDirCameraSpace, sampleHalfDir);
-                    // float weight = computeSampleWeight(
-                        // vec3(virtualNDotH, sqrt(1.0 - virtualNDotH * virtualNDotH), 0.0),
-                        // vec3(sampleNDotH, sqrt(1.0 - sampleNDotH * sampleNDotH), 0.0));
-                    // float weight = 1.0 / abs(virtualNDotH - sampleNDotH);
-                    result[lightPass] = weight * precomputedSample;
+                    precomputedSample = vec4(specularResid.rgb
+                        * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared),
+                        sampleColor.a * geomAtten);
                 }
                 else
                 {
-                    result[lightPass] = getViewWeight(index) * precomputedSample;
+                    precomputedSample =
+                        vec4(specularResid.rgb * 4 / lightIntensity
+                            * (infiniteLightSources ? 1.0 : lightDistSquared),
+                            sampleColor.a * nDotL);
                 }
             }
         }
+    }
+
+    if (precomputedSample.w != 0)
+    {
+        mat3 tangentToObject = mat3(1.0);
+
+        vec3 virtualViewDir;
+        if (useTSOverrides)
+        {
+            vec3 gNormal = normalize(fNormal);
+            vec3 tangent = normalize(fTangent - dot(gNormal, fTangent));
+            vec3 bitangent = normalize(fBitangent
+                - dot(gNormal, fBitangent) * gNormal
+                - dot(tangent, fBitangent) * tangent);
+            tangentToObject = mat3(tangent, bitangent, gNormal);
+
+            virtualViewDir = normalize(mat3(cameraPoses[index]) * tangentToObject * viewDirTSOverride);
+        }
         else
         {
-            for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
+            virtualViewDir = normalize((cameraPoses[index] * vec4(viewPos, 1.0)).xyz - fragmentPos);
+        }
+
+        vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
+
+        for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
+        {
+            if (perPixelWeightsEnabled)
             {
-                result[lightPass] = vec4(0.0);
+                vec3 virtualLightDir;
+                if (useTSOverrides)
+                {
+                    virtualLightDir =
+                        normalize(mat3(cameraPoses[index]) * tangentToObject * lightDirTSOverride);
+                }
+                else if (relightingEnabled)
+                {
+                    virtualLightDir = normalize((cameraPoses[index] *
+                        vec4(lightPosVirtual[lightPass], 1.0)).xyz - fragmentPos);
+                }
+                else
+                {
+                    virtualLightDir = virtualViewDir;
+                }
+
+                // Compute sample weight
+                vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
+                float virtualNdotH = max(0, dot(normalDirCameraSpace, virtualHalfDir));
+                float weight = computeSampleWeight(
+                    isotropyFactor * (nDotH * virtualNdotH + sqrt(1 - nDotH*nDotH) * sqrt(1 - virtualNdotH*virtualNdotH)) +
+                    (1 - isotropyFactor) * dot(virtualHalfDir, sampleHalfDir));
+
+                // float weight = computeSampleWeight(
+                    // normalize(vec3(1,1,10) * (transpose(tangentToObject) * virtualHalfDir)),
+                    // normalize(vec3(1,1,10) * (transpose(tangentToObject) * sampleHalfDir)));
+
+                // float virtualNDotH = dot(normalDirCameraSpace, virtualHalfDir);
+                // float sampleNDotH = dot(normalDirCameraSpace, sampleHalfDir);
+                // float weight = computeSampleWeight(
+                    // vec3(virtualNDotH, sqrt(1.0 - virtualNDotH * virtualNDotH), 0.0),
+                    // vec3(sampleNDotH, sqrt(1.0 - sampleNDotH * sampleNDotH), 0.0));
+                // float weight = 1.0 / abs(virtualNDotH - sampleNDotH);
+                result[lightPass] = weight * precomputedSample;
+            }
+            else
+            {
+                result[lightPass] = getViewWeight(index) * precomputedSample;
             }
         }
 
@@ -844,7 +869,7 @@ void main()
 //            computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
 //    }
 
-    if (relightingEnabled)
+    if (relightingEnabled && ambientColor != vec3(0))
     {
         reflectance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 
@@ -963,7 +988,7 @@ void main()
                         // vec4 weightedAverage = weightedAverages[i];
 
                         predictedMFD = weightedAverage
-                            + (residualImages ? vec4(xyzToRGB(specularColorXYZ * dist(nDotH, roughness)), 0) : vec4(0));
+                            ;//+ (residualImages ? vec4(xyzToRGB(specularColorXYZ * dist(nDotH, roughness)), 0) : vec4(0));
                     }
                 }
 

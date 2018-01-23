@@ -12,6 +12,8 @@ uniform mat4 model_view;
 
 #define MAX_SQRT_ROUGHNESS 1.0
 
+#define diffuseMode true
+
 vec3 getDiffuseColor()
 {
     return pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
@@ -41,15 +43,21 @@ vec3 getSqrtRoughness()
 vec4 computeResidual()
 {
     vec3 normal = normalize(fNormal);
-//    vec3 tangent = normalize(fTangent - dot(normal, fTangent));
-//    vec3 bitangent = normalize(fBitangent
-//        - dot(normal, fBitangent) * normal
-//        - dot(tangent, fBitangent) * tangent);
-//
-//    mat3 tangentToObject = mat3(tangent, bitangent, normal);
-//    vec3 shadingNormal = tangentToObject * getDiffuseNormalVector();
-    vec3 shadingNormal = normal;
+    vec3 shadingNormal;
+    if (diffuseMode)
+    {
+        shadingNormal = normal;
+    }
+    else
+    {
+        vec3 tangent = normalize(fTangent - dot(normal, fTangent));
+        vec3 bitangent = normalize(fBitangent
+            - dot(normal, fBitangent) * normal
+            - dot(tangent, fBitangent) * tangent);
 
+        mat3 tangentToObject = mat3(tangent, bitangent, normal);
+        shadingNormal = tangentToObject * getDiffuseNormalVector();
+    }
 
     vec3 diffuseColorRGB = getDiffuseColor();
     vec3 diffuseColor = rgbToXYZ(diffuseColorRGB);
@@ -70,7 +78,7 @@ vec4 computeResidual()
         vec3 attenuatedLightIntensity = infiniteLightSource ? 
             lightIntensity : lightIntensity / dot(lightPreNormalized, lightPreNormalized);
         vec3 light = normalize(lightPreNormalized);
-        float nDotL = max(0, dot(normal, light));
+        float nDotL = max(0, dot(shadingNormal, light));
 
         if (nDotL > 0.0)
         {
@@ -82,7 +90,7 @@ vec4 computeResidual()
             vec3 colorScaled = rgbToXYZ(color.rgb / attenuatedLightIntensity);
             vec3 diffuseContrib = diffuseColor * nDotL;
             float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
-            vec3 mfdFresnel = /*max(vec3(0.0), */( colorScaled /*- diffuseContrib*/) / geomRatio;
+            vec3 mfdFresnel = max(vec3(0.0), ( colorScaled /*- diffuseContrib*/)) / geomRatio;
 
             vec3 sqrtDenominator = (roughnessSquared - 1) * nDotH * nDotH + 1;
             return vec4(
@@ -90,8 +98,9 @@ vec4 computeResidual()
                             clamp(mfdFresnel * roughnessSquared / specularColor, 0, 1)
                         , vec3(1.0 / 2.2))
                         - pow(
-//                            clamp(roughnessSquared * roughnessSquared / (sqrtDenominator * sqrtDenominator), 0, 1),
-                            clamp(diffuseContrib * roughnessSquared / (geomRatio * specularColor), 0, 1),
+                            diffuseMode ?
+                                clamp(diffuseContrib * roughnessSquared / (geomRatio * specularColor), 0, 1)
+                                : clamp(roughnessSquared * roughnessSquared / (sqrtDenominator * sqrtDenominator), 0, 1),
                         vec3(1.0 / 2.2))
                     , nDotV);
         }

@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
@@ -25,8 +27,8 @@ public class SVDRequest implements IBRRequest
     private static final boolean DEBUG = false;
 
     private static final int BLOCK_SIZE = 32;
-    private static final int SAVED_SINGULAR_VALUES = 16;
-    private static final int MAX_RUNNING_THREADS = 7;
+    private static final int SAVED_SINGULAR_VALUES = 4;
+    private static final int MAX_RUNNING_THREADS = 6;
     private static final boolean PUT_COLOR_IN_VIEW_FACTOR = true;
 
     private final int texWidth;
@@ -98,37 +100,12 @@ public class SVDRequest implements IBRRequest
                 .createFramebufferObject()
         )
         {
+            Queue<Thread> taskQueue = new LinkedList<>();
 
             for (int blockY = 0; blockY < blockCountY; blockY++)
             {
                 for (int blockX = 0; blockX < blockCountX; blockX++)
                 {
-                    boolean proceed = false;
-                    while (!proceed)
-                    {
-                        synchronized (activeBlockCountChangeHandle)
-                        {
-                            if (activeBlockCount < MAX_RUNNING_THREADS)
-                            {
-                                proceed = true;
-                                activeBlockCount++;
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    activeBlockCountChangeHandle.wait(30000); // Double check every 30 seconds if notify() was not called
-                                }
-                                catch (InterruptedException e)
-                                {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    }
-
-                    System.out.println("Starting block " + blockX + ", " + blockY + "...");
-
                     Vector2 minTexCoords = new Vector2(
                         blockX * BLOCK_SIZE * 1.0f / texWidth,
                         blockY * BLOCK_SIZE * 1.0f / texHeight);
@@ -141,99 +118,225 @@ public class SVDRequest implements IBRRequest
                     boolean[] pixelMasks = new boolean[BLOCK_SIZE * BLOCK_SIZE];
                     SimpleMatrix matrix = getMatrix(resources, projTexProgram, framebuffer, minTexCoords, maxTexCoords, validPixelCounts, pixelMasks);
 
-                    int currentBlockX = blockX;
-                    int currentBlockY = blockY;
-
-                    Thread svdThread = new Thread(() ->
+                    // Quickly test if the block is completely empty (i.e. no triangles were rendered in the block).
+                    // If so, then don't even bother putting it in the queue and move on to try another block.
+                    boolean hasValidEntries = false;
+                    for (int i = 0; !hasValidEntries && i < validPixelCounts.length; i++)
                     {
-                        try
+                        hasValidEntries = validPixelCounts[i] != 0;
+                    }
+
+                    if (hasValidEntries)
+                    {
+                        int currentBlockX = blockX;
+                        int currentBlockY = blockY;
+
+                        Thread svdThread = new Thread(() ->
                         {
-                            //SimpleSVD<SimpleMatrix> svd = matrix.svd(true);
-                            FastPartialSVD svd = FastPartialSVD.compute(matrix, SAVED_SINGULAR_VALUES, 0.05, 16, 3);
+                            System.out.println("Starting block " + currentBlockX + ", " + currentBlockY + "...");
 
-                            for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
+                            try
                             {
-                                double squaredError;
+                                //SimpleSVD<SimpleMatrix> svd = matrix.svd(true);
+                                FastPartialSVD svd = FastPartialSVD.compute(matrix, SAVED_SINGULAR_VALUES, 0.05, 16, 3);
 
-                                if (PUT_COLOR_IN_VIEW_FACTOR)
+                                for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
                                 {
-                                    int firstColumn = 3 * k;
-                                    squaredError = IntStream.range(0, svd.getError().numRows())
-                                        .filter(i -> pixelMasks[i])
-                                        .mapToDouble(i -> svd.getError().get(i, firstColumn) * svd.getError().get(i, firstColumn)
-                                                        + svd.getError().get(i, firstColumn + 1) * svd.getError().get(i, firstColumn + 1)
-                                                        + svd.getError().get(i, firstColumn + 2) * svd.getError().get(i, firstColumn + 2))
-                                        .sum();
-                                }
-                                else
-                                {
-                                    int column = k;
-                                    squaredError = IntStream.range(0, svd.getError().numRows())
-                                        .filter(i -> pixelMasks[i / 3])
-                                        .mapToDouble(i -> svd.getError().get(i, column) * svd.getError().get(i, column))
-                                        .sum();
-                                }
+                                    double squaredError;
 
-                                synchronized (squaredErrorByView)
-                                {
-                                    squaredErrorByView[k] += squaredError / (double) (3 * texWidth * texHeight);
-                                }
-                            }
-
-
-                            double[] singularValues = svd.getSingularValues();
-                            int effectiveSingularValues = Math.min(SAVED_SINGULAR_VALUES, singularValues.length);
-
-                            SimpleMatrix uMatrix = svd.getU();
-                            SimpleMatrix vMatrix = svd.getV();
-
-                            double[] scale = new double[effectiveSingularValues];
-                            for (int svIndex = 0; svIndex < effectiveSingularValues; svIndex++)
-                            {
-                                for (int k = 0; k < vMatrix.numRows(); k++)
-                                {
-                                    scale[svIndex] = Math.max(scale[svIndex], Math.abs(vMatrix.get(k, svIndex)));
-                                }
-
-                                for (int k = 0; k < uMatrix.numRows(); k++)
-                                {
-                                    scale[svIndex] = Math.min(scale[svIndex], 1.0 / (singularValues[svIndex] * Math.abs(uMatrix.get(k, svIndex))));
-                                }
-
-                                for (int y = 0; y < BLOCK_SIZE; y++)
-                                {
-                                    for (int x = 0; x < BLOCK_SIZE; x++)
+                                    if (PUT_COLOR_IN_VIEW_FACTOR)
                                     {
-                                        int blockPixelIndex = y * BLOCK_SIZE + x;
-                                        int texturePixelIndex =
-                                            (texHeight - currentBlockY * BLOCK_SIZE - y - 1) * texWidth + currentBlockX * BLOCK_SIZE + x;
+                                        int firstColumn = 3 * k;
+                                        squaredError = IntStream.range(0, svd.getError().numRows())
+                                            .filter(i -> pixelMasks[i])
+                                            .mapToDouble(i -> svd.getError().get(i, firstColumn) * svd.getError().get(i, firstColumn)
+                                                + svd.getError().get(i, firstColumn + 1) * svd.getError().get(i, firstColumn + 1)
+                                                + svd.getError().get(i, firstColumn + 2) * svd.getError().get(i, firstColumn + 2))
+                                            .sum();
+                                    }
+                                    else
+                                    {
+                                        int column = k;
+                                        squaredError = IntStream.range(0, svd.getError().numRows())
+                                            .filter(i -> pixelMasks[i / 3])
+                                            .mapToDouble(i -> svd.getError().get(i, column) * svd.getError().get(i, column))
+                                            .sum();
+                                    }
 
-                                        if (PUT_COLOR_IN_VIEW_FACTOR)
+                                    synchronized (squaredErrorByView)
+                                    {
+                                        squaredErrorByView[k] += squaredError / (double) (3 * texWidth * texHeight);
+                                    }
+                                }
+
+                                double[] singularValues = svd.getSingularValues();
+                                int effectiveSingularValues = Math.min(SAVED_SINGULAR_VALUES, singularValues.length);
+
+                                SimpleMatrix uMatrix = svd.getU();
+                                SimpleMatrix vMatrix = svd.getV();
+
+                                double[] scale = new double[effectiveSingularValues];
+                                for (int svIndex = 0; svIndex < effectiveSingularValues; svIndex++)
+                                {
+                                    for (int k = 0; k < vMatrix.numRows(); k++)
+                                    {
+                                        scale[svIndex] = Math.max(scale[svIndex], Math.abs(vMatrix.get(k, svIndex)));
+                                    }
+
+                                    for (int k = 0; k < uMatrix.numRows(); k++)
+                                    {
+                                        scale[svIndex] = Math.min(scale[svIndex], 1.0 / (singularValues[svIndex] * Math.abs(uMatrix.get(k, svIndex))));
+                                    }
+
+                                    for (int y = 0; y < BLOCK_SIZE; y++)
+                                    {
+                                        for (int x = 0; x < BLOCK_SIZE; x++)
                                         {
-                                            if (pixelMasks[blockPixelIndex])
+                                            int blockPixelIndex = y * BLOCK_SIZE + x;
+                                            int texturePixelIndex =
+                                                (texHeight - currentBlockY * BLOCK_SIZE - y - 1) * texWidth + currentBlockX * BLOCK_SIZE + x;
+
+                                            if (PUT_COLOR_IN_VIEW_FACTOR)
                                             {
-                                                textureData[svIndex][texturePixelIndex][0] =
-                                                    (float) (uMatrix.get(blockPixelIndex, svIndex)
-                                                        * scale[svIndex] * singularValues[svIndex]);
+                                                if (pixelMasks[blockPixelIndex])
+                                                {
+                                                    textureData[svIndex][texturePixelIndex][0] =
+                                                        (float) (uMatrix.get(blockPixelIndex, svIndex)
+                                                            * scale[svIndex] * singularValues[svIndex]);
+                                                }
+                                                else
+                                                {
+                                                    textureData[svIndex][texturePixelIndex][0] = Float.NaN;
+                                                }
                                             }
                                             else
                                             {
-                                                textureData[svIndex][texturePixelIndex][0] = Float.NaN;
+                                                if (pixelMasks[blockPixelIndex])
+                                                {
+                                                    textureData[svIndex][texturePixelIndex][0] =
+                                                        (float) (uMatrix.get(3 * blockPixelIndex, svIndex)
+                                                            * scale[svIndex] * singularValues[svIndex]);
+                                                    textureData[svIndex][texturePixelIndex][1] =
+                                                        (float) (uMatrix.get(3 * blockPixelIndex + 1, svIndex)
+                                                            * scale[svIndex] * singularValues[svIndex]);
+                                                    textureData[svIndex][texturePixelIndex][2] =
+                                                        (float) (uMatrix.get(3 * blockPixelIndex + 2, svIndex)
+                                                            * scale[svIndex] * singularValues[svIndex]);
+                                                }
+                                                else
+                                                {
+                                                    textureData[svIndex][texturePixelIndex][0] = Float.NaN;
+                                                    textureData[svIndex][texturePixelIndex][1] = Float.NaN;
+                                                    textureData[svIndex][texturePixelIndex][2] = Float.NaN;
+                                                }
                                             }
                                         }
-                                        else
+                                    }
+
+                                    // Hole fill
+                                    for (int subBlockSize = 2; subBlockSize <= BLOCK_SIZE; subBlockSize *= 2)
+                                    {
+                                        for (int y0 = 0; y0 < BLOCK_SIZE; y0 += subBlockSize)
                                         {
-                                            if (pixelMasks[blockPixelIndex])
+                                            for (int x0 = 0; x0 < BLOCK_SIZE; x0 += subBlockSize)
                                             {
-                                                textureData[svIndex][texturePixelIndex][0] =
-                                                    (float) (uMatrix.get(3 * blockPixelIndex, svIndex)
-                                                        * scale[svIndex] * singularValues[svIndex]);
-                                                textureData[svIndex][texturePixelIndex][1] =
-                                                    (float) (uMatrix.get(3 * blockPixelIndex + 1, svIndex)
-                                                        * scale[svIndex] * singularValues[svIndex]);
-                                                textureData[svIndex][texturePixelIndex][2] =
-                                                    (float) (uMatrix.get(3 * blockPixelIndex + 2, svIndex)
-                                                        * scale[svIndex] * singularValues[svIndex]);
+                                                float sum = 0.0f;
+                                                int count = 0;
+
+                                                // First pass: compute average
+                                                for (int y = y0; y < y0 + subBlockSize; y++)
+                                                {
+                                                    for (int x = x0; x < x0 + subBlockSize; x++)
+                                                    {
+                                                        int texturePixelIndex =
+                                                            (texHeight - currentBlockY * BLOCK_SIZE - y - 1) * texWidth + currentBlockX * BLOCK_SIZE + x;
+
+                                                        if (PUT_COLOR_IN_VIEW_FACTOR)
+                                                        {
+                                                            if (!Float.isNaN(textureData[svIndex][texturePixelIndex][0]))
+                                                            {
+                                                                sum += textureData[svIndex][texturePixelIndex][0];
+                                                                count++;
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            if (!Float.isNaN(textureData[svIndex][texturePixelIndex][0]))
+                                                            {
+                                                                sum += textureData[svIndex][texturePixelIndex][0];
+                                                                count++;
+                                                            }
+
+                                                            if (!Float.isNaN(textureData[svIndex][texturePixelIndex][1]))
+                                                            {
+                                                                sum += textureData[svIndex][texturePixelIndex][1];
+                                                                count++;
+                                                            }
+
+                                                            if (!Float.isNaN(textureData[svIndex][texturePixelIndex][2]))
+                                                            {
+                                                                sum += textureData[svIndex][texturePixelIndex][2];
+                                                                count++;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                if (count > 0)
+                                                {
+                                                    // Second pass: replace NaN with average.
+                                                    for (int y = y0; y < y0 + subBlockSize; y++)
+                                                    {
+                                                        for (int x = x0; x < x0 + subBlockSize; x++)
+                                                        {
+                                                            int texturePixelIndex =
+                                                                (texHeight - currentBlockY * BLOCK_SIZE - y - 1) * texWidth + currentBlockX * BLOCK_SIZE + x;
+
+                                                            if (PUT_COLOR_IN_VIEW_FACTOR)
+                                                            {
+                                                                if (Float.isNaN(textureData[svIndex][texturePixelIndex][0]))
+                                                                {
+                                                                    textureData[svIndex][texturePixelIndex][0] = sum / count;
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                if (Float.isNaN(textureData[svIndex][texturePixelIndex][0]))
+                                                                {
+                                                                    textureData[svIndex][texturePixelIndex][0] = sum / count;
+                                                                }
+
+                                                                if (Float.isNaN(textureData[svIndex][texturePixelIndex][1]))
+                                                                {
+                                                                    textureData[svIndex][texturePixelIndex][1] = sum / count;
+                                                                }
+
+                                                                if (Float.isNaN(textureData[svIndex][texturePixelIndex][2]))
+                                                                {
+                                                                    textureData[svIndex][texturePixelIndex][2] = sum / count;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                for (int svIndex = effectiveSingularValues; svIndex < SAVED_SINGULAR_VALUES; svIndex++)
+                                {
+                                    // Fill in with NaN for singular values that are zero.
+                                    for (int y = 0; y < BLOCK_SIZE; y++)
+                                    {
+                                        for (int x = 0; x < BLOCK_SIZE; x++)
+                                        {
+                                            int texturePixelIndex =
+                                                (texHeight - currentBlockY * BLOCK_SIZE - y - 1) * texWidth + currentBlockX * BLOCK_SIZE + x;
+
+                                            if (PUT_COLOR_IN_VIEW_FACTOR)
+                                            {
+                                                textureData[svIndex][texturePixelIndex][0] = Float.NaN;
                                             }
                                             else
                                             {
@@ -245,193 +348,112 @@ public class SVDRequest implements IBRRequest
                                     }
                                 }
 
-                                // Hole fill
-                                for (int subBlockSize = 2; subBlockSize <= BLOCK_SIZE; subBlockSize *= 2)
+                                for (int k = 0; k < renderable.getActiveViewSet().getCameraPoseCount(); k++)
                                 {
-                                    for (int y0 = 0; y0 < BLOCK_SIZE; y0 += subBlockSize)
+                                    for (int i = 0; i < svLayoutHeight; i++)
                                     {
-                                        for (int x0 = 0; x0 < BLOCK_SIZE; x0 += subBlockSize)
+                                        for (int j = 0; j < svLayoutWidth; j++)
                                         {
-                                            float sum = 0.0f;
-                                            int count = 0;
-
-                                            // First pass: compute average
-                                            for (int y = y0; y < y0 + subBlockSize; y++)
+                                            int svIndex = i * svLayoutWidth + j;
+                                            if (svIndex < effectiveSingularValues)
                                             {
-                                                for (int x = x0; x < x0 + subBlockSize; x++)
+                                                int texturePixelIndex =
+                                                    ((svLayoutHeight * (blockCountY - currentBlockY) - i - 1) * blockCountX + currentBlockX)
+                                                        * svLayoutWidth + j;
+
+                                                double blockImportance;
+
+                                                if (PUT_COLOR_IN_VIEW_FACTOR)
                                                 {
-                                                    int texturePixelIndex =
-                                                        (texHeight - currentBlockY * BLOCK_SIZE - y - 1) * texWidth + currentBlockX * BLOCK_SIZE + x;
+                                                    viewData[k][texturePixelIndex][0] =
+                                                        (float) (vMatrix.get(3 * k, svIndex) / scale[svIndex]);
+                                                    viewData[k][texturePixelIndex][1] =
+                                                        (float) (vMatrix.get(3 * k + 1, svIndex) / scale[svIndex]);
+                                                    viewData[k][texturePixelIndex][2] =
+                                                        (float) (vMatrix.get(3 * k + 2, svIndex) / scale[svIndex]);
 
-                                                    if (PUT_COLOR_IN_VIEW_FACTOR)
-                                                    {
-                                                        if (!Float.isNaN(textureData[svIndex][texturePixelIndex][0]))
-                                                        {
-                                                            sum += textureData[svIndex][texturePixelIndex][0];
-                                                            count++;
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        if (!Float.isNaN(textureData[svIndex][texturePixelIndex][0]))
-                                                        {
-                                                            sum += textureData[svIndex][texturePixelIndex][0];
-                                                            count++;
-                                                        }
-
-                                                        if (!Float.isNaN(textureData[svIndex][texturePixelIndex][1]))
-                                                        {
-                                                            sum += textureData[svIndex][texturePixelIndex][1];
-                                                            count++;
-                                                        }
-
-                                                        if (!Float.isNaN(textureData[svIndex][texturePixelIndex][2]))
-                                                        {
-                                                            sum += textureData[svIndex][texturePixelIndex][2];
-                                                            count++;
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                            if (count > 0)
-                                            {
-                                                // Second pass: replace NaN with average.
-                                                for (int y = y0; y < y0 + subBlockSize; y++)
-                                                {
-                                                    for (int x = x0; x < x0 + subBlockSize; x++)
-                                                    {
-                                                        int texturePixelIndex =
-                                                            (texHeight - currentBlockY * BLOCK_SIZE - y - 1) * texWidth + currentBlockX * BLOCK_SIZE + x;
-
-                                                        if (PUT_COLOR_IN_VIEW_FACTOR)
-                                                        {
-                                                            if (Float.isNaN(textureData[svIndex][texturePixelIndex][0]))
-                                                            {
-                                                                textureData[svIndex][texturePixelIndex][0] = sum / count;
-                                                            }
-                                                        }
-                                                        else
-                                                        {
-                                                            if (Float.isNaN(textureData[svIndex][texturePixelIndex][0]))
-                                                            {
-                                                                textureData[svIndex][texturePixelIndex][0] = sum / count;
-                                                            }
-
-                                                            if (Float.isNaN(textureData[svIndex][texturePixelIndex][1]))
-                                                            {
-                                                                textureData[svIndex][texturePixelIndex][1] = sum / count;
-                                                            }
-
-                                                            if (Float.isNaN(textureData[svIndex][texturePixelIndex][2]))
-                                                            {
-                                                                textureData[svIndex][texturePixelIndex][2] = sum / count;
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            for (int svIndex = effectiveSingularValues; svIndex < SAVED_SINGULAR_VALUES; svIndex++)
-                            {
-                                // Fill in with NaN for singular values that are zero.
-                                for (int y = 0; y < BLOCK_SIZE; y++)
-                                {
-                                    for (int x = 0; x < BLOCK_SIZE; x++)
-                                    {
-                                        int texturePixelIndex =
-                                            (texHeight - currentBlockY * BLOCK_SIZE - y - 1) * texWidth + currentBlockX * BLOCK_SIZE + x;
-
-                                        if (PUT_COLOR_IN_VIEW_FACTOR)
-                                        {
-                                            textureData[svIndex][texturePixelIndex][0] = Float.NaN;
-                                        }
-                                        else
-                                        {
-                                            textureData[svIndex][texturePixelIndex][0] = Float.NaN;
-                                            textureData[svIndex][texturePixelIndex][1] = Float.NaN;
-                                            textureData[svIndex][texturePixelIndex][2] = Float.NaN;
-                                        }
-                                    }
-                                }
-                            }
-
-                            for (int k = 0; k < renderable.getActiveViewSet().getCameraPoseCount(); k++)
-                            {
-                                for (int i = 0; i < svLayoutHeight; i++)
-                                {
-                                    for (int j = 0; j < svLayoutWidth; j++)
-                                    {
-                                        int svIndex = i * svLayoutWidth + j;
-                                        if (svIndex < effectiveSingularValues)
-                                        {
-                                            int texturePixelIndex =
-                                                ((svLayoutHeight * (blockCountY - currentBlockY) - i - 1) * blockCountX + currentBlockX)
-                                                    * svLayoutWidth + j;
-
-                                            double blockImportance;
-
-                                            if (PUT_COLOR_IN_VIEW_FACTOR)
-                                            {
-                                                viewData[k][texturePixelIndex][0] =
-                                                    (float) (vMatrix.get(3 * k, svIndex) / scale[svIndex]);
-                                                viewData[k][texturePixelIndex][1] =
-                                                    (float) (vMatrix.get(3 * k + 1, svIndex) / scale[svIndex]);
-                                                viewData[k][texturePixelIndex][2] =
-                                                    (float) (vMatrix.get(3 * k + 2, svIndex) / scale[svIndex]);
-
-                                                blockImportance = 1.0 / (double) (texWidth * texHeight)
-                                                    * singularValues[svIndex] * singularValues[svIndex]
-                                                    * (vMatrix.get(3 * k, svIndex) * vMatrix.get(3 * k, svIndex)
+                                                    blockImportance = 1.0 / (double) (texWidth * texHeight)
+                                                        * singularValues[svIndex] * singularValues[svIndex]
+                                                        * (vMatrix.get(3 * k, svIndex) * vMatrix.get(3 * k, svIndex)
                                                         + vMatrix.get(3 * k + 1, svIndex) * vMatrix.get(3 * k + 1, svIndex)
                                                         + vMatrix.get(3 * k + 2, svIndex) * vMatrix.get(3 * k + 2, svIndex)) / 3;
-                                            }
-                                            else
-                                            {
-                                                viewData[k][texturePixelIndex][0] =
-                                                    (float) (vMatrix.get(k, svIndex) / scale[svIndex]);
+                                                }
+                                                else
+                                                {
+                                                    viewData[k][texturePixelIndex][0] =
+                                                        (float) (vMatrix.get(k, svIndex) / scale[svIndex]);
 
-                                                blockImportance = 1.0 / (double) (texWidth * texHeight)
-                                                    * singularValues[svIndex] * singularValues[svIndex]
-                                                    * vMatrix.get(k, svIndex) * vMatrix.get(k, svIndex);
-                                            }
+                                                    blockImportance = 1.0 / (double) (texWidth * texHeight)
+                                                        * singularValues[svIndex] * singularValues[svIndex]
+                                                        * vMatrix.get(k, svIndex) * vMatrix.get(k, svIndex);
+                                                }
 
-                                            synchronized (viewImportanceBySingularValues)
-                                            {
-                                                viewImportanceBySingularValues[k][svIndex] += blockImportance;
-                                            }
+                                                synchronized (viewImportanceBySingularValues)
+                                                {
+                                                    viewImportanceBySingularValues[k][svIndex] += blockImportance;
+                                                }
 
-                                            synchronized (viewImportance)
-                                            {
-                                                viewImportance[k] += blockImportance;
+                                                synchronized (viewImportance)
+                                                {
+                                                    viewImportance[k] += blockImportance;
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            System.out.println("Finished block " + currentBlockX + ", " + currentBlockY + '.');
-                        }
-                        catch(RuntimeException e)
-                        {
-                            System.err.println("Block " + currentBlockX + ", " + currentBlockY + " failed.");
-                            e.printStackTrace();
-                        }
-                        finally
+                                System.out.println("Finished block " + currentBlockX + ", " + currentBlockY + '.');
+                            }
+                            catch (RuntimeException e)
+                            {
+                                System.err.println("Block " + currentBlockX + ", " + currentBlockY + " failed.");
+                                e.printStackTrace();
+                            }
+                            finally
+                            {
+                                synchronized (activeBlockCountChangeHandle)
+                                {
+                                    activeBlockCount--;
+                                    activeBlockCountChangeHandle.notifyAll();
+                                }
+                            }
+                        });
+
+                        taskQueue.add(svdThread);
+
+                        // Add any tasks that are in the queue as long as it looks like there are less than the max number of threads running.
+                        // Otherwise, if the task queue is full, wait until at least one task starts, and then move on to generate another task to replace it.
+                        // Finally, if we've just finished setting up the last block, keep looping until the task queue is empty.
+                        boolean readyForNewBlock = true; // First time through the loop will initialize this variable.
+                        while ((!taskQueue.isEmpty() && readyForNewBlock)
+                            || taskQueue.size() == MAX_RUNNING_THREADS
+                            || (!taskQueue.isEmpty() && blockX == blockCountX - 1 && blockY == blockCountY - 1))
                         {
                             synchronized (activeBlockCountChangeHandle)
                             {
-                                activeBlockCount--;
-                                activeBlockCountChangeHandle.notifyAll();
+                                if (activeBlockCount < MAX_RUNNING_THREADS)
+                                {
+                                    taskQueue.poll().start();
+                                    activeBlockCount++;
+                                }
+                                // Two situations in which we need to sleep: if the task queue is full and we're waiting to start another thread
+                                // before adding more to it, or if we've finished setting up the last block and are just running out the queue.
+                                else if (taskQueue.size() == MAX_RUNNING_THREADS || (blockX == blockCountX - 1 && blockY == blockCountY - 1))
+                                {
+                                    try
+                                    {
+                                        activeBlockCountChangeHandle.wait(30000); // Double check every 30 seconds if notify() was not called
+                                    }
+                                    catch (InterruptedException e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+                                }
+
+                                readyForNewBlock = activeBlockCount < MAX_RUNNING_THREADS;
                             }
                         }
-                    });
-
-                    svdThread.start();
+                    }
                 }
             }
         }

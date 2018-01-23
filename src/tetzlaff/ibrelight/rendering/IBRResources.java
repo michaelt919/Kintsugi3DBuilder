@@ -1,12 +1,10 @@
 package tetzlaff.ibrelight.rendering;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
@@ -16,7 +14,6 @@ import tetzlaff.gl.material.Material;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
-import tetzlaff.gl.types.AbstractDataType;
 import tetzlaff.gl.types.AbstractDataTypeFactory;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.IntVector2;
@@ -256,7 +253,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 try
                 {
                     eigentexturesTemp = context.getTextureFactory()
-                        .build2DColorTextureArray(img.getWidth(), img.getHeight(), 16)
+                        .build2DColorTextureArray(img.getWidth(), img.getHeight(), 4)
                         .setInternalFormat(CompressionFormat.RED_4BPP)
                         .setMipmapsEnabled(true)
                         .setMaxMipmapLevel(6) // = log2(blockSize) = log2(64)  TODO: make this configurable
@@ -264,42 +261,28 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                         //.setMaxAnisotropy(16.0f)
                         .createTexture();
 
-                    AbstractDataType<Number> signedByteType = AbstractDataTypeFactory.getInstance().getSingleComponentDataType(NativeDataType.BYTE);
-                    Function<Color, Number> unsignedToSignedConversion = color -> Math.max(-127, color.getRed() - 128);
-
                     // TODO don't hardcode
-                    eigentexturesTemp.loadLayer(0, new File(viewSet.getImageFilePath(), "sv_0000_00_00.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(1, new File(viewSet.getImageFilePath(), "sv_0001_00_01.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(2, new File(viewSet.getImageFilePath(), "sv_0002_00_02.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(3, new File(viewSet.getImageFilePath(), "sv_0003_00_03.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(4, new File(viewSet.getImageFilePath(), "sv_0004_01_00.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(5, new File(viewSet.getImageFilePath(), "sv_0005_01_01.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(6, new File(viewSet.getImageFilePath(), "sv_0006_01_02.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(7, new File(viewSet.getImageFilePath(), "sv_0007_01_03.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(8, new File(viewSet.getImageFilePath(), "sv_0008_02_00.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(9, new File(viewSet.getImageFilePath(), "sv_0009_02_01.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(10, new File(viewSet.getImageFilePath(), "sv_0010_02_02.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(11, new File(viewSet.getImageFilePath(), "sv_0011_02_03.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(12, new File(viewSet.getImageFilePath(), "sv_0012_03_00.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(13, new File(viewSet.getImageFilePath(), "sv_0013_03_01.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(14, new File(viewSet.getImageFilePath(), "sv_0014_03_02.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
-                    eigentexturesTemp.loadLayer(15, new File(viewSet.getImageFilePath(), "sv_0015_03_03.png"),
-                        true);//, signedByteType, unsignedToSignedConversion);
+//                    eigentexturesTemp.loadLayer(0, new File(viewSet.getImageFilePath(), "sv_0000_00_00.png"), true);
+//                    eigentexturesTemp.loadLayer(1, new File(viewSet.getImageFilePath(), "sv_0001_00_01.png"), true);
+//                    eigentexturesTemp.loadLayer(2, new File(viewSet.getImageFilePath(), "sv_0002_00_02.png"), true);
+//                    eigentexturesTemp.loadLayer(3, new File(viewSet.getImageFilePath(), "sv_0003_00_03.png"), true);
+//                    eigentexturesTemp.loadLayer(4, new File(viewSet.getImageFilePath(), "sv_0004_01_00.png"), true);
+//                    eigentexturesTemp.loadLayer(5, new File(viewSet.getImageFilePath(), "sv_0005_01_01.png"), true);
+//                    eigentexturesTemp.loadLayer(6, new File(viewSet.getImageFilePath(), "sv_0006_01_02.png"), true);
+//                    eigentexturesTemp.loadLayer(7, new File(viewSet.getImageFilePath(), "sv_0007_01_03.png"), true);
+//                    eigentexturesTemp.loadLayer(8, new File(viewSet.getImageFilePath(), "sv_0008_02_00.png"), true);
+//                    eigentexturesTemp.loadLayer(9, new File(viewSet.getImageFilePath(), "sv_0009_02_01.png"), true);
+//                    eigentexturesTemp.loadLayer(10, new File(viewSet.getImageFilePath(), "sv_0010_02_02.png"), true);
+//                    eigentexturesTemp.loadLayer(11, new File(viewSet.getImageFilePath(), "sv_0011_02_03.png"), true);
+//                    eigentexturesTemp.loadLayer(12, new File(viewSet.getImageFilePath(), "sv_0012_03_00.png"), true);
+//                    eigentexturesTemp.loadLayer(13, new File(viewSet.getImageFilePath(), "sv_0013_03_01.png"), true);
+//                    eigentexturesTemp.loadLayer(14, new File(viewSet.getImageFilePath(), "sv_0014_03_02.png"), true);
+//                    eigentexturesTemp.loadLayer(15, new File(viewSet.getImageFilePath(), "sv_0015_03_03.png"), true);
+
+                    eigentexturesTemp.loadLayer(0, new File(viewSet.getImageFilePath(), "sv_0000_00_00.png"), true);
+                    eigentexturesTemp.loadLayer(1, new File(viewSet.getImageFilePath(), "sv_0001_00_01.png"), true);
+                    eigentexturesTemp.loadLayer(2, new File(viewSet.getImageFilePath(), "sv_0002_01_00.png"), true);
+                    eigentexturesTemp.loadLayer(3, new File(viewSet.getImageFilePath(), "sv_0003_01_01.png"), true);
                 }
                 catch (IOException e)
                 {
@@ -379,7 +362,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             }
             else
             {
-                textureArrayBuilder.setInternalFormat(ColorFormat.R16UI);
+                textureArrayBuilder.setInternalFormat(ColorFormat.RGB8);
                 textureArrayBuilder.setMipmapsEnabled(false);
                 textureArrayBuilder.setLinearFilteringEnabled(false);
             }
@@ -429,11 +412,11 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 }
                 else
                 {
-                    this.colorTextures.loadLayer(i, imageFile, true,
-                        AbstractDataTypeFactory.getInstance().getSingleComponentDataType(NativeDataType.UNSIGNED_SHORT),
-                        color -> ((0x7F & (Math.max(-63, Math.min(63, Math.round((color.getGreen() - 128) * 63.0 / 127.0))) + 64)) << 9)
-                            | ((0x1F & (Math.max(-15, Math.min(15, Math.round((color.getBlue() - color.getGreen()) * 31.5 / 127.0))) + 16)) << 4)
-                            | (0x0F & (Math.max(-7, Math.min(7, Math.round((color.getRed() - color.getGreen()) * 31.5 / 127.0))) + 8)));
+                    this.colorTextures.loadLayer(i, imageFile, true );// ,
+//                        AbstractDataTypeFactory.getInstance().getSingleComponentDataType(NativeDataType.UNSIGNED_SHORT),
+//                        color -> ((0x7F & (Math.max(-63, Math.min(63, Math.round((color.getGreen() - 128) * 63.0 / 127.0))) + 64)) << 9)
+//                            | ((0x1F & (Math.max(-15, Math.min(15, Math.round((color.getBlue() - color.getGreen()) * 31.5 / 127.0))) + 16)) << 4)
+//                            | (0x0F & (Math.max(-7, Math.min(7, Math.round((color.getRed() - color.getGreen()) * 31.5 / 127.0))) + 8)));
                 }
 
                 if(loadingMonitor != null)
@@ -931,7 +914,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             program.setTexture("eigentextures", this.eigentextures);
             program.setTexture("viewWeightTextures", this.colorTextures);
-            program.setUniform("blockSize", new IntVector2(64, 64));
+            program.setUniform("blockSize", new IntVector2(32, 32));
         }
         else
         {
