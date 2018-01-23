@@ -6,12 +6,12 @@
 #line 7 1102
 
 uniform sampler2DArray eigentextures;
-uniform usampler2DArray viewWeightTextures;
+uniform sampler2DArray viewWeightTextures;
 uniform ivec2 blockSize;
 
-#define MAX_EIGENTEXTURES 16
-#define VIEW_WEIGHT_PACKING_X 4
-#define VIEW_WEIGHT_PACKING_Y 4
+#define MAX_EIGENTEXTURES 4
+#define VIEW_WEIGHT_PACKING_X 2
+#define VIEW_WEIGHT_PACKING_Y 2
 
 ivec2 computeBlockStart(vec2 texCoords, ivec2 textureSize)
 {
@@ -21,32 +21,32 @@ ivec2 computeBlockStart(vec2 texCoords, ivec2 textureSize)
 
 vec4 computeSVDViewWeights(ivec3 blockStart, int k)
 {
-//    vec3 viewWeights = texelFetch(viewWeightTextures, blockStart + ivec3(k % VIEW_WEIGHT_PACKING_X, k / VIEW_WEIGHT_PACKING_X, 0), 0).xyz;
-//    if (viewWeights.y > 0)
-//    {
-//        return vec4((viewWeights * 255 - vec3(128.0)) / 127.0, 1.0);
-//    }
-//    else
-//    {
-//        return vec4(0.0);
-//    }
-
-
-    uint packedViewWeights = texelFetch(viewWeightTextures, blockStart + ivec3(k % VIEW_WEIGHT_PACKING_X, k / VIEW_WEIGHT_PACKING_X, 0), 0)[0];
-    uvec3 unpackedViewWeights = uvec3((packedViewWeights >> 9) & 0x7Fu, (packedViewWeights >> 4) & 0x1Fu, packedViewWeights & 0x0Fu);
-    if (unpackedViewWeights[0] != 0u)
+    vec3 viewWeights = texelFetch(viewWeightTextures, blockStart + ivec3(k % VIEW_WEIGHT_PACKING_X, k / VIEW_WEIGHT_PACKING_X, 0), 0).xyz;
+    if (viewWeights.y > 0)
     {
-        vec3 unscaledWeights = vec3(
-            int(unpackedViewWeights[2] * 2u + unpackedViewWeights[0]) - 80,
-            int(unpackedViewWeights[0]) - 64,
-            int(unpackedViewWeights[1] * 2u + unpackedViewWeights[0]) - 96);
-
-        return vec4(unscaledWeights / 63.0, 1.0);
+        return vec4((viewWeights * 255 - vec3(128.0)) / 127.0, 1.0);
     }
     else
     {
         return vec4(0.0);
     }
+
+
+//    uint packedViewWeights = texelFetch(viewWeightTextures, blockStart + ivec3(k % VIEW_WEIGHT_PACKING_X, k / VIEW_WEIGHT_PACKING_X, 0), 0)[0];
+//    uvec3 unpackedViewWeights = uvec3((packedViewWeights >> 9) & 0x7Fu, (packedViewWeights >> 4) & 0x1Fu, packedViewWeights & 0x0Fu);
+//    if (unpackedViewWeights[0] != 0u)
+//    {
+//        vec3 unscaledWeights = vec3(
+//            int(unpackedViewWeights[2] * 2u + unpackedViewWeights[0]) - 80,
+//            int(unpackedViewWeights[0]) - 64,
+//            int(unpackedViewWeights[1] * 2u + unpackedViewWeights[0]) - 96);
+//
+//        return vec4(unscaledWeights / 63.0, 1.0);
+//    }
+//    else
+//    {
+//        return vec4(0.0);
+//    }
 }
 
 vec4 getSignedTexel(ivec3 coords, int mipmapLevel)
