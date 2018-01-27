@@ -3,25 +3,26 @@
 
 #line 9901 5
 
-in vec2 fTexCoord;
-
 uniform sampler2D positionMap;
-uniform sampler2D texCoordMap;
 uniform sampler2D normalMap;
 
-vec3 getPosition()
+vec3 getPosition(vec2 texCoord)
 {
-    return texture(positionMap, fTexCoord).xyz;
+    return texture(positionMap, texCoord).xyz;
 }
 
-vec2 getTexCoord()
+vec3 getNormal(vec2 texCoord)
 {
-    return texture(texCoordMap, fTexCoord).xy;
-}
+    vec3 normal = texture(normalMap, texCoord).xyz;
 
-vec3 getNormal()
-{
-    return texture(normalMap, fTexCoord).xyz;
+    if (normal == vec3(0))
+    {
+        return vec3(0);
+    }
+    else
+    {
+        return normalize(normal);
+    }
 }
 
 #endif // USE_DEFERRED_GLSL

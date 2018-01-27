@@ -15,7 +15,6 @@ import tetzlaff.util.RadianceImageLoader.Image;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
@@ -85,8 +84,7 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
 
     void bind()
     {
-        glBindTexture(this.getOpenGLTextureTarget(), this.textureId);
-        OpenGLContext.errorCheck();
+        context.bindTextureToUnit(0, this);
     }
 
     int getTextureId()
@@ -105,9 +103,8 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
             throw new IllegalArgumentException("Texture unit index (" + textureUnitIndex + ") is greater than the maximum allowed index (" +
                     (this.context.getState().getMaxCombinedTextureImageUnits()-1) + ").");
         }
-        glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
-        OpenGLContext.errorCheck();
-        this.bind();
+
+        context.bindTextureToUnit(textureUnitIndex, this);
     }
 
     void initFilteringAndMipmaps(boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel)
@@ -174,7 +171,7 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         {
             return 2;
         }
-        else if (format == GL_RGBA || format == GL_BGRA || format == GL_RGBA_INTEGER || format == GL_RGBA_INTEGER || dataType == GL_UNSIGNED_INT || dataType == GL_INT || dataType == GL_FLOAT ||
+        else if (format == GL_RGBA || format == GL_BGRA || format == GL_RGBA_INTEGER || format == GL_BGRA_INTEGER || dataType == GL_UNSIGNED_INT || dataType == GL_INT || dataType == GL_FLOAT ||
                 dataType == GL_UNSIGNED_INT_8_8_8_8 || dataType == GL_UNSIGNED_INT_8_8_8_8_REV || dataType == GL_UNSIGNED_INT_10_10_10_2 || dataType == GL_UNSIGNED_INT_2_10_10_10_REV)
         {
             return 4;
@@ -189,7 +186,7 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         }
     }
 
-    static int getSpecialInternalFormat(OpenGLContext context, TextureType textureType, int precision)
+    static int getSpecialInternalFormat(TextureType textureType, int precision)
     {
         switch(textureType)
         {

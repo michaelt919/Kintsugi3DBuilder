@@ -1,5 +1,9 @@
 package tetzlaff.util;
 
+import java.util.AbstractList;
+import java.util.List;
+import java.util.Optional;
+
 import tetzlaff.gl.exceptions.NoAvailableTextureUnitsException;
 
 public class ResourceManager<ResourceType>
@@ -54,5 +58,24 @@ public class ResourceManager<ResourceType>
     public ResourceType getResourceByUnit(int index)
     {
         return (ResourceType)resources[index];
+    }
+
+    public List<Optional<ResourceType>> asReadonlyList()
+    {
+        return new AbstractList<Optional<ResourceType>>()
+        {
+            @Override
+            public int size()
+            {
+                return length;
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public Optional<ResourceType> get(int index)
+            {
+                return Optional.ofNullable((ResourceType)resources[index]);
+            }
+        };
     }
 }
