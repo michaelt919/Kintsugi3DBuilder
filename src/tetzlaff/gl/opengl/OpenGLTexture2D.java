@@ -544,7 +544,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, textureType);
-        init(openGLTextureTarget, multisamples, getSpecialInternalFormat(context, textureType, precision), width, height, format,
+        init(openGLTextureTarget, multisamples, getSpecialInternalFormat(textureType, precision), width, height, format,
                 fixedMultisampleLocations, useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
     }
 

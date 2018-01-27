@@ -10,19 +10,13 @@ uniform sampler2D normalMap;
 uniform bool useNormalMap;
 
 layout(location = 0) out vec3 position;
-layout(location = 1) out vec2 texCoord;
-layout(location = 2) out vec3 normal;
+layout(location = 1) out vec3 normal;
 
 void main() 
 {
     position = fPosition;
-    texCoord = fTexCoord;
 
     if (useNormalMap)
-    {
-        normal = normalize(fNormal);
-    }
-    else
     {
         vec3 tangent = normalize(fTangent - dot(normal, fTangent));
         vec3 bitangent = normalize(fBitangent
@@ -33,5 +27,9 @@ void main()
 
         vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
         normal = tangentToObject * vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
+    }
+    else
+    {
+        normal = normalize(fNormal);
     }
 }

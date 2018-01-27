@@ -4,65 +4,40 @@
 #line 5 2101
 
 uniform sampler2D diffuseMap;
-uniform sampler2D normalMap;
 uniform sampler2D specularMap;
 uniform sampler2D roughnessMap;
 
 uniform mat4 model_view;
+uniform bool diffuseMode;
 
 #define MAX_SQRT_ROUGHNESS 1.0
 
-#define diffuseMode true
-
-vec3 getDiffuseColor()
+vec3 getDiffuseColor(vec2 texCoord)
 {
-    return pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
+    return pow(texture(diffuseMap, texCoord).rgb, vec3(gamma));
 }
 
-vec3 getDiffuseNormalVector()
+vec3 getSpecularColor(vec2 texCoord)
 {
-    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
-    return vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
-}
-
-vec3 getSpecularColor()
-{
-    vec3 specularColor = texture(specularMap, fTexCoord).rgb;
+    vec3 specularColor = texture(specularMap, texCoord).rgb;
     return sign(specularColor) * pow(abs(specularColor), vec3(gamma));
 }
 
-vec3 getSqrtRoughness()
+vec3 getSqrtRoughness(vec2 texCoord)
 {
-    vec3 roughnessLookup = texture(roughnessMap, fTexCoord).rgb;
+    vec3 roughnessLookup = texture(roughnessMap, texCoord).rgb;
     return vec3(
             roughnessLookup.y + roughnessLookup.x - 16.0 / 31.0,
             roughnessLookup.y,
             roughnessLookup.y + roughnessLookup.z - 16.0 / 31.0);
 }
 
-vec4 computeResidual()
+vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
 {
-    vec3 normal = normalize(fNormal);
-    vec3 shadingNormal;
-    if (diffuseMode)
-    {
-        shadingNormal = normal;
-    }
-    else
-    {
-        vec3 tangent = normalize(fTangent - dot(normal, fTangent));
-        vec3 bitangent = normalize(fBitangent
-            - dot(normal, fBitangent) * normal
-            - dot(tangent, fBitangent) * tangent);
-
-        mat3 tangentToObject = mat3(tangent, bitangent, normal);
-        shadingNormal = tangentToObject * getDiffuseNormalVector();
-    }
-
-    vec3 diffuseColorRGB = getDiffuseColor();
+    vec3 diffuseColorRGB = getDiffuseColor(texCoord);
     vec3 diffuseColor = rgbToXYZ(diffuseColorRGB);
-    vec3 specularColor = rgbToXYZ(getSpecularColor());
-    vec3 sqrtRoughness = getSqrtRoughness();
+    vec3 specularColor = rgbToXYZ(getSpecularColor(texCoord));
+    vec3 sqrtRoughness = getSqrtRoughness(texCoord);
     vec3 roughness = sqrtRoughness * sqrtRoughness;
     vec3 roughnessSquared = roughness * roughness;
     float maxLuminance = getMaxLuminance();
@@ -72,7 +47,7 @@ vec4 computeResidual()
     float nDotV = max(0, dot(shadingNormal, view));
     vec4 color = getLinearColor();
 
-    if (color.a > 0 && nDotV > 0 && dot(normal, view) > 0)
+    if (color.a > 0 && nDotV > 0)
     {
         vec3 lightPreNormalized = getLightVector();
         vec3 attenuatedLightIntensity = infiniteLightSource ? 

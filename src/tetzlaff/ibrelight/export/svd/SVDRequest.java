@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.FloatBuffer;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedList;
@@ -12,7 +13,9 @@ import java.util.Queue;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
+import org.ejml.data.FMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
+import org.lwjgl.*;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.core.IBRRenderable;
@@ -28,8 +31,9 @@ public class SVDRequest implements IBRRequest
 
     private static final int BLOCK_SIZE = 32;
     private static final int SAVED_SINGULAR_VALUES = 4;
-    private static final int MAX_RUNNING_THREADS = 6;
+    private static final int MAX_RUNNING_THREADS = 1;
     private static final boolean PUT_COLOR_IN_VIEW_FACTOR = true;
+    private static final boolean DIFFUSE_MODE = false;
 
     private final int texWidth;
     private final int texHeight;
@@ -39,12 +43,17 @@ public class SVDRequest implements IBRRequest
     private int activeBlockCount = 0;
     private final Object activeBlockCountChangeHandle = new Object();
 
+    private final Queue<SimpleMatrix> allocatedMatrices;
+    private final Queue<FloatBuffer> allocatedFloatBuffers;
+
     public SVDRequest(int texWidth, int texHeight, File exportPath, ReadonlySettingsModel settings)
     {
         this.exportPath = exportPath;
         this.texWidth = texWidth;
         this.texHeight = texHeight;
         this.settings = settings;
+        this.allocatedMatrices = new LinkedList<>();
+        this.allocatedFloatBuffers = new LinkedList<>();
     }
 
     private static int convertToFixedPoint(double value)
@@ -88,18 +97,46 @@ public class SVDRequest implements IBRRequest
         double[] viewImportance = new double[resources.viewSet.getCameraPoseCount()];
         double[][] viewImportanceBySingularValues = new double[resources.viewSet.getCameraPoseCount()][SAVED_SINGULAR_VALUES];
 
+        for (int i = 0; i < 2 * MAX_RUNNING_THREADS; i++)
+        {
+            if (PUT_COLOR_IN_VIEW_FACTOR)
+            {
+                allocatedMatrices.add(new SimpleMatrix(BLOCK_SIZE * BLOCK_SIZE, resources.viewSet.getCameraPoseCount() * 3, FMatrixRMaj.class));
+            }
+            else
+            {
+                allocatedMatrices.add(new SimpleMatrix(BLOCK_SIZE * BLOCK_SIZE * 3, resources.viewSet.getCameraPoseCount(), FMatrixRMaj.class));
+            }
+
+            allocatedFloatBuffers.add(BufferUtils.createFloatBuffer(BLOCK_SIZE * BLOCK_SIZE * resources.viewSet.getCameraPoseCount() * 4));
+        }
+
+        System.out.println("Finished allocating memory.");
+
         try
         (
-            Program<ContextType> projTexProgram = resources.context.getShaderProgramBuilder()
+            Program<ContextType> deferredProgram = resources.context.getShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/common/deferred.frag"))
+                .createProgram();
+
+            Program<ContextType> projTexProgram = resources.context.getShaderProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/relight/resid.frag"))
                 .createProgram();
 
-            FramebufferObject<ContextType> framebuffer = resources.context.buildFramebufferObject(BLOCK_SIZE, BLOCK_SIZE)
+            FramebufferObject<ContextType> geometryFramebuffer = resources.context.buildFramebufferObject(BLOCK_SIZE, BLOCK_SIZE)
+                .addColorAttachment(ColorFormat.RGB32F)
+                .addColorAttachment(ColorFormat.RGB32F)
+                .createFramebufferObject();
+
+            FramebufferObject<ContextType> colorFramebuffer = resources.context.buildFramebufferObject(BLOCK_SIZE, BLOCK_SIZE)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .createFramebufferObject()
         )
         {
+            System.out.println("Finished compiling programs and creating framebuffer objects.");
+
             Queue<Thread> taskQueue = new LinkedList<>();
 
             for (int blockY = 0; blockY < blockCountY; blockY++)
@@ -114,17 +151,27 @@ public class SVDRequest implements IBRRequest
                         Math.min(1.0f, (blockX + 1) * BLOCK_SIZE * 1.0f / texWidth),
                         Math.min(1.0f, (blockY + 1) * BLOCK_SIZE * 1.0f / texHeight));
 
-                    int[] validPixelCounts = new int[resources.viewSet.getCameraPoseCount()];
-                    boolean[] pixelMasks = new boolean[BLOCK_SIZE * BLOCK_SIZE];
-                    SimpleMatrix matrix = getMatrix(resources, projTexProgram, framebuffer, minTexCoords, maxTexCoords, validPixelCounts, pixelMasks);
+                    FloatBuffer colorStorage;
 
-                    // Quickly test if the block is completely empty (i.e. no triangles were rendered in the block).
-                    // If so, then don't even bother putting it in the queue and move on to try another block.
-                    boolean hasValidEntries = false;
-                    for (int i = 0; !hasValidEntries && i < validPixelCounts.length; i++)
+                    synchronized (allocatedFloatBuffers)
                     {
-                        hasValidEntries = validPixelCounts[i] != 0;
+                        while(allocatedFloatBuffers.isEmpty())
+                        {
+                            try
+                            {
+                                allocatedFloatBuffers.wait(30000); // Double check every 30 seconds if notifyAll() was not called
+                            }
+                            catch (InterruptedException e)
+                            {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        colorStorage = allocatedFloatBuffers.poll();
                     }
+
+                    boolean hasValidEntries = getMatrix(resources, deferredProgram, projTexProgram, geometryFramebuffer, colorFramebuffer,
+                        minTexCoords, maxTexCoords, colorStorage);
 
                     if (hasValidEntries)
                     {
@@ -135,10 +182,67 @@ public class SVDRequest implements IBRRequest
                         {
                             System.out.println("Starting block " + currentBlockX + ", " + currentBlockY + "...");
 
+                            SimpleMatrix matrix;
+
+                            synchronized (allocatedMatrices)
+                            {
+                                while(allocatedMatrices.isEmpty())
+                                {
+                                    try
+                                    {
+                                        allocatedMatrices.wait(30000); // Double check every 30 seconds if notifyAll() was not called
+                                    }
+                                    catch (InterruptedException e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+                                }
+
+                                matrix = allocatedMatrices.poll();
+                            }
+
                             try
                             {
+                                matrix.zero();
+
+                                boolean[] pixelMasks = new boolean[BLOCK_SIZE * BLOCK_SIZE];
+//                                int[] validPixelCounts = new int[resources.viewSet.getCameraPoseCount()];
+
+                                for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
+                                {
+//                                    validPixelCounts[k] = 0;
+
+                                    colorStorage.position(BLOCK_SIZE * BLOCK_SIZE * 4 * k);
+
+                                    FloatBuffer colorSlice = colorStorage.slice();
+                                    colorSlice.limit(BLOCK_SIZE * BLOCK_SIZE * 4);
+
+                                    for (int i = 0; 4 * i + 3 < colorSlice.limit(); i++)
+                                    {
+                                        if (colorSlice.get(4 * i + 3) > 0.0 && !Double.isNaN(colorSlice.get(4 * i))
+                                            && !Double.isNaN(colorSlice.get(4 * i + 1)) && !Double.isNaN(colorSlice.get(4 * i + 2)))
+                                        {
+                                            if (PUT_COLOR_IN_VIEW_FACTOR)
+                                            {
+                                                matrix.set(i, 3 * k, colorSlice.get(4 * i));
+                                                matrix.set(i, 3 * k + 1, colorSlice.get(4 * i + 1));
+                                                matrix.set(i, 3 * k + 2, colorSlice.get(4 * i + 2));
+                                            }
+                                            else
+                                            {
+                                                matrix.set(3 * i, k, colorSlice.get(4 * i));
+                                                matrix.set(3 * i + 1, k, colorSlice.get(4 * i + 1));
+                                                matrix.set(3 * i + 2, k, colorSlice.get(4 * i + 2));
+                                            }
+
+//                                            validPixelCounts[k]++;
+                                            pixelMasks[i] = true;
+                                        }
+                                    }
+                                }
+
                                 //SimpleSVD<SimpleMatrix> svd = matrix.svd(true);
-                                FastPartialSVD svd = FastPartialSVD.compute(matrix, SAVED_SINGULAR_VALUES, 0.05, 16, 3);
+                                FastPartialSVD svd = FastPartialSVD.compute(matrix, SAVED_SINGULAR_VALUES, 0.05f, 16, 3);
 
                                 for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
                                 {
@@ -169,7 +273,7 @@ public class SVDRequest implements IBRRequest
                                     }
                                 }
 
-                                double[] singularValues = svd.getSingularValues();
+                                float[] singularValues = svd.getSingularValues();
                                 int effectiveSingularValues = Math.min(SAVED_SINGULAR_VALUES, singularValues.length);
 
                                 SimpleMatrix uMatrix = svd.getU();
@@ -187,6 +291,8 @@ public class SVDRequest implements IBRRequest
                                     {
                                         scale[svIndex] = Math.min(scale[svIndex], 1.0 / (singularValues[svIndex] * Math.abs(uMatrix.get(k, svIndex))));
                                     }
+
+                                    scale[svIndex] *= Math.signum(uMatrix.elementSum());
 
                                     for (int y = 0; y < BLOCK_SIZE; y++)
                                     {
@@ -416,29 +522,37 @@ public class SVDRequest implements IBRRequest
                                     activeBlockCount--;
                                     activeBlockCountChangeHandle.notifyAll();
                                 }
+
+                                synchronized(allocatedMatrices)
+                                {
+                                    allocatedMatrices.add(matrix);
+                                    allocatedMatrices.notifyAll();
+                                }
+
+                                synchronized(allocatedFloatBuffers)
+                                {
+                                    allocatedFloatBuffers.add(colorStorage);
+                                    allocatedFloatBuffers.notifyAll();
+                                }
                             }
                         });
 
                         taskQueue.add(svdThread);
 
-                        // Add any tasks that are in the queue as long as it looks like there are less than the max number of threads running.
-                        // Otherwise, if the task queue is full, wait until at least one task starts, and then move on to generate another task to replace it.
-                        // Finally, if we've just finished setting up the last block, keep looping until the task queue is empty.
-                        boolean readyForNewBlock = true; // First time through the loop will initialize this variable.
-                        while ((!taskQueue.isEmpty() && readyForNewBlock)
-                            || taskQueue.size() == MAX_RUNNING_THREADS
-                            || (!taskQueue.isEmpty() && blockX == blockCountX - 1 && blockY == blockCountY - 1))
+                        do
                         {
                             synchronized (activeBlockCountChangeHandle)
                             {
-                                if (activeBlockCount < MAX_RUNNING_THREADS)
+                                // Add any tasks that are in the queue as long as there are less than the max number of threads running.
+                                while (!taskQueue.isEmpty() && activeBlockCount < MAX_RUNNING_THREADS)
                                 {
                                     taskQueue.poll().start();
                                     activeBlockCount++;
                                 }
+
                                 // Two situations in which we need to sleep: if the task queue is full and we're waiting to start another thread
                                 // before adding more to it, or if we've finished setting up the last block and are just running out the queue.
-                                else if (taskQueue.size() == MAX_RUNNING_THREADS || (blockX == blockCountX - 1 && blockY == blockCountY - 1))
+                                if (taskQueue.size() == MAX_RUNNING_THREADS || (blockX == blockCountX - 1 && blockY == blockCountY - 1))
                                 {
                                     try
                                     {
@@ -449,9 +563,20 @@ public class SVDRequest implements IBRRequest
                                         e.printStackTrace();
                                     }
                                 }
-
-                                readyForNewBlock = activeBlockCount < MAX_RUNNING_THREADS;
                             }
+                        }
+                        // If the task queue is full and we had to wait for a running task to finish, then loop through a second time to start
+                        // at least one task and free up space in the queue.
+                        // Also, if we've just finished setting up the last block, keep looping until the task queue is empty.
+                        while (taskQueue.size() == MAX_RUNNING_THREADS
+                            || (!taskQueue.isEmpty() && blockX == blockCountX - 1 && blockY == blockCountY - 1));
+                    }
+                    else
+                    {
+                        synchronized(allocatedFloatBuffers)
+                        {
+                            allocatedFloatBuffers.add(colorStorage);
+                            allocatedFloatBuffers.notifyAll();
                         }
                     }
                 }
@@ -567,91 +692,106 @@ public class SVDRequest implements IBRRequest
         }
     }
 
-    private <ContextType extends Context<ContextType>> SimpleMatrix getMatrix(
-        IBRResources<ContextType> resources, Program<ContextType> projTexProgram, Framebuffer<ContextType> framebuffer,
-        Vector2 minTexCoord, Vector2 maxTexCoord, int[] validPixelCountStorage, boolean[] pixelMaskStorage)
+    private <ContextType extends Context<ContextType>> boolean getMatrix(
+        IBRResources<ContextType> resources, Program<ContextType> deferredProgram, Program<ContextType> projTexProgram,
+        FramebufferObject<ContextType> geometryFramebuffer, Framebuffer<ContextType> colorFramebuffer, Vector2 minTexCoord, Vector2 maxTexCoord,
+        FloatBuffer colorStorage)
     {
-        Drawable<ContextType> drawable = resources.context.createDrawable(projTexProgram);
-        drawable.addVertexBuffer("position", resources.positionBuffer);
-        drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
-        drawable.addVertexBuffer("normal", resources.normalBuffer);
-        drawable.addVertexBuffer("tangent", resources.tangentBuffer);
-
-        projTexProgram.setUniform("minTexCoord", minTexCoord);
-        projTexProgram.setUniform("maxTexCoord", maxTexCoord);
-
-        resources.setupShaderProgram(projTexProgram, false);
-        if (settings.getBoolean("occlusionEnabled"))
-        {
-            projTexProgram.setUniform("occlusionBias", settings.getFloat("occlusionBias"));
-        }
-        else
-        {
-            projTexProgram.setUniform("occlusionEnabled", false);
-        }
-
-        // Want to use raw pixel values since they represents roughness, not intensity
-        drawable.program().setUniform("lightIntensityCompensation", false);
-
         resources.context.getState().disableBackFaceCulling();
 
-        SimpleMatrix result;
-        if (PUT_COLOR_IN_VIEW_FACTOR)
+        Drawable<ContextType> deferredDrawable = resources.context.createDrawable(deferredProgram);
+        deferredDrawable.addVertexBuffer("position", resources.positionBuffer);
+        deferredDrawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
+        deferredDrawable.addVertexBuffer("normal", resources.normalBuffer);
+        deferredDrawable.addVertexBuffer("tangent", resources.tangentBuffer);
+
+        deferredProgram.setUniform("minTexCoord", minTexCoord);
+        deferredProgram.setUniform("maxTexCoord", maxTexCoord);
+
+        deferredProgram.setTexture("normalMap", resources.normalTexture);
+        deferredProgram.setUniform("useNormalMap", !DIFFUSE_MODE && resources.normalTexture != null);
+
+        geometryFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+        geometryFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+
+        deferredDrawable.draw(PrimitiveMode.TRIANGLES, geometryFramebuffer);
+
+//        float[] normals = geometryFramebuffer.readFloatingPointColorBufferRGBA(1);
+//        boolean validBlock = false;
+//        for (int i = 0; i < normals.length; i++)
+//        {
+//            if (i % 4 != 3) // Ignore alpha channel
+//            {
+//                validBlock = validBlock || normals[i] != 0;
+//            }
+//        }
+        boolean validBlock = true;
+
+        if (validBlock)
         {
-            result = new SimpleMatrix(BLOCK_SIZE * BLOCK_SIZE, resources.viewSet.getCameraPoseCount() * 3/*, FMatrixRMaj.class*/);
-        }
-        else
-        {
-            result = new SimpleMatrix(BLOCK_SIZE * BLOCK_SIZE * 3, resources.viewSet.getCameraPoseCount()/*, FMatrixRMaj.class*/);
-        }
-
-        for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
-        {
-            framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-
-            projTexProgram.setUniform("viewIndex", k);
-
-            drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-
-            validPixelCountStorage[k] = 0;
-            float[] colors = framebuffer.readFloatingPointColorBufferRGBA(0);
-
-            for (int i = 0; 4 * i + 3 < colors.length; i++)
+            try (VertexBuffer<ContextType> rectangle = resources.context.createRectangle())
             {
-                if (colors[4 * i + 3] > 0.0 && !Double.isNaN(colors[4 * i]) && !Double.isNaN(colors[4 * i + 1]) && !Double.isNaN(colors[4 * i + 2]))
-                {
-                    if (PUT_COLOR_IN_VIEW_FACTOR)
-                    {
-                        result.set(i, 3 * k, colors[4 * i]);
-                        result.set(i, 3 * k + 1, colors[4 * i + 1]);
-                        result.set(i, 3 * k + 2, colors[4 * i + 2]);
-                    }
-                    else
-                    {
-                        result.set(3 * i, k, colors[4 * i]);
-                        result.set(3 * i + 1, k, colors[4 * i + 1]);
-                        result.set(3 * i + 2, k, colors[4 * i + 2]);
-                    }
+                Drawable<ContextType> projTexDrawable = resources.context.createDrawable(projTexProgram);
+                projTexDrawable.addVertexBuffer("position", rectangle);
 
-                    validPixelCountStorage[k]++;
-                    pixelMaskStorage[i] = true;
-                }
-            }
+                projTexProgram.setUniform("minTexCoord", minTexCoord);
+                projTexProgram.setUniform("maxTexCoord", maxTexCoord);
 
-            if (DEBUG)
-            {
-                try
+                resources.setupShaderProgram(projTexProgram, false);
+
+                projTexProgram.setTexture("positionMap", geometryFramebuffer.getColorAttachmentTexture(0));
+
+                // NOTE: overrides normalMap assignment from resources.setupShaderProgram()
+                projTexProgram.setTexture("normalMap", geometryFramebuffer.getColorAttachmentTexture(1));
+
+                projTexProgram.setUniform("diffuseMode", DIFFUSE_MODE);
+
+                if (settings.getBoolean("occlusionEnabled"))
                 {
-                    framebuffer.saveColorBufferToFile(0, "PNG",
-                            new File(exportPath, resources.viewSet.getImageFileName(k).split("\\.")[0] + ".png"));
+                    projTexProgram.setUniform("occlusionBias", settings.getFloat("occlusionBias"));
                 }
-                catch (IOException e)
+                else
                 {
-                    e.printStackTrace();
+                    projTexProgram.setUniform("occlusionEnabled", false);
                 }
+
+                // Want to use raw pixel values since they represents roughness, not intensity
+                projTexProgram.setUniform("lightIntensityCompensation", false);
+
+                colorStorage.clear();
+
+                for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
+                {
+                    colorFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+
+                    projTexProgram.setUniform("viewIndex", k);
+
+                    projTexDrawable.draw(PrimitiveMode.TRIANGLE_FAN, colorFramebuffer);
+
+                    colorStorage.position(4 * BLOCK_SIZE * BLOCK_SIZE * k);
+                    FloatBuffer colorSlice = colorStorage.slice();
+                    colorSlice.limit(4 * BLOCK_SIZE * BLOCK_SIZE);
+                    colorFramebuffer.readFloatingPointColorBufferRGBA(0, colorSlice);
+
+                    if (DEBUG)
+                    {
+                        try
+                        {
+                            colorFramebuffer.saveColorBufferToFile(0, "PNG",
+                                new File(exportPath, resources.viewSet.getImageFileName(k).split("\\.")[0]
+                                    + '_' + minTexCoord.x + '_' + minTexCoord.y + ".png"));
+                        }
+                        catch (IOException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                colorStorage.rewind();
             }
         }
 
-        return result;
+        return validBlock;
     }
 }
