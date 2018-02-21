@@ -776,21 +776,21 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 System.out.println("Roughness texture found.");
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder;
 
-                if (loadOptions.isCompressionRequested())
-                {
-                    // Use 16 bits to give the built-in compression algorithm extra precision to work with.
-                    roughnessTextureBuilder =
-                        context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true,
-                            AbstractDataTypeFactory.getInstance().getMultiComponentDataType(NativeDataType.UNSIGNED_SHORT, 3),
-                            color -> new IntVector3(
-                                (int)Math.max(0, Math.min(0xFFFF, Math.round(
-                                    (Math.max(-15.0, Math.min(15.0, (color.getRed() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 0xFFFF / 31.0))),
-                                (int)Math.max(0, Math.min(0xFFFF, Math.round(color.getGreen() * 0xFFFF / 255.0))),
-                                (int)Math.max(0, Math.min(0xFFFF, Math.round(
-                                    (Math.max(-15.0, Math.min(15.0, (color.getBlue() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 0xFFFF / 31.0)))));
-                    roughnessTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-                }
-                else
+//                if (loadOptions.isCompressionRequested())
+//                {
+//                    // Use 16 bits to give the built-in compression algorithm extra precision to work with.
+//                    roughnessTextureBuilder =
+//                        context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true,
+//                            AbstractDataTypeFactory.getInstance().getMultiComponentDataType(NativeDataType.UNSIGNED_SHORT, 3),
+//                            color -> new IntVector3(
+//                                (int)Math.max(0, Math.min(0xFFFF, Math.round(
+//                                    (Math.max(-15.0, Math.min(15.0, (color.getRed() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 0xFFFF / 31.0))),
+//                                (int)Math.max(0, Math.min(0xFFFF, Math.round(color.getGreen() * 0xFFFF / 255.0))),
+//                                (int)Math.max(0, Math.min(0xFFFF, Math.round(
+//                                    (Math.max(-15.0, Math.min(15.0, (color.getBlue() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 0xFFFF / 31.0)))));
+//                    roughnessTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+//                }
+//                else
                 {
                     roughnessTextureBuilder =
                         context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true,
