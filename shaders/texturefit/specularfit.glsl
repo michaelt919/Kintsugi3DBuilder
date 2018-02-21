@@ -3,8 +3,8 @@
 
 #line 5 2004
 
-#define MIN_ROUGHNESS  0.00390625    // 1/256
-#define MAX_ROUGHNESS  0.70710678 // sqrt(1/2)
+#define MIN_ROUGHNESS 0.00390625    // 1/256
+#define MAX_ROUGHNESS 1.0 // 0.70710678 // sqrt(1/2)
 
 #define MIN_SPECULAR_REFLECTIVITY 0.04 // corresponds to dielectric with index of refraction = 1.5
 #define MAX_ROUGHNESS_WHEN_CLAMPING MAX_ROUGHNESS
@@ -14,6 +14,8 @@ uniform sampler2D normalEstimate;
 
 uniform float fittingGamma;
 uniform bool standaloneMode;
+
+uniform vec4 normalCandidateWeights;
 
 #define fitNearSpecularOnly false // should be true for DARPA stuff (at least when comparing with Joey), false for cultural heritage
 #define chromaticRoughness true
@@ -87,15 +89,15 @@ ParameterizedFit fitSpecular()
         - dot(tangent, fBitangent) * tangent);
 
     mat3 tangentToObject = mat3(tangent, bitangent, normal);
-    vec3 shadingNormalTS = getDiffuseNormalVector();
-    vec3 shadingNormal = tangentToObject * shadingNormalTS;
+    vec3 diffuseNormalTS = getDiffuseNormalVector();
+    vec3 oldDiffuseNormal = tangentToObject * diffuseNormalTS;
 
     vec4 diffuseColor = getDiffuseColor();
 
     float maxLuminance = getMaxLuminance();
     vec3 maxResidual = vec3(0);
     vec2 maxResidualLuminance = vec2(0);
-    //vec3 maxResidualDirection = vec3(0);
+    vec3 maxResidualDirection = vec3(0);
 
     vec3 directionSum = vec3(0);
     vec3 intensityWeightedDirectionSum = vec3(0);
@@ -115,7 +117,7 @@ ParameterizedFit fitSpecular()
             vec3 light = normalize(lightPreNormalized);
 
             vec3 colorRemainder =
-                removeDiffuse(color, diffuseColor.rgb, light, attenuatedLightIntensity, shadingNormal, maxLuminance).rgb / attenuatedLightIntensity;
+                removeDiffuse(color, diffuseColor.rgb, light, attenuatedLightIntensity, oldDiffuseNormal, maxLuminance).rgb / attenuatedLightIntensity;
             float luminance = getLuminance(colorRemainder);
 
             vec3 halfway = normalize(view + light);
@@ -129,23 +131,27 @@ ParameterizedFit fitSpecular()
             {
                 maxResidualLuminance = vec2(luminance, weight);
                 maxResidual = colorRemainder;
+                maxResidualDirection = halfway;
             }
         }
     }
 
     vec3 maxResidualXYZ = rgbToXYZ(maxResidual);
+    float maxResidualComponent = max(max(maxResidualXYZ.x, maxResidualXYZ.y), maxResidualXYZ.z);
+    float luminanceUncertaintyRange = max(0, maxResidualComponent - 0.9);
 
     vec3 specularNormal;
+    vec3 heuristicNormal;
 
     if (aggressiveNormal)
     {
-        specularNormal = normalize(intensityWeightedDirectionSum);
+        heuristicNormal = normalize(intensityWeightedDirectionSum);
     }
     else
     {
         if (dot(intensityWeightedDirectionSum, intensityWeightedDirectionSum) < 1.0)
         {
-            intensityWeightedDirectionSum += (1 - length(intensityWeightedDirectionSum)) * shadingNormal;
+            intensityWeightedDirectionSum += (1 - length(intensityWeightedDirectionSum)) * oldDiffuseNormal;
         }
 
         float directionScale = length(directionSum);
@@ -159,7 +165,7 @@ ParameterizedFit fitSpecular()
         float specularNormalCertainty =
             min(1, directionScale) * dot(specularNormalEstimate, certaintyDirection);
         vec3 scaledCertaintyDirection = specularNormalCertainty * certaintyDirection;
-        specularNormal = normalize(
+        heuristicNormal = normalize(
             scaledCertaintyDirection
                 + sqrt(1 - specularNormalCertainty * specularNormalCertainty
                             * dot(certaintyDirection, certaintyDirection))
@@ -167,10 +173,15 @@ ParameterizedFit fitSpecular()
                         min(1, directionScale) * specularNormalFidelity)));
     }
 
+    specularNormal = normalize(mat4x3(normal, oldDiffuseNormal, maxResidualDirection, heuristicNormal)
+                        * normalCandidateWeights);
+
     vec3 roughnessSums[3];
     roughnessSums[0] = vec3(0);
     roughnessSums[1] = vec3(0);
     roughnessSums[2] = vec3(0);
+
+    vec2 altRoughnessSums = vec2(0);
 
     vec4 sumResidualXYZGamma = vec4(0.0);
 
@@ -201,29 +212,35 @@ ParameterizedFit fitSpecular()
             float nDotHSquared = nDotH * nDotH;
 
             vec3 colorRemainderRGB =
-                removeDiffuse(color, diffuseColor.rgb, light, attenuatedLightIntensity, normal, maxLuminance).rgb / attenuatedLightIntensity;
+                removeDiffuse(color, diffuseColor.rgb, light, attenuatedLightIntensity, specularNormal, maxLuminance).rgb / attenuatedLightIntensity;
             vec3 colorRemainderXYZ = rgbToXYZ(colorRemainderRGB);
 
-            if (nDotV > 0 && (!fitNearSpecularOnly || nDotHSquared > 0.5) /* && nDotV * (1 + nDotHSquared) * (1 + nDotHSquared) > 1.0*/)
+            if (nDotV > 0 && (fitNearSpecularOnly ? nDotHSquared > 0.5 : colorRemainderXYZ.y <= 1.0) /* && nDotV * (1 + nDotHSquared) * (1 + nDotHSquared) > 1.0*/)
             {
                 float hDotV = max(0, dot(halfway, view));
 
-                roughnessSums[0] += nDotV
+                vec3 globalWeight = nDotV
 //                    * sqrt(1 - nDotHSquared)
                     * (LINEAR_WEIGHT_MODE ? colorRemainderXYZ :
                         (PERCEPTUAL_WEIGHT_MODE ? pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)) : vec3(1.0)))
-                    * sqrt(colorRemainderXYZ * nDotV) * (1 - nDotHSquared);
+                    * (fitNearSpecularOnly ? 1.0 : clamp(9 - 10 * colorRemainderXYZ.y, 0, 1));
 
-                roughnessSums[1] += nDotV
-//                    * sqrt(1 - nDotHSquared)
-                    * (LINEAR_WEIGHT_MODE ? colorRemainderXYZ :
-                        (PERCEPTUAL_WEIGHT_MODE ? pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)) : vec3(1.0)))
-                    * sqrt(colorRemainderXYZ * nDotV) * nDotHSquared;
+                vec3 perspectiveWeightedIntensity = colorRemainderXYZ * nDotV / min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
+                vec3 sqrtPerspectiveWeightedIntensity = sqrt(perspectiveWeightedIntensity);
 
-                roughnessSums[2] += nDotV
-//                    * sqrt(1 - nDotHSquared);
-                    * (LINEAR_WEIGHT_MODE ? colorRemainderXYZ :
-                        (PERCEPTUAL_WEIGHT_MODE ? pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)) : vec3(1.0)));
+                roughnessSums[0] += globalWeight * sqrtPerspectiveWeightedIntensity * (1 - nDotHSquared);
+                roughnessSums[1] += globalWeight * sqrtPerspectiveWeightedIntensity * nDotHSquared;
+                roughnessSums[2] += globalWeight;
+
+                float scaledIntensity = 4 * perspectiveWeightedIntensity.y;
+                float scaledIntensityTimesHalfwayFactors = scaledIntensity * nDotHSquared * (nDotHSquared - 1);
+
+                float altRoughnessEstimate =
+                    (1 + 2 * scaledIntensityTimesHalfwayFactors - sqrt(1 + 4 * scaledIntensityTimesHalfwayFactors))
+                         / (2 * scaledIntensity * nDotHSquared * nDotHSquared);
+
+                altRoughnessSums[1] += roughnessSums[2].y * altRoughnessEstimate;
+                altRoughnessSums[0] += roughnessSums[1].y * altRoughnessEstimate;
 
                 sumResidualXYZGamma += nDotV * vec4(pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)), 1.0);
             }
@@ -232,7 +249,7 @@ ParameterizedFit fitSpecular()
 
     if (roughnessSums[2] == vec3(0.0) || sumResidualXYZGamma.w == 0.0)
     {
-        return ParameterizedFit(diffuseColor, vec4(normalize(transpose(tangentToObject) * shadingNormal), 1), vec4(0), vec4(0));
+        return ParameterizedFit(diffuseColor, vec4(diffuseNormalTS, 1), vec4(0), vec4(0));
     }
 
     // Estimate the roughness and specular reflectivity (in an XYZ color space) from the previous computations.
@@ -247,16 +264,35 @@ ParameterizedFit fitSpecular()
     //    4 * xyzToRGB * roughnessSquared * rgbToXYZ * maxResidual.rgb = specularColor;
     if (chromaticRoughness)
     {
-        roughnessSquared = clamp(roughnessSums[0] / max(vec3(0.0), sqrt(maxResidualXYZ) * roughnessSums[2] - roughnessSums[1]),
-            vec3(MIN_ROUGHNESS * MIN_ROUGHNESS), min(0.25 / maxResidualXYZ, vec3(MAX_ROUGHNESS * MAX_ROUGHNESS)));
+        vec3 sumWeights = max(vec3(0.0), sqrt(maxResidualXYZ) * roughnessSums[2] - roughnessSums[1]);
+
+        roughnessSquared = clamp(roughnessSums[0] / sumWeights,
+            MIN_ROUGHNESS * MIN_ROUGHNESS, /*min(0.25 / maxResidualComponent, */MAX_ROUGHNESS * MAX_ROUGHNESS/*)*/);
         specularColorXYZEstimate = 4 * roughnessSquared * maxResidualXYZ;
+
+        //if (specularColorXYZEstimate.y > 1.0)
+        {
+            roughnessSquared.y = clamp(
+                (sqrt(maxResidualXYZ).y * altRoughnessSums[1] - altRoughnessSums[0]) / sumWeights,
+                MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS);
+
+            roughnessSquared.xz = clamp(roughnessSums[0].xz / max(vec2(0.0),
+                    sqrt(maxResidualXYZ.xz / (4 * maxResidualXYZ.y * roughnessSquared.y))
+                        * roughnessSums[2].xz - roughnessSums[1].xz),
+                MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS);
+
+            specularColorXYZEstimate.y = 1.0;
+            specularColorXYZEstimate.xz = roughnessSquared.xz * maxResidualXYZ.xz / (roughnessSquared.y * maxResidualXYZ.y);
+        }
     }
     else
     {
-         roughnessSquared = vec3(clamp(roughnessSums[0].y / max(0.0, sqrt(maxResidualLuminance[0]) * roughnessSums[2].y - roughnessSums[1].y),
-             MIN_ROUGHNESS * MIN_ROUGHNESS, min(0.25 / maxResidualLuminance[0], MAX_ROUGHNESS * MAX_ROUGHNESS)));
-         vec3 avgResidualXYZ = pow(sumResidualXYZGamma.xyz / sumResidualXYZGamma.w, vec3(fittingGamma));
-         specularColorXYZEstimate = 4 * roughnessSquared * maxResidualLuminance[0] * avgResidualXYZ / max(0.001, avgResidualXYZ.y);
+        roughnessSquared = vec3(clamp(roughnessSums[0].y / max(0.0, sqrt(maxResidualLuminance[0]) * roughnessSums[2].y - roughnessSums[1].y),
+            MIN_ROUGHNESS * MIN_ROUGHNESS, /*min(0.25 / maxResidualComponent, */MAX_ROUGHNESS * MAX_ROUGHNESS/*)*/));
+        vec3 avgResidualXYZ = pow(sumResidualXYZGamma.xyz / sumResidualXYZGamma.w, vec3(fittingGamma));
+        specularColorXYZEstimate = 4 * roughnessSquared * maxResidualLuminance[0] * avgResidualXYZ / max(0.001, avgResidualXYZ.y);
+
+        // TODO monochrome roughness version of physical reflectivity enforcement
 
 //        // Force monochrome roughness and reflectivity (for debugging)
 //        vec3 specularColor = 4 * roughnessSquared * maxResidualLuminance[0];
@@ -324,7 +360,7 @@ ParameterizedFit fitSpecular()
     // Refit the diffuse color using a simple linear regression after subtracting the final specular estimate.
     vec4 adjustedDiffuseColor;
 
-    if (diffuseColor != vec4(0, 0, 0, 1))
+    if (diffuseColor.rgb != vec3(0.0))
     {
         vec4 sumDiffuse = vec4(0.0);
 
