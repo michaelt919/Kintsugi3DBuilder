@@ -1455,7 +1455,7 @@ public final class ViewSet
         }
         else
         {
-            return null;
+            return new SampledLuminanceEncoding(gamma);
         }
     }
 
