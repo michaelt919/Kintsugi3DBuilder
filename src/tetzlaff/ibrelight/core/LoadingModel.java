@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.DoubleUnaryOperator;
 
 import tetzlaff.util.AbstractImage;
 
@@ -66,6 +67,16 @@ public class LoadingModel
     public void saveToVSETFile(File vsetFile) throws IOException
     {
         this.handler.saveToVSETFile(vsetFile);
+    }
+
+    public DoubleUnaryOperator getLuminanceEncodingFunction()
+    {
+        return this.handler.getLuminanceEncodingFunction();
+    }
+
+    public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+    {
+        this.handler.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
     }
 
     public void unload()

@@ -56,4 +56,6 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     {
         draw(framebuffer, null, null);
     }
+
+    void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
 }

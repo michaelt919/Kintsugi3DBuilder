@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.AbstractList;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.DoubleUnaryOperator;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Program;
@@ -242,6 +243,18 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     public void setLoadingMonitor(LoadingMonitor loadingMonitor)
     {
         this.loadingMonitor = loadingMonitor;
+    }
+
+    @Override
+    public DoubleUnaryOperator getLuminanceEncodingFunction()
+    {
+        return this.getSelectedItem().getActiveViewSet().getLuminanceEncoding().encodeFunction;
+    }
+
+    @Override
+    public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+    {
+        this.getSelectedItem().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
     }
 
     public InteractiveRenderable<ContextType> getRenderable()

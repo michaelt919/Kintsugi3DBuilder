@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.DoubleUnaryOperator;
 
 import tetzlaff.util.AbstractImage;
 
@@ -21,4 +22,7 @@ public interface LoadingHandler
     void unload();
 
     void setLoadingMonitor(LoadingMonitor loadingMonitor);
+
+    DoubleUnaryOperator getLuminanceEncodingFunction();
+    void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
 }
