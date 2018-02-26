@@ -104,10 +104,17 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         private float gamma;
         private double[] linearLuminanceValues;
         private byte[] encodedLuminanceValues;
+        private String primaryViewName;
 
         private Builder(ContextType context)
         {
             this.context = context;
+        }
+
+        public Builder<ContextType> setPrimaryView(String primaryViewName)
+        {
+            this.primaryViewName = primaryViewName;
+            return this;
         }
 
         public Builder<ContextType> setLoadOptions(ReadonlyLoadOptionsModel loadOptions)
@@ -190,6 +197,11 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             if (imageDirectoryOverride != null)
             {
                 viewSet.setRelativeImagePathName(viewSet.getRootDirectory().toPath().relativize(imageDirectoryOverride.toPath()).toString());
+            }
+
+            if (primaryViewName != null)
+            {
+                viewSet.setPrimaryView(primaryViewName);
             }
 
             return new IBRResources<>(context, viewSet, geometry, loadOptions, loadingMonitor);

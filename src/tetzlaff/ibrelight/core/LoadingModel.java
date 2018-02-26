@@ -49,9 +49,10 @@ public class LoadingModel
         this.handler.loadFromVSETFile(id, vsetFile, loadOptionsModel);
     }
 
-    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory) throws FileNotFoundException
+    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName)
+        throws FileNotFoundException
     {
-        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, loadOptionsModel);
+        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
     }
 
     public Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
