@@ -21,12 +21,12 @@ public class ColorCheckerController
     {
         DoubleUnaryOperator luminanceEncoding = loadingModel.getLuminanceEncodingFunction();
 
-        encoded031.setText(Double.toString(luminanceEncoding.applyAsDouble(0.031)));
-        encoded090.setText(Double.toString(luminanceEncoding.applyAsDouble(0.090)));
-        encoded198.setText(Double.toString(luminanceEncoding.applyAsDouble(0.198)));
-        encoded362.setText(Double.toString(luminanceEncoding.applyAsDouble(0.362)));
-        encoded591.setText(Double.toString(luminanceEncoding.applyAsDouble(0.591)));
-        encoded900.setText(Double.toString(luminanceEncoding.applyAsDouble(0.900)));
+        encoded031.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.031))));
+        encoded090.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.090))));
+        encoded198.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.198))));
+        encoded362.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.362))));
+        encoded591.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.591))));
+        encoded900.setText(Long.toString(Math.round(luminanceEncoding.applyAsDouble(0.900))));
 
         this.loadingModel = loadingModel;
     }
