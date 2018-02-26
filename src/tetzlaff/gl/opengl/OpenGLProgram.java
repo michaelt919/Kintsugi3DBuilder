@@ -151,7 +151,7 @@ final class OpenGLProgram implements Program<OpenGLContext>
             glValidateProgram(programId);
             if (glGetProgrami(programId, GL_VALIDATE_STATUS) == GL_FALSE)
             {
-                throw new InvalidProgramException("The OpenGL program to be used failed validation.");
+                throw new InvalidProgramException(glGetProgramInfoLog(programId));
             }
 
             glUseProgram(programId);
@@ -162,11 +162,7 @@ final class OpenGLProgram implements Program<OpenGLContext>
     @Override
     public boolean setTexture(int location, Texture<OpenGLContext> texture)
     {
-        if (texture == null)
-        {
-            return this.setUniform(location, 0);
-        }
-        else if (texture instanceof OpenGLTexture)
+        if (texture instanceof OpenGLTexture)
         {
             // We don't use texture unit 0, so add one to the resource ID.
             int textureUnit = 1 + textureManager.assignResourceByKey(location, (OpenGLTexture)texture);

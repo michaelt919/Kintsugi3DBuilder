@@ -125,4 +125,6 @@ public interface TextureFactory<ContextType extends Context<ContextType>>
     DepthTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildDepthCubemap(int faceSize);
     StencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildStencilCubemap(int faceSize);
     DepthStencilTextureBuilder<ContextType, ? extends Cubemap<ContextType>> buildDepthStencilCubemap(int faceSize);
+
+    Texture<ContextType> getNullTexture(SamplerType samplerType);
 }
