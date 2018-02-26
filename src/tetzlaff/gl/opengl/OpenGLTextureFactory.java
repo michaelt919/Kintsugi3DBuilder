@@ -6,6 +6,9 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 import tetzlaff.gl.builders.*;
@@ -26,6 +29,7 @@ import static org.lwjgl.opengl.GL30.*;
 class OpenGLTextureFactory implements TextureFactory<OpenGLContext>
 {
     private final OpenGLContext context;
+    private Map<SamplerType, OpenGLNullTexture> nullTextures = new EnumMap<>(SamplerType.class);
 
     OpenGLTextureFactory(OpenGLContext context)
     {
@@ -205,4 +209,18 @@ class OpenGLTextureFactory implements TextureFactory<OpenGLContext>
         return new OpenGLCubemap.DepthStencilBuilder(context, GL_TEXTURE_CUBE_MAP, faceSize);
     }
 
+    @Override
+    public Texture<OpenGLContext> getNullTexture(SamplerType samplerType)
+    {
+        if (nullTextures.containsKey(samplerType))
+        {
+            return nullTextures.get(samplerType);
+        }
+        else
+        {
+            OpenGLNullTexture nullTex = new OpenGLNullTexture(context, samplerType);
+            nullTextures.put(samplerType, nullTex);
+            return nullTex;
+        }
+    }
 }

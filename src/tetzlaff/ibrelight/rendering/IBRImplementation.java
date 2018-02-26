@@ -650,7 +650,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         if (this.environmentMap == null || !lightingModel.isEnvironmentMappingEnabled())
         {
             program.setUniform("useEnvironmentMap", false);
-            program.setTexture("environmentMap", null);
+            program.setTexture("environmentMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_CUBE_MAP));
         }
         else
         {

@@ -77,7 +77,7 @@ public class BTFRequest implements IBRRequest
 
             btfProgram.setUniform("shadowsEnabled", false);
             btfProgram.setUniform("useEnvironmentTexture", false);
-            btfProgram.setTexture("environmentMap", null);
+            btfProgram.setTexture("environmentMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_CUBE_MAP));
             btfProgram.setUniform("ambientColor", Vector3.ZERO);
 
             btfProgram.setUniform("perPixelWeightsEnabled", true);

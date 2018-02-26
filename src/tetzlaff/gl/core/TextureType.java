@@ -2,6 +2,7 @@ package tetzlaff.gl.core;
 
 public enum TextureType 
 {
+    NULL,
     COLOR,
     DEPTH,
     STENCIL,
