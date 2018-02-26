@@ -334,8 +334,8 @@ public final class EnvironmentMap {
     // x = cos(theta) cos(phi)
     // y = sin(phi)
     // z = sin(theta) cos(phi)
-    double lat = Math.asin(dir.y); // -pi/2 to pi/2
-    double lon = Math.acos(dir.x / Math.cos(lat)); // 0 to pi
+    double lat = Math.asin(Math.max(-1.0, Math.min(1.0, dir.y))); // -pi/2 to pi/2
+    double lon = Math.acos(Math.max(-1.0, Math.min(1.0, dir.x / Math.cos(lat)))); // 0 to pi
     if (dir.z < 0.0) {
       lon = 2.0 * Math.PI - lon; // 0 to 2pi
     }
