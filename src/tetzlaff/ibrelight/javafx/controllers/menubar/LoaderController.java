@@ -2,21 +2,26 @@ package tetzlaff.ibrelight.javafx.controllers.menubar;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Comparator;
 import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
+import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
 
 public class LoaderController implements Initializable
 {
 
+    @FXML private ChoiceBox<String> primaryViewChoiceBox;
     @FXML private Text loadCheckCameras;
     @FXML private Text loadCheckObj;
     @FXML private Text loadCheckImages;
@@ -64,6 +69,22 @@ public class LoaderController implements Initializable
             setHomeDir(temp);
             loadCheckCameras.setText("Loaded");
             loadCheckCameras.setFill(Paint.valueOf("Green"));
+            primaryViewChoiceBox.getItems().clear();
+
+            try
+            {
+                ViewSet newViewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
+                for (int i = 0; i < newViewSet.getCameraPoseCount(); i++)
+                {
+                    primaryViewChoiceBox.getItems().add(newViewSet.getImageFileName(i));
+                    primaryViewChoiceBox.getItems().sort(Comparator.naturalOrder());
+                }
+                primaryViewChoiceBox.getSelectionModel().select(0);
+            }
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -109,7 +130,8 @@ public class LoaderController implements Initializable
             {
                 try
                 {
-                    MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir);
+                    MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir,
+                        primaryViewChoiceBox.getSelectionModel().getSelectedItem());
                 }
                 catch (FileNotFoundException e)
                 {
@@ -152,76 +174,4 @@ public class LoaderController implements Initializable
     }
 
     private static final String QUICK_FILENAME = "quickSaveLoadConfig.txt";
-
-    @FXML
-    private void quickSave()
-    {
-        if ((cameraFile != null) && (objFile != null) && (photoDir != null))
-        {
-            System.out.println("Quick save");
-
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(QUICK_FILENAME)))
-            {
-
-                String toWrite =
-                    cameraFile.getPath()
-                        + '\n' +
-                        objFile.getPath()
-                        + '\n' +
-                        photoDir.getPath();
-
-                bw.write(toWrite);
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @FXML
-    private void quickLoad()
-    {
-        System.out.println("Quick load");
-
-        try (BufferedReader br = new BufferedReader(new FileReader(QUICK_FILENAME)))
-        {
-
-            Stream<String> lineStream = br.lines();
-
-            String[] lineArray = lineStream.toArray(String[]::new);
-
-            File newCam = new File(lineArray[0]);
-            File newObj = new File(lineArray[1]);
-            File newPhoto = new File(lineArray[2]);
-
-            if ((newCam != null) && (newObj != null) && (newPhoto != null))
-            {
-                System.out.println("Loaded");
-                cameraFile = newCam;
-                objFile = newObj;
-                photoDir = newPhoto;
-
-                setHomeDir(cameraFile);
-                loadCheckCameras.setText("Loaded");
-                loadCheckCameras.setFill(Paint.valueOf("Green"));
-                loadCheckObj.setText("Loaded");
-                loadCheckObj.setFill(Paint.valueOf("Green"));
-                loadCheckImages.setText("Loaded");
-                loadCheckImages.setFill(Paint.valueOf("Green"));
-            }
-            else
-            {
-                System.out.println("failed");
-            }
-        }
-        catch (FileNotFoundException e)
-        {
-            System.out.println("Can't find the file (but that's ok)");
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
 }

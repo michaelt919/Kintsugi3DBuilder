@@ -129,7 +129,8 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, ReadonlyLoadOptionsModel loadOptions)
+    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName,
+        ReadonlyLoadOptionsModel loadOptions)
         throws FileNotFoundException
     {
         this.loadingMonitor.startLoading();
@@ -139,7 +140,8 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                 IBRResources.getBuilderForContext(this.context)
                     .setLoadingMonitor(this.loadingMonitor)
                     .setLoadOptions(loadOptions)
-                    .loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory));
+                    .loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory)
+                    .setPrimaryView(primaryViewName));
 
         newItem.setObjectModel(this.objectModel);
         newItem.setCameraModel(this.cameraModel);
