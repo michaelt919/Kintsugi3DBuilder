@@ -8,7 +8,8 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<GridPane prefHeight="225.0" prefWidth="165.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.ColorCheckerController">
+<GridPane prefHeight="225.0" prefWidth="165.0" xmlns="http://javafx.com/javafx/8.0.162" xmlns:fx="http://javafx.com/fxml/1"
+fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.ColorCheckerController">
    <children>
       <TextField fx:id="encoded031" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="29.0" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
          <GridPane.margin>
