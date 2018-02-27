@@ -1447,15 +1447,21 @@ public final class ViewSet
         return gamma;
     }
 
+    public boolean hasCustomLuminanceEncoding()
+    {
+        return linearLuminanceValues != null && encodedLuminanceValues != null
+            && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0;
+    }
+
     public SampledLuminanceEncoding getLuminanceEncoding()
     {
-        if (linearLuminanceValues != null && encodedLuminanceValues != null && linearLuminanceValues.length > 0 && encodedLuminanceValues.length > 0)
+        if (hasCustomLuminanceEncoding())
         {
             return new SampledLuminanceEncoding(linearLuminanceValues, encodedLuminanceValues, gamma);
         }
         else
         {
-            return null;
+            return new SampledLuminanceEncoding(gamma);
         }
     }
 

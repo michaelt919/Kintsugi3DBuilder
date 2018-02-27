@@ -73,12 +73,12 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
     /**
      * A 1D texture defining how encoded RGB values should be converted to linear luminance.
      */
-    public final Texture1D<ContextType> luminanceMap;
+    private Texture1D<ContextType> luminanceMap;
 
     /**
      * A 1D texture defining how encoded RGB values should be converted to linear luminance.
      */
-    public final Texture1D<ContextType> inverseLuminanceMap;
+    private Texture1D<ContextType> inverseLuminanceMap;
 
     public final VertexBuffer<ContextType> positionBuffer;
     public final VertexBuffer<ContextType> texCoordBuffer;
@@ -109,10 +109,17 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         private float gamma;
         private double[] linearLuminanceValues;
         private byte[] encodedLuminanceValues;
+        private String primaryViewName;
 
         private Builder(ContextType context)
         {
             this.context = context;
+        }
+
+        public Builder<ContextType> setPrimaryView(String primaryViewName)
+        {
+            this.primaryViewName = primaryViewName;
+            return this;
         }
 
         public Builder<ContextType> setLoadOptions(ReadonlyLoadOptionsModel loadOptions)
@@ -195,6 +202,11 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             if (imageDirectoryOverride != null)
             {
                 viewSet.setRelativeImagePathName(viewSet.getRootDirectory().toPath().relativize(imageDirectoryOverride.toPath()).toString());
+            }
+
+            if (primaryViewName != null)
+            {
+                viewSet.setPrimaryView(primaryViewName);
             }
 
             return new IBRResources<>(context, viewSet, geometry, loadOptions, loadingMonitor);
@@ -503,7 +515,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Luminance map texture
-        if (viewSet.getLuminanceEncoding() != null)
+        if (viewSet.hasCustomLuminanceEncoding())
         {
             luminanceMap = viewSet.getLuminanceEncoding().createLuminanceMap(context);
             inverseLuminanceMap = viewSet.getLuminanceEncoding().createInverseLuminanceMap(context);
@@ -908,6 +920,37 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         return 2 * nearPlane * farPlane / (farPlane + nearPlane - nonLinearDepth * (farPlane - nearPlane));
     }
 
+    public void updateLuminanceMap()
+    {
+        if (luminanceMap != null)
+        {
+            luminanceMap.close();
+            luminanceMap = null;
+        }
+
+        if (inverseLuminanceMap != null)
+        {
+            inverseLuminanceMap.close();
+            inverseLuminanceMap = null;
+        }
+
+        if (viewSet.hasCustomLuminanceEncoding())
+        {
+            luminanceMap = viewSet.getLuminanceEncoding().createLuminanceMap(context);
+            inverseLuminanceMap = viewSet.getLuminanceEncoding().createInverseLuminanceMap(context);
+        }
+    }
+
+    public Texture1D<ContextType> getLuminanceMap()
+    {
+        return luminanceMap;
+    }
+
+    public Texture1D<ContextType> getInverseLuminanceMap()
+    {
+        return inverseLuminanceMap;
+    }
+
     private void setupCommon(Program<ContextType> program)
     {
         if (this.eigentextures != null)
@@ -943,7 +986,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.luminanceMap == null)
         {
             program.setUniform("useLuminanceMap", false);
-            program.setTexture("luminanceMap", null);
+            program.setTexture("luminanceMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
         }
         else
         {
@@ -954,7 +997,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.inverseLuminanceMap == null)
         {
             program.setUniform("useInverseLuminanceMap", false);
-            program.setTexture("inverseLuminanceMap", null);
+            program.setTexture("inverseLuminanceMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
         }
         else
         {
@@ -966,6 +1009,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
         if (this.depthTextures == null)
         {
+            program.setTexture("depthImages", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY));
             program.setUniform("occlusionEnabled", false);
         }
         else
@@ -977,6 +1021,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
         if (this.shadowMatrixBuffer == null || this.shadowTextures == null)
         {
+            program.setTexture("shadowImages", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY));
             program.setUniform("shadowTestEnabled", false);
         }
         else
@@ -995,7 +1040,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.normalTexture == null)
         {
             program.setUniform("useNormalTexture", false);
-            program.setTexture("normalMap", null);
+            program.setTexture("normalMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {
@@ -1006,7 +1051,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.diffuseTexture == null)
         {
             program.setUniform("useDiffuseTexture", false);
-            program.setTexture("diffuseMap", null);
+            program.setTexture("diffuseMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {
@@ -1017,7 +1062,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.specularTexture == null)
         {
             program.setUniform("useSpecularTexture", false);
-            program.setTexture("specularMap", null);
+            program.setTexture("specularMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {
@@ -1028,7 +1073,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.roughnessTexture == null)
         {
             program.setUniform("useRoughnessTexture", false);
-            program.setTexture("roughnessMap", null);
+            program.setTexture("roughnessMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {
@@ -1044,7 +1089,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.normalTexture == null)
         {
             program.setUniform("useNormalTexture", false);
-            program.setTexture("normalMap", null);
+            program.setTexture("normalMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {
@@ -1055,7 +1100,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.diffuseTexture == null)
         {
             program.setUniform("useDiffuseTexture", false);
-            program.setTexture("diffuseMap", null);
+            program.setTexture("diffuseMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {
@@ -1066,7 +1111,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.specularTexture == null)
         {
             program.setUniform("useSpecularTexture", false);
-            program.setTexture("specularMap", null);
+            program.setTexture("specularMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {
@@ -1077,7 +1122,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (this.roughnessTexture == null)
         {
             program.setUniform("useRoughnessTexture", false);
-            program.setTexture("roughnessMap", null);
+            program.setTexture("roughnessMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {

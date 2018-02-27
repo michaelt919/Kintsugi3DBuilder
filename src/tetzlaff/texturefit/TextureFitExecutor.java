@@ -193,14 +193,14 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
             drawable.program().setUniform("gamma", param.getGamma());
 
-            if (viewSetResources.luminanceMap == null)
+            if (viewSetResources.getLuminanceMap() == null)
             {
                 drawable.program().setUniform("useLuminanceMap", false);
             }
             else
             {
                 drawable.program().setUniform("useLuminanceMap", true);
-                drawable.program().setTexture("luminanceMap", viewSetResources.luminanceMap);
+                drawable.program().setTexture("luminanceMap", viewSetResources.getLuminanceMap());
             }
 
             int width;
@@ -436,14 +436,14 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
         drawable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
         drawable.program().setUniform("gamma", param.getGamma());
-        if (viewSetResources.luminanceMap == null)
+        if (viewSetResources.getLuminanceMap() == null)
         {
             drawable.program().setUniform("useLuminanceMap", false);
         }
         else
         {
             drawable.program().setUniform("useLuminanceMap", true);
-            drawable.program().setTexture("luminanceMap", viewSetResources.luminanceMap);
+            drawable.program().setTexture("luminanceMap", viewSetResources.getLuminanceMap());
         }
         drawable.program().setUniform("shadowTestEnabled", false);
         drawable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
@@ -669,14 +669,14 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         drawable.program().setUniform("fittingGamma", (float)FITTING_GAMMA);
         drawable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
 
-        if (viewSetResources.luminanceMap == null)
+        if (viewSetResources.getLuminanceMap() == null)
         {
             drawable.program().setUniform("useLuminanceMap", false);
         }
         else
         {
             drawable.program().setUniform("useLuminanceMap", true);
-            drawable.program().setTexture("luminanceMap", viewSetResources.luminanceMap);
+            drawable.program().setTexture("luminanceMap", viewSetResources.getLuminanceMap());
         }
 
         drawable.program().setUniformBuffer("LightIndices", viewSetResources.lightIndexBuffer);
@@ -1565,7 +1565,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
         System.out.println("Loading view set completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
-        if(viewSetResources.luminanceMap == null)
+        if(!viewSet.hasCustomLuminanceEncoding())
         {
             System.out.println("WARNING: no luminance mapping found.  Reflectance values are not physically grounded.");
         }

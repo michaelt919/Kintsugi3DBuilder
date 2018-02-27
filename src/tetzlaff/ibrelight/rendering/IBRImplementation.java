@@ -91,6 +91,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private File currentBackplateFile;
     private final Object loadBackplateLock = new Object();
 
+    private boolean newLuminanceEncodingDataAvaiable;
+    private double[] newLinearLuminanceValues;
+    private byte[] newEncodedLuminanceValues;
+
     @SuppressWarnings("FieldCanBeLocal")
     private volatile File desiredBackplateFile;
 
@@ -613,6 +617,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
         }
 
+        if (this.newLuminanceEncodingDataAvaiable)
+        {
+            this.getActiveViewSet().setTonemapping(
+                this.getActiveViewSet().getGamma(),
+                this.newLinearLuminanceValues,
+                this.newEncodedLuminanceValues);
+
+            this.resources.updateLuminanceMap();
+        }
+
         if (this.referenceSceneChanged && this.referenceScene != null)
         {
             this.referenceSceneChanged = false;
@@ -710,7 +724,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         if (this.environmentMap == null || !lightingModel.isEnvironmentMappingEnabled())
         {
             program.setUniform("useEnvironmentMap", false);
-            program.setTexture("environmentMap", null);
+            program.setTexture("environmentMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_CUBE_MAP));
         }
         else
         {
@@ -1072,6 +1086,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         FramebufferSize framebufferSize = framebuffer.getSize();
         this.draw(framebuffer, viewOverride, projectionOverride, framebufferSize.width, framebufferSize.height);
+    }
+
+    @Override
+    public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+    {
+        this.newLinearLuminanceValues = linearLuminanceValues;
+        this.newEncodedLuminanceValues = encodedLuminanceValues;
+        this.newLuminanceEncodingDataAvaiable = true;
     }
 
 
