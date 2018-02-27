@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.DoubleUnaryOperator;
 
 import tetzlaff.util.AbstractImage;
 
@@ -48,9 +49,10 @@ public class LoadingModel
         this.handler.loadFromVSETFile(id, vsetFile, loadOptionsModel);
     }
 
-    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory) throws FileNotFoundException
+    public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName)
+        throws FileNotFoundException
     {
-        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, loadOptionsModel);
+        this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
     }
 
     public Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException
@@ -66,6 +68,16 @@ public class LoadingModel
     public void saveToVSETFile(File vsetFile) throws IOException
     {
         this.handler.saveToVSETFile(vsetFile);
+    }
+
+    public DoubleUnaryOperator getLuminanceEncodingFunction()
+    {
+        return this.handler.getLuminanceEncodingFunction();
+    }
+
+    public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+    {
+        this.handler.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
     }
 
     public void unload()

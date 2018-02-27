@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.AbstractList;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.DoubleUnaryOperator;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Program;
@@ -128,7 +129,8 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, ReadonlyLoadOptionsModel loadOptions)
+    public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName,
+        ReadonlyLoadOptionsModel loadOptions)
         throws FileNotFoundException
     {
         this.loadingMonitor.startLoading();
@@ -138,7 +140,8 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                 IBRResources.getBuilderForContext(this.context)
                     .setLoadingMonitor(this.loadingMonitor)
                     .setLoadOptions(loadOptions)
-                    .loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory));
+                    .loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory)
+                    .setPrimaryView(primaryViewName));
 
         newItem.setObjectModel(this.objectModel);
         newItem.setCameraModel(this.cameraModel);
@@ -242,6 +245,18 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     public void setLoadingMonitor(LoadingMonitor loadingMonitor)
     {
         this.loadingMonitor = loadingMonitor;
+    }
+
+    @Override
+    public DoubleUnaryOperator getLuminanceEncodingFunction()
+    {
+        return this.getSelectedItem().getActiveViewSet().getLuminanceEncoding().encodeFunction;
+    }
+
+    @Override
+    public void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues)
+    {
+        this.getSelectedItem().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
     }
 
     public InteractiveRenderable<ContextType> getRenderable()

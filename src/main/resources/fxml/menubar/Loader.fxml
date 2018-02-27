@@ -4,23 +4,15 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<BorderPane fx:id="root" prefHeight="330.0" prefWidth="750.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.LoaderController">
+<BorderPane fx:id="root" prefHeight="330.0" prefWidth="750.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.LoaderController">
     <bottom>
         <HBox alignment="CENTER" BorderPane.alignment="CENTER">
             <children>
-            <HBox alignment="CENTER_LEFT" spacing="30.0" HBox.hgrow="ALWAYS" visible="false">
-               <children>
-                  <Button mnemonicParsing="false" onAction="#quickLoad" text="Quick Load">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </Button>
-                  <Button mnemonicParsing="false" onAction="#quickSave" text="Quick Save">
-                     <font>
-                        <Font size="18.0" />
-                     </font>
-                  </Button>
-               </children>
+            <HBox alignment="CENTER_LEFT" visible="true" HBox.hgrow="ALWAYS">
+                <children>
+                    <Label text="Primary view:  " />
+                    <ChoiceBox fx:id="primaryViewChoiceBox" prefWidth="400.0" />
+                </children>
             </HBox>
             <HBox alignment="CENTER_RIGHT" spacing="30.0" HBox.hgrow="ALWAYS">
                <children>

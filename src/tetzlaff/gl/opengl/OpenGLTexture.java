@@ -15,6 +15,7 @@ import tetzlaff.util.RadianceImageLoader.Image;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.*;
@@ -34,8 +35,16 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
     {
         this.context = context;
         this.textureType = textureType;
-        this.textureId = glGenTextures();
-        OpenGLContext.errorCheck();
+
+        if (textureType == TextureType.NULL)
+        {
+            this.textureId = 0;
+        }
+        else
+        {
+            this.textureId = glGenTextures();
+            OpenGLContext.errorCheck();
+        }
     }
 
     OpenGLTexture(OpenGLContext context, ColorFormat colorFormat)
@@ -214,6 +223,44 @@ abstract class OpenGLTexture implements Texture<OpenGLContext>, OpenGLFramebuffe
         case Repeat: return GL_REPEAT;
         case MirroredRepeat: return GL_MIRRORED_REPEAT;
         default: return 0;
+        }
+    }
+
+    static int translateSamplerType(SamplerType samplerType)
+    {
+        switch (samplerType)
+        {
+            case FLOAT_1D:
+            case INTEGER_1D:
+            case UNSIGNED_INTEGER_1D:
+                return GL_TEXTURE_1D;
+
+            case FLOAT_2D:
+            case INTEGER_2D:
+            case UNSIGNED_INTEGER_2D:
+                return GL_TEXTURE_2D;
+
+            case FLOAT_3D:
+            case INTEGER_3D:
+            case UNSIGNED_INTEGER_3D:
+                return GL_TEXTURE_3D;
+
+            case FLOAT_CUBE_MAP:
+            case INTEGER_CUBE_MAP:
+            case UNSIGNED_INTEGER_CUBE_MAP:
+                return GL_TEXTURE_CUBE_MAP;
+
+            case FLOAT_1D_ARRAY:
+            case INTEGER_1D_ARRAY:
+            case UNSIGNED_INTEGER_1D_ARRAY:
+                return GL_TEXTURE_1D_ARRAY;
+
+            case FLOAT_2D_ARRAY:
+            case INTEGER_2D_ARRAY:
+            case UNSIGNED_INTEGER_2D_ARRAY:
+                return GL_TEXTURE_2D_ARRAY;
+            default:
+                throw new IllegalArgumentException();
         }
     }
 

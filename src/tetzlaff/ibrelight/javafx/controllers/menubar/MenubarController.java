@@ -41,6 +41,7 @@ public class MenubarController
     private final Flag ibrOptionsWindowOpen = new Flag(false);
     private final Flag loadOptionsWindowOpen = new Flag(false);
     private final Flag loaderWindowOpen = new Flag(false);
+    private final Flag colorCheckerWindowOpen = new Flag(false);
 
     @FXML private ProgressBar progressBar;
 
@@ -491,5 +492,25 @@ public class MenubarController
         stage.show();
 
         return fxmlLoader.getController();
+    }
+
+    public void file_colorChecker()
+    {
+        if (colorCheckerWindowOpen.get())
+        {
+            return;
+        }
+
+        try
+        {
+            ColorCheckerController colorCheckerController =
+                makeWindow("Color Checker", colorCheckerWindowOpen, "fxml/menubar/ColorChecker.fxml");
+            colorCheckerController.init(MultithreadModels.getInstance().getLoadingModel());
+
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 }
