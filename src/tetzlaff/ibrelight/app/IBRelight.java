@@ -5,7 +5,7 @@ import java.io.PrintStream;
 
 public final class IBRelight
 {
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private IBRelight()
     {
