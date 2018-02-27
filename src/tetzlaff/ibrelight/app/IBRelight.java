@@ -7,8 +7,6 @@ public final class IBRelight
 {
     private static final boolean DEBUG = true;
 
-    // Added this line to reopen branch - will revert on next commit.
-
     private IBRelight()
     {
     }
