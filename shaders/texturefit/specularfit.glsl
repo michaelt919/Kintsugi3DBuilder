@@ -15,7 +15,8 @@ uniform sampler2D normalEstimate;
 uniform float fittingGamma;
 uniform bool standaloneMode;
 
-uniform vec4 normalCandidateWeights;
+//uniform vec4 normalCandidateWeights;
+uniform vec2 normalCandidate;
 
 #define fitNearSpecularOnly false // should be true for DARPA stuff (at least when comparing with Joey), false for cultural heritage
 #define chromaticRoughness true
@@ -102,6 +103,22 @@ ParameterizedFit fitSpecular()
     vec3 directionSum = vec3(0);
     vec3 intensityWeightedDirectionSum = vec3(0);
 
+    float[255] normalXBins;
+    float[255] normalYBins;
+    int[255] normalXCountBins;
+    int[255] normalYCountBins;
+
+    for (int i = 0; i < 255; i++)
+    {
+        normalXBins[i] = 0.0;
+        normalYBins[i] = 0.0;
+        normalXCountBins[i] = 0;
+        normalYCountBins[i] = 0;
+    }
+
+    float binSum = 0.0;
+    int binCount = 0;
+
     for (int i = 0; i < viewCount; i++)
     {
         vec4 color = getLinearColor(i);
@@ -133,7 +150,20 @@ ParameterizedFit fitSpecular()
                 maxResidual = colorRemainder;
                 maxResidualDirection = halfway;
             }
+
+            vec3 halfwayTS = transpose(tangentToObject) * halfway;
+            normalXBins[int(round(halfwayTS.x * 127 + 127))] += luminance;
+            normalYBins[int(round(halfwayTS.y * 127 + 127))] += luminance;
+            binSum += luminance;
+            normalXCountBins[int(round(halfwayTS.x * 127 + 127))]++;
+            normalYCountBins[int(round(halfwayTS.y * 127 + 127))]++;
+            binCount++;
         }
+    }
+
+    if (dot(intensityWeightedDirectionSum, intensityWeightedDirectionSum) < 1.0)
+    {
+        intensityWeightedDirectionSum += (1 - length(intensityWeightedDirectionSum)) * oldDiffuseNormal;
     }
 
     vec3 maxResidualXYZ = rgbToXYZ(maxResidual);
@@ -141,40 +171,99 @@ ParameterizedFit fitSpecular()
     float luminanceUncertaintyRange = max(0, maxResidualComponent - 0.9);
 
     vec3 specularNormal;
+    vec3 biasedHeuristicNormal;
+    vec3 bias;
+    float resolvability;
+
+//    biasedHeuristicNormal = normalize(intensityWeightedDirectionSum);
+//    float directionScale = length(directionSum);
+//    resolvability = min(1, directionScale)
+//    bias = directionSum / max(1, directionScale);
+
+
+
+    vec2 heuristicNormalTS;
+    vec2 biasTS;
+
+    float runningXSum = normalXBins[0];
+    float runningYSum = normalYBins[0];
+
+    int runningXCount = normalXCountBins[0];
+    int runningYCount = normalYCountBins[0];
+
+    for (int i = 1; i < 255; i++)
+    {
+        float nextXSum = runningXSum + normalXBins[i];
+        float nextYSum = runningYSum + normalYBins[i];
+
+        int nextXCount = runningXCount;
+        int nextYCount = runningYCount;
+
+        if (nextXSum != runningXSum && runningXSum <= binSum / 2 && binSum / 2 < nextXSum)
+        {
+            heuristicNormalTS.x = (mix(i - 1, i, (binSum / 2 - runningXSum) / (nextXSum - runningXSum)) - 127) / 127.0;
+        }
+
+        if (nextYSum != runningYSum && runningYSum <= binSum / 2 && binSum / 2 <= nextYSum)
+        {
+            heuristicNormalTS.y = (mix(i - 1, i, (binSum / 2 - runningYSum) / (nextYSum - runningYSum)) - 127) / 127.0;
+        }
+
+        if (nextXCount != runningXCount && runningXCount <= binCount / 2 && binCount / 2 < nextXCount)
+        {
+            biasTS.x = (mix(i - 1, i, float(binCount * 0.5 - runningXCount) / float(nextXCount - runningXCount)) - 127) / 127.0;
+        }
+
+        if (nextYCount != runningYCount && runningYCount <= binCount / 2 && binCount / 2 < nextYCount)
+        {
+            biasTS.y = (mix(i - 1, i, float(binCount * 0.5 - runningYCount) / float(nextYCount - runningYCount)) - 127) / 127.0;
+        }
+
+        runningXSum = nextXSum;
+        runningYSum = nextYSum;
+        runningXCount = nextXCount;
+        runningYCount = nextYCount;
+    }
+
+    biasedHeuristicNormal = tangentToObject * vec3(heuristicNormalTS, sqrt(1 - dot(heuristicNormalTS, heuristicNormalTS)));
+    bias = tangentToObject * vec3(biasTS, sqrt(1 - dot(biasTS, biasTS)));
+    resolvability = 1.0;
+
+
+
+
+
     vec3 heuristicNormal;
 
     if (aggressiveNormal)
     {
-        heuristicNormal = normalize(intensityWeightedDirectionSum);
+        heuristicNormal = biasedHeuristicNormal;
     }
     else
     {
-        if (dot(intensityWeightedDirectionSum, intensityWeightedDirectionSum) < 1.0)
-        {
-            intensityWeightedDirectionSum += (1 - length(intensityWeightedDirectionSum)) * oldDiffuseNormal;
-        }
-
-        float directionScale = length(directionSum);
-        vec3 averageDirection = directionSum / max(1, directionScale);
-        float specularNormalFidelity = dot(averageDirection, normal);
-        vec3 certaintyDirectionUnnormalized = cross(averageDirection - specularNormalFidelity * normal, normal);
+        float specularNormalFidelity = dot(bias, normal);
+        vec3 certaintyDirectionUnnormalized = cross(bias - specularNormalFidelity * normal, normal);
         vec3 certaintyDirection = certaintyDirectionUnnormalized
             / max(1, length(certaintyDirectionUnnormalized));
 
-        vec3 specularNormalEstimate = normalize(intensityWeightedDirectionSum);
         float specularNormalCertainty =
-            min(1, directionScale) * dot(specularNormalEstimate, certaintyDirection);
+            resolvability * dot(biasedHeuristicNormal, certaintyDirection);
         vec3 scaledCertaintyDirection = specularNormalCertainty * certaintyDirection;
         heuristicNormal = normalize(
             scaledCertaintyDirection
                 + sqrt(1 - specularNormalCertainty * specularNormalCertainty
                             * dot(certaintyDirection, certaintyDirection))
-                    * normalize(mix(normal, normalize(specularNormalEstimate - scaledCertaintyDirection),
-                        min(1, directionScale) * specularNormalFidelity)));
+                    * normalize(mix(normal, normalize(biasedHeuristicNormal - scaledCertaintyDirection),
+                       resolvability * specularNormalFidelity)));
     }
 
-    specularNormal = normalize(mat4x3(normal, oldDiffuseNormal, maxResidualDirection, heuristicNormal)
-                        * normalCandidateWeights);
+//    specularNormal = normalize(mat4x3(normal, oldDiffuseNormal, maxResidualDirection, heuristicNormal)
+//                        * normalCandidateWeights);
+//
+//    specularNormal = tangentToObject * vec3(normalCandidate, sqrt(1 - dot(normalCandidate, normalCandidate)));
+
+    specularNormal = heuristicNormal;
+
 
     vec3 roughnessSums[3];
     roughnessSums[0] = vec3(0);
@@ -270,29 +359,39 @@ ParameterizedFit fitSpecular()
             MIN_ROUGHNESS * MIN_ROUGHNESS, /*min(0.25 / maxResidualComponent, */MAX_ROUGHNESS * MAX_ROUGHNESS/*)*/);
         specularColorXYZEstimate = 4 * roughnessSquared * maxResidualXYZ;
 
-        //if (specularColorXYZEstimate.y > 1.0)
+        if (specularColorXYZEstimate.y > 1.0)
         {
-            roughnessSquared.y = clamp(
-                (sqrt(maxResidualXYZ).y * altRoughnessSums[1] - altRoughnessSums[0]) / sumWeights,
-                MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS);
+            vec3 adjustedMaxResidual = maxResidualXYZ / (4 * maxResidualXYZ.y *
+                clamp((sqrt(maxResidualXYZ).y * altRoughnessSums[1] - altRoughnessSums[0]) / sumWeights.y,
+                                MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS));
 
-            roughnessSquared.xz = clamp(roughnessSums[0].xz / max(vec2(0.0),
-                    sqrt(maxResidualXYZ.xz / (4 * maxResidualXYZ.y * roughnessSquared.y))
-                        * roughnessSums[2].xz - roughnessSums[1].xz),
-                MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS);
+            roughnessSquared = clamp(roughnessSums[0] / max(vec3(0.0), sqrt(adjustedMaxResidual) * roughnessSums[2] - roughnessSums[1]),
+                MIN_ROUGHNESS * MIN_ROUGHNESS, min(0.25 / maxResidualComponent, MAX_ROUGHNESS * MAX_ROUGHNESS));
 
-            specularColorXYZEstimate.y = 1.0;
-            specularColorXYZEstimate.xz = roughnessSquared.xz * maxResidualXYZ.xz / (roughnessSquared.y * maxResidualXYZ.y);
+            specularColorXYZEstimate = 4 * roughnessSquared * adjustedMaxResidual;
         }
     }
     else
     {
-        roughnessSquared = vec3(clamp(roughnessSums[0].y / max(0.0, sqrt(maxResidualLuminance[0]) * roughnessSums[2].y - roughnessSums[1].y),
-            MIN_ROUGHNESS * MIN_ROUGHNESS, /*min(0.25 / maxResidualComponent, */MAX_ROUGHNESS * MAX_ROUGHNESS/*)*/));
-        vec3 avgResidualXYZ = pow(sumResidualXYZGamma.xyz / sumResidualXYZGamma.w, vec3(fittingGamma));
-        specularColorXYZEstimate = 4 * roughnessSquared * maxResidualLuminance[0] * avgResidualXYZ / max(0.001, avgResidualXYZ.y);
+        float sumWeights = max(0.0, sqrt(maxResidualLuminance[0]) * roughnessSums[2].y - roughnessSums[1].y);
+        float initRoughnessSquared = clamp(roughnessSums[0].y / sumWeights, MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS);
 
-        // TODO monochrome roughness version of physical reflectivity enforcement
+        float reflectivityEstimate = 4 * initRoughnessSquared * maxResidualLuminance[0];
+        vec3 avgResidualXYZ = pow(sumResidualXYZGamma.xyz / sumResidualXYZGamma.w, vec3(fittingGamma));
+
+        if (reflectivityEstimate > 1.0)
+        {
+            roughnessSquared = vec3(clamp((sqrt(maxResidualLuminance[0]) * altRoughnessSums[1] - altRoughnessSums[0]) / sumWeights,
+                MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS));
+
+            specularColorXYZEstimate = avgResidualXYZ / max(0.001, avgResidualXYZ.y);
+        }
+        else
+        {
+            roughnessSquared = vec3(initRoughnessSquared);
+            specularColorXYZEstimate = reflectivityEstimate * avgResidualXYZ / max(0.001, avgResidualXYZ.y);
+        }
+
 
 //        // Force monochrome roughness and reflectivity (for debugging)
 //        vec3 specularColor = 4 * roughnessSquared * maxResidualLuminance[0];
