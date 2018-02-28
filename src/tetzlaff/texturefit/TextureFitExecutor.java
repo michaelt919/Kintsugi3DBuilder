@@ -737,7 +737,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
             drawable.program().setTexture("viewImages", viewImages);
             drawable.program().setTexture("depthImages", depthImages);
-            drawable.program().setTexture("shadowImages", shadowImages);
+            drawable.program().setTexture("shadowImages",
+                shadowImages == null ? drawable.getContext().getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY) : shadowImages);
 
             drawable.program().setUniform("minTexCoord",
                     new Vector2((float)col / (float)subdiv, (float)row / (float)subdiv));
@@ -1799,7 +1800,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                                 Random random = new Random();
 
-                                for (int i = 0; i < 32; i++)
+                                for (int i = 0; i < 256; i++)
                                 {
                                     System.out.println("Beginning normal guess " + i + "...");
 
@@ -1815,24 +1816,27 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     //                                    Vector2 assumedNormal = new Vector2(nx * 2 / 255.0f - 1.0f, ny * 2 / 255.0f - 1.0f);
     //                                    specularFitProgram.setUniform("assumedNormal", assumedNormal);
 
-                                    if (i < 16)
+//                                    if (i < 16)
+//                                    {
+//                                        Vector4 unscaledWeights =
+//                                            new Vector4(i & 1,(i >> 1) & 1, (i >> 2) & 1,(i >> 3) & 1);
+//                                        specularFitProgram.setUniform("normalCandidateWeights",
+//                                            unscaledWeights.dividedBy(
+//                                                unscaledWeights.x + unscaledWeights.y
+//                                                + unscaledWeights.z + unscaledWeights.w));
+//                                    }
+//                                    else
                                     {
-                                        Vector4 unscaledWeights =
-                                            new Vector4(i & 1,(i >> 1) & 1, (i >> 2) & 1,(i >> 3) & 1);
-                                        specularFitProgram.setUniform("normalCandidateWeights",
-                                            unscaledWeights.dividedBy(
-                                                unscaledWeights.x + unscaledWeights.y
-                                                + unscaledWeights.z + unscaledWeights.w));
-                                    }
-                                    else
-                                    {
-                                        Vector4 unscaledRandomWeights =
-                                            new Vector4(random.nextFloat(), random.nextFloat(), random.nextFloat(), random.nextFloat());
+//                                        Vector4 unscaledRandomWeights =
+//                                            new Vector4(random.nextFloat(), random.nextFloat(), random.nextFloat(), random.nextFloat());
+//
+//                                        specularFitProgram.setUniform("normalCandidateWeights",
+//                                            unscaledRandomWeights.dividedBy(
+//                                                unscaledRandomWeights.x + unscaledRandomWeights.y
+//                                                + unscaledRandomWeights.z + unscaledRandomWeights.w));
 
-                                        specularFitProgram.setUniform("normalCandidateWeights",
-                                            unscaledRandomWeights.dividedBy(
-                                                unscaledRandomWeights.x + unscaledRandomWeights.y
-                                                + unscaledRandomWeights.z + unscaledRandomWeights.w));
+                                        specularFitProgram.setUniform("normalCandidate",
+                                            new Vector2((float)random.nextGaussian(), (float)random.nextGaussian()));
                                     }
 
                                         backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
