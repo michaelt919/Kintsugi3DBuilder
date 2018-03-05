@@ -259,6 +259,12 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         this.getSelectedItem().setTonemapping(linearLuminanceValues, encodedLuminanceValues);
     }
 
+    @Override
+    public void applyLightCalibration()
+    {
+        this.getSelectedItem().applyLightCalibration();
+    }
+
     public InteractiveRenderable<ContextType> getRenderable()
     {
         return renderableList;

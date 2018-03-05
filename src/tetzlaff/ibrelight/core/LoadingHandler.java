@@ -26,4 +26,5 @@ public interface LoadingHandler
 
     DoubleUnaryOperator getLuminanceEncodingFunction();
     void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
+    void applyLightCalibration();
 }

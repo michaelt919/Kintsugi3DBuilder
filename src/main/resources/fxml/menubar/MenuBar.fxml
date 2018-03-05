@@ -13,6 +13,7 @@
          <MenuItem mnemonicParsing="false" onAction="#file_saveProjectAs" text="Save project as..." />
          <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project" />
          <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
+          <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" />
           <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values..." />
          <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." />
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />

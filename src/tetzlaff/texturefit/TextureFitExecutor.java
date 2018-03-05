@@ -1203,14 +1203,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             Date timestamp = new Date();
 
             // Read a single image to get the dimensions for the texture array
-            File imageFile = new File(imageDir, viewSet.getImageFileName(0));
-            if (!imageFile.exists())
-            {
-                String[] filenameParts = viewSet.getImageFileName(0).split("\\.");
-                filenameParts[filenameParts.length - 1] = "png";
-                String pngFileName = String.join(".", filenameParts);
-                imageFile = new File(imageDir, pngFileName);
-            }
+            File imageFile = viewSetResources.findImageFile(0);
             BufferedImage img = ImageIO.read(new FileInputStream(imageFile));
             viewTextures = context.getTextureFactory().build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount())
                             .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
@@ -1220,14 +1213,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
             for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
             {
-                imageFile = new File(imageDir, viewSet.getImageFileName(i));
-                if (!imageFile.exists())
-                {
-                    String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-                    filenameParts[filenameParts.length - 1] = "png";
-                    String pngFileName = String.join(".", filenameParts);
-                    imageFile = new File(imageDir, pngFileName);
-                }
+                imageFile = viewSetResources.findImageFile(i);
 
                 if (maskDir == null)
                 {
@@ -1235,15 +1221,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 }
                 else
                 {
-                    File maskFile = new File(maskDir, viewSet.getImageFileName(i));
-                    if (!maskFile.exists())
-                    {
-                        String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-                        filenameParts[filenameParts.length - 1] = "png";
-                        String pngFileName = String.join(".", filenameParts);
-                        maskFile = new File(maskDir, pngFileName);
-                    }
-
+                    File maskFile = IBRResources.findImageFile(new File(maskDir, viewSet.getImageFileName(i)));
                     viewTextures.loadLayer(i, imageFile, maskFile, true);
                 }
 

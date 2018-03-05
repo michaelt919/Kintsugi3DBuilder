@@ -703,6 +703,13 @@ public final class ViewSet
                                     sensor.height = Float.parseFloat(reader.getAttributeValue(null, "height"));
                                 }
                                 break;
+                            case "f":
+                                if (sensor != null)
+                                {
+                                    sensor.fx = Float.parseFloat(reader.getElementText());
+                                    sensor.fy = sensor.fx;
+                                }
+                                break;
                             case "fx":
                                 if (sensor != null)
                                 {
