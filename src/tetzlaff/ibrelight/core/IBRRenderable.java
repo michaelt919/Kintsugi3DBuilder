@@ -58,4 +58,5 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     }
 
     void setTonemapping(double[] linearLuminanceValues, byte[] encodedLuminanceValues);
+    void applyLightCalibration();
 }

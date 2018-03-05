@@ -80,6 +80,11 @@ public class LoadingModel
         this.handler.setTonemapping(linearLuminanceValues, encodedLuminanceValues);
     }
 
+    public void applyLightCalibration()
+    {
+        this.handler.applyLightCalibration();
+    }
+
     public void unload()
     {
         this.handler.unload();

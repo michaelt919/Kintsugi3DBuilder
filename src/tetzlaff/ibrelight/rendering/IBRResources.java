@@ -310,35 +310,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (loadOptions != null && loadOptions.areColorImagesRequested() && viewSet.getImageFilePath() != null && viewSet.getCameraPoseCount() > 0)
         {
             Date timestamp = new Date();
-            File imageFile = viewSet.getImageFile(0);
-
-            if (!imageFile.exists())
-            {
-                // Try some alternate file formats/extensions
-                String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
-                for(String extension : altFormats)
-                {
-                    String[] filenameParts = viewSet.getImageFileName(0).split("\\.");
-                    filenameParts[filenameParts.length - 1] = extension;
-                    String altFileName = String.join(".", filenameParts);
-                    File imageFileGuess = new File(imageFile.getParentFile(), altFileName);
-
-                    System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
-                    if (imageFileGuess.exists())
-                    {
-                        System.out.printf("Found!!\n");
-                        imageFile = imageFileGuess;
-                        break;
-                    }
-                }
-
-                // Is it still not there?
-                if (!imageFile.exists())
-                {
-                    throw new FileNotFoundException(
-                            String.format("'%s' not found.", viewSet.getImageFileName(0)));
-                }
-            }
+            File imageFile = findImageFile(0);
 
             BufferedImage img;
 
@@ -394,32 +366,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             {
                 System.out.printf("%d/%d", i, m);
                 System.out.println();
-                imageFile = viewSet.getImageFile(i);
-                if (!imageFile.exists())
-                {
-                    // Try some alternate file formats/extensions
-                    String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
-                    for(String extension : altFormats)
-                    {
-                        String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-                        filenameParts[filenameParts.length - 1] = extension;
-                        String altFileName = String.join(".", filenameParts);
-                        File imageFileGuess = new File(imageFile.getParentFile(), altFileName);
-
-                        if (imageFileGuess.exists())
-                        {
-                            imageFile = imageFileGuess;
-                            break;
-                        }
-                    }
-
-                    // Is it still not there?
-                    if (!imageFile.exists())
-                    {
-                        throw new FileNotFoundException(
-                                String.format("'%s' not found.", viewSet.getImageFileName(i)));
-                    }
-                }
+                imageFile = findImageFile(i);
 
                 this.colorTextures.loadLayer(i, imageFile, true);
 
@@ -727,78 +674,130 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 context.getTextureFactory()
                     .build2DDepthTextureArray(this.depthTextures.getWidth(), this.depthTextures.getHeight(), this.viewSet.getCameraPoseCount())
                     .createTexture();
+            shadowMatrixBuffer = context.createUniformBuffer();
 
-            try
-            (
-                // Don't automatically generate any texture attachments for this framebuffer object
-                FramebufferObject<ContextType> depthRenderingFBO =
-                    context.buildFramebufferObject(this.depthTextures.getWidth(), this.depthTextures.getHeight())
-                        .createFramebufferObject();
-
-                // Load the program
-                Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
-                        .createProgram()
-            )
-            {
-                Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
-                depthDrawable.addVertexBuffer("position", this.positionBuffer);
-
-                // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-                NativeVectorBuffer flattenedShadowMatrices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, this.viewSet.getCameraPoseCount());
-
-                // Render each depth texture
-                for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
-                {
-                    depthRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
-                    depthRenderingFBO.clearDepthBuffer();
-
-                    depthRenderingProgram.setUniform("model_view", this.viewSet.getCameraPose(i));
-                    depthRenderingProgram.setUniform("projection",
-                        this.viewSet.getCameraProjection(this.viewSet.getCameraProjectionIndex(i))
-                            .getProjectionMatrix(
-                                this.viewSet.getRecommendedNearPlane(),
-                                this.viewSet.getRecommendedFarPlane()
-                            )
-                    );
-
-                    Matrix4 modelView = Matrix4.lookAt(
-                            this.viewSet.getCameraPoseInverse(i).times(this.viewSet.getLightPosition(0).asPosition()).getXYZ(),
-                            this.geometry.getCentroid(),
-                            new Vector3(0, 1, 0));
-                    depthRenderingProgram.setUniform("model_view", modelView);
-
-                    Matrix4 projection = this.viewSet.getCameraProjection(this.viewSet.getCameraProjectionIndex(i))
-                            .getProjectionMatrix(
-                                this.viewSet.getRecommendedNearPlane(),
-                                this.viewSet.getRecommendedFarPlane() * 2 // double it for good measure
-                            );
-                    depthRenderingProgram.setUniform("projection", projection);
-
-                    depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
-
-                    Matrix4 fullTransform = projection.times(modelView);
-
-                    int d = 0;
-                    for (int col = 0; col < 4; col++) // column
-                    {
-                        for (int row = 0; row < 4; row++) // row
-                        {
-                            flattenedShadowMatrices.set(i, d, fullTransform.get(row, col));
-                            d++;
-                        }
-                    }
-                }
-
-                // Create the uniform buffer
-                shadowMatrixBuffer = context.createUniformBuffer().setData(flattenedShadowMatrices);
-            }
+            updateShadowTextures();
         }
         else
         {
             shadowTextures = null;
             shadowMatrixBuffer = null;
+        }
+    }
+
+    public static File findImageFile(File requestedFile) throws FileNotFoundException
+    {
+        if (requestedFile.exists())
+        {
+            return requestedFile;
+        }
+        else
+        {
+            // Try some alternate file formats/extensions
+            String[] altFormats = { "png", "PNG", "jpg", "JPG", "jpeg", "JPEG" };
+            for(String extension : altFormats)
+            {
+                String[] filenameParts = requestedFile.getName().split("\\.");
+
+                String altFileName;
+                if (filenameParts.length > 1)
+                {
+                    filenameParts[filenameParts.length - 1] = extension;
+                    altFileName = String.join(".", filenameParts);
+                }
+                else
+                {
+                    altFileName = String.join(".", filenameParts[0], extension);
+                }
+
+                File imageFileGuess = new File(requestedFile.getParentFile(), altFileName);
+
+                System.out.printf("Trying '%s'\n", imageFileGuess.getAbsolutePath());
+                if (imageFileGuess.exists())
+                {
+                    System.out.printf("Found!!\n");
+                    return imageFileGuess;
+                }
+            }
+
+            // Is it still not there?
+            throw new FileNotFoundException(
+                String.format("'%s' not found.", requestedFile.getName()));
+        }
+    }
+
+    public File findImageFile(int index) throws FileNotFoundException
+    {
+        return findImageFile(viewSet.getImageFile(index));
+    }
+
+    private void updateShadowTextures() throws FileNotFoundException
+    {
+        try
+        (
+            // Don't automatically generate any texture attachments for this framebuffer object
+            FramebufferObject<ContextType> depthRenderingFBO =
+                context.buildFramebufferObject(this.depthTextures.getWidth(), this.depthTextures.getHeight())
+                    .createFramebufferObject();
+
+            // Load the program
+            Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
+                    .createProgram()
+        )
+        {
+            Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
+            depthDrawable.addVertexBuffer("position", this.positionBuffer);
+
+            // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
+            NativeVectorBuffer flattenedShadowMatrices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, this.viewSet.getCameraPoseCount());
+
+            // Render each depth texture
+            for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
+            {
+                depthRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
+                depthRenderingFBO.clearDepthBuffer();
+
+                depthRenderingProgram.setUniform("model_view", this.viewSet.getCameraPose(i));
+                depthRenderingProgram.setUniform("projection",
+                    this.viewSet.getCameraProjection(this.viewSet.getCameraProjectionIndex(i))
+                        .getProjectionMatrix(
+                            this.viewSet.getRecommendedNearPlane(),
+                            this.viewSet.getRecommendedFarPlane()
+                        )
+                );
+
+                Matrix4 modelView = Matrix4.lookAt(
+                        this.viewSet.getCameraPoseInverse(i).times(this.viewSet.getLightPosition(0).asPosition()).getXYZ(),
+                        this.geometry.getCentroid(),
+                        new Vector3(0, 1, 0));
+                depthRenderingProgram.setUniform("model_view", modelView);
+
+                Matrix4 projection = this.viewSet.getCameraProjection(this.viewSet.getCameraProjectionIndex(i))
+                        .getProjectionMatrix(
+                            this.viewSet.getRecommendedNearPlane(),
+                            this.viewSet.getRecommendedFarPlane() * 2 // double it for good measure
+                        );
+                depthRenderingProgram.setUniform("projection", projection);
+
+                depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+
+                Matrix4 fullTransform = projection.times(modelView);
+
+                int d = 0;
+                for (int col = 0; col < 4; col++) // column
+                {
+                    for (int row = 0; row < 4; row++) // row
+                    {
+                        flattenedShadowMatrices.set(i, d, fullTransform.get(row, col));
+                        d++;
+                    }
+                }
+            }
+
+            // Create the uniform buffer
+            shadowMatrixBuffer.setData(flattenedShadowMatrices);
         }
     }
 
@@ -825,6 +824,32 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             luminanceMap = viewSet.getLuminanceEncoding().createLuminanceMap(context);
             inverseLuminanceMap = viewSet.getLuminanceEncoding().createInverseLuminanceMap(context);
+        }
+    }
+
+    public void updateLightData()
+    {
+        // Store the light positions in a uniform buffer
+        if (lightPositionBuffer != null && viewSet.getLightPositionData() != null)
+        {
+            // Create the uniform buffer
+            lightPositionBuffer.setData(viewSet.getLightPositionData());
+        }
+
+        // Store the light positions in a uniform buffer
+        if (lightIntensityBuffer != null && viewSet.getLightIntensityData() != null)
+        {
+            // Create the uniform buffer
+            lightIntensityBuffer.setData(viewSet.getLightIntensityData());
+        }
+
+        try
+        {
+            updateShadowTextures();
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
         }
     }
 

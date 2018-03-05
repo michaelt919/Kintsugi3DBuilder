@@ -19,6 +19,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.app.Rendering;
 import tetzlaff.ibrelight.app.SynchronizedWindow;
 import tetzlaff.ibrelight.app.WindowSynchronization;
@@ -158,6 +159,8 @@ public class MainApplication extends Application
         primaryStage.requestFocus();
 
         SettingsModelImpl settingsModel = InternalModels.getInstance().getSettingsModel();
+        settingsModel.createBooleanSetting("lightCalibrationMode", false);
+        settingsModel.createObjectSetting("currentLightCalibration", Vector2.ZERO);
         settingsModel.createBooleanSetting("occlusionEnabled", true);
         settingsModel.createBooleanSetting("fresnelEnabled", false);
         settingsModel.createBooleanSetting("pbrGeometricAttenuationEnabled", false);

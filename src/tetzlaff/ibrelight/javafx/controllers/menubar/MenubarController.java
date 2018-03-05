@@ -13,7 +13,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -26,6 +25,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.stage.WindowEvent;
 import org.xml.sax.SAXException;
+import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.app.WindowSynchronization;
 import tetzlaff.ibrelight.core.*;
 import tetzlaff.ibrelight.javafx.InternalModels;
@@ -50,6 +50,7 @@ public class MenubarController
     @FXML private ToggleGroup renderGroup;
 
     //menu items
+    @FXML private CheckMenuItem lightCalibrationCheckMenuItem;
     @FXML private CheckMenuItem is3DGridCheckMenuItem;
     @FXML private CheckMenuItem compassCheckMenuItem;
     @FXML private CheckMenuItem halfResolutionCheckMenuItem;
@@ -190,6 +191,15 @@ public class MenubarController
 
         initToggleGroups();
         bindCheckMenuItems();
+
+        lightCalibrationCheckMenuItem.selectedProperty().addListener(observable ->
+        {
+            if (!lightCalibrationCheckMenuItem.isSelected())
+            {
+                MultithreadModels.getInstance().getLoadingModel().applyLightCalibration();
+                MultithreadModels.getInstance().getSettingsModel().set("currentLightCalibration", Vector2.ZERO);
+            }
+        });
     }
 
     private void initToggleGroups()
@@ -206,6 +216,8 @@ public class MenubarController
     private void bindCheckMenuItems()
     {
         //value binding
+        lightCalibrationCheckMenuItem.selectedProperty().bindBidirectional(
+            internalModels.getSettingsModel().getBooleanProperty("lightCalibrationMode"));
         is3DGridCheckMenuItem.selectedProperty().bindBidirectional(
             internalModels.getSettingsModel().getBooleanProperty("is3DGridEnabled"));
         compassCheckMenuItem.selectedProperty().bindBidirectional(
