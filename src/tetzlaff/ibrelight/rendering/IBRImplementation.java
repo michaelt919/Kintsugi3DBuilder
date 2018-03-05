@@ -89,9 +89,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private File currentBackplateFile;
     private final Object loadBackplateLock = new Object();
 
-    private boolean newLuminanceEncodingDataAvaiable;
+    private boolean newLuminanceEncodingDataAvailable;
     private double[] newLinearLuminanceValues;
     private byte[] newEncodedLuminanceValues;
+
+    private boolean newLightCalibrationAvailable;
+    private Vector3 newLightCalibration;
 
     @SuppressWarnings("FieldCanBeLocal")
     private volatile File desiredBackplateFile;
@@ -543,7 +546,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
         }
 
-        if (this.newLuminanceEncodingDataAvaiable)
+        if (this.newLuminanceEncodingDataAvailable)
         {
             this.getActiveViewSet().setTonemapping(
                 this.getActiveViewSet().getGamma(),
@@ -551,6 +554,15 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.newEncodedLuminanceValues);
 
             this.resources.updateLuminanceMap();
+
+            this.newLightCalibrationAvailable = false;
+        }
+
+        if (this.newLightCalibrationAvailable)
+        {
+            this.getActiveViewSet().setLightPosition(0, newLightCalibration);
+            this.resources.updateLightData();
+            this.newLightCalibrationAvailable = false;
         }
 
         if (this.referenceSceneChanged && this.referenceScene != null)
@@ -610,7 +622,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         this.resources.setupShaderProgram(program, this.settingsModel.get("renderingMode", RenderingMode.class));
 
-        if (!this.settingsModel.getBoolean("relightingEnabled")
+        if (!this.settingsModel.getBoolean("relightingEnabled") && !settingsModel.getBoolean("lightCalibrationMode")
             && this.settingsModel.get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM)
         {
             program.setUniform("perPixelWeightsEnabled", false);
@@ -640,7 +652,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         program.setUniform("renderGamma", gamma);
 
         program.setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
-        program.setUniform("relightingEnabled", this.settingsModel.getBoolean("relightingEnabled"));
+        program.setUniform("relightingEnabled", this.settingsModel.getBoolean("relightingEnabled") && !settingsModel.getBoolean("lightCalibrationMode"));
         program.setUniform("pbrGeometricAttenuationEnabled", this.settingsModel.getBoolean("pbrGeometricAttenuationEnabled"));
         program.setUniform("fresnelEnabled", this.settingsModel.getBoolean("fresnelEnabled"));
         program.setUniform("shadowsEnabled", this.settingsModel.getBoolean("shadowsEnabled"));
@@ -944,13 +956,23 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         this.newLinearLuminanceValues = linearLuminanceValues;
         this.newEncodedLuminanceValues = encodedLuminanceValues;
-        this.newLuminanceEncodingDataAvaiable = true;
+        this.newLuminanceEncodingDataAvailable = true;
+    }
+
+    @Override
+    public void applyLightCalibration()
+    {
+        this.newLightCalibration = resources.viewSet.getLightPosition(0)
+            .plus(settingsModel.get("currentLightCalibration", Vector2.class).asVector3());
+        this.newLightCalibrationAvailable = true;
     }
 
     @Override
     public void draw(Framebuffer<ContextType> framebuffer, Matrix4 viewOverride, Matrix4 projectionOverride, int subdivWidth, int subdivHeight)
     {
         boolean overriddenViewMatrix = viewOverride != null;
+
+        Matrix4 view = this.getAbsoluteViewMatrix();
 
         try
         {
@@ -965,7 +987,43 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             context.getState().enableBackFaceCulling();
 
-            Matrix4 view = viewOverride;
+            boolean lightCalibrationMode = false;
+            int snapViewIndex = -1;
+
+            if (overriddenViewMatrix)
+            {
+                view = viewOverride;
+            }
+            else if (settingsModel.getBoolean("lightCalibrationMode"))
+            {
+                lightCalibrationMode = true;
+                overriddenViewMatrix = true;
+
+                Vector3 lightPosition = settingsModel.get("currentLightCalibration", Vector2.class).asVector3()
+                                            .plus(resources.viewSet.getLightPosition(0));
+                Matrix4 lightTransform = Matrix4.translate(lightPosition.negated());
+
+                Matrix4 partialViewInverse = getPartialViewMatrix().quickInverse(0.01f);
+                float maxSimilarity = -1.0f;
+
+                for(int i = 0; i < this.resources.viewSet.getCameraPoseCount(); i++)
+                {
+                    if (this.resources.viewSet.getLightIndex(i) == 0)
+                    {
+                        Matrix4 candidateView = this.resources.viewSet.getCameraPose(i);
+
+                        float similarity = partialViewInverse.times(Vector4.ORIGIN).getXYZ()
+                            .dot(getPartialViewMatrix(candidateView).quickInverse(0.01f).times(Vector4.ORIGIN).getXYZ());
+
+                        if (similarity > maxSimilarity)
+                        {
+                            maxSimilarity = similarity;
+                            view = lightTransform.times(candidateView);
+                            snapViewIndex = i;
+                        }
+                    }
+                }
+            }
 
             Matrix4 partialViewMatrix;
 
@@ -989,7 +1047,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
             else
             {
-                view = this.getAbsoluteViewMatrix();
                 partialViewMatrix = getPartialViewMatrix();
             }
 
@@ -1022,7 +1079,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             .setLinearFilteringEnabled(true))
                         .addColorAttachment(ColorAttachmentSpec.createWithInternalFormat(ColorFormat.R32I))
                         .addDepthAttachment(DepthAttachmentSpec.createFixedPointWithPrecision(32))
-                        .createFramebufferObject()
+                        .createFramebufferObject();
+
+                UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer()
             )
             {
                 offscreenFBO.clearIntegerColorBuffer(1, 0, 0, 0, 0);
@@ -1105,6 +1164,18 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
                 this.program.setUniform("envMapMatrix", envMapMatrix);
+
+                if (lightCalibrationMode)
+                {
+                    this.program.setUniform("useViewIndices", true);
+                    this.program.setUniform("viewCount", 1);
+                    viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, 1, snapViewIndex));
+                    this.program.setUniformBuffer("ViewIndices", viewIndexBuffer);
+                }
+                else
+                {
+                    this.program.setUniform("useViewIndices", false);
+                }
 
                 for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
                 {
@@ -1202,7 +1273,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         FramebufferSize size = framebuffer.getSize();
 
-        if (this.settingsModel.getBoolean("relightingEnabled") && this.settingsModel.getBoolean("visibleLightsEnabled"))
+        if (this.settingsModel.getBoolean("relightingEnabled") && this.settingsModel.getBoolean("visibleLightsEnabled")
+            && !settingsModel.getBoolean("lightCalibrationMode"))
         {
             this.context.getState().disableDepthWrite();
 
