@@ -58,6 +58,11 @@ int getViewIndex(int virtualIndex)
     }
 }
 
+mat4 getCameraPose(int virtualIndex)
+{
+    return cameraPoses[getViewIndex(virtualIndex)];
+}
+
 int getLightIndex(int virtualIndex)
 {
     int viewIndex = getViewIndex(virtualIndex);
