@@ -232,6 +232,12 @@ public class EnvironmentModelImpl implements EnvironmentModel
     }
 
     @Override
+    public int getEnvironmentMapFilteringBias()
+    {
+        return doesSelectedExist() ? selected.getValue().getEnvFilteringBias() : 0;
+    }
+
+    @Override
     public float getEnvironmentRotation()
     {
         return doesSelectedExist() ? (float)(selected.getValue().getEnvRotation() * Math.PI / 180) : 0.0f;

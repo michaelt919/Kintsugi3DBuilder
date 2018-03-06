@@ -23,6 +23,7 @@ public class EnvironmentSetting implements DOMConvertable
     private final DoubleProperty envColorIntensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty(1.0));
     private final DoubleProperty backgroundIntensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty(1.0));
     private final DoubleProperty envRotation = StaticUtilities.wrapAround(-180, 180, new SimpleDoubleProperty());
+    private final IntegerProperty envFilteringBias = new SimpleIntegerProperty(0);
     private final Property<Color> envColor = new SimpleObjectProperty<>(Color.WHITE);
     private final Property<Color> bpColor = new SimpleObjectProperty<>(Color.WHITE);
     private final StringProperty name = new SimpleStringProperty("New Environment Map");
@@ -59,6 +60,7 @@ public class EnvironmentSetting implements DOMConvertable
         element.setAttribute("backgroundIntensity", backgroundIntensity.getValue().toString());
         element.setAttribute("envColorIntensity", envColorIntensity.getValue().toString());
         element.setAttribute("envRotation", envRotation.getValue().toString());
+        element.setAttribute("envFilteringBias", envFilteringBias.getValue().toString());
         element.setAttribute("envColor", envColor.getValue().toString());
         element.setAttribute("bpColor", bpColor.getValue().toString());
         element.setAttribute("name", name.getValue());
@@ -84,6 +86,8 @@ public class EnvironmentSetting implements DOMConvertable
         newEnvironment.envColorIntensity.setValue(Double.valueOf(element.getAttribute("envColorIntensity")));
         newEnvironment.envRotation.setValue(Double.valueOf(element.getAttribute("envRotation")));
         newEnvironment.envColor.setValue(Color.valueOf(element.getAttribute("envColor")));
+        newEnvironment.envFilteringBias.setValue(element.hasAttribute("envFilteringBias") ?
+            Integer.valueOf(element.getAttribute("envFilteringBias")) : 0);
         newEnvironment.bpColor.setValue(Color.valueOf(element.getAttribute("bpColor")));
         newEnvironment.name.setValue(String.valueOf(element.getAttribute("name")));
         newEnvironment.locked.setValue(Boolean.valueOf(element.getAttribute("locked")));
@@ -118,6 +122,7 @@ public class EnvironmentSetting implements DOMConvertable
         newEnvironment.backgroundIntensity.setValue(backgroundIntensity.getValue());
         newEnvironment.envColorIntensity.setValue(envColorIntensity.getValue());
         newEnvironment.envRotation.setValue(envRotation.getValue());
+        newEnvironment.envFilteringBias.setValue(envFilteringBias.getValue());
         newEnvironment.envColor.setValue(envColor.getValue());
         newEnvironment.bpColor.setValue(bpColor.getValue());
         newEnvironment.name.setValue(name.getValue() + " copy");
@@ -275,6 +280,21 @@ public class EnvironmentSetting implements DOMConvertable
     public void setEnvRotation(double envRotation)
     {
         this.envRotation.set(envRotation);
+    }
+
+    public IntegerProperty envFilteringBiasProperty()
+    {
+        return envFilteringBias;
+    }
+
+    public int getEnvFilteringBias()
+    {
+        return envFilteringBias.get();
+    }
+
+    public void setEnvFilteringBias(int envFilteringBias)
+    {
+        this.envFilteringBias.set(envFilteringBias);
     }
 
     public Color getEnvColor()

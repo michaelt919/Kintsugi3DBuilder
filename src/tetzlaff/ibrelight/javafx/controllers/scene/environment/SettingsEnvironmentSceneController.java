@@ -35,6 +35,7 @@ public class SettingsEnvironmentSceneController implements Initializable
     @FXML private Slider envIntensitySlider;
     @FXML private TextField envRotationTextField;
     @FXML private Slider envRotationSlider;
+    @FXML private TextField envFilteringBiasTextField;
     @FXML private ColorPicker envColorPicker;
     @FXML private ColorPicker bpColorPicker;
     @FXML private TextField backgroundIntensityTextField;
@@ -93,6 +94,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         envRotationSlider.valueProperty().bindBidirectional(envSetting.envRotationProperty());
         envIntensityTextField.textProperty().bindBidirectional(envSetting.envColorIntensityProperty(), numberStringConverter);
         envRotationTextField.textProperty().bindBidirectional(envSetting.envRotationProperty(), numberStringConverter);
+        envFilteringBiasTextField.textProperty().bindBidirectional(envSetting.envFilteringBiasProperty(), numberStringConverter);
         envColorPicker.valueProperty().bindBidirectional(envSetting.envColorProperty());
         bpColorPicker.valueProperty().bindBidirectional(envSetting.bpColorProperty());
         backgroundIntensityTextField.textProperty().bindBidirectional(envSetting.backgroundIntensityProperty(), numberStringConverter);
@@ -117,6 +119,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         envRotationSlider.valueProperty().unbindBidirectional(envSetting.envRotationProperty());
         envIntensityTextField.textProperty().unbindBidirectional(envSetting.envColorIntensityProperty());
         envRotationTextField.textProperty().unbindBidirectional(envSetting.envRotationProperty());
+        envFilteringBiasTextField.textProperty().unbindBidirectional(envSetting.envFilteringBiasProperty());
         envColorPicker.valueProperty().unbindBidirectional(envSetting.envColorProperty());
         bpColorPicker.valueProperty().unbindBidirectional(envSetting.bpColorProperty());
         backgroundIntensityTextField.textProperty().unbindBidirectional(envSetting.backgroundIntensityProperty());
@@ -140,6 +143,7 @@ public class SettingsEnvironmentSceneController implements Initializable
         StaticUtilities.makeWrapAroundNumeric(-180, 180, envRotationTextField);
         StaticUtilities.makeClampedNumeric(0, Double.MAX_VALUE, envIntensityTextField);
         StaticUtilities.makeClampedNumeric(0, Double.MAX_VALUE, backgroundIntensityTextField);
+        StaticUtilities.makeNumeric(envFilteringBiasTextField);
 
         envIntensitySlider.setLabelFormatter(LOG_SCALE_CONVERTER);
         StaticUtilities.bindLogScaleToLinear(envIntensitySlider.valueProperty(), trueEnvColorIntensity);
