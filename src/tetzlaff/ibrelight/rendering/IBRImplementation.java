@@ -1167,6 +1167,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 if (lightCalibrationMode)
                 {
+                    this.program.setUniform("holeFillColor", new Vector3(0.5f));
                     this.program.setUniform("useViewIndices", true);
                     this.program.setUniform("viewCount", 1);
                     viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, 1, snapViewIndex));
@@ -1175,6 +1176,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 else
                 {
                     this.program.setUniform("useViewIndices", false);
+                    this.program.setUniform("holeFillColor", new Vector3(0.0f));
                 }
 
                 for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
