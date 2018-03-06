@@ -7,6 +7,7 @@ public interface TextureBuilder<ContextType extends Context<ContextType>, Textur
 {
     TextureBuilder<ContextType, TextureType> setMultisamples(int samples, boolean fixedSampleLocations);
     TextureBuilder<ContextType, TextureType> setMipmapsEnabled(boolean enabled);
+    TextureBuilder<ContextType, TextureType> setMaxMipmapLevel(int maxMipmapLevel);
     TextureBuilder<ContextType, TextureType> setLinearFilteringEnabled(boolean enabled);
     TextureBuilder<ContextType, TextureType> setMaxAnisotropy(float maxAnisotropy);
 
