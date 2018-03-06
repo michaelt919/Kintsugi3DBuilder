@@ -3,6 +3,8 @@
 
 #line 5 2004
 
+#define DARPA_MODE false
+
 #define MIN_ROUGHNESS 0.00390625    // 1/256
 #define MAX_ROUGHNESS 1.0 // 0.70710678 // sqrt(1/2)
 
@@ -18,15 +20,16 @@ uniform bool standaloneMode;
 //uniform vec4 normalCandidateWeights;
 uniform vec2 normalCandidate;
 
-#define fitNearSpecularOnly false // should be true for DARPA stuff (at least when comparing with Joey), false for cultural heritage
-#define chromaticRoughness true
+#define fitNearSpecularOnly DARPA_MODE // should be true for DARPA stuff (at least when comparing with Joey), false for cultural heritage
+#define chromaticRoughness (true && !(DARPA_MODE))
 #define chromaticSpecular true
 #define aggressiveNormal false
+#define relaxedSpecularPeaks (true && !(DARPA_MODE))
 #define USE_INFINITE_LIGHT_SOURCES infiniteLightSources
 #define USE_LIGHT_INTENSITIES true
 
-#define LINEAR_WEIGHT_MODE false
-#define PERCEPTUAL_WEIGHT_MODE true
+#define LINEAR_WEIGHT_MODE DARPA_MODE
+#define PERCEPTUAL_WEIGHT_MODE !(DARPA_MODE)
 
 vec4 getDiffuseColor()
 {
@@ -359,7 +362,7 @@ ParameterizedFit fitSpecular()
             MIN_ROUGHNESS * MIN_ROUGHNESS, /*min(0.25 / maxResidualComponent, */MAX_ROUGHNESS * MAX_ROUGHNESS/*)*/);
         specularColorXYZEstimate = 4 * roughnessSquared * maxResidualXYZ;
 
-        if (specularColorXYZEstimate.y > 1.0)
+        if (relaxedSpecularPeaks && specularColorXYZEstimate.y > 1.0)
         {
             vec3 adjustedMaxResidual = maxResidualXYZ / (4 * maxResidualXYZ.y *
                 clamp((sqrt(maxResidualXYZ).y * altRoughnessSums[1] - altRoughnessSums[0]) / sumWeights.y,
@@ -379,7 +382,7 @@ ParameterizedFit fitSpecular()
         float reflectivityEstimate = 4 * initRoughnessSquared * maxResidualLuminance[0];
         vec3 avgResidualXYZ = pow(sumResidualXYZGamma.xyz / sumResidualXYZGamma.w, vec3(fittingGamma));
 
-        if (reflectivityEstimate > 1.0)
+        if (relaxedSpecularPeaks && reflectivityEstimate > 1.0)
         {
             roughnessSquared = vec3(clamp((sqrt(maxResidualLuminance[0]) * altRoughnessSums[1] - altRoughnessSums[0]) / sumWeights,
                 MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS));
