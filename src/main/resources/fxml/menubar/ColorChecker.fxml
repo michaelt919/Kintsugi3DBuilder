@@ -1,20 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.RowConstraints?>
-
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <GridPane prefHeight="225.0" prefWidth="165.0" xmlns="http://javafx.com/javafx/8.0.162" xmlns:fx="http://javafx.com/fxml/1"
-fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.ColorCheckerController">
+          fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.ColorCheckerController">
    <children>
-      <TextField fx:id="encoded031" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="29.0" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
-         <GridPane.margin>
-            <Insets left="5.0" />
-         </GridPane.margin></TextField>
       <Label layoutX="183.0" layoutY="160.0" text="3.1 (Black)" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
       <Label layoutX="8.0" layoutY="6.0" text="CIE-Y" GridPane.halignment="RIGHT">
          <GridPane.margin>
@@ -32,21 +23,27 @@ fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.ColorCheckerControl
          <GridPane.margin>
             <Insets left="10.0" />
          </GridPane.margin></Label>
+      <TextField fx:id="encoded031" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="29.0" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+          <GridPane.margin>
+             <Insets left="5.0" />
+          </GridPane.margin>
+      </TextField>
       <TextField fx:id="encoded090" alignment="CENTER_RIGHT" layoutX="50.0" layoutY="60.0" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
          <GridPane.margin>
             <Insets left="5.0" />
-         </GridPane.margin></TextField>
+         </GridPane.margin>
+      </TextField>
       <TextField fx:id="encoded198" alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
          <GridPane.margin>
             <Insets left="5.0" />
          </GridPane.margin>
       </TextField>
-      <TextField fx:id="encoded591" alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
+      <TextField fx:id="encoded362" alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
          <GridPane.margin>
             <Insets left="5.0" />
          </GridPane.margin>
       </TextField>
-      <TextField fx:id="encoded362" alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
+      <TextField fx:id="encoded591" alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="60.0" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
          <GridPane.margin>
             <Insets left="5.0" />
          </GridPane.margin>

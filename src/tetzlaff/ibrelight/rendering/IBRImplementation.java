@@ -668,10 +668,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             program.setUniform("useEnvironmentMap", true);
             program.setTexture("environmentMap", this.environmentMap);
-            program.setUniform("environmentMipMapLevel", Math.max(0, Math.min(this.environmentMap.getMipmapLevelCount() - 2,
-                    (int)Math.ceil(0.5 *
-                        Math.log(6 * (double)this.environmentMap.getFaceSize() *
-                                (double)this.environmentMap.getFaceSize() / (double)resources.viewSet.getCameraPoseCount() )
+            program.setUniform("environmentMipMapLevel",
+                Math.max(0, Math.min(this.environmentMap.getMipmapLevelCount() - 1,
+                    this.lightingModel.getEnvironmentMapFilteringBias()
+                        + (int)Math.ceil(0.5 *
+                            Math.log(6 * (double)this.environmentMap.getFaceSize() * (double)this.environmentMap.getFaceSize()
+                                / (double)resources.viewSet.getCameraPoseCount() )
                             / Math.log(2.0)))));
             program.setUniform("diffuseEnvironmentMipMapLevel", this.environmentMap.getMipmapLevelCount() - 1);
         }

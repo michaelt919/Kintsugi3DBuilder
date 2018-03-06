@@ -197,6 +197,12 @@ public abstract class ExtendedLightingModelBase<LightInstanceType extends LightI
     }
 
     @Override
+    public int getEnvironmentMapFilteringBias()
+    {
+        return environmentModel.getEnvironmentMapFilteringBias();
+    }
+
+    @Override
     public boolean areLightWidgetsEthereal()
     {
         return this.lightWidgetsEthereal;

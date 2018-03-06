@@ -22,6 +22,8 @@
                     <Slider fx:id="envRotationSlider" blockIncrement="60.0" majorTickUnit="180.0" max="360.0" min="-360.0" minorTickCount="5" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="5" />
                     <CheckBox fx:id="envUseColorCheckBox" mnemonicParsing="false" text="Use color" GridPane.rowIndex="2" />
                     <ImageView fx:id="envImageView" fitHeight="180.0" fitWidth="360.0" pickOnBounds="true" smooth="false" GridPane.columnSpan="3" GridPane.rowIndex="1" />
+                   <Label text="Filtering Bias:" GridPane.halignment="RIGHT" GridPane.rowIndex="6" />
+                   <TextField fx:id="envFilteringBiasTextField" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                 </children>
                 <padding>
                     <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
@@ -38,6 +40,7 @@
                     <RowConstraints />
                     <RowConstraints />
                     <RowConstraints />
+               <RowConstraints />
                 </rowConstraints>
             </GridPane>
         </content>
