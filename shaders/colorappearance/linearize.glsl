@@ -93,4 +93,72 @@ vec4 linearizeColor(vec4 nonlinearColor)
     return vec4(linearizeColor(nonlinearColor.rgb), nonlinearColor.a);
 }
 
+vec3 linearToSRGB(vec3 color)
+{
+    vec3 sRGBColor;
+
+    if(color.r <= 0.0031308)
+    {
+        sRGBColor.r = 12.92 * color.r;
+    }
+    else
+    {
+        sRGBColor.r = (1.055) * pow(color.r, 1.0/2.4) - 0.055;
+    }
+
+    if(color.g <= 0.0031308)
+    {
+        sRGBColor.g = 12.92 * color.g;
+    }
+    else
+    {
+        sRGBColor.g = (1.055) * pow(color.g, 1.0/2.4) - 0.055;
+    }
+
+    if(color.b <= 0.0031308)
+    {
+        sRGBColor.b = 12.92 * color.b;
+    }
+    else
+    {
+        sRGBColor.b = (1.055) * pow(color.b, 1.0/2.4) - 0.055;
+    }
+
+    return sRGBColor;
+}
+
+vec3 sRGBToLinear(vec3 sRGBColor)
+{
+     vec3 linearColor;
+
+     if(sRGBColor.r <= 0.04045)
+     {
+         linearColor.r = sRGBColor.r / 12.92;
+     }
+     else
+     {
+         linearColor.r = pow((sRGBColor.r + 0.055) / 1.055, 2.4);
+     }
+
+     if(sRGBColor.g <= 0.04045)
+     {
+         linearColor.g = sRGBColor.g / 12.92;
+     }
+     else
+     {
+         linearColor.g = pow((sRGBColor.g + 0.055) / 1.055, 2.4);
+     }
+
+     if(sRGBColor.b <= 0.04045)
+     {
+         linearColor.b = sRGBColor.b / 12.92;
+     }
+     else
+     {
+         linearColor.b = pow((sRGBColor.b + 0.055) / 1.055, 2.4);
+     }
+
+     return linearColor;
+}
+
 #endif // LINEARIZE_GLSL

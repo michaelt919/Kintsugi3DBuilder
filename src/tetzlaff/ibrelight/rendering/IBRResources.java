@@ -14,7 +14,10 @@ import tetzlaff.gl.material.Material;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
 import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
+import tetzlaff.gl.types.AbstractDataTypeFactory;
 import tetzlaff.gl.util.VertexGeometry;
+import tetzlaff.gl.vecmath.IntVector2;
+import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.LoadingMonitor;
@@ -64,6 +67,8 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
      * A texture array instantiated on the GPU containing the image corresponding to each view in this dataset.
      */
     public final Texture3D<ContextType> colorTextures;
+
+    public final Texture3D<ContextType> eigentextures;
 
     /**
      * A 1D texture defining how encoded RGB values should be converted to linear luminance.
@@ -230,6 +235,168 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             this.cameraWeightBuffer = null;
         }
 
+        // Read the images from a file
+        if (loadOptions != null && loadOptions.areColorImagesRequested() && viewSet.getImageFilePath() != null && viewSet.getCameraPoseCount() > 0)
+        {
+            Date timestamp = new Date();
+
+            // Try to read the eigentextures
+            BufferedImage img = null;
+
+            File firstEigentexture = new File(viewSet.getImageFilePath(), "sv_0000_00_00.png");
+            if (firstEigentexture.exists())
+            {
+                // Read a single image to get the dimensions for the texture array
+                try (InputStream input = new FileInputStream(firstEigentexture)) // myZip.retrieveFile(imageFile);
+                {
+                    img = ImageIO.read(input);
+                }
+            }
+
+            if (img == null)
+            {
+                System.out.println("Eigentextures not found.  Loading view images as normal textures.");
+                this.eigentextures = null;
+            }
+            else
+            {
+                Texture3D<ContextType> eigentexturesTemp = null;
+
+                try
+                {
+                    eigentexturesTemp = context.getTextureFactory()
+                        .build2DColorTextureArray(img.getWidth(), img.getHeight(), 4)
+                        .setInternalFormat(CompressionFormat.RED_4BPP)
+                        .setMipmapsEnabled(true)
+                        .setMaxMipmapLevel(6) // = log2(blockSize) = log2(64)  TODO: make this configurable
+                        //.setLinearFilteringEnabled(true)
+                        //.setMaxAnisotropy(16.0f)
+                        .createTexture();
+
+                    // TODO don't hardcode
+//                    eigentexturesTemp.loadLayer(0, new File(viewSet.getImageFilePath(), "sv_0000_00_00.png"), true);
+//                    eigentexturesTemp.loadLayer(1, new File(viewSet.getImageFilePath(), "sv_0001_00_01.png"), true);
+//                    eigentexturesTemp.loadLayer(2, new File(viewSet.getImageFilePath(), "sv_0002_00_02.png"), true);
+//                    eigentexturesTemp.loadLayer(3, new File(viewSet.getImageFilePath(), "sv_0003_00_03.png"), true);
+//                    eigentexturesTemp.loadLayer(4, new File(viewSet.getImageFilePath(), "sv_0004_01_00.png"), true);
+//                    eigentexturesTemp.loadLayer(5, new File(viewSet.getImageFilePath(), "sv_0005_01_01.png"), true);
+//                    eigentexturesTemp.loadLayer(6, new File(viewSet.getImageFilePath(), "sv_0006_01_02.png"), true);
+//                    eigentexturesTemp.loadLayer(7, new File(viewSet.getImageFilePath(), "sv_0007_01_03.png"), true);
+//                    eigentexturesTemp.loadLayer(8, new File(viewSet.getImageFilePath(), "sv_0008_02_00.png"), true);
+//                    eigentexturesTemp.loadLayer(9, new File(viewSet.getImageFilePath(), "sv_0009_02_01.png"), true);
+//                    eigentexturesTemp.loadLayer(10, new File(viewSet.getImageFilePath(), "sv_0010_02_02.png"), true);
+//                    eigentexturesTemp.loadLayer(11, new File(viewSet.getImageFilePath(), "sv_0011_02_03.png"), true);
+//                    eigentexturesTemp.loadLayer(12, new File(viewSet.getImageFilePath(), "sv_0012_03_00.png"), true);
+//                    eigentexturesTemp.loadLayer(13, new File(viewSet.getImageFilePath(), "sv_0013_03_01.png"), true);
+//                    eigentexturesTemp.loadLayer(14, new File(viewSet.getImageFilePath(), "sv_0014_03_02.png"), true);
+//                    eigentexturesTemp.loadLayer(15, new File(viewSet.getImageFilePath(), "sv_0015_03_03.png"), true);
+
+                    eigentexturesTemp.loadLayer(0, new File(viewSet.getImageFilePath(), "sv_0000_00_00.png"), true);
+                    eigentexturesTemp.loadLayer(1, new File(viewSet.getImageFilePath(), "sv_0001_00_01.png"), true);
+                    eigentexturesTemp.loadLayer(2, new File(viewSet.getImageFilePath(), "sv_0002_01_00.png"), true);
+                    eigentexturesTemp.loadLayer(3, new File(viewSet.getImageFilePath(), "sv_0003_01_01.png"), true);
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+
+                this.eigentextures = eigentexturesTemp;
+            }
+
+            File imageFile = findImageFile(0);
+
+            // Read a single image to get the dimensions for the texture array
+            try(InputStream input = new FileInputStream(imageFile)) // myZip.retrieveFile(imageFile);
+            {
+                img = ImageIO.read(input);
+            }
+
+            if (img == null)
+            {
+                throw new IOException(String.format("Error: Unsupported image format '%s'.",
+                        viewSet.getImageFileName(0)));
+            }
+
+            ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder =
+                    context.getTextureFactory().build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount());
+
+            if (this.eigentextures == null)
+            {
+                if (loadOptions.isCompressionRequested())
+                {
+                    textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
+                }
+                else
+                {
+                    textureArrayBuilder.setInternalFormat(ColorFormat.RGBA8);
+                }
+
+                if (loadOptions.areMipmapsRequested())
+                {
+                    textureArrayBuilder.setMipmapsEnabled(true);
+                }
+                else
+                {
+                    textureArrayBuilder.setMipmapsEnabled(false);
+                }
+
+                textureArrayBuilder.setLinearFilteringEnabled(true);
+                textureArrayBuilder.setMaxAnisotropy(16.0f);
+            }
+            else
+            {
+                textureArrayBuilder.setInternalFormat(ColorFormat.RGB8);
+                textureArrayBuilder.setMipmapsEnabled(false);
+                textureArrayBuilder.setLinearFilteringEnabled(false);
+            }
+
+            colorTextures = textureArrayBuilder.createTexture();
+
+            if(loadingMonitor != null)
+            {
+                loadingMonitor.setMaximum(viewSet.getCameraPoseCount());
+            }
+
+            int m = viewSet.getCameraPoseCount();
+            for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
+            {
+                System.out.printf("%d/%d", i, m);
+                System.out.println();
+                imageFile = findImageFile(i);
+
+                if (this.eigentextures == null)
+                {
+                    this.colorTextures.loadLayer(i, imageFile, true);
+                }
+                else
+                {
+                    this.colorTextures.loadLayer(i, imageFile, true );// ,
+//                        AbstractDataTypeFactory.getInstance().getSingleComponentDataType(NativeDataType.UNSIGNED_SHORT),
+//                        color -> ((0x7F & (Math.max(-63, Math.min(63, Math.round((color.getGreen() - 128) * 63.0 / 127.0))) + 64)) << 9)
+//                            | ((0x1F & (Math.max(-15, Math.min(15, Math.round((color.getBlue() - color.getGreen()) * 31.5 / 127.0))) + 16)) << 4)
+//                            | (0x0F & (Math.max(-7, Math.min(7, Math.round((color.getRed() - color.getGreen()) * 31.5 / 127.0))) + 8)));
+                }
+
+                if(loadingMonitor != null)
+                {
+                    loadingMonitor.setProgress(i+1);
+                }
+            }
+
+            System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        }
+        else
+        {
+            this.colorTextures = null;
+            this.eigentextures = null;
+        }
+
+        if (loadingMonitor != null)
+        {
+            loadingMonitor.setMaximum(0.0);
+        }
+
         // Store the poses in a uniform buffer
         if (viewSet.getCameraPoseData() != null)
         {
@@ -242,7 +409,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Store the camera projections in a uniform buffer
-        if (viewSet.getCameraProjectionData() != null)
+        if (viewSet.getCameraProjectionData() != null && this.eigentextures == null)
         {
             // Create the uniform buffer
             cameraProjectionBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionData());
@@ -253,7 +420,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
 
         // Store the camera projection indices in a uniform buffer
-        if (viewSet.getCameraProjectionIndexData() != null)
+        if (viewSet.getCameraProjectionIndexData() != null && this.eigentextures == null)
         {
             cameraProjectionIndexBuffer = context.createUniformBuffer().setData(viewSet.getCameraProjectionIndexData());
         }
@@ -306,88 +473,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             inverseLuminanceMap = null;
         }
 
-        // Read the images from a file
-        if (loadOptions != null && loadOptions.areColorImagesRequested() && viewSet.getImageFilePath() != null && viewSet.getCameraPoseCount() > 0)
-        {
-            Date timestamp = new Date();
-            File imageFile = findImageFile(0);
-
-            BufferedImage img;
-
-            // Read a single image to get the dimensions for the texture array
-            try(InputStream input = new FileInputStream(imageFile)) // myZip.retrieveFile(imageFile);
-            {
-                img = ImageIO.read(input);
-            }
-
-            if(img == null)
-            {
-                throw new IOException(String.format("Error: Unsupported image format '%s'.",
-                        viewSet.getImageFileName(0)));
-            }
-
-            ColorTextureBuilder<ContextType, ? extends Texture3D<ContextType>> textureArrayBuilder =
-                    context.getTextureFactory().build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount());
-
-            if (loadOptions.isCompressionRequested())
-            {
-                textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
-            }
-            else
-            {
-                textureArrayBuilder.setInternalFormat(ColorFormat.RGBA8);
-            }
-
-            if (loadOptions.areMipmapsRequested())
-            {
-                textureArrayBuilder.setMipmapsEnabled(true);
-            }
-            else
-            {
-                textureArrayBuilder.setMipmapsEnabled(false);
-            }
-
-            textureArrayBuilder.setLinearFilteringEnabled(true);
-            textureArrayBuilder.setMaxAnisotropy(16.0f);
-
-//            textureArrayBuilder.setInternalFormat(ColorFormat.R16UI);
-//            textureArrayBuilder.setMipmapsEnabled(false);
-//            textureArrayBuilder.setLinearFilteringEnabled(false);
-
-            colorTextures = textureArrayBuilder.createTexture();
-
-            if(loadingMonitor != null)
-            {
-                loadingMonitor.setMaximum(viewSet.getCameraPoseCount());
-            }
-
-            int m = viewSet.getCameraPoseCount();
-            for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
-            {
-                System.out.printf("%d/%d", i, m);
-                System.out.println();
-                imageFile = findImageFile(i);
-
-                this.colorTextures.loadLayer(i, imageFile, true);
-
-                if(loadingMonitor != null)
-                {
-                    loadingMonitor.setProgress(i+1);
-                }
-            }
-
-            System.out.println("View Set textures loaded in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-        }
-        else
-        {
-            this.colorTextures = null;
-        }
-
-        if (loadingMonitor != null)
-        {
-            loadingMonitor.setMaximum(0.0);
-        }
-
         if (geometry != null)
         {
             this.positionBuffer = context.createVertexBuffer().setData(geometry.getVertices());
@@ -411,7 +496,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
                 double minDepth = viewSet.getRecommendedFarPlane();
 
-                if (loadOptions.areDepthImagesRequested())
+                if (loadOptions.areDepthImagesRequested() && this.eigentextures == null)
                 {
                     // Build depth textures for each view
                     this.depthTextures =
@@ -452,30 +537,32 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 {
                     this.depthTextures = null;
 
-                    Texture2D<ContextType> depthAttachment =
-                        context.getTextureFactory().build2DDepthTexture(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
-                            .createTexture();
-                    depthRenderingFBO.setDepthAttachment(depthAttachment);
-
-                    depthRenderingFBO.clearDepthBuffer();
-
-                    depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(viewSet.getPrimaryViewIndex()));
-                    depthRenderingProgram.setUniform("projection",
-                        viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewSet.getPrimaryViewIndex()))
-                            .getProjectionMatrix(
-                                viewSet.getRecommendedNearPlane(),
-                                viewSet.getRecommendedFarPlane()
-                            )
-                    );
-
-                    depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
-
-                    short[] depthBufferData = depthRenderingFBO.readDepthBuffer();
-                    for (short encodedDepth : depthBufferData)
+                    try(Texture2D<ContextType> depthAttachment = context.getTextureFactory()
+                            .build2DDepthTexture(loadOptions.getDepthImageWidth(), loadOptions.getDepthImageHeight())
+                            .createTexture())
                     {
-                        int nonlinearDepth = 0xFFFF & (int) encodedDepth;
-                        minDepth = Math.min(minDepth, getLinearDepth((double) nonlinearDepth / 0xFFFF,
-                            viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+                        depthRenderingFBO.setDepthAttachment(depthAttachment);
+
+                        depthRenderingFBO.clearDepthBuffer();
+
+                        depthRenderingProgram.setUniform("model_view", viewSet.getCameraPose(viewSet.getPrimaryViewIndex()));
+                        depthRenderingProgram.setUniform("projection",
+                            viewSet.getCameraProjection(viewSet.getCameraProjectionIndex(viewSet.getPrimaryViewIndex()))
+                                .getProjectionMatrix(
+                                    viewSet.getRecommendedNearPlane(),
+                                    viewSet.getRecommendedFarPlane()
+                                )
+                        );
+
+                        depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+
+                        short[] depthBufferData = depthRenderingFBO.readDepthBuffer();
+                        for (short encodedDepth : depthBufferData)
+                        {
+                            int nonlinearDepth = 0xFFFF & (int) encodedDepth;
+                            minDepth = Math.min(minDepth, getLinearDepth((double) nonlinearDepth / 0xFFFF,
+                                viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane()));
+                        }
                     }
                 }
 
@@ -575,17 +662,19 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> diffuseTextureBuilder =
                     context.getTextureFactory().build2DColorTextureFromFile(diffuseFile, true);
 
-//                if (loadOptions.isCompressionRequested())
-//                {
-//                    diffuseTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-//                }
-//                else
-                diffuseTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                if (loadOptions.isCompressionRequested())
+                {
+                    diffuseTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+                }
+                else
+                {
+                    diffuseTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                }
 
                 diffuseTexture = diffuseTextureBuilder
-                        .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                        .setLinearFilteringEnabled(true)
-                        .createTexture();
+                    .setMipmapsEnabled(loadOptions.areMipmapsRequested())
+                    .setLinearFilteringEnabled(true)
+                    .createTexture();
             }
             else
             {
@@ -598,17 +687,19 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> normalTextureBuilder =
                     context.getTextureFactory().build2DColorTextureFromFile(normalFile, true);
 
-//                if (loadOptions.isCompressionRequested())
-//                {
-//                    normalTextureBuilder.setInternalFormat(CompressionFormat.RED_4BPP_GREEN_4BPP);
-//                }
-//                else
-                normalTextureBuilder.setInternalFormat(ColorFormat.RG8);
+                if (loadOptions.isCompressionRequested())
+                {
+                    normalTextureBuilder.setInternalFormat(CompressionFormat.RED_4BPP_GREEN_4BPP);
+                }
+                else
+                {
+                    normalTextureBuilder.setInternalFormat(ColorFormat.RG8);
+                }
 
                 normalTexture = normalTextureBuilder
-                        .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                        .setLinearFilteringEnabled(true)
-                        .createTexture();
+                    .setMipmapsEnabled(loadOptions.areMipmapsRequested())
+                    .setLinearFilteringEnabled(true)
+                    .createTexture();
             }
             else
             {
@@ -620,17 +711,19 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 System.out.println("Specular texture found.");
                 ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> specularTextureBuilder =
                     context.getTextureFactory().build2DColorTextureFromFile(specularFile, true);
-//                if (loadOptions.isCompressionRequested())
-//                {
-//                    specularTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
-//                }
-//                else
-                specularTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                if (loadOptions.isCompressionRequested())
+                {
+                    specularTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
+                }
+                else
+                {
+                    specularTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                }
 
                 specularTexture = specularTextureBuilder
-                        .setMipmapsEnabled(loadOptions.areMipmapsRequested())
-                        .setLinearFilteringEnabled(true)
-                        .createTexture();
+                    .setMipmapsEnabled(loadOptions.areMipmapsRequested())
+                    .setLinearFilteringEnabled(true)
+                    .createTexture();
             }
             else
             {
@@ -640,15 +733,35 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             if (roughnessFile != null && roughnessFile.exists())
             {
                 System.out.println("Roughness texture found.");
-                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder =
-                    context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true);
+                ColorTextureBuilder<ContextType, ? extends Texture2D<ContextType>> roughnessTextureBuilder;
 
 //                if (loadOptions.isCompressionRequested())
 //                {
+//                    // Use 16 bits to give the built-in compression algorithm extra precision to work with.
+//                    roughnessTextureBuilder =
+//                        context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true,
+//                            AbstractDataTypeFactory.getInstance().getMultiComponentDataType(NativeDataType.UNSIGNED_SHORT, 3),
+//                            color -> new IntVector3(
+//                                (int)Math.max(0, Math.min(0xFFFF, Math.round(
+//                                    (Math.max(-15.0, Math.min(15.0, (color.getRed() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 0xFFFF / 31.0))),
+//                                (int)Math.max(0, Math.min(0xFFFF, Math.round(color.getGreen() * 0xFFFF / 255.0))),
+//                                (int)Math.max(0, Math.min(0xFFFF, Math.round(
+//                                    (Math.max(-15.0, Math.min(15.0, (color.getBlue() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 0xFFFF / 31.0)))));
 //                    roughnessTextureBuilder.setInternalFormat(CompressionFormat.RGB_4BPP);
 //                }
 //                else
-                roughnessTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                {
+                    roughnessTextureBuilder =
+                        context.getTextureFactory().build2DColorTextureFromFile(roughnessFile, true,
+                            AbstractDataTypeFactory.getInstance().getMultiComponentDataType(NativeDataType.UNSIGNED_BYTE, 3),
+                            color -> new IntVector3(
+                                (int)Math.max(0, Math.min(255, Math.round(
+                                    (Math.max(-15.0, Math.min(15.0, (color.getRed() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 255.0 / 31.0))),
+                                color.getGreen(),
+                                (int)Math.max(0, Math.min(255, Math.round(
+                                    (Math.max(-15.0, Math.min(15.0, (color.getBlue() - color.getGreen()) * 30.0 / 255.0)) + 16.0) * 255.0 / 31.0)))));
+                    roughnessTextureBuilder.setInternalFormat(ColorFormat.RGB8);
+                }
 
                 roughnessTexture = roughnessTextureBuilder
                         .setMipmapsEnabled(loadOptions.areMipmapsRequested())
@@ -865,11 +978,26 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
     private void setupCommon(Program<ContextType> program)
     {
-        program.setTexture("viewImages", this.colorTextures);
+        if (this.eigentextures != null)
+        {
+            program.setTexture("eigentextures", this.eigentextures);
+            program.setTexture("viewWeightTextures", this.colorTextures);
+            program.setUniform("blockSize", new IntVector2(32, 32));
+        }
+        else
+        {
+            program.setTexture("viewImages", this.colorTextures);
+        }
+
         program.setUniformBuffer("CameraWeights", this.cameraWeightBuffer);
         program.setUniformBuffer("CameraPoses", this.cameraPoseBuffer);
-        program.setUniformBuffer("CameraProjections", this.cameraProjectionBuffer);
-        program.setUniformBuffer("CameraProjectionIndices", this.cameraProjectionIndexBuffer);
+
+        if (this.cameraProjectionBuffer != null && this.cameraProjectionIndexBuffer != null)
+        {
+            program.setUniformBuffer("CameraProjections", this.cameraProjectionBuffer);
+            program.setUniformBuffer("CameraProjectionIndices", this.cameraProjectionIndexBuffer);
+        }
+
         if (this.lightPositionBuffer != null && this.lightIntensityBuffer != null && this.lightIndexBuffer != null)
         {
             program.setUniformBuffer("LightPositions", this.lightPositionBuffer);
@@ -1177,9 +1305,19 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             this.normalBuffer.close();
         }
 
+        if (this.tangentBuffer != null)
+        {
+            this.tangentBuffer.close();
+        }
+
         if (this.colorTextures != null)
         {
             this.colorTextures.close();
+        }
+
+        if (this.eigentextures != null)
+        {
+            this.eigentextures.close();
         }
 
         if (depthTextures != null)
