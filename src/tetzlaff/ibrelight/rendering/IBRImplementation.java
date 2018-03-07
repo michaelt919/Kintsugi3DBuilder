@@ -77,6 +77,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private boolean environmentMapUnloadRequested = false;
     private Cubemap<ContextType> environmentMap;
     private File currentEnvironmentFile;
+    private long environmentLastModified;
     private final Object loadEnvironmentLock = new Object();
 
     @SuppressWarnings("FieldCanBeLocal")
@@ -87,6 +88,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private boolean backplateUnloadRequested = false;
     private Texture2D<ContextType> backplateTexture;
     private File currentBackplateFile;
+    private long backplateLastModified;
     private final Object loadBackplateLock = new Object();
 
     private boolean newLuminanceEncodingDataAvailable;
@@ -1848,6 +1850,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             System.out.println("Loading new environment texture.");
 
             this.desiredEnvironmentFile = environmentFile;
+            long lastModified = environmentFile.lastModified();
             boolean readCompleted = false;
 
             int width = 0;
@@ -1856,7 +1859,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             synchronized(loadEnvironmentLock)
             {
-                if (Objects.equals(environmentFile, desiredEnvironmentFile) && !Objects.equals(environmentFile, currentEnvironmentFile))
+                if (Objects.equals(environmentFile, desiredEnvironmentFile) &&
+                    (!Objects.equals(environmentFile, currentEnvironmentFile) || lastModified != environmentLastModified))
                 {
                     this.loadingMonitor.startLoading();
                     this.loadingMonitor.setMaximum(0.0);
@@ -1886,6 +1890,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             if (readCompleted)
             {
+                environmentLastModified = lastModified;
                 currentEnvironmentMap = new ArrayBackedImage(width, height, pixels);
             }
 
@@ -1909,11 +1914,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             System.out.println("Loading new backplate texture.");
 
             this.desiredBackplateFile = backplateFile;
+            long lastModified = backplateFile.lastModified();
             boolean readCompleted = false;
 
             synchronized(loadBackplateLock)
             {
-                if (Objects.equals(backplateFile, desiredBackplateFile) && !Objects.equals(backplateFile, currentBackplateFile))
+                if (Objects.equals(backplateFile, desiredBackplateFile) &&
+                    (!Objects.equals(backplateFile, currentBackplateFile) || lastModified != backplateLastModified))
                 {
                     try
                     {
@@ -1933,6 +1940,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
 
             this.newBackplateDataAvailable = this.newBackplateDataAvailable || readCompleted;
+
+            if (readCompleted)
+            {
+                backplateLastModified = lastModified;
+            }
         }
         else if (backplateFile != null)
         {

@@ -25,6 +25,9 @@ public class EnvironmentModelImpl implements EnvironmentModel
     private boolean environmentMapLoaded = false;
     private boolean backplateLoaded = false;
 
+    private long lastEnvironmentMapTime;
+    private long lastBackplateTime;
+
     private final Property<AbstractImage> loadedEnvironmentMapImage = new SimpleObjectProperty<>();
 
     public void setSelected(ObservableValue<EnvironmentSetting> selected)
@@ -113,63 +116,76 @@ public class EnvironmentModelImpl implements EnvironmentModel
         if (newFile == null)
         {
             loadedEnvironmentMapImage.setValue(null);
+            lastEnvironmentMapTime = 0;
         }
-        else if (!Objects.equals(oldFile, newFile))
+        else if (!Objects.equals(oldFile, newFile) || newFile.lastModified() != lastEnvironmentMapTime)
         {
-            environmentMapLoaded = false;
-
-            new Thread(() ->
-            {
-                try
-                {
-                    System.out.println("Loading environment map file " + newFile.getName());
-                    Optional<AbstractImage> environmentMapImage = MultithreadModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
-                    loadedEnvironmentMapImage.setValue(environmentMapImage.orElse(null));
-                }
-                catch (FileNotFoundException e)
-                {
-                    e.printStackTrace();
-                }
-
-                if (doesSelectedExist())
-                {
-                    selected.getValue().setEnvLoaded(true);
-                }
-
-                environmentMapLoaded = true;
-
-            }).start();
+            loadEnvironmentMap(newFile);
         }
     };
+
+    public void loadEnvironmentMap(File newFile)
+    {
+        environmentMapLoaded = false;
+        long lastModified = newFile.lastModified();
+
+        new Thread(() ->
+        {
+            try
+            {
+                System.out.println("Loading environment map file " + newFile.getName());
+                Optional<AbstractImage> environmentMapImage = MultithreadModels.getInstance().getLoadingModel().loadEnvironmentMap(newFile);
+                loadedEnvironmentMapImage.setValue(environmentMapImage.orElse(null));
+            }
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+
+            if (doesSelectedExist())
+            {
+                selected.getValue().setEnvLoaded(true);
+            }
+
+            environmentMapLoaded = true;
+            lastEnvironmentMapTime = lastModified;
+
+        }).start();
+    }
 
     private final ChangeListener<File> bpFileChange = (observable, oldFile, newFile) ->
     {
-        if (newFile != null && !Objects.equals(oldFile, newFile))
+        if (newFile != null && (!Objects.equals(oldFile, newFile) || newFile.lastModified() != lastBackplateTime))
         {
-            backplateLoaded = false;
-
-            new Thread(() ->
-            {
-                try
-                {
-                    System.out.println("Loading backplate file " + newFile.getName());
-                    MultithreadModels.getInstance().getLoadingModel().loadBackplate(newFile);
-                }
-                catch (FileNotFoundException e)
-                {
-                    e.printStackTrace();
-                }
-
-                if (doesSelectedExist())
-                {
-                    selected.getValue().setBPLoaded(true);
-                }
-            })
-            .start();
-
-            backplateLoaded = true;
+            loadBackplate(newFile);
         }
     };
+
+    public void loadBackplate(File newFile)
+    {
+        backplateLoaded = false;
+        lastBackplateTime = newFile.lastModified();
+        backplateLoaded = true;
+
+        new Thread(() ->
+        {
+            try
+            {
+                System.out.println("Loading backplate file " + newFile.getName());
+                MultithreadModels.getInstance().getLoadingModel().loadBackplate(newFile);
+            }
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
+
+            if (doesSelectedExist())
+            {
+                selected.getValue().setBPLoaded(true);
+            }
+        })
+        .start();
+    }
 
     private final ChangeListener<EnvironmentSetting> settingChange = (observable, oldSetting, newSetting) ->
     {
