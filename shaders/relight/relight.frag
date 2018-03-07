@@ -380,26 +380,23 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor,
 
                 if(pbrGeometricAttenuationEnabled)
                 {
-                    precomputedSample = vec4(specularResid.rgb
-                        * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared),
-                        sampleColor.a * geomAtten);
+                    precomputedSample = sampleColor.a
+                        * vec4(specularResid.rgb * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), geomAtten);
                 }
                 else
                 {
-                    precomputedSample =
-                        vec4(specularResid.rgb * 4 / lightIntensity
-                            * (infiniteLightSources ? 1.0 : lightDistSquared),
-                            sampleColor.a * nDotL);
+                    precomputedSample = sampleColor.a
+                        * vec4(specularResid.rgb * 4 / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), nDotL);
                 }
             }
             else
             {
-                precomputedSample = sampleColor;
+                precomputedSample = sampleColor.a * vec4(sampleColor.rgb, 1.0);
             }
 
             if (residualImages)
             {
-                precomputedSample.rgb -= xyzToRGB(dist(nDotH, roughness) * geomAtten * rgbToXYZ(specularColor));
+                precomputedSample.rgb -= sampleColor.a * xyzToRGB(dist(nDotH, roughness) * geomAtten * rgbToXYZ(specularColor));
             }
 
             mat3 tangentToObject = mat3(1.0);

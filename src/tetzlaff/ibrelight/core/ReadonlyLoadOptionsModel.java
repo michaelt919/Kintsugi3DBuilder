@@ -5,6 +5,7 @@ public interface ReadonlyLoadOptionsModel
     boolean areColorImagesRequested();
     boolean areMipmapsRequested();
     boolean isCompressionRequested();
+    boolean isAlphaRequested();
     boolean areDepthImagesRequested();
     int getDepthImageWidth();
     int getDepthImageHeight();

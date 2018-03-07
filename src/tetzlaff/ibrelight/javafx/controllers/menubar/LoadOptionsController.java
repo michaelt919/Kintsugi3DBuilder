@@ -16,6 +16,7 @@ import tetzlaff.ibrelight.javafx.internal.LoadOptionsModelImpl;
 public class LoadOptionsController implements Initializable
 {
     @FXML private CheckBox compressedImages;
+    @FXML private CheckBox alphaChannel;
     @FXML private CheckBox mipmaps;
     @FXML private CheckBox depthImages;
     @FXML private VBox root;
@@ -87,6 +88,7 @@ public class LoadOptionsController implements Initializable
     public void bind(LoadOptionsModelImpl loadSettings)
     {
         compressedImages.selectedProperty().bindBidirectional(loadSettings.compression);
+        alphaChannel.selectedProperty().bindBidirectional(loadSettings.alpha);
         mipmaps.selectedProperty().bindBidirectional(loadSettings.mipmaps);
         depthImages.selectedProperty().bindBidirectional(loadSettings.depthImages);
         w.bindBidirectional(loadSettings.depthWidth);
@@ -101,6 +103,7 @@ public class LoadOptionsController implements Initializable
         if (loadSettingsCache != null)
         {
             compressedImages.selectedProperty().bindBidirectional(loadSettingsCache.compression);
+            alphaChannel.selectedProperty().bindBidirectional(loadSettingsCache.alpha);
             mipmaps.selectedProperty().bindBidirectional(loadSettingsCache.mipmaps);
             depthImages.selectedProperty().bindBidirectional(loadSettingsCache.depthImages);
             w.bindBidirectional(loadSettingsCache.depthWidth);
