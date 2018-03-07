@@ -1,7 +1,6 @@
 package tetzlaff.gl.opengl;
 
-import java.util.AbstractCollection;
-import java.util.ArrayList;
+import java.util.*;
 
 import tetzlaff.gl.builders.base.ProgramBuilderBase;
 import tetzlaff.gl.core.Program;
@@ -20,7 +19,7 @@ import static org.lwjgl.opengl.GL31.*;
 
 final class OpenGLProgram implements Program<OpenGLContext>
 {
-    protected final OpenGLContext context;
+    final OpenGLContext context;
 
     private int programId;
     private AbstractCollection<OpenGLShader> ownedShaders;
@@ -57,7 +56,7 @@ final class OpenGLProgram implements Program<OpenGLContext>
     {
         programId = glCreateProgram();
         OpenGLContext.errorCheck();
-        ownedShaders = new ArrayList<>();
+        ownedShaders = new ArrayList<>(2);
         // Use one less texture unit because we don't use texture unit 0.
         textureManager = new ResourceManager<>(this.context.getState().getMaxCombinedTextureImageUnits() - 1);
         uniformBufferManager = new ResourceManager<>(this.context.getState().getMaxCombinedUniformBlocks());
@@ -104,58 +103,68 @@ final class OpenGLProgram implements Program<OpenGLContext>
 
     private void useForUniformAssignment()
     {
-        if (!this.isLinked())
-        {
-            throw new UnlinkedProgramException("An OpenGL program cannot be used if it has not been linked.");
-        }
-        else
+        if (this.isLinked())
         {
             glUseProgram(programId);
             OpenGLContext.errorCheck();
+        }
+        else
+        {
+            throw new UnlinkedProgramException("An OpenGL program cannot be used if it has not been linked.");
+        }
+    }
+
+    private static final class TextureListWrapper extends AbstractList<Optional<OpenGLTexture>>
+    {
+        private final List<Optional<OpenGLTexture>> baseTextureList;
+
+        private TextureListWrapper(List<Optional<OpenGLTexture>> baseTextureList)
+        {
+            this.baseTextureList = baseTextureList;
+        }
+
+        @Override
+        public int size()
+        {
+            return baseTextureList.size() + 1;
+        }
+
+        @Override
+        public Optional<OpenGLTexture> get(int index)
+        {
+            return index == 0 ? Optional.empty() : baseTextureList.get(index - 1);
         }
     }
 
     void use()
     {
-        if (!this.isLinked())
+        if (this.isLinked())
         {
-            throw new UnlinkedProgramException("An OpenGL program cannot be used if it has not been linked.");
-        }
-        else
-        {
-            this.context.unbindTextureUnit(0); // Don't ever use texture unit 0
-
-            for (int i = 0; i < textureManager.length; i++)
-            {
-                OpenGLTexture texture = textureManager.getResourceByUnit(i);
-                this.context.unbindTextureUnit(i + 1);
-                if (texture != null)
-                {
-                    texture.bindToTextureUnit(i + 1);
-                }
-            }
-
-            for (int i = 0; i < uniformBufferManager.length; i++)
-            {
-                OpenGLUniformBuffer uniformBuffer = uniformBufferManager.getResourceByUnit(i);
-                if (uniformBuffer != null)
-                {
-                    uniformBuffer.bindToIndex(i);
-                }
-                else
-                {
-                    OpenGLContext.unbindBuffer(GL_UNIFORM_BUFFER, i);
-                }
-            }
+            this.context.updateTextureBindings(new TextureListWrapper(textureManager.asReadonlyList()));
+            this.context.updateUniformBufferBindings(uniformBufferManager.asReadonlyList());
 
             glValidateProgram(programId);
+            OpenGLContext.errorCheck();
             if (glGetProgrami(programId, GL_VALIDATE_STATUS) == GL_FALSE)
             {
-                throw new InvalidProgramException(glGetProgramInfoLog(programId));
+                OpenGLContext.errorCheck();
+
+                String programInfoLog = glGetProgramInfoLog(programId);
+                OpenGLContext.errorCheck();
+
+                throw new InvalidProgramException(programInfoLog);
+            }
+            else
+            {
+                OpenGLContext.errorCheck();
             }
 
             glUseProgram(programId);
             OpenGLContext.errorCheck();
+        }
+        else
+        {
+            throw new UnlinkedProgramException("An OpenGL program cannot be used if it has not been linked.");
         }
     }
 

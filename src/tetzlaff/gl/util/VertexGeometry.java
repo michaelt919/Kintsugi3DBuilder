@@ -283,7 +283,7 @@ public final class VertexGeometry
 
         // Copy the data from the dynamic tables into a data structure that OpenGL can use.
         int vertexCount = vertexIndexList.size();
-        inst.vertices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount * 3);
+        inst.vertices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
         int index = 0;
         for (int k : vertexIndexList)
         {
@@ -311,7 +311,7 @@ public final class VertexGeometry
 
         if (inst.hasNormals)
         {
-            inst.normals = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount * 3);
+            inst.normals = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, vertexCount);
             int i = 0;
             for (int k : normalIndexList)
             {
@@ -324,7 +324,7 @@ public final class VertexGeometry
 
         if (inst.hasTexCoords)
         {
-            inst.texCoords = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 2, vertexCount * 3);
+            inst.texCoords = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 2, vertexCount);
             int i = 0;
             for (int k : texCoordIndexList)
             {
@@ -336,7 +336,7 @@ public final class VertexGeometry
 
         if (inst.hasTexCoords && inst.hasNormals)
         {
-            inst.tangents = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, vertexCount * 3);
+            inst.tangents = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, vertexCount);
             for (int i = 0; i < normalIndexList.size(); i++)
             {
                 inst.tangents.set(i, 0, orthoTangentsMap.get(new NormalTexCoordPair(normalIndexList.get(i), texCoordIndexList.get(i))).x);

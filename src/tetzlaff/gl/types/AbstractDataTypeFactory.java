@@ -1,6 +1,6 @@
 package tetzlaff.gl.types;
 
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
@@ -19,7 +19,37 @@ public final class AbstractDataTypeFactory
     {
     }
 
-    private static final class MultiComponentDataType implements AbstractDataType<Iterable<Number>>
+    static Consumer<Number> wrapByteBuffer(ByteBuffer baseBuffer, NativeDataType nativeDataType)
+    {
+        switch(nativeDataType)
+        {
+            case UNSIGNED_BYTE:
+            case BYTE:
+            case PACKED_BYTE:
+                ByteBuffer byteBuffer = baseBuffer.slice();
+                return component -> byteBuffer.put(component.byteValue());
+            case UNSIGNED_SHORT:
+            case SHORT:
+            case PACKED_SHORT:
+                ShortBuffer shortBuffer = baseBuffer.asShortBuffer();
+                return component -> shortBuffer.put(component.shortValue());
+            case UNSIGNED_INT:
+            case INT:
+            case PACKED_INT:
+                IntBuffer intBuffer = baseBuffer.asIntBuffer();
+                return component -> intBuffer.put(component.intValue());
+            case FLOAT:
+                FloatBuffer floatBuffer = baseBuffer.asFloatBuffer();
+                return component -> floatBuffer.put(component.floatValue());
+            case DOUBLE:
+                DoubleBuffer doubleBuffer = baseBuffer.asDoubleBuffer();
+                return component -> doubleBuffer.put(component.doubleValue());
+            default:
+                throw new UnsupportedOperationException("Unrecognized component data type.");
+        }
+    }
+
+    private static final class MultiComponentDataType implements AbstractDataType<Iterable<? extends Number>>
     {
         private final NativeDataType nativeDataType;
         private final int componentCount;
@@ -49,44 +79,14 @@ public final class AbstractDataTypeFactory
         }
 
         @Override
-        public Consumer<Iterable<Number>> wrapByteBuffer(ByteBuffer baseBuffer)
+        public Consumer<Iterable<? extends Number>> wrapByteBuffer(ByteBuffer baseBuffer)
         {
-            Consumer<Number> componentConsumer;
-
-            switch(nativeDataType)
-            {
-                case UNSIGNED_BYTE:
-                    componentConsumer = component -> baseBuffer.put(component.byteValue());
-                    break;
-                case BYTE:
-                    componentConsumer = component -> baseBuffer.put(component.byteValue());
-                    break;
-                case UNSIGNED_SHORT:
-                    componentConsumer = component -> baseBuffer.asShortBuffer().put(component.shortValue());
-                    break;
-                case SHORT:
-                    componentConsumer = component -> baseBuffer.asShortBuffer().put(component.shortValue());
-                    break;
-                case UNSIGNED_INT:
-                    componentConsumer = component -> baseBuffer.asIntBuffer().put(component.intValue());
-                    break;
-                case INT:
-                    componentConsumer = component -> baseBuffer.asIntBuffer().put(component.intValue());
-                    break;
-                case FLOAT:
-                    componentConsumer = component -> baseBuffer.asFloatBuffer().put(component.floatValue());
-                    break;
-                case DOUBLE:
-                    componentConsumer = component -> baseBuffer.asDoubleBuffer().put(component.doubleValue());
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unrecognized component data type.");
-            }
+            Consumer<Number> componentConsumer = AbstractDataTypeFactory.wrapByteBuffer(baseBuffer, nativeDataType);
 
             return highLevelValue ->
             {
                 int componentIndex = 0;
-                Iterator<Number> iterator = highLevelValue.iterator();
+                Iterator<? extends Number> iterator = highLevelValue.iterator();
                 while (iterator.hasNext() && componentIndex < this.componentCount)
                 {
                     componentConsumer.accept(iterator.next());
@@ -132,27 +132,7 @@ public final class AbstractDataTypeFactory
         @Override
         public Consumer<Number> wrapByteBuffer(ByteBuffer baseBuffer)
         {
-            switch(nativeDataType)
-            {
-                case UNSIGNED_BYTE:
-                    return component -> baseBuffer.put(component.byteValue());
-                case BYTE:
-                    return component -> baseBuffer.put(component.byteValue());
-                case UNSIGNED_SHORT:
-                    return component -> baseBuffer.asShortBuffer().put(component.shortValue());
-                case SHORT:
-                    return component -> baseBuffer.asShortBuffer().put(component.shortValue());
-                case UNSIGNED_INT:
-                    return component -> baseBuffer.asIntBuffer().put(component.intValue());
-                case INT:
-                    return component -> baseBuffer.asIntBuffer().put(component.intValue());
-                case FLOAT:
-                    return component -> baseBuffer.asFloatBuffer().put(component.floatValue());
-                case DOUBLE:
-                    return component -> baseBuffer.asDoubleBuffer().put(component.doubleValue());
-                default:
-                    throw new UnsupportedOperationException("Unrecognized component data type.");
-            }
+            return AbstractDataTypeFactory.wrapByteBuffer(baseBuffer, nativeDataType);
         }
     }
 
@@ -161,7 +141,7 @@ public final class AbstractDataTypeFactory
         return new SingleComponentDataType(nativeType);
     }
 
-    public AbstractDataType<Iterable<Number>> getMultiComponentDataType(NativeDataType nativeType, int componentCount)
+    public AbstractDataType<Iterable<? extends Number>> getMultiComponentDataType(NativeDataType nativeType, int componentCount)
     {
         return new MultiComponentDataType(nativeType, componentCount);
     }
