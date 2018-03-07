@@ -2,6 +2,7 @@
 #define COLOR_APPEARANCE_GLSL
 
 #include "linearize.glsl"
+#include "../common/extractcomponent.glsl"
 
 #line 7 1000
 
@@ -41,12 +42,12 @@ layout(std140) uniform LightIndices
 
 int getLightIndex(int poseIndex)
 {
-    return lightIndices[poseIndex/4][poseIndex%4];
+    return extractComponentByIndex(lightIndices[poseIndex/4], poseIndex%4);
 }
 
 float getCameraWeight(int index)
 {
-    return cameraWeights[index/4][index%4];
+    return extractComponentByIndex(cameraWeights[index/4], index%4);
 }
 
 vec3 getViewVector(int index)

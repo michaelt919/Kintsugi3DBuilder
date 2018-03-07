@@ -3,7 +3,16 @@
 
 #line 5 3002
 
-float getSortingWeight(int index, vec3 targetDirection);
+float computeBuehlerWeight(vec3 targetDirection, vec3 sampleDirection)
+{
+    return 1.0 / (1.0 - clamp(dot(sampleDirection, targetDirection), 0.0, 0.99999));
+}
+
+float getSortingWeight(int virtualIndex, vec3 targetDirection)
+{
+    mat4 cameraPose = getCameraPose(virtualIndex);
+    return computeBuehlerWeight(mat3(cameraPose) * targetDirection, -normalize((cameraPose * vec4(fPosition, 1)).xyz));
+}
 
 void sort(int sampleCount, int totalCount, vec3 targetDirection,
     out float[MAX_SORTING_SAMPLE_COUNT] weights, out int[MAX_SORTING_SAMPLE_COUNT] indices)

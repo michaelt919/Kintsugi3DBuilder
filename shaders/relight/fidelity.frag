@@ -28,7 +28,7 @@ uniform int targetViewIndex;
 
 float getViewWeight(int viewIndex)
 {
-    return viewWeights[viewIndex/4][viewIndex%4];
+    return extractComponentByIndex(viewWeights[viewIndex/4], viewIndex%4);
 }
 
 layout(location = 0) out vec2 fidelity;

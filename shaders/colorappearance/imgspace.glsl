@@ -34,7 +34,7 @@ layout(std140) uniform ShadowMatrices
 
 int getCameraProjectionIndex(int index)
 {
-    return cameraProjectionIndices[index/4][index%4];
+    return extractComponentByIndex(cameraProjectionIndices[index/4], index%4);
 }
 
 vec4 getColor(int index)

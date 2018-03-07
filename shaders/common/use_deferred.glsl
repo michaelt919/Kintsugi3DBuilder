@@ -1,7 +1,7 @@
 #ifndef USE_DEFERRED_GLSL
 #define USE_DEFERRED_GLSL
 
-#line 9901 5
+#line 5 9901
 
 uniform sampler2D positionMap;
 uniform sampler2D normalMap;
