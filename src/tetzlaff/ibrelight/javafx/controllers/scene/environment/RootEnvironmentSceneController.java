@@ -40,6 +40,8 @@ public class RootEnvironmentSceneController
         environmentListView.setItems(sceneModel.getEnvironmentList());
         environmentListView.getSelectionModel().selectedItemProperty().addListener(settingsController.changeListener);
 
+        settingsController.setEnvironmentMapModel(environmentMapModel);
+
         ObservableList<EnvironmentSetting> environmentList = sceneModel.getEnvironmentList();
 
         sceneModel.getEnvironmentList().add(EnvironmentSetting.NO_ENVIRONMENT);
