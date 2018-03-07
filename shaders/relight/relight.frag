@@ -86,7 +86,7 @@ layout(std140) uniform ViewWeights
 
 float getViewWeight(int viewIndex)
 {
-    return viewWeights[viewIndex/4][viewIndex%4];
+    return extractComponentByIndex(viewWeights[viewIndex/4], viewIndex%4);
 }
 
 float computeSampleWeight(float correlation)
@@ -721,16 +721,6 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedRoughnessAverages(vec3 diffuseColor
     return results;
 }
 
-float computeBuehlerWeight(vec3 targetDirection, vec3 sampleDirection)
-{
-    return 1.0 / (1.0 - clamp(dot(sampleDirection, targetDirection), 0.0, 0.99999));
-}
-
-float getSortingWeight(int virtualIndex, vec3 targetDirection)
-{
-    mat4 cameraPose = getCameraPose(virtualIndex);
-    return computeBuehlerWeight(mat3(cameraPose) * targetDirection, -normalize((cameraPose * vec4(fPosition, 1)).xyz));
-}
 
 vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
 {

@@ -2,6 +2,7 @@
 #define COLOR_APPEARANCE_SUBSET_GLSL
 
 #include "linearize.glsl"
+#include "../common/extractcomponent.glsl"
 
 #line 7 1003
 
@@ -50,7 +51,7 @@ int getViewIndex(int virtualIndex)
 {
     if (useViewIndices)
     {
-        return viewIndices[virtualIndex/4][virtualIndex%4];
+        return extractComponentByIndex(viewIndices[virtualIndex/4], virtualIndex%4);
     }
     else
     {
@@ -66,13 +67,13 @@ mat4 getCameraPose(int virtualIndex)
 int getLightIndex(int virtualIndex)
 {
     int viewIndex = getViewIndex(virtualIndex);
-    return lightIndices[viewIndex/4][viewIndex%4];
+    return extractComponentByIndex(lightIndices[viewIndex/4], viewIndex%4);
 }
 
 float getCameraWeight(int virtualIndex)
 {
     int viewIndex = getViewIndex(virtualIndex);
-    return cameraWeights[viewIndex/4][viewIndex%4];
+    return extractComponentByIndex(cameraWeights[viewIndex/4], viewIndex%4);
 }
 
 vec3 getViewVector(int virtualIndex)
