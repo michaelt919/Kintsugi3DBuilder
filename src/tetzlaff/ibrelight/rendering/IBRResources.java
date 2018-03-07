@@ -331,7 +331,14 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
             if (loadOptions.isCompressionRequested())
             {
-                textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
+                if (loadOptions.isAlphaRequested())
+                {
+                    textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_4BPP_ALPHA_4BPP);
+                }
+                else
+                {
+                    textureArrayBuilder.setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP);
+                }
             }
             else
             {

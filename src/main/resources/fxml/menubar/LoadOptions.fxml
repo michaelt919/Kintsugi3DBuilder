@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.*?>
-<VBox fx:id="root" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.LoadOptionsController">
+<VBox fx:id="root" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.LoadOptionsController">
     <CheckBox fx:id="compressedImages" mnemonicParsing="false" selected="true" text="Use compressed images">
       <VBox.margin>
          <Insets bottom="5.0" top="5.0" />
@@ -12,6 +12,11 @@
       <font>
          <Font size="18.0" />
       </font></CheckBox>
+   <CheckBox fx:id="alphaChannel" mnemonicParsing="false" selected="true" text="Use alpha channel">
+      <font>
+         <Font size="18.0" />
+      </font>
+   </CheckBox>
     <CheckBox fx:id="mipmaps" mnemonicParsing="false" selected="true" text="Use mipmaps">
       <VBox.margin>
          <Insets bottom="5.0" top="5.0" />
