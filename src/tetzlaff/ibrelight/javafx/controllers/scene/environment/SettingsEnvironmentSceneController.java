@@ -18,6 +18,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.converter.DoubleStringConverter;
+import tetzlaff.ibrelight.javafx.internal.EnvironmentModelImpl;
 import tetzlaff.ibrelight.javafx.util.ImageFactory;
 import tetzlaff.ibrelight.javafx.util.SafeNumberStringConverter;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
@@ -25,6 +26,9 @@ import tetzlaff.util.AbstractImage;
 
 public class SettingsEnvironmentSceneController implements Initializable
 {
+    @FXML private Button envRefreshButton;
+    @FXML private Button bpRefreshButton;
+
     @FXML private VBox root;
 
     @FXML private CheckBox envUseImageCheckBox;
@@ -57,6 +61,8 @@ public class SettingsEnvironmentSceneController implements Initializable
 
     private final FileChooser envImageFileChooser = new FileChooser();
     private final FileChooser bpImageFileChooser = new FileChooser();
+
+    private EnvironmentModelImpl environmentMapModel;
 
     final ChangeListener<EnvironmentSetting> changeListener = (observable, oldValue, newValue) ->
     {
@@ -236,6 +242,24 @@ public class SettingsEnvironmentSceneController implements Initializable
             bpImageFileChooser.initialDirectoryProperty().set(newFile.getParentFile());
             bpImageFileChooser.initialFileNameProperty().set(newFile.getName());
         }
+    }
+
+    @FXML
+    private void refreshEnvironment()
+    {
+        environmentMapModel.loadEnvironmentMap(localEnvImageFile.getValue());
+    }
+
+    @FXML
+    private void refreshBackplate()
+    {
+        environmentMapModel.loadBackplate(localBPImageFile.getValue());
+        bpImageView.setImage(new Image(localBPImageFile.getValue().toURI().toString()));
+    }
+
+    public void setEnvironmentMapModel(EnvironmentModelImpl environmentMapModel)
+    {
+        this.environmentMapModel = environmentMapModel;
     }
 }
 
