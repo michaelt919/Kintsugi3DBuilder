@@ -7,8 +7,6 @@ public final class IBRelight
 {
     private static final boolean DEBUG = true;
 
-    // temp comment
-
     private IBRelight()
     {
     }
