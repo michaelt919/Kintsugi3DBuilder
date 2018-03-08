@@ -76,8 +76,8 @@ public class LoaderController implements Initializable
                 for (int i = 0; i < newViewSet.getCameraPoseCount(); i++)
                 {
                     primaryViewChoiceBox.getItems().add(newViewSet.getImageFileName(i));
-                    primaryViewChoiceBox.getItems().sort(Comparator.naturalOrder());
                 }
+                primaryViewChoiceBox.getItems().sort(Comparator.naturalOrder());
                 primaryViewChoiceBox.getSelectionModel().select(0);
             }
             catch (FileNotFoundException e)
