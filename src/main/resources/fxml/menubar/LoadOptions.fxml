@@ -12,7 +12,7 @@
       <font>
          <Font size="18.0" />
       </font></CheckBox>
-   <CheckBox fx:id="alphaChannel" mnemonicParsing="false" selected="true" text="Use alpha channel">
+   <CheckBox fx:id="alphaChannel" mnemonicParsing="false" selected="true" text="Use full alpha channel">
       <font>
          <Font size="18.0" />
       </font>
