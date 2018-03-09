@@ -2,6 +2,7 @@ package tetzlaff.ibrelight.export.general;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.function.Consumer;
 
@@ -13,6 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -89,6 +91,16 @@ public class GeneralRenderRequestUI implements IBRRequestUI
     {
         INSTANCE.stage = new Stage();
         INSTANCE.stage.setTitle("Generic export");
+
+        try
+        {
+            INSTANCE.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+        }
+        catch (MalformedURLException e)
+        {
+            e.printStackTrace();
+        }
+
         INSTANCE.stage.setScene(SCENE);
         INSTANCE.stage.initOwner(window);
         INSTANCE.requestFactory = RequestFactoryImplementation.create(modelAccess.getSettingsModel());

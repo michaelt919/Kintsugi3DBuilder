@@ -13,6 +13,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -47,6 +48,7 @@ public class SimpleAnimationUI implements IBRRequestUI
         SimpleAnimationUI simpleAnimationUI = fxmlLoader.getController();
 
         simpleAnimationUI.stage = new Stage();
+        simpleAnimationUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         simpleAnimationUI.stage.setTitle("Animation request");
         simpleAnimationUI.stage.setScene(new Scene(parent));
         simpleAnimationUI.stage.initOwner(window);
