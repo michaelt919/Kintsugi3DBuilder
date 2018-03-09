@@ -19,6 +19,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
@@ -471,6 +472,7 @@ public class MenubarController
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent root = fxmlLoader.load();
         Stage stage = new Stage();
+        stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root));
         stage.initOwner(parentWindow);
@@ -496,6 +498,7 @@ public class MenubarController
         FXMLLoader fxmlLoader = new FXMLLoader(url);
         Parent root = fxmlLoader.load();
         Stage stage = new Stage();
+        stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         stage.setTitle(title);
         stage.setScene(new Scene(root, width, height));
         stage.initOwner(parentWindow);

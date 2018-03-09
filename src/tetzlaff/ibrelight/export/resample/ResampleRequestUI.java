@@ -12,6 +12,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -47,6 +48,7 @@ public class ResampleRequestUI implements IBRRequestUI
         ResampleRequestUI resampleRequestUI = fxmlLoader.getController();
 
         resampleRequestUI.stage = new Stage();
+        resampleRequestUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         resampleRequestUI.stage.setTitle("Resample request");
         resampleRequestUI.stage.setScene(new Scene(parent));
         resampleRequestUI.stage.initOwner(window);
