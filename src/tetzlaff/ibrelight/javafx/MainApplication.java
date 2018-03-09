@@ -1,5 +1,6 @@
 package tetzlaff.ibrelight.javafx;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
@@ -17,6 +18,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import tetzlaff.gl.vecmath.Vector2;
@@ -91,6 +93,8 @@ public class MainApplication extends Application
     @Override
     public void start(Stage primaryStage) throws IOException
     {
+        primaryStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
+
         //get FXML URLs
         String menuBarFXMLFileName = "fxml/menubar/MenuBar.fxml";
         URL menuBarURL = getClass().getClassLoader().getResource(menuBarFXMLFileName);
@@ -124,10 +128,12 @@ public class MainApplication extends Application
         primaryStage.setScene(new Scene(menuBarRoot));
 
         Stage libraryStage = new Stage();
+        libraryStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         libraryStage.setTitle("Library");
         libraryStage.setScene(new Scene(libraryRoot));
 
         Stage sceneStage = new Stage();
+        sceneStage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         sceneStage.setTitle("Scene");
         sceneStage.setScene(new Scene(sceneRoot));
 

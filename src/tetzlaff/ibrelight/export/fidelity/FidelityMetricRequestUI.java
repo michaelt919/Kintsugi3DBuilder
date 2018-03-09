@@ -12,6 +12,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
@@ -46,6 +47,7 @@ public class FidelityMetricRequestUI implements IBRRequestUI
         fidelityMetricRequestUI.modelAccess = modelAccess;
 
         fidelityMetricRequestUI.stage = new Stage();
+        fidelityMetricRequestUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         fidelityMetricRequestUI.stage.setTitle("Fidelity metric request");
         fidelityMetricRequestUI.stage.setScene(new Scene(parent));
         fidelityMetricRequestUI.stage.initOwner(window);

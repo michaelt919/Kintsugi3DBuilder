@@ -12,6 +12,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -45,6 +46,7 @@ public class SVDRequestUI implements IBRRequestUI
         svdRequestUI.modelAccess = modelAccess;
 
         svdRequestUI.stage = new Stage();
+        svdRequestUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         svdRequestUI.stage.setTitle("SVD request");
         svdRequestUI.stage.setScene(new Scene(parent));
         svdRequestUI.stage.initOwner(window);

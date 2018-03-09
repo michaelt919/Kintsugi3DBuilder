@@ -13,6 +13,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
@@ -47,6 +48,7 @@ public class ScreenshotUI implements IBRRequestUI
         ScreenshotUI screenshotUI = fxmlLoader.getController();
 
         screenshotUI.stage = new Stage();
+        screenshotUI.stage.getIcons().add(new Image(new File("ibr-icon.png").toURI().toURL().toString()));
         screenshotUI.stage.setTitle("Screenshot request");
         screenshotUI.stage.setScene(new Scene(parent));
         screenshotUI.stage.initOwner(window);
