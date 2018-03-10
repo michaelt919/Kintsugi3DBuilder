@@ -100,7 +100,7 @@
       </Menu>
       <Menu mnemonicParsing="false" text="Help">
           <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="User Manual" />
-          <MenuItem mnemonicParsing="false" text="About" />
+          <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
       </Menu>
    </MenuBar>
    <ProgressBar fx:id="progressBar" prefWidth="410.0" progress="0.0" visible="false" VBox.vgrow="ALWAYS">
