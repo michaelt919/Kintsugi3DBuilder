@@ -562,7 +562,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         if (this.newLightCalibrationAvailable)
         {
-            this.getActiveViewSet().setLightPosition(0, newLightCalibration);
+            for (int i = 0; i < resources.viewSet.getLightCount(); i++)
+            {
+                this.getActiveViewSet().setLightPosition(i, newLightCalibration);
+            }
+
             this.resources.updateLightData();
             this.newLightCalibrationAvailable = false;
         }
@@ -966,7 +970,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @Override
     public void applyLightCalibration()
     {
-        this.newLightCalibration = resources.viewSet.getLightPosition(0)
+        this.newLightCalibration = resources.viewSet.getLightPosition(resources.viewSet.getLightIndex(resources.viewSet.getPrimaryViewIndex()))
             .plus(settingsModel.get("currentLightCalibration", Vector2.class).asVector3());
         this.newLightCalibrationAvailable = true;
     }
@@ -1003,8 +1007,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 lightCalibrationMode = true;
                 overriddenViewMatrix = true;
 
+                int primaryLightIndex = this.resources.viewSet.getLightIndex(this.resources.viewSet.getPrimaryViewIndex());
+
                 Vector3 lightPosition = settingsModel.get("currentLightCalibration", Vector2.class).asVector3()
-                                            .plus(resources.viewSet.getLightPosition(0));
+                                            .plus(resources.viewSet.getLightPosition(primaryLightIndex));
                 Matrix4 lightTransform = Matrix4.translate(lightPosition.negated());
 
                 Matrix4 partialViewInverse = getPartialViewMatrix().quickInverse(0.01f);
@@ -1012,19 +1018,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 for(int i = 0; i < this.resources.viewSet.getCameraPoseCount(); i++)
                 {
-                    if (this.resources.viewSet.getLightIndex(i) == 0)
+                    Matrix4 candidateView = this.resources.viewSet.getCameraPose(i);
+
+                    float similarity = partialViewInverse.times(Vector4.ORIGIN).getXYZ()
+                        .dot(getPartialViewMatrix(candidateView).quickInverse(0.01f).times(Vector4.ORIGIN).getXYZ());
+
+                    if (similarity > maxSimilarity)
                     {
-                        Matrix4 candidateView = this.resources.viewSet.getCameraPose(i);
-
-                        float similarity = partialViewInverse.times(Vector4.ORIGIN).getXYZ()
-                            .dot(getPartialViewMatrix(candidateView).quickInverse(0.01f).times(Vector4.ORIGIN).getXYZ());
-
-                        if (similarity > maxSimilarity)
-                        {
-                            maxSimilarity = similarity;
-                            view = lightTransform.times(candidateView);
-                            snapViewIndex = i;
-                        }
+                        maxSimilarity = similarity;
+                        view = lightTransform.times(candidateView);
+                        snapViewIndex = i;
                     }
                 }
             }
@@ -1172,6 +1175,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 if (lightCalibrationMode)
                 {
                     this.program.setUniform("holeFillColor", new Vector3(0.5f));
+                    this.program.setUniform("shadowTestEnabled", false);
                     this.program.setUniform("useViewIndices", true);
                     this.program.setUniform("viewCount", 1);
                     viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, 1, snapViewIndex));

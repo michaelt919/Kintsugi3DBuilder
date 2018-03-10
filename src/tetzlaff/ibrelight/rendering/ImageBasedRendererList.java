@@ -10,9 +10,6 @@ import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.interactive.InteractiveRenderableList;
-import tetzlaff.gl.nativebuffer.NativeDataType;
-import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
-import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRenderableListModel;
@@ -185,22 +182,13 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                 double primaryViewDistance = newItem.getResources().getPrimaryViewDistance();
 
                 Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
-                NativeVectorBuffer lightIntensityList = NativeVectorBufferFactory.getInstance()
-                    .createEmpty(NativeDataType.FLOAT, 3, newItem.getActiveViewSet().getLightCount());
 
                 for (int i = 0; i < newItem.getActiveViewSet().getLightCount(); i++)
                 {
-                    lightIntensityList.set(i, 0, lightIntensity.x);
-                    lightIntensityList.set(i, 1, lightIntensity.y);
-                    lightIntensityList.set(i, 2, lightIntensity.z);
-
                     newItem.getActiveViewSet().setLightIntensity(i, lightIntensity);
                 }
 
-                if (newItem.getResources().lightIntensityBuffer != null)
-                {
-                    newItem.getResources().lightIntensityBuffer.setData(lightIntensityList);
-                }
+                newItem.getResources().updateLightData();
 
                 if (loadingMonitor != null)
                 {
