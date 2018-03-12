@@ -12,10 +12,12 @@
          <MenuItem mnemonicParsing="false" onAction="#file_saveProject" text="Save project" />
          <MenuItem mnemonicParsing="false" onAction="#file_saveProjectAs" text="Save project as..." />
          <MenuItem mnemonicParsing="false" onAction="#file_closeProject" text="Close project" />
+         <SeparatorMenuItem />
          <Menu fx:id="exportMenu" mnemonicParsing="false" text="Export" />
           <CheckMenuItem fx:id="lightCalibrationCheckMenuItem" mnemonicParsing="false" text="Light Calibration Mode" />
           <MenuItem mnemonicParsing="false" onAction="#file_colorChecker" text="Enter Color Checker Values..." />
          <MenuItem mnemonicParsing="false" onAction="#file_loadOptions" text="Load Options..." />
+          <SeparatorMenuItem />
          <MenuItem mnemonicParsing="false" onAction="#file_exit" text="Exit" />
       </Menu>
       <Menu mnemonicParsing="false" text="Viewport">
@@ -100,7 +102,7 @@
       </Menu>
       <Menu mnemonicParsing="false" text="Help">
           <MenuItem mnemonicParsing="false" onAction="#help_userManual" text="User Manual" />
-          <MenuItem mnemonicParsing="false" text="About" />
+          <MenuItem mnemonicParsing="false" onAction="#help_about" text="About" />
       </Menu>
    </MenuBar>
    <ProgressBar fx:id="progressBar" prefWidth="410.0" progress="0.0" visible="false" VBox.vgrow="ALWAYS">

@@ -18,10 +18,16 @@ void sort(int sampleCount, int totalCount, vec3 targetDirection,
     out float[MAX_SORTING_SAMPLE_COUNT] weights, out int[MAX_SORTING_SAMPLE_COUNT] indices)
 {
     // Initialization
-    for (int i = 0; i < MAX_SORTING_SAMPLE_COUNT && i < sampleCount; i++)
+    for (int i = 0; i < MAX_SORTING_SAMPLE_COUNT && i < sampleCount && i < totalCount; i++)
     {
         weights[i] = -(1.0 / 0.0); // Parentheses needed for AMD cards.
         indices[i] = -1;
+    }
+
+    for (int i = totalCount; i < MAX_SORTING_SAMPLE_COUNT && i < sampleCount; i++)
+    {
+        weights[i] = 0.0; // If there are less samples available than requested, fill in with weights of 0.0.
+        indices[i] = 0;
     }
 
     // Partial heapsort
@@ -84,10 +90,16 @@ void sortFast(int totalCount, vec3 targetDirection, out float[MAX_SORTING_SAMPLE
     float indicesFP[MAX_SORTING_SAMPLE_COUNT];
 
     // Initialization
-    for (int i = 0; i < MAX_SORTING_SAMPLE_COUNT; i++)
+    for (int i = 0; i < MAX_SORTING_SAMPLE_COUNT && i < totalCount; i++)
     {
         weights[i] = 0.0;
         indicesFP[i] = -1;
+    }
+
+    for (int i = totalCount; i < MAX_SORTING_SAMPLE_COUNT; i++)
+    {
+        weights[i] = 0.0; // If there are less samples available than requested, fill in with weights of 0.0.
+        indicesFP[i] = 0;
     }
 
     // Partial insertion sort
