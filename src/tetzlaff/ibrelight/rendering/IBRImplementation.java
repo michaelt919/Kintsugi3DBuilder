@@ -864,6 +864,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             .times(Matrix4.translate(this.centroid.negated()));
     }
 
+    public Matrix4 getFullViewMatrix(Matrix4 partialViewMatrix)
+    {
+        return partialViewMatrix
+            .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4())
+            .times(Matrix4.translate(this.centroid.negated()));
+    }
+
     private Matrix4 getModelViewMatrix(Matrix4 partialViewMatrix, int modelInstance)
     {
         float scale = getScale();
@@ -1187,7 +1194,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     this.program.setUniform("holeFillColor", new Vector3(0.0f));
                 }
 
-                for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
+                for (int modelInstance = 0; modelInstance < (lightCalibrationMode ? 1 : multiTransformationModel.size()); modelInstance++)
                 {
                     for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
                     {
@@ -1195,7 +1202,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     }
 
                     // Draw instance
-                    Matrix4 modelView = getModelViewMatrix(partialViewMatrix, modelInstance);
+                    Matrix4 modelView = lightCalibrationMode ?
+                        getFullViewMatrix(partialViewMatrix) : getModelViewMatrix(partialViewMatrix, modelInstance);
                     this.program.setUniform("model_view", modelView);
                     this.program.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
 
