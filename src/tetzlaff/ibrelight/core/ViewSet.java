@@ -1352,7 +1352,7 @@ public final class ViewSet
      * @param poseIndex The index of the view.
      * @return The index of the projection transformation.
      */
-    public Integer getCameraProjectionIndex(int poseIndex)
+    public int getCameraProjectionIndex(int poseIndex)
     {
         return this.cameraProjectionIndexList.get(poseIndex);
     }
@@ -1399,7 +1399,7 @@ public final class ViewSet
      * @param poseIndex The index of the view.
      * @return The index of the light source.
      */
-    public Integer getLightIndex(int poseIndex)
+    public int getLightIndex(int poseIndex)
     {
         return this.lightIndexList.get(poseIndex);
     }

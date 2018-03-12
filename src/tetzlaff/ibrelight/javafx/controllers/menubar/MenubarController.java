@@ -7,6 +7,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.Scanner;
 import java.util.function.Predicate;
 import javax.xml.parsers.ParserConfigurationException;
@@ -20,11 +22,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
-import javafx.stage.FileChooser;
+import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
-import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 import org.xml.sax.SAXException;
 import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.app.WindowSynchronization;
@@ -440,6 +439,25 @@ public class MenubarController
     private void help_userManual()
     {
         userDocumentationHandler.run();
+    }
+
+    public void help_about()
+    {
+        try
+        {
+            List<String> lines = Files.readAllLines(new File("ibrelight-about.txt").toPath());
+            Alert alert = new Alert(AlertType.INFORMATION, String.join(System.lineSeparator(), lines));
+            alert.setTitle("About IBRelight");
+            alert.setHeaderText("About IBRelight");
+            alert.initOwner(this.parentWindow);
+            alert.initModality(Modality.NONE);
+            alert.show();
+            alert.setY(100.0);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     @FXML

@@ -742,7 +742,14 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
         }
     }
 
-    return sum / sum.a;
+    if (sum.a == 0.0)
+    {
+        return vec4(holeFillColor, 1.0);
+    }
+    else
+    {
+        return sum / sum.a;
+    }
 }
 
 vec3 computeRoughnessBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)

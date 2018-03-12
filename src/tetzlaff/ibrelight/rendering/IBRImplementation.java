@@ -492,6 +492,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         Matrix4 modelView = this.getModelViewMatrix(this.getPartialViewMatrix(), 0);
         Matrix4 projection = this.getProjectionMatrix(windowSize);
         // TODO break this into blocks just in case there's a GPU timeout?
+        this.setupForDraw(modelView);
         this.drawModel(firstShadingFBO, 0, 0, windowSize.width, windowSize.height, modelView, projection);
         this.shadedFrames.add(new ShadedFrame<>(firstShadingFBO, modelView, projection));
 
@@ -636,7 +637,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         if (this.newLightCalibrationAvailable)
         {
-            this.getActiveViewSet().setLightPosition(0, newLightCalibration);
+            for (int i = 0; i < resources.viewSet.getLightCount(); i++)
+            {
+                this.getActiveViewSet().setLightPosition(i, newLightCalibration);
+            }
+
             this.resources.updateLightData();
             this.newLightCalibrationAvailable = false;
         }
@@ -939,6 +944,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             .times(Matrix4.translate(this.centroid.negated()));
     }
 
+    public Matrix4 getFullViewMatrix(Matrix4 partialViewMatrix)
+    {
+        return partialViewMatrix
+            .times(getDefaultCameraPose().getUpperLeft3x3().asMatrix4())
+            .times(Matrix4.translate(this.centroid.negated()));
+    }
+
     private Matrix4 getModelViewMatrix(Matrix4 partialViewMatrix, int modelInstance)
     {
         float scale = getScale();
@@ -1010,9 +1022,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Matrix4 drawModel(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int x, int y, int width, int height,
         Matrix4 view, Matrix4 projection, boolean interpretViewAsModelView)
     {
-        drawable.program().setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
-        setupForDraw(drawable.program(), view); // in case anything changed when drawing the reference scene.
-
         Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
         drawable.program().setUniform("envMapMatrix", envMapMatrix);
 
@@ -1115,7 +1124,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @Override
     public void applyLightCalibration()
     {
-        this.newLightCalibration = resources.viewSet.getLightPosition(0)
+        this.newLightCalibration = resources.viewSet.getLightPosition(resources.viewSet.getLightIndex(resources.viewSet.getPrimaryViewIndex()))
             .plus(settingsModel.get("currentLightCalibration", Vector2.class).asVector3());
         this.newLightCalibrationAvailable = true;
     }
@@ -1162,8 +1171,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 lightCalibrationMode = true;
                 overriddenViewMatrix = true;
 
+                int primaryLightIndex = this.resources.viewSet.getLightIndex(this.resources.viewSet.getPrimaryViewIndex());
+
                 Vector3 lightPosition = settingsModel.get("currentLightCalibration", Vector2.class).asVector3()
-                                            .plus(resources.viewSet.getLightPosition(0));
+                                            .plus(resources.viewSet.getLightPosition(primaryLightIndex));
                 Matrix4 lightTransform = Matrix4.translate(lightPosition.negated());
 
                 Matrix4 partialViewInverse = getPartialViewMatrix().quickInverse(0.01f);
@@ -1171,19 +1182,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 for(int i = 0; i < this.resources.viewSet.getCameraPoseCount(); i++)
                 {
-                    if (this.resources.viewSet.getLightIndex(i) == 0)
+                    Matrix4 candidateView = this.resources.viewSet.getCameraPose(i);
+
+                    float similarity = partialViewInverse.times(Vector4.ORIGIN).getXYZ()
+                        .dot(getPartialViewMatrix(candidateView).quickInverse(0.01f).times(Vector4.ORIGIN).getXYZ());
+
+                    if (similarity > maxSimilarity)
                     {
-                        Matrix4 candidateView = this.resources.viewSet.getCameraPose(i);
-
-                        float similarity = partialViewInverse.times(Vector4.ORIGIN).getXYZ()
-                            .dot(getPartialViewMatrix(candidateView).quickInverse(0.01f).times(Vector4.ORIGIN).getXYZ());
-
-                        if (similarity > maxSimilarity)
-                        {
-                            maxSimilarity = similarity;
-                            view = lightTransform.times(candidateView);
-                            snapViewIndex = i;
-                        }
+                        maxSimilarity = similarity;
+                        view = lightTransform.times(candidateView);
+                        snapViewIndex = i;
                     }
                 }
             }
@@ -1417,6 +1425,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             //System.out.println(shadingWidth + "x" + shadingHeight);
                         }
 
+                        setupForDraw(this.program, frameInProgress.modelView);
                         drawModel(mainDrawable, frameInProgress.framebuffer, shadingX, shadingY, (int) Math.round(shadingWidth),
                             (int) Math.round(shadingHeight), frameInProgress.modelView, frameInProgress.projection, true);
 
@@ -1446,15 +1455,19 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     this.reprojectProgram.setTexture("prerenderedImagePrimary", primaryFrame.framebuffer.getColorAttachmentTexture(0));
                     this.reprojectProgram.setTexture("prerenderedDepthImagePrimary", primaryFrame.framebuffer.getDepthAttachmentTexture());
 
+                    setupForDraw(this.reprojectProgram, view);
                     drawModel(this.reprojectDrawable, offscreenFBO, 0, 0, fboWidth, fboHeight, view, projection, false);
                 }
                 else
                 {
+                    setupForDraw(this.program, view);
+
                     this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
 
                     if (lightCalibrationMode)
                     {
                         this.program.setUniform("holeFillColor", new Vector3(0.5f));
+                        this.program.setUniform("shadowTestEnabled", false);
                         this.program.setUniform("useViewIndices", true);
                         this.program.setUniform("viewCount", 1);
                         viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, 1, snapViewIndex));
@@ -1466,7 +1479,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         this.program.setUniform("holeFillColor", new Vector3(0.0f));
                     }
 
-                    for (int modelInstance = 0; modelInstance < multiTransformationModel.size(); modelInstance++)
+                    for (int modelInstance = 0; modelInstance < (lightCalibrationMode ? 1 : multiTransformationModel.size()); modelInstance++)
                     {
                         FramebufferSize fullFBOSize = offscreenFBO.getSize();
 
@@ -1478,7 +1491,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                 int effectiveWidth = Math.min(subdivWidth, fullFBOSize.width - x);
                                 int effectiveHeight = Math.min(subdivHeight, fullFBOSize.height - y);
 
-                                drawModel(offscreenFBO, x, y, effectiveWidth, effectiveHeight, view, projection);
+                                drawModel(this.mainDrawable, offscreenFBO, x, y, effectiveWidth, effectiveHeight, view, projection, lightCalibrationMode);
                             }
                         }
                     }
