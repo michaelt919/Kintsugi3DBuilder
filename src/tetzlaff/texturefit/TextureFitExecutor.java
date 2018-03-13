@@ -46,7 +46,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     private String materialName;
 
     private ViewSet viewSet;
-    private IBRResources<ContextType> viewSetResources;
+    private IBRResources<ContextType> resources;
 
     private Program<ContextType> depthRenderingProgram;
     private Program<ContextType> projTexProgram;
@@ -193,14 +193,14 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
             drawable.program().setUniform("gamma", param.getGamma());
 
-            if (viewSetResources.getLuminanceMap() == null)
+            if (resources.getLuminanceMap() == null)
             {
                 drawable.program().setUniform("useLuminanceMap", false);
             }
             else
             {
                 drawable.program().setUniform("useLuminanceMap", true);
-                drawable.program().setTexture("luminanceMap", viewSetResources.getLuminanceMap());
+                drawable.program().setTexture("luminanceMap", resources.getLuminanceMap());
             }
 
             int width;
@@ -231,10 +231,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     }
                 }
 
-                drawable.program().setUniformBuffer("CameraPoses", viewSetResources.cameraPoseBuffer);
-                drawable.program().setUniformBuffer("CameraProjections", viewSetResources.cameraProjectionBuffer);
-                drawable.program().setUniformBuffer("CameraProjectionIndices", viewSetResources.cameraProjectionIndexBuffer);
-                drawable.program().setUniformBuffer("LightIndices", viewSetResources.lightIndexBuffer);
+                drawable.program().setUniformBuffer("CameraPoses", resources.cameraPoseBuffer);
+                drawable.program().setUniformBuffer("CameraProjections", resources.cameraProjectionBuffer);
+                drawable.program().setUniformBuffer("CameraProjectionIndices", resources.cameraProjectionIndexBuffer);
+                drawable.program().setUniformBuffer("LightIndices", resources.lightIndexBuffer);
                 drawable.program().setUniformBuffer("LightPositions", this.lightPositionBuffer);
                 drawable.program().setUniformBuffer("LightIntensities", this.lightIntensityBuffer);
 
@@ -394,7 +394,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         }
     }
 
-    private void loadMesh() throws IOException
+    private VertexGeometry loadMesh() throws IOException
     {
         VertexGeometry mesh = VertexGeometry.createFromOBJFile(objFile);
         positionBuffer = context.createVertexBuffer().setData(mesh.getVertices());
@@ -422,8 +422,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             }
         }
 
-        mesh = null;
-        System.gc(); // Garbage collect the mesh object (hopefully)
+        return mesh;
     }
 
     private Drawable<ContextType> getLightFitDrawable()
@@ -436,29 +435,29 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
         drawable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
         drawable.program().setUniform("gamma", param.getGamma());
-        if (viewSetResources.getLuminanceMap() == null)
+        if (resources.getLuminanceMap() == null)
         {
             drawable.program().setUniform("useLuminanceMap", false);
         }
         else
         {
             drawable.program().setUniform("useLuminanceMap", true);
-            drawable.program().setTexture("luminanceMap", viewSetResources.getLuminanceMap());
+            drawable.program().setTexture("luminanceMap", resources.getLuminanceMap());
         }
         drawable.program().setUniform("shadowTestEnabled", false);
         drawable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
         drawable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
         drawable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
 
-        drawable.program().setUniformBuffer("CameraPoses", viewSetResources.cameraPoseBuffer);
+        drawable.program().setUniformBuffer("CameraPoses", resources.cameraPoseBuffer);
 
         if (!param.isImagePreprojectionUseEnabled())
         {
-            drawable.program().setUniformBuffer("CameraProjections", viewSetResources.cameraProjectionBuffer);
-            drawable.program().setUniformBuffer("CameraProjectionIndices", viewSetResources.cameraProjectionIndexBuffer);
+            drawable.program().setUniformBuffer("CameraProjections", resources.cameraProjectionBuffer);
+            drawable.program().setUniformBuffer("CameraProjectionIndices", resources.cameraProjectionIndexBuffer);
         }
 
-        drawable.program().setUniformBuffer("LightIndices", viewSetResources.lightIndexBuffer);
+        drawable.program().setUniformBuffer("LightIndices", resources.lightIndexBuffer);
 
         drawable.program().setUniform("delta", param.getDiffuseDelta());
         drawable.program().setUniform("iterations", 1/*param.getDiffuseIterations()*/); // TODO rework light fitting
@@ -655,12 +654,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         drawable.addVertexBuffer("tangent", tangentBuffer);
 
         drawable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
-        drawable.program().setUniformBuffer("CameraPoses", viewSetResources.cameraPoseBuffer);
+        drawable.program().setUniformBuffer("CameraPoses", resources.cameraPoseBuffer);
+        drawable.program().setUniformBuffer("CameraWeights", resources.cameraWeightBuffer);
 
         if (!param.isImagePreprojectionUseEnabled())
         {
-            drawable.program().setUniformBuffer("CameraProjections", viewSetResources.cameraProjectionBuffer);
-            drawable.program().setUniformBuffer("CameraProjectionIndices", viewSetResources.cameraProjectionIndexBuffer);
+            drawable.program().setUniformBuffer("CameraProjections", resources.cameraProjectionBuffer);
+            drawable.program().setUniformBuffer("CameraProjectionIndices", resources.cameraProjectionIndexBuffer);
         }
 
         drawable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
@@ -669,17 +669,17 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         drawable.program().setUniform("fittingGamma", (float)FITTING_GAMMA);
         drawable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
 
-        if (viewSetResources.getLuminanceMap() == null)
+        if (resources.getLuminanceMap() == null)
         {
             drawable.program().setUniform("useLuminanceMap", false);
         }
         else
         {
             drawable.program().setUniform("useLuminanceMap", true);
-            drawable.program().setTexture("luminanceMap", viewSetResources.getLuminanceMap());
+            drawable.program().setTexture("luminanceMap", resources.getLuminanceMap());
         }
 
-        drawable.program().setUniformBuffer("LightIndices", viewSetResources.lightIndexBuffer);
+        drawable.program().setUniformBuffer("LightIndices", resources.lightIndexBuffer);
 
         if (lightPositionBuffer != null)
         {
@@ -687,7 +687,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         }
         else
         {
-            drawable.program().setUniformBuffer("LightPositions", viewSetResources.lightPositionBuffer);
+            drawable.program().setUniformBuffer("LightPositions", resources.lightPositionBuffer);
         }
 
         if (lightIntensityBuffer != null)
@@ -696,7 +696,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         }
         else
         {
-            drawable.program().setUniformBuffer("LightIntensities", viewSetResources.lightIntensityBuffer);
+            drawable.program().setUniformBuffer("LightIntensities", resources.lightIntensityBuffer);
         }
 
         if (shadowMatrixBuffer != null)
@@ -1137,14 +1137,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     // Downsample and store each image
                     for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
                     {
-                        File imageFile = new File(imageDir, viewSet.getImageFileName(i));
-                        if (!imageFile.exists())
-                        {
-                            String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-                            filenameParts[filenameParts.length - 1] = "png";
-                            String pngFileName = String.join(".", filenameParts);
-                            imageFile = new File(imageDir, pngFileName);
-                        }
+                        File imageFile = IBRResources.findImageFile(new File(imageDir, viewSet.getImageFileName(i)));
 
                         TextureBuilder<ContextType, ? extends Texture2D<ContextType>> fullSizeImageBuilder;
 
@@ -1154,14 +1147,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                         }
                         else
                         {
-                            File maskFile = new File(maskDir, viewSet.getImageFileName(i));
-                            if (!maskFile.exists())
-                            {
-                                String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-                                filenameParts[filenameParts.length - 1] = "png";
-                                String pngFileName = String.join(".", filenameParts);
-                                maskFile = new File(maskDir, pngFileName);
-                            }
+                            File maskFile = IBRResources.findImageFile(new File(maskDir, viewSet.getImageFileName(0)));
 
                             fullSizeImageBuilder = context.getTextureFactory().build2DColorTextureFromFileWithMask(imageFile, maskFile, true);
                         }
@@ -1203,7 +1189,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             Date timestamp = new Date();
 
             // Read a single image to get the dimensions for the texture array
-            File imageFile = viewSetResources.findImageFile(0);
+            File imageFile = IBRResources.findImageFile(new File(imageDir, viewSet.getImageFileName(0)));
             BufferedImage img = ImageIO.read(new FileInputStream(imageFile));
             viewTextures = context.getTextureFactory().build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount())
                             .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
@@ -1213,7 +1199,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
             for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
             {
-                imageFile = viewSetResources.findImageFile(i);
+                imageFile = IBRResources.findImageFile(new File(imageDir, viewSet.getImageFileName(i)));
 
                 if (maskDir == null)
                 {
@@ -1360,15 +1346,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     viewSet.setLightIntensity(i, lightIntensity);
                 }
 
-                lightPositionBuffer = viewSetResources.lightPositionBuffer;
+                lightPositionBuffer = resources.lightPositionBuffer;
                 lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensityList);
             }
             else
             {
                 System.out.println("Skipping light fit.");
 
-                lightPositionBuffer = viewSetResources.lightPositionBuffer;
-                lightIntensityBuffer =  viewSetResources.lightIntensityBuffer;
+                lightPositionBuffer = resources.lightPositionBuffer;
+                lightIntensityBuffer =  resources.lightIntensityBuffer;
             }
 
 //            if (!param.isImagePreprojectionUseEnabled())
@@ -1503,35 +1489,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         System.out.println("Max size of a uniform block in bytes:" + context.getState().getMaxUniformBlockSize());
         System.out.println("Max texture array layers:" + context.getState().getMaxArrayTextureLayers());
 
-        System.out.println("Loading view set...");
-        Date timestamp = new Date();
-
-        String[] vsetFileNameParts = vsetFile.getName().split("\\.");
-        String fileExt = vsetFileNameParts[vsetFileNameParts.length-1];
-        if ("vset".equalsIgnoreCase(fileExt))
+        if (!loadMeshAndViewSet())
         {
-            System.out.println("Loading from VSET file.");
-
-            viewSet = ViewSet.loadFromVSETFile(vsetFile);
-        }
-        else if ("xml".equalsIgnoreCase(fileExt))
-        {
-            System.out.println("Loading from Agisoft Photoscan XML file.");
-            viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile);
-        }
-        else
-        {
-            System.out.println("Unrecognized file type, aborting.");
             return;
         }
-
-        viewSet.setTonemapping(param.getGamma(), param.getLinearLuminanceValues(), param.getEncodedLuminanceValues());
-
-        // Only generate view set uniform buffers
-        viewSetResources = IBRResources.getBuilderForContext(context)
-                .useExistingViewSet(viewSet)
-                .setLoadOptions(new SimpleLoadOptionsModel().setColorImagesRequested(false))
-                .create();
 
         File auxDir = new File(outputDir, "_aux");
         auxDir.mkdirs();
@@ -1541,8 +1502,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         {
             new File(auxDir, "specularResidDebug").mkdir();
         }
-
-        System.out.println("Loading view set completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
         if(!viewSet.hasCustomLuminanceEncoding())
         {
@@ -1555,13 +1514,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         try
         {
             compileShaders();
-
-            System.out.println("Loading mesh...");
-            timestamp = new Date();
-
-            loadMesh();
-
-            System.out.println("Loading mesh completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
 
             tmpDir = new File(outputDir, "tmp");
 
@@ -1626,6 +1578,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     FramebufferObject<ContextType> diffuseFitFramebuffer = framebuffer1;
 
                     int subdivSize = param.getTextureSize() / param.getTextureSubdivision();
+
+                    Date timestamp = null;
 
                     if (param.isDiffuseTextureEnabled())
                     {
@@ -2333,9 +2287,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 depthRenderingProgram.close();
             }
 
-            if (viewSetResources != null)
+            if (resources != null)
             {
-                viewSetResources.close();
+                resources.close();
             }
 
             if (positionBuffer != null)
@@ -2358,5 +2312,50 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 tangentBuffer.close();
             }
         }
+    }
+
+    private boolean loadMeshAndViewSet() throws IOException
+    {
+        System.out.println("Loading mesh...");
+        Date timestamp = new Date();
+        VertexGeometry mesh = loadMesh();
+
+        System.out.println("Loading mesh completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+
+        System.out.println("Loading view set...");
+        timestamp = new Date();
+
+        String[] vsetFileNameParts = vsetFile.getName().split("\\.");
+        String fileExt = vsetFileNameParts[vsetFileNameParts.length-1];
+        if ("vset".equalsIgnoreCase(fileExt))
+        {
+            System.out.println("Loading from VSET file.");
+
+            viewSet = ViewSet.loadFromVSETFile(vsetFile);
+        }
+        else if ("xml".equalsIgnoreCase(fileExt))
+        {
+            System.out.println("Loading from Agisoft Photoscan XML file.");
+            viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile);
+        }
+        else
+        {
+            System.out.println("Unrecognized file type, aborting.");
+            return false;
+        }
+
+        viewSet.setTonemapping(param.getGamma(), param.getLinearLuminanceValues(), param.getEncodedLuminanceValues());
+
+        // Only generate view set uniform buffers
+        resources = IBRResources.getBuilderForContext(context)
+                .useExistingViewSet(viewSet)
+                .useExistingGeometry(mesh)
+                .setLoadOptions(new SimpleLoadOptionsModel()
+                    .setColorImagesRequested(false)
+                    .setDepthImagesRequested(false))
+                .create();
+
+        System.out.println("Loading view set completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        return true;
     }
 }
