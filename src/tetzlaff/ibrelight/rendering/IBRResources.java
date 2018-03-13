@@ -480,7 +480,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             inverseLuminanceMap = null;
         }
 
-        if (geometry != null)
+        if (geometry != null && loadOptions.getDepthImageWidth() != 0 && loadOptions.getDepthImageHeight() != 0)
         {
             this.positionBuffer = context.createVertexBuffer().setData(geometry.getVertices());
 
