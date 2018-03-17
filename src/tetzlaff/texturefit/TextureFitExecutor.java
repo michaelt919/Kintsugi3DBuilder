@@ -1874,9 +1874,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 //
 //                                                currentFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
 //                                                        "PNG", new File(diffuseTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-//
-//                                                System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + '/' +
-//                                                        (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+
+                                                System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + '/' +
+                                                        (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
                                             });
                                 }
                                 else
@@ -1884,7 +1884,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                                     specularFit.fitImageSpace(viewTextures, depthTextures, shadowTextures,
                                             param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(0) : frontFramebuffer.getColorAttachmentTexture(0),
                                             param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebuffer.getColorAttachmentTexture(1),
-                                            (row, col) -> {});
+                                            (row, col) ->
+                                            {
+                                                System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + '/' +
+                                                    (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+                                            });
                                 }
 
                                 tmp = frontFramebuffer;
