@@ -18,6 +18,7 @@ import tetzlaff.util.ShadingParameterMode;
 
 public class IBROptionsController implements Initializable
 {
+    @FXML private CheckBox buehlerCheckBox;
     @FXML private CheckBox occlusionCheckBox;
     @FXML private TextField gammaTextField;
     @FXML private TextField weightExponentTextField;
@@ -59,6 +60,8 @@ public class IBROptionsController implements Initializable
 
     public void bind(SettingsModelImpl injectedSettingsModel)
     {
+        buehlerCheckBox.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("buehlerAlgorithm"));
+
         occlusionCheckBox.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("occlusionEnabled"));
         weightModeChoiceBox.valueProperty().bindBidirectional(injectedSettingsModel.getObjectProperty("weightMode", ShadingParameterMode.class));
 
@@ -84,6 +87,8 @@ public class IBROptionsController implements Initializable
 
     private void unbind()
     {
+        buehlerCheckBox.selectedProperty().bindBidirectional(settingsModel.getBooleanProperty("buehlerAlgorithm"));
+
         occlusionCheckBox.selectedProperty().unbindBidirectional(settingsModel.getBooleanProperty("occlusionEnabled"));
 
         weightModeChoiceBox.valueProperty().unbindBidirectional(settingsModel.getObjectProperty("weightMode", ShadingParameterMode.class));

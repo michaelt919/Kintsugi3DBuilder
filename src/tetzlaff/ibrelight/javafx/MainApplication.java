@@ -190,6 +190,7 @@ public class MainApplication extends Application
         settingsModel.createBooleanSetting("compassEnabled", false);
         settingsModel.createBooleanSetting("multisamplingEnabled", false);
         settingsModel.createBooleanSetting("halfResolutionEnabled", false);
+        settingsModel.createBooleanSetting("buehlerAlgorithm", true);
 
         SceneModel sceneModel = new SceneModel();
 
