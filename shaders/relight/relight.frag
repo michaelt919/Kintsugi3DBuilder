@@ -60,11 +60,10 @@ uniform bool relightingEnabled;
 uniform bool pbrGeometricAttenuationEnabled;
 uniform bool fresnelEnabled;
 
+uniform bool buehlerAlgorithm;
 uniform bool perPixelWeightsEnabled;
 uniform vec3 holeFillColor;
 
-#define interpolateRoughness false
-#define residualImages false
 #define brdfMode false
 
 layout(std140) uniform ViewWeights
@@ -394,11 +393,6 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor,
                 precomputedSample = sampleColor.a * vec4(sampleColor.rgb, 1.0);
             }
 
-            if (residualImages)
-            {
-                precomputedSample.rgb -= sampleColor.a * xyzToRGB(dist(nDotH, roughness) * geomAtten * rgbToXYZ(specularColor));
-            }
-
             mat3 tangentToObject = mat3(1.0);
 
             vec3 virtualViewDir;
@@ -484,21 +478,13 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor,
     }
 }
 
-struct RoughnessSample
+vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  vec3 specularColor, vec3 roughness, float maxLuminance)
 {
-    vec3 weightedSqrtRoughness;
-    vec3 weight;
-};
-
-RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int virtualIndex, vec3 diffuseColor, vec3 normalDir,
-    vec3 specularColor, vec3 roughness, float maxLuminance)
-{
-    vec4 sampleColor = getColor(virtualIndex);
+    vec4 sampleColor = getLinearColor(virtualIndex);
     mat4 cameraPose = getCameraPose(virtualIndex);
-
     if (sampleColor.a > 0.0)
     {
-        RoughnessSample result[MAX_VIRTUAL_LIGHT_COUNT];
+        vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
 
         // All in camera space
         vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
@@ -518,136 +504,39 @@ RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] computeRoughnessSample(int virtualIndex
         vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
             / (infiniteLightSources ? 1.0 : lightDistSquared);
 
-        vec3 geomAtten = pbrGeometricAttenuationEnabled ? geom(roughness, nDotH, nDotV, nDotL, hDotV) : vec3(nDotL * nDotV);
-
+        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
         if (!relightingEnabled || geomAtten != vec3(0))
         {
-            float nDotHSq = nDotH * nDotH;
-            RoughnessSample precomputedSample;
+            vec4 precomputedSample;
 
-            vec3 mfdFresnelEstimate = dist(nDotH, roughness) * rgbToXYZ(fresnel(specularColor, vec3(1), hDotV));
-
-            if (residualImages)
+            if (relightingEnabled)
             {
-                vec3 sqrtRoughnessEstimate = sqrt(roughness) + sampleColor.xyz - vec3(32.0 / 63.0)
-                    + vec3(sampleColor.y - 16.0 / 31.0, 0.0, sampleColor.y - 16.0 / 31.0);
-                vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * geomAtten) / roughness - sqrt(mfdFresnelEstimate) * vec3(nDotHSq));
-                precomputedSample = RoughnessSample(denominator * sqrtRoughnessEstimate, denominator);
-            }
-            else
-            {
-                vec4 mfdFresnelSample;
-                vec4 specularResid = removeDiffuse(linearizeColor(sampleColor), diffuseContrib, nDotL, maxLuminance);
+                vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
 
                 if(pbrGeometricAttenuationEnabled)
                 {
-                    mfdFresnelSample = vec4(specularResid.rgb
-                        * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared),
-                        sampleColor.a * geomAtten);
+                    return sampleColor.a
+                        * vec4(specularResid.rgb * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), geomAtten);
                 }
                 else
                 {
-                    mfdFresnelSample =
-                        vec4(specularResid.rgb * 4 / lightIntensity
-                            * (infiniteLightSources ? 1.0 : lightDistSquared),
-                            sampleColor.a * nDotL);
+                    return sampleColor.a
+                        * vec4(specularResid.rgb * 4 / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), nDotL);
                 }
-
-                vec3 denominator = max(vec3(0), sqrt(rgbToXYZ(specularColor) * mfdFresnelSample.a) / roughness
-                                       - sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(nDotHSq));
-
-                vec3 weight = max(vec3(0), sqrt(rgbToXYZ(specularColor) * mfdFresnelSample.a) / roughness
-                                    - sqrt(mfdFresnelEstimate) * vec3(nDotHSq));
-
-                precomputedSample = RoughnessSample(
-                    sqrt(sqrt(sqrt(rgbToXYZ(mfdFresnelSample.rgb)) * vec3(1 - nDotHSq) / denominator)) * weight,
-                    weight);
-            }
-
-            precomputedSample.weightedSqrtRoughness = clamp(precomputedSample.weightedSqrtRoughness, vec3(0), sqrt(0.5) * precomputedSample.weight);
-
-            mat3 tangentToObject = mat3(1.0);
-
-            vec3 virtualViewDir;
-            if (useTSOverrides)
-            {
-                vec3 gNormal = normalize(fNormal);
-                vec3 tangent = normalize(fTangent - dot(gNormal, fTangent));
-                vec3 bitangent = normalize(fBitangent
-                    - dot(gNormal, fBitangent) * gNormal
-                    - dot(tangent, fBitangent) * tangent);
-                tangentToObject = mat3(tangent, bitangent, gNormal);
-
-                virtualViewDir = normalize(mat3(cameraPose) * tangentToObject * viewDirTSOverride);
             }
             else
             {
-                virtualViewDir = normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
-            }
-
-            for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
-            {
-//                if (perPixelWeightsEnabled)
-                {
-                    vec3 virtualLightDir;
-                    if (useTSOverrides)
-                    {
-                        virtualLightDir =
-                            normalize(mat3(cameraPose) * tangentToObject * lightDirTSOverride);
-                    }
-                    else if (relightingEnabled)
-                    {
-                        virtualLightDir = normalize((cameraPose *
-                            vec4(lightPosVirtual[lightPass], 1.0)).xyz - fragmentPos);
-                    }
-                    else
-                    {
-                        virtualLightDir = virtualViewDir;
-                    }
-
-                    // Compute sample weight
-                    vec3 virtualHalfDir = normalize(virtualViewDir + virtualLightDir);
-                    float virtualNdotH = max(0, dot(normalDirCameraSpace, virtualHalfDir));
-                    float weight = computeSampleWeight(
-                        isotropyFactor * (1.0 - (nDotH - virtualNdotH) * (nDotH - virtualNdotH)) +
-                        (1 - isotropyFactor) * dot(virtualHalfDir, sampleHalfDir));
-
-                    // float weight = computeSampleWeight(
-                        // normalize(vec3(1,1,10) * (transpose(tangentToObject) * virtualHalfDir)),
-                        // normalize(vec3(1,1,10) * (transpose(tangentToObject) * sampleHalfDir)));
-
-                    // float virtualNDotH = dot(normalDirCameraSpace, virtualHalfDir);
-                    // float sampleNDotH = dot(normalDirCameraSpace, sampleHalfDir);
-                    // float weight = computeSampleWeight(
-                        // vec3(virtualNDotH, sqrt(1.0 - virtualNDotH * virtualNDotH), 0.0),
-                        // vec3(sampleNDotH, sqrt(1.0 - sampleNDotH * sampleNDotH), 0.0));
-                    // float weight = 1.0 / abs(virtualNDotH - sampleNDotH);
-                    result[lightPass] = RoughnessSample(weight * precomputedSample.weightedSqrtRoughness, weight * precomputedSample.weight);
-                }
-//                else
-//                {
-//                    result[lightPass] = getViewWeight(virtualIndex) * precomputedSample;
-//                }
+                return sampleColor.a * vec4(sampleColor.rgb, 1.0);
             }
         }
         else
         {
-            for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
-            {
-                result[lightPass] = RoughnessSample(vec3(0), vec3(0));
-            }
+            return vec4(0.0);
         }
-
-        return result;
     }
     else
     {
-        RoughnessSample result[MAX_VIRTUAL_LIGHT_COUNT];
-        for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
-        {
-            result[lightPass] = RoughnessSample(vec3(0), vec3(0));
-        }
-        return result;
+        return vec4(0.0);
     }
 }
 
@@ -691,50 +580,6 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 no
     return results;
 }
 
-#define MIN_ROUGHNESS_WEIGHT 0.1
-
-vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedRoughnessAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
-{
-    float maxLuminance = getMaxLuminance();
-
-    RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] sums;
-    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
-    {
-        sums[i] = RoughnessSample(vec3(0), vec3(0));
-    }
-
-    for (int i = 0; i < viewCount; i++)
-    {
-        RoughnessSample[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample =
-            computeRoughnessSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
-
-        for (int j = 0; j < MAX_VIRTUAL_LIGHT_COUNT; j++)
-        {
-            sums[j].weightedSqrtRoughness += microfacetSample[j].weightedSqrtRoughness;
-            sums[j].weight += microfacetSample[j].weight;
-        }
-    }
-
-    vec3 sqrtRoughness = sqrt(roughness);
-
-    vec4[MAX_VIRTUAL_LIGHT_COUNT] results;
-    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
-    {
-//        if (!perPixelWeightsEnabled)
-//        {
-//            results[i] = sums[i];
-//        }
-//        else
-        {
-
-            vec3 sqrtLocalRoughness = (sums[i].weightedSqrtRoughness
-                + max(vec3(0), MIN_ROUGHNESS_WEIGHT - sums[i].weight) * sqrtRoughness) / max(vec3(MIN_ROUGHNESS_WEIGHT), sums[i].weight);
-            results[i] = vec4(sqrtLocalRoughness * sqrtLocalRoughness, 1);
-        }
-    }
-    return results;
-}
-
 #define MAX_BUEHLER_SAMPLE_COUNT 5
 
 float computeBuehlerWeight(vec3 targetDirection, vec3 sampleDirection)
@@ -758,14 +603,20 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     int sampleCount = 5; // TODO change to a parameter
 
     // Initialization
-    for (int i = 0; i < sampleCount; i++)
+    for (int i = 0; i < MAX_BUEHLER_SAMPLE_COUNT && i < sampleCount && i < viewCount; i++)
     {
         weights[i] = -(1.0 / 0.0); // Parentheses needed for AMD cards.
         indices[i] = -1;
     }
 
+    for (int i = viewCount; i < MAX_BUEHLER_SAMPLE_COUNT && i < sampleCount; i++)
+    {
+        weights[i] = 0.0; // If there are less samples available than requested, fill in with weights of 0.0.
+        indices[i] = 0;
+    }
+
     // Partial heapsort
-    for (int i = 0; i < viewCount; i++)
+    for (int i = 0; i < MAX_CAMERA_POSE_COUNT && i < viewCount; i++)
     {
         float weight = getBuehlerWeight(i, targetDirection);
         if (weight >= weights[0]) // Decide if the new view goes in the heap
@@ -823,128 +674,26 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     vec4 sum = vec4(0.0);
     for (int i = 1; i < sampleCount; i++)
     {
-        vec4 computedSample = computeSample(indices[i], diffuseColor, normalDir, specularColor, roughness, maxLuminance)[0];
+        vec4 computedSample = computeSampleSingle(indices[i], diffuseColor, normalDir, specularColor, roughness, maxLuminance);
         if (computedSample.a > 0)
         {
-            sum += (weights[i] - weights[0]) * computedSample / computedSample.a;
+            sum += (weights[i] - weights[0]) * computedSample;
         }
     }
 
-    return sum / sum.a;
+    if (sum.a == 0.0)
+    {
+        return vec4(holeFillColor, 1.0);
+    }
+    else
+    {
+        return sum / sum.a;
+    }
 }
-
-vec3 linearToSRGB(vec3 color)
-{
-    vec3 sRGBColor;
-
-    if(color.r <= 0.0031308)
-    {
-        sRGBColor.r = 12.92 * color.r;
-    }
-    else
-    {
-        sRGBColor.r = (1.055) * pow(color.r, 1.0/2.4) - 0.055;
-    }
-
-    if(color.g <= 0.0031308)
-    {
-        sRGBColor.g = 12.92 * color.g;
-    }
-    else
-    {
-        sRGBColor.g = (1.055) * pow(color.g, 1.0/2.4) - 0.055;
-    }
-
-    if(color.b <= 0.0031308)
-    {
-        sRGBColor.b = 12.92 * color.b;
-    }
-    else
-    {
-        sRGBColor.b = (1.055) * pow(color.b, 1.0/2.4) - 0.055;
-    }
-
-    return sRGBColor;
-}
-
-// vec3 sRGBToLinear(vec3 sRGBColor)
-// {
-    // //return pow(sRGBColor, vec3(2.2));
-
-    // vec3 linearColor;
-
-    // if(sRGBColor.r <= 0.04045)
-    // {
-        // linearColor.r = sRGBColor.r / 12.92;
-    // }
-    // else
-    // {
-        // linearColor.r = pow((sRGBColor.r + 0.055) / 1.055, 2.4);
-    // }
-
-    // if(sRGBColor.g <= 0.04045)
-    // {
-        // linearColor.g = sRGBColor.g / 12.92;
-    // }
-    // else
-    // {
-        // linearColor.g = pow((sRGBColor.g + 0.055) / 1.055, 2.4);
-    // }
-
-    // if(sRGBColor.b <= 0.04045)
-    // {
-        // linearColor.b = sRGBColor.b / 12.92;
-    // }
-    // else
-    // {
-        // linearColor.b = pow((sRGBColor.b + 0.055) / 1.055, 2.4);
-    // }
-
-    // return linearColor;
-// }
 
 vec4 tonemap(vec3 color, float alpha)
 {
-    // if (useInverseLuminanceMap)
-    // {
-        // if (color.r <= 0.000001 && color.g <= 0.000001 && color.b <= 0.000001)
-        // {
-            // return vec4(0.0, 0.0, 0.0, 1.0);
-        // }
-        // else
-        // {
-            // // Step 1: convert to CIE luminance
-            // // Clamp to 1 so that the ratio computed in step 3 is well defined
-            // // if the luminance value somehow exceeds 1.0
-            // float luminance = getLuminance(color);
-            // float maxLuminance = getMaxLuminance();
-            // if (luminance >= maxLuminance)
-            // {
-                // return vec4(linearToSRGB(color / maxLuminance), alpha);
-            // }
-            // else
-            // {
-                // float scaledLuminance = min(1.0, luminance / maxLuminance);
-
-                // // Step 2: determine the ratio between the tonemapped and linear luminance
-                // // Remove implicit gamma correction from the lookup table
-                // float tonemappedGammaCorrected = texture(inverseLuminanceMap, scaledLuminance).r;
-                // float tonemappedNoGamma = sRGBToLinear(vec3(tonemappedGammaCorrected))[0];
-                // float scale = tonemappedNoGamma / luminance;
-
-                // // Step 3: return the color, scaled to have the correct luminance,
-                // // but the original saturation and hue.
-                // // Step 4: apply gamma correction
-                // vec3 colorScaled = color * scale;
-                // return vec4(linearToSRGB(colorScaled), alpha);
-            // }
-        // }
-    // }
-    // else
-    {
-        //return vec4(linearToSRGB(color), alpha);
-        return vec4(pow(color, vec3(1.0 / renderGamma)), alpha);
-    }
+    return vec4(pow(color, vec3(1.0 / renderGamma)), alpha);
 }
 
 void main()
@@ -1029,15 +778,12 @@ void main()
 
     vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
 
-    if (imageBasedRenderingEnabled)
+    if (!buehlerAlgorithm && imageBasedRenderingEnabled)
     {
-        weightedAverages = interpolateRoughness ?
-            computeWeightedRoughnessAverages(diffuseColor, normalDir, specularColor, roughness) :
-            computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
-
+        weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
     }
 
-    if (relightingEnabled || !imageBasedRenderingEnabled)
+    if ((relightingEnabled || !imageBasedRenderingEnabled) && ambientColor != vec3(0))
     {
         reflectance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 
@@ -1084,8 +830,9 @@ void main()
         //reflectance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
     }
 
-    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT &&
-        i < (relightingEnabled || !imageBasedRenderingEnabled ? virtualLightCount : 1); i++)
+    int effectiveLightCount = (relightingEnabled || !imageBasedRenderingEnabled ? virtualLightCount : 1);
+
+    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < effectiveLightCount; i++)
     {
         vec3 lightDirUnNorm;
         vec3 lightDir;
@@ -1129,25 +876,19 @@ void main()
 
                 float nDotHSq = max(0, nDotH) * max(0, nDotH);
 
-//                // This is a hack to use Buehler algorithm for the light source
-//                weightedAverages[i] = computeBuehler(
-//                    useTSOverrides ? tangentToObject * halfDir : halfDir,
-//                    diffuseColor, normalDir, specularColor, roughness);
-
                 vec4 predictedMFD;
                 if (imageBasedRenderingEnabled)
                 {
-                    if (interpolateRoughness)
+                    if (buehlerAlgorithm)
                     {
-                        vec3 localRoughnessSq = weightedAverages[i].xyz * weightedAverages[i].xyz;
-                        vec3 mfdDenominatorRoot = 1 - nDotHSq * (1 - localRoughnessSq);
-                        predictedMFD = vec4(max(vec3(0), xyzToRGB(localRoughnessSq * localRoughnessSq * specularColorXYZ
-                            / (roughnessSq * mfdDenominatorRoot * mfdDenominatorRoot))), 25.0);
+                        vec4 weightedAverage = computeBuehler(
+                            useTSOverrides ? tangentToObject * halfDir : halfDir,
+                            diffuseColor, normalDir, specularColor, roughness);
+                        predictedMFD = weightedAverage;
                     }
                     else
                     {
-                        predictedMFD = weightedAverages[i]
-                            + (residualImages ? vec4(xyzToRGB(rgbToXYZ(specularColor) * dist(nDotH, roughness)), 0) : vec4(0));
+                        predictedMFD = weightedAverages[i];
                     }
                 }
 
@@ -1173,37 +914,8 @@ void main()
                         {
                             mfdFresnel = max(vec3(0.0),
                                 fresnel(predictedMFD.rgb, vec3(grazingIntensity), hDotV));
-                                // fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
+                                // fresnel(predictedMFD.rgb, vec3(dist(nDotH, roughness)), hDotV));
                         }
-
-//                        // DEBUG code:
-//                        vec3 mfdFresnelBaseXYZ = rgbToXYZ(specularColor) * dist(nDotH, roughness);
-//                        mfdFresnel = abs(mfdFresnel - fresnel(xyzToRGB(mfdFresnelBaseXYZ), vec3(mfdFresnelBaseXYZ.y), hDotV));
-
-                        //reflectance = abs(pow(weightedAverages[i].xyz - roughness, vec3(2))); break;
-
-                        // The following debug code is for visualizing differences between reference
-                        // and fitted in perceptually linear color space
-
-                        // vec3 reference = max(vec3(0.0),
-                            // fresnel(weightedAverages[i].rgb, vec3(dist(nDotH, roughness)), hDotV));
-                        // vec3 fitted = fresnel(specularColor, vec3(1.0), hDotV)
-                            // * vec3(dist(nDotH, roughness));
-
-                        // vec3 referenceXYZ = rgbToXYZ(reference);
-                        // vec3 fittedXYZ = rgbToXYZ(fitted);
-
-                        // // Pseudo-LAB color space
-                        // vec3 referenceLAB = vec3(referenceXYZ.y,
-                            // 5 * (referenceXYZ.x - referenceXYZ.y),
-                            // 2 * (referenceXYZ.y - referenceXYZ.z));
-                        // vec3 fittedLAB = vec3(fittedXYZ.y,
-                            // 5 * (fittedXYZ.x - fittedXYZ.y), 2 * (fittedXYZ.y - fittedXYZ.z));
-
-                        // vec3 resultLAB = ???
-                        // vec3 resultXYZ = vec3(resultLAB.x + 0.2 * resultLAB.y,
-                            /// resultLAB.x, resultLAB.x - 0.5 * resultLAB.z);
-                        // vec3 resultRGB = xyzToRGB(resultXYZ);
                     }
                     else
                     {

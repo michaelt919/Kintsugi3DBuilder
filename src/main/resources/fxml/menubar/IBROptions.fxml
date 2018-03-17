@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <GridPane fx:id="root" hgap="15.0" vgap="15.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tetzlaff.ibrelight.javafx.controllers.menubar.IBROptionsController">
-    <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="222.0" text="Visibility Testing" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="3">
+    <CheckBox fx:id="occlusionCheckBox" mnemonicParsing="false" prefHeight="27.0" prefWidth="260.0" text="Visibility/shadow testing" GridPane.columnSpan="2" GridPane.rowIndex="4">
       <font>
          <Font size="18.0" />
       </font></CheckBox>
@@ -13,27 +13,32 @@
       <font>
          <Font size="18.0" />
       </font></Text>
-    <Text text="Weight exponent: " GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+    <CheckBox fx:id="buehlerCheckBox" mnemonicParsing="false" text="Limit number of blended views" GridPane.columnSpan="3" GridPane.rowIndex="1">
+        <font>
+            <Font size="18.0" />
+        </font>
+    </CheckBox>
+    <Text text="Weight exponent: " GridPane.halignment="RIGHT" GridPane.rowIndex="2">
       <font>
          <Font size="18.0" />
       </font></Text>
-    <Text text="Isotropy factor: " GridPane.halignment="RIGHT" GridPane.rowIndex="2">
+    <Text text="Isotropy factor: " GridPane.halignment="RIGHT" GridPane.rowIndex="3">
       <font>
          <Font size="18.0" />
       </font></Text>
-    <Text text="Visibility bias: " GridPane.halignment="RIGHT" GridPane.rowIndex="4">
+    <Text text="Visibility bias: " GridPane.halignment="RIGHT" GridPane.rowIndex="5">
       <font>
          <Font size="18.0" />
       </font></Text>
-    <TextField fx:id="occlusionBiasTextField" prefHeight="39.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
+    <TextField fx:id="occlusionBiasTextField" prefHeight="39.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
       <font>
          <Font size="18.0" />
       </font></TextField>
-    <TextField fx:id="isotropyFactorTextField" prefHeight="39.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+    <TextField fx:id="isotropyFactorTextField" prefHeight="39.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
       <font>
          <Font size="18.0" />
       </font></TextField>
-    <TextField fx:id="weightExponentTextField" prefHeight="39.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+    <TextField fx:id="weightExponentTextField" prefHeight="39.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
       <font>
          <Font size="18.0" />
       </font></TextField>
@@ -42,11 +47,11 @@
          <Font size="18.0" />
       </font></TextField>
     <Slider fx:id="gammaSlider" blockIncrement="1.0" majorTickUnit="1.0" max="5.0" min="1.0" minorTickCount="4" showTickLabels="true" showTickMarks="true" value="2.2" GridPane.columnIndex="2" />
-    <Slider fx:id="weightExponentSlider" majorTickUnit="49.0" min="1.0" minorTickCount="8" showTickLabels="true" showTickMarks="true" value="16.0" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-    <Slider fx:id="isotropyFactorSlider" blockIncrement="0.2" majorTickUnit="0.25" max="1.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-    <Slider fx:id="occlusionBiasSlider" majorTickUnit="0.05" max="0.1" showTickLabels="true" showTickMarks="true" value="0.0025" GridPane.columnIndex="2" GridPane.rowIndex="4" />
-   <ChoiceBox fx:id="weightModeChoiceBox" prefHeight="25.0" prefWidth="254.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="5" visible="false" managed="false"/>
-   <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Weight mode: " GridPane.halignment="RIGHT" GridPane.rowIndex="5" visible="false" managed="false">
+    <Slider fx:id="weightExponentSlider" majorTickUnit="49.0" min="1.0" minorTickCount="8" showTickLabels="true" showTickMarks="true" value="16.0" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+    <Slider fx:id="isotropyFactorSlider" blockIncrement="0.2" majorTickUnit="0.25" max="1.0" showTickLabels="true" showTickMarks="true" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+    <Slider fx:id="occlusionBiasSlider" majorTickUnit="0.001" max="0.004" showTickLabels="true" showTickMarks="true" value="0.0025" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+   <ChoiceBox fx:id="weightModeChoiceBox" managed="false" prefHeight="25.0" prefWidth="254.0" visible="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="5" />
+   <Text managed="false" strokeType="OUTSIDE" strokeWidth="0.0" text="Weight mode: " visible="false" GridPane.halignment="RIGHT" GridPane.rowIndex="5">
       <font>
          <Font size="18.0" />
       </font></Text>
@@ -59,6 +64,7 @@
       <ColumnConstraints />
    </columnConstraints>
    <rowConstraints>
+      <RowConstraints />
       <RowConstraints />
       <RowConstraints />
       <RowConstraints />
