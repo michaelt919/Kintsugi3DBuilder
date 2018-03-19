@@ -388,7 +388,7 @@ public final class OpenGLCubemap extends OpenGLTexture implements Cubemap<OpenGL
             // Calculate the number of mipmap levels
             this.levelCount = 0;
             int dim = faceSize;
-            while (dim > 1)
+            while (dim > 0)
             {
                 this.levelCount++;
                 dim /= 2;

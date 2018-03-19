@@ -191,6 +191,7 @@ public class MainApplication extends Application
         settingsModel.createBooleanSetting("multisamplingEnabled", false);
         settingsModel.createBooleanSetting("halfResolutionEnabled", false);
         settingsModel.createBooleanSetting("buehlerAlgorithm", true);
+        settingsModel.createNumericSetting("buehlerViewCount", 5);
 
         SceneModel sceneModel = new SceneModel();
 
