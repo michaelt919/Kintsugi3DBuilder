@@ -282,20 +282,9 @@ public final class Rendering
                     try
                     {
                         // reload program
-                        Program<OpenGLContext> newProgram = context.getShaderProgramBuilder()
-                                .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-                                .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
-                                .createProgram();
-
-                        if (rendererList.getProgram() != null)
-                        {
-                            rendererList.getProgram().close();
-                        }
-                        rendererList.setProgram(newProgram);
-
-                        rendererList.getSelectedItem().reloadHelperShaders();
+                        rendererList.getSelectedItem().reloadShaders();
                     }
-                    catch (FileNotFoundException|RuntimeException e)
+                    catch (RuntimeException e)
                     {
                         e.printStackTrace();
                     }

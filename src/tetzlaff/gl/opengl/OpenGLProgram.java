@@ -1,7 +1,10 @@
 package tetzlaff.gl.opengl;
 
+import java.io.FileNotFoundException;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Optional;
 
 import tetzlaff.gl.builders.base.ProgramBuilderBase;
 import tetzlaff.gl.core.Program;
@@ -20,7 +23,8 @@ import static org.lwjgl.opengl.GL31.*;
 
 final class OpenGLProgram implements Program<OpenGLContext>
 {
-    protected final OpenGLContext context;
+    private final OpenGLContext context;
+    private final Map<String, Object> defines;
 
     private int programId;
     private AbstractCollection<OpenGLShader> ownedShaders;
@@ -35,10 +39,11 @@ final class OpenGLProgram implements Program<OpenGLContext>
         }
 
         @Override
-        public OpenGLProgram createProgram()
+        public OpenGLProgram createProgram() throws FileNotFoundException
         {
-            OpenGLProgram program = new OpenGLProgram(this.context);
-            for(Shader<OpenGLContext> shader : this.getShaders())
+            OpenGLProgram program = new OpenGLProgram(this.context, this.getDefines());
+            Iterable<Shader<OpenGLContext>> compiledShaders = this.compileShaders();
+            for(Shader<OpenGLContext> shader : compiledShaders)
             {
                 program.attachShader(shader);
             }
@@ -47,9 +52,10 @@ final class OpenGLProgram implements Program<OpenGLContext>
         }
     }
 
-    private OpenGLProgram(OpenGLContext context)
+    private OpenGLProgram(OpenGLContext context, Map<String, Object> defines)
     {
         this.context = context;
+        this.defines = defines;
         initProgram();
     }
 
@@ -57,7 +63,7 @@ final class OpenGLProgram implements Program<OpenGLContext>
     {
         programId = glCreateProgram();
         OpenGLContext.errorCheck();
-        ownedShaders = new ArrayList<>();
+        ownedShaders = new ArrayList<>(2);
         // Use one less texture unit because we don't use texture unit 0.
         textureManager = new ResourceManager<>(this.context.getState().getMaxCombinedTextureImageUnits() - 1);
         uniformBufferManager = new ResourceManager<>(this.context.getState().getMaxCombinedUniformBlocks());
@@ -68,7 +74,7 @@ final class OpenGLProgram implements Program<OpenGLContext>
         if (shader instanceof OpenGLShader)
         {
             OpenGLShader shaderCast = (OpenGLShader)shader;
-            glAttachShader(programId, shaderCast.getId());
+            glAttachShader(programId, shaderCast.getShaderId());
             OpenGLContext.errorCheck();
             ownedShaders.add(shaderCast);
             return this;
@@ -97,6 +103,18 @@ final class OpenGLProgram implements Program<OpenGLContext>
     }
 
     @Override
+    public boolean hasDefine(String key)
+    {
+        return defines.containsKey(key);
+    }
+
+    @Override
+    public Optional<Object> getDefine(String key)
+    {
+        return defines.containsKey(key) ? Optional.of(defines.get(key)) : Optional.empty();
+    }
+
+    @Override
     public OpenGLContext getContext()
     {
         return this.context;
@@ -104,24 +122,20 @@ final class OpenGLProgram implements Program<OpenGLContext>
 
     private void useForUniformAssignment()
     {
-        if (!this.isLinked())
-        {
-            throw new UnlinkedProgramException("An OpenGL program cannot be used if it has not been linked.");
-        }
-        else
+        if (this.isLinked())
         {
             glUseProgram(programId);
             OpenGLContext.errorCheck();
+        }
+        else
+        {
+            throw new UnlinkedProgramException("An OpenGL program cannot be used if it has not been linked.");
         }
     }
 
     void use()
     {
-        if (!this.isLinked())
-        {
-            throw new UnlinkedProgramException("An OpenGL program cannot be used if it has not been linked.");
-        }
-        else
+        if (this.isLinked())
         {
             this.context.unbindTextureUnit(0); // Don't ever use texture unit 0
 
@@ -156,6 +170,10 @@ final class OpenGLProgram implements Program<OpenGLContext>
 
             glUseProgram(programId);
             OpenGLContext.errorCheck();
+        }
+        else
+        {
+            throw new UnlinkedProgramException("An OpenGL program cannot be used if it has not been linked.");
         }
     }
 

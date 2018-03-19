@@ -2,6 +2,8 @@ package tetzlaff.gl.core;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Collections;
+import java.util.Map;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
@@ -32,7 +34,13 @@ public interface Context<ContextType extends Context<ContextType>>
     FramebufferSize getFramebufferSize();
 
     Shader<ContextType> createShader(ShaderType type, String source);
-    Shader<ContextType> createShader(ShaderType type, File file) throws FileNotFoundException;
+    Shader<ContextType> createShader(ShaderType type, File file, Map<String, Object> defines) throws FileNotFoundException;
+
+    default Shader<ContextType> createShader(ShaderType type, File file) throws FileNotFoundException
+    {
+        return createShader(type, file, Collections.emptyMap());
+    }
+
     ProgramBuilder<ContextType> getShaderProgramBuilder();
 
     Framebuffer<ContextType> getDefaultFramebuffer();
