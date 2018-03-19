@@ -13,11 +13,16 @@
       <font>
          <Font size="18.0" />
       </font></Text>
-    <CheckBox fx:id="buehlerCheckBox" mnemonicParsing="false" text="Limit number of blended views" GridPane.columnSpan="3" GridPane.rowIndex="1">
+    <CheckBox fx:id="buehlerCheckBox" mnemonicParsing="false" text="Limit blended views per pixel:" GridPane.columnSpan="3" GridPane.rowIndex="1">
         <font>
             <Font size="18.0" />
         </font>
     </CheckBox>
+    <TextField fx:id="buehlerTextField" prefHeight="39.0" prefWidth="99.0" GridPane.columnIndex="2" GridPane.rowIndex="1">
+        <font>
+            <Font size="18.0" />
+        </font>
+    </TextField>
     <Text text="Weight exponent: " GridPane.halignment="RIGHT" GridPane.rowIndex="2">
       <font>
          <Font size="18.0" />

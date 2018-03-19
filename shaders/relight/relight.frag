@@ -61,6 +61,7 @@ uniform bool pbrGeometricAttenuationEnabled;
 uniform bool fresnelEnabled;
 
 uniform bool buehlerAlgorithm;
+uniform int buehlerViewCount;
 uniform bool perPixelWeightsEnabled;
 uniform vec3 holeFillColor;
 
@@ -580,7 +581,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 no
     return results;
 }
 
-#define MAX_BUEHLER_SAMPLE_COUNT 5
+#define MAX_BUEHLER_SAMPLE_COUNT 32
 
 float computeBuehlerWeight(vec3 targetDirection, vec3 sampleDirection)
 {
@@ -600,16 +601,14 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     float weights[MAX_BUEHLER_SAMPLE_COUNT];
     int indices[MAX_BUEHLER_SAMPLE_COUNT];
 
-    int sampleCount = 5; // TODO change to a parameter
-
     // Initialization
-    for (int i = 0; i < MAX_BUEHLER_SAMPLE_COUNT && i < sampleCount && i < viewCount; i++)
+    for (int i = 0; i < MAX_BUEHLER_SAMPLE_COUNT && i < buehlerViewCount && i < viewCount; i++)
     {
         weights[i] = -(1.0 / 0.0); // Parentheses needed for AMD cards.
         indices[i] = -1;
     }
 
-    for (int i = viewCount; i < MAX_BUEHLER_SAMPLE_COUNT && i < sampleCount; i++)
+    for (int i = viewCount; i < MAX_BUEHLER_SAMPLE_COUNT && i < buehlerViewCount; i++)
     {
         weights[i] = 0.0; // If there are less samples available than requested, fill in with weights of 0.0.
         indices[i] = 0;
@@ -635,7 +634,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
                 int rightIndex = 2*currentIndex+2;
 
                 // Find the smallest of the current node, and its left and right children
-                if (leftIndex < sampleCount && weights[leftIndex] < weights[currentIndex])
+                if (leftIndex < MAX_BUEHLER_SAMPLE_COUNT && leftIndex < buehlerViewCount && weights[leftIndex] < weights[currentIndex])
                 {
                     minIndex = leftIndex;
                 }
@@ -644,7 +643,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
                     minIndex = currentIndex;
                 }
 
-                if (rightIndex < sampleCount && weights[rightIndex] < weights[minIndex])
+                if (rightIndex < MAX_BUEHLER_SAMPLE_COUNT && rightIndex < buehlerViewCount && weights[rightIndex] < weights[minIndex])
                 {
                     minIndex = rightIndex;
                 }
@@ -672,7 +671,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     // Evaluate the light field
     // Because of the min-heap property, weights[0] should be the smallest weight
     vec4 sum = vec4(0.0);
-    for (int i = 1; i < sampleCount; i++)
+    for (int i = 1; i < MAX_BUEHLER_SAMPLE_COUNT && i < buehlerViewCount; i++)
     {
         vec4 computedSample = computeSampleSingle(indices[i], diffuseColor, normalDir, specularColor, roughness, maxLuminance);
         if (computedSample.a > 0)

@@ -646,6 +646,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             program.setUniform("perPixelWeightsEnabled", true);
             program.setUniform("buehlerAlgorithm", this.settingsModel.getBoolean("buehlerAlgorithm"));
+            program.setUniform("buehlerViewCount", this.settingsModel.getInt("buehlerViewCount"));
             program.setUniform("weightExponent", this.settingsModel.getFloat("weightExponent"));
             program.setUniform("isotropyFactor", this.settingsModel.getFloat("isotropyFactor"));
             program.setUniform("occlusionEnabled",

@@ -13,11 +13,13 @@ import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import tetzlaff.ibrelight.javafx.internal.SettingsModelImpl;
 import tetzlaff.ibrelight.javafx.util.SafeDecimalNumberStringConverter;
+import tetzlaff.ibrelight.javafx.util.SafeNumberStringConverter;
 import tetzlaff.ibrelight.javafx.util.StaticUtilities;
 import tetzlaff.util.ShadingParameterMode;
 
 public class IBROptionsController implements Initializable
 {
+    @FXML private TextField buehlerTextField;
     @FXML private CheckBox buehlerCheckBox;
     @FXML private CheckBox occlusionCheckBox;
     @FXML private TextField gammaTextField;
@@ -65,6 +67,9 @@ public class IBROptionsController implements Initializable
         occlusionCheckBox.selectedProperty().bindBidirectional(injectedSettingsModel.getBooleanProperty("occlusionEnabled"));
         weightModeChoiceBox.valueProperty().bindBidirectional(injectedSettingsModel.getObjectProperty("weightMode", ShadingParameterMode.class));
 
+        buehlerTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("buehlerViewCount"),
+            new SafeNumberStringConverter(5));
+
         gammaSlider.valueProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("gamma"));
         gammaTextField.textProperty().bindBidirectional(injectedSettingsModel.getNumericProperty("gamma"),
             new SafeDecimalNumberStringConverter(2.2f));
@@ -87,7 +92,8 @@ public class IBROptionsController implements Initializable
 
     private void unbind()
     {
-        buehlerCheckBox.selectedProperty().bindBidirectional(settingsModel.getBooleanProperty("buehlerAlgorithm"));
+        buehlerCheckBox.selectedProperty().unbindBidirectional(settingsModel.getBooleanProperty("buehlerAlgorithm"));
+        buehlerTextField.textProperty().unbindBidirectional(settingsModel.getNumericProperty("buehlerViewCount"));
 
         occlusionCheckBox.selectedProperty().unbindBidirectional(settingsModel.getBooleanProperty("occlusionEnabled"));
 

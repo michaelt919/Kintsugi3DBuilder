@@ -592,7 +592,7 @@ final class OpenGLTexture2D extends OpenGLTexture implements Texture2D<OpenGLCon
             // Calculate the number of mipmap levels
             this.levelCount = 0;
             int dim = Math.max(width, height);
-            while (dim > 1)
+            while (dim > 0)
             {
                 this.levelCount++;
                 dim /= 2;
