@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
-import tetzlaff.gl.core.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.util.VertexGeometry;
 import tetzlaff.gl.vecmath.Matrix4;
@@ -28,8 +27,7 @@ public interface IBRRenderable<ContextType extends Context<ContextType>> extends
     SafeReadonlySettingsModel getSettingsModel();
     void setSettingsModel(ReadonlySettingsModel settingsModel);
 
-    void setProgram(Program<ContextType> program);
-    void reloadHelperShaders();
+    void reloadShaders();
 
     void loadBackplate(File backplateFile) throws FileNotFoundException;
     Optional<AbstractImage> loadEnvironmentMap(File environmentFile) throws FileNotFoundException;

@@ -28,8 +28,6 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
 {
     private final ContextType context;
 
-    private Program<ContextType> program;
-
     private final InteractiveRenderableList<ContextType, IBRRenderable<ContextType>> renderableList;
     private int effectiveSize;
     private LoadingMonitor loadingMonitor;
@@ -44,22 +42,6 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         this.context = context;
         this.renderableList = new InteractiveRenderableList<>();
         this.effectiveSize = 0;
-
-        this.program = program;
-    }
-
-    public Program<ContextType> getProgram()
-    {
-        return this.program;
-    }
-
-    public void setProgram(Program<ContextType> program)
-    {
-        this.program = program;
-        for (IBRRenderable<ContextType> ulf : renderableList)
-        {
-            ulf.setProgram(program);
-        }
     }
 
     @Override
@@ -71,7 +53,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         this.loadingMonitor.startLoading();
 
         IBRRenderable<ContextType> newItem =
-            new IBRImplementation<>(id, context, this.program,
+            new IBRImplementation<>(id, context, null,
                 IBRResources.getBuilderForContext(this.context)
                     .setLoadingMonitor(this.loadingMonitor)
                     .setLoadOptions(loadOptions)
@@ -133,7 +115,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         this.loadingMonitor.startLoading();
 
         IBRRenderable<ContextType> newItem =
-            new IBRImplementation<>(id, context, this.program,
+            new IBRImplementation<>(id, context, null,
                 IBRResources.getBuilderForContext(this.context)
                     .setLoadingMonitor(this.loadingMonitor)
                     .setLoadOptions(loadOptions)

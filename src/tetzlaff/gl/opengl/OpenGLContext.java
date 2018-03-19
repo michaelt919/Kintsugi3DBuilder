@@ -2,6 +2,7 @@ package tetzlaff.gl.opengl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Map;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
@@ -68,9 +69,9 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
     }
 
     @Override
-    public Shader<OpenGLContext> createShader(ShaderType type, File file) throws FileNotFoundException
+    public Shader<OpenGLContext> createShader(ShaderType type, File file, Map<String, Object> defines) throws FileNotFoundException
     {
-        return new OpenGLShader(this, getOpenGLShaderType(type), file);
+        return new OpenGLShader(this, getOpenGLShaderType(type), file, defines);
     }
 
     @Override

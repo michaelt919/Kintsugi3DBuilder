@@ -1,5 +1,7 @@
 package tetzlaff.gl.core;
 
+import java.util.Optional;
+
 import tetzlaff.gl.vecmath.*;
 
 /**
@@ -12,6 +14,10 @@ import tetzlaff.gl.vecmath.*;
  */
 public interface Program<ContextType extends Context<ContextType>> extends Resource, Contextual<ContextType>
 {
+    boolean hasDefine(String key);
+
+    Optional<Object> getDefine(String key);
+
     boolean setUniform(String name, boolean value);
 
     boolean setUniform(String name, Vector4 value);

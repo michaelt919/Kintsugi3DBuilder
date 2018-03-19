@@ -194,10 +194,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             try
             {
-                this.program = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "relight.frag"))
-                        .createProgram();
+                this.program = loadMainProgram();
             }
             catch (FileNotFoundException e)
             {
@@ -433,6 +430,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @Override
     public void update()
     {
+        updateCompiledSettings();
+
         this.updateCentroidAndRadius();
 
         if (this.environmentMapUnloadRequested && this.environmentMap != null)
@@ -1817,32 +1816,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         this.settingsModel = SafeSettingsModelWrapperFactory.getInstance().wrapUnsafeModel(settingsModel);
     }
 
-    @Override
-    public void setProgram(Program<ContextType> program)
-    {
-        this.program = program;
-
-        this.mainDrawable = context.createDrawable(program);
-        this.mainDrawable.addVertexBuffer("position", this.resources.positionBuffer);
-
-        if (this.resources.normalBuffer != null)
-        {
-            this.mainDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
-        }
-
-        if (this.resources.texCoordBuffer != null)
-        {
-            this.mainDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-        }
-
-        if (this.resources.tangentBuffer != null)
-        {
-            this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-        }
-
-        suppressErrors = false;
-    }
-
     private AbstractImage currentEnvironmentMap;
 
     @Override
@@ -1975,10 +1948,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     }
 
     @Override
-    public void reloadHelperShaders()
+    public void reloadShaders()
     {
         try
         {
+            reloadMainProgram();
+
             Program<ContextType> newEnvironmentBackgroundProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
@@ -2048,6 +2023,66 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         catch (FileNotFoundException|RuntimeException e)
         {
             e.printStackTrace();
+        }
+    }
+
+    private void reloadMainProgram() throws FileNotFoundException
+    {
+        Program<ContextType> newProgram = loadMainProgram();
+
+        if (this.program != null)
+        {
+            this.program.close();
+        }
+
+        this.program = newProgram;
+
+        this.mainDrawable = context.createDrawable(program);
+        this.mainDrawable.addVertexBuffer("position", this.resources.positionBuffer);
+
+        if (this.resources.normalBuffer != null)
+        {
+            this.mainDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
+        }
+
+        if (this.resources.texCoordBuffer != null)
+        {
+            this.mainDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+        }
+
+        if (this.resources.tangentBuffer != null)
+        {
+            this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+        }
+
+        suppressErrors = false;
+    }
+
+    private Program<ContextType> loadMainProgram() throws FileNotFoundException
+    {
+        return context.getShaderProgramBuilder()
+                .define("BUEHLER_ALGORITHM", this.settingsModel.getBoolean("buehlerAlgorithm"))
+                .define("BUEHLER_VIEW_COUNT", this.settingsModel.getInt("buehlerViewCount"))
+                .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
+                .createProgram();
+    }
+
+    private void updateCompiledSettings()
+    {
+        //noinspection ConstantConditions
+        if (!Objects.equals(this.program.getDefine("BUEHLER_ALGORITHM").get(), settingsModel.getBoolean("buehlerAlgorithm"))
+            || !Objects.equals(this.program.getDefine("BUEHLER_VIEW_COUNT").get(), settingsModel.getInt("buehlerViewCount")))
+        {
+            try
+            {
+                System.out.println("Updating compiled render settings.");
+                this.reloadMainProgram();
+            }
+            catch (FileNotFoundException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
