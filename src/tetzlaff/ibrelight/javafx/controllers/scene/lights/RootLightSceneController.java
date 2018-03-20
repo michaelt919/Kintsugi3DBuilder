@@ -288,7 +288,7 @@ public class RootLightSceneController implements Initializable
             getSelectedLightGroup().setLocked(n);
             if (selectedLight.getValue() != null)
             {
-                settingsController.setDisabled(n || selectedLight.getValue().isLocked());
+                settingsController.setDisabled(n || selectedLight.getValue().locked().get());
             }
         }
 
@@ -332,7 +332,7 @@ public class RootLightSceneController implements Initializable
             {
                 LightInstanceSetting lastSelectedLight = selectedLightGroup.lightListProperty().get(lastSelectedIndex);
                 Vector3 currentLightTarget =
-                    new Vector3((float) lastSelectedLight.getTargetX(), (float) lastSelectedLight.getTargetY(), (float) lastSelectedLight.getTargetZ());
+                    new Vector3((float) lastSelectedLight.targetX().get(), (float) lastSelectedLight.targetY().get(), (float) lastSelectedLight.targetZ().get());
                 Vector2 windowPosition = sceneViewport.projectPoint(currentLightTarget);
 
                 Vector2 newWindowPosition;
@@ -384,16 +384,16 @@ public class RootLightSceneController implements Initializable
     {
         if (selectedLight.getValue() != null)
         {
-            boolean newValue = !selectedLight.getValue().isLocked();
-            selectedLight.getValue().setLocked(newValue);
+            boolean newValue = !selectedLight.getValue().locked().get();
+            selectedLight.getValue().locked().set(newValue);
             settingsController.setDisabled(newValue || selectedLight.getValue().isGroupLocked());
             if (newValue)
             {
-                selectedLight.getValue().setName("L");
+                selectedLight.getValue().name().set("L");
             }
             else
             {
-                selectedLight.getValue().setName("X");
+                selectedLight.getValue().name().set("X");
             }
             tableView.refresh();
         }

@@ -1320,7 +1320,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     lightFit.fit(i);
 
                     Vector3 lightPosition = lightFit.getPosition();
-                    //lightIntensity = lightFit.getIntensity();
+                    //lightIntensity = lightFit.intensity();
 
                     System.out.println("Light position: " + lightPosition.x + ' ' + lightPosition.y + ' ' + lightPosition.z);
                     System.out.println("(Light intensity from fit: " + lightFit.getIntensity().x + ' ' + lightFit.getIntensity().y + ' ' + lightFit.getIntensity().z + ')');

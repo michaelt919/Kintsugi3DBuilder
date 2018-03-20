@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
-import javafx.scene.paint.Color;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -31,22 +30,7 @@ public class LightGroupSetting implements DOMConvertable
     {
         if (lightList.size() < LIGHT_LIMIT)
         {
-            lightList.add(
-                new LightInstanceSetting(
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    1.0,
-                    false,
-                    "X",
-                    LightType.PointLight,
-                    Color.WHITE,
-                    locked
-                )
-            );
+            lightList.add(new LightInstanceSetting("X", locked));
         }
     }
 
@@ -57,9 +41,9 @@ public class LightGroupSetting implements DOMConvertable
             if (index >= 0 && index < lightList.size())
             {
                 LightInstanceSetting newLight = lightList.get(index).duplicate();
-                newLight.setTargetX(targetX);
-                newLight.setTargetY(targetY);
-                newLight.setTargetZ(targetZ);
+                newLight.targetX().set(targetX);
+                newLight.targetY().set(targetY);
+                newLight.targetZ().set(targetZ);
                 lightList.add(newLight);
             }
             else

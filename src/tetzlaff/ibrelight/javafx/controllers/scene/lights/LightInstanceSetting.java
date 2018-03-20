@@ -15,11 +15,12 @@ public class LightInstanceSetting implements DOMConvertable
     private final DoubleProperty azimuth = StaticUtilities.wrapAround(-180, 180, new SimpleDoubleProperty());
     private final DoubleProperty inclination = StaticUtilities.clamp(-90, 90, new SimpleDoubleProperty());
     private final DoubleProperty log10Distance = new SimpleDoubleProperty();
-    private final DoubleProperty intensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty());
+    private final DoubleProperty intensity = StaticUtilities.clamp(0, Double.MAX_VALUE, new SimpleDoubleProperty(1.0));
     private final BooleanProperty locked = new SimpleBooleanProperty();
     private final StringProperty name = new SimpleStringProperty();
-    private final Property<LightType> lightType = new SimpleObjectProperty<>();
-    private final Property<Color> color = new SimpleObjectProperty<>();
+    private final DoubleProperty spotSize = StaticUtilities.clamp(0.0, 90.0, new SimpleDoubleProperty(90.0));
+    private final DoubleProperty spotTaper = StaticUtilities.clamp(0.0, 1.0, new SimpleDoubleProperty());
+    private final Property<Color> color = new SimpleObjectProperty<>(Color.WHITE);
 
     private final BooleanProperty groupLocked;
 
@@ -28,51 +29,27 @@ public class LightInstanceSetting implements DOMConvertable
         return groupLocked.get();
     }
 
-    public LightInstanceSetting(
-        Double targetX,
-        Double targetY,
-        Double targetZ,
-        Double azimuth,
-        Double inclination,
-        Double log10Distance,
-        Double intensity,
-        Boolean locked,
-        String name,
-        LightType lightType,
-        Color color,
-        BooleanProperty groupLockedProperty
-    )
+    public LightInstanceSetting(String name, BooleanProperty groupLockedProperty)
     {
-        this.targetX.setValue(targetX);
-        this.targetY.setValue(targetY);
-        this.targetZ.setValue(targetZ);
-        this.azimuth.setValue(azimuth);
-        this.inclination.setValue(inclination);
-        this.log10Distance.setValue(log10Distance);
-        this.intensity.setValue(intensity);
-        this.locked.setValue(locked);
         this.name.setValue(name);
-        this.lightType.setValue(lightType);
-        this.color.setValue(color);
         this.groupLocked = groupLockedProperty;
     }
 
     public LightInstanceSetting duplicate()
     {
-        return new LightInstanceSetting(
-            targetX.getValue(),
-            targetY.getValue(),
-            targetZ.getValue(),
-            azimuth.getValue(),
-            inclination.getValue(),
-            log10Distance.getValue(),
-            intensity.getValue(),
-            locked.getValue(),
-            name.getValue(),
-            lightType.getValue(),
-            color.getValue(),
-            this.groupLocked
-        );
+        LightInstanceSetting dupl = new LightInstanceSetting(name.getValue(), this.groupLocked);
+        dupl.targetX.set(this.targetX.get());
+        dupl.targetY.set(this.targetY.get());
+        dupl.targetZ.set(this.targetZ.get());
+        dupl.azimuth.set(this.azimuth.get());
+        dupl.inclination.set(this.inclination.get());
+        dupl.log10Distance.set(this.log10Distance.get());
+        dupl.intensity.set(this.intensity.get());
+        dupl.spotSize.set(this.spotSize.get());
+        dupl.spotTaper.set(this.spotTaper.get());
+        dupl.locked.set(this.locked.get());
+        dupl.color.setValue(this.color.getValue());
+        return dupl;
     }
 
     @Override
@@ -92,193 +69,98 @@ public class LightInstanceSetting implements DOMConvertable
         element.setAttribute("inclination", inclination.getValue().toString());
         element.setAttribute("log10Distance", log10Distance.getValue().toString());
         element.setAttribute("intensity", intensity.getValue().toString());
+        element.setAttribute("spotSize", spotSize.getValue().toString());
+        element.setAttribute("spotTaper", spotTaper.getValue().toString());
         element.setAttribute("locked", locked.getValue().toString());
         element.setAttribute("name", name.getValue());
-        element.setAttribute("lightType", lightType.getValue().toString());
         element.setAttribute("color", color.getValue().toString());
         return element;
     }
 
     public static LightInstanceSetting fromDOMElement(Element element, BooleanProperty groupLockedProperty)
     {
-        return new LightInstanceSetting(
-            Double.valueOf(element.getAttribute("targetX")),
-            Double.valueOf(element.getAttribute("targetY")),
-            Double.valueOf(element.getAttribute("targetZ")),
-            Double.valueOf(element.getAttribute("azimuth")),
-            Double.valueOf(element.getAttribute("inclination")),
-            Double.valueOf(element.getAttribute("log10Distance")),
-            Double.valueOf(element.getAttribute("intensity")),
-            Boolean.valueOf(element.getAttribute("locked")),
-            element.getAttribute("name"),
-            LightType.valueOf(element.getAttribute("lightType")),
-            Color.valueOf(element.getAttribute("color")),
-            groupLockedProperty
-        );
+        LightInstanceSetting setting = new LightInstanceSetting(element.getAttribute("name"), groupLockedProperty);
+        setting.targetX.set(Double.valueOf(element.getAttribute("targetX")));
+        setting.targetY.set(Double.valueOf(element.getAttribute("targetY")));
+        setting.targetZ.set(Double.valueOf(element.getAttribute("targetZ")));
+        setting.azimuth.set(Double.valueOf(element.getAttribute("azimuth")));
+        setting.inclination.set(Double.valueOf(element.getAttribute("inclination")));
+        setting.log10Distance.set(Double.valueOf(element.getAttribute("log10Distance")));
+        setting.intensity.set(Double.valueOf(element.getAttribute("intensity")));
+
+        if (element.hasAttribute("spotSize"))
+        {
+            setting.spotSize.set(Double.valueOf(element.getAttribute("spotSize")));
+        }
+
+        if (element.hasAttribute("spotTaper"))
+        {
+            setting.spotTaper.set(Double.valueOf(element.getAttribute("spotTaper")));
+        }
+
+        setting.locked.set(Boolean.valueOf(element.getAttribute("locked")));
+        setting.color.setValue(Color.valueOf(element.getAttribute("color")));
+
+        return setting;
     }
 
-    public double getTargetX()
-    {
-        return targetX.get();
-    }
-
-    public DoubleProperty targetXProperty()
+    public DoubleProperty targetX()
     {
         return targetX;
     }
 
-    public void setTargetX(double targetX)
-    {
-        this.targetX.set(targetX);
-    }
-
-    public double getTargetY()
-    {
-        return targetY.get();
-    }
-
-    public DoubleProperty targetYProperty()
+    public DoubleProperty targetY()
     {
         return targetY;
     }
 
-    public void setTargetY(double targetY)
-    {
-        this.targetY.set(targetY);
-    }
-
-    public double getTargetZ()
-    {
-        return targetZ.get();
-    }
-
-    public DoubleProperty targetZProperty()
+    public DoubleProperty targetZ()
     {
         return targetZ;
     }
 
-    public void setTargetZ(double targetZ)
-    {
-        this.targetZ.set(targetZ);
-    }
-
-    public double getAzimuth()
-    {
-        return azimuth.get();
-    }
-
-    public DoubleProperty azimuthProperty()
+    public DoubleProperty azimuth()
     {
         return azimuth;
     }
 
-    public void setAzimuth(double azimuth)
-    {
-        this.azimuth.set(azimuth);
-    }
-
-    public double getInclination()
-    {
-        return inclination.get();
-    }
-
-    public DoubleProperty inclinationProperty()
+    public DoubleProperty inclination()
     {
         return inclination;
     }
 
-    public void setInclination(double inclination)
-    {
-        this.inclination.set(inclination);
-    }
-
-    public double getLog10Distance()
-    {
-        return log10Distance.get();
-    }
-
-    public DoubleProperty log10DistanceProperty()
+    public DoubleProperty log10Distance()
     {
         return log10Distance;
     }
 
-    public void setLog10Distance(double log10Distance)
-    {
-        this.log10Distance.set(log10Distance);
-    }
-
-    public double getIntensity()
-    {
-        return intensity.get();
-    }
-
-    public DoubleProperty intensityProperty()
+    public DoubleProperty intensity()
     {
         return intensity;
     }
 
-    public void setIntensity(double intensity)
-    {
-        this.intensity.set(intensity);
-    }
-
-    public boolean isLocked()
-    {
-        return locked.get();
-    }
-
-    public BooleanProperty lockedProperty()
+    public BooleanProperty locked()
     {
         return locked;
     }
 
-    public void setLocked(boolean locked)
-    {
-        this.locked.set(locked);
-    }
-
-    public String getName()
-    {
-        return name.get();
-    }
-
-    public StringProperty nameProperty()
+    public StringProperty name()
     {
         return name;
     }
 
-    public void setName(String name)
-    {
-        this.name.set(name);
-    }
-
-    public LightType getLightType()
-    {
-        return lightType.getValue();
-    }
-
-    public Property<LightType> lightTypeProperty()
-    {
-        return lightType;
-    }
-
-    public void setLightType(LightType lightType)
-    {
-        this.lightType.setValue(lightType);
-    }
-
-    public Color getColor()
-    {
-        return color.getValue();
-    }
-
-    public Property<Color> colorProperty()
+    public Property<Color> color()
     {
         return color;
     }
 
-    public void setColor(Color color)
+    public Property<Number> spotSize()
     {
-        this.color.setValue(color);
+        return spotSize;
+    }
+
+    public Property<Number> spotTaper()
+    {
+        return spotTaper;
     }
 }

@@ -6,26 +6,20 @@ import javafx.scene.paint.Color;
 import tetzlaff.gl.vecmath.Matrix4;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.javafx.controllers.scene.lights.LightInstanceSetting;
-import tetzlaff.ibrelight.javafx.controllers.scene.lights.LightType;
 import tetzlaff.models.LightInstanceModel;
 import tetzlaff.util.OrbitPolarConverter;
 
 public class LightInstanceModelImpl implements LightInstanceModel
 {
     private ObservableValue<LightInstanceSetting> subLightSettingObservableValue;
-    private final LightInstanceSetting sentinel = new LightInstanceSetting(
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        true,
-        "sentinel",
-        LightType.PointLight,
-        Color.BLACK,
-        new SimpleBooleanProperty(true));
+    private final LightInstanceSetting sentinel;
+
+    public LightInstanceModelImpl()
+    {
+        this.sentinel = new LightInstanceSetting("sentinel", new SimpleBooleanProperty(true));
+        this.sentinel.intensity().set(0.0);
+        this.sentinel.locked().set(true);
+    }
 
     public void setSubLightSettingObservableValue(ObservableValue<LightInstanceSetting> subLightSettingObservableValue)
     {
@@ -59,7 +53,7 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public Matrix4 getOrbit()
     {
-        Vector3 polar = new Vector3((float) getLightInstance().getAzimuth(), (float) getLightInstance().getInclination(), 0);
+        Vector3 polar = new Vector3((float) getLightInstance().azimuth().get(), (float) getLightInstance().inclination().get(), 0);
         return OrbitPolarConverter.getInstance().convertToOrbitMatrix(polar);
     }
 
@@ -69,15 +63,15 @@ public class LightInstanceModelImpl implements LightInstanceModel
         if (!this.isLocked())
         {
             Vector3 polar = OrbitPolarConverter.getInstance().convertToPolarCoordinates(orbit);
-            getLightInstance().setAzimuth(polar.x);
-            getLightInstance().setInclination(polar.y);
+            getLightInstance().azimuth().set((double) polar.x);
+            getLightInstance().inclination().set((double) polar.y);
         }
     }
 
     @Override
     public float getLog10Distance()
     {
-        return (float) getLightInstance().getLog10Distance();
+        return (float) getLightInstance().log10Distance().get();
     }
 
     @Override
@@ -85,7 +79,7 @@ public class LightInstanceModelImpl implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().setLog10Distance(log10Distance);
+            getLightInstance().log10Distance().set((double) log10Distance);
         }
     }
 
@@ -104,9 +98,9 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public Vector3 getTarget()
     {
-        return new Vector3((float) getLightInstance().getTargetX(),
-            (float) getLightInstance().getTargetY(),
-            (float) getLightInstance().getTargetZ());
+        return new Vector3((float) getLightInstance().targetX().get(),
+            (float) getLightInstance().targetY().get(),
+            (float) getLightInstance().targetZ().get());
     }
 
     @Override
@@ -114,9 +108,9 @@ public class LightInstanceModelImpl implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().setTargetX(target.x);
-            getLightInstance().setTargetY(target.y);
-            getLightInstance().setTargetZ(target.z);
+            getLightInstance().targetX().set((double) target.x);
+            getLightInstance().targetY().set((double) target.y);
+            getLightInstance().targetZ().set((double) target.z);
         }
     }
 
@@ -134,7 +128,7 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public float getAzimuth()
     {
-        return (float) getLightInstance().getAzimuth();
+        return (float) getLightInstance().azimuth().get();
     }
 
     @Override
@@ -142,14 +136,14 @@ public class LightInstanceModelImpl implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().setAzimuth(azimuth);
+            getLightInstance().azimuth().set((double) azimuth);
         }
     }
 
     @Override
     public float getInclination()
     {
-        return (float) getLightInstance().getInclination();
+        return (float) getLightInstance().inclination().get();
     }
 
     @Override
@@ -169,7 +163,7 @@ public class LightInstanceModelImpl implements LightInstanceModel
     {
         if (!this.isLocked())
         {
-            getLightInstance().setInclination(inclination);
+            getLightInstance().inclination().set((double) inclination);
         }
     }
 
@@ -207,16 +201,16 @@ public class LightInstanceModelImpl implements LightInstanceModel
     @Override
     public boolean isLocked()
     {
-        return getLightInstance().isLocked() || getLightInstance().isGroupLocked();
+        return getLightInstance().locked().get() || getLightInstance().isGroupLocked();
     }
 
     @Override
     public Vector3 getColor()
     {
-        Color color = getLightInstance().getColor();
+        Color color = getLightInstance().color().getValue();
         Vector3 out = new Vector3((float) color.getRed(), (float) color.getGreen(), (float) color.getBlue());
 //        System.out.println("Light Color: " + out);
-        return out.times((float) getLightInstance().getIntensity());
+        return out.times((float) getLightInstance().intensity().get());
     }
 
     @Override
@@ -225,16 +219,16 @@ public class LightInstanceModelImpl implements LightInstanceModel
         if (!this.isLocked())
         {
             LightInstanceSetting lightInstance = getLightInstance();
-            double intensity = lightInstance.getIntensity();
+            double intensity = lightInstance.intensity().get();
 
             if (intensity > 0.0)
             {
-                lightInstance.setColor(new Color(color.x / intensity, color.y / intensity, color.z / intensity, 1));
+                lightInstance.color().setValue(new Color(color.x / intensity, color.y / intensity, color.z / intensity, 1));
             }
             else
             {
-                lightInstance.setIntensity(1.0);
-                lightInstance.setColor(new Color(color.x, color.y, color.z, 1));
+                lightInstance.intensity().set(1.0);
+                lightInstance.color().setValue(new Color(color.x, color.y, color.z, 1));
             }
         }
     }
