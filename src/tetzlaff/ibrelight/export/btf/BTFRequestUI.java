@@ -101,7 +101,7 @@ public class BTFRequestUI implements IBRRequestUI
                 Integer.parseInt(heightTextField.getText()),
                 new File(exportDirectoryField.getText()),
                 modelAccess.getSettingsModel(),
-                modelAccess.getLightingModel().getLightColor(0));
+                modelAccess.getLightingModel().getLightPrototype(0).getColor());
 
             String[] viewIndexStrings = viewIndicesTextField.getText().split("\\s*,\\s*");
 

@@ -1,8 +1,5 @@
 package tetzlaff.models;//Created by alexk on 7/25/2017.
 
-import tetzlaff.gl.vecmath.Vector3;
-
-public interface LightInstanceModel extends ReadonlyLightInstanceModel, ExtendedCameraModel
+public interface LightInstanceModel extends ReadonlyLightInstanceModel, ExtendedCameraModel, LightPrototypeModel
 {
-    void setColor(Vector3 color);
 }

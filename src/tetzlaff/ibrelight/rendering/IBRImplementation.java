@@ -689,6 +689,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         program.setUniform("ambientColor", lightingModel.getAmbientLightColor());
 
+        program.setUniform("useSpotLights", true);
+
         this.clearColor = new Vector3(
                 (float)Math.pow(lightingModel.getBackgroundColor().x, 1.0 / gamma),
                 (float)Math.pow(lightingModel.getBackgroundColor().y, 1.0 / gamma),
@@ -813,11 +815,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             // Always end with this when hardcoding:
             //    .times(new Matrix4(new Matrix3(getDefaultCameraPose())));
 
-        Vector3 lightPos = lightMatrix.quickInverse(0.001f).times(Vector4.ORIGIN).getXYZ();
+        Matrix4 lightMatrixInverse = lightMatrix.quickInverse(0.001f);
+
+        Vector3 lightPos = lightMatrixInverse.times(Vector4.ORIGIN).getXYZ();
 
         program.setUniform("lightPosVirtual[" + lightIndex + ']', lightPos);
 
-        Vector3 controllerLightIntensity = lightingModel.getLightColor(lightIndex);
+        Vector3 controllerLightIntensity = lightingModel.getLightPrototype(lightIndex).getColor();
         float lightDistance = getLightMatrix(lightIndex).times(this.centroid.asPosition()).getXYZ().length();
 
         float lightScale = resources.viewSet.areLightSourcesInfinite() ? 1.0f :
@@ -828,6 +832,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         program.setUniform("lightIntensityVirtual[" + lightIndex + ']',
                 controllerLightIntensity.times(lightDistance * lightDistance * resources.viewSet.getLightIntensity(0).y / (lightScale * lightScale)));
         program.setUniform("lightMatrixVirtual[" + lightIndex + ']', getLightProjection(lightIndex).times(lightMatrix));
+        program.setUniform("lightOrientationVirtual[" + lightIndex + ']',
+            lightMatrixInverse.times(new Vector4(0.0f, 0.0f, -1.0f, 0.0f)).getXYZ());
+        program.setUniform("lightSpotSizeVirtual[" + lightIndex + ']',
+            (float)Math.sin(lightingModel.getLightPrototype(lightIndex).getSpotSize()));
+        program.setUniform("lightSpotTaperVirtual[" + lightIndex + ']', lightingModel.getLightPrototype(lightIndex).getSpotTaper());
     }
 
     private Matrix4 getPartialViewMatrix()
@@ -1338,7 +1347,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 {
                     this.context.getState().setAlphaBlendingFunction(new AlphaBlendingFunction(Weight.ONE, Weight.ONE));
                     this.lightProgram.setUniform("objectID", this.sceneObjectIDLookup.get("Light." + i));
-                    this.lightProgram.setUniform("color", lightingModel.getLightColor(i).times((float)Math.PI));
+                    this.lightProgram.setUniform("color", lightingModel.getLightPrototype(i).getColor().times((float)Math.PI));
 
                     Vector3 lightPosition = widgetTransformation.getColumn(3).getXYZ();
 
