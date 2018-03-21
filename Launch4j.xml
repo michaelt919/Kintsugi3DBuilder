@@ -4,11 +4,11 @@
   <headerType>gui</headerType>
   <jar>C:\Users\Michael\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\IBRelight.jar</jar>
   <outfile>C:\Users\Michael\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\IBRelight.exe</outfile>
-  <errTitle></errTitle>
+  <errTitle>You need an up-to-date version of Java 8 for Windows x64.</errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
   <priority>normal</priority>
-  <downloadUrl>http://java.com/download</downloadUrl>
+  <downloadUrl>http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html</downloadUrl>
   <supportUrl></supportUrl>
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
