@@ -17,7 +17,7 @@ public interface ReadonlyLightingModel
     Matrix4 getEnvironmentMapMatrix();
     int getEnvironmentMapFilteringBias();
 
-    Vector3 getLightColor(int i);
+    ReadonlyLightPrototypeModel getLightPrototype(int i);
     Matrix4 getLightMatrix(int i);
     Vector3 getLightCenter(int i);
 

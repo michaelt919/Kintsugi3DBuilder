@@ -5,7 +5,7 @@ import tetzlaff.ibrelight.javafx.controllers.scene.lights.LightGroupSetting;
 import tetzlaff.models.EnvironmentModel;
 import tetzlaff.models.impl.ExtendedLightingModelBase;
 
-public class LightingModelImpl extends ExtendedLightingModelBase<LightInstanceModelImpl>
+public final class LightingModelImpl extends ExtendedLightingModelBase<LightInstanceModelImpl>
 {
     private ObservableValue<LightGroupSetting> selectedLightGroupSetting;
     private final LightGroupSetting sentinel = new LightGroupSetting("sentinel");

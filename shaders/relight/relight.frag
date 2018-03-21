@@ -23,8 +23,12 @@ uniform mat4 envMapMatrix;
 #define MAX_VIRTUAL_LIGHT_COUNT 4
 uniform vec3 lightIntensityVirtual[MAX_VIRTUAL_LIGHT_COUNT];
 uniform vec3 lightPosVirtual[MAX_VIRTUAL_LIGHT_COUNT];
+uniform vec3 lightOrientationVirtual[MAX_VIRTUAL_LIGHT_COUNT];
+uniform float lightSpotSizeVirtual[MAX_VIRTUAL_LIGHT_COUNT];
+uniform float lightSpotTaperVirtual[MAX_VIRTUAL_LIGHT_COUNT];
 uniform mat4 lightMatrixVirtual[MAX_VIRTUAL_LIGHT_COUNT];
 uniform int virtualLightCount;
+uniform bool useSpotLights;
 uniform vec3 ambientColor;
 
 uniform float renderGamma;
@@ -773,7 +777,7 @@ void main()
     vec3 roughnessSq = roughness * roughness;
 
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
-    vec3 reflectance = vec3(0.0);
+    vec3 radiance = vec3(0.0);
 
     vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
 
@@ -784,14 +788,14 @@ void main()
 
     if ((relightingEnabled || !imageBasedRenderingEnabled) && ambientColor != vec3(0))
     {
-        reflectance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+        radiance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 
         if (imageBasedRenderingEnabled)
         {
             // Old fresnel implementation
             // if (fresnelEnabled)
             // {
-                // reflectance +=
+                // radiance +=
                     // fresnel(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness),
                         // getEnvironmentFresnel(
                             // (envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz,
@@ -799,7 +803,7 @@ void main()
             // }
             // else
             {
-                reflectance += getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
+                radiance += getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
             }
         }
         else
@@ -816,17 +820,17 @@ void main()
 
             if (fresnelEnabled)
             {
-                reflectance += fresnel(ambientColor * reflectivity, ambientColor, nDotV);
+                radiance += fresnel(ambientColor * reflectivity, ambientColor, nDotV);
             }
             else
             {
-                reflectance += ambientColor * reflectivity;
+                radiance += ambientColor * reflectivity;
             }
         }
 
         // For debugging environment mapping:
-        //reflectance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
-        //reflectance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
+        //radiance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
+        //radiance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
     }
 
     int effectiveLightCount = (relightingEnabled || !imageBasedRenderingEnabled ? virtualLightCount : 1);
@@ -936,22 +940,57 @@ void main()
 
                 vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
 
-                reflectance += (
-                    (relightingEnabled || !imageBasedRenderingEnabled ? nDotL * diffuseColor : vec3(0.0)) +
-                    mfdFresnel
-                     * ((!imageBasedRenderingEnabled || relightingEnabled) && pbrGeometricAttenuationEnabled
-                        ? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV) :
-                            vec3(!imageBasedRenderingEnabled || relightingEnabled ? nDotL / 4 : 1.0)))
-                     * ((relightingEnabled || !imageBasedRenderingEnabled) ?
-                        (useTSOverrides ? lightIntensityVirtual[i] :
-                            lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed))
-                        : vec3(1.0))
-                     / (brdfMode ? nDotL : 1.0);
+                vec3 pointRadiance;
+
+                if (relightingEnabled || !imageBasedRenderingEnabled)
+                {
+                    vec3 reflectance = nDotL * diffuseColor;
+
+                    if (pbrGeometricAttenuationEnabled)
+                    {
+                        reflectance += mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV);
+                    }
+                    else
+                    {
+                        reflectance += mfdFresnel * nDotL / 4;
+                    }
+
+                    vec3 irradiance = lightIntensityVirtual[i];
+
+                    if (!useTSOverrides)
+                    {
+                        irradiance /= dot(lightVectorTransformed, lightVectorTransformed);
+
+                        if (useSpotLights)
+                        {
+                            float lightDirCorrelation = max(0.0, dot(lightDir, -lightOrientationVirtual[i]));
+                            float spotBoundaryDistance = lightSpotSizeVirtual[i] - sqrt(1 - lightDirCorrelation * lightDirCorrelation);
+                            irradiance *= clamp(
+                                spotBoundaryDistance / max(0.001, max(lightSpotSizeVirtual[i] * lightSpotTaperVirtual[i], spotBoundaryDistance)),
+                                0.0, 1.0);
+                        }
+                    }
+
+                    pointRadiance = reflectance * irradiance;
+                }
+                else
+                {
+                    pointRadiance = mfdFresnel;
+                }
+
+                if (brdfMode)
+                {
+                    radiance += pointRadiance / nDotL;
+                }
+                else
+                {
+                    radiance += pointRadiance;
+                }
             }
         }
     }
 
-    fragColor = tonemap(reflectance, 1.0);
+    fragColor = tonemap(radiance, 1.0);
 
     fragObjectID = objectID;
 }

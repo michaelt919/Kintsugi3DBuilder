@@ -1,9 +1,6 @@
 package tetzlaff.models;
 
-import tetzlaff.gl.vecmath.Vector3;
-
-public interface ReadonlyLightInstanceModel extends ReadonlyCameraModel
+public interface ReadonlyLightInstanceModel extends ReadonlyCameraModel, ReadonlyLightPrototypeModel
 {
-    Vector3 getColor();
     boolean isEnabled();
 }

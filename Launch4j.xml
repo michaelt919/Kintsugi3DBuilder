@@ -13,14 +13,14 @@
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon></icon>
+  <icon>C:\Users\Michael\IdeaProjects\imagebasedcolorappearance\classes\artifacts\IBRelight\ibr.ico</icon>
   <jre>
     <path></path>
     <bundledJre64Bit>false</bundledJre64Bit>
     <bundledJreAsFallback>false</bundledJreAsFallback>
-    <minVersion>1.8.0</minVersion>
-    <maxVersion></maxVersion>
+    <minVersion>1.8.0_161</minVersion>
+    <maxVersion>1.8.0_999</maxVersion>
     <jdkPreference>preferJre</jdkPreference>
-    <runtimeBits>64/32</runtimeBits>
+    <runtimeBits>64</runtimeBits>
   </jre>
 </launch4jConfig>

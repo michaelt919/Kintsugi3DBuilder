@@ -154,12 +154,12 @@ public class LightInstanceSetting implements DOMConvertable
         return color;
     }
 
-    public Property<Number> spotSize()
+    public DoubleProperty spotSize()
     {
         return spotSize;
     }
 
-    public Property<Number> spotTaper()
+    public DoubleProperty spotTaper()
     {
         return spotTaper;
     }

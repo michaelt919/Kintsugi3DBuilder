@@ -227,9 +227,9 @@ public abstract class ExtendedLightingModelBase<LightInstanceType extends LightI
     }
 
     @Override
-    public Vector3 getLightColor(int i)
+    public LightPrototypeModel getLightPrototype(int i)
     {
-        return lightInstanceModels.get(i).getColor();
+        return lightInstanceModels.get(i);
     }
 
     @Override
@@ -248,15 +248,6 @@ public abstract class ExtendedLightingModelBase<LightInstanceType extends LightI
     public LightInstanceType getLight(int index)
     {
         return this.lightInstanceModels.get(index);
-    }
-
-    @Override
-    public void setLightColor(int i, Vector3 lightColor)
-    {
-        if (this.isLightWidgetEnabled(i))
-        {
-            this.lightInstanceModels.get(i).setColor(lightColor);
-        }
     }
 
     @Override

@@ -234,6 +234,36 @@ public class LightInstanceModelImpl implements LightInstanceModel
     }
 
     @Override
+    public float getSpotSize()
+    {
+        return (float)(getLightInstance().spotSize().get() * Math.PI / 180.0);
+    }
+
+    @Override
+    public void setSpotSize(float spotSize)
+    {
+        if (!this.isLocked())
+        {
+            getLightInstance().spotSize().set(spotSize * 180 / Math.PI);
+        }
+    }
+
+    @Override
+    public float getSpotTaper()
+    {
+        return (float)getLightInstance().spotTaper().get();
+    }
+
+    @Override
+    public void setSpotTaper(float spotTaper)
+    {
+        if (!this.isLocked())
+        {
+            getLightInstance().spotTaper().set(spotTaper);
+        }
+    }
+
+    @Override
     public boolean isEnabled()
     {
         return !(subLightSettingObservableValue == null || subLightSettingObservableValue.getValue() == null);
