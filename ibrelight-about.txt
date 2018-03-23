@@ -5,6 +5,7 @@ Michael Tetzlaff (University of Minnesota) - primary developer
 Alex Kautz (University of Rochester) - contributor
 Seth Berrier (University of Wisconsin Stout) - contributor
 Michael Ludwig (University of Minnesota) - contributor
+Gary Meyer (University of Minnesota) - designer and advisor
 
 Copyright (c) 2018
 The Regents of the University of Minnesota
