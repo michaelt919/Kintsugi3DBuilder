@@ -5,7 +5,7 @@
 
 #line 7 1101
 
-#define MAX_CAMERA_PROJECTION_COUNT 1024
+#define CAMERA_PROJECTION_COUNT 1024
 
 uniform sampler2DArray viewImages;
 uniform sampler2DArray depthImages;
@@ -19,27 +19,29 @@ uniform bool suppressMipmaps;
 
 layout(std140) uniform CameraProjections
 {
-    mat4 cameraProjections[MAX_CAMERA_PROJECTION_COUNT];
+    mat4 cameraProjections[CAMERA_PROJECTION_COUNT];
 };
 
 layout(std140) uniform CameraProjectionIndices
 {
-    ivec4 cameraProjectionIndices[MAX_CAMERA_POSE_COUNT_DIV_4];
+    ivec4 cameraProjectionIndices[CAMERA_POSE_COUNT_DIV_4];
 };
 
 layout(std140) uniform ShadowMatrices
 {
-    mat4 shadowMatrices[MAX_CAMERA_POSE_COUNT];
+    mat4 shadowMatrices[CAMERA_POSE_COUNT];
 };
 
-int getCameraProjectionIndex(int index)
+int getCameraProjectionIndex(int virtualIndex)
 {
-    return extractComponentByIndex(cameraProjectionIndices[index/4], index%4);
+    int viewIndex = getViewIndex(virtualIndex);
+    return extractComponentByIndex(cameraProjectionIndices[viewIndex/4], viewIndex%4);
 }
 
-vec4 getColor(int index)
+vec4 getColor(int virtualIndex)
 {
-    vec4 projTexCoord = cameraProjections[getCameraProjectionIndex(index)] * cameraPoses[index] * 
+    int viewIndex = getViewIndex(virtualIndex);
+    vec4 projTexCoord = cameraProjections[getCameraProjectionIndex(viewIndex)] * cameraPoses[viewIndex] *
                             vec4(fPosition, 1.0);
     projTexCoord /= projTexCoord.w;
     projTexCoord = (projTexCoord + vec4(1)) / 2;
@@ -53,21 +55,21 @@ vec4 getColor(int index)
     {
         if (occlusionEnabled)
         {
-            float imageDepth = texture(depthImages, vec3(projTexCoord.xy, index)).r;
+            float imageDepth = texture(depthImages, vec3(projTexCoord.xy, viewIndex)).r;
             if (abs(projTexCoord.z - imageDepth) > occlusionBias)
             {
                 // Occluded
                 return vec4(0);
             }
         }
-        
+
         if (shadowTestEnabled)
         {
-            vec4 shadowTexCoord = shadowMatrices[index] * vec4(fPosition, 1.0);
+            vec4 shadowTexCoord = shadowMatrices[viewIndex] * vec4(fPosition, 1.0);
             shadowTexCoord /= shadowTexCoord.w;
             shadowTexCoord = (shadowTexCoord + vec4(1)) / 2;
-            
-            if (shadowTexCoord.x < 0 || shadowTexCoord.x > 1 || 
+
+            if (shadowTexCoord.x < 0 || shadowTexCoord.x > 1 ||
                 shadowTexCoord.y < 0 || shadowTexCoord.y > 1 ||
                 shadowTexCoord.z < 0 || shadowTexCoord.z > 1)
             {
@@ -75,7 +77,7 @@ vec4 getColor(int index)
             }
             else
             {
-                float shadowImageDepth = texture(shadowImages, vec3(shadowTexCoord.xy, index)).r;
+                float shadowImageDepth = texture(shadowImages, vec3(shadowTexCoord.xy, viewIndex)).r;
                 if (abs(shadowTexCoord.z - shadowImageDepth) > occlusionBias)
                 {
                     // Occluded
@@ -86,11 +88,11 @@ vec4 getColor(int index)
 
         if (suppressMipmaps)
         {
-            return textureLod(viewImages, vec3(projTexCoord.xy, index), 0);
+            return textureLod(viewImages, vec3(projTexCoord.xy, viewIndex), 0);
         }
         else
         {
-            return texture(viewImages, vec3(projTexCoord.xy, index));
+            return texture(viewImages, vec3(projTexCoord.xy, viewIndex));
         }
     }
 }

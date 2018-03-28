@@ -183,7 +183,7 @@ ParameterizedFit adjustFit()
         mat3 m = mat3(0.0);
         vec3 v = vec3(0.0);
 
-        for (int i = 0; i < viewCount; i++)
+        for (int i = 0; i < VIEW_COUNT; i++)
         {
             vec3 view = normalize(getViewVector(i));
             float nDotV = max(0, dot(shadingNormal, view));

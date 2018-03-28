@@ -12,11 +12,12 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int fragObjectID;
 
-#include "../colorappearance/colorappearance_subset.glsl"
+#include "../colorappearance/colorappearance.glsl"
 
 #define BUEHLER_ALGORITHM true
+#define USE_HEAPSORT true
 #define SORTING_SAMPLE_COUNT 5
-#define MAX_SORTING_TOTAL_COUNT MAX_CAMERA_POSE_COUNT
+#define SORTING_TOTAL_COUNT VIEW_COUNT
 
 #include "reflectanceequations.glsl"
 #include "environment.glsl"
@@ -24,9 +25,9 @@ layout(location = 1) out int fragObjectID;
 #include "tonemap.glsl"
 
 #ifdef SVD_MODE
-#include "../colorappearance/svd_unpack_subset.glsl"
+#include "../colorappearance/svd_unpack.glsl"
 #else
-#include "../colorappearance/imgspace_subset.glsl"
+#include "../colorappearance/imgspace.glsl"
 #endif
 
 #line 32 0
@@ -85,7 +86,7 @@ uniform vec3 holeFillColor;
 
 layout(std140) uniform ViewWeights
 {
-    vec4 viewWeights[MAX_CAMERA_POSE_COUNT_DIV_4];
+    vec4 viewWeights[VIEW_COUNT_DIV_4];
 };
 
 float getViewWeight(int viewIndex)
@@ -199,9 +200,9 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
                 // (useSpecularTexture ?
                         // mfdMono * geomAttenVirtual / (4 * nDotV_virtual) : 1.0 / (2.0 * PI))
                 1.0 / (2.0 * PI)
-            ) * 4 * hDotV_virtual * (weight * 4 * PI * viewCount);
+            ) * 4 * hDotV_virtual * (weight * 4 * PI * VIEW_COUNT);
             // dl = 4 * h dot v * dh
-            // weight * viewCount -> brings weights back to being on the order of 1
+            // weight * VIEW_COUNT -> brings weights back to being on the order of 1
             // This is helpful for consistency with numerical limits (i.e. clamping)
             // Everything gets normalized at the end again anyways.
         }
@@ -218,7 +219,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 
     vec4 sum = vec4(0.0);
 
-    for (int i = 0; i < viewCount; i++)
+    for (int i = 0; i < VIEW_COUNT; i++)
     {
         sum += computeEnvironmentSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
     }
@@ -226,7 +227,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
     if (sum.y > 0.0)
     {
         return sum.rgb
-            / viewCount;                    // better spatial consistency, worse directional consistency?
+            / VIEW_COUNT;                    // better spatial consistency, worse directional consistency?
         //    / clamp(sum.a, 0, 1000000.0);    // Better directional consistency, worse spatial consistency?
     }
     else
@@ -437,7 +438,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 no
         sums[i] = vec4(0.0);
     }
 
-    for (int i = 0; i < viewCount; i++)
+    for (int i = 0; i < VIEW_COUNT; i++)
     {
         vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample =
             computeSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
@@ -474,7 +475,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     float weights[SORTING_SAMPLE_COUNT];
     int indices[SORTING_SAMPLE_COUNT];
 
-    sort(viewCount, targetDirection, weights, indices);
+    sort(targetDirection, weights, indices);
 
     // Evaluate the light field
     // weights[0] should be the smallest weight

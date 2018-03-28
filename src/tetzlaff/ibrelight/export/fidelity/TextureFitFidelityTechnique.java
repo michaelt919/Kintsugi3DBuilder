@@ -71,7 +71,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 
         textureFitProgram = resources.context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit_imgspace_subset.frag"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit_imgspace.frag"))
             .createProgram();
 
         textureFitProgram.setUniform("useViewIndices", true);

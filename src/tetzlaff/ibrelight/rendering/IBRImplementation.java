@@ -2382,6 +2382,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         return context.getShaderProgramBuilder()
                 .define("BUEHLER_ALGORITHM", this.settingsModel.getBoolean("buehlerAlgorithm"))
                 .define("SORTING_SAMPLE_COUNT", this.settingsModel.getInt("buehlerViewCount"))
+                .define("CAMERA_POSE_COUNT", this.resources.viewSet.getCameraPoseCount())
                 .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
                 .createProgram();

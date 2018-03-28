@@ -82,7 +82,7 @@ ErrorResult calculateError()
 
         //if (alpha == 1.0)
         {
-            for (int i = 0; i < viewCount; i++)
+            for (int i = 0; i < VIEW_COUNT; i++)
             {
                 vec3 view = normalize(getViewVector(i));
                 float nDotV = max(0, dot(shadingNormal, view));

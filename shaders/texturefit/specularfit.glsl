@@ -122,7 +122,7 @@ ParameterizedFit fitSpecular()
     float binSum = 0.0;
     float binWeightSum = 0;
 
-    for (int i = 0; i < viewCount; i++)
+    for (int i = 0; i < VIEW_COUNT; i++)
     {
         vec4 color = getLinearColor(i);
         vec3 view = normalize(getViewVector(i));
@@ -299,7 +299,7 @@ ParameterizedFit fitSpecular()
     float pow255Gamma = pow(255, fittingGamma);
     int sq255 = 255 * 255;
 
-    for (int i = 0; i < viewCount; i++)
+    for (int i = 0; i < VIEW_COUNT; i++)
     {
         vec3 view = normalize(getViewVector(i));
 
@@ -428,7 +428,7 @@ ParameterizedFit fitSpecular()
 //
 //    vec4 sumResidualXYZGamma = vec4(0.0);
 //
-//    for (int i = 0; i < viewCount; i++)
+//    for (int i = 0; i < VIEW_COUNT; i++)
 //    {
 //        vec3 view = normalize(getViewVector(i));
 //
@@ -613,7 +613,7 @@ ParameterizedFit fitSpecular()
     {
         vec4 sumDiffuse = vec4(0.0);
 
-        for (int i = 0; i < viewCount; i++)
+        for (int i = 0; i < VIEW_COUNT; i++)
         {
             vec3 view = normalize(getViewVector(i));
 
