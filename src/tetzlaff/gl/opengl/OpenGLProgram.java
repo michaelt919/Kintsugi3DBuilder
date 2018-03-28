@@ -1,5 +1,6 @@
 package tetzlaff.gl.opengl;
 
+import java.util.*;
 import java.io.FileNotFoundException;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ import static org.lwjgl.opengl.GL31.*;
 
 final class OpenGLProgram implements Program<OpenGLContext>
 {
-    private final OpenGLContext context;
+    final OpenGLContext context;
     private final Map<String, Object> defines;
 
     private int programId;
@@ -133,39 +134,49 @@ final class OpenGLProgram implements Program<OpenGLContext>
         }
     }
 
+    private static final class TextureListWrapper extends AbstractList<Optional<OpenGLTexture>>
+    {
+        private final List<Optional<OpenGLTexture>> baseTextureList;
+
+        private TextureListWrapper(List<Optional<OpenGLTexture>> baseTextureList)
+        {
+            this.baseTextureList = baseTextureList;
+        }
+
+        @Override
+        public int size()
+        {
+            return baseTextureList.size() + 1;
+        }
+
+        @Override
+        public Optional<OpenGLTexture> get(int index)
+        {
+            return index == 0 ? Optional.empty() : baseTextureList.get(index - 1);
+        }
+    }
+
     void use()
     {
         if (this.isLinked())
         {
-            this.context.unbindTextureUnit(0); // Don't ever use texture unit 0
-
-            for (int i = 0; i < textureManager.length; i++)
-            {
-                OpenGLTexture texture = textureManager.getResourceByUnit(i);
-                this.context.unbindTextureUnit(i + 1);
-                if (texture != null)
-                {
-                    texture.bindToTextureUnit(i + 1);
-                }
-            }
-
-            for (int i = 0; i < uniformBufferManager.length; i++)
-            {
-                OpenGLUniformBuffer uniformBuffer = uniformBufferManager.getResourceByUnit(i);
-                if (uniformBuffer != null)
-                {
-                    uniformBuffer.bindToIndex(i);
-                }
-                else
-                {
-                    OpenGLContext.unbindBuffer(GL_UNIFORM_BUFFER, i);
-                }
-            }
+            this.context.updateTextureBindings(new TextureListWrapper(textureManager.asReadonlyList()));
+            this.context.updateUniformBufferBindings(uniformBufferManager.asReadonlyList());
 
             glValidateProgram(programId);
+            OpenGLContext.errorCheck();
             if (glGetProgrami(programId, GL_VALIDATE_STATUS) == GL_FALSE)
             {
-                throw new InvalidProgramException(glGetProgramInfoLog(programId));
+                OpenGLContext.errorCheck();
+
+                String programInfoLog = glGetProgramInfoLog(programId);
+                OpenGLContext.errorCheck();
+
+                throw new InvalidProgramException(programInfoLog);
+            }
+            else
+            {
+                OpenGLContext.errorCheck();
             }
 
             glUseProgram(programId);

@@ -2,6 +2,9 @@ package tetzlaff.gl.core;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 /**
  * An interface for a framebuffer.
@@ -13,6 +16,14 @@ import java.io.IOException;
 public interface Framebuffer<ContextType extends Context<ContextType>> extends Contextual<ContextType>
 {
     FramebufferSize getSize();
+
+    void readColorBufferRGBA(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height);
+    void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination, int x, int y, int width, int height);
+    void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination, int x, int y, int width, int height);
+
+    void readColorBufferRGBA(int attachmentIndex, ByteBuffer destination);
+    void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination);
+    void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination);
 
     int[] readColorBufferARGB(int attachmentIndex);
     int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height);

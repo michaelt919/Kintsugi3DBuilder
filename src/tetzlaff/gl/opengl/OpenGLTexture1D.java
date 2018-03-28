@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 
 import tetzlaff.gl.builders.base.ColorTextureBuilderBase;
 import tetzlaff.gl.core.ColorFormat;
+import tetzlaff.gl.core.ColorFormat.DataType;
 import tetzlaff.gl.core.CompressionFormat;
 import tetzlaff.gl.core.Texture1D;
 import tetzlaff.gl.core.TextureWrapMode;
@@ -27,16 +28,16 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
     {
         private final int textureTarget;
         private final int width;
-        private final int format;
+        private final int dimensions;
         private final int type;
         private final ByteBuffer buffer;
 
-        OpenGLTexture1DFromBufferBuilder(OpenGLContext context, int textureTarget, int width, int format, int type, ByteBuffer buffer)
+        OpenGLTexture1DFromBufferBuilder(OpenGLContext context, int textureTarget, int width, int dimensions, int type, ByteBuffer buffer)
         {
             super(context);
             this.textureTarget = textureTarget;
             this.width = width;
-            this.format = format;
+            this.dimensions = dimensions;
             this.type = type;
             this.buffer = buffer;
         }
@@ -51,11 +52,12 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
                         this.textureTarget,
                         this.getInternalCompressionFormat(),
                         this.width,
-                        this.format,
+                        OpenGLContext.getPixelDataFormatFromDimensions(this.dimensions, false),
                         this.type,
                         this.buffer,
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
+                        this.getMaxMipmapLevel(),
                         this.getMaxAnisotropy());
             }
             else
@@ -65,36 +67,42 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
                         this.textureTarget,
                         this.getInternalColorFormat(),
                         this.width,
-                        this.format,
+                        OpenGLContext.getPixelDataFormatFromDimensions(
+                            this.dimensions,
+                            this.getInternalColorFormat().dataType == DataType.SIGNED_INTEGER
+                                || this.getInternalColorFormat().dataType == DataType.UNSIGNED_INTEGER),
                         this.type,
                         this.buffer,
                         this.isLinearFilteringEnabled(),
                         this.areMipmapsEnabled(),
+                        this.getMaxMipmapLevel(),
                         this.getMaxAnisotropy());
             }
         }
     }
 
     private OpenGLTexture1D(OpenGLContext context, int textureTarget, ColorFormat colorFormat, int width, int format, int type, ByteBuffer buffer,
-            boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
+            boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, colorFormat);
 
-        init(context, textureTarget, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, format, type, buffer, useLinearFiltering, useMipmaps, maxAnisotropy);
+        init(context, textureTarget, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, format, type, buffer,
+            useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
     }
 
     private OpenGLTexture1D(OpenGLContext context, int textureTarget, CompressionFormat compressionFormat, int width, int format, int type, ByteBuffer buffer,
-            boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
+            boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         // Create an empty texture to be used as a render target for a framebuffer.
         super(context, compressionFormat);
 
-        init(context, textureTarget, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, format, type, buffer, useLinearFiltering, useMipmaps, maxAnisotropy);
+        init(context, textureTarget, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, format, type, buffer,
+            useLinearFiltering, useMipmaps, maxMipmapLevel, maxAnisotropy);
     }
 
     private void init(OpenGLContext context, int textureTarget, int internalFormat, int width, int format, int type, ByteBuffer buffer,
-            boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
+            boolean useLinearFiltering, boolean useMipmaps, int maxMipmapLevel, float maxAnisotropy)
     {
         this.textureTarget = textureTarget;
         this.bind();
@@ -128,10 +136,6 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
 
         if (useMipmaps)
         {
-            // Create mipmaps
-            glGenerateMipmap(textureTarget);
-            OpenGLContext.errorCheck();
-
             // Calculate the number of mipmap levels
             this.levelCount = 0;
             int dim = width;
@@ -140,42 +144,14 @@ final class OpenGLTexture1D extends OpenGLTexture implements Texture1D<OpenGLCon
                 this.levelCount++;
                 dim /= 2;
             }
-
-            if (useLinearFiltering)
-            {
-                glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-                OpenGLContext.errorCheck();
-                glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                OpenGLContext.errorCheck();
-            }
-            else
-            {
-                glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-                OpenGLContext.errorCheck();
-                glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                OpenGLContext.errorCheck();
-            }
         }
         else
         {
             // No mipmaps
             this.levelCount = 1;
-
-            if (useLinearFiltering)
-            {
-                glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                OpenGLContext.errorCheck();
-                glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                OpenGLContext.errorCheck();
-            }
-            else
-            {
-                glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                OpenGLContext.errorCheck();
-                glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                OpenGLContext.errorCheck();
-            }
         }
+
+        this.initFilteringAndMipmaps(useLinearFiltering, useMipmaps, maxMipmapLevel);
 
         glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         OpenGLContext.errorCheck();

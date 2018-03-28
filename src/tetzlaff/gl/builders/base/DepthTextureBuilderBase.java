@@ -54,6 +54,13 @@ public abstract class DepthTextureBuilderBase<ContextType extends Context<Contex
     }
 
     @Override
+    public DepthTextureBuilderBase<ContextType, TextureType> setMaxMipmapLevel(int maxMipmapLevel)
+    {
+        super.setMaxMipmapLevel(maxMipmapLevel);
+        return this;
+    }
+
+    @Override
     public DepthTextureBuilderBase<ContextType, TextureType> setLinearFilteringEnabled(boolean enabled)
     {
         super.setLinearFilteringEnabled(enabled);

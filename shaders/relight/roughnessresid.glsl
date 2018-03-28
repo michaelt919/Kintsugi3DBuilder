@@ -10,6 +10,8 @@ uniform sampler2D roughnessMap;
 
 uniform mat4 model_view;
 
+#define MAX_SQRT_ROUGHNESS 1.0
+
 vec3 getDiffuseColor()
 {
     return pow(texture(diffuseMap, fTexCoord).rgb, vec3(gamma));
@@ -29,7 +31,11 @@ vec3 getSpecularColor()
 
 vec3 getSqrtRoughness()
 {
-    return texture(roughnessMap, fTexCoord).rgb;
+    vec3 roughnessLookup = texture(roughnessMap, fTexCoord).rgb;
+    return vec3(
+            roughnessLookup.y + roughnessLookup.x - 16.0 / 31.0,
+            roughnessLookup.y,
+            roughnessLookup.y + roughnessLookup.z - 16.0 / 31.0);
 }
 
 vec4 computeRoughnessResidual()
@@ -81,7 +87,7 @@ vec4 computeRoughnessResidual()
                                    - sqrt(mfdFresnel) * vec3(nDotHSquared));
             
             return vec4(clamp(sqrt(sqrt(sqrt(mfdFresnel) * vec3(max(0.0, 1 - nDotHSquared)) / denominator)),
-                vec3(0), vec3(sqrt(0.5))) - sqrtRoughness,
+                vec3(0), vec3(MAX_SQRT_ROUGHNESS)) - sqrtRoughness,
                     nDotV
                     * pow(max(0.0, colorScaled.y - diffuseContrib.y) * roughnessSquared.y / specularColor.y,
                         1.0 / gamma)
