@@ -14,17 +14,16 @@ float getSortingWeight(int virtualIndex, vec3 targetDirection)
     return computeBuehlerWeight(mat3(cameraPose) * targetDirection, -normalize((cameraPose * vec4(fPosition, 1)).xyz));
 }
 
-void sort(int sampleCount, int totalCount, vec3 targetDirection,
-    out float[MAX_SORTING_SAMPLE_COUNT] weights, out int[MAX_SORTING_SAMPLE_COUNT] indices)
+void sort(int totalCount, vec3 targetDirection, out float[SORTING_SAMPLE_COUNT] weights, out int[SORTING_SAMPLE_COUNT] indices)
 {
     // Initialization
-    for (int i = 0; i < MAX_SORTING_SAMPLE_COUNT && i < sampleCount && i < totalCount; i++)
+    for (int i = 0; i < SORTING_SAMPLE_COUNT && i < totalCount; i++)
     {
         weights[i] = -(1.0 / 0.0); // Parentheses needed for AMD cards.
         indices[i] = -1;
     }
 
-    for (int i = totalCount; i < MAX_SORTING_SAMPLE_COUNT && i < sampleCount; i++)
+    for (int i = totalCount; i < SORTING_SAMPLE_COUNT; i++)
     {
         weights[i] = 0.0; // If there are less samples available than requested, fill in with weights of 0.0.
         indices[i] = 0;
@@ -50,7 +49,7 @@ void sort(int sampleCount, int totalCount, vec3 targetDirection,
                 int rightIndex = 2*currentIndex+2;
 
                 // Find the smallest of the current node, and its left and right children
-                if (leftIndex < sampleCount && weights[leftIndex] < weights[currentIndex])
+                if (leftIndex < SORTING_SAMPLE_COUNT && weights[leftIndex] < weights[currentIndex])
                 {
                     minIndex = leftIndex;
                 }
@@ -59,7 +58,7 @@ void sort(int sampleCount, int totalCount, vec3 targetDirection,
                     minIndex = currentIndex;
                 }
 
-                if (rightIndex < sampleCount && weights[rightIndex] < weights[minIndex])
+                if (rightIndex < SORTING_SAMPLE_COUNT && weights[rightIndex] < weights[minIndex])
                 {
                     minIndex = rightIndex;
                 }
@@ -85,18 +84,18 @@ void sort(int sampleCount, int totalCount, vec3 targetDirection,
     }
 }
 
-void sortFast(int totalCount, vec3 targetDirection, out float[MAX_SORTING_SAMPLE_COUNT] weights, out int[MAX_SORTING_SAMPLE_COUNT] indices)
+void sortFast(int totalCount, vec3 targetDirection, out float[SORTING_SAMPLE_COUNT] weights, out int[SORTING_SAMPLE_COUNT] indices)
 {
-    float indicesFP[MAX_SORTING_SAMPLE_COUNT];
+    float indicesFP[SORTING_SAMPLE_COUNT];
 
     // Initialization
-    for (int i = 0; i < MAX_SORTING_SAMPLE_COUNT && i < totalCount; i++)
+    for (int i = 0; i < SORTING_SAMPLE_COUNT && i < totalCount; i++)
     {
         weights[i] = 0.0;
         indicesFP[i] = -1;
     }
 
-    for (int i = totalCount; i < MAX_SORTING_SAMPLE_COUNT; i++)
+    for (int i = totalCount; i < SORTING_SAMPLE_COUNT; i++)
     {
         weights[i] = 0.0; // If there are less samples available than requested, fill in with weights of 0.0.
         indicesFP[i] = 0;
@@ -111,7 +110,7 @@ void sortFast(int totalCount, vec3 targetDirection, out float[MAX_SORTING_SAMPLE
         weights[0] = newValues[0];
         indicesFP[0] = newValues[1];
 
-        for (int j = 1; j < MAX_SORTING_SAMPLE_COUNT; j++)
+        for (int j = 1; j < SORTING_SAMPLE_COUNT; j++)
         {
             vec4 reorderedValues = mix(
                 vec4(weights[j-1], weights[j], indicesFP[j-1], indicesFP[j]),
@@ -125,7 +124,7 @@ void sortFast(int totalCount, vec3 targetDirection, out float[MAX_SORTING_SAMPLE
         }
     }
 
-    for (int i = 0; i < MAX_SORTING_SAMPLE_COUNT; i++)
+    for (int i = 0; i < SORTING_SAMPLE_COUNT; i++)
     {
         indices[i] = int(round(indicesFP[i]));
     }

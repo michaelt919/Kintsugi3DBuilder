@@ -2381,7 +2381,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         return context.getShaderProgramBuilder()
                 .define("BUEHLER_ALGORITHM", this.settingsModel.getBoolean("buehlerAlgorithm"))
-                .define("BUEHLER_VIEW_COUNT", this.settingsModel.getInt("buehlerViewCount"))
+                .define("SORTING_SAMPLE_COUNT", this.settingsModel.getInt("buehlerViewCount"))
                 .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
                 .createProgram();
@@ -2391,7 +2391,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     {
         //noinspection ConstantConditions
         if (!Objects.equals(this.program.getDefine("BUEHLER_ALGORITHM").get(), settingsModel.getBoolean("buehlerAlgorithm"))
-            || !Objects.equals(this.program.getDefine("BUEHLER_VIEW_COUNT").get(), settingsModel.getInt("buehlerViewCount")))
+            || !Objects.equals(this.program.getDefine("SORTING_SAMPLE_COUNT").get(), settingsModel.getInt("buehlerViewCount")))
         {
             try
             {

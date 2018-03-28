@@ -12,9 +12,10 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int fragObjectID;
 
-
 #include "../colorappearance/colorappearance_subset.glsl"
-#define MAX_SORTING_SAMPLE_COUNT 5
+
+#define BUEHLER_ALGORITHM true
+#define SORTING_SAMPLE_COUNT 5
 #define MAX_SORTING_TOTAL_COUNT MAX_CAMERA_POSE_COUNT
 
 #include "reflectanceequations.glsl"
@@ -81,9 +82,6 @@ uniform vec3 holeFillColor;
 #else
 #define residualImages false
 #endif
-
-#define BUEHLER_ALGORITHM true
-#define BUEHLER_VIEW_COUNT 5
 
 layout(std140) uniform ViewWeights
 {
@@ -369,37 +367,46 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor,
 
 vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  vec3 specularColor, vec3 roughness, float maxLuminance)
 {
-    vec4 sampleColor = getLinearColor(virtualIndex);
+    // All in camera space
     mat4 cameraPose = getCameraPose(virtualIndex);
-    if (sampleColor.a > 0.0)
+    vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
+    vec3 sampleViewDir = normalize(-fragmentPos);
+    vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(virtualIndex)].xyz - fragmentPos;
+    float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
+    vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
+    vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
+    vec3 normalDirCameraSpace = normalize((cameraPose * vec4(normalDir, 0.0)).xyz);
+    float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
+    float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
+    float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
+    float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
+
+    vec4 precomputedSample = vec4(0);
+
+    if (residualImages)
     {
-        vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
-
-        // All in camera space
-        vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
-        vec3 sampleViewDir = normalize(-fragmentPos);
-        vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(virtualIndex)].xyz - fragmentPos;
-        float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
-        vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
-        vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
-        vec3 normalDirCameraSpace = normalize((cameraPose * vec4(normalDir, 0.0)).xyz);
-        vec3 lightIntensity = getLightIntensity(virtualIndex);
-
-        float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
-        float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
-        float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
-        float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
-
-        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
-            / (infiniteLightSources ? 1.0 : lightDistSquared);
-
-        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-
-        if (geomAtten != vec3(0))
+        vec4 residual = getColor(virtualIndex);
+        if (residual.w > 0)
         {
-            vec4 precomputedSample;
+            vec3 roughnessSquared = roughness * roughness;
+            return residual.w * vec4(xyzToRGB(
+                pow(max(vec3(0), pow(dist(nDotH, roughness) * roughnessSquared, vec3(1.0 / gamma))
+                    + (residual.xyz - vec3(0.5))), vec3(gamma))
+                * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
+        }
+    }
+    else
+    {
+        vec4 sampleColor = getLinearColor(virtualIndex);
+        if (sampleColor.a > 0.0)
+        {
+            vec3 lightIntensity = getLightIntensity(virtualIndex);
 
-            if (relightingEnabled)
+            vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
+                / (infiniteLightSources ? 1.0 : lightDistSquared);
+
+            vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+            if (geomAtten != vec3(0))
             {
                 vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
 
@@ -414,20 +421,10 @@ vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  v
                         * vec4(specularResid.rgb * 4 / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), nDotL);
                 }
             }
-            else
-            {
-                return sampleColor.a * vec4(sampleColor.rgb, 1.0);
-            }
-        }
-        else
-        {
-            return vec4(0.0);
         }
     }
-    else
-    {
-        return vec4(0.0);
-    }
+
+    return vec4(0.0);
 }
 
 vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
@@ -474,15 +471,15 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
 {
     float maxLuminance = getMaxLuminance();
 
-    float weights[BUEHLER_VIEW_COUNT];
-    int indices[BUEHLER_VIEW_COUNT];
+    float weights[SORTING_SAMPLE_COUNT];
+    int indices[SORTING_SAMPLE_COUNT];
 
-    sort(BUEHLER_VIEW_COUNT, viewCount, targetDirection, weights, indices);
+    sort(viewCount, targetDirection, weights, indices);
 
     // Evaluate the light field
     // weights[0] should be the smallest weight
     vec4 sum = vec4(0.0);
-    for (int i = 1; i < BUEHLER_VIEW_COUNT; i++)
+    for (int i = 1; i < SORTING_SAMPLE_COUNT; i++)
     {
         vec4 computedSample = computeSampleSingle(indices[i], diffuseColor, normalDir, specularColor, roughness, maxLuminance);
         if (computedSample.a > 0)
