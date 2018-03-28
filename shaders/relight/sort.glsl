@@ -3,34 +3,34 @@
 
 #line 5 3002
 
-float computeBuehlerWeight(vec3 targetDirection, vec3 sampleDirection)
-{
-    return 1.0 / (1.0 - clamp(dot(sampleDirection, targetDirection), 0.0, 0.99999));
-}
-
 float getSortingWeight(int virtualIndex, vec3 targetDirection)
 {
     mat4 cameraPose = getCameraPose(virtualIndex);
-    return computeBuehlerWeight(mat3(cameraPose) * targetDirection, -normalize((cameraPose * vec4(fPosition, 1)).xyz));
+    return 1.0 / (1.0 - clamp(
+        dot(mat3(cameraPose) * targetDirection, -normalize((cameraPose * vec4(fPosition, 1)).xyz)),
+        0.0, 0.99999));
 }
 
-void sort(int totalCount, vec3 targetDirection, out float[SORTING_SAMPLE_COUNT] weights, out int[SORTING_SAMPLE_COUNT] indices)
+void sort(vec3 targetDirection, out float[SORTING_SAMPLE_COUNT] weights, out int[SORTING_SAMPLE_COUNT] indices)
 {
+
+#if USE_HEAPSORT
+
     // Initialization
-    for (int i = 0; i < SORTING_SAMPLE_COUNT && i < totalCount; i++)
+    for (int i = 0; i < SORTING_SAMPLE_COUNT && i < SORTING_TOTAL_COUNT; i++)
     {
         weights[i] = -(1.0 / 0.0); // Parentheses needed for AMD cards.
         indices[i] = -1;
     }
 
-    for (int i = totalCount; i < SORTING_SAMPLE_COUNT; i++)
+    for (int i = SORTING_TOTAL_COUNT; i < SORTING_SAMPLE_COUNT; i++)
     {
         weights[i] = 0.0; // If there are less samples available than requested, fill in with weights of 0.0.
         indices[i] = 0;
     }
 
     // Partial heapsort
-    for (int i = 0; i < MAX_SORTING_TOTAL_COUNT && i < totalCount; i++)
+    for (int i = 0; i < SORTING_TOTAL_COUNT; i++)
     {
         float weight = getSortingWeight(i, targetDirection);
         if (weight >= weights[0]) // Decide if the new view goes in the heap
@@ -82,10 +82,9 @@ void sort(int totalCount, vec3 targetDirection, out float[SORTING_SAMPLE_COUNT] 
             }
         }
     }
-}
 
-void sortFast(int totalCount, vec3 targetDirection, out float[SORTING_SAMPLE_COUNT] weights, out int[SORTING_SAMPLE_COUNT] indices)
-{
+#else
+
     float indicesFP[SORTING_SAMPLE_COUNT];
 
     // Initialization
@@ -102,7 +101,7 @@ void sortFast(int totalCount, vec3 targetDirection, out float[SORTING_SAMPLE_COU
     }
 
     // Partial insertion sort
-    for (int i = 0; i < MAX_SORTING_TOTAL_COUNT && i < totalCount; i++)
+    for (int i = 0; i < SORTING_TOTAL_COUNT; i++)
     {
         float weight = getSortingWeight(i, targetDirection);
 
@@ -128,6 +127,9 @@ void sortFast(int totalCount, vec3 targetDirection, out float[SORTING_SAMPLE_COU
     {
         indices[i] = int(round(indicesFP[i]));
     }
+
+#endif // USE_HEAPSORT
+
 }
 
 #endif // SORT_GLSL

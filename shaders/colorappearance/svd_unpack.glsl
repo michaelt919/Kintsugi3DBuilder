@@ -1,7 +1,7 @@
 #ifndef SVD_UNPACK_GLSL
 #define SVD_UNPACK_GLSL
 
-#include "colorappearance_subset.glsl"
+#include "colorappearance.glsl"
 
 #line 7 1102
 

@@ -46,7 +46,7 @@ DiffuseFit fitDiffuse()
         vec3 weightedIrradianceSum = vec3(0.0);
         vec3 directionSum = vec3(0);
 
-        for (int i = 0; i < viewCount; i++)
+        for (int i = 0; i < VIEW_COUNT; i++)
         {
             vec3 view = normalize(getViewVector(i));
 
