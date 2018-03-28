@@ -1,10 +1,10 @@
 package tetzlaff.ibrelight.javafx.controllers.menubar;
 
+import java.util.function.DoubleUnaryOperator;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import tetzlaff.ibrelight.core.LoadingModel;
-
-import java.util.function.DoubleUnaryOperator;
 
 public class ColorCheckerController
 {

@@ -16,6 +16,7 @@ uniform sampler2D specularEstimate;
 uniform sampler2D roughnessEstimate;
 uniform sampler2D errorTexture;
 
+uniform bool ignoreDampingFactor;
 uniform float fittingGamma;
 
 vec4 getDiffuseColor()
@@ -51,7 +52,7 @@ ErrorResult calculateError()
 {
     vec4 prevErrorResult = texture(errorTexture, fTexCoord);
 
-    if (prevErrorResult.x < MIN_DAMPING_FACTOR || prevErrorResult.x > MAX_DAMPING_FACTOR)
+    if (!ignoreDampingFactor && (prevErrorResult.x < MIN_DAMPING_FACTOR || prevErrorResult.x > MAX_DAMPING_FACTOR))
     {
         return ErrorResult(false, 0.0, prevErrorResult.y);
     }

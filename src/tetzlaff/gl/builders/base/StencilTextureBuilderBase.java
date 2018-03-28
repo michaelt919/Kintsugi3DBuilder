@@ -41,6 +41,13 @@ public abstract class StencilTextureBuilderBase<ContextType extends Context<Cont
     }
 
     @Override
+    public StencilTextureBuilderBase<ContextType, TextureType> setMaxMipmapLevel(int maxMipmapLevel)
+    {
+        super.setMaxMipmapLevel(maxMipmapLevel);
+        return this;
+    }
+
+    @Override
     public StencilTextureBuilderBase<ContextType, TextureType> setLinearFilteringEnabled(boolean enabled)
     {
         super.setLinearFilteringEnabled(enabled);
