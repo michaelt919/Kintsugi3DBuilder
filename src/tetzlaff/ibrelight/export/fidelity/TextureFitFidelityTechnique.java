@@ -1,6 +1,7 @@
 package tetzlaff.ibrelight.export.fidelity;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -16,8 +17,6 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
     private IBRResources<ContextType> resources;
     private final boolean usePerceptuallyLinearError;
 
-    private Program<ContextType> textureFitProgram;
-    private Drawable<ContextType> textureFitDrawable;
     private FramebufferObject<ContextType> textureFitFramebuffer;
 
     private FramebufferObject<ContextType> textureFitBaselineFramebuffer;
@@ -54,7 +53,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 
         resources.context.getState().disableBackFaceCulling();
 
-        fidelityProgram = resources.context.getShaderProgramBuilder()
+        fidelityProgram = resources.getIBRShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/fidelity.frag"))
             .createProgram();
@@ -69,28 +68,16 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
         fidelityDrawable.addVertexBuffer("normal", resources.normalBuffer);
         fidelityDrawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
-        textureFitProgram = resources.context.getShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit_imgspace.frag"))
-            .createProgram();
-
-        textureFitProgram.setUniform("useViewIndices", true);
-
         textureFitFramebuffer = resources.context.buildFramebufferObject(size, size)
             .addColorAttachments(ColorFormat.RGBA8, 4)
             .createFramebufferObject();
-
-        textureFitDrawable = resources.context.createDrawable(textureFitProgram);
-        textureFitDrawable.addVertexBuffer("position", resources.positionBuffer);
-        textureFitDrawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
-        textureFitDrawable.addVertexBuffer("normal", resources.normalBuffer);
-        textureFitDrawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
         textureFitBaselineFramebuffer = resources.context.buildFramebufferObject(size, size)
             .addColorAttachments(ColorFormat.RGBA8, 4)
             .createFramebufferObject();
 
-        try(Program<ContextType> textureFitBaselineProgram = resources.context.getShaderProgramBuilder()
+        try(Program<ContextType> textureFitBaselineProgram = resources.getIBRShaderProgramBuilder()
+            .define("VIEW_COUNT", resources.viewSet.getCameraPoseCount())
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit_imgspace.frag"))
             .createProgram())
@@ -103,8 +90,6 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
 
             // Baseline
             resources.setupShaderProgram(textureFitBaselineDrawable.program(), false);
-
-            textureFitBaselineDrawable.program().setUniform("viewCount", resources.viewSet.getCameraPoseCount());
 
             if (this.usePerceptuallyLinearError)
             {
@@ -151,17 +136,27 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
     @Override
     public void updateActiveViewIndexList(List<Integer> activeViewIndexList)
     {
-        resources.setupShaderProgram(textureFitDrawable.program(), false);
-
         for (int i = 0; i < activeViewIndexList.size(); i++)
         {
             viewIndexData.set(i, 0, activeViewIndexList.get(i));
         }
 
-        try (UniformBuffer<ContextType> viewIndexBuffer = resources.context.createUniformBuffer().setData(viewIndexData))
+        try (Program<ContextType> textureFitProgram = resources.getIBRShaderProgramBuilder()
+                .define("USE_VIEW_INDICES", true)
+                .define("VIEW_COUNT", activeViewIndexList.size())
+                .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/texturefit/specularfit_imgspace.frag"))
+                .createProgram();
+            UniformBuffer<ContextType> viewIndexBuffer = resources.context.createUniformBuffer().setData(viewIndexData))
         {
+            Drawable<ContextType> textureFitDrawable = resources.context.createDrawable(textureFitProgram);
+            textureFitDrawable.addVertexBuffer("position", resources.positionBuffer);
+            textureFitDrawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
+            textureFitDrawable.addVertexBuffer("normal", resources.normalBuffer);
+            textureFitDrawable.addVertexBuffer("tangent", resources.tangentBuffer);
+
+            resources.setupShaderProgram(textureFitDrawable.program(), false);
             textureFitDrawable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
-            textureFitDrawable.program().setUniform("viewCount", activeViewIndexList.size());
 
             if (this.usePerceptuallyLinearError)
             {
@@ -181,6 +176,10 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
             textureFitFramebuffer.clearDepthBuffer();
 
             textureFitDrawable.draw(PrimitiveMode.TRIANGLES, textureFitFramebuffer);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
         }
     }
 
@@ -337,11 +336,6 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
     @Override
     public void close()
     {
-        if (textureFitProgram != null)
-        {
-            textureFitProgram.close();
-        }
-
         if (textureFitFramebuffer != null)
         {
             textureFitFramebuffer.close();

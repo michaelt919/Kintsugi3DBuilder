@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.*;
 import javax.imageio.ImageIO;
 
+import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.ColorAttachmentSpec;
 import tetzlaff.gl.builders.framebuffer.DepthAttachmentSpec;
 import tetzlaff.gl.core.*;
@@ -224,18 +225,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     @Override
     public void initialize()
     {
-        if (this.program == null)
-        {
-            try
-            {
-                this.program = loadMainProgram();
-            }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-            }
-        }
-
         try
         {
             this.reprojectProgram = context.getShaderProgramBuilder()
@@ -290,6 +279,18 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         try
         {
             this.resources = resourceBuilder.create();
+
+            if (this.program == null)
+            {
+                try
+                {
+                    this.program = loadMainProgram();
+                }
+                catch (FileNotFoundException e)
+                {
+                    e.printStackTrace();
+                }
+            }
 
             this.mainDrawable = context.createDrawable(program);
             this.mainDrawable.addVertexBuffer("position", this.resources.positionBuffer);
@@ -1476,14 +1477,11 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     {
                         this.program.setUniform("holeFillColor", new Vector3(0.5f));
                         this.program.setUniform("shadowTestEnabled", false);
-                        this.program.setUniform("useViewIndices", true);
-                        this.program.setUniform("viewCount", 1);
                         viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, 1, snapViewIndex));
                         this.program.setUniformBuffer("ViewIndices", viewIndexBuffer);
                     }
                     else
                     {
-                        this.program.setUniform("useViewIndices", false);
                         this.program.setUniform("holeFillColor", new Vector3(0.0f));
                     }
 
@@ -2243,7 +2241,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             reloadMainProgram();
 
-            Program<ContextType> newReprojectProgram = context.getShaderProgramBuilder()
+            Program<ContextType> newReprojectProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "reproject.frag"))
                 .createProgram();
@@ -2273,7 +2271,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.reprojectDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
             }
 
-            Program<ContextType> newEnvironmentBackgroundProgram = context.getShaderProgramBuilder()
+            Program<ContextType> newEnvironmentBackgroundProgram = resources.getIBRShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
                     .createProgram();
@@ -2289,7 +2287,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.environmentBackgroundDrawable.addVertexBuffer("position", rectangleVertices);
 
 
-            Program<ContextType> newLightProgram = context.getShaderProgramBuilder()
+            Program<ContextType> newLightProgram = resources.getIBRShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "light.frag"))
                     .createProgram();
@@ -2304,7 +2302,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.lightDrawable = context.createDrawable(this.lightProgram);
             this.lightDrawable.addVertexBuffer("position", rectangleVertices);
 
-            Program<ContextType> newWidgetProgram = context.getShaderProgramBuilder()
+            Program<ContextType> newWidgetProgram = resources.getIBRShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
                     .createProgram();
@@ -2323,7 +2321,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.gridDrawable = context.createDrawable(this.solidProgram);
             this.gridDrawable.addVertexBuffer("position", gridVertices);
 
-            Program<ContextType> newCircleProgram = context.getShaderProgramBuilder()
+            Program<ContextType> newCircleProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "circle.frag"))
                 .createProgram();
@@ -2379,10 +2377,22 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private Program<ContextType> loadMainProgram() throws FileNotFoundException
     {
-        return context.getShaderProgramBuilder()
+        ProgramBuilder<ContextType> programBuilder = resources.getIBRShaderProgramBuilder();
+
+        if (this.settingsModel != null)
+        {
+            programBuilder
                 .define("BUEHLER_ALGORITHM", this.settingsModel.getBoolean("buehlerAlgorithm"))
-                .define("SORTING_SAMPLE_COUNT", this.settingsModel.getInt("buehlerViewCount"))
-                .define("CAMERA_POSE_COUNT", this.resources.viewSet.getCameraPoseCount())
+                .define("SORTING_SAMPLE_COUNT", this.settingsModel.getInt("buehlerViewCount"));
+
+            if (settingsModel.getBoolean("lightCalibrationMode"))
+            {
+                programBuilder.define("USE_VIEW_INDICES", true);
+                programBuilder.define("VIEW_COUNT", 1);
+            }
+        }
+
+        return programBuilder
                 .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
                 .createProgram();
@@ -2391,8 +2401,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private void updateCompiledSettings()
     {
         //noinspection ConstantConditions
-        if (!Objects.equals(this.program.getDefine("BUEHLER_ALGORITHM").get(), settingsModel.getBoolean("buehlerAlgorithm"))
-            || !Objects.equals(this.program.getDefine("SORTING_SAMPLE_COUNT").get(), settingsModel.getInt("buehlerViewCount")))
+        if (settingsModel != null && (
+            !this.program.hasDefine("BUEHLER_ALGORITHM") || !this.program.hasDefine("SORTING_SAMPLE_COUNT")
+                || !Objects.equals(this.program.getDefine("BUEHLER_ALGORITHM").get(), settingsModel.getBoolean("buehlerAlgorithm"))
+                || !Objects.equals(this.program.getDefine("SORTING_SAMPLE_COUNT").get(), settingsModel.getInt("buehlerViewCount"))
+                || (this.program.hasDefine("USE_VIEW_INDICES") != settingsModel.getBoolean("lightCalibrationMode"))
+                || (this.program.hasDefine("VIEW_COUNT") != settingsModel.getBoolean("lightCalibrationMode"))))
         {
             try
             {

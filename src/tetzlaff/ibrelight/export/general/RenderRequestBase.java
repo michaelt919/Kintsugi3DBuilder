@@ -118,7 +118,7 @@ abstract class RenderRequestBase implements IBRRequest
     protected <ContextType extends Context<ContextType>>
     Program<ContextType> createProgram(IBRResources<ContextType> resources) throws FileNotFoundException
     {
-        Program<ContextType> program = resources.context.getShaderProgramBuilder()
+        Program<ContextType> program = resources.getIBRShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, vertexShader)
             .addShader(ShaderType.FRAGMENT, fragmentShader)
             .createProgram();

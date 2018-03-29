@@ -98,50 +98,50 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "common", "depth.frag").toFile())
                 .createProgram();
 
-        projTexProgram = context.getShaderProgramBuilder()
+        projTexProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "colorappearance", "projtex_single.frag").toFile())
                 .createProgram();
 
-        lightFitProgram = context.getShaderProgramBuilder()
+        lightFitProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
                     param.isImagePreprojectionUseEnabled() ? "lightfit_texspace.frag" : "lightfit_imgspace.frag").toFile())
                 .createProgram();
 
-        diffuseFitProgram = context.getShaderProgramBuilder()
+        diffuseFitProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
                     param.isImagePreprojectionUseEnabled() ? "diffusefit_texspace.frag" : "diffusefit_imgspace.frag").toFile())
                 .createProgram();
 
-        specularFitProgram = context.getShaderProgramBuilder()
+        specularFitProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
                     //"debug.frag").toFile())
                     param.isImagePreprojectionUseEnabled() ? "specularfit_texspace.frag" : "specularfit_imgspace.frag").toFile())
                 .createProgram();
 
-        adjustFitProgram = context.getShaderProgramBuilder()
+        adjustFitProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit",
                     //"adjustfit_debug.frag").toFile())
                     param.isImagePreprojectionUseEnabled() ? "adjustfit_texspace.frag" : "adjustfit_imgspace.frag").toFile())
                 .createProgram();
 
-        errorCalcProgram = context.getShaderProgramBuilder()
+        errorCalcProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit",
                     //"errorcalc_debug.frag").toFile())
                     param.isImagePreprojectionUseEnabled() ? "errorcalc_texspace.frag" : "errorcalc_imgspace.frag").toFile())
                 .createProgram();
 
-        diffuseDebugProgram = context.getShaderProgramBuilder()
+        diffuseDebugProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "colorappearance", "projtex_multi.frag").toFile())
                 .createProgram();
 
-        specularDebugProgram = context.getShaderProgramBuilder()
+        specularDebugProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit", "specularresid_imgspace.frag").toFile())
                 .createProgram();
@@ -240,7 +240,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                 drawable.program().setTexture("viewImages", viewTextures);
                 drawable.program().setUniform("viewIndex", viewIndex);
-                drawable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
                 drawable.program().setUniform("infiniteLightSources", false);
 
                 width = viewTextures.getWidth();
@@ -433,7 +432,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         drawable.addVertexBuffer("texCoord", texCoordBuffer);
         drawable.addVertexBuffer("normal", normalBuffer);
 
-        drawable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
         drawable.program().setUniform("gamma", param.getGamma());
         if (resources.getLuminanceMap() == null)
         {
@@ -653,7 +651,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         drawable.addVertexBuffer("normal", normalBuffer);
         drawable.addVertexBuffer("tangent", tangentBuffer);
 
-        drawable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
         drawable.program().setUniformBuffer("CameraPoses", resources.cameraPoseBuffer);
         drawable.program().setUniformBuffer("CameraWeights", resources.cameraWeightBuffer);
 

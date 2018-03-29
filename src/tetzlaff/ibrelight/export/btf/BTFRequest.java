@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -48,10 +49,21 @@ public class BTFRequest implements IBRRequest
         IBRResources<ContextType> resources = renderable.getResources();
         ContextType context = resources.context;
 
-        try(Program<ContextType> btfProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
-                .createProgram();
+        ProgramBuilder<ContextType> programBuilder = resources.getIBRShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+            .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"));
+
+        if (viewIndices != null)
+        {
+            programBuilder.define("USE_VIEW_INDICES", true);
+            programBuilder.define("VIEW_COUNT", viewIndices.size());
+        }
+        else
+        {
+            programBuilder.define("USE_VIEW_INDICES", false);
+        }
+
+        try(Program<ContextType> btfProgram = programBuilder.createProgram();
             FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(width, height)
                 .addColorAttachment()
                 .createFramebufferObject();
@@ -64,6 +76,20 @@ public class BTFRequest implements IBRRequest
             drawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
             resources.setupShaderProgram(btfProgram, this.settings.get("renderingMode", RenderingMode.class));
+
+            if (viewIndices != null)
+            {
+                NativeVectorBuffer viewIndexData = NativeVectorBufferFactory.getInstance()
+                    .createEmpty(NativeDataType.INT, 1, viewIndices.size());
+
+                for (int i = 0; i < viewIndices.size(); i++)
+                {
+                    viewIndexData.set(i, 0, viewIndices.get(i));
+                }
+
+                viewIndexBuffer.setData(viewIndexData);
+                btfProgram.setUniformBuffer("ViewIndices", viewIndexBuffer);
+            }
 
             btfProgram.setUniform("renderGamma", this.settings.getFloat("gamma"));
             btfProgram.setUniform("weightExponent", this.settings.getFloat("weightExponent"));
@@ -84,26 +110,6 @@ public class BTFRequest implements IBRRequest
             btfProgram.setUniform("suppressMipmaps", true);
 
             btfProgram.setUniform("useTSOverrides", true);
-
-            if (viewIndices != null)
-            {
-                NativeVectorBuffer viewIndexData = NativeVectorBufferFactory.getInstance()
-                    .createEmpty(NativeDataType.INT, 1, viewIndices.size());
-
-                for (int i = 0; i < viewIndices.size(); i++)
-                {
-                    viewIndexData.set(i, 0, viewIndices.get(i));
-                }
-
-                viewIndexBuffer.setData(viewIndexData);
-                btfProgram.setUniformBuffer("ViewIndices", viewIndexBuffer);
-                btfProgram.setUniform("useViewIndices", true);
-                btfProgram.setUniform("viewCount", viewIndices.size());
-            }
-            else
-            {
-                btfProgram.setUniform("useViewIndices", false);
-            }
 
             ////////////////////////////////
 

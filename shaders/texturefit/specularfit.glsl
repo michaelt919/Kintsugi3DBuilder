@@ -3,7 +3,7 @@
 
 #line 5 2004
 
-#define DARPA_MODE false
+#define DARPA_MODE 0
 
 #define MIN_ROUGHNESS 0.00390625    // 1/256
 #define MAX_ROUGHNESS 1.0 // 0.70710678 // sqrt(1/2)
@@ -20,16 +20,16 @@ uniform bool standaloneMode;
 //uniform vec4 normalCandidateWeights;
 uniform vec2 normalCandidate;
 
-#define fitNearSpecularOnly DARPA_MODE // should be true for DARPA stuff (at least when comparing with Joey), false for cultural heritage
-#define chromaticRoughness (true && !(DARPA_MODE))
+#define fitNearSpecularOnly (DARPA_MODE != 0) // should be true for DARPA stuff (at least when comparing with Joey), false for cultural heritage
+#define chromaticRoughness (true && DARPA_MODE == 0)
 #define chromaticSpecular true
 #define aggressiveNormal false
-#define relaxedSpecularPeaks (true && !(DARPA_MODE))
+#define relaxedSpecularPeaks (true && DARPA_MODE == 0)
 #define USE_INFINITE_LIGHT_SOURCES infiniteLightSources
-#define USE_LIGHT_INTENSITIES true
+#define USE_LIGHT_INTENSITIES 1
 
 #define LINEAR_WEIGHT_MODE DARPA_MODE
-#define PERCEPTUAL_WEIGHT_MODE !(DARPA_MODE)
+#define PERCEPTUAL_WEIGHT_MODE (!DARPA_MODE)
 
 vec4 getDiffuseColor()
 {

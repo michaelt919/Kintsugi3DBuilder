@@ -1,6 +1,7 @@
 package tetzlaff.ibrelight.export.fidelity;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,22 +56,11 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
 
         this.viewWeightGenerator = new PowerViewWeightGenerator(settings.getFloat("weightExponent"));
 
-        fidelityProgram = resources.context.getShaderProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/relight/fidelity.frag"))
-            .createProgram();
-
         framebuffer = resources.context.buildFramebufferObject(size, size)
             .addColorAttachment(ColorFormat.RG32F)
             .createFramebufferObject();
 
         resources.context.getState().disableBackFaceCulling();
-
-        drawable = resources.context.createDrawable(fidelityProgram);
-        drawable.addVertexBuffer("position", resources.positionBuffer);
-        drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
-        drawable.addVertexBuffer("normal", resources.normalBuffer);
-        drawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
         viewIndexData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.INT, 1, resources.viewSet.getCameraPoseCount());
     }
@@ -92,6 +82,31 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
         for (int i = 0; i < activeViewIndexList.size(); i++)
         {
             viewIndexData.set(i, 0, activeViewIndexList.get(i));
+        }
+
+        try
+        {
+            if (fidelityProgram != null)
+            {
+                fidelityProgram.close();
+                fidelityProgram = null;
+            }
+
+            fidelityProgram = resources.getIBRShaderProgramBuilder()
+                .define("VIEW_COUNT", activeViewIndexList.size())
+                .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/relight/fidelity.frag"))
+                .createProgram();
+
+            drawable = resources.context.createDrawable(fidelityProgram);
+            drawable.addVertexBuffer("position", resources.positionBuffer);
+            drawable.addVertexBuffer("texCoord", resources.texCoordBuffer);
+            drawable.addVertexBuffer("normal", resources.normalBuffer);
+            drawable.addVertexBuffer("tangent", resources.tangentBuffer);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
         }
     }
 
@@ -133,7 +148,6 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
         try (UniformBuffer<ContextType> viewIndexBuffer = resources.context.createUniformBuffer().setData(viewIndexData))
         {
             drawable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
-            drawable.program().setUniform("viewCount", activeViewIndexList.size());
 
             framebuffer.clearColorBuffer(0, -1.0f, -1.0f, -1.0f, -1.0f);
             framebuffer.clearDepthBuffer();
@@ -211,7 +225,11 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
     @Override
     public void close()
     {
-        fidelityProgram.close();
+        if (fidelityProgram != null)
+        {
+            fidelityProgram.close();
+        }
+
         framebuffer.close();
     }
 }
