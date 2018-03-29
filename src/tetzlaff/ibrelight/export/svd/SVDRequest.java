@@ -120,7 +120,7 @@ public class SVDRequest implements IBRRequest
                 .addShader(ShaderType.FRAGMENT, new File("shaders/common/deferred.frag"))
                 .createProgram();
 
-            Program<ContextType> projTexProgram = resources.context.getShaderProgramBuilder()
+            Program<ContextType> projTexProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/relight/resid.frag"))
                 .createProgram();

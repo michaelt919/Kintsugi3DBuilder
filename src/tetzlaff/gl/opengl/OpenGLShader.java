@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -84,6 +85,7 @@ class OpenGLShader implements Shader<OpenGLContext>
     private static void loadSource(File file, StringBuilder sb, Map<String, Object> defines) throws FileNotFoundException
     {
         int lineCounter = 1;
+        boolean definesAdded = defines.isEmpty();
 
         try(Scanner scanner = new Scanner(file))
         {
@@ -91,7 +93,50 @@ class OpenGLShader implements Shader<OpenGLContext>
             {
                 String nextLine = scanner.nextLine();
 
-                if (nextLine.startsWith("#include"))
+                String trimmedLine = nextLine.trim();
+
+                if (!definesAdded && !trimmedLine.isEmpty() && !trimmedLine.startsWith("#version") && !trimmedLine.startsWith("#extension"))
+                {
+                    for (Entry<String, Object> define : defines.entrySet())
+                    {
+                        String key = define.getKey();
+                        Object value = define.getValue();
+
+                        validateDefine(key, value);
+
+                        sb.append("#define ");
+                        sb.append(key);
+                        sb.append(" ( ");
+
+                        if (value instanceof Boolean)
+                        {
+                            if ((Boolean)value)
+                            {
+                                sb.append(1);
+                            }
+                            else
+                            {
+                                sb.append(0);
+                            }
+                        }
+                        else
+                        {
+                            sb.append(value);
+                        }
+
+                        sb.append(" )");
+                        sb.append(System.lineSeparator());
+                    }
+
+                    sb.append("#line ");
+                    sb.append(lineCounter);
+                    sb.append(" 0");
+                    sb.append(System.lineSeparator());
+
+                    definesAdded = true;
+                }
+
+                if (trimmedLine.startsWith("#include"))
                 {
                     String[] parts = WHITESPACE_PATTERN.split(nextLine);
                     File includeFile;
@@ -112,42 +157,10 @@ class OpenGLShader implements Shader<OpenGLContext>
 
                     loadSource(includeFile, sb, Collections.emptyMap());
                 }
-                else if (nextLine.startsWith("#define"))
-                {
-                    String[] parts = WHITESPACE_PATTERN.split(nextLine);
-                    if (parts.length < 2 || !defines.containsKey(parts[1]))
-                    {
-                        sb.append(nextLine);
-                        sb.append(System.lineSeparator());
-                    }
-                    else
-                    {
-                        Object value = defines.get(parts[1]);
-                        validateDefine(parts[1], value);
-
-                        sb.append("#define ");
-                        sb.append(parts[1]);
-                        sb.append(" ( ");
-                        sb.append(value);
-                        sb.append(" )");
-                        sb.append(System.lineSeparator());
-
-                        handleLineContinuation(scanner, nextLine);
-                    }
-                }
                 else
                 {
                     sb.append(nextLine);
                     sb.append(System.lineSeparator());
-
-                    if (nextLine.startsWith("#undef"))
-                    {
-                        String[] parts = WHITESPACE_PATTERN.split(nextLine);
-                        if (parts.length >= 2 && defines.containsKey(parts[1]))
-                        {
-                            defines.remove(parts[1]);
-                        }
-                    }
                 }
 
                 lineCounter++;

@@ -1,15 +1,11 @@
 package tetzlaff.ibrelight.app;//Created by alexk on 7/19/2017.
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
-import tetzlaff.gl.core.Program;
-import tetzlaff.gl.core.ShaderType;
 import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.interactive.InteractiveGraphics;
@@ -110,20 +106,6 @@ public final class Rendering
 
             context.getState().enableDepthTest();
 
-            Program<OpenGLContext> program;
-            try
-            {
-                program = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
-                        .createProgram();
-            }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-                throw new IllegalStateException("The shader program could not be initialized.", e);
-            }
-
             CameraModel fpCameraModel = new SimpleCameraModel();
 
             FirstPersonController fpController = new FirstPersonController(fpCameraModel);
@@ -168,7 +150,7 @@ public final class Rendering
             toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeys.NONE), KeyPressToolType.TOGGLE_LIGHTS);
             toolBindingModel.setKeyPressTool(new KeyPress(Key.L, ModifierKeysBuilder.begin().control().end()), KeyPressToolType.TOGGLE_LIGHT_WIDGETS);
 
-            ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<>(context, program);
+            ImageBasedRendererList<OpenGLContext> rendererList = new ImageBasedRendererList<>(context);
 
             SceneViewportModel sceneViewportModel = MultithreadModels.getInstance().getSceneViewportModel();
 

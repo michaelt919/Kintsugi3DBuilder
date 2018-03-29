@@ -1,8 +1,6 @@
 #version 330
 #extension GL_ARB_texture_query_lod : enable
 
-//#define SVD_MODE
-
 in vec3 fPosition;
 in vec2 fTexCoord;
 in vec3 fNormal;
@@ -12,25 +10,42 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int fragObjectID;
 
-#include "../colorappearance/colorappearance.glsl"
+#ifndef SVD_MODE
+#define SVD_MODE 0
+#endif
 
-#define BUEHLER_ALGORITHM true
-#define USE_HEAPSORT true
+#ifndef BUEHLER_ALGORITHM
+#define BUEHLER_ALGORITHM 1
+#endif
+
+#ifndef USE_HEAPSORT
+#define USE_HEAPSORT 1
+#endif
+
+#ifndef SORTING_SAMPLE_COUNT
 #define SORTING_SAMPLE_COUNT 5
-#define SORTING_TOTAL_COUNT VIEW_COUNT
+#endif
 
+#ifndef MAX_VIRTUAL_LIGHT_COUNT
+#define MAX_VIRTUAL_LIGHT_COUNT 4
+#endif
+
+#include "../colorappearance/colorappearance.glsl"
 #include "reflectanceequations.glsl"
 #include "environment.glsl"
-#include "sort.glsl"
 #include "tonemap.glsl"
 
-#ifdef SVD_MODE
+#if SVD_MODE
 #include "../colorappearance/svd_unpack.glsl"
 #else
 #include "../colorappearance/imgspace.glsl"
 #endif
 
-#line 32 0
+#define SORTING_TOTAL_COUNT VIEW_COUNT
+
+#include "sort.glsl"
+
+#line 49 0
 
 uniform int objectID;
 
@@ -38,7 +53,6 @@ uniform mat4 model_view;
 uniform vec3 viewPos;
 uniform mat4 envMapMatrix;
 
-#define MAX_VIRTUAL_LIGHT_COUNT 4
 uniform vec3 lightIntensityVirtual[MAX_VIRTUAL_LIGHT_COUNT];
 uniform vec3 lightPosVirtual[MAX_VIRTUAL_LIGHT_COUNT];
 uniform vec3 lightOrientationVirtual[MAX_VIRTUAL_LIGHT_COUNT];
@@ -78,7 +92,7 @@ uniform vec3 holeFillColor;
 
 #define brdfMode false
 
-#ifdef SVD_MODE
+#if SVD_MODE
 #define residualImages true
 #else
 #define residualImages false
@@ -161,7 +175,7 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
             vec3 mfdFresnel;
             float mfdMono;
 
-#ifdef SVD_MODE
+#if SVD_MODE
             vec3 sqrtAdjustedRoughness = sqrt(roughness) + getColor(virtualIndex).xyz - vec3(0.5);
             vec3 adjustedRoughness = sqrtAdjustedRoughness * sqrtAdjustedRoughness;
             vec3 mfd = dist(nDotH, adjustedRoughness) / PI;
@@ -583,12 +597,14 @@ void main()
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
     vec3 radiance = vec3(0.0);
 
+#if !BUEHLER_ALGORITHM
     vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
 
-    if (!BUEHLER_ALGORITHM && imageBasedRenderingEnabled)
+    if (imageBasedRenderingEnabled)
     {
         weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
     }
+#endif
 
     if (relightingEnabled && ambientColor != vec3(0))
     {
@@ -687,17 +703,14 @@ void main()
                 vec4 predictedMFD;
                 if (imageBasedRenderingEnabled)
                 {
-                    if (BUEHLER_ALGORITHM)
-                    {
-                        vec4 weightedAverage = computeBuehler(
-                            useTSOverrides ? tangentToObject * halfDir : halfDir,
-                            diffuseColor, normalDir, specularColor, roughness);
-                        predictedMFD = weightedAverage;
-                    }
-                    else
-                    {
-                        predictedMFD = weightedAverages[i];
-                    }
+#if BUEHLER_ALGORITHM
+                    vec4 weightedAverage = computeBuehler(
+                        useTSOverrides ? tangentToObject * halfDir : halfDir,
+                        diffuseColor, normalDir, specularColor, roughness);
+                    predictedMFD = weightedAverage;
+#else
+                    predictedMFD = weightedAverages[i];
+#endif
                 }
 
                 if (predictedMFD.w < 1.0)

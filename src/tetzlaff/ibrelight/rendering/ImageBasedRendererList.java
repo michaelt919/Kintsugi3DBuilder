@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.function.DoubleUnaryOperator;
 
 import tetzlaff.gl.core.Context;
-import tetzlaff.gl.core.Program;
 import tetzlaff.gl.interactive.InteractiveRenderable;
 import tetzlaff.gl.interactive.InteractiveRenderableList;
 import tetzlaff.gl.vecmath.Vector3;
@@ -37,7 +36,7 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
     private ReadonlyLightingModel lightingModel;
     private ReadonlySettingsModel settingsModel;
 
-    public ImageBasedRendererList(ContextType context, Program<ContextType> program)
+    public ImageBasedRendererList(ContextType context)
     {
         this.context = context;
         this.renderableList = new InteractiveRenderableList<>();

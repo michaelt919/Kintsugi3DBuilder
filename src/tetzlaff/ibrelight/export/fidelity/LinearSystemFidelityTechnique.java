@@ -162,7 +162,7 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
 
         try
         (
-            Program<ContextType> projTexProgram = resources.context.getShaderProgramBuilder()
+            Program<ContextType> projTexProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_multi.frag"))
                 .createProgram();

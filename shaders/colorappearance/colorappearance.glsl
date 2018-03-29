@@ -6,14 +6,29 @@
 
 #line 8 1000
 
+#ifndef PI
 #define PI 3.1415926535897932384626433832795 // For convenience
+#endif
 
+#ifndef CAMERA_POSE_COUNT
 #define CAMERA_POSE_COUNT 1024
-#define CAMERA_POSE_COUNT_DIV_4 (CAMERA_POSE_COUNT / 4)
+#endif
+
+#define CAMERA_POSE_COUNT_DIV_4 ((CAMERA_POSE_COUNT + 3) / 4)
+
+#ifndef LIGHT_COUNT
 #define LIGHT_COUNT 1024
+#endif
+
+#ifndef VIEW_COUNT
 #define VIEW_COUNT CAMERA_POSE_COUNT
-#define VIEW_COUNT_DIV_4 (VIEW_COUNT / 4)
-#define USE_VIEW_INDICES false
+#endif
+
+#define VIEW_COUNT_DIV_4 ((VIEW_COUNT + 3) / 4)
+
+#ifndef USE_VIEW_INDICES
+#define USE_VIEW_INDICES 0
+#endif
 
 #if USE_VIEW_INDICES
 layout(std140) uniform ViewIndices

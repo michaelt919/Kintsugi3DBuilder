@@ -5,7 +5,9 @@
 
 #line 7 1101
 
+#ifndef CAMERA_PROJECTION_COUNT
 #define CAMERA_PROJECTION_COUNT 1024
+#endif
 
 uniform sampler2DArray viewImages;
 uniform sampler2DArray depthImages;

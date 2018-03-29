@@ -12,7 +12,9 @@ uniform mat4 envMapMatrix;
 uniform vec3 envMapIntensity;
 uniform float gamma;
 
+#ifndef PI
 #define PI 3.1415926535897932384626433832795
+#endif
 
 void main()
 {

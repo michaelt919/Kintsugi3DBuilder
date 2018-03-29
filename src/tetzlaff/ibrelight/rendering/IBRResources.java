@@ -9,6 +9,7 @@ import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
 import tetzlaff.gl.builders.ColorTextureBuilder;
+import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.material.Material;
 import tetzlaff.gl.nativebuffer.NativeDataType;
@@ -805,6 +806,14 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
+    public ProgramBuilder<ContextType> getIBRShaderProgramBuilder()
+    {
+        return context.getShaderProgramBuilder()
+            .define("CAMERA_POSE_COUNT", this.viewSet.getCameraPoseCount())
+            .define("LIGHT_COUNT", this.viewSet.getLightCount())
+            .define("CAMERA_PROJECTION_COUNT", this.viewSet.getCameraProjectionCount());
+    }
+
     public static File findImageFile(File requestedFile) throws FileNotFoundException
     {
         if (requestedFile.exists())
@@ -1011,7 +1020,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             program.setUniformBuffer("LightIntensities", this.lightIntensityBuffer);
             program.setUniformBuffer("LightIndices", this.lightIndexBuffer);
         }
-        program.setUniform("viewCount", this.viewSet.getCameraPoseCount());
 
         program.setUniform("gamma", this.viewSet.getGamma());
 

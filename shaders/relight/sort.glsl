@@ -3,6 +3,16 @@
 
 #line 5 3002
 
+#ifndef SORTING_SAMPLE_COUNT
+#define SORTING_SAMPLE_COUNT 1 // For syntax highlighting
+#error
+#endif
+
+#ifndef SORTING_TOTAL_COUNT
+#define SORTING_TOTAL_COUNT 1 // For syntax highlighting
+#error
+#endif
+
 float getSortingWeight(int virtualIndex, vec3 targetDirection)
 {
     mat4 cameraPose = getCameraPose(virtualIndex);
@@ -88,13 +98,13 @@ void sort(vec3 targetDirection, out float[SORTING_SAMPLE_COUNT] weights, out int
     float indicesFP[SORTING_SAMPLE_COUNT];
 
     // Initialization
-    for (int i = 0; i < SORTING_SAMPLE_COUNT && i < totalCount; i++)
+    for (int i = 0; i < SORTING_SAMPLE_COUNT && i < SORTING_TOTAL_COUNT; i++)
     {
         weights[i] = 0.0;
         indicesFP[i] = -1;
     }
 
-    for (int i = totalCount; i < SORTING_SAMPLE_COUNT; i++)
+    for (int i = SORTING_TOTAL_COUNT; i < SORTING_SAMPLE_COUNT; i++)
     {
         weights[i] = 0.0; // If there are less samples available than requested, fill in with weights of 0.0.
         indicesFP[i] = 0;
