@@ -50,6 +50,9 @@ public class BTFRequest implements IBRRequest
         ContextType context = resources.context;
 
         ProgramBuilder<ContextType> programBuilder = resources.getIBRShaderProgramBuilder()
+            .define("BRDF_MODE", true)
+            .define("VIRTUAL_LIGHT_COUNT", 1)
+            .define("RELIGHTING_ENABLED", this.settings.getBoolean("relightingEnabled"))
             .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
             .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"));
 
@@ -97,7 +100,6 @@ public class BTFRequest implements IBRRequest
             btfProgram.setUniform("occlusionEnabled", resources.depthTextures != null && this.settings.getBoolean("occlusionEnabled"));
             btfProgram.setUniform("occlusionBias", this.settings.getFloat("occlusionBias"));
             btfProgram.setUniform("imageBasedRenderingEnabled", this.settings.get("renderingMode", RenderingMode.class).isImageBased());
-            btfProgram.setUniform("relightingEnabled", this.settings.getBoolean("relightingEnabled"));
             btfProgram.setUniform("pbrGeometricAttenuationEnabled", this.settings.getBoolean("pbrGeometricAttenuationEnabled"));
             btfProgram.setUniform("fresnelEnabled", this.settings.getBoolean("fresnelEnabled"));
 
@@ -117,7 +119,6 @@ public class BTFRequest implements IBRRequest
 //            for (int i = 1; i <= 179; i++)
 //            {
 //                double theta = i / 180.0f * Math.PI;
-//                btfProgram.setUniform("virtualLightCount", 1);
 //                btfProgram.setUniform("lightIntensityVirtual[0]", lightColor);
 //                btfProgram.setUniform("lightDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
 //                btfProgram.setUniform("viewDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
@@ -126,7 +127,6 @@ public class BTFRequest implements IBRRequest
             for (int i = 1; i <= 90; i++)
             {
                 double theta = i / 180.0f * Math.PI;
-                btfProgram.setUniform("virtualLightCount", 1);
                 btfProgram.setUniform("lightIntensityVirtual[0]", lightColor);
 
                 btfProgram.setUniform("lightDirTSOverride", new Vector3((float)(Math.sin(theta)*Math.sqrt(0.5)), -(float)(Math.sin(theta)*Math.sqrt(0.5)), (float)Math.cos(theta)));
