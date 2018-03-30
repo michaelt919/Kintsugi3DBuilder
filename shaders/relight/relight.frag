@@ -10,6 +10,10 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int fragObjectID;
 
+#ifndef BRDF_MODE
+#define BRDF_MODE 0
+#endif
+
 #ifndef SVD_MODE
 #define SVD_MODE 0
 #endif
@@ -26,8 +30,20 @@ layout(location = 1) out int fragObjectID;
 #define SORTING_SAMPLE_COUNT 5
 #endif
 
-#ifndef MAX_VIRTUAL_LIGHT_COUNT
-#define MAX_VIRTUAL_LIGHT_COUNT 4
+#ifndef RELIGHTING_ENABLED
+#define RELIGHTING_ENABLED 1
+#endif
+
+#ifndef VIRTUAL_LIGHT_COUNT
+#if RELIGHTING_ENABLED
+#define VIRTUAL_LIGHT_COUNT 4
+#else
+#define VIRTUAL_LIGHT_COUNT 1
+#endif
+#endif
+
+#ifndef RESIDUAL_IMAGES
+#define RESIDUAL_IMAGES SVD_MODE
 #endif
 
 #include "../colorappearance/colorappearance.glsl"
@@ -53,13 +69,12 @@ uniform mat4 model_view;
 uniform vec3 viewPos;
 uniform mat4 envMapMatrix;
 
-uniform vec3 lightIntensityVirtual[MAX_VIRTUAL_LIGHT_COUNT];
-uniform vec3 lightPosVirtual[MAX_VIRTUAL_LIGHT_COUNT];
-uniform vec3 lightOrientationVirtual[MAX_VIRTUAL_LIGHT_COUNT];
-uniform float lightSpotSizeVirtual[MAX_VIRTUAL_LIGHT_COUNT];
-uniform float lightSpotTaperVirtual[MAX_VIRTUAL_LIGHT_COUNT];
-uniform mat4 lightMatrixVirtual[MAX_VIRTUAL_LIGHT_COUNT];
-uniform int virtualLightCount;
+uniform vec3 lightIntensityVirtual[VIRTUAL_LIGHT_COUNT];
+uniform vec3 lightPosVirtual[VIRTUAL_LIGHT_COUNT];
+uniform vec3 lightOrientationVirtual[VIRTUAL_LIGHT_COUNT];
+uniform float lightSpotSizeVirtual[VIRTUAL_LIGHT_COUNT];
+uniform float lightSpotTaperVirtual[VIRTUAL_LIGHT_COUNT];
+uniform mat4 lightMatrixVirtual[VIRTUAL_LIGHT_COUNT];
 uniform bool useSpotLights;
 
 uniform float weightExponent;
@@ -83,20 +98,11 @@ uniform vec3 lightDirTSOverride;
 uniform vec3 viewDirTSOverride;
 
 uniform bool imageBasedRenderingEnabled;
-uniform bool relightingEnabled;
 uniform bool pbrGeometricAttenuationEnabled;
 uniform bool fresnelEnabled;
 
 uniform bool perPixelWeightsEnabled;
 uniform vec3 holeFillColor;
-
-#define brdfMode false
-
-#if SVD_MODE
-#define residualImages true
-#else
-#define residualImages false
-#endif
 
 layout(std140) uniform ViewWeights
 {
@@ -175,12 +181,8 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
             vec3 mfdFresnel;
             float mfdMono;
 
-#if SVD_MODE
-            vec3 sqrtAdjustedRoughness = sqrt(roughness) + getColor(virtualIndex).xyz - vec3(0.5);
-            vec3 adjustedRoughness = sqrtAdjustedRoughness * sqrtAdjustedRoughness;
-            vec3 mfd = dist(nDotH, adjustedRoughness) / PI;
-            mfdMono = mfd.y;
-            mfdFresnel = xyzToRGB(mfd * rgbToXYZ(specularColor) * adjustedRoughness * adjustedRoughness / (roughness * roughness));
+#if RESIDUAL_IMAGES
+            // TODO
 #else
             vec4 sampleColor = getLinearColor(virtualIndex);
             if (sampleColor.a == 0.0)
@@ -250,7 +252,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
     }
 }
 
-vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec3 normalDir,
+vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec3 normalDir,
     vec3 specularColor, vec3 roughness, float maxLuminance)
 {
     // All in camera space
@@ -269,46 +271,43 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor,
 
     vec4 precomputedSample = vec4(0);
 
-    if (residualImages)
+#if RESIDUAL_IMAGES
+    vec4 residual = getColor(virtualIndex);
+    if (residual.w > 0)
     {
-        vec4 residual = getColor(virtualIndex);
-        if (residual.w > 0)
-        {
-            vec3 roughnessSquared = roughness * roughness;
-            precomputedSample = residual.w * vec4(xyzToRGB(
-                pow(max(vec3(0), pow(dist(nDotH, roughness) * roughnessSquared, vec3(1.0 / gamma))
-                    + (residual.xyz - vec3(0.5))), vec3(gamma))
-                * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
-        }
+        vec3 roughnessSquared = roughness * roughness;
+        precomputedSample = residual.w * vec4(xyzToRGB(
+            pow(max(vec3(0), pow(dist(nDotH, roughness) * roughnessSquared, vec3(1.0 / gamma))
+                + (residual.xyz - vec3(0.5))), vec3(gamma))
+            * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
     }
-    else
+#else
+    vec4 sampleColor = getLinearColor(virtualIndex);
+    if (sampleColor.a > 0.0)
     {
-        vec4 sampleColor = getLinearColor(virtualIndex);
-        if (sampleColor.a > 0.0)
+        vec3 lightIntensity = getLightIntensity(virtualIndex);
+
+        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
+            / (infiniteLightSources ? 1.0 : lightDistSquared);
+
+        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+        if (geomAtten != vec3(0))
         {
-            vec3 lightIntensity = getLightIntensity(virtualIndex);
+            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
 
-            vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
-                / (infiniteLightSources ? 1.0 : lightDistSquared);
-
-            vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-            if (geomAtten != vec3(0))
+            if(pbrGeometricAttenuationEnabled)
             {
-                vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-
-                if(pbrGeometricAttenuationEnabled)
-                {
-                    precomputedSample = sampleColor.a
-                        * vec4(specularResid.rgb * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), geomAtten);
-                }
-                else
-                {
-                    precomputedSample = sampleColor.a
-                        * vec4(specularResid.rgb * 4 / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), nDotL);
-                }
+                precomputedSample = sampleColor.a
+                    * vec4(specularResid.rgb * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), geomAtten);
+            }
+            else
+            {
+                precomputedSample = sampleColor.a
+                    * vec4(specularResid.rgb * 4 / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), nDotL);
             }
         }
     }
+#endif
 
     if (precomputedSample.w != 0)
     {
@@ -331,9 +330,9 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor,
             virtualViewDir = normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
         }
 
-        vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
+        vec4 result[VIRTUAL_LIGHT_COUNT];
 
-        for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
+        for (int lightPass = 0; lightPass < VIRTUAL_LIGHT_COUNT; lightPass++)
         {
             if (perPixelWeightsEnabled)
             {
@@ -343,14 +342,14 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor,
                     virtualLightDir =
                         normalize(mat3(cameraPose) * tangentToObject * lightDirTSOverride);
                 }
-                else if (relightingEnabled)
-                {
-                    virtualLightDir = normalize((cameraPose *
-                        vec4(lightPosVirtual[lightPass], 1.0)).xyz - fragmentPos);
-                }
                 else
                 {
+#if RELIGHTING_ENABLED
+                    virtualLightDir = normalize((cameraPose *
+                        vec4(lightPosVirtual[lightPass], 1.0)).xyz - fragmentPos);
+#else
                     virtualLightDir = virtualViewDir;
+#endif
                 }
 
                 // Compute sample weight
@@ -371,8 +370,8 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor,
     }
     else
     {
-        vec4 result[MAX_VIRTUAL_LIGHT_COUNT];
-        for (int lightPass = 0; lightPass < MAX_VIRTUAL_LIGHT_COUNT; lightPass++)
+        vec4 result[VIRTUAL_LIGHT_COUNT];
+        for (int lightPass = 0; lightPass < VIRTUAL_LIGHT_COUNT; lightPass++)
         {
             result[lightPass] = vec4(0.0);
         }
@@ -398,73 +397,70 @@ vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  v
 
     vec4 precomputedSample = vec4(0);
 
-    if (residualImages)
+#if RESIDUAL_IMAGES
+    vec4 residual = getColor(virtualIndex);
+    if (residual.w > 0)
     {
-        vec4 residual = getColor(virtualIndex);
-        if (residual.w > 0)
-        {
-            vec3 roughnessSquared = roughness * roughness;
-            return residual.w * vec4(xyzToRGB(
-                pow(max(vec3(0), pow(dist(nDotH, roughness) * roughnessSquared, vec3(1.0 / gamma))
-                    + (residual.xyz - vec3(0.5))), vec3(gamma))
-                * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
-        }
+        vec3 roughnessSquared = roughness * roughness;
+        return residual.w * vec4(xyzToRGB(
+            pow(max(vec3(0), pow(dist(nDotH, roughness) * roughnessSquared, vec3(1.0 / gamma))
+                + (residual.xyz - vec3(0.5))), vec3(gamma))
+            * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
     }
-    else
+#else
+    vec4 sampleColor = getLinearColor(virtualIndex);
+    if (sampleColor.a > 0.0)
     {
-        vec4 sampleColor = getLinearColor(virtualIndex);
-        if (sampleColor.a > 0.0)
+        vec3 lightIntensity = getLightIntensity(virtualIndex);
+
+        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
+            / (infiniteLightSources ? 1.0 : lightDistSquared);
+
+        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+        if (geomAtten != vec3(0))
         {
-            vec3 lightIntensity = getLightIntensity(virtualIndex);
+            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
 
-            vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity
-                / (infiniteLightSources ? 1.0 : lightDistSquared);
-
-            vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-            if (geomAtten != vec3(0))
+            if(pbrGeometricAttenuationEnabled)
             {
-                vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-
-                if(pbrGeometricAttenuationEnabled)
-                {
-                    return sampleColor.a
-                        * vec4(specularResid.rgb * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), geomAtten);
-                }
-                else
-                {
-                    return sampleColor.a
-                        * vec4(specularResid.rgb * 4 / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), nDotL);
-                }
+                return sampleColor.a
+                    * vec4(specularResid.rgb * 4 * nDotV / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), geomAtten);
+            }
+            else
+            {
+                return sampleColor.a
+                    * vec4(specularResid.rgb * 4 / lightIntensity * (infiniteLightSources ? 1.0 : lightDistSquared), nDotL);
             }
         }
     }
+#endif
 
     return vec4(0.0);
 }
 
-vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
+vec4[VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
 {
     float maxLuminance = getMaxLuminance();
 
-    vec4[MAX_VIRTUAL_LIGHT_COUNT] sums;
-    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
+    vec4[VIRTUAL_LIGHT_COUNT] sums;
+    for (int i = 0; i < VIRTUAL_LIGHT_COUNT; i++)
     {
         sums[i] = vec4(0.0);
     }
 
     for (int i = 0; i < VIEW_COUNT; i++)
     {
-        vec4[MAX_VIRTUAL_LIGHT_COUNT] microfacetSample =
+        vec4[VIRTUAL_LIGHT_COUNT] microfacetSample =
             computeSample(i, diffuseColor, normalDir, specularColor, roughness, maxLuminance);
 
-        for (int j = 0; j < MAX_VIRTUAL_LIGHT_COUNT; j++)
+        for (int j = 0; j < VIRTUAL_LIGHT_COUNT; j++)
         {
             sums[j] += microfacetSample[j];
         }
     }
 
-    vec4[MAX_VIRTUAL_LIGHT_COUNT] results;
-    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT; i++)
+    vec4[VIRTUAL_LIGHT_COUNT] results;
+    for (int i = 0; i < VIRTUAL_LIGHT_COUNT; i++)
     {
         if (!perPixelWeightsEnabled)
         {
@@ -598,7 +594,7 @@ void main()
     vec3 radiance = vec3(0.0);
 
 #if !BUEHLER_ALGORITHM
-    vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
+    vec4[VIRTUAL_LIGHT_COUNT] weightedAverages;
 
     if (imageBasedRenderingEnabled)
     {
@@ -606,7 +602,8 @@ void main()
     }
 #endif
 
-    if (relightingEnabled && ambientColor != vec3(0))
+#if RELIGHTING_ENABLED
+    if (ambientColor != vec3(0))
     {
         radiance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 
@@ -652,10 +649,9 @@ void main()
         //radiance = getEnvironment((envMapMatrix * vec4(-reflect(viewDir, normalDir), 0.0)).xyz);
         //radiance = getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
     }
+#endif
 
-    int effectiveLightCount = (relightingEnabled ? virtualLightCount : 1);
-
-    for (int i = 0; i < MAX_VIRTUAL_LIGHT_COUNT && i < effectiveLightCount; i++)
+    for (int i = 0; i < VIRTUAL_LIGHT_COUNT; i++)
     {
         vec3 lightDirUnNorm;
         vec3 lightDir;
@@ -665,23 +661,24 @@ void main()
             lightDirUnNorm = lightDir = lightDirTSOverride;
             nDotL = max(0.0, lightDir.z);
         }
-        else if (relightingEnabled)
+        else
         {
+#if RELIGHTING_ENABLED
             lightDirUnNorm = lightPosVirtual[i] - fPosition;
             lightDir = normalize(lightDirUnNorm);
             nDotL = max(0.0, dot(normalDir, lightDir));
-        }
-        else
-        {
+#else
             lightDirUnNorm = viewPos - fPosition;
             lightDir = viewDir;
             nDotL = max(0.0, dot(normalDir, viewDir));
+#endif
         }
 
         if (nDotL > 0.0)
         {
+#if RELIGHTING_ENABLED
             bool shadow = false;
-            if (!useTSOverrides && relightingEnabled && shadowsEnabled)
+            if (!useTSOverrides && shadowsEnabled)
             {
                 vec4 projTexCoord = lightMatrixVirtual[i] * vec4(fPosition, 1.0);
                 projTexCoord /= projTexCoord.w;
@@ -693,6 +690,7 @@ void main()
             }
 
             if (!shadow)
+#endif
             {
                 vec3 halfDir = normalize(viewDir + lightDir);
                 float hDotV = dot(halfDir, viewDir);
@@ -720,7 +718,8 @@ void main()
 
                 vec3 mfdFresnel;
 
-                if (relightingEnabled && fresnelEnabled)
+#if RELIGHTING_ENABLED
+                if (fresnelEnabled)
                 {
                     if (imageBasedRenderingEnabled)
                     {
@@ -745,6 +744,7 @@ void main()
                     }
                 }
                 else
+#endif
                 {
                     if (imageBasedRenderingEnabled)
                     {
@@ -777,6 +777,7 @@ void main()
                 {
                     irradiance /= dot(lightVectorTransformed, lightVectorTransformed);
 
+#if RELIGHTING_ENABLED
                     if (useSpotLights)
                     {
                         float lightDirCorrelation = max(0.0, dot(lightDir, -lightOrientationVirtual[i]));
@@ -785,18 +786,17 @@ void main()
                             spotBoundaryDistance / max(0.001, max(lightSpotSizeVirtual[i] * lightSpotTaperVirtual[i], spotBoundaryDistance)),
                             0.0, 1.0);
                     }
+#endif
                 }
 
                 pointRadiance = reflectance * irradiance;
 
-                if (brdfMode)
-                {
-                    radiance += pointRadiance / nDotL;
-                }
-                else
-                {
-                    radiance += pointRadiance;
-                }
+#if BRDF_MODE
+                radiance += pointRadiance / nDotL;
+#else
+                radiance += pointRadiance;
+#endif
+
             }
         }
     }

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.Map.Entry;
 import javax.imageio.ImageIO;
 
 import tetzlaff.gl.builders.ProgramBuilder;
@@ -733,7 +734,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         program.setUniform("renderGamma", gamma);
 
         program.setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
-        program.setUniform("relightingEnabled", this.settingsModel.getBoolean("relightingEnabled") && !settingsModel.getBoolean("lightCalibrationMode"));
         program.setUniform("pbrGeometricAttenuationEnabled", this.settingsModel.getBoolean("pbrGeometricAttenuationEnabled"));
         program.setUniform("fresnelEnabled", this.settingsModel.getBoolean("fresnelEnabled"));
         program.setUniform("shadowsEnabled", this.settingsModel.getBoolean("shadowsEnabled"));
@@ -758,8 +758,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             / Math.log(2.0)))));
             program.setUniform("diffuseEnvironmentMipMapLevel", this.environmentMap.getMipmapLevelCount() - 1);
         }
-
-        program.setUniform("virtualLightCount", Math.min(4, lightingModel.getLightCount()));
 
         program.setUniform("ambientColor", lightingModel.getAmbientLightColor());
 
@@ -2343,9 +2341,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         }
     }
 
-    private void reloadMainProgram() throws FileNotFoundException
+    private void reloadMainProgram(Map<String, Optional<Object>> defineMap) throws FileNotFoundException
     {
-        Program<ContextType> newProgram = loadMainProgram();
+        Program<ContextType> newProgram = loadMainProgram(defineMap);
 
         if (this.program != null)
         {
@@ -2375,20 +2373,54 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         suppressErrors = false;
     }
 
-    private Program<ContextType> loadMainProgram() throws FileNotFoundException
+    private void reloadMainProgram() throws FileNotFoundException
     {
-        ProgramBuilder<ContextType> programBuilder = resources.getIBRShaderProgramBuilder();
+        reloadMainProgram(getPreprocessorDefines());
+    }
+
+    private Map<String, Optional<Object>> getPreprocessorDefines()
+    {
+        Map<String, Optional<Object>> defineMap = new HashMap<>(256);
+
+        // Initialize to defaults
+        defineMap.put("BUEHLER_ALGORITHM", Optional.empty());
+        defineMap.put("SORTING_SAMPLE_COUNT", Optional.empty());
+        defineMap.put("RELIGHTING_ENABLED", Optional.empty());
+        defineMap.put("USE_VIEW_INDICES", Optional.empty());
+        defineMap.put("VIEW_COUNT", Optional.empty());
+        defineMap.put("VIRTUAL_LIGHT_COUNT", Optional.empty());
 
         if (this.settingsModel != null)
         {
-            programBuilder
-                .define("BUEHLER_ALGORITHM", this.settingsModel.getBoolean("buehlerAlgorithm"))
-                .define("SORTING_SAMPLE_COUNT", this.settingsModel.getInt("buehlerViewCount"));
+            defineMap.put("BUEHLER_ALGORITHM", Optional.of(this.settingsModel.getBoolean("buehlerAlgorithm")));
+            defineMap.put("SORTING_SAMPLE_COUNT", Optional.of(this.settingsModel.getInt("buehlerViewCount")));
+            defineMap.put("RELIGHTING_ENABLED", Optional.of(this.settingsModel.getBoolean("relightingEnabled")
+                && !settingsModel.getBoolean("lightCalibrationMode") && this.lightingModel != null));
 
             if (settingsModel.getBoolean("lightCalibrationMode"))
             {
-                programBuilder.define("USE_VIEW_INDICES", true);
-                programBuilder.define("VIEW_COUNT", 1);
+                defineMap.put("USE_VIEW_INDICES", Optional.of(true));
+                defineMap.put("VIEW_COUNT", Optional.of(1));
+            }
+
+            if (this.lightingModel != null && this.settingsModel.getBoolean("relightingEnabled"))
+            {
+                defineMap.put("VIRTUAL_LIGHT_COUNT", Optional.of(lightingModel.getLightCount()));
+            }
+        }
+
+        return defineMap;
+    }
+
+    private Program<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap) throws FileNotFoundException
+    {
+        ProgramBuilder<ContextType> programBuilder = resources.getIBRShaderProgramBuilder();
+
+        for (Entry<String, Optional<Object>> defineEntry : defineMap.entrySet())
+        {
+            if (defineEntry.getValue().isPresent())
+            {
+                programBuilder.define(defineEntry.getKey(), defineEntry.getValue().get());
             }
         }
 
@@ -2398,20 +2430,22 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 .createProgram();
     }
 
+    private Program<ContextType> loadMainProgram() throws FileNotFoundException
+    {
+        return loadMainProgram(getPreprocessorDefines());
+    }
+
     private void updateCompiledSettings()
     {
-        //noinspection ConstantConditions
-        if (settingsModel != null && (
-            !this.program.hasDefine("BUEHLER_ALGORITHM") || !this.program.hasDefine("SORTING_SAMPLE_COUNT")
-                || !Objects.equals(this.program.getDefine("BUEHLER_ALGORITHM").get(), settingsModel.getBoolean("buehlerAlgorithm"))
-                || !Objects.equals(this.program.getDefine("SORTING_SAMPLE_COUNT").get(), settingsModel.getInt("buehlerViewCount"))
-                || (this.program.hasDefine("USE_VIEW_INDICES") != settingsModel.getBoolean("lightCalibrationMode"))
-                || (this.program.hasDefine("VIEW_COUNT") != settingsModel.getBoolean("lightCalibrationMode"))))
+        Map<String, Optional<Object>> defineMap = getPreprocessorDefines();
+
+        if (defineMap.entrySet().stream().anyMatch(
+            defineEntry -> !Objects.equals(this.program.getDefine(defineEntry.getKey()), defineEntry.getValue())))
         {
             try
             {
                 System.out.println("Updating compiled render settings.");
-                this.reloadMainProgram();
+                this.reloadMainProgram(defineMap);
             }
             catch (FileNotFoundException e)
             {

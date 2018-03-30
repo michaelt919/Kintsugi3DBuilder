@@ -131,7 +131,6 @@ abstract class RenderRequestBase implements IBRRequest
         program.setUniform("occlusionEnabled", resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
         program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
         program.setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
-        program.setUniform("relightingEnabled", this.settingsModel.getBoolean("relightingEnabled"));
         program.setUniform("pbrGeometricAttenuationEnabled", this.settingsModel.getBoolean("pbrGeometricAttenuationEnabled"));
         program.setUniform("fresnelEnabled", this.settingsModel.getBoolean("fresnelEnabled"));
 
