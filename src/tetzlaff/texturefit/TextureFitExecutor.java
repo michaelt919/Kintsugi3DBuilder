@@ -99,23 +99,39 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 .createProgram();
 
         projTexProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCE", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "colorappearance", "projtex_single.frag").toFile())
                 .createProgram();
 
         lightFitProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
                     param.isImagePreprojectionUseEnabled() ? "lightfit_texspace.frag" : "lightfit_imgspace.frag").toFile())
                 .createProgram();
 
         diffuseFitProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
                     param.isImagePreprojectionUseEnabled() ? "diffusefit_texspace.frag" : "diffusefit_imgspace.frag").toFile())
                 .createProgram();
 
         specularFitProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
                     //"debug.frag").toFile())
@@ -123,6 +139,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 .createProgram();
 
         adjustFitProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit",
                     //"adjustfit_debug.frag").toFile())
@@ -130,6 +150,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 .createProgram();
 
         errorCalcProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit",
                     //"errorcalc_debug.frag").toFile())
@@ -137,11 +161,19 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 .createProgram();
 
         diffuseDebugProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "colorappearance", "projtex_multi.frag").toFile())
                 .createProgram();
 
         specularDebugProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit", "specularresid_imgspace.frag").toFile())
                 .createProgram();
@@ -195,11 +227,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
             if (resources.getLuminanceMap() == null)
             {
-                drawable.program().setUniform("useLuminanceMap", false);
+                drawable.program().setTexture("luminanceMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
             }
             else
             {
-                drawable.program().setUniform("useLuminanceMap", true);
                 drawable.program().setTexture("luminanceMap", resources.getLuminanceMap());
             }
 
@@ -208,26 +239,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
             if (useExistingTextureArray && viewTextures != null)
             {
-                if (!param.isCameraVisibilityTestEnabled() || depthTextures == null)
-                {
-                    drawable.program().setUniform("occlusionEnabled", false);
-                    drawable.program().setUniform("shadowTestEnabled", false);
-                }
-                else
+                if (param.isCameraVisibilityTestEnabled() && depthTextures != null)
                 {
                     drawable.program().setTexture("depthImages", depthTextures);
-                    drawable.program().setUniform("occlusionEnabled", true);
                     drawable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
 
-                    if (shadowTextures == null || shadowMatrixBuffer == null)
+                    if (shadowTextures != null && shadowMatrixBuffer != null)
                     {
-                        drawable.program().setUniform("shadowTestEnabled", false);
-                    }
-                    else
-                    {
-                        drawable.program().setTexture("shadowImages", depthTextures);
+                        drawable.program().setTexture("shadowImages", shadowTextures);
                         drawable.program().setUniformBuffer("ShadowMatrices", shadowMatrixBuffer);
-                        drawable.program().setUniform("shadowTestEnabled", true);
                     }
                 }
 
@@ -240,14 +260,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                 drawable.program().setTexture("viewImages", viewTextures);
                 drawable.program().setUniform("viewIndex", viewIndex);
-                drawable.program().setUniform("infiniteLightSources", false);
 
                 width = viewTextures.getWidth();
                 height = viewTextures.getHeight();
             }
             else
             {
-                drawable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
                 drawable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
 
                 drawable.program().setUniform("cameraPose", viewSet.getCameraPose(viewIndex));
@@ -260,7 +278,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 Vector3 lightPosition = viewSet.getLightPosition(viewSet.getLightIndex(viewIndex));
                 drawable.program().setUniform("lightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
                 drawable.program().setUniform("lightPosition", lightPosition);
-                drawable.program().setUniform("infiniteLightSource", false);
 
                 File imageFile = new File(imageDir, viewSet.getImageFileName(viewIndex));
                 if (!imageFile.exists())
@@ -324,14 +341,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                             shadowFBO.clearDepthBuffer();
                             shadowDrawable.draw(PrimitiveMode.TRIANGLES, shadowFBO);
 
-                            drawable.program().setUniform("shadowTestEnabled", true);
                             drawable.program().setUniform("shadowMatrix", shadowProjection.times(shadowModelView));
                             drawable.program().setTexture("shadowImage", shadowFBO.getDepthAttachmentTexture());
                         }
-                    }
-                    else
-                    {
-                        drawable.program().setUniform("shadowTestEnabled", false);
                     }
                 }
             }
@@ -435,17 +447,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         drawable.program().setUniform("gamma", param.getGamma());
         if (resources.getLuminanceMap() == null)
         {
-            drawable.program().setUniform("useLuminanceMap", false);
+            drawable.program().setTexture("luminanceMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
         }
         else
         {
-            drawable.program().setUniform("useLuminanceMap", true);
             drawable.program().setTexture("luminanceMap", resources.getLuminanceMap());
         }
-        drawable.program().setUniform("shadowTestEnabled", false);
-        drawable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
         drawable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
-        drawable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
 
         drawable.program().setUniformBuffer("CameraPoses", resources.cameraPoseBuffer);
 
@@ -660,19 +668,16 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             drawable.program().setUniformBuffer("CameraProjectionIndices", resources.cameraProjectionIndexBuffer);
         }
 
-        drawable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
         drawable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
         drawable.program().setUniform("gamma", param.getGamma());
         drawable.program().setUniform("fittingGamma", (float)FITTING_GAMMA);
-        drawable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
 
         if (resources.getLuminanceMap() == null)
         {
-            drawable.program().setUniform("useLuminanceMap", false);
+            drawable.program().setTexture("luminanceMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
         }
         else
         {
-            drawable.program().setUniform("useLuminanceMap", true);
             drawable.program().setTexture("luminanceMap", resources.getLuminanceMap());
         }
 
@@ -698,12 +703,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
         if (shadowMatrixBuffer != null)
         {
-            drawable.program().setUniform("shadowTestEnabled", param.isCameraVisibilityTestEnabled());
             drawable.program().setUniformBuffer("ShadowMatrices", shadowMatrixBuffer);
-        }
-        else
-        {
-            drawable.program().setUniform("shadowTestEnabled", false);
         }
     }
 

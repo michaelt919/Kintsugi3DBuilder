@@ -49,12 +49,20 @@ public class BTFRequest implements IBRRequest
         IBRResources<ContextType> resources = renderable.getResources();
         ContextType context = resources.context;
 
-        ProgramBuilder<ContextType> programBuilder = resources.getIBRShaderProgramBuilder()
-            .define("BRDF_MODE", true)
-            .define("VIRTUAL_LIGHT_COUNT", 1)
-            .define("RELIGHTING_ENABLED", this.settings.getBoolean("relightingEnabled"))
-            .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-            .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"));
+        ProgramBuilder<ContextType> programBuilder =
+            resources.getIBRShaderProgramBuilder(this.settings.get("renderingMode", RenderingMode.class))
+                .define("BRDF_MODE", true)
+                .define("VIRTUAL_LIGHT_COUNT", 1)
+                .define("PHYSICALLY_BASED_MASKING_SHADOWING", this.settings.getBoolean("pbrGeometricAttenuationEnabled"))
+                .define("FRESNEL_EFFECT_ENABLED", this.settings.getBoolean("fresnelEnabled"))
+                .define("RELIGHTING_ENABLED", this.settings.getBoolean("relightingEnabled"))
+                .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settings.getBoolean("occlusionEnabled"))
+                .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settings.getBoolean("occlusionEnabled"))
+                .define("SHADOWS_ENABLED", false)
+                .define("MIPMAPS_ENABLED", false)
+                .define("TANGENT_SPACE_OVERRIDE_ENABLED", true)
+                .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"));
 
         if (viewIndices != null)
         {
@@ -78,7 +86,7 @@ public class BTFRequest implements IBRRequest
             drawable.addVertexBuffer("normal", resources.normalBuffer);
             drawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
-            resources.setupShaderProgram(btfProgram, this.settings.get("renderingMode", RenderingMode.class));
+            resources.setupShaderProgram(btfProgram);
 
             if (viewIndices != null)
             {
@@ -97,21 +105,11 @@ public class BTFRequest implements IBRRequest
             btfProgram.setUniform("renderGamma", this.settings.getFloat("gamma"));
             btfProgram.setUniform("weightExponent", this.settings.getFloat("weightExponent"));
             btfProgram.setUniform("isotropyFactor", this.settings.getFloat("isotropyFactor"));
-            btfProgram.setUniform("occlusionEnabled", resources.depthTextures != null && this.settings.getBoolean("occlusionEnabled"));
             btfProgram.setUniform("occlusionBias", this.settings.getFloat("occlusionBias"));
-            btfProgram.setUniform("imageBasedRenderingEnabled", this.settings.get("renderingMode", RenderingMode.class).isImageBased());
-            btfProgram.setUniform("pbrGeometricAttenuationEnabled", this.settings.getBoolean("pbrGeometricAttenuationEnabled"));
-            btfProgram.setUniform("fresnelEnabled", this.settings.getBoolean("fresnelEnabled"));
 
-            btfProgram.setUniform("shadowsEnabled", false);
             btfProgram.setUniform("useEnvironmentTexture", false);
             btfProgram.setTexture("environmentMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_CUBE_MAP));
             btfProgram.setUniform("ambientColor", Vector3.ZERO);
-
-            btfProgram.setUniform("perPixelWeightsEnabled", true);
-            btfProgram.setUniform("suppressMipmaps", true);
-
-            btfProgram.setUniform("useTSOverrides", true);
 
             ////////////////////////////////
 

@@ -19,17 +19,15 @@ uniform bool lightIntensityCompensation;
 void main()
 {
     vec3 view = normalize(getViewVector());
-    vec3 lightPreNormalized = getLightVector();
-    vec3 attenuatedLightIntensity = // infiniteLightSources ? lightIntensity :
-        lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
-    vec3 light = normalize(lightPreNormalized);
+    LightInfo lightInfo = getLightInfo();
+    vec3 light = lightInfo.normalizedDirection;
     vec3 halfway = normalize(light + view);
     vec3 normal = normalize(fNormal);
     shadingInfo = vec4(dot(normal, light), dot(normal, view), dot(normal, halfway), dot(halfway, view));
 
     if (lightIntensityCompensation)
     {
-        fragColor = vec4(pow(getLinearColor().rgb / attenuatedLightIntensity, vec3(1.0 / gamma)), 1.0);
+        fragColor = vec4(pow(getLinearColor().rgb / lightInfo.attenuatedIntensity, vec3(1.0 / gamma)), 1.0);
     }
     else
     {

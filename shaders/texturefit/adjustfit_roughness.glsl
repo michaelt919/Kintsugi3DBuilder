@@ -144,11 +144,8 @@ ParameterizedFit adjustFit()
 
             if (color.a > 0 && nDotV > 0 && dot(normal, view) > 0)
             {
-                vec3 lightPreNormalized = getLightVector(i);
-                vec3 attenuatedLightIntensity = infiniteLightSources ?
-                    getLightIntensity(i) :
-                    getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
-                vec3 light = normalize(lightPreNormalized);
+                LightInfo lightInfo = getLightInfo(i);
+                vec3 light = lightInfo.normalizedDirection;
                 float nDotL = max(0, dot(light, shadingNormal));
                 vec3 lightTS = objectToTangent * light;
 
@@ -182,7 +179,7 @@ ParameterizedFit adjustFit()
                     float geom = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
                     float geomRatio = geom / (4 * nDotV);
 
-                    vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity), vec3(fittingGammaInv));
+                    vec3 colorScaled = pow(rgbToXYZ(color.rgb / lightInfo.attenuatedIntensity), vec3(fittingGammaInv));
                     vec3 currentFit = prevDiffuseColor * nDotL + prevSpecularColor * mfdEval * geomRatio;
                     vec3 colorResidual = colorScaled - pow(currentFit, vec3(fittingGammaInv));
 

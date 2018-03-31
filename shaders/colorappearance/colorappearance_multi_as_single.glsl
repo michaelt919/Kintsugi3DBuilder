@@ -7,7 +7,7 @@ uniform int viewIndex;
 
 #line 9 1002
 
-#define infiniteLightSource (infiniteLightSources)
+#define INFINITE_LIGHT_SOURCE INFINITE_LIGHT_SOURCES
 #define cameraPose             (cameraPoses[viewIndex])
 #define lightPosition         (lightPositions[getLightIndex(viewIndex)].xyz)
 #define lightIntensity         (getLightIntensity(viewIndex).rgb)
@@ -30,6 +30,11 @@ vec4 getColor()
 vec4 getLinearColor()
 {
     return linearizeColor(getColor());
+}
+
+LightInfo getLightInfo()
+{
+    return getLightInfo(viewIndex);
 }
 
 #endif // COLOR_APPEARANCE_MULTI_AS_SINGLE_GLSL

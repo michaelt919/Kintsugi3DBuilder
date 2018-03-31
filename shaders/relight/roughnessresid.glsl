@@ -65,10 +65,8 @@ vec4 computeRoughnessResidual()
 
     if (color.a > 0 && nDotV > 0 && dot(normal, view) > 0)
     {
-        vec3 lightPreNormalized = getLightVector();
-        vec3 attenuatedLightIntensity = infiniteLightSource ? 
-            lightIntensity : lightIntensity / dot(lightPreNormalized, lightPreNormalized);
-        vec3 light = normalize(lightPreNormalized);
+        LightInfo lightInfo = getLightInfo();
+        vec3 light = lightInfo.normalizedDirection;
         float nDotL = max(0, dot(normal, light));
 
         if (nDotL > 0.0)
@@ -78,7 +76,7 @@ vec4 computeRoughnessResidual()
             float nDotHSquared = nDotH * nDotH;
             float hDotV = max(0, dot(halfway, view));
 
-            vec3 colorScaled = rgbToXYZ(color.rgb / attenuatedLightIntensity);
+            vec3 colorScaled = rgbToXYZ(color.rgb / lightInfo.attenuatedIntensity);
             vec3 diffuseContrib = diffuseColor * nDotL;
             float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
             vec3 mfdFresnel = max(vec3(0.0), colorScaled - diffuseContrib) / geomRatio;

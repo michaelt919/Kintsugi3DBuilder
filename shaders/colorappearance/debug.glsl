@@ -30,11 +30,8 @@ vec4 getColor(int index)
 
     if (nDotV > 0)
     {
-        vec3 lightPreNormalized = getLightVector(index);
-        vec3 attenuatedLightIntensity = infiniteLightSources ?
-            getLightIntensity(index) :
-            getLightIntensity(index) / (dot(lightPreNormalized, lightPreNormalized));
-        vec3 light = normalize(lightPreNormalized);
+        LightInfo lightInfo = getLightInfo(index);
+        vec3 light = lightInfo.normalizedDirection;
         float nDotL = max(0, dot(light, shadingNormal));
         nDotV = max(0, dot(view, shadingNormal));
 
@@ -55,7 +52,7 @@ vec4 getColor(int index)
 
             return vec4(pow(DIFFUSE_COLOR * nDotL + xyzToRGB(SPECULAR_COLOR * mfdEval) / (4 * nDotV)
                     * min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV)
-                    * attenuatedLightIntensity / getMaxLuminance(),
+                    * lightInfo.attenuatedIntensity / getMaxLuminance(),
                 vec3(1.0 / gamma)), 1.0);
         }
         else

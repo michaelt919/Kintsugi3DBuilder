@@ -61,14 +61,12 @@ SpecularResidualInfo computeSpecularResidualInfo()
     
     if (color.a * nDotV > 0)
     {
-        vec3 lightPreNormalized = getLightVector();
-        vec3 attenuatedLightIntensity = infiniteLightSource ? 
-            lightIntensity : lightIntensity / (dot(lightPreNormalized, lightPreNormalized));
-        vec3 light = normalize(lightPreNormalized);
+        LightInfo lightInfo = getLightInfo();
+        vec3 light = lightInfo.normalizedDirection;
         info.nDotL = max(0, dot(normal, light));
 
         info.residualXYZ = useDiffuseEstimate ? 
-            removeDiffuse(color, getDiffuseColor(), maxLuminance, info.nDotL, attenuatedLightIntensity,
+            removeDiffuse(color, getDiffuseColor(), maxLuminance, info.nDotL, lightInfo.attenuatedIntensity,
                 getDiffuseNormalVector())
             : rgbToXYZ(color.rgb / attenuatedLightIntensity);
 

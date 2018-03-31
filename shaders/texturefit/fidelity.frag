@@ -82,11 +82,8 @@ vec2 computeFidelity()
 
     if (color.a > 0 && dot(normal, view) > 0)
     {
-        vec3 lightPreNormalized = getLightVector(targetViewIndex);
-        vec3 attenuatedLightIntensity = infiniteLightSources ?
-            getLightIntensity(targetViewIndex) :
-            getLightIntensity(targetViewIndex) / (dot(lightPreNormalized, lightPreNormalized));
-        vec3 light = normalize(lightPreNormalized);
+        LightInfo lightInfo = getLightInfo(targetViewIndex);
+        vec3 light = lightInfo.normalizedDirection;
         float nDotL = max(0, dot(light, shadingNormal));
 
         vec3 halfway = normalize(view + light);
