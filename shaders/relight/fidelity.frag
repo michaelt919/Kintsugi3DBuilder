@@ -51,11 +51,10 @@ vec4 getSample(int index)
 {
     vec4 color = getLinearColor(index);
 
-    //if (!infiniteLightSources)
-    {
-        vec3 light = getLightVector(index);
-        color.rgb *= dot(light, light) / getLightIntensity(index);
-    }
+#if !INFINITE_LIGHT_SOURCES
+    vec3 light = getLightVector(index);
+    color.rgb *= dot(light, light) / getLightIntensity(index);
+#endif
 
     return color;
 }

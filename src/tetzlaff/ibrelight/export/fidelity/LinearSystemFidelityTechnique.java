@@ -163,6 +163,8 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
         try
         (
             Program<ContextType> projTexProgram = resources.getIBRShaderProgramBuilder()
+                .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settings.getBoolean("occlusionEnabled"))
+                .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settings.getBoolean("occlusionEnabled"))
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_multi.frag"))
                 .createProgram();
@@ -179,12 +181,8 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
             drawable.addVertexBuffer("normal", resources.normalBuffer);
             drawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
-            resources.setupShaderProgram(projTexProgram, false);
-            if (!this.settings.getBoolean("occlusionEnabled"))
-            {
-                projTexProgram.setUniform("occlusionEnabled", false);
-            }
-            else
+            resources.setupShaderProgram(projTexProgram);
+            if (this.settings.getBoolean("occlusionEnabled"))
             {
                 projTexProgram.setUniform("occlusionBias", this.settings.getFloat("occlusionBias"));
             }

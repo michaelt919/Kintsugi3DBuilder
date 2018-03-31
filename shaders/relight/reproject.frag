@@ -143,15 +143,14 @@ vec4 reproject(sampler2D colorImage, sampler2D depthImage, mat4 projection, mat4
 //        }
 //        else
 //        {
-//            if (occlusionEnabled)
+//#if VISIBILITY_TEST_ENABLED
+//            float imageDepth = texture(prerenderedDepthImages, vec3(projTexCoord.xy, i)).r;
+//            if (abs(projTexCoord.z - imageDepth) > occlusionBias)
 //            {
-//                float imageDepth = texture(prerenderedDepthImages, vec3(projTexCoord.xy, i)).r;
-//                if (abs(projTexCoord.z - imageDepth) > occlusionBias)
-//                {
-//                    // Occluded
-//                    return vec4(0);
-//                }
+//                // Occluded
+//                return vec4(0);
 //            }
+//#endif
 //
 //            sum += getWeightByImage(i, view) * min(1, 2 * nDotVPrerendered / nDotVCurrent)
 //                    * texture(prerenderedImages, vec3(projTexCoord.xy, i));

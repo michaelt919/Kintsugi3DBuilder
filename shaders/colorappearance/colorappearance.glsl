@@ -46,7 +46,9 @@ int getViewIndex(int virtualIndex)
 #endif
 }
 
-uniform bool infiniteLightSources;
+#ifndef INFINITE_LIGHT_SOURCES
+#define INFINITE_LIGHT_SOURCES 0
+#endif
 
 layout(std140) uniform CameraWeights
 {
@@ -71,6 +73,12 @@ layout(std140) uniform LightIntensities
 layout(std140) uniform LightIndices
 {
     ivec4 lightIndices[CAMERA_POSE_COUNT_DIV_4];
+};
+
+struct LightInfo
+{
+    vec3 attenuatedIntensity;
+    vec3 normalizedDirection;
 };
 
 mat4 getCameraPose(int virtualIndex)
@@ -107,6 +115,22 @@ vec3 getLightIntensity(int virtualIndex)
 {
     int viewIndex = getViewIndex(virtualIndex);
     return lightIntensities[getLightIndex(viewIndex)].rgb;
+}
+
+LightInfo getLightInfo(int virtualIndex)
+{
+    LightInfo result;
+    result.normalizedDirection = getLightVector(virtualIndex);
+    result.attenuatedIntensity = getLightIntensity(virtualIndex);
+
+    float lightDistSquared = dot(result.normalizedDirection, result.normalizedDirection);
+    result.normalizedDirection *= inversesqrt(lightDistSquared);
+
+#if !INFINITE_LIGHT_SOURCES
+    result.attenuatedIntensity /= lightDistSquared;
+#endif
+
+    return result;
 }
 
 vec4 getColor(int virtualIndex); // Defined by imgspace.glsl or texspace.glsl

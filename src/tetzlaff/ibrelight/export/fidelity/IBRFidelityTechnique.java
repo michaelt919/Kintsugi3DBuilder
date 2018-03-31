@@ -94,6 +94,10 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
 
             fidelityProgram = resources.getIBRShaderProgramBuilder()
                 .define("VIEW_COUNT", activeViewIndexList.size())
+                .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settings.getBoolean("occlusionEnabled")
+                    && this.settings.get("weightMode", ShadingParameterMode.class) != ShadingParameterMode.UNIFORM)
+                .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settings.getBoolean("occlusionEnabled")
+                    && this.settings.get("weightMode", ShadingParameterMode.class) != ShadingParameterMode.UNIFORM)
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/relight/fidelity.frag"))
                 .createProgram();
@@ -113,7 +117,7 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
     @Override
     public double evaluateError(int targetViewIndex, File debugFile)
     {
-        resources.setupShaderProgram(drawable.program(), false);
+        resources.setupShaderProgram(drawable.program());
 
         //NativeVectorBuffer viewWeightBuffer = null;
         UniformBuffer<ContextType> weightBuffer = null;
@@ -126,14 +130,11 @@ public class IBRFidelityTechnique<ContextType extends Context<ContextType>> impl
             weightBuffer = resources.context.createUniformBuffer().setData(
                 /*viewWeightBuffer = */NativeVectorBufferFactory.getInstance().createFromFloatArray(1, viewWeights.length, viewWeights));
             drawable.program().setUniformBuffer("ViewWeights", weightBuffer);
-            drawable.program().setUniform("occlusionEnabled", false);
         }
         else
         {
             drawable.program().setUniform("perPixelWeightsEnabled", true);
-
             drawable.program().setUniform("weightExponent", this.settings.getFloat("weightExponent"));
-            drawable.program().setUniform("occlusionEnabled", resources.depthTextures != null && this.settings.getBoolean("occlusionEnabled"));
             drawable.program().setUniform("occlusionBias", this.settings.getFloat("occlusionBias"));
         }
 

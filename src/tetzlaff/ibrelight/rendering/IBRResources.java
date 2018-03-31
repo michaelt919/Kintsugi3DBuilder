@@ -806,12 +806,27 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         }
     }
 
-    public ProgramBuilder<ContextType> getIBRShaderProgramBuilder()
+    public ProgramBuilder<ContextType> getIBRShaderProgramBuilder(RenderingMode renderingMode)
     {
         return context.getShaderProgramBuilder()
             .define("CAMERA_POSE_COUNT", this.viewSet.getCameraPoseCount())
             .define("LIGHT_COUNT", this.viewSet.getLightCount())
-            .define("CAMERA_PROJECTION_COUNT", this.viewSet.getCameraProjectionCount());
+            .define("CAMERA_PROJECTION_COUNT", this.viewSet.getCameraProjectionCount())
+            .define("LUMINANCE_MAP_ENABLED", this.luminanceMap != null)
+            .define("INVERSE_LUMINANCE_MAP_ENABLED", this.inverseLuminanceMap != null)
+            .define("INFINITE_LIGHT_SOURCES", this.viewSet.areLightSourcesInfinite())
+            .define("VISIBILITY_TEST_ENABLED", this.depthTextures != null)
+            .define("SHADOW_TEST_ENABLED", this.shadowTextures != null)
+            .define("IMAGE_BASED_RENDERING_ENABLED", renderingMode.isImageBased())
+            .define("DIFFUSE_TEXTURE_ENABLED", this.diffuseTexture != null && renderingMode.useDiffuseTexture())
+            .define("SPECULAR_TEXTURE_ENABLED", this.specularTexture != null && renderingMode.useSpecularTextures())
+            .define("ROUGHNESS_TEXTURE_ENABLED", this.roughnessTexture != null && renderingMode.useSpecularTextures())
+            .define("NORMAL_TEXTURE_ENABLED", this.normalTexture != null && renderingMode.useNormalTexture());
+    }
+
+    public ProgramBuilder<ContextType> getIBRShaderProgramBuilder()
+    {
+        return getIBRShaderProgramBuilder(RenderingMode.IMAGE_BASED);
     }
 
     public static File findImageFile(File requestedFile) throws FileNotFoundException
@@ -1025,148 +1040,81 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
         if (this.luminanceMap == null)
         {
-            program.setUniform("useLuminanceMap", false);
             program.setTexture("luminanceMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
         }
         else
         {
-            program.setUniform("useLuminanceMap", true);
             program.setTexture("luminanceMap", this.luminanceMap);
         }
 
         if (this.inverseLuminanceMap == null)
         {
-            program.setUniform("useInverseLuminanceMap", false);
             program.setTexture("inverseLuminanceMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
         }
         else
         {
-            program.setUniform("useInverseLuminanceMap", true);
             program.setTexture("inverseLuminanceMap", this.inverseLuminanceMap);
         }
-
-        program.setUniform("infiniteLightSources", this.viewSet.areLightSourcesInfinite());
 
         if (this.depthTextures == null)
         {
             program.setTexture("depthImages", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY));
-            program.setUniform("occlusionEnabled", false);
         }
         else
         {
             program.setTexture("depthImages", this.depthTextures);
-            program.setUniform("occlusionEnabled", true);
             program.setUniform("occlusionBias", 0.002f);
         }
 
         if (this.shadowMatrixBuffer == null || this.shadowTextures == null)
         {
             program.setTexture("shadowImages", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY));
-            program.setUniform("shadowTestEnabled", false);
         }
         else
         {
-            program.setUniform("shadowTestEnabled", true);
             program.setUniformBuffer("ShadowMatrices", this.shadowMatrixBuffer);
             program.setTexture("shadowImages", this.shadowTextures);
             program.setUniform("occlusionBias", 0.002f);
         }
     }
 
-    public void setupShaderProgram(Program<ContextType> program, boolean enableTextures)
+    public void setupShaderProgram(Program<ContextType> program)
     {
         setupCommon(program);
 
         if (this.normalTexture == null)
         {
-            program.setUniform("useNormalTexture", false);
             program.setTexture("normalMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {
-            program.setUniform("useNormalTexture", enableTextures);
             program.setTexture("normalMap", this.normalTexture);
         }
 
         if (this.diffuseTexture == null)
         {
-            program.setUniform("useDiffuseTexture", false);
             program.setTexture("diffuseMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {
-            program.setUniform("useDiffuseTexture", enableTextures);
             program.setTexture("diffuseMap", this.diffuseTexture);
         }
 
         if (this.specularTexture == null)
         {
-            program.setUniform("useSpecularTexture", false);
             program.setTexture("specularMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {
-            program.setUniform("useSpecularTexture", enableTextures);
             program.setTexture("specularMap", this.specularTexture);
         }
 
         if (this.roughnessTexture == null)
         {
-            program.setUniform("useRoughnessTexture", false);
             program.setTexture("roughnessMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
         }
         else
         {
-            program.setUniform("useRoughnessTexture", enableTextures);
-            program.setTexture("roughnessMap", this.roughnessTexture);
-        }
-    }
-
-    public void setupShaderProgram(Program<ContextType> program, RenderingMode renderingMode)
-    {
-        setupCommon(program);
-
-        if (this.normalTexture == null)
-        {
-            program.setUniform("useNormalTexture", false);
-            program.setTexture("normalMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setUniform("useNormalTexture", renderingMode.useNormalTexture());
-            program.setTexture("normalMap", this.normalTexture);
-        }
-
-        if (this.diffuseTexture == null)
-        {
-            program.setUniform("useDiffuseTexture", false);
-            program.setTexture("diffuseMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setUniform("useDiffuseTexture", renderingMode.useDiffuseTexture());
-            program.setTexture("diffuseMap", this.diffuseTexture);
-        }
-
-        if (this.specularTexture == null)
-        {
-            program.setUniform("useSpecularTexture", false);
-            program.setTexture("specularMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setUniform("useSpecularTexture", renderingMode.useSpecularTextures());
-            program.setTexture("specularMap", this.specularTexture);
-        }
-
-        if (this.roughnessTexture == null)
-        {
-            program.setUniform("useRoughnessTexture", false);
-            program.setTexture("roughnessMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D));
-        }
-        else
-        {
-            program.setUniform("useRoughnessTexture", renderingMode.useSpecularTextures());
             program.setTexture("roughnessMap", this.roughnessTexture);
         }
     }

@@ -89,7 +89,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
             textureFitBaselineDrawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
             // Baseline
-            resources.setupShaderProgram(textureFitBaselineDrawable.program(), false);
+            resources.setupShaderProgram(textureFitBaselineDrawable.program());
 
             if (this.usePerceptuallyLinearError)
             {
@@ -155,7 +155,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
             textureFitDrawable.addVertexBuffer("normal", resources.normalBuffer);
             textureFitDrawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
-            resources.setupShaderProgram(textureFitDrawable.program(), false);
+            resources.setupShaderProgram(textureFitDrawable.program());
             textureFitDrawable.program().setUniformBuffer("ViewIndices", viewIndexBuffer);
 
             if (this.usePerceptuallyLinearError)
@@ -186,7 +186,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
     @Override
     public double evaluateBaselineError(int targetViewIndex, File debugFile)
     {
-        resources.setupShaderProgram(fidelityDrawable.program(), false);
+        resources.setupShaderProgram(fidelityDrawable.program());
 
         fidelityDrawable.program().setUniform("model_view", resources.viewSet.getCameraPose(targetViewIndex));
         fidelityDrawable.program().setUniform("targetViewIndex", targetViewIndex);
@@ -254,7 +254,7 @@ public class TextureFitFidelityTechnique<ContextType extends Context<ContextType
     @Override
     public double evaluateError(int targetViewIndex, File debugFile)
     {
-        resources.setupShaderProgram(fidelityDrawable.program(), false);
+        resources.setupShaderProgram(fidelityDrawable.program());
 
         fidelityDrawable.program().setUniform("model_view", resources.viewSet.getCameraPose(targetViewIndex));
         fidelityDrawable.program().setUniform("targetViewIndex", targetViewIndex);

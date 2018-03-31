@@ -43,6 +43,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private volatile LoadingMonitor loadingMonitor;
     private boolean suppressErrors = false;
     private SafeReadonlySettingsModel settingsModel;
+    private RenderingMode lastCompiledRenderingMode = RenderingMode.IMAGE_BASED;
 
     private final Builder<ContextType> resourceBuilder;
     private IBRResources<ContextType> resources;
@@ -113,7 +114,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private List<Matrix4> multiTransformationModel;
     private Vector3 centroid;
     private float boundingRadius;
-    
+
+    private Program<ContextType> referenceSceneProgram;
     private VertexGeometry referenceScene;
     private boolean referenceSceneChanged = false;
     private VertexBuffer<ContextType> refScenePositions;
@@ -261,7 +263,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             e.printStackTrace();
         }
-
 
         try
         {
@@ -697,17 +698,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void setupForDraw(Matrix4 view)
     {
-        this.setupForDraw(this.mainDrawable.program(), view);
+        this.setupForDraw(this.program, view);
     }
 
     private void setupForDraw(Program<ContextType> program, Matrix4 view)
     {
-        this.resources.setupShaderProgram(program, this.settingsModel.get("renderingMode", RenderingMode.class));
+        this.resources.setupShaderProgram(program);
 
         if (!this.settingsModel.getBoolean("relightingEnabled") && !settingsModel.getBoolean("lightCalibrationMode")
             && this.settingsModel.get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM)
         {
-            program.setUniform("perPixelWeightsEnabled", false);
             if (weightBuffer != null)
             {
                 weightBuffer.close();
@@ -715,28 +715,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             }
             weightBuffer = context.createUniformBuffer().setData(this.generateViewWeights(view));
             program.setUniformBuffer("ViewWeights", weightBuffer);
-            program.setUniform("occlusionEnabled", false);
-            program.setUniform("shadowTestEnabled", false);
         }
         else
         {
-            program.setUniform("perPixelWeightsEnabled", true);
             program.setUniform("weightExponent", this.settingsModel.getFloat("weightExponent"));
             program.setUniform("isotropyFactor", this.settingsModel.getFloat("isotropyFactor"));
-            program.setUniform("occlusionEnabled",
-                this.resources.depthTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
-            program.setUniform("shadowTestEnabled",
-                this.resources.shadowTextures != null && this.settingsModel.getBoolean("occlusionEnabled"));
             program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
         }
 
         float gamma = this.settingsModel.getFloat("gamma");
         program.setUniform("renderGamma", gamma);
-
-        program.setUniform("imageBasedRenderingEnabled", this.settingsModel.get("renderingMode", RenderingMode.class).isImageBased());
-        program.setUniform("pbrGeometricAttenuationEnabled", this.settingsModel.getBoolean("pbrGeometricAttenuationEnabled"));
-        program.setUniform("fresnelEnabled", this.settingsModel.getBoolean("fresnelEnabled"));
-        program.setUniform("shadowsEnabled", this.settingsModel.getBoolean("shadowsEnabled"));
 
         program.setTexture("shadowMaps", shadowMaps);
 
@@ -760,8 +748,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         }
 
         program.setUniform("ambientColor", lightingModel.getAmbientLightColor());
-
-        program.setUniform("useSpotLights", true);
 
         this.clearColor = new Vector3(
                 (float)Math.pow(lightingModel.getBackgroundColor().x, 1.0 / gamma),
@@ -1076,29 +1062,24 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void drawReferenceScene(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 projection)
     {
-        setupForDraw(view);
-        program.setUniform("projection", projection);
-        program.setUniform("imageBasedRenderingEnabled", false);
-        program.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
-
-        if (referenceScene != null && refScenePositions != null && refSceneNormals != null)
+        if (referenceSceneProgram != null && referenceScene != null && refScenePositions != null && refSceneNormals != null)
         {
-            Drawable<ContextType> drawable = context.createDrawable(program);
+            setupForDraw(referenceSceneProgram, view);
+            referenceSceneProgram.setUniform("projection", projection);
+            referenceSceneProgram.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
+
+            Drawable<ContextType> drawable = context.createDrawable(referenceSceneProgram);
             drawable.addVertexBuffer("position", refScenePositions);
             drawable.addVertexBuffer("normal", refSceneNormals);
 
             if (refSceneTexture != null && refSceneTexCoords != null)
             {
                 drawable.addVertexBuffer("texCoord", refSceneTexCoords);
-                program.setTexture("diffuseMap", refSceneTexture);
-                program.setUniform("useDiffuseTexture", true);
+                referenceSceneProgram.setTexture("diffuseMap", refSceneTexture);
             }
-            else
-            {
-                program.setUniform("useDiffuseTexture", false);
-            }
-            program.setUniform("model_view", view);
-            program.setUniform("viewPos", view.quickInverse(0.01f).getColumn(3).getXYZ());
+
+            referenceSceneProgram.setUniform("model_view", view);
+            referenceSceneProgram.setUniform("viewPos", view.quickInverse(0.01f).getColumn(3).getXYZ());
 
             // Do first pass at half resolution to off-screen buffer
             drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
@@ -1474,7 +1455,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     if (lightCalibrationMode)
                     {
                         this.program.setUniform("holeFillColor", new Vector3(0.5f));
-                        this.program.setUniform("shadowTestEnabled", false);
                         viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance().createFromIntArray(false, 1, 1, snapViewIndex));
                         this.program.setUniformBuffer("ViewIndices", viewIndexBuffer);
                     }
@@ -2239,6 +2219,18 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         {
             reloadMainProgram();
 
+            Program<ContextType> newReferenceSceneProgram =
+                loadMainProgram(getReferenceScenePreprocessorDefines(),
+                    refSceneTexture != null && refSceneTexCoords != null ? RenderingMode.LAMBERTIAN_DIFFUSE_TEXTURED : RenderingMode.SPECULAR_SHADED);
+
+            if (this.referenceSceneProgram != null)
+            {
+                this.referenceSceneProgram.close();
+                this.referenceSceneProgram = null;
+            }
+
+            this.referenceSceneProgram = newReferenceSceneProgram;
+
             Program<ContextType> newReprojectProgram = resources.getIBRShaderProgramBuilder()
                 .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "reproject.frag"))
@@ -2341,9 +2333,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         }
     }
 
-    private void reloadMainProgram(Map<String, Optional<Object>> defineMap) throws FileNotFoundException
+    private void reloadMainProgram(Map<String, Optional<Object>> defineMap, RenderingMode renderingMode) throws FileNotFoundException
     {
-        Program<ContextType> newProgram = loadMainProgram(defineMap);
+        Program<ContextType> newProgram = loadMainProgram(defineMap, renderingMode);
 
         if (this.program != null)
         {
@@ -2351,6 +2343,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         }
 
         this.program = newProgram;
+        this.lastCompiledRenderingMode = renderingMode;
 
         this.mainDrawable = context.createDrawable(program);
         this.mainDrawable.addVertexBuffer("position", this.resources.positionBuffer);
@@ -2375,7 +2368,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void reloadMainProgram() throws FileNotFoundException
     {
-        reloadMainProgram(getPreprocessorDefines());
+        reloadMainProgram(getPreprocessorDefines(), this.settingsModel == null ?
+            RenderingMode.IMAGE_BASED : this.settingsModel.get("renderingMode", RenderingMode.class));
     }
 
     private Map<String, Optional<Object>> getPreprocessorDefines()
@@ -2383,19 +2377,48 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         Map<String, Optional<Object>> defineMap = new HashMap<>(256);
 
         // Initialize to defaults
+        defineMap.put("PHYSICALLY_BASED_MASKING_SHADOWING", Optional.empty());
+        defineMap.put("FRESNEL_EFFECT_ENABLED", Optional.empty());
+        defineMap.put("SHADOWS_ENABLED", Optional.empty());
         defineMap.put("BUEHLER_ALGORITHM", Optional.empty());
         defineMap.put("SORTING_SAMPLE_COUNT", Optional.empty());
         defineMap.put("RELIGHTING_ENABLED", Optional.empty());
+        defineMap.put("VISIBILITY_TEST_ENABLED", Optional.empty());
+        defineMap.put("SHADOW_TEST_ENABLED", Optional.empty());
+        defineMap.put("PRECOMPUTED_VIEW_WEIGHTS_ENABLED", Optional.empty());
         defineMap.put("USE_VIEW_INDICES", Optional.empty());
+
         defineMap.put("VIEW_COUNT", Optional.empty());
         defineMap.put("VIRTUAL_LIGHT_COUNT", Optional.empty());
+        defineMap.put("ENVIRONMENT_ILLUMINATION_ENABLED", Optional.empty());
+
+        defineMap.put("LUMINANCE_MAP_ENABLED", Optional.of(this.resources.viewSet.hasCustomLuminanceEncoding()));
+        defineMap.put("INVERSE_LUMINANCE_MAP_ENABLED", Optional.of(false/*this.resources.viewSet.hasCustomLuminanceEncoding()*/));
 
         if (this.settingsModel != null)
         {
+            defineMap.put("PHYSICALLY_BASED_MASKING_SHADOWING",
+                Optional.of(this.settingsModel.getBoolean("pbrGeometricAttenuationEnabled")));
+            defineMap.put("FRESNEL_EFFECT_ENABLED", Optional.of(this.settingsModel.getBoolean("fresnelEnabled")));
+            defineMap.put("SHADOWS_ENABLED", Optional.of(this.settingsModel.getBoolean("shadowsEnabled")));
+
             defineMap.put("BUEHLER_ALGORITHM", Optional.of(this.settingsModel.getBoolean("buehlerAlgorithm")));
             defineMap.put("SORTING_SAMPLE_COUNT", Optional.of(this.settingsModel.getInt("buehlerViewCount")));
             defineMap.put("RELIGHTING_ENABLED", Optional.of(this.settingsModel.getBoolean("relightingEnabled")
                 && !settingsModel.getBoolean("lightCalibrationMode") && this.lightingModel != null));
+
+            boolean occlusionEnabled = this.settingsModel.getBoolean("occlusionEnabled")
+                && (this.settingsModel.getBoolean("relightingEnabled")
+                    || settingsModel.getBoolean("lightCalibrationMode")
+                    || this.settingsModel.get("weightMode", ShadingParameterMode.class) != ShadingParameterMode.UNIFORM);
+
+            defineMap.put("VISIBILITY_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.depthTextures != null));
+            defineMap.put("SHADOW_TEST_ENABLED", Optional.of(occlusionEnabled && this.resources.shadowTextures != null
+                && !settingsModel.getBoolean("lightCalibrationMode")));
+
+            defineMap.put("PRECOMPUTED_VIEW_WEIGHTS_ENABLED",
+                Optional.of(!this.settingsModel.getBoolean("relightingEnabled") && !settingsModel.getBoolean("lightCalibrationMode")
+                    && this.settingsModel.get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM));
 
             if (settingsModel.getBoolean("lightCalibrationMode"))
             {
@@ -2406,15 +2429,21 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             if (this.lightingModel != null && this.settingsModel.getBoolean("relightingEnabled"))
             {
                 defineMap.put("VIRTUAL_LIGHT_COUNT", Optional.of(lightingModel.getLightCount()));
+                defineMap.put("ENVIRONMENT_ILLUMINATION_ENABLED", Optional.of(!Objects.equals(lightingModel.getAmbientLightColor(), Vector3.ZERO)));
             }
         }
 
         return defineMap;
     }
 
-    private Program<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap) throws FileNotFoundException
+    private Map<String, Optional<Object>> getReferenceScenePreprocessorDefines()
     {
-        ProgramBuilder<ContextType> programBuilder = resources.getIBRShaderProgramBuilder();
+        return getPreprocessorDefines();
+    }
+
+    private Program<ContextType> loadMainProgram(Map<String, Optional<Object>> defineMap, RenderingMode renderingMode) throws FileNotFoundException
+    {
+        ProgramBuilder<ContextType> programBuilder = resources.getIBRShaderProgramBuilder(renderingMode);
 
         for (Entry<String, Optional<Object>> defineEntry : defineMap.entrySet())
         {
@@ -2425,6 +2454,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         }
 
         return programBuilder
+                .define("SPOTLIGHTS_ENABLED", true)
                 .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
                 .createProgram();
@@ -2432,24 +2462,62 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private Program<ContextType> loadMainProgram() throws FileNotFoundException
     {
-        return loadMainProgram(getPreprocessorDefines());
+        return loadMainProgram(getPreprocessorDefines(), this.settingsModel.get("renderingMode", RenderingMode.class));
     }
 
     private void updateCompiledSettings()
     {
         Map<String, Optional<Object>> defineMap = getPreprocessorDefines();
 
-        if (defineMap.entrySet().stream().anyMatch(
-            defineEntry -> !Objects.equals(this.program.getDefine(defineEntry.getKey()), defineEntry.getValue())))
+        RenderingMode renderingMode =
+            this.settingsModel == null ? RenderingMode.IMAGE_BASED : this.settingsModel.get("renderingMode", RenderingMode.class);
+
+        if (renderingMode != lastCompiledRenderingMode ||
+            defineMap.entrySet().stream().anyMatch(
+                defineEntry -> !Objects.equals(this.program.getDefine(defineEntry.getKey()), defineEntry.getValue())))
         {
             try
             {
                 System.out.println("Updating compiled render settings.");
-                this.reloadMainProgram(defineMap);
+                this.reloadMainProgram(defineMap, renderingMode);
             }
-            catch (FileNotFoundException e)
+            catch (RuntimeException|FileNotFoundException e)
             {
                 e.printStackTrace();
+            }
+        }
+
+        //noinspection VariableNotUsedInsideIf
+        if (this.referenceScene != null)
+        {
+            Map<String, Optional<Object>> refSceneDefineMap = getReferenceScenePreprocessorDefines();
+
+            if (this.referenceSceneProgram == null
+                || !Objects.equals(this.program.getDefine("DIFFUSE_TEXTURE_ENABLED").orElse(false),
+                    refSceneTexture != null && refSceneTexCoords != null)
+                || refSceneDefineMap.entrySet().stream().anyMatch(
+                    defineEntry -> !Objects.equals(this.program.getDefine(defineEntry.getKey()), defineEntry.getValue())))
+            {
+                try
+                {
+                    System.out.println("Updating compiled render settings for reference scene.");
+
+                    Program<ContextType> newReferenceSceneProgram =
+                        loadMainProgram(refSceneDefineMap, refSceneTexture != null && refSceneTexCoords != null ?
+                            RenderingMode.LAMBERTIAN_DIFFUSE_TEXTURED : RenderingMode.SPECULAR_SHADED);
+
+                    if (this.referenceSceneProgram != null)
+                    {
+                        this.referenceSceneProgram.close();
+                        this.referenceSceneProgram = null;
+                    }
+
+                    this.referenceSceneProgram = newReferenceSceneProgram;
+                }
+                catch (RuntimeException|FileNotFoundException e)
+                {
+                    e.printStackTrace();
+                }
             }
         }
     }

@@ -737,7 +737,7 @@ public class SVDRequest implements IBRRequest
                 projTexProgram.setUniform("minTexCoord", minTexCoord);
                 projTexProgram.setUniform("maxTexCoord", maxTexCoord);
 
-                resources.setupShaderProgram(projTexProgram, false);
+                resources.setupShaderProgram(projTexProgram);
 
                 projTexProgram.setTexture("positionMap", geometryFramebuffer.getColorAttachmentTexture(0));
 
@@ -749,10 +749,6 @@ public class SVDRequest implements IBRRequest
                 if (settings.getBoolean("occlusionEnabled"))
                 {
                     projTexProgram.setUniform("occlusionBias", settings.getFloat("occlusionBias"));
-                }
-                else
-                {
-                    projTexProgram.setUniform("occlusionEnabled", false);
                 }
 
                 // Want to use raw pixel values since they represents roughness, not intensity
