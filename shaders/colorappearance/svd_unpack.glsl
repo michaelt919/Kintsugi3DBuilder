@@ -9,9 +9,20 @@ uniform sampler2DArray eigentextures;
 uniform sampler2DArray viewWeightTextures;
 uniform ivec2 blockSize;
 
-#define MAX_EIGENTEXTURES 4
-#define VIEW_WEIGHT_PACKING_X 2
-#define VIEW_WEIGHT_PACKING_Y 2
+#ifndef EIGENTEXTURE_COUNT
+#define EIGENTEXTURE_COUNT 4 // For syntax highlighting
+#error // Require this to be defined by application.
+#endif
+
+#ifndef VIEW_WEIGHT_PACKING_X
+#define VIEW_WEIGHT_PACKING_X 2 // For syntax highlighting
+#error // Require this to be defined by application.
+#endif
+
+#ifndef VIEW_WEIGHT_PACKING_Y
+#define VIEW_WEIGHT_PACKING_Y 2 // For syntax highlighting
+#error // Require this to be defined by application.
+#endif
 
 ivec2 computeBlockStart(vec2 texCoords, ivec2 textureSize)
 {
@@ -106,7 +117,7 @@ vec4 getColor(int virtualIndex)
 
     vec3 color = vec3(0.0);
 
-    for (int k = 0; k < MAX_EIGENTEXTURES; k++)
+    for (int k = 0; k < EIGENTEXTURE_COUNT; k++)
     {
         vec4 weights000 = computeSVDViewWeights(blockStart000, k);
         vec4 weights001 = computeSVDViewWeights(blockStart001, k);

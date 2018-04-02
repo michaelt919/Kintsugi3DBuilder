@@ -730,7 +730,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         if (this.environmentMap == null || !lightingModel.isEnvironmentMappingEnabled())
         {
-            program.setUniform("useEnvironmentMap", false);
             program.setTexture("environmentMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_CUBE_MAP));
         }
         else
@@ -2430,6 +2429,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             {
                 defineMap.put("VIRTUAL_LIGHT_COUNT", Optional.of(lightingModel.getLightCount()));
                 defineMap.put("ENVIRONMENT_ILLUMINATION_ENABLED", Optional.of(!Objects.equals(lightingModel.getAmbientLightColor(), Vector3.ZERO)));
+                defineMap.put("ENVIRONMENT_TEXTURE_ENABLED", Optional.of(this.environmentMap != null && lightingModel.isEnvironmentMappingEnabled()));
             }
         }
 

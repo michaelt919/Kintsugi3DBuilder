@@ -3,47 +3,50 @@
 
 #line 5 3003
 
+#ifndef ENVIRONMENT_TEXTURE_ENABLED
+#define ENVIRONMENT_TEXTURE_ENABLED 0
+#endif
+
 uniform vec3 ambientColor;
+
+#if ENVIRONMENT_TEXTURE_ENABLED
 uniform samplerCube environmentMap;
-uniform bool useEnvironmentMap;
 uniform int environmentMipMapLevel;
 uniform int diffuseEnvironmentMipMapLevel;
+#endif
 
 vec3 getEnvironmentFresnel(vec3 lightDirection, float fresnelFactor)
 {
-    if (useEnvironmentMap)
-    {
-        return ambientColor * textureLod(environmentMap, lightDirection,
+    vec3 result;
+#if ENVIRONMENT_TEXTURE_ENABLED
+    result = ambientColor * textureLod(environmentMap, lightDirection,
             mix(environmentMipMapLevel, 0, fresnelFactor)).rgb;
-    }
-    else
-    {
-        return ambientColor;
-    }
+#else
+    result = ambientColor;
+#endif
+    return result;
 }
 
 vec3 getEnvironment(vec3 lightDirection)
 {
-    if (useEnvironmentMap)
-    {
-        return ambientColor * textureLod(environmentMap, lightDirection, environmentMipMapLevel).rgb;
-    }
-    else
-    {
-        return ambientColor;
-    }
+    vec3 result;
+#if ENVIRONMENT_TEXTURE_ENABLED
+    result = ambientColor * textureLod(environmentMap, lightDirection, environmentMipMapLevel).rgb;
+#else
+    result = ambientColor;
+#endif
+    return result;
 }
 
 vec3 getEnvironmentDiffuse(vec3 normalDirection)
-{
-    if (useEnvironmentMap)
-    {
-        return ambientColor * textureLod(environmentMap, normalDirection, diffuseEnvironmentMipMapLevel).rgb / 2;
-    }
-    else
-    {
-        return ambientColor;
-    }
+{    vec3 result;
+
+#if ENVIRONMENT_TEXTURE_ENABLED
+    result = ambientColor * textureLod(environmentMap, normalDirection, diffuseEnvironmentMipMapLevel).rgb / 2;
+#else
+    result = ambientColor;
+#endif
+    return result;
 }
 
 #endif // ENVIRONMENT_GLSL
