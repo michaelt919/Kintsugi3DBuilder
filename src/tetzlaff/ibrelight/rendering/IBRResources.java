@@ -95,6 +95,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
     public final UniformBuffer<ContextType> cameraWeightBuffer;
 
     private final double primaryViewDistance;
+    private final IntVector2 svdViewWeightPacking;
 
     private final float[] cameraWeights;
 
@@ -258,15 +259,19 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             {
                 System.out.println("Eigentextures not found.  Loading view images as normal textures.");
                 this.eigentextures = null;
+                svdViewWeightPacking = null;
             }
             else
             {
                 Texture3D<ContextType> eigentexturesTemp = null;
 
+                // TODO don't hardcode
+                svdViewWeightPacking = new IntVector2(2, 2);
+
                 try
                 {
                     eigentexturesTemp = context.getTextureFactory()
-                        .build2DColorTextureArray(img.getWidth(), img.getHeight(), 4)
+                        .build2DColorTextureArray(img.getWidth(), img.getHeight(), svdViewWeightPacking.x * svdViewWeightPacking.y)
                         .setInternalFormat(CompressionFormat.RED_4BPP)
                         .setMipmapsEnabled(true)
                         .setMaxMipmapLevel(6) // = log2(blockSize) = log2(64)  TODO: make this configurable
@@ -274,28 +279,18 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                         //.setMaxAnisotropy(16.0f)
                         .createTexture();
 
-                    // TODO don't hardcode
-//                    eigentexturesTemp.loadLayer(0, new File(viewSet.getImageFilePath(), "sv_0000_00_00.png"), true);
-//                    eigentexturesTemp.loadLayer(1, new File(viewSet.getImageFilePath(), "sv_0001_00_01.png"), true);
-//                    eigentexturesTemp.loadLayer(2, new File(viewSet.getImageFilePath(), "sv_0002_00_02.png"), true);
-//                    eigentexturesTemp.loadLayer(3, new File(viewSet.getImageFilePath(), "sv_0003_00_03.png"), true);
-//                    eigentexturesTemp.loadLayer(4, new File(viewSet.getImageFilePath(), "sv_0004_01_00.png"), true);
-//                    eigentexturesTemp.loadLayer(5, new File(viewSet.getImageFilePath(), "sv_0005_01_01.png"), true);
-//                    eigentexturesTemp.loadLayer(6, new File(viewSet.getImageFilePath(), "sv_0006_01_02.png"), true);
-//                    eigentexturesTemp.loadLayer(7, new File(viewSet.getImageFilePath(), "sv_0007_01_03.png"), true);
-//                    eigentexturesTemp.loadLayer(8, new File(viewSet.getImageFilePath(), "sv_0008_02_00.png"), true);
-//                    eigentexturesTemp.loadLayer(9, new File(viewSet.getImageFilePath(), "sv_0009_02_01.png"), true);
-//                    eigentexturesTemp.loadLayer(10, new File(viewSet.getImageFilePath(), "sv_0010_02_02.png"), true);
-//                    eigentexturesTemp.loadLayer(11, new File(viewSet.getImageFilePath(), "sv_0011_02_03.png"), true);
-//                    eigentexturesTemp.loadLayer(12, new File(viewSet.getImageFilePath(), "sv_0012_03_00.png"), true);
-//                    eigentexturesTemp.loadLayer(13, new File(viewSet.getImageFilePath(), "sv_0013_03_01.png"), true);
-//                    eigentexturesTemp.loadLayer(14, new File(viewSet.getImageFilePath(), "sv_0014_03_02.png"), true);
-//                    eigentexturesTemp.loadLayer(15, new File(viewSet.getImageFilePath(), "sv_0015_03_03.png"), true);
-
-                    eigentexturesTemp.loadLayer(0, new File(viewSet.getImageFilePath(), "sv_0000_00_00.png"), true);
-                    eigentexturesTemp.loadLayer(1, new File(viewSet.getImageFilePath(), "sv_0001_00_01.png"), true);
-                    eigentexturesTemp.loadLayer(2, new File(viewSet.getImageFilePath(), "sv_0002_01_00.png"), true);
-                    eigentexturesTemp.loadLayer(3, new File(viewSet.getImageFilePath(), "sv_0003_01_01.png"), true);
+                    int eigentextureIndex = 0;
+                    for (int i = 0; i < svdViewWeightPacking.x; i++)
+                    {
+                        for (int j = 0; j < svdViewWeightPacking.y; j++)
+                        {
+                            eigentexturesTemp.loadLayer(
+                                eigentextureIndex,
+                                new File(viewSet.getImageFilePath(), String.format("sv_%04d_%02d_%02d.png", eigentextureIndex, i, j)),
+                                true);
+                            eigentextureIndex++;
+                        }
+                    }
                 }
                 catch (IOException e)
                 {
@@ -398,6 +393,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             this.colorTextures = null;
             this.eigentextures = null;
+            this.svdViewWeightPacking = null;
         }
 
         if (loadingMonitor != null)
@@ -808,7 +804,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
     public ProgramBuilder<ContextType> getIBRShaderProgramBuilder(RenderingMode renderingMode)
     {
-        return context.getShaderProgramBuilder()
+        ProgramBuilder<ContextType> builder = context.getShaderProgramBuilder()
             .define("CAMERA_POSE_COUNT", this.viewSet.getCameraPoseCount())
             .define("LIGHT_COUNT", this.viewSet.getLightCount())
             .define("CAMERA_PROJECTION_COUNT", this.viewSet.getCameraProjectionCount())
@@ -821,7 +817,17 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             .define("DIFFUSE_TEXTURE_ENABLED", this.diffuseTexture != null && renderingMode.useDiffuseTexture())
             .define("SPECULAR_TEXTURE_ENABLED", this.specularTexture != null && renderingMode.useSpecularTextures())
             .define("ROUGHNESS_TEXTURE_ENABLED", this.roughnessTexture != null && renderingMode.useSpecularTextures())
-            .define("NORMAL_TEXTURE_ENABLED", this.normalTexture != null && renderingMode.useNormalTexture());
+            .define("NORMAL_TEXTURE_ENABLED", this.normalTexture != null && renderingMode.useNormalTexture())
+            .define("SVD_MODE", this.eigentextures != null);
+
+        if (this.eigentextures != null)
+        {
+            builder.define("EIGENTEXTURE_COUNT", this.eigentextures.getDepth());
+            builder.define("VIEW_WEIGHT_PACKING_X", this.svdViewWeightPacking.x);
+            builder.define("VIEW_WEIGHT_PACKING_Y", this.svdViewWeightPacking.y);
+        }
+
+        return builder;
     }
 
     public ProgramBuilder<ContextType> getIBRShaderProgramBuilder()

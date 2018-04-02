@@ -122,10 +122,21 @@ layout(location = 1) out int fragObjectID;
 #define DEFAULT_SPECULAR_ROUGHNESS (vec3(0.25)); // TODO pass in a default?
 #endif
 
-#include "../colorappearance/colorappearance.glsl"
 #include "reflectanceequations.glsl"
-#include "environment.glsl"
 #include "tonemap.glsl"
+
+#if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
+#include "environment.glsl"
+#endif
+
+#if IMAGE_BASED_RENDERING_ENABLED
+
+#include "../colorappearance/colorappearance.glsl"
+
+#if BUEHLER_ALGORITHM
+#define SORTING_TOTAL_COUNT VIEW_COUNT
+#include "sort.glsl"
+#endif
 
 #if SVD_MODE
 #include "../colorappearance/svd_unpack.glsl"
@@ -133,11 +144,9 @@ layout(location = 1) out int fragObjectID;
 #include "../colorappearance/imgspace.glsl"
 #endif
 
-#define SORTING_TOTAL_COUNT VIEW_COUNT
+#endif
 
-#include "sort.glsl"
-
-#line 141 0
+#line 150 0
 
 uniform int objectID;
 
@@ -146,6 +155,8 @@ uniform vec3 viewPos;
 uniform mat4 envMapMatrix;
 
 uniform vec3 holeFillColor;
+
+#if VIRTUAL_LIGHT_COUNT > 0
 
 uniform vec3 lightIntensityVirtual[VIRTUAL_LIGHT_COUNT];
 
@@ -164,6 +175,8 @@ uniform mat4 lightMatrixVirtual[VIRTUAL_LIGHT_COUNT];
 #endif // SHADOWS_ENABLED
 
 #endif // RELIGHTING_ENABLED
+
+#endif // VIRTUAL_LIGHT_COUNT > 0
 
 #if !BUEHLER_ALGORITHM
 uniform float weightExponent;
@@ -203,6 +216,8 @@ float getViewWeight(int viewIndex)
 }
 #endif
 
+#if IMAGE_BASED_RENDERING_ENABLED
+
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float maxLuminance)
 {
     if (nDotL == 0.0)
@@ -216,6 +231,8 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
         return vec4(remainder, originalColor.a);
     }
 }
+
+#if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
 
 vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDir,
     vec3 specularColor, vec3 roughness, float maxLuminance)
@@ -273,6 +290,7 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
 #if RESIDUAL_IMAGES
             // TODO
 #else
+
             vec4 sampleColor = getLinearColor(virtualIndex);
             if (sampleColor.a == 0.0)
             {
@@ -351,7 +369,106 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
     }
 }
 
-#if !BUEHLER_ALGORITHM
+#endif // RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
+
+#if BUEHLER_ALGORITHM
+
+vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  vec3 specularColor, vec3 roughness, float maxLuminance)
+{
+    // All in camera space
+    mat4 cameraPose = getCameraPose(virtualIndex);
+    vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
+    vec3 sampleViewDir = normalize(-fragmentPos);
+    vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(virtualIndex)].xyz - fragmentPos;
+    float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
+    vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
+    vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
+    vec3 normalDirCameraSpace = normalize((cameraPose * vec4(normalDir, 0.0)).xyz);
+    float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
+    float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
+    float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
+    float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
+
+    vec4 precomputedSample = vec4(0);
+
+#if RESIDUAL_IMAGES
+    vec4 residual = getColor(virtualIndex);
+    if (residual.w > 0)
+    {
+        vec3 roughnessSquared = roughness * roughness;
+        return residual.w * vec4(xyzToRGB(
+            pow(max(vec3(0), pow(
+                    /*dist(nDotH, roughness)*/
+                    rgbToXYZ(diffuseColor) / rgbToXYZ(specularColor)
+                 * roughnessSquared, vec3(1.0 / gamma))
+                + (residual.xyz - vec3(0.5))), vec3(gamma))
+            * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
+    }
+#else
+    vec4 sampleColor = getLinearColor(virtualIndex);
+    if (sampleColor.a > 0.0)
+    {
+        vec3 lightIntensity = getLightIntensity(virtualIndex);
+
+#if !INFINITE_LIGHT_SOURCES
+        lightIntensity /= lightDistSquared;
+#endif
+
+        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity;
+
+#if PHYSICALLY_BASED_MASKING_SHADOWING
+        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+        if (geomAtten != vec3(0))
+        {
+            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
+            return sampleColor.a * vec4(specularResid.rgb * 4 * nDotV / lightIntensity, geomAtten);
+        }
+#else
+        if (nDotL != 0.0)
+        {
+            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
+            return sampleColor.a * vec4(specularResid.rgb * 4 / lightIntensity, nDotL);
+        }
+#endif
+    }
+#endif // RESIDUAL_IMAGES
+
+    return vec4(0.0);
+}
+
+vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
+{
+    float maxLuminance = getMaxLuminance();
+
+    float weights[SORTING_SAMPLE_COUNT];
+    int indices[SORTING_SAMPLE_COUNT];
+
+    sort(targetDirection, weights, indices);
+
+    // Evaluate the light field
+    // weights[0] should be the smallest weight
+    vec4 sum = vec4(0.0);
+    for (int i = 1; i < SORTING_SAMPLE_COUNT; i++)
+    {
+        vec4 computedSample = computeSampleSingle(indices[i], diffuseColor, normalDir, specularColor, roughness, maxLuminance);
+        if (computedSample.a > 0)
+        {
+            sum += (weights[i] - weights[0]) * computedSample;
+        }
+    }
+
+    if (sum.a == 0.0)
+    {
+        return vec4(holeFillColor, 1.0);
+    }
+    else
+    {
+        return sum / sum.a;
+    }
+}
+
+#elif VIRTUAL_LIGHT_COUNT > 0
+
 vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec3 normalDir,
     vec3 specularColor, vec3 roughness, float maxLuminance)
 {
@@ -412,7 +529,7 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec
         }
 #endif
     }
-#endif
+#endif // RESIDUAL_IMAGES
 
     if (precomputedSample.w != 0)
     {
@@ -472,103 +589,6 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec
         return result;
     }
 }
-#endif
-
-vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  vec3 specularColor, vec3 roughness, float maxLuminance)
-{
-    // All in camera space
-    mat4 cameraPose = getCameraPose(virtualIndex);
-    vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
-    vec3 sampleViewDir = normalize(-fragmentPos);
-    vec3 sampleLightDirUnnorm = lightPositions[getLightIndex(virtualIndex)].xyz - fragmentPos;
-    float lightDistSquared = dot(sampleLightDirUnnorm, sampleLightDirUnnorm);
-    vec3 sampleLightDir = sampleLightDirUnnorm * inversesqrt(lightDistSquared);
-    vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
-    vec3 normalDirCameraSpace = normalize((cameraPose * vec4(normalDir, 0.0)).xyz);
-    float nDotH = max(0, dot(normalDirCameraSpace, sampleHalfDir));
-    float nDotL = max(0, dot(normalDirCameraSpace, sampleLightDir));
-    float nDotV = max(0, dot(normalDirCameraSpace, sampleViewDir));
-    float hDotV = max(0, dot(sampleHalfDir, sampleViewDir));
-
-    vec4 precomputedSample = vec4(0);
-
-#if RESIDUAL_IMAGES
-    vec4 residual = getColor(virtualIndex);
-    if (residual.w > 0)
-    {
-        vec3 roughnessSquared = roughness * roughness;
-        return residual.w * vec4(xyzToRGB(
-            pow(max(vec3(0), pow(dist(nDotH, roughness) * roughnessSquared, vec3(1.0 / gamma))
-                + (residual.xyz - vec3(0.5))), vec3(gamma))
-            * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
-    }
-#else
-    vec4 sampleColor = getLinearColor(virtualIndex);
-    if (sampleColor.a > 0.0)
-    {
-        vec3 lightIntensity = getLightIntensity(virtualIndex);
-
-#if !INFINITE_LIGHT_SOURCES
-        lightIntensity /= lightDistSquared;
-#endif
-
-        vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity;
-
-#if PHYSICALLY_BASED_MASKING_SHADOWING
-        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-        if (geomAtten != vec3(0))
-        {
-            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-            return sampleColor.a * vec4(specularResid.rgb * 4 * nDotV / lightIntensity, geomAtten);
-
-        }
-#else
-        if (nDotL != 0.0)
-        {
-            vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
-            return sampleColor.a * vec4(specularResid.rgb * 4 / lightIntensity, nDotL);
-        }
-#endif
-    }
-#endif // RESIDUAL_IMAGES
-
-    return vec4(0.0);
-}
-
-#if BUEHLER_ALGORITHM
-
-vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
-{
-    float maxLuminance = getMaxLuminance();
-
-    float weights[SORTING_SAMPLE_COUNT];
-    int indices[SORTING_SAMPLE_COUNT];
-
-    sort(targetDirection, weights, indices);
-
-    // Evaluate the light field
-    // weights[0] should be the smallest weight
-    vec4 sum = vec4(0.0);
-    for (int i = 1; i < SORTING_SAMPLE_COUNT; i++)
-    {
-        vec4 computedSample = computeSampleSingle(indices[i], diffuseColor, normalDir, specularColor, roughness, maxLuminance);
-        if (computedSample.a > 0)
-        {
-            sum += (weights[i] - weights[0]) * computedSample;
-        }
-    }
-
-    if (sum.a == 0.0)
-    {
-        return vec4(holeFillColor, 1.0);
-    }
-    else
-    {
-        return sum / sum.a;
-    }
-}
-
-#else
 
 vec4[VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
 {
@@ -611,6 +631,8 @@ vec4[VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normal
 }
 
 #endif // BUEHLER_ALGORITHM
+
+#endif // IMAGE_BASED_RENDERING_ENABLED
 
 void main()
 {
@@ -700,6 +722,8 @@ void main()
 #endif // IMAGE_BASED_RENDERING_ENABLED
 
 #endif // RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
+
+#if VIRTUAL_LIGHT_COUNT > 0
 
 #if IMAGE_BASED_RENDERING_ENABLED && !BUEHLER_ALGORITHM
     vec4[VIRTUAL_LIGHT_COUNT] weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
@@ -817,12 +841,13 @@ void main()
                 reflectance += mfdFresnel * nDotL / 4;
 #endif
 
+#if RELIGHTING_ENABLED
                 vec3 irradiance = lightIntensityVirtual[i];
 
 #if !TANGENT_SPACE_OVERRIDE_ENABLED
                 irradiance /= dot(lightVectorTransformed, lightVectorTransformed);
 
-#if RELIGHTING_ENABLED && SPOTLIGHTS_ENABLED
+#if SPOTLIGHTS_ENABLED
                 float lightDirCorrelation = max(0.0, dot(lightDir, -lightOrientationVirtual[i]));
                 float spotBoundaryDistance = lightSpotSizeVirtual[i] - sqrt(1 - lightDirCorrelation * lightDirCorrelation);
                 irradiance *= clamp(
@@ -833,6 +858,9 @@ void main()
 #endif // !TANGENT_SPACE_OVERRIDE_ENABLED
 
                 pointRadiance = reflectance * irradiance;
+#else
+                pointRadiance = reflectance;
+#endif
 
 #if BRDF_MODE
                 radiance += pointRadiance / nDotL;
@@ -842,6 +870,8 @@ void main()
             }
         }
     }
+
+#endif // VIRTUAL_LIGHT_COUNT > 0
 
     fragColor = tonemap(radiance, 1.0);
 
