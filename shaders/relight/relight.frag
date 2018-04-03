@@ -266,9 +266,9 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
 
         vec3 diffuseContrib = diffuseColor * nDotL_sample * lightIntensity;
 
-        vec3 geomAttenSample = geom(roughness, nDotH, nDotV_sample, nDotL_sample, hDotV_sample);
+        float geomAttenSample = geom(roughness.y, nDotH, nDotV_sample, nDotL_sample, hDotV_sample);
 
-        if (nDotV_sample > 0.0 && geomAttenSample != vec3(0))
+        if (nDotV_sample > 0.0 && geomAttenSample > 0.0)
         {
             vec3 virtualViewDir =
                 normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
@@ -277,11 +277,11 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
             float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
             float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
 
-            vec3 geomAttenVirtual;
+            float geomAttenVirtual;
 #if PHYSICALLY_BASED_MASKING_SHADOWING
-            geomAttenVirtual = geom(roughness, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
+            geomAttenVirtual = geom(roughness.y, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
 #else
-            geomAttenVirtual = vec3(nDotL_virtual * nDotV_virtual);
+            geomAttenVirtual = nDotL_virtual * nDotV_virtual;
 #endif
 
             vec3 mfdFresnel;
@@ -328,7 +328,7 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
 
 #if SPECULAR_TEXTURE_ENABLED && ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
             // Normalizes with respect to specular texture when available as described in our Archiving 2017 paper.
-            unweightedSample.a = mfdMono * geomAttenVirtual.y / (4 * nDotV_virtual);
+            unweightedSample.a = mfdMono * geomAttenVirtual / (4 * nDotV_virtual);
 #else
             unweightedSample.a = 1.0 / (2.0 * PI);
 #endif
@@ -417,14 +417,14 @@ vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  v
         vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity;
 
 #if PHYSICALLY_BASED_MASKING_SHADOWING
-        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
-        if (geomAtten != vec3(0))
+        float geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+        if (geomAtten > 0.0)
         {
             vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
             return sampleColor.a * vec4(specularResid.rgb * 4 * nDotV / lightIntensity, geomAtten);
         }
 #else
-        if (nDotL != 0.0)
+        if (nDotL > 0.0)
         {
             vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
             return sampleColor.a * vec4(specularResid.rgb * 4 / lightIntensity, nDotL);
@@ -510,10 +510,10 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec
 
         vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity;
 
-        vec3 geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+        float geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
 
 #if PHYSICALLY_BASED_MASKING_SHADOWING
-        if (geomAtten != vec3(0))
+        if (geomAtten > 0.0)
         {
             vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
             precomputedSample = sampleColor.a

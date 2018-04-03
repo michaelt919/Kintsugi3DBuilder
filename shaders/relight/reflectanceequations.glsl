@@ -67,8 +67,8 @@ float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV)
 float geomPartial(float roughness, float cosine)
 {
     //return cosine;
-    //return computeGeometricAttenuationSmithBeckmann(roughness, nDotV, nDotL);
-    return computeGeometricAttenuationSmithGGX(roughness, nDotV, nDotL);
+    //return computeGeometricAttenuationSmithBeckmann(roughness, cosine);
+    return computeGeometricAttenuationSmithGGX(roughness, cosine);
 }
 
 vec3 computeMicrofacetDistributionGGX(float nDotH, vec3 roughness)

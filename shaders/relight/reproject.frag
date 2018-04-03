@@ -335,7 +335,7 @@ void main()
                         nDotL * diffuseColor +
                         mfdFresnel
                          * (pbrGeometricAttenuationEnabled
-                            ? geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV) : vec3(nDotL / 4)))
+                            ? geom(roughness.y, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV) : (nDotL / 4)))
                          * lightIntensityVirtual[i] / dot(lightVectorTransformed, lightVectorTransformed);
                 }
             }
