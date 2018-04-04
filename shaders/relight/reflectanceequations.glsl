@@ -53,6 +53,13 @@ float computeGeometricAttenuationSmithGGX(float roughness, float cosine)
     return 2 / (1 + sqrt(1 + roughness * roughness * (1 / (cosine * cosine) - 1.0)));
 }
 
+float geomPartial(float roughness, float cosine)
+{
+    //return cosine;
+    //return computeGeometricAttenuationSmithBeckmann(roughness, cosine);
+    return computeGeometricAttenuationSmithGGX(roughness, cosine);
+}
+
 float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV)
 {
     float result;
@@ -62,13 +69,6 @@ float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV)
     result = computeGeometricAttenuationVCavity(nDotH, nDotV, nDotL, hDotV);
 #endif
     return result;
-}
-
-float geomPartial(float roughness, float cosine)
-{
-    //return cosine;
-    //return computeGeometricAttenuationSmithBeckmann(roughness, cosine);
-    return computeGeometricAttenuationSmithGGX(roughness, cosine);
 }
 
 vec3 computeMicrofacetDistributionGGX(float nDotH, vec3 roughness)

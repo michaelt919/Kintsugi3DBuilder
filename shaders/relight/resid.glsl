@@ -82,7 +82,7 @@ vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
 
             return vec4(
                 roughnessSquared *
-                    (colorScaled / specularColor * 4 * nDotV / (geomPartial(roughness, nDotL) * geomPartial(roughness, nDotV)) - 1.0),
+                    (colorScaled / specularColor * 4 * nDotV / (geomPartial(roughness.y, nDotL) * geomPartial(roughness.y, nDotV)) - 1.0),
                 nDotV);
         }
         else

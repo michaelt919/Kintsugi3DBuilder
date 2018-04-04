@@ -29,9 +29,9 @@ public class SVDRequest implements IBRRequest
 {
     private static final boolean DEBUG = false;
 
-    private static final int BLOCK_SIZE = 32;
+    private static final int BLOCK_SIZE = 16;
     private static final int SAVED_SINGULAR_VALUES = 4;
-    private static final int MAX_RUNNING_THREADS = 1;
+    private static final int MAX_RUNNING_THREADS = 7;
     private static final boolean PUT_COLOR_IN_VIEW_FACTOR = true;
     private static final boolean DIFFUSE_MODE = false;
 
@@ -247,23 +247,24 @@ public class SVDRequest implements IBRRequest
                                 for (int k = 0; k < resources.viewSet.getCameraPoseCount(); k++)
                                 {
                                     double squaredError;
+                                    SimpleMatrix error = svd.getError();
 
                                     if (PUT_COLOR_IN_VIEW_FACTOR)
                                     {
                                         int firstColumn = 3 * k;
-                                        squaredError = IntStream.range(0, svd.getError().numRows())
+                                        squaredError = IntStream.range(0, error.numRows())
                                             .filter(i -> pixelMasks[i])
-                                            .mapToDouble(i -> svd.getError().get(i, firstColumn) * svd.getError().get(i, firstColumn)
-                                                + svd.getError().get(i, firstColumn + 1) * svd.getError().get(i, firstColumn + 1)
-                                                + svd.getError().get(i, firstColumn + 2) * svd.getError().get(i, firstColumn + 2))
+                                            .mapToDouble(i -> error.get(i, firstColumn) * error.get(i, firstColumn)
+                                                + error.get(i, firstColumn + 1) * error.get(i, firstColumn + 1)
+                                                + error.get(i, firstColumn + 2) * error.get(i, firstColumn + 2))
                                             .sum();
                                     }
                                     else
                                     {
                                         int column = k;
-                                        squaredError = IntStream.range(0, svd.getError().numRows())
+                                        squaredError = IntStream.range(0, error.numRows())
                                             .filter(i -> pixelMasks[i / 3])
-                                            .mapToDouble(i -> svd.getError().get(i, column) * svd.getError().get(i, column))
+                                            .mapToDouble(i -> error.get(i, column) * error.get(i, column))
                                             .sum();
                                     }
 

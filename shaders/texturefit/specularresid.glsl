@@ -68,7 +68,7 @@ SpecularResidualInfo computeSpecularResidualInfo()
         info.residualXYZ = useDiffuseEstimate ? 
             removeDiffuse(color, getDiffuseColor(), maxLuminance, info.nDotL, lightInfo.attenuatedIntensity,
                 getDiffuseNormalVector())
-            : rgbToXYZ(color.rgb / attenuatedLightIntensity);
+            : rgbToXYZ(color.rgb / lightInfo.attenuatedIntensity);
 
         vec3 halfAngle = normalize(light + view);
         vec3 tangent = normalize(fTangent - dot(normal, fTangent));
