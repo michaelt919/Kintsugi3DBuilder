@@ -122,6 +122,13 @@ layout(location = 1) out int fragObjectID;
 #define DEFAULT_SPECULAR_ROUGHNESS (vec3(0.25)); // TODO pass in a default?
 #endif
 
+#if SVD_MODE
+#ifdef SMITH_MASKING_SHADOWING
+#undef SMITH_MASKING_SHADOWING
+#endif
+#define SMITH_MASKING_SHADOWING 1
+#endif
+
 #include "reflectanceequations.glsl"
 #include "tonemap.glsl"
 
@@ -371,6 +378,22 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 
 #endif // RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
 
+#if RESIDUAL_IMAGES
+vec4 getSampleFromResidual(vec4 residual, float nDotH, vec3 specularColor, vec3 roughness)
+{
+    vec3 roughnessSquared = roughness * roughness;
+//    return residual.w * vec4(xyzToRGB(
+//        pow(max(vec3(0), pow(
+//                /*dist(nDotH, roughness)*/
+//                rgbToXYZ(diffuseColor) / rgbToXYZ(specularColor)
+//             * roughnessSquared, vec3(1.0 / gamma))
+//            + (residual.xyz - vec3(0.5))), vec3(gamma))
+//        * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
+
+    return residual.w * vec4(xyzToRGB(((residual.xyz - vec3(0.5)) / roughnessSquared + 1.0) * rgbToXYZ(specularColor)), 1.0);
+}
+#endif
+
 #if BUEHLER_ALGORITHM
 
 vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  vec3 specularColor, vec3 roughness, float maxLuminance)
@@ -395,14 +418,7 @@ vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  v
     vec4 residual = getColor(virtualIndex);
     if (residual.w > 0)
     {
-        vec3 roughnessSquared = roughness * roughness;
-        return residual.w * vec4(xyzToRGB(
-            pow(max(vec3(0), pow(
-                    /*dist(nDotH, roughness)*/
-                    rgbToXYZ(diffuseColor) / rgbToXYZ(specularColor)
-                 * roughnessSquared, vec3(1.0 / gamma))
-                + (residual.xyz - vec3(0.5))), vec3(gamma))
-            * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
+        return getSampleFromResidual(residual, nDotH, specularColor, roughness);
     }
 #else
     vec4 sampleColor = getLinearColor(virtualIndex);
@@ -417,7 +433,7 @@ vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  v
         vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity;
 
 #if PHYSICALLY_BASED_MASKING_SHADOWING
-        float geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+        float geomAtten = geom(roughness.y, nDotH, nDotV, nDotL, hDotV);
         if (geomAtten > 0.0)
         {
             vec4 specularResid = removeDiffuse(sampleColor, diffuseContrib, nDotL, maxLuminance);
@@ -492,11 +508,7 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec
     vec4 residual = getColor(virtualIndex);
     if (residual.w > 0)
     {
-        vec3 roughnessSquared = roughness * roughness;
-        precomputedSample = residual.w * vec4(xyzToRGB(
-            pow(max(vec3(0), pow(dist(nDotH, roughness) * roughnessSquared, vec3(1.0 / gamma))
-                + (residual.xyz - vec3(0.5))), vec3(gamma))
-            * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
+        precomputedSample = getSampleFromResidual(residual, nDotH, specularColor, roughness);
     }
 #else
     vec4 sampleColor = getLinearColor(virtualIndex);
@@ -510,7 +522,7 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec
 
         vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity;
 
-        float geomAtten = geom(roughness, nDotH, nDotV, nDotL, hDotV);
+        float geomAtten = geom(roughness.y, nDotH, nDotV, nDotL, hDotV);
 
 #if PHYSICALLY_BASED_MASKING_SHADOWING
         if (geomAtten > 0.0)
@@ -836,7 +848,7 @@ void main()
                 vec3 reflectance = nDotL * diffuseColor;
 
 #if PHYSICALLY_BASED_MASKING_SHADOWING
-                reflectance += mfdFresnel * geom(roughness, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV);
+                reflectance += mfdFresnel * geom(roughness.y, nDotH, nDotV, nDotL, hDotV) / (4 * nDotV);
 #else
                 reflectance += mfdFresnel * nDotL / 4;
 #endif

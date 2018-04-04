@@ -34,17 +34,24 @@ vec4 getLinearColor()
     return linearizeColor(getColor());
 }
 
+struct LightInfo
+{
+    vec3 attenuatedIntensity;
+    vec3 normalizedDirection;
+};
+
+
 LightInfo getLightInfo()
 {
     LightInfo result;
-    result.normalizedLightDirection = getLightVector();
-    result.attenuatedLightIntensity = getLightIntensity();
+    result.normalizedDirection = getLightVector();
+    result.attenuatedIntensity = lightIntensity;
 
-    float lightDistSquared = dot(result.normalizedLightDirection, result.normalizedLightDirection);
-    result.normalizedLightDirection *= inversesqrt(lightDistSquared);
+    float lightDistSquared = dot(result.normalizedDirection, result.normalizedDirection);
+    result.normalizedDirection *= inversesqrt(lightDistSquared);
 
 #if !INFINITE_LIGHT_SOURCES
-    result.attenuatedLightIntensity /= lightDistSquared;
+    result.attenuatedIntensity /= lightDistSquared;
 #endif
 
     return result;

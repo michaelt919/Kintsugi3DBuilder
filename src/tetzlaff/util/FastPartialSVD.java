@@ -50,7 +50,7 @@ public final class FastPartialSVD
 
     public SimpleMatrix getError()
     {
-        return this.matrix;
+        return transpose ? this.matrix.transpose() : this.matrix;
     }
 
     public float[] getSingularValues()

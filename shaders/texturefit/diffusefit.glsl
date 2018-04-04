@@ -70,11 +70,11 @@ DiffuseFit fitDiffuse()
 
                 float attenuatedLuminance = getLuminance(lightInfo.attenuatedIntensity);
 
-                a += weight * outerProduct(lightNormalized, lightNormalized);
+                a += weight * outerProduct(light, light);
                 //b += weight * outerProduct(lightNormalized, vec4(color.rgb / lightInfo.attenuatedIntensity, 0.0));
-                b += weight * outerProduct(lightNormalized, color.rgb / lightInfo.attenuatedIntensity);
+                b += weight * outerProduct(light, color.rgb / lightInfo.attenuatedIntensity);
 
-                float nDotL = max(0, dot(geometricNormal, lightNormalized));
+                float nDotL = max(0, dot(geometricNormal, light));
                 weightedRadianceSum += weight * vec4(color.rgb, 1.0) * nDotL;
                 weightedIrradianceSum += weight * lightInfo.attenuatedIntensity * nDotL * nDotL;
 

@@ -21,7 +21,7 @@ uniform bool standaloneMode;
 uniform vec2 normalCandidate;
 
 #define fitNearSpecularOnly (DARPA_MODE != 0) // should be true for DARPA stuff (at least when comparing with Joey), false for cultural heritage
-#define chromaticRoughness (true && DARPA_MODE == 0)
+#define chromaticRoughness (false && DARPA_MODE == 0)
 #define chromaticSpecular true
 #define aggressiveNormal false
 #define relaxedSpecularPeaks (true && DARPA_MODE == 0)
@@ -193,59 +193,59 @@ ParameterizedFit fitSpecular()
     vec3 bias;
     float resolvability;
 
-//    biasedHeuristicNormal = normalize(intensityWeightedDirectionSum);
-//    float directionScale = length(directionSum);
-//    resolvability = min(1, directionScale)
-//    bias = directionSum / max(1, directionScale);
+    biasedHeuristicNormal = normalize(intensityWeightedDirectionSum);
+    float directionScale = length(directionSum);
+    resolvability = min(1, directionScale);
+    bias = directionSum / max(1, directionScale);
 
 
 
-    vec2 heuristicNormalTS;
-    vec2 biasTS;
-
-    float runningXSum = normalXBins[0];
-    float runningYSum = normalYBins[0];
-
-    float runningXWeightSum = normalXWeightBins[0];
-    float runningYWeightSum = normalYWeightBins[0];
-
-    for (int i = 1; i < 255; i++)
-    {
-        float nextXSum = runningXSum + normalXBins[i];
-        float nextYSum = runningYSum + normalYBins[i];
-
-        float nextXWeightSum = runningXWeightSum + normalXWeightBins[i];
-        float nextYWeightSum = runningYWeightSum + normalYWeightBins[i];
-
-        if (nextXSum != runningXSum && runningXSum <= binSum / 2 && binSum / 2 < nextXSum)
-        {
-            heuristicNormalTS.x = (mix(i - 1, i, (binSum / 2 - runningXSum) / (nextXSum - runningXSum)) - 127) / 127.0;
-        }
-
-        if (nextYSum != runningYSum && runningYSum <= binSum / 2 && binSum / 2 <= nextYSum)
-        {
-            heuristicNormalTS.y = (mix(i - 1, i, (binSum / 2 - runningYSum) / (nextYSum - runningYSum)) - 127) / 127.0;
-        }
-
-        if (nextXWeightSum != runningXWeightSum && runningXWeightSum <= binWeightSum / 2 && binWeightSum / 2 < nextXWeightSum)
-        {
-            biasTS.x = (mix(i - 1, i, float(binWeightSum * 0.5 - runningXWeightSum) / float(nextXWeightSum - runningXWeightSum)) - 127) / 127.0;
-        }
-
-        if (nextYWeightSum != runningYWeightSum && runningYWeightSum <= binWeightSum / 2 && binWeightSum / 2 < nextYWeightSum)
-        {
-            biasTS.y = (mix(i - 1, i, float(binWeightSum * 0.5 - runningYWeightSum) / float(nextYWeightSum - runningYWeightSum)) - 127) / 127.0;
-        }
-
-        runningXSum = nextXSum;
-        runningYSum = nextYSum;
-        runningXWeightSum = nextXWeightSum;
-        runningYWeightSum = nextYWeightSum;
-    }
-
-    biasedHeuristicNormal = tangentToObject * vec3(heuristicNormalTS, sqrt(1 - dot(heuristicNormalTS, heuristicNormalTS)));
-    bias = tangentToObject * vec3(biasTS, sqrt(1 - dot(biasTS, biasTS)));
-    resolvability = 1.0;
+//    vec2 heuristicNormalTS;
+//    vec2 biasTS;
+//
+//    float runningXSum = normalXBins[0];
+//    float runningYSum = normalYBins[0];
+//
+//    float runningXWeightSum = normalXWeightBins[0];
+//    float runningYWeightSum = normalYWeightBins[0];
+//
+//    for (int i = 1; i < 255; i++)
+//    {
+//        float nextXSum = runningXSum + normalXBins[i];
+//        float nextYSum = runningYSum + normalYBins[i];
+//
+//        float nextXWeightSum = runningXWeightSum + normalXWeightBins[i];
+//        float nextYWeightSum = runningYWeightSum + normalYWeightBins[i];
+//
+//        if (nextXSum != runningXSum && runningXSum <= binSum / 2 && binSum / 2 < nextXSum)
+//        {
+//            heuristicNormalTS.x = (mix(i - 1, i, (binSum / 2 - runningXSum) / (nextXSum - runningXSum)) - 127) / 127.0;
+//        }
+//
+//        if (nextYSum != runningYSum && runningYSum <= binSum / 2 && binSum / 2 <= nextYSum)
+//        {
+//            heuristicNormalTS.y = (mix(i - 1, i, (binSum / 2 - runningYSum) / (nextYSum - runningYSum)) - 127) / 127.0;
+//        }
+//
+//        if (nextXWeightSum != runningXWeightSum && runningXWeightSum <= binWeightSum / 2 && binWeightSum / 2 < nextXWeightSum)
+//        {
+//            biasTS.x = (mix(i - 1, i, float(binWeightSum * 0.5 - runningXWeightSum) / float(nextXWeightSum - runningXWeightSum)) - 127) / 127.0;
+//        }
+//
+//        if (nextYWeightSum != runningYWeightSum && runningYWeightSum <= binWeightSum / 2 && binWeightSum / 2 < nextYWeightSum)
+//        {
+//            biasTS.y = (mix(i - 1, i, float(binWeightSum * 0.5 - runningYWeightSum) / float(nextYWeightSum - runningYWeightSum)) - 127) / 127.0;
+//        }
+//
+//        runningXSum = nextXSum;
+//        runningYSum = nextYSum;
+//        runningXWeightSum = nextXWeightSum;
+//        runningYWeightSum = nextYWeightSum;
+//    }
+//
+//    biasedHeuristicNormal = tangentToObject * vec3(heuristicNormalTS, sqrt(1 - dot(heuristicNormalTS, heuristicNormalTS)));
+//    bias = tangentToObject * vec3(biasTS, sqrt(1 - dot(biasTS, biasTS)));
+//    resolvability = 1.0;
 
 
 
@@ -474,11 +474,14 @@ ParameterizedFit fitSpecular()
 //            {
 //                float hDotV = max(0, dot(halfway, view));
 //
-//                vec3 globalWeight = nDotV
-////                    * sqrt(1 - nDotHSquared)
-//                    * (LINEAR_WEIGHT_MODE ? colorRemainderXYZ :
-//                        (PERCEPTUAL_WEIGHT_MODE ? pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)) : vec3(1.0)))
-//                    * (fitNearSpecularOnly ? 1.0 : clamp(9 - 10 * colorRemainderXYZ.y, 0, 1));
+//                vec3 globalWeight = vec3(nDotV * (fitNearSpecularOnly ? 1.0 : clamp(9 - 10 * colorRemainderXYZ.y, 0, 1)));
+////                    * sqrt(1 - nDotHSquared);
+//
+//#if LINEAR_WEIGHT_MODE
+//                globalWeight *= colorRemainderXYZ;
+//#elif PERCEPTUAL_WEIGHT_MODE
+//                globalWeight *= pow(colorRemainderXYZ, vec3(1.0 / fittingGamma));
+//#endif
 //
 //                vec3 perspectiveWeightedIntensity = colorRemainderXYZ * nDotV / min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
 //                vec3 sqrtPerspectiveWeightedIntensity = sqrt(perspectiveWeightedIntensity);
@@ -595,9 +598,6 @@ ParameterizedFit fitSpecular()
             colorRemainderRGB = removeDiffuse(color, diffuseColor.rgb, light, vec3(1.0), specularNormal, maxLuminance).rgb;
 #endif
 
-            vec3 colorRemainderXYZ = rgbToXYZ(colorRemainderRGB);
-            vec3 colorRemainderCosineWeighted = colorRemainderXYZ * nDotV;
-
             float nDotL = max(0, dot(light, specularNormal));
             float nDotV = max(0, dot(specularNormal, view));
 
@@ -605,40 +605,49 @@ ParameterizedFit fitSpecular()
             float nDotH = dot(halfway, specularNormal);
             float nDotHSquared = nDotH * nDotH;
 
-            if (nDotV > 0 && nDotL > 0 && (!fitNearSpecularOnly || nDotHSquared > 0.5))
-            {
-                float hDotV = max(0, dot(halfway, view));
+            vec3 colorRemainderXYZ = rgbToXYZ(colorRemainderRGB);
 
+            if (nDotV > 0 && nDotL > 0 && (fitNearSpecularOnly ? nDotHSquared > 0.5 : colorRemainderXYZ.y <= 1.0))
+            {
+                vec3 globalWeight = vec3(nDotV);
+
+                vec3 commonFactor = colorRemainderXYZ * sqrt(colorRemainderXYZ * nDotV);
+
+
+                vec3 numerator, denominator;
 #if LINEAR_WEIGHT_MODE
-                specularSumA += nDotV * (1 - nDotHSquared) * sqrt(colorRemainderCosineWeighted);
-                specularSumB += nDotV * (nDotHSquared * sqrt(colorRemainderCosineWeighted) + sqrt(maxResidualXYZ));
+                numerator = nDotV * (1 - nDotHSquared) * commonFactor;
+                denominator = nDotV * (colorRemainderXYZ * sqrt(maxResidualXYZ) - nDotHSquared * commonFactor);
 #else
-                specularSumA += nDotV * pow((1 - nDotHSquared) * sqrt(colorRemainderCosineWeighted), vec3(1.0 / fittingGamma));
-                specularSumB += nDotV * pow(nDotHSquared * sqrt(colorRemainderCosineWeighted) + sqrt(maxResidualXYZ), vec3(1.0 / fittingGamma));
+                numerator = nDotV * pow((1 - nDotHSquared) * commonFactor, vec3(1.0 / fittingGamma));
+                denominator = nDotV * pow(colorRemainderXYZ * sqrt(maxResidualXYZ) - nDotHSquared * commonFactor, vec3(1.0 / fittingGamma));
 #endif
+
+                specularSumA += numerator;
+                specularSumB += denominator;
 
                 sumResidualXYZGamma += nDotV * vec4(pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)), 1.0);
             }
         }
     }
 
-    if (specularSums[2] == vec3(0.0) || sumResidualXYZGamma.w == 0.0)
+    if (sumResidualXYZGamma.w == 0.0)
     {
         return ParameterizedFit(diffuseColor, vec4(diffuseNormalTS, 1), vec4(0), vec4(0));
     }
 
-    vec3 sumWeights = pow(max(vec3(0.0), specularSumB + specularSumC * sqrt(maxResidualXYZ)), vec3(fittingGamma));
-
     if (chromaticRoughness)
     {
-        specularColorXYZEstimate = clamp(4 * pow(specularSumA, fittingGamma) * maxResidualXYZ / sumWeights, MIN_SPECULAR_REFLECTIVITY, 1.0);
-        roughnessSquared = clamp(specularColorXYZEstimate / (4 * maxResidualXYZ), MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS);
+        roughnessSquared = clamp(pow(specularSumA / specularSumB, vec3(fittingGamma)),
+            MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS);
+        specularColorXYZEstimate = clamp(4 * maxResidualXYZ * roughnessSquared, MIN_SPECULAR_REFLECTIVITY, 1.0);
     }
     else
     {
-        float reflectivityEstimate = clamp(4 * pow(specularSumA.y, fittingGamma) * maxResidualXYZ.y / sumWeights.y, MIN_SPECULAR_REFLECTIVITY, 1.0);
-        roughnessSquared = vec3(clamp(reflectivityEstimate / (4 * maxResidualXYZ.y), MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS));
-        specularColorXYZEstimate = reflectivityEstimate * pow(sumResidualXYZGamma.xyz / max(0.01 * sumResidualXYZGamma.w, sumResidualXYZGamma.y), vec3(fittingGamma));
+        roughnessSquared = vec3(clamp(pow(specularSumA.y / specularSumB.y, fittingGamma),
+            MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS));
+        specularColorXYZEstimate = clamp(4 * maxResidualXYZ.y * roughnessSquared, MIN_SPECULAR_REFLECTIVITY, 1.0)
+            * pow(sumResidualXYZGamma.xyz / max(0.01 * sumResidualXYZGamma.w, sumResidualXYZGamma.y), vec3(fittingGamma));
     }
 
 

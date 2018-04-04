@@ -1019,7 +1019,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             program.setTexture("eigentextures", this.eigentextures);
             program.setTexture("viewWeightTextures", this.colorTextures);
-            program.setUniform("blockSize", new IntVector2(32, 32));
+            program.setUniform("blockSize", new IntVector2(16, 16));
         }
         else
         {
