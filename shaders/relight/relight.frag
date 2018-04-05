@@ -382,15 +382,14 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 vec4 getSampleFromResidual(vec4 residual, float nDotH, vec3 specularColor, vec3 roughness)
 {
     vec3 roughnessSquared = roughness * roughness;
-//    return residual.w * vec4(xyzToRGB(
-//        pow(max(vec3(0), pow(
-//                /*dist(nDotH, roughness)*/
-//                rgbToXYZ(diffuseColor) / rgbToXYZ(specularColor)
-//             * roughnessSquared, vec3(1.0 / gamma))
-//            + (residual.xyz - vec3(0.5))), vec3(gamma))
-//        * rgbToXYZ(specularColor) / roughnessSquared) , 1.0);
+    return residual.w * vec4(xyzToRGB(
+        pow(max(vec3(0), //pow(
+                //dist(nDotH, roughness)
+             //* roughnessSquared, vec3(1.0 / gamma))
+         /*   + */(residual.xyz /*- vec3(0.5)*/)), vec3(gamma))
+        * rgbToXYZ(specularColor) / roughnessSquared), 1.0);
 
-    return residual.w * vec4(xyzToRGB(((residual.xyz - vec3(0.5)) / roughnessSquared + 1.0) * rgbToXYZ(specularColor)), 1.0);
+//    return residual.w * vec4(xyzToRGB(((residual.xyz - vec3(0.5)) / roughnessSquared + 1.0) * rgbToXYZ(specularColor)), 1.0);
 }
 #endif
 

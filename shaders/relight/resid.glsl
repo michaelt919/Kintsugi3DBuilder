@@ -65,25 +65,26 @@ vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
             vec3 colorScaled = rgbToXYZ(color.rgb / lightInfo.attenuatedIntensity);
             vec3 diffuseContrib = diffuseColor * nDotL;
 
-//            float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
-//            vec3 mfdFresnel = max(vec3(0.0), ( colorScaled /*- diffuseContrib*/)) / geomRatio;
+
+            float invGeomRatio = 4 * nDotV / (geomPartial(roughness.y, nDotL) * geomPartial(roughness.y, nDotV));
+            vec3 mfdFresnel = max(vec3(0.0), (colorScaled - diffuseContrib)) * invGeomRatio;
 
             vec3 sqrtDenominator = (roughnessSquared - 1) * nDotH * nDotH + 1;
-//            return vec4(
-//                        pow(
-//                            clamp(mfdFresnel * roughnessSquared / specularColor, 0, 1)
-//                        , vec3(1.0 / 2.2))
-//                        - pow(
-//                            diffuseMode ?
-//                                clamp(diffuseContrib * roughnessSquared / (geomRatio * specularColor), 0, 1)
-//                                : clamp(roughnessSquared * roughnessSquared / (sqrtDenominator * sqrtDenominator), 0, 1),
-//                        vec3(1.0 / 2.2))
-//                    , nDotV);
-
             return vec4(
-                roughnessSquared *
-                    (colorScaled / specularColor * 4 * nDotV / (geomPartial(roughness.y, nDotL) * geomPartial(roughness.y, nDotV)) - 1.0),
-                nDotV);
+                        pow(
+                            clamp(mfdFresnel * roughnessSquared / specularColor, 0, 1)
+                        , vec3(1.0 / 2.2))
+                        - 0.5/*pow(
+                            diffuseMode ?
+                                clamp(nDotL * roughnessSquared * invGeomRatio, 0, 1)
+                                : clamp(roughnessSquared * roughnessSquared / (sqrtDenominator * sqrtDenominator), 0, 1),
+                        vec3(1.0 / 2.2))*/
+                    , nDotV);
+
+//            return vec4(
+//                roughnessSquared *
+//                    (colorScaled / specularColor * 4 * nDotV / (geomPartial(roughness.y, nDotL) * geomPartial(roughness.y, nDotV)) - 1.0),
+//                nDotV);
         }
         else
         {
