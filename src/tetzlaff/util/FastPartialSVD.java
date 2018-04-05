@@ -4,6 +4,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Random;
 
+import org.ejml.data.FMatrix;
 import org.ejml.data.FMatrixRMaj;
 import org.ejml.simple.SimpleMatrix;
 
@@ -50,7 +51,7 @@ public final class FastPartialSVD
 
     public SimpleMatrix getError()
     {
-        return transpose ? this.matrix.transpose() : this.matrix;
+        return this.matrix;
     }
 
     public float[] getSingularValues()
@@ -60,24 +61,17 @@ public final class FastPartialSVD
 
     private FastPartialSVD(SimpleMatrix matrix, int singularValueCount, float tolerance, int maxIterations, int maxAttempts)
     {
-        if (matrix.numCols() > matrix.numRows())
-        {
-            this.transpose = true;
-            this.matrix = matrix.transpose();
-        }
-        else
-        {
-            this.transpose = false;
-            this.matrix = matrix.copy();
-        }
+        this.transpose = matrix.numCols() > matrix.numRows();
+
+        this.matrix = matrix;
 
         this.singularValueCount = singularValueCount;
         this.tolerance = tolerance;
         this.maxIterations = maxIterations;
         this.maxAttempts = maxAttempts;
 
-        this.u = new SimpleMatrix(this.matrix.numRows(), singularValueCount, FMatrixRMaj.class);
-        this.v = new SimpleMatrix(this.matrix.numCols(), singularValueCount, FMatrixRMaj.class);
+        this.u = new SimpleMatrix(this.transpose ? this.matrix.numCols() : this.matrix.numRows(), singularValueCount, FMatrixRMaj.class);
+        this.v = new SimpleMatrix(this.transpose ? this.matrix.numRows() : this.matrix.numCols(), singularValueCount, FMatrixRMaj.class);
         this.singularValues = new float[singularValueCount];
     }
 
@@ -94,7 +88,7 @@ public final class FastPartialSVD
 
             for (int k = 0; k < singularValueCount; k++)
             {
-                SimpleMatrix vk = SimpleMatrix.random32(this.matrix.numCols(), 1, -1, 1, random);
+                SimpleMatrix vk = SimpleMatrix.random32(this.v.numRows(), 1, -1, 1, random);
                 divide(vk.getMatrix(), (float)vk.normF());
 
                 double ev;
@@ -102,8 +96,9 @@ public final class FastPartialSVD
                 int numIterations;
                 int numAttempts = 0;
 
-                SimpleMatrix vkLast = new SimpleMatrix(this.matrix.numCols(), 1, FMatrixRMaj.class);
-                SimpleMatrix diff = new SimpleMatrix(this.matrix.numCols(), 1, FMatrixRMaj.class);
+                SimpleMatrix vkLast = new SimpleMatrix(this.v.numRows(), 1, FMatrixRMaj.class);
+                SimpleMatrix diff = new SimpleMatrix(this.v.numRows(), 1, FMatrixRMaj.class);
+                SimpleMatrix intermediateProduct = new SimpleMatrix(u.numRows(), 1, FMatrix.class);
 
                 do
                 {
@@ -115,7 +110,16 @@ public final class FastPartialSVD
                         vkLast = vk;
                         vk = tmp;
 
-                        multTransA(this.matrix.getMatrix(), this.matrix.mult(vkLast).getMatrix(), vk.getMatrix());
+                        if (transpose)
+                        {
+                            multTransA(this.matrix.getMatrix(), vkLast.getMatrix(), intermediateProduct.getMatrix());
+                            mult(this.matrix.getMatrix(), intermediateProduct.getMatrix(), vk.getMatrix());
+                        }
+                        else
+                        {
+                            mult(this.matrix.getMatrix(), vkLast.getMatrix(), intermediateProduct.getMatrix());
+                            multTransA(this.matrix.getMatrix(), intermediateProduct.getMatrix(), vk.getMatrix());
+                        }
 
                         //vk = a.mult(vkLast);
 
@@ -134,8 +138,6 @@ public final class FastPartialSVD
 
                 if (ev == 0.0)
                 {
-                    u.reshape(u.numRows(), k);
-                    v.reshape(v.numRows(), k);
                     singularValueCount = k;
                 }
                 else if (sqError > toleranceSq)
@@ -146,7 +148,18 @@ public final class FastPartialSVD
                 {
                     float sv = (float)Math.sqrt(ev);
                     singularValues[k] = sv;
-                    SimpleMatrix uk = matrix.mult(vk);
+
+                    SimpleMatrix uk = new SimpleMatrix(this.u.numRows(), 1, FMatrixRMaj.class);
+
+                    if (transpose)
+                    {
+                        multTransA(matrix.getMatrix(), vk.getMatrix(), uk.getMatrix());
+                    }
+                    else
+                    {
+                        mult(matrix.getMatrix(), vk.getMatrix(), uk.getMatrix());
+                    }
+
                     divide(uk.getMatrix(), (float)uk.normF()); // Procedural framework: in place divide for efficiency
 
                     for (int i = 0; i < u.numRows(); i++)
@@ -159,8 +172,16 @@ public final class FastPartialSVD
                         v.set(i, k, vk.get(i));
                     }
 
-                    FMatrixRMaj matrixTransposeTimesUk = new FMatrixRMaj(matrix.numCols(), 1);
-                    multTransA(matrix.getMatrix(), uk.getMatrix(), matrixTransposeTimesUk);
+                    FMatrixRMaj matrixTransposeTimesUk = new FMatrixRMaj(this.v.numRows(), 1);
+
+                    if (transpose)
+                    {
+                        mult(matrix.getMatrix(), uk.getMatrix(), matrixTransposeTimesUk);
+                    }
+                    else
+                    {
+                        multTransA(matrix.getMatrix(), uk.getMatrix(), matrixTransposeTimesUk);
+                    }
 
 //                    // Update matrix A = M'M (using procedural framework for efficiency)
 //                    multAddTransB(-sv, matrixTransposeTimesUk, vk.getMatrix(), a.getMatrix());
@@ -168,7 +189,14 @@ public final class FastPartialSVD
 //                    multAddTransB(ev, vk.getMatrix(), vk.getMatrix(), a.getMatrix());
 
                     // Update original matrix M (using procedural framework for efficiency)
-                    multAddTransB(-sv, uk.getMatrix(), vk.getMatrix(), matrix.getMatrix());
+                    if (transpose)
+                    {
+                        multAddTransB(-sv, vk.getMatrix(), uk.getMatrix(), matrix.getMatrix());
+                    }
+                    else
+                    {
+                        multAddTransB(-sv, uk.getMatrix(), vk.getMatrix(), matrix.getMatrix());
+                    }
                 }
             }
         }

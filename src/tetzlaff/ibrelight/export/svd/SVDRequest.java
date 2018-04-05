@@ -21,6 +21,7 @@ import tetzlaff.gl.vecmath.Vector2;
 import tetzlaff.ibrelight.core.IBRRenderable;
 import tetzlaff.ibrelight.core.IBRRequest;
 import tetzlaff.ibrelight.core.LoadingMonitor;
+import tetzlaff.ibrelight.core.RenderingMode;
 import tetzlaff.ibrelight.rendering.IBRResources;
 import tetzlaff.models.ReadonlySettingsModel;
 import tetzlaff.util.FastPartialSVD;
@@ -31,7 +32,7 @@ public class SVDRequest implements IBRRequest
 
     private static final int BLOCK_SIZE = 16;
     private static final int SAVED_SINGULAR_VALUES = 4;
-    private static final int MAX_RUNNING_THREADS = 7;
+    private static final int MAX_RUNNING_THREADS = 3;
     private static final boolean PUT_COLOR_IN_VIEW_FACTOR = true;
     private static final boolean DIFFUSE_MODE = false;
 
@@ -120,7 +121,7 @@ public class SVDRequest implements IBRRequest
                 .addShader(ShaderType.FRAGMENT, new File("shaders/common/deferred.frag"))
                 .createProgram();
 
-            Program<ContextType> projTexProgram = resources.getIBRShaderProgramBuilder()
+            Program<ContextType> projTexProgram = resources.getIBRShaderProgramBuilder(RenderingMode.IMAGE_BASED_WITH_MATERIALS)
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/relight/resid.frag"))
                 .createProgram();
@@ -180,7 +181,10 @@ public class SVDRequest implements IBRRequest
 
                         Thread svdThread = new Thread(() ->
                         {
-                            System.out.println("Starting block " + currentBlockX + ", " + currentBlockY + "...");
+                            if (currentBlockX == 0)
+                            {
+                                System.out.println("Started row " + currentBlockY + "...");
+                            }
 
                             SimpleMatrix matrix;
 
@@ -509,7 +513,7 @@ public class SVDRequest implements IBRRequest
                                     }
                                 }
 
-                                System.out.println("Finished block " + currentBlockX + ", " + currentBlockY + '.');
+                                //System.out.println("Finished block " + currentBlockX + ", " + currentBlockY + '.');
                             }
                             catch (RuntimeException e)
                             {
@@ -689,7 +693,12 @@ public class SVDRequest implements IBRRequest
                 }
             }
             viewImg.setRGB(0, 0, viewImg.getWidth(), viewImg.getHeight(), viewDataPacked, 0, viewImg.getWidth());
-            ImageIO.write(viewImg, "PNG", new File(exportPath, resources.viewSet.getImageFileName(k)));
+            String[] parts = resources.viewSet.getImageFileName(k).split("\\.");
+            if (parts.length >= 2)
+            {
+                parts[parts.length-1] = "png";
+            }
+            ImageIO.write(viewImg, "PNG", new File(exportPath, String.join(".", parts)));
         }
     }
 
