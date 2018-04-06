@@ -16,20 +16,22 @@ void main()
 {
     position = fPosition;
 
+    vec3 geometricNormal = normalize(fNormal);
+
     if (useNormalMap)
     {
-        vec3 tangent = normalize(fTangent - dot(normal, fTangent));
+        vec3 tangent = normalize(fTangent - dot(geometricNormal, fTangent));
         vec3 bitangent = normalize(fBitangent
-            - dot(normal, fBitangent) * normal
+            - dot(geometricNormal, fBitangent) * geometricNormal
             - dot(tangent, fBitangent) * tangent);
 
-        mat3 tangentToObject = mat3(tangent, bitangent, normal);
+        mat3 tangentToObject = mat3(tangent, bitangent, geometricNormal);
 
         vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
         normal = tangentToObject * vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
     }
     else
     {
-        normal = normalize(fNormal);
+        normal = geometricNormal;
     }
 }

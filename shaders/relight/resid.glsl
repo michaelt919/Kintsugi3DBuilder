@@ -49,7 +49,7 @@ vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
     float nDotV = max(0, dot(shadingNormal, view));
     vec4 color = getLinearColor();
 
-    if (color.a > 0 && nDotV > 0)
+    if (nDotV > 0)
     {
         LightInfo lightInfo = getLightInfo();
         vec3 light = lightInfo.normalizedDirection;
@@ -70,30 +70,35 @@ vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
             vec3 mfdFresnel = max(vec3(0.0), (colorScaled - diffuseContrib)) * invGeomRatio;
 
             vec3 sqrtDenominator = (roughnessSquared - 1) * nDotH * nDotH + 1;
-            return vec4(
-                        pow(
-                            clamp(mfdFresnel * roughnessSquared / specularColor, 0, 1)
-                        , vec3(1.0 / 2.2))
-                        - 0.5/*pow(
-                            diffuseMode ?
-                                clamp(nDotL * roughnessSquared * invGeomRatio, 0, 1)
-                                : clamp(roughnessSquared * roughnessSquared / (sqrtDenominator * sqrtDenominator), 0, 1),
-                        vec3(1.0 / 2.2))*/
-                    , nDotV);
 
-//            return vec4(
-//                roughnessSquared *
-//                    (colorScaled / specularColor * 4 * nDotV / (geomPartial(roughness.y, nDotL) * geomPartial(roughness.y, nDotV)) - 1.0),
-//                nDotV);
+            if (color.a > 0)
+            {
+    //            return vec4(
+    //                        pow(
+    //                            clamp(mfdFresnel * roughnessSquared / specularColor, 0, 1)
+    //                        , vec3(1.0 / 2.2))
+    //                        - pow(
+    //                            diffuseMode ?
+    //                                clamp(nDotL * roughnessSquared * invGeomRatio, 0, 1)
+    //                                : clamp(roughnessSquared * roughnessSquared / (sqrtDenominator * sqrtDenominator), 0, 1),
+    //                        vec3(1.0 / 2.2))
+    //                    , nDotV);
+
+                return vec4(clamp(roughnessSquared * (mfdFresnel / specularColor - 1.0), 0, 1), 1.0);
+            }
+            else
+            {
+                return vec4(clamp(roughnessSquared * (roughnessSquared / (sqrtDenominator * sqrtDenominator) - 1.0), 0, 1), 1.0);
+            }
         }
         else
         {
-            return vec4(0);
+            return vec4(vec3(roughnessSquared * (roughnessSquared - 1.0)), 1.0);
         }
     }
     else
     {
-        return vec4(0);
+        return vec4(vec3(roughnessSquared * (roughnessSquared - 1.0)), 1.0);
     }
 }
 
