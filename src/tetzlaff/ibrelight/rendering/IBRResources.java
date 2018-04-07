@@ -266,7 +266,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 Texture3D<ContextType> eigentexturesTemp = null;
 
                 // TODO don't hardcode
-                svdViewWeightPacking = new IntVector2(2, 2);
+                svdViewWeightPacking = new IntVector2(4, 4);
 
                 try
                 {
@@ -883,71 +883,74 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
 
     private void updateShadowTextures() throws FileNotFoundException
     {
-        try
-        (
-            // Don't automatically generate any texture attachments for this framebuffer object
-            FramebufferObject<ContextType> depthRenderingFBO =
-                context.buildFramebufferObject(this.depthTextures.getWidth(), this.depthTextures.getHeight())
-                    .createFramebufferObject();
-
-            // Load the program
-            Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
-                    .createProgram()
-        )
+        if (this.depthTextures != null)
         {
-            Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
-            depthDrawable.addVertexBuffer("position", this.positionBuffer);
+            try
+            (
+                // Don't automatically generate any texture attachments for this framebuffer object
+                FramebufferObject<ContextType> depthRenderingFBO =
+                    context.buildFramebufferObject(this.depthTextures.getWidth(), this.depthTextures.getHeight())
+                        .createFramebufferObject();
 
-            // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
-            NativeVectorBuffer flattenedShadowMatrices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, this.viewSet.getCameraPoseCount());
-
-            // Render each depth texture
-            for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
+                // Load the program
+                Program<ContextType> depthRenderingProgram = context.getShaderProgramBuilder()
+                        .addShader(ShaderType.VERTEX, new File("shaders/common/depth.vert"))
+                        .addShader(ShaderType.FRAGMENT, new File("shaders/common/depth.frag"))
+                        .createProgram()
+            )
             {
-                depthRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
-                depthRenderingFBO.clearDepthBuffer();
+                Drawable<ContextType> depthDrawable = context.createDrawable(depthRenderingProgram);
+                depthDrawable.addVertexBuffer("position", this.positionBuffer);
 
-                depthRenderingProgram.setUniform("model_view", this.viewSet.getCameraPose(i));
-                depthRenderingProgram.setUniform("projection",
-                    this.viewSet.getCameraProjection(this.viewSet.getCameraProjectionIndex(i))
-                        .getProjectionMatrix(
-                            this.viewSet.getRecommendedNearPlane(),
-                            this.viewSet.getRecommendedFarPlane()
-                        )
-                );
+                // Flatten the camera pose matrices into 16-component vectors and store them in the vertex list data structure.
+                NativeVectorBuffer flattenedShadowMatrices = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 16, this.viewSet.getCameraPoseCount());
 
-                Matrix4 modelView = Matrix4.lookAt(
-                        this.viewSet.getCameraPoseInverse(i).times(this.viewSet.getLightPosition(0).asPosition()).getXYZ(),
-                        this.geometry.getCentroid(),
-                        new Vector3(0, 1, 0));
-                depthRenderingProgram.setUniform("model_view", modelView);
-
-                Matrix4 projection = this.viewSet.getCameraProjection(this.viewSet.getCameraProjectionIndex(i))
-                        .getProjectionMatrix(
-                            this.viewSet.getRecommendedNearPlane(),
-                            this.viewSet.getRecommendedFarPlane() * 2 // double it for good measure
-                        );
-                depthRenderingProgram.setUniform("projection", projection);
-
-                depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
-
-                Matrix4 fullTransform = projection.times(modelView);
-
-                int d = 0;
-                for (int col = 0; col < 4; col++) // column
+                // Render each depth texture
+                for (int i = 0; i < this.viewSet.getCameraPoseCount(); i++)
                 {
-                    for (int row = 0; row < 4; row++) // row
+                    depthRenderingFBO.setDepthAttachment(shadowTextures.getLayerAsFramebufferAttachment(i));
+                    depthRenderingFBO.clearDepthBuffer();
+
+                    depthRenderingProgram.setUniform("model_view", this.viewSet.getCameraPose(i));
+                    depthRenderingProgram.setUniform("projection",
+                        this.viewSet.getCameraProjection(this.viewSet.getCameraProjectionIndex(i))
+                            .getProjectionMatrix(
+                                this.viewSet.getRecommendedNearPlane(),
+                                this.viewSet.getRecommendedFarPlane()
+                            )
+                    );
+
+                    Matrix4 modelView = Matrix4.lookAt(
+                            this.viewSet.getCameraPoseInverse(i).times(this.viewSet.getLightPosition(0).asPosition()).getXYZ(),
+                            this.geometry.getCentroid(),
+                            new Vector3(0, 1, 0));
+                    depthRenderingProgram.setUniform("model_view", modelView);
+
+                    Matrix4 projection = this.viewSet.getCameraProjection(this.viewSet.getCameraProjectionIndex(i))
+                            .getProjectionMatrix(
+                                this.viewSet.getRecommendedNearPlane(),
+                                this.viewSet.getRecommendedFarPlane() * 2 // double it for good measure
+                            );
+                    depthRenderingProgram.setUniform("projection", projection);
+
+                    depthDrawable.draw(PrimitiveMode.TRIANGLES, depthRenderingFBO);
+
+                    Matrix4 fullTransform = projection.times(modelView);
+
+                    int d = 0;
+                    for (int col = 0; col < 4; col++) // column
                     {
-                        flattenedShadowMatrices.set(i, d, fullTransform.get(row, col));
-                        d++;
+                        for (int row = 0; row < 4; row++) // row
+                        {
+                            flattenedShadowMatrices.set(i, d, fullTransform.get(row, col));
+                            d++;
+                        }
                     }
                 }
-            }
 
-            // Create the uniform buffer
-            shadowMatrixBuffer.setData(flattenedShadowMatrices);
+                // Create the uniform buffer
+                shadowMatrixBuffer.setData(flattenedShadowMatrices);
+            }
         }
     }
 

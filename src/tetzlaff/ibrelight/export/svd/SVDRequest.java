@@ -31,7 +31,7 @@ public class SVDRequest implements IBRRequest
     private static final boolean DEBUG = false;
 
     private static final int BLOCK_SIZE = 16;
-    private static final int SAVED_SINGULAR_VALUES = 4;
+    private static final int SAVED_SINGULAR_VALUES = 16;
     private static final int MAX_RUNNING_THREADS = 3;
     private static final boolean PUT_COLOR_IN_VIEW_FACTOR = true;
     private static final boolean DIFFUSE_MODE = false;
