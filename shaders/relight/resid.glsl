@@ -67,9 +67,9 @@ vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
 
 
             float invGeomRatio = 4 * nDotV / (geomPartial(roughness.y, nDotL) * geomPartial(roughness.y, nDotV));
-            vec3 mfdFresnel = max(vec3(0.0), (colorScaled - diffuseContrib)) * invGeomRatio;
+            vec3 mfdFresnel = max(vec3(0.0), (colorScaled - diffuseContrib)) * 4 * nDotV; //* invGeomRatio;
 
-            vec3 sqrtDenominator = (roughnessSquared - 1) * nDotH * nDotH + 1;
+            float sqrtDenominator = (roughnessSquared.y - 1) * nDotH * nDotH + 1;
 
             if (color.a > 0)
             {
@@ -84,21 +84,21 @@ vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
     //                        vec3(1.0 / 2.2))
     //                    , nDotV);
 
-                return vec4(clamp(roughnessSquared * (mfdFresnel / specularColor - 1.0), 0, 1), 1.0);
+                return vec4(clamp(roughnessSquared.y * (mfdFresnel - specularColor), 0, 1), 1.0);
             }
             else
             {
-                return vec4(clamp(roughnessSquared * (roughnessSquared / (sqrtDenominator * sqrtDenominator) - 1.0), 0, 1), 1.0);
+                return vec4(clamp(roughnessSquared.y * specularColor * (roughnessSquared.y / (sqrtDenominator * sqrtDenominator) * (geomPartial(roughness.y, nDotL) * geomPartial(roughness.y, nDotV)) - 1.0), 0, 1), 1.0);
             }
         }
         else
         {
-            return vec4(vec3(roughnessSquared * (roughnessSquared - 1.0)), 1.0);
+            return vec4(vec3(roughnessSquared.y * specularColor * -1.0), 1.0); //vec4(vec3(roughnessSquared.y * specularColor * (roughnessSquared.y - 1.0)), 1.0);
         }
     }
     else
     {
-        return vec4(vec3(roughnessSquared * (roughnessSquared - 1.0)), 1.0);
+        return vec4(vec3(roughnessSquared.y * specularColor * -1.0), 1.0); //vec4(vec3(roughnessSquared.y * specularColor * (roughnessSquared.y - 1.0)), 1.0);
     }
 }
 
