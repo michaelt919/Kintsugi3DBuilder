@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import javax.swing.*;
+import javax.xml.stream.XMLStreamException;
 
 import tetzlaff.gl.exceptions.GLOutOfMemoryException;
 import tetzlaff.gl.glfw.GLFWWindow;
@@ -57,6 +58,10 @@ public final class TextureGenerationProgram
                         new TextureFitExecutor<>(context, gui.getCameraFile(), gui.getModelFile(), gui.getImageDirectory(), gui.getMaskDirectory(),
                             gui.getRescaleDirectory(), gui.getOutputDirectory(), gui.getParameters())
                                 .execute();
+                    }
+                    catch (XMLStreamException streamException)
+                    {
+                        streamException.printStackTrace();
                     }
 
                     GLFWWindow.closeAllWindows();

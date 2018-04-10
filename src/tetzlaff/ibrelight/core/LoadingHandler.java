@@ -10,10 +10,9 @@ import tetzlaff.util.AbstractImage;
 
 public interface LoadingHandler 
 {
-    void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions) throws FileNotFoundException;
+    void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions);
     void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory,
-        String primaryViewName, ReadonlyLoadOptionsModel loadOptions)
-        throws FileNotFoundException;
+        String primaryViewName, ReadonlyLoadOptionsModel loadOptions);
 
     Optional<AbstractImage> loadEnvironmentMap(File environmentMapFile) throws FileNotFoundException;
     void loadBackplate(File backplateFile) throws FileNotFoundException;

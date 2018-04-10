@@ -33,4 +33,10 @@ public interface LoadingMonitor
      * This will always be fired after startLoading() and setProgress() will never be fired after this without startLoading() being fired once again.
      */
     void loadingComplete();
+
+    /**
+     * A callback fired when an exception occurs while loading.
+     * @param e The exception that occurred.
+     */
+    void loadingFailed(Exception e);
 }

@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import javax.imageio.ImageIO;
+import javax.xml.stream.XMLStreamException;
 
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.TextureBuilder;
@@ -1492,7 +1493,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         }
     }
 
-    public void execute() throws IOException
+    public void execute() throws IOException, XMLStreamException
     {
 //        final int DEBUG_PIXEL_X = 322;
 //        final int DEBUG_PIXEL_Y = param.getTextureSize() - 365;

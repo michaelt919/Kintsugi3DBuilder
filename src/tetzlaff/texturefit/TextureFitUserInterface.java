@@ -3,16 +3,19 @@ package tetzlaff.texturefit;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.swing.*;
 import javax.swing.JSpinner.NumberEditor;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.xml.stream.XMLStreamException;
 
 import tetzlaff.ibrelight.core.SampledLuminanceEncoding;
 import tetzlaff.ibrelight.core.ViewSet;
@@ -277,15 +280,12 @@ public class TextureFitUserInterface extends JFrame
                         currentViewSet = ViewSet.loadFromAgisoftXMLFile(new File(fileString));
                     }
 
-                    List<String> cameraPoseNames = new ArrayList<>();
-                    for (int i = 0; i < currentViewSet.getCameraPoseCount(); i++)
-                    {
-                        cameraPoseNames.add(currentViewSet.getImageFileName(i));
-                    }
+                    List<String> cameraPoseNames = IntStream.range(0, currentViewSet.getCameraPoseCount())
+                        .mapToObj(i -> currentViewSet.getImageFileName(i)).collect(Collectors.toList());
 
                     String primaryViewName = cameraPoseNames.get(0);
 
-                    cameraPoseNames.sort((e1, e2) -> e1.compareTo(e2));
+                    cameraPoseNames.sort(Comparator.naturalOrder());
 
                     String[] cameraPoseNameArray = new String[cameraPoseNames.size()];
                     cameraPoseNames.toArray(cameraPoseNameArray);
@@ -304,7 +304,7 @@ public class TextureFitUserInterface extends JFrame
                         spinnerXRiteWhite.setValue((int)Math.round(luminanceEncoding.encodeFunction.applyAsDouble(0.9)));
                     }
                 }
-                catch(IOException ex)
+                catch(FileNotFoundException|XMLStreamException ex)
                 {
                     ex.printStackTrace();
                 }

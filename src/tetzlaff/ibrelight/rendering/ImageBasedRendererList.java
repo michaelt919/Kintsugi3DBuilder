@@ -5,6 +5,7 @@ import java.util.AbstractList;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.DoubleUnaryOperator;
+import javax.xml.stream.XMLStreamException;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Program;
@@ -44,141 +45,178 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
         this.effectiveSize = 0;
     }
 
+    private void handleMissingFiles(Exception e)
+    {
+        e.printStackTrace();
+        if (loadingMonitor != null)
+        {
+            loadingMonitor.loadingFailed(e);
+        }
+    }
+
     @Override
     public void loadFromVSETFile(String id, File vsetFile, ReadonlyLoadOptionsModel loadOptions)
-        throws FileNotFoundException
     {
-        // id = vsetFile.getPath()
-
         this.loadingMonitor.startLoading();
 
-        IBRRenderable<ContextType> newItem =
-            new IBRImplementation<>(id, context, null,
-                IBRResources.getBuilderForContext(this.context)
-                    .setLoadingMonitor(this.loadingMonitor)
-                    .setLoadOptions(loadOptions)
-                    .loadVSETFile(vsetFile));
-
-        newItem.setObjectModel(this.objectModel);
-        newItem.setCameraModel(this.cameraModel);
-        newItem.setLightingModel(this.lightingModel);
-        newItem.setSettingsModel(this.settingsModel);
-
-        newItem.setLoadingMonitor(new LoadingMonitor()
+        try
         {
-            @Override
-            public void startLoading()
-            {
-                if (loadingMonitor != null)
-                {
-                    loadingMonitor.startLoading();
-                }
-            }
+            IBRRenderable<ContextType> newItem =
+                new IBRImplementation<>(id, context, null,
+                    IBRResources.getBuilderForContext(this.context)
+                        .setLoadingMonitor(this.loadingMonitor)
+                        .setLoadOptions(loadOptions)
+                        .loadVSETFile(vsetFile));
 
-            @Override
-            public void setMaximum(double maximum)
-            {
-                if (loadingMonitor != null)
-                {
-                    loadingMonitor.setMaximum(maximum);
-                }
-            }
+            newItem.setObjectModel(this.objectModel);
+            newItem.setCameraModel(this.cameraModel);
+            newItem.setLightingModel(this.lightingModel);
+            newItem.setSettingsModel(this.settingsModel);
 
-            @Override
-            public void setProgress(double progress)
+            newItem.setLoadingMonitor(new LoadingMonitor()
             {
-                if (loadingMonitor != null)
+                @Override
+                public void startLoading()
                 {
-                    loadingMonitor.setProgress(progress);
+                    if (loadingMonitor != null)
+                    {
+                        loadingMonitor.startLoading();
+                    }
                 }
-            }
 
-            @Override
-            public void loadingComplete()
-            {
-                renderableList.setSelectedItem(newItem);
-                effectiveSize = renderableList.size();
-                if (loadingMonitor != null)
+                @Override
+                public void setMaximum(double maximum)
                 {
-                    loadingMonitor.loadingComplete();
+                    if (loadingMonitor != null)
+                    {
+                        loadingMonitor.setMaximum(maximum);
+                    }
                 }
-            }
-        });
-        renderableList.add(newItem);
+
+                @Override
+                public void setProgress(double progress)
+                {
+                    if (loadingMonitor != null)
+                    {
+                        loadingMonitor.setProgress(progress);
+                    }
+                }
+
+                @Override
+                public void loadingComplete()
+                {
+                    renderableList.setSelectedItem(newItem);
+                    effectiveSize = renderableList.size();
+                    if (loadingMonitor != null)
+                    {
+                        loadingMonitor.loadingComplete();
+                    }
+                }
+
+                @Override
+                public void loadingFailed(Exception e)
+                {
+                    if (loadingMonitor != null)
+                    {
+                        loadingMonitor.loadingFailed(e);
+                    }
+                }
+            });
+            renderableList.add(newItem);
+        }
+        catch (FileNotFoundException e)
+        {
+            handleMissingFiles(e);
+        }
     }
 
     @Override
     public void loadFromAgisoftXMLFile(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName,
         ReadonlyLoadOptionsModel loadOptions)
-        throws FileNotFoundException
     {
         this.loadingMonitor.startLoading();
 
-        IBRRenderable<ContextType> newItem =
-            new IBRImplementation<>(id, context, null,
-                IBRResources.getBuilderForContext(this.context)
-                    .setLoadingMonitor(this.loadingMonitor)
-                    .setLoadOptions(loadOptions)
-                    .loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory)
-                    .setPrimaryView(primaryViewName));
-
-        newItem.setObjectModel(this.objectModel);
-        newItem.setCameraModel(this.cameraModel);
-        newItem.setLightingModel(this.lightingModel);
-        newItem.setSettingsModel(this.settingsModel);
-
-        newItem.setLoadingMonitor(new LoadingMonitor()
+        try
         {
-            @Override
-            public void startLoading()
+            IBRRenderable<ContextType> newItem =
+                new IBRImplementation<>(id, context, null,
+                    IBRResources.getBuilderForContext(this.context)
+                        .setLoadingMonitor(this.loadingMonitor)
+                        .setLoadOptions(loadOptions)
+                        .loadAgisoftFiles(xmlFile, meshFile, undistortedImageDirectory)
+                        .setPrimaryView(primaryViewName));
+
+            newItem.setObjectModel(this.objectModel);
+            newItem.setCameraModel(this.cameraModel);
+            newItem.setLightingModel(this.lightingModel);
+            newItem.setSettingsModel(this.settingsModel);
+
+            newItem.setLoadingMonitor(new LoadingMonitor()
             {
-                if (loadingMonitor != null)
+                @Override
+                public void startLoading()
                 {
-                    loadingMonitor.startLoading();
-                }
-            }
-
-            @Override
-            public void setMaximum(double maximum)
-            {
-                if (loadingMonitor != null)
-                {
-                    loadingMonitor.setMaximum(maximum);
-                }
-            }
-
-            @Override
-            public void setProgress(double progress)
-            {
-                if (loadingMonitor != null)
-                {
-                    loadingMonitor.setProgress(progress);
-                }
-            }
-
-            @Override
-            public void loadingComplete()
-            {
-                renderableList.setSelectedItem(newItem);
-                effectiveSize = renderableList.size();
-                double primaryViewDistance = newItem.getResources().getPrimaryViewDistance();
-
-                Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
-
-                for (int i = 0; i < newItem.getActiveViewSet().getLightCount(); i++)
-                {
-                    newItem.getActiveViewSet().setLightIntensity(i, lightIntensity);
+                    if (loadingMonitor != null)
+                    {
+                        loadingMonitor.startLoading();
+                    }
                 }
 
-                newItem.getResources().updateLightData();
-
-                if (loadingMonitor != null)
+                @Override
+                public void setMaximum(double maximum)
                 {
-                    loadingMonitor.loadingComplete();
+                    if (loadingMonitor != null)
+                    {
+                        loadingMonitor.setMaximum(maximum);
+                    }
                 }
-            }
-        });
-        renderableList.add(newItem);
+
+                @Override
+                public void setProgress(double progress)
+                {
+                    if (loadingMonitor != null)
+                    {
+                        loadingMonitor.setProgress(progress);
+                    }
+                }
+
+                @Override
+                public void loadingComplete()
+                {
+                    renderableList.setSelectedItem(newItem);
+                    effectiveSize = renderableList.size();
+                    double primaryViewDistance = newItem.getResources().getPrimaryViewDistance();
+
+                    Vector3 lightIntensity = new Vector3((float)(primaryViewDistance * primaryViewDistance));
+
+                    for (int i = 0; i < newItem.getActiveViewSet().getLightCount(); i++)
+                    {
+                        newItem.getActiveViewSet().setLightIntensity(i, lightIntensity);
+                    }
+
+                    newItem.getResources().updateLightData();
+
+                    if (loadingMonitor != null)
+                    {
+                        loadingMonitor.loadingComplete();
+                    }
+                }
+
+                @Override
+                public void loadingFailed(Exception e)
+                {
+                    if (loadingMonitor != null)
+                    {
+                        loadingMonitor.loadingFailed(e);
+                    }
+                }
+            });
+            renderableList.add(newItem);
+        }
+        catch(FileNotFoundException|XMLStreamException e)
+        {
+            handleMissingFiles(e);
+        }
     }
 
     public IBRRenderable<ContextType> getElementAt(int index)

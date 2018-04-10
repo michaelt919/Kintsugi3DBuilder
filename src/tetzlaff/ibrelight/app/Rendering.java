@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
@@ -25,12 +26,15 @@ import tetzlaff.ibrelight.core.LoadingModel;
 import tetzlaff.ibrelight.core.LoadingMonitor;
 import tetzlaff.ibrelight.javafx.MultithreadModels;
 import tetzlaff.ibrelight.rendering.ImageBasedRendererList;
-import tetzlaff.ibrelight.tools.*;
+import tetzlaff.ibrelight.tools.DragToolType;
+import tetzlaff.ibrelight.tools.KeyPressToolType;
+import tetzlaff.ibrelight.tools.ToolBindingModel;
+import tetzlaff.ibrelight.tools.ToolBindingModelImpl;
 import tetzlaff.ibrelight.tools.ToolBox.Builder;
+import tetzlaff.interactive.InitializationException;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 import tetzlaff.models.*;
-import tetzlaff.models.impl.SimpleCameraModel;
 import tetzlaff.util.KeyPress;
 import tetzlaff.util.MouseMode;
 import tetzlaff.util.WindowBasedController;
@@ -56,7 +60,7 @@ public final class Rendering
         return requestQueue;
     }
 
-    public static void runProgram()
+    public static void runProgram() throws InitializationException
     {
         System.getenv();
         System.setProperty("org.lwjgl.util.DEBUG", "true");
@@ -123,13 +127,6 @@ public final class Rendering
                 e.printStackTrace();
                 throw new IllegalStateException("The shader program could not be initialized.", e);
             }
-
-            CameraModel fpCameraModel = new SimpleCameraModel();
-
-            FirstPersonController fpController = new FirstPersonController(fpCameraModel);
-            fpController.addAsWindowListener(window);
-
-            window.addMouseButtonPressListener((win, buttonIndex, mods) -> fpController.setEnabled(false));
 
             ExtendedLightingModel lightingModel = MultithreadModels.getInstance().getLightingModel();
             EnvironmentModel environmentModel = MultithreadModels.getInstance().getEnvironmentModel();
@@ -289,37 +286,11 @@ public final class Rendering
                         e.printStackTrace();
                     }
                 }
-                //else if (key == Key.L)
-                //{
-                    //metaLightingModel.hardcodedMode = !metaLightingModel.hardcodedMode;
-                //}
-                else if (key == Key.SPACE)
-                {
-                    fpController.setEnabled(!fpController.getEnabled());
-                }
             });
 
             // Create a new application to run our event loop and give it the GLFWWindow for polling
             // of events and the OpenGL context.  The ULFRendererList provides the renderable.
             InteractiveApplication app = InteractiveGraphics.createApplication(window, context, rendererList.getRenderable());
-            app.addRefreshable(new Refreshable()
-            {
-                @Override
-                public void initialize()
-                {
-                }
-
-                @Override
-                public void refresh()
-                {
-                    //fpController.update();
-                }
-
-                @Override
-                public void terminate()
-                {
-                }
-            });
 
             requestQueue = new IBRRequestQueue<>(rendererList);
             requestQueue.setLoadingMonitor(new LoadingMonitor()
@@ -347,6 +318,12 @@ public final class Rendering
                 {
                     loadingModel.getLoadingMonitor().loadingComplete();
                 }
+
+                @Override
+                public void loadingFailed(Exception e)
+                {
+                    loadingModel.getLoadingMonitor().loadingFailed(e);
+                }
             });
 
             app.addRefreshable(new Refreshable()
@@ -369,12 +346,22 @@ public final class Rendering
             });
 
             window.show();
-            app.run();
 
+            try
+            {
+                app.run();
+            }
+            catch(RuntimeException|InitializationException e)
+            {
+                Optional.of(loadingModel.getLoadingMonitor()).ifPresent(loadingMonitor -> loadingMonitor.loadingFailed(e));
+                throw e;
+            }
         }
-
-        // The event loop has terminated so cleanup the windows and exit with a successful return code.
-        GLFWWindow.closeAllWindows();
+        finally
+        {
+            // The event loop has terminated so cleanup the windows and exit with a successful return code.
+            GLFWWindow.closeAllWindows();
+        }
     }
 
     private static void printSupportedImageFormats()
