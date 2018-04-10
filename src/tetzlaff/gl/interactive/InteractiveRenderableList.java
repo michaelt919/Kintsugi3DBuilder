@@ -4,6 +4,7 @@ import java.util.*;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
+import tetzlaff.interactive.InitializationException;
 import tetzlaff.util.SelectableList;
 
 /**
@@ -39,34 +40,35 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
     }
 
     @Override
-    public void initialize()
+    public void initialize() throws InitializationException
     {
-        for (InteractiveRenderable<ContextType> d : renderables)
+        for (InteractiveRenderable<ContextType> r : renderables)
         {
-            d.initialize();
+            r.initialize();
         }
     }
 
     @Override
     public void update()
     {
-        for (InteractiveRenderable<ContextType> d : removedRenderables)
-        {
-            d.close();
-        }
+        removedRenderables.forEach(InteractiveRenderable::close);
 
-        for (InteractiveRenderable<ContextType> d : addedRenderables)
+        for (RenderableType r : addedRenderables)
         {
-            d.initialize();
+            try
+            {
+                r.initialize();
+            }
+            catch (InitializationException e)
+            {
+                renderables.remove(r);
+            }
         }
 
         removedRenderables = new ArrayList<>(8);
         addedRenderables = new ArrayList<>(8);
 
-        for (InteractiveRenderable<ContextType> d : renderables)
-        {
-            d.update();
-        }
+        renderables.forEach(InteractiveRenderable::update);
     }
 
     @Override
@@ -82,9 +84,9 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
     @Override
     public void close()
     {
-        for (InteractiveRenderable<ContextType> d : renderables)
+        for (InteractiveRenderable<ContextType> r : renderables)
         {
-            d.close();
+            r.close();
         }
     }
 

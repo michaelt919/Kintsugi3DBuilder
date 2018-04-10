@@ -12,9 +12,9 @@ public class InteractiveApplication
 
     public InteractiveApplication(EventPollable pollable, Refreshable refreshable)
     {
-        this.pollables = new ArrayList<>();
+        this.pollables = new ArrayList<>(16);
         this.pollables.add(pollable);
-        this.refreshables = new ArrayList<>();
+        this.refreshables = new ArrayList<>(16);
         this.refreshables.add(refreshable);
     }
 
@@ -28,10 +28,8 @@ public class InteractiveApplication
         this.refreshables.add(refreshable);
     }
 
-    public void run()
+    public void run() throws InitializationException
     {
-        int pollingTime = 0;
-        int refreshTime = 0;
         for (Refreshable refreshable : this.refreshables)
         {
             refreshable.initialize();
@@ -40,18 +38,34 @@ public class InteractiveApplication
         Date timestampA = startTimestamp;
         System.out.println("Main loop started.");
         boolean shouldTerminate = false;
+        int refreshTime = 0;
+        int pollingTime = 0;
         while (!shouldTerminate)
         {
             for (Refreshable refreshable : this.refreshables)
             {
-                refreshable.refresh();
+                try
+                {
+                    refreshable.refresh();
+                }
+                catch(RuntimeException e)
+                {
+                    e.printStackTrace();
+                }
             }
             Date timestampB = new Date();
             refreshTime += timestampB.getTime() - timestampA.getTime();
             for (EventPollable poller : pollables)
             {
-                poller.pollEvents();
-                shouldTerminate = shouldTerminate || poller.shouldTerminate();
+                try
+                {
+                    poller.pollEvents();
+                    shouldTerminate = shouldTerminate || poller.shouldTerminate();
+                }
+                catch(RuntimeException e)
+                {
+                    e.printStackTrace();
+                }
             }
             timestampA = new Date();
             pollingTime += timestampA.getTime() - timestampB.getTime();
@@ -63,13 +77,20 @@ public class InteractiveApplication
         System.out.println("Time spent on refreshes: " + refreshTime + " milliseconds");
         for (Refreshable refreshable : this.refreshables)
         {
-            refreshable.terminate();
+            try
+            {
+                refreshable.terminate();
+            }
+            catch(RuntimeException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 
-    public static void runSimultaneous(Iterable<InteractiveApplication> apps)
+    public static void runSimultaneous(Iterable<InteractiveApplication> apps) throws InitializationException
     {
-        Collection<InteractiveApplication> activeApps = new ArrayList<>();
+        Collection<InteractiveApplication> activeApps = new ArrayList<>(16);
         for (InteractiveApplication app : apps)
         {
             for (Refreshable refreshable : app.refreshables)
@@ -81,13 +102,20 @@ public class InteractiveApplication
 
         while(!activeApps.isEmpty())
         {
-            Collection<InteractiveApplication> appsToTerminate = new ArrayList<>();
+            Collection<InteractiveApplication> appsToTerminate = new ArrayList<>(16);
             for (InteractiveApplication app : activeApps)
             {
                 boolean shouldTerminate = false;
                 for (EventPollable poller : app.pollables)
                 {
-                    shouldTerminate = shouldTerminate || poller.shouldTerminate();
+                    try
+                    {
+                        shouldTerminate = shouldTerminate || poller.shouldTerminate();
+                    }
+                    catch(RuntimeException e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
 
                 if (shouldTerminate)
@@ -99,7 +127,14 @@ public class InteractiveApplication
             {
                 for (Refreshable refreshable : app.refreshables)
                 {
-                    refreshable.terminate();
+                    try
+                    {
+                        refreshable.terminate();
+                    }
+                    catch(RuntimeException e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
             }
             activeApps.removeAll(appsToTerminate);
@@ -108,7 +143,14 @@ public class InteractiveApplication
             {
                 for (Refreshable refreshable : app.refreshables)
                 {
-                    refreshable.refresh();
+                    try
+                    {
+                        refreshable.refresh();
+                    }
+                    catch(RuntimeException e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
             }
 
@@ -116,7 +158,14 @@ public class InteractiveApplication
             {
                 for (EventPollable poller : app.pollables)
                 {
-                    poller.pollEvents();
+                    try
+                    {
+                        poller.pollEvents();
+                    }
+                    catch(RuntimeException e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
