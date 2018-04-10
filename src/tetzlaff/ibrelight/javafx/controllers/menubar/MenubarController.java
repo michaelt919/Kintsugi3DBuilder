@@ -127,6 +127,14 @@ public class MenubarController
                 this.maximum = 0.0;
                 Platform.runLater(() ->  progressBar.setVisible(false));
             }
+
+            @Override
+            public void loadingFailed(Exception e)
+            {
+                loadingComplete();
+                projectLoaded = false;
+                Platform.runLater(() -> new Alert(AlertType.ERROR, e.toString()).show());
+            }
         });
 
         boolean foundExportClass = false;
@@ -327,17 +335,7 @@ public class MenubarController
 
                     projectLoaded = true;
 
-                    new Thread(() ->
-                    {
-                        try
-                        {
-                            MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef);
-                        }
-                        catch (FileNotFoundException e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }).start();
+                    new Thread(() -> MultithreadModels.getInstance().getLoadingModel().loadFromVSETFile(vsetFileRef.getPath(), vsetFileRef)).start();
                 }
             }
         }

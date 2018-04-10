@@ -23,6 +23,7 @@ import tetzlaff.ibrelight.core.RenderingMode;
 import tetzlaff.ibrelight.core.ViewSet;
 import tetzlaff.ibrelight.rendering.IBRResources.Builder;
 import tetzlaff.ibrelight.util.KNNViewWeightGenerator;
+import tetzlaff.interactive.InitializationException;
 import tetzlaff.models.*;
 import tetzlaff.models.impl.DefaultSettingsModel;
 import tetzlaff.models.impl.SafeSettingsModelWrapperFactory;
@@ -188,61 +189,32 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     }
 
     @Override
-    public void initialize()
+    public void initialize() throws InitializationException
     {
-        if (this.program == null)
+        try
         {
-            try
+            if (this.program == null)
             {
                 this.program = loadMainProgram();
             }
-            catch (FileNotFoundException e)
-            {
-                e.printStackTrace();
-            }
-        }
 
-        try
-        {
             this.simpleTexProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture.frag"))
                     .createProgram();
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
 
-        try
-        {
             this.tintedTexProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture_tint.frag"))
-                .createProgram();
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "texture_tint.frag"))
+                    .createProgram();
 
-
-        try
-        {
             this.environmentBackgroundProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
                     .createProgram();
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
 
-        this.rectangleVertices = context.createRectangle();
+            this.rectangleVertices = context.createRectangle();
 
-        try
-        {
             this.resources = resourceBuilder.create();
 
             this.mainDrawable = context.createDrawable(program);
@@ -278,29 +250,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             {
                 this.loadingMonitor.setMaximum(0.0); // make indeterminate
             }
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
 
-        try
-        {
             shadowProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "depth.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "depth.frag"))
                     .createProgram();
 
             shadowDrawable = context.createDrawable(shadowProgram);
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-            throw new IllegalStateException("The shader program could not be initialized.", e);
-        }
 
-        try
-        {
             this.solidProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "solid.frag"))
@@ -338,92 +295,84 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             this.gridDrawable = context.createDrawable(this.solidProgram);
             this.gridDrawable.addVertexBuffer("position", gridVertices);
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
 
-        try
-        {
             this.lightProgram = context.getShaderProgramBuilder()
                     .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "light.frag"))
                     .createProgram();
             this.lightDrawable = context.createDrawable(this.lightProgram);
             this.lightDrawable.addVertexBuffer("position", rectangleVertices);
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
 
-        try
-        {
             this.circleProgram = context.getShaderProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
-                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "circle.frag"))
-                .createProgram();
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "imgspace.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "circle.frag"))
+                    .createProgram();
             this.circleDrawable = context.createDrawable(this.circleProgram);
             this.circleDrawable.addVertexBuffer("position", rectangleVertices);
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
 
-        NativeVectorBuffer lightTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
+            NativeVectorBuffer lightTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
 
-        NativeVectorBuffer lightCenterTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
+            NativeVectorBuffer lightCenterTextureData = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 1, 4096);
 
-        int k = 0;
-        for (int i = 0; i < 64; i++)
-        {
-            double x = i * 2.0 / 63.0 - 1.0;
-
-            for (int j = 0; j < 64; j++)
+            int k = 0;
+            for (int i = 0; i < 64; i++)
             {
-                double y = j * 2.0 / 63.0 - 1.0;
+                double x = i * 2.0 / 63.0 - 1.0;
 
-                double rSq = x*x + y*y;
-                lightTextureData.set(k, 0, (float)(Math.cos(Math.min(Math.sqrt(rSq), 1.0) * Math.PI) + 1.0) * 0.5f);
-
-                if (rSq <= 1.0)
+                for (int j = 0; j < 64; j++)
                 {
-                    lightCenterTextureData.set(k, 0, 1.0f);
-                }
+                    double y = j * 2.0 / 63.0 - 1.0;
 
-                k++;
+                    double rSq = x*x + y*y;
+                    lightTextureData.set(k, 0, (float)(Math.cos(Math.min(Math.sqrt(rSq), 1.0) * Math.PI) + 1.0) * 0.5f);
+
+                    if (rSq <= 1.0)
+                    {
+                        lightCenterTextureData.set(k, 0, 1.0f);
+                    }
+
+                    k++;
+                }
+            }
+
+            this.lightTexture = context.getTextureFactory().build2DColorTextureFromBuffer(64, 64, lightTextureData)
+                    .setInternalFormat(ColorFormat.R8)
+                    .setLinearFilteringEnabled(true)
+                    .setMipmapsEnabled(true)
+                    .createTexture();
+
+            this.lightCenterTexture = context.getTextureFactory().build2DColorTextureFromBuffer(64, 64, lightCenterTextureData)
+                    .setInternalFormat(ColorFormat.R8)
+                    .setLinearFilteringEnabled(true)
+                    .setMipmapsEnabled(true)
+                    .createTexture();
+
+            shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
+
+            shadowMaps = context.getTextureFactory().build2DDepthTextureArray(2048, 2048, lightingModel.getLightCount()).createTexture();
+            shadowFramebuffer = context.buildFramebufferObject(2048, 2048)
+                .addDepthAttachment()
+                .createFramebufferObject();
+
+            this.updateCentroidAndRadius();
+
+            // Make sure that everything is loaded onto the graphics card before announcing that loading is complete.
+            this.draw(context.getDefaultFramebuffer());
+
+            if (this.loadingMonitor != null)
+            {
+                this.loadingMonitor.loadingComplete();
             }
         }
-
-        this.lightTexture = context.getTextureFactory().build2DColorTextureFromBuffer(64, 64, lightTextureData)
-                .setInternalFormat(ColorFormat.R8)
-                .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(true)
-                .createTexture();
-
-        this.lightCenterTexture = context.getTextureFactory().build2DColorTextureFromBuffer(64, 64, lightCenterTextureData)
-                .setInternalFormat(ColorFormat.R8)
-                .setLinearFilteringEnabled(true)
-                .setMipmapsEnabled(true)
-                .createTexture();
-
-        shadowDrawable.addVertexBuffer("position", resources.positionBuffer);
-
-        shadowMaps = context.getTextureFactory().build2DDepthTextureArray(2048, 2048, lightingModel.getLightCount()).createTexture();
-        shadowFramebuffer = context.buildFramebufferObject(2048, 2048)
-            .addDepthAttachment()
-            .createFramebufferObject();
-
-        this.updateCentroidAndRadius();
-
-        // Make sure that everything is loaded onto the graphics card before announcing that loading is complete.
-        this.draw(context.getDefaultFramebuffer());
-
-        if (this.loadingMonitor != null)
+        catch (IOException e)
         {
-            this.loadingMonitor.loadingComplete();
+            e.printStackTrace();
+            this.close();
+            if (this.loadingMonitor != null)
+            {
+                this.loadingMonitor.loadingFailed(e);
+            }
+            throw new InitializationException(e);
         }
     }
 

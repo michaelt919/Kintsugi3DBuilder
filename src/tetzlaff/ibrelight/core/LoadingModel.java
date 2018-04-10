@@ -44,13 +44,12 @@ public class LoadingModel
         this.loadOptionsModel = loadOptionsModel;
     }
 
-    public void loadFromVSETFile(String id, File vsetFile) throws FileNotFoundException
+    public void loadFromVSETFile(String id, File vsetFile)
     {
         this.handler.loadFromVSETFile(id, vsetFile, loadOptionsModel);
     }
 
     public void loadFromAgisoftFiles(String id, File xmlFile, File meshFile, File undistortedImageDirectory, String primaryViewName)
-        throws FileNotFoundException
     {
         this.handler.loadFromAgisoftXMLFile(id, xmlFile, meshFile, undistortedImageDirectory, primaryViewName, loadOptionsModel);
     }
