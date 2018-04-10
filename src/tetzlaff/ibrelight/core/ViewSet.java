@@ -588,7 +588,7 @@ public final class ViewSet
      * @return The newly created ViewSet object.
      * @throws FileNotFoundException Thrown if the XML camera file is not found.
      */
-    public static ViewSet loadFromAgisoftXMLFile(File file) throws FileNotFoundException
+    public static ViewSet loadFromAgisoftXMLFile(File file) throws FileNotFoundException, XMLStreamException
     {
         Map<String, Sensor> sensorSet = new Hashtable<>();
         HashSet<Camera> cameraSet = new HashSet<>();
@@ -612,338 +612,332 @@ public final class ViewSet
         int intVersion = 0;
         
         XMLInputFactory factory = XMLInputFactory.newInstance();
-        try
+
+        InputStream xmlStream = new FileInputStream(file);
+        XMLStreamReader reader = factory.createXMLStreamReader(xmlStream);
+        while (reader.hasNext())
         {
-            InputStream xmlStream = new FileInputStream(file);
-            XMLStreamReader reader = factory.createXMLStreamReader(xmlStream);
-            while (reader.hasNext())
+            int event = reader.next();
+            switch(event)
             {
-                int event = reader.next();
-                switch(event)
-                {
-                    case XMLStreamConstants.START_ELEMENT:
-                        switch (reader.getLocalName())
-                        {
-                            case "document":
-                                version = reader.getAttributeValue(null, "version");
-                                String[] verComponents = version.split("\\.");
-                                for (String verComponent : verComponents)
+                case XMLStreamConstants.START_ELEMENT:
+                    switch (reader.getLocalName())
+                    {
+                        case "document":
+                            version = reader.getAttributeValue(null, "version");
+                            String[] verComponents = version.split("\\.");
+                            for (String verComponent : verComponents)
+                            {
+                                intVersion *= 10;
+                                intVersion += Integer.parseInt(verComponent);
+                            }
+                            System.out.printf("PhotoScan XML version %s (%d)\n", version, intVersion);
+                            break;
+                        case "chunk":
+                            chunkLabel = reader.getAttributeValue(null, "label");
+                            if(chunkLabel == null)
+                            {
+                                chunkLabel = "unnamed";
+                            }
+                            System.out.printf("Reading chunk '%s'\n", chunkLabel);
+                            break;
+                        case "group":
+                            groupLabel = reader.getAttributeValue(null, "label");
+                            System.out.printf("Reading group '%s'\n", groupLabel);
+                            lightIndex = nextLightIndex;
+                            nextLightIndex++;
+                            System.out.printf("Light index: " + lightIndex);
+                            break;
+                        case "sensor":
+                            sensorID = reader.getAttributeValue(null, "id");
+                            System.out.printf("\tAdding sensor '%s'\n", sensorID);
+                            sensor = new Sensor(sensorID);
+                            break;
+                        case "camera":
+                            cameraID = reader.getAttributeValue(null, "id");
+                            if(cameraID == null || cameraSet.contains(new Camera(cameraID)))
+                            {
+                               camera = null;
+                            }
+                            else
+                            {
+                                if (Objects.equals(reader.getAttributeValue(null, "enabled"), "true") ||
+                                    Objects.equals(reader.getAttributeValue(null, "enabled"), "1"))
                                 {
-                                    intVersion *= 10;
-                                    intVersion += Integer.parseInt(verComponent);
-                                }
-                                System.out.printf("PhotoScan XML version %s (%d)\n", version, intVersion);
-                                break;
-                            case "chunk":
-                                chunkLabel = reader.getAttributeValue(null, "label");
-                                if(chunkLabel == null)
-                                {
-                                    chunkLabel = "unnamed";
-                                }
-                                System.out.printf("Reading chunk '%s'\n", chunkLabel);
-                                break;
-                            case "group":
-                                groupLabel = reader.getAttributeValue(null, "label");
-                                System.out.printf("Reading group '%s'\n", groupLabel);
-                                lightIndex = nextLightIndex;
-                                nextLightIndex++;
-                                System.out.printf("Light index: " + lightIndex);
-                                break;
-                            case "sensor":
-                                sensorID = reader.getAttributeValue(null, "id");
-                                System.out.printf("\tAdding sensor '%s'\n", sensorID);
-                                sensor = new Sensor(sensorID);
-                                break;
-                            case "camera":
-                                cameraID = reader.getAttributeValue(null, "id");
-                                if(cameraID == null || cameraSet.contains(new Camera(cameraID)))
-                                {
-                                   camera = null;
+                                    if (lightIndex < 0)
+                                    {
+                                        // Set default light index
+                                        lightIndex = defaultLightIndex = nextLightIndex;
+                                        nextLightIndex++;
+                                        System.out.println("Using default light index: " + lightIndex);
+                                    }
+
+                                    sensorID = reader.getAttributeValue(null, "sensor_id");
+                                    imageFile = reader.getAttributeValue(null, "label");
+                                    camera = new Camera(cameraID, sensorSet.get(sensorID), lightIndex);
+                                    camera.filename = imageFile;
                                 }
                                 else
                                 {
-                                    if (Objects.equals(reader.getAttributeValue(null, "enabled"), "true") ||
-                                        Objects.equals(reader.getAttributeValue(null, "enabled"), "1"))
-                                    {
-                                        if (lightIndex < 0)
-                                        {
-                                            // Set default light index
-                                            lightIndex = defaultLightIndex = nextLightIndex;
-                                            nextLightIndex++;
-                                            System.out.println("Using default light index: " + lightIndex);
-                                        }
+                                    camera = null;
+                                }
+                            }
+                            break;
+                        case "orientation":
+                            if(camera != null)
+                            {
+                                camera.orientation = Integer.parseInt(reader.getElementText());
+                            }
+                            break;
+                        case "image":
+                            if (camera != null)
+                            {
+                                camera.filename = reader.getAttributeValue(null, "path");
+                            }
+                            break;
+                        case "resolution":
+                            if (sensor != null)
+                            {
+                                sensor.width = Float.parseFloat(reader.getAttributeValue(null, "width"));
+                                sensor.height = Float.parseFloat(reader.getAttributeValue(null, "height"));
+                            }
+                            break;
+                        case "f":
+                            if (sensor != null)
+                            {
+                                sensor.fx = Float.parseFloat(reader.getElementText());
+                                sensor.fy = sensor.fx;
+                            }
+                            break;
+                        case "fx":
+                            if (sensor != null)
+                            {
+                                sensor.fx = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "fy":
+                            if (sensor != null)
+                            {
+                                sensor.fy = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "cx":
+                            if (sensor != null)
+                            {
+                                sensor.cx = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "cy":
+                            if (sensor != null)
+                            {
+                                sensor.cy = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "p1":
+                            if (sensor != null)
+                            {
+                                sensor.p1 = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "p2":
+                            if (sensor != null)
+                            {
+                                sensor.p2 = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "k1":
+                            if (sensor != null)
+                            {
+                                sensor.k1 = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "k2":
+                            if (sensor != null)
+                            {
+                                sensor.k2 = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "k3":
+                            if (sensor != null)
+                            {
+                                sensor.k3 = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "k4":
+                            if (sensor != null)
+                            {
+                                sensor.k4 = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+                        case "skew":
+                            if (sensor != null)
+                            {
+                                sensor.skew = Float.parseFloat(reader.getElementText());
+                            }
+                            break;
 
-                                        sensorID = reader.getAttributeValue(null, "sensor_id");
-                                        imageFile = reader.getAttributeValue(null, "label");
-                                        camera = new Camera(cameraID, sensorSet.get(sensorID), lightIndex);
-                                        camera.filename = imageFile;
+                        case "transform":
+                            if(camera == null && intVersion >= 110)
+                            {
+                                break;
+                            }
+
+                        case "rotation":
+                            {
+                                String[] components = reader.getElementText().split("\\s");
+                                if (("transform".equals(reader.getLocalName()) && components.length < 16) ||
+                                    ("rotation".equals(reader.getLocalName()) && components.length < 9))
+                                {
+                                    System.err.println("Error: Not enough components in the transform/rotation matrix");
+                                }
+                                else
+                                {
+                                    int expectedSize = 16;
+                                    if("rotation".equals(reader.getLocalName()))
+                                    {
+                                        expectedSize = 9;
                                     }
-                                    else
+
+                                    if(components.length > expectedSize)
                                     {
-                                        camera = null;
+                                        System.err.println("Warning: Too many components in the transform/rotation matrix, ignoring extras.");
                                     }
-                                }
-                                break;
-                            case "orientation":
-                                if(camera != null)
-                                {
-                                    camera.orientation = Integer.parseInt(reader.getElementText());
-                                }
-                                break;
-                            case "image":
-                                if (camera != null)
-                                {
-                                    camera.filename = reader.getAttributeValue(null, "path");
-                                }
-                                break;
-                            case "resolution":
-                                if (sensor != null)
-                                {
-                                    sensor.width = Float.parseFloat(reader.getAttributeValue(null, "width"));
-                                    sensor.height = Float.parseFloat(reader.getAttributeValue(null, "height"));
-                                }
-                                break;
-                            case "f":
-                                if (sensor != null)
-                                {
-                                    sensor.fx = Float.parseFloat(reader.getElementText());
-                                    sensor.fy = sensor.fx;
-                                }
-                                break;
-                            case "fx":
-                                if (sensor != null)
-                                {
-                                    sensor.fx = Float.parseFloat(reader.getElementText());
-                                }
-                                break;
-                            case "fy":
-                                if (sensor != null)
-                                {
-                                    sensor.fy = Float.parseFloat(reader.getElementText());
-                                }
-                                break;
-                            case "cx":
-                                if (sensor != null)
-                                {
-                                    sensor.cx = Float.parseFloat(reader.getElementText());
-                                }
-                                break;
-                            case "cy":
-                                if (sensor != null)
-                                {
-                                    sensor.cy = Float.parseFloat(reader.getElementText());
-                                }
-                                break;
-                            case "p1":
-                                if (sensor != null)
-                                {
-                                    sensor.p1 = Float.parseFloat(reader.getElementText());
-                                }
-                                break;
-                            case "p2":
-                                if (sensor != null)
-                                {
-                                    sensor.p2 = Float.parseFloat(reader.getElementText());
-                                }
-                                break;
-                            case "k1":
-                                if (sensor != null)
-                                {
-                                    sensor.k1 = Float.parseFloat(reader.getElementText());
-                                }
-                                break;
-                            case "k2":
-                                if (sensor != null)
-                                {
-                                    sensor.k2 = Float.parseFloat(reader.getElementText());
-                                }
-                                break;
-                            case "k3":
-                                if (sensor != null)
-                                {
-                                    sensor.k3 = Float.parseFloat(reader.getElementText());
-                                }
-                                break;
-                            case "k4":
-                                if (sensor != null)
-                                {
-                                    sensor.k4 = Float.parseFloat(reader.getElementText());
-                                }
-                                break;
-                            case "skew":
-                                if (sensor != null)
-                                {
-                                    sensor.skew = Float.parseFloat(reader.getElementText());
-                                }
-                                break;
 
-                            case "transform":
-                                if(camera == null && intVersion >= 110)
-                                {
-                                    break;
-                                }
-
-                            case "rotation":
-                                {
-                                    String[] components = reader.getElementText().split("\\s");
-                                    if (("transform".equals(reader.getLocalName()) && components.length < 16) ||
-                                        ("rotation".equals(reader.getLocalName()) && components.length < 9))
+                                    float[] m = new float[expectedSize];
+                                    for (int i = 0; i < expectedSize; i++)
                                     {
-                                        System.err.println("Error: Not enough components in the transform/rotation matrix");
+                                        m[i] = Float.parseFloat(components[i]);
                                     }
-                                    else
+
+                                    if (camera != null)
                                     {
-                                        int expectedSize = 16;
-                                        if("rotation".equals(reader.getLocalName()))
+                                        // Negate 2nd and 3rd column to rotate 180 degrees around x-axis
+                                        // Invert matrix by transposing rotation and negating translation
+                                        Matrix4 trans;
+                                        if(expectedSize == 9)
                                         {
-                                            expectedSize = 9;
-                                        }
-
-                                        if(components.length > expectedSize)
-                                        {
-                                            System.err.println("Warning: Too many components in the transform/rotation matrix, ignoring extras.");
-                                        }
-
-                                        float[] m = new float[expectedSize];
-                                        for (int i = 0; i < expectedSize; i++)
-                                        {
-                                            m[i] = Float.parseFloat(components[i]);
-                                        }
-
-                                        if (camera != null)
-                                        {
-                                            // Negate 2nd and 3rd column to rotate 180 degrees around x-axis
-                                            // Invert matrix by transposing rotation and negating translation
-                                            Matrix4 trans;
-                                            if(expectedSize == 9)
-                                            {
-                                                trans = Matrix3.fromRows(
-                                                        new Vector3( m[0],  m[3],  m[6]),
-                                                        new Vector3(-m[1], -m[4], -m[7]),
-                                                        new Vector3(-m[2], -m[5], -m[8]))
-                                                    .asMatrix4();
-                                            }
-                                            else
-                                            {
-                                                trans = Matrix3.fromRows(
-                                                        new Vector3( m[0],     m[4],  m[8]),
-                                                        new Vector3(-m[1], -m[5], -m[9]),
-                                                        new Vector3(-m[2], -m[6], -m[10]))
-                                                    .asMatrix4()
-                                                    .times(Matrix4.translate(-m[3], -m[7], -m[11]));
-                                            }
-
-                                            camera.transform = trans;
+                                            trans = Matrix3.fromRows(
+                                                    new Vector3( m[0],  m[3],  m[6]),
+                                                    new Vector3(-m[1], -m[4], -m[7]),
+                                                    new Vector3(-m[2], -m[5], -m[8]))
+                                                .asMatrix4();
                                         }
                                         else
                                         {
-                                            if(expectedSize == 9)
-                                            {
-                                                System.out.println("\tSetting global rotation.");
-                                                globalRotation = Matrix3.fromRows(
-                                                        new Vector3(m[0], m[3], m[6]),
-                                                        new Vector3(m[1], m[4], m[7]),
-                                                        new Vector3(m[2], m[5], m[8]))
-                                                    .asMatrix4();
-                                            }
-                                            else
-                                            {
-                                                System.out.println("\tSetting global transformation.");
-                                                globalRotation = Matrix3.fromRows(
-                                                        new Vector3(m[0], m[4], m[8]),
-                                                        new Vector3(m[1], m[5], m[9]),
-                                                        new Vector3(m[2], m[6], m[10]))
-                                                    .asMatrix4()
-                                                    .times(Matrix4.translate(m[3], m[7], m[11]));
-                                            }
+                                            trans = Matrix3.fromRows(
+                                                    new Vector3( m[0],     m[4],  m[8]),
+                                                    new Vector3(-m[1], -m[5], -m[9]),
+                                                    new Vector3(-m[2], -m[6], -m[10]))
+                                                .asMatrix4()
+                                                .times(Matrix4.translate(-m[3], -m[7], -m[11]));
+                                        }
+
+                                        camera.transform = trans;
+                                    }
+                                    else
+                                    {
+                                        if(expectedSize == 9)
+                                        {
+                                            System.out.println("\tSetting global rotation.");
+                                            globalRotation = Matrix3.fromRows(
+                                                    new Vector3(m[0], m[3], m[6]),
+                                                    new Vector3(m[1], m[4], m[7]),
+                                                    new Vector3(m[2], m[5], m[8]))
+                                                .asMatrix4();
+                                        }
+                                        else
+                                        {
+                                            System.out.println("\tSetting global transformation.");
+                                            globalRotation = Matrix3.fromRows(
+                                                    new Vector3(m[0], m[4], m[8]),
+                                                    new Vector3(m[1], m[5], m[9]),
+                                                    new Vector3(m[2], m[6], m[10]))
+                                                .asMatrix4()
+                                                .times(Matrix4.translate(m[3], m[7], m[11]));
                                         }
                                     }
                                 }
-                                break;
-
-                            case "translation":
-                                if (camera == null)
-                                {
-                                    System.out.println("\tSetting global translate.");
-                                    String[] components = reader.getElementText().split("\\s");
-                                    globalTranslate = new Vector3(
-                                            -Float.parseFloat(components[0]),
-                                            -Float.parseFloat(components[1]),
-                                            -Float.parseFloat(components[2]));
-                                }
-                                break;
-
-                            case "scale":
-                                if (camera == null)
-                                {
-                                    System.out.println("\tSetting global scale.");
-                                    globalScale = 1.0f / Float.parseFloat(reader.getElementText());
-                                }
-                                break;
-
-                            case "property": case "projections": case "depth":
-                            case "frames": case "frame": case "meta": case "R":
-                            case "size": case "center": case "region": case "settings":
-                            case "ground_control": case "mesh": case "texture":
-                            case "model": case "calibration": case "thumbnail":
-                            case "point_cloud": case "points": case "sensors":
-                            case "cameras":
-                               // These can all be safely ignored if version is >= 0.9.1
+                            }
                             break;
 
-                            case "photo": case "tracks": case "depth_maps":
-                            case "depth_map": case "dense_cloud":
-                               if(intVersion < 110)
-                               {
-                                   System.out.printf("Unexpected tag '%s' for psz version %s\n",
-                                                       reader.getLocalName(), version);
-                               }
+                        case "translation":
+                            if (camera == null)
+                            {
+                                System.out.println("\tSetting global translate.");
+                                String[] components = reader.getElementText().split("\\s");
+                                globalTranslate = new Vector3(
+                                        -Float.parseFloat(components[0]),
+                                        -Float.parseFloat(components[1]),
+                                        -Float.parseFloat(components[2]));
+                            }
                             break;
 
-                            default:
-                               System.out.printf("Unexpected tag '%s'\n", reader.getLocalName());
-                               break;
-                        }
+                        case "scale":
+                            if (camera == null)
+                            {
+                                System.out.println("\tSetting global scale.");
+                                globalScale = 1.0f / Float.parseFloat(reader.getElementText());
+                            }
+                            break;
+
+                        case "property": case "projections": case "depth":
+                        case "frames": case "frame": case "meta": case "R":
+                        case "size": case "center": case "region": case "settings":
+                        case "ground_control": case "mesh": case "texture":
+                        case "model": case "calibration": case "thumbnail":
+                        case "point_cloud": case "points": case "sensors":
+                        case "cameras":
+                           // These can all be safely ignored if version is >= 0.9.1
                         break;
 
-                    case XMLStreamConstants.END_ELEMENT:
-                    {
-                        switch (reader.getLocalName())
-                        {
-                            case "chunk":
-                                System.out.printf("Finished chunk '%s'\n", chunkLabel);
-                                chunkLabel = "";
-                                break;
-                            case "group":
-                                System.out.printf("Finished group '%s'\n", groupLabel);
-                                groupLabel = "";
-                                lightIndex = defaultLightIndex;
-                                break;
-                            case "sensor":
-                                if(sensor != null)
-                                {
-                                    sensorSet.put(sensor.id, sensor);
-                                    sensor = null;
-                                }
-                                break;
-                            case "camera":
-                                if(camera != null && camera.transform != null)
-                                {
-                                   cameraSet.add(camera);
-                                   System.out.printf("\tAdding camera %s, with sensor %s and image %s\n",
-                                           cameraID, sensorID, imageFile);
-                                   camera = null;
-                                }
-                                break;
-                        }
+                        case "photo": case "tracks": case "depth_maps":
+                        case "depth_map": case "dense_cloud":
+                           if(intVersion < 110)
+                           {
+                               System.out.printf("Unexpected tag '%s' for psz version %s\n",
+                                                   reader.getLocalName(), version);
+                           }
+                        break;
+
+                        default:
+                           System.out.printf("Unexpected tag '%s'\n", reader.getLocalName());
+                           break;
                     }
                     break;
+
+                case XMLStreamConstants.END_ELEMENT:
+                {
+                    switch (reader.getLocalName())
+                    {
+                        case "chunk":
+                            System.out.printf("Finished chunk '%s'\n", chunkLabel);
+                            chunkLabel = "";
+                            break;
+                        case "group":
+                            System.out.printf("Finished group '%s'\n", groupLabel);
+                            groupLabel = "";
+                            lightIndex = defaultLightIndex;
+                            break;
+                        case "sensor":
+                            if(sensor != null)
+                            {
+                                sensorSet.put(sensor.id, sensor);
+                                sensor = null;
+                            }
+                            break;
+                        case "camera":
+                            if(camera != null && camera.transform != null)
+                            {
+                               cameraSet.add(camera);
+                               System.out.printf("\tAdding camera %s, with sensor %s and image %s\n",
+                                       cameraID, sensorID, imageFile);
+                               camera = null;
+                            }
+                            break;
+                    }
                 }
+                break;
             }
-        }
-        catch (XMLStreamException e)
-        {
-            e.printStackTrace();
         }
         
         Parameters params = new Parameters();

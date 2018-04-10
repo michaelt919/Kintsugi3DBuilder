@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
+import javax.xml.stream.XMLStreamException;
 
 import tetzlaff.gl.builders.ColorTextureBuilder;
 import tetzlaff.gl.builders.ProgramBuilder;
@@ -147,19 +148,12 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         public Builder<ContextType> loadVSETFile(File vsetFile) throws FileNotFoundException
         {
             this.viewSet = ViewSet.loadFromVSETFile(vsetFile);
-            try
-            {
-                this.geometry = VertexGeometry.createFromOBJFile(this.viewSet.getGeometryFile());
-            }
-            catch(Exception e)
-            {
-                e.printStackTrace();
-            }
+            this.geometry = VertexGeometry.createFromOBJFile(this.viewSet.getGeometryFile());
             return this;
         }
 
         // undistorted images are defined in the load options
-        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws FileNotFoundException
+        public Builder<ContextType> loadAgisoftFiles(File cameraFile, File geometryFile, File undistortedImageDirectory) throws FileNotFoundException, XMLStreamException
         {
             this.viewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
             Path parentDirectory = cameraFile.getParentFile().toPath();

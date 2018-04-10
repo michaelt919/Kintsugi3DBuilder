@@ -5,9 +5,12 @@ import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.Comparator;
 import java.util.ResourceBundle;
+import javax.xml.stream.XMLStreamException;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Paint;
@@ -66,13 +69,15 @@ public class LoaderController implements Initializable
         {
             cameraFile = temp;
             setHomeDir(temp);
-            loadCheckCameras.setText("Loaded");
-            loadCheckCameras.setFill(Paint.valueOf("Green"));
-            primaryViewChoiceBox.getItems().clear();
 
             try
             {
                 ViewSet newViewSet = ViewSet.loadFromAgisoftXMLFile(cameraFile);
+
+                loadCheckCameras.setText("Loaded");
+                loadCheckCameras.setFill(Paint.valueOf("Green"));
+
+                primaryViewChoiceBox.getItems().clear();
                 for (int i = 0; i < newViewSet.getCameraPoseCount(); i++)
                 {
                     primaryViewChoiceBox.getItems().add(newViewSet.getImageFileName(i));
@@ -80,9 +85,10 @@ public class LoaderController implements Initializable
                 primaryViewChoiceBox.getItems().sort(Comparator.naturalOrder());
                 primaryViewChoiceBox.getSelectionModel().select(0);
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException|XMLStreamException e)
             {
                 e.printStackTrace();
+                new Alert(AlertType.ERROR, e.toString()).show();
             }
         }
     }
@@ -124,19 +130,11 @@ public class LoaderController implements Initializable
         {
             callback.run();
 
-            //ok!
             new Thread(() ->
-            {
-                try
-                {
-                    MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(cameraFile.getPath(), cameraFile, objFile, photoDir,
-                        primaryViewChoiceBox.getSelectionModel().getSelectedItem());
-                }
-                catch (FileNotFoundException e)
-                {
-                    System.out.println("files were malformed");
-                }
-            }).start();
+                MultithreadModels.getInstance().getLoadingModel().loadFromAgisoftFiles(
+                        cameraFile.getPath(), cameraFile, objFile, photoDir,
+                        primaryViewChoiceBox.getSelectionModel().getSelectedItem()))
+                .start();
 
             close();
         }

@@ -2,6 +2,7 @@ package tetzlaff.gl.interactive;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.interactive.EventPollable;
+import tetzlaff.interactive.InitializationException;
 import tetzlaff.interactive.InteractiveApplication;
 import tetzlaff.interactive.Refreshable;
 
@@ -37,7 +38,7 @@ public final class InteractiveGraphics
         return new InteractiveApplication(pollable, new Refreshable()
         {
             @Override
-            public void initialize()
+            public void initialize() throws InitializationException
             {
                 context.makeContextCurrent();
                 renderable.initialize();

@@ -3,6 +3,8 @@ package tetzlaff.ibrelight.app;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import tetzlaff.interactive.InitializationException;
+
 public final class IBRelight
 {
     private static final boolean DEBUG = true;
@@ -11,7 +13,7 @@ public final class IBRelight
     {
     }
 
-    public static void main(String... args) throws IOException
+    public static void main(String... args) throws IOException, InitializationException
     {
         if (!DEBUG)
         {
@@ -40,7 +42,7 @@ public final class IBRelight
         new Thread(new ThreadableUI()).start();
     }
 
-    private static void startRenderWindow()
+    private static void startRenderWindow() throws InitializationException
     {
         Rendering.runProgram();
     }

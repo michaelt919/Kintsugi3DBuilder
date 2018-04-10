@@ -2,6 +2,7 @@ package tetzlaff.gl.interactive;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.Framebuffer;
+import tetzlaff.interactive.InitializationException;
 
 /**
  * An interface used with the InteractiveGraphics object to coordinate the initialization,
@@ -15,10 +16,10 @@ public interface InteractiveRenderable<ContextType extends Context<ContextType>>
     /**
      * Execute any initialization needed prior to updating and drawing this object.  You
      * should bring the internal state into being prepared to call update and draw.  Called
-     * once by the associated InteractiveAppliction created by InteractiveGraphics.  The
+     * once by the associated InteractiveApplication created by InteractiveGraphics.  The
      * associated context will be made current first.
      */
-    void initialize();
+    void initialize() throws InitializationException;
 
     /**
      * Adjust internal state that needs to change prior to drawing.  Called every time the
