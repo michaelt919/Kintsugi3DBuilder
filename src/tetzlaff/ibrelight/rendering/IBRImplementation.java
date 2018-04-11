@@ -2019,7 +2019,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private Program<ContextType> loadMainProgram() throws FileNotFoundException
     {
         return context.getShaderProgramBuilder()
-                .define("BUEHLER_ALGORITHM", this.settingsModel.getBoolean("buehlerAlgorithm"))
+                .define("BUEHLER_ALGORITHM", this.settingsModel.getBoolean("buehlerAlgorithm") ? 1 : 0)
                 .define("BUEHLER_VIEW_COUNT", this.settingsModel.getInt("buehlerViewCount"))
                 .addShader(ShaderType.VERTEX, new File("shaders/common/imgspace.vert"))
                 .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
@@ -2029,7 +2029,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private void updateCompiledSettings()
     {
         //noinspection ConstantConditions
-        if (!Objects.equals(this.program.getDefine("BUEHLER_ALGORITHM").get(), settingsModel.getBoolean("buehlerAlgorithm"))
+        if (!Objects.equals((Integer)this.program.getDefine("BUEHLER_ALGORITHM").get() != 0, settingsModel.getBoolean("buehlerAlgorithm"))
             || !Objects.equals(this.program.getDefine("BUEHLER_VIEW_COUNT").get(), settingsModel.getInt("buehlerViewCount")))
         {
             try

@@ -9,10 +9,15 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int fragObjectID;
 
+#define BUEHLER_ALGORITHM 1
+#define BUEHLER_VIEW_COUNT 5
+
+#define SUPPRESS_MIPMAPS BUEHLER_ALGORITHM
+
 #include "../colorappearance/colorappearance_subset.glsl"
 #include "../colorappearance/imgspace_subset.glsl"
 
-#line 16 0
+#line 21 0
 
 uniform int objectID;
 
@@ -69,9 +74,6 @@ uniform bool perPixelWeightsEnabled;
 uniform vec3 holeFillColor;
 
 #define brdfMode false
-
-#define BUEHLER_ALGORITHM true
-#define BUEHLER_VIEW_COUNT 5
 
 layout(std140) uniform ViewWeights
 {
@@ -595,7 +597,19 @@ float computeBuehlerWeight(vec3 targetDirection, vec3 sampleDirection)
 float getBuehlerWeight(int virtualIndex, vec3 targetDirection)
 {
     mat4 cameraPose = getCameraPose(virtualIndex);
-    return computeBuehlerWeight(mat3(cameraPose) * targetDirection, -normalize((cameraPose * vec4(fPosition, 1)).xyz));
+    vec4 projTexCoord = cameraProjections[getCameraProjectionIndex(virtualIndex)] * cameraPose * vec4(fPosition, 1.0);
+
+    if (projTexCoord.x < -projTexCoord.w || projTexCoord.x > projTexCoord.w
+        || projTexCoord.y < -projTexCoord.w || projTexCoord.y > projTexCoord.w)
+    {
+        return 0.0;
+    }
+    else
+    {
+        vec3 sampleDirectionCameraSpace = -normalize((cameraPose * vec4(fPosition, 1)).xyz);
+        return max(0, dot(sampleDirectionCameraSpace, mat3(cameraPose) * normalize(fNormal)))
+            * computeBuehlerWeight(mat3(cameraPose) * targetDirection, sampleDirectionCameraSpace);
+    }
 }
 
 vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
@@ -690,7 +704,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     }
     else
     {
-        return sum / sum.a;
+        return sum / max(0.01, sum.a);
     }
 }
 
@@ -781,10 +795,12 @@ void main()
 
     vec4[MAX_VIRTUAL_LIGHT_COUNT] weightedAverages;
 
-    if (!BUEHLER_ALGORITHM && imageBasedRenderingEnabled)
+#if !BUEHLER_ALGORITHM
+    if (imageBasedRenderingEnabled)
     {
         weightedAverages = computeWeightedAverages(diffuseColor, normalDir, specularColor, roughness);
     }
+#endif
 
     if ((relightingEnabled || !imageBasedRenderingEnabled) && ambientColor != vec3(0))
     {
@@ -882,17 +898,14 @@ void main()
                 vec4 predictedMFD;
                 if (imageBasedRenderingEnabled)
                 {
-                    if (BUEHLER_ALGORITHM)
-                    {
-                        vec4 weightedAverage = computeBuehler(
-                            useTSOverrides ? tangentToObject * halfDir : halfDir,
-                            diffuseColor, normalDir, specularColor, roughness);
-                        predictedMFD = weightedAverage;
-                    }
-                    else
-                    {
-                        predictedMFD = weightedAverages[i];
-                    }
+#if BUEHLER_ALGORITHM
+                    vec4 weightedAverage = computeBuehler(
+                        useTSOverrides ? tangentToObject * halfDir : halfDir,
+                        diffuseColor, normalDir, specularColor, roughness);
+                    predictedMFD = weightedAverage;
+#else
+                    predictedMFD = weightedAverages[i];
+#endif
                 }
 
                 if (predictedMFD.w < 1.0)
