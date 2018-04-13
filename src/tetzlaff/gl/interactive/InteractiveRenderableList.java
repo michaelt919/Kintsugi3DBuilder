@@ -59,9 +59,10 @@ public class InteractiveRenderableList<ContextType extends Context<ContextType>,
             {
                 r.initialize();
             }
-            catch (InitializationException e)
+            catch (RuntimeException|InitializationException e)
             {
                 renderables.remove(r);
+                e.printStackTrace();
             }
         }
 

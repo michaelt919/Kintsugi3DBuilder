@@ -364,7 +364,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.loadingMonitor.loadingComplete();
             }
         }
-        catch (IOException e)
+        catch (RuntimeException|IOException e)
         {
             e.printStackTrace();
             this.close();
