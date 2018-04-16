@@ -294,7 +294,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 this.eigentextures = eigentexturesTemp;
             }
 
-            File imageFile = findImageFile(0);
+            File imageFile = findImageFile(viewSet.getPrimaryViewIndex());
 
             // Read a single image to get the dimensions for the texture array
             try(InputStream input = new FileInputStream(imageFile)) // myZip.retrieveFile(imageFile);

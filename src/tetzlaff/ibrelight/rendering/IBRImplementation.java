@@ -247,9 +247,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     .createProgram();
 
             this.environmentBackgroundProgram = context.getShaderProgramBuilder()
-                        .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
-                        .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
-                        .createProgram();
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "common"), "envbackgroundtexture.frag"))
+                    .createProgram();
 
             this.rectangleVertices = context.createRectangle();
 
@@ -435,7 +435,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 this.loadingMonitor.loadingComplete();
             }
         }
-        catch (IOException e)
+        catch (RuntimeException|IOException e)
         {
             e.printStackTrace();
             this.close();
