@@ -129,6 +129,10 @@ layout(location = 1) out int fragObjectID;
 #define SMITH_MASKING_SHADOWING 1
 #endif
 
+#ifndef MIPMAPS_ENABLED
+#define MIPMAPS_ENABLED !BUEHLER_ALGORITHM
+#endif
+
 #include "reflectanceequations.glsl"
 #include "tonemap.glsl"
 
@@ -140,20 +144,20 @@ layout(location = 1) out int fragObjectID;
 
 #include "../colorappearance/colorappearance.glsl"
 
-#if BUEHLER_ALGORITHM
-#define SORTING_TOTAL_COUNT VIEW_COUNT
-#include "sort.glsl"
-#endif
-
 #if SVD_MODE
 #include "../colorappearance/svd_unpack.glsl"
 #else
 #include "../colorappearance/imgspace.glsl"
 #endif
 
+#if BUEHLER_ALGORITHM
+#define SORTING_TOTAL_COUNT VIEW_COUNT
+#include "sort.glsl"
 #endif
 
-#line 150 0
+#endif
+
+#line 161 0
 
 uniform int objectID;
 
