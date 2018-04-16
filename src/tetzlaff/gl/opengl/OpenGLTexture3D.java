@@ -31,8 +31,8 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
 {
     private int openGLTextureTarget;
     private int mipmapLevelCount;
-    private int width;
-    private int height;
+    private final int width;
+    private final int height;
     private int depth;
     private boolean useMipmaps;
     private boolean staleMipmaps;
@@ -208,6 +208,10 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     {
         // Create and allocate a 3D texture or 2D texture array
         super(context, colorFormat);
+
+        this.width = width;
+        this.height = height;
+
         init(openGLTextureTarget, multisamples, OpenGLContext.getOpenGLInternalColorFormat(colorFormat), width, height, layerCount, format,
                 fixedSampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
     }
@@ -217,6 +221,10 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     {
         // Create and allocate a 3D texture or 2D texture array
         super(context, compressionFormat);
+
+        this.width = width;
+        this.height = height;
+
         init(openGLTextureTarget, multisamples, OpenGLContext.getOpenGLCompressionFormat(compressionFormat), width, height, layerCount, format,
                 fixedSampleLocations, useLinearFiltering, useMipmaps, maxAnisotropy);
     }
@@ -226,6 +234,9 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     {
         // Create and allocate a 3D texture or 2D texture array
         super(context, textureType);
+
+        this.width = width;
+        this.height = height;
 
         int internalFormat;
         switch(textureType)
@@ -257,8 +268,6 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
             boolean fixedSampleLocations, boolean useLinearFiltering, boolean useMipmaps, float maxAnisotropy)
     {
         this.openGLTextureTarget = textureTarget;
-        this.width = width;
-        this.height = height;
         this.depth = layerCount;
         this.useMipmaps = useMipmaps;
 
@@ -339,7 +348,7 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         }
     }
 
-    private void validateLayer(int layerIndex, BufferedImage img) throws IOException
+    private BufferedImage validateAndScaleImage(int layerIndex, BufferedImage img) throws IOException
     {
         if(img == null)
         {
@@ -351,9 +360,17 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
             throw new IllegalArgumentException("The layer index specified (" + layerIndex + ") is out of bounds (layer count: " + this.depth + ").");
         }
 
-        if (img.getWidth() != this.width || img.getHeight() != this.height)
+        if (this.width == img.getWidth() && this.height == img.getHeight())
         {
-            throw new IllegalStateException("The texture to be loaded does not have the correct width and height.");
+            return img;
+        }
+        else
+        {
+            BufferedImage resized = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
+            Graphics resizedGraphics = resized.createGraphics();
+            resizedGraphics.drawImage(img.getScaledInstance(this.width, this.height, Image.SCALE_SMOOTH), 0, 0 , null);
+            resizedGraphics.dispose();
+            return resized;
         }
     }
 
@@ -362,18 +379,13 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     {
         this.bind();
 
-        BufferedImage img = ImageIO.read(fileStream);
-        validateLayer(layerIndex, img);
-
-        this.width = img.getWidth();
-        this.height = img.getHeight();
-
-        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(img, null, flipVertical);
+        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(validateAndScaleImage(layerIndex, ImageIO.read(fileStream)),
+            null, flipVertical);
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
 
-        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, img.getWidth(), img.getHeight(), 1,
+        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, this.width, this.height, 1,
             GL_BGRA, GL_UNSIGNED_BYTE, buffer);
         OpenGLContext.errorCheck();
 
@@ -395,30 +407,23 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     {
         this.bind();
 
-        BufferedImage img = ImageIO.read(fileStream);
-        validateLayer(layerIndex, img);
-
-        this.width = img.getWidth();
-        this.height = img.getHeight();
-
-        int format = OpenGLContext.getPixelDataFormatFromDimensions(mappedType.getComponentCount());
-        int type = OpenGLContext.getDataTypeConstant(mappedType.getNativeDataType());
         Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
-        int mappedColorLength = mappedType.getSizeInBytes();
-
-        Function<ByteBuffer, Consumer<Color>> bufferWrapperFunctionFull = byteBuffer ->
-        {
-            Consumer<? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
-            return color -> partiallyWrappedBuffer.accept(mappingFunction.apply(color));
-        };
-
-        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(img, null, flipVertical, bufferWrapperFunctionFull, mappedColorLength);
+        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(
+            validateAndScaleImage(layerIndex, ImageIO.read(fileStream)), null, flipVertical,
+            byteBuffer ->
+            {
+                Consumer<? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
+                return color -> partiallyWrappedBuffer.accept(mappingFunction.apply(color));
+            },
+            mappedType.getSizeInBytes());
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
 
-        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, img.getWidth(), img.getHeight(), 1,
-            format, type, buffer);
+        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, this.width, this.height, 1,
+            OpenGLContext.getPixelDataFormatFromDimensions(mappedType.getComponentCount()),
+            OpenGLContext.getDataTypeConstant(mappedType.getNativeDataType()),
+            buffer);
         OpenGLContext.errorCheck();
 
         if (this.useMipmaps)
@@ -434,53 +439,20 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
         this.loadLayer(layerIndex, new FileInputStream(file), flipVertical, mappedType, mappingFunction);
     }
 
-    private void validateLayer(int layerIndex, BufferedImage colorImg, BufferedImage maskImg) throws IOException
-    {
-        if(colorImg == null)
-        {
-            throw new IOException("Error: Unsupported image format for color image.");
-        }
-
-        if(maskImg == null)
-        {
-            throw new IOException("Error: Unsupported image format for mask image.");
-        }
-
-        if (layerIndex < 0 || layerIndex >= this.depth)
-        {
-            throw new IllegalArgumentException("The layer index specified (" + layerIndex + ") is out of bounds (layer count: " + this.depth + ").");
-        }
-
-        if (colorImg.getWidth() != this.width || colorImg.getHeight() != this.height)
-        {
-            throw new IllegalStateException("The texture to be loaded does not have the correct width and height.");
-        }
-
-        if (maskImg.getWidth() != this.width || maskImg.getHeight() != this.height)
-        {
-            throw new IllegalStateException("The alpha mask to be loaded does not have the correct width and height.");
-        }
-    }
-
     @Override
     public void loadLayer(int layerIndex, InputStream imageStream, InputStream maskStream, boolean flipVertical) throws IOException
     {
         this.bind();
 
-        BufferedImage colorImg = ImageIO.read(imageStream);
-        BufferedImage maskImg = ImageIO.read(maskStream);
-
-        validateLayer(layerIndex, colorImg, maskImg);
-
-        this.width = colorImg.getWidth();
-        this.height = colorImg.getHeight();
-
-        ByteBuffer buffer = bufferedImageToNativeBuffer(colorImg, maskImg, flipVertical);
+        ByteBuffer buffer = bufferedImageToNativeBuffer(
+            validateAndScaleImage(layerIndex, ImageIO.read(imageStream)),
+            validateAndScaleImage(layerIndex, ImageIO.read(maskStream)),
+            flipVertical);
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
 
-        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, colorImg.getWidth(), colorImg.getHeight(), 1,
+        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, this.width, this.height, 1,
             GL_BGRA, GL_UNSIGNED_BYTE, buffer);
         OpenGLContext.errorCheck();
 
@@ -502,33 +474,25 @@ final class OpenGLTexture3D extends OpenGLTexture implements Texture3D<OpenGLCon
     {
         this.bind();
 
-        BufferedImage colorImg = ImageIO.read(imageStream);
-        BufferedImage maskImg = ImageIO.read(maskStream);
-
-        validateLayer(layerIndex, colorImg, maskImg);
-
-        this.width = colorImg.getWidth();
-        this.height = colorImg.getHeight();
-
-        int format = OpenGLContext.getPixelDataFormatFromDimensions(mappedType.getComponentCount());
-        int type = OpenGLContext.getDataTypeConstant(mappedType.getNativeDataType());
         Function<ByteBuffer, Consumer<? super MappedType>> bufferWrapperFunctionPartial = mappedType::wrapByteBuffer;
-        int mappedColorLength = mappedType.getSizeInBytes();
-
-        Function<ByteBuffer, Consumer<Color>> bufferWrapperFunctionFull = byteBuffer ->
-        {
-            Consumer<? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
-            return color -> partiallyWrappedBuffer.accept(mappingFunction.apply(color));
-        };
-
-        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(colorImg, maskImg, flipVertical, bufferWrapperFunctionFull, mappedColorLength);
-
+        ByteBuffer buffer = OpenGLTexture.bufferedImageToNativeBuffer(
+            validateAndScaleImage(layerIndex, ImageIO.read(imageStream)),
+            validateAndScaleImage(layerIndex, ImageIO.read(maskStream)),
+            flipVertical,
+            byteBuffer ->
+            {
+                Consumer<? super MappedType> partiallyWrappedBuffer = bufferWrapperFunctionPartial.apply(byteBuffer);
+                return color -> partiallyWrappedBuffer.accept(mappingFunction.apply(color));
+            },
+            mappedType.getSizeInBytes());
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
 
-        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, colorImg.getWidth(), colorImg.getHeight(), 1,
-            format, type, buffer);
+        glTexSubImage3D(this.openGLTextureTarget, 0, 0, 0, layerIndex, this.width, this.height, 1,
+            OpenGLContext.getPixelDataFormatFromDimensions(mappedType.getComponentCount()),
+            OpenGLContext.getDataTypeConstant(mappedType.getNativeDataType()),
+            buffer);
         OpenGLContext.errorCheck();
 
         if (this.useMipmaps)
