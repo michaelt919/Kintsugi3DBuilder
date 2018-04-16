@@ -304,7 +304,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         if (loadOptions != null && loadOptions.areColorImagesRequested() && viewSet.getImageFilePath() != null && viewSet.getCameraPoseCount() > 0)
         {
             Date timestamp = new Date();
-            File imageFile = findImageFile(0);
+            File imageFile = findImageFile(viewSet.getPrimaryViewIndex());
 
             BufferedImage img;
 
