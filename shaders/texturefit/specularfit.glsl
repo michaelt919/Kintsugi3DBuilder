@@ -61,6 +61,7 @@ struct ParameterizedFit
     vec4 normal;
     vec4 specularColor;
     vec4 roughness;
+    vec4 roughnessStdDev;
 };
 
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light,
@@ -289,6 +290,7 @@ ParameterizedFit fitSpecular()
 
     // Estimate the roughness and specular reflectivity (in an XYZ color space).
     vec3 roughnessSquared;
+    vec3 roughnessSquaredStdDev;
     vec3 specularColorXYZEstimate;
 
 
@@ -507,7 +509,7 @@ ParameterizedFit fitSpecular()
 //
 //    if (roughnessSums[2] == vec3(0.0) || sumResidualXYZGamma.w == 0.0)
 //    {
-//        return ParameterizedFit(diffuseColor, vec4(diffuseNormalTS, 1), vec4(0), vec4(0));
+//        return ParameterizedFit(diffuseColor, vec4(diffuseNormalTS, 1), vec4(0), vec4(0), vec4(0));
 //    }
 //
 //    //    Derivation:
@@ -633,7 +635,7 @@ ParameterizedFit fitSpecular()
 
     if (sumResidualXYZGamma.w == 0.0)
     {
-        return ParameterizedFit(diffuseColor, vec4(diffuseNormalTS, 1), vec4(0), vec4(0));
+        return ParameterizedFit(diffuseColor, vec4(diffuseNormalTS, 1), vec4(0), vec4(0), vec4(0));
     }
 
     if (chromaticRoughness)
@@ -782,7 +784,7 @@ ParameterizedFit fitSpecular()
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
     // for texels where there isn't enough information at the specular peak.
     return ParameterizedFit(adjustedDiffuseColor, vec4(normalize(transpose(tangentToObject) * specularNormal), 1),
-        vec4(specularColor, 1), vec4(sqrt(roughnessSquared), 1));
+        vec4(specularColor, 1), vec4(sqrt(roughnessSquared), 1), vec4(roughnessSquaredStdDev, 1.0));
 }
 
 #endif // SPECULARFIT_GLSL
