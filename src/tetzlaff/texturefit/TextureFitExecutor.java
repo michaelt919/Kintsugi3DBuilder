@@ -1285,7 +1285,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 Date timestamp = new Date();
 
                 NativeVectorBuffer lightPositionList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, viewSet.getLightCount());
-                NativeVectorBuffer lightIntensityList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, viewSet.getLightCount());
+                NativeVectorBuffer lightIntensityList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, viewSet.getLightCount());
 
                 LightFit<ContextType> lightFit;
 
@@ -1330,7 +1330,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             }
             else if (param.isLightIntensityEstimationEnabled())
             {
-                NativeVectorBuffer lightIntensityList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, viewSet.getLightCount());
+                NativeVectorBuffer lightIntensityList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, viewSet.getLightCount());
 
                 Vector3 lightIntensity = new Vector3((float)(avgDistance * avgDistance));
                 System.out.println("Using light intensity: " + lightIntensity.x + ' ' + lightIntensity.y + ' ' + lightIntensity.z);
@@ -1634,17 +1634,17 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         (
             FramebufferObject<ContextType> framebuffer1 =
                 context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                    .addColorAttachments(ColorFormat.RGBA32F, 4)
+                    .addColorAttachments(ColorFormat.RGBA32F, 5)
                     .createFramebufferObject();
 
             FramebufferObject<ContextType> framebuffer2 =
                     context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                        .addColorAttachments(ColorFormat.RGBA32F, 4)
+                        .addColorAttachments(ColorFormat.RGBA32F, 5)
                         .createFramebufferObject();
 
             FramebufferObject<ContextType> framebuffer3 =
                     context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                        .addColorAttachments(ColorFormat.RGBA32F, 4)
+                        .addColorAttachments(ColorFormat.RGBA32F, 5)
                         .createFramebufferObject();
 
             FramebufferObject<ContextType> errorFramebuffer1 =
@@ -2005,6 +2005,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-raw.png"));
                     frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(auxDir, "specular-raw.png"));
                     frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "roughness-raw.png"));
+                    frontFramebuffer.saveColorBufferToFile(4, "PNG", new File(auxDir, "roughness-error.png"));
 
                     double lastRMSError;
 
