@@ -3,7 +3,7 @@
 
 #line 5 2004
 
-#define DARPA_MODE 0
+#define DARPA_MODE 1
 
 #define MIN_ROUGHNESS 0.00390625    // 1/256
 #define MAX_ROUGHNESS 1.0 // 0.70710678 // sqrt(1/2)
@@ -572,6 +572,9 @@ ParameterizedFit fitSpecular()
     vec3 specularSumA = vec3(0.0);
     vec3 specularSumB = vec3(0.0);
 
+    vec3 specularSumASqOverB = vec3(0.0);
+    vec3 specularSumBSq = vec3(0.0);
+
     vec4 sumResidualXYZGamma = vec4(0.0);
 
     for (int i = 0; i < VIEW_COUNT; i++)
@@ -628,6 +631,9 @@ ParameterizedFit fitSpecular()
                 specularSumA += numerator;
                 specularSumB += denominator;
 
+                specularSumASqOverB += numerator * numerator / denominator;
+                specularSumBSq += denominator * denominator;
+
                 sumResidualXYZGamma += nDotV * vec4(pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)), 1.0);
             }
         }
@@ -643,6 +649,10 @@ ParameterizedFit fitSpecular()
         roughnessSquared = clamp(pow(specularSumA / specularSumB, vec3(fittingGamma)),
             MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS);
         specularColorXYZEstimate = clamp(4 * maxResidualXYZ * roughnessSquared, MIN_SPECULAR_REFLECTIVITY, 1.0);
+
+        roughnessSquaredStdDev =
+            sqrt((specularSumASqOverB * specularSumB - specularSumA * specularSumA)  // weighted sum of squared error times sum of weights (specularSumB)
+                / (specularSumB * specularSumB - specularSumBSq));                   // unbiased normalization
     }
     else
     {
@@ -650,6 +660,10 @@ ParameterizedFit fitSpecular()
             MIN_ROUGHNESS * MIN_ROUGHNESS, MAX_ROUGHNESS * MAX_ROUGHNESS));
         specularColorXYZEstimate = clamp(4 * maxResidualXYZ.y * roughnessSquared, MIN_SPECULAR_REFLECTIVITY, 1.0)
             * pow(sumResidualXYZGamma.xyz / max(0.01 * sumResidualXYZGamma.w, sumResidualXYZGamma.y), vec3(fittingGamma));
+
+        roughnessSquaredStdDev =
+            vec3(sqrt((specularSumASqOverB.y * specularSumB.y - specularSumA.y * specularSumA.y)
+                / (specularSumB.y * specularSumB.y - specularSumBSq.y)));
     }
 
 

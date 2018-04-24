@@ -108,13 +108,12 @@ vec3 getLightVector(int virtualIndex)
 {
     int viewIndex = getViewIndex(virtualIndex);
     return transpose(mat3(cameraPoses[viewIndex])) *
-        (lightPositions[getLightIndex(viewIndex)].xyz - cameraPoses[viewIndex][3].xyz) - fPosition;
+        (lightPositions[getLightIndex(virtualIndex)].xyz - cameraPoses[viewIndex][3].xyz) - fPosition;
 }
 
 vec3 getLightIntensity(int virtualIndex)
 {
-    int viewIndex = getViewIndex(virtualIndex);
-    return lightIntensities[getLightIndex(viewIndex)].rgb;
+    return lightIntensities[getLightIndex(virtualIndex)].rgb;
 }
 
 LightInfo getLightInfo(int virtualIndex)
