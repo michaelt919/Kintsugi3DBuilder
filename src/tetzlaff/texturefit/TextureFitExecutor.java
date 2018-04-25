@@ -30,7 +30,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
     private static final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
 
-    private static final double FITTING_GAMMA = 2.2; // TODO make this configurable from the interface
+    private static final double FITTING_GAMMA = 1.0; // TODO make this configurable from the interface
 
     private final ContextType context;
     private final File vsetFile;
