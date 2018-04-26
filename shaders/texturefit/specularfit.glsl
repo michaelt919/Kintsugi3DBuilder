@@ -16,6 +16,7 @@ uniform sampler2D normalEstimate;
 
 uniform float fittingGamma;
 uniform bool standaloneMode;
+uniform bool adjustNormal;
 
 //uniform vec4 normalCandidateWeights;
 uniform vec2 normalCandidate;
@@ -202,106 +203,114 @@ ParameterizedFit fitSpecular()
     float luminanceUncertaintyRange = max(0, maxResidualComponent - 0.9);
 
     vec3 specularNormal;
-    vec3 biasedHeuristicNormal;
-    vec3 bias;
-    float resolvability;
 
-    biasedHeuristicNormal = normalize(intensityWeightedDirectionSum);
-    float directionScale = length(directionSum);
-    resolvability = min(1, directionScale);
-    bias = directionSum / max(1, directionScale);
-
-
-
-//    vec2 heuristicNormalTS;
-//    vec2 biasTS;
-//
-//    float runningXSum = normalXBins[0];
-//    float runningYSum = normalYBins[0];
-//
-//    float runningXWeightSum = normalXWeightBins[0];
-//    float runningYWeightSum = normalYWeightBins[0];
-//
-//    for (int i = 1; i < 255; i++)
-//    {
-//        float nextXSum = runningXSum + normalXBins[i];
-//        float nextYSum = runningYSum + normalYBins[i];
-//
-//        float nextXWeightSum = runningXWeightSum + normalXWeightBins[i];
-//        float nextYWeightSum = runningYWeightSum + normalYWeightBins[i];
-//
-//        if (nextXSum != runningXSum && runningXSum <= binSum / 2 && binSum / 2 < nextXSum)
-//        {
-//            heuristicNormalTS.x = (mix(i - 1, i, (binSum / 2 - runningXSum) / (nextXSum - runningXSum)) - 127) / 127.0;
-//        }
-//
-//        if (nextYSum != runningYSum && runningYSum <= binSum / 2 && binSum / 2 <= nextYSum)
-//        {
-//            heuristicNormalTS.y = (mix(i - 1, i, (binSum / 2 - runningYSum) / (nextYSum - runningYSum)) - 127) / 127.0;
-//        }
-//
-//        if (nextXWeightSum != runningXWeightSum && runningXWeightSum <= binWeightSum / 2 && binWeightSum / 2 < nextXWeightSum)
-//        {
-//            biasTS.x = (mix(i - 1, i, float(binWeightSum * 0.5 - runningXWeightSum) / float(nextXWeightSum - runningXWeightSum)) - 127) / 127.0;
-//        }
-//
-//        if (nextYWeightSum != runningYWeightSum && runningYWeightSum <= binWeightSum / 2 && binWeightSum / 2 < nextYWeightSum)
-//        {
-//            biasTS.y = (mix(i - 1, i, float(binWeightSum * 0.5 - runningYWeightSum) / float(nextYWeightSum - runningYWeightSum)) - 127) / 127.0;
-//        }
-//
-//        runningXSum = nextXSum;
-//        runningYSum = nextYSum;
-//        runningXWeightSum = nextXWeightSum;
-//        runningYWeightSum = nextYWeightSum;
-//    }
-//
-//    biasedHeuristicNormal = tangentToObject * vec3(heuristicNormalTS, sqrt(1 - dot(heuristicNormalTS, heuristicNormalTS)));
-//    bias = tangentToObject * vec3(biasTS, sqrt(1 - dot(biasTS, biasTS)));
-//    resolvability = 1.0;
-
-
-
-
-
-    vec3 heuristicNormal;
-
-    if (aggressiveNormal)
+    if (adjustNormal)
     {
-        heuristicNormal = biasedHeuristicNormal;
+        vec3 biasedHeuristicNormal;
+        vec3 bias;
+        float resolvability;
+
+        biasedHeuristicNormal = normalize(intensityWeightedDirectionSum);
+        float directionScale = length(directionSum);
+        resolvability = min(1, directionScale);
+        bias = directionSum / max(1, directionScale);
+
+
+
+    //    vec2 heuristicNormalTS;
+    //    vec2 biasTS;
+    //
+    //    float runningXSum = normalXBins[0];
+    //    float runningYSum = normalYBins[0];
+    //
+    //    float runningXWeightSum = normalXWeightBins[0];
+    //    float runningYWeightSum = normalYWeightBins[0];
+    //
+    //    for (int i = 1; i < 255; i++)
+    //    {
+    //        float nextXSum = runningXSum + normalXBins[i];
+    //        float nextYSum = runningYSum + normalYBins[i];
+    //
+    //        float nextXWeightSum = runningXWeightSum + normalXWeightBins[i];
+    //        float nextYWeightSum = runningYWeightSum + normalYWeightBins[i];
+    //
+    //        if (nextXSum != runningXSum && runningXSum <= binSum / 2 && binSum / 2 < nextXSum)
+    //        {
+    //            heuristicNormalTS.x = (mix(i - 1, i, (binSum / 2 - runningXSum) / (nextXSum - runningXSum)) - 127) / 127.0;
+    //        }
+    //
+    //        if (nextYSum != runningYSum && runningYSum <= binSum / 2 && binSum / 2 <= nextYSum)
+    //        {
+    //            heuristicNormalTS.y = (mix(i - 1, i, (binSum / 2 - runningYSum) / (nextYSum - runningYSum)) - 127) / 127.0;
+    //        }
+    //
+    //        if (nextXWeightSum != runningXWeightSum && runningXWeightSum <= binWeightSum / 2 && binWeightSum / 2 < nextXWeightSum)
+    //        {
+    //            biasTS.x = (mix(i - 1, i, float(binWeightSum * 0.5 - runningXWeightSum) / float(nextXWeightSum - runningXWeightSum)) - 127) / 127.0;
+    //        }
+    //
+    //        if (nextYWeightSum != runningYWeightSum && runningYWeightSum <= binWeightSum / 2 && binWeightSum / 2 < nextYWeightSum)
+    //        {
+    //            biasTS.y = (mix(i - 1, i, float(binWeightSum * 0.5 - runningYWeightSum) / float(nextYWeightSum - runningYWeightSum)) - 127) / 127.0;
+    //        }
+    //
+    //        runningXSum = nextXSum;
+    //        runningYSum = nextYSum;
+    //        runningXWeightSum = nextXWeightSum;
+    //        runningYWeightSum = nextYWeightSum;
+    //    }
+    //
+    //    biasedHeuristicNormal = tangentToObject * vec3(heuristicNormalTS, sqrt(1 - dot(heuristicNormalTS, heuristicNormalTS)));
+    //    bias = tangentToObject * vec3(biasTS, sqrt(1 - dot(biasTS, biasTS)));
+    //    resolvability = 1.0;
+
+
+
+
+
+        vec3 heuristicNormal;
+
+        if (aggressiveNormal)
+        {
+            heuristicNormal = biasedHeuristicNormal;
+        }
+        else
+        {
+            float specularNormalFidelity = dot(bias, normal);                                               // correlation between biased average (either normalized or between 0-1) and geometric normal (normalized)
+            vec3 certaintyDirectionUnnormalized = cross(bias - specularNormalFidelity * normal, normal);    // component of biased average orthogonal to geometric normal
+            vec3 certaintyDirection = certaintyDirectionUnnormalized                                        // points in direction of component of biased average orthogonal to geometric normal
+                / max(1, length(certaintyDirectionUnnormalized));                                           // length is between 0 (no bias) and 1 (biased average completely orthogonal to geometric normal)
+
+            float specularNormalCertainty =                                                                 // correlation between biased normal and the scaled "certainty" direction
+                resolvability * dot(biasedHeuristicNormal, certaintyDirection);                             // range is between 0 (no bias or singular conditions) and 1 (orthogonally biased)
+            vec3 scaledCertaintyDirection = specularNormalCertainty * certaintyDirection;                   // projection of biased normal onto scaled "certainty" direction
+                                                                                                            // length is between 0 (no bias) and 1 (biased average completely orthogonal to geometric normal)
+
+            heuristicNormal = normalize(                                                                    // normalize the following:
+                scaledCertaintyDirection                                                                    // projection of biased normal onto scaled "certainty" direction
+                    + sqrt(1 - specularNormalCertainty * specularNormalCertainty                            // length of vector which, if orthogonal to the preceding projection,
+                                * dot(certaintyDirection, certaintyDirection))                              // is such that their sum has length 1
+                        * normalize(mix(normal, normalize(biasedHeuristicNormal - scaledCertaintyDirection),// mix between the geometric normal and the component of the potentially biased normal orthogonal to the scaled "certainty" direction
+                           resolvability * specularNormalFidelity)));                                       // using the non-singularity and the correlation between the biased average and the geometric normal
+        }                                                                                                   // as the basis for whether to select the potentially biased normal.
+
+#if DARPA_MODE
+        specularNormal = heuristicNormal;
+#else
+
+    //    specularNormal = normalize(mat4x3(normal, oldDiffuseNormal, maxResidualDirection, heuristicNormal)
+    //                        * normalCandidateWeights);
+    //
+    //    specularNormal = tangentToObject * vec3(normalCandidate, sqrt(1 - dot(normalCandidate, normalCandidate)));
+
+        specularNormal = maxResidualDirection.xyz + (1 - maxResidualDirection.w) * heuristicNormal;
+
+#endif
     }
     else
     {
-        float specularNormalFidelity = dot(bias, normal);                                               // correlation between biased average (either normalized or between 0-1) and geometric normal (normalized)
-        vec3 certaintyDirectionUnnormalized = cross(bias - specularNormalFidelity * normal, normal);    // component of biased average orthogonal to geometric normal
-        vec3 certaintyDirection = certaintyDirectionUnnormalized                                        // points in direction of component of biased average orthogonal to geometric normal
-            / max(1, length(certaintyDirectionUnnormalized));                                           // length is between 0 (no bias) and 1 (biased average completely orthogonal to geometric normal)
-
-        float specularNormalCertainty =                                                                 // correlation between biased normal and the scaled "certainty" direction
-            resolvability * dot(biasedHeuristicNormal, certaintyDirection);                             // range is between 0 (no bias or singular conditions) and 1 (orthogonally biased)
-        vec3 scaledCertaintyDirection = specularNormalCertainty * certaintyDirection;                   // projection of biased normal onto scaled "certainty" direction
-                                                                                                        // length is between 0 (no bias) and 1 (biased average completely orthogonal to geometric normal)
-
-        heuristicNormal = normalize(                                                                    // normalize the following:
-            scaledCertaintyDirection                                                                    // projection of biased normal onto scaled "certainty" direction
-                + sqrt(1 - specularNormalCertainty * specularNormalCertainty                            // length of vector which, if orthogonal to the preceding projection,
-                            * dot(certaintyDirection, certaintyDirection))                              // is such that their sum has length 1
-                    * normalize(mix(normal, normalize(biasedHeuristicNormal - scaledCertaintyDirection),// mix between the geometric normal and the component of the potentially biased normal orthogonal to the scaled "certainty" direction
-                       resolvability * specularNormalFidelity)));                                       // using the non-singularity and the correlation between the biased average and the geometric normal
-    }                                                                                                   // as the basis for whether to select the potentially biased normal.
-
-#if DARPA_MODE
-    specularNormal = heuristicNormal;
-#else
-
-//    specularNormal = normalize(mat4x3(normal, oldDiffuseNormal, maxResidualDirection, heuristicNormal)
-//                        * normalCandidateWeights);
-//
-//    specularNormal = tangentToObject * vec3(normalCandidate, sqrt(1 - dot(normalCandidate, normalCandidate)));
-
-    specularNormal = maxResidualDirection.xyz + (1 - maxResidualDirection.w) * heuristicNormal;
-
-#endif
+        specularNormal = oldDiffuseNormal;
+    }
 
 
 
