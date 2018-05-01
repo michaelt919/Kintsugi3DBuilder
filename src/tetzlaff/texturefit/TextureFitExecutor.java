@@ -1531,8 +1531,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 File objFileCopy = new File(outputDir, objFile.getName());
                 Files.copy(objFile.toPath(), objFileCopy.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-                //fitAndSaveTextures(outputDir, null);
-                darpaTestSuite((float)avgDistance);
+                fitAndSaveTextures(outputDir, null);
+                //darpaTestSuite((float)avgDistance);
             }
 
             //System.out.println("Resampling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -1640,7 +1640,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     {
         float sqrtHalf = (float)Math.sqrt(0.5);
 
-        specularFitProgram.setUniform("adjustNormal", false);
+        specularFitProgram.setUniform("disableNormalAdjustment", true);
 
         int index = 1;
 
@@ -1676,7 +1676,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             index++;
         }
 
-        specularFitProgram.setUniform("adjustNormal", true);
+        specularFitProgram.setUniform("disableNormalAdjustment", false);
 
         for (float offset = -1.0f; offset < 1.0625; offset += 0.125)
         {
