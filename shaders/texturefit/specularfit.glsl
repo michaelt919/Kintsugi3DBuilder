@@ -16,7 +16,7 @@ uniform sampler2D normalEstimate;
 
 uniform float fittingGamma;
 uniform bool standaloneMode;
-uniform bool adjustNormal;
+uniform bool disableNormalAdjustment;
 
 //uniform vec4 normalCandidateWeights;
 uniform vec2 normalCandidate;
@@ -103,6 +103,7 @@ ParameterizedFit fitSpecular()
     vec3 maxResidual = vec3(0);
     vec2 maxResidualLuminance = vec2(0);
     vec4 maxResidualDirection = vec4(0);
+    int maxResidualIndex = -1;
 
     vec3 directionSum = vec3(0);
     vec3 intensityWeightedDirectionSum = vec3(0);
@@ -129,7 +130,7 @@ ParameterizedFit fitSpecular()
         vec3 view = normalize(getViewVector(i));
         float nDotV = dot(view, normal);
 
-        if (color.a * dot(view, normal) > 0)
+        if (color.a * nDotV > 0)
         {
             LightInfo lightInfo = getLightInfo(i);
             vec3 light = lightInfo.normalizedDirection;
@@ -161,6 +162,8 @@ ParameterizedFit fitSpecular()
             {
                 maxResidualLuminance = vec2(luminance, weight);
                 maxResidual = colorRemainder;
+                maxResidualDirection = vec4(halfway, 1);
+                maxResidualIndex = i;
             }
 #else
             float normalWeight = weight * clamp(luminance * 10 - 9, 0, 1);
@@ -170,11 +173,13 @@ ParameterizedFit fitSpecular()
                 maxResidualDirection = normalWeight * vec4(halfway, 1);
                 maxResidualLuminance = vec2(luminance, weight);
                 maxResidual = colorRemainder;
+                maxResidualIndex = i;
             }
             else if (maxResidualLuminance[0] * 10 <= 9 && luminance * weight > maxResidualLuminance[0] * maxResidualLuminance[1])
             {
                 maxResidualLuminance = vec2(luminance, weight);
                 maxResidual = colorRemainder;
+                maxResidualIndex = i;
             }
 #endif
 
@@ -204,8 +209,11 @@ ParameterizedFit fitSpecular()
 
     vec3 specularNormal;
 
-    if (adjustNormal)
+    if (!disableNormalAdjustment)
     {
+#if DARPA_MODE
+        specularNormal = maxResidualDirection.xyz;
+#else
         vec3 biasedHeuristicNormal;
         vec3 bias;
         float resolvability;
@@ -294,9 +302,7 @@ ParameterizedFit fitSpecular()
                            resolvability * specularNormalFidelity)));                                       // using the non-singularity and the correlation between the biased average and the geometric normal
         }                                                                                                   // as the basis for whether to select the potentially biased normal.
 
-#if DARPA_MODE
-        specularNormal = heuristicNormal;
-#else
+
 
     //    specularNormal = normalize(mat4x3(normal, oldDiffuseNormal, maxResidualDirection, heuristicNormal)
     //                        * normalCandidateWeights);
@@ -619,7 +625,7 @@ ParameterizedFit fitSpecular()
         // We can avoid division by pi here as well as the 1/pi factors in the parameterized models.
         vec4 color = getLinearColor(i);
 
-        if (color.a * dot(view, normal) > 0)
+        if (color.a * dot(view, normal) > 0 && i != maxResidualIndex)
         {
             LightInfo lightInfo = getLightInfo(i);
             vec3 light = lightInfo.normalizedDirection;
@@ -648,13 +654,13 @@ ParameterizedFit fitSpecular()
                 vec3 numerator = sqrt(max(vec3(0.0), (1 - nDotHSquared) * sqrt(colorRemainderXYZ * nDotV)));
                 vec3 denominatorSq = max(vec3(0.0), sqrt(maxResidualXYZ) - nDotHSquared * sqrt(colorRemainderXYZ * nDotV));
                 vec3 denominator = sqrt(denominatorSq);
-                vec3 weight = nDotV * vec3(1.0);//sqrt(colorRemainderXYZ);
+                vec3 weight = nDotV * sqrt(colorRemainderXYZ);
 #else
                 vec3 numerator = pow(max(vec3(0.0), (1 - nDotHSquared) * sqrt(colorRemainderXYZ * nDotV)),  vec3(1.0 / fittingGamma));
                 vec3 denominator =
                     pow(max(vec3(0.0), sqrt(maxResidualXYZ) - nDotHSquared * sqrt(colorRemainderXYZ * nDotV)), vec3(1.0 / fittingGamma));
                 vec3 denominatorSq = denominator * denominator;
-                vec3 weight = nDotV * vec3(1.0);//pow(colorRemainderXYZ, 1.0 / fittingGamma);
+                vec3 weight = nDotV * pow(colorRemainderXYZ, 1.0 / fittingGamma);
 #endif
 
 
@@ -727,6 +733,72 @@ ParameterizedFit fitSpecular()
             vec3(sqrt((weightedSquareSum.y * specularSumB.y - specularSumA.y * specularSumA.y)  // weighted sum of squared error times sum of weights (specularSumB)
                 / (specularSumB.y * specularSumB.y - squaredWeightSum.y)));                     // unbiased normalization
     }
+
+
+
+
+
+
+    // DEBUG: explicitly compute sum-squared error
+    vec3 sumSquaredError = vec3(0.0);
+    for (int i = 0; i < VIEW_COUNT; i++)
+    {
+        vec3 view = normalize(getViewVector(i));
+
+        // Values of 1.0 for this color would correspond to the expected reflectance
+        // for an ideal diffuse reflector (diffuse albedo of 1), which is a reflectance of 1 / pi.
+        // Hence, this color corresponds to the reflectance times pi.
+        // Both the Phong model and the Cook Torrance with a Beckmann distribution also have a 1/pi factor.
+        // By adopting the convention that all reflectance values are scaled by pi in this shader,
+        // We can avoid division by pi here as well as the 1/pi factors in the parameterized models.
+        vec4 color = getLinearColor(i);
+
+        if (color.a * dot(view, normal) > 0 && i != maxResidualIndex)
+        {
+            LightInfo lightInfo = getLightInfo(i);
+            vec3 light = lightInfo.normalizedDirection;
+
+            vec3 colorRemainderRGB;
+
+#if USE_LIGHT_INTENSITIES
+            colorRemainderRGB = removeDiffuse(color, diffuseColor.rgb, light, lightInfo.attenuatedIntensity, specularNormal, maxLuminance).rgb
+                / lightInfo.attenuatedIntensity;
+#else
+            colorRemainderRGB = removeDiffuse(color, diffuseColor.rgb, light, vec3(1.0), specularNormal, maxLuminance).rgb;
+#endif
+
+            float nDotL = max(0, dot(light, specularNormal));
+            float nDotV = max(0, dot(specularNormal, view));
+
+            vec3 halfway = normalize(view + light);
+            float nDotH = dot(halfway, specularNormal);
+            float nDotHSquared = nDotH * nDotH;
+
+            vec3 colorRemainderXYZ = rgbToXYZ(colorRemainderRGB);
+
+            if (nDotV > 0 && nDotL > 0 && (fitNearSpecularOnly ? nDotHSquared > 0.5 : colorRemainderXYZ.y <= 1.0))
+            {
+
+#if DARPA_MODE
+                vec3 numerator = sqrt(max(vec3(0.0), (1 - nDotHSquared) * sqrt(colorRemainderXYZ * nDotV)));
+                vec3 denominatorSq = max(vec3(0.0), sqrt(maxResidualXYZ) - nDotHSquared * sqrt(colorRemainderXYZ * nDotV));
+                vec3 denominator = sqrt(denominatorSq);
+                vec3 weight = nDotV * vec3(1.0);//sqrt(colorRemainderXYZ);
+#else
+                vec3 numerator = pow(max(vec3(0.0), (1 - nDotHSquared) * sqrt(colorRemainderXYZ * nDotV)),  vec3(1.0 / fittingGamma));
+                vec3 denominator =
+                    pow(max(vec3(0.0), sqrt(maxResidualXYZ) - nDotHSquared * sqrt(colorRemainderXYZ * nDotV)), vec3(1.0 / fittingGamma));
+                vec3 denominatorSq = denominator * denominator;
+                vec3 weight = nDotV * vec3(1.0);//pow(colorRemainderXYZ, 1.0 / fittingGamma);
+#endif
+
+                vec3 diff = (numerator - roughness.y * denominator);
+                sumSquaredError += weight * diff * diff;//(numerator * numerator - 2 * numerator * denominator * roughness.y + roughnessSquared.y * denominatorSq);
+            }
+        }
+    }
+
+    roughnessStdDev = vec3(sqrt(specularSumB.y * sumSquaredError.y / (specularSumB.y * specularSumB.y - squaredWeightSum.y)));
 
 
 
