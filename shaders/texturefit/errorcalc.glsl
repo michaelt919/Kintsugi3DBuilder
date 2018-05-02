@@ -36,9 +36,9 @@ vec3 getSpecularColor()
     return sign(specularColor) * pow(abs(specularColor), vec3(gamma));
 }
 
-vec3 getRoughness()
+vec4 getRoughness()
 {
-    return texture(roughnessEstimate, fTexCoord).rgb;
+    return texture(roughnessEstimate, fTexCoord);
 }
 
 struct ErrorResult
@@ -72,15 +72,15 @@ ErrorResult calculateError()
         float alpha = diffuseColorRGBA.a;
         vec3 diffuseColor = rgbToXYZ(diffuseColorRGBA.rgb);
         vec3 specularColor = rgbToXYZ(getSpecularColor());
-        vec3 roughness = getRoughness();
-        vec3 roughnessSquared = roughness * roughness;
+        vec4 roughness = getRoughness();
+        vec3 roughnessSquared = roughness.xyz * roughness.xyz;
         float maxLuminance = getMaxLuminance();
         float fittingGammaInv = 1.0 / fittingGamma;
 
         float sumSqError = 0.0;
         float sumWeight = 0.0;
 
-        //if (alpha == 1.0)
+        if (!isnan(roughness.y) && roughness.w == 1.0)
         {
             for (int i = 0; i < VIEW_COUNT; i++)
             {
@@ -117,20 +117,21 @@ ErrorResult calculateError()
                     }
                 }
             }
+
+            if (sumWeight > 0.0)
+            {
+                float meanSqError = min(sumSqError / sumWeight, MAX_ERROR);
+
+                if (meanSqError < prevErrorResult.y)
+                {
+                    //return ErrorResult(true, prevErrorResult.x, sumSqError);
+                    return ErrorResult(true, prevErrorResult.x / 2, meanSqError);
+                }
+            }
         }
 
-        float meanSqError = min(sumSqError / sumWeight, MAX_ERROR);
-
-        if (meanSqError >= prevErrorResult.y)
-        {
-            //return ErrorResult(false, prevErrorResult.x / 2, prevErrorResult.y);
-            return ErrorResult(false, prevErrorResult.x * 2, prevErrorResult.y);
-        }
-        else
-        {
-            //return ErrorResult(true, prevErrorResult.x, sumSqError);
-            return ErrorResult(true, prevErrorResult.x / 2, meanSqError);
-        }
+        //return ErrorResult(false, prevErrorResult.x / 2, prevErrorResult.y);
+        return ErrorResult(false, prevErrorResult.x * 2, prevErrorResult.y);
     }
 }
 

@@ -616,6 +616,7 @@ ParameterizedFit fitSpecular()
     for (int i = 0; i < VIEW_COUNT; i++)
     {
         vec3 view = normalize(getViewVector(i));
+        float nDotVTriangle = max(0, dot(view, normal));
 
         // Values of 1.0 for this color would correspond to the expected reflectance
         // for an ideal diffuse reflector (diffuse albedo of 1), which is a reflectance of 1 / pi.
@@ -625,7 +626,7 @@ ParameterizedFit fitSpecular()
         // We can avoid division by pi here as well as the 1/pi factors in the parameterized models.
         vec4 color = getLinearColor(i);
 
-        if (color.a * dot(view, normal) > 0 && i != maxResidualIndex)
+        if (color.a * nDotVTriangle > 0 && i != maxResidualIndex)
         {
             LightInfo lightInfo = getLightInfo(i);
             vec3 light = lightInfo.normalizedDirection;
@@ -654,13 +655,13 @@ ParameterizedFit fitSpecular()
                 vec3 numerator = sqrt(max(vec3(0.0), (1 - nDotHSquared) * sqrt(colorRemainderXYZ * nDotV)));
                 vec3 denominatorSq = max(vec3(0.0), sqrt(maxResidualXYZ) - nDotHSquared * sqrt(colorRemainderXYZ * nDotV));
                 vec3 denominator = sqrt(denominatorSq);
-                vec3 weight = nDotV * sqrt(colorRemainderXYZ);
+                vec3 weight = nDotVTriangle * sqrt(colorRemainderXYZ);
 #else
                 vec3 numerator = pow(max(vec3(0.0), (1 - nDotHSquared) * sqrt(colorRemainderXYZ * nDotV)),  vec3(1.0 / fittingGamma));
                 vec3 denominator =
                     pow(max(vec3(0.0), sqrt(maxResidualXYZ) - nDotHSquared * sqrt(colorRemainderXYZ * nDotV)), vec3(1.0 / fittingGamma));
                 vec3 denominatorSq = denominator * denominator;
-                vec3 weight = nDotV * pow(colorRemainderXYZ, 1.0 / fittingGamma);
+                vec3 weight = nDotVTriangle * pow(colorRemainderXYZ, 1.0 / fittingGamma);
 #endif
 
 
@@ -688,15 +689,17 @@ ParameterizedFit fitSpecular()
 //                    specularSumBSq.z += b.z * b.z;
 //                }
 
-                sumResidualXYZGamma += nDotV * vec4(pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)), 1.0);
+                sumResidualXYZGamma += nDotVTriangle * vec4(pow(colorRemainderXYZ, vec3(1.0 / fittingGamma)), 1.0);
             }
         }
     }
 
-    if (sumResidualXYZGamma.w == 0.0)
+    if (sumResidualXYZGamma.w == 0.0 || specularSumB.y == 0.0)
     {
         return ParameterizedFit(diffuseColor, vec4(diffuseNormalTS, 1), vec4(0), vec4(0), vec4(0));
     }
+
+    float roughnessConfidence = min(1.0, min(specularSumB.y / sqrt(maxResidualXYZ.y), specularSumB.y / (2 * sqrt(maxResidualXYZ.y) * specularSumA.y)));
 
     if (chromaticRoughness)
     {
@@ -744,6 +747,7 @@ ParameterizedFit fitSpecular()
     for (int i = 0; i < VIEW_COUNT; i++)
     {
         vec3 view = normalize(getViewVector(i));
+        float nDotVTriangle = max(0, dot(view, normal));
 
         // Values of 1.0 for this color would correspond to the expected reflectance
         // for an ideal diffuse reflector (diffuse albedo of 1), which is a reflectance of 1 / pi.
@@ -753,7 +757,7 @@ ParameterizedFit fitSpecular()
         // We can avoid division by pi here as well as the 1/pi factors in the parameterized models.
         vec4 color = getLinearColor(i);
 
-        if (color.a * dot(view, normal) > 0 && i != maxResidualIndex)
+        if (color.a * nDotVTriangle > 0 && i != maxResidualIndex)
         {
             LightInfo lightInfo = getLightInfo(i);
             vec3 light = lightInfo.normalizedDirection;
@@ -783,13 +787,13 @@ ParameterizedFit fitSpecular()
                 vec3 numerator = sqrt(max(vec3(0.0), (1 - nDotHSquared) * sqrt(colorRemainderXYZ * nDotV)));
                 vec3 denominatorSq = max(vec3(0.0), sqrt(maxResidualXYZ) - nDotHSquared * sqrt(colorRemainderXYZ * nDotV));
                 vec3 denominator = sqrt(denominatorSq);
-                vec3 weight = nDotV * vec3(1.0);//sqrt(colorRemainderXYZ);
+                vec3 weight = nDotVTriangle * sqrt(colorRemainderXYZ);
 #else
                 vec3 numerator = pow(max(vec3(0.0), (1 - nDotHSquared) * sqrt(colorRemainderXYZ * nDotV)),  vec3(1.0 / fittingGamma));
                 vec3 denominator =
                     pow(max(vec3(0.0), sqrt(maxResidualXYZ) - nDotHSquared * sqrt(colorRemainderXYZ * nDotV)), vec3(1.0 / fittingGamma));
                 vec3 denominatorSq = denominator * denominator;
-                vec3 weight = nDotV * vec3(1.0);//pow(colorRemainderXYZ, 1.0 / fittingGamma);
+                vec3 weight = nDotVTriangle * pow(colorRemainderXYZ, 1.0 / fittingGamma);
 #endif
 
                 vec3 diff = (numerator - roughness.y * denominator);
@@ -934,7 +938,7 @@ ParameterizedFit fitSpecular()
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
     // for texels where there isn't enough information at the specular peak.
     return ParameterizedFit(adjustedDiffuseColor, vec4(normalize(transpose(tangentToObject) * specularNormal), 1),
-        vec4(specularColor, 1), vec4(roughness, 1), vec4(roughnessStdDev, 1.0));
+        vec4(specularColor, 1), vec4(roughness, roughnessConfidence), vec4(roughnessStdDev, roughnessConfidence));
 }
 
 #endif // SPECULARFIT_GLSL
