@@ -1537,8 +1537,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 File objFileCopy = new File(outputDir, objFile.getName());
                 Files.copy(objFile.toPath(), objFileCopy.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-                fitAndSaveTextures(outputDir, null);
-                //darpaTestSuite((float)avgDistance);
+                //fitAndSaveTextures(outputDir, null);
+                darpaTestSuite((float)avgDistance);
             }
 
             //System.out.println("Resampling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -1690,74 +1690,44 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     private void darpaTestSuite(float avgDistance) throws IOException
     {
         float sqrtHalf = (float)Math.sqrt(0.5);
+        int lightIncr = 5;
+        int normalIncr = 5;
+        int lightMax = 100;
+        int normalMax = 60;
 
         specularFitProgram.setUniform("disableNormalAdjustment", true);
 
         int index = 1;
 
-        for (float offset = -1.0f; offset < 1.0625; offset += 0.125)
+        for (int offset = -lightMax; offset <= lightMax; offset += lightIncr)
         {
-            modifyLightOffset(new Vector2(offset * avgDistance, 0.0f));
-            fitAndSaveTextures(new File(outputDir, String.format("%04d_lightHorizontalNoAdjust_" + offset, index)), null);
+            modifyLightOffset(new Vector2(offset * 0.01f * avgDistance, 0.0f));
+            fitAndSaveTextures(new File(outputDir, String.format("%04d_lightHorizontal_" + offset, index)), null);
             index++;
         }
 
-        for (float offset = -1.0f; offset < 1.0625; offset += 0.125)
+        for (int offset = -lightMax; offset <= lightMax; offset += lightIncr)
         {
-            modifyLightOffset(new Vector2(0.0f, offset * avgDistance));
-            fitAndSaveTextures(new File(outputDir, String.format("%04d_lightVerticalNoAdjust_" + offset, index)), null);
-            index++;
-        }
-
-        modifyLightOffset(Vector2.ZERO);
-
-        for (float angle = -60; angle < 67.5f; angle += 15.0f)
-        {
-            float radianAngle = (float)(angle * Math.PI / 180);
-            fitAndSaveTextures(new File(outputDir, String.format("%04d_normalParallelNoAdjust_" + angle, index)),
-                new Vector3((float)Math.sin(radianAngle) * sqrtHalf, (float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
-            index++;
-        }
-
-        for (float angle = -60; angle < 67.5f; angle += 15.0f)
-        {
-            float radianAngle = (float)(angle * Math.PI / 180);
-            fitAndSaveTextures(new File(outputDir, String.format("%04d_normalOrthogonalNoAdjust_" + angle, index)),
-                new Vector3((float)Math.sin(radianAngle) * sqrtHalf, -(float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
-            index++;
-        }
-
-        specularFitProgram.setUniform("disableNormalAdjustment", false);
-
-        for (float offset = -1.0f; offset < 1.0625; offset += 0.125)
-        {
-            modifyLightOffset(new Vector2(offset * avgDistance, 0.0f));
-            fitAndSaveTextures(new File(outputDir, String.format("%04d_lightHorizontalAdjusted_" + offset, index)), null);
-            index++;
-        }
-
-        for (float offset = -1.0f; offset < 1.0625; offset += 0.125)
-        {
-            modifyLightOffset(new Vector2(0.0f, offset * avgDistance));
-            fitAndSaveTextures(new File(outputDir, String.format("%04d_lightVerticalAdjusted_" + offset, index)), null);
+            modifyLightOffset(new Vector2(0.0f, offset * 0.01f * avgDistance));
+            fitAndSaveTextures(new File(outputDir, String.format("%04d_lightVertical_" + offset, index)), null);
             index++;
         }
 
         modifyLightOffset(Vector2.ZERO);
 
-        for (float angle = -60; angle < 67.5f; angle += 15.0f)
+        for (int angle = -normalMax; angle <= normalMax; angle += normalIncr)
         {
             float radianAngle = (float)(angle * Math.PI / 180);
-            fitAndSaveTextures(new File(outputDir, String.format("%04d_normalParallelAdjusted_" + angle, index)),
-                new Vector3((float)Math.sin(radianAngle) * sqrtHalf, (float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
+            fitAndSaveTextures(new File(outputDir, String.format("%04d_normalParallel_" + angle, index)),
+                new Vector3((float)Math.sin(radianAngle) * sqrtHalf, -(float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
             index++;
         }
 
-        for (float angle = -60; angle < 67.5f; angle += 15.0f)
+        for (int angle = -normalMax; angle <= normalMax; angle += normalIncr)
         {
             float radianAngle = (float)(angle * Math.PI / 180);
-            fitAndSaveTextures(new File(outputDir, String.format("%04d_normalOrthogonalAdjusted_" + angle, index)),
-                new Vector3((float)Math.sin(radianAngle) * sqrtHalf, -(float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
+            fitAndSaveTextures(new File(outputDir, String.format("%04d_normalOrthogonal_" + angle, index)),
+                new Vector3((float)Math.sin(radianAngle) * sqrtHalf, (float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
             index++;
         }
     }
@@ -1984,9 +1954,22 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                             SpecularFit<ContextType> specularFit = createSpecularFit(backFramebuffer, viewSet.getCameraPoseCount(), param.getTextureSubdivision());
 
                             int indexRemapped = 127 + (i + 1) / 2 * (1 - 2 * (i % 2));
-                            Vector2 normalXY = //new Vector2(((i + 31) % 64) / 126.0f + 0.25f, (((i >> 6) + 31) % 64) / 126.0f + 0.25f);
-                                //new Vector2(((64 + i) % 128 + 64) / 255.0f, (192 - (64 + i) % 128) / 255.0f);
-                                new Vector2(indexRemapped / 255.0f, (255 - indexRemapped) / 255.0f);
+                            Vector2 normalXY;
+
+                            if (normalDirectionOverride != null)
+                            {
+                                normalXY = new Vector2(
+                                    indexRemapped / 255.0f + normalDirectionOverride.x * 0.5f,
+                                    (255 - indexRemapped) / 255.0f + normalDirectionOverride.y * 0.5f);
+                            }
+                            else
+                            {
+                                normalXY =
+                                    //new Vector2(((i + 31) % 64) / 126.0f + 0.25f, (((i >> 6) + 31) % 64) / 126.0f + 0.25f);
+                                    //new Vector2(((64 + i) % 128 + 64) / 255.0f, (192 - (64 + i) % 128) / 255.0f);
+                                    new Vector2(indexRemapped / 255.0f, (255 - indexRemapped) / 255.0f);
+                            }
+
                             Vector2 normalXYExpanded = normalXY.times(2).minus(new Vector2(1, 1));
                             float normalZ = (float)Math.sqrt(1.0 - normalXYExpanded.dot(normalXYExpanded)) * 0.5f + 0.5f;
                             diffuseFitFramebuffer.clearColorBuffer(3, normalXY.x, normalXY.y, normalZ, 1.0f);
