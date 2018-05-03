@@ -88,7 +88,7 @@ ParameterizedFit fitSpecular()
 {
     vec3 normal = normalize(fNormal);
 
-    vec3 tangent = normalize(fTangent - dot(normal, fTangent));
+    vec3 tangent = normalize(fTangent - dot(normal, fTangent) * normal);
     vec3 bitangent = normalize(fBitangent
         - dot(normal, fBitangent) * normal
         - dot(tangent, fBitangent) * tangent);
