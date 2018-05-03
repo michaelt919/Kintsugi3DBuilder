@@ -1538,7 +1538,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 Files.copy(objFile.toPath(), objFileCopy.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
                 //fitAndSaveTextures(outputDir, null);
-                darpaTestSuite((float)avgDistance);
+                //darpaTestSuite((float)avgDistance);
+                darpaTestSuiteLong((float)avgDistance);
             }
 
             //System.out.println("Resampling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -1695,8 +1696,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         int lightMax = 100;
         int normalMax = 60;
 
-        specularFitProgram.setUniform("disableNormalAdjustment", true);
-
         int index = 1;
 
         for (int offset = -lightMax; offset <= lightMax; offset += lightIncr)
@@ -1730,6 +1729,60 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 new Vector3((float)Math.sin(radianAngle) * sqrtHalf, (float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
             index++;
         }
+    }
+
+    private void darpaTestSuiteLong(float avgDistance) throws IOException
+    {
+        float sqrtHalf = (float)Math.sqrt(0.5);
+        int lightIncr = 5;
+        int normalIncr = 2;
+        int lightMax = 100;
+        int normalMax = 30;
+
+        int index = 1;
+
+        for (int offset = -lightMax; offset <= lightMax; offset += lightIncr)
+        {
+            for (int angle = -normalMax; angle <= normalMax; angle += normalIncr)
+            {
+                modifyLightOffset(new Vector2(0.0f, offset * 0.01f * avgDistance));
+                float radianAngle = (float)(angle * Math.PI / 180);
+                fitAndSaveTextures(new File(outputDir, String.format("%04d_lightVertical_%d_normalOrthogonal_%d", index, offset, angle)),
+                    new Vector3((float)Math.sin(radianAngle) * sqrtHalf, (float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
+                index++;
+            }
+        }
+
+        modifyLightOffset(Vector2.ZERO);
+    }
+
+    private void darpaTestSuiteExtraLong(float avgDistance) throws IOException
+    {
+        float sqrtHalf = (float)Math.sqrt(0.5);
+        int lightVerticalIncr = 10;
+        int lightHorizontalIncr = 20;
+        int normalIncr = 5;
+        int lightMax = 100;
+        int normalMax = 30;
+
+        int index = 1;
+
+        for (int horizOffset = -lightMax; horizOffset <= lightMax; horizOffset += lightHorizontalIncr)
+        {
+            for (int vertOffset = -lightMax; vertOffset <= lightMax; vertOffset += lightVerticalIncr)
+            {
+                for (int angle = -normalMax; angle <= normalMax; angle += normalIncr)
+                {
+                    modifyLightOffset(new Vector2(horizOffset * 0.01f * avgDistance, vertOffset * 0.01f * avgDistance));
+                    float radianAngle = (float)(angle * Math.PI / 180);
+                    fitAndSaveTextures(new File(outputDir, String.format("%04d_lightHorizontal_%d_lightVertical_%d_normalOrthogonal_%d", index, horizOffset, vertOffset, angle)),
+                        new Vector3((float)Math.sin(radianAngle) * sqrtHalf, (float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
+                    index++;
+                }
+            }
+        }
+
+        modifyLightOffset(Vector2.ZERO);
     }
 
     private void fitAndSaveTextures(File instanceDirectory, Vector3 normalDirectionOverride) throws IOException
@@ -1954,25 +2007,41 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                             SpecularFit<ContextType> specularFit = createSpecularFit(backFramebuffer, viewSet.getCameraPoseCount(), param.getTextureSubdivision());
 
                             int indexRemapped = 127 + (i + 1) / 2 * (1 - 2 * (i % 2));
-                            Vector2 normalXY;
+                            Vector2 normalXY =
+                                //new Vector2(((i + 31) % 64) / 126.0f + 0.25f, (((i >> 6) + 31) % 64) / 126.0f + 0.25f);
+                                //new Vector2(((64 + i) % 128 + 64) / 255.0f, (192 - (64 + i) % 128) / 255.0f);
+                                new Vector2(indexRemapped / 255.0f, (255 - indexRemapped) / 255.0f);
+
+                            Vector2 normalXYExpanded = normalXY.times(2).minus(new Vector2(1, 1));
+                            float normalZExpanded = (float)Math.sqrt(1.0 - normalXYExpanded.dot(normalXYExpanded));
 
                             if (normalDirectionOverride != null)
                             {
-                                normalXY = new Vector2(
-                                    indexRemapped / 255.0f + normalDirectionOverride.x * 0.5f,
-                                    (255 - indexRemapped) / 255.0f + normalDirectionOverride.y * 0.5f);
+                                Vector3 tangentOverride = new Vector3(1, 0, 0)
+                                    .minus(normalDirectionOverride.times(normalDirectionOverride.x))
+                                    .normalized();
+                                Vector3 bitangentOverride = new Vector3(0, 1, 0)
+                                    .minus(normalDirectionOverride.times(normalDirectionOverride.y))
+                                    .minus(tangentOverride.times(tangentOverride.y))
+                                    .normalized();
+
+                                Vector3 transformedNormal =
+                                    tangentOverride.times(normalXYExpanded.x)
+                                        .plus(bitangentOverride.times(normalXYExpanded.y))
+                                        .plus(normalDirectionOverride.times(normalZExpanded))
+                                        .plus(new Vector3(1))
+                                        .times(0.5f);
+
+                                diffuseFitFramebuffer.clearColorBuffer(3, transformedNormal.x, transformedNormal.y, transformedNormal.z, 1.0f);
+
+//                                normalXY = new Vector2(
+//                                    indexRemapped / 255.0f + normalDirectionOverride.x * 0.5f,
+//                                    (255 - indexRemapped) / 255.0f + normalDirectionOverride.y * 0.5f);
                             }
                             else
                             {
-                                normalXY =
-                                    //new Vector2(((i + 31) % 64) / 126.0f + 0.25f, (((i >> 6) + 31) % 64) / 126.0f + 0.25f);
-                                    //new Vector2(((64 + i) % 128 + 64) / 255.0f, (192 - (64 + i) % 128) / 255.0f);
-                                    new Vector2(indexRemapped / 255.0f, (255 - indexRemapped) / 255.0f);
+                                diffuseFitFramebuffer.clearColorBuffer(3, normalXY.x, normalXY.y, normalZExpanded * 0.5f + 0.5f, 1.0f);
                             }
-
-                            Vector2 normalXYExpanded = normalXY.times(2).minus(new Vector2(1, 1));
-                            float normalZ = (float)Math.sqrt(1.0 - normalXYExpanded.dot(normalXYExpanded)) * 0.5f + 0.5f;
-                            diffuseFitFramebuffer.clearColorBuffer(3, normalXY.x, normalXY.y, normalZ, 1.0f);
 
                             if (param.isImagePreprojectionUseEnabled())
                             {
