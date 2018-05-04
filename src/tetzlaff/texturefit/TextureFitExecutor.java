@@ -1539,7 +1539,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                 //fitAndSaveTextures(outputDir, null);
                 //darpaTestSuite((float)avgDistance);
-                darpaTestSuiteLong((float)avgDistance);
+                //darpaTestSuiteLong((float)avgDistance);
+                darpaTestSuiteExtraLong((float)avgDistance);
             }
 
             //System.out.println("Resampling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
