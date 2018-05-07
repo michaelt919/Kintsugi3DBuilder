@@ -44,6 +44,13 @@ public abstract class ColorCubemapBuilderBase <ContextType extends Context<Conte
     }
 
     @Override
+    public ColorCubemapBuilderBase<ContextType, TextureType> setMaxMipmapLevel(int maxMipmapLevel)
+    {
+        super.setMaxMipmapLevel(maxMipmapLevel);
+        return this;
+    }
+
+    @Override
     public ColorCubemapBuilderBase<ContextType, TextureType> setLinearFilteringEnabled(boolean enabled)
     {
         super.setLinearFilteringEnabled(enabled);

@@ -4,73 +4,139 @@
 #include "linearize.glsl"
 #include "../common/extractcomponent.glsl"
 
-#line 7 1000
+#line 8 1000
 
+#ifndef PI
 #define PI 3.1415926535897932384626433832795 // For convenience
+#endif
 
-#define MAX_CAMERA_POSE_COUNT 1024
-#define MAX_CAMERA_POSE_COUNT_DIV_4 256
-#define MAX_LIGHT_COUNT 1024
+#ifndef CAMERA_POSE_COUNT
+#define CAMERA_POSE_COUNT 1024
+#endif
 
-uniform int viewCount;
-uniform bool infiniteLightSources;
+#define CAMERA_POSE_COUNT_DIV_4 ((CAMERA_POSE_COUNT + 3) / 4)
+
+#ifndef LIGHT_COUNT
+#define LIGHT_COUNT 1024
+#endif
+
+#ifndef VIEW_COUNT
+#define VIEW_COUNT CAMERA_POSE_COUNT
+#endif
+
+#define VIEW_COUNT_DIV_4 ((VIEW_COUNT + 3) / 4)
+
+#ifndef USE_VIEW_INDICES
+#define USE_VIEW_INDICES 0
+#endif
+
+#if USE_VIEW_INDICES
+layout(std140) uniform ViewIndices
+{
+    ivec4 viewIndices[VIEW_COUNT_DIV_4];
+};
+#endif
+
+int getViewIndex(int virtualIndex)
+{
+#if USE_VIEW_INDICES
+    return extractComponentByIndex(viewIndices[virtualIndex/4], virtualIndex%4);
+#else
+    return virtualIndex;
+#endif
+}
+
+#ifndef INFINITE_LIGHT_SOURCES
+#define INFINITE_LIGHT_SOURCES 0
+#endif
 
 layout(std140) uniform CameraWeights
 {
-    vec4 cameraWeights[MAX_CAMERA_POSE_COUNT_DIV_4];
+    vec4 cameraWeights[CAMERA_POSE_COUNT_DIV_4];
 };
 
 layout(std140) uniform CameraPoses
 {
-    mat4 cameraPoses[MAX_CAMERA_POSE_COUNT];
+    mat4 cameraPoses[CAMERA_POSE_COUNT];
 };
 
 layout(std140) uniform LightPositions
 {
-    vec4 lightPositions[MAX_LIGHT_COUNT];
+    vec4 lightPositions[LIGHT_COUNT];
 };
 
 layout(std140) uniform LightIntensities
 {
-    vec4 lightIntensities[MAX_LIGHT_COUNT];
+    vec4 lightIntensities[LIGHT_COUNT];
 };
 
 layout(std140) uniform LightIndices
 {
-    ivec4 lightIndices[MAX_CAMERA_POSE_COUNT_DIV_4];
+    ivec4 lightIndices[CAMERA_POSE_COUNT_DIV_4];
 };
 
-int getLightIndex(int poseIndex)
+struct LightInfo
 {
-    return extractComponentByIndex(lightIndices[poseIndex/4], poseIndex%4);
+    vec3 attenuatedIntensity;
+    vec3 normalizedDirection;
+};
+
+mat4 getCameraPose(int virtualIndex)
+{
+    return cameraPoses[getViewIndex(virtualIndex)];
 }
 
-float getCameraWeight(int index)
+int getLightIndex(int virtualIndex)
 {
-    return extractComponentByIndex(cameraWeights[index/4], index%4);
+    int viewIndex = getViewIndex(virtualIndex);
+    return extractComponentByIndex(lightIndices[viewIndex/4], viewIndex%4);
 }
 
-vec3 getViewVector(int index)
+float getCameraWeight(int virtualIndex)
 {
-    return transpose(mat3(cameraPoses[index])) * -cameraPoses[index][3].xyz - fPosition;
+    int viewIndex = getViewIndex(virtualIndex);
+    return extractComponentByIndex(cameraWeights[viewIndex/4], viewIndex%4);
 }
 
-vec3 getLightVector(int index)
+vec3 getViewVector(int virtualIndex)
 {
-    return transpose(mat3(cameraPoses[index])) * 
-        (lightPositions[getLightIndex(index)].xyz - cameraPoses[index][3].xyz) - fPosition;
+    int viewIndex = getViewIndex(virtualIndex);
+    return transpose(mat3(cameraPoses[viewIndex])) * -cameraPoses[viewIndex][3].xyz - fPosition;
 }
 
-vec3 getLightIntensity(int index)
+vec3 getLightVector(int virtualIndex)
 {
-    return lightIntensities[getLightIndex(index)].rgb;
+    int viewIndex = getViewIndex(virtualIndex);
+    return transpose(mat3(cameraPoses[viewIndex])) *
+        (lightPositions[getLightIndex(virtualIndex)].xyz - cameraPoses[viewIndex][3].xyz) - fPosition;
 }
 
-vec4 getColor(int index); // Defined by imgspace.glsl or texspace.glsl
-
-vec4 getLinearColor(int index)
+vec3 getLightIntensity(int virtualIndex)
 {
-    return linearizeColor(getColor(index));
+    return lightIntensities[getLightIndex(virtualIndex)].rgb;
+}
+
+LightInfo getLightInfo(int virtualIndex)
+{
+    LightInfo result;
+    result.normalizedDirection = getLightVector(virtualIndex);
+    result.attenuatedIntensity = getLightIntensity(virtualIndex);
+
+    float lightDistSquared = dot(result.normalizedDirection, result.normalizedDirection);
+    result.normalizedDirection *= inversesqrt(lightDistSquared);
+
+#if !INFINITE_LIGHT_SOURCES
+    result.attenuatedIntensity /= lightDistSquared;
+#endif
+
+    return result;
+}
+
+vec4 getColor(int virtualIndex); // Defined by imgspace.glsl or texspace.glsl
+
+vec4 getLinearColor(int virtualIndex)
+{
+    return linearizeColor(getColor(virtualIndex));
 }
 
 #endif // COLOR_APPEARANCE_GLSL

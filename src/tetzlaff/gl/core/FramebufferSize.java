@@ -27,4 +27,26 @@ public class FramebufferSize
         this.width = width;
         this.height = height;
     }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof FramebufferSize)
+        {
+            FramebufferSize other = (FramebufferSize)obj;
+            return other.width == this.width && other.height == this.height;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = width;
+        result = 31 * result + height;
+        return result;
+    }
 }

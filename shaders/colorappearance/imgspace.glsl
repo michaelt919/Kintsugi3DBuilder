@@ -5,44 +5,65 @@
 
 #line 7 1101
 
-#define MAX_CAMERA_PROJECTION_COUNT 1024
+#ifndef CAMERA_PROJECTION_COUNT
+#define CAMERA_PROJECTION_COUNT 1024
+#endif
+
+#ifndef VISIBILITY_TEST_ENABLED
+#define VISIBILITY_TEST_ENABLED 0
+#endif
+
+#ifndef SHADOW_TEST_ENABLED
+#define SHADOW_TEST_ENABLED 0
+#endif
+
+#ifndef MIPMAPS_ENABLED
+#define MIPMAPS_ENABLED 1
+#endif
 
 #ifndef SUPPRESS_MIPMAPS
 #define SUPPRESS_MIPMAPS 0
 #endif
 
 uniform sampler2DArray viewImages;
-uniform sampler2DArray depthImages;
-uniform sampler2DArray shadowImages;
 
-uniform bool occlusionEnabled;
-uniform bool shadowTestEnabled;
+#if VISIBILITY_TEST_ENABLED || SHADOW_TEST_ENABLED
 uniform float occlusionBias;
+#endif
+
+#if VISIBILITY_TEST_ENABLED
+uniform sampler2DArray depthImages;
+#endif
 
 layout(std140) uniform CameraProjections
 {
-    mat4 cameraProjections[MAX_CAMERA_PROJECTION_COUNT];
+    mat4 cameraProjections[CAMERA_PROJECTION_COUNT];
 };
 
 layout(std140) uniform CameraProjectionIndices
 {
-    ivec4 cameraProjectionIndices[MAX_CAMERA_POSE_COUNT_DIV_4];
+    ivec4 cameraProjectionIndices[CAMERA_POSE_COUNT_DIV_4];
 };
+
+#if SHADOW_TEST_ENABLED
+uniform sampler2DArray shadowImages;
 
 layout(std140) uniform ShadowMatrices
 {
-    mat4 shadowMatrices[MAX_CAMERA_POSE_COUNT];
+    mat4 shadowMatrices[CAMERA_POSE_COUNT];
 };
+#endif
 
-int getCameraProjectionIndex(int index)
+int getCameraProjectionIndex(int virtualIndex)
 {
-    return extractComponentByIndex(cameraProjectionIndices[index/4], index%4);
+    int viewIndex = getViewIndex(virtualIndex);
+    return extractComponentByIndex(cameraProjectionIndices[viewIndex/4], viewIndex%4);
 }
 
-vec4 getColor(int index)
+vec4 getColor(int virtualIndex)
 {
-    vec4 projTexCoord = cameraProjections[getCameraProjectionIndex(index)] * cameraPoses[index] *
-                            vec4(fPosition, 1.0);
+    int viewIndex = getViewIndex(virtualIndex);
+    vec4 projTexCoord = cameraProjections[getCameraProjectionIndex(virtualIndex)] * cameraPoses[viewIndex] * vec4(fPosition, 1.0);
     projTexCoord /= projTexCoord.w;
     projTexCoord = (projTexCoord + vec4(1)) / 2;
 
@@ -52,42 +73,42 @@ vec4 getColor(int index)
     }
     else
     {
+#if VISIBILITY_TEST_ENABLED || SHADOW_TEST_ENABLED
         if (projTexCoord.z >= 0 && projTexCoord.z <= 1)
         {
-            if (occlusionEnabled)
+#if VISIBILITY_TEST_ENABLED
+            float imageDepth = texture(depthImages, vec3(projTexCoord.xy, viewIndex)).r;
+            if (abs(projTexCoord.z - imageDepth) > occlusionBias)
             {
-                float imageDepth = texture(depthImages, vec3(projTexCoord.xy, index)).r;
-                if (abs(projTexCoord.z - imageDepth) > occlusionBias)
+                // Occluded
+                return vec4(0);
+            }
+#endif
+
+#if SHADOW_TEST_ENABLED
+            vec4 shadowTexCoord = shadowMatrices[viewIndex] * vec4(fPosition, 1.0);
+            shadowTexCoord /= shadowTexCoord.w;
+            shadowTexCoord = (shadowTexCoord + vec4(1)) / 2;
+
+            if (shadowTexCoord.x >= 0 && shadowTexCoord.x <= 1 &&
+                 shadowTexCoord.y >= 0 && shadowTexCoord.y <= 1 &&
+                 shadowTexCoord.z >= 0 && shadowTexCoord.z <= 1)
+            {
+                float shadowImageDepth = texture(shadowImages, vec3(shadowTexCoord.xy, viewIndex)).r;
+                if (abs(shadowTexCoord.z - shadowImageDepth) > occlusionBias)
                 {
                     // Occluded
                     return vec4(0);
                 }
             }
-
-            if (shadowTestEnabled)
-            {
-                vec4 shadowTexCoord = shadowMatrices[index] * vec4(fPosition, 1.0);
-                shadowTexCoord /= shadowTexCoord.w;
-                shadowTexCoord = (shadowTexCoord + vec4(1)) / 2;
-
-                if (shadowTexCoord.x >= 0 && shadowTexCoord.x <= 1 &&
-                     shadowTexCoord.y >= 0 && shadowTexCoord.y <= 1 &&
-                     shadowTexCoord.z >= 0 && shadowTexCoord.z <= 1)
-                {
-                    float shadowImageDepth = texture(shadowImages, vec3(shadowTexCoord.xy, index)).r;
-                    if (abs(shadowTexCoord.z - shadowImageDepth) > occlusionBias)
-                    {
-                        // Occluded
-                        return vec4(0);
-                    }
-                }
-            }
+#endif
         }
+#endif
 
-#if SUPPRESS_MIPMAPS
-        return textureLod(viewImages, vec3(projTexCoord.xy, index), 0);
+#if MIPMAPS_ENABLED
+        return texture(viewImages, vec3(projTexCoord.xy, viewIndex));
 #else
-        return texture(viewImages, vec3(projTexCoord.xy, index));
+        return textureLod(viewImages, vec3(projTexCoord.xy, viewIndex), 0);
 #endif
     }
 }

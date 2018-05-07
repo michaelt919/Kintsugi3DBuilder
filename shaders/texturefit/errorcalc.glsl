@@ -16,6 +16,7 @@ uniform sampler2D specularEstimate;
 uniform sampler2D roughnessEstimate;
 uniform sampler2D errorTexture;
 
+uniform bool ignoreDampingFactor;
 uniform float fittingGamma;
 
 vec4 getDiffuseColor()
@@ -35,9 +36,9 @@ vec3 getSpecularColor()
     return sign(specularColor) * pow(abs(specularColor), vec3(gamma));
 }
 
-vec3 getRoughness()
+vec4 getRoughness()
 {
-    return texture(roughnessEstimate, fTexCoord).rgb;
+    return texture(roughnessEstimate, fTexCoord);
 }
 
 struct ErrorResult
@@ -51,7 +52,7 @@ ErrorResult calculateError()
 {
     vec4 prevErrorResult = texture(errorTexture, fTexCoord);
 
-    if (prevErrorResult.x < MIN_DAMPING_FACTOR || prevErrorResult.x > MAX_DAMPING_FACTOR)
+    if (!ignoreDampingFactor && (prevErrorResult.x < MIN_DAMPING_FACTOR || prevErrorResult.x > MAX_DAMPING_FACTOR))
     {
         return ErrorResult(false, 0.0, prevErrorResult.y);
     }
@@ -71,17 +72,17 @@ ErrorResult calculateError()
         float alpha = diffuseColorRGBA.a;
         vec3 diffuseColor = rgbToXYZ(diffuseColorRGBA.rgb);
         vec3 specularColor = rgbToXYZ(getSpecularColor());
-        vec3 roughness = getRoughness();
-        vec3 roughnessSquared = roughness * roughness;
+        vec4 roughness = getRoughness();
+        vec3 roughnessSquared = roughness.xyz * roughness.xyz;
         float maxLuminance = getMaxLuminance();
         float fittingGammaInv = 1.0 / fittingGamma;
 
         float sumSqError = 0.0;
         float sumWeight = 0.0;
 
-        //if (alpha == 1.0)
+        if (!isnan(roughness.y) && roughness.w == 1.0)
         {
-            for (int i = 0; i < viewCount; i++)
+            for (int i = 0; i < VIEW_COUNT; i++)
             {
                 vec3 view = normalize(getViewVector(i));
                 float nDotV = max(0, dot(shadingNormal, view));
@@ -89,11 +90,8 @@ ErrorResult calculateError()
 
                 if (color.a > 0 && nDotV > 0 && dot(normal, view) > 0)
                 {
-                    vec3 lightPreNormalized = getLightVector(i);
-                    vec3 attenuatedLightIntensity = infiniteLightSources ?
-                        getLightIntensity(i) :
-                        getLightIntensity(i) / (dot(lightPreNormalized, lightPreNormalized));
-                    vec3 light = normalize(lightPreNormalized);
+                    LightInfo lightInfo = getLightInfo(i);
+                    vec3 light = lightInfo.normalizedDirection;
                     float nDotL = max(0, dot(light, shadingNormal));
 
                     vec3 halfway = normalize(view + light);
@@ -109,7 +107,7 @@ ErrorResult calculateError()
                         float hDotV = max(0, dot(halfway, view));
                         float geomRatio = min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV) / (4 * nDotV);
 
-                        vec3 colorScaled = pow(rgbToXYZ(color.rgb / attenuatedLightIntensity), vec3(fittingGammaInv));
+                        vec3 colorScaled = pow(rgbToXYZ(color.rgb / lightInfo.attenuatedIntensity), vec3(fittingGammaInv));
                         vec3 currentFit = diffuseColor * nDotL + min(vec3(1), specularColor) * mfdEval * geomRatio;
                         vec3 colorResidual = colorScaled - pow(currentFit, vec3(fittingGammaInv));
 
@@ -119,20 +117,21 @@ ErrorResult calculateError()
                     }
                 }
             }
+
+            if (sumWeight > 0.0)
+            {
+                float meanSqError = min(sumSqError / sumWeight, MAX_ERROR);
+
+                if (meanSqError < prevErrorResult.y)
+                {
+                    //return ErrorResult(true, prevErrorResult.x, sumSqError);
+                    return ErrorResult(true, prevErrorResult.x / 2, meanSqError);
+                }
+            }
         }
 
-        float meanSqError = min(sumSqError / sumWeight, MAX_ERROR);
-
-        if (meanSqError >= prevErrorResult.y)
-        {
-            //return ErrorResult(false, prevErrorResult.x / 2, prevErrorResult.y);
-            return ErrorResult(false, prevErrorResult.x * 2, prevErrorResult.y);
-        }
-        else
-        {
-            //return ErrorResult(true, prevErrorResult.x, sumSqError);
-            return ErrorResult(true, prevErrorResult.x / 2, meanSqError);
-        }
+        //return ErrorResult(false, prevErrorResult.x / 2, prevErrorResult.y);
+        return ErrorResult(false, prevErrorResult.x * 2, prevErrorResult.y);
     }
 }
 

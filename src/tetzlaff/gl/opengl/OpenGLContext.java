@@ -2,6 +2,10 @@ package tetzlaff.gl.opengl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.Map;
 
 import tetzlaff.gl.builders.ProgramBuilder;
@@ -12,6 +16,8 @@ import tetzlaff.gl.glfw.GLFWWindowContextBase;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
 import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
+import tetzlaff.gl.types.AbstractDataType;
+import tetzlaff.gl.types.PackedDataType;
 
 import static org.lwjgl.opengl.EXTTextureCompressionS3TC.*;
 import static org.lwjgl.opengl.EXTTextureSRGB.*;
@@ -35,11 +41,16 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
     private final OpenGLContextState state;
     private final OpenGLTextureFactory textureFactory;
 
+    private final Map<Integer, OpenGLTexture> textureBindings;
+    private final Map<Integer, OpenGLUniformBuffer> uniformBufferBindings;
+
     OpenGLContext(long handle)
     {
         super(handle);
         this.state = new OpenGLContextState(this);
         this.textureFactory = new OpenGLTextureFactory(this);
+        this.textureBindings = new HashMap<>(48);
+        this.uniformBufferBindings = new HashMap<>(24);
     }
 
     @Override
@@ -129,15 +140,39 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
         return this.textureFactory;
     }
 
-    static int getPixelDataFormatFromDimensions(int dimensions)
+    static int getPixelDataFormatFromDimensions(int dimensions, boolean integer)
     {
-        switch(dimensions)
+        if (integer)
         {
-        case 1: return GL_RED;
-        case 2: return GL_RG;
-        case 3: return GL_RGB;
-        case 4: return GL_RGBA;
-        default: throw new IllegalArgumentException("Data must be a vertex list of no more than 4 dimensions.");
+            switch (dimensions)
+            {
+                case 1:
+                    return GL_RED_INTEGER;
+                case 2:
+                    return GL_RG_INTEGER;
+                case 3:
+                    return GL_RGB_INTEGER;
+                case 4:
+                    return GL_RGBA_INTEGER;
+                default:
+                    throw new IllegalArgumentException("Data must be a vertex list of no more than 4 dimensions.");
+            }
+        }
+        else
+        {
+            switch (dimensions)
+            {
+                case 1:
+                    return GL_RED;
+                case 2:
+                    return GL_RG;
+                case 3:
+                    return GL_RGB;
+                case 4:
+                    return GL_RGBA;
+                default:
+                    throw new IllegalArgumentException("Data must be a vertex list of no more than 4 dimensions.");
+            }
         }
     }
 
@@ -153,51 +188,114 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
         case INT: return GL_INT;
         case FLOAT: return GL_FLOAT;
         case DOUBLE: return GL_DOUBLE;
-        default: throw new IllegalArgumentException("Unrecognized data type."); // Shouldn't ever happen
+        case PACKED_BYTE:
+        case PACKED_SHORT:
+        case PACKED_INT:
+            throw new IllegalArgumentException("Packed native data type specified outside the context of a packing scheme.");
+        default:
+            throw new IllegalArgumentException("Unrecognized data type."); // Shouldn't ever happen
         }
     }
 
-    static void unbindBuffer(int bufferTarget, int index)
+    static int getDataTypeConstant(AbstractDataType<?> dataType)
     {
-        glBindBufferBase(bufferTarget, index, 0);
-        errorCheck();
+        if (dataType instanceof PackedDataType)
+        {
+            switch((PackedDataType)dataType)
+            {
+                case BYTE_3_3_2:        return GL_UNSIGNED_BYTE_3_3_2;
+                case SHORT_5_6_5:       return GL_UNSIGNED_SHORT_5_6_5;
+                case SHORT_5_5_5_1:     return GL_UNSIGNED_SHORT_5_5_5_1;
+                case SHORT_4_4_4_4:     return GL_UNSIGNED_SHORT_4_4_4_4;
+                case INT_10_10_10_2:    return GL_UNSIGNED_INT_10_10_10_2;
+                case INT_8_8_8_8:       return GL_UNSIGNED_INT_8_8_8_8;
+                default:
+                    throw new IllegalArgumentException("Unrecognized packed data type."); // Shouldn't ever happen
+            }
+        }
+        else
+        {
+            return getDataTypeConstant(dataType.getNativeDataType());
+        }
     }
 
-    void unbindTextureUnit(int textureUnitIndex)
+    void bindTextureToUnit(int textureUnitIndex, OpenGLTexture texture)
     {
-        if (textureUnitIndex < 0)
-        {
-            throw new IllegalArgumentException("Texture unit index cannot be negative.");
-        }
-        else if (textureUnitIndex > state.getMaxCombinedTextureImageUnits())
-        {
-            throw new IllegalArgumentException("Texture unit index (" + textureUnitIndex + ") is greater than the maximum allowed index (" +
-                    (state.getMaxCombinedTextureImageUnits()-1) + ").");
-        }
         glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
         errorCheck();
-        glBindTexture(GL_TEXTURE_1D, 0);
+
+        glBindTexture(texture.getOpenGLTextureTarget(), texture.getTextureId());
         errorCheck();
-        glBindTexture(GL_TEXTURE_2D, 0);
+
+        textureBindings.put(textureUnitIndex, texture);
+    }
+
+    void bindUniformBufferToIndex(int bufferBindingIndex, OpenGLUniformBuffer buffer)
+    {
+        glBindBufferBase(GL_UNIFORM_BUFFER, bufferBindingIndex, buffer.getBufferId());
         errorCheck();
-        glBindTexture(GL_TEXTURE_3D, 0);
-        errorCheck();
-        glBindTexture(GL_TEXTURE_1D_ARRAY, 0);
-        errorCheck();
-        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-        errorCheck();
-        glBindTexture(GL_TEXTURE_RECTANGLE, 0);
-        errorCheck();
-        glBindTexture(GL_TEXTURE_BUFFER, 0);
-        errorCheck();
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-        errorCheck();
-        glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
-        errorCheck();
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-        errorCheck();
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 0);
-        errorCheck();
+
+        uniformBufferBindings.put(bufferBindingIndex, buffer);
+    }
+
+    private static <T> void updateBindingsGeneric(Map<Integer, T> oldBindings, List<Optional<T>> newBindings,
+        BiPredicate<T, T> needsUnbindPredicate, BiConsumer<Integer, T> unbindFunction, BiConsumer<Integer, T> bindFunction)
+    {
+        // Iterate through all of the previous bindings and unbind any that will not be overwritten otherwise.
+        Iterator<Entry<Integer, T>> iterator = oldBindings.entrySet().iterator();
+        while (iterator.hasNext())
+        {
+            Entry<Integer, T> oldBinding = iterator.next();
+            int bindingIndex = oldBinding.getKey();
+            T objectToUnbind = oldBinding.getValue();
+            Optional<? extends T> newObjectToBind = newBindings.get(bindingIndex);
+
+            if (!newObjectToBind.isPresent() || needsUnbindPredicate.test(objectToUnbind, newObjectToBind.get()))
+            {
+                unbindFunction.accept(bindingIndex, objectToUnbind);
+                iterator.remove();
+            }
+        }
+
+        for (int i = 0; i < newBindings.size(); i++)
+        {
+            if (newBindings.get(i).isPresent())
+            {
+                T newObjectToBind = newBindings.get(i).get();
+
+                if (!oldBindings.containsKey(i) || !Objects.equals(oldBindings.get(i), newObjectToBind))
+                {
+                    bindFunction.accept(i, newObjectToBind);
+                }
+            }
+        }
+    }
+
+    void updateTextureBindings(List<Optional<OpenGLTexture>> newTextureBindings)
+    {
+        updateBindingsGeneric(textureBindings, newTextureBindings,
+            (oldTexture, newTexture) -> oldTexture.getOpenGLTextureTarget() != newTexture.getOpenGLTextureTarget(),
+            (textureUnitIndex, textureToUnbind) ->
+            {
+                glActiveTexture(GL_TEXTURE0 + textureUnitIndex);
+                errorCheck();
+
+                glBindTexture(textureToUnbind.getOpenGLTextureTarget(), 0);
+                errorCheck();
+            },
+            (textureUnitIndex, textureToBind) -> textureToBind.bindToTextureUnit(textureUnitIndex));
+    }
+
+    void updateUniformBufferBindings(List<Optional<OpenGLUniformBuffer>> newUniformBufferBindings)
+    {
+        updateBindingsGeneric(uniformBufferBindings, newUniformBufferBindings,
+            (oldBuffer, newBuffer) -> oldBuffer.getBufferTarget() != newBuffer.getBufferTarget(),
+            (bindingIndex, bufferToUnbind) ->
+            {
+                glBindBufferBase(bufferToUnbind.getBufferTarget(), bindingIndex, 0);
+                errorCheck();
+            },
+            (bindingIndex, bufferToBind) -> bufferToBind.bindToIndex(bindingIndex));
     }
 
     protected static int getOpenGLInternalColorFormat(ColorFormat format)

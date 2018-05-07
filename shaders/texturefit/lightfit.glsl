@@ -40,12 +40,12 @@ LightFit fitLight()
         mat3 a = mat3(0);
         vec3 b = vec3(0);
         
-        for (int i = 0; i < viewCount; i++)
+        for (int i = 0; i < VIEW_COUNT; i++)
         {
             if(getLightIndex(i) == lightIndex)
             {
-                vec3 viewNormal = (cameraPoses[i] * vec4(normal, 0.0)).xyz;
-                vec3 surfacePosition = (cameraPoses[i] * vec4(fPosition, 1.0)).xyz;
+                vec3 viewNormal = (getCameraPose(i) * vec4(normal, 0.0)).xyz;
+                vec3 surfacePosition = (getCameraPose(i) * vec4(fPosition, 1.0)).xyz;
                 float nDotV = dot(viewNormal, normalize(-surfacePosition));
 
                 // Physically plausible values for the color components range from 0 to pi
