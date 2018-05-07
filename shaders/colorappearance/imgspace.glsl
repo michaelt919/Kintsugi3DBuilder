@@ -41,7 +41,7 @@ int getCameraProjectionIndex(int index)
 
 vec4 getColor(int index)
 {
-    vec4 projTexCoord = cameraProjections[getCameraProjectionIndex(index)] * cameraPoses[index] * 
+    vec4 projTexCoord = cameraProjections[getCameraProjectionIndex(index)] * cameraPoses[index] *
                             vec4(fPosition, 1.0);
     projTexCoord /= projTexCoord.w;
     projTexCoord = (projTexCoord + vec4(1)) / 2;

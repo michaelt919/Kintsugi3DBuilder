@@ -303,19 +303,21 @@ public final class Matrix4
 
         Matrix4 identityCandidate = this.times(invCandidate);
 
+        float translationScale = this.getColumn(3).getXYZ().length();
+
         if (Math.abs(identityCandidate.get(0, 0) - 1.0f) > tolerance ||
             Math.abs(identityCandidate.get(1, 1) - 1.0f) > tolerance ||
             Math.abs(identityCandidate.get(2, 2) - 1.0f) > tolerance ||
             Math.abs(identityCandidate.get(3, 3) - 1.0f) > tolerance ||
             Math.abs(identityCandidate.get(0, 1)) > tolerance ||
             Math.abs(identityCandidate.get(0, 2)) > tolerance ||
-            Math.abs(identityCandidate.get(0, 3)) > tolerance ||
+            Math.abs(identityCandidate.get(0, 3)) > tolerance * translationScale ||
             Math.abs(identityCandidate.get(1, 0)) > tolerance ||
             Math.abs(identityCandidate.get(1, 2)) > tolerance ||
-            Math.abs(identityCandidate.get(1, 3)) > tolerance ||
+            Math.abs(identityCandidate.get(1, 3)) > tolerance * translationScale ||
             Math.abs(identityCandidate.get(2, 0)) > tolerance ||
             Math.abs(identityCandidate.get(2, 1)) > tolerance ||
-            Math.abs(identityCandidate.get(2, 3)) > tolerance ||
+            Math.abs(identityCandidate.get(2, 3)) > tolerance * translationScale ||
             Math.abs(identityCandidate.get(3, 0)) > tolerance ||
             Math.abs(identityCandidate.get(3, 1)) > tolerance ||
             Math.abs(identityCandidate.get(3, 2)) > tolerance)
