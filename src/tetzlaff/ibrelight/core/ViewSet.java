@@ -539,6 +539,8 @@ public final class ViewSet
         float p1;
         float p2;
         float skew;
+        float pixelWidth = 1.0f;
+        float pixelHeight = 1.0f;
 
         Sensor(String id)
         {
@@ -880,7 +882,20 @@ public final class ViewSet
                             }
                             break;
 
-                        case "property": case "projections": case "depth":
+                        case "property":
+                            if (sensor != null)
+                            {
+                                if (Objects.equals(reader.getAttributeValue(null, "name"), "pixel_width"))
+                                {
+                                    sensor.pixelWidth = Float.parseFloat(reader.getAttributeValue(null, "value"));
+                                }
+                                else if (Objects.equals(reader.getAttributeValue(null, "name"), "pixel_height"))
+                                {
+                                    sensor.pixelHeight = Float.parseFloat(reader.getAttributeValue(null, "value"));
+                                }
+                            }
+                            break;
+                        case "projections": case "depth":
                         case "frames": case "frame": case "meta": case "R":
                         case "size": case "center": case "region": case "settings":
                         case "ground_control": case "mesh": case "texture":
