@@ -3,8 +3,13 @@
 
 #line 5 1200
 
+#ifndef LUMINANCE_MAP_ENABLED
+#define LUMINANCE_MAP_ENABLED 0
+#endif
+
+#if LUMINANCE_MAP_ENABLED
 uniform sampler1D luminanceMap;
-uniform bool useLuminanceMap;
+#endif
 
 uniform float gamma;
 
@@ -30,14 +35,15 @@ vec3 xyzToRGB(vec3 xyzColor)
 
 float getMaxLuminance()
 {
-    if (useLuminanceMap)
-    {
-        return texture(luminanceMap, 1.0).r;
-    }
-    else
-    {
-        return 1.0;
-    }
+    float maxLuminance;
+
+#if LUMINANCE_MAP_ENABLED
+    maxLuminance = texture(luminanceMap, 1.0).r;
+#else
+    maxLuminance = 1.0;
+#endif
+
+    return maxLuminance;
 }
 
 float getMaxTonemappingScale()
@@ -47,50 +53,119 @@ float getMaxTonemappingScale()
 
 vec3 linearizeColor(vec3 nonlinearColor)
 {
-    if (useLuminanceMap)
+    vec3 linearColor;
+
+#if LUMINANCE_MAP_ENABLED
+    if (nonlinearColor.r <= 0.0 && nonlinearColor.g <= 0.0 && nonlinearColor.b <= 0.0)
     {
-        if (nonlinearColor.r <= 0.0 && nonlinearColor.g <= 0.0 && nonlinearColor.b <= 0.0)
-        {
-            return vec3(0);
-        }
-        else
-        {
-            // Step 1: remove gamma correction
-            vec3 colorGamma = pow(nonlinearColor, vec3(gamma));
-            
-            // Step 2: convert to CIE luminance
-            // Clamp to 1 so that the ratio computed in step 3 is well defined
-            // if the luminance value somehow exceeds 1.0
-            float luminanceNonlinear = getLuminance(colorGamma);
-
-            float maxLuminance = getMaxLuminance();
-
-            if (luminanceNonlinear > 1.0)
-            {
-                return colorGamma * maxLuminance;
-            }
-            else
-            {
-                // Step 3: determine the ratio between the linear and nonlinear luminance
-                // Reapply gamma correction to the single luminance value
-                float scale = min(getMaxTonemappingScale() * maxLuminance,
-                    texture(luminanceMap, pow(luminanceNonlinear, 1.0 / gamma)).r / luminanceNonlinear);
-
-                // Step 4: return the color, scaled to have the correct luminance,
-                // but the original saturation and hue.
-                return colorGamma * scale;
-            }
-        }
+        linearColor = vec3(0);
     }
     else
     {
-        return pow(nonlinearColor, vec3(gamma));
+        // Step 1: remove gamma correction
+        vec3 colorGamma = pow(nonlinearColor, vec3(gamma));
+
+        // Step 2: convert to CIE luminance
+        // Clamp to 1 so that the ratio computed in step 3 is well defined
+        // if the luminance value somehow exceeds 1.0
+        float luminanceNonlinear = getLuminance(colorGamma);
+
+        float maxLuminance = getMaxLuminance();
+
+        if (luminanceNonlinear > 1.0)
+        {
+            linearColor = colorGamma * maxLuminance;
+        }
+        else
+        {
+            // Step 3: determine the ratio between the linear and nonlinear luminance
+            // Reapply gamma correction to the single luminance value
+            float scale = min(getMaxTonemappingScale() * maxLuminance,
+                texture(luminanceMap, pow(luminanceNonlinear, 1.0 / gamma)).r / luminanceNonlinear);
+
+            // Step 4: return the color, scaled to have the correct luminance,
+            // but the original saturation and hue.
+            linearColor = colorGamma * scale;
+        }
     }
+#else
+    linearColor = pow(nonlinearColor, vec3(gamma));
+#endif
+
+    return linearColor;
 }
 
 vec4 linearizeColor(vec4 nonlinearColor)
 {
     return vec4(linearizeColor(nonlinearColor.rgb), nonlinearColor.a);
+}
+
+vec3 linearToSRGB(vec3 color)
+{
+    vec3 sRGBColor;
+
+    if(color.r <= 0.0031308)
+    {
+        sRGBColor.r = 12.92 * color.r;
+    }
+    else
+    {
+        sRGBColor.r = (1.055) * pow(color.r, 1.0/2.4) - 0.055;
+    }
+
+    if(color.g <= 0.0031308)
+    {
+        sRGBColor.g = 12.92 * color.g;
+    }
+    else
+    {
+        sRGBColor.g = (1.055) * pow(color.g, 1.0/2.4) - 0.055;
+    }
+
+    if(color.b <= 0.0031308)
+    {
+        sRGBColor.b = 12.92 * color.b;
+    }
+    else
+    {
+        sRGBColor.b = (1.055) * pow(color.b, 1.0/2.4) - 0.055;
+    }
+
+    return sRGBColor;
+}
+
+vec3 sRGBToLinear(vec3 sRGBColor)
+{
+     vec3 linearColor;
+
+     if(sRGBColor.r <= 0.04045)
+     {
+         linearColor.r = sRGBColor.r / 12.92;
+     }
+     else
+     {
+         linearColor.r = pow((sRGBColor.r + 0.055) / 1.055, 2.4);
+     }
+
+     if(sRGBColor.g <= 0.04045)
+     {
+         linearColor.g = sRGBColor.g / 12.92;
+     }
+     else
+     {
+         linearColor.g = pow((sRGBColor.g + 0.055) / 1.055, 2.4);
+     }
+
+     if(sRGBColor.b <= 0.04045)
+     {
+         linearColor.b = sRGBColor.b / 12.92;
+     }
+     else
+     {
+         linearColor.b = pow((sRGBColor.b + 0.055) / 1.055, 2.4);
+     }
+
+     return linearColor;
 }
 
 #endif // LINEARIZE_GLSL

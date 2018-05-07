@@ -46,7 +46,7 @@ DiffuseFit fitDiffuse()
         vec3 weightedIrradianceSum = vec3(0.0);
         vec3 directionSum = vec3(0);
 
-        for (int i = 0; i < viewCount; i++)
+        for (int i = 0; i < VIEW_COUNT; i++)
         {
             vec3 view = normalize(getViewVector(i));
 
@@ -58,30 +58,27 @@ DiffuseFit fitDiffuse()
             float nDotV = dot(geometricNormal, view);
             if (color.a * nDotV > 0)
             {
-                //vec4 light = vec4(getLightVector(i), 1.0);
-                vec3 light = getLightVector(i);
-                vec3 attenuatedIncidentRadiance = infiniteLightSources ?
-                    getLightIntensity(i) : getLightIntensity(i) / (dot(light, light));
-                vec3 lightNormalized = normalize(light);
+                LightInfo lightInfo = getLightInfo(i);
+                vec3 light = lightInfo.normalizedDirection;
 
                 float weight = color.a * nDotV;
                 if (k != 0)
                 {
-                    vec3 error = color.rgb - fit.color * dot(fit.normal, lightNormalized) * attenuatedIncidentRadiance;
+                    vec3 error = color.rgb - fit.color * dot(fit.normal, light) * lightInfo.attenuatedIntensity;
                     weight *= exp(-dot(error,error)/(2*delta*delta));
                 }
 
-                float attenuatedLuminance = getLuminance(attenuatedIncidentRadiance);
+                float attenuatedLuminance = getLuminance(lightInfo.attenuatedIntensity);
 
-                a += weight * outerProduct(lightNormalized, lightNormalized);
-                //b += weight * outerProduct(lightNormalized, vec4(color.rgb / attenuatedIncidentRadiance, 0.0));
-                b += weight * outerProduct(lightNormalized, color.rgb / attenuatedIncidentRadiance);
+                a += weight * outerProduct(light, light);
+                //b += weight * outerProduct(lightNormalized, vec4(color.rgb / lightInfo.attenuatedIntensity, 0.0));
+                b += weight * outerProduct(light, color.rgb / lightInfo.attenuatedIntensity);
 
-                float nDotL = max(0, dot(geometricNormal, lightNormalized));
+                float nDotL = max(0, dot(geometricNormal, light));
                 weightedRadianceSum += weight * vec4(color.rgb, 1.0) * nDotL;
-                weightedIrradianceSum += weight * attenuatedIncidentRadiance * nDotL * nDotL;
+                weightedIrradianceSum += weight * lightInfo.attenuatedIntensity * nDotL * nDotL;
 
-                directionSum += lightNormalized;
+                directionSum += light;
             }
         }
 

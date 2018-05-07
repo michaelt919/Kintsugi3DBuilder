@@ -16,12 +16,12 @@ uniform bool perPixelWeightsEnabled;
 
 layout(std140) uniform ViewWeights
 {
-    vec4 viewWeights[MAX_CAMERA_POSE_COUNT_DIV_4];
+    vec4 viewWeights[VIEW_COUNT_DIV_4];
 };
 
 uniform ViewIndices
 {
-    int viewIndices[MAX_CAMERA_POSE_COUNT];
+    int viewIndices[VIEW_COUNT];
 };
 
 uniform int targetViewIndex;
@@ -40,9 +40,9 @@ float computeSampleWeight(float correlation)
 
 float getSampleWeight(int index)
 {
-    vec3 cameraPos = (cameraPoses[index] * 
+    vec3 cameraPos = (getCameraPose(index) *
         vec4(transpose(mat3(model_view)) * -model_view[3].xyz, 1.0)).xyz;
-    vec3 fragmentPos = (cameraPoses[index] * vec4(fPosition, 1.0)).xyz;
+    vec3 fragmentPos = (getCameraPose(index) * vec4(fPosition, 1.0)).xyz;
 
     return computeSampleWeight(dot(normalize(-fragmentPos), normalize(cameraPos - fragmentPos)));
 }
@@ -51,11 +51,10 @@ vec4 getSample(int index)
 {
     vec4 color = getLinearColor(index);
 
-    //if (!infiniteLightSources)
-    {
-        vec3 light = getLightVector(index);
-        color.rgb *= dot(light, light) / getLightIntensity(index);
-    }
+#if !INFINITE_LIGHT_SOURCES
+    vec3 light = getLightVector(index);
+    color.rgb *= dot(light, light) / getLightIntensity(index);
+#endif
 
     return color;
 }
@@ -63,7 +62,7 @@ vec4 getSample(int index)
 vec2 computeFidelity()
 {
     vec4 sum = vec4(0.0);
-    for (int i = 0; i < viewCount; i++)
+    for (int i = 0; i < VIEW_COUNT; i++)
     {
         int currentViewIndex = viewIndices[i];
         if (perPixelWeightsEnabled)

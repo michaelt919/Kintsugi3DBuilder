@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.nativebuffer.NativeVectorBuffer;
@@ -48,10 +49,32 @@ public class BTFRequest implements IBRRequest
         IBRResources<ContextType> resources = renderable.getResources();
         ContextType context = resources.context;
 
-        try(Program<ContextType> btfProgram = context.getShaderProgramBuilder()
+        ProgramBuilder<ContextType> programBuilder =
+            resources.getIBRShaderProgramBuilder(this.settings.get("renderingMode", RenderingMode.class))
+                .define("BRDF_MODE", true)
+                .define("VIRTUAL_LIGHT_COUNT", 1)
+                .define("PHYSICALLY_BASED_MASKING_SHADOWING", this.settings.getBoolean("pbrGeometricAttenuationEnabled"))
+                .define("FRESNEL_EFFECT_ENABLED", this.settings.getBoolean("fresnelEnabled"))
+                .define("RELIGHTING_ENABLED", this.settings.getBoolean("relightingEnabled"))
+                .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && this.settings.getBoolean("occlusionEnabled"))
+                .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && this.settings.getBoolean("occlusionEnabled"))
+                .define("SHADOWS_ENABLED", false)
+                .define("MIPMAPS_ENABLED", false)
+                .define("TANGENT_SPACE_OVERRIDE_ENABLED", true)
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"))
-                .createProgram();
+                .addShader(ShaderType.FRAGMENT, new File("shaders/relight/relight.frag"));
+
+        if (viewIndices != null)
+        {
+            programBuilder.define("USE_VIEW_INDICES", true);
+            programBuilder.define("VIEW_COUNT", viewIndices.size());
+        }
+        else
+        {
+            programBuilder.define("USE_VIEW_INDICES", false);
+        }
+
+        try(Program<ContextType> btfProgram = programBuilder.createProgram();
             FramebufferObject<ContextType> framebuffer = context.buildFramebufferObject(width, height)
                 .addColorAttachment()
                 .createFramebufferObject();
@@ -63,27 +86,7 @@ public class BTFRequest implements IBRRequest
             drawable.addVertexBuffer("normal", resources.normalBuffer);
             drawable.addVertexBuffer("tangent", resources.tangentBuffer);
 
-            resources.setupShaderProgram(btfProgram, this.settings.get("renderingMode", RenderingMode.class));
-
-            btfProgram.setUniform("renderGamma", this.settings.getFloat("gamma"));
-            btfProgram.setUniform("weightExponent", this.settings.getFloat("weightExponent"));
-            btfProgram.setUniform("isotropyFactor", this.settings.getFloat("isotropyFactor"));
-            btfProgram.setUniform("occlusionEnabled", resources.depthTextures != null && this.settings.getBoolean("occlusionEnabled"));
-            btfProgram.setUniform("occlusionBias", this.settings.getFloat("occlusionBias"));
-            btfProgram.setUniform("imageBasedRenderingEnabled", this.settings.get("renderingMode", RenderingMode.class).isImageBased());
-            btfProgram.setUniform("relightingEnabled", this.settings.getBoolean("relightingEnabled"));
-            btfProgram.setUniform("pbrGeometricAttenuationEnabled", this.settings.getBoolean("pbrGeometricAttenuationEnabled"));
-            btfProgram.setUniform("fresnelEnabled", this.settings.getBoolean("fresnelEnabled"));
-
-            btfProgram.setUniform("shadowsEnabled", false);
-            btfProgram.setUniform("useEnvironmentTexture", false);
-            btfProgram.setTexture("environmentMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_CUBE_MAP));
-            btfProgram.setUniform("ambientColor", Vector3.ZERO);
-
-            btfProgram.setUniform("perPixelWeightsEnabled", true);
-            btfProgram.setUniform("suppressMipmaps", true);
-
-            btfProgram.setUniform("useTSOverrides", true);
+            resources.setupShaderProgram(btfProgram);
 
             if (viewIndices != null)
             {
@@ -97,13 +100,16 @@ public class BTFRequest implements IBRRequest
 
                 viewIndexBuffer.setData(viewIndexData);
                 btfProgram.setUniformBuffer("ViewIndices", viewIndexBuffer);
-                btfProgram.setUniform("useViewIndices", true);
-                btfProgram.setUniform("viewCount", viewIndices.size());
             }
-            else
-            {
-                btfProgram.setUniform("useViewIndices", false);
-            }
+
+            btfProgram.setUniform("renderGamma", this.settings.getFloat("gamma"));
+            btfProgram.setUniform("weightExponent", this.settings.getFloat("weightExponent"));
+            btfProgram.setUniform("isotropyFactor", this.settings.getFloat("isotropyFactor"));
+            btfProgram.setUniform("occlusionBias", this.settings.getFloat("occlusionBias"));
+
+            btfProgram.setUniform("useEnvironmentTexture", false);
+            btfProgram.setTexture("environmentMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_CUBE_MAP));
+            btfProgram.setUniform("ambientColor", Vector3.ZERO);
 
             ////////////////////////////////
 
@@ -111,7 +117,6 @@ public class BTFRequest implements IBRRequest
 //            for (int i = 1; i <= 179; i++)
 //            {
 //                double theta = i / 180.0f * Math.PI;
-//                btfProgram.setUniform("virtualLightCount", 1);
 //                btfProgram.setUniform("lightIntensityVirtual[0]", lightColor);
 //                btfProgram.setUniform("lightDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
 //                btfProgram.setUniform("viewDirTSOverride", new Vector3((float)Math.cos(theta), 0.0f, (float)Math.sin(theta)));
@@ -120,7 +125,6 @@ public class BTFRequest implements IBRRequest
             for (int i = 1; i <= 90; i++)
             {
                 double theta = i / 180.0f * Math.PI;
-                btfProgram.setUniform("virtualLightCount", 1);
                 btfProgram.setUniform("lightIntensityVirtual[0]", lightColor);
 
                 btfProgram.setUniform("lightDirTSOverride", new Vector3((float)(Math.sin(theta)*Math.sqrt(0.5)), -(float)(Math.sin(theta)*Math.sqrt(0.5)), (float)Math.cos(theta)));

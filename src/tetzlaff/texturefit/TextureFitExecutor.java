@@ -30,23 +30,24 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
     private static final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
 
-    private static final double FITTING_GAMMA = 2.2; // TODO make this configurable from the interface
+    private static final double FITTING_GAMMA = 1.0; // TODO make this configurable from the interface
 
     private final ContextType context;
     private final File vsetFile;
     private final File objFile;
+    private final File outputDir;
+    private final TextureFitParameters param;
+
     private File imageDir;
     private File maskDir;
     private File rescaleDir;
-    private final File outputDir;
     private File tmpDir;
-    private final TextureFitParameters param;
 
     private String materialFileName;
     private String materialName;
 
     private ViewSet viewSet;
-    private IBRResources<ContextType> viewSetResources;
+    private IBRResources<ContextType> resources;
 
     private Program<ContextType> depthRenderingProgram;
     private Program<ContextType> projTexProgram;
@@ -55,6 +56,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     private Program<ContextType> specularFitProgram;
     private Program<ContextType> adjustFitProgram;
     private Program<ContextType> errorCalcProgram;
+    private Program<ContextType> errorCalcSimpleProgram;
     private Program<ContextType> diffuseDebugProgram;
     private Program<ContextType> specularDebugProgram;
     private Program<ContextType> textureRectProgram;
@@ -98,50 +100,87 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "common", "depth.frag").toFile())
                 .createProgram();
 
-        projTexProgram = context.getShaderProgramBuilder()
+        projTexProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCE", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "colorappearance", "projtex_single.frag").toFile())
                 .createProgram();
 
-        lightFitProgram = context.getShaderProgramBuilder()
+        lightFitProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
                     param.isImagePreprojectionUseEnabled() ? "lightfit_texspace.frag" : "lightfit_imgspace.frag").toFile())
                 .createProgram();
 
-        diffuseFitProgram = context.getShaderProgramBuilder()
+        diffuseFitProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
                     param.isImagePreprojectionUseEnabled() ? "diffusefit_texspace.frag" : "diffusefit_imgspace.frag").toFile())
                 .createProgram();
 
-        specularFitProgram = context.getShaderProgramBuilder()
+        specularFitProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit",
                     //"debug.frag").toFile())
                     param.isImagePreprojectionUseEnabled() ? "specularfit_texspace.frag" : "specularfit_imgspace.frag").toFile())
                 .createProgram();
 
-        adjustFitProgram = context.getShaderProgramBuilder()
+        adjustFitProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit",
                     //"adjustfit_debug.frag").toFile())
                     param.isImagePreprojectionUseEnabled() ? "adjustfit_texspace.frag" : "adjustfit_imgspace.frag").toFile())
                 .createProgram();
 
-        errorCalcProgram = context.getShaderProgramBuilder()
+        errorCalcProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit",
                     //"errorcalc_debug.frag").toFile())
                     param.isImagePreprojectionUseEnabled() ? "errorcalc_texspace.frag" : "errorcalc_imgspace.frag").toFile())
                 .createProgram();
 
-        diffuseDebugProgram = context.getShaderProgramBuilder()
+        errorCalcSimpleProgram = resources.getIBRShaderProgramBuilder()
+            .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texture.vert").toFile())
+            .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit", "errorcalc_simple.frag").toFile())
+            .createProgram();
+
+        diffuseDebugProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "colorappearance", "projtex_multi.frag").toFile())
                 .createProgram();
 
-        specularDebugProgram = context.getShaderProgramBuilder()
+        specularDebugProgram = resources.getIBRShaderProgramBuilder()
+                .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+                .define("INFINITE_LIGHT_SOURCES", param.areLightSourcesInfinite())
+                .define("VISIBILITY_TEST_ENABLED", param.isCameraVisibilityTestEnabled())
+                .define("SHADOW_TEST_ENABLED", false)
                 .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
                 .addShader(ShaderType.FRAGMENT, Paths.get("shaders", "texturefit", "specularresid_imgspace.frag").toFile())
                 .createProgram();
@@ -193,14 +232,13 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
             drawable.program().setUniform("gamma", param.getGamma());
 
-            if (viewSetResources.getLuminanceMap() == null)
+            if (resources.getLuminanceMap() == null)
             {
-                drawable.program().setUniform("useLuminanceMap", false);
+                drawable.program().setTexture("luminanceMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
             }
             else
             {
-                drawable.program().setUniform("useLuminanceMap", true);
-                drawable.program().setTexture("luminanceMap", viewSetResources.getLuminanceMap());
+                drawable.program().setTexture("luminanceMap", resources.getLuminanceMap());
             }
 
             int width;
@@ -208,47 +246,33 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
             if (useExistingTextureArray && viewTextures != null)
             {
-                if (!param.isCameraVisibilityTestEnabled() || depthTextures == null)
-                {
-                    drawable.program().setUniform("occlusionEnabled", false);
-                    drawable.program().setUniform("shadowTestEnabled", false);
-                }
-                else
+                if (param.isCameraVisibilityTestEnabled() && depthTextures != null)
                 {
                     drawable.program().setTexture("depthImages", depthTextures);
-                    drawable.program().setUniform("occlusionEnabled", true);
                     drawable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
 
-                    if (shadowTextures == null || shadowMatrixBuffer == null)
+                    if (shadowTextures != null && shadowMatrixBuffer != null)
                     {
-                        drawable.program().setUniform("shadowTestEnabled", false);
-                    }
-                    else
-                    {
-                        drawable.program().setTexture("shadowImages", depthTextures);
+                        drawable.program().setTexture("shadowImages", shadowTextures);
                         drawable.program().setUniformBuffer("ShadowMatrices", shadowMatrixBuffer);
-                        drawable.program().setUniform("shadowTestEnabled", true);
                     }
                 }
 
-                drawable.program().setUniformBuffer("CameraPoses", viewSetResources.cameraPoseBuffer);
-                drawable.program().setUniformBuffer("CameraProjections", viewSetResources.cameraProjectionBuffer);
-                drawable.program().setUniformBuffer("CameraProjectionIndices", viewSetResources.cameraProjectionIndexBuffer);
-                drawable.program().setUniformBuffer("LightIndices", viewSetResources.lightIndexBuffer);
+                drawable.program().setUniformBuffer("CameraPoses", resources.cameraPoseBuffer);
+                drawable.program().setUniformBuffer("CameraProjections", resources.cameraProjectionBuffer);
+                drawable.program().setUniformBuffer("CameraProjectionIndices", resources.cameraProjectionIndexBuffer);
+                drawable.program().setUniformBuffer("LightIndices", resources.lightIndexBuffer);
                 drawable.program().setUniformBuffer("LightPositions", this.lightPositionBuffer);
                 drawable.program().setUniformBuffer("LightIntensities", this.lightIntensityBuffer);
 
                 drawable.program().setTexture("viewImages", viewTextures);
                 drawable.program().setUniform("viewIndex", viewIndex);
-                drawable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
-                drawable.program().setUniform("infiniteLightSources", false);
 
                 width = viewTextures.getWidth();
                 height = viewTextures.getHeight();
             }
             else
             {
-                drawable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
                 drawable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
 
                 drawable.program().setUniform("cameraPose", viewSet.getCameraPose(viewIndex));
@@ -261,7 +285,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 Vector3 lightPosition = viewSet.getLightPosition(viewSet.getLightIndex(viewIndex));
                 drawable.program().setUniform("lightIntensity", viewSet.getLightIntensity(viewSet.getLightIndex(viewIndex)));
                 drawable.program().setUniform("lightPosition", lightPosition);
-                drawable.program().setUniform("infiniteLightSource", false);
 
                 File imageFile = new File(imageDir, viewSet.getImageFileName(viewIndex));
                 if (!imageFile.exists())
@@ -325,14 +348,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                             shadowFBO.clearDepthBuffer();
                             shadowDrawable.draw(PrimitiveMode.TRIANGLES, shadowFBO);
 
-                            drawable.program().setUniform("shadowTestEnabled", true);
                             drawable.program().setUniform("shadowMatrix", shadowProjection.times(shadowModelView));
                             drawable.program().setTexture("shadowImage", shadowFBO.getDepthAttachmentTexture());
                         }
-                    }
-                    else
-                    {
-                        drawable.program().setUniform("shadowTestEnabled", false);
                     }
                 }
             }
@@ -394,7 +412,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         }
     }
 
-    private void loadMesh() throws IOException
+    private VertexGeometry loadMesh() throws IOException
     {
         VertexGeometry mesh = VertexGeometry.createFromOBJFile(objFile);
         positionBuffer = context.createVertexBuffer().setData(mesh.getVertices());
@@ -422,8 +440,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             }
         }
 
-        mesh = null;
-        System.gc(); // Garbage collect the mesh object (hopefully)
+        return mesh;
     }
 
     private Drawable<ContextType> getLightFitDrawable()
@@ -434,31 +451,26 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         drawable.addVertexBuffer("texCoord", texCoordBuffer);
         drawable.addVertexBuffer("normal", normalBuffer);
 
-        drawable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
         drawable.program().setUniform("gamma", param.getGamma());
-        if (viewSetResources.getLuminanceMap() == null)
+        if (resources.getLuminanceMap() == null)
         {
-            drawable.program().setUniform("useLuminanceMap", false);
+            drawable.program().setTexture("luminanceMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
         }
         else
         {
-            drawable.program().setUniform("useLuminanceMap", true);
-            drawable.program().setTexture("luminanceMap", viewSetResources.getLuminanceMap());
+            drawable.program().setTexture("luminanceMap", resources.getLuminanceMap());
         }
-        drawable.program().setUniform("shadowTestEnabled", false);
-        drawable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
         drawable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
-        drawable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
 
-        drawable.program().setUniformBuffer("CameraPoses", viewSetResources.cameraPoseBuffer);
+        drawable.program().setUniformBuffer("CameraPoses", resources.cameraPoseBuffer);
 
         if (!param.isImagePreprojectionUseEnabled())
         {
-            drawable.program().setUniformBuffer("CameraProjections", viewSetResources.cameraProjectionBuffer);
-            drawable.program().setUniformBuffer("CameraProjectionIndices", viewSetResources.cameraProjectionIndexBuffer);
+            drawable.program().setUniformBuffer("CameraProjections", resources.cameraProjectionBuffer);
+            drawable.program().setUniformBuffer("CameraProjectionIndices", resources.cameraProjectionIndexBuffer);
         }
 
-        drawable.program().setUniformBuffer("LightIndices", viewSetResources.lightIndexBuffer);
+        drawable.program().setUniformBuffer("LightIndices", resources.lightIndexBuffer);
 
         drawable.program().setUniform("delta", param.getDiffuseDelta());
         drawable.program().setUniform("iterations", 1/*param.getDiffuseIterations()*/); // TODO rework light fitting
@@ -654,32 +666,29 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         drawable.addVertexBuffer("normal", normalBuffer);
         drawable.addVertexBuffer("tangent", tangentBuffer);
 
-        drawable.program().setUniform("viewCount", viewSet.getCameraPoseCount());
-        drawable.program().setUniformBuffer("CameraPoses", viewSetResources.cameraPoseBuffer);
+        drawable.program().setUniformBuffer("CameraPoses", resources.cameraPoseBuffer);
+        drawable.program().setUniformBuffer("CameraWeights", resources.cameraWeightBuffer);
 
         if (!param.isImagePreprojectionUseEnabled())
         {
-            drawable.program().setUniformBuffer("CameraProjections", viewSetResources.cameraProjectionBuffer);
-            drawable.program().setUniformBuffer("CameraProjectionIndices", viewSetResources.cameraProjectionIndexBuffer);
+            drawable.program().setUniformBuffer("CameraProjections", resources.cameraProjectionBuffer);
+            drawable.program().setUniformBuffer("CameraProjectionIndices", resources.cameraProjectionIndexBuffer);
         }
 
-        drawable.program().setUniform("occlusionEnabled", param.isCameraVisibilityTestEnabled());
         drawable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
         drawable.program().setUniform("gamma", param.getGamma());
         drawable.program().setUniform("fittingGamma", (float)FITTING_GAMMA);
-        drawable.program().setUniform("infiniteLightSources", param.areLightSourcesInfinite());
 
-        if (viewSetResources.getLuminanceMap() == null)
+        if (resources.getLuminanceMap() == null)
         {
-            drawable.program().setUniform("useLuminanceMap", false);
+            drawable.program().setTexture("luminanceMap", context.getTextureFactory().getNullTexture(SamplerType.FLOAT_1D));
         }
         else
         {
-            drawable.program().setUniform("useLuminanceMap", true);
-            drawable.program().setTexture("luminanceMap", viewSetResources.getLuminanceMap());
+            drawable.program().setTexture("luminanceMap", resources.getLuminanceMap());
         }
 
-        drawable.program().setUniformBuffer("LightIndices", viewSetResources.lightIndexBuffer);
+        drawable.program().setUniformBuffer("LightIndices", resources.lightIndexBuffer);
 
         if (lightPositionBuffer != null)
         {
@@ -687,7 +696,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         }
         else
         {
-            drawable.program().setUniformBuffer("LightPositions", viewSetResources.lightPositionBuffer);
+            drawable.program().setUniformBuffer("LightPositions", resources.lightPositionBuffer);
         }
 
         if (lightIntensityBuffer != null)
@@ -696,17 +705,12 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         }
         else
         {
-            drawable.program().setUniformBuffer("LightIntensities", viewSetResources.lightIntensityBuffer);
+            drawable.program().setUniformBuffer("LightIntensities", resources.lightIntensityBuffer);
         }
 
         if (shadowMatrixBuffer != null)
         {
-            drawable.program().setUniform("shadowTestEnabled", param.isCameraVisibilityTestEnabled());
             drawable.program().setUniformBuffer("ShadowMatrices", shadowMatrixBuffer);
-        }
-        else
-        {
-            drawable.program().setUniform("shadowTestEnabled", false);
         }
     }
 
@@ -1137,14 +1141,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     // Downsample and store each image
                     for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
                     {
-                        File imageFile = new File(imageDir, viewSet.getImageFileName(i));
-                        if (!imageFile.exists())
-                        {
-                            String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-                            filenameParts[filenameParts.length - 1] = "png";
-                            String pngFileName = String.join(".", filenameParts);
-                            imageFile = new File(imageDir, pngFileName);
-                        }
+                        File imageFile = IBRResources.findImageFile(new File(imageDir, viewSet.getImageFileName(i)));
 
                         TextureBuilder<ContextType, ? extends Texture2D<ContextType>> fullSizeImageBuilder;
 
@@ -1154,14 +1151,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                         }
                         else
                         {
-                            File maskFile = new File(maskDir, viewSet.getImageFileName(i));
-                            if (!maskFile.exists())
-                            {
-                                String[] filenameParts = viewSet.getImageFileName(i).split("\\.");
-                                filenameParts[filenameParts.length - 1] = "png";
-                                String pngFileName = String.join(".", filenameParts);
-                                maskFile = new File(maskDir, pngFileName);
-                            }
+                            File maskFile = IBRResources.findImageFile(new File(maskDir, viewSet.getImageFileName(0)));
 
                             fullSizeImageBuilder = context.getTextureFactory().build2DColorTextureFromFileWithMask(imageFile, maskFile, true);
                         }
@@ -1203,7 +1193,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             Date timestamp = new Date();
 
             // Read a single image to get the dimensions for the texture array
-            File imageFile = viewSetResources.findImageFile(0);
+            File imageFile = IBRResources.findImageFile(new File(imageDir, viewSet.getImageFileName(0)));
             BufferedImage img = ImageIO.read(new FileInputStream(imageFile));
             viewTextures = context.getTextureFactory().build2DColorTextureArray(img.getWidth(), img.getHeight(), viewSet.getCameraPoseCount())
                             .setInternalFormat(CompressionFormat.RGB_PUNCHTHROUGH_ALPHA1_4BPP)
@@ -1213,7 +1203,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
             for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
             {
-                imageFile = viewSetResources.findImageFile(i);
+                imageFile = IBRResources.findImageFile(new File(imageDir, viewSet.getImageFileName(i)));
 
                 if (maskDir == null)
                 {
@@ -1301,7 +1291,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 Date timestamp = new Date();
 
                 NativeVectorBuffer lightPositionList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, viewSet.getLightCount());
-                NativeVectorBuffer lightIntensityList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, viewSet.getLightCount());
+                NativeVectorBuffer lightIntensityList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, viewSet.getLightCount());
 
                 LightFit<ContextType> lightFit;
 
@@ -1346,7 +1336,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
             }
             else if (param.isLightIntensityEstimationEnabled())
             {
-                NativeVectorBuffer lightIntensityList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 3, viewSet.getLightCount());
+                NativeVectorBuffer lightIntensityList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, viewSet.getLightCount());
 
                 Vector3 lightIntensity = new Vector3((float)(avgDistance * avgDistance));
                 System.out.println("Using light intensity: " + lightIntensity.x + ' ' + lightIntensity.y + ' ' + lightIntensity.z);
@@ -1360,15 +1350,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     viewSet.setLightIntensity(i, lightIntensity);
                 }
 
-                lightPositionBuffer = viewSetResources.lightPositionBuffer;
+                lightPositionBuffer = resources.lightPositionBuffer;
                 lightIntensityBuffer = context.createUniformBuffer().setData(lightIntensityList);
             }
             else
             {
                 System.out.println("Skipping light fit.");
 
-                lightPositionBuffer = viewSetResources.lightPositionBuffer;
-                lightIntensityBuffer =  viewSetResources.lightIntensityBuffer;
+                lightPositionBuffer = resources.lightPositionBuffer;
+                lightIntensityBuffer =  resources.lightIntensityBuffer;
             }
 
 //            if (!param.isImagePreprojectionUseEnabled())
@@ -1480,7 +1470,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 materialStream.println("Ks 0 0 0");
             }
 
-            if (param.isNormalTextureEnabled())
+            if ((param.isDiffuseTextureEnabled() && param.isNormalTextureEnabled()) || param.isSpecularTextureEnabled())
             {
                 materialStream.println("norm " + materialName + "_norm.png");
             }
@@ -1503,46 +1493,14 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         System.out.println("Max size of a uniform block in bytes:" + context.getState().getMaxUniformBlockSize());
         System.out.println("Max texture array layers:" + context.getState().getMaxArrayTextureLayers());
 
-        System.out.println("Loading view set...");
-        Date timestamp = new Date();
-
-        String[] vsetFileNameParts = vsetFile.getName().split("\\.");
-        String fileExt = vsetFileNameParts[vsetFileNameParts.length-1];
-        if ("vset".equalsIgnoreCase(fileExt))
+        if (!loadMeshAndViewSet())
         {
-            System.out.println("Loading from VSET file.");
-
-            viewSet = ViewSet.loadFromVSETFile(vsetFile);
-        }
-        else if ("xml".equalsIgnoreCase(fileExt))
-        {
-            System.out.println("Loading from Agisoft Photoscan XML file.");
-            viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile);
-        }
-        else
-        {
-            System.out.println("Unrecognized file type, aborting.");
             return;
         }
 
-        viewSet.setTonemapping(param.getGamma(), param.getLinearLuminanceValues(), param.getEncodedLuminanceValues());
-
-        // Only generate view set uniform buffers
-        viewSetResources = IBRResources.getBuilderForContext(context)
-                .useExistingViewSet(viewSet)
-                .setLoadOptions(new SimpleLoadOptionsModel().setColorImagesRequested(false))
-                .create();
-
-        File auxDir = new File(outputDir, "_aux");
-        auxDir.mkdirs();
-
         outputDir.mkdir();
-        if (param.isDebugModeEnabled())
-        {
-            new File(auxDir, "specularResidDebug").mkdir();
-        }
 
-        System.out.println("Loading view set completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        tmpDir = new File(outputDir, "tmp");
 
         if(!viewSet.hasCustomLuminanceEncoding())
         {
@@ -1555,15 +1513,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         try
         {
             compileShaders();
-
-            System.out.println("Loading mesh...");
-            timestamp = new Date();
-
-            loadMesh();
-
-            System.out.println("Loading mesh completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-
-            tmpDir = new File(outputDir, "tmp");
 
             System.out.println("Primary view: " + param.getPrimaryViewName());
             viewSet.setPrimaryView(param.getPrimaryViewName());
@@ -1588,560 +1537,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 File objFileCopy = new File(outputDir, objFile.getName());
                 Files.copy(objFile.toPath(), objFileCopy.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-                try
-                (
-                    FramebufferObject<ContextType> framebuffer1 =
-                        context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                            .addColorAttachments(ColorFormat.RGBA32F, 4)
-                            .createFramebufferObject();
-
-                    FramebufferObject<ContextType> framebuffer2 =
-                            context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                                .addColorAttachments(ColorFormat.RGBA32F, 4)
-                                .createFramebufferObject();
-
-                    FramebufferObject<ContextType> framebuffer3 =
-                            context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                                .addColorAttachments(ColorFormat.RGBA32F, 4)
-                                .createFramebufferObject()
-                )
-                {
-                    FramebufferObject<ContextType> diffuseFitFramebuffer = framebuffer1;
-
-                    int subdivSize = param.getTextureSize() / param.getTextureSubdivision();
-
-                    if (param.isDiffuseTextureEnabled())
-                    {
-                        System.out.println("Beginning diffuse fit (" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " blocks)...");
-                        timestamp = new Date();
-
-                        diffuseFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-                        diffuseFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-                        diffuseFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-                        diffuseFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-
-                        DiffuseFit<ContextType> diffuseFit = createDiffuseFit(diffuseFitFramebuffer, viewSet.getCameraPoseCount(), param.getTextureSubdivision());
-
-                        File diffuseTempDirectory = new File(tmpDir, "diffuse");
-                        File normalTempDirectory = new File(tmpDir, "normal");
-                        File normalTSTempDirectory = new File(tmpDir, "normalTS");
-
-                        diffuseTempDirectory.mkdir();
-                        normalTempDirectory.mkdir();
-                        normalTSTempDirectory.mkdir();
-
-                        if (param.isImagePreprojectionUseEnabled())
-                        {
-                            FramebufferObject<ContextType> currentFramebuffer = diffuseFitFramebuffer;
-                            diffuseFit.fitTextureSpace(tmpDir,
-                                (row, col) ->
-                                {
-                                    currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
-                                        "PNG", new File(diffuseTempDirectory, String.format("r%04dc%04d.png", row, col)));
-
-                                    currentFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
-                                        "PNG", new File(normalTempDirectory, String.format("r%04dc%04d.png", row, col)));
-
-                                    currentFramebuffer.saveColorBufferToFile(3, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
-                                        "PNG", new File(normalTSTempDirectory, String.format("r%04dc%04d.png", row, col)));
-
-                                    System.out.println("Block " + (row * param.getTextureSubdivision() + col + 1) + '/' +
-                                        (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-                                });
-                        }
-                        else
-                        {
-                            diffuseFit.fitImageSpace(viewTextures, depthTextures, shadowTextures,
-                                (row, col) ->
-                                    System.out.println("Block " + (row * param.getTextureSubdivision() + col + 1) + '/' +
-                                        (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed."));
-                        }
-
-                        System.out.println("Diffuse fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-
-                        System.out.println("Filling empty regions...");
-                        timestamp = new Date();
-                    }
-                    else
-                    {
-                        System.out.println("Skipping diffuse fit.");
-                    }
-
-                    try(VertexBuffer<ContextType> rectBuffer = context.createRectangle())
-                    {
-                        Drawable<ContextType> holeFillRenderable = context.createDrawable(holeFillProgram);
-                        holeFillRenderable.addVertexBuffer("position", rectBuffer);
-                        holeFillProgram.setUniform("minFillAlpha", 0.5f);
-
-                        FramebufferObject<ContextType> backFramebuffer = framebuffer2;
-
-                        if (param.isDiffuseTextureEnabled())
-                        {
-                            System.out.println("Diffuse fill...");
-
-                            // Diffuse
-                            FramebufferObject<ContextType> frontFramebuffer = diffuseFitFramebuffer;
-                            for (int i = 0; i < param.getTextureSize() / 2; i++)
-                            {
-                                backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
-                                backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-                                backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-                                backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-
-                                holeFillProgram.setTexture("input0", frontFramebuffer.getColorAttachmentTexture(0));
-                                holeFillProgram.setTexture("input1", frontFramebuffer.getColorAttachmentTexture(1));
-                                holeFillProgram.setTexture("input2", frontFramebuffer.getColorAttachmentTexture(2));
-                                holeFillProgram.setTexture("input3", frontFramebuffer.getColorAttachmentTexture(3));
-
-                                holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, backFramebuffer);
-                                context.finish();
-
-                                FramebufferObject<ContextType> tmp = frontFramebuffer;
-                                frontFramebuffer = backFramebuffer;
-                                backFramebuffer = tmp;
-                            }
-                            diffuseFitFramebuffer = frontFramebuffer;
-
-                            System.out.println("Empty regions filled in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-                            System.out.println("Saving textures...");
-                            timestamp = new Date();
-
-                            diffuseFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-old.png"));
-                            diffuseFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "diffuse-normal.png"));
-                            //diffuseFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "ambient.png"));
-                            diffuseFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "diffuse-normalts.png"));
-
-                            if (!param.isSpecularTextureEnabled())
-                            {
-                                frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDir, materialName + "_Kd.png"));
-
-                                if (param.isNormalTextureEnabled())
-                                {
-                                    frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(outputDir, materialName + "_norm.png"));
-                                }
-                            }
-
-                            System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
-                        }
-
-                        System.out.println("Fitting specular residual...");
-
-                        if (param.isSpecularTextureEnabled())
-                        {
-                            System.out.println("Creating specular reflectivity texture...");
-
-                            FramebufferObject<ContextType> frontFramebuffer = framebuffer3;
-
-                            frontFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-                            frontFramebuffer.clearColorBuffer(1, 0.5f, 0.5f, 1.0f, 1.0f); // normal map
-                            frontFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-                            frontFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-
-                            backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-                            backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-                            backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-                            backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-
-                            SpecularFit<ContextType> specularFit = createSpecularFit(backFramebuffer, viewSet.getCameraPoseCount(), param.getTextureSubdivision());
-
-                            File diffuseTempDirectory = new File(tmpDir, "diffuse");
-                            diffuseTempDirectory.mkdir();
-
-                            File specularTempDirectory = new File(tmpDir, "specular");
-                            specularTempDirectory.mkdir();
-
-                            if (param.isImagePreprojectionUseEnabled())
-                            {
-                                FramebufferObject<ContextType> currentFramebuffer = backFramebuffer;
-                                specularFit.fitTextureSpace(tmpDir,
-                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(0) : frontFramebuffer.getColorAttachmentTexture(0),
-                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebuffer.getColorAttachmentTexture(1),
-                                    (row, col) ->
-                                    {
-                                        currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
-                                                "PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-
-                                        currentFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
-                                                "PNG", new File(diffuseTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-
-                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + '/' +
-                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-                                    });
-                            }
-                            else
-                            {
-                                specularFit.fitImageSpace(viewTextures, depthTextures, shadowTextures,
-                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(0) : frontFramebuffer.getColorAttachmentTexture(0),
-                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebuffer.getColorAttachmentTexture(1),
-                                    (row, col) ->
-                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + '/' +
-                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed."));
-                            }
-
-                            FramebufferObject<ContextType> tmp = backFramebuffer;
-                            backFramebuffer = frontFramebuffer;
-                            frontFramebuffer = tmp;
-
-                            int pixelCount = 0;
-                            float[] specularFitData = frontFramebuffer.readFloatingPointColorBufferRGBA(2);
-                            for (int i = 0; i * 4 + 3 < specularFitData.length; i++)
-                            {
-                                if (specularFitData[i * 4 + 3] > 0)
-                                {
-                                    pixelCount++;
-                                }
-                            }
-
-                            System.out.println("Pixel count: " + pixelCount);
-
-                            frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-raw.png"));
-                            frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-raw.png"));
-                            frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(auxDir, "specular-raw.png"));
-                            frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "roughness-raw.png"));
-
-                            ErrorCalc<ContextType> errorCalc = createErrorCalc(viewSet.getCameraPoseCount(), param.getTextureSubdivision());
-
-                            double lastRMSError;
-
-                            try
-                            (
-                                FramebufferObject<ContextType> errorFramebuffer1 =
-                                    context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                                        .addColorAttachments(ColorFormat.RG32F, 1)
-                                        .addColorAttachments(ColorFormat.R8, 1)
-                                        .createFramebufferObject();
-
-                                FramebufferObject<ContextType> errorFramebuffer2 =
-                                    context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                                        .addColorAttachments(ColorFormat.RG32F, 1)
-                                        .addColorAttachments(ColorFormat.R8, 1)
-                                        .createFramebufferObject();
-
-                                FramebufferObject<ContextType> peakIntensityFramebuffer =
-                                    context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
-                                        .addColorAttachments(ColorFormat.RGBA32F, 1)
-                                        .createFramebufferObject()
-                            )
-                            {
-                                peakIntensityProgram.setUniform("gamma", 2.2f);
-                                peakIntensityProgram.setTexture("specularTexture", frontFramebuffer.getColorAttachmentTexture(2));
-                                peakIntensityProgram.setTexture("roughnessTexture", frontFramebuffer.getColorAttachmentTexture(3));
-
-                                Drawable<ContextType> peakIntensityDrawable = context.createDrawable(peakIntensityProgram);
-                                peakIntensityDrawable.addVertexBuffer("position", rectBuffer);
-                                peakIntensityDrawable.draw(PrimitiveMode.TRIANGLE_FAN, peakIntensityFramebuffer);
-
-                                peakIntensityFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "peak.png"));
-
-                                FramebufferObject<ContextType> frontErrorFramebuffer = errorFramebuffer1;
-                                FramebufferObject<ContextType> backErrorFramebuffer = errorFramebuffer2;
-
-                                frontErrorFramebuffer.clearColorBuffer(0, 128.0f, Float.MAX_VALUE, 0.0f, 0.0f);
-                                backErrorFramebuffer.clearColorBuffer(0, 0.0f, -1.0f, 0.0f, 0.0f);
-
-                                if (param.isImagePreprojectionUseEnabled())
-                                {
-                                    errorCalc.fitTextureSpace(
-                                        backErrorFramebuffer,
-                                        tmpDir,
-                                        frontFramebuffer.getColorAttachmentTexture(0),
-                                        frontFramebuffer.getColorAttachmentTexture(1),
-                                        frontFramebuffer.getColorAttachmentTexture(2),
-                                        frontFramebuffer.getColorAttachmentTexture(3),
-                                        frontErrorFramebuffer.getColorAttachmentTexture(0),
-                                        (row, col) ->
-                                        {
-            //                                    System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
-            //                                            (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-                                        });
-                                }
-                                else
-                                {
-                                    errorCalc.fitImageSpace(
-                                        backErrorFramebuffer,
-                                        viewTextures, depthTextures, shadowTextures,
-                                        frontFramebuffer.getColorAttachmentTexture(0),
-                                        frontFramebuffer.getColorAttachmentTexture(1),
-                                        frontFramebuffer.getColorAttachmentTexture(2),
-                                        frontFramebuffer.getColorAttachmentTexture(3),
-                                        frontErrorFramebuffer.getColorAttachmentTexture(0),
-                                        (row, col) ->
-                                        {
-            //                                    System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
-            //                                            (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-                                        });
-                                }
-
-                                context.finish();
-
-                                backErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "error-mask-init.png"));
-
-                                tmp = frontErrorFramebuffer;
-                                frontErrorFramebuffer = backErrorFramebuffer;
-                                backErrorFramebuffer = tmp;
-
-                                double initSumSqError = 0.0;
-                                int initSumMask = 0;
-                                float[] errorData = frontErrorFramebuffer.readFloatingPointColorBufferRGBA(0);
-                                for (int j = 0; j * 4 + 3 < errorData.length; j++)
-                                {
-                                    float error = errorData[j * 4 + 1]; // Green channel holds squared error
-                                    if (error >= 0)
-                                    {
-                                        initSumSqError += error;
-                                        initSumMask++;
-                                    }
-                                }
-
-                                lastRMSError = Math.sqrt(initSumSqError / initSumMask);
-
-                                System.out.println("Sum squared error: " + initSumSqError);
-                                System.out.println("RMS error: " + lastRMSError);
-
-                                if (param.isLevenbergMarquardtOptimizationEnabled())
-                                {
-                                    // Non-linear adjustment
-                                    AdjustFit<ContextType> adjustFit = createAdjustFit(viewSet.getCameraPoseCount(), param.getTextureSubdivision());
-                                    Drawable<ContextType> finalizeRenderable = context.createDrawable(finalizeProgram);
-                                    finalizeRenderable.addVertexBuffer("position", rectBuffer);
-
-                                    System.out.println("Adjusting fit...");
-
-                                    boolean saveDebugTextures = false;
-                                    boolean useGlobalDampingFactor = true;
-                                    float globalDampingFactor = 128.0f;
-                                    int iteration = 0;
-
-                                    while (globalDampingFactor <= 0x100000 /* ~ 1 million */)
-                                    {
-                                        backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-                                        backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-                                        backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-                                        backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-
-                                        if(useGlobalDampingFactor)
-                                        {
-                                            // hack to override damping factor and never discard the result - TODO make this more elegant
-                                            frontErrorFramebuffer.clearColorBuffer(0, globalDampingFactor, Float.MAX_VALUE, 0.0f, 0.0f);
-                                        }
-
-                                        if (param.isImagePreprojectionUseEnabled())
-                                        {
-                                            adjustFit.fitTextureSpace(
-                                                backFramebuffer,
-                                                tmpDir,
-                                                frontFramebuffer.getColorAttachmentTexture(0),
-                                                frontFramebuffer.getColorAttachmentTexture(1),
-                                                frontFramebuffer.getColorAttachmentTexture(2),
-                                                frontFramebuffer.getColorAttachmentTexture(3),
-                                                peakIntensityFramebuffer.getColorAttachmentTexture(0),
-                                                frontErrorFramebuffer.getColorAttachmentTexture(0),
-                                                (row, col) ->
-                                                {
-                //                                    currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
-                //                                            "PNG", new File(diffuseTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-                //
-                //                                    currentFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
-                //                                            "PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
-
-                //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
-                //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-                                                });
-                                        }
-                                        else
-                                        {
-                                            adjustFit.fitImageSpace(
-                                                backFramebuffer,
-                                                viewTextures, depthTextures, shadowTextures,
-                                                frontFramebuffer.getColorAttachmentTexture(0),
-                                                frontFramebuffer.getColorAttachmentTexture(1),
-                                                frontFramebuffer.getColorAttachmentTexture(2),
-                                                frontFramebuffer.getColorAttachmentTexture(3),
-                                                peakIntensityFramebuffer.getColorAttachmentTexture(0),
-                                                frontErrorFramebuffer.getColorAttachmentTexture(0),
-                                                (row, col) ->
-                                                {
-                //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
-                //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-                                                });
-                                        }
-
-                                        context.finish();
-
-                                        if (saveDebugTextures)
-                                        {
-                                            backFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-test1.png"));
-                                            backFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-test1.png"));
-                                            backFramebuffer.saveColorBufferToFile(2, "PNG", new File(auxDir, "specular-test1.png"));
-                                            backFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "roughness-test1.png"));
-                                        }
-
-                                        backErrorFramebuffer.clearColorBuffer(0, 0.0f, -1.0f, 0.0f, 0.0f);
-
-                                        if (param.isImagePreprojectionUseEnabled())
-                                        {
-                                            errorCalc.fitTextureSpace(
-                                                backErrorFramebuffer,
-                                                tmpDir,
-                                                backFramebuffer.getColorAttachmentTexture(0),
-                                                backFramebuffer.getColorAttachmentTexture(1),
-                                                backFramebuffer.getColorAttachmentTexture(2),
-                                                backFramebuffer.getColorAttachmentTexture(3),
-                                                frontErrorFramebuffer.getColorAttachmentTexture(0),
-                                                (row, col) ->
-                                                {
-                //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
-                //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-                                                });
-                                        }
-                                        else
-                                        {
-                                            errorCalc.fitImageSpace(
-                                                backErrorFramebuffer,
-                                                viewTextures, depthTextures, shadowTextures,
-                                                backFramebuffer.getColorAttachmentTexture(0),
-                                                backFramebuffer.getColorAttachmentTexture(1),
-                                                backFramebuffer.getColorAttachmentTexture(2),
-                                                backFramebuffer.getColorAttachmentTexture(3),
-                                                frontErrorFramebuffer.getColorAttachmentTexture(0),
-                                                (row, col) ->
-                                                {
-                //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
-                //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
-                                                });
-                                        }
-
-                                        context.finish();
-
-                                        if (saveDebugTextures)
-                                        {
-                                            backErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "error-mask-test.png"));
-                                        }
-
-                                        tmp = frontErrorFramebuffer;
-                                        frontErrorFramebuffer = backErrorFramebuffer;
-                                        backErrorFramebuffer = tmp;
-
-                                        double sumSqError = 0.0;
-                                        int sumMask = 0;
-                                        errorData = frontErrorFramebuffer.readFloatingPointColorBufferRGBA(0);
-                                        for (int j = 0; j * 4 + 3 < errorData.length; j++)
-                                        {
-                                            float error = errorData[j * 4 + 1]; // Green channel holds squared error
-                                            if (error >= 0)
-                                            {
-                                                sumSqError += error;
-                                                sumMask++;
-                                            }
-                                        }
-
-                                        double rmsError = Math.sqrt(sumSqError / sumMask);
-
-                                        System.out.println("Sum squared error: " + sumSqError);
-                                        System.out.println("RMS error: " + rmsError);
-
-                                        if (rmsError < lastRMSError)
-                                        {
-                                            lastRMSError = rmsError;
-
-                                            System.out.println("Saving iteration.");
-
-                                            if (useGlobalDampingFactor)
-                                            {
-                                                globalDampingFactor /= 2;
-
-                                                System.out.println("Next damping factor: " + globalDampingFactor);
-
-                                                // Set the mask framebuffer to all 1 (hack - TODO make this more elegant)
-                                                frontErrorFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
-                                            }
-                                            else
-                                            {
-                                                // If the damping factor isn't being used, set to the minimum, which will function as a countdown if an iteration is unproductive.
-                                                globalDampingFactor = 0.0078125f;
-                                            }
-
-                                            finalizeProgram.setTexture("input0", backFramebuffer.getColorAttachmentTexture(0));
-                                            finalizeProgram.setTexture("input1", backFramebuffer.getColorAttachmentTexture(1));
-                                            finalizeProgram.setTexture("input2", backFramebuffer.getColorAttachmentTexture(2));
-                                            finalizeProgram.setTexture("input3", backFramebuffer.getColorAttachmentTexture(3));
-                                            finalizeProgram.setTexture("alphaMask", frontErrorFramebuffer.getColorAttachmentTexture(1));
-
-                                            finalizeRenderable.draw(PrimitiveMode.TRIANGLE_FAN, frontFramebuffer);
-                                            context.finish();
-                                        }
-                                        else
-                                        {
-                                            // If useGlobalDampingFactor == false, then this effectively serves as a countdown in the case of an unproductive iteration.
-                                            // If enough unproductive iterations occur, then this variable will keep doubling until it exceeds the maximum value.
-                                            globalDampingFactor *= 2;
-
-                                            System.out.println("Discarding iteration.");
-                                            System.out.println("Next damping factor: " + globalDampingFactor);
-                                        }
-
-                                        if (saveDebugTextures)
-                                        {
-                                            frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-test2.png"));
-                                            frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-test2.png"));
-                                            frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(auxDir, "specular-test2.png"));
-                                            frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "roughness-test2.png"));
-                                        }
-
-                                        System.out.println("Iteration " + (iteration+1) + " complete.");
-                                        System.out.println();
-
-                                        iteration++;
-                                    }
-
-                                    frontErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "error-mask-final.png"));
-                                }
-                            }
-
-                            // Fill holes
-                            for (int i = 0; i < param.getTextureSize() / 2; i++)
-                            {
-                                backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-                                backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-                                backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
-                                backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
-
-                                holeFillProgram.setTexture("input0", frontFramebuffer.getColorAttachmentTexture(0));
-                                holeFillProgram.setTexture("input1", frontFramebuffer.getColorAttachmentTexture(1));
-                                holeFillProgram.setTexture("input2", frontFramebuffer.getColorAttachmentTexture(2));
-                                holeFillProgram.setTexture("input3", frontFramebuffer.getColorAttachmentTexture(3));
-
-                                holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, backFramebuffer);
-                                context.finish();
-
-                                tmp = frontFramebuffer;
-                                frontFramebuffer = backFramebuffer;
-                                backFramebuffer = tmp;
-                            }
-
-                            // Save a copy of all of the channels, even the ones that shouldn't be needed, in the _aux folder.
-                            frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-final.png"));
-                            frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-final.png"));
-                            frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(auxDir, "specular-final.png"));
-                            frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "roughness-final.png"));
-
-                            if (param.isDiffuseTextureEnabled())
-                            {
-                                frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(outputDir, materialName + "_Kd.png"));
-                            }
-
-                            if ((param.isDiffuseTextureEnabled() && param.isNormalTextureEnabled()) || param.isSpecularTextureEnabled())
-                            {
-                                frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(outputDir, materialName + "_norm.png"));
-                            }
-
-                            frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(outputDir, materialName + "_Ks.png"));
-                            frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(outputDir, materialName + "_Pr.png"));
-
-                            writeMTLFile("# RMS fitting error: " + lastRMSError);
-                        }
-                    }
-                }
+                //fitAndSaveTextures(outputDir, null);
+                //darpaTestSuite((float)avgDistance);
+                //darpaTestSuiteLong((float)avgDistance);
+                darpaTestSuiteExtraLong((float)avgDistance);
             }
 
             //System.out.println("Resampling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -2203,9 +1602,54 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 depthRenderingProgram.close();
             }
 
-            if (viewSetResources != null)
+            if (lightFitProgram != null)
             {
-                viewSetResources.close();
+                lightFitProgram.close();
+            }
+
+            if (specularFitProgram != null)
+            {
+                specularFitProgram.close();
+            }
+
+            if (adjustFitProgram != null)
+            {
+                adjustFitProgram.close();
+            }
+
+            if (errorCalcProgram != null)
+            {
+                errorCalcProgram.close();
+            }
+
+            if (errorCalcSimpleProgram != null)
+            {
+                errorCalcSimpleProgram.close();
+            }
+
+            if (textureRectProgram != null)
+            {
+                textureRectProgram.close();
+            }
+
+            if (holeFillProgram != null)
+            {
+                holeFillProgram.close();
+            }
+
+            if (finalizeProgram != null)
+            {
+                finalizeProgram.close();
+            }
+
+            if (peakIntensityProgram != null)
+            {
+                peakIntensityProgram.close();
+            }
+
+            if (resources != null)
+            {
+                resources.close();
             }
 
             if (positionBuffer != null)
@@ -2228,5 +1672,897 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 tangentBuffer.close();
             }
         }
+    }
+
+    private void modifyLightOffset(Vector2 lightOffset)
+    {
+        NativeVectorBuffer lightPositionList = NativeVectorBufferFactory.getInstance().createEmpty(NativeDataType.FLOAT, 4, viewSet.getLightCount());
+
+        for (int i = 0; i < viewSet.getLightCount(); i++)
+        {
+            lightPositionList.set(i, 0, lightOffset.x);
+            lightPositionList.set(i, 1, lightOffset.y);
+            lightPositionList.set(i, 2, 0.0);
+            lightPositionList.set(i, 3, 1.0f);
+        }
+
+        lightPositionBuffer.setData(lightPositionList);
+    }
+
+    private void darpaTestSuite(float avgDistance) throws IOException
+    {
+        float sqrtHalf = (float)Math.sqrt(0.5);
+        int lightIncr = 5;
+        int normalIncr = 5;
+        int lightMax = 100;
+        int normalMax = 60;
+
+        int index = 1;
+
+        for (int offset = -lightMax; offset <= lightMax; offset += lightIncr)
+        {
+            modifyLightOffset(new Vector2(offset * 0.01f * avgDistance, 0.0f));
+            fitAndSaveTextures(new File(outputDir, String.format("%04d_lightHorizontal_" + offset, index)), null);
+            index++;
+        }
+
+        for (int offset = -lightMax; offset <= lightMax; offset += lightIncr)
+        {
+            modifyLightOffset(new Vector2(0.0f, offset * 0.01f * avgDistance));
+            fitAndSaveTextures(new File(outputDir, String.format("%04d_lightVertical_" + offset, index)), null);
+            index++;
+        }
+
+        modifyLightOffset(Vector2.ZERO);
+
+        for (int angle = -normalMax; angle <= normalMax; angle += normalIncr)
+        {
+            float radianAngle = (float)(angle * Math.PI / 180);
+            fitAndSaveTextures(new File(outputDir, String.format("%04d_normalParallel_" + angle, index)),
+                new Vector3((float)Math.sin(radianAngle) * sqrtHalf, -(float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
+            index++;
+        }
+
+        for (int angle = -normalMax; angle <= normalMax; angle += normalIncr)
+        {
+            float radianAngle = (float)(angle * Math.PI / 180);
+            fitAndSaveTextures(new File(outputDir, String.format("%04d_normalOrthogonal_" + angle, index)),
+                new Vector3((float)Math.sin(radianAngle) * sqrtHalf, (float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
+            index++;
+        }
+    }
+
+    private void darpaTestSuiteLong(float avgDistance) throws IOException
+    {
+        float sqrtHalf = (float)Math.sqrt(0.5);
+        int lightIncr = 5;
+        int normalIncr = 2;
+        int lightMax = 100;
+        int normalMax = 30;
+
+        int index = 1;
+
+        for (int offset = -lightMax; offset <= lightMax; offset += lightIncr)
+        {
+            for (int angle = -normalMax; angle <= normalMax; angle += normalIncr)
+            {
+                modifyLightOffset(new Vector2(0.0f, offset * 0.01f * avgDistance));
+                float radianAngle = (float)(angle * Math.PI / 180);
+                fitAndSaveTextures(new File(outputDir, String.format("%04d_lightVertical_%d_normalOrthogonal_%d", index, offset, angle)),
+                    new Vector3((float)Math.sin(radianAngle) * sqrtHalf, (float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
+                index++;
+            }
+        }
+
+        modifyLightOffset(Vector2.ZERO);
+    }
+
+    private void darpaTestSuiteExtraLong(float avgDistance) throws IOException
+    {
+        float sqrtHalf = (float)Math.sqrt(0.5);
+        int lightVerticalIncr = 10;
+        int lightHorizontalIncr = 20;
+        int normalIncr = 5;
+        int lightMax = 100;
+        int normalMax = 30;
+
+        int index = 1;
+
+        for (int horizOffset = -lightMax; horizOffset <= lightMax; horizOffset += lightHorizontalIncr)
+        {
+            for (int vertOffset = -lightMax; vertOffset <= lightMax; vertOffset += lightVerticalIncr)
+            {
+                for (int angle = -normalMax; angle <= normalMax; angle += normalIncr)
+                {
+                    modifyLightOffset(new Vector2(horizOffset * 0.01f * avgDistance, vertOffset * 0.01f * avgDistance));
+                    float radianAngle = (float)(angle * Math.PI / 180);
+                    fitAndSaveTextures(new File(outputDir, String.format("%04d_lightHorizontal_%d_lightVertical_%d_normalOrthogonal_%d", index, horizOffset, vertOffset, angle)),
+                        new Vector3((float)Math.sin(radianAngle) * sqrtHalf, (float)Math.sin(radianAngle) * sqrtHalf, (float)Math.cos(radianAngle)));
+                    index++;
+                }
+            }
+        }
+
+        modifyLightOffset(Vector2.ZERO);
+    }
+
+    private void fitAndSaveTextures(File instanceDirectory, Vector3 normalDirectionOverride) throws IOException
+    {
+        instanceDirectory.mkdirs();
+        File auxDir = new File(instanceDirectory, "_aux");
+        auxDir.mkdirs();
+
+        if (param.isDebugModeEnabled())
+        {
+            new File(auxDir, "specularResidDebug").mkdir();
+        }
+
+        try
+        (
+            FramebufferObject<ContextType> framebuffer1 =
+                context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
+                    .addColorAttachments(ColorFormat.RGBA32F, 5)
+                    .createFramebufferObject();
+
+            FramebufferObject<ContextType> framebuffer2 =
+                    context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
+                        .addColorAttachments(ColorFormat.RGBA32F, 5)
+                        .createFramebufferObject();
+
+            FramebufferObject<ContextType> framebuffer3 =
+                    context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
+                        .addColorAttachments(ColorFormat.RGBA32F, 5)
+                        .createFramebufferObject();
+
+            FramebufferObject<ContextType> errorFramebuffer1 =
+                    context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
+                            .addColorAttachments(ColorFormat.RG32F, 1)
+                            .addColorAttachments(ColorFormat.R8, 1)
+                            .createFramebufferObject();
+
+            FramebufferObject<ContextType> errorFramebuffer2 =
+                    context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
+                            .addColorAttachments(ColorFormat.RG32F, 1)
+                            .addColorAttachments(ColorFormat.R8, 1)
+                            .createFramebufferObject();
+
+            FramebufferObject<ContextType> peakIntensityFramebuffer =
+                    context.buildFramebufferObject(param.getTextureSize(), param.getTextureSize())
+                            .addColorAttachments(ColorFormat.RGBA32F, 1)
+                            .createFramebufferObject()
+        )
+        {
+            FramebufferObject<ContextType> diffuseFitFramebuffer = framebuffer1;
+
+            int subdivSize = param.getTextureSize() / param.getTextureSubdivision();
+
+            Date timestamp = null;
+
+            if (param.isDiffuseTextureEnabled())
+            {
+                System.out.println("Beginning diffuse fit (" + (param.getTextureSubdivision() * param.getTextureSubdivision()) + " blocks)...");
+                timestamp = new Date();
+
+                diffuseFitFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+                diffuseFitFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+                diffuseFitFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+                diffuseFitFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+
+                DiffuseFit<ContextType> diffuseFit = createDiffuseFit(diffuseFitFramebuffer, viewSet.getCameraPoseCount(), param.getTextureSubdivision());
+
+                if (param.isImagePreprojectionUseEnabled())
+                {
+                    File diffuseTempDirectory = new File(tmpDir, "diffuse");
+                    File normalTempDirectory = new File(tmpDir, "normal");
+                    File normalTSTempDirectory = new File(tmpDir, "normalTS");
+
+                    diffuseTempDirectory.mkdir();
+                    normalTempDirectory.mkdir();
+                    normalTSTempDirectory.mkdir();
+
+                    FramebufferObject<ContextType> currentFramebuffer = diffuseFitFramebuffer;
+                    diffuseFit.fitTextureSpace(tmpDir,
+                        (row, col) ->
+                        {
+                            currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+                                "PNG", new File(diffuseTempDirectory, String.format("r%04dc%04d.png", row, col)));
+
+                            currentFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+                                "PNG", new File(normalTempDirectory, String.format("r%04dc%04d.png", row, col)));
+
+                            currentFramebuffer.saveColorBufferToFile(3, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+                                "PNG", new File(normalTSTempDirectory, String.format("r%04dc%04d.png", row, col)));
+
+                            System.out.println("Block " + (row * param.getTextureSubdivision() + col + 1) + '/' +
+                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+                        });
+                }
+                else
+                {
+                    diffuseFit.fitImageSpace(viewTextures, depthTextures, shadowTextures,
+                        (row, col) ->
+                            System.out.println("Block " + (row * param.getTextureSubdivision() + col + 1) + '/' +
+                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed."));
+                }
+
+                System.out.println("Diffuse fit completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+
+                System.out.println("Filling empty regions...");
+                timestamp = new Date();
+            }
+            else
+            {
+                System.out.println("Skipping diffuse fit.");
+            }
+
+            try(VertexBuffer<ContextType> rectBuffer = context.createRectangle())
+            {
+                Drawable<ContextType> holeFillRenderable = context.createDrawable(holeFillProgram);
+                holeFillRenderable.addVertexBuffer("position", rectBuffer);
+                holeFillProgram.setUniform("minFillAlpha", 0.5f);
+
+                FramebufferObject<ContextType> backFramebuffer = framebuffer2;
+
+                if (param.isDiffuseTextureEnabled())
+                {
+                    System.out.println("Diffuse fill...");
+
+                    // Diffuse
+                    FramebufferObject<ContextType> frontFramebuffer = diffuseFitFramebuffer;
+                    for (int i = 0; i < param.getTextureSize() / 2; i++)
+                    {
+                        backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 1.0f);
+                        backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+                        backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+                        backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+
+                        holeFillProgram.setTexture("input0", frontFramebuffer.getColorAttachmentTexture(0));
+                        holeFillProgram.setTexture("input1", frontFramebuffer.getColorAttachmentTexture(1));
+                        holeFillProgram.setTexture("input2", frontFramebuffer.getColorAttachmentTexture(2));
+                        holeFillProgram.setTexture("input3", frontFramebuffer.getColorAttachmentTexture(3));
+
+                        holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, backFramebuffer);
+                        context.finish();
+
+                        FramebufferObject<ContextType> tmp = frontFramebuffer;
+                        frontFramebuffer = backFramebuffer;
+                        backFramebuffer = tmp;
+                    }
+                    diffuseFitFramebuffer = frontFramebuffer;
+
+                    System.out.println("Empty regions filled in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+                    System.out.println("Saving textures...");
+                    timestamp = new Date();
+
+                    diffuseFitFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-old.png"));
+                    diffuseFitFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "diffuse-normal.png"));
+                    //diffuseFitFramebuffer.saveColorBufferToFile(2, "PNG", new File(textureDirectory, "ambient.png"));
+                    diffuseFitFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "diffuse-normalts.png"));
+
+                    if (!param.isSpecularTextureEnabled())
+                    {
+                        frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(instanceDirectory, materialName + "_Kd.png"));
+
+                        if (param.isNormalTextureEnabled())
+                        {
+                            frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(instanceDirectory, materialName + "_norm.png"));
+                        }
+                    }
+
+                    System.out.println("Textures saved in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+                }
+
+                System.out.println("Fitting specular residual...");
+
+                if (param.isSpecularTextureEnabled())
+                {
+                    System.out.println("Creating specular reflectivity texture...");
+
+                    FramebufferObject<ContextType> frontFramebuffer = framebuffer3;
+
+                    FramebufferObject<ContextType> frontErrorFramebuffer = errorFramebuffer1;
+                    FramebufferObject<ContextType> backErrorFramebuffer = errorFramebuffer2;
+
+                    frontFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+                    frontFramebuffer.clearColorBuffer(1, 0.5f, 0.5f, 1.0f, 1.0f); // normal map
+                    frontFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+                    frontFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+                    frontFramebuffer.clearColorBuffer(4, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, 0.0f);
+
+                    frontErrorFramebuffer.clearColorBuffer(0, 128.0f, Float.MAX_VALUE, 0.0f, 0.0f);
+                    backErrorFramebuffer.clearColorBuffer(0, 0.0f, -1.0f, 0.0f, 0.0f);
+
+                    ErrorCalc<ContextType> errorCalc = createErrorCalc(viewSet.getCameraPoseCount(), param.getTextureSubdivision());
+                    Drawable<ContextType> finalizeDrawable = context.createDrawable(finalizeProgram);
+                    finalizeDrawable.addVertexBuffer("position", rectBuffer);
+
+                    File diffuseTempDirectory = new File(tmpDir, "diffuse");
+                    File specularTempDirectory = new File(tmpDir, "specular");
+
+                    if (param.isImagePreprojectionUseEnabled())
+                    {
+                        diffuseTempDirectory.mkdirs();
+                        specularTempDirectory.mkdirs();
+                    }
+
+                    FramebufferObject<ContextType> tmp;
+
+                    if (param.isNormalTextureEnabled())
+                    {
+                        Drawable<ContextType> errorCalcSimpleDrawable = context.createDrawable(errorCalcSimpleProgram);
+                        errorCalcSimpleDrawable.addVertexBuffer("position", rectBuffer);
+
+//                        errorCalcProgram.setUniform("ignoreDampingFactor", true);
+                        specularFitProgram.setUniform("disableNormalAdjustment", true);
+
+                        for (int i = 0; i < 128/*64*64*/; i++)
+                        {
+                            System.out.println("Beginning normal guess " + i + "...");
+
+                            backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+                            backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+                            backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+                            backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+                            backFramebuffer.clearColorBuffer(4, 0.0f, 0.0f, 0.0f, 0.0f);
+
+                            SpecularFit<ContextType> specularFit = createSpecularFit(backFramebuffer, viewSet.getCameraPoseCount(), param.getTextureSubdivision());
+
+                            int indexRemapped = 127 + (i + 1) / 2 * (1 - 2 * (i % 2));
+                            Vector2 normalXY =
+                                //new Vector2(((i + 31) % 64) / 126.0f + 0.25f, (((i >> 6) + 31) % 64) / 126.0f + 0.25f);
+                                //new Vector2(((64 + i) % 128 + 64) / 255.0f, (192 - (64 + i) % 128) / 255.0f);
+                                new Vector2(indexRemapped / 255.0f, (255 - indexRemapped) / 255.0f);
+
+                            Vector2 normalXYExpanded = normalXY.times(2).minus(new Vector2(1, 1));
+                            float normalZExpanded = (float)Math.sqrt(1.0 - normalXYExpanded.dot(normalXYExpanded));
+
+                            if (normalDirectionOverride != null)
+                            {
+                                Vector3 tangentOverride = new Vector3(1, 0, 0)
+                                    .minus(normalDirectionOverride.times(normalDirectionOverride.x))
+                                    .normalized();
+                                Vector3 bitangentOverride = new Vector3(0, 1, 0)
+                                    .minus(normalDirectionOverride.times(normalDirectionOverride.y))
+                                    .minus(tangentOverride.times(tangentOverride.y))
+                                    .normalized();
+
+                                Vector3 transformedNormal =
+                                    tangentOverride.times(normalXYExpanded.x)
+                                        .plus(bitangentOverride.times(normalXYExpanded.y))
+                                        .plus(normalDirectionOverride.times(normalZExpanded))
+                                        .plus(new Vector3(1))
+                                        .times(0.5f);
+
+                                diffuseFitFramebuffer.clearColorBuffer(3, transformedNormal.x, transformedNormal.y, transformedNormal.z, 1.0f);
+
+//                                normalXY = new Vector2(
+//                                    indexRemapped / 255.0f + normalDirectionOverride.x * 0.5f,
+//                                    (255 - indexRemapped) / 255.0f + normalDirectionOverride.y * 0.5f);
+                            }
+                            else
+                            {
+                                diffuseFitFramebuffer.clearColorBuffer(3, normalXY.x, normalXY.y, normalZExpanded * 0.5f + 0.5f, 1.0f);
+                            }
+
+                            if (param.isImagePreprojectionUseEnabled())
+                            {
+//                                FramebufferObject<ContextType> currentFramebuffer = backFramebuffer;
+                                specularFit.fitTextureSpace(tmpDir,
+                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(0) : frontFramebuffer.getColorAttachmentTexture(0),
+                                    diffuseFitFramebuffer.getColorAttachmentTexture(3),
+                                    (row, col) ->
+                                    {
+                                        // TODO work out how to support image preprojection
+//                                        currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+//                                                "PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+//
+//                                        currentFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+//                                                "PNG", new File(diffuseTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+//
+//                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + '/' +
+//                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+                                    });
+                            }
+                            else
+                            {
+                                specularFit.fitImageSpace(viewTextures, depthTextures, shadowTextures,
+                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(0) : frontFramebuffer.getColorAttachmentTexture(0),
+                                    diffuseFitFramebuffer.getColorAttachmentTexture(3),
+                                    (row, col) -> {});
+                            }
+
+                            backErrorFramebuffer.clearColorBuffer(0, 0.0f, -1.0f, 0.0f, 0.0f);
+
+//                            if (param.isImagePreprojectionUseEnabled())
+//                            {
+//                                errorCalc.fitTextureSpace(
+//                                        backErrorFramebuffer,
+//                                        tmpDir,
+//                                        backFramebuffer.getColorAttachmentTexture(0),
+//                                        backFramebuffer.getColorAttachmentTexture(1),
+//                                        backFramebuffer.getColorAttachmentTexture(2),
+//                                        backFramebuffer.getColorAttachmentTexture(3),
+//                                        frontErrorFramebuffer.getColorAttachmentTexture(0),
+//                                        (row, col) -> {});
+//                            }
+//                            else
+//                            {
+//                                errorCalc.fitImageSpace(
+//                                        backErrorFramebuffer,
+//                                        viewTextures, depthTextures, shadowTextures,
+//                                        backFramebuffer.getColorAttachmentTexture(0),
+//                                        backFramebuffer.getColorAttachmentTexture(1),
+//                                        backFramebuffer.getColorAttachmentTexture(2),
+//                                        backFramebuffer.getColorAttachmentTexture(3),
+//                                        frontErrorFramebuffer.getColorAttachmentTexture(0),
+//                                        (row, col) -> {});
+//                            }
+
+                            errorCalcSimpleProgram.setTexture("oldErrorTexture", frontFramebuffer.getColorAttachmentTexture(4));
+                            errorCalcSimpleProgram.setTexture("currentErrorTexture", backFramebuffer.getColorAttachmentTexture(4));
+                            errorCalcSimpleDrawable.draw(PrimitiveMode.TRIANGLE_FAN, backErrorFramebuffer);
+
+                            context.finish();
+
+                            tmp = frontErrorFramebuffer;
+                            frontErrorFramebuffer = backErrorFramebuffer;
+                            backErrorFramebuffer = tmp;
+
+                            finalizeProgram.setTexture("input0", backFramebuffer.getColorAttachmentTexture(0));
+                            finalizeProgram.setTexture("input1", backFramebuffer.getColorAttachmentTexture(1));
+                            finalizeProgram.setTexture("input2", backFramebuffer.getColorAttachmentTexture(2));
+                            finalizeProgram.setTexture("input3", backFramebuffer.getColorAttachmentTexture(3));
+                            finalizeProgram.setTexture("input4", backFramebuffer.getColorAttachmentTexture(4));
+                            finalizeProgram.setTexture("alphaMask", frontErrorFramebuffer.getColorAttachmentTexture(1));
+
+                            finalizeDrawable.draw(PrimitiveMode.TRIANGLE_FAN, frontFramebuffer);
+                            context.finish();
+                        }
+                    }
+                    else
+                    {
+                        specularFitProgram.setUniform("normalCandidateWeights", new Vector4(1, 0, 0, 0));
+
+                        backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+                        backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+                        backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+                        backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+                        backFramebuffer.clearColorBuffer(4, 0.0f, 0.0f, 0.0f, 0.0f);
+
+                        SpecularFit<ContextType> specularFit = createSpecularFit(backFramebuffer, viewSet.getCameraPoseCount(), param.getTextureSubdivision());
+
+                        if (normalDirectionOverride != null)
+                        {
+                            Vector3 remappedNormal = normalDirectionOverride.plus(new Vector3(1)).times(0.5f);
+                            if (param.isDiffuseTextureEnabled())
+                            {
+                                diffuseFitFramebuffer.clearColorBuffer(3, remappedNormal.x, remappedNormal.y, remappedNormal.z, 1.0f);
+                            }
+                            else
+                            {
+                                frontFramebuffer.clearColorBuffer(1, remappedNormal.x, remappedNormal.y, remappedNormal.z, 1.0f);
+                            }
+                        }
+
+                        if (param.isImagePreprojectionUseEnabled())
+                        {
+                            FramebufferObject<ContextType> currentFramebuffer = backFramebuffer;
+                            specularFit.fitTextureSpace(tmpDir,
+                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(0) : frontFramebuffer.getColorAttachmentTexture(0),
+                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebuffer.getColorAttachmentTexture(1),
+                                    (row, col) ->
+                                    {
+                                        // TODO work out how to support image preprojection
+//                                        currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+//                                                "PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+//
+//                                        currentFramebuffer.saveColorBufferToFile(1, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+//                                                "PNG", new File(diffuseTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+
+                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + '/' +
+                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+                                    });
+                        }
+                        else
+                        {
+                            specularFit.fitImageSpace(viewTextures, depthTextures, shadowTextures,
+                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(0) : frontFramebuffer.getColorAttachmentTexture(0),
+                                    param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer.getColorAttachmentTexture(3) : frontFramebuffer.getColorAttachmentTexture(1),
+                                    (row, col) ->
+                                    {
+                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + '/' +
+                                            (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+                                    });
+                        }
+
+                        tmp = frontFramebuffer;
+                        frontFramebuffer = backFramebuffer;
+                        backFramebuffer = tmp;
+                    }
+
+                    int pixelCount = 0;
+                    float[] specularFitData = frontFramebuffer.readFloatingPointColorBufferRGBA(2);
+                    for (int i = 0; i * 4 + 3 < specularFitData.length; i++)
+                    {
+                        if (specularFitData[i * 4 + 3] > 0)
+                        {
+                            pixelCount++;
+                        }
+                    }
+
+                    System.out.println("Pixel count: " + pixelCount);
+
+                    frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-raw.png"));
+                    frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-raw.png"));
+                    frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(auxDir, "specular-raw.png"));
+                    frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "roughness-raw.png"));
+                    frontFramebuffer.saveColorBufferToFile(4, "PNG", new File(auxDir, "roughness-error.png"));
+
+                    double lastRMSError;
+
+                    peakIntensityProgram.setUniform("gamma", 2.2f);
+                    peakIntensityProgram.setTexture("specularTexture", frontFramebuffer.getColorAttachmentTexture(2));
+                    peakIntensityProgram.setTexture("roughnessTexture", frontFramebuffer.getColorAttachmentTexture(3));
+
+                    Drawable<ContextType> peakIntensityDrawable = context.createDrawable(peakIntensityProgram);
+                    peakIntensityDrawable.addVertexBuffer("position", rectBuffer);
+                    peakIntensityDrawable.draw(PrimitiveMode.TRIANGLE_FAN, peakIntensityFramebuffer);
+
+                    peakIntensityFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "peak.png"));
+
+                    frontErrorFramebuffer.clearColorBuffer(0, 128.0f, Float.MAX_VALUE, 0.0f, 0.0f);
+                    backErrorFramebuffer.clearColorBuffer(0, 0.0f, -1.0f, 0.0f, 0.0f);
+
+                    errorCalcProgram.setUniform("ignoreDampingFactor", true);
+
+                    if (param.isImagePreprojectionUseEnabled())
+                    {
+                        errorCalc.fitTextureSpace(
+                            backErrorFramebuffer,
+                            tmpDir,
+                            frontFramebuffer.getColorAttachmentTexture(0),
+                            frontFramebuffer.getColorAttachmentTexture(1),
+                            frontFramebuffer.getColorAttachmentTexture(2),
+                            frontFramebuffer.getColorAttachmentTexture(3),
+                            frontErrorFramebuffer.getColorAttachmentTexture(0),
+                            (row, col) ->
+                            {
+//                                    System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
+//                                            (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+                            });
+                    }
+                    else
+                    {
+                        errorCalc.fitImageSpace(
+                            backErrorFramebuffer,
+                            viewTextures, depthTextures, shadowTextures,
+                            frontFramebuffer.getColorAttachmentTexture(0),
+                            frontFramebuffer.getColorAttachmentTexture(1),
+                            frontFramebuffer.getColorAttachmentTexture(2),
+                            frontFramebuffer.getColorAttachmentTexture(3),
+                            frontErrorFramebuffer.getColorAttachmentTexture(0),
+                            (row, col) ->
+                            {
+//                                    System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
+//                                            (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+                            });
+                    }
+
+                    context.finish();
+
+                    backErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "error-mask-init.png"));
+
+                    tmp = frontErrorFramebuffer;
+                    frontErrorFramebuffer = backErrorFramebuffer;
+                    backErrorFramebuffer = tmp;
+
+                    double initSumSqError = 0.0;
+                    int initSumMask = 0;
+                    float[] errorData = frontErrorFramebuffer.readFloatingPointColorBufferRGBA(0);
+                    for (int j = 0; j * 4 + 3 < errorData.length; j++)
+                    {
+                        float error = errorData[j * 4 + 1]; // Green channel holds squared error
+                        if (error >= 0)
+                        {
+                            initSumSqError += error;
+                            initSumMask++;
+                        }
+                    }
+
+                    lastRMSError = Math.sqrt(initSumSqError / initSumMask);
+
+                    System.out.println("Sum squared error: " + initSumSqError);
+                    System.out.println("RMS error: " + lastRMSError);
+
+                    if (param.isLevenbergMarquardtOptimizationEnabled())
+                    {
+                        // Non-linear adjustment
+                        AdjustFit<ContextType> adjustFit = createAdjustFit(viewSet.getCameraPoseCount(), param.getTextureSubdivision());
+
+                        System.out.println("Adjusting fit...");
+
+                        boolean saveDebugTextures = false;
+                        boolean useGlobalDampingFactor = true;
+                        float globalDampingFactor = 128.0f;
+                        int iteration = 0;
+
+                        while (globalDampingFactor <= 0x100000 /* ~ 1 million */)
+                        {
+                            backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+                            backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+                            backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+                            backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+                            backFramebuffer.clearColorBuffer(4, 0.0f, 0.0f, 0.0f, 0.0f);
+
+                            if(useGlobalDampingFactor)
+                            {
+                                // hack to override damping factor and never discard the result - TODO make this more elegant
+                                frontErrorFramebuffer.clearColorBuffer(0, globalDampingFactor, Float.MAX_VALUE, 0.0f, 0.0f);
+                            }
+
+                            if (param.isImagePreprojectionUseEnabled())
+                            {
+                                adjustFit.fitTextureSpace(
+                                    backFramebuffer,
+                                    tmpDir,
+                                    frontFramebuffer.getColorAttachmentTexture(0),
+                                    frontFramebuffer.getColorAttachmentTexture(1),
+                                    frontFramebuffer.getColorAttachmentTexture(2),
+                                    frontFramebuffer.getColorAttachmentTexture(3),
+                                    peakIntensityFramebuffer.getColorAttachmentTexture(0),
+                                    frontErrorFramebuffer.getColorAttachmentTexture(0),
+                                    (row, col) ->
+                                    {
+    //                                    currentFramebuffer.saveColorBufferToFile(0, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+    //                                            "PNG", new File(diffuseTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+    //
+    //                                    currentFramebuffer.saveColorBufferToFile(2, col * subdivSize, row * subdivSize, subdivSize, subdivSize,
+    //                                            "PNG", new File(specularTempDirectory, String.format("alt_r%04dc%04d.png", row, col)));
+
+    //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
+    //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+                                    });
+                            }
+                            else
+                            {
+                                adjustFit.fitImageSpace(
+                                    backFramebuffer,
+                                    viewTextures, depthTextures, shadowTextures,
+                                    frontFramebuffer.getColorAttachmentTexture(0),
+                                    frontFramebuffer.getColorAttachmentTexture(1),
+                                    frontFramebuffer.getColorAttachmentTexture(2),
+                                    frontFramebuffer.getColorAttachmentTexture(3),
+                                    peakIntensityFramebuffer.getColorAttachmentTexture(0),
+                                    frontErrorFramebuffer.getColorAttachmentTexture(0),
+                                    (row, col) ->
+                                    {
+    //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
+    //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+                                    });
+                            }
+
+                            context.finish();
+
+                            if (saveDebugTextures)
+                            {
+                                backFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-test1.png"));
+                                backFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-test1.png"));
+                                backFramebuffer.saveColorBufferToFile(2, "PNG", new File(auxDir, "specular-test1.png"));
+                                backFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "roughness-test1.png"));
+                                backFramebuffer.saveColorBufferToFile(4, "PNG", new File(auxDir, "stddev-test1.png"));
+                            }
+
+                            backErrorFramebuffer.clearColorBuffer(0, 0.0f, -1.0f, 0.0f, 0.0f);
+
+                            if (param.isImagePreprojectionUseEnabled())
+                            {
+                                errorCalc.fitTextureSpace(
+                                    backErrorFramebuffer,
+                                    tmpDir,
+                                    backFramebuffer.getColorAttachmentTexture(0),
+                                    backFramebuffer.getColorAttachmentTexture(1),
+                                    backFramebuffer.getColorAttachmentTexture(2),
+                                    backFramebuffer.getColorAttachmentTexture(3),
+                                    frontErrorFramebuffer.getColorAttachmentTexture(0),
+                                    (row, col) ->
+                                    {
+    //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
+    //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+                                    });
+                            }
+                            else
+                            {
+                                errorCalc.fitImageSpace(
+                                    backErrorFramebuffer,
+                                    viewTextures, depthTextures, shadowTextures,
+                                    backFramebuffer.getColorAttachmentTexture(0),
+                                    backFramebuffer.getColorAttachmentTexture(1),
+                                    backFramebuffer.getColorAttachmentTexture(2),
+                                    backFramebuffer.getColorAttachmentTexture(3),
+                                    frontErrorFramebuffer.getColorAttachmentTexture(0),
+                                    (row, col) ->
+                                    {
+    //                                        System.out.println("Block " + (row*param.getTextureSubdivision() + col + 1) + "/" +
+    //                                                (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed.");
+                                    });
+                            }
+
+                            context.finish();
+
+                            if (saveDebugTextures)
+                            {
+                                backErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "error-mask-test.png"));
+                            }
+
+                            tmp = frontErrorFramebuffer;
+                            frontErrorFramebuffer = backErrorFramebuffer;
+                            backErrorFramebuffer = tmp;
+
+                            double sumSqError = 0.0;
+                            int sumMask = 0;
+                            errorData = frontErrorFramebuffer.readFloatingPointColorBufferRGBA(0);
+                            for (int j = 0; j * 4 + 3 < errorData.length; j++)
+                            {
+                                float error = errorData[j * 4 + 1]; // Green channel holds squared error
+                                if (error >= 0)
+                                {
+                                    sumSqError += error;
+                                    sumMask++;
+                                }
+                            }
+
+                            double rmsError = Math.sqrt(sumSqError / sumMask);
+
+                            System.out.println("Sum squared error: " + sumSqError);
+                            System.out.println("RMS error: " + rmsError);
+
+                            if (rmsError < lastRMSError)
+                            {
+                                lastRMSError = rmsError;
+
+                                System.out.println("Saving iteration.");
+
+                                if (useGlobalDampingFactor)
+                                {
+                                    globalDampingFactor /= 2;
+
+                                    System.out.println("Next damping factor: " + globalDampingFactor);
+
+                                    // Set the mask framebuffer to all 1 (hack - TODO make this more elegant)
+                                    frontErrorFramebuffer.clearColorBuffer(1, 1.0f, 1.0f, 1.0f, 1.0f);
+                                }
+                                else
+                                {
+                                    // If the damping factor isn't being used, set to the minimum, which will function as a countdown if an iteration is unproductive.
+                                    globalDampingFactor = 0.0078125f;
+                                }
+
+                                finalizeProgram.setTexture("input0", backFramebuffer.getColorAttachmentTexture(0));
+                                finalizeProgram.setTexture("input1", backFramebuffer.getColorAttachmentTexture(1));
+                                finalizeProgram.setTexture("input2", backFramebuffer.getColorAttachmentTexture(2));
+                                finalizeProgram.setTexture("input3", backFramebuffer.getColorAttachmentTexture(3));
+                                finalizeProgram.setTexture("input4", backFramebuffer.getColorAttachmentTexture(4));
+                                finalizeProgram.setTexture("alphaMask", frontErrorFramebuffer.getColorAttachmentTexture(1));
+
+                                finalizeDrawable.draw(PrimitiveMode.TRIANGLE_FAN, frontFramebuffer);
+                                context.finish();
+                            }
+                            else
+                            {
+                                // If useGlobalDampingFactor == false, then this effectively serves as a countdown in the case of an unproductive iteration.
+                                // If enough unproductive iterations occur, then this variable will keep doubling until it exceeds the maximum value.
+                                globalDampingFactor *= 2;
+
+                                System.out.println("Discarding iteration.");
+                                System.out.println("Next damping factor: " + globalDampingFactor);
+                            }
+
+                            if (saveDebugTextures)
+                            {
+                                frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-test2.png"));
+                                frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-test2.png"));
+                                frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(auxDir, "specular-test2.png"));
+                                frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "roughness-test2.png"));
+                                frontFramebuffer.saveColorBufferToFile(4, "PNG", new File(auxDir, "stddev-test2.png"));
+                            }
+
+                            System.out.println("Iteration " + (iteration+1) + " complete.");
+                            System.out.println();
+
+                            iteration++;
+                        }
+
+                        frontErrorFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "error-mask-final.png"));
+                    }
+
+                    // Fill holes
+                    for (int i = 0; i < param.getTextureSize() / 2; i++)
+                    {
+                        backFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+                        backFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+                        backFramebuffer.clearColorBuffer(2, 0.0f, 0.0f, 0.0f, 0.0f);
+                        backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
+
+                        holeFillProgram.setTexture("input0", frontFramebuffer.getColorAttachmentTexture(0));
+                        holeFillProgram.setTexture("input1", frontFramebuffer.getColorAttachmentTexture(1));
+                        holeFillProgram.setTexture("input2", frontFramebuffer.getColorAttachmentTexture(2));
+                        holeFillProgram.setTexture("input3", frontFramebuffer.getColorAttachmentTexture(3));
+
+                        holeFillRenderable.draw(PrimitiveMode.TRIANGLE_FAN, backFramebuffer);
+                        context.finish();
+
+                        tmp = frontFramebuffer;
+                        frontFramebuffer = backFramebuffer;
+                        backFramebuffer = tmp;
+                    }
+
+                    // Save a copy of all of the channels, even the ones that shouldn't be needed, in the _aux folder.
+                    frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(auxDir, "diffuse-final.png"));
+                    frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(auxDir, "normal-final.png"));
+                    frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(auxDir, "specular-final.png"));
+                    frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "roughness-final.png"));
+
+                    if (param.isDiffuseTextureEnabled())
+                    {
+                        frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(instanceDirectory, materialName + "_Kd.png"));
+                    }
+
+                    if ((param.isDiffuseTextureEnabled() && param.isNormalTextureEnabled()) || param.isSpecularTextureEnabled())
+                    {
+                        frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(instanceDirectory, materialName + "_norm.png"));
+                    }
+
+                    frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(instanceDirectory, materialName + "_Ks.png"));
+                    frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(instanceDirectory, materialName + "_Pr.png"));
+
+                    writeMTLFile("# RMS fitting error: " + lastRMSError);
+                }
+            }
+        }
+    }
+
+    private boolean loadMeshAndViewSet() throws IOException, XMLStreamException
+    {
+        System.out.println("Loading mesh...");
+        Date timestamp = new Date();
+        VertexGeometry mesh = loadMesh();
+
+        System.out.println("Loading mesh completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+
+        System.out.println("Loading view set...");
+        timestamp = new Date();
+
+        String[] vsetFileNameParts = vsetFile.getName().split("\\.");
+        String fileExt = vsetFileNameParts[vsetFileNameParts.length-1];
+        if ("vset".equalsIgnoreCase(fileExt))
+        {
+            System.out.println("Loading from VSET file.");
+
+            viewSet = ViewSet.loadFromVSETFile(vsetFile);
+        }
+        else if ("xml".equalsIgnoreCase(fileExt))
+        {
+            System.out.println("Loading from Agisoft Photoscan XML file.");
+            viewSet = ViewSet.loadFromAgisoftXMLFile(vsetFile);
+        }
+        else
+        {
+            System.out.println("Unrecognized file type, aborting.");
+            return false;
+        }
+
+        viewSet.setTonemapping(param.getGamma(), param.getLinearLuminanceValues(), param.getEncodedLuminanceValues());
+
+        // Only generate view set uniform buffers
+        resources = IBRResources.getBuilderForContext(context)
+                .useExistingViewSet(viewSet)
+                .useExistingGeometry(mesh)
+                .setLoadOptions(new SimpleLoadOptionsModel()
+                    .setColorImagesRequested(false)
+                    .setDepthImagesRequested(false))
+                .create();
+
+        System.out.println("Loading view set completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
+        return true;
     }
 }
