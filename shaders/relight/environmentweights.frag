@@ -47,6 +47,7 @@ vec4[ACTIVE_EIGENTEXTURE_COUNT + 1] computeEnvironmentSamples(int virtualIndex, 
     vec3 virtualViewDir =
         normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
     vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
+    float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
     float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
     float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
 
@@ -54,14 +55,14 @@ vec4[ACTIVE_EIGENTEXTURE_COUNT + 1] computeEnvironmentSamples(int virtualIndex, 
     float oneMinusHDotVSq = oneMinusHDotV * oneMinusHDotV;
     float fresnelFactor = oneMinusHDotVSq * oneMinusHDotVSq * oneMinusHDotV;
 
-    float microfacetShadowing;
+    float maskingShadowing;
 #if PHYSICALLY_BASED_MASKING_SHADOWING
-    microfacetShadowing = geomPartial(roughness, nDotL_virtual);
+    maskingShadowing = computeGeometricAttenuationHeightCorrelatedSmith(roughness, nDotV_virtual, nDotL_virtual);
 #else
-    microfacetShadowing = nDotL_virtual;
+    maskingShadowing = nDotL_virtual * nDotV_virtual;
 #endif
 
-    vec3 sampleBase = microfacetShadowing * rgbToXYZ(getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPose)) * virtualLightDir));
+    vec3 sampleBase = maskingShadowing * rgbToXYZ(getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPose)) * virtualLightDir));
     float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
     // dl = 4 * h dot v * dh
     // cameraWeight * VIEW_COUNT -> brings weights back to being on the order of 1
@@ -139,21 +140,21 @@ void main()
     }
 
     baseFresnel0 = results[0].baseFresnel;
-    baseFresnel1 = results[1].baseFresnel;
-    baseFresnel2 = results[2].baseFresnel;
-    baseFresnel3 = results[3].baseFresnel;
+    baseFresnel1 = results[1].baseFresnel * 0.5 + 0.5;
+    baseFresnel2 = results[2].baseFresnel * 0.5 + 0.5;
+    baseFresnel3 = results[3].baseFresnel * 0.5 + 0.5;
 
     if (sums[4].baseFresnel.w > 0.0)
     {
         // Pack an extra term into the 4th component
-        baseFresnel0.w = results[4].baseFresnel.x;
-        baseFresnel1.w = results[4].baseFresnel.y;
-        baseFresnel2.w = results[4].baseFresnel.z;
-        baseFresnel3.w = sums[4].fresnelAdjustment.y / VIEW_COUNT;
+        baseFresnel0.w = results[4].baseFresnel.x * 0.5 + 0.5;
+        baseFresnel1.w = results[4].baseFresnel.y * 0.5 + 0.5;
+        baseFresnel2.w = results[4].baseFresnel.z * 0.5 + 0.5;
+        baseFresnel3.w = sums[4].fresnelAdjustment.y / VIEW_COUNT * 0.5 + 0.5;
     }
 
     fresnelAdj0 = results[0].fresnelAdjustment;
-    fresnelAdj1 = results[1].fresnelAdjustment;
-    fresnelAdj2 = results[2].fresnelAdjustment;
-    fresnelAdj3 = results[3].fresnelAdjustment;
+    fresnelAdj1 = results[1].fresnelAdjustment * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
+    fresnelAdj2 = results[2].fresnelAdjustment * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
+    fresnelAdj3 = results[3].fresnelAdjustment * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
 }

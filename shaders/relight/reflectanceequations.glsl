@@ -38,33 +38,46 @@ float computeGeometricAttenuationVCavity(float nDotH, float nDotV, float nDotL, 
     return min(1.0, 2.0 * nDotH * min(nDotV, nDotL) / hDotV);
 }
 
-float computeGeometricAttenuationSmithBeckmann(float roughness, float cosine)
+float computeLambdaBeckmann(float roughness, float cosine)
 {
     float a = min(1.6, cosine / (roughness * sqrt(1.0 - cosine * cosine)));
     float aSq = a * a;
 
-    return min(1.0, (3.535 * a + 2.181 * aSq) / (1 + 2.276 * a + 2.577 * aSq));
+    return max(1.0, (1.0 + 2.276 * a + 2.577 * aSq) / (3.535 * a + 2.181 * aSq) - 1.0);
     // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
-    // for this formula
+    // for this formula (and use G1 = 1 / (1 + Lambda) )
 }
 
-float computeGeometricAttenuationSmithGGX(float roughness, float cosine)
+float computeLambdaGGX(float roughness, float cosine)
 {
-    return 2 / (1 + sqrt(1 + roughness * roughness * (1 / (cosine * cosine) - 1.0)));
+     return -0.5 + 0.5 * sqrt(1 + roughness * roughness * (1 / (cosine * cosine) - 1.0));
+    // ^ See Walter et al. "Microfacet Models for Refraction through Rough Surfaces"
+    // for this formula (and use G1 = 1 / (1 + Lambda) )
 }
 
-float geomPartial(float roughness, float cosine)
+float lambda(float roughness, float cosine)
 {
-    //return cosine;
-    //return computeGeometricAttenuationSmithBeckmann(roughness, cosine);
-    return computeGeometricAttenuationSmithGGX(roughness, cosine);
+    //return 1.0 / cosine - 1.0;
+    //return computeLambdaBeckmann(roughness, cosine);
+    return computeLambdaGGX(roughness, cosine);
+}
+
+float computeGeometricAttenuationSeparableSmith(float roughness, float nDotV, float nDotL)
+{
+    return 1 / ((1 + lambda(roughness, nDotV)) * (1 + lambda(roughness, nDotL)));
+}
+
+float computeGeometricAttenuationHeightCorrelatedSmith(float roughness, float nDotV, float nDotL)
+{
+    return 1 / (1 + lambda(roughness, nDotV) + lambda(roughness, nDotL));
 }
 
 float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV)
 {
     float result;
 #if SMITH_MASKING_SHADOWING
-    result = geomPartial(roughness, nDotL) * geomPartial(roughness, nDotV);
+    //result = computeGeometricAttenuationSeparableSmith(roughness, nDotV, nDotL);
+    result = computeGeometricAttenuationHeightCorrelatedSmith(roughness, nDotV, nDotL);
 #else
     result = computeGeometricAttenuationVCavity(nDotH, nDotV, nDotL, hDotV);
 #endif

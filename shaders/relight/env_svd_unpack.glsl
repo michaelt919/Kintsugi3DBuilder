@@ -1,9 +1,12 @@
 #ifndef ENV_SVD_UNPACK_GLSL
 #define ENV_SVD_UNPACK_GLSL
 
-#include "../svd_unpack.glsl"
+#include "../common/svd_unpack.glsl"
+#include "../common/trilinear.glsl"
 
 #line 7 3005
+
+uniform sampler2DArray environmentWeightsTexture;
 
 vec4 getColor()
 {
@@ -21,8 +24,14 @@ vec4 getColor()
     ivec3 eigentexturesFloorLevelSize = textureSize(eigentextures, mipmapLevelFloor);
     ivec3 eigentexturesCeilLevelSize = textureSize(eigentextures, mipmapLevelCeil);
 
+    ivec3 environmentWeightsSize = textureSize(environmentWeightsTexture, 0);
+    ivec2 floorToEnv = eigentexturesFloorLevelSize.xy / environmentWeightsSize.xy;
+    ivec2 ceilToEnv = eigentexturesCeilLevelSize.xy / environmentWeightsSize.xy;
+
+    ivec2 coords[8];
+
     vec2 texCoordsFloorLevel = fTexCoord * eigentexturesFloorLevelSize.xy;
-    ivec2 coords000 = min(ivec2(floor(texCoordsFloorLevel)), eigentexturesFloorLevelSize.xy - ivec2(1));
+    coords[TRILINEAR_000] = min(ivec2(floor(texCoordsFloorLevel)), eigentexturesFloorLevelSize.xy - ivec2(1));
     ivec2 coords110 = coords000 + 1;
     ivec2 coords010 = ivec2(coords000.x, coords110.y);
     ivec2 coords100 = ivec2(coords110.x, coords000.y);
@@ -35,58 +44,125 @@ vec4 getColor()
     ivec2 coords101 = ivec2(coords111.x, coords001.y);
     vec2 interpolantsCeilLevel = texCoordsCeilLevel - coords001;
 
-    ivec3 eigentexturesSize = textureSize(eigentextures, 0);
-    ivec2 blockStart000 = computeBlockStart(vec2(coords000) / eigentexturesFloorLevelSize.xy, eigentexturesSize.xy);
-    ivec2 blockStart001 = computeBlockStart(vec2(coords001) / eigentexturesCeilLevelSize.xy, eigentexturesSize.xy);
-    ivec2 blockStart010 = computeBlockStart(vec2(coords010) / eigentexturesFloorLevelSize.xy, eigentexturesSize.xy);
-    ivec2 blockStart011 = computeBlockStart(vec2(coords011) / eigentexturesCeilLevelSize.xy, eigentexturesSize.xy);
-    ivec2 blockStart100 = computeBlockStart(vec2(coords100) / eigentexturesFloorLevelSize.xy, eigentexturesSize.xy);
-    ivec2 blockStart101 = computeBlockStart(vec2(coords101) / eigentexturesCeilLevelSize.xy, eigentexturesSize.xy);
-    ivec2 blockStart110 = computeBlockStart(vec2(coords110) / eigentexturesFloorLevelSize.xy, eigentexturesSize.xy);
-    ivec2 blockStart111 = computeBlockStart(vec2(coords111) / eigentexturesCeilLevelSize.xy, eigentexturesSize.xy);
+    ivec2 weightCoords000 = coords000 / floorToEnv;
+    ivec2 weightCoords001 = coords001 / ceilToEnv;
+    ivec2 weightCoords010 = coords010 / floorToEnv;
+    ivec2 weightCoords011 = coords011 / ceilToEnv;
+    ivec2 weightCoords100 = coords100 / floorToEnv;
+    ivec2 weightCoords101 = coords101 / ceilToEnv;
+    ivec2 weightCoords110 = coords110 / floorToEnv;
+    ivec2 weightCoords111 = coords111 / ceilToEnv;
 
-    vec3 color = vec3(0.0);
+    vec4 weights000 = texelFetch(environmentWeightsTexture, ivec3(weightCoords000, 0), 0).xyz;
+    vec4 weights001 = texelFetch(environmentWeightsTexture, ivec3(weightCoords001, 0), 0).xyz;
+    vec4 weights010 = texelFetch(environmentWeightsTexture, ivec3(weightCoords010, 0), 0).xyz;
+    vec4 weights011 = texelFetch(environmentWeightsTexture, ivec3(weightCoords011, 0), 0).xyz;
+    vec4 weights100 = texelFetch(environmentWeightsTexture, ivec3(weightCoords100, 0), 0).xyz;
+    vec4 weights101 = texelFetch(environmentWeightsTexture, ivec3(weightCoords101, 0), 0).xyz;
+    vec4 weights110 = texelFetch(environmentWeightsTexture, ivec3(weightCoords110, 0), 0).xyz;
+    vec4 weights111 = texelFetch(environmentWeightsTexture, ivec3(weightCoords111, 0), 0).xyz;
 
-    for (int k = 0; k < EIGENTEXTURE_COUNT; k++)
+    vec3 sumMFDGeomRoughnessSq =
+        mix(mix(mix(weights000,
+                    weights100,
+                    interpolantsFloorLevel.x),
+                mix(weights010,
+                    weights110,
+                    interpolantsFloorLevel.x),
+                interpolantsFloorLevel.y),
+            mix(mix(weights001,
+                    weights101,
+                    interpolantsCeilLevel.x),
+                mix(weights011,
+                    weights111,
+                    interpolantsCeilLevel.x),
+                interpolantsCeilLevel.y),
+            mipmapLevelInterpolant);
+
+
+    weights000 = texelFetch(environmentWeightsTexture, ivec3(weightCoords000, 4), 0).xyz;
+    weights001 = texelFetch(environmentWeightsTexture, ivec3(weightCoords001, 4), 0).xyz;
+    weights010 = texelFetch(environmentWeightsTexture, ivec3(weightCoords010, 4), 0).xyz;
+    weights011 = texelFetch(environmentWeightsTexture, ivec3(weightCoords011, 4), 0).xyz;
+    weights100 = texelFetch(environmentWeightsTexture, ivec3(weightCoords100, 4), 0).xyz;
+    weights101 = texelFetch(environmentWeightsTexture, ivec3(weightCoords101, 4), 0).xyz;
+    weights110 = texelFetch(environmentWeightsTexture, ivec3(weightCoords110, 4), 0).xyz;
+    weights111 = texelFetch(environmentWeightsTexture, ivec3(weightCoords111, 4), 0).xyz;
+
+    vec3 sumMFDGeomRoughnessSqFresnelFactor =
+        mix(mix(mix(weights000,
+                    weights100,
+                    interpolantsFloorLevel.x),
+                mix(weights010,
+                    weights110,
+                    interpolantsFloorLevel.x),
+                interpolantsFloorLevel.y),
+            mix(mix(weights001,
+                    weights101,
+                    interpolantsCeilLevel.x),
+                mix(weights011,
+                    weights111,
+                    interpolantsCeilLevel.x),
+                interpolantsCeilLevel.y),
+            mipmapLevelInterpolant);
+
+    for (int k = 0; k < 4; k++)
     {
-        vec4 weights000 = computeSVDViewWeights(blockStart000, k);
-        vec4 weights001 = computeSVDViewWeights(blockStart001, k);
-        vec4 weights010 = computeSVDViewWeights(blockStart010, k);
-        vec4 weights011 = computeSVDViewWeights(blockStart011, k);
-        vec4 weights100 = computeSVDViewWeights(blockStart100, k);
-        vec4 weights101 = computeSVDViewWeights(blockStart101, k);
-        vec4 weights110 = computeSVDViewWeights(blockStart110, k);
-        vec4 weights111 = computeSVDViewWeights(blockStart111, k);
+        vec4 weights000 = texelFetch(environmentWeightsTexture, ivec3(weightCoords000, k), 0).xyz * 2.0 - 1.0;
+        vec4 weights001 = texelFetch(environmentWeightsTexture, ivec3(weightCoords001, k), 0).xyz * 2.0 - 1.0;
+        vec4 weights010 = texelFetch(environmentWeightsTexture, ivec3(weightCoords010, k), 0).xyz * 2.0 - 1.0;
+        vec4 weights011 = texelFetch(environmentWeightsTexture, ivec3(weightCoords011, k), 0).xyz * 2.0 - 1.0;
+        vec4 weights100 = texelFetch(environmentWeightsTexture, ivec3(weightCoords100, k), 0).xyz * 2.0 - 1.0;
+        vec4 weights101 = texelFetch(environmentWeightsTexture, ivec3(weightCoords101, k), 0).xyz * 2.0 - 1.0;
+        vec4 weights110 = texelFetch(environmentWeightsTexture, ivec3(weightCoords110, k), 0).xyz * 2.0 - 1.0;
+        vec4 weights111 = texelFetch(environmentWeightsTexture, ivec3(weightCoords111, k), 0).xyz * 2.0 - 1.0;
 
-        vec4 tex000 = getSignedTexel(ivec3(coords000, k), mipmapLevelFloor);
-        vec4 tex001 = getSignedTexel(ivec3(coords001, k), mipmapLevelCeil);
-        vec4 tex010 = getSignedTexel(ivec3(coords010, k), mipmapLevelFloor);
-        vec4 tex011 = getSignedTexel(ivec3(coords011, k), mipmapLevelCeil);
-        vec4 tex100 = getSignedTexel(ivec3(coords100, k), mipmapLevelFloor);
-        vec4 tex101 = getSignedTexel(ivec3(coords101, k), mipmapLevelCeil);
-        vec4 tex110 = getSignedTexel(ivec3(coords110, k), mipmapLevelFloor);
-        vec4 tex111 = getSignedTexel(ivec3(coords111, k), mipmapLevelCeil);
+        vec2 tex000 = getSignedTexel(ivec3(coords000, k), mipmapLevelFloor).yw;
+        vec2 tex001 = getSignedTexel(ivec3(coords001, k), mipmapLevelCeil).yw;
+        vec2 tex010 = getSignedTexel(ivec3(coords010, k), mipmapLevelFloor).yw;
+        vec2 tex011 = getSignedTexel(ivec3(coords011, k), mipmapLevelCeil).yw;
+        vec2 tex100 = getSignedTexel(ivec3(coords100, k), mipmapLevelFloor).yw;
+        vec2 tex101 = getSignedTexel(ivec3(coords101, k), mipmapLevelCeil).yw;
+        vec2 tex110 = getSignedTexel(ivec3(coords110, k), mipmapLevelFloor).yw;
+        vec2 tex111 = getSignedTexel(ivec3(coords111, k), mipmapLevelCeil).yw;
 
         vec4 blendedColor =
-            mix(mix(mix(weights000 * tex000,
-                        weights100 * tex100,
+            mix(mix(mix(weights000 * tex000[0],
+                        weights100 * tex100[0],
                         interpolantsFloorLevel.x),
-                    mix(weights010 * tex010,
-                        weights110 * tex110,
+                    mix(weights010 * tex010[0],
+                        weights110 * tex110[0],
                         interpolantsFloorLevel.x),
                     interpolantsFloorLevel.y),
-                mix(mix(weights001 * tex001,
-                        weights101 * tex101,
+                mix(mix(weights001 * tex001[0],
+                        weights101 * tex101[0],
                         interpolantsCeilLevel.x),
-                    mix(weights011 * tex011,
-                        weights111 * tex111,
+                    mix(weights011 * tex011[0],
+                        weights111 * tex111[0],
                         interpolantsCeilLevel.x),
                     interpolantsCeilLevel.y),
                 mipmapLevelInterpolant);
 
-        if (blendedColor.w > 0)
+        float weight =
+            mix(mix(mix(tex000[1],
+                        tex100[1],
+                        interpolantsFloorLevel.x),
+                    mix(tex010[1],
+                        tex110[1],
+                        interpolantsFloorLevel.x),
+                    interpolantsFloorLevel.y),
+                mix(mix(tex001[1],
+                        tex101[1],
+                        interpolantsCeilLevel.x),
+                    mix(tex011[1],
+                        tex111[1],
+                        interpolantsCeilLevel.x),
+                    interpolantsCeilLevel.y),
+                mipmapLevelInterpolant);
+
+        if (weight > 0)
         {
-            color += blendedColor.xyz / blendedColor.w;
+            environmentWeights[k] = blendedColor / weight;
         }
     }
 
