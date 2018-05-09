@@ -261,17 +261,21 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             if (this.program == null)
             {
                 this.program = loadMainProgram();
-                this.environmentWeightsProgram = getProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texspace.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "environmentweights.frag"))
-                    .createProgram();
             }
 
             this.mainDrawable = context.createDrawable(program);
             this.mainDrawable.addVertexBuffer("position", this.resources.positionBuffer);
 
-            this.environmentWeightsDrawable = context.createDrawable(environmentWeightsProgram);
-            this.environmentWeightsDrawable.addVertexBuffer("position", this.resources.positionBuffer);
+            if (this.resources.eigentextures != null)
+            {
+                this.environmentWeightsProgram = getProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texspace_noscale.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "environmentweights.frag"))
+                    .createProgram();
+
+                this.environmentWeightsDrawable = context.createDrawable(environmentWeightsProgram);
+                this.environmentWeightsDrawable.addVertexBuffer("position", this.resources.positionBuffer);
+            }
 
             this.reprojectDrawable = context.createDrawable(reprojectProgram);
             this.reprojectDrawable.addVertexBuffer("position", this.resources.positionBuffer);
@@ -280,21 +284,31 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             {
                 this.mainDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
                 this.reprojectDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
-                this.environmentWeightsDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
+
+                if (this.environmentWeightsDrawable != null)
+                {
+                    this.environmentWeightsDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
+                }
             }
 
             if (this.resources.texCoordBuffer != null)
             {
                 this.mainDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
                 this.reprojectDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-                this.environmentWeightsDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+                if (this.environmentWeightsDrawable != null)
+                {
+                    this.environmentWeightsDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+                }
             }
 
             if (this.resources.tangentBuffer != null)
             {
                 this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
                 this.reprojectDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-                this.environmentWeightsDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+                if (this.environmentWeightsDrawable != null)
+                {
+                    this.environmentWeightsDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+                }
             }
 
 
@@ -1378,7 +1392,6 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 else
                 {
                     setupForDraw(this.program, view);
-                    setupForDraw(this.environmentWeightsProgram, view);
 
                     this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
 
@@ -1393,23 +1406,26 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         this.program.setUniform("holeFillColor", new Vector3(0.0f));
                     }
 
-                    if (lightingModel != null && !Objects.equals(lightingModel.getAmbientLightColor(), Vector3.ZERO))
+                    if (this.resources.eigentextures != null && lightingModel != null && !Objects.equals(lightingModel.getAmbientLightColor(), Vector3.ZERO))
                     {
+                        setupForDraw(this.environmentWeightsProgram, view);
+
                         try (
                             Texture3D<ContextType> environmentWeightsTexture
                                 = context.getTextureFactory().build2DColorTextureArray(
-                                        resources.colorTextures.getWidth(), resources.colorTextures.getHeight(), 5)
+                                        resources.colorTextures.getWidth(), resources.colorTextures.getHeight(), 8)
                                     .setInternalFormat(ColorFormat.RGBA8)
                                     .createTexture();
                             FramebufferObject<ContextType> environmentWeightsFBO
                                 = context.buildFramebufferObject(resources.colorTextures.getWidth(), resources.colorTextures.getHeight())
-                                    .addEmptyColorAttachments(5)
+                                    .addEmptyColorAttachments(8)
                                     .createFramebufferObject())
                         {
-                            for (int i = 0; i < 5; i++)
+                            for (int i = 0; i < 8; i++)
                             {
                                 environmentWeightsFBO.setColorAttachment(i,
                                     environmentWeightsTexture.getLayerAsFramebufferAttachment(i));
+                                environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
                             }
 
                             FramebufferSize environmentWeightsSize = environmentWeightsFBO.getSize();
@@ -2317,10 +2333,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
     private void reloadMainProgram(Map<String, Optional<Object>> defineMap, RenderingMode renderingMode) throws FileNotFoundException
     {
         Program<ContextType> newProgram = loadMainProgram(defineMap, renderingMode);
-        Program<ContextType> newEnvironmentWeightsProgram = getProgramBuilder()
-            .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texspace.vert"))
-            .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "environmentweights.frag"))
-            .createProgram();
+
+        Program<ContextType> newEnvironmentWeightsProgram = null;
+
+        if (this.resources.eigentextures != null)
+        {
+            newEnvironmentWeightsProgram = getProgramBuilder()
+                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texspace_noscale.vert"))
+                .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "environmentweights.frag"))
+                .createProgram();
+        }
 
         if (this.program != null)
         {
@@ -2329,37 +2351,52 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         this.program = newProgram;
 
-        if (this.environmentWeightsProgram != null)
-        {
-            this.environmentWeightsProgram.close();
-        }
-
-        this.environmentWeightsProgram = newEnvironmentWeightsProgram;
-
         this.lastCompiledRenderingMode = renderingMode;
 
         this.mainDrawable = context.createDrawable(program);
         this.mainDrawable.addVertexBuffer("position", this.resources.positionBuffer);
 
-        this.environmentWeightsDrawable = context.createDrawable(environmentWeightsProgram);
-        this.environmentWeightsDrawable.addVertexBuffer("position", this.resources.positionBuffer);
+        if (this.environmentWeightsProgram != null)
+        {
+            this.environmentWeightsProgram.close();
+        }
+
+        if (newEnvironmentWeightsProgram != null)
+        {
+            this.environmentWeightsProgram = newEnvironmentWeightsProgram;
+
+            this.environmentWeightsDrawable = context.createDrawable(environmentWeightsProgram);
+            this.environmentWeightsDrawable.addVertexBuffer("position", this.resources.positionBuffer);
+        }
 
         if (this.resources.normalBuffer != null)
         {
             this.mainDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
-            this.environmentWeightsDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
+
+            if (this.environmentWeightsDrawable != null)
+            {
+                this.environmentWeightsDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
+            }
         }
 
         if (this.resources.texCoordBuffer != null)
         {
             this.mainDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-            this.environmentWeightsDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+
+            if (this.environmentWeightsDrawable != null)
+            {
+                this.environmentWeightsDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
+            }
         }
 
         if (this.resources.tangentBuffer != null)
         {
             this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-            this.environmentWeightsDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+
+            if (this.environmentWeightsDrawable != null)
+            {
+                this.environmentWeightsDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
+            }
         }
 
         suppressErrors = false;
@@ -2485,7 +2522,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         if (renderingMode != lastCompiledRenderingMode ||
             defineMap.entrySet().stream().anyMatch(
                 defineEntry -> !Objects.equals(this.program.getDefine(defineEntry.getKey()), defineEntry.getValue())
-                    ||  !Objects.equals(this.environmentWeightsProgram.getDefine(defineEntry.getKey()), defineEntry.getValue())))
+                    || (this.environmentWeightsProgram != null
+                        && !Objects.equals(this.environmentWeightsProgram.getDefine(defineEntry.getKey()), defineEntry.getValue()))))
         {
             try
             {

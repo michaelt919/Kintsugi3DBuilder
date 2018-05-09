@@ -150,6 +150,10 @@ layout(location = 1) out int fragObjectID;
 #include "../colorappearance/imgspace.glsl"
 #endif
 
+#if SVD_MODE && RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
+#include "env_svd_unpack.glsl"
+#endif
+
 #if BUEHLER_ALGORITHM
 #define SORTING_TOTAL_COUNT VIEW_COUNT
 #include "sort.glsl"
@@ -157,7 +161,7 @@ layout(location = 1) out int fragObjectID;
 
 #endif
 
-#line 161 0
+#line 165 0
 
 uniform int objectID;
 
@@ -393,7 +397,7 @@ vec4 getSampleFromResidual(vec4 residual, float nDotH, vec3 specularColor, vec3 
 //            + (residual.xyz - vec3(0.5))), vec3(gamma))
 //        * rgbToXYZ(specularColor) / roughnessSquared), 1.0);
 
-    return residual.w * vec4(xyzToRGB((residual.xyz - vec3(0.5)) / roughnessSquared.y) + specularColor, 1.0);
+    return residual.w * vec4(xyzToRGB(rgbToXYZ(specularColor) * ((residual.xyz - vec3(0.5)) / roughnessSquared + 1)), 1.0);
 }
 #endif
 
@@ -722,7 +726,13 @@ void main()
     radiance += diffuseColor * getEnvironmentDiffuse((envMapMatrix * vec4(normalDir, 0.0)).xyz);
 
 #if IMAGE_BASED_RENDERING_ENABLED
+
+#if SVD_MODE
+    radiance += xyzToRGB(getScaledEnvironmentShadingFromSVD(specularColorXYZ, roughness) / specularColorXYZ.y * getMaxLuminance() / (nDotV * roughnessSq));
+#else
     radiance += getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
+#endif
+
 #else
 
     vec3 reflectivity = min(vec3(1.0), diffuseColor + specularColor);
