@@ -11,17 +11,17 @@ uniform ivec2 blockSize;
 
 #ifndef EIGENTEXTURE_COUNT
 #define EIGENTEXTURE_COUNT 4 // For syntax highlighting
-#error // Require this to be defined by application.
+#error "EIGENTEXTURE_COUNT must be externally defined!"
 #endif
 
 #ifndef VIEW_WEIGHT_PACKING_X
 #define VIEW_WEIGHT_PACKING_X 2 // For syntax highlighting
-#error // Require this to be defined by application.
+#error "VIEW_WEIGHT_PACKING_X must be externally defined!"
 #endif
 
 #ifndef VIEW_WEIGHT_PACKING_Y
 #define VIEW_WEIGHT_PACKING_Y 2 // For syntax highlighting
-#error // Require this to be defined by application.
+#error "VIEW_WEIGHT_PACKING_Y must be externally defined!"
 #endif
 
 ivec2 computeBlockStart(vec2 texCoords, ivec2 textureSize)

@@ -16,6 +16,8 @@
 float getSortingWeight(int virtualIndex, vec3 targetDirection)
 {
     mat4 cameraPose = getCameraPose(virtualIndex);
+
+#if !SVD_MODE
     vec4 projTexCoord = cameraProjections[getCameraProjectionIndex(virtualIndex)] * cameraPose * vec4(fPosition, 1.0);
 
     if (projTexCoord.x < -projTexCoord.w || projTexCoord.x > projTexCoord.w
@@ -23,13 +25,12 @@ float getSortingWeight(int virtualIndex, vec3 targetDirection)
     {
         return 0.0;
     }
-    else
-    {
-        vec3 sampleDirectionCameraSpace = -normalize((cameraPose * vec4(fPosition, 1)).xyz);
-        return 1.0 / (1.0 - clamp(
-            dot(mat3(cameraPose) * targetDirection, -normalize((cameraPose * vec4(fPosition, 1)).xyz)),
-            0.0, 0.99999));
-    }
+#endif
+
+    vec3 sampleDirectionCameraSpace = -normalize((cameraPose * vec4(fPosition, 1)).xyz);
+    return 1.0 / (1.0 - clamp(
+        dot(mat3(cameraPose) * targetDirection, -normalize((cameraPose * vec4(fPosition, 1)).xyz)),
+        0.0, 0.99999));
 }
 
 void sort(vec3 targetDirection, out float[SORTING_SAMPLE_COUNT] weights, out int[SORTING_SAMPLE_COUNT] indices)

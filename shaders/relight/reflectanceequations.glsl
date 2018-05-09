@@ -3,6 +3,10 @@
 
 #line 5 3001
 
+#ifndef PHYSICALLY_BASED_MASKING_SHADOWING
+#define PHYSICALLY_BASED_MASKING_SHADOWING 0
+#endif
+
 #ifndef SMITH_MASKING_SHADOWING
 #define SMITH_MASKING_SHADOWING 0
 #endif
@@ -75,7 +79,9 @@ float computeGeometricAttenuationHeightCorrelatedSmith(float roughness, float nD
 float geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV)
 {
     float result;
-#if SMITH_MASKING_SHADOWING
+#if !PHYSICALLY_BASED_MASKING_SHADOWING
+    result = nDotL * nDotV;
+#elif SMITH_MASKING_SHADOWING
     //result = computeGeometricAttenuationSeparableSmith(roughness, nDotV, nDotL);
     result = computeGeometricAttenuationHeightCorrelatedSmith(roughness, nDotV, nDotL);
 #else
