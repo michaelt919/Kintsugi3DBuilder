@@ -75,8 +75,8 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT + 1] computeEnvironmentSamples(int v
         virtualMaskingShadowing = nDotL_virtual * nDotV_virtual;
     #endif
 
-        vec3 sampleBase = 0.25 / PI //* getLuminance(texture(specularMap, fTexCoord).rgb) / getMaxLuminance()
-            //* min(1.0, virtualMaskingShadowing / sampleMaskingShadowing)
+        vec3 sampleBase = 0.25 / PI * getLuminance(pow(texture(specularMap, fTexCoord).rgb, vec3(gamma))) / getMaxLuminance()
+            * virtualMaskingShadowing / sampleMaskingShadowing
             * rgbToXYZ(getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPose)) * virtualLightDir));
         float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
         // dl = 4 * h dot v * dh

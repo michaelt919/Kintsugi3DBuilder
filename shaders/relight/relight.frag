@@ -325,7 +325,7 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
             vec4 residual = getColor(virtualIndex);
             if (residual.w > 0)
             {
-                mfdFresnel = getSampleFromResidual(residual, nDotH, specularColor, roughness).rgb / (PI /* * max(geomAttenVirtual, geomAttenSample)*/);
+                mfdFresnel = getSampleFromResidual(residual, nDotH, specularColor, roughness).rgb / (PI * geomAttenSample);
             }
 #else
 
@@ -361,7 +361,7 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
 
             vec4 unweightedSample;
             unweightedSample.rgb = rgbToXYZ(mfdNewFresnel)
-                /* * geomAttenVirtual */ / (4 * nDotV_virtual)
+                * geomAttenVirtual / (4 * nDotV_virtual)
                 * rgbToXYZ(getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPose)) * virtualLightDir));
 
 #if SPECULAR_TEXTURE_ENABLED && ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
@@ -736,7 +736,7 @@ void main()
 #if IMAGE_BASED_RENDERING_ENABLED
 
 #if SVD_MODE
-    radiance += xyzToRGB(getScaledEnvironmentShadingFromSVD(specularColorXYZ, roughness) /* * getMaxLuminance()*/ / (nDotV * roughnessSq  ));//  * specularColorXYZ.y));
+    radiance += xyzToRGB(getScaledEnvironmentShadingFromSVD(specularColorXYZ, roughness) * getMaxLuminance() / (nDotV * roughnessSq * specularColorXYZ.y));
 #else
     radiance += xyzToRGB(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness));
 #endif
