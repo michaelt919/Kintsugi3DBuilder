@@ -1414,7 +1414,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             Texture3D<ContextType> environmentWeightsTexture
                                 = context.getTextureFactory().build2DColorTextureArray(
                                         resources.colorTextures.getWidth(), resources.colorTextures.getHeight(), 8)
-                                    .setInternalFormat(ColorFormat.RGBA8)
+                                    .setInternalFormat(ColorFormat.RGBA16F)
                                     .createTexture();
                             FramebufferObject<ContextType> environmentWeightsFBO
                                 = context.buildFramebufferObject(resources.colorTextures.getWidth(), resources.colorTextures.getHeight())

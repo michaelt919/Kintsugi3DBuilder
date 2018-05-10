@@ -233,6 +233,23 @@ float getViewWeight(int viewIndex)
 
 #if IMAGE_BASED_RENDERING_ENABLED
 
+#if RESIDUAL_IMAGES
+
+vec4 getSampleFromResidual(vec4 residual, float nDotH, vec3 specularColor, vec3 roughness)
+{
+    vec3 roughnessSquared = roughness * roughness;
+//    return residual.w * vec4(xyzToRGB(
+//        pow(max(vec3(0), pow(
+//                dist(nDotH, roughness)
+//            * roughnessSquared, vec3(1.0 / gamma))
+//            + (residual.xyz - vec3(0.5))), vec3(gamma))
+//        * rgbToXYZ(specularColor) / roughnessSquared), 1.0);
+
+    return residual.w * vec4(xyzToRGB(rgbToXYZ(specularColor) * ((residual.xyz - vec3(0.5)) / roughnessSquared + 1)), 1.0);
+}
+
+#else
+
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float maxLuminance)
 {
     if (nDotL == 0.0)
@@ -246,6 +263,8 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
         return vec4(remainder, originalColor.a);
     }
 }
+
+#endif
 
 #if RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
 
@@ -303,7 +322,11 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
             float mfdMono;
 
 #if RESIDUAL_IMAGES
-            // TODO
+            vec4 residual = getColor(virtualIndex);
+            if (residual.w > 0)
+            {
+                mfdFresnel = getSampleFromResidual(residual, nDotH, specularColor, roughness).rgb / (PI /* * max(geomAttenVirtual, geomAttenSample)*/);
+            }
 #else
 
             vec4 sampleColor = getLinearColor(virtualIndex);
@@ -325,9 +348,9 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
 #else
             mfdFresnel = mfdFresnelGeom * 4 / nDotL_sample;
 #endif
+#endif // RESIDUAL_IMAGES
 
             mfdMono = getLuminance(mfdFresnel / specularColor);
-#endif // RESIDUAL_IMAGES
 
             vec3 mfdNewFresnel;
 #if FRESNEL_ENABLED
@@ -337,9 +360,9 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
 #endif
 
             vec4 unweightedSample;
-            unweightedSample.rgb = mfdNewFresnel
-                * geomAttenVirtual / (4 * nDotV_virtual)
-                * getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPose)) * virtualLightDir);
+            unweightedSample.rgb = rgbToXYZ(mfdNewFresnel)
+                /* * geomAttenVirtual */ / (4 * nDotV_virtual)
+                * rgbToXYZ(getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPose)) * virtualLightDir));
 
 #if SPECULAR_TEXTURE_ENABLED && ARCHIVING_2017_ENVIRONMENT_NORMALIZATION
             // Normalizes with respect to specular texture when available as described in our Archiving 2017 paper.
@@ -385,21 +408,6 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 }
 
 #endif // RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
-
-#if RESIDUAL_IMAGES
-vec4 getSampleFromResidual(vec4 residual, float nDotH, vec3 specularColor, vec3 roughness)
-{
-    vec3 roughnessSquared = roughness * roughness;
-//    return residual.w * vec4(xyzToRGB(
-//        pow(max(vec3(0), pow(
-//                dist(nDotH, roughness)
-//            * roughnessSquared, vec3(1.0 / gamma))
-//            + (residual.xyz - vec3(0.5))), vec3(gamma))
-//        * rgbToXYZ(specularColor) / roughnessSquared), 1.0);
-
-    return residual.w * vec4(xyzToRGB(rgbToXYZ(specularColor) * ((residual.xyz - vec3(0.5)) / roughnessSquared + 1)), 1.0);
-}
-#endif
 
 #if BUEHLER_ALGORITHM
 
@@ -669,17 +677,17 @@ void main()
 #endif
 
     vec3 normalDir;
-#if NORMAL_TEXTURE_ENABLED
-#if TANGENT_SPACE_NORMAL_MAP
-    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
-    vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
-    normalDir = tangentToObject * normalDirTS;
-#else
-    normalDir = normalDirTS;
-#endif // TANGENT_SPACE_NORMAL_MAP
-#else
+//#if NORMAL_TEXTURE_ENABLED
+//#if TANGENT_SPACE_NORMAL_MAP
+//    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
+//    vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
+//    normalDir = tangentToObject * normalDirTS;
+//#else
+//    normalDir = normalDirTS;
+//#endif // TANGENT_SPACE_NORMAL_MAP
+//#else
     normalDir = normalize(fNormal);
-#endif // NORMAL_TEXTURE_ENABLED
+//#endif // NORMAL_TEXTURE_ENABLED
 
     vec3 triangleNormal = normalize(fNormal);
 
@@ -728,10 +736,14 @@ void main()
 #if IMAGE_BASED_RENDERING_ENABLED
 
 #if SVD_MODE
-    radiance += xyzToRGB(getScaledEnvironmentShadingFromSVD(specularColorXYZ, roughness) / specularColorXYZ.y * getMaxLuminance() / (nDotV * roughnessSq));
+    radiance += xyzToRGB(getScaledEnvironmentShadingFromSVD(specularColorXYZ, roughness) /* * getMaxLuminance()*/ / (nDotV * roughnessSq  ));//  * specularColorXYZ.y));
 #else
-    radiance += getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness);
+    radiance += xyzToRGB(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness));
 #endif
+
+//    fragColor = vec4(0.5 * xyzToRGB(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness))
+//        / xyzToRGB(getScaledEnvironmentShadingFromSVD(specularColorXYZ, roughness) * getMaxLuminance() / (nDotV * roughnessSq * specularColorXYZ.y)), 1.0);
+//    return;
 
 #else
 

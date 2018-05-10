@@ -53,57 +53,67 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT + 1] computeEnvironmentSamples(int v
     float nDotV_sample = max(0, dot(normalDirCameraSpace, sampleViewDir));
     float nDotL_sample = max(0, dot(normalDirCameraSpace, sampleLightDir));
 
-    vec3 virtualViewDir =
-        normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
-    vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
-    float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
-    float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
-    float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
-
-    float oneMinusHDotV = max(0, 1.0 - hDotV_virtual);
-    float oneMinusHDotVSq = oneMinusHDotV * oneMinusHDotV;
-    float fresnelFactor = oneMinusHDotVSq * oneMinusHDotVSq * oneMinusHDotV;
-
-    float sampleMaskingShadowing;
-    float virtualMaskingShadowing;
-#if PHYSICALLY_BASED_MASKING_SHADOWING
-    sampleMaskingShadowing = computeGeometricAttenuationHeightCorrelatedSmith(roughness, nDotV_sample, nDotL_sample);
-    virtualMaskingShadowing = computeGeometricAttenuationHeightCorrelatedSmith(roughness, nDotV_virtual, nDotL_virtual);
-#else
-    sampleMaskingShadowing = nDotL_sample * nDotV_sample;
-    virtualMaskingShadowing = nDotL_virtual * nDotV_virtual;
-#endif
-
-    vec3 sampleBase = 0.25 * getLuminance(texture(specularMap, fTexCoord).rgb) / getMaxLuminance()
-        * min(1.0, virtualMaskingShadowing / sampleMaskingShadowing)
-        * rgbToXYZ(getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPose)) * virtualLightDir));
-    float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
-    // dl = 4 * h dot v * dh
-    // cameraWeight * VIEW_COUNT -> brings weights back to being on the order of 1
-    // This is helpful for consistency with numerical limits (i.e. clamping)
-    // Everything gets normalized at the end again anyways.
-
-    results[0].baseFresnel = vec4(sampleBase, 1.0 / (2.0 * PI)) * weight;
-    results[0].fresnelAdjustment = vec4(fresnelFactor * sampleBase, 1.0 / (2.0 * PI)) * weight;
-
-    for (int i = 0; i < ACTIVE_EIGENTEXTURE_COUNT; i++)
+    if (nDotV_sample > 0.0 && nDotL_sample > 0.0)
     {
-        // Light intensities in view set files are assumed to be pre-divided by pi.
-        // Or alternatively, the result of getLinearColor gives a result
-        // where a diffuse reflectivity of 1 is represented by a value of pi.
-        // See diffusefit.glsl
-        vec4 mfdTimesRoughnessSq = computeSVDViewWeights(ivec3(computeBlockStart(fTexCoord, textureSize(eigentextures, 0).xy), virtualIndex), i);
+        vec3 virtualViewDir = normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
+        vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
+        float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
+        float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
+        float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
 
-        if (mfdTimesRoughnessSq.w > 0.0)
+        float oneMinusHDotV = max(0, 1.0 - hDotV_virtual);
+        float oneMinusHDotVSq = oneMinusHDotV * oneMinusHDotV;
+        float fresnelFactor = oneMinusHDotVSq * oneMinusHDotVSq * oneMinusHDotV;
+
+        float sampleMaskingShadowing;
+        float virtualMaskingShadowing;
+    #if PHYSICALLY_BASED_MASKING_SHADOWING
+        sampleMaskingShadowing = computeGeometricAttenuationHeightCorrelatedSmith(roughness, nDotV_sample, nDotL_sample);
+        virtualMaskingShadowing = computeGeometricAttenuationHeightCorrelatedSmith(roughness, nDotV_virtual, nDotL_virtual);
+    #else
+        sampleMaskingShadowing = nDotL_sample * nDotV_sample;
+        virtualMaskingShadowing = nDotL_virtual * nDotV_virtual;
+    #endif
+
+        vec3 sampleBase = 0.25 / PI //* getLuminance(texture(specularMap, fTexCoord).rgb) / getMaxLuminance()
+            //* min(1.0, virtualMaskingShadowing / sampleMaskingShadowing)
+            * rgbToXYZ(getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPose)) * virtualLightDir));
+        float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
+        // dl = 4 * h dot v * dh
+        // cameraWeight * VIEW_COUNT -> brings weights back to being on the order of 1
+        // This is helpful for consistency with numerical limits (i.e. clamping)
+        // Everything gets normalized at the end again anyways.
+
+        results[0].baseFresnel = vec4(sampleBase, 1.0 / (2.0 * PI)) * weight;
+        results[0].fresnelAdjustment = vec4(fresnelFactor * sampleBase, 1.0 / (2.0 * PI)) * weight;
+
+        for (int i = 0; i < ACTIVE_EIGENTEXTURE_COUNT; i++)
         {
-            vec3 unweightedSample = mfdTimesRoughnessSq.xyz * sampleBase;
-            results[i + 1].baseFresnel = vec4(unweightedSample, 1.0 / (2.0 * PI)) * weight;
-            results[i + 1].fresnelAdjustment = vec4(fresnelFactor * unweightedSample, 1.0 / (2.0 * PI)) * weight;
+            // Light intensities in view set files are assumed to be pre-divided by pi.
+            // Or alternatively, the result of getLinearColor gives a result
+            // where a diffuse reflectivity of 1 is represented by a value of pi.
+            // See diffusefit.glsl
+            vec4 mfdTimesRoughnessSq = computeSVDViewWeights(ivec3(computeBlockStart(fTexCoord, textureSize(eigentextures, 0).xy), virtualIndex), i);
+
+            if (mfdTimesRoughnessSq.w > 0.0)
+            {
+                vec3 unweightedSample = mfdTimesRoughnessSq.xyz * sampleBase;
+                results[i + 1].baseFresnel = vec4(unweightedSample, 1.0 / (2.0 * PI)) * weight;
+                results[i + 1].fresnelAdjustment = vec4(fresnelFactor * unweightedSample, 1.0 / (2.0 * PI)) * weight;
+            }
+            else
+            {
+                results[i + 1].baseFresnel = vec4(0.0);
+                results[i + 1].fresnelAdjustment = vec4(0.0);
+            }
         }
-        else
+    }
+    else
+    {
+        for (int i = 0; i < ACTIVE_EIGENTEXTURE_COUNT + 1; i++)
         {
-            results[i + 1].baseFresnel = vec4(0.0);
-            results[i + 1].fresnelAdjustment = vec4(0.0);
+            results[i].baseFresnel = vec4(0.0);
+            results[i].fresnelAdjustment = vec4(0.0);
         }
     }
 
@@ -140,8 +150,8 @@ void main()
         if (sums[j].baseFresnel.w > 0.0)
         {
             float normalizationFactor =
-                VIEW_COUNT;                             // better spatial consistency, worse directional consistency?
-//                clamp(sums.weight, 0, 1000000.0);       // Better directional consistency, worse spatial consistency?
+                VIEW_COUNT;                                 // better spatial consistency, worse directional consistency?
+//                clamp(sums[j].baseFresnel.w, 0, 1000000.0); // Better directional consistency, worse spatial consistency?
 
             results[j].baseFresnel = sums[j].baseFresnel / normalizationFactor;
             results[j].fresnelAdjustment = sums[j].fresnelAdjustment / normalizationFactor;
