@@ -150,6 +150,10 @@ layout(location = 1) out int fragObjectID;
 #include "../colorappearance/imgspace.glsl"
 #endif
 
+#if SPECULAR_TEXTURE_ENABLED
+uniform sampler2D specularMap;
+#endif
+
 #if SVD_MODE && RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
 #include "env_svd_unpack.glsl"
 #endif
@@ -204,10 +208,6 @@ uniform sampler2D diffuseMap;
 
 #if NORMAL_TEXTURE_ENABLED
 uniform sampler2D normalMap;
-#endif
-
-#if SPECULAR_TEXTURE_ENABLED
-uniform sampler2D specularMap;
 #endif
 
 #if ROUGHNESS_TEXTURE_ENABLED
@@ -353,7 +353,7 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
             mfdMono = getLuminance(mfdFresnel / specularColor);
 
             vec3 mfdNewFresnel;
-#if FRESNEL_ENABLED
+#if FRESNEL_EFFECT_ENABLED
             mfdNewFresnel = fresnel(mfdFresnel, vec3(mfdMono), hDotV_virtual);
 #else
             mfdNewFresnel = mfdFresnel;
@@ -749,11 +749,11 @@ void main()
 
     vec3 reflectivity = min(vec3(1.0), diffuseColor + specularColor);
 
-#if FRESNEL_ENABLED
+#if FRESNEL_EFFECT_ENABLED
     radiance += fresnel(ambientColor * reflectivity, ambientColor, nDotV);
 #else
     radiance += ambientColor * reflectivity;
-#endif // FRESNEL_ENABLED
+#endif // FRESNEL_EFFECT_ENABLED
 
 #endif // IMAGE_BASED_RENDERING_ENABLED
 

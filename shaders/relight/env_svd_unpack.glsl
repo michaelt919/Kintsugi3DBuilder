@@ -167,11 +167,15 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorXYZ, vec3 roughness)
         if (blendedTerm.w > 0)
         {
             mfdGeomRoughnessSq += blendedTerm.xyz / blendedTerm.w;
-//            mfdGeomRoughnessSqFresnelFactor += blendedTermFresnel.xyz / blendedTerm.w;
+            mfdGeomRoughnessSqFresnelFactor += blendedTermFresnel.xyz / blendedTerm.w;
         }
     }
 
-    return mfdGeomRoughnessSq * specularColorXYZ;//mix(mfdGeomRoughnessSqFresnelFactor, mfdGeomRoughnessSq, specularColorXYZ);
+#if FRESNEL_EFFECT_ENABLED
+    return mix(mfdGeomRoughnessSqFresnelFactor, mfdGeomRoughnessSq, specularColorXYZ);
+#else
+    return mfdGeomRoughnessSq * specularColorXYZ;
+#endif
 }
 
 #endif // ENV_SVD_UNPACK_GLSL

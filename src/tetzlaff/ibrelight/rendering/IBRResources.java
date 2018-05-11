@@ -1016,7 +1016,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             program.setTexture("eigentextures", this.eigentextures);
             program.setTexture("viewWeightTextures", this.colorTextures);
-            program.setUniform("blockSize", new IntVector2(16, 16));
         }
         else
         {
@@ -1125,6 +1124,18 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
     public double getPrimaryViewDistance()
     {
         return primaryViewDistance;
+    }
+
+    public IntVector2 getSVDViewWeightResolution()
+    {
+        if (this.eigentextures == null)
+        {
+            throw new IllegalStateException("The IBR data is not in an SVD representation.");
+        }
+        else
+        {
+            return new IntVector2(this.colorTextures.getWidth() / svdViewWeightPacking.x, this.colorTextures.getHeight() / svdViewWeightPacking.y);
+        }
     }
 
     public float getCameraWeight(int index)
