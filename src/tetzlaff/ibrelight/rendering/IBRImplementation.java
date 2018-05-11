@@ -1410,14 +1410,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     {
                         setupForDraw(this.environmentWeightsProgram, view);
 
+                        IntVector2 environmentWeightsResolution = this.resources.getSVDViewWeightResolution();
+
                         try (
                             Texture3D<ContextType> environmentWeightsTexture
                                 = context.getTextureFactory().build2DColorTextureArray(
-                                        resources.colorTextures.getWidth(), resources.colorTextures.getHeight(), 8)
+                                    environmentWeightsResolution.x, environmentWeightsResolution.y, 8)
                                     .setInternalFormat(ColorFormat.RGBA16F)
                                     .createTexture();
                             FramebufferObject<ContextType> environmentWeightsFBO
-                                = context.buildFramebufferObject(resources.colorTextures.getWidth(), resources.colorTextures.getHeight())
+                                = context.buildFramebufferObject(environmentWeightsResolution.x, environmentWeightsResolution.y)
                                     .addEmptyColorAttachments(8)
                                     .createFramebufferObject())
                         {
