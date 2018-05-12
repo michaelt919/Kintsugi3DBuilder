@@ -46,15 +46,15 @@ vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
     
     vec3 view = normalize(getViewVector());
 
+    LightInfo lightInfo = getLightInfo();
+    vec3 light = lightInfo.normalizedDirection;
+
     float nDotV = max(0, dot(shadingNormal, view));
+    float nDotL = max(0, dot(shadingNormal, light));
     vec4 color = getLinearColor();
 
     if (nDotV > 0)
     {
-        LightInfo lightInfo = getLightInfo();
-        vec3 light = lightInfo.normalizedDirection;
-        float nDotL = max(0, dot(shadingNormal, light));
-
         if (nDotL > 0.0)
         {
             vec3 halfway = normalize(view + light);
@@ -66,8 +66,8 @@ vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
             vec3 diffuseContrib = diffuseColor * nDotL;
 
             float maskingShadowing = computeGeometricAttenuationHeightCorrelatedSmith(roughness.y, nDotV, nDotL);
-//            float invGeomRatio = 4 * nDotV / maskingShadowing;
-            vec3 mfdFresnel = max(vec3(0.0), (colorScaled - diffuseContrib)) * 4 * nDotV; // * invGeomRatio;
+            float invGeomRatio = 4 * nDotV / maskingShadowing;
+            vec3 specularTerm = max(vec3(0.0), (colorScaled - diffuseContrib));
 
             vec3 sqrtDenominator = (roughnessSquared - 1) * nDotH * nDotH + 1;
 
@@ -84,11 +84,11 @@ vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
     //                        vec3(1.0 / 2.2))
     //                    , nDotV);
 
-                return vec4(clamp(roughnessSquared * (mfdFresnel / specularColor - 1.0), 0, 1), 1.0);
+                return vec4(clamp(roughnessSquared * (invGeomRatio * specularTerm / specularColor - 1.0), -1, 1), 1.0);
             }
             else
             {
-                return vec4(clamp(roughnessSquared * (maskingShadowing * roughnessSquared / (sqrtDenominator * sqrtDenominator) - 1.0), 0, 1), 1.0);
+                return vec4(clamp(roughnessSquared * (roughnessSquared / (sqrtDenominator * sqrtDenominator) - 1.0), -1, 1), 1.0);
             }
         }
         else

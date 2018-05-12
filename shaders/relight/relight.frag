@@ -140,6 +140,10 @@ layout(location = 1) out int fragObjectID;
 #include "environment.glsl"
 #endif
 
+#if SPECULAR_TEXTURE_ENABLED
+uniform sampler2D specularMap;
+#endif
+
 #if IMAGE_BASED_RENDERING_ENABLED
 
 #include "../colorappearance/colorappearance.glsl"
@@ -148,10 +152,6 @@ layout(location = 1) out int fragObjectID;
 #include "../colorappearance/svd_unpack.glsl"
 #else
 #include "../colorappearance/imgspace.glsl"
-#endif
-
-#if SPECULAR_TEXTURE_ENABLED
-uniform sampler2D specularMap;
 #endif
 
 #if SVD_MODE && RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
@@ -165,7 +165,7 @@ uniform sampler2D specularMap;
 
 #endif
 
-#line 165 0
+#line 169 0
 
 uniform int objectID;
 
@@ -235,7 +235,7 @@ float getViewWeight(int viewIndex)
 
 #if RESIDUAL_IMAGES
 
-vec4 getSampleFromResidual(vec4 residual, float nDotH, vec3 specularColor, vec3 roughness)
+vec4 getSampleFromResidual(vec4 residual, float center, vec3 specularColor, vec3 roughness)
 {
     vec3 roughnessSquared = roughness * roughness;
 //    return residual.w * vec4(xyzToRGB(
@@ -245,7 +245,7 @@ vec4 getSampleFromResidual(vec4 residual, float nDotH, vec3 specularColor, vec3 
 //            + (residual.xyz - vec3(0.5))), vec3(gamma))
 //        * rgbToXYZ(specularColor) / roughnessSquared), 1.0);
 
-    return residual.w * vec4(xyzToRGB(rgbToXYZ(specularColor) * ((residual.xyz - vec3(0.5)) / roughnessSquared + 1)), 1.0);
+    return residual.w * vec4(xyzToRGB(rgbToXYZ(specularColor) * ((residual.xyz - vec3(0.5)) / roughnessSquared + center)), 1.0);
 }
 
 #else
@@ -311,12 +311,8 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
             float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
             float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
 
-            float geomAttenVirtual;
-#if PHYSICALLY_BASED_MASKING_SHADOWING
-            geomAttenVirtual = geom(roughness.y, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
-#else
-            geomAttenVirtual = nDotL_virtual * nDotV_virtual;
-#endif
+            float geomAttenVirtual = geom(roughness.y, nDotH, nDotV_virtual, nDotL_virtual, hDotV_virtual);
+
 
             vec3 mfdFresnel;
             float mfdMono;
@@ -325,7 +321,7 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
             vec4 residual = getColor(virtualIndex);
             if (residual.w > 0)
             {
-                mfdFresnel = getSampleFromResidual(residual, nDotH, specularColor, roughness).rgb / (PI * geomAttenSample);
+                mfdFresnel = getSampleFromResidual(residual, 1, specularColor, roughness).rgb / PI;
             }
 #else
 
@@ -437,7 +433,7 @@ vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  v
         vec4 residual = getColor(virtualIndex);
         if (residual.w > 0)
         {
-            return getSampleFromResidual(residual, nDotH, specularColor, roughness) * vec4(vec3(1.0), geomAtten);
+            return getSampleFromResidual(residual, 1, specularColor, roughness) * vec4(geomAtten);
         }
 #else
         vec4 sampleColor = getLinearColor(virtualIndex);
@@ -516,11 +512,13 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec
 
     vec4 precomputedSample = vec4(0);
 
+    float geomAtten = geom(roughness.y, nDotH, nDotV, nDotL, hDotV);
+
 #if RESIDUAL_IMAGES
     vec4 residual = getColor(virtualIndex);
     if (residual.w > 0)
     {
-        precomputedSample = getSampleFromResidual(residual, nDotH, specularColor, roughness);
+        precomputedSample = getSampleFromResidual(residual, 1, specularColor, roughness) * vec4(geomAtten);
     }
 #else
     vec4 sampleColor = getLinearColor(virtualIndex);
@@ -533,8 +531,6 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec
 #endif
 
         vec3 diffuseContrib = diffuseColor * nDotL * lightIntensity;
-
-        float geomAtten = geom(roughness.y, nDotH, nDotV, nDotL, hDotV);
 
 #if PHYSICALLY_BASED_MASKING_SHADOWING
         if (geomAtten > 0.0)
@@ -736,7 +732,7 @@ void main()
 #if IMAGE_BASED_RENDERING_ENABLED
 
 #if SVD_MODE
-    radiance += xyzToRGB(getScaledEnvironmentShadingFromSVD(specularColorXYZ, roughness) * getMaxLuminance() / (nDotV * roughnessSq * specularColorXYZ.y));
+    radiance += xyzToRGB(getScaledEnvironmentShadingFromSVD(specularColorXYZ, roughness) / (nDotV * roughnessSq));
 #else
     radiance += xyzToRGB(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness));
 #endif
