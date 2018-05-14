@@ -269,12 +269,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             if (this.resources.eigentextures != null)
             {
                 this.environmentWeightsProgram = getProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texspace_noscale.vert"))
+                    .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                     .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "environmentweights.frag"))
                     .createProgram();
 
                 this.environmentWeightsDrawable = context.createDrawable(environmentWeightsProgram);
-                this.environmentWeightsDrawable.addVertexBuffer("position", this.resources.positionBuffer);
+                this.environmentWeightsDrawable.addVertexBuffer("position", this.rectangleVertices);
             }
 
             this.reprojectDrawable = context.createDrawable(reprojectProgram);
@@ -284,31 +284,18 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             {
                 this.mainDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
                 this.reprojectDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
-
-                if (this.environmentWeightsDrawable != null)
-                {
-                    this.environmentWeightsDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
-                }
             }
 
             if (this.resources.texCoordBuffer != null)
             {
                 this.mainDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
                 this.reprojectDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-                if (this.environmentWeightsDrawable != null)
-                {
-                    this.environmentWeightsDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-                }
             }
 
             if (this.resources.tangentBuffer != null)
             {
                 this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
                 this.reprojectDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-                if (this.environmentWeightsDrawable != null)
-                {
-                    this.environmentWeightsDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-                }
             }
 
 
@@ -450,8 +437,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             Matrix4 view = this.getAbsoluteViewMatrix();
             Matrix4 projection = this.getProjectionMatrix(windowSize);
             // TODO break this into blocks just in case there's a GPU timeout?
-            this.setupForDraw(this.program, view);
-            Matrix4 modelView = drawModel(this.mainDrawable, firstShadingFBO, 0, 0, windowSize.width, windowSize.height, 0, view, projection);
+            this.setupForDraw(this.program);
+            Matrix4 modelView = setupModelView(this.program, 0, view);
+            this.program.setUniform("projection", projection);
+
+            // Render to off-screen buffer
+            mainDrawable.draw(PrimitiveMode.TRIANGLES, firstShadingFBO, 0, 0, windowSize.width, windowSize.height);
+
+            // Flush to prevent timeout
+            context.flush();
+
             this.shadedFrames.add(new ShadedFrame<>(firstShadingFBO, modelView, projection));
 
     //        // Make sure that everything is loaded onto the graphics card before announcing that loading is complete.
@@ -665,27 +660,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         }
     }
 
-    private void setupForDraw(Program<ContextType> program, Matrix4 view)
+    private void setupForDraw(Program<ContextType> program)
     {
         this.resources.setupShaderProgram(program);
 
-        if (!this.settingsModel.getBoolean("relightingEnabled") && !settingsModel.getBoolean("lightCalibrationMode")
-            && this.settingsModel.get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM)
-        {
-            if (weightBuffer != null)
-            {
-                weightBuffer.close();
-                weightBuffer = null;
-            }
-            weightBuffer = context.createUniformBuffer().setData(this.generateViewWeights(view));
-            program.setUniformBuffer("ViewWeights", weightBuffer);
-        }
-        else
-        {
-            program.setUniform("weightExponent", this.settingsModel.getFloat("weightExponent"));
-            program.setUniform("isotropyFactor", this.settingsModel.getFloat("isotropyFactor"));
-            program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
-        }
+        program.setUniform("weightExponent", this.settingsModel.getFloat("weightExponent"));
+        program.setUniform("isotropyFactor", this.settingsModel.getFloat("isotropyFactor"));
+        program.setUniform("occlusionBias", this.settingsModel.getFloat("occlusionBias"));
 
         float gamma = this.settingsModel.getFloat("gamma");
         program.setUniform("renderGamma", gamma);
@@ -708,6 +689,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                 / (double)resources.viewSet.getCameraPoseCount() )
                             / Math.log(2.0)))));
             program.setUniform("diffuseEnvironmentMipMapLevel", this.environmentMap.getMipmapLevelCount() - 1);
+
+            Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
+            program.setUniform("envMapMatrix", envMapMatrix);
         }
 
         program.setUniform("ambientColor", lightingModel.getAmbientLightColor());
@@ -964,50 +948,56 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         return cameraDistance * Math.min(cameraModel.getHorizontalFOV(), getVerticalFieldOfView(size)) / 4;
     }
 
-    private Matrix4 drawModel(Drawable<ContextType> drawable, Framebuffer<ContextType> framebuffer, int x, int y, int width, int height,
-        int modelInstance, Matrix4 view, Matrix4 projection)
+    private Matrix4 setupModelView(Program<ContextType> p, int modelInstance, Matrix4 view)
     {
-        Matrix4 envMapMatrix = this.getEnvironmentMapMatrix();
-        drawable.program().setUniform("envMapMatrix", envMapMatrix);
-
         Matrix4 partialViewMatrix = getPartialViewMatrix(view);
 
         for (int lightIndex = 0; lightIndex < lightingModel.getLightCount(); lightIndex++)
         {
-            setupLight(drawable.program(), lightIndex, modelInstance);
+            setupLight(p, lightIndex, modelInstance);
         }
 
         // Draw instance
         Matrix4 modelView = modelInstance < 0 ? view : getModelViewMatrix(partialViewMatrix, modelInstance);
 
-        drawable.program().setUniform("model_view", modelView);
-        drawable.program().setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
+        p.setUniform("model_view", modelView);
+        p.setUniform("viewPos", modelView.quickInverse(0.01f).getColumn(3).getXYZ());
 
-        FramebufferSize fullFBOSize = framebuffer.getSize();
-        float scaleX = (float)fullFBOSize.width / (float)width;
-        float scaleY = (float)fullFBOSize.height / (float)height;
-        float centerX = (2 * x + width - fullFBOSize.width) / (float)fullFBOSize.width;
-        float centerY = (2 * y + height - fullFBOSize.height) / (float)fullFBOSize.height;
-
-        drawable.program().setUniform("projection",
-            Matrix4.scale(scaleX, scaleY, 1.0f)
-                .times(Matrix4.translate(-centerX, -centerY, 0))
-                .times(projection));
-
-        // Render to off-screen buffer
-        drawable.draw(PrimitiveMode.TRIANGLES, framebuffer, x, y, width, height);
-
-        // Flush to prevent timeout
-        context.flush();
+        if (!this.settingsModel.getBoolean("relightingEnabled") && !settingsModel.getBoolean("lightCalibrationMode")
+            && this.settingsModel.get("weightMode", ShadingParameterMode.class) == ShadingParameterMode.UNIFORM)
+        {
+            if (weightBuffer == null)
+            {
+                weightBuffer = context.createUniformBuffer();
+            }
+            weightBuffer.setData(this.generateViewWeights(view)); // TODO should this use modelView instead?
+            program.setUniformBuffer("ViewWeights", weightBuffer);
+        }
 
         return modelView;
+    }
+
+    private Matrix4 setupProjection(Program<ContextType> p, int fullWidth, int fullHeight, int x, int y, int width, int height, Matrix4 projection)
+    {
+        float scaleX = (float)fullWidth / (float)width;
+        float scaleY = (float)fullHeight / (float)height;
+        float centerX = (2 * x + width - fullWidth) / (float)fullWidth;
+        float centerY = (2 * y + height - fullHeight) / (float)fullHeight;
+
+        Matrix4 adjustedProjection = Matrix4.scale(scaleX, scaleY, 1.0f)
+            .times(Matrix4.translate(-centerX, -centerY, 0))
+            .times(projection);
+
+        p.setUniform("projection", adjustedProjection);
+
+        return adjustedProjection;
     }
 
     private void drawReferenceScene(Framebuffer<ContextType> framebuffer, Matrix4 view, Matrix4 projection)
     {
         if (referenceSceneProgram != null && referenceScene != null && refScenePositions != null && refSceneNormals != null)
         {
-            setupForDraw(referenceSceneProgram, view);
+            setupForDraw(referenceSceneProgram);
             referenceSceneProgram.setUniform("projection", projection);
             referenceSceneProgram.setUniform("objectID", this.sceneObjectIDLookup.get("SceneObject"));
 
@@ -1356,9 +1346,17 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             //System.out.println(shadingWidth + "x" + shadingHeight);
                         }
 
-                        setupForDraw(this.program, frameInProgress.modelView);
-                        drawModel(mainDrawable, frameInProgress.framebuffer, shadingX, shadingY, (int) Math.round(shadingWidth),
-                            (int) Math.round(shadingHeight), -1, frameInProgress.modelView, frameInProgress.projection);
+                        setupForDraw(this.program);
+                        setupModelView(this.program, -1, frameInProgress.modelView);
+                        setupProjection(this.program, size.width, size.height, shadingX, shadingY,
+                            (int) Math.round(shadingWidth), (int) Math.round(shadingHeight), frameInProgress.projection);
+
+                        // Render to off-screen buffer
+                        mainDrawable.draw(PrimitiveMode.TRIANGLES, framebuffer, shadingX, shadingY,
+                            (int) Math.round(shadingWidth), (int) Math.round(shadingHeight));
+
+                        // Flush to prevent timeout
+                        context.flush();
 
                         FramebufferSize sizeInProgress = frameInProgress.framebuffer.getSize();
                         shadingX += Math.round(shadingWidth);
@@ -1386,12 +1384,19 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                     this.reprojectProgram.setTexture("prerenderedImagePrimary", primaryFrame.framebuffer.getColorAttachmentTexture(0));
                     this.reprojectProgram.setTexture("prerenderedDepthImagePrimary", primaryFrame.framebuffer.getDepthAttachmentTexture());
 
-                    setupForDraw(this.reprojectProgram, view);
-                    drawModel(this.reprojectDrawable, offscreenFBO, 0, 0, fboWidth, fboHeight, 0, view, projection);
+                    setupForDraw(this.reprojectProgram);
+                    setupModelView(this.reprojectProgram, 0, view);
+                    this.reprojectProgram.setUniform("projection", projection);
+
+                    // Render to off-screen buffer
+                    reprojectDrawable.draw(PrimitiveMode.TRIANGLES, offscreenFBO, 0, 0, fboWidth, fboHeight);
+
+                    // Flush to prevent timeout
+                    context.flush();
                 }
                 else
                 {
-                    setupForDraw(this.program, view);
+                    setupForDraw(this.program);
 
                     this.program.setUniform("objectID", this.sceneObjectIDLookup.get("IBRObject"));
 
@@ -1408,7 +1413,10 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                     if (this.resources.eigentextures != null && lightingModel != null && !Objects.equals(lightingModel.getAmbientLightColor(), Vector3.ZERO))
                     {
-                        setupForDraw(this.environmentWeightsProgram, view);
+                        setupForDraw(this.environmentWeightsProgram);
+                        setupModelView(this.environmentWeightsProgram, 0, view);
+                        this.environmentWeightsProgram.setTexture("positionMap", this.resources.blockPositionTexture);
+                        this.environmentWeightsProgram.setTexture("normalMap", this.resources.blockNormalTexture);
 
                         IntVector2 environmentWeightsResolution = this.resources.getSVDViewWeightResolution();
 
@@ -1431,8 +1439,13 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             }
 
                             FramebufferSize environmentWeightsSize = environmentWeightsFBO.getSize();
-                            drawModel(this.environmentWeightsDrawable, environmentWeightsFBO, 0, 0,
-                                environmentWeightsSize.width, environmentWeightsSize.height, 0, view, projection);
+
+                            // Render to off-screen buffer
+                            environmentWeightsDrawable.draw(PrimitiveMode.TRIANGLE_FAN, environmentWeightsFBO, 0, 0,
+                                environmentWeightsSize.width, environmentWeightsSize.height);
+
+                            // Flush to prevent timeout
+                            context.flush();
 
                             this.program.setTexture("environmentWeightsTexture", environmentWeightsTexture);
                             drawModelInSubdivisions(this.mainDrawable, offscreenFBO, subdivWidth, subdivHeight,
@@ -1515,8 +1528,14 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                 int effectiveWidth = Math.min(subdivWidth, fullFBOSize.width - x);
                 int effectiveHeight = Math.min(subdivHeight, fullFBOSize.height - y);
 
-                drawModel(drawable, framebuffer, x, y, effectiveWidth, effectiveHeight,
-                    modelInstance, view, projection);
+                setupModelView(drawable.program(), modelInstance, view);
+                setupProjection(drawable.program(), fullFBOSize.width, fullFBOSize.height, x, y, effectiveWidth, effectiveHeight, projection);
+
+                // Render to off-screen buffer
+                drawable.draw(PrimitiveMode.TRIANGLES, framebuffer, x, y, effectiveWidth, effectiveHeight);
+
+                // Flush to prevent timeout
+                context.flush();
             }
         }
     }
@@ -2341,7 +2360,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
         if (this.resources.eigentextures != null)
         {
             newEnvironmentWeightsProgram = getProgramBuilder()
-                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texspace_noscale.vert"))
+                .addShader(ShaderType.VERTEX, new File(new File(new File("shaders"), "common"), "texture.vert"))
                 .addShader(ShaderType.FRAGMENT, new File(new File(new File("shaders"), "relight"), "environmentweights.frag"))
                 .createProgram();
         }
@@ -2368,37 +2387,22 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             this.environmentWeightsProgram = newEnvironmentWeightsProgram;
 
             this.environmentWeightsDrawable = context.createDrawable(environmentWeightsProgram);
-            this.environmentWeightsDrawable.addVertexBuffer("position", this.resources.positionBuffer);
+            this.environmentWeightsDrawable.addVertexBuffer("position", this.rectangleVertices);
         }
 
         if (this.resources.normalBuffer != null)
         {
             this.mainDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
-
-            if (this.environmentWeightsDrawable != null)
-            {
-                this.environmentWeightsDrawable.addVertexBuffer("normal", this.resources.normalBuffer);
-            }
         }
 
         if (this.resources.texCoordBuffer != null)
         {
             this.mainDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-
-            if (this.environmentWeightsDrawable != null)
-            {
-                this.environmentWeightsDrawable.addVertexBuffer("texCoord", this.resources.texCoordBuffer);
-            }
         }
 
         if (this.resources.tangentBuffer != null)
         {
             this.mainDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-
-            if (this.environmentWeightsDrawable != null)
-            {
-                this.environmentWeightsDrawable.addVertexBuffer("tangent", this.resources.tangentBuffer);
-            }
         }
 
         suppressErrors = false;

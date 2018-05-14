@@ -9,12 +9,12 @@ in vec3 fBitangent;
 uniform sampler2D normalMap;
 uniform bool useNormalMap;
 
-layout(location = 0) out vec3 position;
+layout(location = 0) out vec4 position;
 layout(location = 1) out vec3 normal;
 
 void main() 
 {
-    position = fPosition;
+    position = vec4(fPosition, 1.0);
 
     vec3 geometricNormal = normalize(fNormal);
 
