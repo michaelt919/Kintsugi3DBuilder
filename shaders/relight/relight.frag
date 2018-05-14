@@ -656,6 +656,13 @@ vec4[VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normal
 
 void main()
 {
+//#if IMAGE_BASED_RENDERING_ENABLED && SVD_MODE && RELIGHTING_ENABLED && ENVIRONMENT_ILLUMINATION_ENABLED
+//    fragColor =
+////        vec4(fNormal * 0.5 + 0.5, 1.0);
+//        textureLod(environmentWeightsTexture, vec3(fTexCoord, 0), 0);
+//    return;
+//#endif
+
     vec3 viewDir;
 #if TANGENT_SPACE_OVERRIDE_ENABLED
     viewDir = viewDirTSOverride;
@@ -673,17 +680,17 @@ void main()
 #endif
 
     vec3 normalDir;
-//#if NORMAL_TEXTURE_ENABLED
-//#if TANGENT_SPACE_NORMAL_MAP
-//    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
-//    vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
-//    normalDir = tangentToObject * normalDirTS;
-//#else
-//    normalDir = normalDirTS;
-//#endif // TANGENT_SPACE_NORMAL_MAP
-//#else
+#if NORMAL_TEXTURE_ENABLED
+#if TANGENT_SPACE_NORMAL_MAP
+    vec2 normalDirXY = texture(normalMap, fTexCoord).xy * 2 - vec2(1.0);
+    vec3 normalDirTS = vec3(normalDirXY, sqrt(1 - dot(normalDirXY, normalDirXY)));
+    normalDir = tangentToObject * normalDirTS;
+#else
+    normalDir = normalDirTS;
+#endif // TANGENT_SPACE_NORMAL_MAP
+#else
     normalDir = normalize(fNormal);
-//#endif // NORMAL_TEXTURE_ENABLED
+#endif // NORMAL_TEXTURE_ENABLED
 
     vec3 triangleNormal = normalize(fNormal);
 
@@ -736,10 +743,6 @@ void main()
 #else
     radiance += xyzToRGB(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness));
 #endif
-
-//    fragColor = vec4(0.5 * xyzToRGB(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness))
-//        / xyzToRGB(getScaledEnvironmentShadingFromSVD(specularColorXYZ, roughness) * getMaxLuminance() / (nDotV * roughnessSq * specularColorXYZ.y)), 1.0);
-//    return;
 
 #else
 

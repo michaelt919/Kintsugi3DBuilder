@@ -1,9 +1,7 @@
 #version 330
 #extension GL_ARB_texture_query_lod : enable
 
-in vec3 fPosition;
 in vec2 fTexCoord;
-in vec3 fNormal;
 
 layout(location = 0) out vec4 baseFresnel0;
 layout(location = 1) out vec4 baseFresnel1;
@@ -13,6 +11,10 @@ layout(location = 4) out vec4 fresnelAdj0;
 layout(location = 5) out vec4 fresnelAdj1;
 layout(location = 6) out vec4 fresnelAdj2;
 layout(location = 7) out vec4 fresnelAdj3;
+
+#include "../common/use_deferred.glsl"
+
+#define fPosition (getPosition(fTexCoord))
 
 #include "../colorappearance/colorappearance.glsl"
 #include "../colorappearance/svd_unpack.glsl"
@@ -25,7 +27,6 @@ layout(location = 7) out vec4 fresnelAdj3;
 
 uniform vec3 viewPos;
 uniform mat4 envMapMatrix;
-uniform sampler2D specularMap;
 uniform sampler2D roughnessMap;
 
 struct EnvironmentResult
@@ -40,7 +41,7 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT + 1] computeEnvironmentSamples(int v
 
     mat4 cameraPose = getCameraPose(virtualIndex);
     vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
-    vec3 normalDirCameraSpace = normalize((cameraPose * vec4(fNormal, 0.0)).xyz);
+    vec3 normalDirCameraSpace = mat3(cameraPose) * getNormal(fTexCoord);
     vec3 sampleViewDir = normalize(-fragmentPos);
 
     // All in camera space
@@ -121,6 +122,10 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT + 1] computeEnvironmentSamples(int v
 
 void main()
 {
+//    baseFresnel0 = vec4(getNormal(fTexCoord) * 0.5 + 0.5, 1.0);
+//    baseFresnel0 = vec4(normalize(getPosition(fTexCoord)) * 0.5 + 0.5, 1.0);
+//    return;
+
     float maxLuminance = getMaxLuminance();
     float roughness = texture(roughnessMap, fTexCoord).y;
 
