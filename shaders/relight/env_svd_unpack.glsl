@@ -41,10 +41,10 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorXYZ, vec3 roughness)
     ivec2 coords101 = ivec2(coords111.x, coords001.y);
     vec2 interpolantsCeilLevel = texCoordsCeilLevel - coords001;
 
-    ivec2 weightCoords00 = ivec2(round(coords000 / floorToEnv));
-    ivec2 weightCoords01 = ivec2(round(coords010 / floorToEnv));
-    ivec2 weightCoords10 = ivec2(round(coords100 / floorToEnv));
-    ivec2 weightCoords11 = ivec2(round(coords110 / floorToEnv));
+    ivec2 weightCoords00 = ivec2(floor(coords000 / floorToEnv + 1.0 / 256.0 /* numerical margin */));
+    ivec2 weightCoords01 = ivec2(floor(coords010 / floorToEnv + 1.0 / 256.0 /* numerical margin */));
+    ivec2 weightCoords10 = ivec2(floor(coords100 / floorToEnv + 1.0 / 256.0 /* numerical margin */));
+    ivec2 weightCoords11 = ivec2(floor(coords110 / floorToEnv + 1.0 / 256.0 /* numerical margin */));
 
     vec3 weights000 = texelFetch(environmentWeightsTexture, ivec3(weightCoords00, 0), 0).xyz;
     vec3 weights001 = texelFetch(environmentWeightsTexture, ivec3(weightCoords00, 0), 0).xyz;
