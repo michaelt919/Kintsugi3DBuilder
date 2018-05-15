@@ -11,29 +11,29 @@ uniform sampler2DArray viewWeightTextures;
 // TODO define BLOCK_WIDTH and BLOCK_HEIGHT externally
 #ifndef BLOCK_WIDTH
 #define BLOCK_WIDTH 16 // For syntax highlighting
-//#error "BLOCK_WIDTH must be externally defined!"
+//#error BLOCK_WIDTH must be externally defined!
 #endif
 
 #ifndef BLOCK_HEIGHT
 #define BLOCK_HEIGHT 16 // For syntax highlighting
-//#error "BLOCK_HEIGHT must be externally defined!"
+//#error BLOCK_HEIGHT must be externally defined!
 #endif
 
 #define BLOCK_SIZE (ivec2(BLOCK_WIDTH, BLOCK_HEIGHT))
 
 #ifndef EIGENTEXTURE_COUNT
 #define EIGENTEXTURE_COUNT 4 // For syntax highlighting
-#error "EIGENTEXTURE_COUNT must be externally defined!"
+#error EIGENTEXTURE_COUNT must be externally defined!
 #endif
 
 #ifndef VIEW_WEIGHT_PACKING_X
 #define VIEW_WEIGHT_PACKING_X 2 // For syntax highlighting
-#error "VIEW_WEIGHT_PACKING_X must be externally defined!"
+#error VIEW_WEIGHT_PACKING_X must be externally defined!
 #endif
 
 #ifndef VIEW_WEIGHT_PACKING_Y
 #define VIEW_WEIGHT_PACKING_Y 2 // For syntax highlighting
-#error "VIEW_WEIGHT_PACKING_Y must be externally defined!"
+#error VIEW_WEIGHT_PACKING_Y must be externally defined!
 #endif
 
 ivec2 computeBlockStart(vec2 texCoords, ivec2 textureSize)
