@@ -739,7 +739,7 @@ void main()
 #if IMAGE_BASED_RENDERING_ENABLED
 
 #if SVD_MODE
-    radiance += xyzToRGB(getScaledEnvironmentShadingFromSVD(specularColorXYZ, roughness) / (nDotV * roughnessSq));
+    radiance += xyzToRGB(getScaledEnvironmentShadingFromSVD(specularColorXYZ, roughness) / roughnessSq);
 #else
     radiance += xyzToRGB(getEnvironmentShading(diffuseColor, normalDir, specularColor, roughness));
 #endif
