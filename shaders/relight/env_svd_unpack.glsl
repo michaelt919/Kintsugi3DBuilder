@@ -7,6 +7,30 @@
 
 uniform sampler2DArray environmentWeightsTexture;
 
+vec3[4] getWeights(vec2 weightTexCoords[4], int layer)
+{
+    ivec2 weightTexSize = textureSize(environmentWeightsTexture, 0).xy;
+    vec3 returnValues[4];
+
+    for (int i = 0; i < 4; i++)
+    {
+        ivec2 truncatedTexCoords = min(ivec2(floor(weightTexCoords[i])), weightTexSize - 1);
+        vec2 interpolants = weightTexCoords[i] - truncatedTexCoords;
+
+        vec3 weight00 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer), 0).xyz;
+        vec3 weight01 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer + 8), 0).xyz;
+        vec3 weight10 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer + 16), 0).xyz;
+        vec3 weight11 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer + 24), 0).xyz;
+
+        returnValues[i] = mix(
+            mix(weight00, weight01, interpolants.y),
+            mix(weight10, weight11, interpolants.y),
+            interpolants.x);
+    }
+
+    return returnValues;
+}
+
 vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorXYZ, vec3 roughness)
 {
     float mipmapLevel;
@@ -41,86 +65,30 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorXYZ, vec3 roughness)
     ivec2 coords101 = ivec2(coords111.x, coords001.y);
     vec2 interpolantsCeilLevel = texCoordsCeilLevel - coords001;
 
-    ivec2 weightCoords00 = ivec2(floor(coords000 / floorToEnv + 1.0 / 256.0 /* numerical margin */));
-    ivec2 weightCoords01 = ivec2(floor(coords010 / floorToEnv + 1.0 / 256.0 /* numerical margin */));
-    ivec2 weightCoords10 = ivec2(floor(coords100 / floorToEnv + 1.0 / 256.0 /* numerical margin */));
-    ivec2 weightCoords11 = ivec2(floor(coords110 / floorToEnv + 1.0 / 256.0 /* numerical margin */));
+    vec2 weightCoords[4];
+    weightCoords[0] = coords000 / floorToEnv;
+    weightCoords[1] = coords010 / floorToEnv;
+    weightCoords[2] = coords100 / floorToEnv;
+    weightCoords[3] = coords110 / floorToEnv;
 
-    vec3 weights000 = texelFetch(environmentWeightsTexture, ivec3(weightCoords00, 0), 0).xyz;
-    vec3 weights001 = texelFetch(environmentWeightsTexture, ivec3(weightCoords00, 0), 0).xyz;
-    vec3 weights010 = texelFetch(environmentWeightsTexture, ivec3(weightCoords01, 0), 0).xyz;
-    vec3 weights011 = texelFetch(environmentWeightsTexture, ivec3(weightCoords01, 0), 0).xyz;
-    vec3 weights100 = texelFetch(environmentWeightsTexture, ivec3(weightCoords10, 0), 0).xyz;
-    vec3 weights101 = texelFetch(environmentWeightsTexture, ivec3(weightCoords10, 0), 0).xyz;
-    vec3 weights110 = texelFetch(environmentWeightsTexture, ivec3(weightCoords11, 0), 0).xyz;
-    vec3 weights111 = texelFetch(environmentWeightsTexture, ivec3(weightCoords11, 0), 0).xyz;
+    vec3[] weights = getWeights(weightCoords, 0);
 
     vec3 roughnessSq = roughness * roughness;
 
     vec3 mfdGeomRoughnessSq = roughnessSq *
-        mix(mix(mix(weights000,
-                    weights100,
-                    interpolantsFloorLevel.x),
-                mix(weights010,
-                    weights110,
-                    interpolantsFloorLevel.x),
-                interpolantsFloorLevel.y),
-            mix(mix(weights001,
-                    weights101,
-                    interpolantsCeilLevel.x),
-                mix(weights011,
-                    weights111,
-                    interpolantsCeilLevel.x),
-                interpolantsCeilLevel.y),
-            mipmapLevelInterpolant);
+        mix(mix(weights[0], weights[2], interpolantsFloorLevel.x),
+            mix(weights[1], weights[3], interpolantsFloorLevel.x),
+            interpolantsFloorLevel.y);
 
-
-    weights000 = texelFetch(environmentWeightsTexture, ivec3(weightCoords00, 4), 0).xyz;
-    weights001 = texelFetch(environmentWeightsTexture, ivec3(weightCoords00, 4), 0).xyz;
-    weights010 = texelFetch(environmentWeightsTexture, ivec3(weightCoords01, 4), 0).xyz;
-    weights011 = texelFetch(environmentWeightsTexture, ivec3(weightCoords01, 4), 0).xyz;
-    weights100 = texelFetch(environmentWeightsTexture, ivec3(weightCoords10, 4), 0).xyz;
-    weights101 = texelFetch(environmentWeightsTexture, ivec3(weightCoords10, 4), 0).xyz;
-    weights110 = texelFetch(environmentWeightsTexture, ivec3(weightCoords11, 4), 0).xyz;
-    weights111 = texelFetch(environmentWeightsTexture, ivec3(weightCoords11, 4), 0).xyz;
+    weights = getWeights(weightCoords, 4);
 
     vec3 mfdGeomRoughnessSqFresnelFactor = roughnessSq *
-        mix(mix(mix(weights000,
-                    weights100,
-                    interpolantsFloorLevel.x),
-                mix(weights010,
-                    weights110,
-                    interpolantsFloorLevel.x),
-                interpolantsFloorLevel.y),
-            mix(mix(weights001,
-                    weights101,
-                    interpolantsCeilLevel.x),
-                mix(weights011,
-                    weights111,
-                    interpolantsCeilLevel.x),
-                interpolantsCeilLevel.y),
-            mipmapLevelInterpolant);
+        mix(mix(weights[0], weights[2], interpolantsFloorLevel.x),
+            mix(weights[1], weights[3], interpolantsFloorLevel.x),
+            interpolantsFloorLevel.y);
 
     for (int k = 0; k < 3; k++)
     {
-        weights000 = texelFetch(environmentWeightsTexture, ivec3(weightCoords00, k + 1), 0).xyz * 2.0 - 1.0;
-        weights001 = texelFetch(environmentWeightsTexture, ivec3(weightCoords00, k + 1), 0).xyz * 2.0 - 1.0;
-        weights010 = texelFetch(environmentWeightsTexture, ivec3(weightCoords01, k + 1), 0).xyz * 2.0 - 1.0;
-        weights011 = texelFetch(environmentWeightsTexture, ivec3(weightCoords01, k + 1), 0).xyz * 2.0 - 1.0;
-        weights100 = texelFetch(environmentWeightsTexture, ivec3(weightCoords10, k + 1), 0).xyz * 2.0 - 1.0;
-        weights101 = texelFetch(environmentWeightsTexture, ivec3(weightCoords10, k + 1), 0).xyz * 2.0 - 1.0;
-        weights110 = texelFetch(environmentWeightsTexture, ivec3(weightCoords11, k + 1), 0).xyz * 2.0 - 1.0;
-        weights111 = texelFetch(environmentWeightsTexture, ivec3(weightCoords11, k + 1), 0).xyz * 2.0 - 1.0;
-
-        vec3 fresnelFactorWeights000 = texelFetch(environmentWeightsTexture, ivec3(weightCoords00, k + 5), 0).xyz * 2.0 - 1.0;
-        vec3 fresnelFactorWeights001 = texelFetch(environmentWeightsTexture, ivec3(weightCoords00, k + 5), 0).xyz * 2.0 - 1.0;
-        vec3 fresnelFactorWeights010 = texelFetch(environmentWeightsTexture, ivec3(weightCoords01, k + 5), 0).xyz * 2.0 - 1.0;
-        vec3 fresnelFactorWeights011 = texelFetch(environmentWeightsTexture, ivec3(weightCoords01, k + 5), 0).xyz * 2.0 - 1.0;
-        vec3 fresnelFactorWeights100 = texelFetch(environmentWeightsTexture, ivec3(weightCoords10, k + 5), 0).xyz * 2.0 - 1.0;
-        vec3 fresnelFactorWeights101 = texelFetch(environmentWeightsTexture, ivec3(weightCoords10, k + 5), 0).xyz * 2.0 - 1.0;
-        vec3 fresnelFactorWeights110 = texelFetch(environmentWeightsTexture, ivec3(weightCoords11, k + 5), 0).xyz * 2.0 - 1.0;
-        vec3 fresnelFactorWeights111 = texelFetch(environmentWeightsTexture, ivec3(weightCoords11, k + 5), 0).xyz * 2.0 - 1.0;
-
         vec4 tex000 = getSignedTexel(ivec3(coords000, k), mipmapLevelFloor);
         vec4 tex001 = getSignedTexel(ivec3(coords001, k), mipmapLevelCeil);
         vec4 tex010 = getSignedTexel(ivec3(coords010, k), mipmapLevelFloor);
@@ -130,36 +98,40 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorXYZ, vec3 roughness)
         vec4 tex110 = getSignedTexel(ivec3(coords110, k), mipmapLevelFloor);
         vec4 tex111 = getSignedTexel(ivec3(coords111, k), mipmapLevelCeil);
 
+        weights = getWeights(weightCoords, k + 1);
+
         vec4 blendedTerm =
-            mix(mix(mix(vec4(weights000, 1.0) * tex000,
-                        vec4(weights100, 1.0) * tex100,
+            mix(mix(mix(vec4(weights[0] * 2.0 - 1.0, 1.0) * tex000,
+                        vec4(weights[2] * 2.0 - 1.0, 1.0) * tex100,
                         interpolantsFloorLevel.x),
-                    mix(vec4(weights010, 1.0) * tex010,
-                        vec4(weights110, 1.0) * tex110,
+                    mix(vec4(weights[1] * 2.0 - 1.0, 1.0) * tex010,
+                        vec4(weights[3] * 2.0 - 1.0, 1.0) * tex110,
                         interpolantsFloorLevel.x),
                     interpolantsFloorLevel.y)  ,
-                mix(mix(vec4(weights001, 1.0) * tex001,
-                        vec4(weights101, 1.0) * tex101,
+                mix(mix(vec4(weights[0] * 2.0 - 1.0, 1.0) * tex001,
+                        vec4(weights[2] * 2.0 - 1.0, 1.0) * tex101,
                         interpolantsCeilLevel.x),
-                    mix(vec4(weights011, 1.0) * tex011,
-                        vec4(weights111, 1.0) * tex111,
+                    mix(vec4(weights[1] * 2.0 - 1.0, 1.0) * tex011,
+                        vec4(weights[3] * 2.0 - 1.0, 1.0) * tex111,
                         interpolantsCeilLevel.x),
                     interpolantsCeilLevel.y),
                 mipmapLevelInterpolant);
 
+        weights = getWeights(weightCoords, k + 5);
+
         vec3 blendedTermFresnel =
-            mix(mix(mix(fresnelFactorWeights000 * tex000.xyz,
-                        fresnelFactorWeights100 * tex100.xyz,
+            mix(mix(mix((weights[0] * 2.0 - 1.0) * tex000.xyz,
+                        (weights[2] * 2.0 - 1.0) * tex100.xyz,
                         interpolantsFloorLevel.x),
-                    mix(fresnelFactorWeights010 * tex010.xyz,
-                        fresnelFactorWeights110 * tex110.xyz,
+                    mix((weights[1] * 2.0 - 1.0) * tex010.xyz,
+                        (weights[3] * 2.0 - 1.0) * tex110.xyz,
                         interpolantsFloorLevel.x),
                     interpolantsFloorLevel.y),
-                mix(mix(fresnelFactorWeights001 * tex001.xyz,
-                        fresnelFactorWeights101 * tex101.xyz,
+                mix(mix((weights[0] * 2.0 - 1.0) * tex001.xyz,
+                        (weights[2] * 2.0 - 1.0) * tex101.xyz,
                         interpolantsCeilLevel.x),
-                    mix(fresnelFactorWeights011 * tex011.xyz,
-                        fresnelFactorWeights111 * tex111.xyz,
+                    mix((weights[1] * 2.0 - 1.0) * tex011.xyz,
+                        (weights[3] * 2.0 - 1.0) * tex111.xyz,
                         interpolantsCeilLevel.x),
                     interpolantsCeilLevel.y),
                 mipmapLevelInterpolant);

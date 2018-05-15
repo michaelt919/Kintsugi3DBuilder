@@ -1423,7 +1423,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         try (
                             Texture3D<ContextType> environmentWeightsTexture
                                 = context.getTextureFactory().build2DColorTextureArray(
-                                    environmentWeightsResolution.x, environmentWeightsResolution.y, 8)
+                                    environmentWeightsResolution.x, environmentWeightsResolution.y, 32)
                                     .setInternalFormat(ColorFormat.RGBA16F)
                                     .createTexture();
                             FramebufferObject<ContextType> environmentWeightsFBO
@@ -1431,6 +1431,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                     .addEmptyColorAttachments(8)
                                     .createFramebufferObject())
                         {
+                            FramebufferSize environmentWeightsSize = environmentWeightsFBO.getSize();
+
                             for (int i = 0; i < 8; i++)
                             {
                                 environmentWeightsFBO.setColorAttachment(i,
@@ -1438,9 +1440,40 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                                 environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
                             }
 
-                            FramebufferSize environmentWeightsSize = environmentWeightsFBO.getSize();
+                            environmentWeightsProgram.setUniform("blockOffset", new IntVector2(0, 0));
+                            environmentWeightsDrawable.draw(PrimitiveMode.TRIANGLE_FAN, environmentWeightsFBO, 0, 0,
+                                environmentWeightsSize.width, environmentWeightsSize.height);
 
-                            // Render to off-screen buffer
+                            for (int i = 0; i < 8; i++)
+                            {
+                                environmentWeightsFBO.setColorAttachment(i,
+                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 8));
+                                environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
+                            }
+
+                            environmentWeightsProgram.setUniform("blockOffset", new IntVector2(0, 1));
+                            environmentWeightsDrawable.draw(PrimitiveMode.TRIANGLE_FAN, environmentWeightsFBO, 0, 0,
+                                environmentWeightsSize.width, environmentWeightsSize.height);
+
+                            for (int i = 0; i < 8; i++)
+                            {
+                                environmentWeightsFBO.setColorAttachment(i,
+                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 16));
+                                environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
+                            }
+
+                            environmentWeightsProgram.setUniform("blockOffset", new IntVector2(1, 0));
+                            environmentWeightsDrawable.draw(PrimitiveMode.TRIANGLE_FAN, environmentWeightsFBO, 0, 0,
+                                environmentWeightsSize.width, environmentWeightsSize.height);
+
+                            for (int i = 0; i < 8; i++)
+                            {
+                                environmentWeightsFBO.setColorAttachment(i,
+                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 24));
+                                environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
+                            }
+
+                            environmentWeightsProgram.setUniform("blockOffset", new IntVector2(1, 1));
                             environmentWeightsDrawable.draw(PrimitiveMode.TRIANGLE_FAN, environmentWeightsFBO, 0, 0,
                                 environmentWeightsSize.width, environmentWeightsSize.height);
 

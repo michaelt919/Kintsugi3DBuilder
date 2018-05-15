@@ -614,7 +614,8 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                     .createProgram();
                 FramebufferObject<ContextType> geometryFramebuffer =
                     context.buildFramebufferObject(eigentextures.getWidth(), eigentextures.getHeight())
-                        .addColorAttachments(ColorFormat.RGB32F, 2)
+                        .addColorAttachment(ColorFormat.RGBA32F)
+                        .addColorAttachment(ColorFormat.RGB32F)
                         .createFramebufferObject())
             {
                 Drawable<ContextType> deferredDrawable = context.createDrawable(deferredProgram);
@@ -638,7 +639,7 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 context.getState().enableBackFaceCulling();
 
                 IntVector2 viewWeightResolution = this.getSVDViewWeightResolution();
-                IntVector2 blockResolution = viewWeightResolution;//.plus(new IntVector2(1,1));
+                IntVector2 blockResolution = viewWeightResolution.plus(new IntVector2(1,1));
                 IntVector2 blockSize = new IntVector2(
                     this.eigentextures.getWidth() / viewWeightResolution.x,
                     this.eigentextures.getHeight() / viewWeightResolution.y);
@@ -659,8 +660,8 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
                 {
                     for (int x = 0; x < blockResolution.x; x++)
                     {
-                        int iStart = x * blockSize.x ;//- blockSize.x / 2;
-                        int jStart = y * blockSize.y ;//- blockSize.y / 2;
+                        int iStart = x * blockSize.x - blockSize.x / 2;
+                        int jStart = y * blockSize.y - blockSize.y / 2;
 
                         float[] positionSum = new float[4];
                         float[] normalSum = new float[4];
