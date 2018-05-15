@@ -74,14 +74,15 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT + 1] computeEnvironmentSamples(int v
 
     vec3 sampleHalfDir = normalize(sampleViewDir + sampleLightDir);
 
+    vec3 virtualViewDir = normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
+
     float nDotV_sample = max(0, dot(normalDirCameraSpace, sampleViewDir));
     float nDotL_sample = max(0, dot(normalDirCameraSpace, sampleLightDir));
-
-    if (nDotV_sample > 0.0 && nDotL_sample > 0.0)
-    {
-        vec3 virtualViewDir = normalize((cameraPose * vec4(viewPos, 1.0)).xyz - fragmentPos);
-        vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
         float nDotV_virtual = max(0, dot(normalDirCameraSpace, virtualViewDir));
+
+    if (nDotV_sample > 0.0 && nDotL_sample > 0.0 && nDotV_virtual > 0.0)
+    {
+        vec3 virtualLightDir = -reflect(virtualViewDir, sampleHalfDir);
         float nDotL_virtual = max(0, dot(normalDirCameraSpace, virtualLightDir));
         float hDotV_virtual = max(0, dot(sampleHalfDir, virtualViewDir));
 
@@ -91,15 +92,15 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT + 1] computeEnvironmentSamples(int v
 
         float sampleMaskingShadowing;
         float virtualMaskingShadowing;
-    #if PHYSICALLY_BASED_MASKING_SHADOWING
+#if PHYSICALLY_BASED_MASKING_SHADOWING
         sampleMaskingShadowing = computeGeometricAttenuationHeightCorrelatedSmith(roughness, nDotV_sample, nDotL_sample);
         virtualMaskingShadowing = computeGeometricAttenuationHeightCorrelatedSmith(roughness, nDotV_virtual, nDotL_virtual);
-    #else
+#else
         sampleMaskingShadowing = nDotL_sample * nDotV_sample;
         virtualMaskingShadowing = nDotL_virtual * nDotV_virtual;
-    #endif
+#endif
 
-        vec3 sampleBase = 0.25 / PI * virtualMaskingShadowing
+        vec3 sampleBase = 0.25 / PI * virtualMaskingShadowing / nDotV_virtual
             * rgbToXYZ(getEnvironment(mat3(envMapMatrix) * transpose(mat3(cameraPose)) * virtualLightDir));
         float weight = 4 * hDotV_virtual * (getCameraWeight(virtualIndex) * 4 * PI * VIEW_COUNT);
         // dl = 4 * h dot v * dh
