@@ -12,7 +12,14 @@ layout(location = 5) out vec4 fresnelAdj1;
 layout(location = 6) out vec4 fresnelAdj2;
 layout(location = 7) out vec4 fresnelAdj3;
 
-#include "../common/use_deferred.glsl"
+uniform sampler2D positionMap;
+uniform ivec2 blockOffset;
+
+vec3 getPosition(vec2 texCoord)
+{
+    ivec2 mapSize = textureSize(positionMap, 0);
+    return texelFetch(positionMap, min(ivec2(floor(texCoord * (mapSize - 1))), mapSize - 2) + blockOffset, 0).xyz;
+}
 
 #define fPosition (getPosition(fTexCoord))
 
@@ -21,13 +28,29 @@ layout(location = 7) out vec4 fresnelAdj3;
 #include "reflectanceequations.glsl"
 #include "environment.glsl"
 
-#line 23 0
+#line 32 0
 
 #define ACTIVE_EIGENTEXTURE_COUNT 4
 
 uniform vec3 viewPos;
 uniform mat4 envMapMatrix;
+uniform sampler2D normalMap;
 uniform sampler2D roughnessMap;
+
+vec3 getNormal(vec2 texCoord)
+{
+    ivec2 mapSize = textureSize(normalMap, 0);
+    vec3 normal = texelFetch(normalMap, min(ivec2(floor(texCoord * (mapSize - 1))), mapSize - 2) + blockOffset, 0).xyz;
+
+    if (normal == vec3(0))
+    {
+        return vec3(0);
+    }
+    else
+    {
+        return normalize(normal);
+    }
+}
 
 struct EnvironmentResult
 {
@@ -123,7 +146,7 @@ EnvironmentResult[ACTIVE_EIGENTEXTURE_COUNT + 1] computeEnvironmentSamples(int v
 void main()
 {
 //    baseFresnel0 = vec4(getNormal(fTexCoord) * 0.5 + 0.5, 1.0);
-//    baseFresnel0 = vec4(normalize(getPosition(fTexCoord)) * 0.5 + 0.5, 1.0);
+////    baseFresnel0 = vec4(normalize(getPosition(fTexCoord)) * 0.5 + 0.5, 1.0);
 //    return;
 
     float maxLuminance = getMaxLuminance();
@@ -168,18 +191,18 @@ void main()
     }
 
     baseFresnel0 = results[0].baseFresnel;
-    baseFresnel1 = results[1].baseFresnel * 0.5 + 0.5;
-    baseFresnel2 = results[2].baseFresnel * 0.5 + 0.5;
-    baseFresnel3 = results[3].baseFresnel * 0.5 + 0.5;
+    baseFresnel1 = results[1].baseFresnel * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
+    baseFresnel2 = results[2].baseFresnel * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
+    baseFresnel3 = results[3].baseFresnel * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
 
-    if (sums[4].baseFresnel.w > 0.0)
-    {
-        // Pack an extra term into the 4th component
-        baseFresnel0.w = results[4].baseFresnel.x * 0.5 + 0.5;
-        baseFresnel1.w = results[4].baseFresnel.y * 0.5 + 0.5;
-        baseFresnel2.w = results[4].baseFresnel.z * 0.5 + 0.5;
-        baseFresnel3.w = sums[4].fresnelAdjustment.y / VIEW_COUNT * 0.5 + 0.5;
-    }
+//    if (sums[4].baseFresnel.w > 0.0)
+//    {
+//        // Pack an extra term into the 4th component
+//        baseFresnel0.w = results[4].baseFresnel.x * 0.5 + 0.5;
+//        baseFresnel1.w = results[4].baseFresnel.y * 0.5 + 0.5;
+//        baseFresnel2.w = results[4].baseFresnel.z * 0.5 + 0.5;
+//        baseFresnel3.w = sums[4].fresnelAdjustment.y / VIEW_COUNT * 0.5 + 0.5;
+//    }
 
     fresnelAdj0 = results[0].fresnelAdjustment;
     fresnelAdj1 = results[1].fresnelAdjustment * vec4(0.5, 0.5, 0.5, 1.0) + vec4(0.5, 0.5, 0.5, 0.0);
