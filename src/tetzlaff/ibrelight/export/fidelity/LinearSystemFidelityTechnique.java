@@ -375,15 +375,34 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
                 int pixelIndex = system.activePixels.get(i);
                 double weight = (0x000000FF & weights[targetViewIndex][pixelIndex]) / 255.0;
 
-                IntVector3 encodedColor = encode(
-                    new Vector3((float)(recon.get(3 * i) / weight),
-                                (float)(recon.get(3 * i + 1) / weight),
-                                (float)(recon.get(3 * i + 2) / weight)));
+//                IntVector3 encodedColor = encode(
+//                    new Vector3((float)(recon.get(3 * i) / weight),
+//                                (float)(recon.get(3 * i + 1) / weight),
+//                                (float)(recon.get(3 * i + 2) / weight))
+//                    .applyOperator(x -> Math.pow(x, usePerceptuallyLinearError ? 2.2 : 1.0)));
+//
+//                pixels[pixelIndex] = new Color(
+//                        Math.max(0, Math.min(255, encodedColor.x)),
+//                        Math.max(0, Math.min(255, encodedColor.y)),
+//                        Math.max(0, Math.min(255, encodedColor.z))).getRGB();
 
                 pixels[pixelIndex] = new Color(
-                        Math.max(0, Math.min(255, encodedColor.x)),
-                        Math.max(0, Math.min(255, encodedColor.y)),
-                        Math.max(0, Math.min(255, encodedColor.z))).getRGB();
+                    Math.max(0, Math.min(255,
+                        (int)Math.round(255.0 *
+                            (usePerceptuallyLinearError
+                                ? (float)recon.get(3 * i) / weight
+                                : Math.pow((float)recon.get(3 * i) / weight, 1.0 / 2.2))))),
+                    Math.max(0, Math.min(255,
+                        (int)Math.round(255.0 *
+                            (usePerceptuallyLinearError
+                                ? (float)recon.get(3 * i + 1) / weight
+                                : Math.pow((float)recon.get(3 * i + 1) / weight, 1.0 / 2.2))))),
+                    Math.max(0, Math.min(255,
+                        (int)Math.round(255.0 *
+                            (usePerceptuallyLinearError
+                                ? (float)recon.get(3 * i + 2) / weight
+                                : Math.pow((float)recon.get(3 * i + 2) / weight, 1.0 / 2.2))))))
+                    .getRGB();
             }
 
             // Flip the array vertically
@@ -402,7 +421,7 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
 
             try
             {
-                ImageIO.write(outImg, "PNG", debugFile);
+                ImageIO.write(outImg, "PNG", new File(debugFile.getParent(), "recon_" + debugFile.getName()));
             }
             catch (IOException e)
             {
@@ -411,6 +430,136 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
         }
 
         SimpleMatrix error = recon.minus(system.b);
+
+        if (debugFile != null)
+        {
+            BufferedImage outImg = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_ARGB);
+
+            int[] pixels = IntStream.range(0, imgWidth * imgHeight).map(i -> new Color(0, 0, 0).getRGB()).toArray();
+
+            for (int i = 0; i < system.activePixels.size(); i++)
+            {
+                int pixelIndex = system.activePixels.get(i);
+                double weight = (0x000000FF & weights[targetViewIndex][pixelIndex]) / 255.0;
+
+//                IntVector3 encodedColor = encode(
+//                    new Vector3((float)(error.get(3 * i) / weight),
+//                        (float)(error.get(3 * i + 1) / weight),
+//                        (float)(error.get(3 * i + 2) / weight))
+//                    .applyOperator(x -> Math.pow(x, usePerceptuallyLinearError ? 2.2 : 1.0)));
+//
+//                pixels[pixelIndex] = new Color(
+//                    Math.max(0, Math.min(255, encodedColor.x)),
+//                    Math.max(0, Math.min(255, encodedColor.y)),
+//                    Math.max(0, Math.min(255, encodedColor.z))).getRGB();
+
+                pixels[pixelIndex] = new Color(
+                    Math.max(0, Math.min(255,
+                        (int)Math.round(255.0 *
+                            (usePerceptuallyLinearError
+                                ? (float)error.get(3 * i) / weight
+                                : Math.pow((float)error.get(3 * i) / weight, 1.0 / 2.2))))),
+                    Math.max(0, Math.min(255,
+                        (int)Math.round(255.0 *
+                            (usePerceptuallyLinearError
+                                ? (float)error.get(3 * i + 1) / weight
+                                : Math.pow((float)error.get(3 * i + 1) / weight, 1.0 / 2.2))))),
+                    Math.max(0, Math.min(255,
+                        (int)Math.round(255.0 *
+                            (usePerceptuallyLinearError
+                                ? (float)error.get(3 * i + 2) / weight
+                                : Math.pow((float)error.get(3 * i + 2) / weight, 1.0 / 2.2))))))
+                    .getRGB();
+            }
+
+            // Flip the array vertically
+            for (int y = 0; y < imgHeight / 2; y++)
+            {
+                int limit = (y + 1) * imgWidth;
+                for (int i1 = y * imgWidth, i2 = (imgHeight - y - 1) * imgWidth; i1 < limit; i1++, i2++)
+                {
+                    int tmp = pixels[i1];
+                    pixels[i1] = pixels[i2];
+                    pixels[i2] = tmp;
+                }
+            }
+
+            outImg.setRGB(0, 0, imgWidth, imgHeight, pixels, 0, imgWidth);
+
+            try
+            {
+                ImageIO.write(outImg, "PNG", new File(debugFile.getParent(), "error_" + debugFile.getName()));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        if (debugFile != null)
+        {
+            BufferedImage outImg = new BufferedImage(imgWidth, imgHeight, BufferedImage.TYPE_INT_ARGB);
+
+            int[] pixels = IntStream.range(0, imgWidth * imgHeight).map(i -> new Color(0, 0, 0).getRGB()).toArray();
+
+            for (int i = 0; i < system.activePixels.size(); i++)
+            {
+                int pixelIndex = system.activePixels.get(i);
+                double weight = (0x000000FF & weights[targetViewIndex][pixelIndex]) / 255.0;
+
+//                IntVector3 encodedColor = encode(
+//                    new Vector3((float)(system.b.get(3 * i) / weight),
+//                        (float)(system.b.get(3 * i + 1) / weight),
+//                        (float)(system.b.get(3 * i + 2) / weight))
+//                    .applyOperator(x -> Math.pow(x, usePerceptuallyLinearError ? 2.2 : 1.0)));
+//
+//                pixels[pixelIndex] = new Color(
+//                    Math.max(0, Math.min(255, encodedColor.x)),
+//                    Math.max(0, Math.min(255, encodedColor.y)),
+//                    Math.max(0, Math.min(255, encodedColor.z))).getRGB();
+
+                pixels[pixelIndex] = new Color(
+                    Math.max(0, Math.min(255,
+                        (int)Math.round(255.0 *
+                            (usePerceptuallyLinearError
+                                ? (float)system.b.get(3 * i) / weight
+                                : Math.pow((float)system.b.get(3 * i) / weight, 1.0 / 2.2))))),
+                    Math.max(0, Math.min(255,
+                        (int)Math.round(255.0 *
+                            (usePerceptuallyLinearError
+                                ? (float)system.b.get(3 * i + 1) / weight
+                                : Math.pow((float)system.b.get(3 * i + 1) / weight, 1.0 / 2.2))))),
+                    Math.max(0, Math.min(255,
+                        (int)Math.round(255.0 *
+                            (usePerceptuallyLinearError
+                                ? (float)system.b.get(3 * i + 2) / weight
+                                : Math.pow((float)system.b.get(3 * i + 2) / weight, 1.0 / 2.2))))))
+                    .getRGB();
+            }
+
+            // Flip the array vertically
+            for (int y = 0; y < imgHeight / 2; y++)
+            {
+                int limit = (y + 1) * imgWidth;
+                for (int i1 = y * imgWidth, i2 = (imgHeight - y - 1) * imgWidth; i1 < limit; i1++, i2++)
+                {
+                    int tmp = pixels[i1];
+                    pixels[i1] = pixels[i2];
+                    pixels[i2] = tmp;
+                }
+            }
+
+            outImg.setRGB(0, 0, imgWidth, imgHeight, pixels, 0, imgWidth);
+
+            try
+            {
+                ImageIO.write(outImg, "PNG", new File(debugFile.getParent(), "original_" + debugFile.getName()));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
 
         return error.normF() / system.b.normF();
     }
