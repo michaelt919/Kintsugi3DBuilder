@@ -120,14 +120,14 @@ public final class ViewSet
 
     private static class Parameters
     {
-        List<Matrix4> cameraPoseList;
-        List<Matrix4> cameraPoseInvList;
-        List<Projection> cameraProjectionList;
-        List<Integer> cameraProjectionIndexList;
-        List<Vector3> lightPositionList;
-        List<Vector3> lightIntensityList;
-        List<Integer> lightIndexList;
-        List<String> imageFileNames;
+        final List<Matrix4> cameraPoseList = new ArrayList<>(128);
+        final List<Matrix4> cameraPoseInvList = new ArrayList<>(128);
+        final List<Projection> cameraProjectionList = new ArrayList<>(128);
+        final List<Integer> cameraProjectionIndexList = new ArrayList<>(128);
+        final List<Vector3> lightPositionList = new ArrayList<>(128);
+        final List<Vector3> lightIntensityList = new ArrayList<>(128);
+        final List<Integer> lightIndexList = new ArrayList<>(128);
+        final List<String> imageFileNames = new ArrayList<>(128);
         String relativeImagePath;
         String geometryFileName;
         File directory;
@@ -301,6 +301,37 @@ public final class ViewSet
         }
     }
 
+    public ViewSet createPermutation(Iterable<Integer> permutationIndices)
+    {
+        Parameters params = new Parameters();
+
+        for (int i : permutationIndices)
+        {
+            params.cameraPoseList.add(this.cameraPoseList.get(i));
+            params.cameraPoseInvList.add(this.cameraPoseInvList.get(i));
+            params.cameraProjectionIndexList.add(this.cameraProjectionIndexList.get(i));
+            params.lightIndexList.add(this.lightIndexList.get(i));
+            params.imageFileNames.add(this.imageFileNames.get(i));
+        }
+
+        params.cameraProjectionList.addAll(this.cameraProjectionList);
+        params.lightIntensityList.addAll(this.lightIntensityList);
+        params.lightPositionList.addAll(this.lightPositionList);
+
+        params.relativeImagePath = this.relativeImagePath;
+        params.geometryFileName = this.geometryFileName;
+        params.directory = this.rootDirectory;
+        params.gamma = this.gamma;
+        params.infiniteLightSources = this.infiniteLightSources;
+        params.recommendedNearPlane = this.recommendedNearPlane;
+        params.recommendedFarPlane = this.recommendedFarPlane;
+
+        params.linearLuminanceValues = Arrays.copyOf(this.linearLuminanceValues, this.linearLuminanceValues.length);
+        params.encodedLuminanceValues = Arrays.copyOf(this.encodedLuminanceValues, this.encodedLuminanceValues.length);
+
+        return new ViewSet(params);
+    }
+
     /**
      * Loads a VSET file and creates a corresponding ViewSet object.
      * @param vsetFile The VSET file to load.
@@ -317,26 +348,17 @@ public final class ViewSet
         params.recommendedNearPlane = 0.0f;
         params.recommendedFarPlane = Float.MAX_VALUE;
 
-        List<Matrix4> unorderedCameraPoseList = new ArrayList<>();
-        List<Matrix4> unorderedCameraPoseInvList = new ArrayList<>();
-
-        params.cameraPoseList = new ArrayList<>();
-        params.cameraPoseInvList = new ArrayList<>();
-        params.cameraProjectionList = new ArrayList<>();
-        params.lightPositionList = new ArrayList<>();
-        params.lightIntensityList = new ArrayList<>();
-        params.cameraProjectionIndexList = new ArrayList<>();
-        params.lightIndexList = new ArrayList<>();
-        params.imageFileNames = new ArrayList<>();
-
-        List<Double> linearLuminanceList = new ArrayList<>();
-        List<Byte> encodedLuminanceList = new ArrayList<>();
-
         params.geometryFileName = "manifold.obj";
         params.relativeImagePath = null;
 
+        List<Double> linearLuminanceList = new ArrayList<>(8);
+        List<Byte> encodedLuminanceList = new ArrayList<>(8);
+
         try(Scanner scanner = new Scanner(vsetFile))
         {
+            List<Matrix4> unorderedCameraPoseList = new ArrayList<>(128);
+            List<Matrix4> unorderedCameraPoseInvList = new ArrayList<>(128);
+
             while (scanner.hasNext())
             {
                 String id = scanner.next();
@@ -956,16 +978,6 @@ public final class ViewSet
         }
         
         Parameters params = new Parameters();
-
-        // Initialize internal lists
-        params.cameraPoseList = new ArrayList<>();
-        params.cameraPoseInvList = new ArrayList<>();
-        params.cameraProjectionList = new ArrayList<>();
-        params.lightPositionList = new ArrayList<>();
-        params.lightIntensityList = new ArrayList<>();
-        params.cameraProjectionIndexList = new ArrayList<>();
-        params.lightIndexList = new ArrayList<>();
-        params.imageFileNames = new ArrayList<>();
         
         Sensor[] sensors = sensorSet.values().toArray(new Sensor[0]);
         
