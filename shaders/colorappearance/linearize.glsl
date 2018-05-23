@@ -168,4 +168,25 @@ vec3 sRGBToLinear(vec3 sRGBColor)
      return linearColor;
 }
 
+vec3 xyzToLab(vec3 xyzColor)
+{
+    // Assuming illuminant D65
+    // https://en.wikipedia.org/wiki/CIELAB_color_space
+    vec3 rescaledXYZColor = xyzColor / vec3(0.95047, 1.0, 1.08883);
+    return mat3(vec3(0, 5, 0), vec3(1.16, -5, 2), vec3(0, 0, -2))
+        * mix(rescaledXYZColor * (841.0 / 108.0) + (4.0 / 29.0), pow(rescaledXYZColor, vec3(1.0 / 3.0)),
+                max(vec3(0.0), sign(rescaledXYZColor - (216.0 / 24389.0))))
+        - vec3(0.16, 0, 0);
+}
+
+vec3 labToXYZ(vec3 labColor)
+{
+    // Assuming illuminant D65
+    // https://en.wikipedia.org/wiki/CIELAB_color_space
+    vec3 transformedColor = mat3(vec3(1.0 / 1.16), vec3(0.2, 0, 0), vec3(0, 0, -0.5)) * labColor + vec3(0.16 / 1.16);
+    return vec3(0.95047, 1.0, 1.08883)
+        * mix((108.0 / 841.0) * (transformedColor - (4.0 / 29.0)), transformedColor * transformedColor * transformedColor,
+            max(vec3(0.0), sign(transformedColor - (6.0 / 29.0))));
+}
+
 #endif // LINEARIZE_GLSL

@@ -4,12 +4,15 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
 import org.ejml.simple.SimpleMatrix;
+import org.lwjgl.*;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Vector3;
@@ -164,10 +167,10 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
                 .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && settings.getBoolean("occlusionEnabled"))
                 .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && settings.getBoolean("occlusionEnabled"))
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_multi.frag"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_multi_lab.frag"))
                 .createProgram();
 
-            FramebufferObject<ContextType> framebuffer = resources.context.buildFramebufferObject(size, size)
+            FramebufferObject<ContextType> framebuffer = resources.context.buildFramebufferObject(2048, 2048)
                 .addColorAttachment(ColorFormat.RGB32F)
                 .addColorAttachment(ColorFormat.RGBA32F)
                 .createFramebufferObject()
@@ -189,6 +192,15 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
 
             resources.context.getState().disableBackFaceCulling();
 
+
+            ByteBuffer colorByteBuffer = BufferUtils.createByteBuffer(2048 * 2048 * 4);
+            ByteBuffer geomByteBuffer = BufferUtils.createByteBuffer(2048 * 2048 * 4);
+
+            int[] colorSums = new int[size * size * 3];
+            int[] colorCounts = new int[size * size];
+            int[] weightSums = new int[size * size];
+            int[] weightCounts = new int[size * size];
+
             for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
             {
                 framebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -197,32 +209,55 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
                 projTexProgram.setUniform("viewIndex", i);
 
                 drawable.draw(PrimitiveMode.TRIANGLES, framebuffer);
-                int[] colors = framebuffer.readColorBufferARGB(0);
-                for (int j = 0; j < colors.length; j++)
-                {
-                    Color color = new Color(colors[j], true);
-                    IntVector3 colorVector = new IntVector3(color.getRed(), color.getGreen(), color.getBlue());
 
-                    Vector3 decodedColor = colorVector.asFloatingPoint().dividedBy(255.0f);
-                    if (!usePerceptuallyLinearError)
+                framebuffer.readColorBufferARGB(0, colorByteBuffer);
+                Arrays.fill(colorSums, 0);
+                Arrays.fill(colorCounts, 0);
+
+                for (int j = 0; j < 2048 * 2048; j++)
+                {
+                    Color color = new Color(colorByteBuffer.asIntBuffer().get(j), true);
+
+                    if (color.getAlpha() > 0)
                     {
-                        decodedColor = decodedColor.applyOperator(x -> Math.pow(x, 2.2));
-                        //decodedColor = decode(colorVector);
+                        IntVector3 colorVector = new IntVector3(color.getRed(), color.getGreen(), color.getBlue());
+                        Vector3 decodedColor = colorVector.asFloatingPoint().dividedBy(255.0f);
+                        if (!usePerceptuallyLinearError)
+                        {
+                            decodedColor = decodedColor.applyOperator(x -> Math.pow(x, 2.2));
+                            //decodedColor = decode(colorVector);
+                        }
+
+                        @SuppressWarnings("IntegerDivisionInFloatingPointContext")
+                        int k = (int)Math.floor((j % 2048) * size / 2048.0) + size * (int)Math.floor((j / 2048) * size / 2048.0);
+
+                        colorSums[3 * k]     += Math.round(decodedColor.x * unitReflectanceEncoding);
+                        colorSums[3 * k + 1] += Math.round(decodedColor.y * unitReflectanceEncoding);
+                        colorSums[3 * k + 2] += Math.round(decodedColor.z * unitReflectanceEncoding);
+                        colorCounts[k]++;
                     }
-                    images[i][3 * j] = (byte)Math.round(decodedColor.x * unitReflectanceEncoding);
-                    images[i][3 * j + 1] = (byte)Math.round(decodedColor.y * unitReflectanceEncoding);
-                    images[i][3 * j + 2] = (byte)Math.round(decodedColor.z * unitReflectanceEncoding);
+                }
+
+                for (int k = 0; k < colorCounts.length; k++)
+                {
+                    images[i][3 * k]     = (byte)Math.min(255, Math.round((float)colorSums[3 * k]     / (float)colorCounts[k]));
+                    images[i][3 * k + 1] = (byte)Math.min(255, Math.round((float)colorSums[3 * k + 1] / (float)colorCounts[k]));
+                    images[i][3 * k + 2] = (byte)Math.min(255, Math.round((float)colorSums[3 * k + 2] / (float)colorCounts[k]));
                 }
 
                 if (debugDirectory != null)
                 {
                     try
                     {
-                        framebuffer.saveColorBufferToFile(0, "PNG",
-                                new File(debugDirectory, resources.viewSet.getImageFileName(i).split("\\.")[0] + ".png"));
+                        String[] filenameParts = resources.viewSet.getImageFileName(i).split("\\.");
+                        filenameParts[filenameParts.length - 1] = "png";
 
+                        framebuffer.saveColorBufferToFile(0, "PNG",
+                            new File(debugDirectory, String.join(".", filenameParts)));
+
+                        filenameParts[filenameParts.length - 2] += "_geometry";
                         framebuffer.saveColorBufferToFile(1, "PNG",
-                                new File(debugDirectory, resources.viewSet.getImageFileName(i).split("\\.")[0] + "_geometry.png"));
+                                new File(debugDirectory, String.join(".", filenameParts)));
                     }
                     catch (IOException e)
                     {
@@ -230,10 +265,25 @@ public class LinearSystemFidelityTechnique<ContextType extends Context<ContextTy
                     }
                 }
 
-                int[] geometry = framebuffer.readColorBufferARGB(1);
-                for (int j = 0; j < geometry.length; j++)
+                framebuffer.readColorBufferARGB(1, geomByteBuffer);
+                Arrays.fill(weightSums, 0);
+                Arrays.fill(weightCounts, 0);
+
+                for (int j = 0; j < 2048 * 2048; j++)
                 {
-                    weights[i][j] = (byte) new Color(geometry[j], true).getGreen(); // n dot v
+                    if (new Color(colorByteBuffer.asIntBuffer().get(j), true).getAlpha() > 0)
+                    {
+                        @SuppressWarnings("IntegerDivisionInFloatingPointContext")
+                        int k = (int)Math.floor((j % 2048) * size / 2048.0) + size * (int)Math.floor((j / 2048) * size / 2048.0);
+
+                        weightSums[k] += new Color(geomByteBuffer.asIntBuffer().get(j), true).getGreen(); // n dot v
+                        weightCounts[k]++;
+                    }
+                }
+
+                for (int k = 0; k < weightCounts.length; k++)
+                {
+                    weights[i][k] = (byte)Math.min(255, Math.round((float)weightSums[k] / (float)weightCounts[k]));
                 }
             }
         }

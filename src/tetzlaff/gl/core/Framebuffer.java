@@ -17,11 +17,11 @@ public interface Framebuffer<ContextType extends Context<ContextType>> extends C
 {
     FramebufferSize getSize();
 
-    void readColorBufferRGBA(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height);
+    void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height);
     void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination, int x, int y, int width, int height);
     void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination, int x, int y, int width, int height);
 
-    void readColorBufferRGBA(int attachmentIndex, ByteBuffer destination);
+    void readColorBufferARGB(int attachmentIndex, ByteBuffer destination);
     void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination);
     void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination);
 
