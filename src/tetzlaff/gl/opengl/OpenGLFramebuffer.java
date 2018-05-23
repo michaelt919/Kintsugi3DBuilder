@@ -71,7 +71,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     }
 
     @Override
-    public void readColorBufferRGBA(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height)
+    public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height)
     {
         if (destination.remaining() < width * height * 4)
         {
@@ -84,7 +84,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         OpenGLContext.errorCheck();
 
         // use BGRA because due to byte order differences it ends up being ARGB
-        glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, destination);
+        glReadPixels(x, y, width, height, GL_BGRA, GL_UNSIGNED_BYTE, destination);
         OpenGLContext.errorCheck();
     }
 
@@ -123,10 +123,10 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     }
 
     @Override
-    public void readColorBufferRGBA(int attachmentIndex, ByteBuffer destination)
+    public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination)
     {
         FramebufferSize size = this.getSize();
-        this.readColorBufferRGBA(attachmentIndex, destination, 0, 0, size.width, size.height);
+        this.readColorBufferARGB(attachmentIndex, destination, 0, 0, size.width, size.height);
     }
 
     @Override

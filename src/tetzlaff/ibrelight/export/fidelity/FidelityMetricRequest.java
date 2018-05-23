@@ -22,9 +22,8 @@ public class FidelityMetricRequest implements IBRRequest
     private static final boolean USE_PERCEPTUALLY_LINEAR_ERROR = true;
 
     private static final boolean VIEW_IMPORTANCE_ENABLED = true;
-    private static final boolean VIEW_IMPORTANCE_PREDICTION_ENABLED = true;
+    private static final boolean VIEW_IMPORTANCE_PREDICTION_ENABLED = false;
     private static final boolean CUMULATIVE_ERROR_CALCULATION_ENABLED = true;
-    private static final boolean CUMULATIVE_ERROR_OPTIMIZATION_ENABLED = false;
 
     private final File fidelityExportPath;
     private final File fidelityVSETFile;
@@ -242,17 +241,16 @@ public class FidelityMetricRequest implements IBRRequest
                             }
                         }
 
+                        String[] filenameParts = resources.viewSet.getImageFileName(i).split("\\.");
+                        filenameParts[filenameParts.length - 1] = "png";
+
                         if (!activeViewIndexList.isEmpty())
                         {
                             distanceList.add(minDistance);
 
                             newError = fidelityTechnique.evaluateError(i,
                                 DEBUG && activeViewIndexList.size() == resources.viewSet.getCameraPoseCount() - 1
-                                    ? new File(debugDirectory,
-                                    Arrays.stream(renderable.getActiveViewSet().getImageFileName(i).split("\\."))
-                                            .findFirst()
-                                            .orElse("debug") + ".png")
-                                     : null);
+                                    ? new File(debugDirectory, String.join(".", filenameParts)) : null);
 
                             errorList.add(newError);
 
@@ -300,7 +298,7 @@ public class FidelityMetricRequest implements IBRRequest
                 }
             }
 
-            if (CUMULATIVE_ERROR_CALCULATION_ENABLED && targetDirections != null)
+            if (CUMULATIVE_ERROR_CALCULATION_ENABLED)
             {
                 out.println();
 
@@ -310,61 +308,35 @@ public class FidelityMetricRequest implements IBRRequest
                     callback.setProgress(0);
                 }
 
-                double[] targetDistances = IntStream.range(0, targetDirections.length)
-                    .mapToDouble(i -> Double.MAX_VALUE)
-                    .toArray();
-
-                boolean[] originalUsed = new boolean[resources.viewSet.getCameraPoseCount()];
-
                 List<Integer> activeViewIndexList = new ArrayList<>(resources.viewSet.getCameraPoseCount());
                 fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
 
-                // Print views that are only in the original view set and NOT in the target view set
+                // Print views that are in the original view set
                 // This also initializes the distances for the target views.
                 for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
                 {
-                    // First determine if the view is in the target view set
-                    boolean unused = true;
-                    for (int i = 0; unused && i < targetDirections.length; i++)
+                    out.print(resources.viewSet.getImageFileName(j) + '\t');
+
+                    activeViewIndexList.add(j);
+                    fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
+
+                    int current = j;
+                    double cumError = IntStream.range(0, resources.viewSet.getCameraPoseCount())
+                        .filter(k -> k > current || !fidelityTechnique.isGuaranteedInterpolating())
+                        .mapToDouble(fidelityTechnique::evaluateError)
+                        .sum();
+
+                    out.println(cumError);
+
+                    // Make debug image
+                    if (DEBUG)
                     {
-                        if (targetViewSet.getImageFileName(i).contains(resources.viewSet.getImageFileName(j).split("\\.")[0]))
-                        {
-                            unused = false;
-                        }
-                    }
+                        String[] filenameParts = resources.viewSet.getImageFileName(j).split("\\.");
+                        filenameParts[filenameParts.length - 1] = "png";
 
-                    if (unused)
-                    {
-                        // If it isn't, then print it to the file
-                        originalUsed[j] = true;
-                        out.print(resources.viewSet.getImageFileName(j).split("\\.")[0] + '\t');
-
-                        activeViewIndexList.add(j);
-                        fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
-
-                        double cumError = IntStream.range(0, resources.viewSet.getCameraPoseCount())
-                            .filter(k -> !originalUsed[k] || !fidelityTechnique.isGuaranteedInterpolating())
-                            .mapToDouble(fidelityTechnique::evaluateError)
-                            .sum();
-
-                        out.println(cumError);
-
-                        // Make debug image
-                        if (DEBUG)
-                        {
-                            fidelityTechnique.evaluateError(j,
-                                new File(debugDirectory, "cum_" + activeViewIndexList.size() + '_'
-                                    + Arrays.stream(renderable.getActiveViewSet().getImageFileName(j).split("\\."))
-                                        .findFirst()
-                                        .orElse("debug") + ".png"));
-                        }
-
-                        // Then update the distances for all of the target views
-                        for (int i = 0; i < targetDirections.length; i++)
-                        {
-                            targetDistances[i] = Math.min(targetDistances[i],
-                                Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(viewDirections[j])))));
-                        }
+                        fidelityTechnique.evaluateError(j,
+                            new File(debugDirectory, "cum_" + activeViewIndexList.size() + '_'
+                                + String.join(".", filenameParts)));
                     }
 
                     if (callback != null)
@@ -372,183 +344,89 @@ public class FidelityMetricRequest implements IBRRequest
                         callback.setProgress(activeViewIndexList.size());
                     }
                 }
+            }
+
+            if (targetDirections != null && VIEW_IMPORTANCE_PREDICTION_ENABLED)
+            {
+                double[] targetDistances = IntStream.range(0, targetDirections.length)
+                    .mapToDouble(i -> Double.MAX_VALUE)
+                    .toArray();
+
+                // Initialize all target distances
+                for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
+                {
+                    for (int i = 0; i < targetDirections.length; i++)
+                    {
+                        targetDistances[i] = Math.min(targetDistances[i],
+                            Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(viewDirections[j])))));
+                    }
+                }
 
                 boolean[] targetUsed = new boolean[targetDirections.length];
 
-                if (CUMULATIVE_ERROR_OPTIMIZATION_ENABLED)
+                // Now initialize the predicted errors for all of the remaining target views
+                double[] targetErrors = Arrays.stream(targetDirections)
+                    .mapToDouble(targetDirection -> estimateError(targetDirection, viewDirections, errors, errorDistances, null))
+                    .toArray();
+
+                // Views that are in the target view set and NOT in the original view set
+                int unused;
+                double maxError;
+                do
                 {
-                    int unusedOriginalViews = (int) IntStream.range(0, resources.viewSet.getCameraPoseCount())
-                        .filter(j -> !originalUsed[j])
-                        .count();
+                    unused = 0;
+                    maxError = -1.0;
+                    int maxErrorIndex = -1;
 
-                    // Views that are in both the target view set and the original view set
-                    // Go through these views in order of importance so that when loaded viewset = target viewset, it generates a ground truth ranking.
-                    // TODO switch from incremental addition to incremental removal
-                    while (unusedOriginalViews > 0)
+                    // Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
+                    for (int i = 0; i < targetDirections.length; i++)
                     {
-                        int activeViewCount = activeViewIndexList.size();
-                        activeViewIndexList.add(-1);
-
-                        int nextViewTargetIndex = -1;
-                        int nextViewOriginalIndex = -1;
-                        double minTotalError = Double.MAX_VALUE;
-
-                        for (int i = 0; i < targetDirections.length; i++)
+                        // Can't be previously used and must have more error than any other view
+                        if (!targetUsed[i])
                         {
-                            if (!targetUsed[i])
+                            // Keep track of number of unused views at the same time
+                            unused++;
+
+                            if (targetErrors[i] > maxError)
                             {
-                                for (int j = 0; j < resources.viewSet.getCameraPoseCount(); j++)
-                                {
-                                    if (targetViewSet.getImageFileName(i).contains(resources.viewSet.getImageFileName(j).split("\\.")[0]))
-                                    {
-                                        activeViewIndexList.set(activeViewCount, j);
-                                        fidelityTechnique.updateActiveViewIndexList(activeViewIndexList);
-
-                                        double totalError;
-
-                                        if (fidelityTechnique.isGuaranteedInterpolating())
-                                        {
-                                            int iCopy = i;
-
-                                            totalError = IntStream.range(0, resources.viewSet.getCameraPoseCount())
-                                                .filter(k -> k != iCopy && !targetUsed[k]
-                                                    && IntStream.range(0, resources.viewSet.getCameraPoseCount())
-                                                        .anyMatch(l -> targetViewSet.getImageFileName(k)
-                                                            .contains(resources.viewSet.getImageFileName(l).split("\\.")[0])))
-                                                .mapToDouble(fidelityTechnique::evaluateError)
-                                                .sum();
-                                        }
-                                        else
-                                        {
-                                            totalError = IntStream.range(0, resources.viewSet.getCameraPoseCount())
-                                                .mapToDouble(fidelityTechnique::evaluateError)
-                                                .sum();
-                                        }
-
-                                        if (totalError < minTotalError)
-                                        {
-                                            nextViewTargetIndex = i;
-                                            nextViewOriginalIndex = j;
-                                            minTotalError = totalError;
-                                        }
-
-                                        break;
-                                    }
-                                }
+                                maxError = targetErrors[i];
+                                maxErrorIndex = i;
                             }
                         }
+                    }
 
+                    if (maxErrorIndex >= 0)
+                    {
                         // Print the view to the file
-                        out.print(targetViewSet.getImageFileName(nextViewTargetIndex).split("\\.")[0] + '\t');
+                        out.print(targetViewSet.getImageFileName(maxErrorIndex) + '\t');
 
                         // Flag that its been used
-                        targetUsed[nextViewTargetIndex] = true;
-                        originalUsed[nextViewOriginalIndex] = true;
-                        activeViewIndexList.set(activeViewCount, nextViewOriginalIndex);
+                        targetUsed[maxErrorIndex] = true;
+                        unused--;
 
-                        // Make debug image
-                        if (DEBUG)
-                        {
-                            fidelityTechnique.evaluateError(nextViewOriginalIndex,
-                                new File(debugDirectory, "cum_" + activeViewIndexList.size() + '_'
-                                    + Arrays.stream(renderable.getActiveViewSet().getImageFileName(nextViewOriginalIndex).split("\\."))
-                                        .findFirst()
-                                        .orElse("debug") + ".png"));
-                        }
+                        double cumError = 0.0;
 
-                        // Update all of the other target distances and errors that haven't been used yet
+                        // Update all of the other target distances and errors
                         for (int i = 0; i < targetDirections.length; i++)
                         {
-                            if (!targetUsed[i]) // Don't update previously used views
+                            // Don't update previously used views
+                            if (!targetUsed[i])
                             {
                                 // distance
                                 targetDistances[i] = Math.min(targetDistances[i],
-                                    Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[nextViewTargetIndex])))));
+                                    Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[maxErrorIndex])))));
+
+                                // TODO account for the fact that there may be many target views in the same high-information region
+                                // TODO and predict the point at which it would be better to switch to another region
+                                targetErrors[i] = estimateError(targetDirections[i], viewDirections, errors, errorDistances, targetDistances[i]);
+                                cumError += targetErrors[i];
                             }
                         }
 
-                        out.println(minTotalError);
-
-                        // Count how many views from the original view set haven't been used.
-                        unusedOriginalViews =
-                            (int)IntStream.range(0, resources.viewSet.getCameraPoseCount())
-                                .filter(j -> !originalUsed[j])
-                                .count();
-
-                        if (callback != null)
-                        {
-                            callback.setProgress(activeViewIndexList.size());
-                        }
+                        out.println(cumError);
                     }
                 }
-
-                // Now initialize the predicted errors for all of the remaining target views
-                double[] targetErrors = IntStream.range(0, targetDirections.length)
-                    .filter(i -> !targetUsed[i])
-                    .mapToDouble(i -> estimateError(targetDirections[i], viewDirections, errors, errorDistances, null))
-                    .toArray();
-
-                if (VIEW_IMPORTANCE_PREDICTION_ENABLED)
-                {
-                    // Views that are in the target view set and NOT in the original view set
-                    int unused;
-                    double maxError;
-                    do
-                    {
-                        unused = 0;
-                        maxError = -1.0;
-                        int maxErrorIndex = -1;
-
-                        // Determine which view to do next.  Must be in both view sets and currently have more error than any other view in both view sets.
-                        for (int i = 0; i < targetDirections.length; i++)
-                        {
-                            // Can't be previously used and must have more error than any other view
-                            if (!targetUsed[i])
-                            {
-                                // Keep track of number of unused views at the same time
-                                unused++;
-
-                                if (targetErrors[i] > maxError)
-                                {
-                                    maxError = targetErrors[i];
-                                    maxErrorIndex = i;
-                                }
-                            }
-                        }
-
-                        if (maxErrorIndex >= 0)
-                        {
-                            // Print the view to the file
-                            out.print(targetViewSet.getImageFileName(maxErrorIndex).split("\\.")[0] + '\t');
-
-                            // Flag that its been used
-                            targetUsed[maxErrorIndex] = true;
-                            unused--;
-
-                            double cumError = 0.0;
-
-                            // Update all of the other target distances and errors
-                            for (int i = 0; i < targetDirections.length; i++)
-                            {
-                                // Don't update previously used views
-                                if (!targetUsed[i])
-                                {
-                                    // distance
-                                    targetDistances[i] = Math.min(targetDistances[i],
-                                        Math.acos(Math.max(-1.0, Math.min(1.0f, targetDirections[i].dot(targetDirections[maxErrorIndex])))));
-
-                                    // TODO account for the fact that there may be many target views in the same high-information region
-                                    // TODO and predict the point at which it would be better to switch to another region
-                                    targetErrors[i] = estimateError(targetDirections[i], viewDirections, errors, errorDistances, targetDistances[i]);
-                                    cumError += targetErrors[i];
-                                }
-                            }
-
-                            out.println(cumError);
-                        }
-                    }
-                    while (maxError > 0.0 && unused > 0);
-                }
+                while (maxError > 0.0 && unused > 0);
             }
         }
         catch (Exception e)
