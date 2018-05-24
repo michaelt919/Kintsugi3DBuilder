@@ -186,14 +186,16 @@ public class FidelityMetricRequest implements IBRRequest
 
         try (PrintStream out = new PrintStream(fidelityExportPath);
             FidelityEvaluationTechnique<ContextType> fidelityTechnique =
-                new LinearSystemFidelityTechnique<>(USE_PERCEPTUALLY_LINEAR_ERROR, debugDirectory))
+                new HeuristicFidelityTechnique<>(USE_PERCEPTUALLY_LINEAR_ERROR, debugDirectory))
+                //new LinearSystemFidelityTechnique<>(USE_PERCEPTUALLY_LINEAR_ERROR, debugDirectory))
         {
             fidelityTechnique.initialize(resources, settings, 256);
             fidelityTechnique.setMask(maskFile);
 
             if (VIEW_IMPORTANCE_ENABLED)
             {
-                System.out.println("View Importance:");
+                out.println("View Importance:");
+                out.println();
 
                 double[][] viewDistances = new double[resources.viewSet.getCameraPoseCount()][resources.viewSet.getCameraPoseCount()];
 
@@ -257,7 +259,7 @@ public class FidelityMetricRequest implements IBRRequest
                             lastMinDistance = minDistance;
                         }
                     }
-                    while (VIEW_IMPORTANCE_PREDICTION_ENABLED && Double.isFinite(newError) && !activeViewIndexList.isEmpty() && minDistance < Math.PI / 2);
+                    while (Double.isFinite(newError) && !activeViewIndexList.isEmpty() && minDistance < Math.PI / 2);
 
                     errors[i] = errorList.stream().mapToDouble(x -> x).toArray();
                     errorDistances[i] = distanceList.stream().mapToDouble(x -> x).toArray();
