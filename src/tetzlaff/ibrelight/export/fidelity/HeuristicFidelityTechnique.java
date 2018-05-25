@@ -288,9 +288,9 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
     private Vector3 decodeNormal(int targetViewIndex, int k)
     {
         return new Vector3(
-            normals[targetViewIndex][3 * k]     * (2.0f / 255.0f) - 1.0f,
-            normals[targetViewIndex][3 * k + 1] * (2.0f / 255.0f) - 1.0f,
-            normals[targetViewIndex][3 * k + 2] * (2.0f / 255.0f) - 1.0f)
+            (0x000000FF & normals[targetViewIndex][3 * k])     * (2.0f / 255.0f) - 1.0f,
+            (0x000000FF & normals[targetViewIndex][3 * k + 1]) * (2.0f / 255.0f) - 1.0f,
+            (0x000000FF & normals[targetViewIndex][3 * k + 2]) * (2.0f / 255.0f) - 1.0f)
             .normalized();
     }
 
@@ -305,7 +305,7 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
             .toArray();
 
         Vector3 weightedNormalDirection = Arrays.stream(peakSpecularPixelIndices)
-            .mapToObj(k -> decodeNormal(targetViewIndex, k).times(intensities[targetViewIndex][k] / unitReflectanceEncoding))
+            .mapToObj(k -> decodeNormal(targetViewIndex, k).times((0x000000FF & intensities[targetViewIndex][k]) / unitReflectanceEncoding))
             .reduce(Vector3.ZERO, Vector3::plus)
             .normalized();
 
@@ -313,7 +313,7 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
             .mapToDouble(k ->
             {
                 Vector3 diff = decodeNormal(targetViewIndex, k).minus(weightedNormalDirection);
-                return diff.dot(diff) * intensities[targetViewIndex][k] / unitReflectanceEncoding;
+                return diff.dot(diff) * (0x000000FF & intensities[targetViewIndex][k]) / unitReflectanceEncoding;
             })
             .average()
             .orElse(1.0);
@@ -322,7 +322,7 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
             .mapToDouble(k ->
             {
                 Vector3 diff = decodeNormal(targetViewIndex, k).minus(weightedNormalDirection);
-                return diff.dot(diff) * intensities[targetViewIndex][k] / unitReflectanceEncoding;
+                return diff.dot(diff);
             })
             .average()
             .orElse(1.0);
