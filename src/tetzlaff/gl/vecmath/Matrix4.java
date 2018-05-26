@@ -153,10 +153,10 @@ public final class Matrix4
     {
         float f = 1.0f / (float)Math.tan(fovy / 2);
         return new Matrix4(
-            f / aspect,    0.0f,    0.0f,                            0.0f,
-            0.0f,        f,        0.0f,                            0.0f,
-            0.0f,        0.0f,    (far + near) / (near - far),    2.0f * far * near / (near - far),
-            0.0f,        0.0f,    -1.0f,                            0.0f
+            f / aspect,  0.0f,  0.0f,                         0.0f,
+            0.0f,        f,     0.0f,                         0.0f,
+            0.0f,        0.0f,  (far + near) / (near - far),  2.0f * far * near / (near - far),
+            0.0f,        0.0f,  -1.0f,                        0.0f
         );
     }
 

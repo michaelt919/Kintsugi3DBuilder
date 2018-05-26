@@ -11,6 +11,8 @@ import java.util.stream.IntStream;
 
 import org.lwjgl.*;
 import tetzlaff.gl.core.*;
+import tetzlaff.gl.vecmath.DoubleVector2;
+import tetzlaff.gl.vecmath.DoubleVector3;
 import tetzlaff.gl.vecmath.IntVector3;
 import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.ibrelight.rendering.IBRResources;
@@ -25,7 +27,8 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
     private final File debugDirectory;
 
     private byte[][] intensities;
-    private byte[][] normals;
+    private byte[][] weights;
+    private byte[][] geom;
 
     private List<Integer> viewIndexList;
 
@@ -139,7 +142,8 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
                     usePerceptuallyLinearError ? (1.0 / 2.2) : 1.0);
 
         intensities = new byte[resources.viewSet.getCameraPoseCount()][size * size];
-        normals = new byte[resources.viewSet.getCameraPoseCount()][size * size * 3];
+        weights = new byte[resources.viewSet.getCameraPoseCount()][size * size];
+        geom = new byte[resources.viewSet.getCameraPoseCount()][size * size * 3];
 
         try
         (
@@ -147,7 +151,7 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
                 .define("VISIBILITY_TEST_ENABLED", resources.depthTextures != null && settings.getBoolean("occlusionEnabled"))
                 .define("SHADOW_TEST_ENABLED", resources.shadowTextures != null && settings.getBoolean("occlusionEnabled"))
                 .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-                .addShader(ShaderType.FRAGMENT, new File("shaders/colorappearance/projtex_multi_lab_normal.frag"))
+                .addShader(ShaderType.FRAGMENT, new File("shaders/relight/projtex_multi_fidelity.frag"))
                 .createProgram();
 
             FramebufferObject<ContextType> framebuffer = resources.context.buildFramebufferObject(2048, 2048)
@@ -174,12 +178,12 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
 
 
             ByteBuffer colorByteBuffer = BufferUtils.createByteBuffer(2048 * 2048 * 4);
-            ByteBuffer normalByteBuffer = BufferUtils.createByteBuffer(2048 * 2048 * 4);
+            ByteBuffer geomByteBuffer = BufferUtils.createByteBuffer(2048 * 2048 * 4);
 
+            int[] pixelCounts = new int[size * size];
             int[] intensitySums = new int[size * size];
-            int[] intensityCounts = new int[size * size];
-            int[] normalSums = new int[size * size * 3];
-            int[] normalCounts = new int[size * size];
+            int[] weightSums = new int[size * size];
+            int[] geomSums = new int[size * size * 3];
 
             for (int i = 0; i < resources.viewSet.getCameraPoseCount(); i++)
             {
@@ -192,7 +196,8 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
 
                 framebuffer.readColorBufferARGB(0, colorByteBuffer);
                 Arrays.fill(intensitySums, 0);
-                Arrays.fill(intensityCounts, 0);
+                Arrays.fill(pixelCounts, 0);
+                Arrays.fill(weightSums, 0);
 
                 for (int j = 0; j < 2048 * 2048; j++)
                 {
@@ -211,13 +216,9 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
                         int k = (int)Math.floor((j % 2048) * size / 2048.0) + size * (int)Math.floor((j / 2048) * size / 2048.0);
 
                         intensitySums[k] += Math.round(decodedIntensity * unitReflectanceEncoding);
-                        intensityCounts[k]++;
+                        weightSums[k] += Math.round(color.getGreen() / 255.0f);
+                        pixelCounts[k]++;
                     }
-                }
-
-                for (int k = 0; k < intensityCounts.length; k++)
-                {
-                    intensities[i][k] = (byte)Math.min(255, Math.round((float)intensitySums[k] / (float)intensityCounts[k]));
                 }
 
                 if (debugDirectory != null)
@@ -230,7 +231,7 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
                         framebuffer.saveColorBufferToFile(0, "PNG",
                             new File(debugDirectory, String.join(".", filenameParts)));
 
-                        filenameParts[filenameParts.length - 2] += "_normal";
+                        filenameParts[filenameParts.length - 2] += "_geom";
                         framebuffer.saveColorBufferToFile(1, "PNG",
                                 new File(debugDirectory, String.join(".", filenameParts)));
                     }
@@ -240,31 +241,34 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
                     }
                 }
 
-                framebuffer.readColorBufferARGB(1, normalByteBuffer);
-                Arrays.fill(normalSums, 0);
-                Arrays.fill(normalCounts, 0);
+                framebuffer.readColorBufferARGB(1, geomByteBuffer);
+                Arrays.fill(geomSums, 0);
 
                 for (int j = 0; j < 2048 * 2048; j++)
                 {
                     if (new Color(colorByteBuffer.asIntBuffer().get(j), true).getAlpha() > 0)
                     {
-                        Color normalColor = new Color(normalByteBuffer.asIntBuffer().get(j), true);
+                        Color geomColor = new Color(geomByteBuffer.asIntBuffer().get(j), true);
 
                         @SuppressWarnings("IntegerDivisionInFloatingPointContext")
                         int k = (int)Math.floor((j % 2048) * size / 2048.0) + size * (int)Math.floor((j / 2048) * size / 2048.0);
 
-                        normalSums[3 * k]     += Math.round(normalColor.getRed());
-                        normalSums[3 * k + 1] += Math.round(normalColor.getGreen());
-                        normalSums[3 * k + 2] += Math.round(normalColor.getBlue());
-                        normalCounts[k]++;
+                        geomSums[3 * k]     += Math.round(geomColor.getRed());
+                        geomSums[3 * k + 1] += Math.round(geomColor.getGreen());
+                        geomSums[3 * k + 2] += Math.round(geomColor.getBlue());
                     }
                 }
 
-                for (int k = 0; k < normalCounts.length; k++)
+                for (int k = 0; k < pixelCounts.length; k++)
                 {
-                    normals[i][3 * k]     = (byte)Math.min(255, Math.round((float)normalSums[3 * k]     / (float)normalCounts[k]));
-                    normals[i][3 * k + 1] = (byte)Math.min(255, Math.round((float)normalSums[3 * k + 1] / (float)normalCounts[k]));
-                    normals[i][3 * k + 2] = (byte)Math.min(255, Math.round((float)normalSums[3 * k + 2] / (float)normalCounts[k]));
+                    if (pixelCounts[k] > 0)
+                    {
+                        intensities[i][k]  = (byte)Math.min(255, Math.round((float)intensitySums[k]    / (float)pixelCounts[k]));
+                        weights[i][k]      = (byte)Math.min(255, Math.round((float)weightSums[k]       / (float)pixelCounts[k]));
+                        geom[i][3 * k]     = (byte)Math.min(255, Math.round((float)geomSums[3 * k]     / (float)pixelCounts[k]));
+                        geom[i][3 * k + 1] = (byte)Math.min(255, Math.round((float)geomSums[3 * k + 1] / (float)pixelCounts[k]));
+                        geom[i][3 * k + 2] = (byte)Math.min(255, Math.round((float)geomSums[3 * k + 2] / (float)pixelCounts[k]));
+                    }
                 }
             }
         }
@@ -285,49 +289,160 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
         this.viewIndexList = new ArrayList<>(activeViewIndexList);
     }
 
-    private Vector3 decodeNormal(int targetViewIndex, int k)
+    private DoubleVector2 getGeom2(int viewIndex, int pixelIndex)
     {
-        return new Vector3(
-            (0x000000FF & normals[targetViewIndex][3 * k])     * (2.0f / 255.0f) - 1.0f,
-            (0x000000FF & normals[targetViewIndex][3 * k + 1]) * (2.0f / 255.0f) - 1.0f,
-            (0x000000FF & normals[targetViewIndex][3 * k + 2]) * (2.0f / 255.0f) - 1.0f)
-            .normalized();
+        return new DoubleVector2(
+            (0x000000FF & geom[viewIndex][3 * pixelIndex])     * (2.0 / 255.0) - 1.0,
+            (0x000000FF & geom[viewIndex][3 * pixelIndex + 1]) * (2.0 / 255.0) - 1.0);
+    }
+
+    private DoubleVector3 getGeom3(int viewIndex, int pixelIndex)
+    {
+        return new DoubleVector3(
+            (0x000000FF & geom[viewIndex][3 * pixelIndex])     * (2.0 / 255.0) - 1.0,
+            (0x000000FF & geom[viewIndex][3 * pixelIndex + 1]) * (2.0 / 255.0) - 1.0,
+            (0x000000FF & geom[viewIndex][3 * pixelIndex + 2]) * (2.0 / 255.0) - 1.0);
+    }
+
+    private float getIntensity(int viewIndex, int pixelIndex)
+    {
+        return 0x000000FF & intensities[viewIndex][pixelIndex];
+    }
+
+    private float getWeight(int viewIndex, int pixelIndex)
+    {
+        return 0x000000FF & weights[viewIndex][pixelIndex];
     }
 
     @Override
     public double evaluateError(int targetViewIndex, File debugFile)
     {
         int[] peakSpecularPixelIndices = IntStream.range(0, intensities[targetViewIndex].length - 1)
-            .filter(i -> (0x000000FF & intensities[targetViewIndex][i]) > 0
+            .filter(i -> getIntensity(targetViewIndex,i) > 0
                 && viewIndexList.stream().mapToInt(j -> j)
                     .allMatch(j -> j == targetViewIndex
-                        || (0x000000FF & intensities[targetViewIndex][i]) > (0x000000FF & intensities[j][i])))
+                        || getWeight(targetViewIndex, i) * getIntensity(targetViewIndex,i)
+                            > getWeight(j, i) * getIntensity(j,i)))
             .toArray();
 
-        Vector3 weightedNormalDirection = Arrays.stream(peakSpecularPixelIndices)
-            .mapToObj(k -> decodeNormal(targetViewIndex, k).times((0x000000FF & intensities[targetViewIndex][k]) / unitReflectanceEncoding))
-            .reduce(Vector3.ZERO, Vector3::plus)
-            .normalized();
+//        Vector3 weightedNormalDirection = Arrays.stream(peakSpecularPixelIndices)
+//            .mapToObj(k -> getGeom3(targetViewIndex, k).normalized()
+//                .times((0x000000FF & intensities[targetViewIndex][k]) / unitReflectanceEncoding))
+//            .reduce(Vector3.ZERO, Vector3::plus)
+//            .normalized();
+//
+//        double weightedDifference = Arrays.stream(peakSpecularPixelIndices)
+//            .mapToDouble(k ->
+//            {
+//                Vector3 diff = getGeom3(targetViewIndex, k).normalized().minus(weightedNormalDirection);
+//                return diff.dot(diff) * (0x000000FF & intensities[targetViewIndex][k]) / unitReflectanceEncoding;
+//            })
+//            .average()
+//            .orElse(1.0);
+//
+//        double unweightedDifference = Arrays.stream(peakSpecularPixelIndices)
+//            .mapToDouble(k ->
+//            {
+//                Vector3 diff = getGeom3(targetViewIndex, k).normalized().minus(weightedNormalDirection);
+//                return diff.dot(diff);
+//            })
+//            .average()
+//            .orElse(1.0);
+//
+//        return 1.0 - weightedDifference / unweightedDifference;
 
-        double weightedDifference = Arrays.stream(peakSpecularPixelIndices)
+        double sumWeights = IntStream.range(0, intensities[targetViewIndex].length - 1)
+            .mapToDouble(i -> getWeight(targetViewIndex, i))
+            .sum();
+
+        DoubleVector2 center = IntStream.range(0, intensities[targetViewIndex].length - 1)
+            .mapToObj(k -> getGeom2(targetViewIndex, k).times(getWeight(targetViewIndex, k)))
+            .reduce(DoubleVector2.ZERO, DoubleVector2::plus).dividedBy(sumWeights);
+
+        double xVariance = IntStream.range(0, intensities[targetViewIndex].length - 1)
             .mapToDouble(k ->
             {
-                Vector3 diff = decodeNormal(targetViewIndex, k).minus(weightedNormalDirection);
-                return diff.dot(diff) * (0x000000FF & intensities[targetViewIndex][k]) / unitReflectanceEncoding;
+                double x = getGeom2(targetViewIndex, k).x - center.x;
+                return x * x * getWeight(targetViewIndex, k);
             })
-            .average()
-            .orElse(1.0);
+            .sum() / sumWeights;
 
-        double unweightedDifference = Arrays.stream(peakSpecularPixelIndices)
+        double yVariance = IntStream.range(0, intensities[targetViewIndex].length - 1)
             .mapToDouble(k ->
             {
-                Vector3 diff = decodeNormal(targetViewIndex, k).minus(weightedNormalDirection);
-                return diff.dot(diff);
+                double y = getGeom2(targetViewIndex, k).y - center.y;
+                return y * y * getWeight(targetViewIndex, k);
             })
-            .average()
-            .orElse(1.0);
+            .sum() / sumWeights;
 
-        return 1.0 - weightedDifference / unweightedDifference;
+        double covariance = IntStream.range(0, intensities[targetViewIndex].length - 1)
+            .mapToDouble(k ->
+            {
+                double x = getGeom2(targetViewIndex, k).x - center.x;
+                double y = getGeom2(targetViewIndex, k).y - center.y;
+                return x * y * getWeight(targetViewIndex, k);
+            })
+            .sum() / sumWeights;
+
+        double sumIntensities = Arrays.stream(peakSpecularPixelIndices)
+            .mapToDouble(k -> getWeight(targetViewIndex, k) * getIntensity(targetViewIndex, k))
+            .sum();
+
+        double[] diffs = Arrays.stream(peakSpecularPixelIndices)
+            .mapToDouble(k ->
+                getIntensity(targetViewIndex, k) * getWeight(targetViewIndex, k)
+                    - viewIndexList.stream()
+                        .filter(j -> j != targetViewIndex)
+                        .mapToDouble(j -> getIntensity(j, k) * getWeight(j, k))
+                        .max().orElse(0.0))
+            .toArray();
+
+        double sumDiffs = Arrays.stream(diffs).sum();
+
+        DoubleVector2 weightedCenter = Arrays.stream(peakSpecularPixelIndices)
+            .mapToObj(k -> getGeom2(targetViewIndex, k).times(diffs[k]))
+            .reduce(DoubleVector2.ZERO, DoubleVector2::plus).dividedBy(sumDiffs);
+
+        double intensityWeightedXVariance = Arrays.stream(peakSpecularPixelIndices)
+            .mapToDouble(k ->
+            {
+                double x = getGeom2(targetViewIndex, k).x - weightedCenter.x;
+                return x * x * diffs[k];
+            })
+            .sum() / sumDiffs;
+
+        double intensityWeightedYVariance = Arrays.stream(peakSpecularPixelIndices)
+            .mapToDouble(k ->
+            {
+                double y = getGeom2(targetViewIndex, k).y - weightedCenter.y;
+                return y * y * diffs[k];
+            })
+            .sum() / sumDiffs;
+
+        double intensityWeightedCovariance = Arrays.stream(peakSpecularPixelIndices)
+            .mapToDouble(k ->
+            {
+                double x = getGeom2(targetViewIndex, k).x - weightedCenter.x;
+                double y = getGeom2(targetViewIndex, k).y - weightedCenter.y;
+                return x * y * diffs[k];
+            })
+            .sum() / sumDiffs;
+
+        return (sumDiffs
+            - Math.sqrt(intensityWeightedXVariance * intensityWeightedYVariance - intensityWeightedCovariance * intensityWeightedCovariance)
+                / Math.sqrt(xVariance * yVariance - covariance * covariance))
+            / sumIntensities;
+
+//        DoubleVector2 secondaryIntensityWeightedDirection = new DoubleVector2(
+//                0.5 * (intensityWeightedXVariance - intensityWeightedYVariance
+//                    - Math.sqrt(intensityWeightedXVariance * intensityWeightedXVariance + intensityWeightedYVariance * intensityWeightedYVariance
+//                        - 2 * intensityWeightedXVariance * intensityWeightedYVariance + 4 * intensityWeightedCovariance)),
+//                intensityWeightedCovariance)
+//            .normalized();
+//
+//        @SuppressWarnings("SuspiciousNameCombination")
+//        DoubleVector2 primaryIntensityWeightedDirection =
+//            new DoubleVector2(secondaryIntensityWeightedDirection.y, -secondaryIntensityWeightedDirection.x);
     }
 
     @Override
