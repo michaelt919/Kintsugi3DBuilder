@@ -9,8 +9,8 @@ in vec3 fBitangent;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec4 geomOut;
 
-#include "colorappearance_multi_as_single.glsl"
-#include "imgspace.glsl"
+#include "../colorappearance/colorappearance_multi_as_single.glsl"
+#include "../colorappearance/imgspace.glsl"
 
 #line 16 1011
 
@@ -21,7 +21,7 @@ void main()
     vec3 view = normalize(getViewVector());
     vec3 normal = normalize(fNormal);
 
-    vec4 projPos = cameraProjections[getCameraProjectionIndex(viewIndex)] * cameraPose * fPosition;
+    vec4 projPos = cameraProjections[getCameraProjectionIndex(viewIndex)] * cameraPose * vec4(fPosition, 1.0);
     geomOut = 0.5 + 0.5 * projPos / projPos.w;
     //geomOut = vec4(normal * 0.5 + 0.5, 1.0);
 

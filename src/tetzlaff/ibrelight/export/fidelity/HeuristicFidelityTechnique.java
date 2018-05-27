@@ -41,7 +41,7 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
     @Override
     public boolean isGuaranteedMonotonic()
     {
-        return true;
+        return false;
     }
 
     @Override
@@ -351,7 +351,7 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
 //
 //        return 1.0 - weightedDifference / unweightedDifference;
 
-        double sumWeights = IntStream.range(0, intensities[targetViewIndex].length - 1)
+        double sumWeights = IntStream.range(0, weights[targetViewIndex].length)
             .mapToDouble(i -> getWeight(targetViewIndex, i))
             .sum();
 
@@ -359,32 +359,36 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
             .mapToObj(k -> getGeom2(targetViewIndex, k).times(getWeight(targetViewIndex, k)))
             .reduce(DoubleVector2.ZERO, DoubleVector2::plus).dividedBy(sumWeights);
 
-        double xVariance = IntStream.range(0, intensities[targetViewIndex].length - 1)
+        double xVariance = IntStream.range(0, weights[targetViewIndex].length)
             .mapToDouble(k ->
             {
                 double x = getGeom2(targetViewIndex, k).x - center.x;
                 return x * x * getWeight(targetViewIndex, k);
             })
-            .sum() / sumWeights;
+            .sum();
 
-        double yVariance = IntStream.range(0, intensities[targetViewIndex].length - 1)
+        double yVariance = IntStream.range(0, weights[targetViewIndex].length)
             .mapToDouble(k ->
             {
                 double y = getGeom2(targetViewIndex, k).y - center.y;
                 return y * y * getWeight(targetViewIndex, k);
             })
-            .sum() / sumWeights;
+            .sum();
 
-        double covariance = IntStream.range(0, intensities[targetViewIndex].length - 1)
+        double covariance = IntStream.range(0, weights[targetViewIndex].length)
             .mapToDouble(k ->
             {
                 double x = getGeom2(targetViewIndex, k).x - center.x;
                 double y = getGeom2(targetViewIndex, k).y - center.y;
                 return x * y * getWeight(targetViewIndex, k);
             })
-            .sum() / sumWeights;
+            .sum();
 
-        double sumIntensities = Arrays.stream(peakSpecularPixelIndices)
+        double sumIntensities = IntStream.range(0, intensities[targetViewIndex].length - 1)
+            .mapToDouble(k -> getWeight(targetViewIndex, k) * getIntensity(targetViewIndex, k))
+            .sum();
+
+        double sumPeakIntensities = Arrays.stream(peakSpecularPixelIndices)
             .mapToDouble(k -> getWeight(targetViewIndex, k) * getIntensity(targetViewIndex, k))
             .sum();
 
@@ -399,45 +403,48 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
 
         double sumDiffs = Arrays.stream(diffs).sum();
 
-        DoubleVector2 weightedCenter = Arrays.stream(peakSpecularPixelIndices)
-            .mapToObj(k -> getGeom2(targetViewIndex, k).times(diffs[k]))
+        DoubleVector2 diffWeightedCenter = IntStream.range(0, peakSpecularPixelIndices.length)
+            .mapToObj(i -> getGeom2(targetViewIndex, peakSpecularPixelIndices[i]).times(diffs[i]))
             .reduce(DoubleVector2.ZERO, DoubleVector2::plus).dividedBy(sumDiffs);
 
-        double intensityWeightedXVariance = Arrays.stream(peakSpecularPixelIndices)
-            .mapToDouble(k ->
+        double diffWeightedXVariance = IntStream.range(0, peakSpecularPixelIndices.length)
+            .mapToDouble(i ->
             {
-                double x = getGeom2(targetViewIndex, k).x - weightedCenter.x;
-                return x * x * diffs[k];
+                double x = getGeom2(targetViewIndex, peakSpecularPixelIndices[i]).x - diffWeightedCenter.x;
+                return x * x * diffs[i];
             })
-            .sum() / sumDiffs;
+            .sum();
 
-        double intensityWeightedYVariance = Arrays.stream(peakSpecularPixelIndices)
-            .mapToDouble(k ->
+        double diffWeightedYVariance = IntStream.range(0, peakSpecularPixelIndices.length)
+            .mapToDouble(i ->
             {
-                double y = getGeom2(targetViewIndex, k).y - weightedCenter.y;
-                return y * y * diffs[k];
+                double y = getGeom2(targetViewIndex, peakSpecularPixelIndices[i]).y - diffWeightedCenter.y;
+                return y * y * diffs[i];
             })
-            .sum() / sumDiffs;
+            .sum();
 
-        double intensityWeightedCovariance = Arrays.stream(peakSpecularPixelIndices)
-            .mapToDouble(k ->
+        double diffWeightedCovariance = IntStream.range(0, peakSpecularPixelIndices.length)
+            .mapToDouble(i ->
             {
-                double x = getGeom2(targetViewIndex, k).x - weightedCenter.x;
-                double y = getGeom2(targetViewIndex, k).y - weightedCenter.y;
-                return x * y * diffs[k];
+                double x = getGeom2(targetViewIndex, peakSpecularPixelIndices[i]).x - diffWeightedCenter.x;
+                double y = getGeom2(targetViewIndex, peakSpecularPixelIndices[i]).y - diffWeightedCenter.y;
+                return x * y * diffs[i];
             })
-            .sum() / sumDiffs;
+            .sum();
 
-        return (sumDiffs
-            - Math.sqrt(intensityWeightedXVariance * intensityWeightedYVariance - intensityWeightedCovariance * intensityWeightedCovariance)
-                / Math.sqrt(xVariance * yVariance - covariance * covariance))
-            / sumIntensities;
+        return Math.max(0.0, Math.min(1.0,
+            (sumDiffs
+                    - (1.0 - sumDiffs / sumIntensities)
+                        * Math.sqrt((diffWeightedXVariance * diffWeightedYVariance - diffWeightedCovariance * diffWeightedCovariance)
+                            / (xVariance * yVariance - covariance * covariance))
+                        * sumWeights)
+                / sumPeakIntensities));
 
 //        DoubleVector2 secondaryIntensityWeightedDirection = new DoubleVector2(
-//                0.5 * (intensityWeightedXVariance - intensityWeightedYVariance
-//                    - Math.sqrt(intensityWeightedXVariance * intensityWeightedXVariance + intensityWeightedYVariance * intensityWeightedYVariance
-//                        - 2 * intensityWeightedXVariance * intensityWeightedYVariance + 4 * intensityWeightedCovariance)),
-//                intensityWeightedCovariance)
+//                0.5 * (diffWeightedXVariance - diffWeightedYVariance
+//                    - Math.sqrt(diffWeightedXVariance * diffWeightedXVariance + diffWeightedYVariance * diffWeightedYVariance
+//                        - 2 * diffWeightedXVariance * diffWeightedYVariance + 4 * diffWeightedCovariance)),
+//                diffWeightedCovariance)
 //            .normalized();
 //
 //        @SuppressWarnings("SuspiciousNameCombination")

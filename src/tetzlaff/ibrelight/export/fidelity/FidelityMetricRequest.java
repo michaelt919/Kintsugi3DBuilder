@@ -17,13 +17,13 @@ import tetzlaff.models.ReadonlySettingsModel;
 
 public class FidelityMetricRequest implements IBRRequest
 {
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     private static final boolean USE_PERCEPTUALLY_LINEAR_ERROR = true;
 
     private static final boolean VIEW_IMPORTANCE_ENABLED = true;
     private static final boolean VIEW_IMPORTANCE_PREDICTION_ENABLED = false;
-    private static final boolean CUMULATIVE_ERROR_CALCULATION_ENABLED = true;
+    private static final boolean CUMULATIVE_ERROR_CALCULATION_ENABLED = false;
 
     private final File fidelityExportPath;
     private final File fidelityVSETFile;
@@ -155,7 +155,7 @@ public class FidelityMetricRequest implements IBRRequest
                 .minus(resources.geometry.getCentroid()).normalized())
             .toArray(Vector3[]::new);
 
-        File debugDirectory;
+        File debugDirectory = null;
         if (DEBUG)
         {
             debugDirectory = new File(fidelityExportPath.getParentFile(), "debug");
