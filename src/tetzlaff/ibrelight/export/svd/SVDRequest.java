@@ -30,7 +30,7 @@ public class SVDRequest implements IBRRequest
 {
     private static final boolean DEBUG = false;
 
-    private static final int BLOCK_SIZE = 16;
+    private static final int BLOCK_SIZE = 32;
     private static final int SAVED_SINGULAR_VALUES = 16;
     private static final int MAX_RUNNING_THREADS = 3;
     private static final boolean PUT_COLOR_IN_VIEW_FACTOR = true;
@@ -274,7 +274,14 @@ public class SVDRequest implements IBRRequest
 
                                     synchronized (squaredErrorByView)
                                     {
-                                        squaredErrorByView[k] += squaredError / (double) (3 * texWidth * texHeight);
+                                        if (PUT_COLOR_IN_VIEW_FACTOR)
+                                        {
+                                            squaredErrorByView[k] += squaredError / (double) (3 * texWidth * texHeight);
+                                        }
+                                        else
+                                        {
+                                            squaredErrorByView[k] += squaredError / (double) (texWidth * texHeight);
+                                        }
                                     }
                                 }
 
@@ -718,8 +725,8 @@ public class SVDRequest implements IBRRequest
         deferredProgram.setUniform("minTexCoord", minTexCoord);
         deferredProgram.setUniform("maxTexCoord", maxTexCoord);
 
-        deferredProgram.setTexture("normalMap", resources.normalTexture);
-        deferredProgram.setUniform("useNormalMap", !DIFFUSE_MODE && resources.normalTexture != null);
+//        deferredProgram.setTexture("normalMap", resources.normalTexture);
+//        deferredProgram.setUniform("useNormalMap", !DIFFUSE_MODE && resources.normalTexture != null);
 
         geometryFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
         geometryFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);

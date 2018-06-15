@@ -189,4 +189,20 @@ vec3 labToXYZ(vec3 labColor)
             max(vec3(0.0), sign(transformedColor - (6.0 / 29.0))));
 }
 
+vec3 rgbToYUV(vec3 rgbColor)
+{
+    return mat3(
+        vec3(0.299, -0.14713, 0.615),
+        vec3(0.587, -0.28886, -0.51499),
+        vec3(0.114, 0.436, -0.10001)) * rgbColor;
+}
+
+vec3 yuvToRGB(vec3 yuvColor)
+{
+    return mat3(
+        vec3(1.0),
+        vec3(0.0, -0.39465, 2.03211),
+        vec3(1.13983, -0.58060, 0.0)) * yuvColor;
+}
+
 #endif // LINEARIZE_GLSL

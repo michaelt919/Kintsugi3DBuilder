@@ -17,10 +17,10 @@ vec3[4] getWeights(vec2 weightTexCoords[4], int layer)
         ivec2 truncatedTexCoords = min(ivec2(floor(weightTexCoords[i])), weightTexSize - 1);
         vec2 interpolants = weightTexCoords[i] - truncatedTexCoords;
 
-        vec3 weight00 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer), 0).xyz;
-        vec3 weight01 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer + 8), 0).xyz;
-        vec3 weight10 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer + 16), 0).xyz;
-        vec3 weight11 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer + 24), 0).xyz;
+        vec3 weight00 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer), 0).rgb;
+        vec3 weight01 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer + 32), 0).rgb;
+        vec3 weight10 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer + 64), 0).rgb;
+        vec3 weight11 = texelFetch(environmentWeightsTexture, ivec3(truncatedTexCoords, layer + 96), 0).rgb;
 
         returnValues[i] = mix(
             mix(weight00, weight01, interpolants.y),
@@ -31,7 +31,7 @@ vec3[4] getWeights(vec2 weightTexCoords[4], int layer)
     return returnValues;
 }
 
-vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorXYZ, vec3 roughness)
+vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorRGB, vec3 roughness)
 {
     float mipmapLevel;
 #ifdef GL_ARB_texture_query_lod
@@ -75,19 +75,19 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorXYZ, vec3 roughness)
 
     vec3 roughnessSq = roughness * roughness;
 
-    vec3 mfdGeomRoughnessSq = roughnessSq *
+    vec3 mfdGeomRoughnessSq =
         mix(mix(weights[0], weights[2], interpolantsFloorLevel.x),
             mix(weights[1], weights[3], interpolantsFloorLevel.x),
             interpolantsFloorLevel.y);
 
-    weights = getWeights(weightCoords, 4);
+    weights = getWeights(weightCoords, 1);
 
-    vec3 mfdGeomRoughnessSqFresnelFactor = roughnessSq *
+    vec3 mfdGeomRoughnessSqFresnelFactor =
         mix(mix(weights[0], weights[2], interpolantsFloorLevel.x),
             mix(weights[1], weights[3], interpolantsFloorLevel.x),
             interpolantsFloorLevel.y);
 
-    for (int k = 0; k < 3; k++)
+    for (int k = 0; k < 15; k++)
     {
         vec4 tex000 = getSignedTexel(ivec3(coords000, k), mipmapLevelFloor);
         vec4 tex001 = getSignedTexel(ivec3(coords001, k), mipmapLevelCeil);
@@ -98,7 +98,7 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorXYZ, vec3 roughness)
         vec4 tex110 = getSignedTexel(ivec3(coords110, k), mipmapLevelFloor);
         vec4 tex111 = getSignedTexel(ivec3(coords111, k), mipmapLevelCeil);
 
-        weights = getWeights(weightCoords, k + 1);
+        weights = getWeights(weightCoords, 2 * k + 2);
 
         vec4 blendedTerm =
             mix(mix(mix(vec4(weights[0] * 2.0 - 1.0, 1.0) * tex000,
@@ -117,36 +117,36 @@ vec3 getScaledEnvironmentShadingFromSVD(vec3 specularColorXYZ, vec3 roughness)
                     interpolantsCeilLevel.y),
                 mipmapLevelInterpolant);
 
-        weights = getWeights(weightCoords, k + 5);
+        weights = getWeights(weightCoords, 2 * k + 3);
 
         vec3 blendedTermFresnel =
-            mix(mix(mix((weights[0] * 2.0 - 1.0) * tex000.xyz,
-                        (weights[2] * 2.0 - 1.0) * tex100.xyz,
+            mix(mix(mix((weights[0] * 2.0 - 1.0) * tex000.rgb,
+                        (weights[2] * 2.0 - 1.0) * tex100.rgb,
                         interpolantsFloorLevel.x),
-                    mix((weights[1] * 2.0 - 1.0) * tex010.xyz,
-                        (weights[3] * 2.0 - 1.0) * tex110.xyz,
+                    mix((weights[1] * 2.0 - 1.0) * tex010.rgb,
+                        (weights[3] * 2.0 - 1.0) * tex110.rgb,
                         interpolantsFloorLevel.x),
                     interpolantsFloorLevel.y),
-                mix(mix((weights[0] * 2.0 - 1.0) * tex001.xyz,
-                        (weights[2] * 2.0 - 1.0) * tex101.xyz,
+                mix(mix((weights[0] * 2.0 - 1.0) * tex001.rgb,
+                        (weights[2] * 2.0 - 1.0) * tex101.rgb,
                         interpolantsCeilLevel.x),
-                    mix((weights[1] * 2.0 - 1.0) * tex011.xyz,
-                        (weights[3] * 2.0 - 1.0) * tex111.xyz,
+                    mix((weights[1] * 2.0 - 1.0) * tex011.rgb,
+                        (weights[3] * 2.0 - 1.0) * tex111.rgb,
                         interpolantsCeilLevel.x),
                     interpolantsCeilLevel.y),
                 mipmapLevelInterpolant);
 
         if (blendedTerm.w > 0)
         {
-            mfdGeomRoughnessSq += blendedTerm.xyz / blendedTerm.w;
-            mfdGeomRoughnessSqFresnelFactor += blendedTermFresnel.xyz / blendedTerm.w;
+            mfdGeomRoughnessSq += blendedTerm.rgb / blendedTerm.a;
+            mfdGeomRoughnessSqFresnelFactor += blendedTermFresnel.rgb / blendedTerm.a;
         }
     }
 
 #if FRESNEL_EFFECT_ENABLED
-    return mix(mfdGeomRoughnessSqFresnelFactor, mfdGeomRoughnessSq, specularColorXYZ);
+    return mix(mfdGeomRoughnessSqFresnelFactor, mfdGeomRoughnessSq, specularColorRGB);
 #else
-    return mfdGeomRoughnessSq * specularColorXYZ;
+    return mfdGeomRoughnessSq * specularColorRGB;
 #endif
 }
 

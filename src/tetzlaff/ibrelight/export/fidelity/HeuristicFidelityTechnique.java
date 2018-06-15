@@ -432,24 +432,24 @@ public class HeuristicFidelityTechnique<ContextType extends Context<ContextType>
             })
             .sum();
 
-        return Math.max(0.0, Math.min(1.0,
-            (sumDiffs
-                    - (1.0 - sumDiffs / sumIntensities)
-                        * Math.sqrt((diffWeightedXVariance * diffWeightedYVariance - diffWeightedCovariance * diffWeightedCovariance)
-                            / (xVariance * yVariance - covariance * covariance))
-                        * sumWeights)
-                / sumPeakIntensities));
+        double covarianceScale = xVariance * yVariance - covariance * covariance;
 
-//        DoubleVector2 secondaryIntensityWeightedDirection = new DoubleVector2(
-//                0.5 * (diffWeightedXVariance - diffWeightedYVariance
-//                    - Math.sqrt(diffWeightedXVariance * diffWeightedXVariance + diffWeightedYVariance * diffWeightedYVariance
-//                        - 2 * diffWeightedXVariance * diffWeightedYVariance + 4 * diffWeightedCovariance)),
-//                diffWeightedCovariance)
-//            .normalized();
-//
-//        @SuppressWarnings("SuspiciousNameCombination")
-//        DoubleVector2 primaryIntensityWeightedDirection =
-//            new DoubleVector2(secondaryIntensityWeightedDirection.y, -secondaryIntensityWeightedDirection.x);
+        if (sumWeights > 0.0 && sumIntensities > 0.0 && sumPeakIntensities > 0.0 && sumDiffs > 0.0 && covarianceScale > 0.0)
+        {
+            double returnVal =  Math.max(0.0, Math.min(1.0,
+                (sumDiffs
+                        - (1.0 - sumDiffs / sumIntensities)
+                            * Math.sqrt(Math.max(0,
+                                (diffWeightedXVariance * diffWeightedYVariance - diffWeightedCovariance * diffWeightedCovariance)
+                                    / covarianceScale))
+                            * sumWeights)
+                    / sumPeakIntensities));
+            return returnVal;
+        }
+        else
+        {
+            return 0.0;
+        }
     }
 
     @Override

@@ -604,120 +604,6 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
             this.tangentBuffer = null;
         }
 
-        if (this.eigentextures != null && this.positionBuffer != null && this.texCoordBuffer != null
-            && this.normalBuffer != null && this.tangentBuffer != null)
-        {
-            try(Program<ContextType> deferredProgram =
-                context.getShaderProgramBuilder()
-                    .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
-                    .addShader(ShaderType.FRAGMENT, new File("shaders/common/deferred.frag"))
-                    .createProgram();
-                FramebufferObject<ContextType> geometryFramebuffer =
-                    context.buildFramebufferObject(eigentextures.getWidth(), eigentextures.getHeight())
-                        .addColorAttachment(ColorFormat.RGBA32F)
-                        .addColorAttachment(ColorFormat.RGB32F)
-                        .createFramebufferObject())
-            {
-                Drawable<ContextType> deferredDrawable = context.createDrawable(deferredProgram);
-
-                deferredDrawable.addVertexBuffer("position", this.positionBuffer);
-                deferredDrawable.addVertexBuffer("texCoord", this.texCoordBuffer);
-                deferredDrawable.addVertexBuffer("normal", this.normalBuffer);
-                deferredDrawable.addVertexBuffer("tangent", this.tangentBuffer);
-
-                deferredProgram.setUniform("useNormalMap", false);
-
-                geometryFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-                geometryFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
-
-                context.getState().disableDepthTest();
-                context.getState().disableBackFaceCulling();
-
-                deferredDrawable.draw(PrimitiveMode.TRIANGLES, geometryFramebuffer);
-
-                context.getState().enableDepthTest();
-                context.getState().enableBackFaceCulling();
-
-                IntVector2 viewWeightResolution = this.getSVDViewWeightResolution();
-                IntVector2 blockResolution = viewWeightResolution.plus(new IntVector2(1,1));
-                IntVector2 blockSize = new IntVector2(
-                    this.eigentextures.getWidth() / viewWeightResolution.x,
-                    this.eigentextures.getHeight() / viewWeightResolution.y);
-
-
-
-                NativeVectorBuffer blockPositionBuffer = NativeVectorBufferFactory.getInstance()
-                    .createEmpty(NativeDataType.FLOAT, 3, blockResolution.x * blockResolution.y);
-
-                NativeVectorBuffer blockNormalBuffer = NativeVectorBufferFactory.getInstance()
-                    .createEmpty(NativeDataType.FLOAT, 3, blockResolution.x * blockResolution.y);
-
-                float[] positions = geometryFramebuffer.readFloatingPointColorBufferRGBA(0);
-                float[] normals = geometryFramebuffer.readFloatingPointColorBufferRGBA(1);
-
-                int k = 0;
-                for (int y = 0; y < blockResolution.y; y++)
-                {
-                    for (int x = 0; x < blockResolution.x; x++)
-                    {
-                        int iStart = x * blockSize.x - blockSize.x / 2;
-                        int jStart = y * blockSize.y - blockSize.y / 2;
-
-                        float[] positionSum = new float[4];
-                        float[] normalSum = new float[4];
-
-                        for (int j = Math.max(0, jStart); j < Math.min(jStart + blockSize.y, eigentextures.getHeight()); j++)
-                        {
-                            for (int i = Math.max(0, iStart); i < Math.min(iStart + blockSize.x, eigentextures.getWidth()); i++)
-                            {
-                                float alpha = positions[4 * (eigentextures.getWidth() * j + i) + 3];
-                                if (alpha > 0.0)
-                                {
-                                    positionSum[0] += positions[4 * (eigentextures.getWidth() * j + i)];
-                                    positionSum[1] += positions[4 * (eigentextures.getWidth() * j + i) + 1];
-                                    positionSum[2] += positions[4 * (eigentextures.getWidth() * j + i) + 2];
-                                    positionSum[3] += alpha;
-
-                                    normalSum[0] += normals[4 * (eigentextures.getWidth() * j + i)];
-                                    normalSum[1] += normals[4 * (eigentextures.getWidth() * j + i) + 1];
-                                    normalSum[2] += normals[4 * (eigentextures.getWidth() * j + i) + 2];
-                                }
-                            }
-                        }
-
-                        if (positionSum[3] > 0.0)
-                        {
-                            blockPositionBuffer.set(k, 0, positionSum[0] / positionSum[3]);
-                            blockPositionBuffer.set(k, 1, positionSum[1] / positionSum[3]);
-                            blockPositionBuffer.set(k, 2, positionSum[2] / positionSum[3]);
-
-                            Vector3 normal = new Vector3(normalSum[0], normalSum[1], normalSum[2]).normalized();
-                            blockNormalBuffer.set(k, 0, normal.x);
-                            blockNormalBuffer.set(k, 1, normal.y);
-                            blockNormalBuffer.set(k, 2, normal.z);
-                        }
-
-                        k++;
-                    }
-                }
-
-                blockPositionTexture = context.getTextureFactory()
-                    .build2DColorTextureFromBuffer(blockResolution.x, blockResolution.y, blockPositionBuffer)
-                    .setInternalFormat(ColorFormat.RGB16F)
-                    .createTexture();
-
-                blockNormalTexture = context.getTextureFactory()
-                    .build2DColorTextureFromBuffer(blockResolution.x, blockResolution.y, blockNormalBuffer)
-                    .setInternalFormat(ColorFormat.RGB8_SNORM)
-                    .createTexture();
-            }
-        }
-        else
-        {
-            blockPositionTexture = null;
-            blockNormalTexture = null;
-        }
-
         // TODO Use more information from the material.  Currently just pulling texture names.
         if (this.geometry != null)
         {
@@ -910,6 +796,119 @@ public final class IBRResources<ContextType extends Context<ContextType>> implem
         {
             shadowTextures = null;
             shadowMatrixBuffer = null;
+        }
+
+        if (this.eigentextures != null && this.positionBuffer != null && this.texCoordBuffer != null
+            && this.normalBuffer != null && this.tangentBuffer != null)
+        {
+            try(Program<ContextType> deferredProgram =
+                context.getShaderProgramBuilder()
+                    .addShader(ShaderType.VERTEX, new File("shaders/common/texspace_noscale.vert"))
+                    .addShader(ShaderType.FRAGMENT, new File("shaders/common/deferred.frag"))
+                    .createProgram();
+                FramebufferObject<ContextType> geometryFramebuffer =
+                    context.buildFramebufferObject(eigentextures.getWidth(), eigentextures.getHeight())
+                        .addColorAttachment(ColorFormat.RGBA32F)
+                        .addColorAttachment(ColorFormat.RGB32F)
+                        .createFramebufferObject())
+            {
+                Drawable<ContextType> deferredDrawable = context.createDrawable(deferredProgram);
+
+                deferredDrawable.addVertexBuffer("position", this.positionBuffer);
+                deferredDrawable.addVertexBuffer("texCoord", this.texCoordBuffer);
+                deferredDrawable.addVertexBuffer("normal", this.normalBuffer);
+                deferredDrawable.addVertexBuffer("tangent", this.tangentBuffer);
+
+//                deferredProgram.setUniform("useNormalMap", this.normalTexture != null);
+//                deferredProgram.setTexture("normalMap", this.normalTexture);
+
+                geometryFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
+                geometryFramebuffer.clearColorBuffer(1, 0.0f, 0.0f, 0.0f, 0.0f);
+
+                context.getState().disableDepthTest();
+                context.getState().disableBackFaceCulling();
+
+                deferredDrawable.draw(PrimitiveMode.TRIANGLES, geometryFramebuffer);
+
+                context.getState().enableDepthTest();
+                context.getState().enableBackFaceCulling();
+
+                IntVector2 viewWeightResolution = this.getSVDViewWeightResolution();
+                IntVector2 blockResolution = viewWeightResolution.plus(new IntVector2(1,1));
+                IntVector2 blockSize = new IntVector2(
+                    this.eigentextures.getWidth() / viewWeightResolution.x,
+                    this.eigentextures.getHeight() / viewWeightResolution.y);
+
+                NativeVectorBuffer blockPositionBuffer = NativeVectorBufferFactory.getInstance()
+                    .createEmpty(NativeDataType.FLOAT, 3, blockResolution.x * blockResolution.y);
+
+                NativeVectorBuffer blockNormalBuffer = NativeVectorBufferFactory.getInstance()
+                    .createEmpty(NativeDataType.FLOAT, 3, blockResolution.x * blockResolution.y);
+
+                float[] positions = geometryFramebuffer.readFloatingPointColorBufferRGBA(0);
+                float[] normals = geometryFramebuffer.readFloatingPointColorBufferRGBA(1);
+
+                int k = 0;
+                for (int y = 0; y < blockResolution.y; y++)
+                {
+                    for (int x = 0; x < blockResolution.x; x++)
+                    {
+                        int iStart = x * blockSize.x - blockSize.x / 2;
+                        int jStart = y * blockSize.y - blockSize.y / 2;
+
+                        float[] positionSum = new float[4];
+                        float[] normalSum = new float[4];
+
+                        for (int j = Math.max(0, jStart); j < Math.min(jStart + blockSize.y, eigentextures.getHeight()); j++)
+                        {
+                            for (int i = Math.max(0, iStart); i < Math.min(iStart + blockSize.x, eigentextures.getWidth()); i++)
+                            {
+                                float alpha = positions[4 * (eigentextures.getWidth() * j + i) + 3];
+                                if (alpha > 0.0)
+                                {
+                                    positionSum[0] += positions[4 * (eigentextures.getWidth() * j + i)];
+                                    positionSum[1] += positions[4 * (eigentextures.getWidth() * j + i) + 1];
+                                    positionSum[2] += positions[4 * (eigentextures.getWidth() * j + i) + 2];
+                                    positionSum[3] += alpha;
+
+                                    normalSum[0] += normals[4 * (eigentextures.getWidth() * j + i)];
+                                    normalSum[1] += normals[4 * (eigentextures.getWidth() * j + i) + 1];
+                                    normalSum[2] += normals[4 * (eigentextures.getWidth() * j + i) + 2];
+                                }
+                            }
+                        }
+
+                        if (positionSum[3] > 0.0)
+                        {
+                            blockPositionBuffer.set(k, 0, positionSum[0] / positionSum[3]);
+                            blockPositionBuffer.set(k, 1, positionSum[1] / positionSum[3]);
+                            blockPositionBuffer.set(k, 2, positionSum[2] / positionSum[3]);
+
+                            Vector3 normal = new Vector3(normalSum[0], normalSum[1], normalSum[2]).normalized();
+                            blockNormalBuffer.set(k, 0, normal.x);
+                            blockNormalBuffer.set(k, 1, normal.y);
+                            blockNormalBuffer.set(k, 2, normal.z);
+                        }
+
+                        k++;
+                    }
+                }
+
+                blockPositionTexture = context.getTextureFactory()
+                    .build2DColorTextureFromBuffer(blockResolution.x, blockResolution.y, blockPositionBuffer)
+                    .setInternalFormat(ColorFormat.RGB16F)
+                    .createTexture();
+
+                blockNormalTexture = context.getTextureFactory()
+                    .build2DColorTextureFromBuffer(blockResolution.x, blockResolution.y, blockNormalBuffer)
+                    .setInternalFormat(ColorFormat.RGB8_SNORM)
+                    .createTexture();
+            }
+        }
+        else
+        {
+            blockPositionTexture = null;
+            blockNormalTexture = null;
         }
     }
 

@@ -10,12 +10,12 @@ uniform sampler2DArray viewWeightTextures;
 
 // TODO define BLOCK_WIDTH and BLOCK_HEIGHT externally
 #ifndef BLOCK_WIDTH
-#define BLOCK_WIDTH 16 // For syntax highlighting
+#define BLOCK_WIDTH 32 // For syntax highlighting
 //#error BLOCK_WIDTH must be externally defined!
 #endif
 
 #ifndef BLOCK_HEIGHT
-#define BLOCK_HEIGHT 16 // For syntax highlighting
+#define BLOCK_HEIGHT 32 // For syntax highlighting
 //#error BLOCK_HEIGHT must be externally defined!
 #endif
 
@@ -85,7 +85,7 @@ vec4 getSignedTexel(ivec3 coords, int mipmapLevel)
     }
 }
 
-vec4 getColor(int virtualIndex)
+vec4 getResidual(int virtualIndex)
 {
     int viewIndex = getViewIndex(virtualIndex);
 
@@ -172,7 +172,7 @@ vec4 getColor(int virtualIndex)
         }
     }
 
-    return vec4(color + vec3(0.5), 1.0);
+    return vec4(color, 1.0);
 }
 
 #endif // SVD_UNPACK_GLSL
