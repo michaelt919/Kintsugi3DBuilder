@@ -287,14 +287,45 @@ public class FidelityMetricRequest implements IBRRequest
 
                 if (targetDirections != null)
                 {
-                    double fidelityMetric = 1.0 -
-                        Arrays.stream(targetDirections)
-                            .mapToDouble(targetDirection -> estimateError(targetDirection, viewDirections, errors, errorDistances, null))
+                    double[] targetErrors = Arrays.stream(targetDirections)
+                        .mapToDouble(targetDirection -> estimateError(targetDirection, viewDirections, errors, errorDistances, null))
+                        .toArray();
+
+                    double avgFidelity = 1.0 -
+                        Arrays.stream(targetErrors)
                             .average()
                             .orElse(0.0);
+
+                    double minFidelity = 1.0 -
+                        Arrays.stream(targetErrors)
+                            .max()
+                            .orElse(0.0);
+
                     out.println();
                     out.println("---------------------------");
-                    out.println("Fidelity: " + fidelityMetric);
+                    out.println("Avg. Fidelity: " + avgFidelity);
+                    out.println("Min. Fidelity: " + minFidelity);
+                    out.println("---------------------------");
+                    out.println();
+                }
+                else
+                {
+                    double avgFidelity = 1.0 -
+                        Arrays.stream(errors)
+                            .mapToDouble(errorArray -> errorArray[0])
+                            .average()
+                            .orElse(0.0);
+
+                    double minFidelity = 1.0 -
+                        Arrays.stream(errors)
+                            .mapToDouble(errorArray -> errorArray[0])
+                            .max()
+                            .orElse(0.0);
+
+                    out.println();
+                    out.println("---------------------------");
+                    out.println("Avg. Fidelity: " + avgFidelity);
+                    out.println("Min. Fidelity: " + minFidelity);
                     out.println("---------------------------");
                     out.println();
                 }

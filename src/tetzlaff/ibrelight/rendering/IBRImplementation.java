@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 
 import tetzlaff.gl.builders.ProgramBuilder;
@@ -138,6 +139,9 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private Program<ContextType> environmentWeightsProgram;
     private Drawable<ContextType> environmentWeightsDrawable;
+
+    private Texture3D<ContextType> environmentWeightsTexture;
+    FramebufferObject<ContextType> environmentWeightsFBO;
 
     private static final int SHADING_FRAMEBUFFER_COUNT = 2;
     private final Collection<FramebufferObject<ContextType>> shadingFramebuffers = new ArrayList<>(SHADING_FRAMEBUFFER_COUNT);
@@ -420,6 +424,22 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             this.updateCentroidAndRadius();
 
+            if (this.resources.eigentextures != null)
+            {
+                IntVector2 environmentWeightsResolution = this.resources.getSVDViewWeightResolution();
+
+                this.environmentWeightsTexture
+                    = context.getTextureFactory().build2DColorTextureArray(
+                    environmentWeightsResolution.x, environmentWeightsResolution.y, 512)
+                    .setInternalFormat(ColorFormat.RGBA16F)
+                    .createTexture();
+
+                this.environmentWeightsFBO
+                    = context.buildFramebufferObject(environmentWeightsResolution.x, environmentWeightsResolution.y)
+                    .addEmptyColorAttachments(8)
+                    .createFramebufferObject();
+            }
+
             this.shadedFrames = new LinkedList<>();
 
             FramebufferSize windowSize = context.getFramebufferSize();
@@ -696,10 +716,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         program.setUniform("ambientColor", lightingModel.getAmbientLightColor());
 
+        float maxLuminance = (float)resources.viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
+
         this.clearColor = new Vector3(
-                (float)Math.pow(lightingModel.getBackgroundColor().x, 1.0 / gamma),
-                (float)Math.pow(lightingModel.getBackgroundColor().y, 1.0 / gamma),
-                (float)Math.pow(lightingModel.getBackgroundColor().z, 1.0 / gamma));
+                (float)Math.pow(lightingModel.getBackgroundColor().x / maxLuminance, 1.0 / gamma),
+                (float)Math.pow(lightingModel.getBackgroundColor().y / maxLuminance, 1.0 / gamma),
+                (float)Math.pow(lightingModel.getBackgroundColor().z / maxLuminance, 1.0 / gamma));
     }
 
     private void updateCentroidAndRadius()
@@ -804,7 +826,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
     private void setupLight(Program<ContextType> program, int lightIndex, int modelInstance)
     {
-        Matrix4 lightMatrix = this.multiTransformationModel.get(modelInstance).quickInverse(0.01f).times(getLightMatrix(lightIndex));
+        Matrix4 lightMatrix = this.multiTransformationModel.get(modelInstance < 0 ? 0 : modelInstance).quickInverse(0.01f)
+            .times(getLightMatrix(lightIndex));
 
         // lightMatrix can be hardcoded here (comment out previous line)
 
@@ -1418,25 +1441,16 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                         this.environmentWeightsProgram.setTexture("positionMap", this.resources.blockPositionTexture);
                         this.environmentWeightsProgram.setTexture("normalMap", this.resources.blockNormalTexture);
 
-                        IntVector2 environmentWeightsResolution = this.resources.getSVDViewWeightResolution();
+                        FramebufferSize environmentWeightsSize = environmentWeightsFBO.getSize();
 
-                        try (
-                            Texture3D<ContextType> environmentWeightsTexture
-                                = context.getTextureFactory().build2DColorTextureArray(
-                                    environmentWeightsResolution.x, environmentWeightsResolution.y, 32)
-                                    .setInternalFormat(ColorFormat.RGBA16F)
-                                    .createTexture();
-                            FramebufferObject<ContextType> environmentWeightsFBO
-                                = context.buildFramebufferObject(environmentWeightsResolution.x, environmentWeightsResolution.y)
-                                    .addEmptyColorAttachments(8)
-                                    .createFramebufferObject())
+                        for (int k = 0; k < 4; k++)
                         {
-                            FramebufferSize environmentWeightsSize = environmentWeightsFBO.getSize();
+                            environmentWeightsProgram.setUniform("startingSVIndex", k * 4 - 1);
 
                             for (int i = 0; i < 8; i++)
                             {
                                 environmentWeightsFBO.setColorAttachment(i,
-                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i));
+                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 8 * k));
                                 environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
                             }
 
@@ -1447,7 +1461,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             for (int i = 0; i < 8; i++)
                             {
                                 environmentWeightsFBO.setColorAttachment(i,
-                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 8));
+                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 8 * k + 32));
                                 environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
                             }
 
@@ -1458,7 +1472,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             for (int i = 0; i < 8; i++)
                             {
                                 environmentWeightsFBO.setColorAttachment(i,
-                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 16));
+                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 8 * k + 64));
                                 environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
                             }
 
@@ -1469,21 +1483,21 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
                             for (int i = 0; i < 8; i++)
                             {
                                 environmentWeightsFBO.setColorAttachment(i,
-                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 24));
+                                    environmentWeightsTexture.getLayerAsFramebufferAttachment(i + 8 * k + 96));
                                 environmentWeightsFBO.clearColorBuffer(i, 0.0f, 0.0f, 0.0f, 0.0f);
                             }
 
                             environmentWeightsProgram.setUniform("blockOffset", new IntVector2(1, 1));
                             environmentWeightsDrawable.draw(PrimitiveMode.TRIANGLE_FAN, environmentWeightsFBO, 0, 0,
                                 environmentWeightsSize.width, environmentWeightsSize.height);
-
-                            // Flush to prevent timeout
-                            context.flush();
-
-                            this.program.setTexture("environmentWeightsTexture", environmentWeightsTexture);
-                            drawModelInSubdivisions(this.mainDrawable, offscreenFBO, subdivWidth, subdivHeight,
-                                lightCalibrationMode ? -1 : 0, view, projection);
                         }
+
+                        // Flush to prevent timeout
+                        context.flush();
+
+                        this.program.setTexture("environmentWeightsTexture", environmentWeightsTexture);
+                        drawModelInSubdivisions(this.mainDrawable, offscreenFBO, subdivWidth, subdivHeight,
+                            lightCalibrationMode ? -1 : 0, view, projection);
                     }
                     else
                     {
@@ -1497,7 +1511,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 context.getState().enableBackFaceCulling();
 
-                if (!lightingModel.areLightWidgetsEthereal())
+                if (!lightingModel.areLightWidgetsEthereal()
+                    && IntStream.range(0, lightingModel.getLightCount()).anyMatch(lightingModel::isLightWidgetEnabled))
                 {
                     context.flush();
 
@@ -1520,7 +1535,8 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
                 context.flush();
 
-                if (!lightingModel.areLightWidgetsEthereal())
+                if (!lightingModel.areLightWidgetsEthereal()
+                    && IntStream.range(0, lightingModel.getLightCount()).anyMatch(lightingModel::isLightWidgetEnabled))
                 {
                     // Read buffers here if light widgets are not ethereal (i.e. they can be clicked and should be in the ID buffer)
                     pixelObjectIDs = offscreenFBO.readIntegerColorBufferRGBA(1);
@@ -2094,6 +2110,18 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             reprojectProgram = null;
         }
 
+        if (environmentWeightsTexture != null)
+        {
+            environmentWeightsTexture.close();
+            environmentWeightsTexture = null;
+        }
+
+        if (environmentWeightsFBO != null)
+        {
+            environmentWeightsFBO.close();
+            environmentWeightsFBO = null;
+        }
+
         for (FramebufferObject<ContextType> fbo : shadingFramebuffers)
         {
             fbo.close();
@@ -2634,11 +2662,18 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             @Override
             public Object getObjectAtCoordinates(double x, double y)
             {
-                double xRemapped = Math.min(Math.max(x, 0), 1);
-                double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
+                if (pixelObjectIDs != null)
+                {
+                    double xRemapped = Math.min(Math.max(x, 0), 1);
+                    double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
 
-                int index = 4 * (int)(Math.round((fboSize.height-1) * yRemapped) * fboSize.width + Math.round((fboSize.width-1) * xRemapped));
-                return sceneObjectNameList[pixelObjectIDs[index]];
+                    int index = 4 * (int)(Math.round((fboSize.height-1) * yRemapped) * fboSize.width + Math.round((fboSize.width-1) * xRemapped));
+                    return sceneObjectNameList[pixelObjectIDs[index]];
+                }
+                else
+                {
+                    return null;
+                }
             }
 
 
@@ -2656,21 +2691,28 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
             @Override
             public Vector3 get3DPositionAtCoordinates(double x, double y)
             {
-                double xRemapped = Math.min(Math.max(x, 0), 1);
-                double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
+                if (pixelDepths != null)
+                {
+                    double xRemapped = Math.min(Math.max(x, 0), 1);
+                    double yRemapped = 1.0 - Math.min(Math.max(y, 0), 1);
 
-                int index = (int)(Math.round((fboSize.height-1) * yRemapped) * fboSize.width + Math.round((fboSize.width-1) * xRemapped));
+                    int index = (int)(Math.round((fboSize.height-1) * yRemapped) * fboSize.width + Math.round((fboSize.width-1) * xRemapped));
 
-                Matrix4 projectionInverse = getProjectionInverse();
+                    Matrix4 projectionInverse = getProjectionInverse();
 
-                // Transform from screen space into camera space
-                Vector4 unscaledPosition = projectionInverse
-                    .times(new Vector4((float)(2 * x - 1), (float)(1 - 2 * y), 2 * (float)(0x0000FFFF & pixelDepths[index]) / (float)0xFFFF - 1, 1.0f));
+                    // Transform from screen space into camera space
+                    Vector4 unscaledPosition = projectionInverse
+                        .times(new Vector4((float)(2 * x - 1), (float)(1 - 2 * y), 2 * (float)(0x0000FFFF & pixelDepths[index]) / (float)0xFFFF - 1, 1.0f));
 
-                // Transform from camera space into world space.
-                return getPartialViewMatrix().quickInverse(0.01f)
-                        .times(unscaledPosition.getXYZ().dividedBy(unscaledPosition.w).asPosition())
-                        .getXYZ().dividedBy(getScale());
+                    // Transform from camera space into world space.
+                    return getPartialViewMatrix().quickInverse(0.01f)
+                            .times(unscaledPosition.getXYZ().dividedBy(unscaledPosition.w).asPosition())
+                            .getXYZ().dividedBy(getScale());
+                }
+                else
+                {
+                    return null;
+                }
             }
 
             @Override

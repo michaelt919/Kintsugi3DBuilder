@@ -30,7 +30,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
     private static final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
 
-    private static final double FITTING_GAMMA = 1.0; // TODO make this configurable from the interface
+    private static final double FITTING_GAMMA = 2.2; // TODO make this configurable from the interface
+    private static final boolean BRUTE_FORCE_NORMAL_COMPUTATION = false;
 
     private final ContextType context;
     private final File vsetFile;
@@ -1537,10 +1538,10 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 File objFileCopy = new File(outputDir, objFile.getName());
                 Files.copy(objFile.toPath(), objFileCopy.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-                //fitAndSaveTextures(outputDir, null);
+                fitAndSaveTextures(outputDir, null);
                 //darpaTestSuite((float)avgDistance);
                 //darpaTestSuiteLong((float)avgDistance);
-                darpaTestSuiteExtraLong((float)avgDistance);
+                //darpaTestSuiteExtraLong((float)avgDistance);
             }
 
             //System.out.println("Resampling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
@@ -1987,7 +1988,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                     FramebufferObject<ContextType> tmp;
 
-                    if (param.isNormalTextureEnabled())
+                    if (BRUTE_FORCE_NORMAL_COMPUTATION && param.isNormalTextureEnabled())
                     {
                         Drawable<ContextType> errorCalcSimpleDrawable = context.createDrawable(errorCalcSimpleProgram);
                         errorCalcSimpleDrawable.addVertexBuffer("position", rectBuffer);

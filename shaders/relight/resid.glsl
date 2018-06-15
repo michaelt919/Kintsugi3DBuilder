@@ -29,19 +29,20 @@ vec3 getSqrtRoughness(vec2 texCoord)
 {
     vec3 roughnessLookup = texture(roughnessMap, texCoord).rgb;
     return vec3(
-            roughnessLookup.y + roughnessLookup.x - 16.0 / 31.0,
-            roughnessLookup.y,
-            roughnessLookup.y + roughnessLookup.z - 16.0 / 31.0);
+            roughnessLookup.g + roughnessLookup.r - 16.0 / 31.0,
+            roughnessLookup.g,
+            roughnessLookup.g + roughnessLookup.b - 16.0 / 31.0);
 }
 
 vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
 {
-    vec3 diffuseColorRGB = getDiffuseColor(texCoord);
-    vec3 diffuseColor = rgbToXYZ(diffuseColorRGB);
-    vec3 specularColor = rgbToXYZ(getSpecularColor(texCoord));
+    vec3 diffuseColor = getDiffuseColor(texCoord);
+    vec3 specularColor = getSpecularColor(texCoord);
     vec3 sqrtRoughness = getSqrtRoughness(texCoord);
-    vec3 roughness = sqrtRoughness * sqrtRoughness;
-    vec3 roughnessSquared = roughness * roughness;
+    vec3 roughnessRGB = sqrtRoughness * sqrtRoughness;
+    vec3 roughnessSquaredRGB = roughnessRGB * roughnessRGB;
+    float roughnessSquared = getLuminance(specularColor) / getLuminance(specularColor / roughnessSquaredRGB);
+    float roughness = sqrt(roughnessSquared);
     float maxLuminance = getMaxLuminance();
     
     vec3 view = normalize(getViewVector());
@@ -62,14 +63,16 @@ vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
             float nDotHSquared = nDotH * nDotH;
             float hDotV = max(0, dot(halfway, view));
 
-            vec3 colorScaled = rgbToXYZ(color.rgb / lightInfo.attenuatedIntensity);
+            vec3 colorScaled = color.rgb / lightInfo.attenuatedIntensity;
             vec3 diffuseContrib = diffuseColor * nDotL;
 
-            float maskingShadowing = computeGeometricAttenuationHeightCorrelatedSmith(roughness.y, nDotV, nDotL);
-            float invGeomRatio = 4 * nDotV / maskingShadowing;
+            float maskingShadowing = computeGeometricAttenuationHeightCorrelatedSmith(roughness, nDotV, nDotL);
+//            float invGeomRatio = 4 * nDotV / maskingShadowing;
             vec3 specularTerm = max(vec3(0.0), (colorScaled - diffuseContrib));
 
-            vec3 sqrtDenominator = (roughnessSquared - 1) * nDotH * nDotH + 1;
+            vec3 sqrtDenominator = (roughnessSquaredRGB - 1) * nDotH * nDotH + 1;
+
+            vec3 specularRescaled;
 
             if (color.a > 0)
             {
@@ -84,21 +87,23 @@ vec4 computeResidual(vec2 texCoord, vec3 shadingNormal)
     //                        vec3(1.0 / 2.2))
     //                    , nDotV);
 
-                return vec4(clamp(roughnessSquared * (invGeomRatio * specularTerm / specularColor - 1.0), -1, 1), 1.0);
+                specularRescaled = 4 * specularTerm / specularColor;
             }
             else
             {
-                return vec4(clamp(roughnessSquared * (roughnessSquared / (sqrtDenominator * sqrtDenominator) - 1.0), -1, 1), 1.0);
+                specularRescaled = roughnessSquaredRGB / (sqrtDenominator * sqrtDenominator) * maskingShadowing / nDotV;
             }
+
+            return clamp(vec4(roughnessSquaredRGB * specularRescaled - 0.5, 1.0), -1, 1);
         }
         else
         {
-            return vec4(-roughnessSquared, 1.0);
+            return vec4(-0.5, -0.5, -0.5, 1.0);
         }
     }
     else
     {
-        return vec4(-roughnessSquared, 1.0);
+        return vec4(-0.5, -0.5, -0.5, 1.0);
     }
 }
 
