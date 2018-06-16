@@ -228,6 +228,7 @@ public class Material
                                     currentMaterial.setDisplacementMap(displacementMap);
                                     break;
                                 case "normal":
+                                case "norm":
                                     MaterialTextureMap normalMap = parseTextureStatement(scanner);
                                     currentMaterial.setNormalMap(normalMap);
                                     break;

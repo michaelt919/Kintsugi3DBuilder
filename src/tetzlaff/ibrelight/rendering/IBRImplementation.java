@@ -640,10 +640,12 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
         program.setUniform("useSpotLights", true);
 
+        float maxLuminance = (float)resources.viewSet.getLuminanceEncoding().decodeFunction.applyAsDouble(255.0);
+
         this.clearColor = new Vector3(
-                (float)Math.pow(lightingModel.getBackgroundColor().x, 1.0 / gamma),
-                (float)Math.pow(lightingModel.getBackgroundColor().y, 1.0 / gamma),
-                (float)Math.pow(lightingModel.getBackgroundColor().z, 1.0 / gamma));
+                (float)Math.pow(lightingModel.getBackgroundColor().x / maxLuminance, 1.0 / gamma),
+                (float)Math.pow(lightingModel.getBackgroundColor().y / maxLuminance, 1.0 / gamma),
+                (float)Math.pow(lightingModel.getBackgroundColor().z / maxLuminance, 1.0 / gamma));
     }
 
     private void updateCentroidAndRadius()

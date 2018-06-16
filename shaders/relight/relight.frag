@@ -173,7 +173,7 @@ vec3 computeGeometricAttenuationSmithGGX(vec3 roughness, float nDotV, float nDot
              / (1 + sqrt(1 + roughnessSq * (1 / (nDotL * nDotL) - 1.0)));
 }
 
-vec3 geom(vec3 roughness, float nDotH, float nDotV, float nDotL, float hDotV)
+vec3 geom(float roughness, float nDotH, float nDotV, float nDotL, float hDotV)
 {
     //return nDotV * nDotL;
     return vec3(computeGeometricAttenuationVCavity(nDotH, nDotV, nDotL, hDotV));
@@ -237,7 +237,7 @@ vec4 removeDiffuse(vec4 originalColor, vec3 diffuseContrib, float nDotL, float m
 }
 
 vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDir,
-    vec3 specularColor, vec3 roughness, float maxLuminance)
+    vec3 specularColor, float roughness, float maxLuminance)
 {
     mat4 cameraPose = getCameraPose(virtualIndex);
     vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
@@ -327,7 +327,7 @@ vec4 computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDi
     }
 }
 
-vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
+vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness)
 {
     float maxLuminance = getMaxLuminance();
 
@@ -351,7 +351,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 }
 
 vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec3 normalDir,
-    vec3 specularColor, vec3 roughness, float maxLuminance)
+    vec3 specularColor, float roughness, float maxLuminance)
 {
     vec4 sampleColor = getLinearColor(virtualIndex);
     mat4 cameraPose = getCameraPose(virtualIndex);
@@ -487,7 +487,7 @@ vec4[MAX_VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor,
     }
 }
 
-vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  vec3 specularColor, vec3 roughness, float maxLuminance)
+vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  vec3 specularColor, float roughness, float maxLuminance)
 {
     vec4 sampleColor = getLinearColor(virtualIndex);
     mat4 cameraPose = getCameraPose(virtualIndex);
@@ -549,7 +549,7 @@ vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  v
     }
 }
 
-vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
+vec4[MAX_VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness)
 {
     float maxLuminance = getMaxLuminance();
 
@@ -612,7 +612,7 @@ float getBuehlerWeight(int virtualIndex, vec3 targetDirection)
     }
 }
 
-vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, vec3 roughness)
+vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness)
 {
     float maxLuminance = getMaxLuminance();
 
@@ -775,20 +775,21 @@ void main()
         specularColor = vec3(0.03125); // TODO pass in a default?
     }
 
-    vec3 specularColorXYZ = rgbToXYZ(specularColor);
 
-    vec3 roughness;
+    vec3 roughnessRGB;
     if (useRoughnessTexture)
     {
         vec3 sqrtRoughness = texture(roughnessMap, fTexCoord).rgb;
-        roughness = sqrtRoughness * sqrtRoughness;
+        roughnessRGB = sqrtRoughness * sqrtRoughness;
     }
     else
     {
-        roughness = vec3(0.25); // TODO pass in a default?
+        roughnessRGB = vec3(0.25); // TODO pass in a default?
     }
 
-    vec3 roughnessSq = roughness * roughness;
+    vec3 roughnessRGBSq = roughnessRGB * roughnessRGB;
+    float roughnessSq = getLuminance(specularColor) / (getLuminance(specularColor / roughnessRGBSq));
+    float roughness = sqrt(roughnessSq);
 
     float nDotV = useTSOverrides ? viewDir.z : dot(normalDir, viewDir);
     vec3 radiance = vec3(0.0);
@@ -935,8 +936,8 @@ void main()
                     }
                     else
                     {
-                        vec3 mfdFresnelBaseXYZ = rgbToXYZ(specularColor) * dist(nDotH, roughness);
-                        mfdFresnel = fresnel(xyzToRGB(mfdFresnelBaseXYZ), vec3(mfdFresnelBaseXYZ.y), hDotV);
+                        vec3 mfdFresnelBase = specularColor * dist(nDotH, roughnessRGB);
+                        mfdFresnel = fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(specularColor)), hDotV);
                     }
                 }
                 else
@@ -947,7 +948,7 @@ void main()
                     }
                     else
                     {
-                        mfdFresnel = xyzToRGB(rgbToXYZ(specularColor) * dist(nDotH, roughness));
+                        mfdFresnel = specularColor * dist(nDotH, roughnessRGB);
                     }
                 }
 
