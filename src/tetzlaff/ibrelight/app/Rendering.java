@@ -21,6 +21,7 @@ import tetzlaff.gl.vecmath.Vector3;
 import tetzlaff.gl.window.Key;
 import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.ModifierKeysBuilder;
+import tetzlaff.gl.window.PollableWindow;
 import tetzlaff.ibrelight.core.IBRRequestQueue;
 import tetzlaff.ibrelight.core.LoadingModel;
 import tetzlaff.ibrelight.core.LoadingMonitor;
@@ -69,11 +70,11 @@ public final class Rendering
         printSupportedImageFormats();
 
         // Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
-        try(GLFWWindow<OpenGLContext> window =
-                    GLFWWindowFactory.buildOpenGLWindow("IBRelight", 800, 800)
-                            .setResizable(true)
-                            .setMultisamples(4)
-                            .create())
+        try(PollableWindow<OpenGLContext> window =
+                GLFWWindowFactory.buildOpenGLWindow("IBRelight", 800, 800)
+                    .setResizable(true)
+                    .setMultisamples(4)
+                    .create())
         {
             SynchronizedWindow glfwSynchronization = new SynchronizedWindow()
             {
@@ -110,7 +111,7 @@ public final class Rendering
 //            window.addWindowFocusLostListener(win -> WindowSynchronization.getInstance().focusLost(glfwSynchronization));
 
 
-            OpenGLContext context = window.getContext();
+            OpenGLContext context = window.getBaseContext();
 
             context.getState().enableDepthTest();
 

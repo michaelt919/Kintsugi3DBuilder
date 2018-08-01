@@ -1,12 +1,8 @@
 package tetzlaff.gl.glfw;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.lwjgl.glfw.*;
 import tetzlaff.gl.window.Key;
-import tetzlaff.gl.window.WindowListenerManager;
+import tetzlaff.gl.window.WindowListenerManagerInstance;
 import tetzlaff.gl.window.listeners.*;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -18,222 +14,61 @@ import static org.lwjgl.opengl.GL11.*;
 // Window event callbacks
 // Internal classes for wrapping GLFW callbacks
 
-class GLFWWindowCallback implements WindowListenerManager
+class GLFWWindowCallback extends WindowListenerManagerInstance
 {
     private final GLFWWindow<?> window;
-
-    private final List<WindowPositionListener> windowPosListeners;
-    private final List<WindowSizeListener> windowSizeListeners;
-    private final List<WindowCloseListener> windowCloseListeners;
-    private final List<WindowRefreshListener> windowRefreshListeners;
-    private final List<WindowFocusLostListener> windowFocusLostListeners;
-    private final List<WindowFocusGainedListener> windowFocusGainedListeners;
-    private final List<WindowIconifiedListener> windowIconifiedListeners;
-    private final List<WindowRestoredListener> windowRestoredListeners;
-    private final List<FramebufferSizeListener> framebufferSizeListeners;
-    private final List<KeyPressListener> keyPressListeners;
-    private final List<KeyReleaseListener> keyReleaseListeners;
-    private final List<KeyRepeatListener> keyRepeatListeners;
-    private final List<CharacterListener> characterListeners;
-    private final List<CharacterModifiersListener> charModsListeners;
-    private final List<MouseButtonPressListener> mouseButtonPressListeners;
-    private final List<MouseButtonReleaseListener> mouseButtonReleaseListeners;
-    private final List<CursorPositionListener> cursorPosListeners;
-    private final List<CursorEnteredListener> cursorEnterListeners;
-    private final List<CursorExitedListener> cursorExitListeners;
-    private final List<ScrollListener> scrollListeners;
 
     GLFWWindowCallback(GLFWWindow<?> window)
     {
         this.window = window;
-        windowPosListeners = new ArrayList<>();
-        windowSizeListeners = new ArrayList<>();
-        windowCloseListeners = new ArrayList<>();
-        windowRefreshListeners = new ArrayList<>();
-        windowFocusLostListeners = new ArrayList<>();
-        windowFocusGainedListeners = new ArrayList<>();
-        windowIconifiedListeners = new ArrayList<>();
-        windowRestoredListeners = new ArrayList<>();
-        framebufferSizeListeners = new ArrayList<>();
-        keyPressListeners = new ArrayList<>();
-        keyReleaseListeners = new ArrayList<>();
-        keyRepeatListeners = new ArrayList<>();
-        characterListeners = new ArrayList<>();
-        charModsListeners = new ArrayList<>();
-        mouseButtonPressListeners = new ArrayList<>();
-        mouseButtonReleaseListeners = new ArrayList<>();
-        cursorPosListeners = new ArrayList<>();
-        cursorEnterListeners = new ArrayList<>();
-        cursorExitListeners = new ArrayList<>();
-        scrollListeners = new ArrayList<>();
 
         createAnonymousInnerCallbacks();
     }
 
-    @Override
-    public void addWindowPositionListener(WindowPositionListener listener)
-    {
-        windowPosListeners.add(listener);
-    }
-
-    @Override
-    public void addWindowSizeListener(WindowSizeListener listener)
-    {
-        windowSizeListeners.add(listener);
-    }
-
-    @Override
-    public void addWindowCloseListener(WindowCloseListener listener)
-    {
-        windowCloseListeners.add(listener);
-    }
-
-    @Override
-    public void addWindowRefreshListener(WindowRefreshListener listener)
-    {
-        windowRefreshListeners.add(listener);
-    }
-
-    @Override
-    public void addWindowFocusLostListener(WindowFocusLostListener listener)
-    {
-        windowFocusLostListeners.add(listener);
-    }
-
-    @Override
-    public void addWindowFocusGainedListener(WindowFocusGainedListener listener)
-    {
-        windowFocusGainedListeners.add(listener);
-    }
-
-    @Override
-    public void addWindowIconifiedListener(WindowIconifiedListener listener)
-    {
-        windowIconifiedListeners.add(listener);
-    }
-
-    @Override
-    public void addWindowRestoredListener(WindowRestoredListener listener)
-    {
-        windowRestoredListeners.add(listener);
-    }
-
-    @Override
-    public void addFramebufferSizeListener(FramebufferSizeListener listener)
-    {
-        framebufferSizeListeners.add(listener);
-    }
-
-    @Override
-    public void addKeyPressListener(KeyPressListener listener)
-    {
-        keyPressListeners.add(listener);
-    }
-
-    @Override
-    public void addKeyReleaseListener(KeyReleaseListener listener)
-    {
-        keyReleaseListeners.add(listener);
-    }
-
-    @Override
-    public void addKeyRepeatListener(KeyRepeatListener listener)
-    {
-        keyRepeatListeners.add(listener);
-    }
-
-    @Override
-    public void addCharacterListener(CharacterListener listener)
-    {
-        characterListeners.add(listener);
-    }
-
-    @Override
-    public void addCharacterModifiersListener(CharacterModifiersListener listener)
-    {
-        charModsListeners.add(listener);
-    }
-
-    @Override
-    public void addMouseButtonPressListener(MouseButtonPressListener listener)
-    {
-        mouseButtonPressListeners.add(listener);
-    }
-
-    @Override
-    public void addMouseButtonReleaseListener(MouseButtonReleaseListener listener)
-    {
-        mouseButtonReleaseListeners.add(listener);
-    }
-
-    @Override
-    public void addCursorPositionListener(CursorPositionListener listener)
-    {
-        cursorPosListeners.add(listener);
-    }
-
-    @Override
-    public void addCursorEnteredListener(CursorEnteredListener listener)
-    {
-        cursorEnterListeners.add(listener);
-    }
-
-    @Override
-    public void addCursorExitedListener(CursorExitedListener listener)
-    {
-        cursorExitListeners.add(listener);
-    }
-
-    @Override
-    public void addScrollListener(ScrollListener listener)
-    {
-        scrollListeners.add(listener);
-    }
-
     // A reference to these callbacks must be maintained to prevent Java from garbage collecting them.
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWWindowPosCallback windowPosCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWWindowSizeCallback windowSizeCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWWindowCloseCallback windowCloseCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWWindowRefreshCallback windowRefreshCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWWindowFocusCallback windowFocusCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWWindowIconifyCallback windowIconifyCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWFramebufferSizeCallback framebufferSizeCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWKeyCallback keyCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWCharCallback charCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWCharModsCallback charModsCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWMouseButtonCallback mouseButtonCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWCursorPosCallback cursorPosCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWCursorEnterCallback cursorEnterCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWScrollCallback scrollCallback;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "FieldCanBeLocal" })
     private GLFWDropCallback dropCallback;
 
     private void createAnonymousInnerCallbacks()
@@ -247,7 +82,7 @@ class GLFWWindowCallback implements WindowListenerManager
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            for (WindowPositionListener listener : windowPosListeners)
+                            for (WindowPositionListener listener : getWindowPosListeners())
                             {
                                 listener.windowMoved(window, xpos, ypos);
                             }
@@ -264,7 +99,7 @@ class GLFWWindowCallback implements WindowListenerManager
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            for (WindowSizeListener listener : windowSizeListeners)
+                            for (WindowSizeListener listener : getWindowSizeListeners())
                             {
                                 listener.windowResized(window, width, height);
                             }
@@ -281,7 +116,7 @@ class GLFWWindowCallback implements WindowListenerManager
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            for (WindowCloseListener listener : windowCloseListeners)
+                            for (WindowCloseListener listener : getWindowCloseListeners())
                             {
                                 listener.windowClosing(window);
                             }
@@ -297,7 +132,7 @@ class GLFWWindowCallback implements WindowListenerManager
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            for (WindowRefreshListener listener : windowRefreshListeners)
+                            for (WindowRefreshListener listener : getWindowRefreshListeners())
                             {
                                 listener.windowRefreshed(window);
                             }
@@ -315,14 +150,14 @@ class GLFWWindowCallback implements WindowListenerManager
                         {
                             if (focused == GL_TRUE)
                             {
-                                for (WindowFocusGainedListener listener : windowFocusGainedListeners)
+                                for (WindowFocusGainedListener listener : getWindowFocusGainedListeners())
                                 {
                                     listener.windowFocusGained(window);
                                 }
                             }
                             else
                             {
-                                for (WindowFocusLostListener listener : windowFocusLostListeners)
+                                for (WindowFocusLostListener listener : getWindowFocusLostListeners())
                                 {
                                     listener.windowFocusLost(window);
                                 }
@@ -341,14 +176,14 @@ class GLFWWindowCallback implements WindowListenerManager
                         {
                             if (iconified == GL_TRUE)
                             {
-                                for (WindowIconifiedListener listener : windowIconifiedListeners)
+                                for (WindowIconifiedListener listener : getWindowIconifiedListeners())
                                 {
                                     listener.windowIconified(window);
                                 }
                             }
                             else
                             {
-                                for (WindowRestoredListener listener : windowRestoredListeners)
+                                for (WindowRestoredListener listener : getWindowRestoredListeners())
                                 {
                                     listener.windowRestored(window);
                                 }
@@ -365,7 +200,7 @@ class GLFWWindowCallback implements WindowListenerManager
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            for (FramebufferSizeListener listener : framebufferSizeListeners)
+                            for (FramebufferSizeListener listener : getFramebufferSizeListeners())
                             {
                                 listener.framebufferResized(window, width, height);
                             }
@@ -381,27 +216,27 @@ class GLFWWindowCallback implements WindowListenerManager
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            Map<Integer, Key> keyMap = GLFWKeyCodeMaps.getCodeToKeyMap();
+                            Key key = GLFWKeyCodeMaps.codeToKey(keycode);
 
                             if (action == GLFW_PRESS)
                             {
-                                for (KeyPressListener listener : keyPressListeners)
+                                for (KeyPressListener listener : getKeyPressListeners())
                                 {
-                                    listener.keyPressed(window, keyMap.get(keycode), new GLFWModifierKeys(mods));
+                                    listener.keyPressed(window, key, new GLFWModifierKeys(mods));
                                 }
                             }
                             else if (action == GLFW_RELEASE)
                             {
-                                for (KeyReleaseListener listener : keyReleaseListeners)
+                                for (KeyReleaseListener listener : getKeyReleaseListeners())
                                 {
-                                    listener.keyReleased(window, keyMap.get(keycode), new GLFWModifierKeys(mods));
+                                    listener.keyReleased(window, key, new GLFWModifierKeys(mods));
                                 }
                             }
                             else if (action == GLFW_REPEAT)
                             {
-                                for (KeyRepeatListener listener : keyRepeatListeners)
+                                for (KeyRepeatListener listener : getKeyRepeatListeners())
                                 {
-                                    listener.keyRepeated(window, keyMap.get(keycode), new GLFWModifierKeys(mods));
+                                    listener.keyRepeated(window, key, new GLFWModifierKeys(mods));
                                 }
                             }
                         }
@@ -416,7 +251,7 @@ class GLFWWindowCallback implements WindowListenerManager
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            for (CharacterListener listener : characterListeners)
+                            for (CharacterListener listener : getCharacterListeners())
                             {
                                 listener.characterTyped(window, (char)codepoint);
                             }
@@ -432,7 +267,7 @@ class GLFWWindowCallback implements WindowListenerManager
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            for (CharacterModifiersListener listener : charModsListeners)
+                            for (CharacterModifiersListener listener : getCharModsListeners())
                             {
                                 listener.characterTypedWithModifiers(window, (char)codepoint, new GLFWModifierKeys(mods));
                             }
@@ -450,14 +285,14 @@ class GLFWWindowCallback implements WindowListenerManager
                         {
                             if (action == GLFW_PRESS)
                             {
-                                for (MouseButtonPressListener listener : mouseButtonPressListeners)
+                                for (MouseButtonPressListener listener : getMouseButtonPressListeners())
                                 {
                                     listener.mouseButtonPressed(window, button, new GLFWModifierKeys(mods));
                                 }
                             }
                             else if (action == GLFW_RELEASE)
                             {
-                                for (MouseButtonReleaseListener listener : mouseButtonReleaseListeners)
+                                for (MouseButtonReleaseListener listener : getMouseButtonReleaseListeners())
                                 {
                                     listener.mouseButtonReleased(window, button, new GLFWModifierKeys(mods));
                                 }
@@ -474,7 +309,7 @@ class GLFWWindowCallback implements WindowListenerManager
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            for (CursorPositionListener listener : cursorPosListeners)
+                            for (CursorPositionListener listener : getCursorPosListeners())
                             {
                                 listener.cursorMoved(window, xpos, ypos);
                             }
@@ -492,14 +327,14 @@ class GLFWWindowCallback implements WindowListenerManager
                         {
                             if (entered == GL_TRUE)
                             {
-                                for (CursorEnteredListener listener : cursorEnterListeners)
+                                for (CursorEnteredListener listener : getCursorEnterListeners())
                                 {
                                     listener.cursorEntered(window);
                                 }
                             }
                             else
                             {
-                                for (CursorExitedListener listener : cursorExitListeners)
+                                for (CursorExitedListener listener : getCursorExitListeners())
                                 {
                                     listener.cursorExited(window);
                                 }
@@ -516,7 +351,7 @@ class GLFWWindowCallback implements WindowListenerManager
                     {
                         if (windowHandle == window.getHandle())
                         {
-                            for (ScrollListener listener : scrollListeners)
+                            for (ScrollListener listener : getScrollListeners())
                             {
                                 listener.scroll(window, xoffset, yoffset);
                             }
