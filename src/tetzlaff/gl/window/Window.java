@@ -4,7 +4,7 @@ import tetzlaff.gl.core.Context;
 
 public interface Window<ContextType extends Context<ContextType>> extends WindowListenerManager, AutoCloseable
 {
-    ContextType getContext();
+    ContextType getBaseContext();
 
     void show();
 
