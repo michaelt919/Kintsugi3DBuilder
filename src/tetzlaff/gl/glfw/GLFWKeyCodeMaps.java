@@ -1,9 +1,6 @@
 package tetzlaff.gl.glfw;
 
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 import tetzlaff.gl.window.Key;
@@ -13,7 +10,7 @@ import static org.lwjgl.glfw.GLFW.*;
 final class GLFWKeyCodeMaps
 {
     private static final Map<Integer, Key> CODE_TO_KEY;
-    private static final Map<Key, Integer> KEY_TO_CODE;
+    private static final Map<Key, List<Integer>> KEY_TO_CODES;
 
     static
     {
@@ -67,8 +64,6 @@ final class GLFWKeyCodeMaps
         CODE_TO_KEY.put(GLFW_KEY_BACKSLASH, Key.BACKSLASH);
         CODE_TO_KEY.put(GLFW_KEY_RIGHT_BRACKET, Key.RIGHT_BRACKET);
         CODE_TO_KEY.put(GLFW_KEY_GRAVE_ACCENT, Key.GRAVE_ACCENT);
-        CODE_TO_KEY.put(GLFW_KEY_WORLD_1, Key.WORLD_1);
-        CODE_TO_KEY.put(GLFW_KEY_WORLD_2, Key.WORLD_2);
         CODE_TO_KEY.put(GLFW_KEY_ESCAPE, Key.ESCAPE);
         CODE_TO_KEY.put(GLFW_KEY_ENTER, Key.ENTER);
         CODE_TO_KEY.put(GLFW_KEY_TAB, Key.TAB);
@@ -112,7 +107,6 @@ final class GLFWKeyCodeMaps
         CODE_TO_KEY.put(GLFW_KEY_F22, Key.F22);
         CODE_TO_KEY.put(GLFW_KEY_F23, Key.F23);
         CODE_TO_KEY.put(GLFW_KEY_F24, Key.F24);
-        CODE_TO_KEY.put(GLFW_KEY_F25, Key.F25);
         CODE_TO_KEY.put(GLFW_KEY_KP_0, Key.KEYPAD_0);
         CODE_TO_KEY.put(GLFW_KEY_KP_1, Key.KEYPAD_1);
         CODE_TO_KEY.put(GLFW_KEY_KP_2, Key.KEYPAD_2);
@@ -128,23 +122,24 @@ final class GLFWKeyCodeMaps
         CODE_TO_KEY.put(GLFW_KEY_KP_MULTIPLY, Key.KEYPAD_MULTIPLY);
         CODE_TO_KEY.put(GLFW_KEY_KP_SUBTRACT, Key.KEYPAD_SUBTRACT);
         CODE_TO_KEY.put(GLFW_KEY_KP_ADD, Key.KEYPAD_ADD);
-        CODE_TO_KEY.put(GLFW_KEY_KP_ENTER, Key.KEYPAD_ENTER);
-        CODE_TO_KEY.put(GLFW_KEY_KP_EQUAL, Key.KEYPAD_EQUAL);
-        CODE_TO_KEY.put(GLFW_KEY_LEFT_SHIFT, Key.LEFT_SHIFT);
-        CODE_TO_KEY.put(GLFW_KEY_LEFT_CONTROL, Key.LEFT_CONTROL);
-        CODE_TO_KEY.put(GLFW_KEY_LEFT_ALT, Key.LEFT_ALT);
-        CODE_TO_KEY.put(GLFW_KEY_LEFT_SUPER, Key.LEFT_SUPER);
-        CODE_TO_KEY.put(GLFW_KEY_RIGHT_SHIFT, Key.RIGHT_SHIFT);
-        CODE_TO_KEY.put(GLFW_KEY_RIGHT_CONTROL, Key.RIGHT_CONTROL);
-        CODE_TO_KEY.put(GLFW_KEY_RIGHT_ALT, Key.RIGHT_ALT);
-        CODE_TO_KEY.put(GLFW_KEY_RIGHT_SUPER, Key.RIGHT_SUPER);
+        CODE_TO_KEY.put(GLFW_KEY_KP_ENTER, Key.ENTER);
+        CODE_TO_KEY.put(GLFW_KEY_KP_EQUAL, Key.EQUAL);
+        CODE_TO_KEY.put(GLFW_KEY_LEFT_SHIFT, Key.SHIFT);
+        CODE_TO_KEY.put(GLFW_KEY_LEFT_CONTROL, Key.CONTROL);
+        CODE_TO_KEY.put(GLFW_KEY_LEFT_ALT, Key.ALT);
+        CODE_TO_KEY.put(GLFW_KEY_LEFT_SUPER, Key.SUPER);
+        CODE_TO_KEY.put(GLFW_KEY_RIGHT_SHIFT, Key.SHIFT);
+        CODE_TO_KEY.put(GLFW_KEY_RIGHT_CONTROL, Key.CONTROL);
+        CODE_TO_KEY.put(GLFW_KEY_RIGHT_ALT, Key.ALT);
+        CODE_TO_KEY.put(GLFW_KEY_RIGHT_SUPER, Key.SUPER);
         CODE_TO_KEY.put(GLFW_KEY_MENU, Key.MENU);
-        CODE_TO_KEY.put(GLFW_KEY_LAST, Key.LAST);
 
-        KEY_TO_CODE = new EnumMap<>(Key.class);
+        KEY_TO_CODES = new EnumMap<>(Key.class);
         for (Entry<Integer, Key> entry : CODE_TO_KEY.entrySet())
         {
-            KEY_TO_CODE.put(entry.getValue(), entry.getKey());
+            Optional.of(KEY_TO_CODES.get(entry.getValue()))
+                .orElse(KEY_TO_CODES.put(entry.getValue(), new ArrayList<>(1)))
+                .add(entry.getKey());
         }
     }
 
@@ -152,13 +147,13 @@ final class GLFWKeyCodeMaps
     {
     }
 
-    public static Map<Integer, Key> getCodeToKeyMap()
+    public static Key codeToKey(int code)
     {
-        return Collections.unmodifiableMap(CODE_TO_KEY);
+        return CODE_TO_KEY.getOrDefault(code, Key.UNKNOWN);
     }
 
-    public static Map<Key, Integer> getKeyToCodeMap()
+    public static Iterable<Integer> keyToCodes(Key key)
     {
-        return Collections.unmodifiableMap(KEY_TO_CODE);
+        return KEY_TO_CODES.getOrDefault(key, Collections.emptyList());
     }
 }

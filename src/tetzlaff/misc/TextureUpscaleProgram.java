@@ -10,6 +10,7 @@ import tetzlaff.gl.glfw.GLFWWindow;
 import tetzlaff.gl.glfw.GLFWWindowFactory;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Vector4;
+import tetzlaff.gl.window.Window;
 
 public final class TextureUpscaleProgram
 {
@@ -29,9 +30,9 @@ public final class TextureUpscaleProgram
 
     public static void main(String... args)
     {
-        try(GLFWWindow<OpenGLContext> window = GLFWWindowFactory.buildOpenGLWindow("Texture Upscale", 800, 800).create())
+        try(Window<OpenGLContext> window = GLFWWindowFactory.buildOpenGLWindow("Texture Upscale", 800, 800).create())
         {
-            OpenGLContext context = window.getContext();
+            OpenGLContext context = window.getBaseContext();
             try
             {
                 Program<OpenGLContext> perlinNoiseProgram = context.getShaderProgramBuilder()
@@ -92,9 +93,12 @@ public final class TextureUpscaleProgram
                 e.printStackTrace();
             }
         }
+        finally
+        {
+            GLFWWindow.closeAllWindows();
+        }
         
         System.out.println("Process terminated without errors.");
-        GLFWWindow.closeAllWindows();
         System.exit(0);
     }
 }

@@ -9,23 +9,21 @@ import org.lwjgl.opengl.*;
 import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;
 import tetzlaff.gl.window.*;
-import tetzlaff.gl.window.listeners.*;
-import tetzlaff.interactive.EventPollable;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
-public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> implements Window<ContextType>, EventPollable
+public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>>
+    extends WindowBase<ContextType> implements PollableWindow<ContextType>
 {
     private final long handle;
-    private boolean isDestroyed;
+    private boolean resourceClosed;
     private final WindowListenerManager listenerManager;
 
     private final ContextType context;
 
-    GLFWWindow(GLFWContextFactory<ContextType> contextFactory, int width, int height, String title, int xParam, int yParam,
-        boolean resizable, int multisamples)
+    GLFWWindow(GLFWContextFactory<ContextType> contextFactory, WindowSpecification windowSpec)
     {
         glfwSetErrorCallback(GLFWErrorCallback.createString((error, description) ->
         {
@@ -45,31 +43,33 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-        glfwWindowHint(GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
-        glfwWindowHint(GLFW_SAMPLES, multisamples);
+        glfwWindowHint(GLFW_RESIZABLE, windowSpec.isResizable() ? GL_TRUE : GL_FALSE);
+        glfwWindowHint(GLFW_SAMPLES, windowSpec.getMultisamples());
 
-        handle = glfwCreateWindow(width, height, title, NULL, NULL);
+        handle = glfwCreateWindow(windowSpec.getWidth(), windowSpec.getHeight(), windowSpec.getTitle(), NULL, NULL);
         if ( handle == NULL )
         {
             throw new GLFWException("Failed to create the GLFW window");
         }
 
-        GLFWWindowCallback callback = new GLFWWindowCallback(this);
-        this.listenerManager = callback;
+        this.listenerManager = new GLFWWindowCallback(this);
 
         // Query height and width of screen to set center point
         GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-        int x = xParam;
-        int y = yParam;
-        if (x < 0)
+
+        int xAdj = windowSpec.getX();
+        if (xAdj < 0)
         {
-            x = (vidmode.width() - width) / 2;
+            xAdj = (vidmode.width() - windowSpec.getWidth()) / 2;
         }
-        if (y < 0)
+
+        int yAdj = windowSpec.getY();
+        if (yAdj < 0)
         {
-            y = (vidmode.height() - height) / 2;
+            yAdj = (vidmode.height() - windowSpec.getHeight()) / 2;
         }
-        glfwSetWindowPos(handle, x, y);
+
+        glfwSetWindowPos(handle, xAdj, yAdj);
 
         glfwMakeContextCurrent(handle);
         glfwSwapInterval(1);
@@ -84,7 +84,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
 
         this.context = contextFactory.createContext(handle);
 
-        if (multisamples > 0)
+        if (windowSpec.getMultisamples() > 0)
         {
             context.getState().enableMultisampling();
         }
@@ -101,9 +101,15 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     }
 
     @Override
-    public ContextType getContext()
+    public ContextType getBaseContext()
     {
         return this.context;
+    }
+
+    @Override
+    protected WindowListenerManager getListenerManager()
+    {
+        return listenerManager;
     }
 
     @Override
@@ -154,17 +160,14 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     @Override
     public boolean isResourceClosed()
     {
-        return this.isDestroyed;
+        return this.resourceClosed;
     }
 
     @Override
     public void close()
     {
-        if (glfwWindowShouldClose(handle) == GL_TRUE)
-        {
-            glfwDestroyWindow(handle);
-            this.isDestroyed = true;
-        }
+        glfwDestroyWindow(handle);
+        this.resourceClosed = true;
     }
 
     @Override
@@ -224,9 +227,9 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     {
         switch (glfwGetMouseButton(handle, buttonIndex))
         {
-        case GLFW_PRESS: return MouseButtonState.Pressed;
-        case GLFW_RELEASE: return MouseButtonState.Released;
-        default: return MouseButtonState.Unknown;
+        case GLFW_PRESS: return MouseButtonState.PRESSED;
+        case GLFW_RELEASE: return MouseButtonState.RELEASED;
+        default: return MouseButtonState.UNKNOWN;
         }
     }
 
@@ -234,16 +237,24 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     {
         switch (glfwGetKey(handle, keycode))
         {
-            case GLFW_PRESS: return KeyState.Pressed;
-            case GLFW_RELEASE: return KeyState.Released;
-            default: return KeyState.Unknown;
+            case GLFW_PRESS: return KeyState.PRESSED;
+            case GLFW_RELEASE: return KeyState.RELEASED;
+            default: return KeyState.UNKNOWN;
         }
     }
 
     @Override
     public KeyState getKeyState(Key key)
     {
-        return getKeyState(GLFWKeyCodeMaps.getKeyToCodeMap().get(key));
+        for (int code : GLFWKeyCodeMaps.keyToCodes(key))
+        {
+            if(getKeyState(code) == KeyState.PRESSED)
+            {
+                return KeyState.PRESSED;
+            }
+        }
+
+        return KeyState.RELEASED;
     }
 
     @Override
@@ -261,10 +272,10 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     public ModifierKeys getModifierKeys()
     {
         return new GLFWModifierKeys(
-            getKeyState(GLFW_KEY_LEFT_SHIFT) == KeyState.Pressed || getKeyState(GLFW_KEY_RIGHT_SHIFT) == KeyState.Pressed,
-            getKeyState(GLFW_KEY_LEFT_CONTROL) == KeyState.Pressed || getKeyState(GLFW_KEY_RIGHT_CONTROL) == KeyState.Pressed,
-            getKeyState(GLFW_KEY_LEFT_ALT) == KeyState.Pressed || getKeyState(GLFW_KEY_RIGHT_ALT) == KeyState.Pressed,
-            getKeyState(GLFW_KEY_LEFT_SUPER) == KeyState.Pressed || getKeyState(GLFW_KEY_RIGHT_SUPER) == KeyState.Pressed
+            getKeyState(GLFW_KEY_LEFT_SHIFT) == KeyState.PRESSED || getKeyState(GLFW_KEY_RIGHT_SHIFT) == KeyState.PRESSED,
+            getKeyState(GLFW_KEY_LEFT_CONTROL) == KeyState.PRESSED || getKeyState(GLFW_KEY_RIGHT_CONTROL) == KeyState.PRESSED,
+            getKeyState(GLFW_KEY_LEFT_ALT) == KeyState.PRESSED || getKeyState(GLFW_KEY_RIGHT_ALT) == KeyState.PRESSED,
+            getKeyState(GLFW_KEY_LEFT_SUPER) == KeyState.PRESSED || getKeyState(GLFW_KEY_RIGHT_SUPER) == KeyState.PRESSED
         );
     }
 
@@ -272,125 +283,5 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>> 
     public boolean isFocused()
     {
         return glfwGetWindowAttrib(handle, GLFW_FOCUSED) == GLFW_TRUE;
-    }
-
-    @Override
-    public void addWindowPositionListener(WindowPositionListener listener)
-    {
-        listenerManager.addWindowPositionListener(listener);
-    }
-
-    @Override
-    public void addWindowSizeListener(WindowSizeListener listener)
-    {
-        listenerManager.addWindowSizeListener(listener);
-    }
-
-    @Override
-    public void addWindowCloseListener(WindowCloseListener listener)
-    {
-        listenerManager.addWindowCloseListener(listener);
-    }
-
-    @Override
-    public void addWindowRefreshListener(WindowRefreshListener listener)
-    {
-        listenerManager.addWindowRefreshListener(listener);
-    }
-
-    @Override
-    public void addWindowFocusLostListener(WindowFocusLostListener listener)
-    {
-        listenerManager.addWindowFocusLostListener(listener);
-    }
-
-    @Override
-    public void addWindowFocusGainedListener(WindowFocusGainedListener listener)
-    {
-        listenerManager.addWindowFocusGainedListener(listener);
-    }
-
-    @Override
-    public void addWindowIconifiedListener(WindowIconifiedListener listener)
-    {
-        listenerManager.addWindowIconifiedListener(listener);
-    }
-
-    @Override
-    public void addWindowRestoredListener(WindowRestoredListener listener)
-    {
-        listenerManager.addWindowRestoredListener(listener);
-    }
-
-    @Override
-    public void addFramebufferSizeListener(FramebufferSizeListener listener)
-    {
-        listenerManager.addFramebufferSizeListener(listener);
-    }
-
-    @Override
-    public void addKeyPressListener(KeyPressListener listener)
-    {
-        listenerManager.addKeyPressListener(listener);
-    }
-
-    @Override
-    public void addKeyReleaseListener(KeyReleaseListener listener)
-    {
-        listenerManager.addKeyReleaseListener(listener);
-    }
-
-    @Override
-    public void addKeyRepeatListener(KeyRepeatListener listener)
-    {
-        listenerManager.addKeyRepeatListener(listener);
-    }
-
-    @Override
-    public void addCharacterListener(CharacterListener listener)
-    {
-        listenerManager.addCharacterListener(listener);
-    }
-
-    @Override
-    public void addCharacterModifiersListener(CharacterModifiersListener listener)
-    {
-        listenerManager.addCharacterModifiersListener(listener);
-    }
-
-    @Override
-    public void addMouseButtonPressListener(MouseButtonPressListener listener)
-    {
-        listenerManager.addMouseButtonPressListener(listener);
-    }
-
-    @Override
-    public void addMouseButtonReleaseListener(MouseButtonReleaseListener listener)
-    {
-        listenerManager.addMouseButtonReleaseListener(listener);
-    }
-
-    @Override
-    public void addCursorPositionListener(CursorPositionListener listener)
-    {
-        listenerManager.addCursorPositionListener(listener);
-    }
-
-    @Override
-    public void addCursorEnteredListener(CursorEnteredListener listener)
-    {
-        listenerManager.addCursorEnteredListener(listener);
-    }
-
-    @Override
-    public void addCursorExitedListener(CursorExitedListener listener)
-    {
-        listenerManager.addCursorExitedListener(listener);
-    }
-
-    @Override
-    public void addScrollListener(ScrollListener listener)
-    {
-        listenerManager.addScrollListener(listener);
     }
 }

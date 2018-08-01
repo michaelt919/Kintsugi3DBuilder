@@ -1,6 +1,8 @@
 package tetzlaff.gl.window;
 
-public abstract class WindowBuilderBase<WindowType extends Window<?>> implements WindowBuilder<WindowType>
+import tetzlaff.gl.core.Context;
+
+public abstract class WindowBuilderBase<ContextType extends Context<ContextType>> implements WindowBuilder<ContextType>
 {
     private final String title;
     private final int width;
@@ -19,64 +21,71 @@ public abstract class WindowBuilderBase<WindowType extends Window<?>> implements
         this.y = y;
     }
 
-    protected String getTitle()
+    @Override
+    public String getTitle()
     {
         return title;
     }
 
-    protected int getWidth()
+    @Override
+    public int getWidth()
     {
         return width;
     }
 
-    protected int getHeight()
+    @Override
+    public int getHeight()
     {
         return height;
     }
 
-    protected int getX()
+    @Override
+    public int getX()
     {
         return x;
     }
 
-    protected int getY()
+    @Override
+    public int getY()
     {
         return y;
     }
 
-    protected boolean isResizable()
+    @Override
+    public boolean isResizable()
     {
         return resizable;
     }
 
-    protected int getMultisamples()
+    @Override
+    public int getMultisamples()
     {
         return multisamples;
     }
 
     @Override
-    public WindowBuilderBase<WindowType> setX(int x)
+    public WindowBuilderBase<ContextType> setX(int x)
     {
         this.x = x;
         return this;
     }
 
     @Override
-    public WindowBuilderBase<WindowType> setY(int y)
+    public WindowBuilderBase<ContextType> setY(int y)
     {
         this.y = y;
         return this;
     }
 
     @Override
-    public WindowBuilderBase<WindowType> setResizable(boolean resizable)
+    public WindowBuilderBase<ContextType> setResizable(boolean resizable)
     {
         this.resizable = resizable;
         return this;
     }
 
     @Override
-    public WindowBuilderBase<WindowType> setMultisamples(int multisamples)
+    public WindowBuilderBase<ContextType> setMultisamples(int multisamples)
     {
         this.multisamples = multisamples;
         return this;
