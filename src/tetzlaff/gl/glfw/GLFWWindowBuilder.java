@@ -1,9 +1,10 @@
 package tetzlaff.gl.glfw;
 
+import tetzlaff.gl.window.PollableWindow;
 import tetzlaff.gl.window.WindowBuilderBase;
 
 public class GLFWWindowBuilder<ContextType extends GLFWWindowContextBase<ContextType>>
-    extends WindowBuilderBase<GLFWWindow<ContextType>>
+    extends WindowBuilderBase<ContextType>
 {
     private final GLFWContextFactory<ContextType> contextFactory;
 
@@ -16,9 +17,8 @@ public class GLFWWindowBuilder<ContextType extends GLFWWindowContextBase<Context
     }
 
     @Override
-    public GLFWWindow<ContextType> create()
+    public PollableWindow<ContextType> create()
     {
-        return new GLFWWindow<>(contextFactory, this.getWidth(), this.getHeight(), this.getTitle(),
-            this.getX(), this.getY(), this.isResizable(), this.getMultisamples());
+        return new GLFWWindow<>(contextFactory, this);
     }
 }

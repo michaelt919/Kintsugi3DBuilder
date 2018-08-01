@@ -1,11 +1,13 @@
 package tetzlaff.gl.window;
 
-public interface WindowBuilder<WindowType extends Window<?>>
-{
-    WindowBuilder<WindowType> setX(int x);
-    WindowBuilder<WindowType> setY(int y);
-    WindowBuilder<WindowType> setResizable(boolean resizable);
-    WindowBuilder<WindowType> setMultisamples(int multisamples);
+import tetzlaff.gl.core.Context;
 
-    WindowType create();
+public interface WindowBuilder<ContextType extends Context<ContextType>> extends WindowSpecification
+{
+    WindowBuilder<ContextType> setX(int x);
+    WindowBuilder<ContextType> setY(int y);
+    WindowBuilder<ContextType> setResizable(boolean resizable);
+    WindowBuilder<ContextType> setMultisamples(int multisamples);
+
+    PollableWindow<ContextType> create();
 }
