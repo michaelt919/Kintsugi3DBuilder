@@ -4,16 +4,16 @@ import tetzlaff.gl.window.ModifierKeysBase;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public class GLFWModifierKeys extends ModifierKeysBase
+public class ModifierKeys extends ModifierKeysBase
 {
     private final int glfwCode;
 
-    GLFWModifierKeys(int glfwCode)
+    ModifierKeys(int glfwCode)
     {
         this.glfwCode = glfwCode;
     }
 
-    GLFWModifierKeys(boolean shiftMod, boolean controlMod, boolean altMod, boolean superMod)
+    ModifierKeys(boolean shiftMod, boolean controlMod, boolean altMod, boolean superMod)
     {
         glfwCode =
             (shiftMod ? GLFW_MOD_SHIFT : 0)     |

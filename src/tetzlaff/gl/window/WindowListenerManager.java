@@ -26,7 +26,7 @@ public interface WindowListenerManager
 
     void addKeyReleaseListener(KeyReleaseListener listener);
 
-    void addKeyRepeatListener(KeyRepeatListener listener);
+    void addKeyTypeListener(KeyTypeListener listener);
 
     void addCharacterListener(CharacterListener listener);
 

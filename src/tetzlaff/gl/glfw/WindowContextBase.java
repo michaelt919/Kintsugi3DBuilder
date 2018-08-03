@@ -9,11 +9,11 @@ import tetzlaff.gl.core.FramebufferSize;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public abstract class GLFWWindowContextBase<ContextType extends GLFWWindowContextBase<ContextType>> implements Context<ContextType>
+public abstract class WindowContextBase<ContextType extends WindowContextBase<ContextType>> implements Context<ContextType>
 {
     private final long handle;
 
-    protected GLFWWindowContextBase(long handle)
+    protected WindowContextBase(long handle)
     {
         this.handle = handle;
     }
@@ -25,14 +25,12 @@ public abstract class GLFWWindowContextBase<ContextType extends GLFWWindowContex
         GL.createCapabilities(false);
     }
 
-    @Override
-    public void swapBuffers()
+    public void swapDefaultFramebuffer()
     {
         glfwSwapBuffers(handle);
     }
 
-    @Override
-    public FramebufferSize getFramebufferSize()
+    public FramebufferSize getDefaultFramebufferSize()
     {
         IntBuffer widthBuffer = BufferUtils.createByteBuffer(4).asIntBuffer();
         IntBuffer heightBuffer = BufferUtils.createByteBuffer(4).asIntBuffer();

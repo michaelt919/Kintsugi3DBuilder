@@ -10,7 +10,7 @@ import java.io.IOException;
  *
  * @param <ContextType> The type of the GL context that the framebuffer is associated with.
  */
-public interface Framebuffer<ContextType extends Context<ContextType>> extends Contextual<ContextType>
+public interface Framebuffer<ContextType extends Context<ContextType>> extends Contextual<ContextType>, Identifiable
 {
     FramebufferSize getSize();
 

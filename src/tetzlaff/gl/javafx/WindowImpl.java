@@ -13,14 +13,16 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.converter.CharacterStringConverter;
 import tetzlaff.gl.core.Context;
+import tetzlaff.gl.core.DoubleFramebufferObject;
 import tetzlaff.gl.window.*;
 
 public class WindowImpl<ContextType extends Context<ContextType>>
     extends WindowBase<ContextType> implements PollableWindow<ContextType>
 {
-    private final ContextType baseContext;
-    private final ContextType wrapperContext;
+    private final ContextType context;
+    private final DoubleFramebufferObject<ContextType> framebuffer;
 
     private final Stage stage;
     private final Scene scene;
@@ -42,14 +44,14 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     private static class ModifierKeysInstance extends ModifierKeysBase
     {
         private final boolean shiftModifier;
-        private final boolean ctrlModifier;
+        private final boolean controlModifier;
         private final boolean altModifier;
         private final boolean superModifier;
 
-        ModifierKeysInstance(boolean shiftModifier, boolean ctrlModifier, boolean altModifier, boolean superModifier)
+        ModifierKeysInstance(boolean shiftModifier, boolean controlModifier, boolean altModifier, boolean superModifier)
         {
             this.shiftModifier = shiftModifier;
-            this.ctrlModifier = ctrlModifier;
+            this.controlModifier = controlModifier;
             this.altModifier = altModifier;
             this.superModifier = superModifier;
         }
@@ -63,7 +65,7 @@ public class WindowImpl<ContextType extends Context<ContextType>>
         @Override
         public boolean getControlModifier()
         {
-            return ctrlModifier;
+            return controlModifier;
         }
 
         @Override
@@ -79,10 +81,10 @@ public class WindowImpl<ContextType extends Context<ContextType>>
         }
     }
 
-    WindowImpl(Stage primaryStage, ContextType baseContext, WindowSpecification windowSpec)
+    WindowImpl(Stage primaryStage, ContextType context, DoubleFramebufferObject<ContextType> framebuffer, WindowSpecification windowSpec)
     {
-        this.baseContext = baseContext;
-        this.wrapperContext = new OffscreenContextWrapper(baseContext);
+        this.context = context;
+        this.framebuffer = framebuffer;
 
         this.stage = new Stage(StageStyle.UNIFIED);
         this.stage.initOwner(primaryStage);
@@ -102,6 +104,54 @@ public class WindowImpl<ContextType extends Context<ContextType>>
         this.root = new AnchorPane();
         this.root.setPrefWidth(windowSpec.getWidth());
         this.root.setPrefHeight(windowSpec.getHeight());
+
+        this.scene = new Scene(this.root);
+        this.stage.setScene(this.scene);
+        this.stage.sizeToScene();
+
+        ChangeListener<? super Number> windowSize = (event, oldValue, newValue) ->
+        {
+            eventCollector.windowSize(l -> l.windowResized(this,
+            (int) Math.round(stage.getWidth()), (int) Math.round(stage.getHeight())));
+
+            eventCollector.framebufferSize(l -> l.framebufferResized(this,
+            (int) Math.round(stage.getWidth()), (int) Math.round(stage.getHeight())));
+        };
+
+        this.stage.widthProperty().addListener(windowSize);
+        this.stage.heightProperty().addListener(windowSize);
+
+        ChangeListener<? super Number> windowPos = (event, oldValue, newValue) -> eventCollector.windowPos(
+            l -> l.windowMoved(this, (int) Math.round(stage.getX()), (int) Math.round(stage.getY())));
+
+        this.stage.xProperty().addListener(windowPos);
+        this.stage.yProperty().addListener(windowPos);
+
+        this.stage.focusedProperty().addListener((event, oldValue, newValue) ->
+        {
+            if (oldValue && !newValue)
+            {
+                eventCollector.windowFocusLost(l -> l.windowFocusLost(this));
+            }
+            else if (newValue && !oldValue)
+            {
+                eventCollector.windowFocusGained(l -> l.windowFocusGained(this));
+            }
+        });
+
+        this.stage.iconifiedProperty().addListener((event, oldValue, newValue) ->
+        {
+            if (oldValue && !newValue)
+            {
+                eventCollector.windowRestored(l -> l.windowRestored(this));
+            }
+            else if (newValue && !oldValue)
+            {
+                eventCollector.windowIconified(l -> l.windowIconified(this));
+            }
+        });
+
+        this.stage.setOnCloseRequest(event -> eventCollector.windowClose(l -> l.windowClosing(this)));
 
         root.setOnKeyPressed(event ->
         {
@@ -129,6 +179,24 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             eventCollector.keyRelease(l -> l.keyReleased(this, KeyCodeMaps.codeToKey(event.getCode()), modifierKeys));
         });
 
+        root.setOnKeyTyped(event ->
+        {
+            modifierKeys = new ModifierKeysInstance(
+                event.isShiftDown(),
+                event.isControlDown(),
+                event.isAltDown(),
+                event.isMetaDown());
+
+            eventCollector.keyType(l -> l.keyTyped(this,
+                KeyCodeMaps.codeToKey(event.getCode()), modifierKeys));
+
+            eventCollector.character(l -> l.characterTyped(this,
+                new CharacterStringConverter().fromString(event.getCharacter())));
+
+            eventCollector.charMods(l -> l.characterTypedWithModifiers(this,
+                new CharacterStringConverter().fromString(event.getCharacter()), modifierKeys));
+        });
+
         this.root.setOnMousePressed(event ->
         {
             handleMouseEvent(event);
@@ -150,23 +218,32 @@ public class WindowImpl<ContextType extends Context<ContextType>>
                 index -> eventCollector.cursorPos(l -> l.cursorMoved(this, event.getSceneX(), event.getSceneY())));
         };
 
-        ChangeListener<? super Number> windowSize = (event, oldValue, newValue) -> eventCollector.windowSize(
-            l -> l.windowResized(this, (int) Math.round(stage.getWidth()), (int) Math.round(stage.getHeight())));
-
-        this.stage.widthProperty().addListener(windowSize);
-        this.stage.heightProperty().addListener(windowSize);
-
-        this.stage.setOnCloseRequest(event -> eventCollector.windowClose(l -> l.windowClosing(this)));
-
         this.root.setOnMouseMoved(mouseCursor);
         this.root.setOnMouseDragged(mouseCursor);
 
-        this.scene = new Scene(this.root);
-        this.stage.setScene(this.scene);
-        this.stage.sizeToScene();
+        EventHandler<? super MouseEvent> mouseEnter = event ->
+        {
+            handleMouseEvent(event);
+            eventCollector.cursorEnter(l -> l.cursorEntered(this));
+        };
+
+        this.root.setOnMouseEntered(mouseEnter);
+        this.root.setOnMouseDragEntered(mouseEnter);
+
+        EventHandler<? super MouseEvent> mouseExit = event ->
+        {
+            handleMouseEvent(event);
+            eventCollector.cursorExit(l -> l.cursorExited(this));
+        };
+
+        this.root.setOnMouseExited(mouseExit);
+        this.root.setOnMouseDragExited(mouseExit);
+
+        this.root.setOnScroll(event -> eventCollector.scroll(
+            l -> l.scroll(this, event.getDeltaX(), event.getDeltaY())));
     }
 
-    private OptionalInt getButtonIndex(MouseButton button)
+    private static OptionalInt getButtonIndex(MouseButton button)
     {
         switch(button)
         {
@@ -211,9 +288,9 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public ContextType getBaseContext()
+    public ContextType getContext()
     {
-        return baseContext;
+        return context;
     }
 
     @Override
