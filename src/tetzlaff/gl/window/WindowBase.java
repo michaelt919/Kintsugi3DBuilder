@@ -75,9 +75,9 @@ public abstract class WindowBase<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public void addKeyRepeatListener(KeyRepeatListener listener)
+    public void addKeyTypeListener(KeyTypeListener listener)
     {
-        getListenerManager().addKeyRepeatListener(listener);
+        getListenerManager().addKeyTypeListener(listener);
     }
 
     @Override

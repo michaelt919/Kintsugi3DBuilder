@@ -6,8 +6,8 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import tetzlaff.gl.core.*;
-import tetzlaff.gl.glfw.GLFWWindow;
-import tetzlaff.gl.glfw.GLFWWindowFactory;
+import tetzlaff.gl.glfw.WindowFactory;
+import tetzlaff.gl.glfw.WindowImpl;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Vector4;
 import tetzlaff.gl.window.Window;
@@ -30,9 +30,9 @@ public final class TextureUpscaleProgram
 
     public static void main(String... args)
     {
-        try(Window<OpenGLContext> window = GLFWWindowFactory.buildOpenGLWindow("Texture Upscale", 800, 800).create())
+        try(Window<OpenGLContext> window = WindowFactory.buildOpenGLWindow("Texture Upscale", 800, 800).create())
         {
-            OpenGLContext context = window.getBaseContext();
+            OpenGLContext context = window.getContext();
             try
             {
                 Program<OpenGLContext> perlinNoiseProgram = context.getShaderProgramBuilder()
@@ -95,7 +95,7 @@ public final class TextureUpscaleProgram
         }
         finally
         {
-            GLFWWindow.closeAllWindows();
+            WindowImpl.closeAllWindows();
         }
         
         System.out.println("Process terminated without errors.");

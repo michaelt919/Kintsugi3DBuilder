@@ -7,8 +7,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
-import tetzlaff.gl.glfw.GLFWWindow;
-import tetzlaff.gl.glfw.GLFWWindowFactory;
+import tetzlaff.gl.glfw.WindowFactory;
+import tetzlaff.gl.glfw.WindowImpl;
 import tetzlaff.gl.interactive.InteractiveGraphics;
 import tetzlaff.gl.opengl.OpenGLContext;
 import tetzlaff.gl.vecmath.Matrix4;
@@ -67,7 +67,7 @@ public final class Rendering
 
         // Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
         try(PollableWindow<OpenGLContext> window =
-                GLFWWindowFactory.buildOpenGLWindow("IBRelight", 800, 800)
+                WindowFactory.buildOpenGLWindow("IBRelight", 800, 800)
                     .setResizable(true)
                     .setMultisamples(4)
                     .create())
@@ -107,7 +107,7 @@ public final class Rendering
 //            window.addWindowFocusLostListener(win -> WindowSynchronization.getInstance().focusLost(glfwSynchronization));
 
 
-            OpenGLContext context = window.getBaseContext();
+            OpenGLContext context = window.getContext();
 
             context.getState().enableDepthTest();
 
@@ -271,7 +271,7 @@ public final class Rendering
                 }
             });
 
-            // Create a new application to run our event loop and give it the GLFWWindow for polling
+            // Create a new application to run our event loop and give it the WindowImpl for polling
             // of events and the OpenGL context.  The ULFRendererList provides the renderable.
             InteractiveApplication app = InteractiveGraphics.createApplication(window, context, rendererList.getRenderable());
 
@@ -343,7 +343,7 @@ public final class Rendering
         finally
         {
             // The event loop has terminated so cleanup the windows and exit with a successful return code.
-            GLFWWindow.closeAllWindows();
+            WindowImpl.closeAllWindows();
         }
     }
 

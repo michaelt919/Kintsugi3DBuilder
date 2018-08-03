@@ -76,9 +76,9 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
     @Override
     public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer)
     {
-        if (framebuffer instanceof OpenGLFramebuffer)
+        if (framebuffer.getIdentity() instanceof OpenGLFramebuffer.Identity)
         {
-            ((OpenGLFramebuffer)framebuffer).bindForDraw();
+            ((OpenGLFramebuffer.Identity)framebuffer.getIdentity()).bindForDraw();
             program.use();
             for (VertexAttributeSetting s : settings.values())
             {
@@ -95,9 +95,9 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
     @Override
     public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer, int x, int y, int width, int height)
     {
-        if (framebuffer instanceof OpenGLFramebuffer)
+        if (framebuffer.getIdentity() instanceof OpenGLFramebuffer.Identity)
         {
-            ((OpenGLFramebuffer)framebuffer).bindForDraw(x, y, width, height);
+            ((OpenGLFramebuffer.Identity)framebuffer.getIdentity()).bindForDraw(x, y, width, height);
             program.use();
             for (VertexAttributeSetting s : settings.values())
             {

@@ -442,7 +442,7 @@ public class IBRImplementation<ContextType extends Context<ContextType>> impleme
 
             this.shadedFrames = new LinkedList<>();
 
-            FramebufferSize windowSize = context.getFramebufferSize();
+            FramebufferSize windowSize = context.getDefaultFramebuffer().getSize();
             FramebufferObject<ContextType> firstShadingFBO =
                 context.buildFramebufferObject(windowSize.width, windowSize.height)
                     .addColorAttachment(
