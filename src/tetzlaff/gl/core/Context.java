@@ -25,13 +25,12 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
 public interface Context<ContextType extends Context<ContextType>>
 {
     void makeContextCurrent();
-
     void flush();
     void finish();
-    void swapBuffers();
 
-    ContextState<ContextType> getState();
-    FramebufferSize getFramebufferSize();
+    ContextState getState();
+
+    DoubleFramebuffer<ContextType> getDefaultFramebuffer();
 
     Shader<ContextType> createShader(ShaderType type, String source);
     Shader<ContextType> createShader(ShaderType type, File file, Map<String, Object> defines) throws FileNotFoundException;
@@ -43,7 +42,6 @@ public interface Context<ContextType extends Context<ContextType>>
 
     ProgramBuilder<ContextType> getShaderProgramBuilder();
 
-    Framebuffer<ContextType> getDefaultFramebuffer();
     FramebufferObjectBuilder<ContextType> buildFramebufferObject(int width, int height);
 
     VertexBuffer<ContextType> createVertexBuffer();

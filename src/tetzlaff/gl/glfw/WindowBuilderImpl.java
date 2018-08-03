@@ -3,12 +3,12 @@ package tetzlaff.gl.glfw;
 import tetzlaff.gl.window.PollableWindow;
 import tetzlaff.gl.window.WindowBuilderBase;
 
-public class GLFWWindowBuilder<ContextType extends GLFWWindowContextBase<ContextType>>
+public class WindowBuilderImpl<ContextType extends WindowContextBase<ContextType>>
     extends WindowBuilderBase<ContextType>
 {
-    private final GLFWContextFactory<ContextType> contextFactory;
+    private final ContextFactory<ContextType> contextFactory;
 
-    GLFWWindowBuilder(GLFWContextFactory<ContextType> contextFactory, String title, int width, int height)
+    WindowBuilderImpl(ContextFactory<ContextType> contextFactory, String title, int width, int height)
     {
         // (-1, -1) is the GLFW convention for default window position
         super(title, width, height, -1, -1);
@@ -19,6 +19,6 @@ public class GLFWWindowBuilder<ContextType extends GLFWWindowContextBase<Context
     @Override
     public PollableWindow<ContextType> create()
     {
-        return new GLFWWindow<>(contextFactory, this);
+        return new WindowImpl<>(contextFactory, this);
     }
 }

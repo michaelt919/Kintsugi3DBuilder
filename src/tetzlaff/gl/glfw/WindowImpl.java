@@ -14,7 +14,7 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
-public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>>
+public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     extends WindowBase<ContextType> implements PollableWindow<ContextType>
 {
     private final long handle;
@@ -23,7 +23,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>>
 
     private final ContextType context;
 
-    GLFWWindow(GLFWContextFactory<ContextType> contextFactory, WindowSpecification windowSpec)
+    WindowImpl(ContextFactory<ContextType> contextFactory, WindowSpecification windowSpec)
     {
         glfwSetErrorCallback(GLFWErrorCallback.createString((error, description) ->
         {
@@ -52,7 +52,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>>
             throw new GLFWException("Failed to create the GLFW window");
         }
 
-        this.listenerManager = new GLFWWindowCallback(this);
+        this.listenerManager = new WindowCallback(this);
 
         // Query height and width of screen to set center point
         GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
@@ -101,7 +101,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>>
     }
 
     @Override
-    public ContextType getBaseContext()
+    public ContextType getContext()
     {
         return this.context;
     }
@@ -147,7 +147,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>>
     public boolean isHighDPI()
     {
         WindowSize winSize = getWindowSize();
-        FramebufferSize fbSize = context.getFramebufferSize();
+        FramebufferSize fbSize = context.getDefaultFramebufferSize();
         return winSize.width != fbSize.width || winSize.height != fbSize.height;
     }
 
@@ -246,7 +246,7 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>>
     @Override
     public KeyState getKeyState(Key key)
     {
-        for (int code : GLFWKeyCodeMaps.keyToCodes(key))
+        for (int code : KeyCodeMaps.keyToCodes(key))
         {
             if(getKeyState(code) == KeyState.PRESSED)
             {
@@ -269,9 +269,9 @@ public class GLFWWindow<ContextType extends GLFWWindowContextBase<ContextType>>
     }
 
     @Override
-    public ModifierKeys getModifierKeys()
+    public tetzlaff.gl.window.ModifierKeys getModifierKeys()
     {
-        return new GLFWModifierKeys(
+        return new ModifierKeys(
             getKeyState(GLFW_KEY_LEFT_SHIFT) == KeyState.PRESSED || getKeyState(GLFW_KEY_RIGHT_SHIFT) == KeyState.PRESSED,
             getKeyState(GLFW_KEY_LEFT_CONTROL) == KeyState.PRESSED || getKeyState(GLFW_KEY_RIGHT_CONTROL) == KeyState.PRESSED,
             getKeyState(GLFW_KEY_LEFT_ALT) == KeyState.PRESSED || getKeyState(GLFW_KEY_RIGHT_ALT) == KeyState.PRESSED,

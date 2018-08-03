@@ -5,7 +5,7 @@ import tetzlaff.gl.window.ModifierKeys;
 import tetzlaff.gl.window.Window;
 
 @FunctionalInterface
-public interface KeyRepeatListener
+public interface KeyTypeListener
 {
-    void keyRepeated(Window<?> window, Key key, ModifierKeys mods);
+    void keyTyped(Window<?> window, Key key, ModifierKeys mods);
 }

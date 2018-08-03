@@ -21,7 +21,7 @@ class EventCollector
     private final Queue<Consumer<FramebufferSizeListener>> framebufferSize = new LinkedList<>();
     private final Queue<Consumer<KeyPressListener>> keyPress = new LinkedList<>();
     private final Queue<Consumer<KeyReleaseListener>> keyRelease = new LinkedList<>();
-    private final Queue<Consumer<KeyRepeatListener>> keyRepeat = new LinkedList<>();
+    private final Queue<Consumer<KeyTypeListener>> keyType = new LinkedList<>();
     private final Queue<Consumer<CharacterListener>> character = new LinkedList<>();
     private final Queue<Consumer<CharacterModifiersListener>> charMods = new LinkedList<>();
     private final Queue<Consumer<MouseButtonPressListener>> mouseButtonPress = new LinkedList<>();
@@ -93,9 +93,9 @@ class EventCollector
         this.keyRelease.add(event);
     }
 
-    void keyRepeat(Consumer<KeyRepeatListener> event)
+    void keyType(Consumer<KeyTypeListener> event)
     {
-        this.keyRepeat.add(event);
+        this.keyType.add(event);
     }
 
     void character(Consumer<CharacterListener> event)
@@ -163,7 +163,7 @@ class EventCollector
         pollEvents(framebufferSize, listenerManager.getFramebufferSizeListeners());
         pollEvents(keyPress, listenerManager.getKeyPressListeners());
         pollEvents(keyRelease, listenerManager.getKeyReleaseListeners());
-        pollEvents(keyRepeat, listenerManager.getKeyRepeatListeners());
+        pollEvents(keyType, listenerManager.getKeyTypeListeners());
         pollEvents(character, listenerManager.getCharacterListeners());
         pollEvents(charMods, listenerManager.getCharModsListeners());
         pollEvents(mouseButtonPress, listenerManager.getMouseButtonPressListeners());

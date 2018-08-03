@@ -7,7 +7,7 @@ import tetzlaff.gl.window.Key;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-final class GLFWKeyCodeMaps
+final class KeyCodeMaps
 {
     private static final Map<Integer, Key> CODE_TO_KEY;
     private static final Map<Key, List<Integer>> KEY_TO_CODES;
@@ -143,7 +143,7 @@ final class GLFWKeyCodeMaps
         }
     }
 
-    private GLFWKeyCodeMaps()
+    private KeyCodeMaps()
     {
     }
 
