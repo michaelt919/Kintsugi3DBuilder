@@ -1,8 +1,11 @@
 package tetzlaff.gl.opengl;
 
-import tetzlaff.gl.glfw.GLFWContextFactory;
+import java.util.function.Function;
 
-public class OpenGLContextFactory implements GLFWContextFactory<OpenGLContext>
+import tetzlaff.gl.core.DoubleFramebuffer;
+import tetzlaff.gl.glfw.ContextFactory;
+
+public class OpenGLContextFactory implements ContextFactory<OpenGLContext>
 {
     private static final OpenGLContextFactory INSTANCE = new OpenGLContextFactory();
 
@@ -14,6 +17,16 @@ public class OpenGLContextFactory implements GLFWContextFactory<OpenGLContext>
     @Override
     public OpenGLContext createContext(long glfwHandle)
     {
-        return new OpenGLContext(glfwHandle);
+        OpenGLContext context = new OpenGLContext(glfwHandle);
+        context.setDefaultFramebuffer(new OpenGLDefaultFramebuffer(context));
+        return context;
+    }
+
+    @Override
+    public OpenGLContext createContext(long glfwHandle, Function<OpenGLContext, DoubleFramebuffer<OpenGLContext>> createDefaultFramebuffer)
+    {
+        OpenGLContext context = new OpenGLContext(glfwHandle);
+        context.setDefaultFramebuffer(createDefaultFramebuffer.apply(context));
+        return context;
     }
 }

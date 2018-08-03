@@ -18,7 +18,7 @@ public class WindowListenerManagerInstance implements WindowListenerManager
     private final List<FramebufferSizeListener> framebufferSizeListeners;
     private final List<KeyPressListener> keyPressListeners;
     private final List<KeyReleaseListener> keyReleaseListeners;
-    private final List<KeyRepeatListener> keyRepeatListeners;
+    private final List<KeyTypeListener> keyTypeListeners;
     private final List<CharacterListener> characterListeners;
     private final List<CharacterModifiersListener> charModsListeners;
     private final List<MouseButtonPressListener> mouseButtonPressListeners;
@@ -44,7 +44,7 @@ public class WindowListenerManagerInstance implements WindowListenerManager
         cursorEnterListeners = new ArrayList<>();
         windowIconifiedListeners = new ArrayList<>();
         keyReleaseListeners = new ArrayList<>();
-        keyRepeatListeners = new ArrayList<>();
+        keyTypeListeners = new ArrayList<>();
         windowRefreshListeners = new ArrayList<>();
         keyPressListeners = new ArrayList<>();
         windowRestoredListeners = new ArrayList<>();
@@ -119,9 +119,9 @@ public class WindowListenerManagerInstance implements WindowListenerManager
     }
 
     @Override
-    public void addKeyRepeatListener(KeyRepeatListener listener)
+    public void addKeyTypeListener(KeyTypeListener listener)
     {
-        keyRepeatListeners.add(listener);
+        keyTypeListeners.add(listener);
     }
 
     @Override
@@ -227,9 +227,9 @@ public class WindowListenerManagerInstance implements WindowListenerManager
         return keyReleaseListeners;
     }
 
-    public List<KeyRepeatListener> getKeyRepeatListeners()
+    public List<KeyTypeListener> getKeyTypeListeners()
     {
-        return keyRepeatListeners;
+        return keyTypeListeners;
     }
 
     public List<CharacterListener> getCharacterListeners()

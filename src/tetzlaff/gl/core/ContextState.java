@@ -1,6 +1,6 @@
 package tetzlaff.gl.core;
 
-public interface ContextState<ContextType extends Context<ContextType>>
+public interface ContextState
 {
     void enableDepthTest();
     void disableDepthTest();

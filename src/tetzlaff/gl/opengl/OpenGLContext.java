@@ -6,13 +6,12 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
-import java.util.Map;
 
 import tetzlaff.gl.builders.ProgramBuilder;
 import tetzlaff.gl.builders.framebuffer.FramebufferObjectBuilder;
 import tetzlaff.gl.core.*;
 import tetzlaff.gl.exceptions.*;
-import tetzlaff.gl.glfw.GLFWWindowContextBase;
+import tetzlaff.gl.glfw.WindowContextBase;
 import tetzlaff.gl.nativebuffer.NativeDataType;
 import tetzlaff.gl.opengl.OpenGLFramebufferObject.OpenGLFramebufferObjectBuilder;
 import tetzlaff.gl.opengl.OpenGLProgram.OpenGLProgramBuilder;
@@ -36,13 +35,15 @@ import static org.lwjgl.opengl.GL40.*;
 import static org.lwjgl.opengl.GL41.*;
 import static org.lwjgl.opengl.GL43.*;
 
-public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
+public class OpenGLContext extends WindowContextBase<OpenGLContext>
 {
     private final OpenGLContextState state;
     private final OpenGLTextureFactory textureFactory;
 
     private final Map<Integer, OpenGLTexture> textureBindings;
     private final Map<Integer, OpenGLUniformBuffer> uniformBufferBindings;
+
+    private DoubleFramebuffer<OpenGLContext> defaultFramebuffer;
 
     OpenGLContext(long handle)
     {
@@ -92,9 +93,14 @@ public class OpenGLContext extends GLFWWindowContextBase<OpenGLContext>
     }
 
     @Override
-    public Framebuffer<OpenGLContext> getDefaultFramebuffer()
+    public DoubleFramebuffer<OpenGLContext> getDefaultFramebuffer()
     {
-        return new OpenGLDefaultFramebuffer(this);
+        return this.defaultFramebuffer;
+    }
+
+    void setDefaultFramebuffer(DoubleFramebuffer<OpenGLContext> defaultFramebuffer)
+    {
+        this.defaultFramebuffer = defaultFramebuffer;
     }
 
     @Override
