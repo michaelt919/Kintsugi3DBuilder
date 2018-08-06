@@ -2,9 +2,6 @@ package tetzlaff.gl.builders.framebuffer;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -116,42 +113,6 @@ public final class DefaultFramebufferFactory
         public FramebufferSize getSize()
         {
             return frontFBO.getSize();
-        }
-
-        @Override
-        public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height)
-        {
-            frontFBO.readColorBufferARGB(attachmentIndex, destination, x, y, width, height);
-        }
-
-        @Override
-        public void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination, int x, int y, int width, int height)
-        {
-            frontFBO.readFloatingPointColorBufferRGBA(attachmentIndex, destination, x, y, width, height);
-        }
-
-        @Override
-        public void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination, int x, int y, int width, int height)
-        {
-            frontFBO.readIntegerColorBufferRGBA(attachmentIndex, destination, x, y, width, height);
-        }
-
-        @Override
-        public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination)
-        {
-            frontFBO.readColorBufferARGB(attachmentIndex, destination);
-        }
-
-        @Override
-        public void readFloatingPointColorBufferRGBA(int attachmentIndex, FloatBuffer destination)
-        {
-            frontFBO.readFloatingPointColorBufferRGBA(attachmentIndex, destination);
-        }
-
-        @Override
-        public void readIntegerColorBufferRGBA(int attachmentIndex, IntBuffer destination)
-        {
-            frontFBO.readIntegerColorBufferRGBA(attachmentIndex, destination);
         }
 
         @Override

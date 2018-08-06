@@ -9,12 +9,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
-<<<<<<< local
+import javafx.stage.Stage;
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.ShaderType;
-=======
-import javafx.stage.Stage;
->>>>>>> graft
 import tetzlaff.gl.glfw.WindowFactory;
 import tetzlaff.gl.glfw.WindowImpl;
 import tetzlaff.gl.interactive.InteractiveGraphics;
