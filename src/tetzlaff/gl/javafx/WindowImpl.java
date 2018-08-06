@@ -4,32 +4,40 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.OptionalInt;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelFormat;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.util.converter.CharacterStringConverter;
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.DoubleFramebufferObject;
+import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.window.*;
 
 public class WindowImpl<ContextType extends Context<ContextType>>
     extends WindowBase<ContextType> implements PollableWindow<ContextType>
 {
     private final ContextType context;
-    private final DoubleFramebufferObject<ContextType> framebuffer;
 
     private final Stage stage;
-    private final Scene scene;
     private final Pane root;
+    private final ImageView imageView;
+    private final ChangeListener<Boolean> iconify;
+    private WritableImage image;
 
     private boolean windowClosing = false;
-    private boolean resourceClosed = false;
+
+    private WindowSize windowSize;
+    private WindowPosition windowPosition;
+    private boolean focused;
 
     private final Map<Key, KeyState> keyStates = new EnumMap<>(Key.class);
     private ModifierKeys modifierKeys = ModifierKeys.NONE;
@@ -84,50 +92,79 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     WindowImpl(Stage primaryStage, ContextType context, DoubleFramebufferObject<ContextType> framebuffer, WindowSpecification windowSpec)
     {
         this.context = context;
-        this.framebuffer = framebuffer;
 
-        this.stage = new Stage(StageStyle.UNIFIED);
-        this.stage.initOwner(primaryStage);
-        this.stage.setTitle(windowSpec.getTitle());
-        this.stage.setResizable(windowSpec.isResizable());
+        stage = new Stage();
+        stage.initOwner(primaryStage);
+        stage.setTitle(windowSpec.getTitle());
+        stage.setResizable(windowSpec.isResizable());
 
         if (windowSpec.getX() >= 0)
         {
-            this.stage.setX(windowSpec.getX());
+            stage.setX(windowSpec.getX());
         }
 
         if (windowSpec.getY() >= 0)
         {
-            this.stage.setY(windowSpec.getY());
+            stage.setY(windowSpec.getY());
         }
 
-        this.root = new AnchorPane();
-        this.root.setPrefWidth(windowSpec.getWidth());
-        this.root.setPrefHeight(windowSpec.getHeight());
+        image = new WritableImage(windowSpec.getWidth(), windowSpec.getHeight());
+        imageView = new ImageView(image);
 
-        this.scene = new Scene(this.root);
-        this.stage.setScene(this.scene);
-        this.stage.sizeToScene();
+        root = new StackPane(imageView);
+        root.setPrefWidth(windowSpec.getWidth());
+        root.setPrefHeight(windowSpec.getHeight());
 
-        ChangeListener<? super Number> windowSize = (event, oldValue, newValue) ->
+        Scene scene = new Scene(root);
+        stage.setScene(scene);
+
+        framebuffer.addSwapListener(frontFBO ->
         {
-            eventCollector.windowSize(l -> l.windowResized(this,
-            (int) Math.round(stage.getWidth()), (int) Math.round(stage.getHeight())));
+            FramebufferSize size = frontFBO.getSize();
+            int[] data = frontFBO.readColorBufferARGB(0);
 
-            eventCollector.framebufferSize(l -> l.framebufferResized(this,
-            (int) Math.round(stage.getWidth()), (int) Math.round(stage.getHeight())));
+            Platform.runLater(() ->
+            {
+                //noinspection FloatingPointEquality
+                if (size.width != image.getWidth() || size.height != image.getHeight())
+                {
+                    image = new WritableImage(size.width, size.height);
+                }
+
+                image.getPixelWriter().setPixels(0, 0, size.width, size.height,
+                    PixelFormat.getIntArgbInstance(), data, size.width * (size.height - 1), -size.width);
+
+                imageView.setImage(image);
+            });
+        });
+
+        ChangeListener<? super Number> windowSizeListener = (event, oldValue, newValue) ->
+        {
+            int width = (int) Math.round(root.getWidth());
+            int height = (int) Math.round(root.getHeight());
+
+            framebuffer.requestResize(width, height);
+            eventCollector.windowSize(l -> l.windowResized(this, width, height));
+            eventCollector.framebufferSize(l -> l.framebufferResized(this, width, height));
+            windowSize = new WindowSize(width, height);
         };
 
-        this.stage.widthProperty().addListener(windowSize);
-        this.stage.heightProperty().addListener(windowSize);
+        root.widthProperty().addListener(windowSizeListener);
+        root.heightProperty().addListener(windowSizeListener);
 
-        ChangeListener<? super Number> windowPos = (event, oldValue, newValue) -> eventCollector.windowPos(
-            l -> l.windowMoved(this, (int) Math.round(stage.getX()), (int) Math.round(stage.getY())));
+        ChangeListener<? super Number> windowPosListener = (event, oldValue, newValue) ->
+            eventCollector.windowPos(l ->
+            {
+                int width = (int) Math.round(stage.getX());
+                int height = (int) Math.round(stage.getY());
+                l.windowMoved(this, width, height);
+                windowPosition = new WindowPosition(width, height);
+            });
 
-        this.stage.xProperty().addListener(windowPos);
-        this.stage.yProperty().addListener(windowPos);
+        stage.xProperty().addListener(windowPosListener);
+        stage.yProperty().addListener(windowPosListener);
 
-        this.stage.focusedProperty().addListener((event, oldValue, newValue) ->
+        stage.focusedProperty().addListener((event, oldValue, newValue) ->
         {
             if (oldValue && !newValue)
             {
@@ -137,9 +174,11 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             {
                 eventCollector.windowFocusGained(l -> l.windowFocusGained(this));
             }
+
+            focused = stage.isFocused();
         });
 
-        this.stage.iconifiedProperty().addListener((event, oldValue, newValue) ->
+        iconify = (event, oldValue, newValue) ->
         {
             if (oldValue && !newValue)
             {
@@ -149,11 +188,17 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             {
                 eventCollector.windowIconified(l -> l.windowIconified(this));
             }
+        };
+
+        primaryStage.iconifiedProperty().addListener(iconify);
+
+        stage.setOnCloseRequest(event ->
+        {
+            eventCollector.windowClose(l -> l.windowClosing(this));
+            event.consume();
         });
 
-        this.stage.setOnCloseRequest(event -> eventCollector.windowClose(l -> l.windowClosing(this)));
-
-        root.setOnKeyPressed(event ->
+        scene.setOnKeyPressed(event ->
         {
             modifierKeys = new ModifierKeysInstance(
                 event.isShiftDown(),
@@ -166,7 +211,7 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             eventCollector.keyPress(l -> l.keyPressed(this, KeyCodeMaps.codeToKey(event.getCode()), modifierKeys));
         });
 
-        root.setOnKeyReleased(event ->
+        scene.setOnKeyReleased(event ->
         {
             modifierKeys = new ModifierKeysInstance(
                 event.isShiftDown(),
@@ -179,7 +224,7 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             eventCollector.keyRelease(l -> l.keyReleased(this, KeyCodeMaps.codeToKey(event.getCode()), modifierKeys));
         });
 
-        root.setOnKeyTyped(event ->
+        scene.setOnKeyTyped(event ->
         {
             modifierKeys = new ModifierKeysInstance(
                 event.isShiftDown(),
@@ -197,14 +242,14 @@ public class WindowImpl<ContextType extends Context<ContextType>>
                 new CharacterStringConverter().fromString(event.getCharacter()), modifierKeys));
         });
 
-        this.root.setOnMousePressed(event ->
+        root.setOnMousePressed(event ->
         {
             handleMouseEvent(event);
             getButtonIndex(event.getButton()).ifPresent(
                 index -> eventCollector.mouseButtonPress(l -> l.mouseButtonPressed(this, index, modifierKeys)));
         });
 
-        this.root.setOnMouseReleased(event ->
+        root.setOnMouseReleased(event ->
         {
             handleMouseEvent(event);
             getButtonIndex(event.getButton()).ifPresent(
@@ -214,12 +259,11 @@ public class WindowImpl<ContextType extends Context<ContextType>>
         EventHandler<? super MouseEvent> mouseCursor = event ->
         {
             handleMouseEvent(event);
-            getButtonIndex(event.getButton()).ifPresent(
-                index -> eventCollector.cursorPos(l -> l.cursorMoved(this, event.getSceneX(), event.getSceneY())));
+            eventCollector.cursorPos(l -> l.cursorMoved(this, event.getSceneX(), event.getSceneY()));
         };
 
-        this.root.setOnMouseMoved(mouseCursor);
-        this.root.setOnMouseDragged(mouseCursor);
+        root.setOnMouseMoved(mouseCursor);
+        root.setOnMouseDragged(mouseCursor);
 
         EventHandler<? super MouseEvent> mouseEnter = event ->
         {
@@ -227,8 +271,8 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             eventCollector.cursorEnter(l -> l.cursorEntered(this));
         };
 
-        this.root.setOnMouseEntered(mouseEnter);
-        this.root.setOnMouseDragEntered(mouseEnter);
+        root.setOnMouseEntered(mouseEnter);
+        root.setOnMouseDragEntered(mouseEnter);
 
         EventHandler<? super MouseEvent> mouseExit = event ->
         {
@@ -236,11 +280,15 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             eventCollector.cursorExit(l -> l.cursorExited(this));
         };
 
-        this.root.setOnMouseExited(mouseExit);
-        this.root.setOnMouseDragExited(mouseExit);
+        root.setOnMouseExited(mouseExit);
+        root.setOnMouseDragExited(mouseExit);
 
-        this.root.setOnScroll(event -> eventCollector.scroll(
+        root.setOnScroll(event -> eventCollector.scroll(
             l -> l.scroll(this, event.getDeltaX(), event.getDeltaY())));
+
+        windowSize = new WindowSize((int)Math.round(root.getWidth()), (int)Math.round(root.getHeight()));
+        windowPosition = new WindowPosition((int)Math.round(stage.getX()), (int)Math.round(stage.getY()));
+        focused = stage.isFocused();
     }
 
     private static OptionalInt getButtonIndex(MouseButton button)
@@ -262,11 +310,11 @@ public class WindowImpl<ContextType extends Context<ContextType>>
             event.isAltDown(),
             event.isMetaDown());
 
-        this.lmb = event.isPrimaryButtonDown() ? MouseButtonState.PRESSED : MouseButtonState.RELEASED;
-        this.mmb = event.isMiddleButtonDown() ? MouseButtonState.PRESSED : MouseButtonState.RELEASED;
-        this.rmb = event.isSecondaryButtonDown() ? MouseButtonState.PRESSED : MouseButtonState.RELEASED;
+        lmb = event.isPrimaryButtonDown() ? MouseButtonState.PRESSED : MouseButtonState.RELEASED;
+        mmb = event.isMiddleButtonDown() ? MouseButtonState.PRESSED : MouseButtonState.RELEASED;
+        rmb = event.isSecondaryButtonDown() ? MouseButtonState.PRESSED : MouseButtonState.RELEASED;
 
-        this.cursorPosition = new CursorPosition((int)Math.round(event.getSceneX()), (int)Math.round(event.getSceneY()));
+        cursorPosition = new CursorPosition((int)Math.round(event.getSceneX()), (int)Math.round(event.getSceneY()));
     }
 
     @Override
@@ -296,19 +344,19 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     @Override
     public void show()
     {
-        stage.show();
+        Platform.runLater(stage::show);
     }
 
     @Override
     public void hide()
     {
-        stage.hide();
+        Platform.runLater(stage::hide);
     }
 
     @Override
     public void focus()
     {
-        stage.requestFocus();
+        Platform.runLater(stage::requestFocus);
     }
 
     @Override
@@ -336,55 +384,55 @@ public class WindowImpl<ContextType extends Context<ContextType>>
     }
 
     @Override
-    public boolean isResourceClosed()
-    {
-        return resourceClosed;
-    }
-
-    @Override
     public void close()
     {
-        stage.close();
-        resourceClosed = true;
+        Platform.runLater(stage::close);
+        context.close();
     }
 
     @Override
     public WindowSize getWindowSize()
     {
-        return new WindowSize((int)Math.round(root.getWidth()), (int)Math.round(root.getHeight()));
+        return windowSize;
     }
 
     @Override
     public WindowPosition getWindowPosition()
     {
-        return new WindowPosition((int)Math.round(stage.getX()), (int)Math.round(stage.getY()));
+        return windowPosition;
     }
 
     @Override
     public void setWindowTitle(String title)
     {
-        stage.setTitle(title);
+        Platform.runLater(() -> stage.setTitle(title));
     }
 
     @Override
     public void setWindowSize(int width, int height)
     {
-        root.setPrefWidth(width);
-        root.setPrefHeight(height);
-        stage.sizeToScene();
+        Platform.runLater(() ->
+        {
+            root.setPrefWidth(width);
+            root.setPrefHeight(height);
+            stage.sizeToScene();
+        });
     }
 
     @Override
     public void setWindowPosition(int x, int y)
     {
-        stage.setX(x);
-        stage.setY(y);
+        Platform.runLater(() ->
+        {
+            stage.setX(x);
+            stage.setY(y);
+        });
     }
 
     @Override
     public boolean isFocused()
     {
-        return stage.isFocused();
+        return focused;
     }
 
     @Override

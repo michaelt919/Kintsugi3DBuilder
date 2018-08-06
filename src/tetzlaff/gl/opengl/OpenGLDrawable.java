@@ -76,9 +76,9 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
     @Override
     public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer)
     {
-        if (framebuffer.getIdentity() instanceof OpenGLFramebuffer.Identity)
+        if (framebuffer.getContentsForWrite() instanceof OpenGLFramebuffer.ContentsBase)
         {
-            ((OpenGLFramebuffer.Identity)framebuffer.getIdentity()).bindForDraw();
+            ((OpenGLFramebuffer.ContentsBase)framebuffer.getContentsForWrite()).bindForDraw();
             program.use();
             for (VertexAttributeSetting s : settings.values())
             {
@@ -88,16 +88,16 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
         }
         else
         {
-            throw new IllegalArgumentException("'framebuffer' must be of type OpenGLFramebuffer.");
+            throw new IllegalArgumentException("Contents of 'framebuffer' must be of type OpenGLFramebuffer.ContentsBase.");
         }
     }
 
     @Override
     public void draw(PrimitiveMode primitiveMode, Framebuffer<OpenGLContext> framebuffer, int x, int y, int width, int height)
     {
-        if (framebuffer.getIdentity() instanceof OpenGLFramebuffer.Identity)
+        if (framebuffer.getContentsForWrite() instanceof OpenGLFramebuffer.ContentsBase)
         {
-            ((OpenGLFramebuffer.Identity)framebuffer.getIdentity()).bindForDraw(x, y, width, height);
+            ((OpenGLFramebuffer.ContentsBase)framebuffer.getContentsForWrite()).bindForDraw(x, y, width, height);
             program.use();
             for (VertexAttributeSetting s : settings.values())
             {
@@ -107,7 +107,7 @@ class OpenGLDrawable implements Drawable<OpenGLContext>
         }
         else
         {
-            throw new IllegalArgumentException("'framebuffer' must be of type OpenGLFramebuffer.");
+            throw new IllegalArgumentException("Contents of 'framebuffer' must be of type OpenGLFramebuffer.ContentsBase.");
         }
     }
 

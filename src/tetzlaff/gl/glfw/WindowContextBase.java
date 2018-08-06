@@ -39,4 +39,10 @@ public abstract class WindowContextBase<ContextType extends WindowContextBase<Co
         int height = heightBuffer.get(0);
         return new FramebufferSize(width, height);
     }
+
+    @Override
+    public void close()
+    {
+        glfwDestroyWindow(handle);
+    }
 }

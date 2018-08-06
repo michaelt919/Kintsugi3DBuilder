@@ -31,7 +31,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
         return this.context;
     }
 
-    abstract class Identity
+    abstract class ContentsBase
     {
         abstract int getId();
 
@@ -74,7 +74,10 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     }
 
     @Override
-    public abstract Identity getIdentity();
+    public abstract ContentsBase getContentsForRead();
+
+    @Override
+    public abstract ContentsBase getContentsForWrite();
 
     @Override
     public void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height)
@@ -84,7 +87,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
             throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
         }
 
-        this.getIdentity().bindForRead(attachmentIndex);
+        this.getContentsForRead().bindForRead(attachmentIndex);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
@@ -102,7 +105,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
             throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
         }
 
-        this.getIdentity().bindForRead(attachmentIndex);
+        this.getContentsForRead().bindForRead(attachmentIndex);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
@@ -119,7 +122,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
             throw new IllegalArgumentException("The destination buffer is not big enough to hold the requested data.");
         }
 
-        this.getIdentity().bindForRead(attachmentIndex);
+        this.getContentsForRead().bindForRead(attachmentIndex);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
         OpenGLContext.errorCheck();
@@ -152,7 +155,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     @Override
     public int[] readColorBufferARGB(int attachmentIndex, int x, int y, int width, int height)
     {
-        this.getIdentity().bindForRead(attachmentIndex);
+        this.getContentsForRead().bindForRead(attachmentIndex);
         ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(width * height * 4);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
@@ -177,7 +180,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     @Override
     public float[] readFloatingPointColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height)
     {
-        this.getIdentity().bindForRead(attachmentIndex);
+        this.getContentsForRead().bindForRead(attachmentIndex);
         FloatBuffer pixelBuffer = BufferUtils.createFloatBuffer(width * height * 4);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
@@ -201,7 +204,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     @Override
     public int[] readIntegerColorBufferRGBA(int attachmentIndex, int x, int y, int width, int height)
     {
-        this.getIdentity().bindForRead(attachmentIndex);
+        this.getContentsForRead().bindForRead(attachmentIndex);
         IntBuffer pixelBuffer = BufferUtils.createIntBuffer(width * height * 4);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
@@ -270,7 +273,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     @Override
     public short[] readDepthBuffer(int x, int y, int width, int height)
     {
-        this.getIdentity().bindForRead(0);
+        this.getContentsForRead().bindForRead(0);
         ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(width * height * 2);
 
         glPixelStorei(GL_PACK_ALIGNMENT, 2);
@@ -294,7 +297,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     @Override
     public void clearColorBuffer(int attachmentIndex, float r, float g, float b, float a)
     {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getIdentity().getId());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getContentsForWrite().getId());
         OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -316,7 +319,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     @Override
     public void clearIntegerColorBuffer(int attachmentIndex, int r, int g, int b, int a)
     {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getIdentity().getId());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getContentsForWrite().getId());
         OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -338,7 +341,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     @Override
     public void clearDepthBuffer(float depth)
     {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getIdentity().getId());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getContentsForWrite().getId());
         OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -363,7 +366,7 @@ abstract class OpenGLFramebuffer implements Framebuffer<OpenGLContext>
     @Override
     public void clearStencilBuffer(int stencilIndex)
     {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getIdentity().getId());
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this.getContentsForWrite().getId());
         OpenGLContext.errorCheck();
 
         if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)

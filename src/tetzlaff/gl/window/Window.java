@@ -20,8 +20,6 @@ public interface Window<ContextType extends Context<ContextType>> extends Window
 
     void cancelWindowClose();
 
-    boolean isResourceClosed();
-
     @Override
     void close();
 

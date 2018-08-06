@@ -22,11 +22,14 @@ import tetzlaff.gl.nativebuffer.NativeVectorBufferFactory;
  * Abstract implementations should be parameterized so that subclasses can fulfill this constraint.
  * This type parameter ensures that all the objects created by this context are mutually compatible with each other and the context itself.
  */
-public interface Context<ContextType extends Context<ContextType>>
+public interface Context<ContextType extends Context<ContextType>> extends AutoCloseable
 {
     void makeContextCurrent();
     void flush();
     void finish();
+
+    @Override
+    void close();
 
     ContextState getState();
 
