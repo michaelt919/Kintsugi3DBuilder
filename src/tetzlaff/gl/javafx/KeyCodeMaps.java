@@ -130,8 +130,7 @@ final class KeyCodeMaps
         KEY_TO_CODES = new EnumMap<>(Key.class);
         for (Entry<KeyCode, Key> entry : CODE_TO_KEY.entrySet())
         {
-            Optional.of(KEY_TO_CODES.get(entry.getValue()))
-                .orElse(KEY_TO_CODES.put(entry.getValue(), new ArrayList<>(1)))
+            KEY_TO_CODES.computeIfAbsent(entry.getValue(), key -> new ArrayList<>(1))
                 .add(entry.getKey());
         }
     }

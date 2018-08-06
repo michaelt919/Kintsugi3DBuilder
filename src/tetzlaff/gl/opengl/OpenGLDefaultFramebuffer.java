@@ -7,15 +7,11 @@ import static org.lwjgl.opengl.GL11.*;
 
 class OpenGLDefaultFramebuffer extends OpenGLFramebuffer implements DoubleFramebuffer<OpenGLContext>
 {
+    private final ContentsImpl contentsImpl = new ContentsImpl();
+
     OpenGLDefaultFramebuffer(OpenGLContext context)
     {
         super(context);
-    }
-
-    @Override
-    protected int getId()
-    {
-        return 0;
     }
 
     @Override
@@ -31,16 +27,37 @@ class OpenGLDefaultFramebuffer extends OpenGLFramebuffer implements DoubleFrameb
     }
 
     @Override
-    protected void selectColorSourceForRead(int index)
+    public ContentsImpl getContentsForRead()
     {
-        if (index == 0)
+        return contentsImpl;
+    }
+
+    @Override
+    public ContentsImpl getContentsForWrite()
+    {
+        return contentsImpl;
+    }
+
+    private class ContentsImpl extends ContentsBase
+    {
+        @Override
+        int getId()
         {
-            glReadBuffer(GL_BACK);
-            OpenGLContext.errorCheck();
+            return 0;
         }
-        else
+
+        @Override
+        void selectColorSourceForRead(int index)
         {
-            throw new IllegalArgumentException("The default framebuffer does not have multiple color attachments.");
+            if (index == 0)
+            {
+                glReadBuffer(GL_BACK);
+                OpenGLContext.errorCheck();
+            }
+            else
+            {
+                throw new IllegalArgumentException("The default framebuffer does not have multiple color attachments.");
+            }
         }
     }
 }

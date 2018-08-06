@@ -1,11 +1,13 @@
 package tetzlaff.gl.glfw;
 
 import java.nio.ByteBuffer;
+import java.util.function.Function;
 
 import org.lwjgl.*;
 import org.lwjgl.Version.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
+import tetzlaff.gl.core.DoubleFramebuffer;
 import tetzlaff.gl.core.FramebufferSize;
 import tetzlaff.gl.exceptions.GLFWException;
 import tetzlaff.gl.window.*;
@@ -18,12 +20,13 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     extends WindowBase<ContextType> implements PollableWindow<ContextType>
 {
     private final long handle;
-    private boolean resourceClosed;
     private final WindowListenerManager listenerManager;
 
     private final ContextType context;
 
-    WindowImpl(ContextFactory<ContextType> contextFactory, WindowSpecification windowSpec)
+    WindowImpl(ContextFactory<ContextType> contextFactory,
+        Function<ContextType, DoubleFramebuffer<ContextType>> createDefaultFramebuffer,
+        WindowSpecification windowSpec)
     {
         glfwSetErrorCallback(GLFWErrorCallback.createString((error, description) ->
         {
@@ -82,7 +85,8 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
                 /*Version.getVersion()*/ /* <== causes annoying exception breakpoints in Eclipse */);
         System.out.println("GLFW version: " + glfwGetVersionString());
 
-        this.context = contextFactory.createContext(handle);
+        this.context = createDefaultFramebuffer == null ?
+            contextFactory.createContext(handle) : contextFactory.createContext(handle, createDefaultFramebuffer);
 
         if (windowSpec.getMultisamples() > 0)
         {
@@ -158,16 +162,9 @@ public class WindowImpl<ContextType extends WindowContextBase<ContextType>>
     }
 
     @Override
-    public boolean isResourceClosed()
-    {
-        return this.resourceClosed;
-    }
-
-    @Override
     public void close()
     {
         glfwDestroyWindow(handle);
-        this.resourceClosed = true;
     }
 
     @Override
