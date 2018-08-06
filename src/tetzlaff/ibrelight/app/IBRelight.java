@@ -3,11 +3,13 @@ package tetzlaff.ibrelight.app;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import tetzlaff.ibrelight.javafx.MainApplication;
 import tetzlaff.interactive.InitializationException;
 
 public final class IBRelight
 {
     private static final boolean DEBUG = true;
+    private static final boolean GRAPHICS_WINDOW_ENABLED = false;
 
     private IBRelight()
     {
@@ -27,23 +29,37 @@ public final class IBRelight
         System.setProperty("glass.disableThreadChecks", "true");
         //TODO see com.sun.glass.ui.Application.java line 434
 
-        System.out.println("Starting JavaFX UI");
-        startJavaFXUI();
+        if (GRAPHICS_WINDOW_ENABLED)
+        {
+            System.out.println("Starting JavaFX UI");
+            new Thread(() -> MainApplication.launchWrapper("")).start();
 
-        System.out.println("Starting Render Window");
-        startRenderWindow();
+            System.out.println("Starting Render Window");
+            Rendering.runProgram();
+        }
+        else
+        {
+            MainApplication.addStartListener(stage ->
+            {
+                System.out.println("Starting Render Window");
+                new Thread(() ->
+                {
+                    try
+                    {
+                        Rendering.runProgram(stage);
+                    }
+                    catch(InitializationException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }).start();
+            });
+
+            System.out.println("Starting JavaFX UI");
+            MainApplication.launchWrapper("");
+        }
 
         System.out.println("Boot Complete");
 
-    }
-
-    private static void startJavaFXUI()
-    {
-        new Thread(new ThreadableUI()).start();
-    }
-
-    private static void startRenderWindow() throws InitializationException
-    {
-        Rendering.runProgram();
     }
 }

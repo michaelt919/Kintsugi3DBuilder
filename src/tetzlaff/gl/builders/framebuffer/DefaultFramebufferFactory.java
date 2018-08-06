@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 import tetzlaff.gl.core.*;
 
@@ -33,6 +36,11 @@ public final class DefaultFramebufferFactory
         private int width;
         private int height;
 
+        private int newWidth;
+        private int newHeight;
+
+        private List<Consumer<Framebuffer<ContextType>>> swapListeners = new ArrayList<>(1);
+
         DefaultFramebufferObjectImpl(ContextType context, int initWidth, int initHeight)
         {
             this.context = context;
@@ -52,12 +60,50 @@ public final class DefaultFramebufferFactory
 
             this.width = initWidth;
             this.height = initHeight;
+
+            this.newWidth = initWidth;
+            this.newHeight = initHeight;
+        }
+
+        private void resize()
+        {
+            if (width != backFBO.getSize().width || height !=  backFBO.getSize().height)
+            {
+                if (backFBO == fbo1)
+                {
+                    fbo1.close();
+
+                    this.fbo1 = context.buildFramebufferObject(newWidth, newHeight)
+                        .addColorAttachment(ColorFormat.RGBA8)
+                        .addDepthAttachment()
+                        .createFramebufferObject();
+
+                    this.backFBO = fbo1;
+                }
+                else
+                {
+                    fbo2.close();
+
+                    this.fbo2 = context.buildFramebufferObject(newWidth, newHeight)
+                        .addColorAttachment(ColorFormat.RGBA8)
+                        .addDepthAttachment()
+                        .createFramebufferObject();
+
+                    this.backFBO = fbo2;
+                }
+            }
         }
 
         @Override
-        public Object getIdentity()
+        public Object getContentsForRead()
         {
-            return this.frontFBO.getIdentity();
+            return this.frontFBO.getContentsForRead();
+        }
+
+        @Override
+        public Object getContentsForWrite()
+        {
+            return this.backFBO.getContentsForWrite();
         }
 
         @Override
@@ -69,7 +115,7 @@ public final class DefaultFramebufferFactory
         @Override
         public FramebufferSize getSize()
         {
-            return new FramebufferSize(width, height);
+            return frontFBO.getSize();
         }
 
         @Override
@@ -199,26 +245,10 @@ public final class DefaultFramebufferFactory
         }
 
         @Override
-        public void resize(int width, int height)
+        public void requestResize(int width, int height)
         {
-            this.width = width;
-            this.height = height;
-
-            fbo1.close();
-            fbo2.close();
-
-            this.fbo1 = context.buildFramebufferObject(width, height)
-                .addColorAttachment(ColorFormat.RGBA8)
-                .addDepthAttachment()
-                .createFramebufferObject();
-
-            this.fbo2 = context.buildFramebufferObject(width, height)
-                .addColorAttachment(ColorFormat.RGBA8)
-                .addDepthAttachment()
-                .createFramebufferObject();
-
-            this.frontFBO = fbo1;
-            this.backFBO = fbo2;
+            this.newWidth = width;
+            this.newHeight = height;
         }
 
         @Override
@@ -227,6 +257,22 @@ public final class DefaultFramebufferFactory
             Framebuffer<ContextType> tmp = backFBO;
             backFBO = frontFBO;
             frontFBO = tmp;
+
+            width = newWidth;
+            height = newHeight;
+
+            resize();
+
+            for (Consumer<Framebuffer<ContextType>> l : swapListeners)
+            {
+                l.accept(frontFBO);
+            }
+        }
+
+        @Override
+        public void addSwapListener(Consumer<Framebuffer<ContextType>> listener)
+        {
+            this.swapListeners.add(listener);
         }
 
         @Override

@@ -13,8 +13,11 @@ import java.nio.IntBuffer;
  *
  * @param <ContextType> The type of the GL context that the framebuffer is associated with.
  */
-public interface Framebuffer<ContextType extends Context<ContextType>> extends Contextual<ContextType>, Identifiable
+public interface Framebuffer<ContextType extends Context<ContextType>> extends Contextual<ContextType>
 {
+    Object getContentsForRead();
+    Object getContentsForWrite();
+
     FramebufferSize getSize();
 
     void readColorBufferARGB(int attachmentIndex, ByteBuffer destination, int x, int y, int width, int height);
