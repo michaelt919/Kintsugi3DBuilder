@@ -17,7 +17,7 @@ import static org.lwjgl.opengl.GL30.*;
 
 final class OpenGLFramebufferObject extends OpenGLFramebuffer implements FramebufferObject<OpenGLContext>
 {
-    private final Identity identity;
+    private final Contents contents;
     private final int width;
     private final int height;
     private final AbstractCollection<Resource> ownedAttachments;
@@ -74,11 +74,11 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
         }
     }
 
-    private class Identity extends OpenGLFramebuffer.Identity
+    private class Contents extends ContentsBase
     {
         final int fboId;
 
-        Identity(int fboId)
+        Contents(int fboId)
         {
             this.fboId = fboId;
         }
@@ -110,7 +110,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
         int fboId = glGenFramebuffers();
         OpenGLContext.errorCheck();
 
-        this.identity = new Identity(fboId);
+        this.contents = new Contents(fboId);
 
         this.width = width;
         this.height = height;
@@ -122,7 +122,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
 
         IntBuffer drawBufferList = BufferUtils.createIntBuffer(colorAttachments.length);
 
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, identity.fboId);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, contents.fboId);
         OpenGLContext.errorCheck();
 
         for (int i = 0; i < colorAttachments.length; i++)
@@ -164,9 +164,15 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
     }
 
     @Override
-    public Identity getIdentity()
+    public Contents getContentsForRead()
     {
-        return this.identity;
+        return this.contents;
+    }
+
+    @Override
+    public Contents getContentsForWrite()
+    {
+        return this.contents;
     }
 
     @Override
@@ -214,7 +220,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 }
             }
 
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, identity.fboId);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, contents.fboId);
             OpenGLContext.errorCheck();
             attachmentCast.attachToDrawFramebuffer(GL_COLOR_ATTACHMENT0 + index, 0);
             this.colorAttachments[index] = attachmentCast;
@@ -255,7 +261,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 }
             }
 
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, identity.fboId);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, contents.fboId);
             OpenGLContext.errorCheck();
             attachmentCast.attachToDrawFramebuffer(GL_DEPTH_ATTACHMENT, 0);
 
@@ -298,7 +304,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 }
             }
 
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, identity.fboId);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, contents.fboId);
             OpenGLContext.errorCheck();
             attachmentCast.attachToDrawFramebuffer(GL_STENCIL_ATTACHMENT, 0);
 
@@ -341,7 +347,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
                 }
             }
 
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, identity.fboId);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, contents.fboId);
             OpenGLContext.errorCheck();
             attachmentCast.attachToDrawFramebuffer(GL_DEPTH_STENCIL_ATTACHMENT, 0);
 
@@ -356,7 +362,7 @@ final class OpenGLFramebufferObject extends OpenGLFramebuffer implements Framebu
     @Override
     public void close()
     {
-        glDeleteFramebuffers(identity.fboId);
+        glDeleteFramebuffers(contents.fboId);
         OpenGLContext.errorCheck();
         for (Resource attachment : ownedAttachments)
         {

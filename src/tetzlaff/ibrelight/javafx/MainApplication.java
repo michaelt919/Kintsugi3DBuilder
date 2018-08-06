@@ -3,8 +3,11 @@ package tetzlaff.ibrelight.javafx;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import javafx.application.Application;
@@ -88,6 +91,13 @@ public class MainApplication extends Application
                 return false;
             }
         }
+    }
+
+    private static final Collection<Consumer<Stage>> START_LISTENERS = new ArrayList<>(1);
+
+    public static void addStartListener(Consumer<Stage> startListener)
+    {
+        START_LISTENERS.add(startListener);
     }
 
     @Override
@@ -250,6 +260,11 @@ public class MainApplication extends Application
 //                WindowSynchronization.getInstance().focusLost(menuBarWindow);
 //            }
 //        });
+
+        for (Consumer<Stage> l : START_LISTENERS)
+        {
+            l.accept(primaryStage);
+        }
     }
 
     public static void launchWrapper(String args)

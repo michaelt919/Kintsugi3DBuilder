@@ -9,8 +9,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
+<<<<<<< local
 import tetzlaff.gl.core.Program;
 import tetzlaff.gl.core.ShaderType;
+=======
+import javafx.stage.Stage;
+>>>>>>> graft
 import tetzlaff.gl.glfw.WindowFactory;
 import tetzlaff.gl.glfw.WindowImpl;
 import tetzlaff.gl.interactive.InteractiveGraphics;
@@ -46,22 +50,19 @@ public final class Rendering
     {
     }
 
-    private static volatile IBRRequestQueue<?> requestQueue;
+    private static final IBRRequestQueue<OpenGLContext> REQUEST_QUEUE = new IBRRequestQueue<>();
 
     public static IBRRequestQueue<?> getRequestQueue()
     {
-        if (requestQueue == null)
-        {
-            System.out.println("Waiting for requestQueue to be initialized...");
-        }
-        while (requestQueue == null)
-        {
-        }
-        System.out.println("requestQueue initialized; continuing.");
-        return requestQueue;
+        return REQUEST_QUEUE;
     }
 
     public static void runProgram() throws InitializationException
+    {
+        runProgram(null);
+    }
+
+    public static void runProgram(Stage stage) throws InitializationException
     {
         System.getenv();
         System.setProperty("org.lwjgl.util.DEBUG", "true");
@@ -71,7 +72,8 @@ public final class Rendering
 
         // Create a GLFW window for integration with LWJGL (part of the 'view' in this MVC arrangement)
         try(PollableWindow<OpenGLContext> window =
-                WindowFactory.buildOpenGLWindow("IBRelight", 800, 800)
+            (stage == null ? WindowFactory.buildOpenGLWindow("IBRelight", 800, 800)
+                : WindowFactory.buildJavaFXWindow(stage, "IBRelight", 800, 800))
                     .setResizable(true)
                     .setMultisamples(4)
                     .create())
@@ -293,8 +295,8 @@ public final class Rendering
             // of events and the OpenGL context.  The ULFRendererList provides the renderable.
             InteractiveApplication app = InteractiveGraphics.createApplication(window, context, rendererList.getRenderable());
 
-            requestQueue = new IBRRequestQueue<>(rendererList);
-            requestQueue.setLoadingMonitor(new LoadingMonitor()
+            REQUEST_QUEUE.setModel(rendererList);
+            REQUEST_QUEUE.setLoadingMonitor(new LoadingMonitor()
             {
                 @Override
                 public void startLoading()
@@ -337,7 +339,7 @@ public final class Rendering
                 @Override
                 public void refresh()
                 {
-                    requestQueue.executeQueue();
+                    REQUEST_QUEUE.executeQueue();
                 }
 
                 @Override
@@ -354,7 +356,7 @@ public final class Rendering
             }
             catch(RuntimeException|InitializationException e)
             {
-                Optional.of(loadingModel.getLoadingMonitor()).ifPresent(loadingMonitor -> loadingMonitor.loadingFailed(e));
+                Optional.ofNullable(loadingModel.getLoadingMonitor()).ifPresent(loadingMonitor -> loadingMonitor.loadingFailed(e));
                 throw e;
             }
         }

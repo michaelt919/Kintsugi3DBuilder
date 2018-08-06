@@ -2,6 +2,7 @@ package tetzlaff.gl.javafx;
 
 import java.util.function.Function;
 
+import javafx.application.Platform;
 import javafx.stage.Stage;
 import tetzlaff.gl.builders.framebuffer.DefaultFramebufferFactory;
 import tetzlaff.gl.core.DoubleFramebuffer;
@@ -10,14 +11,15 @@ import tetzlaff.gl.glfw.WindowContextBase;
 import tetzlaff.gl.window.PollableWindow;
 import tetzlaff.gl.window.WindowBuilderBase;
 
-class WindowBuilderImpl<ContextType extends WindowContextBase<ContextType>>
+public class CopyWindowBuilder<ContextType extends WindowContextBase<ContextType>>
     extends WindowBuilderBase<ContextType>
 {
     private final ContextType context;
     private final Stage primaryStage;
     private DoubleFramebufferObject<ContextType> framebuffer;
+    private volatile PollableWindow<ContextType> result;
 
-    WindowBuilderImpl(Stage primaryStage,
+    public CopyWindowBuilder(Stage primaryStage,
         Function<Function<ContextType, DoubleFramebuffer<ContextType>>, ContextType> createContext,
         String title, int width, int height)
     {
@@ -30,12 +32,17 @@ class WindowBuilderImpl<ContextType extends WindowContextBase<ContextType>>
             framebuffer = DefaultFramebufferFactory.create(c, width, height);
             return framebuffer;
         });
-
     }
 
     @Override
     public PollableWindow<ContextType> create()
     {
-        return new WindowImpl<>(primaryStage, context, framebuffer, this);
+        Platform.runLater(() -> result = new WindowImpl<>(primaryStage, context, framebuffer, this));
+
+        while(result == null)
+        {
+        }
+
+        return result;
     }
 }

@@ -10,7 +10,7 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL31.*;
 
-public class OpenGLContextState implements ContextState<OpenGLContext>
+public class OpenGLContextState implements ContextState
 {
     OpenGLContext context;
 
