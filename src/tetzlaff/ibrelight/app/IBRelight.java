@@ -8,12 +8,8 @@ import tetzlaff.interactive.InitializationException;
 
 public final class IBRelight
 {
-<<<<<<< local
     private static final boolean DEBUG = false;
-=======
-    private static final boolean DEBUG = true;
     private static final boolean GRAPHICS_WINDOW_ENABLED = false;
->>>>>>> graft
 
     private IBRelight()
     {
