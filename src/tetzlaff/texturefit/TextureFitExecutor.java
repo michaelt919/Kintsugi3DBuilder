@@ -30,9 +30,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 {
     private static final int SHADOW_MAP_FAR_PLANE_CUSHION = 2; // TODO decide where this should be defined
 
-    private static final double FITTING_GAMMA = 2.2; // TODO make this configurable from the interface
-    private static final boolean BRUTE_FORCE_NORMAL_COMPUTATION = false;
-
     private final ContextType context;
     private final File vsetFile;
     private final File objFile;
@@ -678,7 +675,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
         drawable.program().setUniform("occlusionBias", param.getCameraVisibilityTestBias());
         drawable.program().setUniform("gamma", param.getGamma());
-        drawable.program().setUniform("fittingGamma", (float)FITTING_GAMMA);
 
         if (resources.getLuminanceMap() == null)
         {
@@ -971,96 +967,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         setupCommonShaderInputs(drawable);
         return new ErrorCalc<>(drawable, viewCount, subdiv);
     }
-
-//    private void removeNormalMapBias(float[] normalData, int normalMapSize, VertexMesh mesh)
-//    {
-//        VertexBuffer<ContextType> selectorBuffer = context.createVertexBuffer();
-//        FloatVertexList selectors = new FloatVertexList(1, mesh.getTexCoords().count);
-//
-//        FloatVertexList biasedNormals = new FloatVertexList(3, mesh.getTexCoords().count);
-//
-//        Renderable<ContextType> vertexWeightRenderable = context.createRenderable(vertexColorProgram);
-//        vertexWeightRenderable.addVertexBuffer("texCoord", texCoordBuffer);
-//        vertexWeightRenderable.addVertexBuffer("colors", selectorBuffer);
-//
-//        FramebufferObject<ContextType> vertexWeightFramebuffer =
-//            context.getFramebufferObjectBuilder(normalMapSize, normalMapSize)
-//                .addColorAttachment(ColorFormat.R8)
-//                .createFramebufferObject();
-//
-//        for (int i = 0; i < mesh.getUniqueTexCoords().count; i++)
-//        {
-//            int[] texCoordInstances = mesh.getUniqueTexCoords().get(i);
-//
-//            for (int j = 0; j < texCoordInstances.length; j++)
-//            {
-//                // Select the current vertex
-//                selectors.set(j, 0, 1.0f);
-//            }
-//
-//            // Define a vertex buffer with zeros at every vertex except the current one
-//            selectorBuffer.setData(selectors);
-//
-//            vertexWeightFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//            vertexWeightRenderable.draw(PrimitiveMode.TRIANGLES, vertexWeightFramebuffer);
-//            float[] vertexWeightData = vertexWeightFramebuffer.readFloatingPointColorBufferRGBA(0);
-//
-//            Vector3 weightedNormalSum = new Vector3(0.0f, 0.0f, 0.0f);
-//            for (int j = 0; j < vertexWeightData.length; j++)
-//            {
-//                weightedNormalSum = weightedNormalSum
-//                    .plus(new Vector3(normalData[4*j + 0] - 0.5f, normalData[4*j + 1] - 0.5f, normalData[4*j + 2] - 0.5f)
-//                        .times(vertexWeightData[j]));
-//            }
-//
-//            Vector3 biasedNormal = weightedNormalSum.normalized();
-//
-//            for (int j = 0; j < texCoordInstances.length; j++)
-//            {
-//                // Set the biased normal in all instances
-//                biasedNormals.set(j, 0, biasedNormal.x);
-//                biasedNormals.set(j, 1, biasedNormal.y);
-//                biasedNormals.set(j, 2, biasedNormal.z);
-//
-//                // Deselect the current vertex
-//                selectors.set(j, 0, 0.0f);
-//            }
-//        }
-//
-//        vertexWeightFramebuffer.delete();
-//        selectorBuffer.delete();
-//
-//        VertexBuffer<ContextType> biasedNormalBuffer = context.createVertexBuffer().setData(biasedNormals);
-//
-//        Renderable<ContextType> biasedNormalRenderable = context.createRenderable(vertexColorProgram);
-//        biasedNormalRenderable.addVertexBuffer("texCoord", texCoordBuffer);
-//        biasedNormalRenderable.addVertexBuffer("colors", biasedNormalBuffer);
-//
-//        FramebufferObject<ContextType> biasedNormalFramebuffer =
-//            context.getFramebufferObjectBuilder(normalMapSize, normalMapSize)
-//                .addColorAttachment(ColorFormat.RGB32F)
-//                .createFramebufferObject();
-//
-//        biasedNormalFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
-//        biasedNormalRenderable.draw(PrimitiveMode.TRIANGLES, biasedNormalFramebuffer);
-//        float[] biasedNormalData = vertexWeightFramebuffer.readFloatingPointColorBufferRGBA(0);
-//
-//        for (int i = 0; i < normalData.length; i+=4)
-//        {
-//            Vector3 detailNormal = new Vector3(normalData[i + 0] - 0.5f, normalData[i + 1] - 0.5f, normalData[i + 2] - 0.5f).normalized();
-//            Vector3 biasedNormal = new Vector3(biasedNormalData[i + 0], biasedNormalData[i + 1], biasedNormalData[i + 2]).normalized();
-//
-//            Vector3 unbiasedNormal = new Vector3(detailNormal.x - biasedNormal.x, detailNormal.y - biasedNormal.y, detailNormal.z - biasedNormal.z + 1.0f).normalized();
-//
-//            // Write into the input array
-//            normalData[i + 0] = unbiasedNormal.x * 0.5f + 0.5f;
-//            normalData[i + 1] = unbiasedNormal.y * 0.5f + 0.5f;
-//            normalData[i + 2] = unbiasedNormal.z * 0.5f + 0.5f;
-//        }
-//
-//        biasedNormalFramebuffer.delete();
-//        biasedNormalBuffer.delete();
-//    }
 
     private static double getLinearDepth(double nonLinearDepth, double nearPlane, double farPlane)
     {
@@ -1426,7 +1332,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     {
         try(PrintStream materialStream = new PrintStream(new File(outputDir, materialFileName)))
         {
-            materialStream.println(comments);
+            if (comments != null)
+            {
+                materialStream.println(comments);
+            }
+
             materialStream.println("newmtl " + materialName);
 
             if (param.isDiffuseTextureEnabled())
@@ -1456,22 +1366,15 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 materialStream.println("Ks 1.0 1.0 1.0");
                 materialStream.println("map_Ks " + materialName + "_Ks.png");
 
-                //if (param.isRoughnessTextureEnabled())
-                //{
-                    materialStream.println("Pr 1.0");
-                    materialStream.println("map_Pr " + materialName + "_Pr.png");
-                //}
-    //            else
-    //            {
-    //                materialStream.println("Pr " + specularParams.roughness);
-    //            }
+                materialStream.println("Pr 1.0");
+                materialStream.println("map_Pr " + materialName + "_Pr.png");
             }
             else
             {
                 materialStream.println("Ks 0 0 0");
             }
 
-            if ((param.isDiffuseTextureEnabled() && param.isNormalTextureEnabled()) || param.isSpecularTextureEnabled())
+            if ((param.isDiffuseTextureEnabled() && param.getDiffuseComputedNormalWeight() > 0) || param.isSpecularTextureEnabled())
             {
                 materialStream.println("norm " + materialName + "_norm.png");
             }
@@ -1486,9 +1389,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
     public void execute() throws IOException, XMLStreamException
     {
-//        final int DEBUG_PIXEL_X = 322;
-//        final int DEBUG_PIXEL_Y = param.getTextureSize() - 365;
-
         System.out.println("Max vertex uniform components across all blocks:" + context.getState().getMaxCombinedVertexUniformComponents());
         System.out.println("Max fragment uniform components across all blocks:" + context.getState().getMaxCombinedFragmentUniformComponents());
         System.out.println("Max size of a uniform block in bytes:" + context.getState().getMaxUniformBlockSize());
@@ -1533,7 +1433,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 outputStream.flush();
             }
 
-            if (param.isDiffuseTextureEnabled() || param.isNormalTextureEnabled() || param.isSpecularTextureEnabled())
+            if (param.isDiffuseTextureEnabled() || param.isSpecularTextureEnabled())
             {
                 File objFileCopy = new File(outputDir, objFile.getName());
                 Files.copy(objFile.toPath(), objFileCopy.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -1543,8 +1443,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 //darpaTestSuiteLong((float)avgDistance);
                 //darpaTestSuiteExtraLong((float)avgDistance);
             }
-
-            //System.out.println("Resampling completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
         }
         finally
         {
@@ -1793,11 +1691,6 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
         File auxDir = new File(instanceDirectory, "_aux");
         auxDir.mkdirs();
 
-        if (param.isDebugModeEnabled())
-        {
-            new File(auxDir, "specularResidDebug").mkdir();
-        }
-
         try
         (
             FramebufferObject<ContextType> framebuffer1 =
@@ -1944,7 +1837,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     {
                         frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(instanceDirectory, materialName + "_Kd.png"));
 
-                        if (param.isNormalTextureEnabled())
+                        if (param.getDiffuseComputedNormalWeight() > 0)
                         {
                             frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(instanceDirectory, materialName + "_norm.png"));
                         }
@@ -1988,12 +1881,11 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                     FramebufferObject<ContextType> tmp;
 
-                    if (BRUTE_FORCE_NORMAL_COMPUTATION && param.isNormalTextureEnabled())
+                    if (param.isBruteForceNormalEnabled())
                     {
                         Drawable<ContextType> errorCalcSimpleDrawable = context.createDrawable(errorCalcSimpleProgram);
                         errorCalcSimpleDrawable.addVertexBuffer("position", rectBuffer);
 
-//                        errorCalcProgram.setUniform("ignoreDampingFactor", true);
                         specularFitProgram.setUniform("disableNormalAdjustment", true);
 
                         for (int i = 0; i < 128/*64*64*/; i++)
@@ -2199,6 +2091,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(auxDir, "roughness-raw.png"));
                     frontFramebuffer.saveColorBufferToFile(4, "PNG", new File(auxDir, "roughness-error.png"));
 
+                    frontFramebuffer.saveColorBufferToFile(4, "PNG", new File(outputDir, materialName + "_Pr_error.png"));
+
                     double lastRMSError;
 
                     peakIntensityProgram.setUniform("gamma", 2.2f);
@@ -2257,26 +2151,26 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     frontErrorFramebuffer = backErrorFramebuffer;
                     backErrorFramebuffer = tmp;
 
-                    double initSumSqError = 0.0;
-                    int initSumMask = 0;
-                    float[] errorData = frontErrorFramebuffer.readFloatingPointColorBufferRGBA(0);
-                    for (int j = 0; j * 4 + 3 < errorData.length; j++)
-                    {
-                        float error = errorData[j * 4 + 1]; // Green channel holds squared error
-                        if (error >= 0)
-                        {
-                            initSumSqError += error;
-                            initSumMask++;
-                        }
-                    }
-
-                    lastRMSError = Math.sqrt(initSumSqError / initSumMask);
-
-                    System.out.println("Sum squared error: " + initSumSqError);
-                    System.out.println("RMS error: " + lastRMSError);
-
                     if (param.isLevenbergMarquardtOptimizationEnabled())
                     {
+                        double initSumSqError = 0.0;
+                        int initSumMask = 0;
+                        float[] errorData = frontErrorFramebuffer.readFloatingPointColorBufferRGBA(0);
+                        for (int j = 0; j * 4 + 3 < errorData.length; j++)
+                        {
+                            float error = errorData[j * 4 + 1]; // Green channel holds squared error
+                            if (error >= 0)
+                            {
+                                initSumSqError += error;
+                                initSumMask++;
+                            }
+                        }
+
+                        lastRMSError = Math.sqrt(initSumSqError / initSumMask);
+
+                        System.out.println("Sum squared error: " + initSumSqError);
+                        System.out.println("RMS error: " + lastRMSError);
+
                         // Non-linear adjustment
                         AdjustFit<ContextType> adjustFit = createAdjustFit(viewSet.getCameraPoseCount(), param.getTextureSubdivision());
 
@@ -2508,7 +2402,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                         frontFramebuffer.saveColorBufferToFile(0, "PNG", new File(instanceDirectory, materialName + "_Kd.png"));
                     }
 
-                    if ((param.isDiffuseTextureEnabled() && param.isNormalTextureEnabled()) || param.isSpecularTextureEnabled())
+                    if ((param.isDiffuseTextureEnabled() && param.getDiffuseComputedNormalWeight() > 0) || param.isSpecularTextureEnabled())
                     {
                         frontFramebuffer.saveColorBufferToFile(1, "PNG", new File(instanceDirectory, materialName + "_norm.png"));
                     }
@@ -2516,7 +2410,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     frontFramebuffer.saveColorBufferToFile(2, "PNG", new File(instanceDirectory, materialName + "_Ks.png"));
                     frontFramebuffer.saveColorBufferToFile(3, "PNG", new File(instanceDirectory, materialName + "_Pr.png"));
 
-                    writeMTLFile("# RMS fitting error: " + lastRMSError);
+                    writeMTLFile(null/*"# RMS fitting error: " + lastRMSError*/);
                 }
             }
         }

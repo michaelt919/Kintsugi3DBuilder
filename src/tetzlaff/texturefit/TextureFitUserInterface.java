@@ -44,9 +44,6 @@ public class TextureFitUserInterface extends JFrame
 
     private final JSpinner textureSizeSpinner;
     private final JSpinner textureBlockSizeSpinner;
-    private final JCheckBox imagePreprojUseCheckBox;
-    private final JCheckBox imagePreprojReuseCheckBox;
-
     private final JSpinner diffuseDeltaSpinner;
     private final JSpinner diffuseIterationsSpinner;
     private final JSpinner diffuseCompNormalSpinner;
@@ -64,11 +61,8 @@ public class TextureFitUserInterface extends JFrame
     private final JCheckBox chckbxUseXriteMeasurements;
     private final JCheckBox chckbxComputeDiffuseTexture;
     private final JCheckBox chckbxComputeSpecularTexture;
-    private final JCheckBox chckbxEstimateLightOffset;
     private final JCheckBox chckbxComputeNormalMap;
     private final JCheckBox checkBoxEstimateGlobalLightIntensity;
-    private final JCheckBox chckbxDebugMode;
-    private final JCheckBox chckbxLevenbergMarquardtSpecularOptimization;
 
     private class FilePicker
     {
@@ -77,7 +71,7 @@ public class TextureFitUserInterface extends JFrame
 
     public TextureFitUserInterface()
     {
-        super("Texture Generation Program");
+        super("DARPA REVEAL: Reflectance Parameter Fitting");
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocation(10, 10);
@@ -121,7 +115,7 @@ public class TextureFitUserInterface extends JFrame
         JFileChooser fileChooser4 = new JFileChooser();
         fileChooser4.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
-        tabbedPane.addTab("Files and Directories", filePanel);
+        tabbedPane.addTab("Files / Directories", filePanel);
 
         JPanel panel_1 = new JPanel();
         panel_1.setBorder(new TitledBorder(null, "Input Files and Directories", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -404,7 +398,7 @@ public class TextureFitUserInterface extends JFrame
         JPanel basicSettingsPanel = new JPanel();
 
         JPanel colorCheckerPanel = new JPanel();
-        tabbedPane.addTab("ColorChecker Measurements", null, colorCheckerPanel, null);
+        tabbedPane.addTab("ColorChecker", null, colorCheckerPanel, null);
         GridBagLayout gbl_colorCheckerPanel = new GridBagLayout();
         gbl_colorCheckerPanel.columnWidths = new int[] {60, 60};
         gbl_colorCheckerPanel.rowHeights = new int[] {0, 0, 30, 30, 30, 30, 30, 30};
@@ -582,16 +576,6 @@ public class TextureFitUserInterface extends JFrame
         gbc_imageHeightSpinner.gridy = 1;
         panel_3.add(imageHeightSpinner, gbc_imageHeightSpinner);
 
-        imagePreprojUseCheckBox = new JCheckBox("Pre-project photos (reduces graphics memory usage but takes longer)", defaults.isImagePreprojectionUseEnabled());
-        GridBagConstraints gbc_imagePreprojUseCheckBox = new GridBagConstraints();
-        gbc_imagePreprojUseCheckBox.anchor = GridBagConstraints.WEST;
-        gbc_imagePreprojUseCheckBox.gridwidth = 5;
-        gbc_imagePreprojUseCheckBox.insets = new Insets(0, 0, 0, 5);
-        gbc_imagePreprojUseCheckBox.gridx = 0;
-        gbc_imagePreprojUseCheckBox.gridy = 2;
-        panel_3.add(imagePreprojUseCheckBox, gbc_imagePreprojUseCheckBox);
-        imagePreprojUseCheckBox.setBorder(new EmptyBorder(5, 10, 5, 10));
-
         Box imageHeightBox = new Box(BoxLayout.X_AXIS);
         panel_2.add(imageHeightBox);
         imageHeightBox.setBorder(new EmptyBorder(5, 10, 5, 10));
@@ -652,33 +636,26 @@ public class TextureFitUserInterface extends JFrame
         gbl_advancedSettingsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         advancedSettingsPanel.setLayout(gbl_advancedSettingsPanel);
 
-        chckbxDebugMode = new JCheckBox("Debug mode");
-        GridBagConstraints gbc_chckbxDebugMode = new GridBagConstraints();
-        gbc_chckbxDebugMode.insets = new Insets(0, 0, 5, 5);
-        gbc_chckbxDebugMode.gridx = 0;
-        gbc_chckbxDebugMode.gridy = 0;
-        advancedSettingsPanel.add(chckbxDebugMode, gbc_chckbxDebugMode);
-
         cameraVisCheckBox = new JCheckBox("Enable camera visibility test", defaults.isCameraVisibilityTestEnabled());
         GridBagConstraints gbc_cameraVisCheckBox = new GridBagConstraints();
         gbc_cameraVisCheckBox.gridwidth = 2;
         gbc_cameraVisCheckBox.anchor = GridBagConstraints.WEST;
         gbc_cameraVisCheckBox.insets = new Insets(0, 0, 5, 5);
         gbc_cameraVisCheckBox.gridx = 0;
-        gbc_cameraVisCheckBox.gridy = 1;
+        gbc_cameraVisCheckBox.gridy = 0;
         advancedSettingsPanel.add(cameraVisCheckBox, gbc_cameraVisCheckBox);
         cameraVisCheckBox.setBorder(new EmptyBorder(5, 10, 5, 10));
         JLabel cameraVisBiasLabel = new JLabel("Camera visibility test bias:");
         GridBagConstraints gbc_cameraVisBiasLabel = new GridBagConstraints();
         gbc_cameraVisBiasLabel.insets = new Insets(0, 0, 5, 5);
         gbc_cameraVisBiasLabel.gridx = 0;
-        gbc_cameraVisBiasLabel.gridy = 2;
+        gbc_cameraVisBiasLabel.gridy = 1;
         advancedSettingsPanel.add(cameraVisBiasLabel, gbc_cameraVisBiasLabel);
         cameraVisBiasSpinner = new JSpinner(new SpinnerNumberModel((double) defaults.getCameraVisibilityTestBias(), (double) 0.0f, (double) 1.0f, (double) 0.0001f));
         GridBagConstraints gbc_cameraVisBiasSpinner = new GridBagConstraints();
         gbc_cameraVisBiasSpinner.insets = new Insets(0, 0, 5, 5);
         gbc_cameraVisBiasSpinner.gridx = 1;
-        gbc_cameraVisBiasSpinner.gridy = 2;
+        gbc_cameraVisBiasSpinner.gridy = 1;
         advancedSettingsPanel.add(cameraVisBiasSpinner, gbc_cameraVisBiasSpinner);
 
         NumberEditor cameraVisBiasNumberEditor = new NumberEditor(cameraVisBiasSpinner, "0.0000");
@@ -687,24 +664,14 @@ public class TextureFitUserInterface extends JFrame
         GridBagConstraints gbc_textureBlockSizeLabel = new GridBagConstraints();
         gbc_textureBlockSizeLabel.insets = new Insets(0, 0, 5, 5);
         gbc_textureBlockSizeLabel.gridx = 0;
-        gbc_textureBlockSizeLabel.gridy = 3;
+        gbc_textureBlockSizeLabel.gridy = 2;
         advancedSettingsPanel.add(textureBlockSizeLabel, gbc_textureBlockSizeLabel);
         textureBlockSizeSpinner = new JSpinner(new SpinnerNumberModel(128.0, 1.0, 8192.0, 1.0));
         GridBagConstraints gbc_textureBlockSizeSpinner = new GridBagConstraints();
         gbc_textureBlockSizeSpinner.insets = new Insets(0, 0, 5, 5);
         gbc_textureBlockSizeSpinner.gridx = 1;
-        gbc_textureBlockSizeSpinner.gridy = 3;
+        gbc_textureBlockSizeSpinner.gridy = 2;
         advancedSettingsPanel.add(textureBlockSizeSpinner, gbc_textureBlockSizeSpinner);
-
-        imagePreprojReuseCheckBox = new JCheckBox("Reuse pre-projected photos", defaults.isImagePreprojectionGenerationEnabled());
-        GridBagConstraints gbc_imagePreprojReuseCheckBox = new GridBagConstraints();
-        gbc_imagePreprojReuseCheckBox.gridwidth = 2;
-        gbc_imagePreprojReuseCheckBox.anchor = GridBagConstraints.WEST;
-        gbc_imagePreprojReuseCheckBox.insets = new Insets(0, 0, 5, 5);
-        gbc_imagePreprojReuseCheckBox.gridx = 0;
-        gbc_imagePreprojReuseCheckBox.gridy = 4;
-        advancedSettingsPanel.add(imagePreprojReuseCheckBox, gbc_imagePreprojReuseCheckBox);
-        imagePreprojReuseCheckBox.setBorder(new EmptyBorder(5, 10, 5, 10));
 
         checkBoxEstimateGlobalLightIntensity = new JCheckBox("Estimate global light intensity from primary view");
         checkBoxEstimateGlobalLightIntensity.setSelected(true);
@@ -713,85 +680,59 @@ public class TextureFitUserInterface extends JFrame
         gbc_checkBoxEstimateGlobalLightIntensity.gridwidth = 2;
         gbc_checkBoxEstimateGlobalLightIntensity.insets = new Insets(0, 0, 5, 5);
         gbc_checkBoxEstimateGlobalLightIntensity.gridx = 0;
-        gbc_checkBoxEstimateGlobalLightIntensity.gridy = 5;
+        gbc_checkBoxEstimateGlobalLightIntensity.gridy = 3;
         advancedSettingsPanel.add(checkBoxEstimateGlobalLightIntensity, gbc_checkBoxEstimateGlobalLightIntensity);
         JLabel diffuseDeltaLabel = new JLabel("\"Delta\" for diffuse fit:");
         GridBagConstraints gbc_diffuseDeltaLabel = new GridBagConstraints();
         gbc_diffuseDeltaLabel.insets = new Insets(0, 0, 5, 5);
         gbc_diffuseDeltaLabel.gridx = 0;
-        gbc_diffuseDeltaLabel.gridy = 6;
+        gbc_diffuseDeltaLabel.gridy = 4;
         advancedSettingsPanel.add(diffuseDeltaLabel, gbc_diffuseDeltaLabel);
         diffuseDeltaSpinner = new JSpinner(new SpinnerNumberModel((double) defaults.getDiffuseDelta(), (double) 0.0f, (double) 1.0f, (double) 0.01f));
         GridBagConstraints gbc_diffuseDeltaSpinner = new GridBagConstraints();
         gbc_diffuseDeltaSpinner.fill = GridBagConstraints.HORIZONTAL;
         gbc_diffuseDeltaSpinner.insets = new Insets(0, 0, 5, 5);
         gbc_diffuseDeltaSpinner.gridx = 1;
-        gbc_diffuseDeltaSpinner.gridy = 6;
+        gbc_diffuseDeltaSpinner.gridy = 4;
         advancedSettingsPanel.add(diffuseDeltaSpinner, gbc_diffuseDeltaSpinner);
         JLabel diffuseIterationsLabel = new JLabel("Diffuse fit iterations:");
         GridBagConstraints gbc_diffuseIterationsLabel = new GridBagConstraints();
         gbc_diffuseIterationsLabel.insets = new Insets(0, 0, 5, 5);
         gbc_diffuseIterationsLabel.gridx = 0;
-        gbc_diffuseIterationsLabel.gridy = 7;
+        gbc_diffuseIterationsLabel.gridy = 5;
         advancedSettingsPanel.add(diffuseIterationsLabel, gbc_diffuseIterationsLabel);
         diffuseIterationsSpinner = new JSpinner(new SpinnerNumberModel((double) defaults.getDiffuseIterations(), (double) 0.0f, (double) 999.0f, (double) 1.0f));
         GridBagConstraints gbc_diffuseIterationsSpinner = new GridBagConstraints();
         gbc_diffuseIterationsSpinner.insets = new Insets(0, 0, 5, 5);
         gbc_diffuseIterationsSpinner.gridx = 1;
-        gbc_diffuseIterationsSpinner.gridy = 7;
+        gbc_diffuseIterationsSpinner.gridy = 5;
         advancedSettingsPanel.add(diffuseIterationsSpinner, gbc_diffuseIterationsSpinner);
 
-        tabbedPane.addTab("Advanced Settings", advancedSettingsPanel);
-
-        JPanel experimentalSettingsPanel = new JPanel();
-        tabbedPane.addTab("Experimental Settings", experimentalSettingsPanel);
-        GridBagLayout gbl_experimentalSettingsPanel = new GridBagLayout();
-        gbl_experimentalSettingsPanel.columnWidths = new int[] {127, 127, 0};
-        gbl_experimentalSettingsPanel.rowHeights = new int[] {30, 30, 30, 0, 0};
-        gbl_experimentalSettingsPanel.columnWeights = new double[]{0.0, 0.0, 0.0};
-        gbl_experimentalSettingsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0};
-        experimentalSettingsPanel.setLayout(gbl_experimentalSettingsPanel);
-
-        chckbxEstimateLightOffset = new JCheckBox("Estimate light offset");
-        GridBagConstraints gbc_chckbxEstimateLightOffset = new GridBagConstraints();
-        gbc_chckbxEstimateLightOffset.gridwidth = 2;
-        gbc_chckbxEstimateLightOffset.anchor = GridBagConstraints.NORTHWEST;
-        gbc_chckbxEstimateLightOffset.insets = new Insets(0, 0, 5, 5);
-        gbc_chckbxEstimateLightOffset.gridx = 0;
-        gbc_chckbxEstimateLightOffset.gridy = 0;
-        experimentalSettingsPanel.add(chckbxEstimateLightOffset, gbc_chckbxEstimateLightOffset);
-
-        chckbxComputeNormalMap = new JCheckBox("Compute normal map");
-        GridBagConstraints gbc_chckbxComputeNormalMap = new GridBagConstraints();
-        gbc_chckbxComputeNormalMap.gridwidth = 2;
-        gbc_chckbxComputeNormalMap.anchor = GridBagConstraints.NORTHWEST;
-        gbc_chckbxComputeNormalMap.insets = new Insets(0, 0, 5, 5);
-        gbc_chckbxComputeNormalMap.gridx = 0;
-        gbc_chckbxComputeNormalMap.gridy = 1;
-        experimentalSettingsPanel.add(chckbxComputeNormalMap, gbc_chckbxComputeNormalMap);
-        JLabel diffuseComplNormalLabel = new JLabel("Computed normal weight:");
+        JLabel diffuseComplNormalLabel = new JLabel("Computed diffuse normal weight:");
         GridBagConstraints gbc_diffuseComplNormalLabel = new GridBagConstraints();
         gbc_diffuseComplNormalLabel.anchor = GridBagConstraints.WEST;
         gbc_diffuseComplNormalLabel.insets = new Insets(0, 0, 5, 5);
         gbc_diffuseComplNormalLabel.gridx = 0;
-        gbc_diffuseComplNormalLabel.gridy = 2;
-        experimentalSettingsPanel.add(diffuseComplNormalLabel, gbc_diffuseComplNormalLabel);
+        gbc_diffuseComplNormalLabel.gridy = 6;
+        advancedSettingsPanel.add(diffuseComplNormalLabel, gbc_diffuseComplNormalLabel);
         diffuseCompNormalSpinner = new JSpinner(new SpinnerNumberModel((double) Math.min(9999.0f, defaults.getDiffuseComputedNormalWeight()), (double) 0.0f, (double) 9999.0f, (double) 0.1f));
         GridBagConstraints gbc_diffuseCompNormalSpinner = new GridBagConstraints();
         gbc_diffuseCompNormalSpinner.insets = new Insets(0, 0, 5, 5);
         gbc_diffuseCompNormalSpinner.anchor = GridBagConstraints.WEST;
         gbc_diffuseCompNormalSpinner.gridx = 1;
-        gbc_diffuseCompNormalSpinner.gridy = 2;
-        experimentalSettingsPanel.add(diffuseCompNormalSpinner, gbc_diffuseCompNormalSpinner);
+        gbc_diffuseCompNormalSpinner.gridy = 6;
+        advancedSettingsPanel.add(diffuseCompNormalSpinner, gbc_diffuseCompNormalSpinner);
 
-        chckbxLevenbergMarquardtSpecularOptimization = new JCheckBox("Levenberg-Marquardt specular optimization");
-        GridBagConstraints gbc_chckbxLevenbergMarquardtSpecularOptimization = new GridBagConstraints();
-        gbc_chckbxLevenbergMarquardtSpecularOptimization.anchor = GridBagConstraints.WEST;
-        gbc_chckbxLevenbergMarquardtSpecularOptimization.gridwidth = 2;
-        gbc_chckbxLevenbergMarquardtSpecularOptimization.insets = new Insets(0, 0, 5, 5);
-        gbc_chckbxLevenbergMarquardtSpecularOptimization.gridx = 0;
-        gbc_chckbxLevenbergMarquardtSpecularOptimization.gridy = 3;
-        experimentalSettingsPanel.add(chckbxLevenbergMarquardtSpecularOptimization, gbc_chckbxLevenbergMarquardtSpecularOptimization);
+        chckbxComputeNormalMap = new JCheckBox("Compute brute force normal");
+        GridBagConstraints gbc_chckbxComputeNormalMap = new GridBagConstraints();
+        gbc_chckbxComputeNormalMap.gridwidth = 2;
+        gbc_chckbxComputeNormalMap.anchor = GridBagConstraints.NORTHWEST;
+        gbc_chckbxComputeNormalMap.insets = new Insets(0, 0, 5, 5);
+        gbc_chckbxComputeNormalMap.gridx = 0;
+        gbc_chckbxComputeNormalMap.gridy = 7;
+        advancedSettingsPanel.add(chckbxComputeNormalMap, gbc_chckbxComputeNormalMap);
+
+        tabbedPane.addTab("Advanced Settings", advancedSettingsPanel);
 
         Box executeBox = new Box(BoxLayout.X_AXIS);
         JPanel executeWrapper = new JPanel();
@@ -863,8 +804,8 @@ public class TextureFitUserInterface extends JFrame
         int textureSubdiv = (int)Math.ceil((double)getValueAsInt(this.textureSizeSpinner) / (double)getValueAsInt(this.textureBlockSizeSpinner));
         param.setTextureSubdivision(textureSubdiv);
 
-        param.setImagePreprojectionUseEnabled(this.imagePreprojUseCheckBox.isSelected());
-        param.setImagePreprojectionGenerationEnabled(this.imagePreprojUseCheckBox.isSelected() && !this.imagePreprojReuseCheckBox.isSelected());
+        param.setImagePreprojectionUseEnabled(false);
+        param.setImagePreprojectionGenerationEnabled(false);
         param.setImageRescalingEnabled(this.imageRescaleCheckBox.isSelected());
         param.setImageWidth(getValueAsInt(this.imageWidthSpinner));
         param.setImageHeight(getValueAsInt(this.imageHeightSpinner));
@@ -873,12 +814,12 @@ public class TextureFitUserInterface extends JFrame
         param.setDiffuseComputedNormalWeight(this.chckbxComputeNormalMap.isSelected() ? getValueAsFloat(this.diffuseCompNormalSpinner) : 0.0f);
         param.setDiffuseInputNormalWeight(Float.MAX_VALUE);
         param.setDiffuseTextureEnabled(this.chckbxComputeDiffuseTexture.isSelected());
-        param.setNormalTextureEnabled(this.chckbxComputeNormalMap.isSelected());
+        param.setBruteForceNormalEnabled(this.chckbxComputeNormalMap.isSelected());
         param.setSpecularTextureEnabled(this.chckbxComputeSpecularTexture.isSelected());
         param.setLightIntensityEstimationEnabled(this.checkBoxEstimateGlobalLightIntensity.isSelected());
-        param.setLightOffsetEstimationEnabled(this.chckbxEstimateLightOffset.isSelected());
-        param.setLevenbergMarquardtOptimizationEnabled(this.chckbxLevenbergMarquardtSpecularOptimization.isSelected());
-        param.setDebugModeEnabled(this.chckbxDebugMode.isSelected());
+        param.setLightOffsetEstimationEnabled(false);
+        param.setLevenbergMarquardtOptimizationEnabled(false);
+        param.setDebugModeEnabled(false);
 
         param.setPrimaryViewName((String)this.primaryViewComboBox.getSelectedItem());
 

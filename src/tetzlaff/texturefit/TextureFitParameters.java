@@ -20,14 +20,14 @@ public class TextureFitParameters
     // Diffuse fitting parameters
     private float diffuseDelta = 1.0f;
     private int diffuseIterations = 64;
-    private float diffuseComputedNormalWeight = 0.0f;
+    private float diffuseComputedNormalWeight = 1.0f;
     private float diffuseInputNormalWeight = Float.MAX_VALUE;
 
     private boolean debugModeEnabled = false;
     private boolean lightIntensityEstimationEnabled = true;
     private boolean lightOffsetEstimationEnabled = false;
     private boolean diffuseTextureEnabled = true;
-    private boolean normalTextureEnabled = false;
+    private boolean bruteForceNormalEnabled = false;
     private boolean specularTextureEnabled = true;
     private boolean levenbergMarquardtOptimizationEnabled = false;
 
@@ -212,14 +212,14 @@ public class TextureFitParameters
         this.diffuseTextureEnabled = diffuseTextureEnabled;
     }
 
-    public boolean isNormalTextureEnabled()
+    public boolean isBruteForceNormalEnabled()
     {
-        return this.normalTextureEnabled;
+        return this.bruteForceNormalEnabled;
     }
 
-    public void setNormalTextureEnabled(boolean normalTextureEnabled)
+    public void setBruteForceNormalEnabled(boolean normalTextureEnabled)
     {
-        this.normalTextureEnabled = normalTextureEnabled;
+        this.bruteForceNormalEnabled = normalTextureEnabled;
     }
 
     public boolean isSpecularTextureEnabled()
