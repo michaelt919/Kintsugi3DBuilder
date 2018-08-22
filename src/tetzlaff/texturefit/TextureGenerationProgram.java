@@ -16,7 +16,7 @@ import tetzlaff.gl.window.Window;
 
 public final class TextureGenerationProgram
 {
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     private TextureGenerationProgram()
     {

@@ -17,7 +17,7 @@ uniform sampler2D normalEstimate;
 #define ENABLE_DIFFUSE_ADJUSTMENT 1
 uniform bool disableNormalAdjustment;
 
-#define chromaticSpecular false
+#define chromaticSpecular true
 
 vec4 getDiffuseColor()
 {

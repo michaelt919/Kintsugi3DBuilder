@@ -61,7 +61,7 @@ public class TextureFitUserInterface extends JFrame
     private final JCheckBox chckbxUseXriteMeasurements;
     private final JCheckBox chckbxComputeDiffuseTexture;
     private final JCheckBox chckbxComputeSpecularTexture;
-    private final JCheckBox chckbxComputeNormalMap;
+//    private final JCheckBox chckbxComputeNormalMap;
     private final JCheckBox checkBoxEstimateGlobalLightIntensity;
 
     private class FilePicker
@@ -518,7 +518,7 @@ public class TextureFitUserInterface extends JFrame
         colorCheckerPanel.add(spinnerXRiteBlack, gbc_spinnerXRiteBlack);
         GridBagLayout gbl_basicSettingsPanel = new GridBagLayout();
         gbl_basicSettingsPanel.columnWidths = new int[]{510, 0};
-        gbl_basicSettingsPanel.rowHeights = new int[]{123, 88, 153, 0};
+        gbl_basicSettingsPanel.rowHeights = new int[]{0, 0, 0, 0};
         gbl_basicSettingsPanel.columnWeights = new double[]{0.0, Double.MIN_VALUE};
         gbl_basicSettingsPanel.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
         basicSettingsPanel.setLayout(gbl_basicSettingsPanel);
@@ -609,7 +609,7 @@ public class TextureFitUserInterface extends JFrame
         gbc_textureSizeSpinner.gridy = 0;
         panel_5.add(textureSizeSpinner, gbc_textureSizeSpinner);
 
-        chckbxComputeDiffuseTexture = new JCheckBox("Compute diffuse texture");
+        chckbxComputeDiffuseTexture = new JCheckBox("Estimate diffuse reflectance");
         chckbxComputeDiffuseTexture.setSelected(true);
         GridBagConstraints gbc_chckbxComputeDiffuseTexture = new GridBagConstraints();
         gbc_chckbxComputeDiffuseTexture.gridwidth = 2;
@@ -618,7 +618,7 @@ public class TextureFitUserInterface extends JFrame
         gbc_chckbxComputeDiffuseTexture.gridy = 1;
         panel_5.add(chckbxComputeDiffuseTexture, gbc_chckbxComputeDiffuseTexture);
 
-        chckbxComputeSpecularTexture = new JCheckBox("Compute specular texture");
+        chckbxComputeSpecularTexture = new JCheckBox("Estimate specular reflectance");
         chckbxComputeSpecularTexture.setSelected(true);
         GridBagConstraints gbc_chckbxComputeSpecularTexture = new GridBagConstraints();
         gbc_chckbxComputeSpecularTexture.gridwidth = 2;
@@ -723,14 +723,14 @@ public class TextureFitUserInterface extends JFrame
         gbc_diffuseCompNormalSpinner.gridy = 6;
         advancedSettingsPanel.add(diffuseCompNormalSpinner, gbc_diffuseCompNormalSpinner);
 
-        chckbxComputeNormalMap = new JCheckBox("Compute brute force normal");
-        GridBagConstraints gbc_chckbxComputeNormalMap = new GridBagConstraints();
-        gbc_chckbxComputeNormalMap.gridwidth = 2;
-        gbc_chckbxComputeNormalMap.anchor = GridBagConstraints.NORTHWEST;
-        gbc_chckbxComputeNormalMap.insets = new Insets(0, 0, 5, 5);
-        gbc_chckbxComputeNormalMap.gridx = 0;
-        gbc_chckbxComputeNormalMap.gridy = 7;
-        advancedSettingsPanel.add(chckbxComputeNormalMap, gbc_chckbxComputeNormalMap);
+//        chckbxComputeNormalMap = new JCheckBox("Compute brute force normal");
+//        GridBagConstraints gbc_chckbxComputeNormalMap = new GridBagConstraints();
+//        gbc_chckbxComputeNormalMap.gridwidth = 2;
+//        gbc_chckbxComputeNormalMap.anchor = GridBagConstraints.NORTHWEST;
+//        gbc_chckbxComputeNormalMap.insets = new Insets(0, 0, 5, 5);
+//        gbc_chckbxComputeNormalMap.gridx = 0;
+//        gbc_chckbxComputeNormalMap.gridy = 7;
+//        advancedSettingsPanel.add(chckbxComputeNormalMap, gbc_chckbxComputeNormalMap);
 
         tabbedPane.addTab("Advanced Settings", advancedSettingsPanel);
 
@@ -811,10 +811,10 @@ public class TextureFitUserInterface extends JFrame
         param.setImageHeight(getValueAsInt(this.imageHeightSpinner));
         param.setDiffuseDelta(getValueAsFloat(this.diffuseDeltaSpinner));
         param.setDiffuseIterations(getValueAsInt(this.diffuseIterationsSpinner));
-        param.setDiffuseComputedNormalWeight(this.chckbxComputeNormalMap.isSelected() ? getValueAsFloat(this.diffuseCompNormalSpinner) : 0.0f);
+        param.setDiffuseComputedNormalWeight(getValueAsFloat(this.diffuseCompNormalSpinner));
         param.setDiffuseInputNormalWeight(Float.MAX_VALUE);
         param.setDiffuseTextureEnabled(this.chckbxComputeDiffuseTexture.isSelected());
-        param.setBruteForceNormalEnabled(this.chckbxComputeNormalMap.isSelected());
+        param.setBruteForceNormalEnabled(false/*this.chckbxComputeNormalMap.isSelected()*/);
         param.setSpecularTextureEnabled(this.chckbxComputeSpecularTexture.isSelected());
         param.setLightIntensityEstimationEnabled(this.checkBoxEstimateGlobalLightIntensity.isSelected());
         param.setLightOffsetEstimationEnabled(false);
