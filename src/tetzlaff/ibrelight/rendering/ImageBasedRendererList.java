@@ -193,7 +193,10 @@ public class ImageBasedRendererList<ContextType extends Context<ContextType>>
                         newItem.getActiveViewSet().setLightIntensity(i, lightIntensity);
                     }
 
+                    newItem.getActiveViewSet().setInfiniteLightSources(false);
+
                     newItem.getResources().updateLightData();
+                    newItem.reloadShaders();
 
                     if (loadingMonitor != null)
                     {
