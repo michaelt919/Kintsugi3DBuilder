@@ -101,7 +101,7 @@ public final class ViewSet
     /**
      * If false, inverse-square light attenuation should be applied.
      */
-    private final boolean infiniteLightSources;
+    private boolean infiniteLightSources;
 
     /**
      * The recommended near plane to use when rendering this view set.
@@ -1491,5 +1491,10 @@ public final class ViewSet
     public boolean areLightSourcesInfinite()
     {
         return infiniteLightSources;
+    }
+
+    public void setInfiniteLightSources(boolean infiniteLightSources)
+    {
+        this.infiniteLightSources = infiniteLightSources;
     }
 }
