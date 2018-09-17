@@ -36,8 +36,8 @@ public class Potato
         for (Bump b : bumps)
         {
             double diff = Math.acos(direction.dot(b.direction));
-            double sigma = Math.PI * b.size / 2;
-            r += b.height / (2 * Math.PI * sigma * sigma) * Math.exp(-diff * diff / (2 * sigma * sigma));
+            double sigma = Math.PI * b.size / 12;
+            r += b.height / (6 * Math.PI * sigma * sigma) * Math.exp(-diff * diff / (2 * sigma * sigma));
         }
 
         return r;
