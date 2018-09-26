@@ -8,7 +8,7 @@
 #define MIN_ROUGHNESS 0.00390625    // 1/256
 #define MAX_ROUGHNESS 1.0
 
-#define MIN_SPECULAR_REFLECTIVITY 0.04 // corresponds to dielectric with index of refraction = 1.5
+#define MIN_SPECULAR_REFLECTIVITY 0.0 //0.04 // corresponds to dielectric with index of refraction = 1.5
 #define MAX_ROUGHNESS_WHEN_CLAMPING MAX_ROUGHNESS
 
 uniform sampler2D diffuseEstimate;
@@ -79,25 +79,6 @@ ParameterizedFit fitSpecular()
     vec4 maxResidualDirection = vec4(0);
     int maxResidualIndex = -1;
 
-    vec3 directionSum = vec3(0);
-    vec3 intensityWeightedDirectionSum = vec3(0);
-
-    float[255] normalXBins;
-    float[255] normalYBins;
-    float[255] normalXWeightBins;
-    float[255] normalYWeightBins;
-
-    for (int i = 0; i < 255; i++)
-    {
-        normalXBins[i] = 0.0;
-        normalYBins[i] = 0.0;
-        normalXWeightBins[i] = 0.0;
-        normalYWeightBins[i] = 0.0;
-    }
-
-    float binSum = 0.0;
-    float binWeightSum = 0;
-
     for (int i = 0; i < VIEW_COUNT; i++)
     {
         vec4 color = getLinearColor(i);
@@ -119,12 +100,8 @@ ParameterizedFit fitSpecular()
 #endif
 
             float luminance = getLuminance(colorRemainder);
-
             vec3 halfway = normalize(view + light);
-
             float weight = clamp(2 * nDotV, 0, 1);
-            directionSum += weight * halfway;
-            intensityWeightedDirectionSum += weight * halfway * luminance;
 
             if (luminance * weight > maxResidualLuminance[0] * maxResidualLuminance[1])
             {
@@ -133,25 +110,7 @@ ParameterizedFit fitSpecular()
                 maxResidualDirection = vec4(halfway, 1);
                 maxResidualIndex = i;
             }
-
-            float cameraWeight = getCameraWeight(i);
-            vec3 halfwayTS = transpose(tangentToObject) * halfway;
-
-            normalXBins[int(round(halfwayTS.x * 127 + 127))] += cameraWeight * luminance;
-            normalYBins[int(round(halfwayTS.y * 127 + 127))] += cameraWeight * luminance;
-
-            binSum += cameraWeight * luminance;
-
-            normalXWeightBins[int(round(halfwayTS.x * 127 + 127))] += cameraWeight;
-            normalYWeightBins[int(round(halfwayTS.y * 127 + 127))] += cameraWeight;
-
-            binWeightSum += cameraWeight;
         }
-    }
-
-    if (dot(intensityWeightedDirectionSum, intensityWeightedDirectionSum) < 1.0)
-    {
-        intensityWeightedDirectionSum += (1 - length(intensityWeightedDirectionSum)) * oldDiffuseNormal;
     }
 
     vec3 specularNormal;
