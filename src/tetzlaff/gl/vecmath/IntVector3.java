@@ -54,6 +54,26 @@ public class IntVector3 implements Iterable<Integer>
         return new IntVector2(this.x, this.y);
     }
 
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof IntVector3)
+        {
+            IntVector3 other = (IntVector3) obj;
+            return other.x == this.x && other.y == this.y && other.z == this.z;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return 31 * (31 * (31 + x) + y) + z;
+    }
+
     public IntVector3 plus(IntVector3 other)
     {
         return new IntVector3(
