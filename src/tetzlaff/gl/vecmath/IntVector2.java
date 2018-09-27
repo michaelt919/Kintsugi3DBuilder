@@ -52,6 +52,26 @@ public class IntVector2 implements Iterable<Integer>
         return new Vector2(x / 255.0f, y / 255.0f);
     }
 
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof IntVector2)
+        {
+            IntVector2 other = (IntVector2) obj;
+            return other.x == this.x && other.y == this.y;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return 31 * (31 + x) + y;
+    }
+
     public IntVector2 plus(IntVector2 other)
     {
         return new IntVector2(
