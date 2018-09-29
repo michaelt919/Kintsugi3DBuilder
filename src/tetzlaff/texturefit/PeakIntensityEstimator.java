@@ -149,8 +149,8 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
     Vector3[] estimate(int texWidth, int texHeight, float objSpaceRadius, float colorSpaceRadius)
     {
         new File("debug").mkdir(); // debug
-        new File("debug", "peak").mkdirs(); // debug
-        new File("debug", "offPeak").mkdirs(); // debug
+//        new File("debug", "peak").mkdirs(); // debug
+//        new File("debug", "offPeak").mkdirs(); // debug
 //        new File("debug", "position").mkdirs(); // debug
 
         Drawable<ContextType> imgSpaceDrawable = context.createDrawable(imgSpaceProgram);
@@ -198,19 +198,19 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                 fbo.readFloatingPointColorBufferRGBA(2, positionBuffer);
 
                 // debug
-                try
-                {
-                    fbo.saveColorBufferToFile(0, "PNG",
-                        new File(new File("debug", "peak"), viewSet.getImageFileName(i)));
-                    fbo.saveColorBufferToFile(1, "PNG",
-                        new File(new File("debug", "offPeak"), viewSet.getImageFileName(i)));
+//                try
+//                {
+//                    fbo.saveColorBufferToFile(0, "PNG",
+//                        new File(new File("debug", "peak"), viewSet.getImageFileName(i)));
+//                    fbo.saveColorBufferToFile(1, "PNG",
+//                        new File(new File("debug", "offPeak"), viewSet.getImageFileName(i)));
 //                    fbo.saveColorBufferToFile(2, "PNG",
 //                        new File(new File("debug", "position"), viewSet.getImageFileName(i)));
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
+//                }
+//                catch (IOException e)
+//                {
+//                    e.printStackTrace();
+//                }
 
                 for (int k = 0; k < viewImages.getWidth() * viewImages.getHeight(); k++)
                 {
@@ -284,97 +284,100 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
 
         System.out.println("Estimating peak reflectance...");
 
-        Vector3[] estimatedPeaks = new Vector3[texWidth * texHeight];
-
-        for (int i = 0; i < texWidth * texHeight; i++)
-        {
-            if ((100 * i) / (texWidth * texHeight) > (100 * (i-1)) / (texWidth * texHeight))
+        Vector3[] estimatedPeaks = IntStream.range(0, texWidth * texHeight)
+            .parallel()
+            .mapToObj(i ->
             {
-                System.out.println((100 * i) / (texWidth * texHeight) + "%");
-            }
-
-            if (offPeakTexSpace[4 * i + 3] > 0)
-            {
-                Vector3 position = new Vector3(
-                    positionsTexSpace[4 * i],
-                    positionsTexSpace[4 * i + 1],
-                    positionsTexSpace[4 * i + 2]);
-
-                Vector3 offPeakSum = new Vector3(
-                    offPeakTexSpace[4 * i],
-                    offPeakTexSpace[4 * i + 1],
-                    offPeakTexSpace[4 * i + 2]);
-
-                Collection<CharacteristicBin> binNeighborhood =
-                    CharacteristicBin.fromContinuous(offPeakSum, position, objSpaceRadius, colorSpaceRadius).getSurrounding();
-
-                float lastPeak = Float.MAX_VALUE;
-                float red = 0;
-                float green = 0;
-                float blue = 0;
-
-                for (CharacteristicBin bin : binNeighborhood)
+                if ((100 * i) / (texWidth * texHeight) > (100 * (i-1)) / (texWidth * texHeight))
                 {
-                    List<PeakCandidate> redBin = redSorted.get(bin);
-
-                    if (redBin != null)
-                    {
-                        for (int k = 0; k < redBin.size() && lastPeak >= red; k++)
-                        {
-                            PeakCandidate candidate = redBin.get(k);
-
-                            float weight = Math.max(0, Math.min(1, 2 * (objSpaceRadius - candidate.position.distance(position)) / objSpaceRadius))
-                                * Math.max(0, Math.min(1, 2 * (colorSpaceRadius - candidate.offPeakSum.distance(offPeakSum)) / colorSpaceRadius));
-
-                            red = Math.max(red, weight * candidate.peak.x);
-                            lastPeak = candidate.peak.x;
-                        }
-                    }
-
-                    lastPeak = Float.MAX_VALUE;
-
-                    List<PeakCandidate> greenBin = greenSorted.get(bin);
-
-                    if (greenBin != null)
-                    {
-                        for (int k = 0; k < greenBin.size() && lastPeak >= green; k++)
-                        {
-                            PeakCandidate candidate = greenBin.get(k);
-
-                            float weight = Math.max(0, Math.min(1, 2 * (objSpaceRadius - candidate.position.distance(position)) / objSpaceRadius))
-                                * Math.max(0, Math.min(1, 2 * (colorSpaceRadius - candidate.offPeakSum.distance(offPeakSum)) / colorSpaceRadius));
-
-                            green = Math.max(green, weight * candidate.peak.y);
-                            lastPeak = candidate.peak.y;
-                        }
-                    }
-
-                    lastPeak = Float.MAX_VALUE;
-
-                    List<PeakCandidate> blueBin = blueSorted.get(bin);
-
-                    if (blueBin != null)
-                    {
-                        for (int k = 0; k < blueBin.size() && lastPeak >= blue; k++)
-                        {
-                            PeakCandidate candidate = blueBin.get(k);
-
-                            float weight = Math.max(0, Math.min(1, 2 * (objSpaceRadius - candidate.position.distance(position)) / objSpaceRadius))
-                                * Math.max(0, Math.min(1, 2 * (colorSpaceRadius - candidate.offPeakSum.distance(offPeakSum)) / colorSpaceRadius));
-
-                            blue = Math.max(blue, weight * candidate.peak.z);
-                            lastPeak = candidate.peak.z;
-                        }
-                    }
+                    System.out.print(".");
                 }
 
-                estimatedPeaks[i] = new Vector3(red, green, blue);
-            }
-            else
-            {
-                estimatedPeaks[i] = Vector3.ZERO;
-            }
-        }
+                if (offPeakTexSpace[4 * i + 3] > 0)
+                {
+                    Vector3 position = new Vector3(
+                        positionsTexSpace[4 * i],
+                        positionsTexSpace[4 * i + 1],
+                        positionsTexSpace[4 * i + 2]);
+
+                    Vector3 offPeakSum = new Vector3(
+                        offPeakTexSpace[4 * i],
+                        offPeakTexSpace[4 * i + 1],
+                        offPeakTexSpace[4 * i + 2]);
+
+                    Collection<CharacteristicBin> binNeighborhood =
+                        CharacteristicBin.fromContinuous(offPeakSum, position, objSpaceRadius, colorSpaceRadius).getSurrounding();
+
+                    float lastPeak = Float.MAX_VALUE;
+                    float red = 0;
+                    float green = 0;
+                    float blue = 0;
+
+                    for (CharacteristicBin bin : binNeighborhood)
+                    {
+                        List<PeakCandidate> redBin = redSorted.get(bin);
+
+                        if (redBin != null)
+                        {
+                            for (int k = 0; k < redBin.size() && lastPeak >= red; k++)
+                            {
+                                PeakCandidate candidate = redBin.get(k);
+
+                                float weight = Math.max(0, Math.min(1, 2 * (objSpaceRadius - candidate.position.distance(position)) / objSpaceRadius))
+                                    * Math.max(0, Math.min(1, 2 * (colorSpaceRadius - candidate.offPeakSum.distance(offPeakSum)) / colorSpaceRadius));
+
+                                red = Math.max(red, weight * candidate.peak.x);
+                                lastPeak = candidate.peak.x;
+                            }
+                        }
+
+                        lastPeak = Float.MAX_VALUE;
+
+                        List<PeakCandidate> greenBin = greenSorted.get(bin);
+
+                        if (greenBin != null)
+                        {
+                            for (int k = 0; k < greenBin.size() && lastPeak >= green; k++)
+                            {
+                                PeakCandidate candidate = greenBin.get(k);
+
+                                float weight = Math.max(0, Math.min(1, 2 * (objSpaceRadius - candidate.position.distance(position)) / objSpaceRadius))
+                                    * Math.max(0, Math.min(1, 2 * (colorSpaceRadius - candidate.offPeakSum.distance(offPeakSum)) / colorSpaceRadius));
+
+                                green = Math.max(green, weight * candidate.peak.y);
+                                lastPeak = candidate.peak.y;
+                            }
+                        }
+
+                        lastPeak = Float.MAX_VALUE;
+
+                        List<PeakCandidate> blueBin = blueSorted.get(bin);
+
+                        if (blueBin != null)
+                        {
+                            for (int k = 0; k < blueBin.size() && lastPeak >= blue; k++)
+                            {
+                                PeakCandidate candidate = blueBin.get(k);
+
+                                float weight = Math.max(0, Math.min(1, 2 * (objSpaceRadius - candidate.position.distance(position)) / objSpaceRadius))
+                                    * Math.max(0, Math.min(1, 2 * (colorSpaceRadius - candidate.offPeakSum.distance(offPeakSum)) / colorSpaceRadius));
+
+                                blue = Math.max(blue, weight * candidate.peak.z);
+                                lastPeak = candidate.peak.z;
+                            }
+                        }
+                    }
+
+                    return new Vector3(red, green, blue);
+                }
+                else
+                {
+                    return Vector3.ZERO;
+                }
+            })
+            .toArray(Vector3[]::new);
+
+        System.out.println("Finished.");
 
         // debug
         BufferedImage outImg = new BufferedImage(texWidth, texHeight, BufferedImage.TYPE_INT_ARGB);
