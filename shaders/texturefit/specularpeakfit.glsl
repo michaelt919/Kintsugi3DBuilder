@@ -57,6 +57,7 @@ struct Residual
     vec3 color;
     float luminance;
     float weight;
+    float rating;
     vec3 direction;
     float nDotV;
     int index;
@@ -79,6 +80,7 @@ Residual getResidual(int index, vec3 diffuseColor, vec3 normal, vec3 maxLuminanc
 
     residual.luminance = getLuminance(residual.color);
     residual.weight = color.a * clamp(sqrt(2) * residual.nDotV, 0, 1);
+    residual.rating = residual.luminance * residual.weight;
     residual.direction = normalize(view + light);
     residual.index = index;
 
@@ -132,81 +134,131 @@ ParameterizedFit fitSpecular()
 
     vec4 diffuseColor = getDiffuseColor();
     vec4 specularPeak = getSpecularPeak();
+    float peakLuminance = getLuminance(specularPeak.rgb);
 
     float maxLuminance = getMaxLuminance();
 
-    Residual maxResiduals[4];
+    Residual maxResiduals[7];
 
     for (int i = 0; i < VIEW_COUNT; i++)
     {
         Residual residual = getResidual(i, diffuseColor.rgb, oldDiffuseNormal, maxLuminance);
 
-        if (residual.luminance * residual.weight > maxResiduals[0].luminance * maxResiduals[0].weight)
+        if (residual.rating > maxResiduals[0].rating)
         {
+            maxResiduals[6] = maxResiduals[5];
+            maxResiduals[5] = maxResiduals[4];
+            maxResiduals[4] = maxResiduals[3];
+            maxResiduals[3] = maxResiduals[2];
+            maxResiduals[2] = maxResiduals[1];
+            maxResiduals[1] = maxResiduals[0];
             maxResiduals[0] = residual;
         }
-    }
-
-    float distanceThreshold = 2.0;
-    for (int i = 0; i < VIEW_COUNT; i++)
-    {
-        if (i != maxResiduals[0].index)
+        else if (residual.rating > maxResiduals[1].rating)
         {
-            distanceThreshold = min(distanceThreshold,
-                length(normalize(getLightInfo(i).normalizedDirection + normalize(getViewVector(i))) - maxResiduals[0].direction));
-        }
-    }
-
-    for (int i = 0; i < VIEW_COUNT; i++)
-    {
-        Residual residual = getResidual(i, diffuseColor.rgb, oldDiffuseNormal, maxLuminance);
-        residual.weight *= clamp(length(residual.direction - maxResiduals[0].direction) / distanceThreshold + 1.0, 0, 1);
-
-        if (residual.luminance * residual.weight > maxResiduals[1].luminance * maxResiduals[1].weight)
-        {
+            maxResiduals[6] = maxResiduals[5];
+            maxResiduals[5] = maxResiduals[4];
+            maxResiduals[4] = maxResiduals[3];
+            maxResiduals[3] = maxResiduals[2];
+            maxResiduals[2] = maxResiduals[1];
             maxResiduals[1] = residual;
         }
-    }
-
-    vec3 v = normalize(maxResiduals[1].direction - maxResiduals[0].direction);
-
-    for (int i = 0; i < VIEW_COUNT; i++)
-    {
-        Residual residual = getResidual(i, diffuseColor.rgb, oldDiffuseNormal, maxLuminance);
-        residual.weight *= clamp(length(residual.direction - maxResiduals[0].direction) / distanceThreshold + 1.0, 0, 1);
-
-        float alignment = dot(normalize(residual.direction - maxResiduals[0].direction), v);
-        residual.weight *= 1.0 - alignment * alignment;
-
-        if (residual.luminance * residual.weight > maxResiduals[2].luminance * maxResiduals[2].weight)
+        else if (residual.rating > maxResiduals[2].rating)
         {
+            maxResiduals[6] = maxResiduals[5];
+            maxResiduals[5] = maxResiduals[4];
+            maxResiduals[4] = maxResiduals[3];
+            maxResiduals[3] = maxResiduals[2];
             maxResiduals[2] = residual;
         }
-        if (residual.luminance * residual.weight > maxResiduals[2].luminance * maxResiduals[2].weight)
+        else if (residual.rating > maxResiduals[3].rating)
         {
-            maxResiduals[2] = residual;
+            maxResiduals[6] = maxResiduals[5];
+            maxResiduals[5] = maxResiduals[4];
+            maxResiduals[4] = maxResiduals[3];
+            maxResiduals[3] = residual;
+        }
+        else if (residual.rating > maxResiduals[4].rating)
+        {
+            maxResiduals[6] = maxResiduals[5];
+            maxResiduals[5] = maxResiduals[4];
+            maxResiduals[4] = residual;
+        }
+        else if (residual.rating > maxResiduals[5].rating)
+        {
+            maxResiduals[6] = maxResiduals[5];
+            maxResiduals[5] = residual;
+        }
+        else if (residual.rating > maxResiduals[6].rating)
+        {
+            maxResiduals[6] = residual;
         }
     }
+
+    float rating1MinusRating6 = max(1.0 / 256.0, maxResiduals[1].rating - maxResiduals[6].rating);
+    maxResiduals[1].weight *= rating1MinusRating6 / max(rating1MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[1].rating);
+
+    float rating2MinusRating6 = max(1.0 / 256.0, maxResiduals[2].rating - maxResiduals[6].rating);
+    float rating0MinusRating2 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[2].rating);
+    maxResiduals[2].weight *= rating2MinusRating6 / rating0MinusRating2;
+
+    float rating0MinusRating3 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[3].rating);
+    maxResiduals[3].weight *= (maxResiduals[3].rating - maxResiduals[6].rating) * rating0MinusRating2 / (rating0MinusRating3 * rating0MinusRating3);
+
+    float rating0MinusRating4 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[4].rating);
+    maxResiduals[4].weight *= (maxResiduals[4].rating - maxResiduals[6].rating) * rating0MinusRating2 / (rating0MinusRating4 * rating0MinusRating4);
+
+    float rating0MinusRating5 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[5].rating);
+    maxResiduals[5].weight *= (maxResiduals[5].rating - maxResiduals[6].rating) * rating0MinusRating2 / (rating0MinusRating5 * rating0MinusRating5);
+
+    maxResiduals[6].weight = 0;
 
     ParameterizedFit result;
 
     result.diffuseColor = diffuseColor;
-//    result.normal = vec4(mix(oldDiffuseNormal, maxResiduals[0].direction,
-//        clamp((maxResiduals[0].luminance - maxResiduals[1].luminance) / (specularPeak - maxResiduals[1].luminance), 0, 1)), 1.0);
 
     ivec2 bestBlock;
+    vec3 bestNormal;
+    float minEnergy;
 
     for (int i = 0; i < 16; i++)
     {
         for (int j = 0; j < 16; j++)
         {
-            float nx = (i * 16.0 + 3.5) / 255.0;
-            float ny = (j * 16.0 + 3.5) / 255.0;
+            float nx = (i * 16.0 + 7.5) * 2 / 255.0 - 1;
+            float ny = (j * 16.0 + 7.5) * 2 / 255.0 - 1;
             vec3 normal = tangentToObject * vec3(nx, ny, sqrt(1 - nx*nx - ny*ny));
 
-
+            float energy = computeEnergy(maxResiduals, normal);
+            if (energy < minEnergy)
+            {
+                minEnergy = energy;
+                bestBlock = ivec2(i, j);
+                bestNormal = normal;
+            }
         }
     }
+
+    for (int i = 0; i < 16; i++)
+    {
+        for (int j = 0; j < 16; j++)
+        {
+            float nx = (bestBlock[0] * 16.0 + i) * 2 / 255.0 - 1;
+            float ny = (bestBlock[1] * 16.0 + j) * 2 / 255.0 - 1;
+            vec3 normal = tangentToObject * vec3(nx, ny, sqrt(1 - nx*nx - ny*ny));
+
+            float energy = computeEnergy(maxResiduals, normal);
+            if (energy < minEnergy)
+            {
+                minEnergy = energy;
+                bestNormal = normal;
+            }
+        }
+    }
+
+    result.normal = vec4(mix(oldDiffuseNormal, maxResiduals[0].direction,
+        clamp((maxResiduals[0].weight * maxResiduals[0].luminance - maxResiduals[1].weight * maxResiduals[1].luminance)
+            / ((peakLuminance - maxResiduals[1].weight * maxResiduals[1].luminance)), 0, 1)), 1.0);
 
     float nDotH = max(0.0, dot(result.normal, maxResiduals[0].direction));
     float nDotHSquared = nDotH * nDotH;
