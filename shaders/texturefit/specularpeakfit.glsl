@@ -24,8 +24,7 @@ vec3 getDiffuseNormalVector()
 
 vec4 getSpecularPeak()
 {
-    vec4 textureResult = texture(peakEstimate, fTexCoord);
-    return vec4(pow(textureResult.rgb, vec3(gamma)), textureResult.a);
+    return texture(peakEstimate, fTexCoord); // already in linear color space
 }
 
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light,
@@ -86,11 +85,11 @@ Residual getResidual(int index, vec3 diffuseColor, vec3 normal, float maxLuminan
     vec3 light = lightInfo.normalizedDirection;
     residual.direction = normalize(view + light);
 
-    residual.color = removeDiffuse(color, diffuseColor, light, lightInfo.attenuatedIntensity, normal, maxLuminance).rgb
-        / lightInfo.attenuatedIntensity;
-//    float roughnessSq = 0.0125 / getLuminance(getSpecularPeak().rgb);
-//    float sqrtDenominator = (roughnessSq - 1) * residual.nDotV * residual.nDotV + 1;
-//    residual.color = vec3(0.0125 * roughnessSq / (residual.nDotV * sqrtDenominator * sqrtDenominator));
+//    residual.color = removeDiffuse(color, diffuseColor, light, lightInfo.attenuatedIntensity, normal, maxLuminance).rgb
+//        / lightInfo.attenuatedIntensity;
+    float roughnessSq = 0.25 / getLuminance(getSpecularPeak().rgb);
+    float sqrtDenominator = (roughnessSq - 1) * residual.nDotV * residual.nDotV + 1;
+    residual.color = vec3(0.25 * roughnessSq / (residual.nDotV * sqrtDenominator * sqrtDenominator));
 
     residual.luminance = getLuminance(residual.color);
     residual.weight = color.a * clamp(sqrt(2) * residual.nDotV, 0, 1);

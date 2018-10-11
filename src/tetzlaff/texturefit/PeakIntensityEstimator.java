@@ -286,6 +286,7 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         }
 
         System.out.println("Estimating peak reflectance...");
+        System.out.println("____________________________________________________________________________________________________");
 
         Vector3[] estimatedPeaks = IntStream.range(0, texWidth * texHeight)
             .parallel()
@@ -380,6 +381,7 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
             })
             .toArray(Vector3[]::new);
 
+        System.out.println();
         System.out.println("Finished.");
 
         // debug
