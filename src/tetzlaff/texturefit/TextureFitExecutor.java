@@ -82,6 +82,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
     private Texture3D<ContextType> shadowTextures;
 
     private PeakIntensityEstimator<ContextType> peakIntensityEstimator;
+    private SpecularPeakFit<ContextType> specularPeakFit;
 
     public TextureFitExecutor(ContextType context, File vsetFile, File objFile, File imageDir, File maskDir, File rescaleDir, File outputDir, TextureFitParameters param)
     {
@@ -212,6 +213,9 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
         peakIntensityEstimator = new PeakIntensityEstimator<>(context, viewSet);
         peakIntensityEstimator.compileShaders();
+
+        specularPeakFit = new SpecularPeakFit<>(context, this::setupCommonShaderInputs,
+            viewSet.getCameraPoseCount(), param.getTextureSubdivision());
 
         System.out.println("Shader compilation completed in " + (new Date().getTime() - timestamp.getTime()) + " milliseconds.");
     }
@@ -1879,15 +1883,20 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     FramebufferObject<ContextType> frontErrorFramebuffer = errorFramebuffer1;
                     FramebufferObject<ContextType> backErrorFramebuffer = errorFramebuffer2;
 
+                    float[] peakIntensityData = new float[peakIntensityEstimates.length * 3];
+                    for (int i = 0; i < peakIntensityEstimates.length; i++)
+                    {
+                        peakIntensityData[i * 3] = peakIntensityEstimates[i].x;
+                        peakIntensityData[i * 3 + 1] = peakIntensityEstimates[i].y;
+                        peakIntensityData[i * 3 + 2] = peakIntensityEstimates[i].z;
+                    }
+
                     FramebufferObject<ContextType> tmp;
 
                     try(Texture2D<ContextType> peakSpecularTexture =
                         context.getTextureFactory().build2DColorTextureFromBuffer(param.getTextureSize(), param.getTextureSize(),
-                            NativeVectorBufferFactory.getInstance().createFromDoubleArray(
-                                3, param.getTextureSize() * param.getTextureSize(),
-                                Arrays.stream(peakIntensityEstimates)
-                                    .flatMapToDouble(peakColor -> DoubleStream.of(peakColor.x, peakColor.y, peakColor.z))
-                                    .toArray()))
+                            NativeVectorBufferFactory.getInstance().createFromFloatArray(
+                                3, param.getTextureSize() * param.getTextureSize(), peakIntensityData))
                             .setInternalFormat(ColorFormat.RGB32F)
                             .setLinearFilteringEnabled(true)
                             .createTexture())
@@ -1916,8 +1925,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                         backFramebuffer.clearColorBuffer(3, 0.0f, 0.0f, 0.0f, 0.0f);
                         backFramebuffer.clearColorBuffer(4, 0.0f, 0.0f, 0.0f, 0.0f);
 
-                        SpecularPeakFit<ContextType> specularPeakFit = new SpecularPeakFit<>(context, backFramebuffer, this::setupCommonShaderInputs,
-                            viewSet.getCameraPoseCount(), param.getTextureSubdivision());
+                        specularPeakFit.setFramebuffer(backFramebuffer);
 
                         specularPeakFit.fitImageSpace(viewTextures, depthTextures, shadowTextures,
                             (param.isDiffuseTextureEnabled() ? diffuseFitFramebuffer : frontFramebuffer).getColorAttachmentTexture(0),
@@ -2149,7 +2157,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                     double lastRMSError;
 
-                    peakIntensityProgram.setUniform("gamma", 2.2f);
+                    peakIntensityProgram.setUniform("gamma", param.getGamma());
                     peakIntensityProgram.setTexture("specularTexture", frontFramebuffer.getColorAttachmentTexture(2));
                     peakIntensityProgram.setTexture("roughnessTexture", frontFramebuffer.getColorAttachmentTexture(3));
 

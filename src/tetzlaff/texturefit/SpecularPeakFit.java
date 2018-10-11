@@ -11,15 +11,15 @@ public class SpecularPeakFit<ContextType extends Context<ContextType>> implement
 {
     private final ParameterizedFitBase<ContextType> base;
     private final Program<ContextType> program;
-    private final Framebuffer<ContextType> framebuffer;
 
-    SpecularPeakFit(Context<ContextType> context, Framebuffer<ContextType> framebuffer, Consumer<Drawable<ContextType>> shaderSetup,
+    private Framebuffer<ContextType> framebuffer;
+
+    SpecularPeakFit(Context<ContextType> context, Consumer<Drawable<ContextType>> shaderSetup,
         int viewCount, int subdiv) throws IOException
     {
-        this.framebuffer = framebuffer;
         this.program = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace.vert").toFile())
-            .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit", "specularpeakfit.frag").toFile())
+            .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit", "specularpeakfit_imgspace.frag").toFile())
             .createProgram();
         this.base = new ParameterizedFitBase<>(context.createDrawable(this.program), viewCount, subdiv);
         shaderSetup.accept(this.base.drawable);
@@ -29,6 +29,11 @@ public class SpecularPeakFit<ContextType extends Context<ContextType>> implement
     public void close()
     {
         this.program.close();
+    }
+
+    void setFramebuffer(Framebuffer<ContextType> framebuffer)
+    {
+        this.framebuffer = framebuffer;
     }
 
     void fitImageSpace(Texture<ContextType> viewImages, Texture<ContextType> depthImages, Texture<ContextType> shadowImages,
