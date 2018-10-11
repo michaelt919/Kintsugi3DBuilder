@@ -270,14 +270,17 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         for (Entry<CharacteristicBin, List<PeakCandidate>> bin : peaks.entrySet())
         {
             redSorted.put(bin.getKey(), bin.getValue().stream()
+                .parallel()
                 .sorted(Comparator.<PeakCandidate, Float>comparing(candidate -> candidate.peak.x).reversed())
                 .collect(Collectors.toList()));
 
             greenSorted.put(bin.getKey(), bin.getValue().stream()
+                .parallel()
                 .sorted(Comparator.<PeakCandidate, Float>comparing(candidate -> candidate.peak.y).reversed())
                 .collect(Collectors.toList()));
 
             blueSorted.put(bin.getKey(), bin.getValue().stream()
+                .parallel()
                 .sorted(Comparator.<PeakCandidate, Float>comparing(candidate -> candidate.peak.z).reversed())
                 .collect(Collectors.toList()));
         }
