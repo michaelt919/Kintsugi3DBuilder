@@ -1864,8 +1864,8 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                 }
 
                 peakIntensityEstimator.init(this::setupCommonShaderInputs, viewTextures, depthTextures, shadowTextures);
-                Vector3[] peakIntensityEstimates = peakIntensityEstimator.estimate(param.getTextureSize(), param.getTextureSize(),
-                    2.0f, 0.02f);
+//                Vector3[] peakIntensityEstimates = peakIntensityEstimator.estimate(param.getTextureSize(), param.getTextureSize(),
+//                    2.0f, 0.02f);
 
 
                 System.out.println("Fitting specular residual...");
@@ -1883,23 +1883,23 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                     FramebufferObject<ContextType> frontErrorFramebuffer = errorFramebuffer1;
                     FramebufferObject<ContextType> backErrorFramebuffer = errorFramebuffer2;
 
-                    float[] peakIntensityData = new float[peakIntensityEstimates.length * 3];
-                    for (int i = 0; i < peakIntensityEstimates.length; i++)
-                    {
-                        peakIntensityData[i * 3] = peakIntensityEstimates[i].x;
-                        peakIntensityData[i * 3 + 1] = peakIntensityEstimates[i].y;
-                        peakIntensityData[i * 3 + 2] = peakIntensityEstimates[i].z;
-                    }
+//                    float[] peakIntensityData = new float[peakIntensityEstimates.length * 3];
+//                    for (int i = 0; i < peakIntensityEstimates.length; i++)
+//                    {
+//                        peakIntensityData[i * 3] = peakIntensityEstimates[i].x;
+//                        peakIntensityData[i * 3 + 1] = peakIntensityEstimates[i].y;
+//                        peakIntensityData[i * 3 + 2] = peakIntensityEstimates[i].z;
+//                    }
 
                     FramebufferObject<ContextType> tmp;
 
-                    try(Texture2D<ContextType> peakSpecularTexture =
-                        context.getTextureFactory().build2DColorTextureFromBuffer(param.getTextureSize(), param.getTextureSize(),
-                            NativeVectorBufferFactory.getInstance().createFromFloatArray(
-                                3, param.getTextureSize() * param.getTextureSize(), peakIntensityData))
-                            .setInternalFormat(ColorFormat.RGB32F)
-                            .setLinearFilteringEnabled(true)
-                            .createTexture())
+//                    try(Texture2D<ContextType> peakSpecularTexture =
+//                        context.getTextureFactory().build2DColorTextureFromBuffer(param.getTextureSize(), param.getTextureSize(),
+//                            NativeVectorBufferFactory.getInstance().createFromFloatArray(
+//                                3, param.getTextureSize() * param.getTextureSize(), peakIntensityData))
+//                            .setInternalFormat(ColorFormat.RGB32F)
+//                            .setLinearFilteringEnabled(true)
+//                            .createTexture())
                     {
                         frontFramebuffer.clearColorBuffer(0, 0.0f, 0.0f, 0.0f, 0.0f);
                         frontFramebuffer.clearColorBuffer(1, 0.5f, 0.5f, 1.0f, 1.0f); // normal map
@@ -1932,7 +1932,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
                             param.isDiffuseTextureEnabled() ?
                                 diffuseFitFramebuffer.getColorAttachmentTexture(3) :
                                 frontFramebuffer.getColorAttachmentTexture(1),
-                            peakSpecularTexture,
+                            context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D),//peakSpecularTexture,
                             (row, col) ->
                                 System.out.println("Block " + (row * param.getTextureSubdivision() + col + 1) + '/' +
                                     (param.getTextureSubdivision() * param.getTextureSubdivision()) + " completed."));

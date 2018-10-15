@@ -24,7 +24,7 @@ vec3 getDiffuseNormalVector()
 
 vec4 getSpecularPeak()
 {
-    return texture(peakEstimate, fTexCoord); // already in linear color space
+    return vec4(1.0);//texture(peakEstimate, fTexCoord); // already in linear color space
 }
 
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light,
