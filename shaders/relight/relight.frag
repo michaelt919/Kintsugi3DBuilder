@@ -710,7 +710,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
 
 vec4 tonemap(vec3 color, float alpha)
 {
-    return vec4(pow(color, vec3(1.0 / renderGamma)), alpha);
+    return vec4(pow(color / getMaxLuminance(), vec3(1.0 / renderGamma)), alpha);
 }
 
 void main()
