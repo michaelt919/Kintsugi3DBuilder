@@ -60,7 +60,11 @@ class MultiviewRenderRequest extends RenderRequestBase
 
             String fileName = renderable.getActiveViewSet().getImageFileName(i);
 
-            if (!fileName.endsWith(".png"))
+            if (!fileName.contains("\\."))
+            {
+                fileName += ".png";
+            }
+            else if (!fileName.endsWith(".png"))
             {
                 String[] parts = fileName.split("\\.");
                 parts[parts.length - 1] = "png";
