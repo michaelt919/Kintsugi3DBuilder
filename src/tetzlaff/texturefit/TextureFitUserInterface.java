@@ -814,7 +814,7 @@ public class TextureFitUserInterface extends JFrame
         param.setDiffuseComputedNormalWeight(getValueAsFloat(this.diffuseCompNormalSpinner));
         param.setDiffuseInputNormalWeight(Float.MAX_VALUE);
         param.setDiffuseTextureEnabled(this.chckbxComputeDiffuseTexture.isSelected());
-        param.setBruteForceNormalEnabled(false/*this.chckbxComputeNormalMap.isSelected()*/);
+        param.setBruteForceNormalEnabled(false);
         param.setSpecularTextureEnabled(this.chckbxComputeSpecularTexture.isSelected());
         param.setLightIntensityEstimationEnabled(this.checkBoxEstimateGlobalLightIntensity.isSelected());
         param.setLightOffsetEstimationEnabled(false);
