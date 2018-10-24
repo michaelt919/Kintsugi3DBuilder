@@ -386,7 +386,7 @@ ParameterizedFit fitSpecular()
     // We'll put a lower cap of 1/m^2 on the alpha we divide by so that noise doesn't get amplified
     // for texels where there isn't enough information at the specular peak.
     return ParameterizedFit(adjustedDiffuseColor, vec4(normalize(transpose(tangentToObject) * specularNormal), 1),
-        vec4(specularColor, 1), vec4(roughness, roughnessConfidence), vec4(roughnessStdDev, roughnessConfidence));
+        vec4(specularColor, 1), vec4(roughness, 1), vec4(roughnessStdDev, 1));
 }
 
 #endif // SPECULARFIT_GLSL
