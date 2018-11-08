@@ -24,7 +24,7 @@ vec3 getDiffuseNormalVector()
 
 vec4 getSpecularPeak()
 {
-    return vec4(1.0);//texture(peakEstimate, fTexCoord); // already in linear color space
+    return texture(peakEstimate, fTexCoord); // already in linear color space
 }
 
 vec4 removeDiffuse(vec4 originalColor, vec3 diffuseColor, vec3 light,
@@ -85,11 +85,13 @@ Residual getResidual(int index, vec3 diffuseColor, vec3 normal, float maxLuminan
     vec3 light = lightInfo.normalizedDirection;
     residual.direction = normalize(view + light);
 
-//    residual.color = removeDiffuse(color, diffuseColor, light, lightInfo.attenuatedIntensity, normal, maxLuminance).rgb
-//        / lightInfo.attenuatedIntensity;
-    float roughnessSq = 0.25 / getLuminance(getSpecularPeak().rgb);
-    float sqrtDenominator = (roughnessSq - 1) * residual.nDotV * residual.nDotV + 1;
-    residual.color = vec3(0.25 * roughnessSq / (residual.nDotV * sqrtDenominator * sqrtDenominator));
+    residual.color = removeDiffuse(color, diffuseColor, light, lightInfo.attenuatedIntensity, normal, maxLuminance).rgb
+        / lightInfo.attenuatedIntensity;
+
+//    // debug
+//    float roughnessSq = 0.125 / getLuminance(getSpecularPeak().rgb);
+//    float sqrtDenominator = (roughnessSq - 1) * residual.nDotV * residual.nDotV + 1;
+//    residual.color = vec3(0.125 * roughnessSq / (residual.nDotV * sqrtDenominator * sqrtDenominator));
 
     residual.luminance = getLuminance(residual.color);
     residual.weight = color.a * clamp(sqrt(2) * residual.nDotV, 0, 1);
@@ -138,34 +140,22 @@ float computeEnergy(Residual maxResiduals[7], vec3 specularPeak, float peakLumin
     float nDotH = max(0.0, dot(normal, maxResiduals[0].direction));
     float nDotHSquared = nDotH * nDotH;
 
-    float numerator = sqrt(max(0.0, (1 - nDotHSquared) * sqrt(maxResiduals[0].luminance * maxResiduals[0].nDotV)));
-    float denominatorSq = max(0.0, sqrt(peakLuminance) - nDotHSquared * sqrt(maxResiduals[0].luminance * maxResiduals[0].nDotV));
-    float denominator = sqrt(denominatorSq);
+    float roughness = estimateRoughness(maxResiduals, peakLuminance, normal);
+    float roughnessSq = roughness * roughness;
+    vec3 specularColor = 4 * specularPeak * roughnessSq;
 
-    if (denominator == 0.0)
-    {
-        return 1000000.0; // arbitrarily high number
-    }
-    else
-    {
-        float roughnessSq = numerator / denominator;
+    vec3 diffs[5];
+    diffs[0] = brdf(normal, specularColor, roughnessSq, maxResiduals[1]) - maxResiduals[1].color;
+    diffs[1] = brdf(normal, specularColor, roughnessSq, maxResiduals[2]) - maxResiduals[2].color;
+    diffs[2] = brdf(normal, specularColor, roughnessSq, maxResiduals[3]) - maxResiduals[3].color;
+    diffs[3] = brdf(normal, specularColor, roughnessSq, maxResiduals[4]) - maxResiduals[4].color;
+    diffs[4] = brdf(normal, specularColor, roughnessSq, maxResiduals[5]) - maxResiduals[5].color;
 
-        float roughness = sqrt(roughnessSq);
-        vec3 specularColor = 4 * specularPeak * roughnessSq;
-
-        vec3 diffs[5];
-        diffs[0] = brdf(normal, specularColor, roughnessSq, maxResiduals[1]) - maxResiduals[1].color;
-        diffs[1] = brdf(normal, specularColor, roughnessSq, maxResiduals[2]) - maxResiduals[2].color;
-        diffs[2] = brdf(normal, specularColor, roughnessSq, maxResiduals[3]) - maxResiduals[3].color;
-        diffs[3] = brdf(normal, specularColor, roughnessSq, maxResiduals[4]) - maxResiduals[4].color;
-        diffs[4] = brdf(normal, specularColor, roughnessSq, maxResiduals[5]) - maxResiduals[5].color;
-
-        return dot(diffs[0], diffs[0]) * maxResiduals[1].weight +
-            dot(diffs[1], diffs[1]) * maxResiduals[2].weight +
-            dot(diffs[2], diffs[2]) * maxResiduals[3].weight +
-            dot(diffs[3], diffs[3]) * maxResiduals[4].weight +
-            dot(diffs[4], diffs[4]) * maxResiduals[5].weight;
-    }
+    return dot(diffs[0], diffs[0]) * maxResiduals[1].weight +
+        dot(diffs[1], diffs[1]) * maxResiduals[2].weight +
+        dot(diffs[2], diffs[2]) * maxResiduals[3].weight +
+        dot(diffs[3], diffs[3]) * maxResiduals[4].weight +
+        dot(diffs[4], diffs[4]) * maxResiduals[5].weight;
 }
 
 ParameterizedFit fitSpecular()
@@ -250,25 +240,28 @@ ParameterizedFit fitSpecular()
         }
     }
 
-    maxResiduals[0].weight = 256.0;
+// TODO experiment with weights
 
-    float rating1MinusRating6 = max(1.0 / 256.0, maxResiduals[1].rating - maxResiduals[6].rating);
-    maxResiduals[1].weight *= rating1MinusRating6 / max(rating1MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[1].rating);
-
-    float rating2MinusRating6 = max(1.0 / 256.0, maxResiduals[2].rating - maxResiduals[6].rating);
-    float rating0MinusRating2 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[2].rating);
-    maxResiduals[2].weight *= rating2MinusRating6 / rating0MinusRating2;
-
-    float rating0MinusRating3 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[3].rating);
-    maxResiduals[3].weight *= (maxResiduals[3].rating - maxResiduals[6].rating) * rating0MinusRating2 / (rating0MinusRating3 * rating0MinusRating3);
-
-    float rating0MinusRating4 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[4].rating);
-    maxResiduals[4].weight *= (maxResiduals[4].rating - maxResiduals[6].rating) * rating0MinusRating2 / (rating0MinusRating4 * rating0MinusRating4);
-
-    float rating0MinusRating5 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[5].rating);
-    maxResiduals[5].weight *= (maxResiduals[5].rating - maxResiduals[6].rating) * rating0MinusRating2 / (rating0MinusRating5 * rating0MinusRating5);
-
-    maxResiduals[6].weight = 0;
+////    maxResiduals[0].weight = 256.0;
+//    maxResiduals[0].weight *= max(1.0 / 256.0, maxResiduals[0].rating - maxResiduals[6].rating);
+//
+//    float rating1MinusRating6 = max(1.0 / 256.0, maxResiduals[1].rating - maxResiduals[6].rating);
+//    maxResiduals[1].weight *= rating1MinusRating6 ;// / max(rating1MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[1].rating);
+//
+//    float rating2MinusRating6 = max(1.0 / 256.0, maxResiduals[2].rating - maxResiduals[6].rating);
+//    float rating0MinusRating2 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[2].rating);
+//    maxResiduals[2].weight *= rating2MinusRating6 ;// / rating0MinusRating2;
+//
+//    float rating0MinusRating3 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[3].rating);
+//    maxResiduals[3].weight *= (maxResiduals[3].rating - maxResiduals[6].rating) ;// * rating0MinusRating2 / (rating0MinusRating3 * rating0MinusRating3);
+//
+//    float rating0MinusRating4 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[4].rating);
+//    maxResiduals[4].weight *= (maxResiduals[4].rating - maxResiduals[6].rating) ;// * rating0MinusRating2 / (rating0MinusRating4 * rating0MinusRating4);
+//
+//    float rating0MinusRating5 = max(rating2MinusRating6 / 256.0, maxResiduals[0].rating - maxResiduals[5].rating);
+//    maxResiduals[5].weight *= (maxResiduals[5].rating - maxResiduals[6].rating) ;// * rating0MinusRating2 / (rating0MinusRating5 * rating0MinusRating5);
+//
+//    maxResiduals[6].weight = 0;
 
     result.diffuseColor = diffuseColor;
 
@@ -312,7 +305,7 @@ ParameterizedFit fitSpecular()
     }
 
     vec3 normalTS = mix(oldDiffuseNormal, maxResiduals[0].direction,
-        0 * clamp((maxResiduals[0].weight * maxResiduals[0].luminance - maxResiduals[1].weight * maxResiduals[1].luminance)
+        clamp((maxResiduals[0].weight * maxResiduals[0].luminance - maxResiduals[1].weight * maxResiduals[1].luminance)
             / ((peakLuminance - maxResiduals[1].weight * maxResiduals[1].luminance)), 0, 1));
 
     result.normal = vec4(transpose(tangentToObject) * normalTS, 1.0);

@@ -46,16 +46,24 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         this.shadowImages = shadowImages;
     }
 
-    void compileShaders() throws IOException
+    void compileShaders(boolean visibilityTest, boolean shadowTest) throws IOException
     {
         imgSpaceProgram = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "imgspace.vert").toFile())
             .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit", "specularpeakinfo_imgspace.frag").toFile())
+            .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+            .define("INFINITE_LIGHT_SOURCES", viewSet.areLightSourcesInfinite())
+            .define("VISIBILITY_TEST_ENABLED", visibilityTest)
+            .define("SHADOW_TEST_ENABLED", shadowTest)
             .createProgram();
 
         texSpaceProgram = context.getShaderProgramBuilder()
             .addShader(ShaderType.VERTEX, Paths.get("shaders", "common", "texspace_noscale.vert").toFile())
             .addShader(ShaderType.FRAGMENT, Paths.get("shaders","texturefit", "specularpeakinfo_imgspace.frag").toFile())
+            .define("LUMINANCE_MAP_ENABLED", viewSet.hasCustomLuminanceEncoding())
+            .define("INFINITE_LIGHT_SOURCES", viewSet.areLightSourcesInfinite())
+            .define("VISIBILITY_TEST_ENABLED", visibilityTest)
+            .define("SHADOW_TEST_ENABLED", shadowTest)
             .createProgram();
     }
 
@@ -197,7 +205,7 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                 fbo.readFloatingPointColorBufferRGBA(1, offPeakBuffer);
                 fbo.readFloatingPointColorBufferRGBA(2, positionBuffer);
 
-                // debug
+//                // debug
 //                try
 //                {
 //                    fbo.saveColorBufferToFile(0, "PNG",
@@ -388,7 +396,10 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         BufferedImage outImg = new BufferedImage(texWidth, texHeight, BufferedImage.TYPE_INT_ARGB);
         outImg.setRGB(0, 0, texWidth, texHeight, Arrays.stream(estimatedPeaks).mapToInt(
             peak -> outImg.getColorModel().getDataElement(new float[] {
-                    (float)Math.pow(peak.x, 1.0 / 2.2), (float)Math.pow(peak.y, 1.0 / 2.2), (float)Math.pow(peak.z, 1.0 / 2.2), 1.0f },
+                    Math.min(1.0f, (float)Math.pow(peak.x, 1.0 / 2.2)),
+                    Math.min(1.0f, (float)Math.pow(peak.y, 1.0 / 2.2)),
+                    Math.min(1.0f, (float)Math.pow(peak.z, 1.0 / 2.2)),
+                    1.0f },
                 0)).toArray(), 0, texWidth);
         try
         {
