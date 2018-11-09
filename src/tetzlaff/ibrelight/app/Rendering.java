@@ -254,7 +254,7 @@ public final class Rendering
 
             window.addKeyPressListener((win, key, modifierKeys) ->
             {
-                if (key == Key.F10)
+                if (key == Key.F11)
                 {
                     System.out.println("reloading program...");
 

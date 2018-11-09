@@ -133,6 +133,10 @@ layout(location = 1) out int fragObjectID;
 #define MIPMAPS_ENABLED !BUEHLER_ALGORITHM
 #endif
 
+#ifndef HYBRID_SPECULAR_ENABLED
+#define HYBRID_SPECULAR_ENABLED 1
+#endif
+
 #include "reflectanceequations.glsl"
 #include "tonemap.glsl"
 
@@ -507,25 +511,39 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
 
     sort(targetDirection, weights, indices);
 
+    float analyticWeight = 1.0 / (1.0 - clamp(dot(targetDirection, normalDir), 0.0, 0.99999));
+
+    float maxSampleLuminance = 0.0;
+
+    vec4 samples[SORTING_SAMPLE_COUNT - 1];
+    for (int i = 1; i < SORTING_SAMPLE_COUNT; i++)
+    {
+        samples[i - 1] = computeSampleSingle(indices[i], diffuseColor, normalDir, specularColor, roughness, peak, maxLuminance);
+        maxSampleLuminance = max(maxSampleLuminance, getLuminance(samples[i - 1].rgb));
+    }
+
     // Evaluate the light field
     // weights[0] should be the smallest weight
     vec4 sum = vec4(0.0);
-    for (int i = 1; i < SORTING_SAMPLE_COUNT; i++)
+    for (int i = 0; i < SORTING_SAMPLE_COUNT - 1; i++)
     {
-        vec4 computedSample = computeSampleSingle(indices[i], diffuseColor, normalDir, specularColor, roughness, peak, maxLuminance);
-        if (computedSample.a > 0)
+        if (samples[i].a > 0)
         {
-            sum += (weights[i] - weights[0]) * computedSample;
+            sum += (weights[i + 1] - weights[0]) * samples[i];
         }
     }
 
     if (sum.a == 0.0)
     {
+#if HYBRID_SPECULAR_ENABLED
+        return vec4(0.0);
+#else
         return vec4(holeFillColor, 1.0);
+#endif // HYBRID_SPECULAR_ENABLED
     }
     else
     {
-        return sum / sum.a;
+        return sum / vec4(sum.aaa, sum.a + max(0, analyticWeight - weights[0]));
     }
 }
 
@@ -877,38 +895,45 @@ void main()
 
 #endif // IMAGE_BASED_RENDERING_ENABLED
 
-                if (predictedMFD.w < 1.0)
-                {
-                    predictedMFD.rgb += (1 - predictedMFD.w) * holeFillColor;
-                }
-
                 vec3 mfdFresnel;
 
 #if RELIGHTING_ENABLED && FRESNEL_EFFECT_ENABLED
+                vec3 mfdFresnelBase = specularColor * dist(nDotH, roughnessRGB);
+                vec3 mfdFresnelAnalytic = fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(specularColor)), hDotV);
 
 #if IMAGE_BASED_RENDERING_ENABLED
-                float grazingIntensity = getLuminance(predictedMFD.rgb
-                    / max(vec3(1 / predictedMFD.a), specularColor));
+                float grazingIntensity = getLuminance(max(vec3(0.0), predictedMFD.rgb) / specularColor);
 
-                if (grazingIntensity <= 0.0)
-                {
-                    mfdFresnel = vec3(0,0,0);
-                }
-                else
-                {
-                    mfdFresnel = max(vec3(0.0),
-                        fresnel(predictedMFD.rgb, vec3(grazingIntensity), hDotV));
-                        // fresnel(predictedMFD.rgb, vec3(dist(nDotH, roughnessRGB)), hDotV));
-                }
+                vec3 mfdFresnelIBR = max(vec3(0.0),
+                    fresnel(predictedMFD.rgb, vec3(grazingIntensity), hDotV));
+                    // fresnel(predictedMFD.rgb, vec3(dist(nDotH, roughnessRGB)), hDotV));=
+
+#if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
+                mfdFresnel = mix(mfdFresnelAnalytic, mfdFresnelIBR, predictedMFD.a);
 #else
-                vec3 mfdFresnelBase = specularColor * dist(nDotH, roughnessRGB);
-                mfdFresnel = fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(specularColor)), hDotV);
+                mfdFresnel = mfdFresnelIBR;
+#endif // SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED
+
+#else
+                mfdFresnel = mfdFresnelAnalytic;
+
 #endif // IMAGE_BASED_RENDERING_ENABLED
 
-#elif IMAGE_BASED_RENDERING_ENABLED
-                mfdFresnel = max(vec3(0.0), predictedMFD.rgb);
 #else
-                mfdFresnel = specularColor * dist(nDotH, roughnessRGB);
+                vec3 mfdFresnelAnalytic = specularColor * dist(nDotH, roughnessRGB);
+
+#if IMAGE_BASED_RENDERING_ENABLED
+
+#if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
+                mfdFresnel = mix(mfdFresnelAnalytic, max(vec3(0.0), predictedMFD.rgb), predictedMFD.a);
+#else
+                mfdFresnel = max(vec3(0.0), predictedMFD.rgb);
+#endif // SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED
+
+#else
+                mfdFresnel = mfdFresnelAnalytic;
+#endif // IMAGE_BASED_RENDERING_ENABLED
+
 #endif // RELIGHTING_ENABLED && FRESNEL_EFFECT_ENABLED
 
                 vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;
