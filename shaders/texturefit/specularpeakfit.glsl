@@ -158,6 +158,94 @@ float computeEnergy(Residual maxResiduals[7], vec3 specularPeak, float peakLumin
         dot(diffs[4], diffs[4]) * maxResiduals[5].weight;
 }
 
+vec3 estimateNormal(vec4 diffuseColor, vec3 diffuseNormal, vec3 geometricNormal)
+{
+    float maxLuminance = getMaxLuminance();
+    vec2 maxResidualLuminance = vec2(0);
+    vec4 maxResidualDirection = vec4(0);
+
+    vec3 directionSum = vec3(0);
+    vec3 intensityWeightedDirectionSum = vec3(0);
+
+    for (int i = 0; i < VIEW_COUNT; i++)
+    {
+        vec4 color = getLinearColor(i);
+        vec3 view = normalize(getViewVector(i));
+        float nDotV = dot(view, geometricNormal);
+
+        if (color.a * nDotV > 0)
+        {
+            LightInfo lightInfo = getLightInfo(i);
+            vec3 light = lightInfo.normalizedDirection;
+
+            vec3 colorRemainder;
+
+#if USE_LIGHT_INTENSITIES
+            colorRemainder = removeDiffuse(color, diffuseColor.rgb, light, lightInfo.attenuatedIntensity, diffuseNormal, maxLuminance).rgb
+                / lightInfo.attenuatedIntensity;
+#else
+            colorRemainder = removeDiffuse(color, diffuseColor.rgb, light, vec3(1.0), diffuseNormal, maxLuminance).rgb;
+#endif
+
+            float luminance = getLuminance(colorRemainder);
+            vec3 halfway = normalize(view + light);
+            float weight = clamp(sqrt(2) * nDotV, 0, 1);
+
+            directionSum += weight * halfway;
+            intensityWeightedDirectionSum += weight * halfway * luminance;
+
+            float normalWeight = weight * clamp(luminance * 10 - 9, 0, 1);
+
+            if (normalWeight > maxResidualLuminance[1] * clamp(maxResidualLuminance[0] * 10 - 9, 0, 1))
+            {
+                maxResidualDirection = normalWeight * vec4(halfway, 1);
+                maxResidualLuminance = vec2(luminance, weight);
+            }
+            else if (maxResidualLuminance[0] * 10 <= 9 && luminance * weight > maxResidualLuminance[0] * maxResidualLuminance[1])
+            {
+                maxResidualLuminance = vec2(luminance, weight);
+            }
+        }
+    }
+
+    if (dot(intensityWeightedDirectionSum, intensityWeightedDirectionSum) < 1.0)
+    {
+        intensityWeightedDirectionSum += (1 - length(intensityWeightedDirectionSum)) * diffuseNormal;
+    }
+
+    vec3 biasedHeuristicNormal;
+    vec3 bias;
+    float resolvability;
+
+    biasedHeuristicNormal = normalize(intensityWeightedDirectionSum);
+    float directionScale = length(directionSum);
+    resolvability = min(1, directionScale);
+    bias = directionSum / max(1, directionScale);
+
+
+    vec3 heuristicNormal;
+
+    float specularNormalFidelity = dot(bias, geometricNormal);                                                      // correlation between biased average (either normalized or between 0-1) and geometric normal (normalized)
+    vec3 certaintyDirectionUnnormalized = cross(bias - specularNormalFidelity * geometricNormal, geometricNormal);  // component of biased average orthogonal to geometric normal
+    vec3 certaintyDirection = certaintyDirectionUnnormalized                                                        // points in direction of component of biased average orthogonal to geometric normal
+        / max(1, length(certaintyDirectionUnnormalized));                                                           // length is between 0 (no bias) and 1 (biased average completely orthogonal to geometric normal)
+
+    float specularNormalCertainty =                                                                                 // correlation between biased normal and the scaled "certainty" direction
+        resolvability * dot(biasedHeuristicNormal, certaintyDirection);                                             // range is between 0 (no bias or singular conditions) and 1 (orthogonally biased)
+    vec3 scaledCertaintyDirection = specularNormalCertainty * certaintyDirection;                                   // projection of biased normal onto scaled "certainty" direction
+                                                                                                                    // length is between 0 (no bias) and 1 (biased average completely orthogonal to geometric normal)
+
+    heuristicNormal = normalize(                                                                                    // normalize the following:
+        scaledCertaintyDirection                                                                                    // projection of biased normal onto scaled "certainty" direction
+            + sqrt(1 - specularNormalCertainty * specularNormalCertainty                                            // length of vector which, if orthogonal to the preceding projection,
+                        * dot(certaintyDirection, certaintyDirection))                                              // is such that their sum has length 1
+                * normalize(mix(geometricNormal, normalize(biasedHeuristicNormal - scaledCertaintyDirection),       // mix between the geometric normal and the component of the potentially biased normal orthogonal to the scaled "certainty" direction
+                   resolvability * specularNormalFidelity)));                                                       // using the non-singularity and the correlation between the biased average and the geometric normal
+                                                                                                                    // as the basis for whether to select the potentially biased normal.
+
+    return maxResidualDirection.xyz + (1 - maxResidualDirection.w) * heuristicNormal;
+}
+
 ParameterizedFit fitSpecular()
 {
     vec3 normal = normalize(fNormal);
@@ -265,51 +353,59 @@ ParameterizedFit fitSpecular()
 
     result.diffuseColor = diffuseColor;
 
-    ivec2 bestBlock;
-    vec3 bestNormal;
-    float minEnergy;
 
-    for (int i = 0; i < 16; i++)
-    {
-        for (int j = 0; j < 16; j++)
-        {
-            float nx = (i * 16.0 + 7.5) * 2 / 255.0 - 1;
-            float ny = (j * 16.0 + 7.5) * 2 / 255.0 - 1;
-            vec3 normal = tangentToObject * vec3(nx, ny, sqrt(1 - nx*nx - ny*ny));
 
-            float energy = computeEnergy(maxResiduals, specularPeak.rgb, peakLuminance, normal);
-            if (energy < minEnergy)
-            {
-                minEnergy = energy;
-                bestBlock = ivec2(i, j);
-                bestNormal = normal;
-            }
-        }
-    }
 
-    for (int i = 0; i < 16; i++)
-    {
-        for (int j = 0; j < 16; j++)
-        {
-            float nx = (bestBlock[0] * 16.0 + i) * 2 / 255.0 - 1;
-            float ny = (bestBlock[1] * 16.0 + j) * 2 / 255.0 - 1;
-            vec3 normal = tangentToObject * vec3(nx, ny, sqrt(1 - nx*nx - ny*ny));
+//    ivec2 bestBlock;
+//    vec3 bestNormal;
+//    float minEnergy;
+//
+//    for (int i = 0; i < 16; i++)
+//    {
+//        for (int j = 0; j < 16; j++)
+//        {
+//            float nx = (i * 16.0 + 7.5) * 2 / 255.0 - 1;
+//            float ny = (j * 16.0 + 7.5) * 2 / 255.0 - 1;
+//            vec3 normal = tangentToObject * vec3(nx, ny, sqrt(1 - nx*nx - ny*ny));
+//
+//            float energy = computeEnergy(maxResiduals, specularPeak.rgb, peakLuminance, normal);
+//            if (energy < minEnergy)
+//            {
+//                minEnergy = energy;
+//                bestBlock = ivec2(i, j);
+//                bestNormal = normal;
+//            }
+//        }
+//    }
+//
+//    for (int i = 0; i < 16; i++)
+//    {
+//        for (int j = 0; j < 16; j++)
+//        {
+//            float nx = (bestBlock[0] * 16.0 + i) * 2 / 255.0 - 1;
+//            float ny = (bestBlock[1] * 16.0 + j) * 2 / 255.0 - 1;
+//            vec3 normal = tangentToObject * vec3(nx, ny, sqrt(1 - nx*nx - ny*ny));
+//
+//            float energy = computeEnergy(maxResiduals, specularPeak.rgb, peakLuminance, normal);
+//            if (energy < minEnergy)
+//            {
+//                minEnergy = energy;
+//                bestNormal = normal;
+//            }
+//        }
+//    }
 
-            float energy = computeEnergy(maxResiduals, specularPeak.rgb, peakLuminance, normal);
-            if (energy < minEnergy)
-            {
-                minEnergy = energy;
-                bestNormal = normal;
-            }
-        }
-    }
+//    vec3 bestNormal = oldDiffuseNormal;
+    vec3 bestNormal = estimateNormal(diffuseColor, oldDiffuseNormal, normal);
 
-    vec3 normalTS = mix(oldDiffuseNormal, maxResiduals[0].direction,
+    vec3 normalObjSpace = mix(bestNormal, maxResiduals[0].direction,
         clamp((maxResiduals[0].weight * maxResiduals[0].luminance - maxResiduals[1].weight * maxResiduals[1].luminance)
             / ((peakLuminance - maxResiduals[1].weight * maxResiduals[1].luminance)), 0, 1));
 
-    result.normal = vec4(transpose(tangentToObject) * normalTS, 1.0);
-    result.roughness = vec4(vec3(estimateRoughness(maxResiduals, peakLuminance, normalTS)), 1.0);
+    result.normal = vec4(transpose(tangentToObject) * normalObjSpace, 1.0);
+
+
+    result.roughness = vec4(vec3(estimateRoughness(maxResiduals, peakLuminance, normalObjSpace)), 1.0);
     result.specularColor = vec4(4 * specularPeak.rgb * result.roughness[0] * result.roughness[0], 1.0);
 
     return result;

@@ -239,9 +239,9 @@ float getViewWeight(int viewIndex)
 
 #if RESIDUAL_IMAGES
 
-vec4 getSampleFromResidual(vec4 residual, vec3 peak)
+vec4 getSampleFromResidual(vec4 residual, vec3 peakTimes4Pi)
 {
-    return residual.a * vec4(peak * (residual.rgb + vec3(0.5)), 1.0);
+    return residual.a * vec4(peakTimes4Pi * (residual.rgb + vec3(0.5)), 1.0);
 }
 
 #else
@@ -272,7 +272,7 @@ struct EnvironmentSample
 };
 
 EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, vec3 normalDir,
-    vec3 specularColor, float roughness, vec3 peak, float maxLuminance)
+    vec3 specularColor, float roughness, vec3 peakTimes4Pi, float maxLuminance)
 {
     mat4 cameraPose = getCameraPose(virtualIndex);
     vec3 fragmentPos = (cameraPose * vec4(fPosition, 1.0)).xyz;
@@ -324,7 +324,7 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, 
             vec4 residual = getResidual(virtualIndex);
             if (residual.w > 0)
             {
-                mfdFresnel = getSampleFromResidual(residual, peak).rgb * nDotV_sample / geomAttenSample / PI;
+                mfdFresnel = getSampleFromResidual(residual, peakTimes4Pi).rgb * nDotV_sample / geomAttenSample / PI;
             }
 #else
 
@@ -333,7 +333,7 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, 
             if (sampleColor.a == 0.0)
             {
 //                return vec4(0.0);
-                mfdFresnel = dist(nDotH, sqrt(specularColor / peak)) * specularColor / PI;
+                mfdFresnel = distTimesPi(nDotH, sqrt(specularColor / peakTimes4Pi)) * specularColor / PI;
             }
             else
             {
@@ -390,7 +390,7 @@ EnvironmentSample computeEnvironmentSample(int virtualIndex, vec3 diffuseColor, 
     }
 }
 
-vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness, vec3 peak)
+vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness, vec3 peakTimes4Pi)
 {
     float maxLuminance = getMaxLuminance();
 
@@ -399,7 +399,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 
     for (int i = 0; i < VIEW_COUNT; i++)
     {
-        EnvironmentSample envSample = computeEnvironmentSample(i, diffuseColor, normalDir, specularColor, roughness, peak, maxLuminance);
+        EnvironmentSample envSample = computeEnvironmentSample(i, diffuseColor, normalDir, specularColor, roughness, peakTimes4Pi, maxLuminance);
         sum += envSample.sampleResult;
 
         if (getLuminance(envSample.sampleBRDF) > getLuminance(maxSamples[0].sampleBRDF))
@@ -430,7 +430,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
     sum +=
         (weights[0] * maxSamples[1].sampleWeight + weights[1] * maxSamples[2].sampleWeight
                + weights[2] * maxSamples[3].sampleWeight + weights[3] * maxSamples[4].sampleWeight) / weightSum *
-        vec4(peak * getEnvironment(mat3(envMapMatrix) * -reflect(normalize(viewPos.xyz - fPosition.xyz), normalDir)), 1.0 / (2.0 * PI));
+        vec4(peakTimes4Pi * getEnvironment(mat3(envMapMatrix) * -reflect(normalize(viewPos.xyz - fPosition.xyz), normalDir)), 1.0 / (2.0 * PI));
 
     if (sum.a > 0.0)
     {
@@ -448,7 +448,7 @@ vec3 getEnvironmentShading(vec3 diffuseColor, vec3 normalDir, vec3 specularColor
 
 #if BUEHLER_ALGORITHM
 
-vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  vec3 specularColor, float roughness, vec3 peak, float maxLuminance)
+vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  vec3 specularColor, float roughness, vec3 peakTimes4Pi, float maxLuminance)
 {
     // All in camera space
     mat4 cameraPose = getCameraPose(virtualIndex);
@@ -474,7 +474,7 @@ vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  v
         vec4 residual = getResidual(virtualIndex);
         if (residual.w > 0)
         {
-            return getSampleFromResidual(residual, peak) * vec4(vec3(nDotV), geomAtten);
+            return getSampleFromResidual(residual, peakTimes4Pi) * vec4(vec3(nDotV), geomAtten);
         }
 #else
         vec4 sampleColor = getLinearColor(virtualIndex);
@@ -502,7 +502,7 @@ vec4 computeSampleSingle(int virtualIndex, vec3 diffuseColor, vec3 normalDir,  v
     return vec4(0.0);
 }
 
-vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness, vec3 peak)
+vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness, vec3 peakTimes4Pi)
 {
     float maxLuminance = getMaxLuminance();
 
@@ -518,7 +518,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     vec4 samples[SORTING_SAMPLE_COUNT - 1];
     for (int i = 1; i < SORTING_SAMPLE_COUNT; i++)
     {
-        samples[i - 1] = computeSampleSingle(indices[i], diffuseColor, normalDir, specularColor, roughness, peak, maxLuminance);
+        samples[i - 1] = computeSampleSingle(indices[i], diffuseColor, normalDir, specularColor, roughness, peakTimes4Pi, maxLuminance);
         maxSampleLuminance = max(maxSampleLuminance, getLuminance(samples[i - 1].rgb));
     }
 
@@ -529,7 +529,11 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
     {
         if (samples[i].a > 0)
         {
-            sum += (weights[i + 1] - weights[0]) * samples[i];
+            sum += (weights[i + 1] - weights[0])
+#if 1 || SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
+                * getLuminance(max(vec3(0.0), peakTimes4Pi - samples[i].rgb / samples[i].a))
+#endif
+                * samples[i];
         }
     }
 
@@ -549,7 +553,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
 
 #elif VIRTUAL_LIGHT_COUNT > 0
 
-vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness, vec3 peak, float maxLuminance)
+vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness, vec3 peakTimes4Pi, float maxLuminance)
 {
     // All in camera space
     mat4 cameraPose = getCameraPose(virtualIndex);
@@ -573,7 +577,7 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec
     vec4 residual = getResidual(virtualIndex);
     if (residual.w > 0)
     {
-        precomputedSample = getSampleFromResidual(residual, peak) * vec4(vec3(nDotV), geomAtten);
+        precomputedSample = getSampleFromResidual(residual, peakTimes4Pi) * vec4(vec3(nDotV), geomAtten);
     }
 #else
     vec4 sampleColor = getLinearColor(virtualIndex);
@@ -665,7 +669,7 @@ vec4[VIRTUAL_LIGHT_COUNT] computeSample(int virtualIndex, vec3 diffuseColor, vec
     }
 }
 
-vec4[VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness, vec3 peak)
+vec4[VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normalDir, vec3 specularColor, float roughness, vec3 peakTimes4Pi)
 {
     float maxLuminance = getMaxLuminance();
 
@@ -678,7 +682,7 @@ vec4[VIRTUAL_LIGHT_COUNT] computeWeightedAverages(vec3 diffuseColor, vec3 normal
     for (int i = 0; i < VIEW_COUNT; i++)
     {
         vec4[VIRTUAL_LIGHT_COUNT] microfacetSample =
-            computeSample(i, diffuseColor, normalDir, specularColor, roughness, peak, maxLuminance);
+            computeSample(i, diffuseColor, normalDir, specularColor, roughness, peakTimes4Pi, maxLuminance);
 
         for (int j = 0; j < VIRTUAL_LIGHT_COUNT; j++)
         {
@@ -898,7 +902,7 @@ void main()
                 vec3 mfdFresnel;
 
 #if RELIGHTING_ENABLED && FRESNEL_EFFECT_ENABLED
-                vec3 mfdFresnelBase = specularColor * dist(nDotH, roughnessRGB);
+                vec3 mfdFresnelBase = specularColor * distTimesPi(nDotH, roughnessRGB);
                 vec3 mfdFresnelAnalytic = fresnel(mfdFresnelBase, vec3(getLuminance(mfdFresnelBase) / getLuminance(specularColor)), hDotV);
 
 #if IMAGE_BASED_RENDERING_ENABLED
@@ -906,7 +910,7 @@ void main()
 
                 vec3 mfdFresnelIBR = max(vec3(0.0),
                     fresnel(predictedMFD.rgb, vec3(grazingIntensity), hDotV));
-                    // fresnel(predictedMFD.rgb, vec3(dist(nDotH, roughnessRGB)), hDotV));=
+                    // fresnel(predictedMFD.rgb, vec3(distTimesPi(nDotH, roughnessRGB)), hDotV));=
 
 #if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
                 mfdFresnel = mix(mfdFresnelAnalytic, mfdFresnelIBR, predictedMFD.a);
@@ -920,7 +924,7 @@ void main()
 #endif // IMAGE_BASED_RENDERING_ENABLED
 
 #else
-                vec3 mfdFresnelAnalytic = specularColor * dist(nDotH, roughnessRGB);
+                vec3 mfdFresnelAnalytic = specularColor * distTimesPi(nDotH, roughnessRGB);
 
 #if IMAGE_BASED_RENDERING_ENABLED
 

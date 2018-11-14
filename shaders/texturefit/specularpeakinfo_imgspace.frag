@@ -31,5 +31,5 @@ void main()
 
     peak = result.peak;
     offPeakSum = result.offPeakSum;
-    position = vec4(fPosition, 1.0);
+    position = vec4(fPosition, result.peakNDotH);
 }
