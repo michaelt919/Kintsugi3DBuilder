@@ -321,12 +321,12 @@ void main()
 
                     if (relightingEnabled && fresnelEnabled)
                     {
-                        vec3 mfdFresnelBaseXYZ = specularColorXYZ * dist(nDotH, roughness);
+                        vec3 mfdFresnelBaseXYZ = specularColorXYZ * distTimesPi(nDotH, roughness);
                         mfdFresnel = fresnel(xyzToRGB(mfdFresnelBaseXYZ), vec3(mfdFresnelBaseXYZ.y), hDotV);
                     }
                     else
                     {
-                        mfdFresnel = xyzToRGB(specularColorXYZ * dist(nDotH, roughness));
+                        mfdFresnel = xyzToRGB(specularColorXYZ * distTimesPi(nDotH, roughness));
                     }
 
                     vec3 lightVectorTransformed = (model_view * vec4(lightDirUnNorm, 0.0)).xyz;

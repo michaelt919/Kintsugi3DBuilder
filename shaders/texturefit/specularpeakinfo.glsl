@@ -7,6 +7,7 @@ struct SpecularPeakInfo
 {
     vec4 peak;
     vec4 offPeakSum;
+    float peakNDotH;
 };
 
 SpecularPeakInfo computeSpecularPeakInfo()
@@ -30,6 +31,7 @@ SpecularPeakInfo computeSpecularPeakInfo()
         result.offPeakSum += colorWeighted;
 
         result.peak = max(result.peak, sign(max(0, nDotV - 0.5) * color.a) * vec4(colorAdj, 1));
+        result.peakNDotH = max(result.peakNDotH, nDotH);
     }
 
     result.offPeakSum = pow(result.offPeakSum / result.offPeakSum.a, vec4(vec3(1.0 / 2.2), 1.0));

@@ -1865,7 +1865,7 @@ public class TextureFitExecutor<ContextType extends Context<ContextType>>
 
                 peakIntensityEstimator.init(this::setupCommonShaderInputs, viewTextures, depthTextures, shadowTextures);
                 Vector3[] peakIntensityEstimates = peakIntensityEstimator.estimate(param.getTextureSize(), param.getTextureSize(),
-                    2.0f, 0.02f);
+                    resources.geometry.getBoundingRadius() * 0.25f, 0.02f);
 
 
                 System.out.println("Fitting specular residual...");

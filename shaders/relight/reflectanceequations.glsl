@@ -118,7 +118,7 @@ vec3 computeMicrofacetDistributionPhong(float nDotH, vec3 roughness)
     return max(vec3(0.0), pow(vec3(nDotH), 2 / roughnessSquared - 2) / (roughnessSquared));
 }
 
-vec3 dist(float nDotH, vec3 roughness)
+vec3 distTimesPi(float nDotH, vec3 roughness)
 {
     return computeMicrofacetDistributionGGX(nDotH, roughness);
     //return computeMicrofacetDistributionBeckmann(nDotH, roughness);

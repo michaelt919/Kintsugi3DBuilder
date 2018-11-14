@@ -140,12 +140,14 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         final Vector3 peak;
         final Vector3 offPeakSum;
         final Vector3 position;
+        final float nDotH;
 
-        PeakCandidate(Vector3 peak, Vector3 offPeakSum, Vector3 position)
+        PeakCandidate(Vector3 peak, Vector3 offPeakSum, Vector3 position, float nDotH)
         {
             this.peak = peak;
             this.offPeakSum = offPeakSum;
             this.position = position;
+            this.nDotH = nDotH;
         }
 
         CharacteristicBin characteristicBin(float objSpaceRadius, float colorSpaceRadius)
@@ -168,8 +170,6 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         imgSpaceDrawable.program().setTexture("shadowImages",
             shadowImages == null ? context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY) : shadowImages);
 
-        Map<CharacteristicBin, List<PeakCandidate>> peaks = new HashMap<>(100000);
-
         FloatBuffer peakBuffer =
             BufferUtils.createFloatBuffer(4 * viewImages.getWidth() * viewImages.getHeight());
         FloatBuffer offPeakBuffer =
@@ -181,11 +181,16 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
 
         float maxOffPeak = 0.0f;
 
+        Map<CharacteristicBin, List<PeakCandidate>> peakCandidates = new HashMap<>(100000);
+        Queue<PeakCandidate> expectedPeaks = new PriorityQueue<>(256 * viewSet.getCameraPoseCount(),
+            Comparator.comparingDouble(peakCandidate -> peakCandidate.nDotH));
+
         try(FramebufferObject<ContextType> fbo = context.buildFramebufferObject(
-            viewImages.getWidth(), viewImages.getHeight())
+            viewImages.getWidth() / 2, viewImages.getHeight() / 2)
             .addColorAttachments(ColorFormat.RGBA32F, 3)
             .createFramebufferObject())
         {
+
             for (int i = 0; i < viewSet.getCameraPoseCount(); i++)
             {
                 System.out.println((i + 1) + "/" + viewSet.getCameraPoseCount());
@@ -227,18 +232,35 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                         PeakCandidate peak = new PeakCandidate(
                             new Vector3(peakBuffer.get(4 * k), peakBuffer.get(4 * k + 1), peakBuffer.get(4 * k + 2)),
                             new Vector3(offPeakBuffer.get(4 * k), offPeakBuffer.get(4 * k + 1), offPeakBuffer.get(4 * k + 2)),
-                            new Vector3(positionBuffer.get(4 * k), positionBuffer.get(4 * k + 1), positionBuffer.get(4 * k + 2)));
+                            new Vector3(positionBuffer.get(4 * k), positionBuffer.get(4 * k + 1), positionBuffer.get(4 * k + 2)),
+                            positionBuffer.get(4 * k + 3) /* n dot h */);
 
                         CharacteristicBin binID = peak.characteristicBin(objSpaceRadius, colorSpaceRadius);
-                        List<PeakCandidate> bin = peaks.get(binID);
+                        List<PeakCandidate> bin = peakCandidates.get(binID);
                         if (bin == null)
                         {
                             bin = new ArrayList<>(1);
-                            peaks.put(binID, new ArrayList<>(1));
+                            peakCandidates.put(binID, new ArrayList<>(1));
                         }
                         bin.add(peak);
 
-                        maxOffPeak = Math.max(maxOffPeak, Math.max(offPeakBuffer.get(4 * k), Math.max(offPeakBuffer.get(4 * k + 1), offPeakBuffer.get(4 * k + 2))));
+                        if (peak.nDotH > 0.999)
+                        {
+                            if (expectedPeaks.size() < 256 * viewSet.getCameraPoseCount())
+                            {
+                                expectedPeaks.add(peak);
+                            }
+                            else if (peak.nDotH > expectedPeaks.peek().nDotH)
+                            {
+                                expectedPeaks.remove();
+                                expectedPeaks.add(peak);
+                            }
+                        }
+
+                        if (Float.isFinite(offPeakBuffer.get(4 * k)) && Float.isFinite(offPeakBuffer.get(4 * k + 1)) && Float.isFinite(offPeakBuffer.get(4 * k + 2)))
+                        {
+                            maxOffPeak = Math.max(maxOffPeak, Math.max(offPeakBuffer.get(4 * k), Math.max(offPeakBuffer.get(4 * k + 1), offPeakBuffer.get(4 * k + 2))));
+                        }
                     }
                 }
             }
@@ -271,11 +293,11 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
 
         System.out.println("Sorting samples...");
 
-        Map<CharacteristicBin, List<PeakCandidate>> redSorted = new HashMap<>(peaks.size());
-        Map<CharacteristicBin, List<PeakCandidate>> greenSorted = new HashMap<>(peaks.size());
-        Map<CharacteristicBin, List<PeakCandidate>> blueSorted = new HashMap<>(peaks.size());
+        Map<CharacteristicBin, List<PeakCandidate>> redSorted = new HashMap<>(peakCandidates.size());
+        Map<CharacteristicBin, List<PeakCandidate>> greenSorted = new HashMap<>(peakCandidates.size());
+        Map<CharacteristicBin, List<PeakCandidate>> blueSorted = new HashMap<>(peakCandidates.size());
 
-        for (Entry<CharacteristicBin, List<PeakCandidate>> bin : peaks.entrySet())
+        for (Entry<CharacteristicBin, List<PeakCandidate>> bin : peakCandidates.entrySet())
         {
             redSorted.put(bin.getKey(), bin.getValue().stream()
                 .parallel()
@@ -325,6 +347,17 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                     float green = 0;
                     float blue = 0;
 
+                    float distanceToExpectedPeak = (float)Math.sqrt(0.5);
+
+                    for (PeakCandidate expectedPeak : expectedPeaks)
+                    {
+                        float scaledObjSpaceDistance = expectedPeak.position.distance(position) / objSpaceRadius;
+                        float scaledColorSpaceDistance = expectedPeak.offPeakSum.distance(offPeakSum) / colorSpaceRadius;
+
+                        distanceToExpectedPeak = Math.min(distanceToExpectedPeak,
+                            (float)Math.sqrt(scaledObjSpaceDistance * scaledObjSpaceDistance + scaledColorSpaceDistance * scaledColorSpaceDistance));
+                    }
+
                     for (CharacteristicBin bin : binNeighborhood)
                     {
                         List<PeakCandidate> redBin = redSorted.get(bin);
@@ -335,8 +368,14 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                             {
                                 PeakCandidate candidate = redBin.get(k);
 
-                                float weight = Math.max(0, Math.min(1, 2 * (objSpaceRadius - candidate.position.distance(position)) / objSpaceRadius))
-                                    * Math.max(0, Math.min(1, 2 * (colorSpaceRadius - candidate.offPeakSum.distance(offPeakSum)) / colorSpaceRadius));
+                                float scaledObjSpaceDistance = candidate.position.distance(position) / objSpaceRadius;
+                                float scaledColorSpaceDistance = candidate.offPeakSum.distance(offPeakSum) / colorSpaceRadius;
+
+                                float weight = (float)Math.max(0, Math.min(1,
+                                    (1.0 - Math.sqrt(0.5 * scaledObjSpaceDistance * scaledObjSpaceDistance
+                                                + 0.5 * scaledColorSpaceDistance * scaledColorSpaceDistance)
+                                            / distanceToExpectedPeak)
+                                        / (1.0 - Math.sqrt(0.5))));
 
                                 red = Math.max(red, weight * candidate.peak.x);
                                 lastPeak = candidate.peak.x;
@@ -353,8 +392,14 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                             {
                                 PeakCandidate candidate = greenBin.get(k);
 
-                                float weight = Math.max(0, Math.min(1, 2 * (objSpaceRadius - candidate.position.distance(position)) / objSpaceRadius))
-                                    * Math.max(0, Math.min(1, 2 * (colorSpaceRadius - candidate.offPeakSum.distance(offPeakSum)) / colorSpaceRadius));
+                                float scaledObjSpaceDistance = candidate.position.distance(position) / objSpaceRadius;
+                                float scaledColorSpaceDistance = candidate.offPeakSum.distance(offPeakSum) / colorSpaceRadius;
+
+                                float weight = (float)Math.max(0, Math.min(1,
+                                    (1.0 - Math.sqrt(0.5 * scaledObjSpaceDistance * scaledObjSpaceDistance
+                                                + 0.5 * scaledColorSpaceDistance * scaledColorSpaceDistance)
+                                            / distanceToExpectedPeak)
+                                        / (1.0 - Math.sqrt(0.5))));
 
                                 green = Math.max(green, weight * candidate.peak.y);
                                 lastPeak = candidate.peak.y;
@@ -371,8 +416,14 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                             {
                                 PeakCandidate candidate = blueBin.get(k);
 
-                                float weight = Math.max(0, Math.min(1, 2 * (objSpaceRadius - candidate.position.distance(position)) / objSpaceRadius))
-                                    * Math.max(0, Math.min(1, 2 * (colorSpaceRadius - candidate.offPeakSum.distance(offPeakSum)) / colorSpaceRadius));
+                                float scaledObjSpaceDistance = candidate.position.distance(position) / objSpaceRadius;
+                                float scaledColorSpaceDistance = candidate.offPeakSum.distance(offPeakSum) / colorSpaceRadius;
+
+                                float weight = (float)Math.max(0, Math.min(1,
+                                    (1.0 - Math.sqrt(0.5 * scaledObjSpaceDistance * scaledObjSpaceDistance
+                                                + 0.5 * scaledColorSpaceDistance * scaledColorSpaceDistance)
+                                            / distanceToExpectedPeak)
+                                        / (1.0 - Math.sqrt(0.5))));
 
                                 blue = Math.max(blue, weight * candidate.peak.z);
                                 lastPeak = candidate.peak.z;
