@@ -530,7 +530,7 @@ vec4 computeBuehler(vec3 targetDirection, vec3 diffuseColor, vec3 normalDir, vec
         if (samples[i].a > 0)
         {
             sum += (weights[i + 1] - weights[0])
-#if 1 || SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
+#if SPECULAR_TEXTURE_ENABLED && ROUGHNESS_TEXTURE_ENABLED && HYBRID_SPECULAR_ENABLED
                 * getLuminance(max(vec3(0.0), peakTimes4Pi - samples[i].rgb / samples[i].a))
 #endif
                 * samples[i];
