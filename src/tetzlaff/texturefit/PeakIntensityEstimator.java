@@ -30,6 +30,8 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
     private Texture3D<ContextType> viewImages;
     private Texture3D<ContextType> depthImages;
     private Texture3D<ContextType> shadowImages;
+    private Texture<ContextType> diffuseTexture;
+    private Texture<ContextType> normalTexture;
 
     PeakIntensityEstimator(Context<ContextType> context, ViewSet viewSet)
     {
@@ -37,13 +39,15 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         this.viewSet = viewSet;
     }
 
-    void init(Consumer<Drawable<ContextType>> shaderSetup, Texture3D<ContextType> viewImages,
-        Texture3D<ContextType> depthImages, Texture3D<ContextType> shadowImages)
+    void init(Consumer<Drawable<ContextType>> shaderSetup, Texture3D<ContextType> viewImages, Texture3D<ContextType> depthImages,
+        Texture3D<ContextType> shadowImages, Texture<ContextType> diffuseTexture, Texture<ContextType> normalTexture)
     {
         this.shaderSetup = shaderSetup;
         this.viewImages = viewImages;
         this.depthImages = depthImages;
         this.shadowImages = shadowImages;
+        this.diffuseTexture = diffuseTexture;
+        this.normalTexture = normalTexture;
     }
 
     void compileShaders(boolean visibilityTest, boolean shadowTest) throws IOException
@@ -169,6 +173,8 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         imgSpaceDrawable.program().setTexture("depthImages", depthImages);
         imgSpaceDrawable.program().setTexture("shadowImages",
             shadowImages == null ? context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY) : shadowImages);
+        imgSpaceDrawable.program().setTexture("diffuseEstimate", diffuseTexture);
+        imgSpaceDrawable.program().setTexture("normalEstimate", normalTexture);
 
         FloatBuffer peakBuffer =
             BufferUtils.createFloatBuffer(4 * viewImages.getWidth() * viewImages.getHeight());
@@ -186,7 +192,7 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
             Comparator.comparingDouble(peakCandidate -> peakCandidate.nDotH));
 
         try(FramebufferObject<ContextType> fbo = context.buildFramebufferObject(
-            viewImages.getWidth() / 2, viewImages.getHeight() / 2)
+            viewImages.getWidth(), viewImages.getHeight())
             .addColorAttachments(ColorFormat.RGBA32F, 3)
             .createFramebufferObject())
         {
@@ -225,41 +231,64 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
 //                    e.printStackTrace();
 //                }
 
-                for (int k = 0; k < viewImages.getWidth() * viewImages.getHeight(); k++)
+                for (int y = 0; y < viewImages.getHeight(); y += 8)
                 {
-                    if (peakBuffer.get(4 * k + 3) > 0.0)
+                    for (int x = 0; x < viewImages.getHeight(); x += 8)
                     {
-                        PeakCandidate peak = new PeakCandidate(
-                            new Vector3(peakBuffer.get(4 * k), peakBuffer.get(4 * k + 1), peakBuffer.get(4 * k + 2)),
-                            new Vector3(offPeakBuffer.get(4 * k), offPeakBuffer.get(4 * k + 1), offPeakBuffer.get(4 * k + 2)),
-                            new Vector3(positionBuffer.get(4 * k), positionBuffer.get(4 * k + 1), positionBuffer.get(4 * k + 2)),
-                            positionBuffer.get(4 * k + 3) /* n dot h */);
+                        PeakCandidate maxPeak = null;
 
-                        CharacteristicBin binID = peak.characteristicBin(objSpaceRadius, colorSpaceRadius);
-                        List<PeakCandidate> bin = peakCandidates.get(binID);
-                        if (bin == null)
+                        for (int dy = 0; dy < 8 && y + dy < viewImages.getHeight(); dy++)
                         {
-                            bin = new ArrayList<>(1);
-                            peakCandidates.put(binID, new ArrayList<>(1));
-                        }
-                        bin.add(peak);
-
-                        if (peak.nDotH > 0.999)
-                        {
-                            if (expectedPeaks.size() < 256 * viewSet.getCameraPoseCount())
+                            for (int dx = 0; dx < 8 && x + dx < viewImages.getWidth(); dx++)
                             {
-                                expectedPeaks.add(peak);
-                            }
-                            else if (peak.nDotH > expectedPeaks.peek().nDotH)
-                            {
-                                expectedPeaks.remove();
-                                expectedPeaks.add(peak);
+                                int k = (y + dy) * viewImages.getWidth() + x + dx;
+
+                                if (peakBuffer.get(4 * k + 3) > 0.0)
+                                {
+                                    PeakCandidate peakCandidate = new PeakCandidate(
+                                        new Vector3(peakBuffer.get(4 * k), peakBuffer.get(4 * k + 1), peakBuffer.get(4 * k + 2)),
+                                        new Vector3(offPeakBuffer.get(4 * k), offPeakBuffer.get(4 * k + 1), offPeakBuffer.get(4 * k + 2)),
+                                        new Vector3(positionBuffer.get(4 * k), positionBuffer.get(4 * k + 1), positionBuffer.get(4 * k + 2)),
+                                        positionBuffer.get(4 * k + 3) /* n dot h */);
+
+                                    if (maxPeak == null || maxPeak.peak.y < peakCandidate.peak.y)
+                                    {
+                                        maxPeak = peakCandidate;
+                                    }
+                                }
+
+                                if (Float.isFinite(offPeakBuffer.get(4 * k)) && Float.isFinite(offPeakBuffer.get(4 * k + 1))
+                                        && Float.isFinite(offPeakBuffer.get(4 * k + 2)))
+                                {
+                                    maxOffPeak = Math.max(maxOffPeak, Math.max(offPeakBuffer.get(4 * k),
+                                        Math.max(offPeakBuffer.get(4 * k + 1), offPeakBuffer.get(4 * k + 2))));
+                                }
                             }
                         }
 
-                        if (Float.isFinite(offPeakBuffer.get(4 * k)) && Float.isFinite(offPeakBuffer.get(4 * k + 1)) && Float.isFinite(offPeakBuffer.get(4 * k + 2)))
+                        if (maxPeak != null)
                         {
-                            maxOffPeak = Math.max(maxOffPeak, Math.max(offPeakBuffer.get(4 * k), Math.max(offPeakBuffer.get(4 * k + 1), offPeakBuffer.get(4 * k + 2))));
+                            CharacteristicBin binID = maxPeak.characteristicBin(objSpaceRadius, colorSpaceRadius);
+                            List<PeakCandidate> bin = peakCandidates.get(binID);
+                            if (bin == null)
+                            {
+                                bin = new ArrayList<>(1);
+                                peakCandidates.put(binID, new ArrayList<>(1));
+                            }
+                            bin.add(maxPeak);
+
+                            if (maxPeak.nDotH > 0.999)
+                            {
+                                if (expectedPeaks.size() < 256 * viewSet.getCameraPoseCount())
+                                {
+                                    expectedPeaks.add(maxPeak);
+                                }
+                                else if (maxPeak.nDotH > expectedPeaks.peek().nDotH)
+                                {
+                                    expectedPeaks.remove();
+                                    expectedPeaks.add(maxPeak);
+                                }
+                            }
                         }
                     }
                 }
@@ -274,6 +303,8 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
         texSpaceDrawable.program().setTexture("depthImages", depthImages);
         texSpaceDrawable.program().setTexture("shadowImages",
             shadowImages == null ? context.getTextureFactory().getNullTexture(SamplerType.FLOAT_2D_ARRAY) : shadowImages);
+        texSpaceDrawable.program().setTexture("diffuseEstimate", diffuseTexture);
+        texSpaceDrawable.program().setTexture("normalEstimate", normalTexture);
 
         float[] offPeakTexSpace;
         float[] positionsTexSpace;

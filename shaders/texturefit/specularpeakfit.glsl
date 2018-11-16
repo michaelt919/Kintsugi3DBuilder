@@ -405,8 +405,11 @@ ParameterizedFit fitSpecular()
     result.normal = vec4(transpose(tangentToObject) * normalObjSpace, 1.0);
 
 
-    result.roughness = vec4(vec3(estimateRoughness(maxResiduals, peakLuminance, normalObjSpace)), 1.0);
-    result.specularColor = vec4(4 * specularPeak.rgb * result.roughness[0] * result.roughness[0], 1.0);
+//    result.roughness = vec4(vec3(estimateRoughness(maxResiduals, peakLuminance, normalObjSpace)), 1.0);
+//    result.specularColor = vec4(4 * specularPeak.rgb * result.roughness[0] * result.roughness[0], 1.0);
+
+    result.roughness = vec4(vec3(sqrt(0.01 / specularPeak.rgb)), 1.0);
+    result.specularColor = vec4(0.04, 0.04, 0.04, 1.0);
 
     return result;
 }
