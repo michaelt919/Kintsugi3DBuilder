@@ -12,6 +12,7 @@ public class SpecularPeakFit<ContextType extends Context<ContextType>> implement
 {
     private final ParameterizedFitBase<ContextType> base;
     private final Program<ContextType> program;
+    private final Consumer<Drawable<ContextType>> shaderSetup;
 
     private Framebuffer<ContextType> framebuffer;
 
@@ -27,8 +28,9 @@ public class SpecularPeakFit<ContextType extends Context<ContextType>> implement
             .define("SHADOW_TEST_ENABLED", shadowTest)
             .createProgram();
 
+        this.shaderSetup = shaderSetup;
+
         this.base = new ParameterizedFitBase<>(context.createDrawable(this.program), viewSet.getCameraPoseCount(), subdiv);
-        shaderSetup.accept(this.base.drawable);
     }
 
     @Override
@@ -46,6 +48,7 @@ public class SpecularPeakFit<ContextType extends Context<ContextType>> implement
         Texture<ContextType> diffuseEstimate, Texture<ContextType> normalEstimate, Texture<ContextType> peakEstimate,
         SubdivisionRenderingCallback callback) throws IOException
     {
+        shaderSetup.accept(this.base.drawable);
         program.setTexture("diffuseEstimate", diffuseEstimate);
         program.setTexture("normalEstimate", normalEstimate);
         program.setTexture("peakEstimate", peakEstimate);

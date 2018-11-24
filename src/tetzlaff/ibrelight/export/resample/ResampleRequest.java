@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import tetzlaff.gl.core.Context;
 import tetzlaff.gl.core.FramebufferObject;
@@ -45,7 +48,11 @@ public class ResampleRequest implements IBRRequest
                     targetViewSet.getCameraProjection(targetViewSet.getCameraProjectionIndex(i))
                         .getProjectionMatrix(targetViewSet.getRecommendedNearPlane(), targetViewSet.getRecommendedFarPlane()));
 
-            File exportFile = new File(resampleExportPath, targetViewSet.getImageFileName(i));
+            String[] parts = targetViewSet.getImageFileName(i).split("\\.");
+            File exportFile = new File(resampleExportPath,
+                Stream.concat(Arrays.stream(parts, 0, parts.length-1), Stream.of("png"))
+                    .collect(Collectors.joining(".")));
+
             exportFile.getParentFile().mkdirs();
             framebuffer.saveColorBufferToFile(0, "PNG", exportFile);
 

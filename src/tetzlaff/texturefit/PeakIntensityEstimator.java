@@ -243,7 +243,8 @@ class PeakIntensityEstimator<ContextType extends Context<ContextType>>
                             {
                                 int k = (y + dy) * viewImages.getWidth() + x + dx;
 
-                                if (peakBuffer.get(4 * k + 3) > 0.0)
+                                if (Float.isFinite(peakBuffer.get(4 * k)) && Float.isFinite(peakBuffer.get(4 * k + 1))
+                                    && Float.isFinite(peakBuffer.get(4 * k + 2)) && peakBuffer.get(4 * k + 3) > 0.0)
                                 {
                                     PeakCandidate peakCandidate = new PeakCandidate(
                                         new Vector3(peakBuffer.get(4 * k), peakBuffer.get(4 * k + 1), peakBuffer.get(4 * k + 2)),
