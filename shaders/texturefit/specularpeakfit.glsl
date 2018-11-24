@@ -7,6 +7,8 @@
 #define CHROMATIC_SPECULAR 1
 #endif
 
+#define MIN_SPECULAR_REFLECTIVITY 0.04
+
 uniform sampler2D diffuseEstimate;
 uniform sampler2D normalEstimate;
 uniform sampler2D peakEstimate;
@@ -405,11 +407,12 @@ ParameterizedFit fitSpecular()
     result.normal = vec4(transpose(tangentToObject) * normalObjSpace, 1.0);
 
 
-//    result.roughness = vec4(vec3(estimateRoughness(maxResiduals, peakLuminance, normalObjSpace)), 1.0);
-//    result.specularColor = vec4(4 * specularPeak.rgb * result.roughness[0] * result.roughness[0], 1.0);
+    result.roughness = vec4(vec3(max(sqrt(0.25 * MIN_SPECULAR_REFLECTIVITY / getLuminance(specularPeak.rgb)),
+        estimateRoughness(maxResiduals, peakLuminance, normalObjSpace))), 1.0);
+    result.specularColor = vec4(4 * specularPeak.rgb * result.roughness[0] * result.roughness[0], 1.0);
 
-    result.roughness = vec4(vec3(sqrt(0.01 / specularPeak.rgb)), 1.0);
-    result.specularColor = vec4(0.04, 0.04, 0.04, 1.0);
+//    result.roughness = vec4(vec3(sqrt(0.01 / specularPeak.rgb)), 1.0);
+//    result.specularColor = vec4(0.04, 0.04, 0.04, 1.0);
 
     return result;
 }

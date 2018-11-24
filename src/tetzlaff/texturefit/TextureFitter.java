@@ -275,7 +275,7 @@ class TextureFitter<ContextType extends Context<ContextType>>
                             frontFramebuffer.getColorAttachmentTexture(1));
                     Vector3[] peakIntensityEstimates = resources.getPeakIntensityEstimator().estimate(
                         param.getTextureSize() / 2, param.getTextureSize() / 2,
-                        resources.getGeometry().getBoundingRadius() * 0.25f, 0.125f);
+                        resources.getGeometry().getBoundingRadius() * 0.25f, 0.25f);
 
                     FramebufferObject<ContextType> frontErrorFramebuffer = errorFramebuffer1;
                     FramebufferObject<ContextType> backErrorFramebuffer = errorFramebuffer2;
@@ -291,7 +291,7 @@ class TextureFitter<ContextType extends Context<ContextType>>
                     FramebufferObject<ContextType> tmp;
 
                     try(Texture2D<ContextType> peakSpecularTexture =
-                        context.getTextureFactory().build2DColorTextureFromBuffer(param.getTextureSize(), param.getTextureSize(),
+                        context.getTextureFactory().build2DColorTextureFromBuffer(param.getTextureSize() / 2, param.getTextureSize() / 2,
                             NativeVectorBufferFactory.getInstance().createFromFloatArray(
                                 3, (param.getTextureSize() / 2) * (param.getTextureSize() / 2), peakIntensityData))
                             .setInternalFormat(ColorFormat.RGB32F)
